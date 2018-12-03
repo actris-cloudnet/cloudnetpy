@@ -1,2 +1,2 @@
-# actris-cloudnet
+# cloudnet
 Python package for Cloudnet data processing
