@@ -1,0 +1,174 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>categorize &#8212; cloudnet  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for categorize</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; This module is used to generate</span>
+<span class="sd">categorize (Level 1) product from pre-processed</span>
+<span class="sd">radar, lidar and MWR files.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># import sys</span>
+<span class="c1"># import numpy as np</span>
+<span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
+<span class="kn">import</span> <span class="nn">ncf</span>
+
+
+<div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../categorize.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">aux</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Generate Cloudnet Level 1 categorize file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        input_files (tuple): Tuple of strings containing full paths of</span>
+<span class="sd">                             4 input files (radar, lidar, mwr, model).</span>
+<span class="sd">        output_file (str): Full path of output file.</span>
+<span class="sd">        aux (tuple): Tuple of strings including some metadata</span>
+<span class="sd">                     of the site (site_name, institute).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rad</span><span class="p">,</span> <span class="n">rad_vrs</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">lid</span><span class="p">,</span> <span class="n">lid_vrs</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">mwr</span><span class="p">,</span> <span class="n">mwr_vrs</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">mod</span><span class="p">,</span> <span class="n">mod_vrs</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">freq</span><span class="p">,</span> <span class="n">is35</span> <span class="o">=</span> <span class="n">get_radar_freq</span><span class="p">(</span><span class="n">rad_vrs</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_radar_freq"><a class="viewcode-back" href="../categorize.html#categorize.get_radar_freq">[docs]</a><span class="k">def</span> <span class="nf">get_radar_freq</span><span class="p">(</span><span class="n">vrs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return frequency of radar.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vrs: Pointer to radar variables.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple containing</span>
+
+<span class="sd">        - **frequency** (*float*): Frequency or radar.</span>
+<span class="sd">        - **is35** (*boolean*): True if 35 GHz radar. False if 94 GHz.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: No frequency in the radar file.</span>
+<span class="sd">        ValueError: Invalid frequency value.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">possible_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;radar_frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;frequency&#39;</span><span class="p">)</span>  <span class="c1"># Several possible</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="p">[</span><span class="n">vrs</span><span class="p">[</span><span class="n">field</span><span class="p">][:]</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">vrs</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">possible_fields</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">freq</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Missing frequency in the radar file.&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># actual data of the masked data</span>
+
+    <span class="k">assert</span> <span class="n">ma</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Multiple frequencies. Not a radar file??&#39;</span>
+
+    <span class="k">if</span> <span class="mi">30</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">40</span><span class="p">:</span>
+        <span class="n">is35</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="mi">90</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="n">is35</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only 35 and 94 GHz radas supported.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">),</span> <span class="n">is35</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">cloudnet</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">cloudnet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../categorize.html">categorize module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ncf.html">ncf module</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Finnish Meteorological Institute.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
