@@ -6,6 +6,7 @@ radar, lidar and MWR files.
 # import sys
 import numpy as np
 import numpy.ma as ma
+from scipy import stats
 import utils.ncf as ncf
 
 
@@ -22,7 +23,7 @@ def generate_categorize(input_files, output_file, aux):
     """
 
     TIME_RESOLUTION = 30  # fixed time resolution for now
-    
+
     rad, rad_vrs = ncf.load_nc(input_files[0])
     lid, lid_vrs = ncf.load_nc(input_files[1])
     mwr, mwr_vrs = ncf.load_nc(input_files[2])
@@ -38,11 +39,17 @@ def generate_categorize(input_files, output_file, aux):
     except ValueError as error:
         print(error)
 
-           
     height = get_altitude_grid(rad_vrs['altitude'][:],
                                rad_vrs['range'][:])
 
-    
+    site_altitude = get_site_altitude(rad_vrs['altitude'][:],
+                                      lid_vrs['altitude'][:])
+
+    # average radar variables in time
+    fields = ('Zh', 'v', 'ldr', 'width')
+    radar = fetch_radar(rad_vrs, fields, time)
+    vfold = rad_vrs['NyquistVelocity'][:]
+
 
 def get_radar_freq(vrs):
     """ Return frequency of radar.
@@ -65,22 +72,38 @@ def get_radar_freq(vrs):
     else:
         freq = freq[0]  # actual data of the masked data
     assert ma.count(freq) == 1, 'Multiple frequencies. Not a radar file??'
-    b1 = 30 < freq < 40
-    b2 = 90 < freq < 100
-    if not b1 and not b2:
+    range_1 = 30 < freq < 40
+    range_2 = 90 < freq < 100
+    if not (range_1 or range_2):
         raise ValueError('Only 35 and 94 GHz radars supported.')
     return float(freq)
 
 
+def get_site_altitude(alt_radar, alt_lidar):
+    """ Return altitude of the measurement site above mean sea level.
+
+    Site altitude is the altitude of radar or lidar, which one is lower.
+
+    Args:
+        alt_radar (float): Altitude of radar above mean sea level [km]
+        alt_lidar (float): Altitude of lidar above mean sea level [km]
+
+    Returns:
+        Altitude of the measurement site.
+
+    """
+    return min(alt_radar, alt_lidar)
+
+
 def get_altitude_grid(alt_radar, range_radar):
     """ Return altitude grid for Cloudnet products.
-    Altitude grid is defined as the radar measurement 
+    Altitude grid is defined as the radar measurement
     grid from the mean sea level.
 
     Args:
         alt_radar (float): Altitude of radar above mean sea level [km]
-        range_radar (nd.array): Altitude grid of radar measurements 
-                                above instrument [km]    
+        range_radar (nd.array): Altitude grid of radar measurements
+                                above instrument [km]
 
     Returns:
         (nd.array): Altitude grid
@@ -90,7 +113,7 @@ def get_altitude_grid(alt_radar, range_radar):
 
 
 def get_time(reso):
-    """ Computes fraction hour time vector 0-24 with user-given 
+    """ Computes fraction hour time vector 0-24 with user-given
     resolution (in seconds) where 60 is the maximum allowed value.
 
     Args:
@@ -107,3 +130,54 @@ def get_time(reso):
         raise ValueError('Time resolution should be between 0 and 60 [s]')
     step = reso/7200
     return np.arange(step, 24-step, step*2)
+
+
+def fetch_radar(vrs, fields, time):
+    """ Read and rebin radar 2d fields in time (using mean).
+
+    Args:
+        vrs: Pointer to radar variables
+        fields (tuple): Tuple of strings containing radar
+                        fields to be interpolated.
+        time: Target time vector.
+
+    Returns:
+        (dict): Rebinned radar fields.
+
+    """
+    out = {}
+    x = vrs['time'][:]
+    for field in fields:
+        out[field] = rebin_x_2d(x, vrs[field][:], time)
+    return out
+
+
+def rebin_x_2d(x, data, xin):
+    """ Rebin 2D data in x-direction. Handles masked data.
+
+    Args:
+        x: x vector of the input data.
+        data (nd.array): Input data.
+        xin: The new x vector.
+
+    Returns:
+        (nd.array): Rebinned field.
+
+    """
+    # new binning vector
+    edge1 = round(xin[0] - (xin[1]-xin[0])/2)
+    edge2 = round(xin[-1] + (xin[-1]-xin[-2])/2)
+    edges = np.linspace(edge1, edge2, len(xin)+1)
+    # prepare input/output data
+    datai = np.zeros((len(xin), data.shape[1]))
+    data = ma.masked_invalid(data)
+    # loop over y
+    for ii, values in enumerate(data.T):
+        mask = values.mask
+        if len(values[~mask]) > 0:
+            datai[:, ii], _, _ = stats.binned_statistic(x[~mask],
+                                                        values[~mask],
+                                                        statistic='mean',
+                                                        bins=edges)
+    datai[np.isfinite(datai) == 0] = 0
+    return ma.masked_equal(datai, 0)
