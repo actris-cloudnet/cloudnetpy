@@ -47,7 +47,11 @@ def generate_categorize(input_files, output_file, aux):
 
     # average radar variables in time
     fields = ('Zh', 'v', 'ldr', 'width')
-    radar = fetch_radar(rad_vrs, fields, time)
+    try:
+        radar = fetch_radar(rad_vrs, fields, time)
+    except KeyError as error:
+        print(error)
+
     vfold = rad_vrs['NyquistVelocity'][:]
 
 
@@ -133,51 +137,57 @@ def get_time(reso):
 
 
 def fetch_radar(vrs, fields, time):
-    """ Read and rebin radar 2d fields in time (using mean).
+    """ Read and rebin radar 2d fields in time.
 
     Args:
         vrs: Pointer to radar variables
         fields (tuple): Tuple of strings containing radar
-                        fields to be interpolated.
-        time: Target time vector.
+                        fields to be averaged.
+        time: New time vector.
 
     Returns:
         (dict): Rebinned radar fields.
+
+    Raises:
+        KeyError: Missing field.
 
     """
     out = {}
     x = vrs['time'][:]
     for field in fields:
-        out[field] = rebin_x_2d(x, vrs[field][:], time)
+        if field in vrs:
+            out[field] = rebin_x_2d(x, vrs[field][:], time)
+        else:
+            raise KeyError(f"No variable '{field}' in the radar file.")
     return out
 
 
-def rebin_x_2d(x, data, xin):
-    """ Rebin 2D data in x-direction. Handles masked data.
+def rebin_x_2d(x, data, xnew):
+    """ Rebin 2D data in x-direction using mean. Handles masked data.
 
     Args:
-        x: x vector of the input data.
-        data (nd.array): Input data.
-        xin: The new x vector.
+        x: A 1-D array of real values.
+        data (nd.array): 2-D input data.
+        xnew: The new x vector.
 
     Returns:
-        (nd.array): Rebinned field.
+        Rebinned field.
 
     """
     # new binning vector
-    edge1 = round(xin[0] - (xin[1]-xin[0])/2)
-    edge2 = round(xin[-1] + (xin[-1]-xin[-2])/2)
-    edges = np.linspace(edge1, edge2, len(xin)+1)
+    edge1 = round(xnew[0] - (xnew[1]-xnew[0])/2)
+    edge2 = round(xnew[-1] + (xnew[-1]-xnew[-2])/2)
+    edges = np.linspace(edge1, edge2, len(xnew)+1)
     # prepare input/output data
-    datai = np.zeros((len(xin), data.shape[1]))
+    datai = np.zeros((len(xnew), data.shape[1]))
     data = ma.masked_invalid(data)
     # loop over y
-    for ii, values in enumerate(data.T):
+    for ind, values in enumerate(data.T):
         mask = values.mask
         if len(values[~mask]) > 0:
-            datai[:, ii], _, _ = stats.binned_statistic(x[~mask],
-                                                        values[~mask],
-                                                        statistic='mean',
-                                                        bins=edges)
+            datai[:, ind], _, _ = stats.binned_statistic(x[~mask],
+                                                         values[~mask],
+                                                         statistic='mean',
+                                                         bins=edges)
     datai[np.isfinite(datai) == 0] = 0
     return ma.masked_equal(datai, 0)
