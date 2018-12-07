@@ -73,8 +73,7 @@ def get_radar_freq(vrs):
     freq = [vrs[field][:] for field in vrs if field in possible_fields]
     if not freq:
         raise KeyError('Missing frequency in the radar file.')
-    else:
-        freq = freq[0]  # actual data of the masked data
+    freq = freq[0]  # actual data of the masked data
     assert ma.count(freq) == 1, 'Multiple frequencies. Not a radar file??'
     range_1 = 30 < freq < 40
     range_2 = 90 < freq < 100
@@ -155,10 +154,9 @@ def fetch_radar(vrs, fields, time):
     out = {}
     x = vrs['time'][:]
     for field in fields:
-        if field in vrs:
-            out[field] = rebin_x_2d(x, vrs[field][:], time)
-        else:
+        if field not in vrs:
             raise KeyError(f"No variable '{field}' in the radar file.")
+        out[field] = rebin_x_2d(x, vrs[field][:], time)
     return out
 
 
