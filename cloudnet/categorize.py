@@ -3,12 +3,11 @@ categorize (Level 1) product from pre-processed
 radar, lidar and MWR files.
 """
 
-# import sys
 import numpy as np
 import numpy.ma as ma
 from scipy import stats
-import utils.ncf as ncf
-
+import ncf
+import utils
 
 def generate_categorize(input_files, output_file, aux):
     """ Generate Cloudnet Level 1 categorize file.
@@ -30,12 +29,12 @@ def generate_categorize(input_files, output_file, aux):
     mod, mod_vrs = ncf.load_nc(input_files[3])
 
     try:
-        freq = get_radar_freq(rad_vrs)
+        freq = ncf.get_radar_freq(rad_vrs)
     except (ValueError, KeyError) as error:
         print(error)
 
     try:
-        time = get_time(TIME_RESOLUTION)
+        time = utils.get_time(TIME_RESOLUTION)
     except ValueError as error:
         print(error)
 
@@ -57,34 +56,6 @@ def generate_categorize(input_files, output_file, aux):
     # average lidar variables in time and height
     lidar = fetch_lidar(lid_vrs, ('beta',), time, height)
     
-    
-
-def get_radar_freq(vrs):
-    """ Return frequency of radar.
-
-    Args:
-        vrs: Pointer to radar variables.
-
-    Returns:
-        Frequency or radar.
-
-    Raises:
-        KeyError: No frequency in the radar file.
-        ValueError: Invalid frequency value.
-
-    """
-    possible_fields = ('radar_frequency', 'frequency')  # Several possible
-    freq = [vrs[field][:] for field in vrs if field in possible_fields]
-    if not freq:
-        raise KeyError('Missing frequency in the radar file.')
-    freq = freq[0]  # actual data of the masked data
-    assert ma.count(freq) == 1, 'Multiple frequencies. Not a radar file??'
-    range_1 = 30 < freq < 40
-    range_2 = 90 < freq < 100
-    if not (range_1 or range_2):
-        raise ValueError('Only 35 and 94 GHz radars supported.')
-    return float(freq)
-
 
 def get_site_altitude(alt_radar, alt_lidar):
     """ Return altitude of the measurement site above mean sea level.
@@ -119,26 +90,6 @@ def get_altitude_grid(alt_radar, range_radar):
     return range_radar + alt_radar
 
 
-def get_time(reso):
-    """ Computes fraction hour time vector 0-24 with user-given
-    resolution (in seconds) where 60 is the maximum allowed value.
-
-    Args:
-        reso (float): Time resolution in seconds.
-
-    Returns:
-        (nd.array): Time vector between 0 and 24.
-
-    Raises:
-        ValueError: Bad resolution as input.
-
-    """
-    if reso < 1 or reso > 60:
-        raise ValueError('Time resolution should be between 0 and 60 [s]')
-    step = reso/7200
-    return np.arange(step, 24-step, step*2)
-
-
 def fetch_radar(vrs, fields, time):
     """ Read and rebin radar 2d fields in time.
 
@@ -160,7 +111,7 @@ def fetch_radar(vrs, fields, time):
     for field in fields:
         if field not in vrs:
             raise KeyError(f"No variable '{field}' in the radar file.")
-        out[field] = rebin_x_2d(x, vrs[field][:], time)
+        out[field] = utils.rebin_x_2d(x, vrs[field][:], time)
     return out
 
 
@@ -187,38 +138,12 @@ def fetch_lidar(vrs, fields, time, height):
     for field in fields:
         if field not in vrs:
             raise KeyError(f"No variable '{field}' in the lidar file.")
-        dataim = rebin_x_2d(x, vrs[field][:], time)
-        dataim = rebin_x_2d(y, dataim.T, height).T
+        dataim = utils.rebin_x_2d(x, vrs[field][:], time)
+        dataim = utils.rebin_x_2d(y, dataim.T, height).T
         out[field] = dataim
     return out
 
 
-def rebin_x_2d(x, data, xnew):
-    """ Rebin 2D data in x-direction using mean. Handles masked data.
 
-    Args:
-        x: A 1-D array of real values.
-        data (nd.array): 2-D input data.
-        xnew: The new x vector.
 
-    Returns:
-        Rebinned field.
-
-    """
-    # new binning vector
-    edge1 = round(xnew[0] - (xnew[1]-xnew[0])/2)
-    edge2 = round(xnew[-1] + (xnew[-1]-xnew[-2])/2)
-    edges = np.linspace(edge1, edge2, len(xnew)+1)
-    # prepare input/output data
-    datai = np.zeros((len(xnew), data.shape[1]))
-    data = ma.masked_invalid(data)
-    # loop over y
-    for ind, values in enumerate(data.T):
-        mask = values.mask
-        if len(values[~mask]) > 0:
-            datai[:, ind], _, _ = stats.binned_statistic(x[~mask],
-                                                         values[~mask],
-                                                         statistic='mean',
-                                                         bins=edges)
-    datai[np.isfinite(datai) == 0] = 0
-    return ma.masked_equal(datai, 0)
+    
