@@ -31,7 +31,7 @@ def km2m(var):
     have 'units' attribute set to 'km' to trigger the conversion.
 
     Args:
-        vrs: A netCDF variable.
+        var: A netCDF variable.
 
     Returns:
         Altitude (scalar or array)  converted to km. 
