@@ -32,9 +32,13 @@
           <div class="body" role="main">
             
   <h1>Source code for ncf</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot; This modules contains netCDF related functions &quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot; This modules contains netCDF related functions. The functions </span>
+<span class="sd">in this module typically have a pointer to netCDF variable(s) as </span>
+<span class="sd">an argument.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">netCDF4</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 
 
 <div class="viewcode-block" id="load_nc"><a class="viewcode-back" href="../ncf.html#ncf.load_nc">[docs]</a><span class="k">def</span> <span class="nf">load_nc</span><span class="p">(</span><span class="n">file_in</span><span class="p">):</span>
@@ -61,7 +65,7 @@
 <span class="sd">    have &#39;units&#39; attribute set to &#39;km&#39; to trigger the conversion.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        vrs: A netCDF variable.</span>
+<span class="sd">        var: A netCDF variable.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Altitude (scalar or array)  converted to km. </span>
@@ -71,6 +75,33 @@
     <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;km&#39;</span><span class="p">:</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">*</span><span class="mi">1000</span>
     <span class="k">return</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="get_radar_freq"><a class="viewcode-back" href="../ncf.html#ncf.get_radar_freq">[docs]</a><span class="k">def</span> <span class="nf">get_radar_freq</span><span class="p">(</span><span class="n">vrs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return frequency of radar.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vrs: Pointer to radar variables.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Frequency or radar.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: No frequency in the radar file.</span>
+<span class="sd">        ValueError: Invalid frequency value.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">possible_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;radar_frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;frequency&#39;</span><span class="p">)</span>  <span class="c1"># Several possible</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="p">[</span><span class="n">vrs</span><span class="p">[</span><span class="n">field</span><span class="p">][:]</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">vrs</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">possible_fields</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">freq</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Missing frequency in the radar file.&#39;</span><span class="p">)</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># actual data of the masked data</span>
+    <span class="k">assert</span> <span class="n">ma</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Multiple frequencies. Not a radar file??&#39;</span>
+    <span class="n">range_1</span> <span class="o">=</span> <span class="mi">30</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">40</span>
+    <span class="n">range_2</span> <span class="o">=</span> <span class="mi">90</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">100</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">range_1</span> <span class="ow">or</span> <span class="n">range_2</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only 35 and 94 GHz radars supported.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -91,8 +122,7 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../ncf.html">ncf module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../categorize.html">categorize module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../modules.html">cloudnet</a></li>
 </ul>
 
 <div class="relations">

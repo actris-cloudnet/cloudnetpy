@@ -15,7 +15,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="ncf module" href="ncf.html" />
+    <link rel="next" title="ncf module" href="ncf.html" />
+    <link rel="prev" title="cloudnet" href="modules.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -39,17 +40,18 @@ categorize (Level 1) product from pre-processed
 radar, lidar and MWR files.</p>
 <dl class="function">
 <dt id="categorize.fetch_lidar">
-<code class="descclassname">categorize.</code><code class="descname">fetch_lidar</code><span class="sig-paren">(</span><em>vrs</em>, <em>fields</em>, <em>time</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#fetch_lidar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.fetch_lidar" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">categorize.</code><code class="descname">fetch_lidar</code><span class="sig-paren">(</span><em>lid_vars</em>, <em>fields</em>, <em>time</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#fetch_lidar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.fetch_lidar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read and rebin lidar 2d fields in time and height.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>vrs</strong> – Pointer to lidar variables</li>
+<li><strong>lid_vars</strong> – Pointer to lidar variables</li>
 <li><strong>fields</strong> (<em>tuple</em>) – Tuple of strings containing lidar
 fields to be averaged.</li>
-<li><strong>time</strong> – New time vector.</li>
+<li><strong>time</strong> – A 1-D array.</li>
+<li><strong>height</strong> – A 1-D array.</li>
 </ul>
 </td>
 </tr>
@@ -68,17 +70,17 @@ fields to be averaged.</li>
 
 <dl class="function">
 <dt id="categorize.fetch_radar">
-<code class="descclassname">categorize.</code><code class="descname">fetch_radar</code><span class="sig-paren">(</span><em>vrs</em>, <em>fields</em>, <em>time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#fetch_radar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.fetch_radar" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">categorize.</code><code class="descname">fetch_radar</code><span class="sig-paren">(</span><em>rad_vars</em>, <em>fields</em>, <em>time_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#fetch_radar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.fetch_radar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read and rebin radar 2d fields in time.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>vrs</strong> – Pointer to radar variables</li>
+<li><strong>rad_vars</strong> – Pointer to radar variables</li>
 <li><strong>fields</strong> (<em>tuple</em>) – Tuple of strings containing radar
 fields to be averaged.</li>
-<li><strong>time</strong> – New time vector.</li>
+<li><strong>time_new</strong> – A 1-D array.</li>
 </ul>
 </td>
 </tr>
@@ -118,7 +120,7 @@ of the site (site_name, institute).</li>
 
 <dl class="function">
 <dt id="categorize.get_altitude_grid">
-<code class="descclassname">categorize.</code><code class="descname">get_altitude_grid</code><span class="sig-paren">(</span><em>alt_radar</em>, <em>range_radar</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#get_altitude_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.get_altitude_grid" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">categorize.</code><code class="descname">get_altitude_grid</code><span class="sig-paren">(</span><em>rad_vars</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#get_altitude_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.get_altitude_grid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return altitude grid for Cloudnet products.
 Altitude grid is defined as the radar measurement
 grid from the mean sea level.</p>
@@ -126,42 +128,9 @@ grid from the mean sea level.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>alt_radar</strong> (<em>float</em>) – Altitude of radar above mean sea level [km]</li>
-<li><strong>range_radar</strong> (<em>nd.array</em>) – Altitude grid of radar measurements
-above instrument [km]</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rad_vars</strong> – Radar variables.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Altitude grid</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(nd.array)</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.get_radar_freq">
-<code class="descclassname">categorize.</code><code class="descname">get_radar_freq</code><span class="sig-paren">(</span><em>vrs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#get_radar_freq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.get_radar_freq" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return frequency of radar.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vrs</strong> – Pointer to radar variables.</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Frequency or radar.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
-<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code> – No frequency in the radar file.</li>
-<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Invalid frequency value.</li>
-</ul>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude grid</td>
 </tr>
 </tbody>
 </table>
@@ -189,49 +158,6 @@ above instrument [km]</li>
 </table>
 </dd></dl>
 
-<dl class="function">
-<dt id="categorize.get_time">
-<code class="descclassname">categorize.</code><code class="descname">get_time</code><span class="sig-paren">(</span><em>reso</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.get_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes fraction hour time vector 0-24 with user-given
-resolution (in seconds) where 60 is the maximum allowed value.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>reso</strong> (<em>float</em>) – Time resolution in seconds.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time vector between 0 and 24.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">(nd.array)</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Bad resolution as input.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.rebin_x_2d">
-<code class="descclassname">categorize.</code><code class="descname">rebin_x_2d</code><span class="sig-paren">(</span><em>x</em>, <em>data</em>, <em>xnew</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#rebin_x_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.rebin_x_2d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebin 2D data in x-direction using mean. Handles masked data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> – A 1-D array of real values.</li>
-<li><strong>data</strong> (<em>nd.array</em>) – 2-D input data.</li>
-<li><strong>xnew</strong> – The new x vector.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Rebinned field.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 </div>
 
 
@@ -253,15 +179,22 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="ncf.html">ncf module</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">categorize module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">cloudnet</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">categorize module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncf.html">ncf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">utils module</a></li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="ncf.html" title="previous chapter">ncf module</a></li>
+  <li><a href="modules.html">cloudnet</a><ul>
+      <li>Previous: <a href="modules.html" title="previous chapter">cloudnet</a></li>
+      <li>Next: <a href="ncf.html" title="next chapter">ncf module</a></li>
+  </ul></li>
   </ul></li>
 </ul>
 </div>

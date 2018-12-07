@@ -13,9 +13,7 @@ properties at high vertical and temporal resolution.
    :maxdepth: 2
    :caption: Contents:
 
-   ncf
-   categorize
-
+   modules
 
    
 	    

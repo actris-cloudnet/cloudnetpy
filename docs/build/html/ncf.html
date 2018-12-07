@@ -15,8 +15,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="categorize module" href="categorize.html" />
-    <link rel="prev" title="Welcome to cloudnet’s documentation!" href="index.html" />
+    <link rel="next" title="utils module" href="utils.html" />
+    <link rel="prev" title="categorize module" href="categorize.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -35,7 +35,33 @@
             
   <div class="section" id="module-ncf">
 <span id="ncf-module"></span><h1>ncf module<a class="headerlink" href="#module-ncf" title="Permalink to this headline">¶</a></h1>
-<p>This modules contains netCDF related functions</p>
+<p>This modules contains netCDF related functions. The functions
+in this module typically have a pointer to netCDF variable(s) as
+an argument.</p>
+<dl class="function">
+<dt id="ncf.get_radar_freq">
+<code class="descclassname">ncf.</code><code class="descname">get_radar_freq</code><span class="sig-paren">(</span><em>vrs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ncf.html#get_radar_freq"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ncf.get_radar_freq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return frequency of radar.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vrs</strong> – Pointer to radar variables.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Frequency or radar.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code> – No frequency in the radar file.</li>
+<li><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Invalid frequency value.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="function">
 <dt id="ncf.km2m">
 <code class="descclassname">ncf.</code><code class="descname">km2m</code><span class="sig-paren">(</span><em>var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ncf.html#km2m"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ncf.km2m" title="Permalink to this definition">¶</a></dt>
@@ -46,7 +72,7 @@ have ‘units’ attribute set to ‘km’ to trigger the conversion.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vrs</strong> – A netCDF variable.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var</strong> – A netCDF variable.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude (scalar or array)  converted to km.</td>
 </tr>
@@ -95,16 +121,22 @@ have ‘units’ attribute set to ‘km’ to trigger the conversion.</p>
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">ncf module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="categorize.html">categorize module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">cloudnet</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="categorize.html">categorize module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ncf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="utils.html">utils module</a></li>
+</ul>
+</li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="index.html" title="previous chapter">Welcome to cloudnet’s documentation!</a></li>
-      <li>Next: <a href="categorize.html" title="next chapter">categorize module</a></li>
+  <li><a href="modules.html">cloudnet</a><ul>
+      <li>Previous: <a href="categorize.html" title="previous chapter">categorize module</a></li>
+      <li>Next: <a href="utils.html" title="next chapter">utils module</a></li>
+  </ul></li>
   </ul></li>
 </ul>
 </div>
