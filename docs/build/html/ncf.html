@@ -15,6 +15,8 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="categorize module" href="categorize.html" />
+    <link rel="prev" title="Welcome to cloudnet’s documentation!" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -34,6 +36,24 @@
   <div class="section" id="module-ncf">
 <span id="ncf-module"></span><h1>ncf module<a class="headerlink" href="#module-ncf" title="Permalink to this headline">¶</a></h1>
 <p>This modules contains netCDF related functions</p>
+<dl class="function">
+<dt id="ncf.km2m">
+<code class="descclassname">ncf.</code><code class="descname">km2m</code><span class="sig-paren">(</span><em>var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ncf.html#km2m"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ncf.km2m" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert m to km.</p>
+<p>Read Input and convert it to from km -&gt; m (if needed). The input must
+have ‘units’ attribute set to ‘km’ to trigger the conversion.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vrs</strong> – A netCDF variable.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude (scalar or array)  converted to km.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="function">
 <dt id="ncf.load_nc">
 <code class="descclassname">ncf.</code><code class="descname">load_nc</code><span class="sig-paren">(</span><em>file_in</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ncf.html#load_nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ncf.load_nc" title="Permalink to this definition">¶</a></dt>
@@ -74,7 +94,8 @@
 
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ncf module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="categorize.html">categorize module</a></li>
 </ul>
 
@@ -82,6 +103,8 @@
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to cloudnet’s documentation!</a></li>
+      <li>Next: <a href="categorize.html" title="next chapter">categorize module</a></li>
   </ul></li>
 </ul>
 </div>

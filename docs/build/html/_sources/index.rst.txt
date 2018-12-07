@@ -6,15 +6,18 @@
 Welcome to cloudnet's documentation!
 ====================================
 
-jeejoo
+Cloudnet produces vertical profiles of cloud
+properties at high vertical and temporal resolution.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   modules
-   categorize
    ncf
+   categorize
+
+
+   
 	    
 
 Indices and tables

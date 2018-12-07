@@ -18,3 +18,22 @@ def load_nc(file_in):
     """
     file_pointer = netCDF4.Dataset(file_in)
     return file_pointer, file_pointer.variables
+
+
+def km2m(var):
+    """ Convert m to km.
+
+    Read Input and convert it to from km -> m (if needed). The input must
+    have 'units' attribute set to 'km' to trigger the conversion.
+
+    Args:
+        vrs: A netCDF variable.
+
+    Returns:
+        Altitude (scalar or array)  converted to km. 
+
+    """
+    y = var[:]
+    if var.units == 'km':
+        y = y*1000
+    return y

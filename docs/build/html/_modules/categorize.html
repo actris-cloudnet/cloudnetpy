@@ -38,9 +38,10 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c1"># import sys</span>
-<span class="c1"># import numpy as np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
-<span class="kn">import</span> <span class="nn">ncf</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">stats</span>
+<span class="kn">import</span> <span class="nn">utils.ncf</span> <span class="k">as</span> <span class="nn">ncf</span>
 
 
 <div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../categorize.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">aux</span><span class="p">):</span>
@@ -54,16 +55,43 @@
 <span class="sd">                     of the site (site_name, institute).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">TIME_RESOLUTION</span> <span class="o">=</span> <span class="mi">30</span>  <span class="c1"># fixed time resolution for now</span>
+
     <span class="n">rad</span><span class="p">,</span> <span class="n">rad_vrs</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">lid</span><span class="p">,</span> <span class="n">lid_vrs</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">mwr</span><span class="p">,</span> <span class="n">mwr_vrs</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
     <span class="n">mod</span><span class="p">,</span> <span class="n">mod_vrs</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
 
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">freq</span><span class="p">,</span> <span class="n">is35</span> <span class="o">=</span> <span class="n">get_radar_freq</span><span class="p">(</span><span class="n">rad_vrs</span><span class="p">)</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">get_radar_freq</span><span class="p">(</span><span class="n">rad_vrs</span><span class="p">)</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span></div>
+        <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
 
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">get_time</span><span class="p">(</span><span class="n">TIME_RESOLUTION</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+
+    <span class="n">height</span> <span class="o">=</span> <span class="n">get_altitude_grid</span><span class="p">(</span><span class="n">rad_vrs</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">][:],</span>
+                               <span class="n">rad_vrs</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">][:])</span>
+
+    <span class="n">site_altitude</span> <span class="o">=</span> <span class="n">get_site_altitude</span><span class="p">(</span><span class="n">rad_vrs</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">][:],</span>
+                                      <span class="n">lid_vrs</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">][:])</span>
+
+    <span class="c1"># average radar variables in time</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">radar</span> <span class="o">=</span> <span class="n">fetch_radar</span><span class="p">(</span><span class="n">rad_vrs</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+
+    <span class="n">vfold</span> <span class="o">=</span> <span class="n">rad_vrs</span><span class="p">[</span><span class="s1">&#39;NyquistVelocity&#39;</span><span class="p">][:]</span>
+
+    <span class="c1"># average lidar variables in time and height</span>
+    <span class="n">lidar</span> <span class="o">=</span> <span class="n">fetch_lidar</span><span class="p">(</span><span class="n">lid_vrs</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,),</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div>
+    
+    
 
 <div class="viewcode-block" id="get_radar_freq"><a class="viewcode-back" href="../categorize.html#categorize.get_radar_freq">[docs]</a><span class="k">def</span> <span class="nf">get_radar_freq</span><span class="p">(</span><span class="n">vrs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Return frequency of radar.</span>
@@ -72,10 +100,7 @@
 <span class="sd">        vrs: Pointer to radar variables.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Tuple containing</span>
-
-<span class="sd">        - **frequency** (*float*): Frequency or radar.</span>
-<span class="sd">        - **is35** (*boolean*): True if 35 GHz radar. False if 94 GHz.</span>
+<span class="sd">        Frequency or radar.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError: No frequency in the radar file.</span>
@@ -84,22 +109,153 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">possible_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;radar_frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;frequency&#39;</span><span class="p">)</span>  <span class="c1"># Several possible</span>
     <span class="n">freq</span> <span class="o">=</span> <span class="p">[</span><span class="n">vrs</span><span class="p">[</span><span class="n">field</span><span class="p">][:]</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">vrs</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">possible_fields</span><span class="p">]</span>
-
     <span class="k">if</span> <span class="ow">not</span> <span class="n">freq</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Missing frequency in the radar file.&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># actual data of the masked data</span>
-
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># actual data of the masked data</span>
     <span class="k">assert</span> <span class="n">ma</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Multiple frequencies. Not a radar file??&#39;</span>
+    <span class="n">range_1</span> <span class="o">=</span> <span class="mi">30</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">40</span>
+    <span class="n">range_2</span> <span class="o">=</span> <span class="mi">90</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">100</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">range_1</span> <span class="ow">or</span> <span class="n">range_2</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only 35 and 94 GHz radars supported.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span></div>
 
-    <span class="k">if</span> <span class="mi">30</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">40</span><span class="p">:</span>
-        <span class="n">is35</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="k">elif</span> <span class="mi">90</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
-        <span class="n">is35</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only 35 and 94 GHz radas supported.&#39;</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">),</span> <span class="n">is35</span></div>
+<div class="viewcode-block" id="get_site_altitude"><a class="viewcode-back" href="../categorize.html#categorize.get_site_altitude">[docs]</a><span class="k">def</span> <span class="nf">get_site_altitude</span><span class="p">(</span><span class="n">alt_radar</span><span class="p">,</span> <span class="n">alt_lidar</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return altitude of the measurement site above mean sea level.</span>
+
+<span class="sd">    Site altitude is the altitude of radar or lidar, which one is lower.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        alt_radar (float): Altitude of radar above mean sea level [km]</span>
+<span class="sd">        alt_lidar (float): Altitude of lidar above mean sea level [km]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Altitude of the measurement site.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">alt_radar</span><span class="p">,</span> <span class="n">alt_lidar</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_altitude_grid"><a class="viewcode-back" href="../categorize.html#categorize.get_altitude_grid">[docs]</a><span class="k">def</span> <span class="nf">get_altitude_grid</span><span class="p">(</span><span class="n">alt_radar</span><span class="p">,</span> <span class="n">range_radar</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return altitude grid for Cloudnet products.</span>
+<span class="sd">    Altitude grid is defined as the radar measurement</span>
+<span class="sd">    grid from the mean sea level.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        alt_radar (float): Altitude of radar above mean sea level [km]</span>
+<span class="sd">        range_radar (nd.array): Altitude grid of radar measurements</span>
+<span class="sd">                                above instrument [km]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (nd.array): Altitude grid</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">range_radar</span> <span class="o">+</span> <span class="n">alt_radar</span></div>
+
+
+<div class="viewcode-block" id="get_time"><a class="viewcode-back" href="../categorize.html#categorize.get_time">[docs]</a><span class="k">def</span> <span class="nf">get_time</span><span class="p">(</span><span class="n">reso</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Computes fraction hour time vector 0-24 with user-given</span>
+<span class="sd">    resolution (in seconds) where 60 is the maximum allowed value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        reso (float): Time resolution in seconds.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (nd.array): Time vector between 0 and 24.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: Bad resolution as input.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">reso</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">reso</span> <span class="o">&gt;</span> <span class="mi">60</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Time resolution should be between 0 and 60 [s]&#39;</span><span class="p">)</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="n">reso</span><span class="o">/</span><span class="mi">7200</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="mi">24</span><span class="o">-</span><span class="n">step</span><span class="p">,</span> <span class="n">step</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="fetch_radar"><a class="viewcode-back" href="../categorize.html#categorize.fetch_radar">[docs]</a><span class="k">def</span> <span class="nf">fetch_radar</span><span class="p">(</span><span class="n">vrs</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Read and rebin radar 2d fields in time.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vrs: Pointer to radar variables</span>
+<span class="sd">        fields (tuple): Tuple of strings containing radar</span>
+<span class="sd">                        fields to be averaged.</span>
+<span class="sd">        time: New time vector.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (dict): Rebinned radar fields.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: Missing field.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">vrs</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vrs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No variable &#39;</span><span class="si">{field}</span><span class="s2">&#39; in the radar file.&quot;</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">rebin_x_2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">vrs</span><span class="p">[</span><span class="n">field</span><span class="p">][:],</span> <span class="n">time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="fetch_lidar"><a class="viewcode-back" href="../categorize.html#categorize.fetch_lidar">[docs]</a><span class="k">def</span> <span class="nf">fetch_lidar</span><span class="p">(</span><span class="n">vrs</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Read and rebin lidar 2d fields in time and height.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vrs: Pointer to lidar variables</span>
+<span class="sd">        fields (tuple): Tuple of strings containing lidar</span>
+<span class="sd">                        fields to be averaged.</span>
+<span class="sd">        time: New time vector.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        (dict): Rebinned lidar fields.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: Missing field.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>        
+    <span class="n">x</span> <span class="o">=</span> <span class="n">vrs</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span>
+    <span class="n">lidar_alt</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">vrs</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">])</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">vrs</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">lidar_alt</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vrs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No variable &#39;</span><span class="si">{field}</span><span class="s2">&#39; in the lidar file.&quot;</span><span class="p">)</span>
+        <span class="n">dataim</span> <span class="o">=</span> <span class="n">rebin_x_2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">vrs</span><span class="p">[</span><span class="n">field</span><span class="p">][:],</span> <span class="n">time</span><span class="p">)</span>
+        <span class="n">dataim</span> <span class="o">=</span> <span class="n">rebin_x_2d</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dataim</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataim</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="rebin_x_2d"><a class="viewcode-back" href="../categorize.html#categorize.rebin_x_2d">[docs]</a><span class="k">def</span> <span class="nf">rebin_x_2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">xnew</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Rebin 2D data in x-direction using mean. Handles masked data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: A 1-D array of real values.</span>
+<span class="sd">        data (nd.array): 2-D input data.</span>
+<span class="sd">        xnew: The new x vector.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Rebinned field.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># new binning vector</span>
+    <span class="n">edge1</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">xnew</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">xnew</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">xnew</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">edge2</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">xnew</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">xnew</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">xnew</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">edge1</span><span class="p">,</span> <span class="n">edge2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">xnew</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># prepare input/output data</span>
+    <span class="n">datai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">xnew</span><span class="p">),</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="c1"># loop over y</span>
+    <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">mask</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">datai</span><span class="p">[:,</span> <span class="n">ind</span><span class="p">],</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">binned_statistic</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">],</span>
+                                                         <span class="n">values</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">],</span>
+                                                         <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span>
+                                                         <span class="n">bins</span><span class="o">=</span><span class="n">edges</span><span class="p">)</span>
+    <span class="n">datai</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">datai</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_equal</span><span class="p">(</span><span class="n">datai</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -120,9 +276,8 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../modules.html">cloudnet</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../categorize.html">categorize module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ncf.html">ncf module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../categorize.html">categorize module</a></li>
 </ul>
 
 <div class="relations">

@@ -54,6 +54,10 @@ def generate_categorize(input_files, output_file, aux):
 
     vfold = rad_vrs['NyquistVelocity'][:]
 
+    # average lidar variables in time and height
+    lidar = fetch_lidar(lid_vrs, ('beta',), time, height)
+    
+    
 
 def get_radar_freq(vrs):
     """ Return frequency of radar.
@@ -157,6 +161,35 @@ def fetch_radar(vrs, fields, time):
         if field not in vrs:
             raise KeyError(f"No variable '{field}' in the radar file.")
         out[field] = rebin_x_2d(x, vrs[field][:], time)
+    return out
+
+
+def fetch_lidar(vrs, fields, time, height):
+    """ Read and rebin lidar 2d fields in time and height.
+
+    Args:
+        vrs: Pointer to lidar variables
+        fields (tuple): Tuple of strings containing lidar
+                        fields to be averaged.
+        time: New time vector.
+
+    Returns:
+        (dict): Rebinned lidar fields.
+
+    Raises:
+        KeyError: Missing field.
+
+    """
+    out = {}        
+    x = vrs['time'][:]
+    lidar_alt = ncf.km2m(vrs['altitude'])
+    y = ncf.km2m(vrs['range']) + lidar_alt
+    for field in fields:
+        if field not in vrs:
+            raise KeyError(f"No variable '{field}' in the lidar file.")
+        dataim = rebin_x_2d(x, vrs[field][:], time)
+        dataim = rebin_x_2d(y, dataim.T, height).T
+        out[field] = dataim
     return out
 
 

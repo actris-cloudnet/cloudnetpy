@@ -52,6 +52,25 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">file_pointer</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">file_in</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">file_pointer</span><span class="p">,</span> <span class="n">file_pointer</span><span class="o">.</span><span class="n">variables</span></div>
+
+
+<div class="viewcode-block" id="km2m"><a class="viewcode-back" href="../ncf.html#ncf.km2m">[docs]</a><span class="k">def</span> <span class="nf">km2m</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Convert m to km.</span>
+
+<span class="sd">    Read Input and convert it to from km -&gt; m (if needed). The input must</span>
+<span class="sd">    have &#39;units&#39; attribute set to &#39;km&#39; to trigger the conversion.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vrs: A netCDF variable.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Altitude (scalar or array)  converted to km. </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
+    <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;km&#39;</span><span class="p">:</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">*</span><span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">y</span></div>
 </pre></div>
 
           </div>
@@ -72,9 +91,8 @@
 <h3>Navigation</h3>
 <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../modules.html">cloudnet</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../categorize.html">categorize module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ncf.html">ncf module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../categorize.html">categorize module</a></li>
 </ul>
 
 <div class="relations">

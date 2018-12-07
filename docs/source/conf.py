@@ -14,8 +14,10 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../cloudnet/categorize'))
 sys.path.insert(0, os.path.abspath('../../cloudnet/utils'))
+sys.path.insert(0, os.path.abspath('../../cloudnet/categorize'))
+sys.path.insert(0, os.path.abspath('../../cloudnet'))
+
 
 
 # -- Project information -----------------------------------------------------
