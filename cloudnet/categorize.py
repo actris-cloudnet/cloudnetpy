@@ -3,6 +3,7 @@ categorize (Level 1) product from pre-processed
 radar, lidar and MWR files.
 """
 
+import sys
 import numpy as np
 import numpy.ma as ma
 import ncf
@@ -20,12 +21,12 @@ def generate_categorize(input_files, output_file, aux):
 
     """
 
-    TIME_RESOLUTION = 30  # fixed time resolution for now
+    TIME_RESOLUTION = 60  # fixed time resolution for now
 
-    rad, rad_vars = ncf.load_nc(input_files[0])
-    lid, lid_vars = ncf.load_nc(input_files[1])
-    mwr, mwr_vars = ncf.load_nc(input_files[2])
-    mod, mod_vars = ncf.load_nc(input_files[3])
+    rad_vars = ncf.load_nc(input_files[0])
+    lid_vars = ncf.load_nc(input_files[1])
+    mwr_vars = ncf.load_nc(input_files[2])
+    mod_vars = ncf.load_nc(input_files[3])
 
     try:
         freq = ncf.get_radar_freq(rad_vars)
@@ -39,9 +40,11 @@ def generate_categorize(input_files, output_file, aux):
 
     height = get_altitude_grid(rad_vars)
 
-    site_altitude = get_site_altitude(rad_vars['altitude'][:],
-                                      lid_vars['altitude'][:])
-
+    try:
+        site_alt = ncf.get_site_alt(rad_vars, lid_vars)
+    except KeyError as error:
+        print(error)
+        
     # average radar variables in time
     fields = ('Zh', 'v', 'ldr', 'width')
     try:
@@ -52,22 +55,6 @@ def generate_categorize(input_files, output_file, aux):
 
     # average lidar variables in time and height
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
-
-
-def get_site_altitude(alt_radar, alt_lidar):
-    """ Return altitude of the measurement site above mean sea level.
-
-    Site altitude is the altitude of radar or lidar, which one is lower.
-
-    Args:
-        alt_radar (float): Altitude of radar above mean sea level [km]
-        alt_lidar (float): Altitude of lidar above mean sea level [km]
-
-    Returns:
-        Altitude of the measurement site.
-
-    """
-    return min(alt_radar, alt_lidar)
 
 
 def get_altitude_grid(rad_vars):

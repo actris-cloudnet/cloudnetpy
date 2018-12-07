@@ -42,20 +42,8 @@
 
 
 <div class="viewcode-block" id="load_nc"><a class="viewcode-back" href="../ncf.html#ncf.load_nc">[docs]</a><span class="k">def</span> <span class="nf">load_nc</span><span class="p">(</span><span class="n">file_in</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Return pointer to netCDF file and its variables.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        file_in (str): File name.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Tuple containing</span>
-
-<span class="sd">        - Pointer to file.</span>
-<span class="sd">        - Pointer to file variables.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">file_pointer</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">file_in</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">file_pointer</span><span class="p">,</span> <span class="n">file_pointer</span><span class="o">.</span><span class="n">variables</span></div>
+    <span class="sd">&quot;&quot;&quot; Return instance of netCDF Dataset variables. &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">file_in</span><span class="p">)</span><span class="o">.</span><span class="n">variables</span></div>
 
 
 <div class="viewcode-block" id="km2m"><a class="viewcode-back" href="../ncf.html#ncf.km2m">[docs]</a><span class="k">def</span> <span class="nf">km2m</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
@@ -102,6 +90,30 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">range_1</span> <span class="ow">or</span> <span class="n">range_2</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only 35 and 94 GHz radars supported.&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_site_alt"><a class="viewcode-back" href="../ncf.html#ncf.get_site_alt">[docs]</a><span class="k">def</span> <span class="nf">get_site_alt</span><span class="p">(</span><span class="o">*</span><span class="n">vrs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return altitude of the measurement site above mean sea level.</span>
+
+<span class="sd">    Site altitude is defined as the lowermost value of</span>
+<span class="sd">    the investigated values.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">       *vrs: Files (Dataset variables) to be investigated.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Altitude of the measurement site.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        KeyError: If no &#39;altitude&#39; field is found from any of </span>
+<span class="sd">                  the input files.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">field</span> <span class="o">=</span> <span class="s1">&#39;altitude&#39;</span>
+    <span class="n">alts</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span><span class="p">[</span><span class="n">field</span><span class="p">][:]</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vrs</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">var</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">alts</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t determine site altitude.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">alts</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

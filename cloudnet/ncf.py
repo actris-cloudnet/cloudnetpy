@@ -8,20 +8,8 @@ import numpy.ma as ma
 
 
 def load_nc(file_in):
-    """ Return pointer to netCDF file and its variables.
-
-    Args:
-        file_in (str): File name.
-
-    Returns:
-        Tuple containing
-
-        - Pointer to file.
-        - Pointer to file variables.
-
-    """
-    file_pointer = netCDF4.Dataset(file_in)
-    return file_pointer, file_pointer.variables
+    """ Return instance of netCDF Dataset variables. """
+    return netCDF4.Dataset(file_in).variables
 
 
 def km2m(var):
@@ -68,3 +56,27 @@ def get_radar_freq(vrs):
     if not (range_1 or range_2):
         raise ValueError('Only 35 and 94 GHz radars supported.')
     return float(freq)
+
+
+def get_site_alt(*vrs):
+    """ Return altitude of the measurement site above mean sea level.
+
+    Site altitude is defined as the lowermost value of
+    the investigated values.
+
+    Args:
+       *vrs: Files (Dataset variables) to be investigated.
+
+    Returns:
+        Altitude of the measurement site.
+
+    Raises:
+        KeyError: If no 'altitude' field is found from any of 
+                  the input files.
+
+    """
+    field = 'altitude'
+    alts = [var[field][:] for var in vrs if field in var]
+    if not alts:
+        raise KeyError("Can't determine site altitude.")
+    return min(alts)

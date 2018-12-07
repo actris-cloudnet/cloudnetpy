@@ -37,6 +37,7 @@
 <span class="sd">radar, lidar and MWR files.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 <span class="kn">import</span> <span class="nn">ncf</span>
@@ -54,12 +55,12 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">TIME_RESOLUTION</span> <span class="o">=</span> <span class="mi">30</span>  <span class="c1"># fixed time resolution for now</span>
+    <span class="n">TIME_RESOLUTION</span> <span class="o">=</span> <span class="mi">60</span>  <span class="c1"># fixed time resolution for now</span>
 
-    <span class="n">rad</span><span class="p">,</span> <span class="n">rad_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">lid</span><span class="p">,</span> <span class="n">lid_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-    <span class="n">mwr</span><span class="p">,</span> <span class="n">mwr_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-    <span class="n">mod</span><span class="p">,</span> <span class="n">mod_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+    <span class="n">rad_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">lid_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">mwr_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">mod_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">freq</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">get_radar_freq</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>
@@ -73,9 +74,11 @@
 
     <span class="n">height</span> <span class="o">=</span> <span class="n">get_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>
 
-    <span class="n">site_altitude</span> <span class="o">=</span> <span class="n">get_site_altitude</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">][:],</span>
-                                      <span class="n">lid_vars</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">][:])</span>
-
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">site_alt</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">get_site_alt</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">lid_vars</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        
     <span class="c1"># average radar variables in time</span>
     <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
@@ -86,22 +89,6 @@
 
     <span class="c1"># average lidar variables in time and height</span>
     <span class="n">lidar</span> <span class="o">=</span> <span class="n">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,),</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="get_site_altitude"><a class="viewcode-back" href="../categorize.html#categorize.get_site_altitude">[docs]</a><span class="k">def</span> <span class="nf">get_site_altitude</span><span class="p">(</span><span class="n">alt_radar</span><span class="p">,</span> <span class="n">alt_lidar</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Return altitude of the measurement site above mean sea level.</span>
-
-<span class="sd">    Site altitude is the altitude of radar or lidar, which one is lower.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        alt_radar (float): Altitude of radar above mean sea level [km]</span>
-<span class="sd">        alt_lidar (float): Altitude of lidar above mean sea level [km]</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Altitude of the measurement site.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">alt_radar</span><span class="p">,</span> <span class="n">alt_lidar</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="get_altitude_grid"><a class="viewcode-back" href="../categorize.html#categorize.get_altitude_grid">[docs]</a><span class="k">def</span> <span class="nf">get_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">):</span>
