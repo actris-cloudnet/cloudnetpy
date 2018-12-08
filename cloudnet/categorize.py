@@ -11,6 +11,7 @@ from scipy.interpolate import interp1d
 import config
 import ncf
 import utils
+#import sys
 
 
 def generate_categorize(input_files, output_file, aux):
@@ -28,25 +29,20 @@ def generate_categorize(input_files, output_file, aux):
         time = utils.get_time(config.TIME_RESOLUTION)
     except ValueError as error:
         print(error)
-
     rad_vars = ncf.load_nc(input_files[0])
     lid_vars = ncf.load_nc(input_files[1])
     mwr_vars = ncf.load_nc(input_files[2])
     mod_vars = ncf.load_nc(input_files[3])
-
     try:
         freq = ncf.get_radar_freq(rad_vars)
         wlband = ncf.get_wl_band(freq)
     except (ValueError, KeyError) as error:
         print(error)
-
     height = _get_altitude_grid(rad_vars)  # m
-
     try:
         alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
     except KeyError as error:
         print(error)
-
     fields = ('Zh', 'v', 'ldr', 'width')
     try:
         radar = fetch_radar(rad_vars, fields, time)
@@ -202,23 +198,22 @@ def fetch_model(mod_vars, alt_site, wlband, time, height):
 
 
 def _read_model(vrs, fields, alt_site, wlband):
-    """Read model fields and interpolate to Cloudnet altitude grid. This function needs work.."""
+    """Read model fields and interpolate to Cloudnet altitude grid."""
     out = {}
     model_heights = ncf.km2m(vrs['height']) + alt_site # now above mean sea level
-    model_heights = np.array(model_heights)  # why this?
+    model_heights = np.array(model_heights)  # masked arrays not supported
     model_time = vrs['time'][:]
     new_grid = np.mean(model_heights, axis=0) # is this ok??
-    nx = model_time.shape[0]
-    ny = new_grid.shape[0]
+    nx, ny = len(model_time), len(new_grid)
     for field in fields:
         data = np.array(vrs[field][:])
         datai = np.zeros((nx, ny))
         if 'atten' in field:
             data = data[wlband, :, :]
         # interpolate profiles into common altitude grid
-        for n in range(0, len(model_time)):
-            f = interp1d(model_heights[n, :], data[n, :], fill_value='extrapolate')
-            datai[n, :] = f(new_grid)
+        for ind in range(nx):
+            f = interp1d(model_heights[ind, :], data[ind, :], fill_value='extrapolate')
+            datai[ind, :] = f(new_grid)
         out[field] = datai
     return out, model_time, new_grid
 

@@ -45,6 +45,7 @@
 <span class="kn">import</span> <span class="nn">config</span>
 <span class="kn">import</span> <span class="nn">ncf</span>
 <span class="kn">import</span> <span class="nn">utils</span>
+<span class="c1">#import sys</span>
 
 
 <div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../categorize.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">aux</span><span class="p">):</span>
@@ -62,25 +63,20 @@
         <span class="n">time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">TIME_RESOLUTION</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
-
     <span class="n">rad_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">lid_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">mwr_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
     <span class="n">mod_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
-
     <span class="k">try</span><span class="p">:</span>
         <span class="n">freq</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">get_radar_freq</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>
         <span class="n">wlband</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">get_wl_band</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
-
     <span class="n">height</span> <span class="o">=</span> <span class="n">_get_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>  <span class="c1"># m</span>
-
     <span class="k">try</span><span class="p">:</span>
         <span class="n">alt_site</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">get_site_alt</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">lid_vars</span><span class="p">,</span> <span class="n">mwr_vars</span><span class="p">)</span>  <span class="c1"># m</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
-
     <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">radar</span> <span class="o">=</span> <span class="n">fetch_radar</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
@@ -236,23 +232,22 @@
 
 
 <span class="k">def</span> <span class="nf">_read_model</span><span class="p">(</span><span class="n">vrs</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">wlband</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read model fields and interpolate to Cloudnet altitude grid. This function needs work..&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Read model fields and interpolate to Cloudnet altitude grid.&quot;&quot;&quot;</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">model_heights</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">vrs</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">alt_site</span> <span class="c1"># now above mean sea level</span>
-    <span class="n">model_heights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model_heights</span><span class="p">)</span>  <span class="c1"># why this?</span>
+    <span class="n">model_heights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">model_heights</span><span class="p">)</span>  <span class="c1"># masked arrays not supported</span>
     <span class="n">model_time</span> <span class="o">=</span> <span class="n">vrs</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span>
     <span class="n">new_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">model_heights</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="c1"># is this ok??</span>
-    <span class="n">nx</span> <span class="o">=</span> <span class="n">model_time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">ny</span> <span class="o">=</span> <span class="n">new_grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_time</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_grid</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vrs</span><span class="p">[</span><span class="n">field</span><span class="p">][:])</span>
         <span class="n">datai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">))</span>
         <span class="k">if</span> <span class="s1">&#39;atten&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">wlband</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
         <span class="c1"># interpolate profiles into common altitude grid</span>
-        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">model_time</span><span class="p">)):</span>
-            <span class="n">f</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="n">model_heights</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:],</span> <span class="n">data</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:],</span> <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;extrapolate&#39;</span><span class="p">)</span>
-            <span class="n">datai</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">new_grid</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">):</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="n">model_heights</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">:],</span> <span class="n">data</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">:],</span> <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;extrapolate&#39;</span><span class="p">)</span>
+            <span class="n">datai</span><span class="p">[</span><span class="n">ind</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">new_grid</span><span class="p">)</span>
         <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">datai</span>
     <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">model_time</span><span class="p">,</span> <span class="n">new_grid</span>
 
