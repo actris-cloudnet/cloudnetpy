@@ -5,5 +5,6 @@ cloudnet
    :maxdepth: 4
 
    categorize
+   config
    ncf
    utils

@@ -104,11 +104,34 @@
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Missing frequency in the radar file.&#39;</span><span class="p">)</span>
     <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># actual data of the masked data</span>
     <span class="k">assert</span> <span class="n">ma</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Multiple frequencies. Not a radar file??&#39;</span>
-    <span class="n">range_1</span> <span class="o">=</span> <span class="mi">30</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">40</span>
-    <span class="n">range_2</span> <span class="o">=</span> <span class="mi">90</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">100</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">range_1</span> <span class="ow">or</span> <span class="n">range_2</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">get_wl_band</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only 35 and 94 GHz radars supported.&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_wl_band"><a class="viewcode-back" href="../ncf.html#ncf.get_wl_band">[docs]</a><span class="k">def</span> <span class="nf">get_wl_band</span><span class="p">(</span><span class="n">freq</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Return integer that corresponds to the radar wavelength.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        freq: Radar frequency.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Integer corresponding to freqeuency. Possible return</span>
+<span class="sd">        values are 0 (35.5 GHz) and 1 (~94 GHz).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: Not supported frequency.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="mi">30</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">40</span><span class="p">:</span>
+        <span class="n">wl_band</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">elif</span> <span class="mi">90</span> <span class="o">&lt;</span> <span class="n">freq</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="n">wl_band</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+    <span class="k">return</span> <span class="n">wl_band</span></div>
 
 
 <div class="viewcode-block" id="get_site_alt"><a class="viewcode-back" href="../ncf.html#ncf.get_site_alt">[docs]</a><span class="k">def</span> <span class="nf">get_site_alt</span><span class="p">(</span><span class="o">*</span><span class="n">vrs</span><span class="p">):</span>

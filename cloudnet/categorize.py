@@ -6,6 +6,9 @@ radar, lidar and MWR files.
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import interp1d
+#import matplotlib as mpl
+#import matplotlib.pyplot as plt
+import config
 import ncf
 import utils
 
@@ -21,9 +24,10 @@ def generate_categorize(input_files, output_file, aux):
                      of the site (site_name, institute).
 
     """
-
-    TIME_RESOLUTION = 60  # fixed time resolution for now
-    LWP_ERROR = (0.25, 20)  # fractional and linear error components
+    try:
+        time = utils.get_time(config.TIME_RESOLUTION)
+    except ValueError as error:
+        print(error)
 
     rad_vars = ncf.load_nc(input_files[0])
     lid_vars = ncf.load_nc(input_files[1])
@@ -32,34 +36,26 @@ def generate_categorize(input_files, output_file, aux):
 
     try:
         freq = ncf.get_radar_freq(rad_vars)
+        wlband = ncf.get_wl_band(freq)
     except (ValueError, KeyError) as error:
-        print(error)
-
-    try:
-        time = utils.get_time(TIME_RESOLUTION)
-    except ValueError as error:
         print(error)
 
     height = _get_altitude_grid(rad_vars)  # m
 
     try:
-        site_alt = ncf.get_site_alt(rad_vars, lid_vars)  # m
+        alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
     except KeyError as error:
         print(error)
 
-    # average radar variables in time
     fields = ('Zh', 'v', 'ldr', 'width')
     try:
         radar = fetch_radar(rad_vars, fields, time)
     except KeyError as error:
         print(error)
     vfold = rad_vars['NyquistVelocity'][:]
-
-    # average lidar variables in time and height
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
-
-    # interpolate mwr variables in time
-    lwp = fetch_mwr(mwr_vars, LWP_ERROR, time)
+    lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
+    model = fetch_model(mod_vars, alt_site, wlband, time, height)
 
 
 def _get_altitude_grid(rad_vars):
@@ -150,7 +146,7 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
         Dict containing interpolated LWP data {'lwp', 'lwp_error'}
 
     """
-    def interpolate_lwp(time_lwp, lwp, time_new):
+    def _interpolate_lwp(time_lwp, lwp, time_new):
         """ Linear interpolation of LWP data. This can be
         bad idea if there are lots of gaps in the data.
         """
@@ -161,9 +157,10 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
             lwp_i = np.full_like(time_new, fill_value=np.nan)
         return lwp_i
 
+
     lwp = _read_lwp(mwr_vars, *lwp_errors)
-    lwp_i = interpolate_lwp(lwp['time'], lwp['lwp'], time)
-    lwp_error_i = interpolate_lwp(lwp['time'], lwp['lwp_error'], time)
+    lwp_i = _interpolate_lwp(lwp['time'], lwp['lwp'], time)
+    lwp_error_i = _interpolate_lwp(lwp['time'], lwp['lwp_error'], time)
     return {'lwp': lwp_i, 'lwp_error': lwp_error_i}
 
 
@@ -189,3 +186,46 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         time = utils.epoch2desimal_hour((2001, 1, 1), time)  # fixed epoc!!
     lwp_err = np.sqrt(lin_err**2 + (frac_err*lwp)**2)
     return {'time': time, 'lwp': lwp, 'lwp_error': lwp_err}
+
+
+def fetch_model(mod_vars, alt_site, wlband, time, height):
+    """ Wrapper function to read and interpolate model variables. """
+    fields = ('temperature', 'pressure', 'rh', 'gas_atten', 'specific_gas_atten',
+              'specific_saturated_gas_atten', 'specific_liquid_atten')
+    fields_all = fields + ('q', 'uwind', 'vwind')
+    model, model_time, model_height = _read_model(mod_vars, fields_all,
+                                                  alt_site, wlband)
+    model_i = _interpolate_model(model, fields, model_time,
+                                 model_height, time, height)
+    return {'model': model, 'model_i': model_i,
+            'time': model_time, 'height': model_height}
+
+
+def _read_model(vrs, fields, alt_site, wlband):
+    """Read model fields and interpolate to Cloudnet altitude grid. This function needs work.."""
+    out = {}
+    model_heights = ncf.km2m(vrs['height']) + alt_site # now above mean sea level
+    model_heights = np.array(model_heights)  # why this?
+    model_time = vrs['time'][:]
+    new_grid = np.mean(model_heights, axis=0) # is this ok??
+    nx = model_time.shape[0]
+    ny = new_grid.shape[0]
+    for field in fields:
+        data = np.array(vrs[field][:])
+        datai = np.zeros((nx, ny))
+        if 'atten' in field:
+            data = data[wlband, :, :]
+        # interpolate profiles into common altitude grid
+        for n in range(0, len(model_time)):
+            f = interp1d(model_heights[n, :], data[n, :], fill_value='extrapolate')
+            datai[n, :] = f(new_grid)
+        out[field] = datai
+    return out, model_time, new_grid
+
+
+def _interpolate_model(model, fields, *args):
+    """ Interpolate model fields into universal time/height grid """
+    out = {}
+    for field in fields:
+        out[field] = utils.interpolate_2d(*args, model[field])
+    return out

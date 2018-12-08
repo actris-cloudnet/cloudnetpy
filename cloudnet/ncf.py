@@ -70,11 +70,34 @@ def get_radar_freq(vrs):
         raise KeyError('Missing frequency in the radar file.')
     freq = freq[0]  # actual data of the masked data
     assert ma.count(freq) == 1, 'Multiple frequencies. Not a radar file??'
-    range_1 = 30 < freq < 40
-    range_2 = 90 < freq < 100
-    if not (range_1 or range_2):
+    try:
+        get_wl_band(freq)
+    except ValueError as error:
         raise ValueError('Only 35 and 94 GHz radars supported.')
     return float(freq)
+
+
+def get_wl_band(freq):
+    """ Return integer that corresponds to the radar wavelength.
+
+    Args:
+        freq: Radar frequency.
+
+    Returns:
+        Integer corresponding to freqeuency. Possible return
+        values are 0 (35.5 GHz) and 1 (~94 GHz).
+
+    Raises:
+        ValueError: Not supported frequency.
+
+    """
+    if 30 < freq < 40:
+        wl_band = 0
+    elif 90 < freq < 100:
+        wl_band = 1
+    else:
+        raise ValueError
+    return wl_band
 
 
 def get_site_alt(*vrs):

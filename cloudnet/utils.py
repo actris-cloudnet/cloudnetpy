@@ -6,6 +6,7 @@ import time
 import numpy as np
 import numpy.ma as ma
 from scipy import stats
+from scipy.interpolate import RectBivariateSpline
 #import sys
 
 
@@ -46,8 +47,8 @@ def get_time(reso):
     """
     if reso < 1 or reso > 60:
         raise ValueError('Time resolution should be between 0 and 60 [s]')
-    step = reso/7200
-    return np.arange(step, 24-step, step*2)
+    half_step = reso/7200
+    return np.arange(half_step, 24-half_step, half_step*2)
 
 
 def binning_vector(x_bin):
@@ -73,12 +74,12 @@ def rebin_x_2d(x_in, data, x_new):
     """ Rebin 2D data in x-direction using mean. Handles masked data.
 
     Args:
-        x: A 1-D array of real values.
+        x_in: A 1-D array of real values.
         data (nd.array): 2-D input data.
-        xnew: The new x vector (center points).
+        x_new: The new x vector (center points).
 
     Returns:
-        Rebinned (averaged) field.
+        Rebinned (averaged) data.
 
     """
     edges = binning_vector(x_new)
@@ -93,3 +94,34 @@ def rebin_x_2d(x_in, data, x_new):
                                                          bins=edges)
     datai[np.isfinite(datai) == 0] = 0
     return ma.masked_equal(datai, 0)
+
+
+def filter_isolated_pixels(array):
+    """ Return array with completely isolated single cells removed. """
+    filtered_array = ma.copy(array)
+    id_regions, num_ids = ndimage.label(filtered_array, structure=np.ones((3,3)))
+    id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids+1)))
+    area_mask = (id_sizes == 1)
+    filtered_array[area_mask[id_regions]] = 0
+    return filtered_array
+
+
+def is_bit(n, k):
+    """ Element-wise test of bit k (1,2,3...) on integer n. """
+    mask = 1 << k-1
+    return (n & mask > 0)
+
+
+def set_bit(n, k):
+    """ Set bit k (1,2,3..) on integer n. """
+    mask = 1 << k-1
+    n |= mask
+    return n
+
+
+def interpolate_2d(x, y, xin, yin, z):
+    """ FAST interpolation of 2d data that is in grid
+    Does not work with nans! 
+    """
+    f = RectBivariateSpline(x, y, z, kx=1, ky=1) # linear interpolation
+    return f(xin, yin)
