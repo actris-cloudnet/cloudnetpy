@@ -3,12 +3,12 @@ categorize (Level 1) product from pre-processed
 radar, lidar and MWR files.
 """
 
-import sys
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import interp1d
 import ncf
 import utils
+
 
 def generate_categorize(input_files, output_file, aux):
     """ Generate Cloudnet Level 1 categorize file.
@@ -23,7 +23,7 @@ def generate_categorize(input_files, output_file, aux):
     """
 
     TIME_RESOLUTION = 60  # fixed time resolution for now
-    LWP_ERROR = (0.25, 20) # fractional and linear error components
+    LWP_ERROR = (0.25, 20)  # fractional and linear error components
 
     rad_vars = ncf.load_nc(input_files[0])
     lid_vars = ncf.load_nc(input_files[1])
@@ -40,10 +40,10 @@ def generate_categorize(input_files, output_file, aux):
     except ValueError as error:
         print(error)
 
-    height = _get_altitude_grid(rad_vars)  # shpinx excludes "private" methods
+    height = _get_altitude_grid(rad_vars)  # m
 
     try:
-        site_alt = ncf.get_site_alt(rad_vars, lid_vars)
+        site_alt = ncf.get_site_alt(rad_vars, lid_vars)  # m
     except KeyError as error:
         print(error)
 
@@ -61,20 +61,25 @@ def generate_categorize(input_files, output_file, aux):
     # interpolate mwr variables in time
     lwp = fetch_mwr(mwr_vars, LWP_ERROR, time)
 
-    
+
 def _get_altitude_grid(rad_vars):
-    """ Return altitude grid for Cloudnet products.
-    Altitude grid is defined as the radar measurement
+    """ Return altitude grid for Cloudnet products in [m].
+    Altitude grid is defined as the instruments measurement
     grid from the mean sea level.
 
     Args:
-        rad_vars: Radar variables.
+        rad_vars: A netCDF4 instance.
 
     Returns:
-        Altitude grid
+        Altitude grid.
+
+    Notes:
+        Grid should be calculated from radar measurement.
 
     """
-    return rad_vars['range'][:] + rad_vars['altitude']
+    range_instru = ncf.km2m(rad_vars['range'])
+    alt_instru = ncf.km2m(rad_vars['altitude'])
+    return range_instru + alt_instru
 
 
 def fetch_radar(rad_vars, fields, time_new):
@@ -122,7 +127,7 @@ def fetch_lidar(lid_vars, fields, time, height):
     out = {}
     x = lid_vars['time'][:]
     lidar_alt = ncf.km2m(lid_vars['altitude'])
-    y = ncf.km2m(lid_vars['range']) + lidar_alt
+    y = ncf.km2m(lid_vars['range']) + lidar_alt  # m
     for field in fields:
         if field not in lid_vars:
             raise KeyError(f"No variable '{field}' in the lidar file.")
@@ -181,6 +186,6 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
     lwp = mwr_vars['LWP_data'][:]
     time = mwr_vars['time'][:]
     if max(time) > 24:
-        time = utils.epoch2desimal_hour((2001, 1, 1), time) # fixed epoc!!
+        time = utils.epoch2desimal_hour((2001, 1, 1), time)  # fixed epoc!!
     lwp_err = np.sqrt(lin_err**2 + (frac_err*lwp)**2)
     return {'time': time, 'lwp': lwp, 'lwp_error': lwp_err}

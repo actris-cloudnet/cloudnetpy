@@ -65,7 +65,7 @@ an argument.</p>
 <dl class="function">
 <dt id="ncf.get_site_alt">
 <code class="descclassname">ncf.</code><code class="descname">get_site_alt</code><span class="sig-paren">(</span><em>*vrs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ncf.html#get_site_alt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ncf.get_site_alt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return altitude of the measurement site above mean sea level.</p>
+<dd><p>Return altitude of the measurement site above mean sea level in [m].</p>
 <p>Site altitude is defined as the lowermost value of
 the investigated values.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -86,8 +86,8 @@ the input files.</td>
 <dl class="function">
 <dt id="ncf.km2m">
 <code class="descclassname">ncf.</code><code class="descname">km2m</code><span class="sig-paren">(</span><em>var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ncf.html#km2m"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ncf.km2m" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert m to km.</p>
-<p>Read Input and convert it to from km -&gt; m (if needed). The input must
+<dd><p>Convert km to m.</p>
+<p>Read input and convert it to from km -&gt; m. The input must
 have ‘units’ attribute set to ‘km’ to trigger the conversion.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -105,6 +105,24 @@ have ‘units’ attribute set to ‘km’ to trigger the conversion.</p>
 <dt id="ncf.load_nc">
 <code class="descclassname">ncf.</code><code class="descname">load_nc</code><span class="sig-paren">(</span><em>file_in</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ncf.html#load_nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ncf.load_nc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return instance of netCDF Dataset variables.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ncf.m2km">
+<code class="descclassname">ncf.</code><code class="descname">m2km</code><span class="sig-paren">(</span><em>var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ncf.html#m2km"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ncf.m2km" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert m to km.</p>
+<p>Read Input and convert it to from m -&gt; km. The input must
+have ‘units’ attribute set to ‘m’ to trigger the conversion.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var</strong> – A netCDF variable.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude (scalar or array)  converted to m.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

@@ -1,11 +1,11 @@
-""" This module contains general 
+""" This module contains general
 helper functions. """
 
+import calendar
+import time
 import numpy as np
 import numpy.ma as ma
 from scipy import stats
-import calendar
-import time
 #import sys
 
 
@@ -51,7 +51,7 @@ def get_time(reso):
 
 
 def binning_vector(x_bin):
-    """ Convert 1-D (center) points to bins with even spacing. 
+    """ Convert 1-D (center) points to bins with even spacing.
 
     Args:
         x_bin: A 1-D array of N real values.
@@ -60,7 +60,7 @@ def binning_vector(x_bin):
         N + 1 edge values.
 
     Examples:
-        >>> binning_vector([1, 2, 3]) 
+        >>> binning_vector([1, 2, 3])
             [0.5, 1.5, 2.5, 3.5]
 
     """

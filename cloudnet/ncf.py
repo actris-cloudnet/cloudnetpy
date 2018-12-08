@@ -1,11 +1,10 @@
-""" This modules contains netCDF related functions. The functions 
-in this module typically have a pointer to netCDF variable(s) as 
+""" This modules contains netCDF related functions. The functions
+in this module typically have a pointer to netCDF variable(s) as
 an argument."""
 
 import netCDF4
 import numpy as np
 import numpy.ma as ma
-from collections import namedtuple
 
 
 def load_nc(file_in):
@@ -14,22 +13,41 @@ def load_nc(file_in):
 
 
 def km2m(var):
-    """ Convert m to km.
+    """ Convert km to m.
 
-    Read Input and convert it to from km -> m (if needed). The input must
+    Read input and convert it to from km -> m. The input must
     have 'units' attribute set to 'km' to trigger the conversion.
 
     Args:
         var: A netCDF variable.
 
     Returns:
-        Altitude (scalar or array)  converted to km. 
+        Altitude (scalar or array)  converted to km.
 
     """
-    y = var[:]
+    alt = var[:]
     if var.units == 'km':
-        y = y*1000
-    return y
+        alt = alt*1000
+    return alt
+
+
+def m2km(var):
+    """ Convert m to km.
+
+    Read Input and convert it to from m -> km. The input must
+    have 'units' attribute set to 'm' to trigger the conversion.
+
+    Args:
+        var: A netCDF variable.
+
+    Returns:
+        Altitude (scalar or array)  converted to m.
+
+    """
+    alt = var[:]
+    if var.units == 'm':
+        alt = alt/1000
+    return alt
 
 
 def get_radar_freq(vrs):
@@ -60,7 +78,7 @@ def get_radar_freq(vrs):
 
 
 def get_site_alt(*vrs):
-    """ Return altitude of the measurement site above mean sea level.
+    """ Return altitude of the measurement site above mean sea level in [m].
 
     Site altitude is defined as the lowermost value of
     the investigated values.
@@ -72,12 +90,12 @@ def get_site_alt(*vrs):
         Altitude of the measurement site.
 
     Raises:
-        KeyError: If no 'altitude' field is found from any of 
+        KeyError: If no 'altitude' field is found from any of
                   the input files.
 
     """
     field = 'altitude'
-    alts = [var[field][:] for var in vrs if field in var]
+    alts = [km2m(var[field]) for var in vrs if field in var]
     if not alts:
         raise KeyError("Can't determine site altitude.")
     return min(alts)

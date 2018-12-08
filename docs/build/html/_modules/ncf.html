@@ -32,14 +32,13 @@
           <div class="body" role="main">
             
   <h1>Source code for ncf</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot; This modules contains netCDF related functions. The functions </span>
-<span class="sd">in this module typically have a pointer to netCDF variable(s) as </span>
+<span></span><span class="sd">&quot;&quot;&quot; This modules contains netCDF related functions. The functions</span>
+<span class="sd">in this module typically have a pointer to netCDF variable(s) as</span>
 <span class="sd">an argument.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">netCDF4</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
 
 
 <div class="viewcode-block" id="load_nc"><a class="viewcode-back" href="../ncf.html#ncf.load_nc">[docs]</a><span class="k">def</span> <span class="nf">load_nc</span><span class="p">(</span><span class="n">file_in</span><span class="p">):</span>
@@ -48,22 +47,41 @@
 
 
 <div class="viewcode-block" id="km2m"><a class="viewcode-back" href="../ncf.html#ncf.km2m">[docs]</a><span class="k">def</span> <span class="nf">km2m</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Convert m to km.</span>
+    <span class="sd">&quot;&quot;&quot; Convert km to m.</span>
 
-<span class="sd">    Read Input and convert it to from km -&gt; m (if needed). The input must</span>
+<span class="sd">    Read input and convert it to from km -&gt; m. The input must</span>
 <span class="sd">    have &#39;units&#39; attribute set to &#39;km&#39; to trigger the conversion.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        var: A netCDF variable.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Altitude (scalar or array)  converted to km. </span>
+<span class="sd">        Altitude (scalar or array)  converted to km.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
+    <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
     <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;km&#39;</span><span class="p">:</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">*</span><span class="mi">1000</span>
-    <span class="k">return</span> <span class="n">y</span></div>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="o">*</span><span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">alt</span></div>
+
+
+<div class="viewcode-block" id="m2km"><a class="viewcode-back" href="../ncf.html#ncf.m2km">[docs]</a><span class="k">def</span> <span class="nf">m2km</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Convert m to km.</span>
+
+<span class="sd">    Read Input and convert it to from m -&gt; km. The input must</span>
+<span class="sd">    have &#39;units&#39; attribute set to &#39;m&#39; to trigger the conversion.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        var: A netCDF variable.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Altitude (scalar or array)  converted to m.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
+    <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="o">/</span><span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">alt</span></div>
 
 
 <div class="viewcode-block" id="get_radar_freq"><a class="viewcode-back" href="../ncf.html#ncf.get_radar_freq">[docs]</a><span class="k">def</span> <span class="nf">get_radar_freq</span><span class="p">(</span><span class="n">vrs</span><span class="p">):</span>
@@ -94,7 +112,7 @@
 
 
 <div class="viewcode-block" id="get_site_alt"><a class="viewcode-back" href="../ncf.html#ncf.get_site_alt">[docs]</a><span class="k">def</span> <span class="nf">get_site_alt</span><span class="p">(</span><span class="o">*</span><span class="n">vrs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Return altitude of the measurement site above mean sea level.</span>
+    <span class="sd">&quot;&quot;&quot; Return altitude of the measurement site above mean sea level in [m].</span>
 
 <span class="sd">    Site altitude is defined as the lowermost value of</span>
 <span class="sd">    the investigated values.</span>
@@ -106,12 +124,12 @@
 <span class="sd">        Altitude of the measurement site.</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        KeyError: If no &#39;altitude&#39; field is found from any of </span>
+<span class="sd">        KeyError: If no &#39;altitude&#39; field is found from any of</span>
 <span class="sd">                  the input files.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">field</span> <span class="o">=</span> <span class="s1">&#39;altitude&#39;</span>
-    <span class="n">alts</span> <span class="o">=</span> <span class="p">[</span><span class="n">var</span><span class="p">[</span><span class="n">field</span><span class="p">][:]</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vrs</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">var</span><span class="p">]</span>
+    <span class="n">alts</span> <span class="o">=</span> <span class="p">[</span><span class="n">km2m</span><span class="p">(</span><span class="n">var</span><span class="p">[</span><span class="n">field</span><span class="p">])</span> <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vrs</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">var</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">alts</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t determine site altitude.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">alts</span><span class="p">)</span></div>
