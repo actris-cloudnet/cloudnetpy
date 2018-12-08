@@ -6,6 +6,7 @@ radar, lidar and MWR files.
 import sys
 import numpy as np
 import numpy.ma as ma
+from scipy.interpolate import interp1d
 import ncf
 import utils
 
@@ -22,6 +23,7 @@ def generate_categorize(input_files, output_file, aux):
     """
 
     TIME_RESOLUTION = 60  # fixed time resolution for now
+    LWP_ERROR = (0.25, 20) # fractional and linear error components
 
     rad_vars = ncf.load_nc(input_files[0])
     lid_vars = ncf.load_nc(input_files[1])
@@ -38,13 +40,13 @@ def generate_categorize(input_files, output_file, aux):
     except ValueError as error:
         print(error)
 
-    height = get_altitude_grid(rad_vars)
+    height = _get_altitude_grid(rad_vars)  # shpinx excludes "private" methods
 
     try:
         site_alt = ncf.get_site_alt(rad_vars, lid_vars)
     except KeyError as error:
         print(error)
-        
+
     # average radar variables in time
     fields = ('Zh', 'v', 'ldr', 'width')
     try:
@@ -56,8 +58,11 @@ def generate_categorize(input_files, output_file, aux):
     # average lidar variables in time and height
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
 
+    # interpolate mwr variables in time
+    lwp = fetch_mwr(mwr_vars, LWP_ERROR, time)
 
-def get_altitude_grid(rad_vars):
+    
+def _get_altitude_grid(rad_vars):
     """ Return altitude grid for Cloudnet products.
     Altitude grid is defined as the radar measurement
     grid from the mean sea level.
@@ -125,3 +130,57 @@ def fetch_lidar(lid_vars, fields, time, height):
         dataim = utils.rebin_x_2d(y, dataim.T, height).T
         out[field] = dataim
     return out
+
+
+def fetch_mwr(mwr_vars, lwp_errors, time):
+    """ Wrapper to read and interpolate LWP and its error.
+
+    Args:
+        mwr_vars: A netCDF instance.
+        lwp_errors: A 2-element tuple containing
+                    (fractional_error, linear_error)
+        time: A 1-D array.
+
+    Returns:
+        Dict containing interpolated LWP data {'lwp', 'lwp_error'}
+
+    """
+    def interpolate_lwp(time_lwp, lwp, time_new):
+        """ Linear interpolation of LWP data. This can be
+        bad idea if there are lots of gaps in the data.
+        """
+        try:
+            f = interp1d(time_lwp, lwp)
+            lwp_i = f(time_new)
+        except:
+            lwp_i = np.full_like(time_new, fill_value=np.nan)
+        return lwp_i
+
+    lwp = _read_lwp(mwr_vars, *lwp_errors)
+    lwp_i = interpolate_lwp(lwp['time'], lwp['lwp'], time)
+    lwp_error_i = interpolate_lwp(lwp['time'], lwp['lwp_error'], time)
+    return {'lwp': lwp_i, 'lwp_error': lwp_error_i}
+
+
+def _read_lwp(mwr_vars, frac_err, lin_err):
+    """ Read LWP, estimate its error, and convert time vector if needed.
+
+    Args:
+        mwr_vars: A netCDF4 instance.
+        frac_error: Fractional error (scalar).
+        lin_error: Linear error (scalar).
+
+    Returns:
+        Dict containing {'time', 'lwp', 'lwp_error'} that are 1-D arrays.
+
+
+    Note: hatpro time can be 'hours since' 00h of measurement date
+    or 'seconds since' some epoch (which could be site/file dependent).
+
+    """
+    lwp = mwr_vars['LWP_data'][:]
+    time = mwr_vars['time'][:]
+    if max(time) > 24:
+        time = utils.epoch2desimal_hour((2001, 1, 1), time) # fixed epoc!!
+    lwp_err = np.sqrt(lin_err**2 + (frac_err*lwp)**2)
+    return {'time': time, 'lwp': lwp, 'lwp_error': lwp_err}

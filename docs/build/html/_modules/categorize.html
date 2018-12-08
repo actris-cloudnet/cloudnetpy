@@ -40,6 +40,7 @@
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">interp1d</span>
 <span class="kn">import</span> <span class="nn">ncf</span>
 <span class="kn">import</span> <span class="nn">utils</span>
 
@@ -56,6 +57,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">TIME_RESOLUTION</span> <span class="o">=</span> <span class="mi">60</span>  <span class="c1"># fixed time resolution for now</span>
+    <span class="n">LWP_ERROR</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span> <span class="c1"># fractional and linear error components</span>
 
     <span class="n">rad_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">lid_vars</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">load_nc</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -72,13 +74,13 @@
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
 
-    <span class="n">height</span> <span class="o">=</span> <span class="n">get_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">_get_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>  <span class="c1"># shpinx excludes &quot;private&quot; methods</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">site_alt</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">get_site_alt</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">lid_vars</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
-        
+
     <span class="c1"># average radar variables in time</span>
     <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
@@ -88,10 +90,13 @@
     <span class="n">vfold</span> <span class="o">=</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;NyquistVelocity&#39;</span><span class="p">][:]</span>
 
     <span class="c1"># average lidar variables in time and height</span>
-    <span class="n">lidar</span> <span class="o">=</span> <span class="n">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,),</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div>
+    <span class="n">lidar</span> <span class="o">=</span> <span class="n">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,),</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
 
+    <span class="c1"># interpolate mwr variables in time</span>
+    <span class="n">lwp</span> <span class="o">=</span> <span class="n">fetch_mwr</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">LWP_ERROR</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="get_altitude_grid"><a class="viewcode-back" href="../categorize.html#categorize.get_altitude_grid">[docs]</a><span class="k">def</span> <span class="nf">get_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">):</span>
+    
+<span class="k">def</span> <span class="nf">_get_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Return altitude grid for Cloudnet products.</span>
 <span class="sd">    Altitude grid is defined as the radar measurement</span>
 <span class="sd">    grid from the mean sea level.</span>
@@ -103,7 +108,7 @@
 <span class="sd">        Altitude grid</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">][:]</span> <span class="o">+</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">][:]</span> <span class="o">+</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="fetch_radar"><a class="viewcode-back" href="../categorize.html#categorize.fetch_radar">[docs]</a><span class="k">def</span> <span class="nf">fetch_radar</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time_new</span><span class="p">):</span>
@@ -159,6 +164,60 @@
         <span class="n">dataim</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_x_2d</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dataim</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
         <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataim</span>
     <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="fetch_mwr"><a class="viewcode-back" href="../categorize.html#categorize.fetch_mwr">[docs]</a><span class="k">def</span> <span class="nf">fetch_mwr</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">lwp_errors</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Wrapper to read and interpolate LWP and its error.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mwr_vars: A netCDF instance.</span>
+<span class="sd">        lwp_errors: A 2-element tuple containing</span>
+<span class="sd">                    (fractional_error, linear_error)</span>
+<span class="sd">        time: A 1-D array.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict containing interpolated LWP data {&#39;lwp&#39;, &#39;lwp_error&#39;}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">interpolate_lwp</span><span class="p">(</span><span class="n">time_lwp</span><span class="p">,</span> <span class="n">lwp</span><span class="p">,</span> <span class="n">time_new</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Linear interpolation of LWP data. This can be</span>
+<span class="sd">        bad idea if there are lots of gaps in the data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="n">time_lwp</span><span class="p">,</span> <span class="n">lwp</span><span class="p">)</span>
+            <span class="n">lwp_i</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">time_new</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">lwp_i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">time_new</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lwp_i</span>
+
+    <span class="n">lwp</span> <span class="o">=</span> <span class="n">_read_lwp</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="o">*</span><span class="n">lwp_errors</span><span class="p">)</span>
+    <span class="n">lwp_i</span> <span class="o">=</span> <span class="n">interpolate_lwp</span><span class="p">(</span><span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;lwp&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">)</span>
+    <span class="n">lwp_error_i</span> <span class="o">=</span> <span class="n">interpolate_lwp</span><span class="p">(</span><span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;lwp_error&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;lwp&#39;</span><span class="p">:</span> <span class="n">lwp_i</span><span class="p">,</span> <span class="s1">&#39;lwp_error&#39;</span><span class="p">:</span> <span class="n">lwp_error_i</span><span class="p">}</span></div>
+
+
+<span class="k">def</span> <span class="nf">_read_lwp</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">frac_err</span><span class="p">,</span> <span class="n">lin_err</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Read LWP, estimate its error, and convert time vector if needed.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        mwr_vars: A netCDF4 instance.</span>
+<span class="sd">        frac_error: Fractional error (scalar).</span>
+<span class="sd">        lin_error: Linear error (scalar).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict containing {&#39;time&#39;, &#39;lwp&#39;, &#39;lwp_error&#39;} that are 1-D arrays.</span>
+
+
+<span class="sd">    Note: hatpro time can be &#39;hours since&#39; 00h of measurement date</span>
+<span class="sd">    or &#39;seconds since&#39; some epoch (which could be site/file dependent).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lwp</span> <span class="o">=</span> <span class="n">mwr_vars</span><span class="p">[</span><span class="s1">&#39;LWP_data&#39;</span><span class="p">][:]</span>
+    <span class="n">time</span> <span class="o">=</span> <span class="n">mwr_vars</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span>
+    <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">24</span><span class="p">:</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">epoch2desimal_hour</span><span class="p">((</span><span class="mi">2001</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">time</span><span class="p">)</span> <span class="c1"># fixed epoc!!</span>
+    <span class="n">lwp_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lin_err</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">frac_err</span><span class="o">*</span><span class="n">lwp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">:</span> <span class="n">lwp</span><span class="p">,</span> <span class="s1">&#39;lwp_error&#39;</span><span class="p">:</span> <span class="n">lwp_err</span><span class="p">}</span>
 </pre></div>
 
           </div>

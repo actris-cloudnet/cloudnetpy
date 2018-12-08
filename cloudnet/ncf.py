@@ -5,6 +5,7 @@ an argument."""
 import netCDF4
 import numpy as np
 import numpy.ma as ma
+from collections import namedtuple
 
 
 def load_nc(file_in):

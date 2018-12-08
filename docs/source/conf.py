@@ -47,7 +47,9 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
 ]
+
 
 napoleon_google_docstring = True
 

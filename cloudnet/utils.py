@@ -4,6 +4,30 @@ helper functions. """
 import numpy as np
 import numpy.ma as ma
 from scipy import stats
+import calendar
+import time
+#import sys
+
+
+def epoch2desimal_hour(epoch, time_in):
+    """ Convert seconds since epoch to desimal hour of that day.
+
+    Args:
+        epoc: A 3-element tuple containing (year, month, day)
+        time_in: A 1-D array.
+
+    Returns:
+        Time as desimal hour.
+
+    """
+    dtime = []
+    ep = calendar.timegm((*epoch, 0, 0, 0))
+    for t1 in time_in:
+        x = time.gmtime(t1+ep)
+        dtime.append(x.tm_hour + ((x.tm_min*60 + x.tm_sec)/3600))
+    if dtime[-1] == 0: # Last point can be 24h which would be 0 (we want 24 instead)
+        dtime[-1] = 24
+    return dtime
 
 
 def get_time(reso):
@@ -11,10 +35,10 @@ def get_time(reso):
     resolution (in seconds) where 60 is the maximum allowed value.
 
     Args:
-        reso (float): Time resolution in seconds.
+        reso: Time resolution in seconds.
 
     Returns:
-        (nd.array): Time vector between 0 and 24.
+        Time vector between 0 and 24.
 
     Raises:
         ValueError: Bad resolution as input.
@@ -54,7 +78,7 @@ def rebin_x_2d(x_in, data, x_new):
         xnew: The new x vector (center points).
 
     Returns:
-        Rebinned field.
+        Rebinned (averaged) field.
 
     """
     edges = binning_vector(x_new)

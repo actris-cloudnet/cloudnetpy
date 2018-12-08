@@ -69,6 +69,29 @@ fields to be averaged.</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="categorize.fetch_mwr">
+<code class="descclassname">categorize.</code><code class="descname">fetch_mwr</code><span class="sig-paren">(</span><em>mwr_vars</em>, <em>lwp_errors</em>, <em>time</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#fetch_mwr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.fetch_mwr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper to read and interpolate LWP and its error.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mwr_vars</strong> – A netCDF instance.</li>
+<li><strong>lwp_errors</strong> – A 2-element tuple containing
+(fractional_error, linear_error)</li>
+<li><strong>time</strong> – A 1-D array.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Dict containing interpolated LWP data {‘lwp’, ‘lwp_error’}</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="categorize.fetch_radar">
 <code class="descclassname">categorize.</code><code class="descname">fetch_radar</code><span class="sig-paren">(</span><em>rad_vars</em>, <em>fields</em>, <em>time_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#fetch_radar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.fetch_radar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read and rebin radar 2d fields in time.</p>
@@ -113,24 +136,6 @@ fields to be averaged.</li>
 of the site (site_name, institute).</li>
 </ul>
 </td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.get_altitude_grid">
-<code class="descclassname">categorize.</code><code class="descname">get_altitude_grid</code><span class="sig-paren">(</span><em>rad_vars</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#get_altitude_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.get_altitude_grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return altitude grid for Cloudnet products.
-Altitude grid is defined as the radar measurement
-grid from the mean sea level.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rad_vars</strong> – Radar variables.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude grid</td>
 </tr>
 </tbody>
 </table>
