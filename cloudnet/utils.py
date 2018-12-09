@@ -5,7 +5,7 @@ import calendar
 import time
 import numpy as np
 import numpy.ma as ma
-from scipy import stats
+from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
 # import sys
 
@@ -22,9 +22,9 @@ def epoch2desimal_hour(epoch, time_in):
 
     """
     dtime = []
-    ep = calendar.timegm((*epoch, 0, 0, 0))
-    for t1 in time_in:
-        x = time.gmtime(t1+ep)
+    epo = calendar.timegm((*epoch, 0, 0, 0))
+    for time_1 in time_in:
+        x = time.gmtime(time_1+epo)
         dtime.append(x.tm_hour + ((x.tm_min*60 + x.tm_sec)/3600))
     if dtime[-1] == 0:  # Last point can be 24h which would be 0 (we want 24)
         dtime[-1] = 24
@@ -107,22 +107,81 @@ def filter_isolated_pixels(array):
     return filtered_array
 
 
-def is_bit(n, k):
-    """ Element-wise test of bit k (1,2,3...) on integer n. """
-    mask = 1 << k-1
-    return (n & mask > 0)
+def bit_test(integer, nth_bit):
+    """ Test if nth bit (1,2,3..) is on for the input number.
 
+    Args:
+        integer: A number.
+        nth_bit: Investigated bit.
 
-def set_bit(n, k):
-    """ Set bit k (1,2,3..) on integer n. """
-    mask = 1 << k-1
-    n |= mask
-    return n
+    Returns:
+        True if set, otherwise False.
 
+    Raises:
+        ValueError: negative bit as input.
 
-def interpolate_2d(x, y, xin, yin, z):
-    """ FAST interpolation of 2d data that is in grid
-    Does not work with nans!
+    Examples:
+        >>> bit_test(4, 2)
+            False
+        >>> bit_test(4, 3)
+            True
+
+    Notes:
+        Indices start from 1 for historical reasons.
+
     """
-    f = RectBivariateSpline(x, y, z, kx=1, ky=1)  # linear interpolation
-    return f(xin, yin)
+    if nth_bit < 0:
+        raise ValueError('Negative bit number.')
+    mask = 1 << nth_bit-1
+    return integer & mask > 0
+
+
+def bit_set(integer, nth_bit):
+    """ Set nth bit (1, 2, 3..) on input number.
+
+    Args:
+        integer: A number.
+        nth_bit: Bit to be set.
+
+    Returns:
+        Integer where nth bit is set.
+
+    Raises:
+        ValueError: negative bit as input.
+
+    Examples:
+        >>> bit_set(1, 2)
+            3
+        >>> bit_set(0, 3)
+            4
+
+    Notes:
+        Indices start from 1 for historical reasons.
+
+    """
+    if nth_bit < 0:
+        raise ValueError('Negative bit number.')
+    mask = 1 << nth_bit-1
+    integer |= mask
+    return integer
+
+
+def interpolate_2d(x_in, y_in, x_new, y_new, z_in):
+    """Linear interpolation of gridded 2d data.
+
+    Args:
+        x_in: A 1-D array.
+        y_in: A 1-D array.
+        x_new: A 1-D array.
+        y_new: A 1-D array.
+        z_in: A 2-D array at points (x, y)
+
+    Returns:
+        Interpolated data.
+
+    Notes:
+        Does not work with nans.
+
+    """
+    fun = RectBivariateSpline(x_in, y_in, z_in, kx=1, ky=1)  # linear interpolation
+    return fun(x_new, y_new)
