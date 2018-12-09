@@ -3,15 +3,15 @@ categorize (Level 1) product from pre-processed
 radar, lidar and MWR files.
 """
 
+import sys
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import interp1d
-#import matplotlib as mpl
-#import matplotlib.pyplot as plt
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
 import config
 import ncf
 import utils
-#import sys
 
 
 def generate_categorize(input_files, output_file, aux):
@@ -28,26 +28,26 @@ def generate_categorize(input_files, output_file, aux):
     try:
         time = utils.get_time(config.TIME_RESOLUTION)
     except ValueError as error:
-        print(error)
+        sys.exit(error)
     rad_vars = ncf.load_nc(input_files[0])
     lid_vars = ncf.load_nc(input_files[1])
     mwr_vars = ncf.load_nc(input_files[2])
     mod_vars = ncf.load_nc(input_files[3])
     try:
         freq = ncf.get_radar_freq(rad_vars)
-        wlband = ncf.get_wl_band(freq)
     except (ValueError, KeyError) as error:
-        print(error)
+        sys.exit(error)
+    wlband = ncf.get_wl_band(freq)
     height = _get_altitude_grid(rad_vars)  # m
     try:
         alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
     except KeyError as error:
-        print(error)
+        sys.exit(error)
     fields = ('Zh', 'v', 'ldr', 'width')
     try:
         radar = fetch_radar(rad_vars, fields, time)
     except KeyError as error:
-        print(error)
+        sys.exit(error)
     vfold = rad_vars['NyquistVelocity'][:]
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
@@ -153,7 +153,6 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
             lwp_i = np.full_like(time_new, fill_value=np.nan)
         return lwp_i
 
-
     lwp = _read_lwp(mwr_vars, *lwp_errors)
     lwp_i = _interpolate_lwp(lwp['time'], lwp['lwp'], time)
     lwp_error_i = _interpolate_lwp(lwp['time'], lwp['lwp_error'], time)
@@ -185,9 +184,23 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
 
 
 def fetch_model(mod_vars, alt_site, wlband, time, height):
-    """ Wrapper function to read and interpolate model variables. """
-    fields = ('temperature', 'pressure', 'rh', 'gas_atten', 'specific_gas_atten',
-              'specific_saturated_gas_atten', 'specific_liquid_atten')
+    """ Wrapper function to read and interpolate model variables.
+
+    Args:
+        mod_vars: A netCDF4 instance.
+        alt_site: Altitude of site above mean sea level.
+        wlband: 0 (35Ghz) or 1 (94Ghz)
+        time: A 1-D array.
+        height: A 1-D array.
+
+    Returns:
+        Dict containing original model fields in common altitude
+        grid, and interpolated fields (in Cloudnet time/height grid).
+
+    """
+    fields = ('temperature', 'pressure', 'rh', 'gas_atten',
+              'specific_gas_atten', 'specific_saturated_gas_atten',
+              'specific_liquid_atten')
     fields_all = fields + ('q', 'uwind', 'vwind')
     model, model_time, model_height = _read_model(mod_vars, fields_all,
                                                   alt_site, wlband)
@@ -198,28 +211,29 @@ def fetch_model(mod_vars, alt_site, wlband, time, height):
 
 
 def _read_model(vrs, fields, alt_site, wlband):
-    """Read model fields and interpolate to Cloudnet altitude grid."""
+    """Read model fields and interpolate into common altitude grid."""
     out = {}
-    model_heights = ncf.km2m(vrs['height']) + alt_site # now above mean sea level
+    model_heights = ncf.km2m(vrs['height']) + alt_site  # above mean sea level
     model_heights = np.array(model_heights)  # masked arrays not supported
     model_time = vrs['time'][:]
-    new_grid = np.mean(model_heights, axis=0) # is this ok??
+    new_grid = np.mean(model_heights, axis=0)  # is mean profile ok?
     nx, ny = len(model_time), len(new_grid)
     for field in fields:
         data = np.array(vrs[field][:])
         datai = np.zeros((nx, ny))
         if 'atten' in field:
             data = data[wlband, :, :]
-        # interpolate profiles into common altitude grid
+        # interpolate model profiles into common altitude grid
         for ind in range(nx):
-            f = interp1d(model_heights[ind, :], data[ind, :], fill_value='extrapolate')
+            f = interp1d(model_heights[ind, :], data[ind, :],
+                         fill_value='extrapolate')
             datai[ind, :] = f(new_grid)
         out[field] = datai
     return out, model_time, new_grid
 
 
 def _interpolate_model(model, fields, *args):
-    """ Interpolate model fields into universal time/height grid """
+    """ Interpolate model fields into Cloudnet time/height grid """
     out = {}
     for field in fields:
         out[field] = utils.interpolate_2d(*args, model[field])

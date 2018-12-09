@@ -7,7 +7,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy import stats
 from scipy.interpolate import RectBivariateSpline
-#import sys
+# import sys
 
 
 def epoch2desimal_hour(epoch, time_in):
@@ -26,7 +26,7 @@ def epoch2desimal_hour(epoch, time_in):
     for t1 in time_in:
         x = time.gmtime(t1+ep)
         dtime.append(x.tm_hour + ((x.tm_min*60 + x.tm_sec)/3600))
-    if dtime[-1] == 0: # Last point can be 24h which would be 0 (we want 24 instead)
+    if dtime[-1] == 0:  # Last point can be 24h which would be 0 (we want 24)
         dtime[-1] = 24
     return dtime
 
@@ -99,7 +99,8 @@ def rebin_x_2d(x_in, data, x_new):
 def filter_isolated_pixels(array):
     """ Return array with completely isolated single cells removed. """
     filtered_array = ma.copy(array)
-    id_regions, num_ids = ndimage.label(filtered_array, structure=np.ones((3,3)))
+    id_regions, num_ids = ndimage.label(filtered_array,
+                                        structure=np.ones((3, 3)))
     id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids+1)))
     area_mask = (id_sizes == 1)
     filtered_array[area_mask[id_regions]] = 0
@@ -121,7 +122,7 @@ def set_bit(n, k):
 
 def interpolate_2d(x, y, xin, yin, z):
     """ FAST interpolation of 2d data that is in grid
-    Does not work with nans! 
+    Does not work with nans!
     """
-    f = RectBivariateSpline(x, y, z, kx=1, ky=1) # linear interpolation
+    f = RectBivariateSpline(x, y, z, kx=1, ky=1)  # linear interpolation
     return f(xin, yin)

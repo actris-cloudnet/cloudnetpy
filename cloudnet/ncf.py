@@ -54,7 +54,7 @@ def get_radar_freq(vrs):
     """ Return frequency of radar.
 
     Args:
-        vrs: Pointer to radar variables.
+        vrs: A netCDF instance.
 
     Returns:
         Frequency or radar.
@@ -64,7 +64,7 @@ def get_radar_freq(vrs):
         ValueError: Invalid frequency value.
 
     """
-    possible_fields = ('radar_frequency', 'frequency')  # Several possible
+    possible_fields = ('radar_frequency', 'frequency')  
     freq = [vrs[field][:] for field in vrs if field in possible_fields]
     if not freq:
         raise KeyError('Missing frequency in the radar file.')
