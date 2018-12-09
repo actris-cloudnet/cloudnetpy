@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to cloudnet's documentation!
+Welcome to Cloudnet's documentation!
 ====================================
 
 Cloudnet produces vertical profiles of cloud
