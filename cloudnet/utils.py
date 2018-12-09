@@ -65,7 +65,7 @@ def binning_vector(x_bin):
             [0.5, 1.5, 2.5, 3.5]
 
     """
-    ndigits = 2  # not sure about first and last edge
+    ndigits = 2  # not sure when first and last edge
                  # should be rounded (if at all)
     edge1 = round(x_bin[0] - (x_bin[1]-x_bin[0])/2, ndigits)
     edge2 = round(x_bin[-1] + (x_bin[-1]-x_bin[-2])/2, ndigits)

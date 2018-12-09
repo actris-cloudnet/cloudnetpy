@@ -29,10 +29,7 @@ def generate_categorize(input_files, output_file, aux):
         time = utils.get_time(config.TIME_RESOLUTION)
     except ValueError as error:
         sys.exit(error)
-    rad_vars = ncf.load_nc(input_files[0])
-    lid_vars = ncf.load_nc(input_files[1])
-    mwr_vars = ncf.load_nc(input_files[2])
-    mod_vars = ncf.load_nc(input_files[3])
+    rad_vars, lid_vars, mwr_vars, mod_vars = _load_files(input_files)
     try:
         freq = ncf.get_radar_freq(rad_vars)
     except (ValueError, KeyError) as error:
@@ -43,15 +40,22 @@ def generate_categorize(input_files, output_file, aux):
         alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
     except KeyError as error:
         sys.exit(error)
-    fields = ('Zh', 'v', 'ldr', 'width')
     try:
-        radar = fetch_radar(rad_vars, fields, time)
+        radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time)
     except KeyError as error:
         sys.exit(error)
     vfold = rad_vars['NyquistVelocity'][:]
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, wlband, time, height)
+
+
+def _load_files(files):
+    """ Wrapper to load input files (radar, lidar, mwr, model). """
+    out = []
+    for file1 in files:
+        out.append(ncf.load_nc(file1))
+    return out
 
 
 def _get_altitude_grid(rad_vars):
