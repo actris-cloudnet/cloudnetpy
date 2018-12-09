@@ -65,10 +65,8 @@ def binning_vector(x_bin):
             [0.5, 1.5, 2.5, 3.5]
 
     """
-    ndigits = 2  # not sure when first and last edge
-                 # should be rounded (if at all)
-    edge1 = round(x_bin[0] - (x_bin[1]-x_bin[0])/2, ndigits)
-    edge2 = round(x_bin[-1] + (x_bin[-1]-x_bin[-2])/2, ndigits)
+    edge1 = x_bin[0] - (x_bin[1]-x_bin[0])/2
+    edge2 = x_bin[-1] + (x_bin[-1]-x_bin[-2])/2
     return np.linspace(edge1, edge2, len(x_bin)+1)
 
 
@@ -88,10 +86,10 @@ def rebin_x_2d(x_in, data, x_new):
     datai = np.zeros((len(x_new), data.shape[1]))
     data = ma.masked_invalid(data)
     for ind, values in enumerate(data.T):
-        mask = values.mask
-        if len(values[~mask]) > 0:
-            datai[:, ind], _, _ = stats.binned_statistic(x_in[~mask],
-                                                         values[~mask],
+        mask = ~values.mask
+        if ma.any(values[mask]):
+            datai[:, ind], _, _ = stats.binned_statistic(x_in[mask],
+                                                         values[mask],
                                                          statistic='mean',
                                                          bins=edges)
     datai[np.isfinite(datai) == 0] = 0

@@ -53,8 +53,8 @@ def generate_categorize(input_files, output_file, aux):
 def _load_files(files):
     """ Wrapper to load input files (radar, lidar, mwr, model). """
     out = []
-    for file1 in files:
-        out.append(ncf.load_nc(file1))
+    for fil in files:
+        out.append(ncf.load_nc(fil))
     return out
 
 
