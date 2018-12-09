@@ -7,7 +7,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
-# import sys
+import sys
 
 
 def epoch2desimal_hour(epoch, time_in):
@@ -56,7 +56,7 @@ def binning_vector(x_bin):
 
     Args:
         x_bin: A 1-D array of N real values.
-
+                   
     Returns:
         N + 1 edge values.
 
@@ -65,8 +65,10 @@ def binning_vector(x_bin):
             [0.5, 1.5, 2.5, 3.5]
 
     """
-    edge1 = round(x_bin[0] - (x_bin[1]-x_bin[0])/2)
-    edge2 = round(x_bin[-1] + (x_bin[-1]-x_bin[-2])/2)
+    ndigits = 2  # not sure about first and last edge
+                 # should be rounded (if at all)
+    edge1 = round(x_bin[0] - (x_bin[1]-x_bin[0])/2, ndigits)
+    edge2 = round(x_bin[-1] + (x_bin[-1]-x_bin[-2])/2, ndigits)
     return np.linspace(edge1, edge2, len(x_bin)+1)
 
 
