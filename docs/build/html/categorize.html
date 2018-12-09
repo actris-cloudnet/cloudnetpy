@@ -72,6 +72,25 @@ fields to be averaged.</li>
 <dt id="categorize.fetch_model">
 <code class="descclassname">categorize.</code><code class="descname">fetch_model</code><span class="sig-paren">(</span><em>mod_vars</em>, <em>alt_site</em>, <em>wlband</em>, <em>time</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#fetch_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.fetch_model" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrapper function to read and interpolate model variables.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mod_vars</strong> – A netCDF4 instance.</li>
+<li><strong>alt_site</strong> – Altitude of site above mean sea level.</li>
+<li><strong>wlband</strong> – 0 (35Ghz) or 1 (94Ghz)</li>
+<li><strong>time</strong> – A 1-D array.</li>
+<li><strong>height</strong> – A 1-D array.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Dict containing original model fields in common altitude
+grid, and interpolated fields (in Cloudnet time/height grid).</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
