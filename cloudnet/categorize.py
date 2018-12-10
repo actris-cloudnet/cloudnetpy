@@ -108,9 +108,9 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
             raise KeyError(f"No variable '{field}' in the radar file.")
         data = rad_vars[field][:]
         if field == 'Zh':  # average in linear scale
-            data_lin = utils.rebin_x_2d(time_orig, utils.db2lin(data),
-                                        time_new)
-            out[field] = utils.lin2db(data_lin)
+            data_lin = utils.dblin(data)
+            data_mean = utils.rebin_x_2d(time_orig, data_lin, time_new)
+            out[field] = utils.lin2db(data_mean)
         elif field == 'v':  # average in polar coordinates
             data = data * c
             vx = np.cos(data)
