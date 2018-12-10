@@ -5,5 +5,6 @@ This python package is a refactored fork of the currently operational processing
 See http://devcloudnet.fmi.fi for more information about Cloudnet and its products - and watch this space.
 
 ```diff
-- Cloudnet python package is currently under heavy development. It does not yet produces any meaninful results and should not be used for any serious scientific work.
+- Cloudnet python package is currently under heavy development. It does not yet produces any meaninful results 
+and should not be used for any serious scientific work.
 ```
