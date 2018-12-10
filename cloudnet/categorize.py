@@ -112,11 +112,12 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
                                         time_new)
             out[field] = utils.lin2db(data_lin)
         elif field == 'v':  # average in polar coordinates
-            vx = np.cos(data * c)
-            vy = np.sin(data * c)
+            data = data * c
+            vx = np.cos(data)
+            vy = np.sin(data)
             vx_mean = utils.rebin_x_2d(time_orig, vx, time_new)
             vy_mean = utils.rebin_x_2d(time_orig, vy, time_new)
-            out[field] = np.arctan2(vy_mean, vx_mean) * (1/c)
+            out[field] = np.arctan2(vy_mean, vx_mean) / c
         else:
             out[field] = utils.rebin_x_2d(x, data, time_new)
     return out
