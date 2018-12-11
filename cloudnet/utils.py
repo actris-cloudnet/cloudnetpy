@@ -201,3 +201,8 @@ def db2lin(x):
 def lin2db(x):
     """ Linear to dB conversion. """
     return ma.log10(x)*10
+
+
+def med_diff(x):
+    """ Median difference in vector x."""
+    return(ma.median(ma.diff(x)))
