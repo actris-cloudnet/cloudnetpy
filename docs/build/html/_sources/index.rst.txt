@@ -3,18 +3,20 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Cloudnet's documentation!
-====================================
+=========================
+Cloudnet's documentation!
+=========================
 
 Cloudnet produces vertical profiles of cloud
 properties at high vertical and temporal resolution.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-   modules
-
+   overview
+   installation
+   quickstart
+   api
    
 	    
 

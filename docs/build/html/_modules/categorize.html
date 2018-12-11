@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>categorize &#8212; cloudnet  documentation</title>
+    <title>categorize &#8212; Cloudnet  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
@@ -38,6 +38,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">interp1d</span>
@@ -48,7 +49,7 @@
 <span class="kn">import</span> <span class="nn">utils</span>
 
 
-<div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../categorize.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">aux</span><span class="p">):</span>
+<div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../api.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">aux</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Generate Cloudnet Level 1 categorize file.</span>
 
 <span class="sd">    Args:</span>
@@ -74,11 +75,11 @@
         <span class="n">alt_site</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">get_site_alt</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">lid_vars</span><span class="p">,</span> <span class="n">mwr_vars</span><span class="p">)</span>  <span class="c1"># m</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+    <span class="n">vfold</span> <span class="o">=</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;NyquistVelocity&#39;</span><span class="p">][:]</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">radar</span> <span class="o">=</span> <span class="n">fetch_radar</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">),</span> <span class="n">time</span><span class="p">)</span>
+        <span class="n">radar</span> <span class="o">=</span> <span class="n">fetch_radar</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">),</span> <span class="n">time</span><span class="p">,</span> <span class="n">vfold</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
-    <span class="n">vfold</span> <span class="o">=</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;NyquistVelocity&#39;</span><span class="p">][:]</span>
     <span class="n">lidar</span> <span class="o">=</span> <span class="n">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,),</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
     <span class="n">lwp</span> <span class="o">=</span> <span class="n">fetch_mwr</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">LWP_ERROR</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">wlband</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div>
@@ -112,14 +113,15 @@
     <span class="k">return</span> <span class="n">range_instru</span> <span class="o">+</span> <span class="n">alt_instru</span>
 
 
-<div class="viewcode-block" id="fetch_radar"><a class="viewcode-back" href="../categorize.html#categorize.fetch_radar">[docs]</a><span class="k">def</span> <span class="nf">fetch_radar</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time_new</span><span class="p">):</span>
+<div class="viewcode-block" id="fetch_radar"><a class="viewcode-back" href="../api.html#categorize.fetch_radar">[docs]</a><span class="k">def</span> <span class="nf">fetch_radar</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time_new</span><span class="p">,</span> <span class="n">vfold</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Read and rebin radar 2d fields in time.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        rad_vars: Pointer to radar variables</span>
+<span class="sd">        rad_vars: A netCDF instance.</span>
 <span class="sd">        fields (tuple): Tuple of strings containing radar</span>
 <span class="sd">                        fields to be averaged.</span>
-<span class="sd">        time_new: A 1-D array.</span>
+<span class="sd">        time_new (array_like): A 1-D array.</span>
+<span class="sd">        vfold (float): folding velocity</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (dict): Rebinned radar fields.</span>
@@ -127,25 +129,43 @@
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError: Missing field.</span>
 
+<span class="sd">    Notes:</span>
+<span class="sd">        Radar echo, &#39;Zh&#39;, is averaged in linear space.</span>
+<span class="sd">        Doppler velocity, &#39;v&#39;, is averaged in polar coordinates.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">vfold</span>
     <span class="n">time_orig</span> <span class="o">=</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span>
     <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rad_vars</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No variable &#39;</span><span class="si">{field}</span><span class="s2">&#39; in the radar file.&quot;</span><span class="p">)</span>
-        <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_x_2d</span><span class="p">(</span><span class="n">time_orig</span><span class="p">,</span> <span class="n">rad_vars</span><span class="p">[</span><span class="n">field</span><span class="p">][:],</span> <span class="n">time_new</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">rad_vars</span><span class="p">[</span><span class="n">field</span><span class="p">][:]</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="o">==</span> <span class="s1">&#39;Zh&#39;</span><span class="p">:</span>  <span class="c1"># average in linear scale</span>
+            <span class="n">data_lin</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">db2lin</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">data_mean</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_x_2d</span><span class="p">(</span><span class="n">time_orig</span><span class="p">,</span> <span class="n">data_lin</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">lin2db</span><span class="p">(</span><span class="n">data_mean</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">field</span> <span class="o">==</span> <span class="s1">&#39;v&#39;</span><span class="p">:</span>  <span class="c1"># average in polar coordinates</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="n">c</span>
+            <span class="n">vx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">vy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">vx_mean</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_x_2d</span><span class="p">(</span><span class="n">time_orig</span><span class="p">,</span> <span class="n">vx</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
+            <span class="n">vy_mean</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_x_2d</span><span class="p">(</span><span class="n">time_orig</span><span class="p">,</span> <span class="n">vy</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">vy_mean</span><span class="p">,</span> <span class="n">vx_mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">c</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_x_2d</span><span class="p">(</span><span class="n">time_orig</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="fetch_lidar"><a class="viewcode-back" href="../categorize.html#categorize.fetch_lidar">[docs]</a><span class="k">def</span> <span class="nf">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+<div class="viewcode-block" id="fetch_lidar"><a class="viewcode-back" href="../api.html#categorize.fetch_lidar">[docs]</a><span class="k">def</span> <span class="nf">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Read and rebin lidar 2d fields in time and height.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        lid_vars: Pointer to lidar variables</span>
+<span class="sd">        lid_vars: A netCDF instance.</span>
 <span class="sd">        fields (tuple): Tuple of strings containing lidar</span>
 <span class="sd">                        fields to be averaged.</span>
-<span class="sd">        time: A 1-D array.</span>
-<span class="sd">        height: A 1-D array.</span>
+<span class="sd">        time (array_like): A 1-D array.</span>
+<span class="sd">        height (array_like): A 1-D array.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (dict): Rebinned lidar fields.</span>
@@ -167,14 +187,14 @@
     <span class="k">return</span> <span class="n">out</span></div>
 
 
-<div class="viewcode-block" id="fetch_mwr"><a class="viewcode-back" href="../categorize.html#categorize.fetch_mwr">[docs]</a><span class="k">def</span> <span class="nf">fetch_mwr</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">lwp_errors</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+<div class="viewcode-block" id="fetch_mwr"><a class="viewcode-back" href="../api.html#categorize.fetch_mwr">[docs]</a><span class="k">def</span> <span class="nf">fetch_mwr</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">lwp_errors</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Wrapper to read and interpolate LWP and its error.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        mwr_vars: A netCDF instance.</span>
 <span class="sd">        lwp_errors: A 2-element tuple containing</span>
 <span class="sd">                    (fractional_error, linear_error)</span>
-<span class="sd">        time: A 1-D array.</span>
+<span class="sd">        time (array_like): A 1-D array.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict containing interpolated LWP data {&#39;lwp&#39;, &#39;lwp_error&#39;}</span>
@@ -202,8 +222,8 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        mwr_vars: A netCDF4 instance.</span>
-<span class="sd">        frac_error: Fractional error (scalar).</span>
-<span class="sd">        lin_error: Linear error (scalar).</span>
+<span class="sd">        frac_error (float): Fractional error (scalar).</span>
+<span class="sd">        lin_error (float): Linear error (scalar).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict containing {&#39;time&#39;, &#39;lwp&#39;, &#39;lwp_error&#39;} that are 1-D arrays.</span>
@@ -221,15 +241,15 @@
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">:</span> <span class="n">lwp</span><span class="p">,</span> <span class="s1">&#39;lwp_error&#39;</span><span class="p">:</span> <span class="n">lwp_err</span><span class="p">}</span>
 
 
-<div class="viewcode-block" id="fetch_model"><a class="viewcode-back" href="../categorize.html#categorize.fetch_model">[docs]</a><span class="k">def</span> <span class="nf">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">wlband</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+<div class="viewcode-block" id="fetch_model"><a class="viewcode-back" href="../api.html#categorize.fetch_model">[docs]</a><span class="k">def</span> <span class="nf">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">wlband</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Wrapper function to read and interpolate model variables.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        mod_vars: A netCDF4 instance.</span>
-<span class="sd">        alt_site: Altitude of site above mean sea level.</span>
-<span class="sd">        wlband: 0 (35Ghz) or 1 (94Ghz)</span>
-<span class="sd">        time: A 1-D array.</span>
-<span class="sd">        height: A 1-D array.</span>
+<span class="sd">        alt_site (int): Altitude of site above mean sea level.</span>
+<span class="sd">        wlband (int): 0 (35Ghz) or 1 (94Ghz)</span>
+<span class="sd">        time (array_like): A 1-D array.</span>
+<span class="sd">        height (array_like): A 1-D array.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict containing original model fields in common altitude</span>
@@ -284,19 +304,33 @@
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">cloudnet</a></h1>
+<p class="logo">
+  <a href="../index.html">
+    <img class="logo" src="../_static/cloudnet_logo.png" alt="Logo"/>
+    
+  </a>
+</p>
 
 
 
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=tukiains&repo=cloudnet&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
 
 
 
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../modules.html">cloudnet</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API reference</a></li>
 </ul>
 
 <div class="relations">

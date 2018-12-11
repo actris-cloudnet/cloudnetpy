@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.abspath('../../cloudnet'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'cloudnet'
+project = 'Cloudnet'
 copyright = '2018, Finnish Meteorological Institute'
 author = 'Finnish Meteorological Institute'
 
@@ -48,6 +48,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.todo',
+    'sphinx.ext.autosummary',
 ]
 
 
@@ -92,7 +93,11 @@ html_theme = 'alabaster'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'logo': 'cloudnet_logo.png',
+    'github_user': 'tukiains',
+    'github_repo': 'cloudnet',
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

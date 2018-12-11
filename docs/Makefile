@@ -16,9 +16,4 @@ help:
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
-
-	@sphinx-apidoc -f -o source/ ../cloudnet
-#	@sphinx-apidoc -f -o source/ ../cloudnet/utils
-#	@sphinx-apidoc -f -o source/ ../cloudnet/categorize
-
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
