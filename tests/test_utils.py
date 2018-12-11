@@ -53,5 +53,16 @@ def test_rebin():
                                                [2, 4.5, 6.5]]).T)
 
 
-
+def test_isola():
+    """ Unit tests for units.filter_isolated_pixels(). """
+    x = np.array([[0,0,1,1,1],
+                  [0,0,0,0,0],
+                  [1,0,1,0,0],
+                  [0,0,0,0,1]])                 
+    x2 = np.array([[0,0,1,1,1],
+                   [0,0,0,0,0],
+                   [0,0,0,0,0],
+                   [0,0,0,0,0]])                  
+    assert_array_almost_equal(utils.filter_isolated_pixels(x), x2)
+                              
     
