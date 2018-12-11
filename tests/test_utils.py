@@ -6,6 +6,7 @@ import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal
 import utils
 
+
 def test_binning():
     """ Unit tests for units.binning_vector(). """
     arg, out = [], []
