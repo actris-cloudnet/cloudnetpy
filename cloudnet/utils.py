@@ -14,8 +14,8 @@ def epoch2desimal_hour(epoch, time_in):
     """ Convert seconds since epoch to desimal hour of that day.
 
     Args:
-        epoc: A 3-element tuple containing (year, month, day)
-        time_in: A 1-D array.
+        epoc (tuple): A 3-element tuple containing (year, month, day)
+        time_in (array_like): A 1-D array.
 
     Returns:
         Time as desimal hour.
@@ -36,10 +36,10 @@ def get_time(reso):
     resolution (in seconds) where 60 is the maximum allowed value.
 
     Args:
-        reso: Time resolution in seconds.
+        reso (int): Time resolution in seconds.
 
     Returns:
-        Time vector between 0 and 24.
+        (array_like): Time vector between 0 and 24.
 
     Raises:
         ValueError: Bad resolution as input.
@@ -52,13 +52,13 @@ def get_time(reso):
 
 
 def binning_vector(x_bin):
-    """ Convert 1-D (center) points to bins with even spacing.
+    """ Convert 1-D center points to bins with even spacing.
 
     Args:
-        x_bin: A 1-D array of N real values.
+        x_bin (array_like): A 1-D array of N real values.
                    
     Returns:
-        N + 1 edge values.
+        (array_like): N + 1 edge values.
 
     Examples:
         >>> binning_vector([1, 2, 3])
@@ -74,9 +74,9 @@ def rebin_x_2d(x_in, data, x_new):
     """ Rebin 2D data in x-direction using mean. Handles masked data.
 
     Args:
-        x_in: A 1-D array of real values.
-        data (nd.array): 2-D input data.
-        x_new: The new x vector (center points).
+        x_in (array_like): A 1-D array.
+        data (array_like): 2-D input data.
+        x_new (array_like): The new x vector (center points).
 
     Returns:
         Rebinned (averaged) data.
@@ -111,11 +111,11 @@ def bit_test(integer, nth_bit):
     """ Test if nth bit (1,2,3..) is on for the input number.
 
     Args:
-        integer: A number.
-        nth_bit: Investigated bit.
+        integer (int): A number.
+        nth_bit (int): Investigated bit.
 
     Returns:
-        True if set, otherwise False.
+        (bool): True if set, otherwise False.
 
     Raises:
         ValueError: negative bit as input.
@@ -166,22 +166,22 @@ def bit_set(integer, nth_bit):
     return integer
 
 
-def interpolate_2d(x_in, y_in, x_new, y_new, z_in):
+def interpolate_2d(x, y, x_new, y_new, z):
     """Linear interpolation of gridded 2d data.
 
     Args:
-        x_in: A 1-D array.
-        y_in: A 1-D array.
-        x_new: A 1-D array.
-        y_new: A 1-D array.
-        z_in: A 2-D array at points (x, y)
+        x (array_like): A 1-D array.
+        y (array_like): A 1-D array.
+        x_new (array_like): A 1-D array.
+        y_new (array_like): A 1-D array.
+        z (array_like): A 2-D array at points (x, y)
 
     Returns:
-        Interpolated data.
+        (array_like): Interpolated data.
 
     Notes:
         Does not work with nans.
 
     """
-    fun = RectBivariateSpline(x_in, y_in, z_in, kx=1, ky=1)  # linear interpolation
+    fun = RectBivariateSpline(x, y, z, kx=1, ky=1)  # linear interpolation
     return fun(x_new, y_new)

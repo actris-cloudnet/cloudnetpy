@@ -82,10 +82,10 @@ def fetch_radar(rad_vars, fields, time_new):
     """ Read and rebin radar 2d fields in time.
 
     Args:
-        rad_vars: Pointer to radar variables
+        rad_vars: A netCDF instance.
         fields (tuple): Tuple of strings containing radar
                         fields to be averaged.
-        time_new: A 1-D array.
+        time_new (array_like): A 1-D array.
 
     Returns:
         (dict): Rebinned radar fields.
@@ -107,11 +107,11 @@ def fetch_lidar(lid_vars, fields, time, height):
     """ Read and rebin lidar 2d fields in time and height.
 
     Args:
-        lid_vars: Pointer to lidar variables
+        lid_vars: A netCDF instance.
         fields (tuple): Tuple of strings containing lidar
                         fields to be averaged.
-        time: A 1-D array.
-        height: A 1-D array.
+        time (array_like): A 1-D array.
+        height (array_like): A 1-D array.
 
     Returns:
         (dict): Rebinned lidar fields.
@@ -140,7 +140,7 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
         mwr_vars: A netCDF instance.
         lwp_errors: A 2-element tuple containing
                     (fractional_error, linear_error)
-        time: A 1-D array.
+        time (array_like): A 1-D array.
 
     Returns:
         Dict containing interpolated LWP data {'lwp', 'lwp_error'}
@@ -168,8 +168,8 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
 
     Args:
         mwr_vars: A netCDF4 instance.
-        frac_error: Fractional error (scalar).
-        lin_error: Linear error (scalar).
+        frac_error (float): Fractional error (scalar).
+        lin_error (float): Linear error (scalar).
 
     Returns:
         Dict containing {'time', 'lwp', 'lwp_error'} that are 1-D arrays.
@@ -192,10 +192,10 @@ def fetch_model(mod_vars, alt_site, wlband, time, height):
 
     Args:
         mod_vars: A netCDF4 instance.
-        alt_site: Altitude of site above mean sea level.
-        wlband: 0 (35Ghz) or 1 (94Ghz)
-        time: A 1-D array.
-        height: A 1-D array.
+        alt_site (int): Altitude of site above mean sea level.
+        wlband (int): 0 (35Ghz) or 1 (94Ghz)
+        time (array_like): A 1-D array.
+        height (array_like): A 1-D array.
 
     Returns:
         Dict containing original model fields in common altitude
