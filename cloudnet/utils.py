@@ -18,9 +18,15 @@ def epoch2desimal_hour(epoch, time_in):
         time_in (array_like): A 1-D array.
 
     Returns:
-        Time as desimal hour.
+        (list): Time as desimal hour.
+    
+    Examples:        
+        >>> epoch2desimal_hour((1970,1,1), 1095379200) # 2004-17-10 12AM
+        >>> [24]
 
     """
+    if not hasattr(time_in, "__iter__"):
+        time_in = [time_in]
     dtime = []
     epo = calendar.timegm((*epoch, 0, 0, 0))
     for time_1 in time_in:

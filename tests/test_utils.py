@@ -31,3 +31,10 @@ def test_bit_set():
     assert utils.bit_set(3, 1) == 3
     assert utils.bit_set(4, 1) == 5
     assert utils.bit_set(4, 2) == 6
+
+
+def test_epoch():
+    n0 = 1095379200
+    assert utils.epoch2desimal_hour((1970,1,1), n0) == [24]
+    n1 = 12*60*60
+    assert utils.epoch2desimal_hour((1970,1,1), n0 + n1) == [12]
