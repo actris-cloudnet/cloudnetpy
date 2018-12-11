@@ -4,6 +4,7 @@ radar, lidar and MWR files.
 """
 
 import sys
+import math
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import interp1d
@@ -40,11 +41,11 @@ def generate_categorize(input_files, output_file, aux):
         alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
     except KeyError as error:
         sys.exit(error)
+    vfold = rad_vars['NyquistVelocity'][:]
     try:
-        radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time)
+        radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time, vfold)
     except KeyError as error:
         sys.exit(error)
-    vfold = rad_vars['NyquistVelocity'][:]
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, wlband, time, height)
@@ -78,7 +79,7 @@ def _get_altitude_grid(rad_vars):
     return range_instru + alt_instru
 
 
-def fetch_radar(rad_vars, fields, time_new):
+def fetch_radar(rad_vars, fields, time_new, vfold):
     """ Read and rebin radar 2d fields in time.
 
     Args:
@@ -86,6 +87,7 @@ def fetch_radar(rad_vars, fields, time_new):
         fields (tuple): Tuple of strings containing radar
                         fields to be averaged.
         time_new (array_like): A 1-D array.
+        vfold (float): folding velocity
 
     Returns:
         (dict): Rebinned radar fields.
@@ -93,13 +95,31 @@ def fetch_radar(rad_vars, fields, time_new):
     Raises:
         KeyError: Missing field.
 
+    Notes:
+        Radar echo, 'Zh', is averaged in linear space.
+        Doppler velocity, 'v', is averaged in polar coordinates.
+
     """
     out = {}
+    c = math.pi/vfold
     time_orig = rad_vars['time'][:]
     for field in fields:
         if field not in rad_vars:
             raise KeyError(f"No variable '{field}' in the radar file.")
-        out[field] = utils.rebin_x_2d(time_orig, rad_vars[field][:], time_new)
+        data = rad_vars[field][:]
+        if field == 'Zh':  # average in linear scale
+            data_lin = utils.dblin(data)
+            data_mean = utils.rebin_x_2d(time_orig, data_lin, time_new)
+            out[field] = utils.lin2db(data_mean)
+        elif field == 'v':  # average in polar coordinates
+            data = data * c
+            vx = np.cos(data)
+            vy = np.sin(data)
+            vx_mean = utils.rebin_x_2d(time_orig, vx, time_new)
+            vy_mean = utils.rebin_x_2d(time_orig, vy, time_new)
+            out[field] = np.arctan2(vy_mean, vx_mean) / c
+        else:
+            out[field] = utils.rebin_x_2d(x, data, time_new)
     return out
 
 

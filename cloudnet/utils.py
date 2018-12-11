@@ -185,3 +185,13 @@ def interpolate_2d(x, y, x_new, y_new, z):
     """
     fun = RectBivariateSpline(x, y, z, kx=1, ky=1)  # linear interpolation
     return fun(x_new, y_new)
+
+
+def db2lin(x):
+    """ dB to linear conversion. """
+    return 10**(x/10)
+
+
+def lin2db(x):
+    """ Linear to dB conversion. """
+    return ma.log10(x)*10
