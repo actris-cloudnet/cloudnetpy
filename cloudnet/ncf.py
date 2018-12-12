@@ -15,14 +15,14 @@ def load_nc(file_in):
 def km2m(var):
     """ Convert km to m.
 
-    Read input and convert it to from km -> m. The input must
+    Read input and convert it to from km to m. The input must
     have 'units' attribute set to 'km' to trigger the conversion.
 
     Args:
         var: A netCDF variable.
 
     Returns:
-        Altitude (scalar or array)  converted to km.
+        Altitude (scalar or array) converted to km.
 
     """
     alt = var[:]

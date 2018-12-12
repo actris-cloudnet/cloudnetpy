@@ -29,11 +29,11 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
 
     Args:
         beta (array_like): 2D attenuated backscattering.
-        height (array_like): 1D array of altitudes [m].
-        peak_amp, optional (float): Min. value for peak (default 2.5e-5).
-        max_width, optional (float): Max. width of peak (default 300 [m]).
-        min_points, optional (int): Min. number of points in peak (default 3).
-        min_top_der, optional (float): Min. derivative above peak (default 4e-7).
+        height (array_like): 1D array of altitudes (m).
+        peak_amp (float, optional): Min. value for peak. Default 2e-5.
+        max_width (float, optional): Max. width of peak. Default 300 (m).
+        min_points (int, optional): Min. number of points in peak. Default 3.
+        min_top_der (float, optional): Min. derivative above peak. Default 4e-7.
 
     Returns:
         (array_like): Classification of liquid at each point: 1 = Yes,  0 = No

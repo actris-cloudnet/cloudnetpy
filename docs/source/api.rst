@@ -21,3 +21,17 @@ cloudnet.ncf
 
 .. automodule:: ncf
    :members:
+
+
+cloudnet.atmos
+--------------
+
+.. automodule:: atmos
+   :members:
+
+
+cloudnet.droplet
+----------------
+
+.. automodule:: droplet
+   :members:
