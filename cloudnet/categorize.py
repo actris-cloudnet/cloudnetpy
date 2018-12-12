@@ -110,8 +110,7 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
             out[field] = utils.lin2db(data_mean)
         elif field == 'v':  # average in polar coordinates
             data = data * c
-            vx = np.cos(data)
-            vy = np.sin(data)
+            vx, vy = np.cos(data), np.sin(data)
             vx_mean = utils.rebin_2d(time_orig, vx, time_new)
             vy_mean = utils.rebin_2d(time_orig, vy, time_new)
             out[field] = np.arctan2(vy_mean, vx_mean) / c
