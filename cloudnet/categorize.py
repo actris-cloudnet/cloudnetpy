@@ -13,6 +13,7 @@ from scipy.interpolate import interp1d
 import config
 import ncf
 import utils
+import atmos
 
 
 def generate_categorize(input_files, output_file, aux):
@@ -28,21 +29,15 @@ def generate_categorize(input_files, output_file, aux):
     """
     try:
         time = utils.get_time(config.TIME_RESOLUTION)
-    except ValueError as error:
-        sys.exit(error)
-    rad_vars, lid_vars, mwr_vars, mod_vars = _load_files(input_files)
-    try:
+        rad_vars, lid_vars, mwr_vars, mod_vars = _load_files(input_files)
         freq = ncf.get_radar_freq(rad_vars)
     except (ValueError, KeyError) as error:
         sys.exit(error)
     wlband = ncf.get_wl_band(freq)
     height = _get_altitude_grid(rad_vars)  # m
-    try:
-        alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
-    except KeyError as error:
-        sys.exit(error)
     vfold = rad_vars['NyquistVelocity'][:]
     try:
+        alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
         radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time, vfold)
     except KeyError as error:
         sys.exit(error)
@@ -53,6 +48,8 @@ def generate_categorize(input_files, output_file, aux):
 
 def _load_files(files):
     """ Wrapper to load input files (radar, lidar, mwr, model). """
+    if len(files) != 4:
+        raise ValueError('You need 4 input files: radar, lidar, mwr and model.')
     out = []
     for fil in files:
         out.append(ncf.load_nc(fil))
@@ -219,7 +216,8 @@ def fetch_model(mod_vars, alt_site, wlband, time, height):
 
     Returns:
         Dict containing original model fields in common altitude
-        grid, and interpolated fields (in Cloudnet time/height grid).
+        grid, interpolated fields in Cloudnet time/height grid,
+        and wet bulb temperature.
 
     """
     fields = ('temperature', 'pressure', 'rh', 'gas_atten',
@@ -230,8 +228,10 @@ def fetch_model(mod_vars, alt_site, wlband, time, height):
                                                   alt_site, wlband)
     model_i = _interpolate_model(model, fields, model_time,
                                  model_height, time, height)
-    return {'model': model, 'model_i': model_i,
-            'time': model_time, 'height': model_height}
+    Tw = atmos.wet_bulb(model_i['temperature'], model_i['pressure'],
+                        model_i['rh'])
+    return {'model': model, 'model_i': model_i, 'time': model_time,
+            'height': model_height, 'Tw': Tw}
 
 
 def _read_model(vrs, fields, alt_site, wlband):
