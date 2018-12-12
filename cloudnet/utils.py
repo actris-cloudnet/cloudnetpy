@@ -206,3 +206,5 @@ def lin2db(x):
 def med_diff(x):
     """ Median difference in vector x."""
     return(ma.median(ma.diff(x)))
+
+
