@@ -49,11 +49,11 @@ def test_epoch():
 
 
 def test_rebin():
-    """ Unit tests for units.rebin_x_2d(). """
+    """ Unit tests for units.rebin_2d(). """
     x = np.array([1, 2, 2.99, 4, 4.99, 6, 7])
     xnew = np.array([2, 4, 6])
     data = np.array([range(1,8), range(1,8)]).T
-    data_i = utils.rebin_x_2d(x, data, xnew)
+    data_i = utils.rebin_2d(x, data, xnew)
     assert_array_almost_equal(data_i,np.array([[2, 4.5, 6.5],
                                                [2, 4.5, 6.5]]).T)
 

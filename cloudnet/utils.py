@@ -76,7 +76,7 @@ def binning_vector(x_bin):
     return np.linspace(edge1, edge2, len(x_bin)+1)
 
 
-def rebin_x_2d(x_in, data, x_new):
+def rebin_2d(x_in, data, x_new):
     """ Rebin 2D data in x-direction using mean. Handles masked data.
 
     Args:
