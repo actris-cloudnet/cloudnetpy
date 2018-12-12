@@ -6,7 +6,6 @@ import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal
 import utils
 import pytest
-import atmos
 
 
 def test_binning():
