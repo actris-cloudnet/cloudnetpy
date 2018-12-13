@@ -107,7 +107,7 @@ def dew_point(Pw, A=6.116441, m=7.591386, Tn=240.7263):
 def wet_bulb(Tdry, p, rh):
     """ Return wet bulb temperature.
 
-    This function returns wet bulb temperature for given temperature,
+    Return wet bulb temperature for given temperature,
     pressure and relative humidity. Algorithm is based on a Taylor
     expansion of a simple expression for the saturated vapour pressure.
 
