@@ -8,7 +8,7 @@ import utils
 
 
 def _get_base_ind(dprof, p, dist, lim):
-    """Bottom index below peak."""
+    """ Find bottom index below peak."""
     start = max(p-dist, 0)  # should not be negative
     diffs = dprof[start:p]
     mind = np.argmax(diffs)
@@ -16,7 +16,7 @@ def _get_base_ind(dprof, p, dist, lim):
 
 
 def _get_top_ind(dprof, p, nprof, dist, lim):
-    """Top index above peak."""
+    """ Find top index above peak."""
     end = min(p+dist, nprof)  # should not be greater than len(profile)
     diffs = dprof[p:end]
     mind = np.argmin(diffs)
@@ -30,10 +30,10 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
     Args:
         beta (array_like): 2D attenuated backscattering.
         height (array_like): 1D array of altitudes (m).
-        peak_amp (float, optional): Min. value for peak. Default 2e-5.
-        max_width (float, optional): Max. width of peak. Default 300 (m).
-        min_points (int, optional): Min. number of points in peak. Default 3.
-        min_top_der (float, optional): Min. derivative above peak. Default 4e-7.
+        peak_amp (float, optional): Minimum value for peak. Default is 2e-5.
+        max_width (float, optional): Maximum width of peak. Default is 300 (m).
+        min_points (int, optional): Minimum number of valid points in peak. Default is 3.
+        min_top_der (float, optional): Minimum derivative above peak. Default is 4e-7.
 
     Returns:
         (array_like): Classification of liquid at each point: 1 = Yes,  0 = No

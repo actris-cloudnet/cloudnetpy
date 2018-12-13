@@ -14,8 +14,9 @@ import atmos
 ])
 def test_saturation_vapor_pressure(t, res):
     """ Unit tests for atmos.saturation_vapor_pressure(). """
-    cnet = atmos.saturation_vapor_pressure(t)
-    assert_array_almost_equal(cnet/100, res/100, decimal=1) # 0.1hpa difference is ok
+    cnet = atmos.saturation_vapor_pressure_acc(t)
+    assert_array_almost_equal(cnet, res, decimal=2) # 0.1hpa difference is ok
+
 
 @pytest.mark.parametrize("P_w, res", [
     (500, 270.37),
@@ -35,6 +36,6 @@ def test_dew_point(P_w, res):
 def test_wet_bulb(Tdry, p, rh, res):
     """ Unit tests for atmos.wet_bulb(). """
     cnet = atmos.wet_bulb(np.array(Tdry), np.array(p), np.array(rh))
-    assert_array_almost_equal(cnet, res, decimal=1) 
+    assert_array_almost_equal(cnet, res, decimal=3) 
 
 
