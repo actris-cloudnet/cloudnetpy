@@ -16,13 +16,13 @@ import os
 import sys
 #sys.path.insert(0, os.path.abspath('../../cloudnet/categorize'))
 #sys.path.insert(0, os.path.abspath('../../cloudnet/utils'))
-sys.path.insert(0, os.path.abspath('../../cloudnet'))
+sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'Cloudnet'
+project = 'CloudnetPy'
 copyright = '2018, Finnish Meteorological Institute'
 author = 'Finnish Meteorological Institute'
 

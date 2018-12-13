@@ -1,6 +1,6 @@
 """ This module contains unit tests for atmos-module. """
 import sys
-sys.path.append('../cloudnet')
+sys.path.append('../cloudnetpy')
 import numpy as np
 import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal
@@ -12,12 +12,22 @@ import atmos
     (300, 3546.1),
     (280, 995.02),
 ])
-def test_saturation_vapor_pressure(t, res):
+def test_saturation_vapor_pressure1(t, res):
     """ Unit tests for atmos.saturation_vapor_pressure(). """
-    cnet = atmos.saturation_vapor_pressure_acc(t)
-    assert_array_almost_equal(cnet, res, decimal=2) # 0.1hpa difference is ok
+    cnet = atmos._saturation_vapor_pressure_accurate(t)
+    assert_array_almost_equal(cnet, res, decimal=1) # 0.1hpa difference is ok
 
 
+@pytest.mark.parametrize("t, res", [
+    (300, 3546.1),
+    (280, 995.02),
+])
+def test_saturation_vapor_pressure2(t, res):
+    """ Unit tests for atmos.saturation_vapor_pressure(). """
+    cnet = atmos._saturation_vapor_pressure_fast(t)
+    assert_array_almost_equal(cnet, res, decimal=1) # 0.1hpa difference is ok
+
+    
 @pytest.mark.parametrize("P_w, res", [
     (500, 270.37),
     (300, 263.68),
@@ -36,6 +46,6 @@ def test_dew_point(P_w, res):
 def test_wet_bulb(Tdry, p, rh, res):
     """ Unit tests for atmos.wet_bulb(). """
     cnet = atmos.wet_bulb(np.array(Tdry), np.array(p), np.array(rh))
-    assert_array_almost_equal(cnet, res, decimal=3) 
+    assert_array_almost_equal(cnet, res, decimal=1) 
 
 
