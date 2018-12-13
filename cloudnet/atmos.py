@@ -23,13 +23,17 @@ def saturation_vapor_pressure(T, A=6.116441, m=7.591386, Tn=240.7263):
 
     Args:
         T (array_like): Temperature (K).
+        A (float, optional): Parameter for Vaisala's empirical formula.
+        m (float, optional): Parameter for Vaisala's empirical formula.
+        Tn (float, optional): Parameter for Vaisala's empirical formula.
 
     Returns:
         Saturation water vapor pressure (Pa).
 
     Notes:
         Method taken from Vaisala white paper: "Humidity conversion formulas".
-        This is the simpler of the two methods described in Vaisala's paper.
+        This is the simpler (and less accurate) of the two methods described 
+        in the paper.
 
     """
     Tc = k2c(T)
@@ -41,6 +45,9 @@ def dew_point(Pw, A=6.116441, m=7.591386, Tn=240.7263):
 
     Args:
         Pw (array_like): Water wapor pressure (Pa).
+        A (float, optional): Parameter for Vaisala's empirical formula.
+        m (float, optional): Parameter for Vaisala's empirical formula.
+        Tn (float, optional): Parameter for Vaisala's empirical formula.
 
     Returns:
         Dew point temperature (K)
