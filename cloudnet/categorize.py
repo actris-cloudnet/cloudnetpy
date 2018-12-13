@@ -132,6 +132,7 @@ def fetch_lidar(lid_vars, fields, time, height):
     Returns:
         (dict): Rebinned lidar fields.
 
+
     Raises:
         KeyError: Missing field.
 
