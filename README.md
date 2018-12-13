@@ -7,6 +7,6 @@ The python version will eventually be a major upgrade due to numerous updated me
 See http://devcloudnet.fmi.fi for more information about Cloudnet and its products - and watch this space!
 
 ```diff
-- Cloudnet python package is currently under heavy development. It does not yet 
+- CloudnetPy is currently under heavy development. It does not yet 
 - produce any meaninful results and should not be used for serious scientific work.
 ```
