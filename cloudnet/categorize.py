@@ -49,7 +49,7 @@ def generate_categorize(input_files, output_file, aux):
 def _load_files(files):
     """ Wrapper to load input files (radar, lidar, mwr, model). """
     if len(files) != 4:
-        raise ValueError('You need 4 input files: radar, lidar, mwr and model.')
+        raise ValueError('You need 4 input files: radar, lidar, mwr, model.')
     out = []
     for fil in files:
         out.append(ncf.load_nc(fil))
