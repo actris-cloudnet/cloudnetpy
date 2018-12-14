@@ -41,8 +41,8 @@ def get_melting_bit_ldr(Tw, ldr, v):
     v_diff = np.diff(v, axis=1).filled(fill_value=0)
     TRANGE = (-2, 5)  # find peak from this T range around T0
     for ii, tprof in enumerate(Tw):
-        ind = np.where(np.logical_and(tprof > T0+TRANGE[0],
-                                      tprof < T0+TRANGE[1]))[0]
+        ind = np.where((tprof > T0+TRANGE[0]) &
+                       (tprof < T0+TRANGE[1]))[0]
         nind = len(ind)
         ldr_prof, ldr_dprof, nldr = _slice(ldr, ldr_diff, ii, ind)
         v_prof, v_dprof, nv = _slice(v, v_diff, ii, ind)

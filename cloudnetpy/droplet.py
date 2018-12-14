@@ -8,7 +8,56 @@ import utils
 
 
 def get_base_ind(dprof, p, dist, lim):
-    """ Find bottom index below peak."""
+    """ Find base index of a peak in profile.
+
+    Return the lowermost index of profile where 1st order differences
+    below the peak exceed a threshold value.
+
+    Args:
+        dprof (array_like): 1st discrete difference profile of 1D array.
+                            Masked values should be 0, e.g.
+                            dprof=np.diff(masked_prof).filled(0)
+        p (int): Index of (possibly local) peak in the original profile.
+        dist (int): Number of elements investigated below **p**.
+                    If (**p**-**dist**)<0, search starts from index 0.
+        lim (float): Parameter for base index. Values greater than 1.0 are valid.
+                   Values close to 1 most likely return the point right
+                   below the maximum 1st order difference
+                   (within **dist** points below **p**).
+                   Values larger than one more likely
+                   accept some other point that is lower.
+
+    Returns:
+        Base index, or None if can't find it.
+
+    Examples:
+        Consider a profile
+
+        >>> x = np.array([0, 0.5, 1, -99, 4, 8, 5])
+
+        that contains one bad, masked value
+
+        >>> mx = ma.masked_array(x, mask=[0, 0, 0, 1, 0, 0, 0])
+        >>> [0 0.5, 1.0, --, 4.0, 8.0, 5.0]
+
+        The 1st order difference is now
+
+        >>> dx = np.diff(mx).filled(0)
+        >>> [0.5 0.5,  0. ,  0. ,  4. , -3. ]
+
+        From the original profile we see that the peak index is 5. Let's say our
+        base can't be more than 4 elements below peak and the threshold value is 2.
+        Thus we call
+
+        >>> get_base_ind(dx, 5, 4, 2)
+        >>> 4
+
+        When x[4] is the lowermost point that satisfies the condition.
+        Changing the threshold value would alter the result
+
+        >>> get_base_ind(dx, 5, 4, 10)
+        >>> 1
+    """
     start = max(p-dist, 0)  # should not be negative
     diffs = dprof[start:p]
     mind = np.argmax(diffs)
