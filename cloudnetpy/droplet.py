@@ -7,7 +7,7 @@ import scipy.signal
 import utils
 
 
-def _get_base_ind(dprof, p, dist, lim):
+def get_base_ind(dprof, p, dist, lim):
     """ Find bottom index below peak."""
     start = max(p-dist, 0)  # should not be negative
     diffs = dprof[start:p]
@@ -15,7 +15,7 @@ def _get_base_ind(dprof, p, dist, lim):
     return start + np.where(diffs > diffs[mind]/lim)[0][0]
 
 
-def _get_top_ind(dprof, p, nprof, dist, lim):
+def get_top_ind(dprof, p, nprof, dist, lim):
     """ Find top index above peak."""
     end = min(p+dist, nprof)  # should not be greater than len(profile)
     diffs = dprof[p:end]
@@ -58,11 +58,11 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         lprof = beta[n, :]
         dprof = beta_diff[n, :]
         try:
-            base = _get_base_ind(dprof, p, base_below_peak, 4)
+            base = get_base_ind(dprof, p, base_below_peak, 4)
         except:
             continue
         try:
-            top = _get_top_ind(dprof, p, height.shape[0], top_above_peak, 4)
+            top = get_top_ind(dprof, p, height.shape[0], top_above_peak, 4)
         except:
             continue
         tval, pval = lprof[top], lprof[p]
