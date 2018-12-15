@@ -45,7 +45,7 @@ def get_base_ind(dprof, p, dist, lim):
         >>> dx = np.diff(mx).filled(0)
         >>> [0.5 0.5,  0. ,  0. ,  4. , -3. ]
 
-        From the original profile we see that the peak index is 5. Let's say our
+        From the original profile we see that the peak index is 5. Let's assume our
         base can't be more than 4 elements below peak and the threshold value is 2.
         Thus we call
 

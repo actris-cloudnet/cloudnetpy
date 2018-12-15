@@ -1,6 +1,6 @@
 """ Classify gridded measurements. """
 
-import sys
+# import sys
 import numpy as np
 import numpy.ma as ma
 # import matplotlib as mpl
@@ -12,13 +12,19 @@ from atmos import T0
 
 
 def fetch_cat_bits(radar, lidar, model, time, height, vfold):
-    """ Experimental classification based on lidar and LDR-supported radar data """
+    """ Experimental classification based on lidar and LDR-supported
+    radar data. """
     cat_bits = np.zeros(model['Tw'].shape, dtype=int)
     if 'ldr' and 'v' not in radar:
         raise KeyError('Needs LDR and doppler velocity.')
     melting_bit = get_melting_bit_ldr(model['Tw'], radar['ldr'], radar['v'])
     cold_bit = get_cold_bit(model['Tw'], melting_bit, time, height)
+    cloud_bit = droplet.get_liquid_layers(lidar['beta'], height)
+
+    cat_bits = _set_cat_bits(cat_bits, cloud_bit, 1)
+    cat_bits = _set_cat_bits(cat_bits, cold_bit, 3)
     cat_bits = _set_cat_bits(cat_bits, melting_bit, 4)
+
     return cat_bits
 
 
@@ -70,15 +76,36 @@ def get_melting_bit_ldr(Tw, ldr, v):
 
 
 def get_cold_bit(Tw, melting_bit, time, height):
-    """ Adjust cold bit so that it starts from
-    the melting layer when we have it
+    """ Find freezing region using the model temperature and melting layer.
+
+    Sub-zero region is first derived from the model wet bulb temperature.
+    It is then adjusted to start from the melting layer when we have such.
+    Finally, a linear smoother is applied to combine the model and
+    observations to avoid strong gradients in the zero-temperature line.
+
+    Args:
+        Tw (array_like): Wet bulb temperature as (m, n) array.
+        melting_bit (array_like): Binary field indicating melting layer,
+        (m, n) array.
+        time (array_like): Time vector (m,).
+        height (array_like): Altitude vector (n,).
+
+    Returns:
+        Binary field for melting layer region, (m, n) array.
+
+    Notes:
+        It is not straightforward how the model temperature and melting
+        layer should be combined to have a best possible estimate
+        of the sub-zero region.
+
     """
     cold_bit = np.zeros(Tw.shape, dtype=int)
     ntime = time.shape[0]
     T0_alt = _get_T0_alt(Tw, height)
     mean_melting_height = np.zeros((ntime,))
     for ii in np.where(np.any(melting_bit, axis=1))[0]:
-        mean_melting_height[ii] = np.median(height[np.where(melting_bit[ii, :])])
+        mean_melting_height[ii] = np.median(
+            height[np.where(melting_bit[ii, :])])
     m_final = np.copy(mean_melting_height)
     win = 240
     m_final[0] = mean_melting_height[0] or T0_alt[0]
@@ -103,7 +130,19 @@ def _set_cat_bits(cat_bits, bits_in, k):
 
 
 def _get_T0_alt(Tw, height):
-    """ Interpolate T0 altitude from model temperature. """
+    """ Find altitudes where model temperature goes
+        below freezing.
+
+    Args:
+        Tw (array_like): Wet bulb temperature,
+        height (array_like): Altitude vector of the
+                             wet bulb temperature.
+
+    Returns:
+        1D array containing the interpolated
+        freezing altitudes.
+
+    """
     alt = np.array([])
     for prof in Tw:
         ind = np.where(prof < T0)[0][0]
