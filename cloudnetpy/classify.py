@@ -29,7 +29,17 @@ def fetch_cat_bits(radar, lidar, model, time, height, vfold):
 
 
 def get_melting_bit_ldr(Tw, ldr, v):
-    """ Estimate melting layer from LDR data and model temperature
+    """ Estimate melting layer from LDR data and model temperature.
+
+    Args:
+        Tw (ndarray): Wet bulb temperature, (n, m).
+        ldr (ndarray): Linear depolarization ratio, (n, m).
+        v (ndarray): Doppler velocity, (n, m).
+
+    Returns:
+        Binary field indicating the melting layer, (n, m) array 
+        where 1=yes and 0=no.
+
     """
 
     def _slice(arg1, arg2, ii, ind):
@@ -84,14 +94,14 @@ def get_cold_bit(Tw, melting_bit, time, height):
     observations to avoid strong gradients in the zero-temperature line.
 
     Args:
-        Tw (array_like): Wet bulb temperature as (m, n) array.
-        melting_bit (array_like): Binary field indicating melting layer,
-        (m, n) array.
-        time (array_like): Time vector (m,).
-        height (array_like): Altitude vector (n,).
+        Tw (ndarray): Wet bulb temperature as (m, n) array.
+        melting_bit (ndarray): Binary field indicating melting layer,
+                               (m, n) array.
+        time (ndarray): Time vector (m,).
+        height (ndarray): Altitude vector (n,).
 
     Returns:
-        Binary field for melting layer region, (m, n) array.
+        Binary field indicating the sub-zero region, (m, n).
 
     Notes:
         It is not straightforward how the model temperature and melting
@@ -134,9 +144,9 @@ def _get_T0_alt(Tw, height):
         below freezing.
 
     Args:
-        Tw (array_like): Wet bulb temperature,
-        height (array_like): Altitude vector of the
-                             wet bulb temperature.
+        Tw (ndarray): Wet bulb temperature,
+        height (ndarray): Altitude vector of the
+                          wet bulb temperature.
 
     Returns:
         1D array containing the interpolated
