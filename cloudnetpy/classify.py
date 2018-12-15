@@ -1,6 +1,6 @@
 """ Classify gridded measurements. """
 
-# import sys
+import sys
 import numpy as np
 import numpy.ma as ma
 # import matplotlib as mpl
@@ -112,8 +112,6 @@ def _get_T0_alt(Tw, height):
         else:
             x = prof[ind-1:ind+1]
             y = height[ind-1:ind+1]
-        if x[0] > x[1]:
-            x = np.flip(x, 0)
-            y = np.flip(y, 0)
-        alt = np.append(alt, np.interp(T0, x, y))
+            x, y = zip(*sorted(zip(x, y)))
+            alt = np.append(alt, np.interp(T0, x, y))
     return alt
