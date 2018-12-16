@@ -6,25 +6,28 @@ import numpy.ma as ma
 # import matplotlib as mpl
 # import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
+from scipy import stats
 import droplet
 import utils
 from atmos import T0
 
 
-def fetch_cat_bits(radar, lidar, model, time, height, vfold):
-    """ Experimental classification based on lidar and LDR-supported
-    radar data. """
-    cat_bits = np.zeros(model['Tw'].shape, dtype=int)
+def fetch_cat_bits(radar, beta, Tw, time, height, vfold):
+    """ Classificate radar/lidar observations. """
+    cat_bits = np.zeros(Tw.shape, dtype=int)
     if 'ldr' and 'v' not in radar:
         raise KeyError('Needs LDR and doppler velocity.')
-    melting_bit = get_melting_bit_ldr(model['Tw'], radar['ldr'], radar['v'])
-    cold_bit = get_cold_bit(model['Tw'], melting_bit, time, height)
-    cloud_bit = droplet.get_liquid_layers(lidar['beta'], height)
-
+    melting_bit = get_melting_bit_ldr(Tw, radar['ldr'], radar['v'])
+    cold_bit = get_cold_bit(Tw, melting_bit, time, height)
+    cloud_bit = droplet.get_liquid_layers(beta, height)
+    rain_bit = get_rain_bit(radar['Zh'], time)
+    clutter_bit = get_clutter_bit(rain_bit, radar['v'])
+    insect_bit, insect_prob = get_insect_bit(radar, melting_bit, cloud_bit,
+                                             rain_bit, clutter_bit, Tw, height)
     cat_bits = _set_cat_bits(cat_bits, cloud_bit, 1)
     cat_bits = _set_cat_bits(cat_bits, cold_bit, 3)
     cat_bits = _set_cat_bits(cat_bits, melting_bit, 4)
-
+    cat_bits = _set_cat_bits(cat_bits, insect_bit, 6)
     return cat_bits
 
 
@@ -37,7 +40,7 @@ def get_melting_bit_ldr(Tw, ldr, v):
         v (ndarray): Doppler velocity, (n, m).
 
     Returns:
-        Binary field indicating the melting layer, (n, m) array 
+        Binary field indicating the melting layer, (n, m) array
         where 1=yes and 0=no.
 
     """
@@ -164,3 +167,62 @@ def _get_T0_alt(Tw, height):
             x, y = zip(*sorted(zip(x, y)))
             alt = np.append(alt, np.interp(T0, x, y))
     return alt
+
+
+def _insect_prob_ldr(z, ldr, z_loc=15, ldr_loc=-20):
+    """ Probability that pixel is insect, based on Z and LDR values """
+    zp, ldrp = np.zeros(z.shape), np.zeros(z.shape)
+    ind = ~z.mask
+    zp[ind] = stats.norm.cdf(z[ind]*-1, loc=z_loc, scale=8)
+    ind = ~ldr.mask
+    ldrp[ind] = stats.norm.cdf(ldr[ind], loc=ldr_loc, scale=5)
+    return zp * ldrp
+
+
+def _insect_prob_width(z, ldr, w, w_limit=0.06):
+    """ (0, 1) Probability that pixel is insect, based on WIDTH values """
+    i_prob = np.zeros(z.shape)
+    temp_w = np.ones(z.shape)
+    # pixels that have Z but no LDR
+    ind = np.logical_and(ldr.mask, ~z.mask)
+    temp_w[ind] = w[ind]
+    i_prob[temp_w < w_limit] = 1
+    return i_prob
+
+
+def get_insect_bit(radar, melting_bit, droplet_bit, rain_bit, clutter_bit, Tw, height):
+    """ Estimation of insect probability from radar Z, LDR, and WIDTH """
+    insect_bit = np.zeros_like(clutter_bit)
+    Z, ldr = radar['Zh'], radar['ldr']
+    p1 = _insect_prob_ldr(Z, ldr)
+    p2 = _insect_prob_width(Z, ldr, radar['width'])
+    p_ins = p1 + p2
+    p_ins[rain_bit == 1, :] = 0
+    p_ins[droplet_bit == 1] = 0
+    p_ins[melting_bit == 1] = 0
+    p_ins[Tw < (T0-5)] = 0   # No insects below this temperature
+    insect_bit[p_ins > 0.7] = 1
+    return insect_bit, p_ins
+
+
+def get_rain_bit(Z, time, time_buffer=5):
+    nprofs = len(time)
+    rain_bit = np.zeros(nprofs, dtype=int)
+    rain_bit[Z[:, 3] > 0] = 1
+    step = utils.med_diff(time)*60*60  # minutes
+    nsteps = int(round(time_buffer*60/step/2))
+    for ind in np.where(rain_bit)[0]:
+        i1 = max(0, ind-nsteps)
+        i2 = min(ind+nsteps+1, nprofs)
+        rain_bit[i1:i2] = 1
+    return rain_bit
+
+
+def get_clutter_bit(rain_bit, v, ngates=10, vlim=0.05):
+    """ Estimate clutter from radar data. """
+    clutter_bit = np.zeros(v.shape, dtype=int)
+    no_rain = np.where(rain_bit == 0)[0]
+    ind = np.ma.where(np.abs(v[no_rain, 0:ngates]) < vlim)
+    for n, m in zip(*ind):
+        clutter_bit[no_rain[n], m] = 1
+    return clutter_bit

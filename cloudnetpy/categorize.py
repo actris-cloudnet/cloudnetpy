@@ -45,10 +45,9 @@ def generate_categorize(input_files, output_file, aux):
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, wlband, time, height)
-    try:
-        cat_bits = classify.fetch_cat_bits(radar, lidar, model, time, height, vfold)
-    except KeyError as error:
-        sys.exit(error)
+
+    cat_bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
+                                       time, height, vfold)
 
         
 def _load_files(files):

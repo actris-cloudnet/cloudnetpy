@@ -7,7 +7,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
-import sys
+# import sys
 
 
 def epoch2desimal_hour(epoch, time_in):
