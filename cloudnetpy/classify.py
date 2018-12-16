@@ -3,8 +3,8 @@
 # import sys
 import numpy as np
 import numpy.ma as ma
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy import stats
 import droplet
@@ -22,8 +22,8 @@ def fetch_cat_bits(radar, beta, Tw, time, height, vfold):
     cloud_bit = droplet.get_liquid_layers(beta, height)
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(rain_bit, radar['v'])
-    insect_bit, insect_prob = get_insect_bit(radar, melting_bit, cloud_bit,
-                                             rain_bit, clutter_bit, Tw, height)
+    insect_bit, insect_prob = get_insect_bit(radar, Tw, melting_bit,
+                                             cloud_bit, rain_bit, clutter_bit)
     cat_bits = _set_cat_bits(cat_bits, cloud_bit, 1)
     cat_bits = _set_cat_bits(cat_bits, cold_bit, 3)
     cat_bits = _set_cat_bits(cat_bits, melting_bit, 4)
@@ -114,19 +114,19 @@ def get_cold_bit(Tw, melting_bit, time, height):
     """
     cold_bit = np.zeros(Tw.shape, dtype=int)
     ntime = time.shape[0]
-    T0_alt = _get_T0_alt(Tw, height)
+    t0_alt = _get_t0_alt(Tw, height)
     mean_melting_height = np.zeros((ntime,))
     for ii in np.where(np.any(melting_bit, axis=1))[0]:
         mean_melting_height[ii] = np.median(
             height[np.where(melting_bit[ii, :])])
     m_final = np.copy(mean_melting_height)
     win = 240
-    m_final[0] = mean_melting_height[0] or T0_alt[0]
-    m_final[-1] = mean_melting_height[-1] or T0_alt[-1]
+    m_final[0] = mean_melting_height[0] or t0_alt[0]
+    m_final[-1] = mean_melting_height[-1] or t0_alt[-1]
     for n in range(win, ntime-win):
         data_in_window = mean_melting_height[n-win:n+win+1]
         if not np.any(data_in_window):
-            m_final[n] = T0_alt[n]
+            m_final[n] = t0_alt[n]
     ind = np.where(m_final > 0)[0]
     f = interp1d(time[ind], m_final[ind], kind='linear')
     tline = f(time)
@@ -142,7 +142,7 @@ def _set_cat_bits(cat_bits, bits_in, k):
     return cat_bits
 
 
-def _get_T0_alt(Tw, height):
+def _get_t0_alt(Tw, height):
     """ Find altitudes where model temperature goes
         below freezing.
 
@@ -169,74 +169,113 @@ def _get_T0_alt(Tw, height):
     return alt
 
 
-def _insect_prob_ldr(z, ldr, z_loc=15, ldr_loc=-20):
-    """ Probability that pixel is insect, based on Z and LDR values """
-    zp, ldrp = np.zeros(z.shape), np.zeros(z.shape)
-    ind = ~z.mask
-    zp[ind] = stats.norm.cdf(z[ind]*-1, loc=z_loc, scale=8)
-    ind = ~ldr.mask
-    ldrp[ind] = stats.norm.cdf(ldr[ind], loc=ldr_loc, scale=5)
-    return zp * ldrp
+def get_insect_bit(radar, Tw, *args):
+    """ Return insect probability and binary field indicating insects. """
+    insect_bit = np.zeros(Tw.shape, dtype=int)
+    iprob = insect_probability(radar['Zh'], radar['ldr'], radar['width'])
+    iprob_screened = screen_insects(iprob, Tw, *args)
+    insect_bit[iprob_screened > 0.7] = 1
+    return insect_bit, iprob_screened
 
 
-def _insect_prob_width(z, ldr, w, w_limit=0.06):
-    """ (0, 1) Probability that pixel is insect, based on WIDTH values """
-    i_prob = np.zeros(z.shape)
-    temp_w = np.ones(z.shape)
-    # pixels that have Z but no LDR
-    ind = np.logical_and(ldr.mask, ~z.mask)
-    temp_w[ind] = w[ind]
-    i_prob[temp_w < w_limit] = 1
-    return i_prob
-
-
-def get_insect_bit(radar, melting_bit, droplet_bit, rain_bit,
-                   clutter_bit, Tw, height, bit_lim=0.7):
+def insect_probability(z, ldr, width):
     """Find insect probability from radar parameters.
 
     Args:
-        radar (dict): Gridded radar fields that are (m, n).
-        melting_bit (ndarray): Binary field for melting layer, (m, n).
-        droplet_bit (ndarray): Binary field for liquid layers, (m, n).
-        rain_bit (ndarray): Binary field for rainy profiles, (m,).
-        clutter_bit (ndarra): Binary field for radar clutter, (m,).
-        Tw (ndarray): Wet bulb temperature, (m, n).
-        height (ndarray): Altitude vector, (n, ).
-        bit_lim (float): Probability threshold between 0 and 1. Pixels where
-            insect probability is greater that **bit_lim** are classified as 
-            insects.
+        z (ndarray): Radar echo.
+        ldr (ndarray): Radar linear depolarization ratio.
+        width (ndarray): Radar doppler width.
 
     Returns:
-        Tuple containing insect_probability and insect binary flag (1=yes, 0=no).
+        Insect probability between 0-1 for all pixels.
 
     """
-    insect_bit = np.zeros_like(clutter_bit)
-    Z, ldr = radar['Zh'], radar['ldr']
-    p1 = _insect_prob_ldr(Z, ldr)
-    p2 = _insect_prob_width(Z, ldr, radar['width'])
-    p_ins = p1 + p2
-    p_ins[rain_bit == 1, :] = 0
-    p_ins[droplet_bit == 1] = 0
-    p_ins[melting_bit == 1] = 0
-    p_ins[Tw < (T0-5)] = 0   # No insects below this temperature
-    insect_bit[p_ins > bit_lim] = 1
-    return insect_bit, p_ins
+    def _insect_prob_ldr(z, ldr, z_loc=15, ldr_loc=-20):
+        """ Probability that pixel is insect, based on Z and LDR values """
+        zp, ldrp = np.zeros(z.shape), np.zeros(z.shape)
+        ind = ~z.mask
+        zp[ind] = stats.norm.cdf(z[ind]*-1, loc=z_loc, scale=8)
+        ind = ~ldr.mask
+        ldrp[ind] = stats.norm.cdf(ldr[ind], loc=ldr_loc, scale=5)
+        return zp * ldrp
+
+    def _insect_prob_width(z, ldr, w, w_limit=0.06):
+        """ (0, 1) Probability that pixel is insect, based on WIDTH values """
+        i_prob = np.zeros(z.shape)
+        temp_w = np.ones(z.shape)
+        # pixels that have Z but no LDR
+        ind = np.logical_and(ldr.mask, ~z.mask)
+        temp_w[ind] = w[ind]
+        i_prob[temp_w < w_limit] = 1
+        return i_prob
+
+    p1 = _insect_prob_ldr(z, ldr)
+    p2 = _insect_prob_width(z, ldr, width)
+    return p1 + p2
+
+
+def screen_insects(insect_prob, Tw, *args):
+    """ Screen insects by temperature and other misc. conditions."""
+    prob = np.copy(insect_prob)
+    prob = _screen_insects_misc(prob, *args)
+    prob = _screen_insects_temp(prob, Tw)
+    return prob
+
+
+def _screen_insects_misc(insect_prob, *args):
+    """ Set insect probability to 0 where needed.
+
+    Args:
+        insect_prob (ndarray): Insect probability, (m, n).
+        *args (ndrray): Binary fields where 1 means that
+            insect probablity will be changed to 0. Shape
+            of these fields can be (m, n), or (m,) when
+            whole profile will be flagged.
+
+    Returns:
+        Screened insect probability field.
+
+    """
+    for arg in args:
+        if arg.size == insect_prob.shape[0]:
+            insect_prob[arg == 1, :] == 0
+        else:
+            insect_prob[arg == 1] == 0
+    return insect_prob
+
+
+def _screen_insects_temp(insect_prob, Tw, t_lim=-5):
+    """ Remove insects from too cold temperatures.
+
+    Args:
+        insect_prob (ndarray): Insect probability.
+        Tw (ndarray): Wet bulb temperature.
+        t_lim (float, optional): Temperature limit in
+            Celcius. Remove possible insects from colder
+            temperatures. Defaults to -5.
+
+    Returns:
+        Screened insect probability field.
+
+    """
+    insect_prob[Tw < (T0+t_lim)] = 0
+    return insect_prob
 
 
 def get_rain_bit(Z, time, time_buffer=5):
-    """ Find profiles affected by rain. 
+    """ Find profiles affected by rain.
 
     Args:
         Z (ndarray): Radar echo with shape (m, n).
         time (ndarray): Time vector with shape (m,).
-        time_buffer (float, optional): If profile includes rain, 
-            profiles measured **time_buffer** minutes before 
+        time_buffer (float, optional): If profile includes rain,
+            profiles measured **time_buffer** minutes before
             and after are also flagged to contain rain. Defaults to 5.
 
     Returns:
         Binary array indicating profiles affected by rain (1=yes, 0=no).
 
-    """    
+    """
     nprofs = len(time)
     rain_bit = np.zeros(nprofs, dtype=int)
     rain_bit[Z[:, 3] > 0] = 1
