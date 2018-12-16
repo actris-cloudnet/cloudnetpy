@@ -3,8 +3,8 @@
 # import sys
 import numpy as np
 import numpy.ma as ma
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy import stats
 import droplet
@@ -190,8 +190,26 @@ def _insect_prob_width(z, ldr, w, w_limit=0.06):
     return i_prob
 
 
-def get_insect_bit(radar, melting_bit, droplet_bit, rain_bit, clutter_bit, Tw, height):
-    """ Estimation of insect probability from radar Z, LDR, and WIDTH """
+def get_insect_bit(radar, melting_bit, droplet_bit, rain_bit,
+                   clutter_bit, Tw, height, bit_lim=0.7):
+    """Find insect probability from radar parameters.
+
+    Args:
+        radar (dict): Gridded radar fields that are (m, n).
+        melting_bit (ndarray): Binary field for melting layer, (m, n).
+        droplet_bit (ndarray): Binary field for liquid layers, (m, n).
+        rain_bit (ndarray): Binary field for rainy profiles, (m,).
+        clutter_bit (ndarra): Binary field for radar clutter, (m,).
+        Tw (ndarray): Wet bulb temperature, (m, n).
+        height (ndarray): Altitude vector, (n, ).
+        bit_lim (float): Probability threshold between 0 and 1. Pixels where
+            insect probability is greater that **bit_lim** are classified as 
+            insects.
+
+    Returns:
+        Tuple containing insect_probability and insect binary flag (1=yes, 0=no).
+
+    """
     insect_bit = np.zeros_like(clutter_bit)
     Z, ldr = radar['Zh'], radar['ldr']
     p1 = _insect_prob_ldr(Z, ldr)
@@ -201,11 +219,24 @@ def get_insect_bit(radar, melting_bit, droplet_bit, rain_bit, clutter_bit, Tw, h
     p_ins[droplet_bit == 1] = 0
     p_ins[melting_bit == 1] = 0
     p_ins[Tw < (T0-5)] = 0   # No insects below this temperature
-    insect_bit[p_ins > 0.7] = 1
+    insect_bit[p_ins > bit_lim] = 1
     return insect_bit, p_ins
 
 
 def get_rain_bit(Z, time, time_buffer=5):
+    """ Find profiles affected by rain. 
+
+    Args:
+        Z (ndarray): Radar echo with shape (m, n).
+        time (ndarray): Time vector with shape (m,).
+        time_buffer (float, optional): If profile includes rain, 
+            profiles measured **time_buffer** minutes before 
+            and after are also flagged to contain rain. Defaults to 5.
+
+    Returns:
+        Binary array indicating profiles affected by rain (1=yes, 0=no).
+
+    """    
     nprofs = len(time)
     rain_bit = np.zeros(nprofs, dtype=int)
     rain_bit[Z[:, 3] > 0] = 1
