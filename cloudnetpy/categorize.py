@@ -18,7 +18,7 @@ import classify
 
 
 def generate_categorize(input_files, output_file, aux):
-    """ Generate Cloudnet Level 1 categorize file.
+    """Generates Cloudnet Level 1 categorize file.
 
     Args:
         input_files (tuple): Tuple of strings containing full paths of
@@ -47,11 +47,11 @@ def generate_categorize(input_files, output_file, aux):
     model = fetch_model(mod_vars, alt_site, wlband, time, height)
 
     cat_bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
-                                       time, height, vfold)
+                                       time, height)
 
-        
+
 def _load_files(files):
-    """ Wrapper to load input files (radar, lidar, mwr, model). """
+    """Wrapper to load input files (radar, lidar, mwr, model). """
     if len(files) != 4:
         raise ValueError('You need 4 input files: radar, lidar, mwr, model.')
     out = []
@@ -61,7 +61,7 @@ def _load_files(files):
 
 
 def _get_altitude_grid(rad_vars):
-    """ Return altitude grid for Cloudnet products in [m].
+    """Returns altitude grid for Cloudnet products in [m].
     Altitude grid is defined as the instruments measurement
     grid from the mean sea level.
 
@@ -81,7 +81,7 @@ def _get_altitude_grid(rad_vars):
 
 
 def fetch_radar(rad_vars, fields, time_new, vfold):
-    """ Read and rebin radar 2d fields in time.
+    """Reads and rebins radar 2d fields in time.
 
     Args:
         rad_vars: A netCDF instance.
@@ -124,7 +124,7 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
 
 
 def fetch_lidar(lid_vars, fields, time, height):
-    """ Read and rebin lidar 2d fields in time and height.
+    """Reads and rebins lidar 2d fields in time and height.
 
     Args:
         lid_vars: A netCDF instance.
@@ -155,7 +155,7 @@ def fetch_lidar(lid_vars, fields, time, height):
 
 
 def fetch_mwr(mwr_vars, lwp_errors, time):
-    """ Wrapper to read and interpolate LWP and its error.
+    """Wrapper to read and interpolate LWP and its error.
 
     Args:
         mwr_vars: A netCDF instance.
@@ -168,7 +168,7 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
 
     """
     def _interpolate_lwp(time_lwp, lwp, time_new):
-        """ Linear interpolation of LWP data. This can be
+        """Linear interpolation of LWP data. This can be
         bad idea if there are lots of gaps in the data.
         """
         try:
@@ -185,7 +185,7 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
 
 
 def _read_lwp(mwr_vars, frac_err, lin_err):
-    """ Read LWP, estimate its error, and convert time vector if needed.
+    """Reads LWP, estimates its error, and converts time if needed.
 
     Args:
         mwr_vars: A netCDF4 instance.
@@ -196,8 +196,10 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         Dict containing {'time', 'lwp', 'lwp_error'} that are 1-D arrays.
 
 
-    Note: hatpro time can be 'hours since' 00h of measurement date
-    or 'seconds since' some epoch (which could be site/file dependent).
+    Note: 
+        hatpro time can be 'hours since' 00h of measurement date
+        or 'seconds since' some epoch (which could be site/file 
+        dependent).
 
     """
     lwp = mwr_vars['LWP_data'][:]

@@ -35,3 +35,10 @@ cloudnet.droplet
 
 .. automodule:: droplet
    :members:
+
+
+cloudnet.classify
+-----------------
+
+.. automodule:: classify
+   :members:

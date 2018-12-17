@@ -12,8 +12,20 @@ import utils
 from atmos import T0
 
 
-def fetch_cat_bits(radar, beta, Tw, time, height, vfold):
-    """ Classificate radar/lidar observations. """
+def fetch_cat_bits(radar, beta, Tw, time, height):
+    """Classifies radar/lidar observations.
+
+    Args:
+        radar: A dict containing gridded radar fields
+            ('Zh', 'v', 'ldr', 'width').
+        beta (ndarray): Attenuated backscattering coefficient.
+        Tw (ndarray): Wet bulb temperature.
+        height (ndarray): 1D altitude vector.
+
+    Returns:
+        Bit field containing the classification.
+
+    """
     cat_bits = np.zeros(Tw.shape, dtype=int)
     if 'ldr' and 'v' not in radar:
         raise KeyError('Needs LDR and doppler velocity.')
@@ -21,9 +33,9 @@ def fetch_cat_bits(radar, beta, Tw, time, height, vfold):
     cold_bit = get_cold_bit(Tw, melting_bit, time, height)
     cloud_bit = droplet.get_liquid_layers(beta, height)
     rain_bit = get_rain_bit(radar['Zh'], time)
-    clutter_bit = get_clutter_bit(rain_bit, radar['v'])
-    insect_bit, insect_prob = get_insect_bit(radar, Tw, melting_bit,
-                                             cloud_bit, rain_bit, clutter_bit)
+    clutter_bit = get_clutter_bit(radar['v'], rain_bit)
+    insect_bit, insect_prob = get_insect_bit(radar, Tw, melting_bit, cloud_bit,
+                                             rain_bit, clutter_bit)
     cat_bits = _set_cat_bits(cat_bits, cloud_bit, 1)
     cat_bits = _set_cat_bits(cat_bits, cold_bit, 3)
     cat_bits = _set_cat_bits(cat_bits, melting_bit, 4)
@@ -32,7 +44,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height, vfold):
 
 
 def get_melting_bit_ldr(Tw, ldr, v):
-    """ Estimate melting layer from LDR data and model temperature.
+    """Finds melting layer from model temperature, ldr, and velocity.
 
     Args:
         Tw (ndarray): Wet bulb temperature, (n, m).
@@ -40,11 +52,9 @@ def get_melting_bit_ldr(Tw, ldr, v):
         v (ndarray): Doppler velocity, (n, m).
 
     Returns:
-        Binary field indicating the melting layer, (n, m) array
-        where 1=yes and 0=no.
+        A (n, m) binary field indicating the melting layer (1=yes and 0=no).
 
     """
-
     def _slice(arg1, arg2, ii, ind):
         out1, out2 = arg1[ii, ind], arg2[ii, ind]
         return out1, out2, ma.count(out1)
@@ -89,7 +99,7 @@ def get_melting_bit_ldr(Tw, ldr, v):
 
 
 def get_cold_bit(Tw, melting_bit, time, height):
-    """ Find freezing region using the model temperature and melting layer.
+    """Finds freezing region using the model temperature and melting layer.
 
     Sub-zero region is first derived from the model wet bulb temperature.
     It is then adjusted to start from the melting layer when we have such.
@@ -97,19 +107,17 @@ def get_cold_bit(Tw, melting_bit, time, height):
     observations to avoid strong gradients in the zero-temperature line.
 
     Args:
-        Tw (ndarray): Wet bulb temperature as (m, n) array.
-        melting_bit (ndarray): Binary field indicating melting layer,
-                               (m, n) array.
-        time (ndarray): Time vector (m,).
-        height (ndarray): Altitude vector (n,).
+        Tw (ndarray): Wet bulb temperature, (m, n).
+        melting_bit (ndarray): Binary field indicating melting layer, (m, n).
+        time (ndarray): Time vector, (m,).
+        height (ndarray): Altitude vector, (n,).
 
     Returns:
         Binary field indicating the sub-zero region, (m, n).
 
     Notes:
-        It is not straightforward how the model temperature and melting
-        layer should be combined to have a best possible estimate
-        of the sub-zero region.
+        It is not clear how model temperature and melting layer should be
+        ideally combined to determine the sub-zero region.
 
     """
     cold_bit = np.zeros(Tw.shape, dtype=int)
@@ -136,24 +144,22 @@ def get_cold_bit(Tw, melting_bit, time, height):
 
 
 def _set_cat_bits(cat_bits, bits_in, k):
-    """ Update categorize-bits array. """
+    """ Updates categorize-bits array. """
     ind = np.where(bits_in)
     cat_bits[ind] = utils.bit_set(cat_bits[ind], k)
     return cat_bits
 
 
 def _get_t0_alt(Tw, height):
-    """ Find altitudes where model temperature goes
+    """ Interpolates altitudes where model temperature goes
         below freezing.
 
     Args:
-        Tw (ndarray): Wet bulb temperature,
-        height (ndarray): Altitude vector of the
-                          wet bulb temperature.
+        Tw (ndarray): Wet bulb temperature, (n, m).
+        height (ndarray): Altitude vector, (m,).
 
     Returns:
-        1D array containing the interpolated
-        freezing altitudes.
+        1D array containing the interpolated freezing altitudes.
 
     """
     alt = np.array([])
@@ -170,28 +176,43 @@ def _get_t0_alt(Tw, height):
 
 
 def get_insect_bit(radar, Tw, *args):
-    """ Return insect probability and binary field indicating insects. """
+    """ Returns insect probability and binary field indicating insects.
+
+    Args:
+        radar: A dict containing gridded radar fields
+            ('Zh', 'ldr', 'width').
+        Tw (ndarray): Wet bulb temperature.
+        *args: Binary fields that are used to screen the
+            insect probability. E.g. rain_bit, clutter_bit,
+            melting_layer_bit, ...
+
+    Returns:
+        A 2-element tuple containing result of classification
+        for each pixel (1=insect, 0=no) and insect probability
+        (0-1).
+
+    """
     insect_bit = np.zeros(Tw.shape, dtype=int)
-    iprob = insect_probability(radar['Zh'], radar['ldr'], radar['width'])
-    iprob_screened = screen_insects(iprob, Tw, *args)
-    insect_bit[iprob_screened > 0.7] = 1
+    iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])
+    iprob_screened = _screen_insects(iprob, Tw, *args)
+    insect_bit[iprob_screened > 0.7] = 1  # limit should be optional argument
     return insect_bit, iprob_screened
 
 
-def insect_probability(z, ldr, width):
-    """Find insect probability from radar parameters.
+def _insect_probability(z, ldr, width):
+    """Finds insect probability from radar parameters.
 
     Args:
         z (ndarray): Radar echo.
         ldr (ndarray): Radar linear depolarization ratio.
-        width (ndarray): Radar doppler width.
+        width (ndarray): Radar spectral width.
 
     Returns:
         Insect probability between 0-1 for all pixels.
 
     """
     def _insect_prob_ldr(z, ldr, z_loc=15, ldr_loc=-20):
-        """ Probability that pixel is insect, based on Z and LDR values """
+        """Finds probability of insects, based on echo and ldr."""
         zp, ldrp = np.zeros(z.shape), np.zeros(z.shape)
         ind = ~z.mask
         zp[ind] = stats.norm.cdf(z[ind]*-1, loc=z_loc, scale=8)
@@ -200,7 +221,7 @@ def insect_probability(z, ldr, width):
         return zp * ldrp
 
     def _insect_prob_width(z, ldr, w, w_limit=0.06):
-        """ (0, 1) Probability that pixel is insect, based on WIDTH values """
+        """Finds (0, 1) probability of insects, based on spectral width."""
         i_prob = np.zeros(z.shape)
         temp_w = np.ones(z.shape)
         # pixels that have Z but no LDR
@@ -214,56 +235,40 @@ def insect_probability(z, ldr, width):
     return p1 + p2
 
 
-def screen_insects(insect_prob, Tw, *args):
-    """ Screen insects by temperature and other misc. conditions."""
+def _screen_insects(insect_prob, Tw, *args):
+    """Screens insects by temperature and other misc. conditions.
+
+    Args:
+        insect_prob (ndarray): Insect probability, (m, n).
+        Tw (ndarray): (m, n)
+        *args (ndrray): Variable number of binary fields where 1
+            means that insect probablity should be 0. Shape of these
+            fields can be (m, n), or (m,) when whole profile
+            will be flagged.
+
+    """
+    def _screen_insects_misc(insect_prob, *args):
+        """Sets insect probability to 0, indicated by *args."""
+        for arg in args:
+            if arg.size == insect_prob.shape[0]:
+                insect_prob[arg == 1, :] = 0
+            else:
+                insect_prob[arg == 1] = 0
+        return insect_prob
+
+    def _screen_insects_temp(insect_prob, Tw, t_lim=-5):
+        """Removes insects from too cold temperatures."""
+        insect_prob[Tw < (T0+t_lim)] = 0
+        return insect_prob
+
     prob = np.copy(insect_prob)
     prob = _screen_insects_misc(prob, *args)
     prob = _screen_insects_temp(prob, Tw)
     return prob
 
 
-def _screen_insects_misc(insect_prob, *args):
-    """ Set insect probability to 0 where needed.
-
-    Args:
-        insect_prob (ndarray): Insect probability, (m, n).
-        *args (ndrray): Binary fields where 1 means that
-            insect probablity will be changed to 0. Shape
-            of these fields can be (m, n), or (m,) when
-            whole profile will be flagged.
-
-    Returns:
-        Screened insect probability field.
-
-    """
-    for arg in args:
-        if arg.size == insect_prob.shape[0]:
-            insect_prob[arg == 1, :] == 0
-        else:
-            insect_prob[arg == 1] == 0
-    return insect_prob
-
-
-def _screen_insects_temp(insect_prob, Tw, t_lim=-5):
-    """ Remove insects from too cold temperatures.
-
-    Args:
-        insect_prob (ndarray): Insect probability.
-        Tw (ndarray): Wet bulb temperature.
-        t_lim (float, optional): Temperature limit in
-            Celcius. Remove possible insects from colder
-            temperatures. Defaults to -5.
-
-    Returns:
-        Screened insect probability field.
-
-    """
-    insect_prob[Tw < (T0+t_lim)] = 0
-    return insect_prob
-
-
 def get_rain_bit(Z, time, time_buffer=5):
-    """ Find profiles affected by rain.
+    """Find profiles affected by rain.
 
     Args:
         Z (ndarray): Radar echo with shape (m, n).
@@ -273,7 +278,8 @@ def get_rain_bit(Z, time, time_buffer=5):
             and after are also flagged to contain rain. Defaults to 5.
 
     Returns:
-        Binary array indicating profiles affected by rain (1=yes, 0=no).
+        A 1D binary array indicating profiles affected by
+        rain (1=yes, 0=no).
 
     """
     nprofs = len(time)
@@ -288,8 +294,21 @@ def get_rain_bit(Z, time, time_buffer=5):
     return rain_bit
 
 
-def get_clutter_bit(rain_bit, v, ngates=10, vlim=0.05):
-    """ Estimate clutter from radar data. """
+def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
+    """Estimates clutter from doppler velocity.
+
+    Args:
+        v (ndarray): Doppler velocity, (n, m).
+        rain_bit (ndarray): A (n,) array indicating
+            profiles affected by rain (1=yes, 0=no).
+        vlim (float, optional): Velocity threshold.
+            Default is 0.05 (m/s).
+
+    Returns:
+        2-D binary array containing pixels affected
+        by clutter (1=yes, 0=no).
+
+    """
     clutter_bit = np.zeros(v.shape, dtype=int)
     no_rain = np.where(rain_bit == 0)[0]
     ind = np.ma.where(np.abs(v[no_rain, 0:ngates]) < vlim)

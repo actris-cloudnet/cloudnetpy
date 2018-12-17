@@ -20,7 +20,7 @@ setup(
     packages=find_packages(exclude=('tests', 'docs')),
     python_requires='>=3.6',
     install_requires=['scipy>=1.1', 'netCDF4>=1.4.1'],
-        classifiers=[
+    classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
