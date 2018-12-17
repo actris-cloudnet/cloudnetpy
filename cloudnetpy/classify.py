@@ -26,28 +26,28 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
         Bit field containing the classification.
 
     """
-    bits = {}
+    bits = [None]*6
     if 'ldr' and 'v' not in radar:
         raise KeyError('Needs LDR and doppler velocity.')
-    bits['4'] = get_melting_bit_ldr(Tw, radar['ldr'], radar['v'])
-    bits['3'] = get_cold_bit(Tw, bits['4'], time, height)
-    bits['1'] = droplet.get_liquid_layers(beta, height)
+    bits[3] = get_melting_bit_ldr(Tw, radar['ldr'], radar['v'])
+    bits[2] = get_cold_bit(Tw, bits[3], time, height)
+    bits[0] = droplet.get_liquid_layers(beta, height)
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(radar['v'], rain_bit)
-    bits['6'], insect_prob = get_insect_bit(radar, Tw, bits['4'], bits['1'],
-                                            rain_bit, clutter_bit)
-    bits['2'] = get_falling_bit(radar['Zh'], clutter_bit, bits['6'])
-    bits['5'] = get_aerosol_bit(beta, bits['2'], bits['1'])
+    bits[5], insect_prob = get_insect_bit(radar, Tw, bits[3], bits[0],
+                                          rain_bit, clutter_bit)
+    bits[1] = get_falling_bit(radar['Zh'], clutter_bit, bits[5])
+    bits[4] = get_aerosol_bit(beta, bits[1], bits[0])
     cat_bits = _set_cat_bits(bits)
     return cat_bits
 
 
 def _set_cat_bits(bits):
     """Updates category bits array."""
-    cat_bits = np.zeros_like(bits['1'])
-    for n, bit in bits.items():
+    cat_bits = np.zeros_like(bits[0])
+    for n, bit in enumerate(bits, 1):
         ind = np.where(bit)
-        cat_bits[ind] = utils.bit_set(cat_bits[ind], int(n))
+        cat_bits[ind] = utils.bit_set(cat_bits[ind], n)
     return cat_bits
 
 
