@@ -7,9 +7,9 @@ import numpy.ma as ma
 # import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy import stats
-import droplet
-import utils
-from atmos import T0
+from cloudnetpy import droplet
+from cloudnetpy import utils
+from cloudnetpy.atmos import T0
 
 
 def fetch_cat_bits(radar, beta, Tw, time, height):

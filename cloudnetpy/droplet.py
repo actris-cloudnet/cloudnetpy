@@ -4,7 +4,7 @@
 import numpy as np
 import numpy.ma as ma
 import scipy.signal
-import utils
+from cloudnetpy import utils
 
 
 def get_base_ind(dprof, p, dist, lim):

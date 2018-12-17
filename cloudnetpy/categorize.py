@@ -10,11 +10,11 @@ import numpy.ma as ma
 from scipy.interpolate import interp1d
 # import matplotlib as mpl
 # import matplotlib.pyplot as plt
-import config
-import ncf
-import utils
-import atmos
-import classify
+from cloudnetpy import config
+from cloudnetpy import ncf
+from cloudnetpy import utils
+from cloudnetpy import atmos
+from cloudnetpy import classify
 
 
 def generate_categorize(input_files, output_file, aux):
@@ -45,7 +45,6 @@ def generate_categorize(input_files, output_file, aux):
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, wlband, time, height)
-
     cat_bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
                                        time, height)
 
@@ -53,7 +52,7 @@ def generate_categorize(input_files, output_file, aux):
 def _load_files(files):
     """Wrapper to load input files (radar, lidar, mwr, model). """
     if len(files) != 4:
-        raise ValueError('You need 4 input files: radar, lidar, mwr, model.')
+        raise ValueError('Aborting - there should be excatly 4 input files.')
     out = []
     for fil in files:
         out.append(ncf.load_nc(fil))
