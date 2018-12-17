@@ -195,9 +195,9 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         Dict containing {'time', 'lwp', 'lwp_error'} that are 1-D arrays.
 
 
-    Note: 
+    Note:
         hatpro time can be 'hours since' 00h of measurement date
-        or 'seconds since' some epoch (which could be site/file 
+        or 'seconds since' some epoch (which could be site/file
         dependent).
 
     """

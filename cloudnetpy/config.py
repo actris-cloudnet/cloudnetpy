@@ -7,5 +7,5 @@ TIME_RESOLUTION = 30
 
 # Fractional and linear error components
 # for liquid water path (LWP)
-LWP_ERROR = (0.25, 20)  
+LWP_ERROR = (0.25, 20)
 
