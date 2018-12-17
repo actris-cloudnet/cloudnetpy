@@ -58,7 +58,8 @@ def get_melting_bit_ldr(Tw, ldr, v):
         v (ndarray): Doppler velocity, (n, m).
 
     Returns:
-        A (n, m) binary field indicating the melting layer (1=yes and 0=no).
+        A (n, m) Field showing the melting layer
+                 (1 = yes from ldr, 2 = yes from v, and 0 = no).
 
     """
     def _slice(arg1, arg2, ii, ind):
