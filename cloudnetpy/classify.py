@@ -26,23 +26,28 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
         Bit field containing the classification.
 
     """
-    cat_bits = np.zeros(Tw.shape, dtype=int)
+    bits = {}
     if 'ldr' and 'v' not in radar:
         raise KeyError('Needs LDR and doppler velocity.')
-    melting_bit = get_melting_bit_ldr(Tw, radar['ldr'], radar['v'])
-    cold_bit = get_cold_bit(Tw, melting_bit, time, height)
-    cloud_bit = droplet.get_liquid_layers(beta, height)
+    bits['4'] = get_melting_bit_ldr(Tw, radar['ldr'], radar['v'])
+    bits['3'] = get_cold_bit(Tw, bits['4'], time, height)
+    bits['1'] = droplet.get_liquid_layers(beta, height)
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(radar['v'], rain_bit)
-    insect_bit, insect_prob = get_insect_bit(radar, Tw, melting_bit, cloud_bit,
-                                             rain_bit, clutter_bit)
-    falling_bit = get_falling_bit(radar['Zh'], clutter_bit, insect_bit)
-    aerosol_bit = get_aerosol_bit(beta, falling_bit, droplet_bit)
+    bits['6'], insect_prob = get_insect_bit(radar, Tw, bits['4'], bits['1'],
+                                            rain_bit, clutter_bit)
+    bits['2'] = get_falling_bit(radar['Zh'], clutter_bit, bits['6'])
+    bits['5'] = get_aerosol_bit(beta, bits['2'], bits['1'])
+    cat_bits = _set_cat_bits(bits)
+    return cat_bits
 
-    cat_bits = _set_cat_bits(cat_bits, cloud_bit, 1)
-    cat_bits = _set_cat_bits(cat_bits, cold_bit, 3)
-    cat_bits = _set_cat_bits(cat_bits, melting_bit, 4)
-    cat_bits = _set_cat_bits(cat_bits, insect_bit, 6)
+
+def _set_cat_bits(bits):
+    """Updates category bits array."""
+    cat_bits = np.zeros_like(bits['1'])
+    for n, bit in bits.items():
+        ind = np.where(bit)
+        cat_bits[ind] = utils.bit_set(cat_bits[ind], int(n))
     return cat_bits
 
 
@@ -144,13 +149,6 @@ def get_cold_bit(Tw, melting_bit, time, height):
     for ii, alt in enumerate(tline):
         cold_bit[ii, np.where(height > alt)[0]] = 1
     return cold_bit
-
-
-def _set_cat_bits(cat_bits, bits_in, k):
-    """ Updates categorize-bits array. """
-    ind = np.where(bits_in)
-    cat_bits[ind] = utils.bit_set(cat_bits[ind], k)
-    return cat_bits
 
 
 def _get_t0_alt(Tw, height):
