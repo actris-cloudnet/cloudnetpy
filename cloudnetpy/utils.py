@@ -11,7 +11,7 @@ from scipy.interpolate import RectBivariateSpline
 
 
 def epoch2desimal_hour(epoch, time_in):
-    """ Convert seconds since epoch to desimal hour of that day.
+    """Converts seconds since epoch to desimal hour of that day.
 
     Args:
         epoc (tuple): A 3-element tuple containing (year, month, day)
@@ -19,8 +19,8 @@ def epoch2desimal_hour(epoch, time_in):
 
     Returns:
         (list): Time as desimal hour.
-    
-    Examples:        
+
+    Examples:
         >>> epoch2desimal_hour((1970,1,1), 1095379200) # 2004-17-10 12AM
         >>> [24]
 
@@ -38,7 +38,7 @@ def epoch2desimal_hour(epoch, time_in):
 
 
 def get_time(reso):
-    """ Computes fraction hour time vector 0-24 with user-given
+    """Computes fraction hour time vector 0-24 with user-given
     resolution (in seconds) where 60 is the maximum allowed value.
 
     Args:
@@ -58,11 +58,11 @@ def get_time(reso):
 
 
 def binning_vector(x_bin):
-    """ Convert 1-D center points to bins with even spacing.
+    """Converts 1-D center points to bins with even spacing.
 
     Args:
         x_bin (array_like): A 1-D array of N real values.
-                   
+
     Returns:
         (array_like): N + 1 edge values.
 
@@ -77,7 +77,7 @@ def binning_vector(x_bin):
 
 
 def rebin_2d(x_in, data, x_new):
-    """ Rebin 2D data in x-direction using mean. Handles masked data.
+    """Rebins 2-D data in x-direction using mean. Handles masked data.
 
     Args:
         x_in (array_like): A 1-D array.
@@ -103,7 +103,15 @@ def rebin_2d(x_in, data, x_new):
 
 
 def filter_isolated_pixels(array):
-    """ Return array with completely isolated single cells removed. """
+    """Returns array with completely isolated single cells removed.
+
+    Args:
+        array (ndarray): 2-D input data.
+
+    Returns:
+        Cleaned data.
+
+    """
     filtered_array = ma.copy(array)
     id_regions, num_ids = ndimage.label(filtered_array,
                                         structure=np.ones((3, 3)))
@@ -114,7 +122,7 @@ def filter_isolated_pixels(array):
 
 
 def bit_test(integer, nth_bit):
-    """ Test if nth bit (1,2,3..) is on for the input number.
+    """Tests if nth bit (1,2,3..) is on for the input number.
 
     Args:
         integer (int): A number.
@@ -143,7 +151,7 @@ def bit_test(integer, nth_bit):
 
 
 def bit_set(integer, nth_bit):
-    """ Set nth bit (1, 2, 3..) on input number.
+    """Sets nth bit (1, 2, 3..) on input number.
 
     Args:
         integer: A number.
@@ -194,17 +202,15 @@ def interpolate_2d(x, y, x_new, y_new, z):
 
 
 def db2lin(x):
-    """ dB to linear conversion. """
+    """dB to linear conversion."""
     return 10**(x/10)
 
 
 def lin2db(x):
-    """ Linear to dB conversion. """
+    """Linear to dB conversion."""
     return ma.log10(x)*10
 
 
 def med_diff(x):
-    """ Median difference in vector x."""
-    return(ma.median(ma.diff(x)))
-
-
+    """Median difference in vector x."""
+    return ma.median(ma.diff(x))
