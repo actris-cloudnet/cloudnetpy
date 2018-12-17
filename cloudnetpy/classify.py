@@ -3,8 +3,8 @@
 # import sys
 import numpy as np
 import numpy.ma as ma
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy import stats
 from cloudnetpy import droplet
@@ -36,6 +36,9 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     clutter_bit = get_clutter_bit(radar['v'], rain_bit)
     insect_bit, insect_prob = get_insect_bit(radar, Tw, melting_bit, cloud_bit,
                                              rain_bit, clutter_bit)
+    falling_bit = get_falling_bit(radar['Zh'], clutter_bit, insect_bit)
+    aerosol_bit = get_aerosol_bit(beta, falling_bit, droplet_bit)
+
     cat_bits = _set_cat_bits(cat_bits, cloud_bit, 1)
     cat_bits = _set_cat_bits(cat_bits, cold_bit, 3)
     cat_bits = _set_cat_bits(cat_bits, melting_bit, 4)
@@ -315,3 +318,31 @@ def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
     for n, m in zip(*ind):
         clutter_bit[no_rain[n], m] = 1
     return clutter_bit
+
+
+def get_falling_bit(Z, clutter_bit, insect_bit):
+    """Finds falling hydrometeors.
+
+    Args:
+        Z (ndarray): Radar echo, (n, m).
+        clutter_bit (ndarray): Binary field of clutter, (n, m).
+        insect_bit (ndarray): Binary field of insects, (n, m).
+
+    Returns:
+        Binary field for falling hydrometeros (1=yes, 0=no).
+
+    """
+    falling_bit = np.zeros_like(clutter_bit)
+    falling_bit[~Z.mask] = 1
+    falling_bit[clutter_bit == 1] = 0
+    falling_bit[insect_bit == 1] = 0
+    falling_bit = utils.filter_isolated_pixels(falling_bit)
+    return falling_bit
+
+
+def get_aerosol_bit(beta, falling_bit, droplet_bit):
+    """ Estimate aerosols from lidar measured beta """
+    aerosol_bit = np.zeros_like(falling_bit)
+    mazk = (falling_bit == 0) & (droplet_bit == 0) & (~beta.mask)
+    aerosol_bit[mazk] = 1
+    return aerosol_bit

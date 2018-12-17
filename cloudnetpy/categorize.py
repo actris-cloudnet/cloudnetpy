@@ -4,6 +4,8 @@ radar, lidar and MWR files.
 """
 
 import sys
+import os
+sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import math
 import numpy as np
 import numpy.ma as ma
