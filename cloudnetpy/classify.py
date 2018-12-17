@@ -27,8 +27,6 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
 
     """
     bits = [None]*6
-    if 'ldr' and 'v' not in radar:
-        raise KeyError('Needs LDR and doppler velocity.')
     bits[3] = get_melting_bit_ldr(Tw, radar['ldr'], radar['v'])
     bits[2] = get_cold_bit(Tw, bits[3], time, height)
     bits[0] = droplet.get_liquid_layers(beta, height)
