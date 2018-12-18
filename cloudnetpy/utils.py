@@ -15,7 +15,7 @@ def epoch2desimal_hour(epoch, time_in):
 
     Args:
         epoc (tuple): A 3-element tuple containing (year, month, day)
-        time_in (array_like): A 1-D array.
+        time_in (ndarray): A 1-D array.
 
     Returns:
         (list): Time as desimal hour.
@@ -45,7 +45,7 @@ def get_time(reso):
         reso (int): Time resolution in seconds.
 
     Returns:
-        (array_like): Time vector between 0 and 24.
+        (ndarray): Time vector between 0 and 24.
 
     Raises:
         ValueError: Bad resolution as input.
@@ -61,10 +61,10 @@ def binning_vector(x_bin):
     """Converts 1-D center points to bins with even spacing.
 
     Args:
-        x_bin (array_like): A 1-D array of N real values.
+        x_bin (ndarray): A 1-D array of N real values.
 
     Returns:
-        (array_like): N + 1 edge values.
+        N + 1 edge values.
 
     Examples:
         >>> binning_vector([1, 2, 3])
@@ -80,9 +80,9 @@ def rebin_2d(x_in, data, x_new):
     """Rebins 2-D data in x-direction using mean. Handles masked data.
 
     Args:
-        x_in (array_like): A 1-D array.
-        data (array_like): 2-D input data.
-        x_new (array_like): The new x vector (center points).
+        x_in (ndarray): A 1-D array.
+        data (ndarray): 2-D input data.
+        x_new (ndarray): The new x vector (center points).
 
     Returns:
         Rebinned (averaged) data.
@@ -184,14 +184,14 @@ def interpolate_2d(x, y, x_new, y_new, z):
     """Linear interpolation of gridded 2d data.
 
     Args:
-        x (array_like): A 1-D array.
-        y (array_like): A 1-D array.
-        x_new (array_like): A 1-D array.
-        y_new (array_like): A 1-D array.
-        z (array_like): A 2-D array at points (x, y)
+        x (ndarray): A 1-D array.
+        y (ndarray): A 1-D array.
+        x_new (ndarray): A 1-D array.
+        y_new (ndarray): A 1-D array.
+        z (ndarray): A 2-D array at points (x, y)
 
     Returns:
-        (array_like): Interpolated data.
+        (ndarray): Interpolated data.
 
     Notes:
         Does not work with nans.
@@ -212,5 +212,5 @@ def lin2db(x):
 
 
 def med_diff(x):
-    """Median difference in vector x."""
+    """Returns median difference in array."""
     return ma.median(ma.diff(x))

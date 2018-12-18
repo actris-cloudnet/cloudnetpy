@@ -87,7 +87,7 @@ def fetch_radar(rad_vars, fields, time_new):
         rad_vars: A netCDF instance.
         fields (tuple): Tuple of strings containing radar
                         fields to be averaged.
-        time_new (array_like): A 1-D array.
+        time_new (ndarray): A 1-D array.
 
     Returns:
         (dict): Rebinned radar fields.
@@ -129,8 +129,8 @@ def fetch_lidar(lid_vars, fields, time, height):
         lid_vars: A netCDF instance.
         fields (tuple): Tuple of strings containing lidar
                         fields to be averaged.
-        time (array_like): A 1-D array.
-        height (array_like): A 1-D array.
+        time (ndarray): A 1-D array.
+        height (ndarray): A 1-D array.
 
     Returns:
         (dict): Rebinned lidar fields.
@@ -160,7 +160,7 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
         mwr_vars: A netCDF instance.
         lwp_errors: A 2-element tuple containing
                     (fractional_error, linear_error)
-        time (array_like): A 1-D array.
+        time (ndarray): A 1-D array.
 
     Returns:
         Dict containing interpolated LWP data {'lwp', 'lwp_error'}
@@ -216,8 +216,8 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
         mod_vars: A netCDF4 instance.
         alt_site (int): Altitude of site above mean sea level.
         freq (float): Radar frequency.
-        time (array_like): A 1-D array.
-        height (array_like): A 1-D array.
+        time (ndarray): A 1-D array.
+        height (ndarray): A 1-D array.
 
     Returns:
         Dict containing original model fields in common altitude

@@ -15,7 +15,7 @@ def get_base_ind(dprof, p, dist, lim):
     below the peak exceed a threshold value.
 
     Args:
-        dprof (array_like): 1st discrete difference profile of 1D array.
+        dprof (ndarray): 1st discrete difference profile of 1D array.
                             Masked values should be 0, e.g.
                             dprof=np.diff(masked_prof).filled(0)
         p (int): Index of (possibly local) peak in the original profile.
@@ -78,8 +78,8 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
     """ Estimate liquid layers from SNR-screened attenuated backscattering.
 
     Args:
-        beta (array_like): 2D attenuated backscattering.
-        height (array_like): 1D array of altitudes (m).
+        beta (ndarray): 2D attenuated backscattering.
+        height (ndarray): 1D array of altitudes (m).
         peak_amp (float, optional): Minimum value for peak. Default is 2e-5.
         max_width (float, optional): Maximum width of peak. Default is 300 (m).
         min_points (int, optional): Minimum number of valid points in peak. Default is 3.
@@ -88,7 +88,7 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
             is always positive. Default is 1e6.
 
     Returns:
-        (array_like): Classification of liquid at each point: 1 = Yes,  0 = No
+        (ndarray): Classification of liquid at each point: 1 = Yes,  0 = No
 
     """
     # search distances for potential base/top
