@@ -72,8 +72,8 @@ def get_melting_bit(Tw, ldr, v):
         return top, base
 
     melting_bit = np.zeros(Tw.shape, dtype=int)
-    ldr_diff = np.diff(ldr, axis=1).filled(fill_value=0)
-    v_diff = np.diff(v, axis=1).filled(fill_value=0)
+    ldr_diff = np.diff(ldr, axis=1).filled(0)
+    v_diff = np.diff(v, axis=1).filled(0)
     trange = (-2, 5)  # find peak from this T range around T0
     for ii, tprof in enumerate(Tw):
         ind = np.where((tprof > T0+trange[0]) &
