@@ -110,7 +110,7 @@ def get_site_alt(*vrs):
        *vrs: Files (Dataset variables) to be investigated.
 
     Returns:
-        Altitude of the measurement site.
+        Altitude (m) of the measurement site.
 
     Raises:
         KeyError: If no 'altitude' field is found from any of

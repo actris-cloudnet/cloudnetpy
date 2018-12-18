@@ -98,7 +98,7 @@
 <span class="sd">        ValueError: Invalid frequency value.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">possible_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;radar_frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;frequency&#39;</span><span class="p">)</span>  
+    <span class="n">possible_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;radar_frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;frequency&#39;</span><span class="p">)</span>
     <span class="n">freq</span> <span class="o">=</span> <span class="p">[</span><span class="n">vrs</span><span class="p">[</span><span class="n">field</span><span class="p">][:]</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">vrs</span> <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">possible_fields</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">freq</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Missing frequency in the radar file.&#39;</span><span class="p">)</span>
@@ -144,7 +144,7 @@
 <span class="sd">       *vrs: Files (Dataset variables) to be investigated.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Altitude of the measurement site.</span>
+<span class="sd">        Altitude (m) of the measurement site.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError: If no &#39;altitude&#39; field is found from any of</span>

@@ -83,8 +83,8 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         peak_amp (float, optional): Minimum value for peak. Default is 2e-5.
         max_width (float, optional): Maximum width of peak. Default is 300 (m).
         min_points (int, optional): Minimum number of valid points in peak. Default is 3.
-        min_top_der (float, optional): Minimum derivative above peak 
-            defined as (alt_top-alt_peak)/(beta_peak-beta_top) which 
+        min_top_der (float, optional): Minimum derivative above peak
+            defined as (alt_top-alt_peak)/(beta_peak-beta_top) which
             is always positive. Default is 1e6.
 
     Returns:
@@ -111,7 +111,7 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         try:
             top = get_top_ind(dprof, p, height.shape[0], top_above_peak, 4)
         except:
-            continue      
+            continue
         npoints = np.count_nonzero(lprof[base:top+1])
         peak_width = height[top] - height[base]
         top_der = (height[top] - height[p]) / (lprof[p] - lprof[top])

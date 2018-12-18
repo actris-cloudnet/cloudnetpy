@@ -3,20 +3,20 @@ categorize (Level 1) product from pre-processed
 radar, lidar and MWR files.
 """
 
-import sys
 import os
-sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
+import sys
+sys.path.insert(0, os.path.abspath('../../cloudnetpy'))  #pylint: disable=wrong-import-position
 import math
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import interp1d
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
 from cloudnetpy import config
 from cloudnetpy import ncf
 from cloudnetpy import utils
 from cloudnetpy import atmos
 from cloudnetpy import classify
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
 
 
 def generate_categorize(input_files, output_file, aux):
@@ -36,17 +36,15 @@ def generate_categorize(input_files, output_file, aux):
         freq = ncf.get_radar_freq(rad_vars)
     except (ValueError, KeyError) as error:
         sys.exit(error)
-    wlband = ncf.get_wl_band(freq)
     height = _get_altitude_grid(rad_vars)  # m
-    vfold = rad_vars['NyquistVelocity'][:]
     try:
         alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
-        radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time, vfold)
+        radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time)
     except KeyError as error:
         sys.exit(error)
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
-    model = fetch_model(mod_vars, alt_site, wlband, time, height)
+    model = fetch_model(mod_vars, alt_site, freq, time, height)
     cat_bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
                                        time, height)
 
@@ -81,7 +79,7 @@ def _get_altitude_grid(rad_vars):
     return range_instru + alt_instru
 
 
-def fetch_radar(rad_vars, fields, time_new, vfold):
+def fetch_radar(rad_vars, fields, time_new):
     """Reads and rebins radar 2d fields in time.
 
     Args:
@@ -89,7 +87,6 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
         fields (tuple): Tuple of strings containing radar
                         fields to be averaged.
         time_new (array_like): A 1-D array.
-        vfold (float): folding velocity
 
     Returns:
         (dict): Rebinned radar fields.
@@ -103,7 +100,7 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
 
     """
     out = {}
-    c = math.pi/vfold
+    vfold = math.pi/rad_vars['NyquistVelocity'][:]
     time_orig = rad_vars['time'][:]
     for field in fields:
         if field not in rad_vars:
@@ -114,11 +111,11 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
             data_mean = utils.rebin_2d(time_orig, data_lin, time_new)
             out[field] = utils.lin2db(data_mean)
         elif field == 'v':  # average in polar coordinates
-            data = data * c
+            data = data * vfold
             vx, vy = np.cos(data), np.sin(data)
             vx_mean = utils.rebin_2d(time_orig, vx, time_new)
             vy_mean = utils.rebin_2d(time_orig, vy, time_new)
-            out[field] = np.arctan2(vy_mean, vx_mean) / c
+            out[field] = np.arctan2(vy_mean, vx_mean) / vfold
         else:
             out[field] = utils.rebin_2d(time_orig, data, time_new)
     return out
@@ -211,13 +208,13 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
     return {'time': time, 'lwp': lwp, 'lwp_error': lwp_err}
 
 
-def fetch_model(mod_vars, alt_site, wlband, time, height):
+def fetch_model(mod_vars, alt_site, freq, time, height):
     """ Wrapper function to read and interpolate model variables.
 
     Args:
         mod_vars: A netCDF4 instance.
         alt_site (int): Altitude of site above mean sea level.
-        wlband (int): 0 (35Ghz) or 1 (94Ghz)
+        freq (float): Radar frequency.
         time (array_like): A 1-D array.
         height (array_like): A 1-D array.
 
@@ -232,7 +229,7 @@ def fetch_model(mod_vars, alt_site, wlband, time, height):
               'specific_liquid_atten')
     fields_all = fields + ('q', 'uwind', 'vwind')
     model, model_time, model_height = _read_model(mod_vars, fields_all,
-                                                  alt_site, wlband)
+                                                  alt_site, freq)
     model_i = _interpolate_model(model, fields, model_time,
                                  model_height, time, height)
     Tw = atmos.wet_bulb(model_i['temperature'], model_i['pressure'],
@@ -241,9 +238,10 @@ def fetch_model(mod_vars, alt_site, wlband, time, height):
             'height': model_height, 'Tw': Tw}
 
 
-def _read_model(vrs, fields, alt_site, wlband):
+def _read_model(vrs, fields, alt_site, freq):
     """Read model fields and interpolate into common altitude grid."""
     out = {}
+    wlband = ncf.get_wl_band(freq)
     model_heights = ncf.km2m(vrs['height']) + alt_site  # above mean sea level
     model_heights = np.array(model_heights)  # masked arrays not supported
     model_time = vrs['time'][:]

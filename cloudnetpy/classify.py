@@ -58,7 +58,7 @@ def get_melting_bit(Tw, ldr, v):
         v (ndarray): Doppler velocity, (n, m).
 
     Returns:
-        Melting layer detection status (1 = yes from ldr, 
+        Melting layer detection status (1 = yes from ldr,
         2 = yes from v, 0 = no).
 
     """
@@ -86,10 +86,8 @@ def get_melting_bit(Tw, ldr, v):
         if nldr > 3 or nv > 3:
             try:
                 top, base = _basetop(ldr_dprof, ldr_p, nind)
-                diff1 = ldr_prof[ldr_p] - ldr_prof[top]
-                diff2 = ldr_prof[ldr_p] - ldr_prof[base]
-                conds = (diff1 > 4,
-                         diff2 > 4,
+                conds = (ldr_prof[ldr_p] - ldr_prof[top] > 4,
+                         ldr_prof[ldr_p] - ldr_prof[base] > 4,
                          ldr_prof[ldr_p] > -20,
                          v_prof[base] < -2)
                 if all(conds):
@@ -97,8 +95,8 @@ def get_melting_bit(Tw, ldr, v):
             except:  # just cach all exceptions
                 try:
                     top, base = _basetop(v_dprof, v_p, nind)
-                    diff1 = v_prof[top] - v_prof[base]
-                    if diff1 > 1 and v_prof[base] < -2:
+                    diff = v_prof[top] - v_prof[base]
+                    if diff > 1 and v_prof[base] < -2:
                         melting_bit[ii, ind[v_p-1:v_p+2]] = 2
                 except:  # failed whatever the reason
                     continue
