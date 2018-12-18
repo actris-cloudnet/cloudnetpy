@@ -1,4 +1,10 @@
-""" Main testing file for Categorize file creation """
+""" Main testing file for Categorize file creation 
+
+Test data is here:
+
+http://tukiains.kapsi.fi/omia/test_data.tar.gz
+
+"""
 import sys
 import os
 sys.path.insert(0, '../cloudnetpy')
