@@ -47,6 +47,7 @@ def generate_categorize(input_files, output_file, aux):
     model = fetch_model(mod_vars, alt_site, freq, time, height)
     cat_bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
                                        time, height)
+    gas_atten = atmos.get_gas_atten(model['model_i'], cat_bits, height)
 
 
 def _load_files(files):

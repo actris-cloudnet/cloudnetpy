@@ -2,7 +2,13 @@
 atmospheric parameters.
 """
 
+# import sys
 import numpy as np
+# import numpy.ma as ma
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
+from cloudnetpy import utils
+
 
 # triple point of water
 T0 = 273.16
@@ -122,3 +128,27 @@ def wet_bulb(Tdry, p, rh):
     B = Pw_d + F - Tdew*Pw_dd
     C = -Tdry*F - Tdew*Pw_d + 0.5*Tdew**2*Pw_dd
     return (-B + np.sqrt(B*B - 4*A*C)) / (2*A)
+
+
+def get_gas_atten(model_i, cat_bits, height):
+    """Returns gas attenuation (assumes saturation inside liquid droplets).
+
+    Args:
+        model_i: Dict containing interpolated model fields.
+        cat_bits (ndarray): 2D array of integers containing categorize
+            flag bits.
+
+    Returns:
+        Attenuation due to atmospheric gases.
+
+    """
+    dheight = utils.med_diff(height)
+    droplet_bit = utils.bit_test(cat_bits, 1)
+    ind = np.where(droplet_bit)
+    gas_atten = np.zeros_like(droplet_bit, float)
+    spec_gas_atten = np.copy(model_i['specific_gas_atten'])
+    spec_gas_atten[ind] = model_i['specific_saturated_gas_atten'][ind]
+    gas_atten[:, :] = model_i['gas_atten'][0, :]
+    gas_atten[:, 1:] = gas_atten[:, 1:] + 2.0*np.cumsum(spec_gas_atten[:, :-1],
+                                                        axis=1)*dheight*0.001
+    return gas_atten

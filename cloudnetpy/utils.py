@@ -112,7 +112,7 @@ def filter_isolated_pixels(array):
         Cleaned data.
 
     """
-    filtered_array = ma.copy(array)
+    filtered_array = np.copy(array)
     id_regions, num_ids = ndimage.label(filtered_array,
                                         structure=np.ones((3, 3)))
     id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids+1)))

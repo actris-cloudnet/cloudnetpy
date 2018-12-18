@@ -95,7 +95,7 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
     dheight = utils.med_diff(height)
     base_below_peak = int(np.ceil((200/dheight)))
     top_above_peak = int(np.ceil((150/dheight)))
-    cloud_bit = ma.masked_all(beta.shape, dtype=int)
+    cloud_bit = np.zeros(beta.shape, dtype=int)
     beta_diff = np.diff(beta, axis=1).filled(0)  # difference matrix
     beta = beta.filled(0)
     pind = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)

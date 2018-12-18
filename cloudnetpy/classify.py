@@ -1,6 +1,7 @@
 """ Classify gridded measurements. """
 
 # import sys
+import sys
 import numpy as np
 import numpy.ma as ma
 # import matplotlib as mpl
@@ -28,7 +29,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     """
     bits = [None]*6
     bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
-    bits[2] = get_cold_bit(Tw, bits[3], time, height)
+    bits[2] = get_cold_bit(Tw, bits[3], time, height)    
     bits[0] = droplet.get_liquid_layers(beta, height)
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(radar['v'], rain_bit)
