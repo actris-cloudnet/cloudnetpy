@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../../cloudnetpy'))  #pylint: disable=wrong-import-position
 import math
 import numpy as np
-import numpy.ma as ma
+# import numpy.ma as ma
 from scipy.interpolate import interp1d
 from cloudnetpy import config
 from cloudnetpy import ncf
