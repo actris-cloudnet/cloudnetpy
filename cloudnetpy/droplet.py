@@ -41,25 +41,25 @@ def get_base_ind(dprof, p, dist, lim):
         that contains one bad, masked value
 
         >>> mx = ma.masked_array(x, mask=[0, 0, 0, 1, 0, 0, 0])
-        >>> [0 0.5, 1.0, --, 4.0, 8.0, 5.0]
+            [0 0.5, 1.0, --, 4.0, 8.0, 5.0]
 
         The 1st order difference is now
 
         >>> dx = np.diff(mx).filled(0)
-        >>> [0.5 0.5,  0. ,  0. ,  4. , -3. ]
+            [0.5 0.5,  0. ,  0. ,  4. , -3. ]
 
         From the original profile we see that the peak index is 5.
         Let's assume our base can't be more than 4 elements below
         peak and the threshold value is 2. Thus we call
 
         >>> get_base_ind(dx, 5, 4, 2)
-        >>> 4
+            4
 
         When x[4] is the lowermost point that satisfies the condition.
         Changing the threshold value would alter the result
 
         >>> get_base_ind(dx, 5, 4, 10)
-        >>> 1
+            1
     """
     start = max(p-dist, 0)  # should not be negative
     diffs = dprof[start:p]

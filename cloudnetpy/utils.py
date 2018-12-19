@@ -22,7 +22,7 @@ def epoch2desimal_hour(epoch, time_in):
 
     Examples:
         >>> epoch2desimal_hour((1970,1,1), 1095379200) # 2004-17-10 12AM
-        >>> [24]
+            [24]
 
     """
     if not hasattr(time_in, "__iter__"):
@@ -231,7 +231,7 @@ def bases_and_tops(y):
     Examples:
         >>> y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]
         >>> bases_and_tops(y)
-        >>> ([3, 7], [4, 9])
+            ([3, 7], [4, 9])
 
     """
     zero = np.zeros(1)
