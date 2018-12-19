@@ -31,7 +31,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
             - bit 5: Aerosols
             - bit 6: Insects
 
-        The dict contains also profiles containing rain, 'rain_bit', 
+        The dict contains also profiles containing rain, 'rain_bit',
         and pixels contaminated by clutter, 'clutter_bit'.
 
     """
