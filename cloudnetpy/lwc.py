@@ -25,10 +25,13 @@ def theory_adiabatic_lwc(T, P):
     R = con.Rs  # specific gas constant for dry air
     drylapse = -g / cp  # dry lapse rate
     qs, es = temp2mixingratio(T, P)
-    rhoa = P / (R * (1 + 0.6*qs) * T)
-    dqldz = -(1 - (cp*T / (L*e))) * (1/((cp*T/(L*e)) + (L*qs*rhoa/(P-es))))*(rhoa*g*e*es)*((P-es)**(-2))
-    dlwcdz = rhoa * dqldz
-    return dlwcdz
+    rhoa = P / (R*T*(0.6*qs + 1))
+    a, b = cp*T/(L*e), P-es
+    f1 = -1 + a
+    f2 = 1/(a + (L*qs*rhoa/b))
+    f3 = rhoa*g*e*es*b**-2
+    dlwc_dz = rhoa*f1*f2*f3
+    return dlwc_dz
 
 
 def temp2mixingratio(T, P):
