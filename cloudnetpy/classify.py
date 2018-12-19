@@ -23,14 +23,14 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
         Tw (ndarray): Wet bulb temperature.
         height (ndarray): 1D altitude vector.
 
-    Returns:
-        A dict containing the classification, 'cat_bits', where:
-        1: Liquid droplets
-        2: Falling hydrometeors
-        3: Temperature < 0
-        4: Melting layer
-        5: Aerosols
-        6: Insects
+    Returns: A dict containing the classification, 'cat_bits', where:
+            - bit 1: Liquid droplets
+            - bit 2: Falling hydrometeors
+            - bit 3: Temperature < 0
+            - bit 4: Melting layer
+            - bit 5: Aerosols
+            - bit 6: Insects
+
         The dict contains also profiles containing rain, 'rain_bit', 
         and pixels contaminated by clutter, 'clutter_bit'.
 
