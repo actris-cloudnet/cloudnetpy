@@ -183,7 +183,7 @@ def _get_T0_alt(Tw, height):
     return alt
 
 
-def get_insect_bit(radar, Tw, *args):
+def get_insect_bit(radar, Tw, *args, prob_lim=0.7):
     """ Returns insect probability and binary field indicating insects.
 
     Args:
@@ -193,6 +193,8 @@ def get_insect_bit(radar, Tw, *args):
         *args: Binary fields that are used to screen the
             insect probability. E.g. rain_bit, clutter_bit,
             melting_layer_bit, ...
+        prob_lim (float, optional): Probability higher than
+            this will lead to positive result. Default is 0.7.
 
     Returns:
         A 2-element tuple containing result of classification
@@ -203,7 +205,7 @@ def get_insect_bit(radar, Tw, *args):
     insect_bit = np.zeros(Tw.shape, dtype=int)
     iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])
     iprob_screened = _screen_insects(iprob, Tw, *args)
-    insect_bit[iprob_screened > 0.7] = 1  # limit should be optional argument
+    insect_bit[iprob_screened > prob_lim] = 1
     return insect_bit, iprob_screened
 
 
