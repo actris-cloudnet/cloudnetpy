@@ -240,7 +240,21 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
 
 
 def _read_model(vrs, fields, alt_site, freq):
-    """Read model fields and interpolate into common altitude grid."""
+    """Read model fields and interpolate into common altitude grid.
+
+    Args:
+        vrs: A netCDF4 instance.
+        fields (array_like): list of strings containing fields
+            to be interpolated.
+        alt_site (float): Site altitude (m).
+        freq (float): Radar frequency (GHz).
+
+    Returns:
+        3-element tuple containing (1) dict that has original model fields
+        in common altitude grid, and interpolated model fields, (2) Original
+        model time (3) Original model heights (average of individual heights
+        of the day).
+    """
     out = {}
     wlband = ncf.get_wl_band(freq)
     model_heights = ncf.km2m(vrs['height']) + alt_site  # above mean sea level
@@ -263,7 +277,18 @@ def _read_model(vrs, fields, alt_site, freq):
 
 
 def _interpolate_model(model, fields, *args):
-    """ Interpolate model fields into Cloudnet time/height grid """
+    """ Interpolate model fields into Cloudnet time/height grid
+
+    Args:
+        model: A netCDF instance.
+        fields (array_like): list of strings containing fields
+            to be interpolated.
+        *args: original time, orignal height, new time, new height.
+
+    Returns:
+        dict containing interpolated model fields.
+
+    """
     out = {}
     for field in fields:
         out[field] = utils.interpolate_2d(*args, model[field])
