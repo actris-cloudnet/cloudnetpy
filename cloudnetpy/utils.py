@@ -223,13 +223,13 @@ def bases_and_tops(y):
     ones, i.e. their starting and ending indices.
 
     Args:
-        y (ndarray): 1D array.
+        y (array_like): 1D array.
 
     Returns:
         2-element tuple containing indices of bases and tops.
 
     Examples:
-        >>> y = np.array([0, 0, 0, 1, 1, 0, 0, 1, 1, 1]
+        >>> y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]
         >>> bases_and_tops(y)
         >>> ([3, 7], [4, 9])
 
