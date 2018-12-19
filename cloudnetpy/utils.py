@@ -239,4 +239,4 @@ def bases_and_tops(y):
     y2_diff = np.diff(y2)
     bases = np.where(y2_diff == 1)[0]
     tops = np.where(y2_diff == -1)[0] - 1
-    return (bases, tops)
+    return bases, tops
