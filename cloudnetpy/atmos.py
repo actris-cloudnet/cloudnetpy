@@ -2,11 +2,11 @@
 atmospheric parameters.
 """
 
-import sys
+# import sys
 import numpy as np
-import numpy.ma as ma
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+# import numpy.ma as ma
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
 from cloudnetpy import utils
 from cloudnetpy import lwc
 from cloudnetpy import constants as con
@@ -153,42 +153,40 @@ def get_gas_atten(model_i, cat_bits, height):
 
 
 def get_liquid_atten(lwp, model, bits, height):
-    """ approximation of a liquid attenuation in a profile """
-    #msize = temperature.shape
-    #lwc_adiabatic = ma.zeros(msize)
-    #lwc_error = ma.zeros(msize)
-    #lwp_boxes = ma.zeros(msize)
-    #lwp_boxes_error = ma.zeros(msize)
-    #liquid_attenuation = ma.zeros(msize)
-    #liquid_attenuation_error = ma.zeros(msize)
-    #corr_atten_bit = np.zeros_like(droplet_bit)
-    #uncorr_atten_bit = np.zeros_like(droplet_bit)
+    """ approximation of a liquid attenuation in a profile.
+    """
+    spec_liq_att = model['specific_liquid_atten']
     droplet_bit = utils.bit_test(bits['cat_bits'], 1)
+    msize = droplet_bit.shape
+    lwc_adiabatic, lwc_err = np.zeros(msize), np.zeros(msize)
+    lwp_boxes, lwp_boxes_err = np.zeros(msize), np.zeros(msize)
+    liq_atten, liq_atten_err = np.zeros(msize), np.zeros(msize)
+    dheight = utils.med_diff(height) * 1000
     is_liquid = np.any(droplet_bit, axis=1)
     is_lwp = np.isfinite(lwp['lwp'])
     for ii in np.where(is_lwp & is_liquid)[0]:
         bases, tops = utils.bases_and_tops(droplet_bit[ii, :])
         for base, top in zip(bases, tops):
             npoints = top - base + 1
-            idx = np.arange(npoints) + base
-            dlwc_dz = lwc.theory_adiabatic_lwc(model['model_i']['temperature'][ii, base],
-                                               model['model_i']['pressure'][ii, base])
-
-            #lwc_adiabatic[ii,idx] = dlwc_dz * dheight * 1000 * (np.arange(npoints)+1)
-            #lwc_error[ii,idx] = dlwc_dz # unnormalised
-
-        #lwp_boxes[ii,:] = lwp[ii] * lwc_adiabatic[ii,:] / np.sum(lwc_adiabatic[ii,:])
-        #lwp_boxes_error[ii,:] = lwp_error[ii] * lwc_error[ii,:] / np.sum(lwc_error[ii,:])
-
-    #for ii in np.where(~is_lwp)[0]:
-    #    lwp_boxes[ii,droplet_bit[ii,:]==1] = None
-
-    #liquid_attenuation[:,1:] = 0.002 * ma.cumsum(lwp_boxes[:,0:-1] * specific_liquid_atten[:,0:-1], axis=1)
-    #liquid_attenuation_error[:,1:] = 0.002 * np.cumsum(lwp_boxes_error[:,0:-1] * specific_liquid_atten[:,0:-1], axis=1)
-
+            ran = np.arange(npoints)
+            idx = ran + base
+            dlwc_dz = lwc.theory_adiabatic_lwc(model['temperature'][ii, base],
+                                               model['pressure'][ii, base])
+            lwc_adiabatic[ii, idx] = dlwc_dz * dheight * (ran+1)
+            lwc_err[ii, idx] = dlwc_dz  # unnormalised
+        lwp_boxes[ii, :] = (lwp['lwp'][ii] *
+                            lwc_adiabatic[ii, :]/np.sum(lwc_adiabatic[ii, :]))
+        lwp_boxes_err[ii, :] = (lwp['lwp_error'][ii] *
+                                lwc_err[ii, :]/np.sum(lwc_err[ii, :]))
+    for ii in np.where(~is_lwp)[0]:
+        lwp_boxes[ii, droplet_bit[ii, :] == 1] = None
+    liq_atten[:, 1:] = 0.002 * np.cumsum(lwp_boxes[:, :-1] *
+                                         spec_liq_att[:, :-1], axis=1)
+    liq_atten_err[:, 1:] = 0.002 * np.cumsum(lwp_boxes_err[:, :-1] *
+                                             spec_liq_att[:, :-1], axis=1)
     #liquid_attenuation[rain_bit==1,:] = None
     #above_melting = np.cumsum(melting_bit>0,axis=1)
-    #liquid_attenuation[above_melting>=1] = None    
+    #liquid_attenuation[above_melting>=1] = None
     #liquid_attenuation = ma.masked_invalid(liquid_attenuation)
     #liquid_attenuation = ma.masked_equal(liquid_attenuation,0)
     # bit indicating attenuation that was corrected

@@ -46,7 +46,7 @@ def generate_categorize(input_files, output_file, aux):
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, freq, time, height)
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height)
-    atten = _get_attenuations(lwp, model, bits, height)
+    atten = _get_attenuations(lwp, model['model_i'], bits, height)
 
 
 def _get_attenuations(lwp, model, bits, height):
