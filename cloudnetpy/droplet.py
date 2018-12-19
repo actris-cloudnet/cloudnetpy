@@ -4,6 +4,8 @@
 # import sys
 import numpy as np
 # import numpy.ma as ma
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
 import scipy.signal
 from cloudnetpy import utils
 
@@ -74,7 +76,7 @@ def get_top_ind(dprof, p, nprof, dist, lim):
 
 
 def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
-                      min_points=3, min_top_der=1e6):
+                      min_points=3, min_top_der=2e-7):
     """ Estimate liquid layers from SNR-screened attenuated backscattering.
 
     Args:
@@ -85,8 +87,8 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         min_points (int, optional): Minimum number of valid points in peak.
             Default is 3.
         min_top_der (float, optional): Minimum derivative above peak
-            defined as (alt_top-alt_peak)/(beta_peak-beta_top) which
-            is always positive. Default is 1e6.
+            defined as (beta_peak-beta_top) / (alt_top-alt_peak) which
+            is always positive. Default is 2e-7.
 
     Returns:
         (ndarray): Classification of liquid at each point: 1 = Yes,  0 = No
@@ -115,7 +117,7 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
             continue
         npoints = np.count_nonzero(lprof[base:top+1])
         peak_width = height[top] - height[base]
-        top_der = (height[top] - height[peak]) / (lprof[peak] - lprof[top])
+        top_der = (lprof[peak] - lprof[top]) / (height[top] - height[peak])
         conds = (npoints > min_points,
                  peak_width < max_width,
                  top_der > min_top_der)
