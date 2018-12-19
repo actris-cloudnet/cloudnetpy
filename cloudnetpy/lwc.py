@@ -7,8 +7,7 @@ def theory_adiabatic_lwc(T, P):
     """Returns adiabatic LWC change rate.
 
     Calculates the theoretical adiabatic rate of increase of LWC with
-    height, or pressure, given the cloud base temperature and pressure,
-    From Brenguier (1991).
+    height, or pressure, given the cloud base temperature and pressure.
 
     Args:
         T (ndarray): Temperature of cloud base (K).
@@ -16,6 +15,9 @@ def theory_adiabatic_lwc(T, P):
 
     Returns:
         dlwc/dz in kg m-3 m-1
+
+    References:
+        Brenguier, 1991, https://bit.ly/2QCSJtb
 
     """
     e = con.mw_ratio  # Ratio of the molecular weight of water vapor to dry air
