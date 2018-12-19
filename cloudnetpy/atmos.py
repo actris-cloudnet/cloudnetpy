@@ -4,7 +4,7 @@ atmospheric parameters.
 
 # import sys
 import numpy as np
-# import numpy.ma as ma
+import numpy.ma as ma
 # import matplotlib as mpl
 # import matplotlib.pyplot as plt
 from cloudnetpy import utils
@@ -197,14 +197,29 @@ def get_liquid_atten(lwp, model, bits, height):
                                          spec_liq_att[:, :-1], axis=1)
     liq_atten_err[:, 1:] = 0.002 * np.cumsum(lwp_boxes_err[:, :-1] *
                                              spec_liq_att[:, :-1], axis=1)
-    #liquid_attenuation[rain_bit==1,:] = None
-    #above_melting = np.cumsum(melting_bit>0,axis=1)
-    #liquid_attenuation[above_melting>=1] = None
-    #liquid_attenuation = ma.masked_invalid(liquid_attenuation)
-    #liquid_attenuation = ma.masked_equal(liquid_attenuation,0)
-    # bit indicating attenuation that was corrected
-    #corr_atten_bit[~liquid_attenuation.mask] = 1
-    # bit indicating attenuation that was NOT corrected
-    #uncorr_atten_bit[rain_bit==1,:] = 1
-    #uncorr_atten_bit[above_melting>=1] = 1
-    return 0
+    liq_atten, cbit, ucbit = _screen_liq_atten(liq_atten, bits)
+    return {'liq_atten': liq_atten, 'liq_atten_err': liq_atten_err,
+            'liq_atten_corr_bit': cbit, 'liq_atten_ucorr_bit': ucbit}
+
+
+def _screen_liq_atten(liq_atten, bits):
+    """Remove corrupted data from liquid attenuation."""
+
+    def _get_bits(liq_atten, rain_ind, melt_ind):
+        corr_atten_bit = np.zeros_like(melt_ind)
+        uncorr_atten_bit = np.zeros_like(melt_ind)
+        corr_atten_bit[~liq_atten.mask] = 1
+        uncorr_atten_bit[rain_ind, :] = 1
+        uncorr_atten_bit[melt_ind] = 1
+        return corr_atten_bit, uncorr_atten_bit
+    
+    rain_ind = bits['rain_bit'] == 1
+    melt_bit = utils.bit_test(bits['cat_bits'], 4)
+    above_melt = np.cumsum(melt_bit == 1, axis=1)
+    melt_ind = above_melt >= 1
+    liq_atten[melt_ind] = None
+    liq_atten[rain_ind, :] = None
+    liq_atten = ma.masked_invalid(liq_atten)
+    liq_atten = ma.masked_equal(liq_atten, 0)
+    cbit, ucbit = _get_bits(liq_atten, rain_ind, melt_ind)
+    return liq_atten, cbit, ucbit
