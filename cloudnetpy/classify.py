@@ -1,7 +1,7 @@
 """ Classify gridded measurements. """
 
 # import sys
-import sys
+# import sys
 import numpy as np
 import numpy.ma as ma
 # import matplotlib as mpl
@@ -29,7 +29,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     """
     bits = [None]*6
     bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
-    bits[2] = get_cold_bit(Tw, bits[3], time, height)    
+    bits[2] = get_cold_bit(Tw, bits[3], time, height)
     bits[0] = droplet.get_liquid_layers(beta, height)
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(radar['v'], rain_bit)
@@ -128,7 +128,7 @@ def get_cold_bit(Tw, melting_bit, time, height):
     """
     cold_bit = np.zeros(Tw.shape, dtype=int)
     ntime = time.shape[0]
-    t0_alt = _get_t0_alt(Tw, height)
+    t0_alt = _get_T0_alt(Tw, height)
     mean_melting_height = np.zeros((ntime,))
     for ii in np.where(np.any(melting_bit, axis=1))[0]:
         mean_melting_height[ii] = np.median(
@@ -149,7 +149,7 @@ def get_cold_bit(Tw, melting_bit, time, height):
     return cold_bit
 
 
-def _get_t0_alt(Tw, height):
+def _get_T0_alt(Tw, height):
     """ Interpolates altitudes where model temperature goes
         below freezing.
 
