@@ -4,12 +4,20 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>categorize &#8212; CloudnetPy  documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
@@ -18,17 +26,15 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head><body>
+  </head>
+  <body>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for categorize</h1><div class="highlight"><pre>
@@ -42,7 +48,7 @@
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="s1">&#39;../../cloudnetpy&#39;</span><span class="p">))</span>  <span class="c1">#pylint: disable=wrong-import-position</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
+<span class="c1"># import numpy.ma as ma</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">interp1d</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">config</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">ncf</span>
@@ -79,8 +85,15 @@
     <span class="n">lidar</span> <span class="o">=</span> <span class="n">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,),</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
     <span class="n">lwp</span> <span class="o">=</span> <span class="n">fetch_mwr</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">LWP_ERROR</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-    <span class="n">cat_bits</span> <span class="o">=</span> <span class="n">classify</span><span class="o">.</span><span class="n">fetch_cat_bits</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">],</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;Tw&#39;</span><span class="p">],</span>
-                                       <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div>
+    <span class="n">bits</span> <span class="o">=</span> <span class="n">classify</span><span class="o">.</span><span class="n">fetch_cat_bits</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">],</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;Tw&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">atten</span> <span class="o">=</span> <span class="n">_get_attenuations</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;model_i&#39;</span><span class="p">],</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_attenuations</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model_i</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return attenuations due to atmospheric liquid and gases.&quot;&quot;&quot;</span>
+    <span class="n">gas_atten</span> <span class="o">=</span> <span class="n">atmos</span><span class="o">.</span><span class="n">get_gas_atten</span><span class="p">(</span><span class="n">model_i</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;cat_bits&#39;</span><span class="p">],</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">liq_atten</span> <span class="o">=</span> <span class="n">atmos</span><span class="o">.</span><span class="n">get_liquid_atten</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model_i</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;gas_atten&#39;</span><span class="p">:</span> <span class="n">gas_atten</span><span class="p">,</span> <span class="s1">&#39;liq_atten&#39;</span><span class="p">:</span> <span class="n">liq_atten</span><span class="p">}</span>
 
 
 <span class="k">def</span> <span class="nf">_load_files</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
@@ -120,7 +133,7 @@
 <span class="sd">        rad_vars: A netCDF instance.</span>
 <span class="sd">        fields (tuple): Tuple of strings containing radar</span>
 <span class="sd">                        fields to be averaged.</span>
-<span class="sd">        time_new (array_like): A 1-D array.</span>
+<span class="sd">        time_new (ndarray): A 1-D array.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (dict): Rebinned radar fields.</span>
@@ -162,8 +175,8 @@
 <span class="sd">        lid_vars: A netCDF instance.</span>
 <span class="sd">        fields (tuple): Tuple of strings containing lidar</span>
 <span class="sd">                        fields to be averaged.</span>
-<span class="sd">        time (array_like): A 1-D array.</span>
-<span class="sd">        height (array_like): A 1-D array.</span>
+<span class="sd">        time (ndarray): A 1-D array.</span>
+<span class="sd">        height (ndarray): A 1-D array.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (dict): Rebinned lidar fields.</span>
@@ -193,7 +206,7 @@
 <span class="sd">        mwr_vars: A netCDF instance.</span>
 <span class="sd">        lwp_errors: A 2-element tuple containing</span>
 <span class="sd">                    (fractional_error, linear_error)</span>
-<span class="sd">        time (array_like): A 1-D array.</span>
+<span class="sd">        time (ndarray): A 1-D array.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict containing interpolated LWP data {&#39;lwp&#39;, &#39;lwp_error&#39;}</span>
@@ -249,8 +262,8 @@
 <span class="sd">        mod_vars: A netCDF4 instance.</span>
 <span class="sd">        alt_site (int): Altitude of site above mean sea level.</span>
 <span class="sd">        freq (float): Radar frequency.</span>
-<span class="sd">        time (array_like): A 1-D array.</span>
-<span class="sd">        height (array_like): A 1-D array.</span>
+<span class="sd">        time (ndarray): A 1-D array.</span>
+<span class="sd">        height (ndarray): A 1-D array.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict containing original model fields in common altitude</span>
@@ -273,7 +286,21 @@
 
 
 <span class="k">def</span> <span class="nf">_read_model</span><span class="p">(</span><span class="n">vrs</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read model fields and interpolate into common altitude grid.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Read model fields and interpolate into common altitude grid.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vrs: A netCDF4 instance.</span>
+<span class="sd">        fields (array_like): list of strings containing fields</span>
+<span class="sd">            to be interpolated.</span>
+<span class="sd">        alt_site (float): Site altitude (m).</span>
+<span class="sd">        freq (float): Radar frequency (GHz).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        3-element tuple containing (1) dict that has original model fields</span>
+<span class="sd">        in common altitude grid, and interpolated model fields, (2) Original</span>
+<span class="sd">        model time (3) Original model heights (average of individual heights</span>
+<span class="sd">        of the day).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">wlband</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">get_wl_band</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
     <span class="n">model_heights</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">vrs</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">alt_site</span>  <span class="c1"># above mean sea level</span>
@@ -296,7 +323,18 @@
 
 
 <span class="k">def</span> <span class="nf">_interpolate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Interpolate model fields into Cloudnet time/height grid &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot; Interpolate model fields into Cloudnet time/height grid</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model: A netCDF instance.</span>
+<span class="sd">        fields (array_like): list of strings containing fields</span>
+<span class="sd">            to be interpolated.</span>
+<span class="sd">        *args: original time, orignal height, new time, new height.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict containing interpolated model fields.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
         <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">interpolate_2d</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="n">field</span><span class="p">])</span>
@@ -304,41 +342,10 @@
 </pre></div>
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<p class="logo">
-  <a href="../index.html">
-    <img class="logo" src="../_static/cloudnet_logo.png" alt="Logo"/>
-    
-  </a>
-</p>
-
-
-
-
-
-
-<p>
-<iframe src="https://ghbtns.com/github-btn.html?user=tukiains&repo=cloudnet&type=watch&count=true&size=large&v=2"
-  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
-</p>
-
-
-
-
-
-<h3>Navigation</h3>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation instructions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api.html">API reference</a></li>
-</ul>
-
-<div class="relations">
+        <div class="sphinxsidebarwrapper"><div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
@@ -349,24 +356,14 @@
 </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
-    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
@@ -375,8 +372,8 @@
       &copy;2018, Finnish Meteorological Institute.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.7</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
     </div>
 
