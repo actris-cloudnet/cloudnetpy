@@ -67,7 +67,7 @@ def _load_files(files):
 
 
 def _get_altitude_grid(rad_vars):
-    """Returns altitude grid for Cloudnet products in [m].
+    """Returns altitude grid for Cloudnet products (m).
     Altitude grid is defined as the instruments measurement
     grid from the mean sea level.
 
