@@ -214,3 +214,29 @@ def lin2db(x):
 def med_diff(x):
     """Returns median difference in array."""
     return ma.median(ma.diff(x))
+
+
+def bases_and_tops(y):
+    """Finds islands of ones from binary array.
+
+    From a binary vector finds all "islands" of
+    ones, i.e. their starting and ending indices.
+
+    Args:
+        y (ndarray): 1D array.
+
+    Returns:
+        2-element tuple containing indices of bases and tops.
+
+    Examples:
+        >>> y = np.array([0, 0, 0, 1, 1, 0, 0, 1, 1, 1]
+        >>> bases_and_tops(y)
+        >>> ([3, 7], [4, 9])
+
+    """
+    zero = np.zeros(1)
+    y2 = np.concatenate((zero, y, zero))
+    y2_diff = np.diff(y2)
+    bases = np.where(y2_diff == 1)[0]
+    tops = np.where(y2_diff == -1)[0] - 1
+    return (bases, tops)

@@ -10,7 +10,7 @@ from scipy.interpolate import interp1d
 from scipy import stats
 from cloudnetpy import droplet
 from cloudnetpy import utils
-from cloudnetpy.atmos import T0
+from cloudnetpy.constants import T0
 
 
 def fetch_cat_bits(radar, beta, Tw, time, height):
@@ -24,7 +24,15 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
         height (ndarray): 1D altitude vector.
 
     Returns:
-        Bit field containing the classification.
+        A dict containing the classification, 'cat_bits', where:
+        1: Liquid droplets
+        2: Falling hydrometeors
+        3: Temperature < 0
+        4: Melting layer
+        5: Aerosols
+        6: Insects
+        The dict contains also profiles containing rain, 'rain_bit', 
+        and pixels contaminated by clutter, 'clutter_bit'.
 
     """
     bits = [None]*6
@@ -38,7 +46,8 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     bits[1] = get_falling_bit(radar['Zh'], clutter_bit, bits[5])
     bits[4] = get_aerosol_bit(beta, bits[1], bits[0])
     cat_bits = _set_cat_bits(bits)
-    return cat_bits
+    return {'cat_bits': cat_bits, 'rain_bit': rain_bit,
+            'clutter_bit': clutter_bit}
 
 
 def _set_cat_bits(bits):

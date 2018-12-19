@@ -45,9 +45,15 @@ def generate_categorize(input_files, output_file, aux):
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, freq, time, height)
-    cat_bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
-                                       time, height)
-    gas_atten = atmos.get_gas_atten(model['model_i'], cat_bits, height)
+    bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height)
+    atten = _get_attenuations(lwp, model, bits, height)
+
+
+def _get_attenuations(lwp, model, bits, height):
+    """Return attenuations due to atmospheric liquid and gases."""
+    gas_atten = atmos.get_gas_atten(model['model_i'], bits['cat_bits'], height)
+    liq_atten = atmos.get_liquid_atten(lwp, model, bits, height)
+    return {'gas_atten': gas_atten, 'liq_atten': liq_atten}
 
 
 def _load_files(files):
