@@ -153,7 +153,7 @@ def get_gas_atten(model_i, cat_bits, height):
 
 
 def get_liquid_atten(lwp, model, bits, height):
-    """Approximation of a liquid attenuation in a profile.
+    """Calculates attenuation due to liquid water.
 
     Args:
         lwp: Dict containing interpolated liquid water
@@ -203,8 +203,18 @@ def get_liquid_atten(lwp, model, bits, height):
 
 
 def _screen_liq_atten(liq_atten, bits):
-    """Remove corrupted data from liquid attenuation."""
+    """Remove corrupted data from liquid attenuation.
 
+    Args:
+        liq_atten (ndarray): Liquid attenuation.
+        bits: Dict containing classification bits.
+
+    Returns:
+        3-element tuple containing screened liquid
+        attenuation, and bitfields showing where
+        it was corrected and where it was not.
+
+    """
     def _get_bits(liq_atten, rain_ind, melt_ind):
         corr_atten_bit = np.zeros_like(melt_ind)
         uncorr_atten_bit = np.zeros_like(melt_ind)
