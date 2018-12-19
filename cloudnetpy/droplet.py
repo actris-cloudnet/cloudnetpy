@@ -1,9 +1,9 @@
 """ This module has functions for liquid layer detection.
 """
 
-import sys
+# import sys
 import numpy as np
-import numpy.ma as ma
+# import numpy.ma as ma
 import scipy.signal
 from cloudnetpy import utils
 
@@ -21,9 +21,9 @@ def get_base_ind(dprof, p, dist, lim):
         p (int): Index of (possibly local) peak in the original profile.
         dist (int): Number of elements investigated below **p**.
                     If (**p**-**dist**)<0, search starts from index 0.
-        lim (float): Parameter for base index. Values greater than 1.0 are valid.
-                   Values close to 1 most likely return the point right
-                   below the maximum 1st order difference
+        lim (float): Parameter for base index. Values greater than 1.0
+                   are valid. Values close to 1 most likely return the
+                   point right below the maximum 1st order difference
                    (within **dist** points below **p**).
                    Values larger than one more likely
                    accept some other point that is lower.
@@ -46,9 +46,9 @@ def get_base_ind(dprof, p, dist, lim):
         >>> dx = np.diff(mx).filled(0)
         >>> [0.5 0.5,  0. ,  0. ,  4. , -3. ]
 
-        From the original profile we see that the peak index is 5. Let's assume our
-        base can't be more than 4 elements below peak and the threshold value is 2.
-        Thus we call
+        From the original profile we see that the peak index is 5.
+        Let's assume our base can't be more than 4 elements below
+        peak and the threshold value is 2. Thus we call
 
         >>> get_base_ind(dx, 5, 4, 2)
         >>> 4
@@ -82,7 +82,8 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         height (ndarray): 1D array of altitudes (m).
         peak_amp (float, optional): Minimum value for peak. Default is 2e-5.
         max_width (float, optional): Maximum width of peak. Default is 300 (m).
-        min_points (int, optional): Minimum number of valid points in peak. Default is 3.
+        min_points (int, optional): Minimum number of valid points in peak.
+            Default is 3.
         min_top_der (float, optional): Minimum derivative above peak
             defined as (alt_top-alt_peak)/(beta_peak-beta_top) which
             is always positive. Default is 1e6.
@@ -101,20 +102,20 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
     pind = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
     strong_peaks = np.where(beta[pind] > peak_amp)
     pind = (pind[0][strong_peaks], pind[1][strong_peaks])
-    for n, p in zip(*pind):
+    for n, peak in zip(*pind):
         lprof = beta[n, :]
         dprof = beta_diff[n, :]
         try:
-            base = get_base_ind(dprof, p, base_below_peak, 4)
+            base = get_base_ind(dprof, peak, base_below_peak, 4)
         except:
             continue
         try:
-            top = get_top_ind(dprof, p, height.shape[0], top_above_peak, 4)
+            top = get_top_ind(dprof, peak, height.shape[0], top_above_peak, 4)
         except:
             continue
         npoints = np.count_nonzero(lprof[base:top+1])
         peak_width = height[top] - height[base]
-        top_der = (height[top] - height[p]) / (lprof[p] - lprof[top])
+        top_der = (height[top] - height[peak]) / (lprof[peak] - lprof[top])
         conds = (npoints > min_points,
                  peak_width < max_width,
                  top_der > min_top_der)
