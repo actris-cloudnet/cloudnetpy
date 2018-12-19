@@ -19,6 +19,7 @@ from cloudnetpy import classify
 # import matplotlib.pyplot as plt
 
 
+
 def generate_categorize(input_files, output_file, aux):
     """Generates Cloudnet Level 1 categorize file.
 
