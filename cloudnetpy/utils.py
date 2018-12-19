@@ -29,8 +29,8 @@ def epoch2desimal_hour(epoch, time_in):
         time_in = [time_in]
     dtime = []
     epo = calendar.timegm((*epoch, 0, 0, 0))
-    for time_1 in time_in:
-        x = time.gmtime(time_1+epo)
+    for t in time_in:
+        x = time.gmtime(t+epo)
         dtime.append(x.tm_hour + ((x.tm_min*60 + x.tm_sec)/3600))
     if dtime[-1] == 0:  # Last point can be 24h which would be 0 (we want 24)
         dtime[-1] = 24
@@ -57,11 +57,11 @@ def get_time(reso):
     return np.arange(half_step, 24-half_step, half_step*2)
 
 
-def binning_vector(x_bin):
+def binning_vector(x):
     """Converts 1-D center points to bins with even spacing.
 
     Args:
-        x_bin (ndarray): A 1-D array of N real values.
+        x (ndarray): A 1-D array of N real values.
 
     Returns:
         N + 1 edge values.
@@ -71,9 +71,9 @@ def binning_vector(x_bin):
             [0.5, 1.5, 2.5, 3.5]
 
     """
-    edge1 = x_bin[0] - (x_bin[1]-x_bin[0])/2
-    edge2 = x_bin[-1] + (x_bin[-1]-x_bin[-2])/2
-    return np.linspace(edge1, edge2, len(x_bin)+1)
+    edge1 = x[0] - (x[1]-x[0])/2
+    edge2 = x[-1] + (x[-1]-x[-2])/2
+    return np.linspace(edge1, edge2, len(x)+1)
 
 
 def rebin_2d(x_in, data, x_new):
