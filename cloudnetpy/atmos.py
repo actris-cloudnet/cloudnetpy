@@ -153,7 +153,20 @@ def get_gas_atten(model_i, cat_bits, height):
 
 
 def get_liquid_atten(lwp, model, bits, height):
-    """ approximation of a liquid attenuation in a profile.
+    """Approximation of a liquid attenuation in a profile.
+
+    Args:
+        lwp: Dict containing interpolated liquid water
+            path (and its error).
+        model: Dict containing interpolated model fields.
+        bits: Dict containing classification bits
+            {'cat_bits', 'rain_bit', 'clutter_bit'}.
+        height (ndarray): Altitude vector.
+
+    Returns:
+        Dict containing liquid attenuation, its error
+        and ..
+
     """
     spec_liq_att = model['specific_liquid_atten']
     droplet_bit = utils.bit_test(bits['cat_bits'], 1)

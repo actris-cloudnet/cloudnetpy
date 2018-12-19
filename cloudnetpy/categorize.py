@@ -49,10 +49,10 @@ def generate_categorize(input_files, output_file, aux):
     atten = _get_attenuations(lwp, model['model_i'], bits, height)
 
 
-def _get_attenuations(lwp, model, bits, height):
+def _get_attenuations(lwp, model_i, bits, height):
     """Return attenuations due to atmospheric liquid and gases."""
-    gas_atten = atmos.get_gas_atten(model['model_i'], bits['cat_bits'], height)
-    liq_atten = atmos.get_liquid_atten(lwp, model, bits, height)
+    gas_atten = atmos.get_gas_atten(model_i, bits['cat_bits'], height)
+    liq_atten = atmos.get_liquid_atten(lwp, model_i, bits, height)
     return {'gas_atten': gas_atten, 'liq_atten': liq_atten}
 
 
