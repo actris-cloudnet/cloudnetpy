@@ -9,7 +9,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from cloudnetpy import utils
 from cloudnetpy import lwc
-from cloudnetpy import constants
+from cloudnetpy import constants as con
 
 
 def c2k(temp):
@@ -110,18 +110,18 @@ def wet_bulb(Tdry, p, rh):
 
     """
     def _get_derivatives(Pw, Tdew, m=17.269, Tn=35.86):
-        a = m*(Tn - constants.T0)
+        a = m*(Tn - con.T0)
         b = Tdew - Tn
         Pw_d = -Pw*a/b**2
         Pw_dd = Pw*((a/b**2)**2 + 2*a/b**3)
         return Pw_d, Pw_dd
 
-    rh[rh < 1e-12] = 1e-12  # rh = 0 causes trouble
+    rh[rh < 1e-5] = 1e-5  # rh cant be 0
     Pws = saturation_vapor_pressure(Tdry, kind='fast')
     Pw = Pws * rh
     Tdew = dew_point(Pw)
     Pw_d, Pw_dd = _get_derivatives(Pw, Tdew)
-    F = p*1004 / (2.5e6*0.622)
+    F = p*1004 / (con.latent_heat*con.mw_ratio)
     A = Pw_dd/2
     B = Pw_d + F - Tdew*Pw_dd
     C = -Tdry*F - Tdew*Pw_d + 0.5*Tdew**2*Pw_dd
