@@ -18,8 +18,8 @@ def get_base_ind(dprof, p, dist, lim):
 
     Args:
         dprof (ndarray): 1st discrete difference profile of 1D array.
-                            Masked values should be 0, e.g.
-                            dprof=np.diff(masked_prof).filled(0)
+                         Masked values should be 0, e.g.
+                         dprof=np.diff(masked_prof).filled(0)
         p (int): Index of (possibly local) peak in the original profile.
         dist (int): Number of elements investigated below **p**.
                     If (**p**-**dist**)<0, search starts from index 0.
