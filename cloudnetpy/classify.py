@@ -368,7 +368,7 @@ def get_aerosol_bit(beta, falling_bit, droplet_bit):
         beta (ndarray): Attenuated backscattering as a masked array.
         falling_bit (array_like): Binary array containing falling hydrometeors.
         droplet_bit (array_like): Binary array containing liquid droplets.
-        
+
     Returns:
         Pixels that are classified as aerosols.
 
@@ -377,7 +377,28 @@ def get_aerosol_bit(beta, falling_bit, droplet_bit):
 
 
 def fetch_qual_bits(Z, beta, clutter_bit, atten):
-    """Quality bits """
+    """Returns Cloudnet quality bits.
+
+    Args:
+        Z (ndarray): Radar echo.
+        beta (ndarray): Attenuated backscattering.
+        clutter_bit (ndarray): Binary array showing pixels
+            contaminated by clutter.
+        atten (dict): Dictionary including binary arrays
+            'liq_atten_corr_bit' and 'liq_atten_ucorr_bit'
+            that indicate where liquid attenuation was corrected
+            and where it wasn't.
+
+    Returns:
+        Integer array containing the folowing bits:
+            - bit 1: Pixel contains radar data.
+            - bit 2: Pixel contains lidar data.
+            - bit 3: Pixel contaminated by radar clutter.
+            - bit 4: Molecular scattering present (currently not implemented!).
+            - bit 5: Pixel was affected by liquid attenuation.
+            - bit 6: Liquid attenuation was corrected.
+
+    """
     bits = [None]*6
     bits[0] = (~Z.mask).astype(int)
     bits[1] = (~beta.mask).astype(int)
