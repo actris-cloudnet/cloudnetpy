@@ -53,7 +53,6 @@
 <span class="c1"># import matplotlib.pyplot as plt</span>
 
 
-
 <div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../api.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">aux</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generates Cloudnet Level 1 categorize file.</span>
 
@@ -81,7 +80,9 @@
     <span class="n">lwp</span> <span class="o">=</span> <span class="n">fetch_mwr</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">LWP_ERROR</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
     <span class="n">bits</span> <span class="o">=</span> <span class="n">classify</span><span class="o">.</span><span class="n">fetch_cat_bits</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">],</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;Tw&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-    <span class="n">atten</span> <span class="o">=</span> <span class="n">_get_attenuations</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;model_i&#39;</span><span class="p">],</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span></div>
+    <span class="n">atten</span> <span class="o">=</span> <span class="n">_get_attenuations</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;model_i&#39;</span><span class="p">],</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">qual_bits</span> <span class="o">=</span> <span class="n">classify</span><span class="o">.</span><span class="n">fetch_qual_bits</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">],</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">],</span>
+                                         <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;clutter_bit&#39;</span><span class="p">],</span> <span class="n">atten</span><span class="p">[</span><span class="s1">&#39;liq_atten&#39;</span><span class="p">])</span></div>
 
 
 <span class="k">def</span> <span class="nf">_get_attenuations</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model_i</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
