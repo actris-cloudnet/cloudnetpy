@@ -45,18 +45,29 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
                                           rain_bit, clutter_bit)
     bits[1] = get_falling_bit(radar['Zh'], clutter_bit, bits[5])
     bits[4] = get_aerosol_bit(beta, bits[1], bits[0])
-    cat_bits = _set_cat_bits(bits)
+    cat_bits = _bits_to_integer(bits)
     return {'cat_bits': cat_bits, 'rain_bit': rain_bit,
             'clutter_bit': clutter_bit}
 
 
-def _set_cat_bits(bits):
-    """Updates category bits array."""
-    cat_bits = np.zeros_like(bits[0])
+def _bits_to_integer(bits):
+    """Creates ndarray of integers from individual bit fields.
+
+    Args:
+        bits (list): List of bit fields (of similar sizes!)
+        to be saved in the resulting array of integers. bits[0]
+        will be saved as bit 1, bits[1] as bit 2, etc.
+
+    Returns:
+        Array of integers containing the information from
+        individual bits.
+
+    """
+    int_array = np.zeros_like(bits[0])
     for n, bit in enumerate(bits, 1):
         ind = np.where(bit)
-        cat_bits[ind] = utils.bit_set(cat_bits[ind], n)
-    return cat_bits
+        int_array[ind] = utils.bit_set(int_array[ind], n)
+    return int_array
 
 
 def get_melting_bit(Tw, ldr, v):
@@ -348,8 +359,25 @@ def get_falling_bit(Z, clutter_bit, insect_bit):
 
 
 def get_aerosol_bit(beta, falling_bit, droplet_bit):
-    """ Estimate aerosols from lidar measured beta """
+    """Estimates aerosols from lidar backscattering."""
     aerosol_bit = np.zeros_like(falling_bit)
     mazk = (falling_bit == 0) & (droplet_bit == 0) & (~beta.mask)
     aerosol_bit[mazk] = 1
     return aerosol_bit
+
+
+def fetch_qual_bits(Z, beta, clutter_bit, atten):
+    """Quality bits """
+    bits = [None]*6
+    qual_bits = np.zeros_like(clutter_bit)
+    lidar_bit = np.zeros_like(clutter_bit)
+    radar_bit = np.zeros_like(clutter_bit)
+    radar_bit[~Z.mask] = 1
+    lidar_bit[~beta.mask] = 1
+    bits[0] = radar_bit
+    bits[1] = lidar_bit
+    bits[3] = qual_bits
+    bits[4] = atten['liq_atten_corr_bit'] | atten['liq_atten_ucorr_bit']
+    bits[5] = atten['liq_atten_corr_bit']
+    qual_bits = _bits_to_integer(bits)
+    return qual_bits

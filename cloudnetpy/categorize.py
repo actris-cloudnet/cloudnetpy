@@ -19,7 +19,6 @@ from cloudnetpy import classify
 # import matplotlib.pyplot as plt
 
 
-
 def generate_categorize(input_files, output_file, aux):
     """Generates Cloudnet Level 1 categorize file.
 
@@ -48,6 +47,8 @@ def generate_categorize(input_files, output_file, aux):
     model = fetch_model(mod_vars, alt_site, freq, time, height)
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height)
     atten = _get_attenuations(lwp, model['model_i'], bits, height)
+    qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
+                                         bits['clutter_bit'], atten['liq_atten'])
 
 
 def _get_attenuations(lwp, model_i, bits, height):
