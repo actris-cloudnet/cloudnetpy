@@ -1,11 +1,10 @@
 """ Classify gridded measurements. """
 
 # import sys
-# import sys
 import numpy as np
 import numpy.ma as ma
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy import stats
 from cloudnetpy import droplet
@@ -331,10 +330,8 @@ def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
 
     """
     clutter_bit = np.zeros(v.shape, dtype=int)
-    no_rain = np.where(rain_bit == 0)[0]
-    ind = np.ma.where(np.abs(v[no_rain, 0:ngates]) < vlim)
-    for n, m in zip(*ind):
-        clutter_bit[no_rain[n], m] = 1
+    no_velo = (np.abs(v[:, :ngates]) < vlim).astype(int).filled(0)
+    clutter_bit[:, :ngates] = -(no_velo.T*~rain_bit).T
     return clutter_bit
 
 
