@@ -29,6 +29,9 @@ def generate_categorize(input_files, output_file, aux):
         aux (tuple): Tuple of strings including some metadata
                      of the site (site_name, institute).
 
+    References:
+        https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883
+
     """
     try:
         time = utils.get_time(config.TIME_RESOLUTION)

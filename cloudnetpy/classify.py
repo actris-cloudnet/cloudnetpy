@@ -350,10 +350,7 @@ def get_falling_bit(Z, clutter_bit, insect_bit):
         Binary field for falling hydrometeros (1=yes, 0=no).
 
     """
-    falling_bit = np.zeros_like(clutter_bit)
-    falling_bit[~Z.mask] = 1
-    falling_bit[clutter_bit == 1] = 0
-    falling_bit[insect_bit == 1] = 0
+    falling_bit = ~Z.mask & ~clutter_bit & ~insect_bit
     falling_bit = utils.filter_isolated_pixels(falling_bit)
     return falling_bit
 
@@ -389,8 +386,7 @@ def fetch_qual_bits(Z, beta, clutter_bit, atten):
             that indicate where liquid attenuation was corrected
             and where it wasn't.
 
-    Returns:
-        Integer array containing the folowing bits:
+    Returns: Integer array containing the following bits:
             - bit 1: Pixel contains radar data.
             - bit 2: Pixel contains lidar data.
             - bit 3: Pixel contaminated by radar clutter.
