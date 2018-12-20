@@ -361,22 +361,17 @@ def get_falling_bit(Z, clutter_bit, insect_bit):
 def get_aerosol_bit(beta, falling_bit, droplet_bit):
     """Estimates aerosols from lidar backscattering."""
     aerosol_bit = np.zeros_like(falling_bit)
-    mazk = (falling_bit == 0) & (droplet_bit == 0) & (~beta.mask)
-    aerosol_bit[mazk] = 1
+    mask = (falling_bit == 0) & (droplet_bit == 0) & (~beta.mask)
+    aerosol_bit[mazs] = 1
     return aerosol_bit
 
 
 def fetch_qual_bits(Z, beta, clutter_bit, atten):
     """Quality bits """
     bits = [None]*6
-    qual_bits = np.zeros_like(clutter_bit)
-    lidar_bit = np.zeros_like(clutter_bit)
-    radar_bit = np.zeros_like(clutter_bit)
-    radar_bit[~Z.mask] = 1
-    lidar_bit[~beta.mask] = 1
-    bits[0] = radar_bit
-    bits[1] = lidar_bit
-    bits[3] = qual_bits
+    bits[0] = (~Z.mask).astype(int)
+    bits[1] = (~beta.mask).astype(int)
+    bits[2] = clutter_bit
     bits[4] = atten['liq_atten_corr_bit'] | atten['liq_atten_ucorr_bit']
     bits[5] = atten['liq_atten_corr_bit']
     qual_bits = _bits_to_integer(bits)
