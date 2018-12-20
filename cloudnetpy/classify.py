@@ -359,11 +359,21 @@ def get_falling_bit(Z, clutter_bit, insect_bit):
 
 
 def get_aerosol_bit(beta, falling_bit, droplet_bit):
-    """Estimates aerosols from lidar backscattering."""
-    aerosol_bit = np.zeros_like(falling_bit)
-    mask = (falling_bit == 0) & (droplet_bit == 0) & (~beta.mask)
-    aerosol_bit[mazs] = 1
-    return aerosol_bit
+    """Estimates aerosols from lidar backscattering.
+
+    Aerosols are the unmasked pixels in the attenuated backscattering
+    that are: (a) not falling, (b) not liquid droplets.
+
+    Args:
+        beta (ndarray): Attenuated backscattering as a masked array.
+        falling_bit (array_like): Binary array containing falling hydrometeors.
+        droplet_bit (array_like): Binary array containing liquid droplets.
+        
+    Returns:
+        Pixels that are classified as aerosols.
+
+    """
+    return ~falling_bit & ~droplet_bit & ~beta.mask
 
 
 def fetch_qual_bits(Z, beta, clutter_bit, atten):
@@ -374,5 +384,4 @@ def fetch_qual_bits(Z, beta, clutter_bit, atten):
     bits[2] = clutter_bit
     bits[4] = atten['liq_atten_corr_bit'] | atten['liq_atten_ucorr_bit']
     bits[5] = atten['liq_atten_corr_bit']
-    qual_bits = _bits_to_integer(bits)
-    return qual_bits
+    return _bits_to_integer(bits)
