@@ -55,7 +55,7 @@ def _bits_to_integer(bits):
     Args:
         bits (list): List of bit fields (of similar sizes!)
         to be saved in the resulting array of integers. bits[0]
-        will be saved as bit 1, bits[1] as bit 2, etc.
+        is saved as bit 1, bits[1] as bit 2, etc.
 
     Returns:
         Array of integers containing the information from
@@ -263,8 +263,8 @@ def _screen_insects(insect_prob, Tw, *args):
         Tw (ndarray): (m, n)
         *args (ndrray): Variable number of binary fields where 1
             means that insect probablity should be 0. Shape of these
-            fields can be (m, n), or (m,) when whole profile
-            will be flagged.
+            fields can be (m, n), or (m,) when the whole profile
+            is flagged.
 
     """
     def _screen_insects_misc(insect_prob, *args):
@@ -322,7 +322,7 @@ def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
         rain_bit (ndarray): A (n,) array indicating
             profiles affected by rain (1=yes, 0=no).
         vlim (float, optional): Velocity threshold.
-            Smaller values will be classified as clutter.
+            Smaller values are classified as clutter.
             Default is 0.05 (m/s).
 
     Returns:
