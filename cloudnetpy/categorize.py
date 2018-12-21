@@ -54,14 +54,31 @@ def generate_categorize(input_files, output_file, aux):
     Z_corr = _correct_atten(radar['Zh'], atten['gas_atten'],
                             atten['liq_atten']['liq_atten'])
 
-    Z_err = _fetch_Z_errors(radar, atten, rad_vars['range'][:],
-                            bits['clutter_bit'], time, freq)
+    Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter_bit'], time, freq)
 
 
-def _fetch_Z_errors(radar, atten, radar_range, clutter_bit, time, freq):
-    """Returns sensitivity, precision and error of radar echo."""
+def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
+    """Returns sensitivity, precision and error of radar echo.
+
+    Args:
+        radar: A netCDF4 instance.
+        rad_vars: Radar variables.
+        atten (dict): Gas and liquid attenuation variables.
+        clutter_bit (ndarray): Boolean array denoting pixels
+            contaminated by clutter.
+        time (ndarray): Time vector.
+        freq (float): Radar frequency.
+
+    Returns:
+        Dict containing {'radar_sensitivity', 'radar_error'}.
+
+    Notes:
+        Needs to be at least checked and perhaps refactored.
+
+    """
     Z = radar['Zh']
     gas_atten, liq_atten = atten['gas_atten'], atten['liq_atten']
+    radar_range = utils.km2m(rad_vars['range'])
     log_range = utils.lin2db(radar_range, scale=20)
     Z_power = Z - log_range
     Z_power_list = np.sort(Z_power.compressed())
