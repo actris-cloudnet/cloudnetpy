@@ -3,8 +3,8 @@
 import sys
 import numpy as np
 import numpy.ma as ma
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy import stats
 from cloudnetpy import droplet
@@ -35,9 +35,9 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
 
     """
     bits = [None]*6
-    bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
-    bits[2] = get_cold_bit(Tw, bits[3], time, height)
-    bits[0] = droplet.get_liquid_layers(beta, height)
+    bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])    
+    bits[2] = get_cold_bit(Tw, bits[3], time, height)    
+    bits[0] = droplet.get_liquid_layers(beta, height)    
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(radar['v'], rain_bit)
     bits[5], insect_prob = get_insect_bit(radar, Tw, bits[3], bits[0],
@@ -78,8 +78,7 @@ def get_melting_bit(Tw, ldr, v):
         v (ndarray): Doppler velocity, (n, m).
 
     Returns:
-        Melting layer detection status (1 = yes from ldr,
-        2 = yes from v, 0 = no).
+        Boolean array denoting the melting layer.
 
     """
     def _slice(arg1, arg2, ii, ind):
@@ -91,7 +90,7 @@ def get_melting_bit(Tw, ldr, v):
         base = droplet.get_base_ind(dprof, pind, a, b)
         return top, base
 
-    melting_bit = np.zeros(Tw.shape, dtype=int)
+    melting_bit = np.zeros(Tw.shape, dtype=bool)
     ldr_diff = np.diff(ldr, axis=1).filled(0)
     v_diff = np.diff(v, axis=1).filled(0)
     trange = (-2, 5)  # find peak from this T range around T0
@@ -111,13 +110,13 @@ def get_melting_bit(Tw, ldr, v):
                          ldr_prof[ldr_p] > -20,
                          v_prof[base] < -2)
                 if all(conds):
-                    melting_bit[ii, ind[ldr_p]:ind[top]+1] = 1
+                    melting_bit[ii, ind[ldr_p]:ind[top]+1] = True
             except:  # just cach all exceptions
                 try:
                     top, base = _basetop(v_dprof, v_p, nind)
                     diff = v_prof[top] - v_prof[base]
                     if diff > 1 and v_prof[base] < -2:
-                        melting_bit[ii, ind[v_p-1:v_p+2]] = 2
+                        melting_bit[ii, ind[v_p-1:v_p+2]] = True
                 except:  # failed whatever the reason
                     continue
     return melting_bit
@@ -138,14 +137,14 @@ def get_cold_bit(Tw, melting_bit, time, height):
         height (ndarray): Altitude vector, (n,).
 
     Returns:
-        Binary field indicating the sub-zero region, (m, n).
+        Boolean array denoting the sub-zero region.
 
     Notes:
         It is not clear how model temperature and melting layer should be
         ideally combined to determine the sub-zero region.
 
     """
-    cold_bit = np.zeros(Tw.shape, dtype=int)
+    cold_bit = np.zeros(Tw.shape, dtype=bool)
     ntime = time.shape[0]
     t0_alt = _get_T0_alt(Tw, height)
     mean_melting_height = np.zeros((ntime,))
@@ -164,7 +163,7 @@ def get_cold_bit(Tw, melting_bit, time, height):
     f = interp1d(time[ind], m_final[ind], kind='linear')
     tline = f(time)
     for ii, alt in enumerate(tline):
-        cold_bit[ii, np.where(height > alt)[0]] = 1
+        cold_bit[ii, np.where(height > alt)[0]] = True
     return cold_bit
 
 

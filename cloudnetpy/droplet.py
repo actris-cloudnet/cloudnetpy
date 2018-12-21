@@ -80,7 +80,7 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
     """ Estimate liquid layers from SNR-screened attenuated backscattering.
 
     Args:
-        beta (ndarray): 2D attenuated backscattering.
+        beta (MaskedArray): 2D attenuated backscattering.
         height (ndarray): 1D array of altitudes (m).
         peak_amp (float, optional): Minimum value for peak. Default is 2e-5.
         max_width (float, optional): Maximum width of peak. Default is 300 (m).
@@ -91,14 +91,14 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
             is always positive. Default is 2e-7.
 
     Returns:
-        (ndarray): Classification of liquid at each point: 1 = Yes,  0 = No
+        Boolean array denoting the liquid layers.
 
     """
     # search distances for potential base/top
     dheight = utils.med_diff(height)
     base_below_peak = int(np.ceil((200/dheight)))
     top_above_peak = int(np.ceil((150/dheight)))
-    cloud_bit = np.zeros(beta.shape, dtype=int)
+    cloud_bit = np.zeros(beta.shape, dtype=bool)
     beta_diff = np.diff(beta, axis=1).filled(0)  # difference matrix
     beta = beta.filled(0)
     pind = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
@@ -122,5 +122,5 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
                  peak_width < max_width,
                  top_der > min_top_der)
         if all(conds):
-            cloud_bit[n, base:top+1] = 1
+            cloud_bit[n, base:top+1] = True
     return cloud_bit
