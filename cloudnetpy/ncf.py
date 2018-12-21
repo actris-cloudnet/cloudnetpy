@@ -2,37 +2,9 @@
 in this module typically have a pointer to netCDF variable(s) as
 an argument."""
 
-import netCDF4
 import numpy as np
 import numpy.ma as ma
-
-
-def _copy_dimensions(file_from, file_to, dims_to_be_copied):
-    """Copies dimensions from one file to another. """
-    for dname, dim in file_from.dimensions.items():
-        if dname in dims_to_be_copied:
-            file_to.createDimension(dname, len(dim))
-
-
-def _copy_variables(file_from, file_to, vars_to_be_copied):
-    """Copies variables (and their attributes) from one file to another."""
-    for vname, varin in file_from.variables.items():
-        if vname in vars_to_be_copied:
-            outVar = file_to.createVariable(vname, varin.datatype, varin.dimensions)
-            outVar.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
-            outVar[:] = varin[:]
-
-
-def _copy_global(file_from, file_to, attrs_to_be_copied):
-    """Copies global attributes from one file to another."""
-    for aname in file_from.ncattrs():
-        if aname in attrs_to_be_copied:
-            setattr(file_to, aname, file_from.getncattr(aname))
-
-
-def _get_date(cat):
-    """Returns measurement date in format yyyy-mm-dd """
-    return '-'.join([str(cat.year), str(cat.month).zfill(2), str(cat.day).zfill(2)])
+import netCDF4
 
 
 def load_nc(file_in):
