@@ -41,13 +41,41 @@
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 
 
+<span class="k">def</span> <span class="nf">_copy_dimensions</span><span class="p">(</span><span class="n">file_from</span><span class="p">,</span> <span class="n">file_to</span><span class="p">,</span> <span class="n">dims_to_be_copied</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies dimensions from one file to another. &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">dname</span><span class="p">,</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">file_from</span><span class="o">.</span><span class="n">dimensions</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">dname</span> <span class="ow">in</span> <span class="n">dims_to_be_copied</span><span class="p">:</span>
+            <span class="n">file_to</span><span class="o">.</span><span class="n">createDimension</span><span class="p">(</span><span class="n">dname</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_copy_variables</span><span class="p">(</span><span class="n">file_from</span><span class="p">,</span> <span class="n">file_to</span><span class="p">,</span> <span class="n">vars_to_be_copied</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies variables (and their attributes) from one file to another.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">vname</span><span class="p">,</span> <span class="n">varin</span> <span class="ow">in</span> <span class="n">file_from</span><span class="o">.</span><span class="n">variables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">vname</span> <span class="ow">in</span> <span class="n">vars_to_be_copied</span><span class="p">:</span>
+            <span class="n">outVar</span> <span class="o">=</span> <span class="n">file_to</span><span class="o">.</span><span class="n">createVariable</span><span class="p">(</span><span class="n">vname</span><span class="p">,</span> <span class="n">varin</span><span class="o">.</span><span class="n">datatype</span><span class="p">,</span> <span class="n">varin</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
+            <span class="n">outVar</span><span class="o">.</span><span class="n">setncatts</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">varin</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">varin</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">()})</span>
+            <span class="n">outVar</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">varin</span><span class="p">[:]</span>
+
+
+<span class="k">def</span> <span class="nf">_copy_global</span><span class="p">(</span><span class="n">file_from</span><span class="p">,</span> <span class="n">file_to</span><span class="p">,</span> <span class="n">attrs_to_be_copied</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies global attributes from one file to another.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">aname</span> <span class="ow">in</span> <span class="n">file_from</span><span class="o">.</span><span class="n">ncattrs</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">aname</span> <span class="ow">in</span> <span class="n">attrs_to_be_copied</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">file_to</span><span class="p">,</span> <span class="n">aname</span><span class="p">,</span> <span class="n">file_from</span><span class="o">.</span><span class="n">getncattr</span><span class="p">(</span><span class="n">aname</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_get_date</span><span class="p">(</span><span class="n">cat</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns measurement date in format yyyy-mm-dd &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">year</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">month</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">cat</span><span class="o">.</span><span class="n">day</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)])</span>
+
+
 <div class="viewcode-block" id="load_nc"><a class="viewcode-back" href="../api.html#ncf.load_nc">[docs]</a><span class="k">def</span> <span class="nf">load_nc</span><span class="p">(</span><span class="n">file_in</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Return instance of netCDF Dataset variables. &quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot; Returns instance of netCDF Dataset variables. &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">file_in</span><span class="p">)</span><span class="o">.</span><span class="n">variables</span></div>
 
 
 <div class="viewcode-block" id="km2m"><a class="viewcode-back" href="../api.html#ncf.km2m">[docs]</a><span class="k">def</span> <span class="nf">km2m</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Convert km to m.</span>
+    <span class="sd">&quot;&quot;&quot; Converts km to m.</span>
 
 <span class="sd">    Read input and convert it to from km to m. The input must</span>
 <span class="sd">    have &#39;units&#39; attribute set to &#39;km&#39; to trigger the conversion.</span>
@@ -66,7 +94,7 @@
 
 
 <div class="viewcode-block" id="m2km"><a class="viewcode-back" href="../api.html#ncf.m2km">[docs]</a><span class="k">def</span> <span class="nf">m2km</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Convert m to km.</span>
+    <span class="sd">&quot;&quot;&quot; Converts m to km.</span>
 
 <span class="sd">    Read Input and convert it to from m -&gt; km. The input must</span>
 <span class="sd">    have &#39;units&#39; attribute set to &#39;m&#39; to trigger the conversion.</span>
@@ -85,7 +113,7 @@
 
 
 <div class="viewcode-block" id="get_radar_freq"><a class="viewcode-back" href="../api.html#ncf.get_radar_freq">[docs]</a><span class="k">def</span> <span class="nf">get_radar_freq</span><span class="p">(</span><span class="n">vrs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Return frequency of radar.</span>
+    <span class="sd">&quot;&quot;&quot; Returns frequency of radar.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        vrs: A netCDF instance.</span>
@@ -112,7 +140,7 @@
 
 
 <div class="viewcode-block" id="get_wl_band"><a class="viewcode-back" href="../api.html#ncf.get_wl_band">[docs]</a><span class="k">def</span> <span class="nf">get_wl_band</span><span class="p">(</span><span class="n">freq</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Return integer that corresponds to the radar wavelength.</span>
+    <span class="sd">&quot;&quot;&quot; Returns integer that corresponds to the radar wavelength.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        freq: Radar frequency.</span>
@@ -135,7 +163,7 @@
 
 
 <div class="viewcode-block" id="get_site_alt"><a class="viewcode-back" href="../api.html#ncf.get_site_alt">[docs]</a><span class="k">def</span> <span class="nf">get_site_alt</span><span class="p">(</span><span class="o">*</span><span class="n">vrs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Return altitude of the measurement site above mean sea level in [m].</span>
+    <span class="sd">&quot;&quot;&quot; Returns altitude of the measurement site above mean sea level in [m].</span>
 
 <span class="sd">    Site altitude is defined as the lowermost value of</span>
 <span class="sd">    the investigated values.</span>

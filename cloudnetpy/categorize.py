@@ -48,7 +48,7 @@ def generate_categorize(input_files, output_file, aux):
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, freq, time, height)
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height)
-    atten = _get_attenuations(lwp, model['model_i'], bits, height)
+    atten = _get_attenuations(lwp, model['interp'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
                                          bits['clutter_bit'], atten['liq_atten'])
     Z_corr = _correct_atten(radar['Zh'], atten['gas_atten'],
@@ -71,11 +71,11 @@ def generate_categorize(input_files, output_file, aux):
                 'width': radar['width'],
                 'ldr': radar['ldr'], 
                 'Z_bias': config.Z_BIAS,
-                'temperature': model['model_i']['temperature'],
-                'pressure': model['model_i']['pressure'], 
-                'specific_humidity': model['model']['q'],
-                'uwind': model['model']['uwind'],
-                'vwind': model['model']['vwind'], 
+                'temperature': model['interp']['temperature'],
+                'pressure': model['interp']['pressure'], 
+                'specific_humidity': model['original']['q'],
+                'uwind': model['original']['uwind'],
+                'vwind': model['original']['vwind'], 
                 'model_height': model['height'],
                 'model_time': model['time'],
                 'category_bits': bits['cat_bits'],
@@ -346,7 +346,7 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
                                  model_height, time, height)
     Tw = atmos.wet_bulb(model_i['temperature'], model_i['pressure'],
                         model_i['rh'])
-    return {'model': model, 'model_i': model_i, 'time': model_time,
+    return {'original': model, 'interp': model_i, 'time': model_time,
             'height': model_height, 'Tw': Tw}
 
 
