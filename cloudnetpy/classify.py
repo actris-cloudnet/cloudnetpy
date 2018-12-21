@@ -43,7 +43,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     bits[4] = get_aerosol_bit(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
     return {'cat_bits': cat_bits, 'rain_bit': rain_bit,
-            'clutter_bit': clutter_bit}
+            'clutter_bit': clutter_bit, 'insect_prob': insect_prob}
 
 
 def _bits_to_integer(bits):

@@ -54,6 +54,41 @@ def generate_categorize(input_files, output_file, aux):
     Z_corr = _correct_atten(radar['Zh'], atten['gas_atten'],
                             atten['liq_atten']['liq_atten'])
     Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter_bit'], time, freq)
+    
+    # collect variables for output
+    cat_vars = {'height': height,
+                'time': time,
+                'latitude': rad_vars['latitude'][:],
+                'longitude': rad_vars['longitude'][:],
+                'altitude': alt_site, 
+                'radar_frequency': freq,
+                'lidar_wavelength': lid_vars['wavelength'][:], 
+                'beta': lidar['beta'],
+                'beta_error': config.BETA_ERROR,
+                'beta_bias': config.BETA_BIAS, 
+                'Z': Z_corr,
+                'v': radar['v'],
+                'width': radar['width'],
+                'ldr': radar['ldr'], 
+                'Z_bias': config.Z_BIAS,
+                'temperature': model['model_i']['temperature'],
+                'pressure': model['model_i']['pressure'], 
+                'specific_humidity': model['model']['q'],
+                'uwind': model['model']['uwind'],
+                'vwind': model['model']['vwind'], 
+                'model_height': model['height'],
+                'model_time': model['time'],
+                'category_bits': bits['cat_bits'],
+                'Tw': model['Tw'],
+                'insect_probability': bits['insect_prob'],
+                'radar_gas_atten': atten['gas_atten'],
+                'radar_liquid_atten': atten['liq_atten']['liq_atten'],
+                'lwp': lwp['lwp'],
+                'lwp_error': lwp['lwp_error'],
+                'quality_bits': qual_bits,
+                'Z_error': Z_err['error'],
+                'Z_sensitivity': Z_err['sensitivity']} 
+    
 
 
 def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
@@ -77,7 +112,7 @@ def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
     """
     Z = radar['Zh']
     gas_atten, liq_atten = atten['gas_atten'], atten['liq_atten']
-    radar_range = utils.km2m(rad_vars['range'])
+    radar_range = ncf.km2m(rad_vars['range'])
     log_range = utils.lin2db(radar_range, scale=20)
     Z_power = Z - log_range
     Z_power_list = np.sort(Z_power.compressed())
@@ -369,3 +404,29 @@ def _interpolate_model(model, fields, *args):
     for field in fields:
         out[field] = utils.interpolate_2d(*args, model[field])
     return out
+
+
+def _save_cat(file_name, time, height, model_time, model_height, obs, dvec, version, aux):
+    rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4')
+    # create dimensions
+    time = rootgrp.createDimension('time', len(time))
+    height = rootgrp.createDimension('height', len(height))
+    model_time = rootgrp.createDimension('model_time', len(model_time))
+    model_height = rootgrp.createDimension('model_height', len(model_height))
+    
+    # root group variables
+    ncf.write_vars2nc(rootgrp, obs)
+
+    # global attributes:
+    rootgrp.Conventions = 'CF-1.7'
+    rootgrp.title = 'Categorize file from ' + aux[0]
+    rootgrp.institution = 'Data processed at the ' + aux[1]
+    rootgrp.year = int(dvec[:4])
+    rootgrp.month = int(dvec[5:7])
+    rootgrp.day = int(dvec[8:])
+    rootgrp.software_version = version
+    rootgrp.git_version = ncf.git_version()
+    rootgrp.file_uuid = str(uuid.uuid4().hex)
+    rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
+    rootgrp.history = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") + ' - categorize file created'
+    rootgrp.close()
