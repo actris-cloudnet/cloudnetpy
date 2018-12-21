@@ -1,6 +1,6 @@
 """ Classify gridded measurements. """
 
-# import sys
+import sys
 import numpy as np
 import numpy.ma as ma
 # import matplotlib as mpl
@@ -326,7 +326,7 @@ def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
             Default is 0.05 (m/s).
 
     Returns:
-        2-D binary array containing pixels affected
+        2-D ndarray containing pixels affected
         by clutter (1=yes, 0=no).
 
     """
@@ -340,15 +340,15 @@ def get_falling_bit(Z, clutter_bit, insect_bit):
     """Finds falling hydrometeors.
 
     Args:
-        Z (ndarray): Radar echo, (n, m).
-        clutter_bit (ndarray): Binary field of clutter, (n, m).
-        insect_bit (ndarray): Binary field of insects, (n, m).
+        Z (MaskedArray): Radar echo.
+        clutter_bit (ndarray): Binary field of clutter.
+        insect_bit (ndarray): Binary field of insects.
 
     Returns:
-        Binary field for falling hydrometeros (1=yes, 0=no).
+        2-D ndarray containing falling hydrometeros (1=yes, 0=no).
 
     """
-    falling_bit = ~Z.mask & ~clutter_bit & ~insect_bit
+    falling_bit = ~Z.mask & (clutter_bit^1) & (insect_bit^1)
     falling_bit = utils.filter_isolated_pixels(falling_bit)
     return falling_bit
 
@@ -360,15 +360,15 @@ def get_aerosol_bit(beta, falling_bit, droplet_bit):
     that are: (a) not falling, (b) not liquid droplets.
 
     Args:
-        beta (ndarray): Attenuated backscattering as a masked array.
-        falling_bit (array_like): Binary array containing falling hydrometeors.
-        droplet_bit (array_like): Binary array containing liquid droplets.
+        beta (MaskedArray): Attenuated backscattering coefficient.
+        falling_bit (ndarray): Binary array containing falling hydrometeors.
+        droplet_bit (ndarray): Binary array containing liquid droplets.
 
     Returns:
         Pixels that are classified as aerosols.
 
     """
-    return ~falling_bit & ~droplet_bit & ~beta.mask
+    return ~beta.mask & (falling_bit^1) & (droplet_bit^1) 
 
 
 def fetch_qual_bits(Z, beta, clutter_bit, atten):
