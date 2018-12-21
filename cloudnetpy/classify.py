@@ -1,10 +1,7 @@
 """ Classify gridded measurements. """
 
-# import sys
 import numpy as np
 import numpy.ma as ma
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy import stats
 from cloudnetpy import droplet
@@ -18,7 +15,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     Args:
         radar: A dict containing gridded radar fields
             ('Zh', 'v', 'ldr', 'width').
-        beta (ndarray): Attenuated backscattering coefficient.
+        beta (MaskedArray): Attenuated backscattering coefficient.
         Tw (ndarray): Wet bulb temperature.
         height (ndarray): 1D altitude vector.
 
@@ -371,11 +368,11 @@ def fetch_qual_bits(Z, beta, clutter_bit, atten):
     """Returns Cloudnet quality bits.
 
     Args:
-        Z (ndarray): Radar echo.
-        beta (ndarray): Attenuated backscattering.
-        clutter_bit (ndarray): Binary array showing pixels
+        Z (MaskedArray): Radar echo.
+        beta (MaskedArray): Attenuated backscattering.
+        clutter_bit (ndarray): Boolean array showing pixels
             contaminated by clutter.
-        atten (dict): Dictionary including binary arrays
+        atten (dict): Dictionary including boolean arrays
             'liq_atten_corr_bit' and 'liq_atten_ucorr_bit'
             that indicate where liquid attenuation was corrected
             and where it wasn't.

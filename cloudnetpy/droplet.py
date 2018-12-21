@@ -1,11 +1,7 @@
 """ This module has functions for liquid layer detection.
 """
 
-# import sys
 import numpy as np
-# import numpy.ma as ma
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
 import scipy.signal
 from cloudnetpy import utils
 

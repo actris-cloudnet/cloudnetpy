@@ -2,11 +2,8 @@
 atmospheric parameters.
 """
 
-# import sys
 import numpy as np
 import numpy.ma as ma
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
 from cloudnetpy import utils
 from cloudnetpy import lwc
 from cloudnetpy import constants as con
@@ -216,11 +213,11 @@ def _screen_liq_atten(liq_atten, bits):
 
     """
     def _get_bits(liq_atten, rain_ind, melt_ind):
-        corr_atten_bit = np.zeros_like(melt_ind)
-        uncorr_atten_bit = np.zeros_like(melt_ind)
-        corr_atten_bit[~liq_atten.mask] = 1
-        uncorr_atten_bit[rain_ind, :] = 1
-        uncorr_atten_bit[melt_ind] = 1
+        corr_atten_bit = np.zeros_like(melt_ind, dtype=bool)
+        uncorr_atten_bit = np.zeros_like(melt_ind, dtype=bool)
+        corr_atten_bit[~liq_atten.mask] = True
+        uncorr_atten_bit[rain_ind, :] = True
+        uncorr_atten_bit[melt_ind] = True
         return corr_atten_bit, uncorr_atten_bit
     
     rain_ind = bits['rain_bit'] == 1
