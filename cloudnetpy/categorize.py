@@ -53,7 +53,6 @@ def generate_categorize(input_files, output_file, aux):
                                          bits['clutter_bit'], atten['liq_atten'])
     Z_corr = _correct_atten(radar['Zh'], atten['gas_atten'],
                             atten['liq_atten']['liq_atten'])
-
     Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter_bit'], time, freq)
 
 
