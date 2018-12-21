@@ -201,19 +201,26 @@ def interpolate_2d(x, y, x_new, y_new, z):
     return fun(x_new, y_new)
 
 
-def db2lin(x):
+def db2lin(x, scale=10):
     """dB to linear conversion."""
-    return 10**(x/10)
+    return 10**(x/scale)
 
 
-def lin2db(x):
+def lin2db(x, scale=10):
     """Linear to dB conversion."""
-    return ma.log10(x)*10
+    return scale*ma.log10(x)
 
 
 def med_diff(x):
     """Returns median difference in array."""
     return ma.median(ma.diff(x))
+
+
+def l2norm(*args):
+    ss = 0
+    for arg in args:
+        ss += arg**2
+    return np.sqrt(ss)
 
 
 def bases_and_tops(y):

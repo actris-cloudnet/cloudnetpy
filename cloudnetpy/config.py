@@ -9,3 +9,5 @@ TIME_RESOLUTION = 30
 # for liquid water path (LWP)
 LWP_ERROR = (0.25, 20)
 
+# Estimated precision of gas attenuation
+GAS_ATTEN_PREC = 0.1
