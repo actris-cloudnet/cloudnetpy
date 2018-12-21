@@ -1,10 +1,10 @@
 """ Classify gridded measurements. """
 
-import sys
+# import sys
 import numpy as np
 import numpy.ma as ma
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+# import matplotlib as mpl
+# import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 from scipy import stats
 from cloudnetpy import droplet
@@ -35,9 +35,9 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
 
     """
     bits = [None]*6
-    bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])    
-    bits[2] = get_cold_bit(Tw, bits[3], time, height)    
-    bits[0] = droplet.get_liquid_layers(beta, height)    
+    bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
+    bits[2] = get_cold_bit(Tw, bits[3], time, height)
+    bits[0] = droplet.get_liquid_layers(beta, height)
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(radar['v'], rain_bit)
     bits[5], insect_prob = get_insect_bit(radar, Tw, bits[3], bits[0],
@@ -50,7 +50,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
 
 
 def _bits_to_integer(bits):
-    """Creates ndarray of integers from individual bit fields.
+    """Creates ndarray of integers from individual boolean fields.
 
     Args:
         bits (list): List of bit fields (of similar sizes!)
@@ -58,14 +58,14 @@ def _bits_to_integer(bits):
         is saved as bit 1, bits[1] as bit 2, etc.
 
     Returns:
-        Array of integers containing the information from
-        individual bits.
+        Array of integers containing the information of the
+        individual boolean fields.
 
     """
-    int_array = np.zeros_like(bits[0])
+    int_array = np.zeros_like(bits[0], dtype=int)
     for n, bit in enumerate(bits, 1):
         ind = np.where(bit)
-        int_array[ind] = utils.bit_set(int_array[ind], n)
+        int_array[ind] = utils.bit_set(int_array[ind].astype(int), n)
     return int_array
 
 
@@ -206,15 +206,14 @@ def get_insect_bit(radar, Tw, *args, prob_lim=0.7):
             this will lead to positive result. Default is 0.7.
 
     Returns:
-        A 2-element tuple containing result of classification
-        for each pixel (1=insect, 0=no) and insect probability
-        (0-1).
+        A 2-element tuple containing result of classification (bool)
+        for each pixel and insect probability (0-1).
 
     """
-    insect_bit = np.zeros(Tw.shape, dtype=int)
+    insect_bit = np.zeros(Tw.shape, dtype=bool)
     iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])
     iprob_screened = _screen_insects(iprob, Tw, *args)
-    insect_bit[iprob_screened > prob_lim] = 1
+    insect_bit[iprob_screened > prob_lim] = True
     return insect_bit, iprob_screened
 
 
@@ -297,19 +296,18 @@ def get_rain_bit(Z, time, time_buffer=5):
             and after are also flagged to contain rain. Defaults to 5.
 
     Returns:
-        A 1D binary array indicating profiles affected by
-        rain (1=yes, 0=no).
+        1-D boolean array denoting profiles affected by rain.
 
     """
     nprofs = len(time)
-    rain_bit = np.zeros(nprofs, dtype=int)
+    rain_bit = np.zeros(nprofs, dtype=bool)
     rain_bit[Z[:, 3] > 0] = 1
     step = utils.med_diff(time)*60*60  # minutes
     nsteps = int(round(time_buffer*60/step/2))
     for ind in np.where(rain_bit)[0]:
         i1 = max(0, ind-nsteps)
         i2 = min(ind+nsteps+1, nprofs)
-        rain_bit[i1:i2] = 1
+        rain_bit[i1:i2] = True
     return rain_bit
 
 
@@ -317,21 +315,20 @@ def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
     """Estimates clutter from doppler velocity.
 
     Args:
-        v (MaskedArray): Doppler velocity, (n, m).
-        rain_bit (ndarray): A (n,) array indicating
-            profiles affected by rain (1=yes, 0=no).
+        v (MaskedArray): Doppler velocity.
+        rain_bit (ndarray): 1-D boolean array indicating
+            profiles affected by rain.
         vlim (float, optional): Velocity threshold.
             Smaller values are classified as clutter.
             Default is 0.05 (m/s).
 
     Returns:
-        2-D ndarray containing pixels affected
-        by clutter (1=yes, 0=no).
+        Boolean array denoting pixels contaminated by clutter.
 
     """
-    clutter_bit = np.zeros(v.shape, dtype=int)
-    no_velo = (np.abs(v[:, :ngates]) < vlim).astype(int).filled(0)
-    clutter_bit[:, :ngates] = (no_velo.T*(rain_bit^1)).T
+    clutter_bit = np.zeros(v.shape, dtype=bool)
+    tiny_velocity = (np.abs(v[:, :ngates]) < vlim).filled(False)
+    clutter_bit[:, :ngates] = (tiny_velocity.T*(~rain_bit)).T
     return clutter_bit
 
 
@@ -344,10 +341,10 @@ def get_falling_bit(Z, clutter_bit, insect_bit):
         insect_bit (ndarray): Binary field of insects.
 
     Returns:
-        2-D ndarray containing falling hydrometeros (1=yes, 0=no).
+        Boolean array containing falling hydrometeros.
 
     """
-    falling_bit = ~Z.mask & (clutter_bit^1) & (insect_bit^1)
+    falling_bit = ~Z.mask & ~clutter_bit & ~insect_bit
     falling_bit = utils.filter_isolated_pixels(falling_bit)
     return falling_bit
 
@@ -364,10 +361,10 @@ def get_aerosol_bit(beta, falling_bit, droplet_bit):
         droplet_bit (ndarray): Binary array containing liquid droplets.
 
     Returns:
-        Pixels that are classified as aerosols.
+        Boolean array for aerosol classification.
 
     """
-    return ~beta.mask & (falling_bit^1) & (droplet_bit^1) 
+    return ~beta.mask & ~falling_bit & ~droplet_bit
 
 
 def fetch_qual_bits(Z, beta, clutter_bit, atten):
