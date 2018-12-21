@@ -56,7 +56,18 @@ def generate_categorize(input_files, output_file, aux):
 
 
 def _correct_atten(Z, gas_atten, liq_atten):
-    """Corrects radar echo for attenuation."""
+    """Corrects radar echo for attenuation.
+    
+    Args:
+        Z (MaskedArray): Radar echo.
+        gas_atten (ndarray): attenuation due to atmospheric gases.
+        liq_atten (MaskedArray): attenuation due to atmospheric liquid.
+
+    Returns:
+        Copy of input Z, corrected by liquid attenuation
+        (where applicable) and gas attenuation.
+
+    """
     Z_corr = ma.copy(Z) + gas_atten
     ind = ~liq_atten.mask
     Z_corr[ind] = Z_corr[ind] + liq_atten[ind]
