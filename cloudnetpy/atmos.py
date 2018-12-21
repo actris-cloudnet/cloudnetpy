@@ -208,8 +208,9 @@ def _screen_liq_atten(liq_atten, bits):
 
     Returns:
         3-element tuple containing screened liquid
-        attenuation, and bitfields showing where
-        it was corrected and where it was not.
+        attenuation (MaskedArray), and bitfields 
+        showing where it was corrected and where it 
+        was not.
 
     """
     def _get_bits(liq_atten, rain_ind, melt_ind):

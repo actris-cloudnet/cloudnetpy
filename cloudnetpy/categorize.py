@@ -8,13 +8,14 @@ import sys
 sys.path.insert(0, os.path.abspath('../../cloudnetpy'))  #pylint: disable=wrong-import-position
 import math
 import numpy as np
-# import numpy.ma as ma
+import numpy.ma as ma
 from scipy.interpolate import interp1d
 from cloudnetpy import config
 from cloudnetpy import ncf
 from cloudnetpy import utils
 from cloudnetpy import atmos
 from cloudnetpy import classify
+# from cloudnetpy import plotting
 
 
 def generate_categorize(input_files, output_file, aux):
@@ -50,10 +51,20 @@ def generate_categorize(input_files, output_file, aux):
     atten = _get_attenuations(lwp, model['model_i'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
                                          bits['clutter_bit'], atten['liq_atten'])
-    
+    Z_corr = _correct_atten(radar['Zh'], atten['gas_atten'],
+                            atten['liq_atten']['liq_atten'])
+
+
+def _correct_atten(Z, gas_atten, liq_atten):
+    """Corrects radar echo for attenuation."""
+    Z_corr = ma.copy(Z) + gas_atten
+    ind = ~liq_atten.mask
+    Z_corr[ind] = Z_corr[ind] + liq_atten[ind]
+    return Z_corr
+
 
 def _get_attenuations(lwp, model_i, bits, height):
-    """Return attenuations due to atmospheric liquid and gases."""
+    """Returns attenuations due to atmospheric liquid and gases."""
     gas_atten = atmos.get_gas_atten(model_i, bits['cat_bits'], height)
     liq_atten = atmos.get_liquid_atten(lwp, model_i, bits, height)
     return {'gas_atten': gas_atten, 'liq_atten': liq_atten}
