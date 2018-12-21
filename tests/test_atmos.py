@@ -5,7 +5,7 @@ import numpy as np
 import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal
 import pytest
-import atmos
+from cloudnetpy import atmos
 
 
 @pytest.mark.parametrize("t, res", [
@@ -14,7 +14,7 @@ import atmos
 ])
 def test_saturation_vapor_pressure1(t, res):
     """ Unit tests for atmos.saturation_vapor_pressure(). """
-    cnet = atmos._saturation_vapor_pressure_accurate(t)
+    cnet = atmos.saturation_vapor_pressure(t, kind='accurate')
     assert_array_almost_equal(cnet, res, decimal=1) # 0.1hpa difference is ok
 
 
@@ -24,7 +24,7 @@ def test_saturation_vapor_pressure1(t, res):
 ])
 def test_saturation_vapor_pressure2(t, res):
     """ Unit tests for atmos.saturation_vapor_pressure(). """
-    cnet = atmos._saturation_vapor_pressure_fast(t)
+    cnet = atmos.saturation_vapor_pressure(t, kind='fast')
     assert_array_almost_equal(cnet, res, decimal=1) # 0.1hpa difference is ok
 
     

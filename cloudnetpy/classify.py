@@ -318,10 +318,11 @@ def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
     """Estimates clutter from doppler velocity.
 
     Args:
-        v (ndarray): Doppler velocity, (n, m).
+        v (MaskedArray): Doppler velocity, (n, m).
         rain_bit (ndarray): A (n,) array indicating
             profiles affected by rain (1=yes, 0=no).
         vlim (float, optional): Velocity threshold.
+            Smaller values will be classified as clutter.
             Default is 0.05 (m/s).
 
     Returns:
