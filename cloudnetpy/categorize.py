@@ -411,6 +411,17 @@ def _interpolate_model(model, fields, *args):
     return out
 
 
+def _anc_names(var, bias=False, err=False, sens=False):
+    out = ''
+    if bias:
+        out = out + var + '_bias '
+    if err:
+        out = out + var + '_error '
+    if sens:
+        out = out + var + '_sensitivity '
+    return out[:-1]
+
+
 def _cat_cnet_vars(vars_in):
     """Creates list of variable instances for output writing."""
     lin, log = 'linear', 'logarithmic'
@@ -467,39 +478,63 @@ def _cat_cnet_vars(vars_in):
                        units = 'm',
                        fill_value = None, 
                        comment = 'Defined as the altitude of radar or lidar, choosing the one that is lower.'))
-
-    """
     # radar variables
-    var, lname = 'radar_frequency', 'Transmit frequency'
-    obs.append(CnetVar(var, vars_in[var], long_name=lname, size=(), units='GHz', fill_value=None))
-
-    var, lname = 'Z', 'Radar reflectivity factor'
-    obs.append(CnetVar(var, vars_in[var], long_name=lname, units='dBZ', plot_range=(-40, 20), plot_scale=lin, 
-                       extra_attributes={src:radar_source, anc: anc_names(var, True, True, True)}))
-
+    var = 'radar_frequency' 
+    obs.append(CnetVar(var, vars_in[var],
+                       long_name = 'Transmit frequency',
+                       size=(),
+                       units = 'GHz',
+                       fill_value = None))
+    var = 'Z'
+    lname = 'Radar reflectivity factor'
+    obs.append(CnetVar(var, vars_in[var],
+                       long_name = lname,
+                       units = 'dBZ',
+                       plot_range = (-40, 20),
+                       plot_scale = lin, 
+                       extra_attributes = {src: radar_source,
+                                           anc: _anc_names(var, True, True, True)}))
     var = 'Z_bias'
-    obs.append(CnetVar(var, vars_in[var], long_name=bias_name(lname), size=(), units='dB', fill_value=None, comment=bias_comm))
-
+    obs.append(CnetVar(var, vars_in[var],
+                       long_name = output.bias_name(lname),
+                       size = (),
+                       units = 'dB',
+                       fill_value = None,
+                       comment = bias_comm))
     var = 'Z_error'
-    obs.append(CnetVar(var, vars_in[var], long_name=err_name(lname), units='dB', comment='err'))
-    
-    var, lname = 'Z_sensitivity', 'Minimum detectable radar reflectivity'
-    obs.append(CnetVar(var, vars_in[var], long_name=lname, size=('height'), units='dBZ',
-                       comment=('This variable is an estimate of the radar sensitivity, i.e. the minimum detectable radar reflectivity\n',
+    obs.append(CnetVar(var, vars_in[var],
+                       long_name = output.err_name(lname),
+                       units = 'dB',
+                       comment = 'err'))
+    var = 'Z_sensitivity' 
+    obs.append(CnetVar(var, vars_in[var],
+                       long_name = 'Minimum detectable radar reflectivity',
+                       size = ('height'),
+                       units = 'dBZ',
+                       comment = ('This variable is an estimate of the radar sensitivity, i.e. the minimum detectable radar reflectivity\n',
                        'as a function of height. It includes the effect of ground clutter and gas attenuation but not liquid attenuation.')))
-    
-    var, lname = 'v', 'Doppler velocity'
-    obs.append(CnetVar(var, vars_in[var], long_name=lname, units='m s-1', plot_range=(-4, 2), plot_scale=lin, 
-                       extra_attributes={src:radar_source}))
-
-    var, lname = 'width', 'Spectral width'
-    obs.append(CnetVar(var, vars_in[var], long_name=lname, units='m s-1', plot_range=(0.03, 3), plot_scale=log, 
-                       extra_attributes={src:radar_source}))
-    
-    var, lname = 'ldr', 'Linear depolarisation ratio'
-    obs.append(CnetVar(var, vars_in[var], long_name=lname, units='dB', plot_range=(-30, 0), plot_scale=lin, 
-                       extra_attributes={src:radar_source}))
-
+    var = 'v'
+    obs.append(CnetVar(var, vars_in[var],
+                       long_name = 'Doppler velocity',
+                       units='m s-1',
+                       plot_range=(-4, 2),
+                       plot_scale=lin,
+                       extra_attributes = {src:radar_source}))
+    var = 'width' 
+    obs.append(CnetVar(var, vars_in[var],
+                       long_name = 'Spectral width',
+                       units = 'm s-1',
+                       plot_range = (0.03, 3),
+                       plot_scale = log, 
+                       extra_attributes = {src:radar_source}))
+    var = 'ldr'
+    obs.append(CnetVar(var, vars_in[var],
+                       long_name = 'Linear depolarisation ratio',
+                       units = 'dB',
+                       plot_range = (-30, 0),
+                       plot_scale = lin,
+                       extra_attributes = {src:radar_source}))
+    """
     # lidar variables
     var, lname = 'lidar_wavelength', 'Laser wavelength'
     obs.append(CnetVar(var, vars_in[var], long_name=lname, size=(), units='nm', fill_value=None))
@@ -573,9 +608,3 @@ def _cat_cnet_vars(vars_in):
 
     
     return obs
-
-
-
-
-
-

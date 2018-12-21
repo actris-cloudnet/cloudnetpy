@@ -103,3 +103,30 @@ def save_cat(file_name, time, height, model_time, model_height, obs, aux):
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
     rootgrp.history = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") + ' - categorize file created'
     rootgrp.close()
+
+
+def status_name(long_name):
+    """ Default retrieval status variable name """
+    return long_name + ' retrieval status'
+
+
+def bias_name(long_name):
+    """ Default bias variable name """
+    return 'Possible bias in ' + long_name.lower() + ', one standard deviation'
+
+
+def err_name(long_name):
+    """ Default error variable name """
+    return 'Random error in ' + long_name.lower() + ', one standard deviation'
+
+
+def err_comm(long_name):
+    """ Default error comment """
+    return ('This variable is an estimate of the one-standard-deviation random error in ' + long_name.lower() + '\n',
+            'due to the uncertainty of the retrieval, including the random error in the radar and lidar parameters.')
+            
+
+def bias_comm(long_name):
+    """ Default bias comment """
+    return ('This variable is an estimate of the possible systematic error (one-standard-deviation) in ' + long_name.lower() + '\n',
+            'due to the uncertainty in the calibration of the radar and lidar.')
