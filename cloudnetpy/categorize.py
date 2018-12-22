@@ -412,6 +412,7 @@ def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
 
 
 def _anc_names(var, bias=False, err=False, sens=False):
+    """Returns list of ancillary variable names."""
     out = ''
     if bias:
         out = out + var + '_bias '
