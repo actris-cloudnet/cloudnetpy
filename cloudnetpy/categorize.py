@@ -692,21 +692,19 @@ def _comments(field):
                           'It includes the effect of ground clutter and gas attenuation but not liquid attenuation.'),
 
         'Z_error': ('This variable is an estimate of the one-standard-deviation random error in radar reflectivity factor.\n'
-		    'It originates from the following independent sources of error:\n'
-		    '1) Precision in reflectivity estimate due to finite signal to noise and finite number of pulses\n'
-		    '2) 10% uncertainty in gaseous attenuation correction (mainly due to error in model humidity field)\n'
-		    '3) Error in liquid water path (given by the variable lwp_error) and its partitioning with height).'),
+                    'It originates from the following independent sources of error:\n'
+                    '1) Precision in reflectivity estimate due to finite signal to noise and finite number of pulses\n'
+                    '2) 10% uncertainty in gaseous attenuation correction (mainly due to error in model humidity field)\n'
+                    '3) Error in liquid water path (given by the variable lwp_error) and its partitioning with height).'),
 
-        'altitude': ('Defined as the altitude of radar or lidar, '
-                     'choosing the one that is lower.'),
+        'altitude': ('Defined as the altitude of radar or lidar - the one that is lower.'),
 
         'Z': ('This variable has been corrected for attenuation by gaseous attenuation (using the thermodynamic variables\n'
               'from a forecast model; see the radar_gas_atten variable) and liquid attenuation (using liquid water path from\n'
               'a microwave radiometer; see the radar_liquid_atten variable) but rain and melting-layer attenuation has not \n'
               'been corrected. Calibration convention: in the absence of attenuation, a cloud at 273 K containing one million \n'
               '100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.\n'
-	      'Original comment: Calibrated reflectivity. Calibration convention: in the absence of attenuation, a cloud at 273 K\n'
+              'Original comment: Calibrated reflectivity. Calibration convention: in the absence of attenuation, a cloud at 273 K\n'
               'containing one million 100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.')        
     }
     return com[field]
-

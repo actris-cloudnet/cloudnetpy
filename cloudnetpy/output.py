@@ -5,36 +5,40 @@ from datetime import datetime, timezone
 
 
 class CnetVar:
-    """Class for Cloudnet variables. Replace with namedtuple?
+    """Class for Cloudnet variables. Needs refactoring.
     """
     def __init__(self, name, data, data_type='f4', size=('time', 'height'),
-                 zlib=True, fill_value=True, long_name='', units='',
-                 comment='', plot_scale=None, plot_range=None,
-                 bias_variable=None, error_variable=None,
-                 extra_attributes=None):
+                 zlib=True, fill_value=True,
+                 long_name=None, units=None,
+                 comment=None, plot_scale=None,
+                 plot_range=None, extra_attributes=None):
+        # Required:
         self.name = name
         self.data = data
         self.data_type = data_type
         self.size = size
         self.zlib = zlib
+        if isinstance(fill_value, bool):
+            self.fill_value = netCDF4.default_fillvals[data_type]
+        else:
+            self.fill_value = fill_value
+        # Optional:
         self.long_name = long_name
         self.units = units
         self.comment = comment
         self.plot_scale = plot_scale
         self.plot_range = plot_range
         self.extra_attributes = extra_attributes
-        if bias_variable and type(bias_variable) == bool:
-            self.bias_variable = name + '_bias'
-        else:
-            self.bias_variable = bias_variable
-        if error_variable and type(error_variable) == bool:
-            self.error_variable = name + '_error'
-        else:
-            self.error_variable = error_variable
-        if fill_value and type(fill_value) == bool:
-            self.fill_value = netCDF4.default_fillvals[data_type]
-        else:
-            self.fill_value = fill_value
+
+    def valid_attrs(self):
+        """Return (optional) attributes that actually have a value."""
+        out = {}
+        fields = ('long_name', 'units', 'comment', 'plot_range', 'plot_scale')
+        for field in fields:
+            value = getattr(self, field)
+            if value:
+                out[field] = value
+        return out
 
 
 def write_vars2nc(rootgrp, obs):
@@ -43,12 +47,8 @@ def write_vars2nc(rootgrp, obs):
         ncvar = rootgrp.createVariable(var.name, var.data_type, var.size,
                                        zlib=var.zlib, fill_value=var.fill_value)
         ncvar[:] = var.data
-        fields = ['long_name', 'units', 'error_variable', 'bias_variable',
-                  'comment', 'plot_range', 'plot_scale']
-        for field in fields:
-            value = getattr(var, field)
-            if value:
-                setattr(ncvar, field, value)
+        for attr in var.valid_attrs():
+            setattr(ncvar, attr, getattr(var, attr))
         if var.extra_attributes:
             for attr, value in var.extra_attributes.items():
                 setattr(ncvar, attr, value)
