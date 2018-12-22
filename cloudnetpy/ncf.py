@@ -12,6 +12,15 @@ def load_nc(file_in):
     return netCDF4.Dataset(file_in).variables
 
 
+def fetch_radar_meta(radar_file):
+    """Read some global metadata from radar nc-file."""
+    nc = netCDF4.Dataset(radar_file)
+    radar_type = nc.title.split()[0]
+    dvec = '-'.join([str(nc.year), str(nc.month).zfill(2),
+                     str(nc.day).zfill(2)])
+    return radar_type, dvec
+
+
 def km2m(var):
     """ Converts km to m.
 

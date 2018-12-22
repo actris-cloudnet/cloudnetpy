@@ -1,14 +1,16 @@
 import netCDF4
+import uuid
 from datetime import datetime, timezone
-#from cloudnetpy import ncf
 
 
 class CnetVar:
-    """Class for Cloudnet variables. Not sure this is needed though."""
-    def __init__(self, name, data,
-                 data_type='f4', size=('time','height'), zlib=True, fill_value=True,
-                 long_name='', units='', comment='', plot_scale=None, plot_range=None,
-                 bias_variable=None, error_variable=None, extra_attributes=None):
+    """Class for Cloudnet variables. Replace with namedtuple?
+    """
+    def __init__(self, name, data, data_type='f4', size=('time','height'),
+                 zlib=True, fill_value=True, long_name='', units='',
+                 comment='', plot_scale=None, plot_range=None,
+                 bias_variable=None, error_variable=None,
+                 extra_attributes=None):
         self.name = name
         self.data = data
         self.data_type = data_type
@@ -20,15 +22,15 @@ class CnetVar:
         self.plot_scale = plot_scale
         self.plot_range = plot_range
         self.extra_attributes = extra_attributes
-        if (bias_variable and type(bias_variable) == bool):
+        if bias_variable and type(bias_variable) == bool:
             self.bias_variable = name + '_bias'
         else:
             self.bias_variable = bias_variable
-        if (error_variable and type(error_variable) == bool):
+        if error_variable and type(error_variable) == bool:
             self.error_variable = name + '_error'
         else:
             self.error_variable = error_variable
-        if (fill_value and type(fill_value) == bool):
+        if fill_value and type(fill_value) == bool:
             self.fill_value = netCDF4.default_fillvals[data_type]
         else:
             self.fill_value = fill_value
@@ -81,7 +83,8 @@ def _copy_global(file_from, file_to, attrs_to_be_copied):
             setattr(file_to, aname, file_from.getncattr(aname))
 
 
-def save_cat(file_name, time, height, model_time, model_height, obs, aux):
+def save_cat(file_name, time, height, model_time, model_height,
+             obs, radar_type, dvec, aux):
     rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4')
     # create dimensions
     time = rootgrp.createDimension('time', len(time))
@@ -94,12 +97,12 @@ def save_cat(file_name, time, height, model_time, model_height, obs, aux):
     rootgrp.Conventions = 'CF-1.7'
     rootgrp.title = 'Categorize file from ' + aux[0]
     rootgrp.institution = 'Data processed at the ' + aux[1]
-    #rootgrp.year = int(dvec[:4])
-    #rootgrp.month = int(dvec[5:7])
-    #rootgrp.day = int(dvec[8:])
+    rootgrp.year = int(dvec[:4])
+    rootgrp.month = int(dvec[5:7])
+    rootgrp.day = int(dvec[8:])
     #rootgrp.software_version = version
     #rootgrp.git_version = ncf.git_version()
-    #rootgrp.file_uuid = str(uuid.uuid4().hex)
+    rootgrp.file_uuid = str(uuid.uuid4().hex)
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
     rootgrp.history = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") + ' - categorize file created'
     rootgrp.close()

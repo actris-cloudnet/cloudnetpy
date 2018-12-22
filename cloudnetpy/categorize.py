@@ -38,6 +38,7 @@ def generate_categorize(input_files, output_file, aux):
     try:
         time = utils.get_time(config.TIME_RESOLUTION)
         rad_vars, lid_vars, mwr_vars, mod_vars = _load_files(input_files)
+        radar_type, dvec = ncf.fetch_radar_meta(input_files[0])
         freq = ncf.get_radar_freq(rad_vars)
     except (ValueError, KeyError) as error:
         sys.exit(error)
@@ -57,8 +58,7 @@ def generate_categorize(input_files, output_file, aux):
     Z_corr = _correct_atten(radar['Zh'], atten['gas_atten'],
                             atten['liq_atten']['liq_atten'])
     Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter_bit'], time, freq)
-    
-    # collect variables for output
+    # Collect variables for output file writing:
     cat_vars = {'height': height,
                 'time': time,
                 'latitude': rad_vars['latitude'][:],
@@ -68,17 +68,17 @@ def generate_categorize(input_files, output_file, aux):
                 'lidar_wavelength': lid_vars['wavelength'][:], 
                 'beta': lidar['beta'],
                 'beta_error': config.BETA_ERROR,
-                'beta_bias': config.BETA_BIAS, 
+                'beta_bias': config.BETA_BIAS,
                 'Z': Z_corr,
                 'v': radar['v'],
                 'width': radar['width'],
-                'ldr': radar['ldr'], 
+                'ldr': radar['ldr'],
                 'Z_bias': config.Z_BIAS,
                 'temperature': model['original']['temperature'],
-                'pressure': model['original']['pressure'], 
+                'pressure': model['original']['pressure'],
                 'specific_humidity': model['original']['q'],
                 'uwind': model['original']['uwind'],
-                'vwind': model['original']['vwind'], 
+                'vwind': model['original']['vwind'],
                 'model_height': model['height'],
                 'model_time': model['time'],
                 'category_bits': bits['cat_bits'],
@@ -90,11 +90,11 @@ def generate_categorize(input_files, output_file, aux):
                 'lwp_error': lwp['lwp_error'],
                 'quality_bits': qual_bits,
                 'Z_error': Z_err['error'],
-                'Z_sensitivity': Z_err['sensitivity']} 
+                'Z_sensitivity': Z_err['sensitivity']}
+    obs = _cat_cnet_vars(cat_vars, dvec, radar_type)
+    output.save_cat(output_file, time, height, model['time'], model['height'],
+                    obs, radar_type, dvec, aux)
 
-    obs = _cat_cnet_vars(cat_vars)
-    output.save_cat(output_file, time, height, model['time'], model['height'], obs, aux)
-    
 
 def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
     """Returns sensitivity, precision and error of radar echo.
@@ -422,14 +422,14 @@ def _anc_names(var, bias=False, err=False, sens=False):
     return out[:-1]
 
 
-def _cat_cnet_vars(vars_in):
+def _cat_cnet_vars(vars_in, dvec, radar_type):
     """Creates list of variable instances for output writing."""
     lin, log = 'linear', 'logarithmic'
     src = 'source'
     anc = 'ancillary_variables'
     bias_comm = 'This variable is an estimate of the one-standard-deviation calibration error'
     model_source = 'HYSPLIT'
-    radar_source = 'Cloud radar model XXX'
+    radar_source = f"{radar_type} cloud radar"
     obs = []
     # general variables
     var = 'height'
@@ -442,8 +442,7 @@ def _cat_cnet_vars(vars_in):
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Time UTC',
                        size = ('time'),
-                       #units = 'hours since ' + dvec + ' 00:00:00 +0:00',
-                       units = 'hours since 00:00:00 +0:00',
+                       units = 'hours since ' + dvec + ' 00:00:00 +0:00',
                        fill_value = None,
                        comment = 'Fixed ' + str(config.TIME_RESOLUTION) + 's resolution.'))
     var = 'model_height'
@@ -456,8 +455,7 @@ def _cat_cnet_vars(vars_in):
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Model time UTC',
                        size = ('model_time'),
-                       #units = 'hours since ' + dvec + ' 00:00:00 +0:00',
-                       units = 'hours since 00:00:00 +0:00',
+                       units = 'hours since ' + dvec + ' 00:00:00 +0:00',
                        fill_value = None))
     var = 'latitude'
     obs.append(CnetVar(var, vars_in[var],
@@ -471,15 +469,15 @@ def _cat_cnet_vars(vars_in):
                        size = (),
                        units = 'degrees_east',
                        fill_value = None))
-    var = 'altitude' 
+    var = 'altitude'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Altitude of site',
                        size = (),
                        units = 'm',
-                       fill_value = None, 
+                       fill_value = None,
                        comment = 'Defined as the altitude of radar or lidar, choosing the one that is lower.'))
     # radar variables
-    var = 'radar_frequency' 
+    var = 'radar_frequency'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Transmit frequency',
                        size = (),
@@ -491,7 +489,7 @@ def _cat_cnet_vars(vars_in):
                        long_name = lname,
                        units = 'dBZ',
                        plot_range = (-40, 20),
-                       plot_scale = lin, 
+                       plot_scale = lin,
                        extra_attributes = {src: radar_source,
                                            anc: _anc_names(var, True, True, True)}))
     var = 'Z_bias'
@@ -504,9 +502,8 @@ def _cat_cnet_vars(vars_in):
     var = 'Z_error'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = output.err_name(lname),
-                       units = 'dB',
-                       comment = 'err'))
-    var = 'Z_sensitivity' 
+                       units = 'dB'))
+    var = 'Z_sensitivity'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Minimum detectable radar reflectivity',
                        size = ('height'),
@@ -525,7 +522,7 @@ def _cat_cnet_vars(vars_in):
                        long_name = 'Spectral width',
                        units = 'm s-1',
                        plot_range = (0.03, 3),
-                       plot_scale = log, 
+                       plot_scale = log,
                        extra_attributes = {src:radar_source}))
     var = 'ldr'
     obs.append(CnetVar(var, vars_in[var],
@@ -547,7 +544,7 @@ def _cat_cnet_vars(vars_in):
                        long_name = lname,
                        units = 'sr-1 m-1',
                        plot_range = (1e-7, 1e-4),
-                       plot_scale = log, 
+                       plot_scale = log,
                        extra_attributes = {src:'Lidar/Ceilometer model XXX',
                                            anc: _anc_names(var, bias=True, err=True)}))
     var = 'beta_bias'
@@ -562,8 +559,7 @@ def _cat_cnet_vars(vars_in):
                        long_name = output.err_name(lname),
                        size = (),
                        units = 'dB',
-                       fill_value = None,
-                       comment = 'This variable is a crude estimate of the one-standard deviation random error'))
+                       fill_value = None))
     # mwr variables
     var = 'lwp'
     obs.append(CnetVar(var, vars_in[var],
@@ -571,7 +567,7 @@ def _cat_cnet_vars(vars_in):
                        size = ('time'),
                        units = 'g m-2',
                        plot_range = (-100, 1000),
-                       plot_scale = lin, 
+                       plot_scale = lin,
                        extra_attributes = {'source':'HATPRO microwave radiometer'}))
     var = 'lwp_error'
     obs.append(CnetVar(var, vars_in[var],
@@ -593,7 +589,7 @@ def _cat_cnet_vars(vars_in):
                        size = ('model_time', 'model_height'),
                        units = 'Pa',
                        plot_range = (0, 1.1e5),
-                       plot_scale = log, 
+                       plot_scale = log,
                        extra_attributes = {src:model_source}))
     var = 'specific_humidity'
     obs.append(CnetVar(var, vars_in[var],
@@ -601,7 +597,7 @@ def _cat_cnet_vars(vars_in):
                        size = ('model_time', 'model_height'),
                        units = '',
                        plot_range = (0, 0.006),
-                       plot_scale = lin, 
+                       plot_scale = lin,
                        extra_attributes = {src:model_source}))
     var = 'uwind'
     obs.append(CnetVar(var, vars_in[var],
@@ -609,16 +605,15 @@ def _cat_cnet_vars(vars_in):
                        size = ('model_time', 'model_height'),
                        units = 'm s-1',
                        plot_range = (-50, 50),
-                       plot_scale = lin, 
+                       plot_scale = lin,
                        extra_attributes = {src:model_source}))
-
     var = 'vwind'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Meridional wind',
                        size = ('model_time', 'model_height'),
                        units = 'm s-1',
                        plot_range = (-50, 50),
-                       plot_scale = lin, 
+                       plot_scale = lin,
                        extra_attributes = {src:model_source}))
     # other
     var = 'category_bits'
@@ -644,7 +639,8 @@ def _cat_cnet_vars(vars_in):
                        long_name = 'Wet bulb temperature',
                        units = 'K',
                        fill_value = None,
-                       comment = 'Calculated from model T, P and relative humidity, which were first interpolated into measurement grid.'))
+                       comment = ('Calculated from model T, P and relative humidity, '
+                                  'which were first interpolated into measurement grid.')))
     var = 'insect_probability'
     obs.append(CnetVar(var, vars_in[var],
                        long_name  = 'Probability of insects',
@@ -658,7 +654,7 @@ def _cat_cnet_vars(vars_in):
     var = 'radar_liquid_atten'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Approximate two-way radar attenuation due to liquid water',
-                       units  ='dB',
+                       units = 'dB',
                        plot_range = (0, 4),
                        plot_scale = lin))
     return obs
