@@ -1,3 +1,4 @@
+""" Functions for Categorize output file writing."""
 import netCDF4
 import uuid
 from datetime import datetime, timezone
@@ -6,7 +7,7 @@ from datetime import datetime, timezone
 class CnetVar:
     """Class for Cloudnet variables. Replace with namedtuple?
     """
-    def __init__(self, name, data, data_type='f4', size=('time','height'),
+    def __init__(self, name, data, data_type='f4', size=('time', 'height'),
                  zlib=True, fill_value=True, long_name='', units='',
                  comment='', plot_scale=None, plot_range=None,
                  bias_variable=None, error_variable=None,
@@ -57,7 +58,7 @@ def write_vars2nc(rootgrp, obs):
             ncvar.plot_scale = var.plot_scale
         if var.extra_attributes:
             for attr, value in var.extra_attributes.items():
-                setattr(ncvar, attr, value)  # hmm, problem herr?
+                setattr(ncvar, attr, value)
 
 
 def _copy_dimensions(file_from, file_to, dims_to_be_copied):
@@ -71,9 +72,9 @@ def _copy_variables(file_from, file_to, vars_to_be_copied):
     """Copies variables (and their attributes) from one file to another."""
     for vname, varin in file_from.variables.items():
         if vname in vars_to_be_copied:
-            outVar = file_to.createVariable(vname, varin.datatype, varin.dimensions)
-            outVar.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
-            outVar[:] = varin[:]
+            varout = file_to.createVariable(vname, varin.datatype, varin.dimensions)
+            varout.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
+            varout[:] = varin[:]
 
 
 def _copy_global(file_from, file_to, attrs_to_be_copied):
@@ -84,7 +85,7 @@ def _copy_global(file_from, file_to, attrs_to_be_copied):
 
 
 def save_cat(file_name, time, height, model_time, model_height,
-             obs, radar_type, dvec, aux):
+             obs, dvec, aux):
     rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     # create dimensions
     time = rootgrp.createDimension('time', len(time))
@@ -127,7 +128,7 @@ def err_comm(long_name):
     """ Default error comment """
     return ('This variable is an estimate of the one-standard-deviation random error in ' + long_name.lower() + '\n',
             'due to the uncertainty of the retrieval, including the random error in the radar and lidar parameters.')
-            
+
 
 def bias_comm(long_name):
     """ Default bias comment """
