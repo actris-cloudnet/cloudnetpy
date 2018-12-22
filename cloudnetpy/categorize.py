@@ -10,6 +10,7 @@ import math
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import interp1d
+from collections import namedtuple
 # from datetime import datetime, timezone
 from cloudnetpy import config
 from cloudnetpy import ncf
@@ -432,6 +433,7 @@ def _cat_cnet_vars(vars_in, dvec, radar_type):
     model_source = 'HYSPLIT'
     radar_source = f"{radar_type} cloud radar"
     obs = []
+
     # general variables
     var = 'height'
     obs.append(CnetVar(var, vars_in[var],

@@ -43,19 +43,12 @@ def write_vars2nc(rootgrp, obs):
         ncvar = rootgrp.createVariable(var.name, var.data_type, var.size,
                                        zlib=var.zlib, fill_value=var.fill_value)
         ncvar[:] = var.data
-        ncvar.long_name = var.long_name
-        if var.units:
-            ncvar.units = var.units
-        if var.error_variable:
-            ncvar.error_variable = var.error_variable
-        if var.bias_variable:
-            ncvar.bias_variable = var.bias_variable
-        if var.comment:
-            ncvar.comment = var.comment
-        if var.plot_range:
-            ncvar.plot_range = var.plot_range
-        if var.plot_scale:
-            ncvar.plot_scale = var.plot_scale
+        fields = ['long_name', 'units', 'error_variable', 'bias_variable',
+                  'comment', 'plot_range', 'plot_scale']
+        for field in fields:
+            value = getattr(var, field)
+            if value:
+                setattr(ncvar, field, value)
         if var.extra_attributes:
             for attr, value in var.extra_attributes.items():
                 setattr(ncvar, attr, value)
