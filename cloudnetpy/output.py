@@ -57,7 +57,7 @@ def write_vars2nc(rootgrp, obs):
             ncvar.plot_scale = var.plot_scale
         if var.extra_attributes:
             for attr, value in var.extra_attributes.items():
-                setattr(ncvar, attr, value)
+                setattr(ncvar, attr, value)  # hmm, problem herr?
 
 
 def _copy_dimensions(file_from, file_to, dims_to_be_copied):
@@ -85,7 +85,7 @@ def _copy_global(file_from, file_to, attrs_to_be_copied):
 
 def save_cat(file_name, time, height, model_time, model_height,
              obs, radar_type, dvec, aux):
-    rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4')
+    rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     # create dimensions
     time = rootgrp.createDimension('time', len(time))
     height = rootgrp.createDimension('height', len(height))

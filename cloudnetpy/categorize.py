@@ -96,50 +96,6 @@ def generate_categorize(input_files, output_file, aux):
                     obs, radar_type, dvec, aux)
 
 
-def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
-    """Returns sensitivity, precision and error of radar echo.
-
-    Args:
-        radar: A netCDF4 instance.
-        rad_vars: Radar variables.
-        atten (dict): Gas and liquid attenuation variables.
-        clutter_bit (ndarray): Boolean array denoting pixels
-            contaminated by clutter.
-        time (ndarray): Time vector.
-        freq (float): Radar frequency.
-
-    Returns:
-        Dict containing {'radar_sensitivity', 'radar_error'}.
-
-    Notes:
-        Needs to be at least checked and perhaps refactored.
-
-    """
-    Z = radar['Zh']
-    gas_atten, liq_atten = atten['gas_atten'], atten['liq_atten']
-    radar_range = ncf.km2m(rad_vars['range'])
-    log_range = utils.lin2db(radar_range, scale=20)
-    Z_power = Z - log_range
-    Z_power_list = np.sort(Z_power.compressed())
-    Z_power_min = Z_power_list[int(np.floor(len(Z_power_list)/1000))]
-    # Sensitivity:
-    Z_sensitivity = Z_power_min + log_range + np.mean(gas_atten, axis=0)
-    Zc = ma.masked_where(clutter_bit == 0, Z, copy=True)
-    Zc = ma.median(Zc, axis=0)
-    ind = ~Zc.mask
-    Z_sensitivity[ind] = Zc[ind]    
-    # Precision:
-    dwell_time = (time[1]-time[0])*3600
-    independent_pulses = (dwell_time*4*np.sqrt(math.pi)*freq*1e9/3e8)*radar['width']
-    Z_precision = 4.343*(1.0/np.sqrt(independent_pulses) +
-                         utils.db2lin(Z_power_min-Z_power)/3)
-    # Error:
-    g_prec = config.GAS_ATTEN_PREC
-    Z_error = utils.l2norm(gas_atten*g_prec, liq_atten['liq_atten_err'], Z_precision)
-    Z_error[liq_atten['liq_atten_ucorr_bit'] == 1] = None
-    return {'sensitivity': Z_sensitivity, 'error': Z_error}
-
-
 def _correct_atten(Z, gas_atten, liq_atten):
     """Corrects radar echo for attenuation.
 
@@ -411,6 +367,50 @@ def _interpolate_model(model, fields, *args):
     return out
 
 
+def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
+    """Returns sensitivity, precision and error of radar echo.
+
+    Args:
+        radar: A netCDF4 instance.
+        rad_vars: Radar variables.
+        atten (dict): Gas and liquid attenuation variables.
+        clutter_bit (ndarray): Boolean array denoting pixels
+            contaminated by clutter.
+        time (ndarray): Time vector.
+        freq (float): Radar frequency.
+
+    Returns:
+        Dict containing {'radar_sensitivity', 'radar_error'}.
+
+    Notes:
+        Needs to be at least checked and perhaps refactored.
+
+    """
+    Z = radar['Zh']
+    gas_atten, liq_atten = atten['gas_atten'], atten['liq_atten']
+    radar_range = ncf.km2m(rad_vars['range'])
+    log_range = utils.lin2db(radar_range, scale=20)
+    Z_power = Z - log_range
+    Z_power_list = np.sort(Z_power.compressed())
+    Z_power_min = Z_power_list[int(np.floor(len(Z_power_list)/1000))]
+    # Sensitivity:
+    Z_sensitivity = Z_power_min + log_range + np.mean(gas_atten, axis=0)
+    Zc = ma.masked_where(clutter_bit == 0, Z, copy=True)
+    Zc = ma.median(Zc, axis=0)
+    ind = ~Zc.mask
+    Z_sensitivity[ind] = Zc[ind]    
+    # Precision:
+    dwell_time = (time[1]-time[0])*3600
+    independent_pulses = (dwell_time*4*np.sqrt(math.pi)*freq*1e9/3e8)*radar['width']
+    Z_precision = 4.343*(1.0/np.sqrt(independent_pulses) +
+                         utils.db2lin(Z_power_min-Z_power)/3)
+    # Error:
+    g_prec = config.GAS_ATTEN_PREC
+    Z_error = utils.l2norm(gas_atten*g_prec, liq_atten['liq_atten_err'], Z_precision)
+    Z_error[liq_atten['liq_atten_ucorr_bit'] == 1] = None
+    return {'sensitivity': Z_sensitivity, 'error': Z_error}
+
+
 def _anc_names(var, bias=False, err=False, sens=False):
     out = ''
     if bias:
@@ -475,7 +475,8 @@ def _cat_cnet_vars(vars_in, dvec, radar_type):
                        size = (),
                        units = 'm',
                        fill_value = None,
-                       comment = 'Defined as the altitude of radar or lidar, choosing the one that is lower.'))
+                       comment = ('Defined as the altitude of radar or lidar, '
+                                  'choosing the one that is lower.')))
     # radar variables
     var = 'radar_frequency'
     obs.append(CnetVar(var, vars_in[var],
@@ -508,14 +509,17 @@ def _cat_cnet_vars(vars_in, dvec, radar_type):
                        long_name = 'Minimum detectable radar reflectivity',
                        size = ('height'),
                        units = 'dBZ',
-                       comment = ('This variable is an estimate of the radar sensitivity, i.e. the minimum detectable radar reflectivity\n',
-                       'as a function of height. It includes the effect of ground clutter and gas attenuation but not liquid attenuation.')))
+                       comment = ('This variable is an estimate of the radar sensitivity,\n'
+                                  'i.e. the minimum detectable radar reflectivity, as a function of height.\n'
+                                  'It includes the effect of ground clutter and gas attenuation but not liquid attenuation.')))
     var = 'v'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Doppler velocity',
                        units = 'm s-1',
                        plot_range = (-4, 2),
                        plot_scale = lin,
+                       comment = ('This parameter is the radial component of the velocity,\n'
+                                  'with positive velocities are away from the radar.'),
                        extra_attributes = {src:radar_source}))
     var = 'width' 
     obs.append(CnetVar(var, vars_in[var],
@@ -595,7 +599,6 @@ def _cat_cnet_vars(vars_in, dvec, radar_type):
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Model specific humidity',
                        size = ('model_time', 'model_height'),
-                       units = '',
                        plot_range = (0, 0.006),
                        plot_scale = lin,
                        extra_attributes = {src:model_source}))
@@ -620,20 +623,22 @@ def _cat_cnet_vars(vars_in, dvec, radar_type):
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Target classification bits',
                        data_type = 'i4',
-                       units = None,
                        fill_value = None,
                        extra_attributes = {'valid_range': [0, 5],
                                            'flag_masks': [0, 1, 2, 3, 4, 5],
-                                           'flag_meanings':'liquid_droplets falling_hydrometeors freezing_temperature melting_ice aerosols insects'}))
+                                           'flag_meanings':'liquid_droplets falling_hydrometeors '
+                                                            'freezing_temperature melting_ice aerosols '
+                                                            'insects'}))
     var = 'quality_bits'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Data quality bits',
                        data_type = 'i4',
-                       units = None,
                        fill_value = None,
-                       extra_attributes = {'valid_range': [0, 5],
+                       extra_attributes = {'valid_ranges': [0, 5],
                                            'flag_masks': [0, 1, 2, 3, 4, 5],
-                                           'flag_meanings':'lidar_echo radar_echo radar_clutter lidar_molec_scatter attenuation atten_correction'}))
+                                           'flag_meanings':'lidar_echo radar_echo radar_clutter '
+                                                           'lidar_molec_scatter attenuation '
+                                                           'atten_correction'}))
     var = 'Tw'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Wet bulb temperature',
@@ -650,11 +655,20 @@ def _cat_cnet_vars(vars_in, dvec, radar_type):
                        long_name = 'Two-way radar attenuation due to atmospheric gases',
                        units = 'dB',
                        plot_range = (0, 4),
-                       plot_scale = lin))
+                       plot_scale = lin,
+                       comment = ('This variable was calculated from the model temperature,\n'
+                                  'pressure and humidity, but forcing pixels containing liquid cloud to saturation\n'
+                                  'with respect to liquid water. It was calculated using the millimeter-wave propagation\n'
+                                  'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.')))
     var = 'radar_liquid_atten'
     obs.append(CnetVar(var, vars_in[var],
                        long_name = 'Approximate two-way radar attenuation due to liquid water',
                        units = 'dB',
                        plot_range = (0, 4),
-                       plot_scale = lin))
+                       plot_scale = lin,
+                       comment = ('This variable was calculated from the liquid water path\n'
+                                  'measured by microwave radiometer using lidar and radar returns to perform\n'
+                                  'an approximate partioning of the liquid water content with height. Bit 5 of the\n'
+                                  'quality_bits variable indicates where a correction for liquid water attenuation has\n'
+                                  'been performed.')))
     return obs
