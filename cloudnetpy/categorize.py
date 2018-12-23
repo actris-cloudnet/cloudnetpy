@@ -435,8 +435,8 @@ def _cat_cnet_vars(vars_in, radar_meta):
     obs.append(CnetVar(var, vars_in[var],
                        long_name='Height above mean sea level',
                        size=('height'),
-                       units='m',
-                       fill_value=None))
+                       fill_value=None,
+                       units='m'))
     var = 'time'
     obs.append(CnetVar(var, vars_in[var],
                        long_name='Time UTC',
@@ -460,28 +460,24 @@ def _cat_cnet_vars(vars_in, radar_meta):
     obs.append(CnetVar(var, vars_in[var],
                        long_name='Latitude of site',
                        size=(),
-                       units='degrees_north',
-                       fill_value=None))
+                       units='degrees_north'))
     var = 'longitude'
     obs.append(CnetVar(var, vars_in[var],
                        long_name='Longitude of site',
                        size=(),
-                       units='degrees_east',
-                       fill_value=None))
+                       units='degrees_east'))
     var = 'altitude'
     obs.append(CnetVar(var, vars_in[var],
                        long_name='Altitude of site',
                        size=(),
                        units='m',
-                       fill_value=None,
                        comment=_comments(var)))
     # radar variables
     var = 'radar_frequency'
     obs.append(CnetVar(var, vars_in[var],
                        long_name='Transmit frequency',
                        size=(),
-                       units='GHz',
-                       fill_value=None))
+                       units='GHz'))
     var = 'Z'
     lname = 'Radar reflectivity factor'
     obs.append(CnetVar(var, vars_in[var],
@@ -497,7 +493,6 @@ def _cat_cnet_vars(vars_in, radar_meta):
                        long_name=output.bias_name(lname),
                        size=(),
                        units='dB',
-                       fill_value=None,
                        comment=bias_comm))
     var = 'Z_error'
     obs.append(CnetVar(var, vars_in[var],
@@ -537,8 +532,7 @@ def _cat_cnet_vars(vars_in, radar_meta):
     obs.append(CnetVar(var, vars_in[var],
                        long_name='Laser wavelength',
                        size=(),
-                       units='nm',
-                       fill_value=None))
+                       units='nm'))
     var = 'beta'
     lname = 'Attenuated backscatter coefficient'
     obs.append(CnetVar(var, vars_in[var],
@@ -553,14 +547,12 @@ def _cat_cnet_vars(vars_in, radar_meta):
                        long_name=output.bias_name(lname),
                        size=(),
                        units='dB',
-                       fill_value=None,
                        comment=bias_comm))
     var = 'beta_error'
     obs.append(CnetVar(var, vars_in[var],
                        long_name=output.err_name(lname),
                        size=(),
-                       units='dB',
-                       fill_value=None))
+                       units='dB'))
     # mwr variables
     var = 'lwp'
     obs.append(CnetVar(var, vars_in[var],

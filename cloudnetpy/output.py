@@ -6,22 +6,19 @@ from cloudnetpy import config
 
 class CnetVar:
     """Class for Cloudnet variables. Needs refactoring.
-    """
+    """    
     def __init__(self, name, data, data_type='f4', size=('time', 'height'),
                  zlib=True, fill_value=True,
                  long_name=None, units=None,
-                 comment=None, plot_scale=None,
-                 plot_range=None, extra_attributes=None):
+                 comment=None, plot_scale=None, plot_range=None,
+                 extra_attributes=None):
         # Required:
         self.name = name
         self.data = data
         self.data_type = data_type
         self.size = size
         self.zlib = zlib
-        if isinstance(fill_value, bool):
-            self.fill_value = netCDF4.default_fillvals[data_type]
-        else:
-            self.fill_value = fill_value
+        self.fill_value = self._get_fillv(fill_value)
         # Optional:
         self.long_name = long_name
         self.units = units
@@ -29,6 +26,15 @@ class CnetVar:
         self.plot_scale = plot_scale
         self.plot_range = plot_range
         self.extra_attributes = extra_attributes
+
+    def _get_fillv(self, fill_value):
+        """Returns proper fill value."""
+        if not self.size:
+            return None  # no fill value for scalars
+        if isinstance(fill_value, bool):
+            return netCDF4.default_fillvals[self.data_type]
+        else:
+            return fill_value
 
     def valid_attrs(self):
         """Return (optional) attributes that actually have a value."""
