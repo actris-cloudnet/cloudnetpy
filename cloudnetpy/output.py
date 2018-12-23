@@ -6,12 +6,9 @@ from cloudnetpy import config
 
 class CnetVar:
     """Class for Cloudnet variables. Needs refactoring.
-    """    
+    """
     def __init__(self, name, data, data_type='f4', size=('time', 'height'),
-                 zlib=True, fill_value=True,
-                 long_name=None, units=None,
-                 comment=None, plot_scale=None, plot_range=None,
-                 extra_attributes=None):
+                 zlib=True, fill_value=True, **kwargs):
         # Required:
         self.name = name
         self.data = data
@@ -19,32 +16,18 @@ class CnetVar:
         self.size = size
         self.zlib = zlib
         self.fill_value = self._get_fillv(fill_value)
-        # Optional:
-        self.long_name = long_name
-        self.units = units
-        self.comment = comment
-        self.plot_scale = plot_scale
-        self.plot_range = plot_range
-        self.extra_attributes = extra_attributes
+        # Extra:
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
     def _get_fillv(self, fill_value):
         """Returns proper fill value."""
         if not self.size:
             return None  # no fill value for scalars
-        if isinstance(fill_value, bool):
+        elif isinstance(fill_value, bool):
             return netCDF4.default_fillvals[self.data_type]
         else:
             return fill_value
-
-    def valid_attrs(self):
-        """Return (optional) attributes that actually have a value."""
-        out = {}
-        fields = ('long_name', 'units', 'comment', 'plot_range', 'plot_scale')
-        for field in fields:
-            value = getattr(self, field)
-            if value:
-                out[field] = value
-        return out
 
 
 def write_vars2nc(rootgrp, obs):
@@ -53,11 +36,8 @@ def write_vars2nc(rootgrp, obs):
         ncvar = rootgrp.createVariable(var.name, var.data_type, var.size,
                                        zlib=var.zlib, fill_value=var.fill_value)
         ncvar[:] = var.data
-        for attr in var.valid_attrs():
+        for attr in var.kwargs:
             setattr(ncvar, attr, getattr(var, attr))
-        if var.extra_attributes:
-            for attr, value in var.extra_attributes.items():
-                setattr(ncvar, attr, value)
 
 
 def _copy_dimensions(file_from, file_to, dims_to_be_copied):
@@ -84,6 +64,7 @@ def _copy_global(file_from, file_to, attrs_to_be_copied):
 
 
 def save_cat(file_name, time, height, model_time, model_height, obs, radar_meta):
+    """Creates a categorize netCDF4 file and saves all data into it."""
     rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     # create dimensions
     time = rootgrp.createDimension('time', len(time))
