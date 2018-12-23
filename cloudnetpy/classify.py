@@ -27,8 +27,8 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
             - bit 5: Aerosols
             - bit 6: Insects
 
-        The dict contains also profiles containing rain, 'rain_bit',
-        and pixels contaminated by clutter, 'clutter_bit'.
+        The dict contains also profiles containing rain
+        and pixels contaminated by clutter.
 
     """
     bits = [None]*6
@@ -42,8 +42,8 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     bits[1] = get_falling_bit(radar['Zh'], clutter_bit, bits[5])
     bits[4] = get_aerosol_bit(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
-    return {'cat_bits': cat_bits, 'rain_bit': rain_bit,
-            'clutter_bit': clutter_bit, 'insect_prob': insect_prob}
+    return {'cat': cat_bits, 'rain': rain_bit,
+            'clutter': clutter_bit, 'insect_prob': insect_prob}
 
 
 def _bits_to_integer(bits):
@@ -197,8 +197,8 @@ def get_insect_bit(radar, Tw, *args, prob_lim=0.7):
             ('Zh', 'ldr', 'width').
         Tw (ndarray): Wet bulb temperature.
         *args: Binary fields that are used to screen the
-            insect probability. E.g. rain_bit, clutter_bit,
-            melting_layer_bit, ...
+            insect probability. E.g. rain, clutter,
+            melting_layer, ...
         prob_lim (float, optional): Probability higher than
             this will lead to positive result. Default is 0.7.
 
@@ -364,7 +364,7 @@ def get_aerosol_bit(beta, falling_bit, droplet_bit):
     return ~beta.mask & ~falling_bit & ~droplet_bit
 
 
-def fetch_qual_bits(Z, beta, clutter_bit, atten):
+def fetch_qual_bits(Z, beta, clutter_bit, liq_atten):
     """Returns Cloudnet quality bits.
 
     Args:
@@ -372,10 +372,9 @@ def fetch_qual_bits(Z, beta, clutter_bit, atten):
         beta (MaskedArray): Attenuated backscattering.
         clutter_bit (ndarray): Boolean array showing pixels
             contaminated by clutter.
-        atten (dict): Dictionary including boolean arrays
-            'liq_atten_corr_bit' and 'liq_atten_ucorr_bit'
-            that indicate where liquid attenuation was corrected
-            and where it wasn't.
+        liq_atten (dict): Dictionary including boolean arrays
+            'corr_bit' and 'ucorr_bit' that indicate where liquid
+            attenuation was corrected and where it wasn't.
 
     Returns: Integer array containing the following bits:
             - bit 1: Pixel contains radar data.
@@ -390,6 +389,6 @@ def fetch_qual_bits(Z, beta, clutter_bit, atten):
     bits[0] = (~Z.mask).astype(int)
     bits[1] = (~beta.mask).astype(int)
     bits[2] = clutter_bit
-    bits[4] = atten['liq_atten_corr_bit'] | atten['liq_atten_ucorr_bit']
-    bits[5] = atten['liq_atten_corr_bit']
+    bits[4] = liq_atten['corr_bit'] | liq_atten['ucorr_bit']
+    bits[5] = liq_atten['corr_bit']
     return _bits_to_integer(bits)

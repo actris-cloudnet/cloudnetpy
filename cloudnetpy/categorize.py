@@ -10,8 +10,6 @@ import math
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import interp1d
-from collections import namedtuple
-# from datetime import datetime, timezone
 from cloudnetpy import config
 from cloudnetpy import ncf
 from cloudnetpy import utils
@@ -52,10 +50,10 @@ def generate_categorize(input_files, output_file):
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height)
     atten = _get_attenuations(lwp, model['interp'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
-                                         bits['clutter_bit'], atten['liq_atten'])
-    Z_corr = _correct_atten(radar['Zh'], atten['gas_atten'],
-                            atten['liq_atten']['liq_atten'])
-    Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter_bit'],
+                                         bits['clutter'], atten['liquid'])
+    Z_corr = _correct_atten(radar['Zh'], atten['gas'],
+                            atten['liquid']['value'])
+    Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter'],
                             time, radar_meta['freq'])
     # Collect variables for output file writing:
     cat_vars = {'height': height,
@@ -80,13 +78,13 @@ def generate_categorize(input_files, output_file):
                 'vwind': model['original']['vwind'],
                 'model_height': model['height'],
                 'model_time': model['time'],
-                'category_bits': bits['cat_bits'],
+                'category_bits': bits['cat'],
                 'Tw': model['Tw'],
                 'insect_probability': bits['insect_prob'],
-                'radar_gas_atten': atten['gas_atten'],
-                'radar_liquid_atten': atten['liq_atten']['liq_atten'],
+                'radar_gas_atten': atten['gas'],
+                'radar_liquid_atten': atten['liquid']['value'],
                 'lwp': lwp['lwp'],
-                'lwp_error': lwp['lwp_error'],
+                'lwp_error': lwp['error'],
                 'quality_bits': qual_bits,
                 'Z_error': Z_err['error'],
                 'Z_sensitivity': Z_err['sensitivity']}
@@ -116,9 +114,9 @@ def _correct_atten(Z, gas_atten, liq_atten):
 
 def _get_attenuations(lwp, model_i, bits, height):
     """Returns attenuations due to atmospheric liquid and gases."""
-    gas_atten = atmos.get_gas_atten(model_i, bits['cat_bits'], height)
+    gas_atten = atmos.get_gas_atten(model_i, bits['cat'], height)
     liq_atten = atmos.get_liquid_atten(lwp, model_i, bits, height)
-    return {'gas_atten': gas_atten, 'liq_atten': liq_atten}
+    return {'gas': gas_atten, 'liquid': liq_atten}
 
 
 def _load_files(files):
@@ -250,8 +248,8 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
 
     lwp = _read_lwp(mwr_vars, *lwp_errors)
     lwp_i = _interpolate_lwp(lwp['time'], lwp['lwp'], time)
-    lwp_error_i = _interpolate_lwp(lwp['time'], lwp['lwp_error'], time)
-    return {'lwp': lwp_i, 'lwp_error': lwp_error_i}
+    lwp_error_i = _interpolate_lwp(lwp['time'], lwp['error'], time)
+    return {'lwp': lwp_i, 'error': lwp_error_i}
 
 
 def _read_lwp(mwr_vars, frac_err, lin_err):
@@ -277,7 +275,7 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
     if max(time) > 24:
         time = utils.epoch2desimal_hour((2001, 1, 1), time)  # fixed epoc!!
     lwp_err = np.sqrt(lin_err**2 + (frac_err*lwp)**2)
-    return {'time': time, 'lwp': lwp, 'lwp_error': lwp_err}
+    return {'time': time, 'lwp': lwp, 'error': lwp_err}
 
 
 def fetch_model(mod_vars, alt_site, freq, time, height):
@@ -386,7 +384,7 @@ def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
 
     """
     Z = radar['Zh']
-    gas_atten, liq_atten = atten['gas_atten'], atten['liq_atten']
+    gas_atten, liq_atten = atten['gas'], atten['liquid']
     radar_range = ncf.km2m(rad_vars['range'])
     log_range = utils.lin2db(radar_range, scale=20)
     Z_power = Z - log_range
@@ -405,8 +403,8 @@ def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
                          utils.db2lin(Z_power_min-Z_power)/3)
     # Error:
     g_prec = config.GAS_ATTEN_PREC
-    Z_error = utils.l2norm(gas_atten*g_prec, liq_atten['liq_atten_err'], Z_precision)
-    Z_error[liq_atten['liq_atten_ucorr_bit'] == 1] = None
+    Z_error = utils.l2norm(gas_atten*g_prec, liq_atten['err'], Z_precision)
+    Z_error[liq_atten['ucorr_bit'] == 1] = None
     return {'sensitivity': Z_sensitivity, 'error': Z_error}
 
 
@@ -673,18 +671,18 @@ def _comments(field):
                                'an approximate partioning of the liquid water content with height. Bit 5 of the\n'
                                'quality_bits variable indicates where a correction for liquid water attenuation has\n'
                                'been performed.'),
-        
+
         'radar_gas_atten': ('This variable was calculated from the model temperature,\n'
                             'pressure and humidity, but forcing pixels containing liquid cloud to saturation\n'
                             'with respect to liquid water. It was calculated using the millimeter-wave propagation\n'
                             'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.'),
-        
+
         'Tw': ('Calculated from model T, P and relative humidity,\n'
                'which were first interpolated into measurement grid.'),
 
         'v': ('This parameter is the radial component of the velocity,\n'
               'with positive velocities are away from the radar.'),
-        
+
         'Z_sensitivity': ('This variable is an estimate of the radar sensitivity,\n'
                           'i.e. the minimum detectable radar reflectivity, as a function of height.\n'
                           'It includes the effect of ground clutter and gas attenuation but not liquid attenuation.'),
@@ -703,6 +701,6 @@ def _comments(field):
               'been corrected. Calibration convention: in the absence of attenuation, a cloud at 273 K containing one million \n'
               '100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.\n'
               'Original comment: Calibrated reflectivity. Calibration convention: in the absence of attenuation, a cloud at 273 K\n'
-              'containing one million 100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.')        
+              'containing one million 100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.')
     }
     return com[field]

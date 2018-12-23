@@ -156,8 +156,7 @@ def get_liquid_atten(lwp, model, bits, height):
         lwp: Dict containing interpolated liquid water
             path (and its error).
         model: Dict containing interpolated model fields.
-        bits: Dict containing classification bits
-            {'cat_bits', 'rain_bit', 'clutter_bit'}.
+        bits: Dict containing classification bits {'cat', 'rain'}.
         height (ndarray): Altitude vector.
 
     Returns:
@@ -166,7 +165,7 @@ def get_liquid_atten(lwp, model, bits, height):
 
     """
     spec_liq_att = model['specific_liquid_atten']
-    droplet_bit = utils.bit_test(bits['cat_bits'], 1)
+    droplet_bit = utils.bit_test(bits['cat'], 1)
     msize = droplet_bit.shape
     lwc_adiabatic, lwc_err = np.zeros(msize), np.zeros(msize)
     lwp_boxes, lwp_boxes_err = np.zeros(msize), np.zeros(msize)
@@ -186,7 +185,7 @@ def get_liquid_atten(lwp, model, bits, height):
             lwc_err[ii, idx] = dlwc_dz  # unnormalised
         lwp_boxes[ii, :] = (lwp['lwp'][ii] *
                             lwc_adiabatic[ii, :]/np.sum(lwc_adiabatic[ii, :]))
-        lwp_boxes_err[ii, :] = (lwp['lwp_error'][ii] *
+        lwp_boxes_err[ii, :] = (lwp['error'][ii] *
                                 lwc_err[ii, :]/np.sum(lwc_err[ii, :]))
     for ii in np.where(~is_lwp)[0]:
         lwp_boxes[ii, droplet_bit[ii, :] == 1] = None
@@ -195,8 +194,8 @@ def get_liquid_atten(lwp, model, bits, height):
     liq_atten_err[:, 1:] = 0.002 * np.cumsum(lwp_boxes_err[:, :-1] *
                                              spec_liq_att[:, :-1], axis=1)
     liq_atten, cbit, ucbit = _screen_liq_atten(liq_atten, bits)
-    return {'liq_atten': liq_atten, 'liq_atten_err': liq_atten_err,
-            'liq_atten_corr_bit': cbit, 'liq_atten_ucorr_bit': ucbit}
+    return {'value': liq_atten, 'err': liq_atten_err,
+            'corr_bit': cbit, 'ucorr_bit': ucbit}
 
 
 def _screen_liq_atten(liq_atten, bits):
@@ -208,8 +207,8 @@ def _screen_liq_atten(liq_atten, bits):
 
     Returns:
         3-element tuple containing screened liquid
-        attenuation (MaskedArray), and bitfields 
-        showing where it was corrected and where it 
+        attenuation (MaskedArray), and bitfields
+        showing where it was corrected and where it
         was not.
 
     """
@@ -220,9 +219,9 @@ def _screen_liq_atten(liq_atten, bits):
         uncorr_atten_bit[rain_ind, :] = True
         uncorr_atten_bit[melt_ind] = True
         return corr_atten_bit, uncorr_atten_bit
-    
-    rain_ind = bits['rain_bit'] == 1
-    melt_bit = utils.bit_test(bits['cat_bits'], 4)
+
+    rain_ind = bits['rain'] == 1
+    melt_bit = utils.bit_test(bits['cat'], 4)
     above_melt = np.cumsum(melt_bit == 1, axis=1)
     melt_ind = above_melt >= 1
     liq_atten[melt_ind] = None
