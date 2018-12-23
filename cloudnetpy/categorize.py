@@ -651,8 +651,6 @@ def _cat_cnet_vars(vars_in, radar_meta):
                        plot_scale=lin,
                        comment=_comments(var)))
 
-    sys.exit(0)
-    
     return obs
 
 

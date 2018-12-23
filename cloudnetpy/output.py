@@ -19,6 +19,7 @@ class CnetVar:
         # Extra:
         for key, value in kwargs.items():
             setattr(self, key, value)
+        self.kwarg_keys = kwargs.keys()
 
     def _get_fillv(self, fill_value):
         """Returns proper fill value."""
@@ -36,7 +37,7 @@ def write_vars2nc(rootgrp, obs):
         ncvar = rootgrp.createVariable(var.name, var.data_type, var.size,
                                        zlib=var.zlib, fill_value=var.fill_value)
         ncvar[:] = var.data
-        for attr in var.kwargs:
+        for attr in var.kwarg_keys:
             setattr(ncvar, attr, getattr(var, attr))
 
 
