@@ -15,10 +15,12 @@ def load_nc(file_in):
 def fetch_radar_meta(radar_file):
     """Read some global metadata from radar nc-file."""
     nc = netCDF4.Dataset(radar_file)
-    radar_type = nc.title.split()[0]
+    model = nc.title.split()[0]
+    location = nc.location
+    freq = get_radar_freq(nc.variables)
     dvec = '-'.join([str(nc.year), str(nc.month).zfill(2),
                      str(nc.day).zfill(2)])
-    return radar_type, dvec
+    return {'model': model, 'freq': freq, 'date': dvec, 'location': location}
 
 
 def km2m(var):

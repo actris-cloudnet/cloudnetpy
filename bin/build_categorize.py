@@ -20,11 +20,7 @@ def main():
     model_file = 'test_data/20180110_mace-head_gdas1.nc'
     input_files = (radar_file, lidar_file, mwr_file, model_file)
     output_file = 'test_cat.nc'
-    site = 'Mace Head'
-    institute = 'Finnish Meteorological Institute'
-    aux = (site, institute)
-
-    cat.generate_categorize(input_files, output_file, aux)
+    cat.generate_categorize(input_files, output_file)
 
 
 if __name__ == "__main__":

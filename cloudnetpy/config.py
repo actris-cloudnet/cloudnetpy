@@ -2,6 +2,9 @@
 options for Cloudnet retrieval.
 """
 
+# Institute running CloudnetPy. 
+INSTITUTE = 'Finnish Meteorological Institute'
+
 # Time resolution for Cloudnet retrieval
 TIME_RESOLUTION = 30
 

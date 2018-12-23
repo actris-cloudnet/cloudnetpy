@@ -2,7 +2,7 @@
 import netCDF4
 import uuid
 from datetime import datetime, timezone
-
+from cloudnetpy import config
 
 class CnetVar:
     """Class for Cloudnet variables. Needs refactoring.
@@ -77,8 +77,7 @@ def _copy_global(file_from, file_to, attrs_to_be_copied):
             setattr(file_to, aname, file_from.getncattr(aname))
 
 
-def save_cat(file_name, time, height, model_time, model_height,
-             obs, dvec, aux):
+def save_cat(file_name, time, height, model_time, model_height, obs, radar_meta):
     rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     # create dimensions
     time = rootgrp.createDimension('time', len(time))
@@ -89,8 +88,9 @@ def save_cat(file_name, time, height, model_time, model_height,
     write_vars2nc(rootgrp, obs)
     # global attributes:
     rootgrp.Conventions = 'CF-1.7'
-    rootgrp.title = 'Categorize file from ' + aux[0]
-    rootgrp.institution = 'Data processed at the ' + aux[1]
+    rootgrp.title = 'Categorize file from ' + radar_meta['location']
+    rootgrp.institution = 'Data processed at the ' + config.INSTITUTE
+    dvec = radar_meta['date']
     rootgrp.year = int(dvec[:4])
     rootgrp.month = int(dvec[5:7])
     rootgrp.day = int(dvec[8:])

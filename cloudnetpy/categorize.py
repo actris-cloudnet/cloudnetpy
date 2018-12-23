@@ -22,15 +22,13 @@ from cloudnetpy.output import CnetVar
 # from cloudnetpy import plotting
 
 
-def generate_categorize(input_files, output_file, aux):
+def generate_categorize(input_files, output_file):
     """Generates Cloudnet Level 1 categorize file.
 
     Args:
         input_files (tuple): Tuple of strings containing full paths of
                              4 input files (radar, lidar, mwr, model).
         output_file (str): Full path of output file.
-        aux (tuple): Tuple of strings including some metadata
-                     of the site (site_name, institute).
 
     References:
         https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883
@@ -39,8 +37,7 @@ def generate_categorize(input_files, output_file, aux):
     try:
         time = utils.get_time(config.TIME_RESOLUTION)
         rad_vars, lid_vars, mwr_vars, mod_vars = _load_files(input_files)
-        radar_type, dvec = ncf.fetch_radar_meta(input_files[0])
-        freq = ncf.get_radar_freq(rad_vars)
+        radar_meta = ncf.fetch_radar_meta(input_files[0])
     except (ValueError, KeyError) as error:
         sys.exit(error)
     height = _get_altitude_grid(rad_vars)  # m
@@ -51,21 +48,22 @@ def generate_categorize(input_files, output_file, aux):
         sys.exit(error)
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
-    model = fetch_model(mod_vars, alt_site, freq, time, height)
+    model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height)
     atten = _get_attenuations(lwp, model['interp'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
                                          bits['clutter_bit'], atten['liq_atten'])
     Z_corr = _correct_atten(radar['Zh'], atten['gas_atten'],
                             atten['liq_atten']['liq_atten'])
-    Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter_bit'], time, freq)
+    Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter_bit'],
+                            time, radar_meta['freq'])
     # Collect variables for output file writing:
     cat_vars = {'height': height,
                 'time': time,
                 'latitude': rad_vars['latitude'][:],
                 'longitude': rad_vars['longitude'][:],
                 'altitude': alt_site,
-                'radar_frequency': freq,
+                'radar_frequency': radar_meta['freq'],
                 'lidar_wavelength': lid_vars['wavelength'][:],
                 'beta': lidar['beta'],
                 'beta_error': config.BETA_ERROR,
@@ -92,9 +90,9 @@ def generate_categorize(input_files, output_file, aux):
                 'quality_bits': qual_bits,
                 'Z_error': Z_err['error'],
                 'Z_sensitivity': Z_err['sensitivity']}
-    obs = _cat_cnet_vars(cat_vars, dvec, radar_type)
+    obs = _cat_cnet_vars(cat_vars, radar_meta)
     output.save_cat(output_file, time, height, model['time'], model['height'],
-                    obs, dvec, aux)
+                    obs, radar_meta)
 
 
 def _correct_atten(Z, gas_atten, liq_atten):
@@ -163,7 +161,7 @@ def fetch_radar(rad_vars, fields, time_new):
         time_new (ndarray): A 1-D array.
 
     Returns:
-        (dict): Rebinned radar fields.
+        Dict containing rebinned radar fields.
 
     Raises:
         KeyError: Missing field.
@@ -206,7 +204,7 @@ def fetch_lidar(lid_vars, fields, time, height):
         height (ndarray): A 1-D array.
 
     Returns:
-        (dict): Rebinned lidar fields.
+        Dict containing rebinned lidar fields.
 
 
     Raises:
@@ -359,7 +357,7 @@ def _interpolate_model(model, fields, *args):
         *args: original time, orignal height, new time, new height.
 
     Returns:
-        dict containing interpolated model fields.
+        Dict containing interpolated model fields.
 
     """
     out = {}
@@ -424,14 +422,14 @@ def _anc_names(var, bias=False, err=False, sens=False):
     return out[:-1]
 
 
-def _cat_cnet_vars(vars_in, dvec, radar_type):
+def _cat_cnet_vars(vars_in, radar_meta):
     """Creates list of variable instances for output writing."""
     lin, log = 'linear', 'logarithmic'
     src = 'source'
     anc = 'ancillary_variables'
     bias_comm = 'This variable is an estimate of the one-standard-deviation calibration error'
     model_source = 'HYSPLIT'
-    radar_source = f"{radar_type} cloud radar"
+    radar_source = f"{radar_meta['model']} cloud radar"
     obs = []
 
     # general variables
@@ -445,7 +443,7 @@ def _cat_cnet_vars(vars_in, dvec, radar_type):
     obs.append(CnetVar(var, vars_in[var],
                        long_name='Time UTC',
                        size=('time'),
-                       units='hours since ' + dvec + ' 00:00:00 +0:00',
+                       units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00',
                        fill_value=None,
                        comment='Fixed ' + str(config.TIME_RESOLUTION) + 's resolution.'))
     var = 'model_height'
@@ -458,7 +456,7 @@ def _cat_cnet_vars(vars_in, dvec, radar_type):
     obs.append(CnetVar(var, vars_in[var],
                        long_name='Model time UTC',
                        size=('model_time'),
-                       units='hours since ' + dvec + ' 00:00:00 +0:00',
+                       units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00',
                        fill_value=None))
     var = 'latitude'
     obs.append(CnetVar(var, vars_in[var],

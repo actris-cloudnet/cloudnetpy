@@ -61,7 +61,7 @@ def binning_vector(x):
     """Converts 1-D center points to bins with even spacing.
 
     Args:
-        x (ndarray): A 1-D array of N real values.
+        x (array_like): A 1-D array of N real values.
 
     Returns:
         N + 1 edge values.
