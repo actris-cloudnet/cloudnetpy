@@ -55,6 +55,7 @@ def generate_categorize(input_files, output_file):
                             atten['liquid']['value'])
     Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter'],
                             time, radar_meta['freq'])
+    instruments = ncf.fetch_instrument_models(*input_files[0:3])
     # Collect variables for output file writing:
     cat_vars = {'height': height,
                 'time': time,
@@ -88,7 +89,7 @@ def generate_categorize(input_files, output_file):
                 'quality_bits': qual_bits,
                 'Z_error': Z_err['error'],
                 'Z_sensitivity': Z_err['sensitivity']}
-    obs = _cat_cnet_vars(cat_vars, radar_meta)
+    obs = _cat_cnet_vars(cat_vars, radar_meta, instruments)
     output.save_cat(output_file, time, height, model['time'], model['height'],
                     obs, radar_meta)
 
@@ -420,12 +421,12 @@ def _anc_names(var, bias=False, err=False, sens=False):
     return out[:-1]
 
 
-def _cat_cnet_vars(vars_in, radar_meta):
+def _cat_cnet_vars(vars_in, radar_meta, instruments):
     """Creates list of variable instances for output writing."""
     lin, log = 'linear', 'logarithmic'
     bias_comm = 'This variable is an estimate of the one-standard-deviation calibration error'
+    radar_source = instruments['radar']
     model_source = 'HYSPLIT'
-    radar_source = f"{radar_meta['model']} cloud radar"
     obs = []
 
     # general variables
@@ -538,7 +539,7 @@ def _cat_cnet_vars(vars_in, radar_meta):
                        units='sr-1 m-1',
                        plot_range=(1e-7, 1e-4),
                        plot_scale=log,
-                       source='Lidar/Ceilometer model X',
+                       source=instruments['lidar'],
                        ancillary_variables=_anc_names(var, bias=True, err=True)))
     var = 'beta_bias'
     obs.append(CnetVar(var, vars_in[var],
@@ -559,7 +560,7 @@ def _cat_cnet_vars(vars_in, radar_meta):
                        units='g m-2',
                        plot_range=(-100, 1000),
                        plot_scale=lin,
-                       source='HATPRO microwave radiometer'))
+                       source=instruments['mwr']))
     var = 'lwp_error'
     obs.append(CnetVar(var, vars_in[var],
                        size=('time'),

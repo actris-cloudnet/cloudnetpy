@@ -13,7 +13,7 @@ def load_nc(file_in):
 
 
 def fetch_radar_meta(radar_file):
-    """Read some global metadata from radar nc-file."""
+    """Returns some global metadata from radar nc-file."""
     nc = netCDF4.Dataset(radar_file)
     model = nc.title.split()[0]
     location = nc.location
@@ -21,6 +21,36 @@ def fetch_radar_meta(radar_file):
     dvec = '-'.join([str(nc.year), str(nc.month).zfill(2),
                      str(nc.day).zfill(2)])
     return {'model': model, 'freq': freq, 'date': dvec, 'location': location}
+
+
+def fetch_instrument_models(radar_file, lidar_file, mwr_file):
+    """Returns models of the three Cloudnet instruments."""
+    
+    def _get_lidar_model(lidar_file):
+        """Returns model of the lidar."""
+        try:
+            return netCDF4.Dataset(lidar_file).system
+        except AttributeError:
+            return 'Unknown lidar'
+        
+    def _get_mwr_model(mwr_file):
+        """Returns model of the microwave radiometer."""
+        try:
+            return netCDF4.Dataset(mwr_file).radiometer_system
+        except AttributeError:
+            return 'Unknown radiometer'
+
+    def _get_radar_model(radar_file):
+        """Returns model of the cloud radar."""
+        try:
+            return netCDF4.Dataset(radar_file).title.split()[0]
+        except AttributeError:
+            return 'Unknown cloud radar'
+
+    radar_model = _get_radar_model(radar_file)
+    lidar_model = _get_lidar_model(lidar_file)
+    mwr_model = _get_mwr_model(mwr_file)
+    return {'radar': radar_model, 'lidar': lidar_model, 'mwr': mwr_model}
 
 
 def km2m(var):
