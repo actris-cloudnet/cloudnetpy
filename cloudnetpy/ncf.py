@@ -15,12 +15,11 @@ def load_nc(file_in):
 def fetch_radar_meta(radar_file):
     """Returns some global metadata from radar nc-file."""
     nc = netCDF4.Dataset(radar_file)
-    model = nc.title.split()[0]
     location = nc.location
     freq = get_radar_freq(nc.variables)
     dvec = '-'.join([str(nc.year), str(nc.month).zfill(2),
                      str(nc.day).zfill(2)])
-    return {'model': model, 'freq': freq, 'date': dvec, 'location': location}
+    return {'freq': freq, 'date': dvec, 'location': location}
 
 
 def fetch_instrument_models(radar_file, lidar_file, mwr_file):
