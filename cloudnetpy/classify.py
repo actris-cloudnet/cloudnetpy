@@ -7,6 +7,9 @@ from scipy import stats
 from cloudnetpy import droplet
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
+import sys
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 
 def fetch_cat_bits(radar, beta, Tw, time, height):
@@ -146,8 +149,7 @@ def get_cold_bit(Tw, melting_bit, time, height):
     t0_alt = _get_T0_alt(Tw, height)
     mean_melting_height = np.zeros((ntime,))
     for ii in np.where(np.any(melting_bit, axis=1))[0]:
-        mean_melting_height[ii] = np.median(
-            height[np.where(melting_bit[ii, :])])
+        mean_melting_height[ii] = ma.median(height[melting_bit[ii, :]])        
     m_final = np.copy(mean_melting_height)
     win = 240
     m_final[0] = mean_melting_height[0] or t0_alt[0]

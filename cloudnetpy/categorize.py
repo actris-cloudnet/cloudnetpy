@@ -38,9 +38,9 @@ def generate_categorize(input_files, output_file):
         time = utils.get_time(config.TIME_RESOLUTION)
         rad_vars, lid_vars, mwr_vars, mod_vars = _load_files(input_files)
         radar_meta = ncf.fetch_radar_meta(input_files[0])
+        height = _get_altitude_grid(rad_vars)  # m
     except (ValueError, KeyError) as error:
         sys.exit(error)
-    height = _get_altitude_grid(rad_vars)  # m
     try:
         alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
         radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time)
@@ -153,13 +153,16 @@ def _get_altitude_grid(rad_vars):
     Returns:
         Altitude grid.
 
-    Notes:
-        Grid should be calculated from radar measurement.
+    Raises:
+        ValueError: Masked values in radar altitude. Not really the
+        correct error type.
 
     """
     range_instru = ncf.km2m(rad_vars['range'])
+    if ma.is_masked(range_instru):
+        raise ValueError('Masked altitude values in radar data!?')
     alt_instru = ncf.km2m(rad_vars['altitude'])
-    return range_instru + alt_instru
+    return np.array(range_instru + alt_instru)
 
 
 def fetch_radar(rad_vars, fields, time_new):
@@ -442,7 +445,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
     radar_source = instruments['radar']
     model_source = 'HYSPLIT'
     obs = []
-    # general variables
+    # dimensions and site location
     var = 'height'
     obs.append(CV(var, vars_in[var],
                   size=('height'),
@@ -526,6 +529,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                   units='m s-1',
                   plot_range=(0.03, 3),
                   plot_scale=log,
+                  comment=_comments(var),
                   source=radar_source))
     var = 'ldr'
     obs.append(CV(var, vars_in[var],
@@ -533,6 +537,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                   units='dB',
                   plot_range=(-30, 0),
                   plot_scale=lin,
+                  comment=_comments(var),
                   source=radar_source))
     # lidar variables
     var = 'lidar_wavelength'
@@ -714,10 +719,6 @@ def _comments(field):
         ('Calculated from model T, P and relative humidity, which were first\n'
          'interpolated into measurement grid.'),
 
-        'v':
-        ('This parameter is the radial component of the velocity, with positive\n'
-         'velocities are away from the radar.'),
-
         'Z_sensitivity':
         ('This variable is an estimate of the radar sensitivity,\n'
          'i.e. the minimum detectable radar reflectivity, as a function\n'
@@ -750,5 +751,17 @@ def _comments(field):
 
         'bias':
         ('This variable is an estimate of the one-standard-deviation calibration error.'),
+
+        'ldr':
+        ('This parameter is the ratio of cross-polar to co-polar reflectivity.'),
+
+        'width':
+        ('This parameter is the standard deviation of the reflectivity-weighted\n'
+         'velocities in the radar pulse volume.'),
+
+        'v':
+        ('This parameter is the radial component of the velocity, with positive\n'
+         'velocities are away from the radar.'),        
+        
     }
     return com[field]
