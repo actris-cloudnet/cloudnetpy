@@ -16,7 +16,7 @@ from cloudnetpy import utils
 from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
-from cloudnetpy.output import CnetVar
+from cloudnetpy.output import CnetVar as CV
 # from cloudnetpy import plotting
 # import matplotlib as mpl
 # import matplotlib.pyplot as plt
@@ -123,7 +123,7 @@ def _get_attenuations(lwp, model_i, bits, height):
         bits (dict): Categorize bits {'cat', 'rain'}
 
     Returns:
-        A 2-element tuple containing gas_atten (ndarray) and 
+        A 2-element tuple containing gas_atten (ndarray) and
         liq_atten {dict}.
 
     """
@@ -245,7 +245,7 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
         time (ndarray): A 1-D array.
 
     Returns:
-        Dict containing interpolated LWP data 
+        Dict containing interpolated LWP data
         and its error {'value', 'err'}.
 
     """
@@ -385,7 +385,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
         radar: A netCDF4 instance.
         rad_vars: Radar variables.
         gas_atten (ndarray): Gas attenuation.
-        liq_atten (dict): Liquid attenuation, 
+        liq_atten (dict): Liquid attenuation,
             containing {'err', 'ucorr_bit'}
         clutter_bit (ndarray): Boolean array denoting pixels
             contaminated by clutter.
@@ -444,238 +444,238 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
     obs = []
     # general variables
     var = 'height'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('height'),
-                       fill_value=None,
-                       long_name='Height above mean sea level',
-                       units='m'))
+    obs.append(CV(var, vars_in[var],
+                  size=('height'),
+                  fill_value=None,
+                  long_name='Height above mean sea level',
+                  units='m'))
     var = 'time'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('time'),
-                       fill_value=None,
-                       long_name='Time UTC',
-                       units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00',
-                       comment='Fixed ' + str(config.TIME_RESOLUTION) + 's resolution.'))
+    obs.append(CV(var, vars_in[var],
+                  size=('time'),
+                  fill_value=None,
+                  long_name='Time UTC',
+                  units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00',
+                  comment='Fixed ' + str(config.TIME_RESOLUTION) + 's resolution.'))
     var = 'model_height'
-    obs.append(CnetVar(var, vars_in[var],
-                       fill_value=None,
-                       size=('model_height'),
-                       long_name='Height of model variables above mean sea level',
-                       units='m'))
+    obs.append(CV(var, vars_in[var],
+                  fill_value=None,
+                  size=('model_height'),
+                  long_name='Height of model variables above mean sea level',
+                  units='m'))
     var = 'model_time'
-    obs.append(CnetVar(var, vars_in[var],
-                       fill_value=None,
-                       size=('model_time'),                       
-                       long_name='Model time UTC',
-                       units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00'))
+    obs.append(CV(var, vars_in[var],
+                  fill_value=None,
+                  size=('model_time'),
+                  long_name='Model time UTC',
+                  units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00'))
     var = 'latitude'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Latitude of site',
-                       units='degrees_north'))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Latitude of site',
+                  units='degrees_north'))
     var = 'longitude'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Longitude of site',
-                       units='degrees_east'))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Longitude of site',
+                  units='degrees_east'))
     var = 'altitude'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Altitude of site',
-                       units='m',
-                       comment=_comments(var)))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Altitude of site',
+                  units='m',
+                  comment=_comments(var)))
     # radar variables
     var = 'radar_frequency'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Transmit frequency',
-                       units='GHz'))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Transmit frequency',
+                  units='GHz'))
     var = 'Z'
     lname = 'Radar reflectivity factor'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name=lname,
-                       units='dBZ',
-                       plot_range=(-40, 20),
-                       plot_scale=lin,
-                       comment=_comments(var),
-                       source=radar_source,
-                       ancillary_variables=_anc_names(var, True, True, True)))
+    obs.append(CV(var, vars_in[var],
+                  long_name=lname,
+                  units='dBZ',
+                  plot_range=(-40, 20),
+                  plot_scale=lin,
+                  comment=_comments(var),
+                  source=radar_source,
+                  ancillary_variables=_anc_names(var, True, True, True)))
     var = 'Z_bias'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name=output.bias_name(lname),
-                       units='dB',
-                       comment=_comments('bias')))
+    obs.append(CV(var, vars_in[var],
+                  long_name=output.bias_name(lname),
+                  units='dB',
+                  comment=_comments('bias')))
     var = 'Z_error'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name=output.err_name(lname),
-                       units='dB',
-                       comment=_comments(var)))
+    obs.append(CV(var, vars_in[var],
+                  long_name=output.err_name(lname),
+                  units='dB',
+                  comment=_comments(var)))
     var = 'Z_sensitivity'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('height'),
-                       long_name='Minimum detectable radar reflectivity',
-                       units='dBZ',
-                       comment=_comments(var)))
+    obs.append(CV(var, vars_in[var],
+                  size=('height'),
+                  long_name='Minimum detectable radar reflectivity',
+                  units='dBZ',
+                  comment=_comments(var)))
     var = 'v'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Doppler velocity',
-                       units='m s-1',
-                       plot_range=(-4, 2),
-                       plot_scale=lin,
-                       comment=_comments(var),
-                       source=radar_source))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Doppler velocity',
+                  units='m s-1',
+                  plot_range=(-4, 2),
+                  plot_scale=lin,
+                  comment=_comments(var),
+                  source=radar_source))
     var = 'width'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Spectral width',
-                       units='m s-1',
-                       plot_range=(0.03, 3),
-                       plot_scale=log,
-                       source=radar_source))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Spectral width',
+                  units='m s-1',
+                  plot_range=(0.03, 3),
+                  plot_scale=log,
+                  source=radar_source))
     var = 'ldr'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Linear depolarisation ratio',
-                       units='dB',
-                       plot_range=(-30, 0),
-                       plot_scale=lin,
-                       source=radar_source))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Linear depolarisation ratio',
+                  units='dB',
+                  plot_range=(-30, 0),
+                  plot_scale=lin,
+                  source=radar_source))
     # lidar variables
     var = 'lidar_wavelength'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Laser wavelength',
-                       units='nm'))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Laser wavelength',
+                  units='nm'))
     var = 'beta'
     lname = 'Attenuated backscatter coefficient'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name=lname,
-                       units='sr-1 m-1',
-                       plot_range=(1e-7, 1e-4),
-                       plot_scale=log,
-                       source=instruments['lidar'],
-                       ancillary_variables=_anc_names(var, bias=True, err=True)))
+    obs.append(CV(var, vars_in[var],
+                  long_name=lname,
+                  units='sr-1 m-1',
+                  plot_range=(1e-7, 1e-4),
+                  plot_scale=log,
+                  source=instruments['lidar'],
+                  ancillary_variables=_anc_names(var, bias=True, err=True)))
     var = 'beta_bias'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name=output.bias_name(lname),
-                       units='dB',
-                       comment=_comments('bias')))
+    obs.append(CV(var, vars_in[var],
+                  long_name=output.bias_name(lname),
+                  units='dB',
+                  comment=_comments('bias')))
     var = 'beta_error'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name=output.err_name(lname),
-                       units='dB'))
+    obs.append(CV(var, vars_in[var],
+                  long_name=output.err_name(lname),
+                  units='dB'))
     # mwr variables
     var = 'lwp'
     lname = 'Liquid water path'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('time'),
-                       long_name=lname,
-                       units='g m-2',
-                       plot_range=(-100, 1000),
-                       plot_scale=lin,
-                       source=instruments['mwr']))
+    obs.append(CV(var, vars_in[var],
+                  size=('time'),
+                  long_name=lname,
+                  units='g m-2',
+                  plot_range=(-100, 1000),
+                  plot_scale=lin,
+                  source=instruments['mwr']))
     var = 'lwp_error'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('time'),
-                       long_name=output.err_name(lname),
-                       units='g m-2'))
+    obs.append(CV(var, vars_in[var],
+                  size=('time'),
+                  long_name=output.err_name(lname),
+                  units='g m-2'))
     # model variables
     var = 'temperature'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('model_time', 'model_height'),
-                       long_name='Temperature',
-                       units='K',
-                       plot_range=(200, 300),
-                       plot_scale=lin,
-                       source=model_source))
+    obs.append(CV(var, vars_in[var],
+                  size=('model_time', 'model_height'),
+                  long_name='Temperature',
+                  units='K',
+                  plot_range=(200, 300),
+                  plot_scale=lin,
+                  source=model_source))
     var = 'pressure'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('model_time', 'model_height'),
-                       long_name='Pressure',
-                       units='Pa',
-                       plot_range=(0, 1.1e5),
-                       plot_scale=log,
-                       source=model_source))
+    obs.append(CV(var, vars_in[var],
+                  size=('model_time', 'model_height'),
+                  long_name='Pressure',
+                  units='Pa',
+                  plot_range=(0, 1.1e5),
+                  plot_scale=log,
+                  source=model_source))
     var = 'specific_humidity'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('model_time', 'model_height'),
-                       long_name='Model specific humidity',
-                       plot_range=(0, 0.006),
-                       plot_scale=lin,
-                       source=model_source))
+    obs.append(CV(var, vars_in[var],
+                  size=('model_time', 'model_height'),
+                  long_name='Model specific humidity',
+                  plot_range=(0, 0.006),
+                  plot_scale=lin,
+                  source=model_source))
     var = 'uwind'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('model_time', 'model_height'),
-                       long_name='Zonal wind',
-                       units='m s-1',
-                       plot_range=(-50, 50),
-                       plot_scale=lin,
-                       source=model_source))
+    obs.append(CV(var, vars_in[var],
+                  size=('model_time', 'model_height'),
+                  long_name='Zonal wind',
+                  units='m s-1',
+                  plot_range=(-50, 50),
+                  plot_scale=lin,
+                  source=model_source))
     var = 'vwind'
-    obs.append(CnetVar(var, vars_in[var],
-                       size=('model_time', 'model_height'),
-                       long_name='Meridional wind',
-                       units='m s-1',
-                       plot_range=(-50, 50),
-                       plot_scale=lin,
-                       source=model_source))
+    obs.append(CV(var, vars_in[var],
+                  size=('model_time', 'model_height'),
+                  long_name='Meridional wind',
+                  units='m s-1',
+                  plot_range=(-50, 50),
+                  plot_scale=lin,
+                  source=model_source))
     # other
     var = 'Tw'
-    obs.append(CnetVar(var, vars_in[var],
-                       fill_value=None,
-                       long_name='Wet bulb temperature',
-                       units='K',
-                       comment=_comments(var)))
+    obs.append(CV(var, vars_in[var],
+                  fill_value=None,
+                  long_name='Wet bulb temperature',
+                  units='K',
+                  comment=_comments(var)))
     var = 'insect_probability'
-    obs.append(CnetVar(var, vars_in[var],
-                       fill_value=None,
-                       long_name='Probability of insects'))
+    obs.append(CV(var, vars_in[var],
+                  fill_value=None,
+                  long_name='Probability of insects'))
     var = 'radar_gas_atten'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Two-way radar attenuation due to atmospheric gases',
-                       units='dB',
-                       plot_range=(0, 4),
-                       plot_scale=lin,
-                       comment=_comments(var)))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Two-way radar attenuation due to atmospheric gases',
+                  units='dB',
+                  plot_range=(0, 4),
+                  plot_scale=lin,
+                  comment=_comments(var)))
     var = 'radar_liquid_atten'
-    obs.append(CnetVar(var, vars_in[var],
-                       long_name='Approximate two-way radar attenuation due to liquid water',
-                       units='dB',
-                       plot_range=(0, 4),
-                       plot_scale=lin,
-                       comment=_comments(var)))
+    obs.append(CV(var, vars_in[var],
+                  long_name='Approximate two-way radar attenuation due to liquid water',
+                  units='dB',
+                  plot_range=(0, 4),
+                  plot_scale=lin,
+                  comment=_comments(var)))
 
     var = 'category_bits'
-    obs.append(CnetVar(var, vars_in[var],
-                       data_type='i4',
-                       fill_value=None,
-                       long_name='Target classification bits',
-                       valid_range=[0, 5],
-                       comment=_comments(var),
-                       definition=
-                       ('\nBit 0: Small liquid droplets are present.\n'
-                        'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
-                        '       likely ice particles, otherwise they are drizzle or rain drops.\n'
-                        'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
-                        '       the phase of Bit-1 particles.\n'
-                        'Bit 3: Melting ice particles are present.\n'
-                        'Bit 4: Aerosol particles are present and visible to the lidar.\n'
-                        'Bit 5: Insects are present and visible to the radar.')))
+    obs.append(CV(var, vars_in[var],
+                  data_type='i4',
+                  fill_value=None,
+                  long_name='Target classification bits',
+                  valid_range=[0, 5],
+                  comment=_comments(var),
+                  definition=
+                  ('\nBit 0: Small liquid droplets are present.\n'
+                   'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
+                   '       likely ice particles, otherwise they are drizzle or rain drops.\n'
+                   'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
+                   '       the phase of Bit-1 particles.\n'
+                   'Bit 3: Melting ice particles are present.\n'
+                   'Bit 4: Aerosol particles are present and visible to the lidar.\n'
+                   'Bit 5: Insects are present and visible to the radar.')))
     var = 'quality_bits'
-    obs.append(CnetVar(var, vars_in[var],
-                       data_type='i4',
-                       fill_value=None,
-                       long_name='Data quality bits',
-                       valid_range=[0, 5],
-                       comment=_comments(var),
-                       definition=
-                       ('\nBit 0: An echo is detected by the radar.\n'
-                        'Bit 1: An echo is detected by the lidar.\n'
-                        'Bit 2: The apparent echo detected by the radar is ground clutter\n'
-                        '       or some other non-atmospheric artifact.\n'
-                        'Bit 3: The echo detected by the lidar is due to clear-air molecular scattering.\n'
-                        'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
-                        '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
-                        '       a correction for the radar attenuation has been performed;\n'
-                        '       otherwise do not trust the absolute values of reflectivity factor.\n'
-                        '       No correction is performed for lidar attenuation.\n'
-                        'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
-                        '       using the microwave radiometer measurements of liquid water path\n'
-                        '       and the lidar estimation of the location of liquid water cloud;\n'
-                        '       be aware that errors in reflectivity may result.')))
+    obs.append(CV(var, vars_in[var],
+                  data_type='i4',
+                  fill_value=None,
+                  long_name='Data quality bits',
+                  valid_range=[0, 5],
+                  comment=_comments(var),
+                  definition=
+                  ('\nBit 0: An echo is detected by the radar.\n'
+                   'Bit 1: An echo is detected by the lidar.\n'
+                   'Bit 2: The apparent echo detected by the radar is ground clutter\n'
+                   '       or some other non-atmospheric artifact.\n'
+                   'Bit 3: The lidar echo is due to clear-air molecular scattering.\n'
+                   'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
+                   '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
+                   '       a correction for the radar attenuation has been performed;\n'
+                   '       otherwise do not trust the absolute values of reflectivity factor.\n'
+                   '       No correction is performed for lidar attenuation.\n'
+                   'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
+                   '       using the microwave radiometer measurements of liquid water path\n'
+                   '       and the lidar estimation of the location of liquid water cloud;\n'
+                   '       be aware that errors in reflectivity may result.')))
     return obs
 
 
@@ -734,7 +734,7 @@ def _comments(field):
          '   error in model humidity field)\n'
          '3) Error in liquid water path (given by the variable lwp_error) and\n'
          '   its partitioning with height).'),
-        
+
         'altitude':
         ('Defined as the altitude of radar or lidar - the one that is lower.'),
 
