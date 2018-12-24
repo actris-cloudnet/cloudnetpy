@@ -464,24 +464,20 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                        units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00'))
     var = 'latitude'
     obs.append(CnetVar(var, vars_in[var],
-                       size=(),
                        long_name='Latitude of site',
                        units='degrees_north'))
     var = 'longitude'
     obs.append(CnetVar(var, vars_in[var],
-                       size=(),
                        long_name='Longitude of site',
                        units='degrees_east'))
     var = 'altitude'
     obs.append(CnetVar(var, vars_in[var],
-                       size=(),
                        long_name='Altitude of site',
                        units='m',
                        comment=_comments(var)))
     # radar variables
     var = 'radar_frequency'
     obs.append(CnetVar(var, vars_in[var],
-                       size=(),
                        long_name='Transmit frequency',
                        units='GHz'))
     var = 'Z'
@@ -496,7 +492,6 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                        ancillary_variables=_anc_names(var, True, True, True)))
     var = 'Z_bias'
     obs.append(CnetVar(var, vars_in[var],
-                       size=(),
                        long_name=output.bias_name(lname),
                        units='dB',
                        comment=_comments('bias')))
@@ -536,7 +531,6 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
     # lidar variables
     var = 'lidar_wavelength'
     obs.append(CnetVar(var, vars_in[var],
-                       size=(),
                        long_name='Laser wavelength',
                        units='nm'))
     var = 'beta'
@@ -550,13 +544,11 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                        ancillary_variables=_anc_names(var, bias=True, err=True)))
     var = 'beta_bias'
     obs.append(CnetVar(var, vars_in[var],
-                       size=(),
                        long_name=output.bias_name(lname),
                        units='dB',
                        comment=_comments('bias')))
     var = 'beta_error'
     obs.append(CnetVar(var, vars_in[var],
-                       size=(),
                        long_name=output.err_name(lname),
                        units='dB'))
     # mwr variables

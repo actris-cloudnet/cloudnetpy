@@ -1,6 +1,7 @@
 """ Functions for Categorize output file writing."""
 import netCDF4
 import uuid
+import numpy as np
 from datetime import datetime, timezone
 from cloudnetpy import config
 
@@ -13,14 +14,20 @@ class CnetVar:
         self.name = name
         self.data = data
         self.data_type = data_type
-        self.size = size
         self.zlib = zlib
+        self.size = self._get_size(data, size)
         self.fill_value = self._get_fillv(fill_value)
         # Extra:
         for key, value in kwargs.items():
             setattr(self, key, value)
         self.kwarg_keys = kwargs.keys()
 
+    def _get_size(self, data, size):
+        if isinstance(data, np.ndarray) and data.size > 1:
+            return size
+        else:
+            return ()  # it is scalar
+        
     def _get_fillv(self, fill_value):
         """Returns proper fill value."""
         if not self.size:
