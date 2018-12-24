@@ -23,6 +23,7 @@ class CnetVar:
         self.kwarg_keys = kwargs.keys()
 
     def _get_size(self, data, size):
+        """Sets the size for scalars."""
         if isinstance(data, np.ndarray) and data.size > 1:
             return size
         else:
@@ -46,29 +47,6 @@ def write_vars2nc(rootgrp, obs):
         ncvar[:] = var.data
         for attr in var.kwarg_keys:
             setattr(ncvar, attr, getattr(var, attr))
-
-
-def _copy_dimensions(file_from, file_to, dims_to_be_copied):
-    """Copies dimensions from one file to another. """
-    for dname, dim in file_from.dimensions.items():
-        if dname in dims_to_be_copied:
-            file_to.createDimension(dname, len(dim))
-
-
-def _copy_variables(file_from, file_to, vars_to_be_copied):
-    """Copies variables (and their attributes) from one file to another."""
-    for vname, varin in file_from.variables.items():
-        if vname in vars_to_be_copied:
-            varout = file_to.createVariable(vname, varin.datatype, varin.dimensions)
-            varout.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
-            varout[:] = varin[:]
-
-
-def _copy_global(file_from, file_to, attrs_to_be_copied):
-    """Copies global attributes from one file to another."""
-    for aname in file_from.ncattrs():
-        if aname in attrs_to_be_copied:
-            setattr(file_to, aname, file_from.getncattr(aname))
 
 
 def save_cat(file_name, time, height, model_time, model_height, obs, radar_meta):
@@ -123,3 +101,26 @@ def bias_comm(long_name):
     """ Default bias comment """
     return ('This variable is an estimate of the possible systematic error in ' + long_name.lower() + 'due to the\n'
             'uncertainty in the calibration of the radar and lidar.')
+
+
+def _copy_dimensions(file_from, file_to, dims_to_be_copied):
+    """Copies dimensions from one file to another. """
+    for dname, dim in file_from.dimensions.items():
+        if dname in dims_to_be_copied:
+            file_to.createDimension(dname, len(dim))
+
+
+def _copy_variables(file_from, file_to, vars_to_be_copied):
+    """Copies variables (and their attributes) from one file to another."""
+    for vname, varin in file_from.variables.items():
+        if vname in vars_to_be_copied:
+            varout = file_to.createVariable(vname, varin.datatype, varin.dimensions)
+            varout.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})
+            varout[:] = varin[:]
+
+
+def _copy_global(file_from, file_to, attrs_to_be_copied):
+    """Copies global attributes from one file to another."""
+    for aname in file_from.ncattrs():
+        if aname in attrs_to_be_copied:
+            setattr(file_to, aname, file_from.getncattr(aname))

@@ -435,7 +435,6 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
     radar_source = instruments['radar']
     model_source = 'HYSPLIT'
     obs = []
-
     # general variables
     var = 'height'
     obs.append(CnetVar(var, vars_in[var],
@@ -651,7 +650,6 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                        plot_range=(0, 4),
                        plot_scale=lin,
                        comment=_comments(var)))
-
     return obs
 
 
