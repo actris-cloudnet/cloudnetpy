@@ -48,13 +48,12 @@ def generate_categorize(input_files, output_file):
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height)
-    atten = _get_attenuations(lwp, model['interp'], bits, height)
+    gas_atten, liq_atten = _get_attenuations(lwp, model['interp'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
-                                         bits['clutter'], atten['liquid'])
-    Z_corr = _correct_atten(radar['Zh'], atten['gas'],
-                            atten['liquid']['value'])
-    Z_err = _fetch_Z_errors(radar, rad_vars, atten, bits['clutter'],
-                            time, radar_meta['freq'])
+                                         bits['clutter'], liq_atten)
+    Z_corr = _correct_atten(radar['Zh'], gas_atten, liq_atten['value'])
+    Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
+                            bits['clutter'], time, radar_meta['freq'])
     instruments = ncf.fetch_instrument_models(*input_files[0:3])
     # Collect variables for output file writing:
     cat_vars = {'height': height,
@@ -82,10 +81,10 @@ def generate_categorize(input_files, output_file):
                 'category_bits': bits['cat'],
                 'Tw': model['Tw'],
                 'insect_probability': bits['insect_prob'],
-                'radar_gas_atten': atten['gas'],
-                'radar_liquid_atten': atten['liquid']['value'],
-                'lwp': lwp['lwp'],
-                'lwp_error': lwp['error'],
+                'radar_gas_atten': gas_atten,
+                'radar_liquid_atten': liq_atten['value'],
+                'lwp': lwp['value'],
+                'lwp_error': lwp['err'],
                 'quality_bits': qual_bits,
                 'Z_error': Z_err['error'],
                 'Z_sensitivity': Z_err['sensitivity']}
@@ -114,10 +113,17 @@ def _correct_atten(Z, gas_atten, liq_atten):
 
 
 def _get_attenuations(lwp, model_i, bits, height):
-    """Returns attenuations due to atmospheric liquid and gases."""
+    """Returns attenuations due to atmospheric liquid and gases.
+
+    Args:
+        lwp (dict): LWP variables {''}
+        model_i (dict):
+        bits (dict): 
+
+    """
     gas_atten = atmos.get_gas_atten(model_i, bits['cat'], height)
     liq_atten = atmos.get_liquid_atten(lwp, model_i, bits, height)
-    return {'gas': gas_atten, 'liquid': liq_atten}
+    return gas_atten, liq_atten
 
 
 def _load_files(files):
@@ -233,7 +239,8 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
         time (ndarray): A 1-D array.
 
     Returns:
-        Dict containing interpolated LWP data {'lwp', 'lwp_error'}
+        Dict containing interpolated LWP data 
+        and its error {'value', 'err'}.
 
     """
     def _interpolate_lwp(time_lwp, lwp, time_new):
@@ -248,9 +255,9 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
         return lwp_i
 
     lwp = _read_lwp(mwr_vars, *lwp_errors)
-    lwp_i = _interpolate_lwp(lwp['time'], lwp['lwp'], time)
-    lwp_error_i = _interpolate_lwp(lwp['time'], lwp['error'], time)
-    return {'lwp': lwp_i, 'error': lwp_error_i}
+    lwp_i = _interpolate_lwp(lwp['time'], lwp['value'], time)
+    lwp_error_i = _interpolate_lwp(lwp['time'], lwp['err'], time)
+    return {'value': lwp_i, 'err': lwp_error_i}
 
 
 def _read_lwp(mwr_vars, frac_err, lin_err):
@@ -262,8 +269,7 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         lin_error (float): Linear error (scalar).
 
     Returns:
-        Dict containing {'time', 'lwp', 'lwp_error'} that are 1-D arrays.
-
+        Dict containing {'time', 'value', 'err'} that are 1-D arrays.
 
     Note:
         hatpro time can be 'hours since' 00h of measurement date
@@ -276,7 +282,7 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
     if max(time) > 24:
         time = utils.epoch2desimal_hour((2001, 1, 1), time)  # fixed epoc!!
     lwp_err = np.sqrt(lin_err**2 + (frac_err*lwp)**2)
-    return {'time': time, 'lwp': lwp, 'error': lwp_err}
+    return {'time': time, 'value': lwp, 'err': lwp_err}
 
 
 def fetch_model(mod_vars, alt_site, freq, time, height):
@@ -365,13 +371,16 @@ def _interpolate_model(model, fields, *args):
     return out
 
 
-def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
+def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
+                    clutter_bit, time, freq):
     """Returns sensitivity, precision and error of radar echo.
 
     Args:
         radar: A netCDF4 instance.
         rad_vars: Radar variables.
-        atten (dict): Gas and liquid attenuation variables.
+        gas_atten (ndarray): Gas attenuation.
+        liq_atten (dict): Liquid attenuation, 
+            containing {'err', 'ucorr_bit'}
         clutter_bit (ndarray): Boolean array denoting pixels
             contaminated by clutter.
         time (ndarray): Time vector.
@@ -385,7 +394,6 @@ def _fetch_Z_errors(radar, rad_vars, atten, clutter_bit, time, freq):
 
     """
     Z = radar['Zh']
-    gas_atten, liq_atten = atten['gas'], atten['liquid']
     radar_range = ncf.km2m(rad_vars['range'])
     log_range = utils.lin2db(radar_range, scale=20)
     Z_power = Z - log_range

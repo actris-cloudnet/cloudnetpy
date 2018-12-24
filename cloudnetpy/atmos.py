@@ -154,7 +154,7 @@ def get_liquid_atten(lwp, model, bits, height):
 
     Args:
         lwp: Dict containing interpolated liquid water
-            path (and its error).
+            path and its error {'value', 'err'}.
         model: Dict containing interpolated model fields.
         bits: Dict containing classification bits {'cat', 'rain'}.
         height (ndarray): Altitude vector.
@@ -172,7 +172,7 @@ def get_liquid_atten(lwp, model, bits, height):
     liq_atten, liq_atten_err = np.zeros(msize), np.zeros(msize)
     dheight = utils.med_diff(height) * 1000
     is_liquid = np.any(droplet_bit, axis=1)
-    is_lwp = np.isfinite(lwp['lwp'])
+    is_lwp = np.isfinite(lwp['value'])
     for ii in np.where(is_lwp & is_liquid)[0]:
         bases, tops = utils.bases_and_tops(droplet_bit[ii, :])
         for base, top in zip(bases, tops):
@@ -183,9 +183,9 @@ def get_liquid_atten(lwp, model, bits, height):
                                                model['pressure'][ii, base])
             lwc_adiabatic[ii, idx] = dlwc_dz * dheight * (ran+1)
             lwc_err[ii, idx] = dlwc_dz  # unnormalised
-        lwp_boxes[ii, :] = (lwp['lwp'][ii] *
+        lwp_boxes[ii, :] = (lwp['value'][ii] *
                             lwc_adiabatic[ii, :]/np.sum(lwc_adiabatic[ii, :]))
-        lwp_boxes_err[ii, :] = (lwp['error'][ii] *
+        lwp_boxes_err[ii, :] = (lwp['err'][ii] *
                                 lwc_err[ii, :]/np.sum(lwc_err[ii, :]))
     for ii in np.where(~is_lwp)[0]:
         lwp_boxes[ii, droplet_bit[ii, :] == 1] = None

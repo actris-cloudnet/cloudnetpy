@@ -47,12 +47,43 @@
 
 
 <div class="viewcode-block" id="fetch_radar_meta"><a class="viewcode-back" href="../api.html#ncf.fetch_radar_meta">[docs]</a><span class="k">def</span> <span class="nf">fetch_radar_meta</span><span class="p">(</span><span class="n">radar_file</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read some global metadata from radar nc-file.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Returns some global metadata from radar nc-file.&quot;&quot;&quot;</span>
     <span class="n">nc</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">radar_file</span><span class="p">)</span>
-    <span class="n">radar_type</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="n">nc</span><span class="o">.</span><span class="n">location</span>
+    <span class="n">freq</span> <span class="o">=</span> <span class="n">get_radar_freq</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
     <span class="n">dvec</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">year</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">month</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
                      <span class="nb">str</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">day</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">)])</span>
-    <span class="k">return</span> <span class="n">radar_type</span><span class="p">,</span> <span class="n">dvec</span></div>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;freq&#39;</span><span class="p">:</span> <span class="n">freq</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">dvec</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="fetch_instrument_models"><a class="viewcode-back" href="../api.html#ncf.fetch_instrument_models">[docs]</a><span class="k">def</span> <span class="nf">fetch_instrument_models</span><span class="p">(</span><span class="n">radar_file</span><span class="p">,</span> <span class="n">lidar_file</span><span class="p">,</span> <span class="n">mwr_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns models of the three Cloudnet instruments.&quot;&quot;&quot;</span>
+    
+    <span class="k">def</span> <span class="nf">_get_lidar_model</span><span class="p">(</span><span class="n">lidar_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns model of the lidar.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">lidar_file</span><span class="p">)</span><span class="o">.</span><span class="n">system</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;Unknown lidar&#39;</span>
+        
+    <span class="k">def</span> <span class="nf">_get_mwr_model</span><span class="p">(</span><span class="n">mwr_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns model of the microwave radiometer.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">mwr_file</span><span class="p">)</span><span class="o">.</span><span class="n">radiometer_system</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;Unknown radiometer&#39;</span>
+
+    <span class="k">def</span> <span class="nf">_get_radar_model</span><span class="p">(</span><span class="n">radar_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns model of the cloud radar.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">radar_file</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;Unknown cloud radar&#39;</span>
+
+    <span class="n">radar_model</span> <span class="o">=</span> <span class="n">_get_radar_model</span><span class="p">(</span><span class="n">radar_file</span><span class="p">)</span>
+    <span class="n">lidar_model</span> <span class="o">=</span> <span class="n">_get_lidar_model</span><span class="p">(</span><span class="n">lidar_file</span><span class="p">)</span>
+    <span class="n">mwr_model</span> <span class="o">=</span> <span class="n">_get_mwr_model</span><span class="p">(</span><span class="n">mwr_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;radar&#39;</span><span class="p">:</span> <span class="n">radar_model</span><span class="p">,</span> <span class="s1">&#39;lidar&#39;</span><span class="p">:</span> <span class="n">lidar_model</span><span class="p">,</span> <span class="s1">&#39;mwr&#39;</span><span class="p">:</span> <span class="n">mwr_model</span><span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="km2m"><a class="viewcode-back" href="../api.html#ncf.km2m">[docs]</a><span class="k">def</span> <span class="nf">km2m</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>

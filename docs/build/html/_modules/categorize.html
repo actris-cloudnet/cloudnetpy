@@ -44,8 +44,6 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">interp1d</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">namedtuple</span>
-<span class="c1"># from datetime import datetime, timezone</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">config</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">ncf</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">utils</span>
@@ -56,15 +54,13 @@
 <span class="c1"># from cloudnetpy import plotting</span>
 
 
-<div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../api.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">aux</span><span class="p">):</span>
+<div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../api.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generates Cloudnet Level 1 categorize file.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_files (tuple): Tuple of strings containing full paths of</span>
 <span class="sd">                             4 input files (radar, lidar, mwr, model).</span>
 <span class="sd">        output_file (str): Full path of output file.</span>
-<span class="sd">        aux (tuple): Tuple of strings including some metadata</span>
-<span class="sd">                     of the site (site_name, institute).</span>
 
 <span class="sd">    References:</span>
 <span class="sd">        https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883</span>
@@ -73,8 +69,7 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_time</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">TIME_RESOLUTION</span><span class="p">)</span>
         <span class="n">rad_vars</span><span class="p">,</span> <span class="n">lid_vars</span><span class="p">,</span> <span class="n">mwr_vars</span><span class="p">,</span> <span class="n">mod_vars</span> <span class="o">=</span> <span class="n">_load_files</span><span class="p">(</span><span class="n">input_files</span><span class="p">)</span>
-        <span class="n">radar_type</span><span class="p">,</span> <span class="n">dvec</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">fetch_radar_meta</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-        <span class="n">freq</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">get_radar_freq</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>
+        <span class="n">radar_meta</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">fetch_radar_meta</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
     <span class="n">height</span> <span class="o">=</span> <span class="n">_get_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>  <span class="c1"># m</span>
@@ -85,25 +80,26 @@
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
     <span class="n">lidar</span> <span class="o">=</span> <span class="n">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,),</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
     <span class="n">lwp</span> <span class="o">=</span> <span class="n">fetch_mwr</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">LWP_ERROR</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
     <span class="n">bits</span> <span class="o">=</span> <span class="n">classify</span><span class="o">.</span><span class="n">fetch_cat_bits</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">],</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;Tw&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-    <span class="n">atten</span> <span class="o">=</span> <span class="n">_get_attenuations</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;interp&#39;</span><span class="p">],</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">gas_atten</span><span class="p">,</span> <span class="n">liq_atten</span> <span class="o">=</span> <span class="n">_get_attenuations</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;interp&#39;</span><span class="p">],</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
     <span class="n">qual_bits</span> <span class="o">=</span> <span class="n">classify</span><span class="o">.</span><span class="n">fetch_qual_bits</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">],</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">],</span>
-                                         <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;clutter_bit&#39;</span><span class="p">],</span> <span class="n">atten</span><span class="p">[</span><span class="s1">&#39;liq_atten&#39;</span><span class="p">])</span>
-    <span class="n">Z_corr</span> <span class="o">=</span> <span class="n">_correct_atten</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">],</span> <span class="n">atten</span><span class="p">[</span><span class="s1">&#39;gas_atten&#39;</span><span class="p">],</span>
-                            <span class="n">atten</span><span class="p">[</span><span class="s1">&#39;liq_atten&#39;</span><span class="p">][</span><span class="s1">&#39;liq_atten&#39;</span><span class="p">])</span>
-    <span class="n">Z_err</span> <span class="o">=</span> <span class="n">_fetch_Z_errors</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">rad_vars</span><span class="p">,</span> <span class="n">atten</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;clutter_bit&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
+                                         <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;clutter&#39;</span><span class="p">],</span> <span class="n">liq_atten</span><span class="p">)</span>
+    <span class="n">Z_corr</span> <span class="o">=</span> <span class="n">_correct_atten</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">],</span> <span class="n">gas_atten</span><span class="p">,</span> <span class="n">liq_atten</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">])</span>
+    <span class="n">Z_err</span> <span class="o">=</span> <span class="n">_fetch_Z_errors</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">rad_vars</span><span class="p">,</span> <span class="n">gas_atten</span><span class="p">,</span> <span class="n">liq_atten</span><span class="p">,</span>
+                            <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;clutter&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">])</span>
+    <span class="n">instruments</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">fetch_instrument_models</span><span class="p">(</span><span class="o">*</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
     <span class="c1"># Collect variables for output file writing:</span>
     <span class="n">cat_vars</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">height</span><span class="p">,</span>
                 <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span>
                 <span class="s1">&#39;latitude&#39;</span><span class="p">:</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;latitude&#39;</span><span class="p">][:],</span>
                 <span class="s1">&#39;longitude&#39;</span><span class="p">:</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;longitude&#39;</span><span class="p">][:],</span>
                 <span class="s1">&#39;altitude&#39;</span><span class="p">:</span> <span class="n">alt_site</span><span class="p">,</span>
-                <span class="s1">&#39;radar_frequency&#39;</span><span class="p">:</span> <span class="n">freq</span><span class="p">,</span>
+                <span class="s1">&#39;radar_frequency&#39;</span><span class="p">:</span> <span class="n">radar_meta</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;lidar_wavelength&#39;</span><span class="p">:</span> <span class="n">lid_vars</span><span class="p">[</span><span class="s1">&#39;wavelength&#39;</span><span class="p">][:],</span>
                 <span class="s1">&#39;beta&#39;</span><span class="p">:</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;beta_error&#39;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">BETA_ERROR</span><span class="p">,</span>
-                <span class="s1">&#39;beta_bias&#39;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">BETA_BIAS</span><span class="p">,</span>
+                <span class="s1">&#39;beta_error&#39;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">BETA_ERROR</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="s1">&#39;beta_bias&#39;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">BETA_ERROR</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
                 <span class="s1">&#39;Z&#39;</span><span class="p">:</span> <span class="n">Z_corr</span><span class="p">,</span>
                 <span class="s1">&#39;v&#39;</span><span class="p">:</span> <span class="n">radar</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="n">radar</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">],</span>
@@ -116,19 +112,19 @@
                 <span class="s1">&#39;vwind&#39;</span><span class="p">:</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;original&#39;</span><span class="p">][</span><span class="s1">&#39;vwind&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;model_height&#39;</span><span class="p">:</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;model_time&#39;</span><span class="p">:</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;category_bits&#39;</span><span class="p">:</span> <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;cat_bits&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;category_bits&#39;</span><span class="p">:</span> <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;cat&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;Tw&#39;</span><span class="p">:</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;Tw&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;insect_probability&#39;</span><span class="p">:</span> <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;insect_prob&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;radar_gas_atten&#39;</span><span class="p">:</span> <span class="n">atten</span><span class="p">[</span><span class="s1">&#39;gas_atten&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;radar_liquid_atten&#39;</span><span class="p">:</span> <span class="n">atten</span><span class="p">[</span><span class="s1">&#39;liq_atten&#39;</span><span class="p">][</span><span class="s1">&#39;liq_atten&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;lwp&#39;</span><span class="p">:</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;lwp&#39;</span><span class="p">],</span>
-                <span class="s1">&#39;lwp_error&#39;</span><span class="p">:</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;lwp_error&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;radar_gas_atten&#39;</span><span class="p">:</span> <span class="n">gas_atten</span><span class="p">,</span>
+                <span class="s1">&#39;radar_liquid_atten&#39;</span><span class="p">:</span> <span class="n">liq_atten</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;lwp&#39;</span><span class="p">:</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">],</span>
+                <span class="s1">&#39;lwp_error&#39;</span><span class="p">:</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;err&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;quality_bits&#39;</span><span class="p">:</span> <span class="n">qual_bits</span><span class="p">,</span>
                 <span class="s1">&#39;Z_error&#39;</span><span class="p">:</span> <span class="n">Z_err</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;Z_sensitivity&#39;</span><span class="p">:</span> <span class="n">Z_err</span><span class="p">[</span><span class="s1">&#39;sensitivity&#39;</span><span class="p">]}</span>
-    <span class="n">obs</span> <span class="o">=</span> <span class="n">_cat_cnet_vars</span><span class="p">(</span><span class="n">cat_vars</span><span class="p">,</span> <span class="n">dvec</span><span class="p">,</span> <span class="n">radar_type</span><span class="p">)</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">_cat_cnet_vars</span><span class="p">(</span><span class="n">cat_vars</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">,</span> <span class="n">instruments</span><span class="p">)</span>
     <span class="n">output</span><span class="o">.</span><span class="n">save_cat</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span>
-                    <span class="n">obs</span><span class="p">,</span> <span class="n">dvec</span><span class="p">,</span> <span class="n">aux</span><span class="p">)</span></div>
+                    <span class="n">obs</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_correct_atten</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">gas_atten</span><span class="p">,</span> <span class="n">liq_atten</span><span class="p">):</span>
@@ -151,10 +147,17 @@
 
 
 <span class="k">def</span> <span class="nf">_get_attenuations</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model_i</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns attenuations due to atmospheric liquid and gases.&quot;&quot;&quot;</span>
-    <span class="n">gas_atten</span> <span class="o">=</span> <span class="n">atmos</span><span class="o">.</span><span class="n">get_gas_atten</span><span class="p">(</span><span class="n">model_i</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;cat_bits&#39;</span><span class="p">],</span> <span class="n">height</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Returns attenuations due to atmospheric liquid and gases.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lwp (dict): LWP variables {&#39;&#39;}</span>
+<span class="sd">        model_i (dict):</span>
+<span class="sd">        bits (dict): </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gas_atten</span> <span class="o">=</span> <span class="n">atmos</span><span class="o">.</span><span class="n">get_gas_atten</span><span class="p">(</span><span class="n">model_i</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="s1">&#39;cat&#39;</span><span class="p">],</span> <span class="n">height</span><span class="p">)</span>
     <span class="n">liq_atten</span> <span class="o">=</span> <span class="n">atmos</span><span class="o">.</span><span class="n">get_liquid_atten</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="n">model_i</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;gas_atten&#39;</span><span class="p">:</span> <span class="n">gas_atten</span><span class="p">,</span> <span class="s1">&#39;liq_atten&#39;</span><span class="p">:</span> <span class="n">liq_atten</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">gas_atten</span><span class="p">,</span> <span class="n">liq_atten</span>
 
 
 <span class="k">def</span> <span class="nf">_load_files</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
@@ -270,7 +273,8 @@
 <span class="sd">        time (ndarray): A 1-D array.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Dict containing interpolated LWP data {&#39;lwp&#39;, &#39;lwp_error&#39;}</span>
+<span class="sd">        Dict containing interpolated LWP data </span>
+<span class="sd">        and its error {&#39;value&#39;, &#39;err&#39;}.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">_interpolate_lwp</span><span class="p">(</span><span class="n">time_lwp</span><span class="p">,</span> <span class="n">lwp</span><span class="p">,</span> <span class="n">time_new</span><span class="p">):</span>
@@ -285,9 +289,9 @@
         <span class="k">return</span> <span class="n">lwp_i</span>
 
     <span class="n">lwp</span> <span class="o">=</span> <span class="n">_read_lwp</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="o">*</span><span class="n">lwp_errors</span><span class="p">)</span>
-    <span class="n">lwp_i</span> <span class="o">=</span> <span class="n">_interpolate_lwp</span><span class="p">(</span><span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;lwp&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">)</span>
-    <span class="n">lwp_error_i</span> <span class="o">=</span> <span class="n">_interpolate_lwp</span><span class="p">(</span><span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;lwp_error&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;lwp&#39;</span><span class="p">:</span> <span class="n">lwp_i</span><span class="p">,</span> <span class="s1">&#39;lwp_error&#39;</span><span class="p">:</span> <span class="n">lwp_error_i</span><span class="p">}</span></div>
+    <span class="n">lwp_i</span> <span class="o">=</span> <span class="n">_interpolate_lwp</span><span class="p">(</span><span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;value&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">)</span>
+    <span class="n">lwp_error_i</span> <span class="o">=</span> <span class="n">_interpolate_lwp</span><span class="p">(</span><span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span> <span class="n">lwp</span><span class="p">[</span><span class="s1">&#39;err&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">lwp_i</span><span class="p">,</span> <span class="s1">&#39;err&#39;</span><span class="p">:</span> <span class="n">lwp_error_i</span><span class="p">}</span></div>
 
 
 <span class="k">def</span> <span class="nf">_read_lwp</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">frac_err</span><span class="p">,</span> <span class="n">lin_err</span><span class="p">):</span>
@@ -299,8 +303,7 @@
 <span class="sd">        lin_error (float): Linear error (scalar).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Dict containing {&#39;time&#39;, &#39;lwp&#39;, &#39;lwp_error&#39;} that are 1-D arrays.</span>
-
+<span class="sd">        Dict containing {&#39;time&#39;, &#39;value&#39;, &#39;err&#39;} that are 1-D arrays.</span>
 
 <span class="sd">    Note:</span>
 <span class="sd">        hatpro time can be &#39;hours since&#39; 00h of measurement date</span>
@@ -313,7 +316,7 @@
     <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">24</span><span class="p">:</span>
         <span class="n">time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">epoch2desimal_hour</span><span class="p">((</span><span class="mi">2001</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">time</span><span class="p">)</span>  <span class="c1"># fixed epoc!!</span>
     <span class="n">lwp_err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">lin_err</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">frac_err</span><span class="o">*</span><span class="n">lwp</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">:</span> <span class="n">lwp</span><span class="p">,</span> <span class="s1">&#39;lwp_error&#39;</span><span class="p">:</span> <span class="n">lwp_err</span><span class="p">}</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">time</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="n">lwp</span><span class="p">,</span> <span class="s1">&#39;err&#39;</span><span class="p">:</span> <span class="n">lwp_err</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="fetch_model"><a class="viewcode-back" href="../api.html#categorize.fetch_model">[docs]</a><span class="k">def</span> <span class="nf">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
@@ -402,13 +405,16 @@
     <span class="k">return</span> <span class="n">out</span>
 
 
-<span class="k">def</span> <span class="nf">_fetch_Z_errors</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">rad_vars</span><span class="p">,</span> <span class="n">atten</span><span class="p">,</span> <span class="n">clutter_bit</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_fetch_Z_errors</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">rad_vars</span><span class="p">,</span> <span class="n">gas_atten</span><span class="p">,</span> <span class="n">liq_atten</span><span class="p">,</span>
+                    <span class="n">clutter_bit</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns sensitivity, precision and error of radar echo.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        radar: A netCDF4 instance.</span>
 <span class="sd">        rad_vars: Radar variables.</span>
-<span class="sd">        atten (dict): Gas and liquid attenuation variables.</span>
+<span class="sd">        gas_atten (ndarray): Gas attenuation.</span>
+<span class="sd">        liq_atten (dict): Liquid attenuation, </span>
+<span class="sd">            containing {&#39;err&#39;, &#39;ucorr_bit&#39;}</span>
 <span class="sd">        clutter_bit (ndarray): Boolean array denoting pixels</span>
 <span class="sd">            contaminated by clutter.</span>
 <span class="sd">        time (ndarray): Time vector.</span>
@@ -422,7 +428,6 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">Z</span> <span class="o">=</span> <span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">]</span>
-    <span class="n">gas_atten</span><span class="p">,</span> <span class="n">liq_atten</span> <span class="o">=</span> <span class="n">atten</span><span class="p">[</span><span class="s1">&#39;gas_atten&#39;</span><span class="p">],</span> <span class="n">atten</span><span class="p">[</span><span class="s1">&#39;liq_atten&#39;</span><span class="p">]</span>
     <span class="n">radar_range</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">])</span>
     <span class="n">log_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">lin2db</span><span class="p">(</span><span class="n">radar_range</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
     <span class="n">Z_power</span> <span class="o">=</span> <span class="n">Z</span> <span class="o">-</span> <span class="n">log_range</span>
@@ -441,8 +446,8 @@
                          <span class="n">utils</span><span class="o">.</span><span class="n">db2lin</span><span class="p">(</span><span class="n">Z_power_min</span><span class="o">-</span><span class="n">Z_power</span><span class="p">)</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
     <span class="c1"># Error:</span>
     <span class="n">g_prec</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">GAS_ATTEN_PREC</span>
-    <span class="n">Z_error</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">l2norm</span><span class="p">(</span><span class="n">gas_atten</span><span class="o">*</span><span class="n">g_prec</span><span class="p">,</span> <span class="n">liq_atten</span><span class="p">[</span><span class="s1">&#39;liq_atten_err&#39;</span><span class="p">],</span> <span class="n">Z_precision</span><span class="p">)</span>
-    <span class="n">Z_error</span><span class="p">[</span><span class="n">liq_atten</span><span class="p">[</span><span class="s1">&#39;liq_atten_ucorr_bit&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">Z_error</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">l2norm</span><span class="p">(</span><span class="n">gas_atten</span><span class="o">*</span><span class="n">g_prec</span><span class="p">,</span> <span class="n">liq_atten</span><span class="p">[</span><span class="s1">&#39;err&#39;</span><span class="p">],</span> <span class="n">Z_precision</span><span class="p">)</span>
+    <span class="n">Z_error</span><span class="p">[</span><span class="n">liq_atten</span><span class="p">[</span><span class="s1">&#39;ucorr_bit&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;sensitivity&#39;</span><span class="p">:</span> <span class="n">Z_sensitivity</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">Z_error</span><span class="p">}</span>
 
 
@@ -458,68 +463,62 @@
     <span class="k">return</span> <span class="n">out</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_cat_cnet_vars</span><span class="p">(</span><span class="n">vars_in</span><span class="p">,</span> <span class="n">dvec</span><span class="p">,</span> <span class="n">radar_type</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_cat_cnet_vars</span><span class="p">(</span><span class="n">vars_in</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">,</span> <span class="n">instruments</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates list of variable instances for output writing.&quot;&quot;&quot;</span>
     <span class="n">lin</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;logarithmic&#39;</span>
-    <span class="n">src</span> <span class="o">=</span> <span class="s1">&#39;source&#39;</span>
-    <span class="n">anc</span> <span class="o">=</span> <span class="s1">&#39;ancillary_variables&#39;</span>
     <span class="n">bias_comm</span> <span class="o">=</span> <span class="s1">&#39;This variable is an estimate of the one-standard-deviation calibration error&#39;</span>
+    <span class="n">radar_source</span> <span class="o">=</span> <span class="n">instruments</span><span class="p">[</span><span class="s1">&#39;radar&#39;</span><span class="p">]</span>
     <span class="n">model_source</span> <span class="o">=</span> <span class="s1">&#39;HYSPLIT&#39;</span>
-    <span class="n">radar_source</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{radar_type}</span><span class="s2"> cloud radar&quot;</span>
     <span class="n">obs</span> <span class="o">=</span> <span class="p">[]</span>
 
     <span class="c1"># general variables</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;height&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Height above mean sea level&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">),</span>
-                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Height above mean sea level&#39;</span><span class="p">,</span>
+                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;time&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Time UTC&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">),</span>
-                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;hours since &#39;</span> <span class="o">+</span> <span class="n">dvec</span> <span class="o">+</span> <span class="s1">&#39; 00:00:00 +0:00&#39;</span><span class="p">,</span>
                        <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Time UTC&#39;</span><span class="p">,</span>
+                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;hours since &#39;</span> <span class="o">+</span> <span class="n">radar_meta</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; 00:00:00 +0:00&#39;</span><span class="p">,</span>
                        <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;Fixed &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">TIME_RESOLUTION</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;s resolution.&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;model_height&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Height of model variables above mean sea level&#39;</span><span class="p">,</span>
+                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model_height&#39;</span><span class="p">),</span>
-                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Height of model variables above mean sea level&#39;</span><span class="p">,</span>
+                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;model_time&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
+                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model_time&#39;</span><span class="p">),</span>                       
                        <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Model time UTC&#39;</span><span class="p">,</span>
-                       <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model_time&#39;</span><span class="p">),</span>
-                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;hours since &#39;</span> <span class="o">+</span> <span class="n">dvec</span> <span class="o">+</span> <span class="s1">&#39; 00:00:00 +0:00&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;hours since &#39;</span> <span class="o">+</span> <span class="n">radar_meta</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; 00:00:00 +0:00&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;latitude&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Latitude of site&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(),</span>
-                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;degrees_north&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Latitude of site&#39;</span><span class="p">,</span>
+                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;degrees_north&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;longitude&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Longitude of site&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(),</span>
-                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;degrees_east&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Longitude of site&#39;</span><span class="p">,</span>
+                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;degrees_east&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;altitude&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Altitude of site&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Altitude of site&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">comment</span><span class="o">=</span><span class="n">_comments</span><span class="p">(</span><span class="n">var</span><span class="p">)))</span>
     <span class="c1"># radar variables</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;radar_frequency&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Transmit frequency&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(),</span>
-                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;GHz&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Transmit frequency&#39;</span><span class="p">,</span>
+                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;GHz&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;Z&#39;</span>
     <span class="n">lname</span> <span class="o">=</span> <span class="s1">&#39;Radar reflectivity factor&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
@@ -528,14 +527,13 @@
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">40</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
                        <span class="n">comment</span><span class="o">=</span><span class="n">_comments</span><span class="p">(</span><span class="n">var</span><span class="p">),</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span> <span class="n">radar_source</span><span class="p">,</span>
-                                         <span class="n">anc</span><span class="p">:</span> <span class="n">_anc_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">radar_source</span><span class="p">,</span>
+                       <span class="n">ancillary_variables</span><span class="o">=</span><span class="n">_anc_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;Z_bias&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">bias_name</span><span class="p">(</span><span class="n">lname</span><span class="p">),</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">bias_name</span><span class="p">(</span><span class="n">lname</span><span class="p">),</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;dB&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">comment</span><span class="o">=</span><span class="n">bias_comm</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;Z_error&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
@@ -544,8 +542,8 @@
                        <span class="n">comment</span><span class="o">=</span><span class="n">_comments</span><span class="p">(</span><span class="n">var</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;Z_sensitivity&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Minimum detectable radar reflectivity&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;height&#39;</span><span class="p">),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Minimum detectable radar reflectivity&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;dBZ&#39;</span><span class="p">,</span>
                        <span class="n">comment</span><span class="o">=</span><span class="n">_comments</span><span class="p">(</span><span class="n">var</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;v&#39;</span>
@@ -555,28 +553,27 @@
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
                        <span class="n">comment</span><span class="o">=</span><span class="n">_comments</span><span class="p">(</span><span class="n">var</span><span class="p">),</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span><span class="n">radar_source</span><span class="p">}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">radar_source</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;width&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
                        <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Spectral width&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;m s-1&#39;</span><span class="p">,</span>
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="mf">0.03</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">log</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span><span class="n">radar_source</span><span class="p">}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">radar_source</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;ldr&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
                        <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Linear depolarisation ratio&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;dB&#39;</span><span class="p">,</span>
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span><span class="n">radar_source</span><span class="p">}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">radar_source</span><span class="p">))</span>
     <span class="c1"># lidar variables</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;lidar_wavelength&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Laser wavelength&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(),</span>
-                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;nm&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Laser wavelength&#39;</span><span class="p">,</span>
+                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;nm&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;beta&#39;</span>
     <span class="n">lname</span> <span class="o">=</span> <span class="s1">&#39;Attenuated backscatter coefficient&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
@@ -584,106 +581,104 @@
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;sr-1 m-1&#39;</span><span class="p">,</span>
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="mf">1e-7</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">log</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span><span class="s1">&#39;Lidar/Ceilometer model XXX&#39;</span><span class="p">,</span>
-                                         <span class="n">anc</span><span class="p">:</span> <span class="n">_anc_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">instruments</span><span class="p">[</span><span class="s1">&#39;lidar&#39;</span><span class="p">],</span>
+                       <span class="n">ancillary_variables</span><span class="o">=</span><span class="n">_anc_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;beta_bias&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">bias_name</span><span class="p">(</span><span class="n">lname</span><span class="p">),</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">bias_name</span><span class="p">(</span><span class="n">lname</span><span class="p">),</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;dB&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">comment</span><span class="o">=</span><span class="n">bias_comm</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;beta_error&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">err_name</span><span class="p">(</span><span class="n">lname</span><span class="p">),</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(),</span>
-                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;dB&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">err_name</span><span class="p">(</span><span class="n">lname</span><span class="p">),</span>
+                       <span class="n">units</span><span class="o">=</span><span class="s1">&#39;dB&#39;</span><span class="p">))</span>
     <span class="c1"># mwr variables</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;lwp&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Liquid water path&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Liquid water path&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;g m-2&#39;</span><span class="p">,</span>
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1000</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;source&#39;</span><span class="p">:</span><span class="s1">&#39;HATPRO microwave radiometer&#39;</span><span class="p">}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">instruments</span><span class="p">[</span><span class="s1">&#39;mwr&#39;</span><span class="p">]))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;lwp_error&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Error in liquid water path, one standard deviation&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Error in liquid water path, one standard deviation&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;g m-2&#39;</span><span class="p">))</span>
     <span class="c1"># model variables</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;temperature&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model_time&#39;</span><span class="p">,</span> <span class="s1">&#39;model_height&#39;</span><span class="p">),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Temperature&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span><span class="n">model_source</span><span class="p">}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">model_source</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;pressure&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Pressure&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model_time&#39;</span><span class="p">,</span> <span class="s1">&#39;model_height&#39;</span><span class="p">),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Pressure&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;Pa&#39;</span><span class="p">,</span>
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.1e5</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">log</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span><span class="n">model_source</span><span class="p">}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">model_source</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;specific_humidity&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Model specific humidity&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model_time&#39;</span><span class="p">,</span> <span class="s1">&#39;model_height&#39;</span><span class="p">),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Model specific humidity&#39;</span><span class="p">,</span>
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.006</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span><span class="n">model_source</span><span class="p">}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">model_source</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;uwind&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Zonal wind&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model_time&#39;</span><span class="p">,</span> <span class="s1">&#39;model_height&#39;</span><span class="p">),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Zonal wind&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;m s-1&#39;</span><span class="p">,</span>
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span><span class="n">model_source</span><span class="p">}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">model_source</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;vwind&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Meridional wind&#39;</span><span class="p">,</span>
                        <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;model_time&#39;</span><span class="p">,</span> <span class="s1">&#39;model_height&#39;</span><span class="p">),</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Meridional wind&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;m s-1&#39;</span><span class="p">,</span>
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="n">src</span><span class="p">:</span><span class="n">model_source</span><span class="p">}))</span>
+                       <span class="n">source</span><span class="o">=</span><span class="n">model_source</span><span class="p">))</span>
     <span class="c1"># other</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;category_bits&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Target classification bits&#39;</span><span class="p">,</span>
                        <span class="n">data_type</span><span class="o">=</span><span class="s1">&#39;i4&#39;</span><span class="p">,</span>
                        <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;valid_range&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
-                                         <span class="s1">&#39;flag_masks&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
-                                         <span class="s1">&#39;flag_meanings&#39;</span><span class="p">:(</span><span class="s1">&#39;liquid_droplets falling_hydrometeors &#39;</span>
-                                                          <span class="s1">&#39;freezing_temperature melting_ice &#39;</span>
-                                                          <span class="s1">&#39;aerosols insects&#39;</span><span class="p">)}))</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Target classification bits&#39;</span><span class="p">,</span>
+                       <span class="n">valid_range</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                       <span class="n">flag_masks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                       <span class="n">flag_meanings</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;liquid_droplets falling_hydrometeors &#39;</span>
+                                      <span class="s1">&#39;freezing_temperature melting_ice &#39;</span>
+                                      <span class="s1">&#39;aerosols insects&#39;</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;quality_bits&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Data quality bits&#39;</span><span class="p">,</span>
                        <span class="n">data_type</span><span class="o">=</span><span class="s1">&#39;i4&#39;</span><span class="p">,</span>
                        <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                       <span class="n">extra_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;valid_ranges&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
-                                         <span class="s1">&#39;flag_masks&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
-                                         <span class="s1">&#39;flag_meanings&#39;</span><span class="p">:(</span><span class="s1">&#39;lidar_echo radar_echo radar_clutter &#39;</span>
-                                                          <span class="s1">&#39;lidar_molec_scatter attenuation &#39;</span>
-                                                          <span class="s1">&#39;atten_correction&#39;</span><span class="p">)}))</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Data quality bits&#39;</span><span class="p">,</span>
+                       <span class="n">valid_ranges</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                       <span class="n">flag_masks</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+                       <span class="n">flag_meanings</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;lidar_echo radar_echo radar_clutter &#39;</span>
+                                      <span class="s1">&#39;lidar_molec_scatter attenuation &#39;</span>
+                                      <span class="s1">&#39;atten_correction&#39;</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;Tw&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
+                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Wet bulb temperature&#39;</span><span class="p">,</span>
                        <span class="n">units</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                        <span class="n">comment</span><span class="o">=</span><span class="n">_comments</span><span class="p">(</span><span class="n">var</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;insect_probability&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Probability of insects&#39;</span><span class="p">,</span>
-                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">))</span>
+                       <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                       <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Probability of insects&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;radar_gas_atten&#39;</span>
     <span class="n">obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">CnetVar</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
                        <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Two-way radar attenuation due to atmospheric gases&#39;</span><span class="p">,</span>
@@ -698,6 +693,7 @@
                        <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
                        <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
                        <span class="n">comment</span><span class="o">=</span><span class="n">_comments</span><span class="p">(</span><span class="n">var</span><span class="p">)))</span>
+
     <span class="k">return</span> <span class="n">obs</span>
 
 
@@ -709,18 +705,18 @@
                                <span class="s1">&#39;an approximate partioning of the liquid water content with height. Bit 5 of the</span><span class="se">\n</span><span class="s1">&#39;</span>
                                <span class="s1">&#39;quality_bits variable indicates where a correction for liquid water attenuation has</span><span class="se">\n</span><span class="s1">&#39;</span>
                                <span class="s1">&#39;been performed.&#39;</span><span class="p">),</span>
-        
+
         <span class="s1">&#39;radar_gas_atten&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;This variable was calculated from the model temperature,</span><span class="se">\n</span><span class="s1">&#39;</span>
                             <span class="s1">&#39;pressure and humidity, but forcing pixels containing liquid cloud to saturation</span><span class="se">\n</span><span class="s1">&#39;</span>
                             <span class="s1">&#39;with respect to liquid water. It was calculated using the millimeter-wave propagation</span><span class="se">\n</span><span class="s1">&#39;</span>
                             <span class="s1">&#39;model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.&#39;</span><span class="p">),</span>
-        
+
         <span class="s1">&#39;Tw&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;Calculated from model T, P and relative humidity,</span><span class="se">\n</span><span class="s1">&#39;</span>
                <span class="s1">&#39;which were first interpolated into measurement grid.&#39;</span><span class="p">),</span>
 
         <span class="s1">&#39;v&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;This parameter is the radial component of the velocity,</span><span class="se">\n</span><span class="s1">&#39;</span>
               <span class="s1">&#39;with positive velocities are away from the radar.&#39;</span><span class="p">),</span>
-        
+
         <span class="s1">&#39;Z_sensitivity&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;This variable is an estimate of the radar sensitivity,</span><span class="se">\n</span><span class="s1">&#39;</span>
                           <span class="s1">&#39;i.e. the minimum detectable radar reflectivity, as a function of height.</span><span class="se">\n</span><span class="s1">&#39;</span>
                           <span class="s1">&#39;It includes the effect of ground clutter and gas attenuation but not liquid attenuation.&#39;</span><span class="p">),</span>
@@ -739,7 +735,7 @@
               <span class="s1">&#39;been corrected. Calibration convention: in the absence of attenuation, a cloud at 273 K containing one million </span><span class="se">\n</span><span class="s1">&#39;</span>
               <span class="s1">&#39;100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.</span><span class="se">\n</span><span class="s1">&#39;</span>
               <span class="s1">&#39;Original comment: Calibrated reflectivity. Calibration convention: in the absence of attenuation, a cloud at 273 K</span><span class="se">\n</span><span class="s1">&#39;</span>
-              <span class="s1">&#39;containing one million 100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.&#39;</span><span class="p">)</span>        
+              <span class="s1">&#39;containing one million 100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.&#39;</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">com</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
 </pre></div>
