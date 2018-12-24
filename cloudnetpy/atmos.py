@@ -203,7 +203,8 @@ def _screen_liq_atten(liq_atten, bits):
 
     Args:
         liq_atten (ndarray): Liquid attenuation.
-        bits: Dict containing classification bits.
+        bits: Dict containing classification bits and rain
+        {'cat', 'rain'}.
 
     Returns:
         3-element tuple containing screened liquid
