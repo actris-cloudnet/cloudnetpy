@@ -421,11 +421,11 @@ def _anc_names(var, bias=False, err=False, sens=False):
     """Returns list of ancillary variable names."""
     out = ''
     if bias:
-        out = out + var + '_bias '
+        out += f"{var}_bias "
     if err:
-        out = out + var + '_error '
+        out += f"{var}_error "
     if sens:
-        out = out + var + '_sensitivity '
+        out += f"{var}_sensitivity "
     return out[:-1]
 
 
@@ -698,11 +698,11 @@ def _comments(field):
                             'with respect to liquid water. It was calculated using the millimeter-wave propagation\n'
                             'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.'),
 
-        'Tw': ('Calculated from model T, P and relative humidity,\n'
-               'which were first interpolated into measurement grid.'),
+        'Tw': ('Calculated from model T, P and relative humidity, which were first\n'
+               'interpolated into measurement grid.'),
 
-        'v': ('This parameter is the radial component of the velocity,\n'
-              'with positive velocities are away from the radar.'),
+        'v': ('This parameter is the radial component of the velocity, with positive\n'
+              'velocities are away from the radar.'),
 
         'Z_sensitivity': ('This variable is an estimate of the radar sensitivity,\n'
                           'i.e. the minimum detectable radar reflectivity, as a function\n'
@@ -721,15 +721,14 @@ def _comments(field):
 
         'altitude': ('Defined as the altitude of radar or lidar - the one that is lower.'),
 
-        'Z': ('This variable has been corrected for attenuation\n'
-              'by gaseous attenuation (using the thermodynamic variables\n'
-              'from a forecast model; see the radar_gas_atten variable)\n'
-              'and liquid attenuation (using liquid water path from\n'
-              'a microwave radiometer; see the radar_liquid_atten variable)\n'
-              'but rain and melting-layer attenuation has not been corrected.\n'
-              'Calibration convention: in the absence of attenuation, a cloud\n'
-              'at 273 K containing one million 100-micron droplets per cubic\n'
-              'metre will have a reflectivity of 0 dBZ at all frequencies.\n'),
+        'Z': ('This variable has been corrected for attenuation by gaseous\n'
+              'attenuation (using the thermodynamic variables from a forecast\n'
+              'model; see the radar_gas_atten variable) and liquid attenuation\n'
+              '(using liquid water path from a microwave radiometer; see the\n'
+              'radar_liquid_atten variable) but rain and melting-layer attenuation\n'
+              'has not been corrected. Calibration convention: in the absence of\n'
+              'attenuation, a cloud at 273 K containing one million 100-micron droplets\n'
+              'per cubic metre will have a reflectivity of 0 dBZ at all frequencies.'),
 
         'bias': 'This variable is an estimate of the one-standard-deviation calibration error.',
     }
