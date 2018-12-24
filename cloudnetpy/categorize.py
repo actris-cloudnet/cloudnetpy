@@ -606,26 +606,6 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                        plot_scale=lin,
                        source=model_source))
     # other
-    var = 'category_bits'
-    obs.append(CnetVar(var, vars_in[var],
-                       data_type='i4',
-                       fill_value=None,
-                       long_name='Target classification bits',
-                       valid_range=[0, 5],
-                       flag_masks=[0, 1, 2, 3, 4, 5],
-                       flag_meanings=('liquid_droplets falling_hydrometeors '
-                                      'freezing_temperature melting_ice '
-                                      'aerosols insects')))
-    var = 'quality_bits'
-    obs.append(CnetVar(var, vars_in[var],
-                       data_type='i4',
-                       fill_value=None,
-                       long_name='Data quality bits',
-                       valid_ranges=[0, 5],
-                       flag_masks=[0, 1, 2, 3, 4, 5],
-                       flag_meanings=('lidar_echo radar_echo radar_clutter '
-                                      'lidar_molec_scatter attenuation '
-                                      'atten_correction')))
     var = 'Tw'
     obs.append(CnetVar(var, vars_in[var],
                        fill_value=None,
@@ -650,12 +630,63 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                        plot_range=(0, 4),
                        plot_scale=lin,
                        comment=_comments(var)))
+
+    var = 'category_bits'
+    obs.append(CnetVar(var, vars_in[var],
+                       data_type='i4',
+                       fill_value=None,
+                       long_name='Target classification bits',
+                       valid_range=[0, 5],
+                       comment=_comments(var),
+                       definition=('\nBit 0: Small liquid droplets are present.\n'
+			           'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
+                                   '       likely ice particles, otherwise they are drizzle or rain drops.\n'
+			           'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
+                                   '       the phase of Bit-1 particles.\n'
+			           'Bit 3: Melting ice particles are present.\n'
+			           'Bit 4: Aerosol particles are present and visible to the lidar.\n'
+			           'Bit 5: Insects are present and visible to the radar.')))
+    var = 'quality_bits'
+    obs.append(CnetVar(var, vars_in[var],
+                       data_type='i4',
+                       fill_value=None,
+                       long_name='Data quality bits',
+                       valid_range=[0, 5],
+                       comment=_comments(var),
+                       definition=('\nBit 0: An echo is detected by the radar.\n'
+			           'Bit 1: An echo is detected by the lidar.\n'
+			           'Bit 2: The apparent echo detected by the radar is ground clutter\n'
+                                   '       or some other non-atmospheric artifact.\n'
+			           'Bit 3: The echo detected by the lidar is due to clear-air molecular scattering.\n'
+			           'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
+                                   '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
+                                   '       a correction for the radar attenuation has been performed;\n'
+                                   '       otherwise do not trust the absolute values of reflectivity factor.\n'
+                                   '       No correction is performed for lidar attenuation.\n'
+			           'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
+                                   '       using the microwave radiometer measurements of liquid water path\n'
+                                   '       and the lidar estimation of the location of liquid water cloud;\n'
+                                   '       be aware that errors in reflectivity may result.')))
     return obs
 
 
 def _comments(field):
     """Returns the comment text for a Cloudnet variable."""
     com = {
+
+        'category_bits': ('This variable contains information on the nature of the targets at each pixel,\n'
+			  'thereby facilitating the application of algorithms that work with only one type of target.\n'
+			  'The information is in the form of an array of bits, each of which states either\n'
+			  'whether a certain type of particle is present (e.g. aerosols),\n'
+			  'or the whether some of the target particles have a particular property.\n'
+			  'The definitions of each bit are given in the definition attribute.\n'
+			  'Bit 0 is the least significant.'),
+
+        'quality_bits': ('This variable contains information on the quality of the data at each pixel.\n'
+			 'The information is in the form of an array of bits,\n'
+			 'and the definitions of each bit are given in the definition attribute.\n'
+			 'Bit 0 is the least significant'),
+
         'radar_liquid_atten': ('This variable was calculated from the liquid water path\n'
                                'measured by microwave radiometer using lidar and radar returns to perform\n'
                                'an approximate partioning of the liquid water content with height. Bit 5 of the\n'
