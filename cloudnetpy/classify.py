@@ -7,9 +7,6 @@ from scipy import stats
 from cloudnetpy import droplet
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
-import sys
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 
 def fetch_cat_bits(radar, beta, Tw, time, height):

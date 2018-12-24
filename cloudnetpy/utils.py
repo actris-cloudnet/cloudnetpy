@@ -7,7 +7,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
-# import sys
+import sys
 
 
 def epoch2desimal_hour(epoch, time_in):
@@ -98,7 +98,7 @@ def rebin_2d(x_in, data, x_new):
                                                          values[mask],
                                                          statistic='mean',
                                                          bins=edges)
-    datai[np.isfinite(datai) == 0] = 0
+    datai[~np.isfinite(datai)] = 0
     return ma.masked_equal(datai, 0)
 
 
