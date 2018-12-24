@@ -432,7 +432,6 @@ def _anc_names(var, bias=False, err=False, sens=False):
 def _cat_cnet_vars(vars_in, radar_meta, instruments):
     """Creates list of variable instances for output writing."""
     lin, log = 'linear', 'logarithmic'
-    bias_comm = 'This variable is an estimate of the one-standard-deviation calibration error'
     radar_source = instruments['radar']
     model_source = 'HYSPLIT'
     obs = []
@@ -500,7 +499,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                        size=(),
                        long_name=output.bias_name(lname),
                        units='dB',
-                       comment=bias_comm))
+                       comment=_comments('bias')))
     var = 'Z_error'
     obs.append(CnetVar(var, vars_in[var],
                        long_name=output.err_name(lname),
@@ -554,7 +553,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                        size=(),
                        long_name=output.bias_name(lname),
                        units='dB',
-                       comment=bias_comm))
+                       comment=_comments('bias')))
     var = 'beta_error'
     obs.append(CnetVar(var, vars_in[var],
                        size=(),
@@ -562,9 +561,10 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                        units='dB'))
     # mwr variables
     var = 'lwp'
+    lname = 'Liquid water path'
     obs.append(CnetVar(var, vars_in[var],
                        size=('time'),
-                       long_name='Liquid water path',
+                       long_name=lname,
                        units='g m-2',
                        plot_range=(-100, 1000),
                        plot_scale=lin,
@@ -572,7 +572,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
     var = 'lwp_error'
     obs.append(CnetVar(var, vars_in[var],
                        size=('time'),
-                       long_name='Error in liquid water path, one standard deviation',
+                       long_name=output.err_name(lname),
                        units='g m-2'))
     # model variables
     var = 'temperature'
@@ -701,6 +701,8 @@ def _comments(field):
               'been corrected. Calibration convention: in the absence of attenuation, a cloud at 273 K containing one million \n'
               '100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.\n'
               'Original comment: Calibrated reflectivity. Calibration convention: in the absence of attenuation, a cloud at 273 K\n'
-              'containing one million 100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.')
+              'containing one million 100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.'),
+
+        'bias': 'This variable is an estimate of the one-standard-deviation calibration error.',
     }
     return com[field]

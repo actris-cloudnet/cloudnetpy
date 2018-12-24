@@ -107,11 +107,12 @@ def err_name(long_name):
 
 def err_comm(long_name):
     """ Default error comment """
-    return ('This variable is an estimate of the one-standard-deviation random error in ' + long_name.lower() + '\n',
-            'due to the uncertainty of the retrieval, including the random error in the radar and lidar parameters.')
+    return ('This variable is an estimate of the one-standard-deviation random error\n'
+            'in ' + long_name.lower() + 'due to the uncertainty of the retrieval, including\n'
+            'the random error in the radar and lidar parameters.')
 
 
 def bias_comm(long_name):
     """ Default bias comment """
-    return ('This variable is an estimate of the possible systematic error (one-standard-deviation) in ' + long_name.lower() + '\n',
-            'due to the uncertainty in the calibration of the radar and lidar.')
+    return ('This variable is an estimate of the possible systematic error in ' + long_name.lower() + 'due to the\n'
+            'uncertainty in the calibration of the radar and lidar.')
