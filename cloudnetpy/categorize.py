@@ -25,8 +25,8 @@ def generate_categorize(input_files, output_file):
 
     Args:
         input_files (tuple): Tuple of strings containing full paths of
-                             4 input files (radar, lidar, mwr, model).
-        output_file (str): Full path of output file.
+                             the 4 input files (radar, lidar, mwr, model).
+        output_file (str): Full path of the output file.
 
     References:
         https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883
@@ -721,12 +721,15 @@ def _comments(field):
 
         'altitude': ('Defined as the altitude of radar or lidar - the one that is lower.'),
 
-        'Z': ('This variable has been corrected for attenuation by gaseous attenuation\n'
-              '(using the thermodynamic variables from a forecast model; see the radar_gas_atten variable)\n'
-              'and liquid attenuation (using liquid water path from a microwave radiometer; see the\n'
-              'radar_liquid_atten variable) but rain and melting-layer attenuation has not been corrected.\n'
-              'Calibration convention: in the absence of attenuation, a cloud at 273 K containing one million\n'
-              '100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.\n'),
+        'Z': ('This variable has been corrected for attenuation\n'
+              'by gaseous attenuation (using the thermodynamic variables\n'
+              'from a forecast model; see the radar_gas_atten variable)\n'
+              'and liquid attenuation (using liquid water path from\n'
+              'a microwave radiometer; see the radar_liquid_atten variable)\n'
+              'but rain and melting-layer attenuation has not been corrected.\n'
+              'Calibration convention: in the absence of attenuation, a cloud\n'
+              'at 273 K containing one million 100-micron droplets per cubic\n'
+              'metre will have a reflectivity of 0 dBZ at all frequencies.\n'),
 
         'bias': 'This variable is an estimate of the one-standard-deviation calibration error.',
     }
