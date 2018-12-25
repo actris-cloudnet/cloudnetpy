@@ -2,8 +2,10 @@
 """
 
 import numpy as np
+import numpy.ma as ma
 import scipy.signal
 from cloudnetpy import utils
+from cloudnetpy.constants import T0
 
 
 def get_base_ind(dprof, p, dist, lim):
@@ -90,12 +92,12 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         Boolean array denoting the liquid layers.
 
     """
-    # search distances for potential base/top
     dheight = utils.med_diff(height)
     base_below_peak = int(np.ceil((200/dheight)))
     top_above_peak = int(np.ceil((150/dheight)))
     cloud_bit = np.zeros(beta.shape, dtype=bool)
-    beta_diff = np.diff(beta, axis=1).filled(0)  # difference matrix
+    cloud_top = np.zeros(beta.shape, dtype=bool)
+    beta_diff = np.diff(beta, axis=1).filled(0)
     beta = beta.filled(0)
     pind = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
     strong_peaks = np.where(beta[pind] > peak_amp)
@@ -119,4 +121,31 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
                  top_der > min_top_der)
         if all(conds):
             cloud_bit[n, base:top+1] = True
+            cloud_top[n, top] = True
+    return cloud_bit, cloud_top
+
+
+def correct_cloud_top(Z, Tw, cold_bit, cloud_bit, cloud_top, height):
+    """ Correct lidar detected cloud top using radar signal.
+
+    Notes:
+        This routine should be checked carefully.
+    """
+    dheight = utils.med_diff(height)
+    top_above = int(np.ceil((300/dheight)))  # 300 m above cloud top
+    for prof, top in zip(*np.where(cloud_top)):
+        if cold_bit[prof, top]:
+            ii = top_above
+        else:
+            ii = np.where(cold_bit[prof, top:])[0][0]  # first sub-zero pixel
+        ind = range(top, top+ii+1)
+        rad = Z[prof, ind]
+        if rad.mask.all():  # all masked, not sure what to do..
+            pass
+        elif not rad.mask.any():  # nothing masked
+            cloud_bit[prof, ind] = True
+        else:
+            first_masked = ma.where(rad.mask)[0][0]
+            cloud_bit[prof, top:top+first_masked+1] = True
+    cloud_bit[Tw < (T0-40)] = False
     return cloud_bit

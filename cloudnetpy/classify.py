@@ -33,16 +33,17 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
 
     """
     bits = [None]*6
-    bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
-    bits[2] = get_cold_bit(Tw, bits[3], time, height)
-    bits[0] = droplet.get_liquid_layers(beta, height)
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(radar['v'], rain_bit)
-    
-    bits[5], insect_prob = get_insect_bit(radar, Tw, bits[3], bits[0], rain_bit, clutter_bit)
-
-    bits[1] = get_falling_bit(radar['Zh'], beta, clutter_bit, bits[0], bits[5], Tw)
-
+    cloud_bit, cloud_top = droplet.get_liquid_layers(beta, height)
+    bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
+    bits[2] = get_cold_bit(Tw, bits[3], time, height)
+    bits[0] = droplet.correct_cloud_top(radar['Zh'], Tw, bits[2],
+                                        cloud_bit, cloud_top, height)
+    bits[5], insect_prob = get_insect_bit(radar, Tw, bits[3], bits[0],
+                                          rain_bit, clutter_bit)
+    bits[1] = get_falling_bit(radar['Zh'], beta, clutter_bit, bits[0],
+                              bits[5], Tw)
     bits[4] = get_aerosol_bit(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
     return {'cat': cat_bits, 'rain': rain_bit,
@@ -349,7 +350,7 @@ def get_falling_bit(Z, beta, clutter_bit, droplet_bit, insect_bit, Tw):
     good_Z = ~Z.mask
     no_clutter = ~clutter_bit
     no_insects = ~insect_bit
-    ice_from_lidar = ~beta.mask & ~droplet_bit & (Tw < T0-7)
+    ice_from_lidar = ~beta.mask & ~droplet_bit & (Tw < (T0-7))
     falling_bit = (good_Z & no_clutter & no_insects) | ice_from_lidar
     falling_bit = utils.filter_isolated_pixels(falling_bit)
     return falling_bit
