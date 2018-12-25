@@ -7,6 +7,7 @@ from scipy import stats
 from cloudnetpy import droplet
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
+# from cloudnetpy import plotting
 
 
 def fetch_cat_bits(radar, beta, Tw, time, height):
@@ -37,9 +38,11 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     bits[0] = droplet.get_liquid_layers(beta, height)
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(radar['v'], rain_bit)
-    bits[5], insect_prob = get_insect_bit(radar, Tw, bits[3], bits[0],
-                                          rain_bit, clutter_bit)
-    bits[1] = get_falling_bit(radar['Zh'], clutter_bit, bits[5])
+    
+    bits[5], insect_prob = get_insect_bit(radar, Tw, bits[3], bits[0], rain_bit, clutter_bit)
+
+    bits[1] = get_falling_bit(radar['Zh'], beta, clutter_bit, bits[0], bits[5], Tw)
+
     bits[4] = get_aerosol_bit(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
     return {'cat': cat_bits, 'rain': rain_bit,
@@ -328,19 +331,26 @@ def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
     return clutter_bit
 
 
-def get_falling_bit(Z, clutter_bit, insect_bit):
+def get_falling_bit(Z, beta, clutter_bit, droplet_bit, insect_bit, Tw):
     """Finds falling hydrometeors.
 
     Args:
         Z (MaskedArray): Radar echo.
-        clutter_bit (ndarray): Binary field of clutter.
-        insect_bit (ndarray): Binary field of insects.
+        beta (MaskedArray): Lidar echo.
+        clutter_bit (ndarray): Pixels contaminated by clutter.
+        droplet_bit (ndarray): Pixels containing droplets.
+        insect_bit (ndarray): Pixels containing insects.
+        Tw (ndarray): Wet bulb temperature.
 
     Returns:
         Boolean array containing falling hydrometeros.
 
     """
-    falling_bit = ~Z.mask & ~clutter_bit & ~insect_bit
+    good_Z = ~Z.mask
+    no_clutter = ~clutter_bit
+    no_insects = ~insect_bit
+    ice_from_lidar = ~beta.mask & ~droplet_bit & (Tw < T0-7)
+    falling_bit = (good_Z & no_clutter & no_insects) | ice_from_lidar
     falling_bit = utils.filter_isolated_pixels(falling_bit)
     return falling_bit
 

@@ -17,6 +17,7 @@ from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
 from cloudnetpy.output import CnetVar as CV
+# from cloudnetpy import plotting
 
 
 def generate_categorize(input_files, output_file):
@@ -658,7 +659,6 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                   data_type='i4',
                   fill_value=None,
                   long_name='Target classification bits',
-                  valid_range=[0, 5],
                   comment=_comments(var),
                   definition=
                   ('\nBit 0: Small liquid droplets are present.\n'
@@ -674,7 +674,6 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                   data_type='i4',
                   fill_value=None,
                   long_name='Data quality bits',
-                  valid_range=[0, 5],
                   comment=_comments(var),
                   definition=
                   ('\nBit 0: An echo is detected by the radar.\n'
