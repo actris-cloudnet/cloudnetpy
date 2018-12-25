@@ -7,7 +7,6 @@ import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
-import sys
 
 
 def epoch2desimal_hour(epoch, time_in):
@@ -217,10 +216,20 @@ def med_diff(x):
 
 
 def l2norm(*args):
+    """Returns l2 norm.
+
+    Args:
+       *args: variable number of input variables. They
+           can be numpy / masked arrays.
+
+    Returns:
+        The l2 norm.
+
+    """
     ss = 0
     for arg in args:
-        ss += arg**2
-    return np.sqrt(ss)
+        ss = ss + arg**2
+    return ma.sqrt(ss)
 
 
 def bases_and_tops(y):

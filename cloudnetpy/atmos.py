@@ -139,13 +139,11 @@ def get_gas_atten(model_i, cat_bits, height):
     """
     dheight = utils.med_diff(height)
     droplet_bit = utils.bit_test(cat_bits, 1)
-    ind = np.where(droplet_bit)
-    gas_atten = np.zeros_like(droplet_bit, float)
     spec_gas_atten = np.copy(model_i['specific_gas_atten'])
-    spec_gas_atten[ind] = model_i['specific_saturated_gas_atten'][ind]
-    gas_atten[:, :] = model_i['gas_atten'][0, :]
-    gas_atten[:, 1:] = gas_atten[:, 1:] + 2.0*np.cumsum(spec_gas_atten[:, :-1],
-                                                        axis=1)*dheight*0.001
+    spec_gas_atten[droplet_bit] = model_i['specific_saturated_gas_atten'][droplet_bit]
+    first_layer_gas_atten = model_i['gas_atten'][:, 0]
+    gas_atten = np.tile(first_layer_gas_atten, (len(height), 1)).T
+    gas_atten[:, 1:] = gas_atten[:, 1:] + 2.0*np.cumsum(spec_gas_atten[:, :-1], axis=1)*dheight*0.001
     return gas_atten
 
 

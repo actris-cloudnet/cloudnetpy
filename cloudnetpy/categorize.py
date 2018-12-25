@@ -17,9 +17,6 @@ from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
 from cloudnetpy.output import CnetVar as CV
-# from cloudnetpy import plotting
-# import matplotlib as mpl
-# import matplotlib.pyplot as plt
 
 
 def generate_categorize(input_files, output_file):
@@ -456,7 +453,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
     """Creates list of variable instances for output writing."""
     lin, log = 'linear', 'logarithmic'
     radar_source = instruments['radar']
-    model_source = 'HYSPLIT'
+    model_source = 'HYSPLIT'  # what we should have here?
     obs = []
     # dimensions and site location
     var = 'height'
@@ -520,6 +517,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
     var = 'Z_error'
     obs.append(CV(var, vars_in[var],
                   long_name=output.err_name(lname),
+                  plot_range=(0, 3),
                   units='dB',
                   comment=_comments(var)))
     var = 'Z_sensitivity'
@@ -655,7 +653,6 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                   plot_range=(0, 4),
                   plot_scale=lin,
                   comment=_comments(var)))
-
     var = 'category_bits'
     obs.append(CV(var, vars_in[var],
                   data_type='i4',
