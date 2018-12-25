@@ -5,6 +5,7 @@ an argument."""
 import numpy as np
 import numpy.ma as ma
 import netCDF4
+import sys
 
 
 def load_nc(file_in):
@@ -13,13 +14,83 @@ def load_nc(file_in):
 
 
 def fetch_radar_meta(radar_file):
-    """Returns some global metadata from radar nc-file."""
+    """Returns some global metadata from radar nc-file.
+
+    Args:
+        radar_file (str): Full path of the cloud radar netCDF file.
+
+    Returns:
+        Dict containing radar frequency, measurement date, and radar
+        (i.e. site) location: {'freq', 'date', 'location'}.
+
+    Raises:
+        KeyError: No frequency in the radar file.
+        ValueError: Invalid frequency value, only 35 and 94 Ghz
+            radars supported.
+
+    """
     nc = netCDF4.Dataset(radar_file)
-    location = nc.location
-    freq = get_radar_freq(nc.variables)
+    try:
+        location = nc.location
+    except AttributeError:
+        location = 'Unknown location'        
+    try:
+        freq = get_radar_freq(nc.variables)
+    except (ValueError, KeyError) as error:
+        raise error
     dvec = '-'.join([str(nc.year), str(nc.month).zfill(2),
                      str(nc.day).zfill(2)])
     return {'freq': freq, 'date': dvec, 'location': location}
+
+
+def get_radar_freq(vrs):
+    """ Returns frequency of radar.
+
+    Args:
+        vrs: A netCDF instance.
+
+    Returns:
+        Frequency or radar.
+
+    Raises:
+        KeyError: No frequency in the radar file.
+        ValueError: Invalid frequency value.
+
+    """
+    possible_fields = ('radar_frequency', 'frequency')
+    freq = [vrs[field][:] for field in vrs if field in possible_fields]
+    if not freq:
+        raise KeyError('Missing frequency. Not a radar file??')
+    freq = freq[0]  # actual data of the masked data
+    assert ma.count(freq) == 1, 'Multiple frequencies. Not a radar file??'
+    try:
+        get_wl_band(freq)
+    except ValueError as error:
+        raise ValueError('Only 35 and 94 GHz radars supported.')
+    return float(freq)
+
+
+def get_wl_band(freq):
+    """ Returns integer that corresponds to the radar wavelength.
+
+    Args:
+        freq: Radar frequency.
+
+    Returns:
+        Integer corresponding to freqeuency. Possible return
+        values are 0 (35.5 GHz) and 1 (~94 GHz).
+
+    Raises:
+        ValueError: Not supported frequency.
+
+    """
+    if 30 < freq < 40:
+        wl_band = 0
+    elif 90 < freq < 100:
+        wl_band = 1
+    else:
+        raise ValueError
+    return wl_band
 
 
 def fetch_instrument_models(radar_file, lidar_file, mwr_file):
@@ -88,56 +159,6 @@ def m2km(var):
     if var.units == 'm':
         alt = alt/1000
     return alt
-
-
-def get_radar_freq(vrs):
-    """ Returns frequency of radar.
-
-    Args:
-        vrs: A netCDF instance.
-
-    Returns:
-        Frequency or radar.
-
-    Raises:
-        KeyError: No frequency in the radar file.
-        ValueError: Invalid frequency value.
-
-    """
-    possible_fields = ('radar_frequency', 'frequency')
-    freq = [vrs[field][:] for field in vrs if field in possible_fields]
-    if not freq:
-        raise KeyError('Missing frequency in the radar file.')
-    freq = freq[0]  # actual data of the masked data
-    assert ma.count(freq) == 1, 'Multiple frequencies. Not a radar file??'
-    try:
-        get_wl_band(freq)
-    except ValueError as error:
-        raise ValueError('Only 35 and 94 GHz radars supported.')
-    return float(freq)
-
-
-def get_wl_band(freq):
-    """ Returns integer that corresponds to the radar wavelength.
-
-    Args:
-        freq: Radar frequency.
-
-    Returns:
-        Integer corresponding to freqeuency. Possible return
-        values are 0 (35.5 GHz) and 1 (~94 GHz).
-
-    Raises:
-        ValueError: Not supported frequency.
-
-    """
-    if 30 < freq < 40:
-        wl_band = 0
-    elif 90 < freq < 100:
-        wl_band = 1
-    else:
-        raise ValueError
-    return wl_band
 
 
 def get_site_alt(*vrs):

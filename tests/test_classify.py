@@ -13,9 +13,9 @@ def test_get_clutter_bit1():
                   [-0.3, 0.04, 0.4, 0.9, 1.2]])  # with two small v
     v.mask = ([[0, 0, 1, 1, 0],
                [0, 0, 0, 0, 0]])
-    rain_bit = np.array([0, 0])
+    rain_bit = np.array([0, 0], dtype=bool)
     res = np.array([[0, 1, 0, 0, 0],
-                    [0, 1, 0, 0, 0]])
+                    [0, 1, 0, 0, 0]], dtype=bool)
     cnet = classify.get_clutter_bit(v, rain_bit, ngates=5)
     assert_array_almost_equal(cnet, res)
 
@@ -25,9 +25,9 @@ def test_get_clutter_bit2():
                   [-0.3, 0.04, 0.4, 0.9, 1.2]])  # with two small v
     v.mask = ([[0, 0, 1, 1, 0],
                [0, 0, 0, 0, 0]])
-    rain_bit = np.array([1, 1])
+    rain_bit = np.array([1, 1], dtype=bool)
     res = np.array([[0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0]])
+                    [0, 0, 0, 0, 0]], dtype=bool)
     cnet = classify.get_clutter_bit(v, rain_bit, ngates=5)
     assert_array_almost_equal(cnet, res)
 
@@ -37,10 +37,10 @@ def test_get_falling_bit():
     Z = ma.array(np.random.rand(2,5))
     Z.mask = ([[True, True, False, False, False],
                [True, False, False, False, False]])
-    clutter_bit = np.zeros((2,5), dtype=int)
-    insect_bit = np.zeros((2,5), dtype=int)
+    clutter_bit = np.zeros((2,5), dtype=bool)
+    insect_bit = np.zeros((2,5), dtype=bool)
     res = np.array([[0,0,1,1,1],
-                    [0,1,1,1,1]], dtype=int)
+                    [0,1,1,1,1]], dtype=bool)
     cnet = classify.get_falling_bit(Z, clutter_bit, insect_bit)
     assert_array_almost_equal(cnet, res)
 

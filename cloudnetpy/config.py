@@ -1,12 +1,10 @@
-""" This module contains constants and options
-options for Cloudnet retrieval.
+""" This module contains some hand-tuned metadata and 
+ad-hoc parameter values (that might be site/instrument
+dependent in future.)
 """
 
-# Institute running CloudnetPy. 
+# Institute running the software.
 INSTITUTE = 'Finnish Meteorological Institute'
-
-# Time resolution for Cloudnet retrieval
-TIME_RESOLUTION = 30
 
 # Fractional and linear error components
 # for liquid water path (LWP)

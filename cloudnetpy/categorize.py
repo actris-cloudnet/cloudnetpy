@@ -35,7 +35,7 @@ def generate_categorize(input_files, output_file):
 
     """
     try:
-        time = utils.get_time(config.TIME_RESOLUTION)
+        time = utils.get_time()
         rad_vars, lid_vars, mwr_vars, mod_vars = _load_files(input_files)
         radar_meta = ncf.fetch_radar_meta(input_files[0])
         height = _get_altitude_grid(rad_vars)  # m
@@ -133,12 +133,25 @@ def _get_attenuations(lwp, model_i, bits, height):
 
 
 def _load_files(files):
-    """Wrapper to load input files (radar, lidar, mwr, model). """
+    """Wrapper to load input files (radar, lidar, mwr, model). 
+    
+    Args:
+        files (tuple): Tuple of strings containing full paths of
+            the 4 input netCDF files (radar, lidar, mwr, model).
+
+    Returns: 
+        (list): List of 4 elements containing the corresponding 
+            netCDF variable dictionaries.
+
+    Raises:
+        ValueError: If there are not exactly 4 input files.
+
+    """
     if len(files) != 4:
         raise ValueError('Aborting - there should be excatly 4 input files.')
     out = []
-    for fil in files:
-        out.append(ncf.load_nc(fil))
+    for f in files:
+        out.append(ncf.load_nc(f))
     return out
 
 
@@ -457,8 +470,8 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
                   size=('time'),
                   fill_value=None,
                   long_name='Time UTC',
-                  units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00',
-                  comment='Fixed ' + str(config.TIME_RESOLUTION) + 's resolution.'))
+                  units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00'))
+                  #comment='Fixed ' + str(config.TIME_RESOLUTION) + 's resolution.'))
     var = 'model_height'
     obs.append(CV(var, vars_in[var],
                   fill_value=None,
