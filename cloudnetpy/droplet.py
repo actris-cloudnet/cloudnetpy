@@ -5,7 +5,6 @@ import numpy.ma as ma
 import scipy.signal
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
-from cloudnetpy import plotting
 
 
 def get_base_ind(dprof, p, dist, lim):
@@ -136,7 +135,7 @@ def correct_cloud_top(Z, Tw, cold_bit, cloud_bit, cloud_top, height):
         cloud_bit (ndarray): Boolean field of cloud droplets.
         cloud_top (ndarray): Boolean field of cloud tops.
         height (ndarray): Altitude vector.
-    
+
     Returns:
         Corrected cloud bit.
 
@@ -144,11 +143,8 @@ def correct_cloud_top(Z, Tw, cold_bit, cloud_bit, cloud_top, height):
     dheight = utils.med_diff(height)
     top_above = int(np.ceil((750/dheight)))
     for prof, top in zip(*np.where(cloud_top)):
-        if cold_bit[prof, top]:
-            ii = top_above
-        else:
-            ii = np.where(cold_bit[prof, top:])[0][0] + top_above
-        rad = Z[prof, top:top+ii+1]
+        ind = np.where(cold_bit[prof, top:])[0][0] + top_above
+        rad = Z[prof, top:top+ind+1]
         if not (rad.mask.all() or ~rad.mask.any()):
             first_masked = ma.where(rad.mask)[0][0]
             cloud_bit[prof, top:top+first_masked+1] = True
