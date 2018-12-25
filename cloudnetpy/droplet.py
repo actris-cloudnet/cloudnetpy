@@ -1,11 +1,11 @@
 """ This module has functions for liquid layer detection.
 """
-
 import numpy as np
 import numpy.ma as ma
 import scipy.signal
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
+from cloudnetpy import plotting
 
 
 def get_base_ind(dprof, p, dist, lim):
@@ -126,25 +126,30 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
 
 
 def correct_cloud_top(Z, Tw, cold_bit, cloud_bit, cloud_top, height):
-    """ Correct lidar detected cloud top using radar signal.
+    """Corrects lidar detected cloud top using radar signal.
 
-    Notes:
-        This routine should be checked carefully.
+    Args:
+        Z (MaskedArray): Radar echo.
+        Tw (ndarray): Wet bulb temperature.
+        cold_bit (ndarray): Boolean field of sub-zero temperature
+            that was fixed using the melting layer.
+        cloud_bit (ndarray): Boolean field of cloud droplets.
+        cloud_top (ndarray): Boolean field of cloud tops.
+        height (ndarray): Altitude vector.
+    
+    Returns:
+        Corrected cloud bit.
+
     """
     dheight = utils.med_diff(height)
-    top_above = int(np.ceil((300/dheight)))  # 300 m above cloud top
+    top_above = int(np.ceil((750/dheight)))
     for prof, top in zip(*np.where(cloud_top)):
         if cold_bit[prof, top]:
             ii = top_above
         else:
-            ii = np.where(cold_bit[prof, top:])[0][0]  # first sub-zero pixel
-        ind = range(top, top+ii+1)
-        rad = Z[prof, ind]
-        if rad.mask.all():  # all masked, not sure what to do..
-            pass
-        elif not rad.mask.any():  # nothing masked
-            cloud_bit[prof, ind] = True
-        else:
+            ii = np.where(cold_bit[prof, top:])[0][0] + top_above
+        rad = Z[prof, top:top+ii+1]
+        if not (rad.mask.all() or ~rad.mask.any()):
             first_masked = ma.where(rad.mask)[0][0]
             cloud_bit[prof, top:top+first_masked+1] = True
     cloud_bit[Tw < (T0-40)] = False
