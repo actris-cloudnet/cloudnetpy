@@ -211,16 +211,10 @@ def _screen_liq_atten(liq_atten, bits):
         was not.
 
     """
-    # Points above melting layer:
     melt_bit = utils.bit_test(bits['cat'], 3)
     above_melt = np.cumsum(melt_bit, axis=1)
-    melt_ind = above_melt >= 1
-    # Points with uncorrected attenuation:
-    uncorr_atten = np.zeros_like(melt_bit, dtype=bool)
-    uncorr_atten[melt_ind] = True
+    uncorr_atten = above_melt >= 1
     uncorr_atten[bits['rain'], :] = True
-    # Points that ARE corrected
-    corr_atten = np.zeros_like(melt_bit, dtype=bool)
-    corr_atten[(liq_atten > 0) & (~uncorr_atten)] = True
+    corr_atten = (liq_atten > 0) & ~uncorr_atten
     liq_atten[uncorr_atten] = ma.masked  # mask uncorrected bits ?
     return liq_atten, corr_atten, uncorr_atten
