@@ -167,7 +167,7 @@ def get_liquid_atten(lwp, model, bits, height):
     msize = droplet_bit.shape
     lwc_adiabatic, lwc_err = np.zeros(msize), np.zeros(msize)
     lwp_boxes, lwp_boxes_err = np.zeros(msize), np.zeros(msize)
-    liq_atten, liq_atten_err = np.zeros(msize), np.zeros(msize)
+    liq_atten, liq_atten_err = ma.zeros(msize), ma.zeros(msize)
     dheight = utils.med_diff(height) * 1000
     is_liquid = np.any(droplet_bit, axis=1)
     is_lwp = np.isfinite(lwp['value'])
@@ -211,21 +211,16 @@ def _screen_liq_atten(liq_atten, bits):
         was not.
 
     """
-    def _get_bits(liq_atten, rain_ind, melt_ind):
-        corr_atten_bit = np.zeros_like(melt_ind, dtype=bool)
-        uncorr_atten_bit = np.zeros_like(melt_ind, dtype=bool)
-        corr_atten_bit[~liq_atten.mask] = True
-        uncorr_atten_bit[rain_ind, :] = True
-        uncorr_atten_bit[melt_ind] = True
-        return corr_atten_bit, uncorr_atten_bit
-
-    rain_ind = bits['rain'] == 1
+    # Points above melting layer:
     melt_bit = utils.bit_test(bits['cat'], 3)
-    above_melt = np.cumsum(melt_bit == 1, axis=1)
+    above_melt = np.cumsum(melt_bit, axis=1)
     melt_ind = above_melt >= 1
-    liq_atten[melt_ind] = None
-    liq_atten[rain_ind, :] = None
-    liq_atten = ma.masked_invalid(liq_atten)
-    liq_atten = ma.masked_equal(liq_atten, 0)
-    cbit, ucbit = _get_bits(liq_atten, rain_ind, melt_ind)
-    return liq_atten, cbit, ucbit
+    # Points with uncorrected attenuation:
+    uncorr_atten = np.zeros_like(melt_bit, dtype=bool)
+    uncorr_atten[melt_ind] = True
+    uncorr_atten[bits['rain'], :] = True
+    # Points that ARE corrected
+    corr_atten = np.zeros_like(melt_bit, dtype=bool)
+    corr_atten[(liq_atten > 0) & (~uncorr_atten)] = True
+    liq_atten[uncorr_atten] = ma.masked  # mask uncorrected bits ?
+    return liq_atten, corr_atten, uncorr_atten
