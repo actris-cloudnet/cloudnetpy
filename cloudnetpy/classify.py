@@ -7,7 +7,6 @@ from scipy import stats
 from cloudnetpy import droplet
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
-# from cloudnetpy import plotting
 
 
 def fetch_cat_bits(radar, beta, Tw, time, height):
@@ -34,7 +33,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     """
     bits = [None]*6
     rain_bit = get_rain_bit(radar['Zh'], time)
-    clutter_bit = get_clutter_bit(radar['v'], rain_bit)
+    clutter_bit = get_clutter_bit(radar['v'], rain_bit, vlim=0.5)
     cloud_bit, cloud_top = droplet.get_liquid_layers(beta, height)
     bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
     bits[2] = get_cold_bit(Tw, bits[3], time, height)
@@ -210,10 +209,9 @@ def get_insect_bit(radar, Tw, *args, prob_lim=0.7):
         for each pixel and insect probability (0-1).
 
     """
-    insect_bit = np.zeros(Tw.shape, dtype=bool)
     iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])
     iprob_screened = _screen_insects(iprob, Tw, *args)
-    insect_bit[iprob_screened > prob_lim] = True
+    insect_bit = iprob_screened > prob_lim
     return insect_bit, iprob_screened
 
 
@@ -240,13 +238,11 @@ def _insect_probability(z, ldr, width):
 
     def _insect_prob_width(z, ldr, w, w_limit=0.06):
         """Finds (0, 1) probability of insects, based on spectral width."""
-        i_prob = np.zeros(z.shape)
         temp_w = np.ones(z.shape)
         # pixels that have Z but no LDR
         ind = np.logical_and(ldr.mask, ~z.mask)
         temp_w[ind] = w[ind]
-        i_prob[temp_w < w_limit] = 1
-        return i_prob
+        return (temp_w < w_limit).astype(int)
 
     p1 = _insect_prob_ldr(z, ldr)
     p2 = _insect_prob_width(z, ldr, width)
@@ -301,9 +297,9 @@ def get_rain_bit(Z, time, time_buffer=5):
     """
     nprofs = len(time)
     rain_bit = np.zeros(nprofs, dtype=bool)
-    rain_bit[Z[:, 3] > 0] = 1
-    step = utils.med_diff(time)*60*60  # minutes
-    nsteps = int(round(time_buffer*60/step/2))
+    rain_bit[ma.where(Z[:, 3] > 0)] = 1
+    step = utils.med_diff(time)*60
+    nsteps = int(round(time_buffer/step/2))
     for ind in np.where(rain_bit)[0]:
         i1 = max(0, ind-nsteps)
         i2 = min(ind+nsteps+1, nprofs)
