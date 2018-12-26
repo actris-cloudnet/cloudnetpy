@@ -2,7 +2,6 @@
 categorize (Level 1) product from pre-processed
 radar, lidar and MWR files.
 """
-
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../cloudnetpy'))  #pylint: disable=wrong-import-position
@@ -17,7 +16,6 @@ from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
 from cloudnetpy.output import CnetVar as CV
-# from cloudnetpy import plotting
 
 
 def generate_categorize(input_files, output_file):

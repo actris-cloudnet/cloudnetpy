@@ -91,9 +91,8 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         Boolean array denoting the liquid layers.
 
     """
-    dheight = utils.med_diff(height)
-    base_below_peak = int(np.ceil((200/dheight)))
-    top_above_peak = int(np.ceil((150/dheight)))
+    base_below_peak = _number_of_elements(height, 200)
+    top_above_peak = _number_of_elements(height, 150)
     cloud_bit = np.zeros(beta.shape, dtype=bool)
     cloud_top = np.zeros(beta.shape, dtype=bool)
     beta_diff = np.diff(beta, axis=1).filled(0)
@@ -140,8 +139,7 @@ def correct_cloud_top(Z, Tw, cold_bit, cloud_bit, cloud_top, height):
         Corrected cloud bit.
 
     """
-    dheight = utils.med_diff(height)
-    top_above = int(np.ceil((750/dheight)))
+    top_above = _number_of_elements(height, 750)
     for prof, top in zip(*np.where(cloud_top)):
         ind = np.where(cold_bit[prof, top:])[0][0] + top_above
         rad = Z[prof, top:top+ind+1]
@@ -150,3 +148,9 @@ def correct_cloud_top(Z, Tw, cold_bit, cloud_bit, cloud_top, height):
             cloud_bit[prof, top:top+first_masked+1] = True
     cloud_bit[Tw < (T0-40)] = False
     return cloud_bit
+
+
+def _number_of_elements(height, dist):
+    """Return number of points in 'height' that cover 'dist' metres."""
+    dheight = utils.med_diff(height)
+    return int(np.ceil((dist/dheight)))
