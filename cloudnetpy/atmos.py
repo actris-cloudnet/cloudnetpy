@@ -138,7 +138,7 @@ def get_gas_atten(model_i, cat_bits, height):
 
     """
     dheight = utils.med_diff(height)
-    droplet_bit = utils.bit_test(cat_bits, 1)
+    droplet_bit = utils.bit_test(cat_bits, 0)
     spec_gas_atten = np.copy(model_i['specific_gas_atten'])
     spec_gas_atten[droplet_bit] = model_i['specific_saturated_gas_atten'][droplet_bit]
     first_layer_gas_atten = model_i['gas_atten'][:, 0]
@@ -163,7 +163,7 @@ def get_liquid_atten(lwp, model, bits, height):
 
     """
     spec_liq_att = model['specific_liquid_atten']
-    droplet_bit = utils.bit_test(bits['cat'], 1)
+    droplet_bit = utils.bit_test(bits['cat'], 0)
     msize = droplet_bit.shape
     lwc_adiabatic, lwc_err = np.zeros(msize), np.zeros(msize)
     lwp_boxes, lwp_boxes_err = np.zeros(msize), np.zeros(msize)
@@ -220,7 +220,7 @@ def _screen_liq_atten(liq_atten, bits):
         return corr_atten_bit, uncorr_atten_bit
 
     rain_ind = bits['rain'] == 1
-    melt_bit = utils.bit_test(bits['cat'], 4)
+    melt_bit = utils.bit_test(bits['cat'], 3)
     above_melt = np.cumsum(melt_bit == 1, axis=1)
     melt_ind = above_melt >= 1
     liq_atten[melt_ind] = None

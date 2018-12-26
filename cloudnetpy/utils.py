@@ -121,7 +121,7 @@ def filter_isolated_pixels(array):
 
 
 def bit_test(integer, nth_bit):
-    """Tests if nth bit (1,2,3..) is on for the input number.
+    """Tests if nth bit (0,1,2..) is on for the input number.
 
     Args:
         integer (int): A number.
@@ -134,23 +134,20 @@ def bit_test(integer, nth_bit):
         ValueError: negative bit as input.
 
     Examples:
-        >>> bit_test(4, 2)
+        >>> bit_test(4, 1)
             False
-        >>> bit_test(4, 3)
+        >>> bit_test(4, 2)
             True
-
-    Notes:
-        Indices start from 1 for historical reasons.
 
     """
     if nth_bit < 0:
         raise ValueError('Negative bit number.')
-    mask = 1 << nth_bit-1
+    mask = 1 << nth_bit
     return integer & mask > 0
 
 
 def bit_set(integer, nth_bit):
-    """Sets nth bit (1, 2, 3..) on input number.
+    """Sets nth bit (0, 1, 2..) on input number.
 
     Args:
         integer: A number.
@@ -163,18 +160,15 @@ def bit_set(integer, nth_bit):
         ValueError: negative bit as input.
 
     Examples:
-        >>> bit_set(1, 2)
+        >>> bit_set(1, 1)
             3
-        >>> bit_set(0, 3)
+        >>> bit_set(0, 2)
             4
-
-    Notes:
-        Indices start from 1 for historical reasons.
 
     """
     if nth_bit < 0:
         raise ValueError('Negative bit number.')
-    mask = 1 << nth_bit-1
+    mask = 1 << nth_bit
     integer |= mask
     return integer
 

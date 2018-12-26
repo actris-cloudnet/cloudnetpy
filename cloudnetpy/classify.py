@@ -21,12 +21,12 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
         height (ndarray): 1D altitude vector.
 
     Returns: A dict containing the classification, 'cat_bits', where:
-            - bit 1: Liquid droplets
-            - bit 2: Falling hydrometeors
-            - bit 3: Temperature < 0
-            - bit 4: Melting layer
-            - bit 5: Aerosols
-            - bit 6: Insects
+            - bit 0: Liquid droplets
+            - bit 1: Falling hydrometeors
+            - bit 2: Temperature < 0
+            - bit 3: Melting layer
+            - bit 4: Aerosols
+            - bit 5: Insects
 
         The dict contains also profiles containing rain
         and pixels contaminated by clutter.
@@ -64,7 +64,7 @@ def _bits_to_integer(bits):
 
     """
     int_array = np.zeros_like(bits[0], dtype=int)
-    for n, bit in enumerate(bits, 1):
+    for n, bit in enumerate(bits):
         ind = np.where(bit)
         int_array[ind] = utils.bit_set(int_array[ind].astype(int), n)
     return int_array
@@ -387,17 +387,17 @@ def fetch_qual_bits(Z, beta, clutter_bit, liq_atten):
             attenuation was corrected and where it wasn't.
 
     Returns: Integer array containing the following bits:
-            - bit 1: Pixel contains radar data.
-            - bit 2: Pixel contains lidar data.
-            - bit 3: Pixel contaminated by radar clutter.
-            - bit 4: Molecular scattering present (currently not implemented!).
-            - bit 5: Pixel was affected by liquid attenuation.
-            - bit 6: Liquid attenuation was corrected.
+            - bit 0: Pixel contains radar data.
+            - bit 1: Pixel contains lidar data.
+            - bit 2: Pixel contaminated by radar clutter.
+            - bit 3: Molecular scattering present (currently not implemented!).
+            - bit 4: Pixel was affected by liquid attenuation.
+            - bit 5: Liquid attenuation was corrected.
 
     """
     bits = [None]*6
-    bits[0] = (~Z.mask).astype(int)
-    bits[1] = (~beta.mask).astype(int)
+    bits[0] = ~Z.mask
+    bits[1] = ~beta.mask
     bits[2] = clutter_bit
     bits[4] = liq_atten['corr_bit'] | liq_atten['ucorr_bit']
     bits[5] = liq_atten['corr_bit']
