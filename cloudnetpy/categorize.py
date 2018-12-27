@@ -425,9 +425,9 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     ind = ~Zc.mask
     Z_sensitivity[ind] = Zc[ind]
     # Precision:
-    dwell_time = (time[1]-time[0])*3600
-    independent_pulses = (dwell_time*4*np.sqrt(math.pi)*freq*1e9/3e8)*radar['width']
-    Z_precision = 4.343*(1.0/np.sqrt(independent_pulses) +
+    dwell_time = (time[1]-time[0])*3600  # seconds
+    independent_pulses = dwell_time*freq*1e9*4*np.sqrt(math.pi)/3e8*radar['width']
+    Z_precision = 4.343*(1/np.sqrt(independent_pulses) +
                          utils.db2lin(Z_power_min-Z_power)/3)
     # Error:
     Z_error = utils.l2norm(gas_atten*config.GAS_ATTEN_PREC, liq_atten['err'],
