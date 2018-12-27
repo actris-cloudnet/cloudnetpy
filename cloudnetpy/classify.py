@@ -64,7 +64,7 @@ def _bits_to_integer(bits):
     """
     int_array = np.zeros_like(bits[0], dtype=int)
     for n, bit in enumerate(bits):
-        ind = np.where(bit)
+        ind = np.where(bit)  # works also if bit is None
         int_array[ind] = utils.bit_set(int_array[ind].astype(int), n)
     return int_array
 
@@ -239,8 +239,7 @@ def _insect_probability(z, ldr, width):
     def _insect_prob_width(z, ldr, w, w_limit=0.06):
         """Finds (0, 1) probability of insects, based on spectral width."""
         temp_w = np.ones(z.shape)
-        # pixels that have Z but no LDR
-        ind = np.logical_and(ldr.mask, ~z.mask)
+        ind = ldr.mask & ~z.mask  # pixels that have Z but no LDR
         temp_w[ind] = w[ind]
         return (temp_w < w_limit).astype(int)
 
@@ -265,9 +264,9 @@ def _screen_insects(insect_prob, Tw, *args):
         """Sets insect probability to 0, indicated by *args."""
         for arg in args:
             if arg.size == insect_prob.shape[0]:
-                insect_prob[arg == 1, :] = 0
+                insect_prob[arg, :] = 0
             else:
-                insect_prob[arg == 1] = 0
+                insect_prob[arg] = 0
         return insect_prob
 
     def _screen_insects_temp(insect_prob, Tw, t_lim=-5):
