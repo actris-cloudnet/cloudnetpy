@@ -95,6 +95,7 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
     top_above_peak = _number_of_elements(height, 150)
     cloud_bit = np.zeros(beta.shape, dtype=bool)
     cloud_top = np.zeros(beta.shape, dtype=bool)
+    cloud_base = np.zeros(beta.shape, dtype=bool)
     beta_diff = np.diff(beta, axis=1).filled(0)
     beta = beta.filled(0)
     pind = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
@@ -120,7 +121,8 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         if all(conds):
             cloud_bit[n, base:top+1] = True
             cloud_top[n, top] = True
-    return cloud_bit, cloud_top
+            cloud_base[n, base] = True
+    return cloud_bit, cloud_base, cloud_top
 
 
 def correct_cloud_top(Z, Tw, cold_bit, cloud_bit, cloud_top, height):

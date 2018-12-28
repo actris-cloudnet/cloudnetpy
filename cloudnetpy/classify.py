@@ -34,7 +34,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     bits = [None]*6
     rain_bit = get_rain_bit(radar['Zh'], time)
     clutter_bit = get_clutter_bit(radar['v'], rain_bit, vlim=0.5)
-    cloud_bit, cloud_top = droplet.get_liquid_layers(beta, height)
+    cloud_bit, cloud_base, cloud_top = droplet.get_liquid_layers(beta, height)
     bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
     bits[2] = get_cold_bit(Tw, bits[3], time, height)
     bits[0] = droplet.correct_cloud_top(radar['Zh'], Tw, bits[2],
@@ -45,7 +45,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
                               bits[5], Tw)
     bits[4] = get_aerosol_bit(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
-    return {'cat': cat_bits, 'rain': rain_bit,
+    return {'cat': cat_bits, 'rain': rain_bit, 'cloud_base': cloud_base,
             'clutter': clutter_bit, 'insect_prob': insect_prob}
 
 
