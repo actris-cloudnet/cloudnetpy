@@ -250,3 +250,46 @@ def bases_and_tops(y):
     bases = np.where(y2_diff == 1)[0]
     tops = np.where(y2_diff == -1)[0] - 1
     return bases, tops
+
+
+def cumsum_reset(x, axis=1):
+    """Finds cumulative sum (of boolean array) that resets on 0.
+
+    Args:
+        x (ndarray): Boolean array.
+        axis (int, optional): Axis where the sum is calculated. 
+            Default is 1.
+
+    Returns:
+        Cumulative sum, restarted at 0.
+
+    Examples:
+        >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1], dtype=bool)
+        >>> cumsum_reset(x)
+            [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]
+
+    """
+    cums = x.cumsum(axis=axis)
+    return cums - np.maximum.accumulate(cums*~x, axis=axis)
+
+
+def forward_fill(arr, value=0):
+    """Forward fills a numpy array.
+
+    Args:
+        arr (ndarray): Input array of ints.
+        value (int): Value to be filled. Default is 0.
+
+    Returns:
+        New array with forward filled values.
+
+    Examples:
+        >>> x = np.array([0, 0, 2, 0, 0, 5, 0, 0])
+        >>> forward_fill(x)
+            [0, 0, 2, 2, 2, 5, 5, 5]
+    
+    """
+    mask = arr == value
+    idx = np.where(~mask, np.arange(mask.shape[1]), 0)
+    np.maximum.accumulate(idx, axis=1, out=idx)
+    return arr[np.arange(idx.shape[0])[:, None], idx]
