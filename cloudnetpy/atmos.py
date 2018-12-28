@@ -162,7 +162,7 @@ def get_liquid_atten(lwp, model, bits, height):
         and ..
 
     """
-    spec_liq_att = model['specific_liquid_atten']
+    spec_liqa = model['specific_liquid_atten']
     droplet_bit = utils.bit_test(bits['cat'], 0)
     msize = droplet_bit.shape
     lwc_adiabatic, lwc_err = np.zeros(msize), np.zeros(msize)
@@ -174,23 +174,20 @@ def get_liquid_atten(lwp, model, bits, height):
     for ii in np.where(is_lwp & is_liquid)[0]:
         bases, tops = utils.bases_and_tops(droplet_bit[ii, :])
         for base, top in zip(bases, tops):
-            npoints = top - base + 1
-            ran = np.arange(npoints)
-            idx = ran + base
+            idx = np.arange(base, top+1)
             dlwc_dz = lwc.theory_adiabatic_lwc(model['temperature'][ii, base],
                                                model['pressure'][ii, base])
-            lwc_adiabatic[ii, idx] = dlwc_dz * dheight * (ran+1)
-            lwc_err[ii, idx] = dlwc_dz  # unnormalised
-        lwp_boxes[ii, :] = (lwp['value'][ii] *
-                            lwc_adiabatic[ii, :]/np.sum(lwc_adiabatic[ii, :]))
-        lwp_boxes_err[ii, :] = (lwp['err'][ii] *
-                                lwc_err[ii, :]/np.sum(lwc_err[ii, :]))
+            lwc_adiabatic[ii, idx] = dlwc_dz * dheight * (idx-base+1)
+            lwc_err[ii, idx] = dlwc_dz
+        lwp_boxes[ii, :] = (lwp['value'][ii]*lwc_adiabatic[ii, :]/
+                            np.sum(lwc_adiabatic[ii, :]))
+        lwp_boxes_err[ii, :] = (lwp['err'][ii]*lwc_err[ii, :]/
+                                np.sum(lwc_err[ii, :]))
     for ii in np.where(~is_lwp)[0]:
         lwp_boxes[ii, droplet_bit[ii, :] == 1] = None
-    liq_atten[:, 1:] = 0.002 * np.cumsum(lwp_boxes[:, :-1] *
-                                         spec_liq_att[:, :-1], axis=1)
-    liq_atten_err[:, 1:] = 0.002 * np.cumsum(lwp_boxes_err[:, :-1] *
-                                             spec_liq_att[:, :-1], axis=1)
+    c = 0.002
+    liq_atten[:, 1:] = c*np.cumsum(lwp_boxes[:, :-1]*spec_liqa[:, :-1], axis=1)
+    liq_atten_err[:, 1:] = c*np.cumsum(lwp_boxes_err[:, :-1]*spec_liqa[:, :-1], axis=1)
     liq_atten, cbit, ucbit = _screen_liq_atten(liq_atten, bits)
     return {'value': liq_atten, 'err': liq_atten_err,
             'corr_bit': cbit, 'ucorr_bit': ucbit}
