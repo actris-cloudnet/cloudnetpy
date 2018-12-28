@@ -3,7 +3,7 @@
 import numpy as np
 import cloudnetpy.constants as con
 
-def theory_adiabatic_lwc(T, P):
+def adiabatic_lwc(T, P):
     """Returns adiabatic LWC change rate.
 
     Calculates the theoretical adiabatic rate of increase of LWC with

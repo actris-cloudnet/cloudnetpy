@@ -165,27 +165,24 @@ def get_liquid_atten(lwp, model, bits, height):
     spec_liqa = model['specific_liquid_atten']
     droplet_bit = utils.bit_test(bits['cat'], 0)
     msize = droplet_bit.shape
-    lwc_adiabatic, lwc_err = np.zeros(msize), np.zeros(msize)
-    lwp_boxes, lwp_boxes_err = np.zeros(msize), np.zeros(msize)
-    liq_atten, liq_atten_err = ma.zeros(msize), ma.zeros(msize)
-    dheight = utils.med_diff(height) * 1000
-    is_liquid = np.any(droplet_bit, axis=1)
+    dz, dz_err = np.zeros(msize), np.zeros(msize)
+    ind = np.where(bits['cloud_base'])
+    dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
+    lwc_err = utils.forward_fill(dz)
+    lwc_err[~droplet_bit] = ma.masked
+    counts_from_base = utils.cumsum_reset(droplet_bit)
+    lwc_adiab = counts_from_base*lwc_err*utils.med_diff(height)*1000
     is_lwp = np.isfinite(lwp['value'])
-    for ii in np.where(is_lwp & is_liquid)[0]:
-        bases, tops = utils.bases_and_tops(droplet_bit[ii, :])
-        for base, top in zip(bases, tops):
-            idx = np.arange(base, top+1)
-            dlwc_dz = lwc.theory_adiabatic_lwc(model['temperature'][ii, base],
-                                               model['pressure'][ii, base])
-            lwc_adiabatic[ii, idx] = dlwc_dz * dheight * (idx-base+1)
-            lwc_err[ii, idx] = dlwc_dz
-        lwp_boxes[ii, :] = (lwp['value'][ii]*lwc_adiabatic[ii, :]/
-                            np.sum(lwc_adiabatic[ii, :]))
-        lwp_boxes_err[ii, :] = (lwp['err'][ii]*lwc_err[ii, :]/
-                                np.sum(lwc_err[ii, :]))
-    for ii in np.where(~is_lwp)[0]:
-        lwp_boxes[ii, droplet_bit[ii, :] == 1] = None
+    is_liquid = np.any(droplet_bit, axis=1)
+    ind = is_lwp & is_liquid
+    lwp_boxes, lwp_boxes_err = np.zeros(msize), np.zeros(msize)
+    lwp_boxes[ind, :] = (lwc_adiab[ind, :].T*lwp['value'][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
+    lwp_boxes_err[ind, :] = (lwc_err[ind, :].T*lwp['err'][ind]/np.sum(lwc_err[ind, :], axis=1)).T    
+    #lwp_boxes[droplet_bit] = None
+    #for ii in np.where(~is_lwp)[0]:
+    #    lwp_boxes[ii, droplet_bit[ii, :] == 1] = None        
     c = 0.002
+    liq_atten, liq_atten_err = ma.zeros(msize), ma.zeros(msize)
     liq_atten[:, 1:] = c*np.cumsum(lwp_boxes[:, :-1]*spec_liqa[:, :-1], axis=1)
     liq_atten_err[:, 1:] = c*np.cumsum(lwp_boxes_err[:, :-1]*spec_liqa[:, :-1], axis=1)
     liq_atten, cbit, ucbit = _screen_liq_atten(liq_atten, bits)
