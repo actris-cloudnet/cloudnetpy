@@ -33,7 +33,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     """
     bits = [None]*6
     rain_bit = get_rain_bit(radar['Zh'], time)
-    clutter_bit = get_clutter_bit(radar['v'], rain_bit, vlim=0.5)
+    clutter_bit = get_clutter_bit(radar['v'], rain_bit)
     cloud_bit, cloud_base, cloud_top = droplet.get_liquid_layers(beta, height)
     bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
     bits[2] = get_cold_bit(Tw, bits[3], time, height)
@@ -149,7 +149,7 @@ def get_cold_bit(Tw, melting_bit, time, height):
     t0_alt = _get_T0_alt(Tw, height)
     mean_melting_height = np.zeros((ntime,))
     for ii in np.where(np.any(melting_bit, axis=1))[0]:
-        mean_melting_height[ii] = ma.median(height[melting_bit[ii, :]])        
+        mean_melting_height[ii] = ma.median(height[melting_bit[ii, :]])
     m_final = np.copy(mean_melting_height)
     win = 240
     m_final[0] = mean_melting_height[0] or t0_alt[0]
@@ -191,7 +191,7 @@ def _get_T0_alt(Tw, height):
     return alt
 
 
-def get_insect_bit(radar, Tw, *args, prob_lim=0.7):
+def get_insect_bit(radar, Tw, *args, prob_lim=0.8):
     """ Returns insect probability and binary field indicating insects.
 
     Args:

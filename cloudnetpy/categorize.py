@@ -51,7 +51,7 @@ def generate_categorize(input_files, output_file):
                                          bits['clutter'], liq_atten)
     Z_corr = _correct_atten(radar['Zh'], gas_atten, liq_atten['value'])
     Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
-                            bits['clutter'], time, radar_meta['freq'])
+                            bits['clutter'], radar_meta['freq'])
     instruments = ncf.fetch_instrument_models(*input_files[0:3])
     # Collect variables for output file writing:
     cat_vars = {'height': height,
@@ -197,6 +197,7 @@ def fetch_radar(rad_vars, fields, time_new):
     out = {}
     vfold = math.pi/rad_vars['NyquistVelocity'][:]
     time_orig = rad_vars['time'][:]
+    out['time'] = time_orig
     for field in fields:
         if field not in rad_vars:
             raise KeyError(f"No variable '{field}' in the radar file.")
@@ -390,7 +391,7 @@ def _interpolate_model(model, fields, *args):
 
 
 def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
-                    clutter_bit, time, freq):
+                    clutter_bit, freq):
     """Returns sensitivity, precision and error of radar echo.
 
     Args:
@@ -401,7 +402,6 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
             containing {'err', 'ucorr_bit'}
         clutter_bit (ndarray): Boolean array denoting pixels
             contaminated by clutter.
-        time (ndarray): Time vector.
         freq (float): Radar frequency.
 
     Returns:
@@ -424,15 +424,12 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     Zc = ma.median(Zc, axis=0)
     ind = ~Zc.mask
     Z_sensitivity[ind] = Zc[ind]
-    # Precision:
-    dwell_time = (time[1]-time[0])*3600  # seconds
-    independent_pulses = dwell_time*freq*1e9*4*np.sqrt(math.pi)/3e8*radar['width']
-    Z_precision = 4.343*(1/np.sqrt(independent_pulses) +
-                         utils.db2lin(Z_power_min-Z_power)/3)
     # Error:
-    Z_error = utils.l2norm(gas_atten*config.GAS_ATTEN_PREC, liq_atten['err'],
-                           Z_precision)
-    Z_error = ma.masked_where(liq_atten['ucorr_bit'], Z_error)
+    dwell_time = utils.med_diff(radar['time'])*3600  # seconds
+    independent_pulses = dwell_time*freq*1e9*4*np.sqrt(math.pi)/3e8*radar['width']
+    Z_precision = 4.343*(1/np.sqrt(independent_pulses) + utils.db2lin(Z_power_min-Z_power)/3)
+    Z_error = utils.l2norm(gas_atten*config.GAS_ATTEN_PREC, liq_atten['err'], Z_precision)
+    Z_error[liq_atten['ucorr_bit']] = ma.masked
     return {'sensitivity': Z_sensitivity, 'error': Z_error}
 
 

@@ -160,30 +160,31 @@ def get_liquid_atten(lwp, model, bits, height):
 
     Returns:
         Dict containing liquid attenuation, its error
-        and ..
+        and bits indicating where attenuation was corrected
+        and where it was not.
 
     """
+    def _init(nvars, msize):
+        out = []        
+        for _ in range(nvars):
+            out.append(ma.zeros(msize))
+        return out 
+            
     spec_liqa = model['specific_liquid_atten']
-    droplet_bit = utils.bit_test(bits['cat'], 0)
-    msize = droplet_bit.shape
-    lwc_dz = np.zeros(msize)
+    cloud_bit = utils.bit_test(bits['cat'], 0)
+    lwc_dz, lwc_dz_err, liq_atten, liq_atten_err, lwp_norm, lwp_norm_err = _init(6, cloud_bit.shape)
     ind = np.where(bits['cloud_base'])
     lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
-    lwc_err = utils.forward_fill(lwc_dz)
-    lwc_err[~droplet_bit] = ma.masked
-    ind_from_base = utils.cumsum_reset(droplet_bit, axis=1)
-    lwc_adiab = ind_from_base*lwc_err*utils.med_diff(height)*1000
-    ind = np.isfinite(lwp['value']) & np.any(droplet_bit, axis=1)
-    lwp_boxes, lwp_boxes_err = np.zeros(msize), np.zeros(msize)
-    lwp_boxes[ind, :] = (lwc_adiab[ind, :].T*lwp['value'][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
-    lwp_boxes_err[ind, :] = (lwc_err[ind, :].T*lwp['err'][ind]/np.sum(lwc_err[ind, :], axis=1)).T
-    liq_atten, liq_atten_err = ma.zeros(msize), ma.zeros(msize)
-    c = 0.002
-    liq_atten[:, 1:] = c*np.cumsum(lwp_boxes[:, :-1]*spec_liqa[:, :-1], axis=1)
-    liq_atten_err[:, 1:] = c*np.cumsum(lwp_boxes_err[:, :-1]*spec_liqa[:, :-1], axis=1)
+    lwc_dz_err[cloud_bit] = utils.forward_fill(lwc_dz[cloud_bit])
+    ind_from_base = utils.cumsum_reset(cloud_bit, axis=1)
+    lwc_adiab = ind_from_base*lwc_dz_err*utils.med_diff(height)*1e3
+    ind = np.isfinite(lwp['value']) & np.any(cloud_bit, axis=1)
+    lwp_norm[ind, :] = (lwc_adiab[ind, :].T*lwp['value'][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
+    lwp_norm_err[ind, :] = (lwc_dz_err[ind, :].T*lwp['err'][ind]/np.sum(lwc_dz_err[ind, :], axis=1)).T
+    liq_atten[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liqa[:, :-1], axis=1)
+    liq_atten_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liqa[:, :-1], axis=1)
     liq_atten, cbit, ucbit = _screen_liq_atten(liq_atten, bits)
-    return {'value': liq_atten, 'err': liq_atten_err,
-            'corr_bit': cbit, 'ucorr_bit': ucbit}
+    return {'value': liq_atten, 'err': liq_atten_err, 'corr_bit': cbit, 'ucorr_bit': ucbit}
 
 
 def _screen_liq_atten(liq_atten, bits):
@@ -206,5 +207,5 @@ def _screen_liq_atten(liq_atten, bits):
     uncorr_atten = above_melt >= 1
     uncorr_atten[bits['rain'], :] = True
     corr_atten = (liq_atten > 0) & ~uncorr_atten
-    liq_atten[uncorr_atten] = ma.masked  # mask uncorrected bits ?
+    liq_atten[uncorr_atten] = ma.masked
     return liq_atten, corr_atten, uncorr_atten
