@@ -51,7 +51,7 @@ def generate_categorize(input_files, output_file):
                                          bits['clutter'], liq_atten)
     Z_corr = _correct_atten(radar['Zh'], gas_atten, liq_atten['value'])
     Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
-                            bits['clutter'], radar_meta['freq'])
+                            bits['clutter'], radar_meta['freq'], time)
     instruments = ncf.fetch_instrument_models(*input_files[0:3])
     # Collect variables for output file writing:
     cat_vars = {'height': height,
@@ -391,7 +391,7 @@ def _interpolate_model(model, fields, *args):
 
 
 def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
-                    clutter_bit, freq):
+                    clutter_bit, freq, time):
     """Returns sensitivity, precision and error of radar echo.
 
     Args:
@@ -403,6 +403,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
         clutter_bit (ndarray): Boolean array denoting pixels
             contaminated by clutter.
         freq (float): Radar frequency.
+        time (ndarray): Time vector.
 
     Returns:
         Dict containing {'Z_sensitivity', 'Z_error'} which are
@@ -425,7 +426,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     ind = ~Zc.mask
     Z_sensitivity[ind] = Zc[ind]
     # Error:
-    dwell_time = utils.med_diff(radar['time'])*3600  # seconds
+    dwell_time = utils.med_diff(time)*3600  # seconds
     independent_pulses = dwell_time*freq*1e9*4*np.sqrt(math.pi)/3e8*radar['width']
     Z_precision = 4.343*(1/np.sqrt(independent_pulses) + utils.db2lin(Z_power_min-Z_power)/3)
     Z_error = utils.l2norm(gas_atten*config.GAS_ATTEN_PREC, liq_atten['err'], Z_precision)
