@@ -143,7 +143,8 @@ def get_gas_atten(model_i, cat_bits, height):
     spec_gas_atten[droplet_bit] = model_i['specific_saturated_gas_atten'][droplet_bit]
     first_layer_gas_atten = model_i['gas_atten'][:, 0]
     gas_atten = np.tile(first_layer_gas_atten, (len(height), 1)).T
-    gas_atten[:, 1:] = gas_atten[:, 1:] + 2.0*np.cumsum(spec_gas_atten[:, :-1], axis=1)*dheight*0.001
+    gas_atten[:, 1:] = gas_atten[:, 1:] + 2.0*np.cumsum(spec_gas_atten[:, :-1],
+                                                        axis=1)*dheight*0.001
     return gas_atten
 
 
@@ -165,24 +166,19 @@ def get_liquid_atten(lwp, model, bits, height):
     spec_liqa = model['specific_liquid_atten']
     droplet_bit = utils.bit_test(bits['cat'], 0)
     msize = droplet_bit.shape
-    dz, dz_err = np.zeros(msize), np.zeros(msize)
+    lwc_dz = np.zeros(msize)
     ind = np.where(bits['cloud_base'])
-    dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
-    lwc_err = utils.forward_fill(dz)
+    lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
+    lwc_err = utils.forward_fill(lwc_dz)
     lwc_err[~droplet_bit] = ma.masked
-    counts_from_base = utils.cumsum_reset(droplet_bit, axis=1)
-    lwc_adiab = counts_from_base*lwc_err*utils.med_diff(height)*1000
-    is_lwp = np.isfinite(lwp['value'])
-    is_liquid = np.any(droplet_bit, axis=1)
-    ind = is_lwp & is_liquid
+    ind_from_base = utils.cumsum_reset(droplet_bit, axis=1)
+    lwc_adiab = ind_from_base*lwc_err*utils.med_diff(height)*1000
+    ind = np.isfinite(lwp['value']) & np.any(droplet_bit, axis=1)
     lwp_boxes, lwp_boxes_err = np.zeros(msize), np.zeros(msize)
     lwp_boxes[ind, :] = (lwc_adiab[ind, :].T*lwp['value'][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
-    lwp_boxes_err[ind, :] = (lwc_err[ind, :].T*lwp['err'][ind]/np.sum(lwc_err[ind, :], axis=1)).T    
-    #lwp_boxes[droplet_bit] = None
-    #for ii in np.where(~is_lwp)[0]:
-    #    lwp_boxes[ii, droplet_bit[ii, :] == 1] = None        
-    c = 0.002
+    lwp_boxes_err[ind, :] = (lwc_err[ind, :].T*lwp['err'][ind]/np.sum(lwc_err[ind, :], axis=1)).T
     liq_atten, liq_atten_err = ma.zeros(msize), ma.zeros(msize)
+    c = 0.002
     liq_atten[:, 1:] = c*np.cumsum(lwp_boxes[:, :-1]*spec_liqa[:, :-1], axis=1)
     liq_atten_err[:, 1:] = c*np.cumsum(lwp_boxes_err[:, :-1]*spec_liqa[:, :-1], axis=1)
     liq_atten, cbit, ucbit = _screen_liq_atten(liq_atten, bits)

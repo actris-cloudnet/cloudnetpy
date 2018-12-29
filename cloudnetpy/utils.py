@@ -287,7 +287,7 @@ def forward_fill(arr, value=0):
         >>> x = np.array([0, 5, 0, 0, 2, 0])
         >>> forward_fill(x)
             [0, 5, 5, 5, 2, 2]
-    
+
     Notes:
         Works only in axis=1 direction.
 
