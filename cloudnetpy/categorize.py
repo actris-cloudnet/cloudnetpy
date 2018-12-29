@@ -417,8 +417,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     radar_range = ncf.km2m(rad_vars['range'])
     log_range = utils.lin2db(radar_range, scale=20)
     Z_power = Z - log_range
-    Z_power_list = np.sort(Z_power.compressed())
-    Z_power_min = Z_power_list[int(np.floor(len(Z_power_list)/1000))]
+    Z_power_min = np.percentile(Z_power.compressed(), 0.1)
     # Sensitivity:
     Z_sensitivity = Z_power_min + log_range + np.mean(gas_atten, axis=0)
     Zc = ma.masked_where(~clutter_bit, Z)
