@@ -138,9 +138,9 @@ def get_gas_atten(model_i, cat_bits, height):
 
     """
     dheight = utils.med_diff(height)
-    droplet_bit = utils.bit_test(cat_bits, 0)
+    cloud_bit = utils.bit_test(cat_bits, 0)
     spec_gas_atten = np.copy(model_i['specific_gas_atten'])
-    spec_gas_atten[droplet_bit] = model_i['specific_saturated_gas_atten'][droplet_bit]
+    spec_gas_atten[cloud_bit] = model_i['specific_saturated_gas_atten'][cloud_bit]
     first_layer_gas_atten = model_i['gas_atten'][:, 0]
     gas_atten = np.tile(first_layer_gas_atten, (len(height), 1)).T
     gas_atten[:, 1:] = gas_atten[:, 1:] + 2.0*np.cumsum(spec_gas_atten[:, :-1],
@@ -163,16 +163,10 @@ def get_liquid_atten(lwp, model, bits, height):
         and bits indicating where attenuation was corrected
         and where it was not.
 
-    """
-    def _init(nvars, msize):
-        out = []        
-        for _ in range(nvars):
-            out.append(ma.zeros(msize))
-        return out 
-            
+    """            
     spec_liqa = model['specific_liquid_atten']
     cloud_bit = utils.bit_test(bits['cat'], 0)
-    lwc_dz, lwc_dz_err, liq_atten, liq_atten_err, lwp_norm, lwp_norm_err = _init(6, cloud_bit.shape)
+    lwc_dz, lwc_dz_err, liq_atten, liq_atten_err, lwp_norm, lwp_norm_err = utils.init(6, cloud_bit.shape)
     ind = np.where(bits['cloud_base'])
     lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
     lwc_dz_err[cloud_bit] = utils.forward_fill(lwc_dz[cloud_bit])

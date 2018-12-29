@@ -301,3 +301,14 @@ def forward_fill(arr, value=0):
         return arr[np.arange(idx.shape[0])[:, None], idx]
     else:
         return arr[idx]
+
+
+def init(nvars, msize, dtype=float, masked=True):
+    """Initializes several numpy arrays."""
+    out = []        
+    for _ in range(nvars):
+        if masked:
+            out.append(ma.zeros(msize, dtype=dtype))
+        else:
+            out.append(np.zeros(msize, dtype=dtype))
+    return out

@@ -327,14 +327,14 @@ def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
     return clutter_bit
 
 
-def get_falling_bit(Z, beta, clutter_bit, droplet_bit, insect_bit, Tw):
+def get_falling_bit(Z, beta, clutter_bit, cloud_bit, insect_bit, Tw):
     """Finds falling hydrometeors.
 
     Args:
         Z (MaskedArray): Radar echo.
         beta (MaskedArray): Lidar echo.
         clutter_bit (ndarray): Pixels contaminated by clutter.
-        droplet_bit (ndarray): Pixels containing droplets.
+        cloud_bit (ndarray): Pixels containing droplets.
         insect_bit (ndarray): Pixels containing insects.
         Tw (ndarray): Wet bulb temperature.
 
@@ -345,13 +345,13 @@ def get_falling_bit(Z, beta, clutter_bit, droplet_bit, insect_bit, Tw):
     good_Z = ~Z.mask
     no_clutter = ~clutter_bit
     no_insects = ~insect_bit
-    ice_from_lidar = ~beta.mask & ~droplet_bit & (Tw < (T0-7))
+    ice_from_lidar = ~beta.mask & ~cloud_bit & (Tw < (T0-7))
     falling_bit = (good_Z & no_clutter & no_insects) | ice_from_lidar
     falling_bit = utils.filter_isolated_pixels(falling_bit)
     return falling_bit
 
 
-def get_aerosol_bit(beta, falling_bit, droplet_bit):
+def get_aerosol_bit(beta, falling_bit, cloud_bit):
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are the unmasked pixels in the attenuated backscattering
@@ -360,13 +360,13 @@ def get_aerosol_bit(beta, falling_bit, droplet_bit):
     Args:
         beta (MaskedArray): Attenuated backscattering coefficient.
         falling_bit (ndarray): Binary array containing falling hydrometeors.
-        droplet_bit (ndarray): Binary array containing liquid droplets.
+        cloud_bit (ndarray): Binary array containing liquid droplets.
 
     Returns:
         Boolean array for aerosol classification.
 
     """
-    return ~beta.mask & ~falling_bit & ~droplet_bit
+    return ~beta.mask & ~falling_bit & ~cloud_bit
 
 
 def fetch_qual_bits(Z, beta, clutter_bit, liq_atten):

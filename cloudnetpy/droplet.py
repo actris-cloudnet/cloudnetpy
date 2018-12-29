@@ -91,11 +91,9 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         Boolean array denoting the liquid layers.
 
     """
+    cloud_bit, cloud_top, cloud_base = utils.init(3, beta.shape, dtype=bool, masked=False)
     base_below_peak = _number_of_elements(height, 200)
     top_above_peak = _number_of_elements(height, 150)
-    cloud_bit = np.zeros(beta.shape, dtype=bool)
-    cloud_top = np.zeros(beta.shape, dtype=bool)
-    cloud_base = np.zeros(beta.shape, dtype=bool)
     beta_diff = np.diff(beta, axis=1).filled(0)
     beta = beta.filled(0)
     pind = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
