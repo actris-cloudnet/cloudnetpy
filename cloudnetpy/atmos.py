@@ -143,8 +143,8 @@ def get_gas_atten(model_i, cat_bits, height):
     spec_gas_atten[cloud_bit] = model_i['specific_saturated_gas_atten'][cloud_bit]
     first_layer_gas_atten = model_i['gas_atten'][:, 0]
     gas_atten = np.tile(first_layer_gas_atten, (len(height), 1)).T
-    gas_atten[:, 1:] = gas_atten[:, 1:] + 2.0*np.cumsum(spec_gas_atten[:, :-1],
-                                                        axis=1)*dheight*0.001
+    gas_atten[:, 1:] = gas_atten[:, 1:] + 2*np.cumsum(spec_gas_atten[:, :-1],
+                                                      axis=1)*dheight*1e-3
     return gas_atten
 
 
