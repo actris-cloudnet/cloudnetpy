@@ -252,44 +252,52 @@ def bases_and_tops(y):
     return bases, tops
 
 
-def cumsum_reset(x, axis=1):
-    """Finds cumulative sum (of boolean array) that resets on 0.
+def cumsum_reset(x, axis=0):
+    """Finds cumulative sum that resets on 0.
 
     Args:
-        x (ndarray): Boolean array.
-        axis (int, optional): Axis where the sum is calculated. 
-            Default is 1.
+        x (ndarray): Input array.
+        axis (int, optional): Axis where the sum is calculated.
+            Default is 0.
 
     Returns:
         Cumulative sum, restarted at 0.
 
     Examples:
-        >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1], dtype=bool)
+        >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])
         >>> cumsum_reset(x)
             [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]
 
     """
     cums = x.cumsum(axis=axis)
-    return cums - np.maximum.accumulate(cums*~x, axis=axis)
+    return cums - np.maximum.accumulate(cums*(x == 0), axis=axis)
 
 
 def forward_fill(arr, value=0):
     """Forward fills a numpy array.
 
     Args:
-        arr (ndarray): Input array of ints.
+        arr (ndarray): 1-D or 2-D array of ints.
         value (int): Value to be filled. Default is 0.
 
     Returns:
-        New array with forward filled values.
+        New forward-filled array.
 
     Examples:
-        >>> x = np.array([0, 0, 2, 0, 0, 5, 0, 0])
+        >>> x = np.array([0, 5, 0, 0, 2, 0])
         >>> forward_fill(x)
-            [0, 0, 2, 2, 2, 5, 5, 5]
+            [0, 5, 5, 5, 2, 2]
     
+    Notes:
+        Works only in axis=1 direction.
+
     """
-    mask = arr == value
-    idx = np.where(~mask, np.arange(mask.shape[1]), 0)
-    np.maximum.accumulate(idx, axis=1, out=idx)
-    return arr[np.arange(idx.shape[0])[:, None], idx]
+    mask = arr != value
+    ndims = len(arr.shape)
+    ran = np.arange(arr.shape[ndims-1])
+    idx = np.where(mask, ran, 0)
+    idx = np.maximum.accumulate(idx, axis=ndims-1)
+    if ndims == 2:
+        return arr[np.arange(idx.shape[0])[:, None], idx]
+    else:
+        return arr[idx]

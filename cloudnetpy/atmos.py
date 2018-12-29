@@ -170,7 +170,7 @@ def get_liquid_atten(lwp, model, bits, height):
     dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
     lwc_err = utils.forward_fill(dz)
     lwc_err[~droplet_bit] = ma.masked
-    counts_from_base = utils.cumsum_reset(droplet_bit)
+    counts_from_base = utils.cumsum_reset(droplet_bit, axis=1)
     lwc_adiab = counts_from_base*lwc_err*utils.med_diff(height)*1000
     is_lwp = np.isfinite(lwp['value'])
     is_liquid = np.any(droplet_bit, axis=1)
