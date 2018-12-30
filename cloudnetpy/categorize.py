@@ -30,9 +30,9 @@ def generate_categorize(input_files, output_file):
         https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883
 
     """
+    rad_vars, lid_vars, mwr_vars, mod_vars = (ncf.load_nc(f) for f in input_files)
     try:
-        time = utils.get_time()
-        rad_vars, lid_vars, mwr_vars, mod_vars = _load_files(input_files)
+        time = utils.get_time()        
         radar_meta = ncf.fetch_radar_meta(input_files[0])
         height = _get_altitude_grid(rad_vars)  # m
     except (ValueError, KeyError) as error:
@@ -126,27 +126,6 @@ def _get_attenuations(lwp, model_i, bits, height):
     gas_atten = atmos.get_gas_atten(model_i, bits['cat'], height)
     liq_atten = atmos.get_liquid_atten(lwp, model_i, bits, height)
     return gas_atten, liq_atten
-
-
-def _load_files(files):
-    """Wrapper to load input files (radar, lidar, mwr, model). 
-    
-    Args:
-        files (tuple): Tuple of strings containing full paths of
-            the 4 input netCDF files (radar, lidar, mwr, model).
-
-    Returns: 
-        (list): List of 4 elements containing the corresponding 
-            netCDF variable dictionaries.
-
-    Raises:
-        ValueError: If there are not exactly 4 input files.
-
-    """
-    if len(files) != 4:
-        raise ValueError('Aborting - there should be exactly 4 input files.')
-    for f in files:
-        yield(ncf.load_nc(f))
 
 
 def _get_altitude_grid(rad_vars):
