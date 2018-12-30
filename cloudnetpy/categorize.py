@@ -392,7 +392,7 @@ def _interpolate_model(model, fields, *args):
 
 def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                     clutter_bit, freq, time):
-    """Returns sensitivity, precision and error of radar echo.
+    """Returns sensitivity and error of radar echo.
 
     Args:
         radar: A netCDF4 instance.
@@ -409,22 +409,15 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
         Dict containing {'Z_sensitivity', 'Z_error'} which are
         1D and 2D MaskedArrays, respectively.
 
-    Notes:
-        Needs to be at least checked and perhaps refactored.
-
     """
     Z = radar['Zh']
     radar_range = ncf.km2m(rad_vars['range'])
     log_range = utils.lin2db(radar_range, scale=20)
     Z_power = Z - log_range
     Z_power_min = np.percentile(Z_power.compressed(), 0.1)
-    # Sensitivity:
     Z_sensitivity = Z_power_min + log_range + np.mean(gas_atten, axis=0)
-    Zc = ma.masked_where(~clutter_bit, Z)
-    Zc = ma.median(Zc, axis=0)
-    ind = ~Zc.mask
-    Z_sensitivity[ind] = Zc[ind]
-    # Error:
+    Zc = ma.median(ma.masked_where(~clutter_bit, Z), axis=0)
+    Z_sensitivity[~Zc.mask] = Zc[~Zc.mask]
     dwell_time = utils.med_diff(time)*3600  # seconds
     independent_pulses = dwell_time*freq*1e9*4*np.sqrt(math.pi)/3e8*radar['width']
     Z_precision = 4.343*(1/np.sqrt(independent_pulses) + utils.db2lin(Z_power_min-Z_power)/3)

@@ -7,7 +7,8 @@ import numpy.ma as ma
 from cloudnetpy import utils
 from cloudnetpy import lwc
 from cloudnetpy import constants as con
-
+from cloudnetpy import plotting
+import sys
 
 def c2k(temp):
     """Converts Celsius to Kelvins."""
@@ -139,13 +140,11 @@ def get_gas_atten(model_i, cat_bits, height):
     """
     dheight = utils.med_diff(height)
     cloud_bit = utils.bit_test(cat_bits, 0)
-    spec_gas_atten = np.copy(model_i['specific_gas_atten'])
-    spec_gas_atten[cloud_bit] = model_i['specific_saturated_gas_atten'][cloud_bit]
-    first_layer_gas_atten = model_i['gas_atten'][:, 0]
-    gas_atten = np.tile(first_layer_gas_atten, (len(height), 1)).T
-    gas_atten[:, 1:] = gas_atten[:, 1:] + 2*np.cumsum(spec_gas_atten[:, :-1],
-                                                      axis=1)*dheight*1e-3
-    return gas_atten
+    spec = np.copy(model_i['specific_gas_atten'])
+    spec[cloud_bit] = model_i['specific_saturated_gas_atten'][cloud_bit]
+    layer1_att = model_i['gas_atten'][:, 0]
+    gas_att = 2*np.cumsum(spec.T, axis=0)*dheight*1e-3 + layer1_att
+    return np.insert(gas_att.T, 0, layer1_att, axis=1)[:,:-1]
 
 
 def get_liquid_atten(lwp, model, bits, height):
