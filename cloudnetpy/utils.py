@@ -292,10 +292,9 @@ def forward_fill(arr, value=0):
         Works only in axis=1 direction.
 
     """
-    mask = arr != value
     ndims = len(arr.shape)
     ran = np.arange(arr.shape[ndims-1])
-    idx = np.where(mask, ran, 0)
+    idx = np.where((arr != value), ran, 0)
     idx = np.maximum.accumulate(idx, axis=ndims-1)
     if ndims == 2:
         return arr[np.arange(idx.shape[0])[:, None], idx]
@@ -305,10 +304,6 @@ def forward_fill(arr, value=0):
 
 def init(nvars, msize, dtype=float, masked=True):
     """Initializes several numpy arrays."""
-    out = []        
+    fun = ma.zeros if masked else np.zeros
     for _ in range(nvars):
-        if masked:
-            out.append(ma.zeros(msize, dtype=dtype))
-        else:
-            out.append(np.zeros(msize, dtype=dtype))
-    return out
+        yield fun(msize, dtype=dtype)
