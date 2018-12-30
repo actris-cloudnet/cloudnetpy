@@ -302,8 +302,30 @@ def forward_fill(arr, value=0):
         return arr[idx]
 
 
-def init(nvars, msize, dtype=float, masked=True):
-    """Initializes several numpy arrays."""
+def init(nvars, shape, dtype=float, masked=True):
+    """Initializes several numpy arrays.
+
+    Args:
+        nvars (int): Number of arrays to be generated.
+        shape (tuple): Shape of the arrays, e.g. (2, 3).
+        dtype (data-type, optional): The desired data-type
+            for the arrays, e.g., int. Default is float.
+        masked (bool): Generated arrays are MaskedArrays if True.
+            Default is True.
+
+        Yields:
+            Iterator containing the empty arrays.
+
+        Examples:
+            >>>a, b = utils.init(2, (2, 3))
+            >>>a
+            masked_array(
+              data=[[0., 0., 0.],
+                    [0., 0., 0.]],
+              mask=False,
+              fill_value=1e+20)
+
+    """
     fun = ma.zeros if masked else np.zeros
     for _ in range(nvars):
-        yield fun(msize, dtype=dtype)
+        yield fun(shape, dtype=dtype)
