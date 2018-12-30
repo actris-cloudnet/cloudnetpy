@@ -144,11 +144,9 @@ def _load_files(files):
 
     """
     if len(files) != 4:
-        raise ValueError('Aborting - there should be excatly 4 input files.')
-    out = []
+        raise ValueError('Aborting - there should be exactly 4 input files.')
     for f in files:
-        out.append(ncf.load_nc(f))
-    return out
+        yield(ncf.load_nc(f))
 
 
 def _get_altitude_grid(rad_vars):
