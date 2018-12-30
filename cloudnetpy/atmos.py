@@ -1,14 +1,12 @@
 """ This module contains functions to calculate
 atmospheric parameters.
 """
-
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils
 from cloudnetpy import lwc
 from cloudnetpy import constants as con
-from cloudnetpy import plotting
-import sys
+
 
 def c2k(temp):
     """Converts Celsius to Kelvins."""
@@ -131,8 +129,8 @@ def get_gas_atten(model_i, cat_bits, height):
 
     Args:
         model_i: Dict containing interpolated model fields.
-        cat_bits (ndarray): 2D array of integers containing categorize
-            flag bits.
+        cat_bits (ndarray): 2D array of integers containing 
+            categorize flag bits.
 
     Returns:
         Attenuation due to atmospheric gases.
