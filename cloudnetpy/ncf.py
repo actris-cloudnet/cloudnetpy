@@ -5,7 +5,6 @@ an argument."""
 import numpy as np
 import numpy.ma as ma
 import netCDF4
-import sys
 
 
 def load_nc(file_in):
@@ -33,7 +32,7 @@ def fetch_radar_meta(radar_file):
     try:
         location = nc.location
     except AttributeError:
-        location = 'Unknown location'        
+        location = 'Unknown location'
     try:
         freq = radar_freq(nc.variables)
     except (ValueError, KeyError) as error:
@@ -66,7 +65,7 @@ def radar_freq(vrs):
     try:
         wl_band(freq)
     except ValueError as error:
-        raise ValueError('Only 35 and 94 GHz radars supported.')
+        raise error
     return float(freq)
 
 
@@ -89,20 +88,20 @@ def wl_band(freq):
     elif 90 < freq < 100:
         wl_band = 1
     else:
-        raise ValueError
+        raise ValueError('Only 35 and 94 GHz radars supported.')
     return wl_band
 
 
 def fetch_instrument_models(radar_file, lidar_file, mwr_file):
     """Returns models of the three Cloudnet instruments."""
-    
+
     def _lidar_model(lidar_file):
         """Returns model of the lidar."""
         try:
             return netCDF4.Dataset(lidar_file).system
         except AttributeError:
             return 'Unknown lidar'
-        
+
     def _mwr_model(mwr_file):
         """Returns model of the microwave radiometer."""
         try:
