@@ -100,9 +100,9 @@ def find_melting_layer(Tw, ldr, v):
         nind = len(ind)
         ldr_prof, ldr_dprof, nldr = _slice(ldr, ldr_diff, ii, ind)
         v_prof, v_dprof, nv = _slice(v, v_diff, ii, ind)
-        ldr_p = np.argmax(ldr_prof)
-        v_p = np.argmax(v_dprof)
         if nldr > 3 or nv > 3:
+            ldr_p = np.argmax(ldr_prof)
+            v_p = np.argmax(v_dprof)
             try:
                 top, base = _basetop(ldr_dprof, ldr_p, nind)
                 conds = (ldr_prof[ldr_p] - ldr_prof[top] > 4,
