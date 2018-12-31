@@ -22,7 +22,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     Returns: A dict containing the classification, 'cat_bits', where:
             - bit 0: Liquid droplets
             - bit 1: Falling hydrometeors
-            - bit 2: Temperature < 0
+            - bit 2: Temperature < 0 Celsius
             - bit 3: Melting layer
             - bit 4: Aerosols
             - bit 5: Insects
@@ -32,21 +32,21 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
 
     """
     bits = [None]*6
-    rain_bit = profiles_with_rain(radar['Zh'], time)
-    clutter_bit = pixels_with_clutter(radar['v'], rain_bit)
-    cloud_bit, cloud_base, cloud_top = droplet.liquid_layers(beta, height)
-    bits[3] = melting_bit(Tw, radar['ldr'], radar['v'])
-    bits[2] = cold_bit(Tw, bits[3], time, height)
+    is_rain = rain_from_radar(radar['Zh'], time)
+    is_clutter = find_clutter(radar['v'], is_rain)    
+    is_liquid, liquid_base, liquid_top = droplet.find_liquid(beta, height)
+    bits[3] = find_melting_layer(Tw, radar['ldr'], radar['v'])
+    bits[2] = find_freezing_region(Tw, bits[3], time, height)
     bits[0] = droplet.correct_cloud_top(radar['Zh'], Tw, bits[2],
-                                        cloud_bit, cloud_top, height)
-    bits[5], insect_prob = insect_bit(radar, Tw, bits[3], bits[0],
-                                      rain_bit, clutter_bit)
-    bits[1] = falling_bit(radar['Zh'], beta, clutter_bit, bits[0],
-                          bits[5], Tw)
-    bits[4] = aerosol_bit(beta, bits[1], bits[0])
+                                        is_liquid, liquid_top, height)
+    bits[5], insect_prob = find_insects(radar, Tw, bits[3], bits[0],
+                                        is_rain, is_clutter)
+    bits[1] = find_falling_hydrometeors(radar['Zh'], beta, is_clutter,
+                                        bits[0], bits[5], Tw)
+    bits[4] = find_aerosols(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
-    return {'cat': cat_bits, 'rain': rain_bit, 'cloud_base': cloud_base,
-            'clutter': clutter_bit, 'insect_prob': insect_prob}
+    return {'cat': cat_bits, 'rain': is_rain, 'liquid_base': liquid_base,
+            'clutter': is_clutter, 'insect_prob': insect_prob}
 
 
 def _bits_to_integer(bits):
@@ -69,7 +69,7 @@ def _bits_to_integer(bits):
     return int_array
 
 
-def melting_bit(Tw, ldr, v):
+def find_melting_layer(Tw, ldr, v):
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Args:
@@ -90,7 +90,7 @@ def melting_bit(Tw, ldr, v):
         base = droplet.base_ind(dprof, pind, a, b)
         return top, base
 
-    melting_bit = np.zeros(Tw.shape, dtype=bool)
+    melting_layer = np.zeros(Tw.shape, dtype=bool)
     ldr_diff = np.diff(ldr, axis=1).filled(0)
     v_diff = np.diff(v, axis=1).filled(0)
     trange = (-2, 5)  # find peak from this T range around T0
@@ -110,19 +110,19 @@ def melting_bit(Tw, ldr, v):
                          ldr_prof[ldr_p] > -20,
                          v_prof[base] < -2)
                 if all(conds):
-                    melting_bit[ii, ind[ldr_p]:ind[top]+1] = True
+                    melting_layer[ii, ind[ldr_p]:ind[top]+1] = True
             except:  # just cach all exceptions
                 try:
                     top, base = _basetop(v_dprof, v_p, nind)
                     diff = v_prof[top] - v_prof[base]
                     if diff > 1 and v_prof[base] < -2:
-                        melting_bit[ii, ind[v_p-1:v_p+2]] = True
+                        melting_layer[ii, ind[v_p-1:v_p+2]] = True
                 except:  # failed whatever the reason
                     continue
-    return melting_bit
+    return melting_layer
 
 
-def cold_bit(Tw, melting_bit, time, height):
+def find_freezing_region(Tw, melting_layer, time, height):
     """Finds freezing region using the model temperature and melting layer.
 
     Sub-zero region is first derived from the model wet bulb temperature.
@@ -132,7 +132,7 @@ def cold_bit(Tw, melting_bit, time, height):
 
     Args:
         Tw (ndarray): Wet bulb temperature, (m, n).
-        melting_bit (ndarray): Binary field indicating melting layer, (m, n).
+        melting_layer (ndarray): Binary field indicating melting layer, (m, n).
         time (ndarray): Time vector, (m,).
         height (ndarray): Altitude vector, (n,).
 
@@ -144,12 +144,12 @@ def cold_bit(Tw, melting_bit, time, height):
         ideally combined to determine the sub-zero region.
 
     """
-    cold_bit = np.zeros(Tw.shape, dtype=bool)
+    is_freezing = np.zeros(Tw.shape, dtype=bool)
     ntime = time.shape[0]
     t0_alt = _T0_alt(Tw, height)
     mean_melting_height = np.zeros((ntime,))
-    for ii in np.where(np.any(melting_bit, axis=1))[0]:
-        mean_melting_height[ii] = ma.median(height[melting_bit[ii, :]])
+    for ii in np.where(np.any(melting_layer, axis=1))[0]:
+        mean_melting_height[ii] = ma.median(height[melting_layer[ii, :]])
     m_final = np.copy(mean_melting_height)
     win = 240
     m_final[0] = mean_melting_height[0] or t0_alt[0]
@@ -162,8 +162,8 @@ def cold_bit(Tw, melting_bit, time, height):
     f = interp1d(time[ind], m_final[ind], kind='linear')
     tline = f(time)
     for ii, alt in enumerate(tline):
-        cold_bit[ii, np.where(height > alt)[0]] = True
-    return cold_bit
+        is_freezing[ii, np.where(height > alt)[0]] = True
+    return is_freezing
 
 
 def _T0_alt(Tw, height):
@@ -191,7 +191,7 @@ def _T0_alt(Tw, height):
     return alt
 
 
-def insect_bit(radar, Tw, *args, prob_lim=0.8):
+def find_insects(radar, Tw, *args, prob_lim=0.8):
     """ Returns insect probability and binary field indicating insects.
 
     Args:
@@ -211,8 +211,8 @@ def insect_bit(radar, Tw, *args, prob_lim=0.8):
     """
     iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])
     iprob_screened = _screen_insects(iprob, Tw, *args)
-    insect_bit = iprob_screened > prob_lim
-    return insect_bit, iprob_screened
+    is_insects = iprob_screened > prob_lim
+    return is_insects, iprob_screened
 
 
 def _insect_probability(z, ldr, width):
@@ -280,7 +280,7 @@ def _screen_insects(insect_prob, Tw, *args):
     return prob
 
 
-def profiles_with_rain(Z, time, time_buffer=5):
+def rain_from_radar(Z, time, time_buffer=5):
     """Find profiles affected by rain.
 
     Args:
@@ -294,24 +294,23 @@ def profiles_with_rain(Z, time, time_buffer=5):
         1-D boolean array denoting profiles affected by rain.
 
     """
+    is_rain = ma.array(Z[:, 3] > 0, dtype=bool).filled(False)
     nprofs = len(time)
-    rain_bit = np.zeros(nprofs, dtype=bool)
-    rain_bit[ma.where(Z[:, 3] > 0)] = 1
     step = utils.med_diff(time)*60
     nsteps = int(round(time_buffer/step/2))
-    for ind in np.where(rain_bit)[0]:
+    for ind in np.where(is_rain)[0]:
         i1 = max(0, ind-nsteps)
         i2 = min(ind+nsteps+1, nprofs)
-        rain_bit[i1:i2] = True
-    return rain_bit
+        is_rain[i1:i2] = True
+    return is_rain
 
 
-def pixels_with_clutter(v, rain_bit, ngates=10, vlim=0.05):
+def find_clutter(v, is_rain, ngates=10, vlim=0.05):
     """Estimates clutter from doppler velocity.
 
     Args:
         v (MaskedArray): Doppler velocity.
-        rain_bit (ndarray): 1-D boolean array indicating
+        is_rain (ndarray): 1-D boolean array indicating
             profiles affected by rain.
         vlim (float, optional): Velocity threshold.
             Smaller values are classified as clutter.
@@ -321,21 +320,22 @@ def pixels_with_clutter(v, rain_bit, ngates=10, vlim=0.05):
         Boolean array denoting pixels contaminated by clutter.
 
     """
-    clutter_bit = np.zeros(v.shape, dtype=bool)
+    is_clutter = np.zeros(v.shape, dtype=bool)
     tiny_velocity = (np.abs(v[:, :ngates]) < vlim).filled(False)
-    clutter_bit[:, :ngates] = (tiny_velocity.T*(~rain_bit)).T
-    return clutter_bit
+    is_clutter[:, :ngates] = (tiny_velocity.T*(~is_rain)).T
+    return is_clutter
 
 
-def falling_bit(Z, beta, clutter_bit, cloud_bit, insect_bit, Tw):
+def find_falling_hydrometeors(Z, beta, is_clutter, is_liquid,
+                              is_insects, Tw):
     """Finds falling hydrometeors.
 
     Args:
         Z (MaskedArray): Radar echo.
         beta (MaskedArray): Lidar echo.
-        clutter_bit (ndarray): Pixels contaminated by clutter.
-        cloud_bit (ndarray): Pixels containing droplets.
-        insect_bit (ndarray): Pixels containing insects.
+        is_clutter (ndarray): Pixels contaminated by clutter.
+        is_liquid (ndarray): Pixels containing droplets.
+        is_insects (ndarray): Pixels containing insects.
         Tw (ndarray): Wet bulb temperature.
 
     Returns:
@@ -343,15 +343,14 @@ def falling_bit(Z, beta, clutter_bit, cloud_bit, insect_bit, Tw):
 
     """
     good_Z = ~Z.mask
-    no_clutter = ~clutter_bit
-    no_insects = ~insect_bit
-    ice_from_lidar = ~beta.mask & ~cloud_bit & (Tw < (T0-7))
-    falling_bit = (good_Z & no_clutter & no_insects) | ice_from_lidar
-    falling_bit = utils.filter_isolated_pixels(falling_bit)
-    return falling_bit
+    no_clutter = ~is_clutter
+    no_insects = ~is_insects
+    ice_from_lidar = ~beta.mask & ~is_liquid & (Tw < (T0-7))
+    is_falling = (good_Z & no_clutter & no_insects) | ice_from_lidar
+    return utils.filter_isolated_pixels(is_falling)
 
 
-def aerosol_bit(beta, falling_bit, cloud_bit):
+def find_aerosols(beta, is_falling, is_liquid):
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are the unmasked pixels in the attenuated backscattering
@@ -359,23 +358,23 @@ def aerosol_bit(beta, falling_bit, cloud_bit):
 
     Args:
         beta (MaskedArray): Attenuated backscattering coefficient.
-        falling_bit (ndarray): Binary array containing falling hydrometeors.
-        cloud_bit (ndarray): Binary array containing liquid droplets.
+        is_falling (ndarray): Binary array containing falling hydrometeors.
+        is_liquid (ndarray): Binary array containing liquid droplets.
 
     Returns:
         Boolean array for aerosol classification.
 
     """
-    return ~beta.mask & ~falling_bit & ~cloud_bit
+    return ~beta.mask & ~is_falling & ~is_liquid
 
 
-def fetch_qual_bits(Z, beta, clutter_bit, liq_atten):
+def fetch_qual_bits(Z, beta, is_clutter, liq_atten):
     """Returns Cloudnet quality bits.
 
     Args:
         Z (MaskedArray): Radar echo.
         beta (MaskedArray): Attenuated backscattering.
-        clutter_bit (ndarray): Boolean array showing pixels
+        is_clutter (ndarray): Boolean array showing pixels
             contaminated by clutter.
         liq_atten (dict): Dictionary including boolean arrays
             'corr_bit' and 'ucorr_bit' that indicate where liquid
@@ -393,7 +392,7 @@ def fetch_qual_bits(Z, beta, clutter_bit, liq_atten):
     bits = [None]*6
     bits[0] = ~Z.mask
     bits[1] = ~beta.mask
-    bits[2] = clutter_bit
+    bits[2] = is_clutter
     bits[4] = liq_atten['corr_bit'] | liq_atten['ucorr_bit']
     bits[5] = liq_atten['corr_bit']
     return _bits_to_integer(bits)

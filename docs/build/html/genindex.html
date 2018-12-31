@@ -48,7 +48,6 @@
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
- | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -63,8 +62,6 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#classify.aerosol_bit">aerosol_bit() (in module classify)</a>
-</li>
       <li><a href="api.html#module-atmos">atmos (module)</a>
 </li>
   </ul></td>
@@ -95,11 +92,9 @@
 </li>
       <li><a href="api.html#module-categorize">categorize (module)</a>
 </li>
-      <li><a href="api.html#module-classify">classify (module)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#classify.cold_bit">cold_bit() (in module classify)</a>
+      <li><a href="api.html#module-classify">classify (module)</a>
 </li>
       <li><a href="api.html#droplet.correct_cloud_top">correct_cloud_top() (in module droplet)</a>
 </li>
@@ -133,8 +128,6 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#classify.falling_bit">falling_bit() (in module classify)</a>
-</li>
       <li><a href="api.html#classify.fetch_cat_bits">fetch_cat_bits() (in module classify)</a>
 </li>
       <li><a href="api.html#ncf.fetch_instrument_models">fetch_instrument_models() (in module ncf)</a>
@@ -143,8 +136,6 @@
 </li>
       <li><a href="api.html#categorize.fetch_model">fetch_model() (in module categorize)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#categorize.fetch_mwr">fetch_mwr() (in module categorize)</a>
 </li>
       <li><a href="api.html#classify.fetch_qual_bits">fetch_qual_bits() (in module classify)</a>
@@ -153,7 +144,23 @@
 </li>
       <li><a href="api.html#ncf.fetch_radar_meta">fetch_radar_meta() (in module ncf)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.filter_isolated_pixels">filter_isolated_pixels() (in module utils)</a>
+</li>
+      <li><a href="api.html#classify.find_aerosols">find_aerosols() (in module classify)</a>
+</li>
+      <li><a href="api.html#classify.find_clutter">find_clutter() (in module classify)</a>
+</li>
+      <li><a href="api.html#classify.find_falling_hydrometeors">find_falling_hydrometeors() (in module classify)</a>
+</li>
+      <li><a href="api.html#classify.find_freezing_region">find_freezing_region() (in module classify)</a>
+</li>
+      <li><a href="api.html#classify.find_insects">find_insects() (in module classify)</a>
+</li>
+      <li><a href="api.html#droplet.find_liquid">find_liquid() (in module droplet)</a>
+</li>
+      <li><a href="api.html#classify.find_melting_layer">find_melting_layer() (in module classify)</a>
 </li>
       <li><a href="api.html#utils.forward_fill">forward_fill() (in module utils)</a>
 </li>
@@ -179,8 +186,6 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#classify.insect_bit">insect_bit() (in module classify)</a>
-</li>
       <li><a href="api.html#utils.interpolate_2d">interpolate_2d() (in module utils)</a>
 </li>
   </ul></td>
@@ -205,11 +210,9 @@
 </li>
       <li><a href="api.html#utils.lin2db">lin2db() (in module utils)</a>
 </li>
-      <li><a href="api.html#atmos.liquid_atten">liquid_atten() (in module atmos)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#droplet.liquid_layers">liquid_layers() (in module droplet)</a>
+      <li><a href="api.html#atmos.liquid_atten">liquid_atten() (in module atmos)</a>
 </li>
       <li><a href="api.html#ncf.load_nc">load_nc() (in module ncf)</a>
 </li>
@@ -227,8 +230,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.med_diff">med_diff() (in module utils)</a>
 </li>
-      <li><a href="api.html#classify.melting_bit">melting_bit() (in module classify)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -240,18 +241,6 @@
   </ul></td>
 </tr></table>
 
-<h2 id="P">P</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#classify.pixels_with_clutter">pixels_with_clutter() (in module classify)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#classify.profiles_with_rain">profiles_with_rain() (in module classify)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -259,6 +248,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#classify.rain_from_radar">rain_from_radar() (in module classify)</a>
+</li>
       <li><a href="api.html#utils.rebin_2d">rebin_2d() (in module utils)</a>
 </li>
   </ul></td>

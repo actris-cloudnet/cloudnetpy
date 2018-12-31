@@ -7,7 +7,6 @@ import numpy.ma as ma
 from cloudnetpy import utils
 from cloudnetpy import lwc
 from cloudnetpy import constants as con
-import sys
 
 
 def c2k(temp):
@@ -170,7 +169,7 @@ def liquid_atten(lwp, model, bits, height):
     spec_liq = model['specific_liquid_atten']
     is_liq = utils.bit_test(bits['cat'], 0)
     lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
-    ind = np.where(bits['cloud_base'])
+    ind = np.where(bits['liquid_base'])
     lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
     lwc_dz_err[is_liq] = utils.forward_fill(lwc_dz[is_liq])
     ind_from_base = utils.cumsum_reset(is_liq, axis=1)
@@ -199,8 +198,8 @@ def _screen_liq_atten(liq_atten, bits):
         was not.
 
     """
-    melt_bit = utils.bit_test(bits['cat'], 3)
-    above_melt = np.cumsum(melt_bit, axis=1)
+    melting_layer = utils.bit_test(bits['cat'], 3)
+    above_melt = np.cumsum(melting_layer, axis=1)
     uncorr_atten = above_melt >= 1
     uncorr_atten[bits['rain'], :] = True
     corr_atten = (liq_atten > 0) & ~uncorr_atten

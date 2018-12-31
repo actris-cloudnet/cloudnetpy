@@ -72,8 +72,8 @@ def top_ind(dprof, p, nprof, dist, lim):
     return p + np.where(diffs < diffs[mind]/lim)[0][-1] + 1
 
 
-def liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
-                      min_points=3, min_top_der=2e-7):
+def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
+                min_points=3, min_top_der=2e-7):
     """ Estimate liquid layers from SNR-screened attenuated backscattering.
 
     Args:
@@ -91,7 +91,8 @@ def liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         Boolean array denoting the liquid layers.
 
     """
-    cloud_bit, cloud_top, cloud_base = utils.init(3, beta.shape, dtype=bool, masked=False)
+    is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,
+                                                    masked=False)
     base_below_peak = _number_of_elements(height, 200)
     top_above_peak = _number_of_elements(height, 150)
     beta_diff = np.diff(beta, axis=1).filled(0)
@@ -117,37 +118,37 @@ def liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
                  peak_width < max_width,
                  top_der > min_top_der)
         if all(conds):
-            cloud_bit[n, base:top+1] = True
-            cloud_top[n, top] = True
-            cloud_base[n, base] = True
-    return cloud_bit, cloud_base, cloud_top
+            is_liquid[n, base:top+1] = True
+            liquid_top[n, top] = True
+            liquid_base[n, base] = True
+    return is_liquid, liquid_base, liquid_top
 
 
-def correct_cloud_top(Z, Tw, cold_bit, cloud_bit, cloud_top, height):
+def correct_cloud_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
     """Corrects lidar detected cloud top using radar signal.
 
     Args:
         Z (MaskedArray): Radar echo.
         Tw (ndarray): Wet bulb temperature.
-        cold_bit (ndarray): Boolean field of sub-zero temperature
+        is_freezing (ndarray): Boolean field of sub-zero temperature
             that was fixed using the melting layer.
-        cloud_bit (ndarray): Boolean field of cloud droplets.
-        cloud_top (ndarray): Boolean field of cloud tops.
+        is_liquid (ndarray): Boolean field of liquid cloud droplets.
+        liquid_top (ndarray): Boolean field of liquid cloud tops.
         height (ndarray): Altitude vector.
 
     Returns:
-        Corrected cloud bit.
+        Corrected liquid cloud field.
 
     """
     top_above = _number_of_elements(height, 750)
-    for prof, top in zip(*np.where(cloud_top)):
-        ind = np.where(cold_bit[prof, top:])[0][0] + top_above
+    for prof, top in zip(*np.where(liquid_top)):
+        ind = np.where(is_freezing[prof, top:])[0][0] + top_above
         rad = Z[prof, top:top+ind+1]
         if not (rad.mask.all() or ~rad.mask.any()):
             first_masked = ma.where(rad.mask)[0][0]
-            cloud_bit[prof, top:top+first_masked+1] = True
-    cloud_bit[Tw < (T0-40)] = False
-    return cloud_bit
+            is_liquid[prof, top:top+first_masked+1] = True
+    is_liquid[Tw < (T0-40)] = False
+    return is_liquid
 
 
 def _number_of_elements(height, dist):
