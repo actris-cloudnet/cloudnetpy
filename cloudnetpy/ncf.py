@@ -35,7 +35,7 @@ def fetch_radar_meta(radar_file):
     except AttributeError:
         location = 'Unknown location'        
     try:
-        freq = get_radar_freq(nc.variables)
+        freq = radar_freq(nc.variables)
     except (ValueError, KeyError) as error:
         raise error
     dvec = '-'.join([str(nc.year), str(nc.month).zfill(2),
@@ -43,7 +43,7 @@ def fetch_radar_meta(radar_file):
     return {'freq': freq, 'date': dvec, 'location': location}
 
 
-def get_radar_freq(vrs):
+def radar_freq(vrs):
     """ Returns frequency of radar.
 
     Args:
@@ -64,13 +64,13 @@ def get_radar_freq(vrs):
     freq = freq[0]  # actual data of the masked data
     assert ma.count(freq) == 1, 'Multiple frequencies. Not a radar file??'
     try:
-        get_wl_band(freq)
+        wl_band(freq)
     except ValueError as error:
         raise ValueError('Only 35 and 94 GHz radars supported.')
     return float(freq)
 
 
-def get_wl_band(freq):
+def wl_band(freq):
     """ Returns integer that corresponds to the radar wavelength.
 
     Args:
@@ -96,30 +96,30 @@ def get_wl_band(freq):
 def fetch_instrument_models(radar_file, lidar_file, mwr_file):
     """Returns models of the three Cloudnet instruments."""
     
-    def _get_lidar_model(lidar_file):
+    def _lidar_model(lidar_file):
         """Returns model of the lidar."""
         try:
             return netCDF4.Dataset(lidar_file).system
         except AttributeError:
             return 'Unknown lidar'
         
-    def _get_mwr_model(mwr_file):
+    def _mwr_model(mwr_file):
         """Returns model of the microwave radiometer."""
         try:
             return netCDF4.Dataset(mwr_file).radiometer_system
         except AttributeError:
             return 'Unknown radiometer'
 
-    def _get_radar_model(radar_file):
+    def _radar_model(radar_file):
         """Returns model of the cloud radar."""
         try:
             return netCDF4.Dataset(radar_file).title.split()[0]
         except AttributeError:
             return 'Unknown cloud radar'
 
-    radar_model = _get_radar_model(radar_file)
-    lidar_model = _get_lidar_model(lidar_file)
-    mwr_model = _get_mwr_model(mwr_file)
+    radar_model = _radar_model(radar_file)
+    lidar_model = _lidar_model(lidar_file)
+    mwr_model = _mwr_model(mwr_file)
     return {'radar': radar_model, 'lidar': lidar_model, 'mwr': mwr_model}
 
 
@@ -161,7 +161,7 @@ def m2km(var):
     return alt
 
 
-def get_site_alt(*vrs):
+def site_alt(*vrs):
     """ Returns altitude of the measurement site above mean sea level in [m].
 
     Site altitude is defined as the lowermost value of

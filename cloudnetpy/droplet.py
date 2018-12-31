@@ -7,7 +7,7 @@ from cloudnetpy import utils
 from cloudnetpy.constants import T0
 
 
-def get_base_ind(dprof, p, dist, lim):
+def base_ind(dprof, p, dist, lim):
     """ Find base index of a peak in profile.
 
     Return the lowermost index of profile where 1st order differences
@@ -49,13 +49,13 @@ def get_base_ind(dprof, p, dist, lim):
         Let's assume our base can't be more than 4 elements below
         peak and the threshold value is 2. Thus we call
 
-        >>> get_base_ind(dx, 5, 4, 2)
+        >>> base_ind(dx, 5, 4, 2)
             4
 
         When x[4] is the lowermost point that satisfies the condition.
         Changing the threshold value would alter the result
 
-        >>> get_base_ind(dx, 5, 4, 10)
+        >>> base_ind(dx, 5, 4, 10)
             1
     """
     start = max(p-dist, 0)  # should not be negative
@@ -64,7 +64,7 @@ def get_base_ind(dprof, p, dist, lim):
     return start + np.where(diffs > diffs[mind]/lim)[0][0]
 
 
-def get_top_ind(dprof, p, nprof, dist, lim):
+def top_ind(dprof, p, nprof, dist, lim):
     """ Find top index above peak."""
     end = min(p+dist, nprof)  # should not be greater than len(profile)
     diffs = dprof[p:end]
@@ -72,7 +72,7 @@ def get_top_ind(dprof, p, nprof, dist, lim):
     return p + np.where(diffs < diffs[mind]/lim)[0][-1] + 1
 
 
-def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
+def liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
                       min_points=3, min_top_der=2e-7):
     """ Estimate liquid layers from SNR-screened attenuated backscattering.
 
@@ -103,11 +103,11 @@ def get_liquid_layers(beta, height, peak_amp=2e-5, max_width=300,
         lprof = beta[n, :]
         dprof = beta_diff[n, :]
         try:
-            base = get_base_ind(dprof, peak, base_below_peak, 4)
+            base = base_ind(dprof, peak, base_below_peak, 4)
         except:
             continue
         try:
-            top = get_top_ind(dprof, peak, height.shape[0], top_above_peak, 4)
+            top = top_ind(dprof, peak, height.shape[0], top_above_peak, 4)
         except:
             continue
         npoints = np.count_nonzero(lprof[base:top+1])

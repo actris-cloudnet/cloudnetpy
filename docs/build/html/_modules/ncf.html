@@ -69,7 +69,7 @@
     <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
         <span class="n">location</span> <span class="o">=</span> <span class="s1">&#39;Unknown location&#39;</span>        
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">freq</span> <span class="o">=</span> <span class="n">get_radar_freq</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">radar_freq</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">variables</span><span class="p">)</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">error</span>
     <span class="n">dvec</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">year</span><span class="p">),</span> <span class="nb">str</span><span class="p">(</span><span class="n">nc</span><span class="o">.</span><span class="n">month</span><span class="p">)</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
@@ -77,7 +77,7 @@
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;freq&#39;</span><span class="p">:</span> <span class="n">freq</span><span class="p">,</span> <span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="n">dvec</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">}</span></div>
 
 
-<div class="viewcode-block" id="get_radar_freq"><a class="viewcode-back" href="../api.html#ncf.get_radar_freq">[docs]</a><span class="k">def</span> <span class="nf">get_radar_freq</span><span class="p">(</span><span class="n">vrs</span><span class="p">):</span>
+<div class="viewcode-block" id="radar_freq"><a class="viewcode-back" href="../api.html#ncf.radar_freq">[docs]</a><span class="k">def</span> <span class="nf">radar_freq</span><span class="p">(</span><span class="n">vrs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Returns frequency of radar.</span>
 
 <span class="sd">    Args:</span>
@@ -98,13 +98,13 @@
     <span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># actual data of the masked data</span>
     <span class="k">assert</span> <span class="n">ma</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;Multiple frequencies. Not a radar file??&#39;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">get_wl_band</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+        <span class="n">wl_band</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Only 35 and 94 GHz radars supported.&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_wl_band"><a class="viewcode-back" href="../api.html#ncf.get_wl_band">[docs]</a><span class="k">def</span> <span class="nf">get_wl_band</span><span class="p">(</span><span class="n">freq</span><span class="p">):</span>
+<div class="viewcode-block" id="wl_band"><a class="viewcode-back" href="../api.html#ncf.wl_band">[docs]</a><span class="k">def</span> <span class="nf">wl_band</span><span class="p">(</span><span class="n">freq</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Returns integer that corresponds to the radar wavelength.</span>
 
 <span class="sd">    Args:</span>
@@ -130,30 +130,30 @@
 <div class="viewcode-block" id="fetch_instrument_models"><a class="viewcode-back" href="../api.html#ncf.fetch_instrument_models">[docs]</a><span class="k">def</span> <span class="nf">fetch_instrument_models</span><span class="p">(</span><span class="n">radar_file</span><span class="p">,</span> <span class="n">lidar_file</span><span class="p">,</span> <span class="n">mwr_file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns models of the three Cloudnet instruments.&quot;&quot;&quot;</span>
     
-    <span class="k">def</span> <span class="nf">_get_lidar_model</span><span class="p">(</span><span class="n">lidar_file</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_lidar_model</span><span class="p">(</span><span class="n">lidar_file</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns model of the lidar.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">lidar_file</span><span class="p">)</span><span class="o">.</span><span class="n">system</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s1">&#39;Unknown lidar&#39;</span>
         
-    <span class="k">def</span> <span class="nf">_get_mwr_model</span><span class="p">(</span><span class="n">mwr_file</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_mwr_model</span><span class="p">(</span><span class="n">mwr_file</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns model of the microwave radiometer.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">mwr_file</span><span class="p">)</span><span class="o">.</span><span class="n">radiometer_system</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s1">&#39;Unknown radiometer&#39;</span>
 
-    <span class="k">def</span> <span class="nf">_get_radar_model</span><span class="p">(</span><span class="n">radar_file</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_radar_model</span><span class="p">(</span><span class="n">radar_file</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns model of the cloud radar.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">radar_file</span><span class="p">)</span><span class="o">.</span><span class="n">title</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s1">&#39;Unknown cloud radar&#39;</span>
 
-    <span class="n">radar_model</span> <span class="o">=</span> <span class="n">_get_radar_model</span><span class="p">(</span><span class="n">radar_file</span><span class="p">)</span>
-    <span class="n">lidar_model</span> <span class="o">=</span> <span class="n">_get_lidar_model</span><span class="p">(</span><span class="n">lidar_file</span><span class="p">)</span>
-    <span class="n">mwr_model</span> <span class="o">=</span> <span class="n">_get_mwr_model</span><span class="p">(</span><span class="n">mwr_file</span><span class="p">)</span>
+    <span class="n">radar_model</span> <span class="o">=</span> <span class="n">_radar_model</span><span class="p">(</span><span class="n">radar_file</span><span class="p">)</span>
+    <span class="n">lidar_model</span> <span class="o">=</span> <span class="n">_lidar_model</span><span class="p">(</span><span class="n">lidar_file</span><span class="p">)</span>
+    <span class="n">mwr_model</span> <span class="o">=</span> <span class="n">_mwr_model</span><span class="p">(</span><span class="n">mwr_file</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;radar&#39;</span><span class="p">:</span> <span class="n">radar_model</span><span class="p">,</span> <span class="s1">&#39;lidar&#39;</span><span class="p">:</span> <span class="n">lidar_model</span><span class="p">,</span> <span class="s1">&#39;mwr&#39;</span><span class="p">:</span> <span class="n">mwr_model</span><span class="p">}</span></div>
 
 
@@ -195,7 +195,7 @@
     <span class="k">return</span> <span class="n">alt</span></div>
 
 
-<div class="viewcode-block" id="get_site_alt"><a class="viewcode-back" href="../api.html#ncf.get_site_alt">[docs]</a><span class="k">def</span> <span class="nf">get_site_alt</span><span class="p">(</span><span class="o">*</span><span class="n">vrs</span><span class="p">):</span>
+<div class="viewcode-block" id="site_alt"><a class="viewcode-back" href="../api.html#ncf.site_alt">[docs]</a><span class="k">def</span> <span class="nf">site_alt</span><span class="p">(</span><span class="o">*</span><span class="n">vrs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Returns altitude of the measurement site above mean sea level in [m].</span>
 
 <span class="sd">    Site altitude is defined as the lowermost value of</span>

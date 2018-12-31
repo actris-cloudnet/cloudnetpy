@@ -32,18 +32,18 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
 
     """
     bits = [None]*6
-    rain_bit = get_rain_bit(radar['Zh'], time)
-    clutter_bit = get_clutter_bit(radar['v'], rain_bit)
-    cloud_bit, cloud_base, cloud_top = droplet.get_liquid_layers(beta, height)
-    bits[3] = get_melting_bit(Tw, radar['ldr'], radar['v'])
-    bits[2] = get_cold_bit(Tw, bits[3], time, height)
+    rain_bit = profiles_with_rain(radar['Zh'], time)
+    clutter_bit = pixels_with_clutter(radar['v'], rain_bit)
+    cloud_bit, cloud_base, cloud_top = droplet.liquid_layers(beta, height)
+    bits[3] = melting_bit(Tw, radar['ldr'], radar['v'])
+    bits[2] = cold_bit(Tw, bits[3], time, height)
     bits[0] = droplet.correct_cloud_top(radar['Zh'], Tw, bits[2],
                                         cloud_bit, cloud_top, height)
-    bits[5], insect_prob = get_insect_bit(radar, Tw, bits[3], bits[0],
-                                          rain_bit, clutter_bit)
-    bits[1] = get_falling_bit(radar['Zh'], beta, clutter_bit, bits[0],
-                              bits[5], Tw)
-    bits[4] = get_aerosol_bit(beta, bits[1], bits[0])
+    bits[5], insect_prob = insect_bit(radar, Tw, bits[3], bits[0],
+                                      rain_bit, clutter_bit)
+    bits[1] = falling_bit(radar['Zh'], beta, clutter_bit, bits[0],
+                          bits[5], Tw)
+    bits[4] = aerosol_bit(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
     return {'cat': cat_bits, 'rain': rain_bit, 'cloud_base': cloud_base,
             'clutter': clutter_bit, 'insect_prob': insect_prob}
@@ -69,7 +69,7 @@ def _bits_to_integer(bits):
     return int_array
 
 
-def get_melting_bit(Tw, ldr, v):
+def melting_bit(Tw, ldr, v):
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Args:
@@ -86,8 +86,8 @@ def get_melting_bit(Tw, ldr, v):
         return out1, out2, ma.count(out1)
 
     def _basetop(dprof, pind, nind, a=10, b=2):
-        top = droplet.get_top_ind(dprof, pind, nind, a, b)
-        base = droplet.get_base_ind(dprof, pind, a, b)
+        top = droplet.top_ind(dprof, pind, nind, a, b)
+        base = droplet.base_ind(dprof, pind, a, b)
         return top, base
 
     melting_bit = np.zeros(Tw.shape, dtype=bool)
@@ -122,7 +122,7 @@ def get_melting_bit(Tw, ldr, v):
     return melting_bit
 
 
-def get_cold_bit(Tw, melting_bit, time, height):
+def cold_bit(Tw, melting_bit, time, height):
     """Finds freezing region using the model temperature and melting layer.
 
     Sub-zero region is first derived from the model wet bulb temperature.
@@ -146,7 +146,7 @@ def get_cold_bit(Tw, melting_bit, time, height):
     """
     cold_bit = np.zeros(Tw.shape, dtype=bool)
     ntime = time.shape[0]
-    t0_alt = _get_T0_alt(Tw, height)
+    t0_alt = _T0_alt(Tw, height)
     mean_melting_height = np.zeros((ntime,))
     for ii in np.where(np.any(melting_bit, axis=1))[0]:
         mean_melting_height[ii] = ma.median(height[melting_bit[ii, :]])
@@ -166,7 +166,7 @@ def get_cold_bit(Tw, melting_bit, time, height):
     return cold_bit
 
 
-def _get_T0_alt(Tw, height):
+def _T0_alt(Tw, height):
     """ Interpolates altitudes where model temperature goes
         below freezing.
 
@@ -191,7 +191,7 @@ def _get_T0_alt(Tw, height):
     return alt
 
 
-def get_insect_bit(radar, Tw, *args, prob_lim=0.8):
+def insect_bit(radar, Tw, *args, prob_lim=0.8):
     """ Returns insect probability and binary field indicating insects.
 
     Args:
@@ -280,7 +280,7 @@ def _screen_insects(insect_prob, Tw, *args):
     return prob
 
 
-def get_rain_bit(Z, time, time_buffer=5):
+def profiles_with_rain(Z, time, time_buffer=5):
     """Find profiles affected by rain.
 
     Args:
@@ -306,7 +306,7 @@ def get_rain_bit(Z, time, time_buffer=5):
     return rain_bit
 
 
-def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
+def pixels_with_clutter(v, rain_bit, ngates=10, vlim=0.05):
     """Estimates clutter from doppler velocity.
 
     Args:
@@ -327,7 +327,7 @@ def get_clutter_bit(v, rain_bit, ngates=10, vlim=0.05):
     return clutter_bit
 
 
-def get_falling_bit(Z, beta, clutter_bit, cloud_bit, insect_bit, Tw):
+def falling_bit(Z, beta, clutter_bit, cloud_bit, insect_bit, Tw):
     """Finds falling hydrometeors.
 
     Args:
@@ -351,7 +351,7 @@ def get_falling_bit(Z, beta, clutter_bit, cloud_bit, insect_bit, Tw):
     return falling_bit
 
 
-def get_aerosol_bit(beta, falling_bit, cloud_bit):
+def aerosol_bit(beta, falling_bit, cloud_bit):
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are the unmasked pixels in the attenuated backscattering

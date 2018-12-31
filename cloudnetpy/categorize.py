@@ -30,31 +30,33 @@ def generate_categorize(input_files, output_file):
         https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883
 
     """
-    rad_vars, lid_vars, mwr_vars, mod_vars = (ncf.load_nc(f) for f in input_files)
+    rad_vars, lid_vars, mwr_vars, mod_vars = (ncf.load_nc(f)
+                                              for f in input_files)
     try:
-        time = utils.get_time()
-        height = _get_altitude_grid(rad_vars)  # m
+        time = utils.time_grid()
+        height = _altitude_grid(rad_vars)  # m
         radar_meta = ncf.fetch_radar_meta(input_files[0])
     except (ValueError, KeyError) as error:
         sys.exit(error)
     try:
-        alt_site = ncf.get_site_alt(rad_vars, lid_vars, mwr_vars)  # m
+        alt_site = ncf.site_alt(rad_vars, lid_vars, mwr_vars)
         radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time)
     except KeyError as error:
         sys.exit(error)
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)
-    bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height)
-    gas_atten = atmos.get_gas_atten(model['interp'], bits['cat'], height)
-    liq_atten = atmos.get_liquid_atten(lwp, model['interp'], bits, height)
+    bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
+                                   time, height)
+    gas_atten = atmos.gas_atten(model['interp'], bits['cat'], height)
+    liq_atten = atmos.liquid_atten(lwp, model['interp'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
                                          bits['clutter'], liq_atten)
     Z_corr = _correct_atten(radar['Zh'], gas_atten, liq_atten['value'])
-    Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten, bits['clutter'],
-                            radar_meta['freq'], time, config.GAS_ATTEN_PREC)
+    Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
+                            bits['clutter'], radar_meta['freq'],
+                            time, config.GAS_ATTEN_PREC)
     instruments = ncf.fetch_instrument_models(*input_files[0:3])
-    # Collect variables for output file writing:
     cat_vars = {'height': height,
                 'time': time,
                 'latitude': rad_vars['latitude'][:],
@@ -111,7 +113,7 @@ def _correct_atten(Z, gas_atten, liq_atten):
     return Z_corr
 
 
-def _get_altitude_grid(rad_vars):
+def _altitude_grid(rad_vars):
     """Returns altitude grid for Cloudnet products (m).
     Altitude grid is defined as the instruments measurement
     grid from the mean sea level.
@@ -311,7 +313,7 @@ def _read_model(vrs, fields, alt_site, freq):
         of the day).
     """
     out = {}
-    wlband = ncf.get_wl_band(freq)
+    wlband = ncf.wl_band(freq)
     model_heights = ncf.km2m(vrs['height']) + alt_site  # above mean sea level
     model_heights = np.array(model_heights)  # masked arrays not supported
     model_time = vrs['time'][:]
@@ -381,9 +383,12 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     Zc = ma.median(ma.masked_where(~clutter_bit, Z), axis=0)
     Z_sensitivity[~Zc.mask] = Zc[~Zc.mask]
     dwell_time = utils.med_diff(time)*3600  # seconds
-    independent_pulses = dwell_time*freq*1e9*4*np.sqrt(math.pi)/3e8*radar['width']
-    Z_precision = 4.343*(1/np.sqrt(independent_pulses) + utils.db2lin(Z_power_min-Z_power)/3)
-    Z_error = utils.l2norm(gas_atten*gas_atten_prec, liq_atten['err'], Z_precision)
+    independent_pulses = (dwell_time*freq*1e9*4*np.sqrt(math.pi) /
+                          3e8*radar['width'])
+    Z_precision = 4.343*(1/np.sqrt(independent_pulses) +
+                         utils.db2lin(Z_power_min-Z_power)/3)
+    Z_error = utils.l2norm(gas_atten*gas_atten_prec, liq_atten['err'],
+                           Z_precision)
     Z_error[liq_atten['ucorr_bit']] = ma.masked
     return {'sensitivity': Z_sensitivity, 'error': Z_error}
 
@@ -418,7 +423,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
              fill_value=None,
              long_name='Time UTC',
              units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00'))
-             #comment='Fixed ' + str(config.TIME_RESOLUTION) + 's resolution.'))
+    # comment='Fixed ' + str(config.TIME_RESOLUTION) + 's resolution.'))
     var = 'model_height'
     yield(CV(var, vars_in[var],
              fill_value=None,
@@ -598,7 +603,8 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
              comment=_comments(var)))
     var = 'radar_liquid_atten'
     yield(CV(var, vars_in[var],
-             long_name='Approximate two-way radar attenuation due to liquid water',
+             long_name=('Approximate two-way radar attenuation'
+                        'due to liquid water'),
              units='dB',
              plot_range=(0, 4),
              plot_scale=lin,
@@ -609,36 +615,45 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
              fill_value=None,
              long_name='Target classification bits',
              comment=_comments(var),
-             definition=
-             ('\nBit 0: Small liquid droplets are present.\n'
-              'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
-              '       likely ice particles, otherwise they are drizzle or rain drops.\n'
-              'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
-              '       the phase of Bit-1 particles.\n'
-              'Bit 3: Melting ice particles are present.\n'
-              'Bit 4: Aerosol particles are present and visible to the lidar.\n'
-              'Bit 5: Insects are present and visible to the radar.')))
+             definition=_definitions(var)))
     var = 'quality_bits'
     yield(CV(var, vars_in[var],
              data_type='i4',
              fill_value=None,
              long_name='Data quality bits',
              comment=_comments(var),
-             definition=
-             ('\nBit 0: An echo is detected by the radar.\n'
-              'Bit 1: An echo is detected by the lidar.\n'
-              'Bit 2: The apparent echo detected by the radar is ground clutter\n'
-              '       or some other non-atmospheric artifact.\n'
-              'Bit 3: The lidar echo is due to clear-air molecular scattering.\n'
-              'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
-              '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
-              '       a correction for the radar attenuation has been performed;\n'
-              '       otherwise do not trust the absolute values of reflectivity factor.\n'
-              '       No correction is performed for lidar attenuation.\n'
-              'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
-              '       using the microwave radiometer measurements of liquid water path\n'
-              '       and the lidar estimation of the location of liquid water cloud;\n'
-              '       be aware that errors in reflectivity may result.')))
+             definition=_definitions(var)))
+
+
+def _definitions(field):
+    df = {
+        'category_bits':
+        ('\nBit 0: Small liquid droplets are present.\n'
+         'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
+         '       likely ice particles, otherwise they are drizzle or rain drops.\n'
+         'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
+         '       the phase of Bit-1 particles.\n'
+         'Bit 3: Melting ice particles are present.\n'
+         'Bit 4: Aerosol particles are present and visible to the lidar.\n'
+         'Bit 5: Insects are present and visible to the radar.'),
+
+        'quality_bits':
+        ('\nBit 0: An echo is detected by the radar.\n'
+         'Bit 1: An echo is detected by the lidar.\n'
+         'Bit 2: The apparent echo detected by the radar is ground clutter\n'
+         '       or some other non-atmospheric artifact.\n'
+         'Bit 3: The lidar echo is due to clear-air molecular scattering.\n'
+         'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
+         '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
+         '       a correction for the radar attenuation has been performed;\n'
+         '       otherwise do not trust the absolute values of reflectivity factor.\n'
+         '       No correction is performed for lidar attenuation.\n'
+         'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
+         '       using the microwave radiometer measurements of liquid water path\n'
+         '       and the lidar estimation of the location of liquid water cloud;\n'
+         '       be aware that errors in reflectivity may result.')
+    }
+    return df[field]
 
 
 def _comments(field):

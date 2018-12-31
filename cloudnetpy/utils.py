@@ -36,7 +36,7 @@ def epoch2desimal_hour(epoch, time_in):
     return dtime
 
 
-def get_time(reso=30):
+def time_grid(reso=30):
     """Computes fraction hour time vector 0-24 with user-given
     resolution (in seconds) where 60 is the maximum allowed value.
 

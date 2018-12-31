@@ -105,7 +105,7 @@ def wet_bulb(Tdry, p, rh):
         (ndarray): Wet bulb temperature (K).
 
     """
-    def _get_derivatives(Pw, Tdew, m=17.269, Tn=35.86):
+    def _derivatives(Pw, Tdew, m=17.269, Tn=35.86):
         a = m*(Tn - con.T0)
         b = Tdew - Tn
         Pw_d = -Pw*a/b**2
@@ -116,7 +116,7 @@ def wet_bulb(Tdry, p, rh):
     Pws = saturation_vapor_pressure(Tdry, kind='fast')
     Pw = Pws * rh
     Tdew = dew_point(Pw)
-    Pw_d, Pw_dd = _get_derivatives(Pw, Tdew)
+    Pw_d, Pw_dd = _derivatives(Pw, Tdew)
     F = p*1004 / (con.latent_heat*con.mw_ratio)
     A = Pw_dd/2
     B = Pw_d + F - Tdew*Pw_dd
@@ -124,7 +124,7 @@ def wet_bulb(Tdry, p, rh):
     return (-B + np.sqrt(B*B - 4*A*C)) / (2*A)
 
 
-def get_gas_atten(model_i, cat_bits, height):
+def gas_atten(model_i, cat_bits, height):
     """Returns gas attenuation (assumes saturation inside liquid droplets).
 
     Args:
@@ -145,7 +145,7 @@ def get_gas_atten(model_i, cat_bits, height):
     return np.insert(gas_att.T, 0, layer1_att, axis=1)[:, :-1]
 
 
-def get_liquid_atten(lwp, model, bits, height):
+def liquid_atten(lwp, model, bits, height):
     """Calculates attenuation due to liquid water.
 
     Args:
