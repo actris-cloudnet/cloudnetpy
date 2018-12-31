@@ -32,17 +32,7 @@ def test_get_clutter_bit2():
     assert_array_almost_equal(cnet, res)
 
 
-def test_get_falling_bit():
-    """ Unit tests for classify.get_falling_bit(). """
-    Z = ma.array(np.random.rand(2,5))
-    Z.mask = ([[True, True, False, False, False],
-               [True, False, False, False, False]])
-    clutter_bit = np.zeros((2,5), dtype=bool)
-    insect_bit = np.zeros((2,5), dtype=bool)
-    res = np.array([[0,0,1,1,1],
-                    [0,1,1,1,1]], dtype=bool)
-    cnet = classify.get_falling_bit(Z, clutter_bit, insect_bit)
-    assert_array_almost_equal(cnet, res)
+
 
 
 

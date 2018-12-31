@@ -23,17 +23,17 @@ def test_binning():
 
 def test_bit_test():
     """ Unit tests for units.bit_test(). """
-    assert utils.bit_test(0, 1) is False
-    assert utils.bit_test(1, 1) is True
-    assert utils.bit_test(2, 1) is False
-    assert utils.bit_test(2, 2) is True
+    assert utils.bit_test(0, 0) is False
+    assert utils.bit_test(1, 0) is True
+    assert utils.bit_test(2, 0) is False
+    assert utils.bit_test(2, 1) is True
 
     
 @pytest.mark.parametrize("n, k, res", [
-    (0, 1, 1),
-    (3, 1, 3),
-    (4, 1, 5),
-    (4, 2, 6),
+    (0, 0, 1),
+    (3, 0, 3),
+    (4, 0, 5),
+    (4, 1, 6),
 ])
 def test_bit_set(n, k, res):
     """ Unit tests for units.bit_set(). """
@@ -70,3 +70,40 @@ def test_isola():
                    [0,0,0,0,0]])                  
     assert_array_almost_equal(utils.filter_isolated_pixels(x), x2)
 
+
+def test_forward_fill():
+    x = np.array([0, 5, 0, 0, 2, 0])
+    res = np.array([0, 5, 5, 5, 2, 2])
+    assert_array_almost_equal(utils.forward_fill(x), res)
+    x = np.array([[1, 0, 2, 0],
+                  [0, 5, 0, 0]])
+    res = np.array([[1, 1, 2, 2],
+                    [0, 5, 5, 5]])
+    assert_array_almost_equal(utils.forward_fill(x), res)
+    x = np.array([[5, 1, 1, 6],
+                  [3, 0, 1, 0]])
+    res = np.array([[5, 5, 5, 6],
+                    [3, 0, 0, 0]])
+    assert_array_almost_equal(utils.forward_fill(x, value=1), res)
+
+
+def test_cumsum_reset():
+    x = np.array([0, 1, 2, 0, 1, 1])
+    res = np.array([0, 1, 3, 0, 1, 2])
+    assert_array_almost_equal(utils.cumsum_reset(x), res)
+
+    x = np.array([[0, 1, 1, 0],
+                  [0, 5, 0, 0]])
+    res = np.array([[0, 1, 2, 0],
+                    [0, 5, 0, 0]])
+    assert_array_almost_equal(utils.cumsum_reset(x, axis=1), res)
+    x = np.array([[0, 1, 1, 0],
+                  [0, 5, 0, 0]])
+    res = np.array([[0, 1, 1, 0],
+                    [0, 6, 0, 0]])
+    assert_array_almost_equal(utils.cumsum_reset(x, axis=0), res)
+    x = np.array([[0, 1, 1, 0],
+                  [0, 5, 0, 0]])
+    res = np.array([[0, 1, 1, 0],
+                    [0, 6, 0, 0]])
+    assert_array_almost_equal(utils.cumsum_reset(x), res)
