@@ -4,7 +4,7 @@ radar, lidar and MWR files.
 """
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../cloudnetpy'))  #pylint: disable=wrong-import-position
+sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import math
 import numpy as np
 import numpy.ma as ma

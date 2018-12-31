@@ -40,9 +40,9 @@ def temp2mixingratio(T, P):
     """Converts temperature and pressure to mixing ratio."""
     t1 = T/con.T0
     t2 = 1 - (con.T0/T)
-    svp = 10**(10.79574*(t2)-5.028*np.log10(t1) +
-               1.50475e-4*(1-(10**(-8.2969*(t1-1)))) +
-               0.42873e-3*(10**(4.76955*(t2))) +
-               2.78614)
+    svp = 10**(10.79574*(t2)-5.028*np.log10(t1)
+               + 1.50475e-4*(1-(10**(-8.2969*(t1-1))))
+               + 0.42873e-3*(10**(4.76955*(t2)))
+               + 2.78614)
     mixing_ratio = con.mw_ratio*svp/(P-svp)
     return mixing_ratio, svp
