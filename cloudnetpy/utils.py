@@ -310,15 +310,16 @@ def init(nvars, shape, dtype=float, masked=True):
         shape (tuple): Shape of the arrays, e.g. (2, 3).
         dtype (data-type, optional): The desired data-type
             for the arrays, e.g., int. Default is float.
-        masked (bool): Generated arrays are MaskedArrays if True.
+        masked (bool): If True, generated arrays are masked
+            arrays, else ordinary numpy arrays.
             Default is True.
 
-        Yields:
-            Iterator containing the empty arrays.
+    Yields:
+        Iterator containing the empty arrays.
 
-        Examples:
-            >>>a, b = utils.init(2, (2, 3))
-            >>>a
+    Examples:
+        >>> a, b = utils.init(2, (2, 3))
+        >>> a
             masked_array(
               data=[[0., 0., 0.],
                     [0., 0., 0.]],
