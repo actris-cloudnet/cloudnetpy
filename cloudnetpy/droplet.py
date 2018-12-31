@@ -124,8 +124,8 @@ def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
     return is_liquid, liquid_base, liquid_top
 
 
-def correct_cloud_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
-    """Corrects lidar detected cloud top using radar signal.
+def correct_liquid_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
+    """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
         Z (MaskedArray): Radar echo.

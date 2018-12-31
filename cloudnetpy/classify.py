@@ -37,8 +37,8 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     is_liquid, liquid_base, liquid_top = droplet.find_liquid(beta, height)
     bits[3] = find_melting_layer(Tw, radar['ldr'], radar['v'])
     bits[2] = find_freezing_region(Tw, bits[3], time, height)
-    bits[0] = droplet.correct_cloud_top(radar['Zh'], Tw, bits[2],
-                                        is_liquid, liquid_top, height)
+    bits[0] = droplet.correct_liquid_top(radar['Zh'], Tw, bits[2],
+                                         is_liquid, liquid_top, height)
     bits[5], insect_prob = find_insects(radar, Tw, bits[3], bits[0],
                                         is_rain, is_clutter)
     bits[1] = find_falling_hydrometeors(radar['Zh'], beta, is_clutter,

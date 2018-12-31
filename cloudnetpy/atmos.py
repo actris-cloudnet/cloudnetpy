@@ -142,9 +142,9 @@ def gas_atten(model_i, cat_bits, height):
 
     """
     dheight = utils.med_diff(height)
-    cloud_bit = utils.bit_test(cat_bits, 0)
+    is_liquid = utils.bit_test(cat_bits, 0)
     spec = np.copy(model_i['specific_gas_atten'])
-    spec[cloud_bit] = model_i['specific_saturated_gas_atten'][cloud_bit]
+    spec[is_liquid] = model_i['specific_saturated_gas_atten'][is_liquid]
     layer1_att = model_i['gas_atten'][:, 0]
     gas_att = 2*np.cumsum(spec.T, axis=0)*dheight*1e-3 + layer1_att
     return np.insert(gas_att.T, 0, layer1_att, axis=1)[:, :-1]
