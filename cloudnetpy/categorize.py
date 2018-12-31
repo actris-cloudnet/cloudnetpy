@@ -32,9 +32,9 @@ def generate_categorize(input_files, output_file):
     """
     rad_vars, lid_vars, mwr_vars, mod_vars = (ncf.load_nc(f) for f in input_files)
     try:
-        time = utils.get_time()        
-        radar_meta = ncf.fetch_radar_meta(input_files[0])
+        time = utils.get_time()
         height = _get_altitude_grid(rad_vars)  # m
+        radar_meta = ncf.fetch_radar_meta(input_files[0])
     except (ValueError, KeyError) as error:
         sys.exit(error)
     try:
@@ -46,7 +46,8 @@ def generate_categorize(input_files, output_file):
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height)
-    gas_atten, liq_atten = _get_attenuations(lwp, model['interp'], bits, height)
+    gas_atten = atmos.get_gas_atten(model['interp'], bits['cat'], height)
+    liq_atten = atmos.get_liquid_atten(lwp, model['interp'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
                                          bits['clutter'], liq_atten)
     Z_corr = _correct_atten(radar['Zh'], gas_atten, liq_atten['value'])
@@ -108,24 +109,6 @@ def _correct_atten(Z, gas_atten, liq_atten):
     ind = ~liq_atten.mask
     Z_corr[ind] = Z_corr[ind] + liq_atten[ind]
     return Z_corr
-
-
-def _get_attenuations(lwp, model_i, bits, height):
-    """Returns attenuations due to atmospheric liquid and gases.
-
-    Args:
-        lwp (dict): LWP variables {'value', 'err'}.
-        model_i (dict): Interpolated model fields.
-        bits (dict): Categorize bits {'cat', 'rain'}
-
-    Returns:
-        A 2-element tuple containing gas_atten (ndarray) and
-        liq_atten {dict}.
-
-    """
-    gas_atten = atmos.get_gas_atten(model_i, bits['cat'], height)
-    liq_atten = atmos.get_liquid_atten(lwp, model_i, bits, height)
-    return gas_atten, liq_atten
 
 
 def _get_altitude_grid(rad_vars):
@@ -733,7 +716,7 @@ def _comments(field):
 
         'v':
         ('This parameter is the radial component of the velocity, with positive\n'
-         'velocities are away from the radar.'),        
-        
+         'velocities are away from the radar.'),
+
     }
     return com[field]

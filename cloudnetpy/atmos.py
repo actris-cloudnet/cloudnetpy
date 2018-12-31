@@ -129,7 +129,7 @@ def get_gas_atten(model_i, cat_bits, height):
 
     Args:
         model_i: Dict containing interpolated model fields.
-        cat_bits (ndarray): 2D array of integers containing 
+        cat_bits (ndarray): 2D array of integers containing
             categorize flag bits.
 
     Returns:
@@ -142,7 +142,7 @@ def get_gas_atten(model_i, cat_bits, height):
     spec[cloud_bit] = model_i['specific_saturated_gas_atten'][cloud_bit]
     layer1_att = model_i['gas_atten'][:, 0]
     gas_att = 2*np.cumsum(spec.T, axis=0)*dheight*1e-3 + layer1_att
-    return np.insert(gas_att.T, 0, layer1_att, axis=1)[:,:-1]
+    return np.insert(gas_att.T, 0, layer1_att, axis=1)[:, :-1]
 
 
 def get_liquid_atten(lwp, model, bits, height):
@@ -160,10 +160,10 @@ def get_liquid_atten(lwp, model, bits, height):
         and bits indicating where attenuation was corrected
         and where it was not.
 
-    """            
+    """
     spec_liqa = model['specific_liquid_atten']
     cloud_bit = utils.bit_test(bits['cat'], 0)
-    lwc_dz, lwc_dz_err, liq_atten, liq_atten_err, lwp_norm, lwp_norm_err = utils.init(6, cloud_bit.shape)
+    lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, cloud_bit.shape)
     ind = np.where(bits['cloud_base'])
     lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
     lwc_dz_err[cloud_bit] = utils.forward_fill(lwc_dz[cloud_bit])
@@ -172,10 +172,10 @@ def get_liquid_atten(lwp, model, bits, height):
     ind = np.isfinite(lwp['value']) & np.any(cloud_bit, axis=1)
     lwp_norm[ind, :] = (lwc_adiab[ind, :].T*lwp['value'][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
     lwp_norm_err[ind, :] = (lwc_dz_err[ind, :].T*lwp['err'][ind]/np.sum(lwc_dz_err[ind, :], axis=1)).T
-    liq_atten[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liqa[:, :-1], axis=1)
-    liq_atten_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liqa[:, :-1], axis=1)
-    liq_atten, cbit, ucbit = _screen_liq_atten(liq_atten, bits)
-    return {'value': liq_atten, 'err': liq_atten_err, 'corr_bit': cbit, 'ucorr_bit': ucbit}
+    liq_att[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liqa[:, :-1], axis=1)
+    liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liqa[:, :-1], axis=1)
+    liq_att, cbit, ucbit = _screen_liq_atten(liq_att, bits)
+    return {'value': liq_att, 'err': liq_att_err, 'corr_bit': cbit, 'ucorr_bit': ucbit}
 
 
 def _screen_liq_atten(liq_atten, bits):
