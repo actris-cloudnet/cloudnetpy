@@ -147,22 +147,20 @@ def find_freezing_region(Tw, melting_layer, time, height):
     is_freezing = np.zeros(Tw.shape, dtype=bool)
     ntime = time.shape[0]
     t0_alt = _T0_alt(Tw, height)
-    mean_melting_height = np.zeros((ntime,))
-    for ii in np.where(np.any(melting_layer, axis=1))[0]:
-        mean_melting_height[ii] = ma.median(height[melting_layer[ii, :]])
-    m_final = np.copy(mean_melting_height)
-    win = 240
-    m_final[0] = mean_melting_height[0] or t0_alt[0]
-    m_final[-1] = mean_melting_height[-1] or t0_alt[-1]
-    for n in range(win, ntime-win):
-        data_in_window = mean_melting_height[n-win:n+win+1]
-        if not np.any(data_in_window):
-            m_final[n] = t0_alt[n]
-    ind = np.where(m_final > 0)[0]
-    f = interp1d(time[ind], m_final[ind], kind='linear')
-    tline = f(time)
-    for ii, alt in enumerate(tline):
-        is_freezing[ii, np.where(height > alt)[0]] = True
+    alt_array = np.tile(height, (ntime, 1))
+    melting_alts = ma.array(alt_array, mask=~melting_layer)
+    mean_melting_alt = ma.median(melting_alts, axis=1)
+    freezing_alt = ma.copy(mean_melting_alt)
+    for ind in (0, -1):
+        freezing_alt[ind] = mean_melting_alt[ind] or t0_alt[ind]
+    win = 480
+    for n in range(0, ntime-win):
+        if mean_melting_alt[n:n+win].mask.all():
+            freezing_alt[n] = t0_alt[n]    
+    ind = ~freezing_alt.mask
+    f = interp1d(time[ind], freezing_alt[ind]) 
+    for ii, alt in enumerate(f(time)):
+        is_freezing[ii, height > alt] = True
     return is_freezing
 
 
@@ -342,11 +340,11 @@ def find_falling_hydrometeors(Z, beta, is_clutter, is_liquid,
         Boolean array containing falling hydrometeros.
 
     """
-    good_Z = ~Z.mask
+    is_Z = ~Z.mask
     no_clutter = ~is_clutter
     no_insects = ~is_insects
     ice_from_lidar = ~beta.mask & ~is_liquid & (Tw < (T0-7))
-    is_falling = (good_Z & no_clutter & no_insects) | ice_from_lidar
+    is_falling = (is_Z & no_clutter & no_insects) | ice_from_lidar
     return utils.filter_isolated_pixels(is_falling)
 
 

@@ -21,8 +21,13 @@ setup(
     python_requires='>=3.6',
     install_requires=['scipy>=1.1', 'netCDF4>=1.4.1'],
     classifiers=[
+        "Development Status :: 2 - Pre-Alpha",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
+        "Intended Audience :: Science/Research",
+        "Topic :: Scientific/Engineering",
     ],
 )

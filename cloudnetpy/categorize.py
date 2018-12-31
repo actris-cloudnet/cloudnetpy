@@ -52,7 +52,7 @@ def generate_categorize(input_files, output_file):
     liq_atten = atmos.liquid_atten(lwp, model['interp'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
                                          bits['clutter'], liq_atten)
-    Z_corr = _correct_atten(radar['Zh'], gas_atten, liq_atten['value'])
+    Z_corrected = _correct_atten(radar['Zh'], gas_atten, liq_atten['value'])
     Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                             bits['clutter'], radar_meta['freq'],
                             time, config.GAS_ATTEN_PREC)
@@ -67,7 +67,7 @@ def generate_categorize(input_files, output_file):
                 'beta': lidar['beta'],
                 'beta_error': config.BETA_ERROR[0],
                 'beta_bias': config.BETA_ERROR[1],
-                'Z': Z_corr,
+                'Z': Z_corrected,
                 'v': radar['v'],
                 'width': radar['width'],
                 'ldr': radar['ldr'],
