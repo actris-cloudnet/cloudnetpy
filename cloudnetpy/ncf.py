@@ -161,7 +161,7 @@ def m2km(var):
     return alt
 
 
-def site_alt(*vrs):
+def site_altitude(*vrs):
     """ Returns altitude of the measurement site above mean sea level in [m].
 
     Site altitude is defined as the lowermost value of

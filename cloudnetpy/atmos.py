@@ -1,3 +1,4 @@
+
 """ This module contains functions to calculate
 atmospheric parameters.
 """
@@ -6,6 +7,7 @@ import numpy.ma as ma
 from cloudnetpy import utils
 from cloudnetpy import lwc
 from cloudnetpy import constants as con
+import sys
 
 
 def c2k(temp):
@@ -47,8 +49,12 @@ def saturation_vapor_pressure(T, kind='accurate'):
         C = [-7.85951783, 1.84408259, -11.7866497,
              22.6807411, -15.9618719, 1.80122502]
         v = 1 - T/Tc
-        X = (Tc/T) * (C[0]*v + C[1]*v**1.5 + C[2]*v**3 + C[3]*v**3.5 +
-                      C[4]*v**4 + C[5]*v**7.5)
+        X = (Tc/T) * (C[0]*v
+                      + C[1]*v**1.5
+                      + C[2]*v**3
+                      + C[3]*v**3.5
+                      + C[4]*v**4
+                      + C[5]*v**7.5)
         return Pc * np.exp(X) * 100
 
     def _saturation_vapor_pressure_fast(T, A=6.116441, m=7.591386,
@@ -161,19 +167,19 @@ def liquid_atten(lwp, model, bits, height):
         and where it was not.
 
     """
-    spec_liqa = model['specific_liquid_atten']
-    cloud_bit = utils.bit_test(bits['cat'], 0)
-    lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, cloud_bit.shape)
+    spec_liq = model['specific_liquid_atten']
+    is_liq = utils.bit_test(bits['cat'], 0)
+    lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
     ind = np.where(bits['cloud_base'])
     lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
-    lwc_dz_err[cloud_bit] = utils.forward_fill(lwc_dz[cloud_bit])
-    ind_from_base = utils.cumsum_reset(cloud_bit, axis=1)
+    lwc_dz_err[is_liq] = utils.forward_fill(lwc_dz[is_liq])
+    ind_from_base = utils.cumsum_reset(is_liq, axis=1)
     lwc_adiab = ind_from_base*lwc_dz_err*utils.med_diff(height)*1e3
-    ind = np.isfinite(lwp['value']) & np.any(cloud_bit, axis=1)
+    ind = np.isfinite(lwp['value']) & np.any(is_liq, axis=1)
     lwp_norm[ind, :] = (lwc_adiab[ind, :].T*lwp['value'][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
     lwp_norm_err[ind, :] = (lwc_dz_err[ind, :].T*lwp['err'][ind]/np.sum(lwc_dz_err[ind, :], axis=1)).T
-    liq_att[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liqa[:, :-1], axis=1)
-    liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liqa[:, :-1], axis=1)
+    liq_att[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
+    liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liq[:, :-1], axis=1)
     liq_att, cbit, ucbit = _screen_liq_atten(liq_att, bits)
     return {'value': liq_att, 'err': liq_att_err, 'corr_bit': cbit, 'ucorr_bit': ucbit}
 

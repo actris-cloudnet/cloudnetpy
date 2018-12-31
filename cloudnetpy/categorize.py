@@ -39,7 +39,7 @@ def generate_categorize(input_files, output_file):
     except (ValueError, KeyError) as error:
         sys.exit(error)
     try:
-        alt_site = ncf.site_alt(rad_vars, lid_vars, mwr_vars)
+        alt_site = ncf.site_altitude(rad_vars, lid_vars, mwr_vars)
         radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time)
     except KeyError as error:
         sys.exit(error)
@@ -90,8 +90,8 @@ def generate_categorize(input_files, output_file):
                 'Z_error': Z_err['error'],
                 'Z_sensitivity': Z_err['sensitivity']}
     obs = _cat_cnet_vars(cat_vars, radar_meta, instruments)
-    output.save_cat(output_file, time, height, model['time'], model['height'],
-                    obs, radar_meta)
+    output.save_cat(output_file, time, height, model['time'],
+                    model['height'], obs, radar_meta)
 
 
 def _correct_atten(Z, gas_atten, liq_atten):
@@ -383,10 +383,10 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     Zc = ma.median(ma.masked_where(~clutter_bit, Z), axis=0)
     Z_sensitivity[~Zc.mask] = Zc[~Zc.mask]
     dwell_time = utils.med_diff(time)*3600  # seconds
-    independent_pulses = (dwell_time*freq*1e9*4*np.sqrt(math.pi) /
-                          3e8*radar['width'])
-    Z_precision = 4.343*(1/np.sqrt(independent_pulses) +
-                         utils.db2lin(Z_power_min-Z_power)/3)
+    independent_pulses = (dwell_time*freq*1e9*4*np.sqrt(math.pi)
+                          * radar['width']/3e8)
+    Z_precision = 4.343*(1/np.sqrt(independent_pulses)
+                         + utils.db2lin(Z_power_min-Z_power)/3)
     Z_error = utils.l2norm(gas_atten*gas_atten_prec, liq_atten['err'],
                            Z_precision)
     Z_error[liq_atten['ucorr_bit']] = ma.masked
