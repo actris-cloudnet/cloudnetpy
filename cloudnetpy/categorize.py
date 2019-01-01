@@ -351,7 +351,7 @@ def _interpolate_model(model, fields, *args):
 
 
 def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
-                    clutter_bit, freq, time, gas_atten_prec):
+                    is_clutter, freq, time, gas_atten_prec):
     """Returns sensitivity and error of radar echo.
 
     Args:
@@ -360,7 +360,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
         gas_atten (ndarray): Gas attenuation.
         liq_atten (dict): Liquid attenuation,
             containing {'err', 'ucorr_bit'}
-        clutter_bit (ndarray): Boolean array denoting pixels
+        is_clutter (ndarray): Boolean array denoting pixels
             contaminated by clutter.
         freq (float): Radar frequency.
         time (ndarray): Time vector.
@@ -378,7 +378,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     Z_power = Z - log_range
     Z_power_min = np.percentile(Z_power.compressed(), 0.1)
     Z_sensitivity = Z_power_min + log_range + np.mean(gas_atten, axis=0)
-    Zc = ma.median(ma.masked_where(~clutter_bit, Z), axis=0)
+    Zc = ma.median(ma.array(Z, mask=~is_clutter), axis=0)
     Z_sensitivity[~Zc.mask] = Zc[~Zc.mask]
     dwell_time = utils.med_diff(time)*3600  # seconds
     independent_pulses = (dwell_time*freq*1e9*4*np.sqrt(math.pi)
