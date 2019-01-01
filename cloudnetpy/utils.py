@@ -330,3 +330,31 @@ def init(nvars, shape, dtype=float, masked=True):
     fun = ma.zeros if masked else np.zeros
     for _ in range(nvars):
         yield fun(shape, dtype=dtype)
+
+
+def number_of_elements(x, dist, var=None):
+    """Returns the number of elements that cover certain distance.
+
+    Args:
+        x (ndarray): Input array with arbitrary units (if **dist**
+            also has the same units) or time in fraction hour.
+            **x** should be (at least roughly) evenly spaced.
+        dist (int): Distance to be covered. If x is fraction time,
+            length is in minutes.
+        var (str, optional): 'time' or None. If None, inputs
+            have the same units. If 'time', input is fraction hour
+            and distance in minutes. Default is None.
+
+    Returns:
+        Number of elements in the input array that cover the **length**.
+
+    Examples:
+        >>> x = np.array([2, 4, 6, 8, 10])
+        >>> utils.number_of_elements(x, 6)
+            3
+
+    """
+    n = dist/med_diff(x)
+    if var == 'time':
+        n = n/60
+    return int(np.ceil(n))

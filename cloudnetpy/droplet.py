@@ -93,8 +93,8 @@ def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
     """
     is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,
                                                     masked=False)
-    base_below_peak = _number_of_elements(height, 200)
-    top_above_peak = _number_of_elements(height, 150)
+    base_below_peak = utils.number_of_elements(height, 200)
+    top_above_peak = utils.number_of_elements(height, 150)
     beta_diff = np.diff(beta, axis=1).filled(0)
     beta = beta.filled(0)
     pind = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
@@ -140,7 +140,7 @@ def correct_liquid_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
         Corrected liquid cloud field.
 
     """
-    top_above = _number_of_elements(height, 750)
+    top_above = utils.number_of_elements(height, 750)
     for prof, top in zip(*np.where(liquid_top)):
         ind = np.where(is_freezing[prof, top:])[0][0] + top_above
         rad = Z[prof, top:top+ind+1]
@@ -149,9 +149,3 @@ def correct_liquid_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
             is_liquid[prof, top:top+first_masked+1] = True
     is_liquid[Tw < (T0-40)] = False
     return is_liquid
-
-
-def _number_of_elements(height, dist):
-    """Return number of points in 'height' that cover 'dist' metres."""
-    dheight = utils.med_diff(height)
-    return int(np.ceil((dist/dheight)))
