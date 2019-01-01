@@ -214,7 +214,7 @@ def fetch_lidar(lid_vars, fields, time, height):
 
 
 def fetch_mwr(mwr_vars, lwp_errors, time):
-    """Wrapper to read and interpolate LWP and its error.
+    """Returns interpolated liquid water path and its error.
 
     Args:
         mwr_vars: NetCDF instance.
@@ -272,7 +272,7 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
 
 
 def fetch_model(mod_vars, alt_site, freq, time, height):
-    """ Wrapper function to read and interpolate model variables.
+    """Interpolates model variables and calculates wet bulb temperature.
 
     Args:
         mod_vars: NetCDF4 instance.
@@ -363,7 +363,7 @@ def _interpolate_model(model, fields, *args):
 
 def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                     is_clutter, freq, time, gas_atten_prec):
-    """Returns sensitivity and error of radar echo.
+    """Calculates sensitivity and error of radar echo.
 
     Args:
         radar: NetCDF4 instance.
@@ -636,6 +636,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments):
 
 
 def _definitions(field):
+    """Returns definition for a Cloudnet variable."""
     df = {
         'category_bits':
         ('\nBit 0: Small liquid droplets are present.\n'
@@ -667,7 +668,7 @@ def _definitions(field):
 
 
 def _comments(field):
-    """Returns the comment text for a Cloudnet variable."""
+    """Returns comment text for a Cloudnet variable."""
     com = {
         'category_bits':
         ('This variable contains information on the nature of the targets\n'
