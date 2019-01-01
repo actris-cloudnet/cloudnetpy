@@ -131,9 +131,9 @@ def find_freezing_region(Tw, melting_layer, time, height):
     observations to avoid strong gradients in the zero-temperature line.
 
     Args:
-        Tw (ndarray): Wet bulb temperature as 2-D array.
-        melting_layer (ndarray): Binary field indicating melting layer, (m, n).
-        time (ndarray): 1-D time grid (m).
+        Tw (ndarray): 2-D wet bulb temperature.
+        melting_layer (ndarray): 2-D boolean array indicating melting layer.
+        time (ndarray): 1-D time grid.
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
@@ -170,11 +170,11 @@ def _T0_alt(Tw, height):
         below freezing.
 
     Args:
-        Tw (ndarray): Wet bulb temperature as 2-D array.
+        Tw (ndarray): 2-D wet bulb temperature.
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        1-D array containing the interpolated freezing altitudes.
+        1-D array of floats containing the freezing altitudes.
 
     """
     alt = np.array([])
@@ -219,12 +219,12 @@ def _insect_probability(z, ldr, width):
     """Finds insect probability from radar parameters.
 
     Args:
-        z (ndarray): Radar echo.
-        ldr (ndarray): Radar linear depolarization ratio.
-        width (ndarray): Radar spectral width.
+        z (ndarray): 2-D radar echo.
+        ldr (ndarray): 2-D radar linear depolarization ratio.
+        width (ndarray): 2-D radar spectral width.
 
     Returns:
-        Insect probability between 0-1 for all pixels.
+        2-D insect probability between 0-1 for all pixels.
 
     """
     def _insect_prob_ldr(z, ldr, z_loc=15, ldr_loc=-20):
@@ -310,7 +310,7 @@ def find_clutter(v, is_rain, ngates=10, vlim=0.05):
     """Estimates clutter from doppler velocity.
 
     Args:
-        v (MaskedArray): Doppler velocity.
+        v (MaskedArray): 2-D doppler velocity.
         is_rain (ndarray): 1-D boolean array indicating
             profiles affected by rain.
         vlim (float, optional): Velocity threshold.
@@ -318,7 +318,7 @@ def find_clutter(v, is_rain, ngates=10, vlim=0.05):
             Default is 0.05 (m/s).
 
     Returns:
-        Boolean array denoting pixels contaminated by clutter.
+        2-D boolean array denoting pixels contaminated by clutter.
 
     """
     is_clutter = np.zeros(v.shape, dtype=bool)
@@ -332,15 +332,15 @@ def find_falling_hydrometeors(Z, beta, is_clutter, is_liquid,
     """Finds falling hydrometeors.
 
     Args:
-        Z (MaskedArray): Radar echo.
-        beta (MaskedArray): Lidar echo.
-        is_clutter (ndarray): Pixels contaminated by clutter.
-        is_liquid (ndarray): Pixels containing droplets.
-        is_insects (ndarray): Pixels containing insects.
-        Tw (ndarray): Wet bulb temperature.
+        Z (MaskedArray): 2-D radar echo.
+        beta (MaskedArray): 2-D lidar echo.
+        is_clutter (ndarray): 2-D boolean array of clutter.
+        is_liquid (ndarray): 2-D boolean array of liquid droplets.
+        is_insects (ndarray): 2-D boolean array of insects.
+        Tw (ndarray): 2-D wet bulb temperature.
 
     Returns:
-        Boolean array containing falling hydrometeros.
+        2-D boolean array containing falling hydrometeros.
 
     """
     is_Z = ~Z.mask
@@ -358,12 +358,12 @@ def find_aerosols(beta, is_falling, is_liquid):
     that are: (a) not falling, (b) not liquid droplets.
 
     Args:
-        beta (MaskedArray): Attenuated backscattering coefficient.
-        is_falling (ndarray): Binary array containing falling hydrometeors.
-        is_liquid (ndarray): Binary array containing liquid droplets.
+        beta (MaskedArray): 2-D attenuated backscattering coefficient.
+        is_falling (ndarray): 2-D boolean array of falling hydrometeors.
+        is_liquid (ndarray): 2-D boolean array of liquid droplets.
 
     Returns:
-        Boolean array for aerosol classification.
+        2-D boolean array of aerosol classification.
 
     """
     return ~beta.mask & ~is_falling & ~is_liquid
@@ -373,11 +373,10 @@ def fetch_qual_bits(Z, beta, is_clutter, liq_atten):
     """Returns Cloudnet quality bits.
 
     Args:
-        Z (MaskedArray): Radar echo.
-        beta (MaskedArray): Attenuated backscattering.
-        is_clutter (ndarray): Boolean array showing pixels
-            contaminated by clutter.
-        liq_atten (dict): Boolean arrays 'is_corr' and 'is_not_corr' 
+        Z (MaskedArray): 2-D radar echo.
+        beta (MaskedArray): 2-D attenuated backscattering.
+        is_clutter (ndarray): 2-D boolean array of clutter.
+        liq_atten (dict): 2-D boolean arrays {'is_corr', 'is_not_corr'}
             denoting where liquid attenuation was corrected and 
             where it wasn't.
 
