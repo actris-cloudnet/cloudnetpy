@@ -1,7 +1,7 @@
-
 """ This module contains functions to calculate
-atmospheric parameters.
+various atmospheric parameters.
 """
+
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils
@@ -75,7 +75,7 @@ def saturation_vapor_pressure(T, kind='accurate'):
 
 
 def dew_point(Pw, A=6.116441, m=7.591386, Tn=240.7263):
-    """ Return dew point temperature.
+    """ Returns dew point temperature.
 
     Args:
         Pw (ndarray): Water wapor pressure (Pa).
@@ -184,7 +184,7 @@ def liquid_atten(lwp, model, bits, height):
 
 
 def _screen_liq_atten(liq_atten, bits):
-    """Remove corrupted data from liquid attenuation.
+    """Removes corrupted data from liquid attenuation.
 
     Args:
         liq_atten (ndarray): Liquid attenuation.
@@ -199,9 +199,8 @@ def _screen_liq_atten(liq_atten, bits):
 
     """
     melting_layer = utils.bit_test(bits['cat'], 3)
-    above_melt = np.cumsum(melting_layer, axis=1)
-    uncorr_atten = above_melt >= 1
+    uncorr_atten = np.cumsum(melting_layer, axis=1) >= 1
     uncorr_atten[bits['rain'], :] = True
-    corr_atten = (liq_atten > 0) & ~uncorr_atten
+    corr_atten = (liq_atten > 0).filled(False) & ~uncorr_atten
     liq_atten[uncorr_atten] = ma.masked
     return liq_atten, corr_atten, uncorr_atten
