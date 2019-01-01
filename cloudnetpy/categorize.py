@@ -98,12 +98,12 @@ def _correct_atten(Z, gas_atten, liq_atten):
     """Corrects radar echo for attenuation.
 
     Args:
-        Z (MaskedArray): Radar echo.
-        gas_atten (ndarray): attenuation due to atmospheric gases.
-        liq_atten (MaskedArray): attenuation due to atmospheric liquid.
+        Z (MaskedArray): 2-D array of radar echo.
+        gas_atten (ndarray): 2-D array of attenuation due to atmospheric gases.
+        liq_atten (MaskedArray): 2-D array of attenuation due to atmospheric liquid.
 
     Returns:
-        Copy of input Z, corrected by liquid attenuation
+        Copy of **Z**, corrected by liquid attenuation
         (where applicable) and gas attenuation (everywhere).
 
     """
@@ -114,13 +114,13 @@ def _correct_atten(Z, gas_atten, liq_atten):
 
 
 def _altitude_grid(rad_vars):
-    """Returns altitude grid for Cloudnet products (m).
+    """Returns altitude grid for Cloudnet products.
 
     Args:
-        rad_vars: A netCDF4 instance.
+        rad_vars: NetCDF4 instance.
 
     Returns:
-        Altitude grid.
+        Altitude grid (m).
 
     Raises:
         ValueError: Masked values in radar altitude. This
@@ -144,10 +144,10 @@ def fetch_radar(rad_vars, fields, time_new):
     """Reads and rebins radar 2d fields in time.
 
     Args:
-        rad_vars: A netCDF instance.
-        fields (tuple): Tuple of strings containing the radar 
-            fields to be averaged, e.g. ('Zh', 'v', 'width').
-        time_new (ndarray): A 1-D array.
+        rad_vars: NetCDF instance.
+        fields (tuple): Tuple of strings containing 2-D radar 
+            fields to be rebinned, e.g. ('Zh', 'v', 'width').
+        time_new (ndarray): 1-D array, the target time vector.
 
     Returns:
         Dict containing rebinned radar fields.
@@ -187,11 +187,11 @@ def fetch_lidar(lid_vars, fields, time, height):
     """Reads and rebins lidar 2d fields in time and height.
 
     Args:
-        lid_vars: A netCDF instance.
-        fields (tuple): Tuple of strings containing the lidar
-            fields to be averaged. Usually just the ('beta',).
-        time (ndarray): A 1-D array, i.e. the target time vector.
-        height (ndarray): A 1-D array, i.e. the target height vector.
+        lid_vars: NetCDF instance.
+        fields (tuple): Tuple of strings containing lidar
+            fields to be rebinned. Usually just the ('beta',).
+        time (ndarray): 1-D array, the target time vector.
+        height (ndarray): 1-D array, the target height vector.
 
     Returns:
         Dict containing the rebinned lidar fields.
@@ -217,10 +217,10 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
     """Wrapper to read and interpolate LWP and its error.
 
     Args:
-        mwr_vars: A netCDF instance.
-        lwp_errors: A 2-element tuple containing
+        mwr_vars: NetCDF instance.
+        lwp_errors: 2-element tuple containing
                     (fractional_error, linear_error)
-        time (ndarray): A 1-D array, i.e. the target time vector.
+        time (ndarray): 1-D array, the target time vector.
 
     Returns:
         Dict containing interpolated LWP data
@@ -250,7 +250,7 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
     """Reads LWP, estimates its error, and converts time if needed.
 
     Args:
-        mwr_vars: A netCDF4 instance.
+        mwr_vars: NetCDF4 instance.
         frac_error (float): Fractional error (scalar).
         lin_error (float): Linear error (scalar).
 
@@ -275,16 +275,17 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
     """ Wrapper function to read and interpolate model variables.
 
     Args:
-        mod_vars: A netCDF4 instance.
-        alt_site (int): Altitude of site above mean sea level.
-        freq (float): Radar frequency.
-        time (ndarray): A 1-D array.
-        height (ndarray): A 1-D array.
+        mod_vars: NetCDF4 instance.
+        alt_site (int): Altitude of the site above mean sea level.
+        freq (float): Radar frequency (GHz).
+        time (ndarray): 1-D array.
+        height (ndarray): 1-D array.
 
     Returns:
         Dict containing original model fields in common altitude
-        grid, interpolated fields in Cloudnet time/height grid,
-        and wet bulb temperature.
+        grid, and the time and height vector of those, interpolated 
+        fields in Cloudnet time/height grid, and wet bulb temperature 
+        {'original', 'interp', 'time', 'height', 'Tw'}
 
     """
     fields = ('temperature', 'pressure', 'rh', 'gas_atten',
@@ -305,7 +306,7 @@ def _read_model(vrs, fields, alt_site, freq):
     """Reads model fields and interpolates into common altitude grid.
 
     Args:
-        vrs: A netCDF4 instance.
+        vrs: NetCDF4 instance.
         fields (array_like): list of strings containing fields
             to be interpolated.
         alt_site (float): Site altitude (m).
@@ -344,13 +345,14 @@ def _interpolate_model(model, fields, *args):
     """Interpolates model fields into Cloudnet's time / height grid.
 
     Args:
-        model: Dict containing the model fields.
-        fields (array_like): list of strings containing fields
+        model (dict): Model fields in arbitrary (but common) time
+            and altitude grid.
+        fields (tuple): Tuple of strings containing fields
             to be interpolated.
         *args: time, height, new time, new height.
 
     Returns:
-        Dict containing the interpolated model fields.
+        Dict containing interpolated model fields.
 
     """
     out = {}
@@ -364,21 +366,22 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     """Returns sensitivity and error of radar echo.
 
     Args:
-        radar: A netCDF4 instance.
+        radar: NetCDF4 instance.
         rad_vars: Radar variables.
-        gas_atten (ndarray): Gas attenuation.
-        liq_atten (dict): Liquid attenuation,
-            containing {'err', 'ucorr_bit'}
+        gas_atten (ndarray): 2-D gas attenuation.
+        liq_atten (dict): Liquid attenuation error and boolean
+            arrays denoting where liquid attenuation was not
+            corrected {'err', 'is_not_corr'}.
         is_clutter (ndarray): Boolean array denoting pixels
             contaminated by clutter.
-        freq (float): Radar frequency.
-        time (ndarray): Time vector.
+        freq (float): Radar frequency (GHz).
+        time (ndarray): 1-D time vector.
         gas_atten_prec (float): Precision of gas attenuation
             between 0 and 1, e.g., 0.1.
 
     Returns:
         Dict containing {'Z_sensitivity', 'Z_error'} which are
-        1D and 2D MaskedArrays, respectively.
+        1-D and 2-D MaskedArrays, respectively.
 
     """
     Z = radar['Zh']
@@ -396,7 +399,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                          + utils.db2lin(Z_power_min-Z_power)/3)
     Z_error = utils.l2norm(gas_atten*gas_atten_prec, liq_atten['err'],
                            Z_precision)
-    Z_error[liq_atten['ucorr_bit']] = ma.masked
+    Z_error[liq_atten['is_not_corr']] = ma.masked
     return {'sensitivity': Z_sensitivity, 'error': Z_error}
 
 

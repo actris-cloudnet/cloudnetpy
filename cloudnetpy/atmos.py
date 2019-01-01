@@ -19,6 +19,14 @@ def k2c(temp):
     return np.array(temp) - 273.15
 
 
+def _vaisala_params():
+    """Returns parameters for Vaisala's empirical formulas."""
+    A = 6.116441
+    m = 7.591386
+    Tn = 240.7263
+    return A, m, Tn
+
+
 def saturation_vapor_pressure(T, kind='accurate'):
     """Returns water vapour saturation pressure (over liquid).
 
@@ -56,14 +64,14 @@ def saturation_vapor_pressure(T, kind='accurate'):
                       + C[5]*v**7.5)
         return Pc * np.exp(X) * 100
 
-    def _saturation_vapor_pressure_fast(T, A=6.116441, m=7.591386,
-                                        Tn=240.7263):
+    def _saturation_vapor_pressure_fast(T):
         """Fast method for water vapour saturation.
 
-        References:
-            Vaisala's white paper: "Humidity conversion formulas".
+        Notes:
+            Method from Vaisala's white paper: "Humidity conversion formulas".
 
         """
+        A, m, Tn = _vaisala_params()
         Tc = k2c(T)
         return A * 10**((m*Tc) / (Tc+Tn)) * 100
 
@@ -74,22 +82,20 @@ def saturation_vapor_pressure(T, kind='accurate'):
     return Pws
 
 
-def dew_point(Pw, A=6.116441, m=7.591386, Tn=240.7263):
+def dew_point(Pw):
     """ Returns dew point temperature.
 
     Args:
         Pw (ndarray): Water wapor pressure (Pa).
-        A (float, optional): Parameter for Vaisala's empirical formula.
-        m (float, optional): Parameter for Vaisala's empirical formula.
-        Tn (float, optional): Parameter for Vaisala's empirical formula.
 
     Returns:
         Dew point temperature (K).
 
     Notes:
-        Method taken from Vaisala white paper: "Humidity conversion formulas".
+        Method from Vaisala's white paper: "Humidity conversion formulas".
 
     """
+    A, m, Tn = _vaisala_params()
     Td = Tn / ((m/np.log10(Pw/100/A))-1)
     return c2k(Td)
 
@@ -129,13 +135,15 @@ def wet_bulb(Tdry, p, rh):
     return (-B + np.sqrt(B*B - 4*A*C)) / (2*A)
 
 
-def gas_atten(model_i, cat_bits, height):
+def gas_atten(model, cat_bits, height):
     """Returns gas attenuation (assumes saturation inside liquid droplets).
 
     Args:
-        model_i: Dict containing interpolated model fields.
-        cat_bits (ndarray): 2D array of integers containing
+        model (dict): Interpolated 2-D model fields {'gas_atten',
+            'specific_gas_atten', 'specific_saturated_gas_atten'}.
+        cat_bits (ndarray): 2-D array of integers containing
             categorize flag bits.
+        height (ndarray): 1-D altitude grid (m).
 
     Returns:
         Attenuation due to atmospheric gases.
@@ -143,9 +151,9 @@ def gas_atten(model_i, cat_bits, height):
     """
     dheight = utils.med_diff(height)
     is_liquid = utils.bit_test(cat_bits, 0)
-    spec = np.copy(model_i['specific_gas_atten'])
-    spec[is_liquid] = model_i['specific_saturated_gas_atten'][is_liquid]
-    layer1_att = model_i['gas_atten'][:, 0]
+    spec = np.copy(model['specific_gas_atten'])
+    spec[is_liquid] = model['specific_saturated_gas_atten'][is_liquid]
+    layer1_att = model['gas_atten'][:, 0]
     gas_att = 2*np.cumsum(spec.T, axis=0)*dheight*1e-3 + layer1_att
     return np.insert(gas_att.T, 0, layer1_att, axis=1)[:, :-1]
 
@@ -154,16 +162,18 @@ def liquid_atten(lwp, model, bits, height):
     """Calculates attenuation due to liquid water.
 
     Args:
-        lwp: Dict containing interpolated liquid water
+        lwp (dict): Interpolated liquid water
             path and its error {'value', 'err'}.
-        model: Dict containing interpolated model fields.
-        bits: Dict containing classification bits {'cat', 'rain'}.
-        height (ndarray): Altitude vector.
+        model (dict): Interpolated 2-D model fields {'temperature', 'pressure',
+            'specific_liquid_atten'}
+        bits (dict): Classification bits and rain {'cat', 'rain'}.
+        height (ndarray): 1-D altitude grid (m).
 
     Returns:
         Dict containing liquid attenuation, its error
-        and bits indicating where attenuation was corrected
-        and where it was not.
+        and boolean arrays indicating where attenuation was corrected
+        and where it was not: {'value', 'err', 'is_corr',
+        'is_not_corr'}.
 
     """
     spec_liq = model['specific_liquid_atten']
@@ -180,7 +190,7 @@ def liquid_atten(lwp, model, bits, height):
     liq_att[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
     liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liq[:, :-1], axis=1)
     liq_att, cbit, ucbit = _screen_liq_atten(liq_att, bits)
-    return {'value': liq_att, 'err': liq_att_err, 'corr_bit': cbit, 'ucorr_bit': ucbit}
+    return {'value': liq_att, 'err': liq_att_err, 'is_corr': cbit, 'is_not_corr': ucbit}
 
 
 def _screen_liq_atten(liq_atten, bits):
@@ -193,7 +203,7 @@ def _screen_liq_atten(liq_atten, bits):
 
     Returns:
         3-element tuple containing screened liquid
-        attenuation (MaskedArray), and bitfields
+        attenuation (MaskedArray), and boolean arrays
         showing where it was corrected and where it
         was not.
 

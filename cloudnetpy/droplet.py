@@ -7,28 +7,30 @@ from cloudnetpy import utils
 from cloudnetpy.constants import T0
 
 
-def base_ind(dprof, p, dist, lim):
-    """ Find base index of a peak in profile.
+def ind_base(dprof, p, dist, lim):
+    """Finds base index of a peak in profile.
 
     Return the lowermost index of profile where 1st order differences
     below the peak exceed a threshold value.
 
     Args:
-        dprof (ndarray): 1st discrete difference profile of 1D array.
-                         Masked values should be 0, e.g.
-                         dprof=np.diff(masked_prof).filled(0)
+        dprof (ndarray): 1-D array of 1st discrete difference.
+            Masked values should be 0, e.g. dprof = 
+            np.diff(masked_prof).filled(0)
         p (int): Index of (possibly local) peak in the original profile.
+            Note that the peak must be found with some other method prior
+            calling this function.
         dist (int): Number of elements investigated below **p**.
-                    If (**p**-**dist**)<0, search starts from index 0.
+                    If ( **p** - **dist**)<0, search starts from index 0.
         lim (float): Parameter for base index. Values greater than 1.0
                    are valid. Values close to 1 most likely return the
                    point right below the maximum 1st order difference
                    (within **dist** points below **p**).
-                   Values larger than one more likely
-                   accept some other point that is lower.
+                   Values larger than 1 more likely
+                   accept some other point, lower in the profile.
 
     Returns:
-        Base index, or None if can't find it.
+        Base index of the peak.
 
     Examples:
         Consider a profile
@@ -49,14 +51,18 @@ def base_ind(dprof, p, dist, lim):
         Let's assume our base can't be more than 4 elements below
         peak and the threshold value is 2. Thus we call
 
-        >>> base_ind(dx, 5, 4, 2)
+        >>> ind_base(dx, 5, 4, 2)
             4
 
         When x[4] is the lowermost point that satisfies the condition.
         Changing the threshold value would alter the result
 
-        >>> base_ind(dx, 5, 4, 10)
+        >>> ind_base(dx, 5, 4, 10)
             1
+
+    See also:
+        droplet.ind_top()
+
     """
     start = max(p-dist, 0)  # should not be negative
     diffs = dprof[start:p]
@@ -64,8 +70,37 @@ def base_ind(dprof, p, dist, lim):
     return start + np.where(diffs > diffs[mind]/lim)[0][0]
 
 
-def top_ind(dprof, p, nprof, dist, lim):
-    """ Find top index above peak."""
+def ind_top(dprof, p, nprof, dist, lim):
+    """Finds top index of a peak in profile.
+
+    Return the uppermost index of profile where 1st order differences
+    above the peak exceed a threshold value.
+
+    Args:
+        dprof (ndarray): 1-D array of 1st discrete difference.
+            Masked values should be 0, e.g. dprof = 
+            np.diff(masked_prof).filled(0)
+        nprof (int): Length of the profile. Top index can't be higher
+            than this.
+        p (int): Index of (possibly local) peak in the profile.
+            Note that the peak must be found with some other method prior
+            calling this function.
+        dist (int): Number of elements investigated above **p**.
+                    If (**p** + **dist**) > **nprof**, search ends to **nprof**.
+        lim (float): Parameter for top index. Values greater than 1.0
+                   are valid. Values close to 1 most likely return the
+                   point right above the maximum 1st order difference
+                   (within **dist** points above **p**).
+                   Values larger than 1 more likely
+                   accept some other point, higher in the profile.
+
+    Returns:
+        Top index of the peak.
+
+    See also:
+        droplet.base_ind()
+
+    """
     end = min(p+dist, nprof)  # should not be greater than len(profile)
     diffs = dprof[p:end]
     mind = np.argmin(diffs)
@@ -77,14 +112,14 @@ def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
     """ Estimate liquid layers from SNR-screened attenuated backscattering.
 
     Args:
-        beta (MaskedArray): 2D attenuated backscattering.
-        height (ndarray): 1D array of altitudes (m).
-        peak_amp (float, optional): Minimum value for peak. Default is 2e-5.
+        beta (MaskedArray): 2-D array of attenuated backscattering.
+        height (ndarray): 1-D altitude grid (m).
+        peak_amp (float, optional): Minimum value of peak. Default is 2e-5.
         max_width (float, optional): Maximum width of peak. Default is 300 (m).
         min_points (int, optional): Minimum number of valid points in peak.
             Default is 3.
-        min_top_der (float, optional): Minimum derivative above peak
-            defined as (beta_peak-beta_top) / (alt_top-alt_peak) which
+        min_top_der (float, optional): Minimum derivative above peak,
+            defined as (beta_peak-beta_top) / (alt_top-alt_peak), which
             is always positive. Default is 2e-7.
 
     Returns:
@@ -104,11 +139,11 @@ def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
         lprof = beta[n, :]
         dprof = beta_diff[n, :]
         try:
-            base = base_ind(dprof, peak, base_below_peak, 4)
+            base = ind_base(dprof, peak, base_below_peak, 4)
         except:
             continue
         try:
-            top = top_ind(dprof, peak, height.shape[0], top_above_peak, 4)
+            top = ind_top(dprof, peak, height.shape[0], top_above_peak, 4)
         except:
             continue
         npoints = np.count_nonzero(lprof[base:top+1])
@@ -128,13 +163,14 @@ def correct_liquid_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
-        Z (MaskedArray): Radar echo.
-        Tw (ndarray): Wet bulb temperature.
-        is_freezing (ndarray): Boolean field of sub-zero temperature
-            that was fixed using the melting layer.
-        is_liquid (ndarray): Boolean field of liquid cloud droplets.
-        liquid_top (ndarray): Boolean field of liquid cloud tops.
-        height (ndarray): Altitude vector.
+        Z (MaskedArray): 2-D array of radar echo.
+        Tw (ndarray): 2-D array of wet bulb temperature.
+        is_freezing (ndarray): 2-D boolean array of sub-zero temperature, 
+            derived from the model temperature and melting layer based
+            on radar data.
+        is_liquid (ndarray): 2-D boolean array of liquid clouds.
+        liquid_top (ndarray): 2-D boolean array of liquid cloud tops.
+        height (ndarray): 1-D altitude grid (m).
 
     Returns:
         Corrected liquid cloud field.

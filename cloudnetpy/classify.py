@@ -17,7 +17,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
             ('Zh', 'v', 'ldr', 'width').
         beta (MaskedArray): Attenuated backscattering coefficient.
         Tw (ndarray): Wet bulb temperature.
-        height (ndarray): 1D altitude vector.
+        height (ndarray): 1-D altitude grid (m).
 
     Returns: A dict containing the classification, 'cat_bits', where:
             - bit 0: Liquid droplets
@@ -86,8 +86,8 @@ def find_melting_layer(Tw, ldr, v):
         return out1, out2, ma.count(out1)
 
     def _basetop(dprof, pind, nind, a=10, b=2):
-        top = droplet.top_ind(dprof, pind, nind, a, b)
-        base = droplet.base_ind(dprof, pind, a, b)
+        top = droplet.ind_top(dprof, pind, nind, a, b)
+        base = droplet.ind_base(dprof, pind, a, b)
         return top, base
 
     melting_layer = np.zeros(Tw.shape, dtype=bool)
@@ -131,10 +131,10 @@ def find_freezing_region(Tw, melting_layer, time, height):
     observations to avoid strong gradients in the zero-temperature line.
 
     Args:
-        Tw (ndarray): Wet bulb temperature, (m, n).
+        Tw (ndarray): Wet bulb temperature as 2-D array.
         melting_layer (ndarray): Binary field indicating melting layer, (m, n).
-        time (ndarray): Time vector, (m,).
-        height (ndarray): Altitude vector, (n,).
+        time (ndarray): 1-D time grid (m).
+        height (ndarray): 1-D altitude grid (m).
 
     Returns:
         Boolean array denoting the sub-zero region.
@@ -170,11 +170,11 @@ def _T0_alt(Tw, height):
         below freezing.
 
     Args:
-        Tw (ndarray): Wet bulb temperature, (n, m).
-        height (ndarray): Altitude vector, (m,).
+        Tw (ndarray): Wet bulb temperature as 2-D array.
+        height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        1D array containing the interpolated freezing altitudes.
+        1-D array containing the interpolated freezing altitudes.
 
     """
     alt = np.array([])
@@ -375,9 +375,9 @@ def fetch_qual_bits(Z, beta, is_clutter, liq_atten):
         beta (MaskedArray): Attenuated backscattering.
         is_clutter (ndarray): Boolean array showing pixels
             contaminated by clutter.
-        liq_atten (dict): Dictionary including boolean arrays
-            'corr_bit' and 'ucorr_bit' that indicate where liquid
-            attenuation was corrected and where it wasn't.
+        liq_atten (dict): Boolean arrays 'is_corr' and 'is_not_corr' 
+            denoting where liquid attenuation was corrected and 
+            where it wasn't.
 
     Returns: Integer array containing the following bits:
             - bit 0: Pixel contains radar data.
@@ -392,6 +392,6 @@ def fetch_qual_bits(Z, beta, is_clutter, liq_atten):
     bits[0] = ~Z.mask
     bits[1] = ~beta.mask
     bits[2] = is_clutter
-    bits[4] = liq_atten['corr_bit'] | liq_atten['ucorr_bit']
-    bits[5] = liq_atten['corr_bit']
+    bits[4] = liq_atten['is_corr'] | liq_atten['is_not_corr']
+    bits[5] = liq_atten['is_corr']
     return _bits_to_integer(bits)

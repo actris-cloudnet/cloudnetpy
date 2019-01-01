@@ -46,7 +46,7 @@ def radar_freq(vrs):
     """ Returns frequency of radar.
 
     Args:
-        vrs: A netCDF instance.
+        vrs: NetCDF instance.
 
     Returns:
         Frequency or radar.
@@ -73,11 +73,11 @@ def wl_band(freq):
     """ Returns integer that corresponds to the radar wavelength.
 
     Args:
-        freq: Radar frequency.
+        freq (float): Radar frequency (GHz).
 
     Returns:
         Integer corresponding to freqeuency. Possible return
-        values are 0 (35.5 GHz) and 1 (~94 GHz).
+        values are 0 (~35.5 GHz) and 1 (~94 GHz).
 
     Raises:
         ValueError: Not supported frequency.
@@ -129,7 +129,7 @@ def km2m(var):
     have 'units' attribute set to 'km' to trigger the conversion.
 
     Args:
-        var: A netCDF variable.
+        var: NetCDF variable.
 
     Returns:
         Altitude (scalar or array) converted to km.
@@ -148,7 +148,7 @@ def m2km(var):
     have 'units' attribute set to 'm' to trigger the conversion.
 
     Args:
-        var: A netCDF variable.
+        var: NetCDF variable.
 
     Returns:
         Altitude (scalar or array)  converted to m.
