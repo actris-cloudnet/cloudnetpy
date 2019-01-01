@@ -318,17 +318,15 @@ def _read_model(vrs, fields, alt_site, freq):
     model_heights = np.array(model_heights)  # masked arrays not supported
     model_time = vrs['time'][:]
     new_grid = np.mean(model_heights, axis=0)  # is mean profile ok?
-    nx, ny = len(model_time), len(new_grid)
     for field in fields:
         data = np.array(vrs[field][:])
-        datai = np.zeros((nx, ny))
         if 'atten' in field:
             data = data[wlband, :, :]
         # interpolate model profiles into common altitude grid
-        for ind in range(nx):
-            f = interp1d(model_heights[ind, :], data[ind, :],
-                         fill_value='extrapolate')
-            datai[ind, :] = f(new_grid)
+        datai = np.zeros((len(model_time), len(new_grid)))
+        for i, (alt, prof) in enumerate(zip(model_heights, data)):
+            f = interp1d(alt, prof, fill_value='extrapolate')
+            datai[i, :] = f(new_grid)
         out[field] = datai
     return out, model_time, new_grid
 
