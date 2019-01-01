@@ -104,7 +104,7 @@ def _correct_atten(Z, gas_atten, liq_atten):
 
     Returns:
         Copy of input Z, corrected by liquid attenuation
-        (where applicable) and gas attenuation.
+        (where applicable) and gas attenuation (everywhere).
 
     """
     Z_corr = ma.copy(Z) + gas_atten
@@ -115,8 +115,6 @@ def _correct_atten(Z, gas_atten, liq_atten):
 
 def _altitude_grid(rad_vars):
     """Returns altitude grid for Cloudnet products (m).
-    Altitude grid is defined as the instruments measurement
-    grid from the mean sea level.
 
     Args:
         rad_vars: A netCDF4 instance.
@@ -125,8 +123,14 @@ def _altitude_grid(rad_vars):
         Altitude grid.
 
     Raises:
-        ValueError: Masked values in radar altitude. Not really the
-        correct error type.
+        ValueError: Masked values in radar altitude. This
+            should never happen.
+
+    Notes:
+        Altitude grid is defined as the instrument's measurement
+        grid above mean sea level. Generally the instrument 
+        used here should always be radar but it is possible to
+        use other instrument as well.
 
     """
     range_instru = ncf.km2m(rad_vars['range'])
@@ -141,8 +145,8 @@ def fetch_radar(rad_vars, fields, time_new):
 
     Args:
         rad_vars: A netCDF instance.
-        fields (tuple): Tuple of strings containing radar
-                        fields to be averaged.
+        fields (tuple): Tuple of strings containing the radar 
+            fields to be averaged, e.g. ('Zh', 'v', 'width').
         time_new (ndarray): A 1-D array.
 
     Returns:
@@ -184,14 +188,13 @@ def fetch_lidar(lid_vars, fields, time, height):
 
     Args:
         lid_vars: A netCDF instance.
-        fields (tuple): Tuple of strings containing lidar
-                        fields to be averaged.
-        time (ndarray): A 1-D array.
-        height (ndarray): A 1-D array.
+        fields (tuple): Tuple of strings containing the lidar
+            fields to be averaged. Usually just the ('beta',).
+        time (ndarray): A 1-D array, i.e. the target time vector.
+        height (ndarray): A 1-D array, i.e. the target height vector.
 
     Returns:
-        Dict containing rebinned lidar fields.
-
+        Dict containing the rebinned lidar fields.
 
     Raises:
         KeyError: Missing field.
@@ -217,28 +220,30 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
         mwr_vars: A netCDF instance.
         lwp_errors: A 2-element tuple containing
                     (fractional_error, linear_error)
-        time (ndarray): A 1-D array.
+        time (ndarray): A 1-D array, i.e. the target time vector.
 
     Returns:
         Dict containing interpolated LWP data
         and its error {'value', 'err'}.
 
-    """
-    def _interpolate_lwp(time_lwp, lwp, time_new):
-        """Linear interpolation of LWP data. This can be
-        bad idea if there are lots of gaps in the data.
-        """
-        try:
-            f = interp1d(time_lwp, lwp)
-            lwp_i = f(time_new)
-        except:
-            lwp_i = np.full_like(time_new, fill_value=np.nan)
-        return lwp_i
+    Notes: 
+        Needs to decide how to handle totally 
+        missing (or sparse) mwr data.
 
-    lwp = _read_lwp(mwr_vars, *lwp_errors)
-    lwp_i = _interpolate_lwp(lwp['time'], lwp['value'], time)
-    lwp_error_i = _interpolate_lwp(lwp['time'], lwp['err'], time)
-    return {'value': lwp_i, 'err': lwp_error_i}
+    """
+    def _interpolate_lwp(time_lwp, data, time_new):
+        """Linear interpolation of LWP data."""
+        try:
+            f = interp1d(time_lwp, data)
+            data_interp = f(time_new)
+        except:
+            data_interp = np.full_like(time_new, fill_value=np.nan)
+        return data_interp
+
+    data, time_lwp, error = _read_lwp(mwr_vars, *lwp_errors)
+    data_interp = _interpolate_lwp(time_lwp, data, time)
+    error_interp = _interpolate_lwp(time_lwp, error, time)
+    return {'value': data_interp, 'err': error_interp}
 
 
 def _read_lwp(mwr_vars, frac_err, lin_err):
@@ -250,7 +255,7 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         lin_error (float): Linear error (scalar).
 
     Returns:
-        Dict containing {'time', 'value', 'err'} that are 1-D arrays.
+        3-element tuple containing LWP (data, time, error).
 
     Note:
         hatpro time can be 'hours since' 00h of measurement date
@@ -258,12 +263,12 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         dependent).
 
     """
-    lwp = mwr_vars['LWP_data'][:]
+    data = mwr_vars['LWP_data'][:]
     time = mwr_vars['time'][:]
     if max(time) > 24:
-        time = utils.epoch2desimal_hour((2001, 1, 1), time)  # fixed epoc!!
-    lwp_err = utils.l2norm(frac_err*lwp, lin_err)
-    return {'time': time, 'value': lwp, 'err': lwp_err}
+        time = utils.epoch2desimal_hour((2001, 1, 1), time)  # fixed epoc!
+    error = utils.l2norm(frac_err*data, lin_err)
+    return data, time, error
 
 
 def fetch_model(mod_vars, alt_site, freq, time, height):
@@ -297,7 +302,7 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
 
 
 def _read_model(vrs, fields, alt_site, freq):
-    """Read model fields and interpolate into common altitude grid.
+    """Reads model fields and interpolates into common altitude grid.
 
     Args:
         vrs: A netCDF4 instance.
@@ -307,10 +312,15 @@ def _read_model(vrs, fields, alt_site, freq):
         freq (float): Radar frequency (GHz).
 
     Returns:
-        3-element tuple containing (1) dict that has original model fields
-        in common altitude grid, and interpolated model fields, (2) Original
-        model time (3) Original model heights (average of individual heights
-        of the day).
+        3-element tuple containing (1) dict where the model fields
+        are in common altitude grid, (2) original model time (3) altitude
+        vector used in the interpolation (mean of the individual height
+        vectors of the day).
+
+    Notes:
+        The common altitude vector used in the interpolation is 
+        defined above mean sea level.
+
     """
     out = {}
     wlband = ncf.wl_band(freq)
@@ -322,7 +332,6 @@ def _read_model(vrs, fields, alt_site, freq):
         data = np.array(vrs[field][:])
         if 'atten' in field:
             data = data[wlband, :, :]
-        # interpolate model profiles into common altitude grid
         datai = np.zeros((len(model_time), len(new_grid)))
         for i, (alt, prof) in enumerate(zip(model_heights, data)):
             f = interp1d(alt, prof, fill_value='extrapolate')
@@ -332,16 +341,16 @@ def _read_model(vrs, fields, alt_site, freq):
 
 
 def _interpolate_model(model, fields, *args):
-    """ Interpolate model fields into Cloudnet time/height grid
+    """Interpolates model fields into Cloudnet's time / height grid.
 
     Args:
-        model: A netCDF instance.
+        model: Dict containing the model fields.
         fields (array_like): list of strings containing fields
             to be interpolated.
-        *args: original time, orignal height, new time, new height.
+        *args: time, height, new time, new height.
 
     Returns:
-        Dict containing interpolated model fields.
+        Dict containing the interpolated model fields.
 
     """
     out = {}
