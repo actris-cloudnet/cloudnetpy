@@ -9,12 +9,11 @@ class CnetVar:
     """Class for Cloudnet variables. Needs refactoring.
     """
     def __init__(self, name, data, data_type='f4', size=('time', 'height'),
-                 zlib=True, fill_value=True, **kwargs):
+                 fill_value=True, **kwargs):
         # Required:
         self.name = name
         self.data = data
         self.data_type = data_type
-        self.zlib = zlib
         self.size = self._get_size(data, size)
         self.fill_value = self._get_fillv(fill_value)
         # Extra:
@@ -39,17 +38,17 @@ class CnetVar:
             return fill_value
 
 
-def write_vars2nc(rootgrp, obs):
+def write_vars2nc(rootgrp, obs, zlib):
     """Iterate over Cloudnet instances and write to given rootgrp."""
     for var in obs:
         ncvar = rootgrp.createVariable(var.name, var.data_type, var.size,
-                                       zlib=var.zlib, fill_value=var.fill_value)
+                                       zlib=zlib, fill_value=var.fill_value)
         ncvar[:] = var.data
         for attr in var.kwarg_keys:
             setattr(ncvar, attr, getattr(var, attr))
 
 
-def save_cat(file_name, time, height, model_time, model_height, obs, radar_meta):
+def save_cat(file_name, time, height, model_time, model_height, obs, radar_meta, zlib):
     """Creates a categorize netCDF4 file and saves all data into it."""
     rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     # create dimensions
@@ -58,7 +57,7 @@ def save_cat(file_name, time, height, model_time, model_height, obs, radar_meta)
     model_time = rootgrp.createDimension('model_time', len(model_time))
     model_height = rootgrp.createDimension('model_height', len(model_height))
     # root group variables
-    write_vars2nc(rootgrp, obs)
+    write_vars2nc(rootgrp, obs, zlib)
     # global attributes:
     rootgrp.Conventions = 'CF-1.7'
     rootgrp.title = 'Categorize file from ' + radar_meta['location']

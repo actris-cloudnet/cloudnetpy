@@ -154,7 +154,7 @@ def bit_set(integer, nth_bit):
         nth_bit: Bit to be set.
 
     Returns:
-        Integer where nth bit is set.
+        (int): Integer where nth bit is set.
 
     Raises:
         ValueError: negative bit as input.
@@ -217,7 +217,7 @@ def l2norm(*args):
            can be numpy / masked arrays.
 
     Returns:
-        The l2 norm.
+        (MaskedArray): The l2 norm.
 
     """
     ss = 0
@@ -227,16 +227,17 @@ def l2norm(*args):
 
 
 def bases_and_tops(y):
-    """Finds islands of ones from binary array.
+    """Finds islands of ones from boolean array.
 
     From a binary vector finds all "islands" of
     ones, i.e. their starting and ending indices.
 
     Args:
-        y (array_like): 1D array.
+        y (array_like): 1-D array of ones and zeros.
 
     Returns:
-        2-element tuple containing indices of bases and tops.
+        2-element tuple containing indices of bases 
+        and tops.
 
     Examples:
         >>> y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]
@@ -261,7 +262,7 @@ def cumsum_reset(x, axis=0):
             Default is 0.
 
     Returns:
-        Cumulative sum, restarted at 0.
+        (ndarray): Cumulative sum, restarted at 0.
 
     Examples:
         >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])
@@ -281,7 +282,7 @@ def forward_fill(arr, value=0):
         value (int): Value to be filled. Default is 0.
 
     Returns:
-        New forward-filled array.
+        (ndarray): Forward-filled array.
 
     Examples:
         >>> x = np.array([0, 5, 0, 0, 2, 0])
@@ -346,7 +347,7 @@ def number_of_elements(x, dist, var=None):
             and distance in minutes. Default is None.
 
     Returns:
-        Number of elements in the input array that cover the **length**.
+        (int): Number of elements in the input array that cover the **length**.
 
     Examples:
         >>> x = np.array([2, 4, 6, 8, 10])

@@ -13,13 +13,12 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     """Classifies radar/lidar observations.
 
     Args:
-        radar: A dict containing gridded radar fields
-            ('Zh', 'v', 'ldr', 'width').
-        beta (MaskedArray): Attenuated backscattering coefficient.
-        Tw (ndarray): Wet bulb temperature.
+        radar (dict): 2-D radar variables {'Zh', 'v', 'ldr', 'width'}.
+        beta (MaskedArray): 2-D lidar attenuated backscattering coefficient.
+        Tw (ndarray): 2-D wet bulb temperature (K).
         height (ndarray): 1-D altitude grid (m).
 
-    Returns: A dict containing the classification, 'cat_bits', where:
+    Returns: A dict containing the 2-D classification, 'cat_bits', where:
             - bit 0: Liquid droplets
             - bit 1: Falling hydrometeors
             - bit 2: Temperature < 0 Celsius
@@ -27,8 +26,10 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
             - bit 4: Aerosols
             - bit 5: Insects
 
-        The dict contains also profiles containing rain
-        and pixels contaminated by clutter.
+        The dict also contains 1-D boolean array of rain presense, 
+        'rain', 2-D boolean arrays of clutter and liquid cloud bases,
+        {'is_clutter', 'liquid_base'}, and 2-D array of
+        insect probability, 'insect_prob'.
 
     """
     bits = [None]*6
@@ -50,16 +51,16 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
 
 
 def _bits_to_integer(bits):
-    """Creates ndarray of integers from individual boolean fields.
+    """Creates array of integers from individual boolean arrays.
 
     Args:
-        bits (list): List of bit fields (of similar sizes!)
+        bits (list): List of bit fields (of similar sizes)
         to be saved in the resulting array of integers. bits[0]
         is saved as bit 0, bits[1] as bit 1, etc.
 
     Returns:
         Array of integers containing the information of the
-        individual boolean fields.
+        individual boolean arrays.
 
     """
     int_array = np.zeros_like(bits[0], dtype=int)
@@ -125,19 +126,20 @@ def find_melting_layer(Tw, ldr, v):
 def find_freezing_region(Tw, melting_layer, time, height):
     """Finds freezing region using the model temperature and melting layer.
 
-    Sub-zero region is first derived from the model wet bulb temperature.
-    It is then adjusted to start from the melting layer when we have such.
-    Finally, a linear smoother is applied to combine the model and
-    observations to avoid strong gradients in the zero-temperature line.
+    Every profile that contains melting layer, subzero region starts from 
+    the mean melting layer height. If there are (long) time windows where 
+    no melting layer is present, model temperature is used in the 
+    middle of the time window. Finally, the subzero altitudes are linearly 
+    interpolated for all profiles.
 
     Args:
         Tw (ndarray): 2-D wet bulb temperature.
-        melting_layer (ndarray): 2-D boolean array indicating melting layer.
+        melting_layer (ndarray): 2-D boolean array denoting melting layer.
         time (ndarray): 1-D time grid.
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        Boolean array denoting the sub-zero region.
+        2-D boolean array denoting the sub-zero region.
 
     Notes:
         It is not clear how model temperature and melting layer should be
@@ -174,7 +176,8 @@ def _T0_alt(Tw, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        1-D array of floats containing the freezing altitudes.
+        1-D array denoting altitudes where the
+        temperature drops below 0 deg C.
 
     """
     alt = np.array([])
@@ -191,40 +194,39 @@ def _T0_alt(Tw, height):
 
 
 def find_insects(radar, Tw, *args, prob_lim=0.8):
-    """Returns insect probability and boolean field denoting insects.
+    """Returns insect probability and boolean array of insect presense.
 
     Args:
-        radar: A dict containing 2-D radar fields
-            {'Zh', 'ldr', 'width'}.
+        radar (dict): 2-D radar fields {'Zh', 'ldr', 'width'}.
         Tw (ndarray): 2-D wet bulb temperature.
         *args: Binary fields that are used to screen the
             insect probability. E.g. rain, clutter,
             melting_layer, ...
         prob_lim (float, optional): Probability higher than
-            this will lead to positive result. Default is 0.8.
+            this will lead to positive detection. Default is 0.8.
 
     Returns:
         A 2-element tuple containing result of classification 
         (2-D boolean array) for each pixel and insect probability 
-        (2-D array of floats where the values are between 0 and 1).
+        (2-D MaskedArray of floats where the values are between 0 and 1).
 
     """
     iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])
-    iprob_screened = _screen_insects(iprob, Tw, *args)
-    is_insects = iprob_screened > prob_lim
-    return is_insects, iprob_screened
+    iprob = _screen_insects(iprob, Tw, *args)
+    is_insects = iprob > prob_lim
+    return is_insects, ma.masked_where(iprob == 0, iprob)
 
 
 def _insect_probability(z, ldr, width):
-    """Finds insect probability from radar parameters.
+    """Estimates insect probability from radar parameters.
 
     Args:
-        z (ndarray): 2-D radar echo.
-        ldr (ndarray): 2-D radar linear depolarization ratio.
-        width (ndarray): 2-D radar spectral width.
+        z (MaskedArray): 2-D radar echo.
+        ldr (MaskedArray): 2-D radar linear depolarization ratio.
+        width (MaskedArray): 2-D radar spectral width.
 
     Returns:
-        2-D insect probability between 0-1 for all pixels.
+        2-D insect probability between 0-1.
 
     """
     def _insect_prob_ldr(z, ldr, z_loc=15, ldr_loc=-20):
@@ -285,7 +287,7 @@ def rain_from_radar(Z, time, time_buffer=5):
     """Find profiles affected by rain.
 
     Args:
-        Z (ndarray): 2-D radar echo.
+        Z (MaskedArray): 2-D radar echo.
         time (ndarray): 1-D time vector.
         time_buffer (float, optional): If a profile contains rain,
             profiles measured **time_buffer** (min) before
@@ -311,8 +313,8 @@ def find_clutter(v, is_rain, ngates=10, vlim=0.05):
 
     Args:
         v (MaskedArray): 2-D doppler velocity.
-        is_rain (ndarray): 1-D boolean array indicating
-            profiles affected by rain.
+        is_rain (ndarray): 1-D boolean array denoting
+            presense of rain.
         vlim (float, optional): Velocity threshold.
             Smaller values are classified as clutter.
             Default is 0.05 (m/s).

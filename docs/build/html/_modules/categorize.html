@@ -58,13 +58,14 @@
 <span class="kn">from</span> <span class="nn">cloudnetpy.output</span> <span class="k">import</span> <span class="n">CnetVar</span> <span class="k">as</span> <span class="n">CV</span>
 
 
-<div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../api.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
+<div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../api.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">zlib</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generates Cloudnet Level 1 categorize file.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        input_files (tuple): Tuple of strings containing full paths of</span>
 <span class="sd">                             the 4 input files (radar, lidar, mwr, model).</span>
 <span class="sd">        output_file (str): Full path of the output file.</span>
+<span class="sd">        zlib (bool): If True, the output file is compressed. Default is True.</span>
 
 <span class="sd">    References:</span>
 <span class="sd">        https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883</span>
@@ -129,9 +130,9 @@
                 <span class="s1">&#39;quality_bits&#39;</span><span class="p">:</span> <span class="n">qual_bits</span><span class="p">,</span>
                 <span class="s1">&#39;Z_error&#39;</span><span class="p">:</span> <span class="n">Z_err</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">],</span>
                 <span class="s1">&#39;Z_sensitivity&#39;</span><span class="p">:</span> <span class="n">Z_err</span><span class="p">[</span><span class="s1">&#39;sensitivity&#39;</span><span class="p">]}</span>
-    <span class="n">obs</span> <span class="o">=</span> <span class="n">_cat_cnet_vars</span><span class="p">(</span><span class="n">cat_vars</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">,</span> <span class="n">instruments</span><span class="p">)</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">_cat_cnet_vars</span><span class="p">(</span><span class="n">cat_vars</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">,</span> <span class="n">instruments</span><span class="p">,</span> <span class="n">zlib</span><span class="p">)</span>
     <span class="n">output</span><span class="o">.</span><span class="n">save_cat</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">],</span>
-                    <span class="n">model</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">obs</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">)</span></div>
+                    <span class="n">model</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">],</span> <span class="n">obs</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">,</span> <span class="n">zlib</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_correct_atten</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">gas_atten</span><span class="p">,</span> <span class="n">liq_atten</span><span class="p">):</span>
@@ -157,7 +158,7 @@
     <span class="sd">&quot;&quot;&quot;Returns altitude grid for Cloudnet products.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        rad_vars: NetCDF4 instance.</span>
+<span class="sd">        rad_vars: NetCDF instance.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Altitude grid (m).</span>
@@ -224,17 +225,17 @@
 
 
 <div class="viewcode-block" id="fetch_lidar"><a class="viewcode-back" href="../api.html#categorize.fetch_lidar">[docs]</a><span class="k">def</span> <span class="nf">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Reads and rebins lidar 2d fields in time and height.</span>
+    <span class="sd">&quot;&quot;&quot;Reads and rebins lidar fields in time and height.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        lid_vars: NetCDF instance.</span>
-<span class="sd">        fields (tuple): Tuple of strings containing lidar</span>
+<span class="sd">        fields (tuple): Tuple of strings containing lidar 2-D</span>
 <span class="sd">            fields to be rebinned. Usually just the (&#39;beta&#39;,).</span>
 <span class="sd">        time (ndarray): 1-D array, the target time vector.</span>
-<span class="sd">        height (ndarray): 1-D array, the target height vector.</span>
+<span class="sd">        height (ndarray): 1-D array, the target height vector (m).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Dict containing the rebinned lidar fields.</span>
+<span class="sd">        Dict containing rebinned lidar fields.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError: Missing field.</span>
@@ -264,7 +265,7 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict containing interpolated LWP data</span>
-<span class="sd">        and its error {&#39;value&#39;, &#39;err&#39;}.</span>
+<span class="sd">        and its error: {&#39;value&#39;, &#39;err&#39;}.</span>
 
 <span class="sd">    Notes: </span>
 <span class="sd">        Needs to decide how to handle totally </span>
@@ -290,7 +291,7 @@
     <span class="sd">&quot;&quot;&quot;Reads LWP, estimates its error, and converts time if needed.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        mwr_vars: NetCDF4 instance.</span>
+<span class="sd">        mwr_vars: NetCDF instance.</span>
 <span class="sd">        frac_error (float): Fractional error (scalar).</span>
 <span class="sd">        lin_error (float): Linear error (scalar).</span>
 
@@ -315,16 +316,16 @@
     <span class="sd">&quot;&quot;&quot;Interpolates model variables and calculates wet bulb temperature.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        mod_vars: NetCDF4 instance.</span>
-<span class="sd">        alt_site (int): Altitude of the site above mean sea level.</span>
+<span class="sd">        mod_vars: NetCDF instance.</span>
+<span class="sd">        alt_site (int): Altitude of the site above mean sea level (m).</span>
 <span class="sd">        freq (float): Radar frequency (GHz).</span>
-<span class="sd">        time (ndarray): 1-D array.</span>
-<span class="sd">        height (ndarray): 1-D array.</span>
+<span class="sd">        time (ndarray): 1-D array, the target time vector.</span>
+<span class="sd">        height (ndarray): 1-D array, the target height vector (m).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict containing original model fields in common altitude</span>
-<span class="sd">        grid, and the time and height vector of those, interpolated </span>
-<span class="sd">        fields in Cloudnet time/height grid, and wet bulb temperature </span>
+<span class="sd">        grid with the corresponding time and height vector, interpolated </span>
+<span class="sd">        fields in Cloudnet time / height grid, and wet bulb temperature:</span>
 <span class="sd">        {&#39;original&#39;, &#39;interp&#39;, &#39;time&#39;, &#39;height&#39;, &#39;Tw&#39;}</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -346,7 +347,7 @@
     <span class="sd">&quot;&quot;&quot;Reads model fields and interpolates into common altitude grid.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        vrs: NetCDF4 instance.</span>
+<span class="sd">        vrs: NetCDF instance.</span>
 <span class="sd">        fields (array_like): list of strings containing fields</span>
 <span class="sd">            to be interpolated.</span>
 <span class="sd">        alt_site (float): Site altitude (m).</span>
@@ -406,7 +407,7 @@
     <span class="sd">&quot;&quot;&quot;Calculates sensitivity and error of radar echo.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        radar: NetCDF4 instance.</span>
+<span class="sd">        radar: NetCDF instance.</span>
 <span class="sd">        rad_vars: Radar variables.</span>
 <span class="sd">        gas_atten (ndarray): 2-D gas attenuation.</span>
 <span class="sd">        liq_atten (dict): Liquid attenuation error and boolean</span>
@@ -455,7 +456,7 @@
     <span class="k">return</span> <span class="n">out</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_cat_cnet_vars</span><span class="p">(</span><span class="n">vars_in</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">,</span> <span class="n">instruments</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_cat_cnet_vars</span><span class="p">(</span><span class="n">vars_in</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">,</span> <span class="n">instruments</span><span class="p">,</span> <span class="n">zlib</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates list of variable instances for output writing.&quot;&quot;&quot;</span>
     <span class="n">lin</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;logarithmic&#39;</span>
     <span class="n">radar_source</span> <span class="o">=</span> <span class="n">instruments</span><span class="p">[</span><span class="s1">&#39;radar&#39;</span><span class="p">]</span>
@@ -639,10 +640,13 @@
              <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
              <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Wet bulb temperature&#39;</span><span class="p">,</span>
              <span class="n">units</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">,</span>
+             <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">300</span><span class="p">),</span>
+             <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
              <span class="n">comment</span><span class="o">=</span><span class="n">_comments</span><span class="p">(</span><span class="n">var</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;insect_probability&#39;</span>
     <span class="k">yield</span><span class="p">(</span><span class="n">CV</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
-             <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+             <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+             <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
              <span class="n">long_name</span><span class="o">=</span><span class="s1">&#39;Probability of insects&#39;</span><span class="p">))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;radar_gas_atten&#39;</span>
     <span class="k">yield</span><span class="p">(</span><span class="n">CV</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
