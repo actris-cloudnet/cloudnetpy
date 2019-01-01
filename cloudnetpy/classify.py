@@ -55,7 +55,7 @@ def _bits_to_integer(bits):
     Args:
         bits (list): List of bit fields (of similar sizes!)
         to be saved in the resulting array of integers. bits[0]
-        is saved as bit 1, bits[1] as bit 2, etc.
+        is saved as bit 0, bits[1] as bit 1, etc.
 
     Returns:
         Array of integers containing the information of the
@@ -73,12 +73,12 @@ def find_melting_layer(Tw, ldr, v):
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Args:
-        Tw (ndarray): Wet bulb temperature, (n, m).
-        ldr (ndarray): Linear depolarization ratio, (n, m).
-        v (ndarray): Doppler velocity, (n, m).
+        Tw (ndarray): 2-D wet bulb temperature.
+        ldr (ndarray): 2-D linear depolarization ratio.
+        v (ndarray): 2-D doppler velocity.
 
     Returns:
-        Boolean array denoting the melting layer.
+        2-D boolean array denoting the melting layer.
 
     """
     def _slice(arg1, arg2, ii, ind):
@@ -191,21 +191,22 @@ def _T0_alt(Tw, height):
 
 
 def find_insects(radar, Tw, *args, prob_lim=0.8):
-    """ Returns insect probability and binary field indicating insects.
+    """Returns insect probability and boolean field denoting insects.
 
     Args:
-        radar: A dict containing gridded radar fields
-            ('Zh', 'ldr', 'width').
-        Tw (ndarray): Wet bulb temperature.
+        radar: A dict containing 2-D radar fields
+            {'Zh', 'ldr', 'width'}.
+        Tw (ndarray): 2-D wet bulb temperature.
         *args: Binary fields that are used to screen the
             insect probability. E.g. rain, clutter,
             melting_layer, ...
         prob_lim (float, optional): Probability higher than
-            this will lead to positive result. Default is 0.7.
+            this will lead to positive result. Default is 0.8.
 
     Returns:
-        A 2-element tuple containing result of classification (bool)
-        for each pixel and insect probability (0-1).
+        A 2-element tuple containing result of classification 
+        (2-D boolean array) for each pixel and insect probability 
+        (2-D array of floats where the values are between 0 and 1).
 
     """
     iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])
@@ -251,9 +252,9 @@ def _screen_insects(insect_prob, Tw, *args):
     """Screens insects by temperature and other misc. conditions.
 
     Args:
-        insect_prob (ndarray): Insect probability, (m, n).
-        Tw (ndarray): (m, n)
-        *args (ndrray): Variable number of binary fields where 1
+        insect_prob (ndarray): Insect probability with the shape (m, n).
+        Tw (ndarray): Wet bulb temperature with the shape (m, n).
+        *args (ndrray): Variable number of boolean arrays where True
             means that insect probablity should be 0. Shape of these
             fields can be (m, n), or (m,) when the whole profile
             is flagged.
@@ -269,7 +270,8 @@ def _screen_insects(insect_prob, Tw, *args):
         return insect_prob
 
     def _screen_insects_temp(insect_prob, Tw, t_lim=-5):
-        """Removes insects from too cold temperatures."""
+        """Removes insects from cold temperatures.
+        Default limit is -5 degrees of Celsius."""
         insect_prob[Tw < (T0+t_lim)] = 0
         return insect_prob
 
@@ -283,11 +285,11 @@ def rain_from_radar(Z, time, time_buffer=5):
     """Find profiles affected by rain.
 
     Args:
-        Z (ndarray): Radar echo with shape (m, n).
-        time (ndarray): Time vector with shape (m,).
-        time_buffer (float, optional): If profile includes rain,
-            profiles measured **time_buffer** minutes before
-            and after are also flagged to contain rain. Defaults to 5.
+        Z (ndarray): 2-D radar echo.
+        time (ndarray): 1-D time vector.
+        time_buffer (float, optional): If a profile contains rain,
+            profiles measured **time_buffer** (min) before
+            and after are also marked to contain rain. Default is 5 (min).
 
     Returns:
         1-D boolean array denoting profiles affected by rain.
