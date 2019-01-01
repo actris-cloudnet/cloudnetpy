@@ -157,7 +157,7 @@ def find_freezing_region(Tw, melting_layer, time, height):
     mid_win = int(win/2)
     for n in range(0, ntime-win):
         if mean_melting_alt[n:n+win].mask.all():
-            freezing_alt[mid_win] = t0_alt[mid_win]
+            freezing_alt[n+mid_win] = t0_alt[n+mid_win]
     ind = ~freezing_alt.mask
     f = interp1d(time[ind], freezing_alt[ind]) 
     for ii, alt in enumerate(f(time)):
