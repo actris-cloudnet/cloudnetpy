@@ -10,10 +10,15 @@ CloudnetPy documentation
 Welcome! This is the documentation for CloudnetPy, the Python
 implementation of the Cloudnet processing scheme.
 
+.. WARNING::
+   CloudnetPy is still in Pre-Alpha stage. It should not be used yet for any serious scientific work!
+
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
 
    overview
+   measurements
    installation
    quickstart
    api
