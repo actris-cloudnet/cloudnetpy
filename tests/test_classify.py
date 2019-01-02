@@ -16,7 +16,7 @@ def test_get_clutter_bit1():
     rain_bit = np.array([0, 0], dtype=bool)
     res = np.array([[0, 1, 0, 0, 0],
                     [0, 1, 0, 0, 0]], dtype=bool)
-    cnet = classify.get_clutter_bit(v, rain_bit, ngates=5)
+    cnet = classify.find_clutter(v, rain_bit, ngates=5)
     assert_array_almost_equal(cnet, res)
 
 def test_get_clutter_bit2():
@@ -28,7 +28,7 @@ def test_get_clutter_bit2():
     rain_bit = np.array([1, 1], dtype=bool)
     res = np.array([[0, 0, 0, 0, 0],
                     [0, 0, 0, 0, 0]], dtype=bool)
-    cnet = classify.get_clutter_bit(v, rain_bit, ngates=5)
+    cnet = classify.find_clutter(v, rain_bit, ngates=5)
     assert_array_almost_equal(cnet, res)
 
 

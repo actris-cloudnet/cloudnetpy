@@ -120,7 +120,7 @@ def filter_isolated_pixels(array):
     return filtered_array
 
 
-def bit_test(integer, nth_bit):
+def isbit(integer, nth_bit):
     """Tests if nth bit (0,1,2..) is on for the input number.
 
     Args:
@@ -134,9 +134,9 @@ def bit_test(integer, nth_bit):
         ValueError: negative bit as input.
 
     Examples:
-        >>> bit_test(4, 1)
+        >>> isbit(4, 1)
             False
-        >>> bit_test(4, 2)
+        >>> isbit(4, 2)
             True
 
     """
@@ -146,7 +146,7 @@ def bit_test(integer, nth_bit):
     return integer & mask > 0
 
 
-def bit_set(integer, nth_bit):
+def setbit(integer, nth_bit):
     """Sets nth bit (0, 1, 2..) on input number.
 
     Args:
@@ -160,9 +160,9 @@ def bit_set(integer, nth_bit):
         ValueError: negative bit as input.
 
     Examples:
-        >>> bit_set(1, 1)
+        >>> setbit(1, 1)
             3
-        >>> bit_set(0, 2)
+        >>> setbitt(0, 2)
             4
 
     """
@@ -204,8 +204,8 @@ def lin2db(x, scale=10):
     return scale*ma.log10(x)
 
 
-def med_diff(x):
-    """Returns median difference in array."""
+def mdiff(x):
+    """Returns median difference of 1-D array."""
     return ma.median(ma.diff(x))
 
 
@@ -253,7 +253,7 @@ def bases_and_tops(y):
     return bases, tops
 
 
-def cumsum_reset(x, axis=0):
+def cumsumr(x, axis=0):
     """Finds cumulative sum that resets on 0.
 
     Args:
@@ -266,7 +266,7 @@ def cumsum_reset(x, axis=0):
 
     Examples:
         >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])
-        >>> utils.cumsum_reset(x)
+        >>> utils.cumsumr(x)
             [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]
 
     """
@@ -278,7 +278,7 @@ def ffill(arr, value=0):
     """Forward fills a numpy array.
 
     Args:
-        arr (ndarray): 1-D or 2-D array of ints.
+        arr (ndarray): 1-D or 2-D array.
         value (int): Value to be filled. Default is 0.
 
     Returns:
@@ -355,7 +355,7 @@ def number_of_elements(x, dist, var=None):
             3
 
     """
-    n = dist/med_diff(x)
+    n = dist/mdiff(x)
     if var == 'time':
         n = n/60
     return int(np.ceil(n))

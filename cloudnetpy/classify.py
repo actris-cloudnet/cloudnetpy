@@ -66,7 +66,7 @@ def _bits_to_integer(bits):
     int_array = np.zeros_like(bits[0], dtype=int)
     for n, bit in enumerate(bits):
         ind = np.where(bit)  # works also if bit is None
-        int_array[ind] = utils.bit_set(int_array[ind].astype(int), n)
+        int_array[ind] = utils.setbit(int_array[ind].astype(int), n)
     return int_array
 
 
@@ -299,12 +299,11 @@ def rain_from_radar(Z, time, time_buffer=5):
     """
     is_rain = ma.array(Z[:, 3] > 0, dtype=bool).filled(False)
     nprofs = len(time)
-    step = utils.med_diff(time)*60
-    nsteps = int(round(time_buffer/step/2))
+    nsteps = utils.number_of_elements(time, time_buffer, 'time')
     for ind in np.where(is_rain)[0]:
         i1 = max(0, ind-nsteps)
-        i2 = min(ind+nsteps+1, nprofs)
-        is_rain[i1:i2] = True
+        i2 = min(ind+nsteps, nprofs)
+        is_rain[i1:i2+1] = True
     return is_rain
 
 

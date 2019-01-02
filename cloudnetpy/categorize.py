@@ -393,7 +393,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     Z_sensitivity = Z_power_min + log_range + np.mean(gas_atten, axis=0)
     Zc = ma.median(ma.array(Z, mask=~is_clutter), axis=0)
     Z_sensitivity[~Zc.mask] = Zc[~Zc.mask]
-    dwell_time = utils.med_diff(time)*3600  # seconds
+    dwell_time = utils.mdiff(time)*3600  # seconds
     independent_pulses = (dwell_time*freq*1e9*4*np.sqrt(math.pi)
                           * radar['width']/3e8)
     Z_precision = 4.343*(1/np.sqrt(independent_pulses)

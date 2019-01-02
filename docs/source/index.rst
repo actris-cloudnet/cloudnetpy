@@ -3,12 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-=========================
-Cloudnet's documentation!
-=========================
+========================
+CloudnetPy documentation
+========================
 
-Cloudnet produces vertical profiles of cloud
-properties at high vertical and temporal resolution.
+Welcome! This is the documentation for CloudnetPy, the Python
+implementation of the Cloudnet processing scheme.
 
 .. toctree::
    :maxdepth: 2

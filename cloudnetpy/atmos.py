@@ -149,8 +149,8 @@ def gas_atten(model, cat_bits, height):
         Attenuation due to atmospheric gases.
 
     """
-    dheight = utils.med_diff(height)
-    is_liquid = utils.bit_test(cat_bits, 0)
+    dheight = utils.mdiff(height)
+    is_liquid = utils.isbit(cat_bits, 0)
     spec = np.copy(model['specific_gas_atten'])
     spec[is_liquid] = model['specific_saturated_gas_atten'][is_liquid]
     layer1_att = model['gas_atten'][:, 0]
@@ -177,13 +177,13 @@ def liquid_atten(lwp, model, bits, height):
 
     """
     spec_liq = model['specific_liquid_atten']
-    is_liq = utils.bit_test(bits['cat'], 0)
+    is_liq = utils.isbit(bits['cat'], 0)
     lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
     ind = np.where(bits['liquid_base'])
     lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
     lwc_dz_err[is_liq] = utils.ffill(lwc_dz[is_liq])
-    ind_from_base = utils.cumsum_reset(is_liq, axis=1)
-    lwc_adiab = ind_from_base*lwc_dz_err*utils.med_diff(height)*1e3
+    ind_from_base = utils.cumsumr(is_liq, axis=1)
+    lwc_adiab = ind_from_base*lwc_dz_err*utils.mdiff(height)*1e3
     ind = np.isfinite(lwp['value']) & np.any(is_liq, axis=1)
     lwp_norm[ind, :] = (lwc_adiab[ind, :].T*lwp['value'][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
     lwp_norm_err[ind, :] = (lwc_dz_err[ind, :].T*lwp['err'][ind]/np.sum(lwc_dz_err[ind, :], axis=1)).T
@@ -208,7 +208,7 @@ def _screen_liq_atten(liq_atten, bits):
         was not.
 
     """
-    melting_layer = utils.bit_test(bits['cat'], 3)
+    melting_layer = utils.isbit(bits['cat'], 3)
     uncorr_atten = np.cumsum(melting_layer, axis=1) >= 1
     uncorr_atten[bits['rain'], :] = True
     corr_atten = (liq_atten > 0).filled(False) & ~uncorr_atten
