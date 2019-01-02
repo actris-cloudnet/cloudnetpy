@@ -181,7 +181,7 @@ def liquid_atten(lwp, model, bits, height):
     lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
     ind = np.where(bits['liquid_base'])
     lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
-    lwc_dz_err[is_liq] = utils.forward_fill(lwc_dz[is_liq])
+    lwc_dz_err[is_liq] = utils.ffill(lwc_dz[is_liq])
     ind_from_base = utils.cumsum_reset(is_liq, axis=1)
     lwc_adiab = ind_from_base*lwc_dz_err*utils.med_diff(height)*1e3
     ind = np.isfinite(lwp['value']) & np.any(is_liq, axis=1)

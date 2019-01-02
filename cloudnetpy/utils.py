@@ -266,7 +266,7 @@ def cumsum_reset(x, axis=0):
 
     Examples:
         >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])
-        >>> cumsum_reset(x)
+        >>> utils.cumsum_reset(x)
             [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]
 
     """
@@ -274,7 +274,7 @@ def cumsum_reset(x, axis=0):
     return cums - np.maximum.accumulate(cums*(x == 0), axis=axis)
 
 
-def forward_fill(arr, value=0):
+def ffill(arr, value=0):
     """Forward fills a numpy array.
 
     Args:
@@ -286,7 +286,7 @@ def forward_fill(arr, value=0):
 
     Examples:
         >>> x = np.array([0, 5, 0, 0, 2, 0])
-        >>> forward_fill(x)
+        >>> utils.ffill(x)
             [0, 5, 5, 5, 2, 2]
 
     Notes:
