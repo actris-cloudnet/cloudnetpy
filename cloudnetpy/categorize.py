@@ -41,7 +41,8 @@ def generate_categorize(input_files, output_file, zlib=True):
         sys.exit(error)
     try:
         alt_site = ncf.site_altitude(rad_vars, lid_vars, mwr_vars)
-        radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time)
+        radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time,
+                            radar_meta['vfold'])
     except KeyError as error:
         sys.exit(error)
     lidar = fetch_lidar(lid_vars, ('beta',), time, height)
@@ -141,7 +142,7 @@ def _altitude_grid(rad_vars):
     return np.array(range_instru + alt_instru)
 
 
-def fetch_radar(rad_vars, fields, time_new):
+def fetch_radar(rad_vars, fields, time_new, vfold):
     """Reads and rebins radar 2d fields in time.
 
     Args:
@@ -149,6 +150,7 @@ def fetch_radar(rad_vars, fields, time_new):
         fields (tuple): Tuple of strings containing 2-D radar 
             fields to be rebinned, e.g. ('Zh', 'v', 'width').
         time_new (ndarray): 1-D array, the target time vector.
+        vfold (float): Folding velocity = Pi/NyquistVelocity (m/s).
 
     Returns:
         Dict containing rebinned radar fields.
@@ -162,7 +164,6 @@ def fetch_radar(rad_vars, fields, time_new):
 
     """
     out = {}
-    vfold = math.pi/rad_vars['NyquistVelocity'][:]
     time_orig = rad_vars['time'][:]
     out['time'] = time_orig
     for field in fields:

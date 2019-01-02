@@ -5,6 +5,8 @@ an argument."""
 import numpy as np
 import numpy.ma as ma
 import netCDF4
+import math
+import scipy.constants
 
 
 def load_nc(file_in):
@@ -35,11 +37,22 @@ def fetch_radar_meta(radar_file):
         location = 'Unknown location'
     try:
         freq = radar_freq(nc.variables)
+        vfold = folding_velo(nc.variables, freq)
     except (ValueError, KeyError) as error:
         raise error
-    dvec = '-'.join([str(nc.year), str(nc.month).zfill(2),
+    dvec = '-'.join([str(nc.year).zfill(4), str(nc.month).zfill(2),
                      str(nc.day).zfill(2)])
-    return {'freq': freq, 'date': dvec, 'location': location}
+    return {'freq': freq, 'vfold': vfold, 'date': dvec,
+            'location': location}
+
+
+def folding_velo(vrs, freq):
+    """Returns radar folding velocity."""
+    if 'NyquistVelocity' in vrs:
+        nyq = vrs['NyquistVelocity']
+    elif 'prf' in vrs:
+        nyq = vrs['prf'][:] * scipy.constants.c / (4 * freq)
+    return math.pi / nyq
 
 
 def radar_freq(vrs):

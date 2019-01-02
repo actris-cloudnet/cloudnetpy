@@ -333,7 +333,7 @@ def init(nvars, shape, dtype=float, masked=True):
         yield fun(shape, dtype=dtype)
 
 
-def number_of_elements(x, dist, var=None):
+def n_elements(x, dist, var=None):
     """Returns the number of elements that cover certain distance.
 
     Args:
@@ -351,7 +351,7 @@ def number_of_elements(x, dist, var=None):
 
     Examples:
         >>> x = np.array([2, 4, 6, 8, 10])
-        >>> utils.number_of_elements(x, 6)
+        >>> utils.n_elements(x, 6)
             3
 
     """

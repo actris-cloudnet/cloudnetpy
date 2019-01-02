@@ -34,7 +34,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     """
     bits = [None]*6
     is_rain = rain_from_radar(radar['Zh'], time)
-    is_clutter = find_clutter(radar['v'], is_rain)    
+    is_clutter = find_clutter(radar['v'], is_rain)
     is_liquid, liquid_base, liquid_top = droplet.find_liquid(beta, height)
     bits[3] = find_melting_layer(Tw, radar['ldr'], radar['v'])
     bits[2] = find_freezing_region(Tw, bits[3], time, height)
@@ -155,7 +155,7 @@ def find_freezing_region(Tw, melting_layer, time, height):
     freezing_alt = ma.copy(mean_melting_alt)
     for ind in (0, -1):
         freezing_alt[ind] = mean_melting_alt[ind] or t0_alt[ind]
-    win = utils.number_of_elements(time, 240, 'time')  # 240 min time window
+    win = utils.n_elements(time, 240, 'time')  # 4h window
     mid_win = int(win/2)
     for n in range(0, ntime-win):
         if mean_melting_alt[n:n+win].mask.all():
@@ -299,7 +299,7 @@ def rain_from_radar(Z, time, time_buffer=5):
     """
     is_rain = ma.array(Z[:, 3] > 0, dtype=bool).filled(False)
     nprofs = len(time)
-    nsteps = utils.number_of_elements(time, time_buffer, 'time')
+    nsteps = utils.n_elements(time, time_buffer, 'time')
     for ind in np.where(is_rain)[0]:
         i1 = max(0, ind-nsteps)
         i2 = min(ind+nsteps, nprofs)
