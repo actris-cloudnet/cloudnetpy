@@ -7,6 +7,7 @@ from scipy import stats
 from cloudnetpy import droplet
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
+import scipy.ndimage
 
 
 def fetch_cat_bits(radar, beta, Tw, time, height):
@@ -70,13 +71,15 @@ def _bits_to_integer(bits):
     return int_array
 
 
-def find_melting_layer(Tw, ldr, v):
+def find_melting_layer(Tw, ldr, v, smooth=True):
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Args:
         Tw (ndarray): 2-D wet bulb temperature.
         ldr (ndarray): 2-D linear depolarization ratio.
         v (ndarray): 2-D doppler velocity.
+        smooth (bool, optional): If True, apply a small 
+            Gaussian smoother to the melting layer. Default is True.
 
     Returns:
         2-D boolean array denoting the melting layer.
@@ -94,7 +97,7 @@ def find_melting_layer(Tw, ldr, v):
     melting_layer = np.zeros(Tw.shape, dtype=bool)
     ldr_diff = np.diff(ldr, axis=1).filled(0)
     v_diff = np.diff(v, axis=1).filled(0)
-    trange = (-2, 5)  # find peak from this T range around T0
+    trange = (-10, 10)  # find peak from this T range around T0
     for ii, tprof in enumerate(Tw):
         ind = np.where((tprof > T0+trange[0]) &
                        (tprof < T0+trange[1]))[0]
@@ -108,18 +111,21 @@ def find_melting_layer(Tw, ldr, v):
                 top, base = _basetop(ldr_dprof, ldr_p, nind)
                 conds = (ldr_prof[ldr_p] - ldr_prof[top] > 4,
                          ldr_prof[ldr_p] - ldr_prof[base] > 4,
-                         ldr_prof[ldr_p] > -20,
-                         v_prof[base] < -2)
+                         ldr_prof[ldr_p] > -30,
+                         v_prof[base] < -1)
                 if all(conds):
                     melting_layer[ii, ind[ldr_p]:ind[top]+1] = True
             except:  # just cach all exceptions
                 try:
                     top, base = _basetop(v_dprof, v_p, nind)
                     diff = v_prof[top] - v_prof[base]
-                    if diff > 1 and v_prof[base] < -2:
+                    if diff > 2 and v_prof[base] < -2:
                         melting_layer[ii, ind[v_p-1:v_p+2]] = True
                 except:  # failed whatever the reason
                     continue
+    if smooth:
+        ml = scipy.ndimage.filters.gaussian_filter(np.array(melting_layer, dtype=float), (n, 0.1))
+        melting_layer = (ml > 0.2).astype(bool)
     return melting_layer
 
 
