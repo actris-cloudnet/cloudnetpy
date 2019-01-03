@@ -2,12 +2,12 @@
 
 import numpy as np
 import numpy.ma as ma
+import scipy.ndimage
 from scipy.interpolate import interp1d
 from scipy import stats
 from cloudnetpy import droplet
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
-import scipy.ndimage
 
 
 def fetch_cat_bits(radar, beta, Tw, time, height):
@@ -27,7 +27,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
             - bit 4: Aerosols
             - bit 5: Insects
 
-        The dict also contains 1-D boolean array of rain presense, 
+        The dict also contains 1-D boolean array of rain presense,
         'rain', 2-D boolean arrays of clutter and liquid cloud bases,
         {'is_clutter', 'liquid_base'}, and 2-D array of
         insect probability, 'insect_prob'.
@@ -78,7 +78,7 @@ def find_melting_layer(Tw, ldr, v, smooth=True):
         Tw (ndarray): 2-D wet bulb temperature.
         ldr (ndarray): 2-D linear depolarization ratio.
         v (ndarray): 2-D doppler velocity.
-        smooth (bool, optional): If True, apply a small 
+        smooth (bool, optional): If True, apply a small
             Gaussian smoother to the melting layer. Default is True.
 
     Returns:
@@ -124,7 +124,7 @@ def find_melting_layer(Tw, ldr, v, smooth=True):
                 except:  # failed whatever the reason
                     continue
     if smooth:
-        ml = scipy.ndimage.filters.gaussian_filter(np.array(melting_layer, dtype=float), (n, 0.1))
+        ml = scipy.ndimage.filters.gaussian_filter(np.array(melting_layer, dtype=float), (2, 0.1))
         melting_layer = (ml > 0.2).astype(bool)
     return melting_layer
 
@@ -132,10 +132,10 @@ def find_melting_layer(Tw, ldr, v, smooth=True):
 def find_freezing_region(Tw, melting_layer, time, height):
     """Finds freezing region using the model temperature and melting layer.
 
-    Every profile that contains melting layer, subzero region starts from 
-    the mean melting layer height. If there are (long) time windows where 
-    no melting layer is present, model temperature is used in the 
-    middle of the time window. Finally, the subzero altitudes are linearly 
+    Every profile that contains melting layer, subzero region starts from
+    the mean melting layer height. If there are (long) time windows where
+    no melting layer is present, model temperature is used in the
+    middle of the time window. Finally, the subzero altitudes are linearly
     interpolated for all profiles.
 
     Args:
@@ -167,7 +167,7 @@ def find_freezing_region(Tw, melting_layer, time, height):
         if mean_melting_alt[n:n+win].mask.all():
             freezing_alt[n+mid_win] = t0_alt[n+mid_win]
     ind = ~freezing_alt.mask
-    f = interp1d(time[ind], freezing_alt[ind]) 
+    f = interp1d(time[ind], freezing_alt[ind])
     for ii, alt in enumerate(f(time)):
         is_freezing[ii, height > alt] = True
     return is_freezing
@@ -212,8 +212,8 @@ def find_insects(radar, Tw, *args, prob_lim=0.8):
             this will lead to positive detection. Default is 0.8.
 
     Returns:
-        A 2-element tuple containing result of classification 
-        (2-D boolean array) for each pixel and insect probability 
+        A 2-element tuple containing result of classification
+        (2-D boolean array) for each pixel and insect probability
         (2-D MaskedArray of floats where the values are between 0 and 1).
 
     """
@@ -350,11 +350,11 @@ def find_falling_hydrometeors(Z, beta, is_clutter, is_liquid,
         2-D boolean array containing falling hydrometeros.
 
     """
-    is_Z = ~Z.mask
+    is_z = ~Z.mask
     no_clutter = ~is_clutter
     no_insects = ~is_insects
     ice_from_lidar = ~beta.mask & ~is_liquid & (Tw < (T0-7))
-    is_falling = (is_Z & no_clutter & no_insects) | ice_from_lidar
+    is_falling = (is_z & no_clutter & no_insects) | ice_from_lidar
     return utils.filter_isolated_pixels(is_falling)
 
 
@@ -384,7 +384,7 @@ def fetch_qual_bits(Z, beta, is_clutter, liq_atten):
         beta (MaskedArray): 2-D attenuated backscattering.
         is_clutter (ndarray): 2-D boolean array of clutter.
         liq_atten (dict): 2-D boolean arrays {'is_corr', 'is_not_corr'}
-            denoting where liquid attenuation was corrected and 
+            denoting where liquid attenuation was corrected and
             where it wasn't.
 
     Returns: Integer array containing the following bits:
