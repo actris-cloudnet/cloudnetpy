@@ -47,12 +47,57 @@ def fetch_radar_meta(radar_file):
 
 
 def folding_velo(vrs, freq):
-    """Returns radar folding velocity."""
+    """Returns radar folding velocity.
+
+    Args:
+        vrs (dict): Radar variables.
+        freq (float): Rardar frequency (GHz).
+
+    Returns:
+        (float): Radar folding velocity (m/s).
+
+    Raises:
+        KeyError:
+            No 'NyquistVelocity' or 'prf' in
+            radar variables.
+
+    """
     if 'NyquistVelocity' in vrs:
-        nyq = vrs['NyquistVelocity']
+        nyq = vrs['NyquistVelocity'][:]
     elif 'prf' in vrs:
         nyq = vrs['prf'][:] * scipy.constants.c / (4 * freq)
+    else:
+        raise KeyError("Can't find or compute folding velocity!")
     return math.pi / nyq
+
+
+def findkey(vrs, possible_fields):
+    """Finds first matching key from several possible.
+    Args:
+        vrs (dict): Dictionary or some other
+            iterable containing strings.
+        fields (tuple): List of possible strings to be
+            searched.
+
+    Returns:
+        First found value.
+
+    Examples:
+        >>> x = {'abc':1, 'bac':2, 'cba':3}
+        >>> ncf.findkey(x, ('bac', 'cba'))
+            'bac'
+
+        The order of the keys to be searched is defaining
+        the return value if there are several matching strings:
+
+        >>> ncf.findkey(x, ('cba', 'bac'))
+            'cba'
+
+    """
+    for field in possible_fields:
+        if field in vrs:
+            return field
+    return None
 
 
 def radar_freq(vrs):
@@ -69,12 +114,11 @@ def radar_freq(vrs):
         ValueError: Invalid frequency value.
 
     """
-    possible_fields = ('radar_frequency', 'frequency')
-    freq = [vrs[field][:] for field in vrs if field in possible_fields]
-    if not freq:
-        raise KeyError('Missing frequency. Not a radar file??')
-    freq = freq[0]  # actual data of the masked data
-    assert ma.count(freq) == 1, 'Multiple frequencies. Not a radar file??'
+    freq_key = findkey(vrs, ('radar_frequency', 'frequency'))
+    if not freq_key:
+        raise KeyError('Missing frequency, check your radar file.')
+    freq = vrs[freq_key][:]
+    assert ma.count(freq) == 1, 'Multiple frequencies, not a radar file?'
     try:
         wl_band(freq)
     except ValueError as error:
@@ -97,12 +141,11 @@ def wl_band(freq):
 
     """
     if 30 < freq < 40:
-        wl_band = 0
+        return 0
     elif 90 < freq < 100:
-        wl_band = 1
+        return 1
     else:
         raise ValueError('Only 35 and 94 GHz radars supported.')
-    return wl_band
 
 
 def fetch_instrument_models(radar_file, lidar_file, mwr_file):
