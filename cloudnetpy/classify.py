@@ -10,7 +10,7 @@ from cloudnetpy import utils
 from cloudnetpy.constants import T0
 
 
-def fetch_cat_bits(radar, beta, Tw, time, height):
+def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
     """Classifies radar/lidar observations.
 
     Args:
@@ -18,6 +18,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
         beta (MaskedArray): 2-D lidar attenuated backscattering coefficient.
         Tw (ndarray): 2-D wet bulb temperature (K).
         height (ndarray): 1-D altitude grid (m).
+        model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF'.
 
     Returns: A dict containing the 2-D classification, 'cat_bits', where:
             - bit 0: Liquid droplets
@@ -37,7 +38,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height):
     is_rain = rain_from_radar(radar['Zh'], time)
     is_clutter = find_clutter(radar['v'], is_rain)
     is_liquid, liquid_base, liquid_top = droplet.find_liquid(beta, height)
-    bits[3] = find_melting_layer(Tw, radar['ldr'], radar['v'])
+    bits[3] = find_melting_layer(Tw, radar['ldr'], radar['v'], model_type)
     bits[2] = find_freezing_region(Tw, bits[3], time, height)
     bits[0] = droplet.correct_liquid_top(radar['Zh'], Tw, bits[2],
                                          is_liquid, liquid_top, height)
@@ -71,13 +72,14 @@ def _bits_to_integer(bits):
     return int_array
 
 
-def find_melting_layer(Tw, ldr, v, smooth=True):
+def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Args:
         Tw (ndarray): 2-D wet bulb temperature.
         ldr (ndarray): 2-D linear depolarization ratio.
         v (ndarray): 2-D doppler velocity.
+        model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF'.
         smooth (bool, optional): If True, apply a small
             Gaussian smoother to the melting layer. Default is True.
 
@@ -94,10 +96,13 @@ def find_melting_layer(Tw, ldr, v, smooth=True):
         base = droplet.ind_base(dprof, pind, a, b)
         return top, base
 
+    if 'gdas1' in model_type.lower():
+        trange = (-8, 6)
+    elif 'ecmwf' in model_type.lower():
+        trange = (-4, 3)
     melting_layer = np.zeros(Tw.shape, dtype=bool)
     ldr_diff = np.diff(ldr, axis=1).filled(0)
     v_diff = np.diff(v, axis=1).filled(0)
-    trange = (-10, 10)  # find peak from this T range around T0
     for ii, tprof in enumerate(Tw):
         ind = np.where((tprof > T0+trange[0]) &
                        (tprof < T0+trange[1]))[0]
@@ -115,13 +120,13 @@ def find_melting_layer(Tw, ldr, v, smooth=True):
                          v_prof[base] < -1)
                 if all(conds):
                     melting_layer[ii, ind[ldr_p]:ind[top]+1] = True
-            except:  # just cach all exceptions
+            except:
                 try:
                     top, base = _basetop(v_dprof, v_p, nind)
                     diff = v_prof[top] - v_prof[base]
                     if diff > 2 and v_prof[base] < -2:
                         melting_layer[ii, ind[v_p-1:v_p+2]] = True
-                except:  # failed whatever the reason
+                except:
                     continue
     if smooth:
         ml = scipy.ndimage.filters.gaussian_filter(np.array(melting_layer, dtype=float), (2, 0.1))

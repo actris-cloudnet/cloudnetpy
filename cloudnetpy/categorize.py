@@ -16,6 +16,7 @@ from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
 from cloudnetpy.output import CnetVar as CV
+from cloudnetpy import plotting
 
 
 def generate_categorize(input_files, output_file, zlib=True):
@@ -33,6 +34,8 @@ def generate_categorize(input_files, output_file, zlib=True):
     """
     rad_vars, lid_vars, mwr_vars, mod_vars = (ncf.load_nc(f)
                                               for f in input_files)
+
+    input_types = ncf.fetch_input_types(input_files)
     try:
         time = utils.time_grid()
         height = _altitude_grid(rad_vars)  # m
@@ -49,7 +52,7 @@ def generate_categorize(input_files, output_file, zlib=True):
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
-                                   time, height)
+                                   time, height, input_types['model'])
     gas_atten = atmos.gas_atten(model['interp'], bits['cat'], height)
     liq_atten = atmos.liquid_atten(lwp, model['interp'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
@@ -58,7 +61,6 @@ def generate_categorize(input_files, output_file, zlib=True):
     Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                             bits['clutter'], radar_meta['freq'],
                             time, config.GAS_ATTEN_PREC)
-    instruments = ncf.fetch_instrument_models(*input_files[0:3])
     cat_vars = {'height': height,
                 'time': time,
                 'latitude': rad_vars['latitude'][:],
@@ -91,7 +93,7 @@ def generate_categorize(input_files, output_file, zlib=True):
                 'quality_bits': qual_bits,
                 'Z_error': Z_err['error'],
                 'Z_sensitivity': Z_err['sensitivity']}
-    obs = _cat_cnet_vars(cat_vars, radar_meta, instruments, zlib)
+    obs = _cat_cnet_vars(cat_vars, radar_meta, input_types, zlib)
     output.save_cat(output_file, time, height, model['time'],
                     model['height'], obs, radar_meta, zlib)
 
@@ -119,10 +121,10 @@ def _altitude_grid(rad_vars):
     """Returns altitude grid for Cloudnet products.
 
     Args:
-        rad_vars: NetCDF instance.
+        rad_vars (dict): Radar variables.
 
     Returns:
-        Altitude grid (m).
+        (ndarray): Altitude grid (m).
 
     Raises:
         ValueError: Masked values in radar altitude. This
@@ -146,14 +148,14 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
     """Reads and rebins radar 2d fields in time.
 
     Args:
-        rad_vars: NetCDF instance.
+        rad_vars (dict): Radar variables.
         fields (tuple): Tuple of strings containing 2-D radar 
             fields to be rebinned, e.g. ('Zh', 'v', 'width').
         time_new (ndarray): 1-D array, the target time vector.
         vfold (float): Folding velocity = Pi/NyquistVelocity (m/s).
 
     Returns:
-        Dict containing rebinned radar fields.
+        (dict): Rebinned radar fields.
 
     Raises:
         KeyError: Missing field.
@@ -189,14 +191,14 @@ def fetch_lidar(lid_vars, fields, time, height):
     """Reads and rebins lidar fields in time and height.
 
     Args:
-        lid_vars: NetCDF instance.
+        lid_vars (dict): Lidar variables.
         fields (tuple): Tuple of strings containing lidar 2-D
             fields to be rebinned. Usually just the ('beta',).
         time (ndarray): 1-D array, the target time vector.
         height (ndarray): 1-D array, the target height vector (m).
 
     Returns:
-        Dict containing rebinned lidar fields.
+        (dict): Rebinned lidar fields.
 
     Raises:
         KeyError: Missing field.
@@ -219,14 +221,13 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
     """Returns interpolated liquid water path and its error.
 
     Args:
-        mwr_vars: NetCDF instance.
-        lwp_errors: 2-element tuple containing
-                    (fractional_error, linear_error)
+        mwr_vars (dict): Radiometer variables.
+        lwp_errors (tuple): 2-element tuple containing
+            (fractional_error, linear_error)
         time (ndarray): 1-D array, the target time vector.
 
     Returns:
-        Dict containing interpolated LWP data
-        and its error: {'value', 'err'}.
+        (dict): Interpolated LWP data and its error: {'value', 'err'}.
 
     Notes: 
         Needs to decide how to handle totally 
@@ -252,12 +253,13 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
     """Reads LWP, estimates its error, and converts time if needed.
 
     Args:
-        mwr_vars: NetCDF instance.
+        mwr_vars (dict): Radiometer variables.
         frac_error (float): Fractional error (scalar).
         lin_error (float): Linear error (scalar).
 
     Returns:
-        3-element tuple containing LWP (data, time, error).
+        (tuple): 3-element tuple containing liquid water path 
+            variables (data, time, error).
 
     Note:
         hatpro time can be 'hours since' 00h of measurement date
@@ -265,7 +267,8 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         dependent).
 
     """
-    data = mwr_vars['LWP_data'][:]
+    data_field = ncf.findkey(mwr_vars, ('LWP_data', 'lwp'))
+    data = mwr_vars[data_field][:]
     time = mwr_vars['time'][:]
     if max(time) > 24:
         time = utils.epoch2desimal_hour((2001, 1, 1), time)  # fixed epoc!
@@ -277,14 +280,14 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
     """Interpolates model variables and calculates wet bulb temperature.
 
     Args:
-        mod_vars: NetCDF instance.
+        mod_vars (dict): Model variables.
         alt_site (int): Altitude of the site above mean sea level (m).
         freq (float): Radar frequency (GHz).
         time (ndarray): 1-D array, the target time vector.
         height (ndarray): 1-D array, the target height vector (m).
 
     Returns:
-        Dict containing original model fields in common altitude
+        (dict): Original model fields in common altitude
         grid with the corresponding time and height vector, interpolated 
         fields in Cloudnet time / height grid, and wet bulb temperature:
         {'original', 'interp', 'time', 'height', 'Tw'}
@@ -308,14 +311,14 @@ def _read_model(vrs, fields, alt_site, freq):
     """Reads model fields and interpolates into common altitude grid.
 
     Args:
-        vrs: NetCDF instance.
+        vrs (dict): Model variables.
         fields (array_like): list of strings containing fields
             to be interpolated.
         alt_site (float): Site altitude (m).
         freq (float): Radar frequency (GHz).
 
     Returns:
-        3-element tuple containing (1) dict where the model fields
+        (tuple): 3-element tuple containing (1) dict where the model fields
         are in common altitude grid, (2) original model time (3) altitude
         vector used in the interpolation (mean of the individual height
         vectors of the day).
@@ -369,7 +372,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
 
     Args:
         radar: NetCDF instance.
-        rad_vars: Radar variables.
+        rad_vars (dict): Radar variables.
         gas_atten (ndarray): 2-D gas attenuation.
         liq_atten (dict): Liquid attenuation error and boolean
             arrays denoting where liquid attenuation was not
@@ -382,8 +385,8 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
             between 0 and 1, e.g., 0.1.
 
     Returns:
-        Dict containing {'Z_sensitivity', 'Z_error'} which are
-        1-D and 2-D MaskedArrays, respectively.
+        (dict): Error-related variables {'Z_sensitivity', 'Z_error'} 
+            which are 1-D and 2-D MaskedArrays, respectively.
 
     """
     Z = radar['Zh']
@@ -417,11 +420,11 @@ def _anc_names(var, bias=False, err=False, sens=False):
     return out[:-1]
 
 
-def _cat_cnet_vars(vars_in, radar_meta, instruments, zlib):
+def _cat_cnet_vars(vars_in, radar_meta, input_types, zlib):
     """Creates list of variable instances for output writing."""
     lin, log = 'linear', 'logarithmic'
-    radar_source = instruments['radar']
-    model_source = 'HYSPLIT'  # what we should have here?
+    radar_source = input_types['radar']
+    model_source = input_types['model']
     # dimensions and site location
     var = 'height'
     yield(CV(var, vars_in[var],
@@ -529,7 +532,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments, zlib):
              units='sr-1 m-1',
              plot_range=(1e-7, 1e-4),
              plot_scale=log,
-             source=instruments['lidar'],
+             source=input_types['lidar'],
              ancillary_variables=_anc_names(var, bias=True, err=True)))
     var = 'beta_bias'
     yield(CV(var, vars_in[var],
@@ -549,7 +552,7 @@ def _cat_cnet_vars(vars_in, radar_meta, instruments, zlib):
              units='g m-2',
              plot_range=(-100, 1000),
              plot_scale=lin,
-             source=instruments['mwr']))
+             source=input_types['mwr']))
     var = 'lwp_error'
     yield(CV(var, vars_in[var],
              size=('time'),

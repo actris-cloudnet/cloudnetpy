@@ -148,34 +148,28 @@ def wl_band(freq):
         raise ValueError('Only 35 and 94 GHz radars supported.')
 
 
-def fetch_instrument_models(radar_file, lidar_file, mwr_file):
-    """Returns models of the three Cloudnet instruments."""
+def fetch_input_types(input_files):
+    """Returns types of the instruments and nwp model.
 
-    def _lidar_model(lidar_file):
-        """Returns model of the lidar."""
+    Notes:
+        This does not really work very well because the 
+        instrument meta data is not standardized.
+    """
+
+    def _find_model(f, attr):
+        """Read type from input file attributes."""
         try:
-            return netCDF4.Dataset(lidar_file).system
+            if attr == 'title':
+                return getattr(netCDF4.Dataset(f), attr).split()[0]
+            else:
+                return getattr(netCDF4.Dataset(f), attr)
         except AttributeError:
-            return 'Unknown lidar'
+            return 'Unknown instrument or model.'
 
-    def _mwr_model(mwr_file):
-        """Returns model of the microwave radiometer."""
-        try:
-            return netCDF4.Dataset(mwr_file).radiometer_system
-        except AttributeError:
-            return 'Unknown radiometer'
-
-    def _radar_model(radar_file):
-        """Returns model of the cloud radar."""
-        try:
-            return netCDF4.Dataset(radar_file).title.split()[0]
-        except AttributeError:
-            return 'Unknown cloud radar'
-
-    radar_model = _radar_model(radar_file)
-    lidar_model = _lidar_model(lidar_file)
-    mwr_model = _mwr_model(mwr_file)
-    return {'radar': radar_model, 'lidar': lidar_model, 'mwr': mwr_model}
+    return {'radar': _find_model(input_files[0], 'title'),
+            'lidar': _find_model(input_files[1], 'system'),
+            'mwr': _find_model(input_files[2], 'radiometer_system'),
+            'model': _find_model(input_files[3], 'title')}
 
 
 def km2m(var):
