@@ -61,8 +61,8 @@ def _bits_to_integer(bits):
         is saved as bit 0, bits[1] as bit 1, etc.
 
     Returns:
-        Array of integers containing the information of the
-        individual boolean arrays.
+        (ndarray): Array of integers containing the information
+            of the individual boolean arrays.
 
     """
     int_array = np.zeros_like(bits[0], dtype=int)
@@ -84,7 +84,7 @@ def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
             Gaussian smoother to the melting layer. Default is True.
 
     Returns:
-        2-D boolean array denoting the melting layer.
+        (ndarray): 2-D boolean array denoting the melting layer.
 
     """
     def _slice(arg1, arg2, ii, ind):
@@ -150,7 +150,7 @@ def find_freezing_region(Tw, melting_layer, time, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        2-D boolean array denoting the sub-zero region.
+        (ndarray): 2-D boolean array denoting the sub-zero region.
 
     Notes:
         It is not clear how model temperature and melting layer should be
@@ -187,7 +187,7 @@ def _T0_alt(Tw, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        1-D array denoting altitudes where the
+        (ndarray): 1-D array denoting altitudes where the
         temperature drops below 0 deg C.
 
     """
@@ -212,14 +212,14 @@ def find_insects(radar, Tw, *args, prob_lim=0.8):
         Tw (ndarray): 2-D wet bulb temperature.
         *args: Binary fields that are used to screen the
             insect probability. E.g. rain, clutter,
-            melting_layer, ...
+            melting_layer, etc.
         prob_lim (float, optional): Probability higher than
             this will lead to positive detection. Default is 0.8.
 
     Returns:
-        A 2-element tuple containing result of classification
-        (2-D boolean array) for each pixel and insect probability
-        (2-D MaskedArray of floats where the values are between 0 and 1).
+        (tuple): 2-element tuple containing result of classification
+        as 2-D boolean array and insect probability
+        as 2-D MaskedArray where the values between 0 and 1.
 
     """
     iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])
@@ -305,7 +305,7 @@ def rain_from_radar(Z, time, time_buffer=5):
             and after are also marked to contain rain. Default is 5 (min).
 
     Returns:
-        1-D boolean array denoting profiles affected by rain.
+        (ndarray): 1-D boolean array denoting profiles affected by rain.
 
     """
     is_rain = ma.array(Z[:, 3] > 0, dtype=bool).filled(False)
@@ -330,7 +330,8 @@ def find_clutter(v, is_rain, ngates=10, vlim=0.05):
             Default is 0.05 (m/s).
 
     Returns:
-        2-D boolean array denoting pixels contaminated by clutter.
+        (ndarray): 2-D boolean array denoting pixels contaminated
+            by clutter.
 
     """
     is_clutter = np.zeros(v.shape, dtype=bool)
@@ -352,7 +353,7 @@ def find_falling_hydrometeors(Z, beta, is_clutter, is_liquid,
         Tw (ndarray): 2-D wet bulb temperature.
 
     Returns:
-        2-D boolean array containing falling hydrometeros.
+        (ndarray): 2-D boolean array containing falling hydrometeros.
 
     """
     is_z = ~Z.mask
@@ -375,7 +376,7 @@ def find_aerosols(beta, is_falling, is_liquid):
         is_liquid (ndarray): 2-D boolean array of liquid droplets.
 
     Returns:
-        2-D boolean array of aerosol classification.
+        (ndarray): 2-D boolean array of aerosol classification.
 
     """
     return ~beta.mask & ~is_falling & ~is_liquid
@@ -393,12 +394,12 @@ def fetch_qual_bits(Z, beta, is_clutter, liq_atten):
             where it wasn't.
 
     Returns: Integer array containing the following bits:
-            - bit 0: Pixel contains radar data.
-            - bit 1: Pixel contains lidar data.
-            - bit 2: Pixel contaminated by radar clutter.
-            - bit 3: Molecular scattering present (currently not implemented!).
-            - bit 4: Pixel was affected by liquid attenuation.
-            - bit 5: Liquid attenuation was corrected.
+            - bit 0: Pixel contains radar data
+            - bit 1: Pixel contains lidar data
+            - bit 2: Pixel contaminated by radar clutter
+            - bit 3: Molecular scattering present (currently not implemented!)
+            - bit 4: Pixel was affected by liquid attenuation
+            - bit 5: Liquid attenuation was corrected
 
     """
     bits = [None]*6

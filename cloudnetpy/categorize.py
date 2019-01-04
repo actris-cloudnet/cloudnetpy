@@ -16,7 +16,6 @@ from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
 from cloudnetpy.output import CnetVar as CV
-from cloudnetpy import plotting
 
 
 def generate_categorize(input_files, output_file, zlib=True):
@@ -93,7 +92,7 @@ def generate_categorize(input_files, output_file, zlib=True):
                 'quality_bits': qual_bits,
                 'Z_error': Z_err['error'],
                 'Z_sensitivity': Z_err['sensitivity']}
-    obs = _cat_cnet_vars(cat_vars, radar_meta, input_types, zlib)
+    obs = _cat_cnet_vars(cat_vars, radar_meta, input_types)
     output.save_cat(output_file, time, height, model['time'],
                     model['height'], obs, radar_meta, zlib)
 
@@ -132,7 +131,7 @@ def _altitude_grid(rad_vars):
 
     Notes:
         Altitude grid is defined as the instrument's measurement
-        grid above mean sea level. Generally the instrument 
+        grid above mean sea level. Generally the instrument
         used here should always be radar but it is possible to
         use other instrument as well.
 
@@ -149,7 +148,7 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
 
     Args:
         rad_vars (dict): Radar variables.
-        fields (tuple): Tuple of strings containing 2-D radar 
+        fields (tuple): Tuple of strings containing 2-D radar
             fields to be rebinned, e.g. ('Zh', 'v', 'width').
         time_new (ndarray): 1-D array, the target time vector.
         vfold (float): Folding velocity = Pi/NyquistVelocity (m/s).
@@ -229,8 +228,8 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
     Returns:
         (dict): Interpolated LWP data and its error: {'value', 'err'}.
 
-    Notes: 
-        Needs to decide how to handle totally 
+    Notes:
+        Needs to decide how to handle totally
         missing (or sparse) mwr data.
 
     """
@@ -258,7 +257,7 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         lin_error (float): Linear error (scalar).
 
     Returns:
-        (tuple): 3-element tuple containing liquid water path 
+        (tuple): 3-element tuple containing liquid water path
             variables (data, time, error).
 
     Note:
@@ -288,7 +287,7 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
 
     Returns:
         (dict): Original model fields in common altitude
-        grid with the corresponding time and height vector, interpolated 
+        grid with the corresponding time and height vector, interpolated
         fields in Cloudnet time / height grid, and wet bulb temperature:
         {'original', 'interp', 'time', 'height', 'Tw'}
 
@@ -324,7 +323,7 @@ def _read_model(vrs, fields, alt_site, freq):
         vectors of the day).
 
     Notes:
-        The common altitude vector used in the interpolation is 
+        The common altitude vector used in the interpolation is
         defined above mean sea level.
 
     """
@@ -371,8 +370,8 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     """Calculates sensitivity and error of radar echo.
 
     Args:
-        radar: NetCDF instance.
-        rad_vars (dict): Radar variables.
+        radar (dict): Interpolated radar variables.
+        rad_vars (dict): Original radar variables.
         gas_atten (ndarray): 2-D gas attenuation.
         liq_atten (dict): Liquid attenuation error and boolean
             arrays denoting where liquid attenuation was not
@@ -385,7 +384,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
             between 0 and 1, e.g., 0.1.
 
     Returns:
-        (dict): Error-related variables {'Z_sensitivity', 'Z_error'} 
+        (dict): Error-related variables {'Z_sensitivity', 'Z_error'}
             which are 1-D and 2-D MaskedArrays, respectively.
 
     """
@@ -420,7 +419,7 @@ def _anc_names(var, bias=False, err=False, sens=False):
     return out[:-1]
 
 
-def _cat_cnet_vars(vars_in, radar_meta, input_types, zlib):
+def _cat_cnet_vars(vars_in, radar_meta, input_types):
     """Creates list of variable instances for output writing."""
     lin, log = 'linear', 'logarithmic'
     radar_source = input_types['radar']

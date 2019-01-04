@@ -3,6 +3,7 @@
 import numpy as np
 import cloudnetpy.constants as con
 
+
 def adiabatic_lwc(T, P):
     """Returns adiabatic LWC change rate.
 
@@ -14,7 +15,7 @@ def adiabatic_lwc(T, P):
         P (ndarray): Pressure of cloud base (Pa).
 
     Returns:
-        dlwc/dz in kg m-3 m-1
+        (ndarray): dlwc/dz in kg m-3 m-1
 
     References:
         Brenguier, 1991, https://bit.ly/2QCSJtb
@@ -37,7 +38,16 @@ def adiabatic_lwc(T, P):
 
 
 def temp2mixingratio(T, P):
-    """Converts temperature and pressure to mixing ratio."""
+    """Converts temperature and pressure to mixing ratio.
+
+    Args:
+        T (ndarray): Temperature (K).
+        P (ndarray): Pressure (Pa).
+
+    Returns:
+        (ndarray): Mixing ratio.
+
+    """
     t1 = T/con.T0
     t2 = 1 - (con.T0/T)
     svp = 10**(10.79574*(t2)-5.028*np.log10(t1)

@@ -56,17 +56,17 @@ def time_grid(reso=30):
     return np.arange(half_step, 24-half_step, half_step*2)
 
 
-def binning_vector(x):
+def binvec(x):
     """Converts 1-D center points to bins with even spacing.
 
     Args:
         x (array_like): A 1-D array of N real values.
 
     Returns:
-        N + 1 edge values.
+        (ndarray): N + 1 edge values.
 
     Examples:
-        >>> binning_vector([1, 2, 3])
+        >>> utils.binvec([1, 2, 3])
             [0.5, 1.5, 2.5, 3.5]
 
     """
@@ -84,10 +84,12 @@ def rebin_2d(x_in, data, x_new):
         x_new (ndarray): The new x vector (center points).
 
     Returns:
-        Rebinned (averaged) data.
+        (MaskedArray): Rebinned (averaged) data.
+
+    Notes: 0-values are masked in the returned array.
 
     """
-    edges = binning_vector(x_new)
+    edges = binvec(x_new)
     datai = np.zeros((len(x_new), data.shape[1]))
     data = ma.masked_invalid(data)
     for ind, values in enumerate(data.T):
@@ -108,7 +110,7 @@ def filter_isolated_pixels(array):
         array (ndarray): 2-D input data.
 
     Returns:
-        Cleaned data.
+        (ndarray): Cleaned data.
 
     """
     filtered_array = np.copy(array)
@@ -134,9 +136,9 @@ def isbit(integer, nth_bit):
         ValueError: negative bit as input.
 
     Examples:
-        >>> isbit(4, 1)
+        >>> utils.isbit(4, 1)
             False
-        >>> isbit(4, 2)
+        >>> utils.isbit(4, 2)
             True
 
     """
@@ -160,9 +162,9 @@ def setbit(integer, nth_bit):
         ValueError: negative bit as input.
 
     Examples:
-        >>> setbit(1, 1)
+        >>> utils.setbit(1, 1)
             3
-        >>> setbitt(0, 2)
+        >>> utils.setbit(0, 2)
             4
 
     """
@@ -236,12 +238,12 @@ def bases_and_tops(y):
         y (array_like): 1-D array of ones and zeros.
 
     Returns:
-        2-element tuple containing indices of bases 
-        and tops.
+        (tuple): 2-element tuple containing indices of bases
+            and tops.
 
     Examples:
         >>> y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]
-        >>> bases_and_tops(y)
+        >>> utils.bases_and_tops(y)
             ([3, 7], [4, 9])
 
     """
@@ -337,25 +339,39 @@ def n_elements(x, dist, var=None):
     """Returns the number of elements that cover certain distance.
 
     Args:
-        x (ndarray): Input array with arbitrary units (if **dist**
-            also has the same units) or time in fraction hour.
-            **x** should be (at least roughly) evenly spaced.
-        dist (int): Distance to be covered. If x is fraction time,
-            length is in minutes.
+        x (ndarray): Input array with arbitrary units
+            or time in fraction hour. *x* should be
+            evenly spaced or at least close to.
+        dist (float): Distance to be covered. If x is fraction time,
+            *dist* is in minutes. Otherwise *x* and *dist* should have
+            the same units.
         var (str, optional): 'time' or None. If None, inputs
             have the same units. If 'time', input is fraction hour
             and distance in minutes. Default is None.
 
     Returns:
-        (int): Number of elements in the input array that cover the **length**.
+        (int): Number of elements in the input array that cover *dist*.
 
     Examples:
         >>> x = np.array([2, 4, 6, 8, 10])
         >>> utils.n_elements(x, 6)
             3
 
+        The result is rounded to the closest integer, so:
+
+        >>> utils.n_elements(x, 6.9)
+            3
+        >>> utils.n_elements(x, 7)
+            4
+
+        With fraction hour time vector:
+
+        >>> x = np.linspace(0, 1, 61)
+        >>> utils.n_elements(x, 10, 'time')
+            10
+
     """
     n = dist/mdiff(x)
     if var == 'time':
         n = n/60
-    return int(np.ceil(n))
+    return int(np.round(n))

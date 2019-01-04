@@ -20,12 +20,12 @@ def ind_base(dprof, p, dist, lim):
         p (int): Index of (possibly local) peak in the original profile.
             Note that the peak must be found with some other method prior
             calling this function.
-        dist (int): Number of elements investigated below **p**.
-                    If ( **p** - **dist**)<0, search starts from index 0.
+        dist (int): Number of elements investigated below *p*.
+                    If ( *p* - *dist*)<0, search starts from index 0.
         lim (float): Parameter for base index. Values greater than 1.0
                    are valid. Values close to 1 most likely return the
                    point right below the maximum 1st order difference
-                   (within **dist** points below **p**).
+                   (within *dist* points below *p*).
                    Values larger than 1 more likely
                    accept some other point, lower in the profile.
 
@@ -85,12 +85,12 @@ def ind_top(dprof, p, nprof, dist, lim):
         p (int): Index of (possibly local) peak in the profile.
             Note that the peak must be found with some other method prior
             calling this function.
-        dist (int): Number of elements investigated above **p**.
-                    If (**p** + **dist**) > **nprof**, search ends to **nprof**.
+        dist (int): Number of elements investigated above *p*.
+                    If (*p* + *dist*) > *nprof*, search ends to *nprof*.
         lim (float): Parameter for top index. Values greater than 1.0
                    are valid. Values close to 1 most likely return the
                    point right above the maximum 1st order difference
-                   (within **dist** points above **p**).
+                   (within *dist* points above *p*).
                    Values larger than 1 more likely
                    accept some other point, higher in the profile.
 
@@ -98,7 +98,7 @@ def ind_top(dprof, p, nprof, dist, lim):
         Top index of the peak.
 
     See also:
-        droplet.base_ind()
+        droplet.ind_base()
 
     """
     end = min(p+dist, nprof)  # should not be greater than len(profile)

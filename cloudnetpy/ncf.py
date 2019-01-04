@@ -2,7 +2,6 @@
 in this module typically have a pointer to netCDF variable(s) as
 an argument."""
 
-import numpy as np
 import numpy.ma as ma
 import netCDF4
 import math
@@ -10,7 +9,7 @@ import scipy.constants
 
 
 def load_nc(file_in):
-    """ Returns instance of netCDF Dataset variables. """
+    """ Returns netCDF Dataset variables."""
     return netCDF4.Dataset(file_in).variables
 
 
@@ -21,8 +20,9 @@ def fetch_radar_meta(radar_file):
         radar_file (str): Full path of the cloud radar netCDF file.
 
     Returns:
-        Dict containing radar frequency, measurement date, and radar
-        (i.e. site) location: {'freq', 'date', 'location'}.
+        (dict): Radar frequency, folding velocity, measurement date,
+        and radar (i.e. site) location: {'freq', 'vfold', 'date',
+        'location'}.
 
     Raises:
         KeyError: No frequency in the radar file.
@@ -73,14 +73,15 @@ def folding_velo(vrs, freq):
 
 def findkey(vrs, possible_fields):
     """Finds first matching key from several possible.
+
     Args:
-        vrs (dict): Dictionary or some other
+        vrs (dict): Dictionary or other
             iterable containing strings.
         fields (tuple): List of possible strings to be
             searched.
 
     Returns:
-        First found value.
+        (str): First matching key.
 
     Examples:
         >>> x = {'abc':1, 'bac':2, 'cba':3}
@@ -104,10 +105,10 @@ def radar_freq(vrs):
     """ Returns frequency of radar.
 
     Args:
-        vrs: NetCDF instance.
+        vrs (dict): Radar variables.
 
     Returns:
-        Frequency or radar.
+        (float): Frequency or radar.
 
     Raises:
         KeyError: No frequency in the radar file.
@@ -152,7 +153,7 @@ def fetch_input_types(input_files):
     """Returns types of the instruments and nwp model.
 
     Notes:
-        This does not really work very well because the 
+        This does not really work very well because the
         instrument meta data is not standardized.
     """
 
@@ -179,7 +180,7 @@ def km2m(var):
     have 'units' attribute set to 'km' to trigger the conversion.
 
     Args:
-        var: NetCDF variable.
+        var: NetCDF4 variable.
 
     Returns:
         Altitude (scalar or array) converted to km.
@@ -198,7 +199,7 @@ def m2km(var):
     have 'units' attribute set to 'm' to trigger the conversion.
 
     Args:
-        var: NetCDF variable.
+        var: NetCDF4 variable.
 
     Returns:
         Altitude (scalar or array)  converted to m.
@@ -217,10 +218,10 @@ def site_altitude(*vrs):
     the investigated values.
 
     Args:
-       *vrs: Files (Dataset variables) to be investigated.
+       *vrs: Array of dicts to be investigated.
 
     Returns:
-        Altitude (m) of the measurement site.
+        (float): Altitude (m) of the measurement site.
 
     Raises:
         KeyError: If no 'altitude' field is found from any of
