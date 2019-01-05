@@ -33,6 +33,9 @@ def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
         {'is_clutter', 'liquid_base'}, and 2-D array of
         insect probability, 'insect_prob'.
 
+    See also:
+        classify.fetch_qual_bits()
+
     """
     bits = [None]*6
     is_rain = rain_from_radar(radar['Zh'], time)
@@ -400,6 +403,9 @@ def fetch_qual_bits(Z, beta, is_clutter, liq_atten):
             - bit 3: Molecular scattering present (currently not implemented!)
             - bit 4: Pixel was affected by liquid attenuation
             - bit 5: Liquid attenuation was corrected
+
+    See also:
+        classify.fetch_cat_bits()
 
     """
     bits = [None]*6

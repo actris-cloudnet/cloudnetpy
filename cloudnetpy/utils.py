@@ -141,6 +141,9 @@ def isbit(integer, nth_bit):
         >>> utils.isbit(4, 2)
             True
 
+    See also:
+        utils.setbit()
+
     """
     if nth_bit < 0:
         raise ValueError('Negative bit number.')
@@ -166,6 +169,9 @@ def setbit(integer, nth_bit):
             3
         >>> utils.setbit(0, 2)
             4
+
+    See also:
+        utils.isbit()
 
     """
     if nth_bit < 0:

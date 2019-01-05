@@ -47,7 +47,7 @@ def generate_categorize(input_files, output_file, zlib=True):
                             radar_meta['vfold'])
     except KeyError as error:
         sys.exit(error)
-    lidar = fetch_lidar(lid_vars, ('beta',), time, height)
+    lidar = fetch_lidar(lid_vars, ('beta', 'beta_raw'), time, height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
@@ -68,6 +68,7 @@ def generate_categorize(input_files, output_file, zlib=True):
                 'radar_frequency': radar_meta['freq'],
                 'lidar_wavelength': lid_vars['wavelength'][:],
                 'beta': lidar['beta'],
+                'beta_raw': lidar['beta_raw'],
                 'beta_error': config.BETA_ERROR[0],
                 'beta_bias': config.BETA_ERROR[1],
                 'Z': Z_corrected,
@@ -533,6 +534,14 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
              plot_scale=log,
              source=input_types['lidar'],
              ancillary_variables=_anc_names(var, bias=True, err=True)))
+    var = 'beta_raw'
+    lname = 'Raw attenuated backscatter coefficient'
+    yield(CV(var, vars_in[var],
+             long_name=lname,
+             units='sr-1 m-1',
+             plot_range=(1e-7, 1e-4),
+             plot_scale=log,
+             source=input_types['lidar']))
     var = 'beta_bias'
     yield(CV(var, vars_in[var],
              long_name=output.bias_name(lname),

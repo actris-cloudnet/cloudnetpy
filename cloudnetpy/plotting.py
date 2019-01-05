@@ -1,0 +1,90 @@
+"""Misc. plotting routines for Cloudnet products."""
+
+import numpy as np
+import numpy.ma as ma
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import netCDF4
+from cloudnetpy import utils
+
+# Plot range, colormap, is log plot
+PARAMS = {
+    'beta': [(1e-8, 1e-4), 'jet', True],
+    'beta_raw': [(1e-8, 1e-4), 'jet', True],
+    'Z': [(-40, 20), 'jet'],
+    'ldr': [(-35, -10), 'viridis'],
+    'width': [(0, 1), 'jet'],
+    'v': [(-4, 2), 'RdBu_r'],
+    'insect_probability': [(0, 1), 'viridis'],
+    'radar_liquid_atten': [(0, 10), 'viridis'],
+    'radar_gas_atten': [(0, 1), 'viridis'],
+}
+
+
+def plot_variable(file1, file2, name, dvec, ylim=(0, 500)):
+    """Plot relevant data for a Cloudnet variable."""
+    if name == 'insects':
+        data_fields = ('Z', 'ldr', 'width', 'insect_probability')
+        bitno = 5
+    elif name == 'melting':
+        data_fields = ('Z', 'ldr', 'v')
+        bitno = 3
+    elif name == 'liquid':
+        data_fields = ('Z', 'beta', 'beta_raw')
+        bitno = 0
+    nfields = len(data_fields)
+    nsubs = (nfields+2, 1)
+    plt.figure()
+    for n, field in enumerate(data_fields, 1):
+        _plot_data(nsubs, n, file1, field, ylim, *PARAMS[field])
+    _plot_bit(nsubs, nfields+1, file1, bitno, ylim)
+    _plot_bit(nsubs, nfields+2, file2, bitno, ylim)
+    _showpic(nsubs, dvec)
+
+
+def _plot_data(nsubs, idx, filename, field, ylim,
+               clim, cmap='jet', log=False):
+    """Plots 2-D data field."""
+    plt.subplot(nsubs[0], nsubs[1], idx)
+    ncv = netCDF4.Dataset(filename).variables
+    data = ncv[field][:].T
+    if log:
+        data = np.log(data)
+        clim = np.log(clim)
+    plt.imshow(data, aspect='auto', origin='lower', cmap=cmap)
+    plt.clim(clim)
+    plt.ylim(ylim)
+    plt.text(30, max(ylim)*0.8, field)
+    plt.grid(color=(.8, .8, .8), linestyle=':')
+
+
+def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):
+    """Plots a bitfield."""
+    plt.subplot(nsubs[0], nsubs[1], idx)
+    ncv = netCDF4.Dataset(filename).variables
+    data = utils.isbit(ncv[field][:], bitno)
+    plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
+    plt.ylim(ylim)
+    plt.text(30, max(ylim)*0.8, f"bit: {bitno}")
+    plt.grid(color=(.8, .8, .8), linestyle=':')
+
+
+def _showpic(nsubs, dvec):
+    """Adjusts layout etc. and shows the actual figure."""
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.00, hspace=0.0)
+    plt.subplot(nsubs[0], nsubs[1], 1)
+    plt.title(dvec)
+    plt.show()
+
+
+def plot_2d(data, cbar=True, cmap='viridis', ncolors=50):
+    """Simple plot of 2d variable."""
+    if cbar:
+        cmap = plt.get_cmap(cmap, ncolors)
+        plt.pcolormesh(ma.masked_equal(data, 0).T, cmap=cmap)
+        plt.colorbar()
+    else:
+        plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
+        plt.pcolormesh(ma.masked_equal(data, 0).T)
+    plt.show()
