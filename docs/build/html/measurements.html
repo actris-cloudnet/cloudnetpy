@@ -1,0 +1,178 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Input data &#8212; CloudnetPy  documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation instructions" href="installation.html" />
+    <link rel="prev" title="Overview" href="overview.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation instructions"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="Overview"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="input-data">
+<h1>Input data<a class="headerlink" href="#input-data" title="Permalink to this headline">¶</a></h1>
+<p>A Cloudnet site contains three main instruments:</p>
+<ul class="simple">
+<li>Cloud radar</li>
+<li>Optical lidar, typically ceilometer</li>
+<li>Microwave radiometer</li>
+</ul>
+<p>In addition, height-resolved model data (temperature, pressure, etc.) are
+needed for the processing.</p>
+<p>Raw measurements need to be first processed (SNR screened, etc.) with some
+separate software and stored as netCDF files. Specifications for the
+input files are in this document (?)</p>
+<div class="section" id="cloud-radar">
+<h2>Cloud radar<a class="headerlink" href="#cloud-radar" title="Permalink to this headline">¶</a></h2>
+<p>Sub-millimeter cloud radar is the key instrument in Cloudnet data processing.
+Cloud radars emit electromagnetic waves and detect radiation, backscattered from
+atmospheric particles such as ice crystals, insects and birds. From the scattered
+signal, the so-called <em>Doppler spectra</em> for different time delays, or range gates,
+corresponding to different altitudes, can be calculated.
+Other variables such as <em>radar reflectivity</em>, <em>Doppler velocity</em> and <em>width</em> can be
+furthermore derived from the radar spectra.</p>
+<p>Most modern cloud radars are also polarimetric. Polarization measurements highly
+improve chances to distinguish different type of scatterers from the data.</p>
+<p>In the standard Cloudnet operation mode, cloud radar is pointing vertically and
+measures continuously with high temporal resolution.</p>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="_images/radar.jpg"><img alt="_images/radar.jpg" src="_images/radar.jpg" style="width: 300px;" /></a>
+<p class="caption"><span class="caption-text">MIRA-36 Cloud Radar</span></p>
+</div>
+<div class="section" id="frequency">
+<h3>Frequency<a class="headerlink" href="#frequency" title="Permalink to this headline">¶</a></h3>
+<p>Cloud radars typically operate on around 35 GHz or 94 GHz. Cloud radars at 35 GHz have
+a larger antenna and are typically bigger, more powerful (and more expensive)
+than 94 GHz radars.</p>
+</div>
+<div class="section" id="temporal-resolution">
+<h3>Temporal resolution<a class="headerlink" href="#temporal-resolution" title="Permalink to this headline">¶</a></h3>
+<p>Temporal sampling resolution of a cloud radar can be anything between 1 and 30 s.
+Typical values are 1, 10 and 30 s. However, arbitrary or regular gaps in the data
+are possible due to e.g. horizontal scanning or other off-zenith measurements.</p>
+</div>
+</div>
+<div class="section" id="optical-lidar">
+<h2>Optical lidar<a class="headerlink" href="#optical-lidar" title="Permalink to this headline">¶</a></h2>
+<p>Cloudnet processing uses low-powered optical lidar to find liquid
+cloud bases, precipitation supercooled liquids, and aerosols,
+which are not sensitive to the radar. This is typically a ceilometer
+but it can also be a Doppler lidar.</p>
+<div class="figure align-center" id="id2">
+<a class="reference internal image-reference" href="_images/dlidar.jpg"><img alt="_images/dlidar.jpg" src="_images/dlidar.jpg" style="width: 300px;" /></a>
+<p class="caption"><span class="caption-text">Doppler lidar, from HALO-photonics.</span></p>
+</div>
+</div>
+<div class="section" id="microwave-radiometer">
+<h2>Microwave radiometer<a class="headerlink" href="#microwave-radiometer" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Input data</a><ul>
+<li><a class="reference internal" href="#cloud-radar">Cloud radar</a><ul>
+<li><a class="reference internal" href="#frequency">Frequency</a></li>
+<li><a class="reference internal" href="#temporal-resolution">Temporal resolution</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#optical-lidar">Optical lidar</a></li>
+<li><a class="reference internal" href="#microwave-radiometer">Microwave radiometer</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="overview.html"
+                        title="previous chapter">Overview</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="next chapter">Installation instructions</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/measurements.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="Installation instructions"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="overview.html" title="Overview"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Finnish Meteorological Institute.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+    </div>
+  </body>
+</html>
