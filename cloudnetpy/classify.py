@@ -78,6 +78,23 @@ def _bits_to_integer(bits):
 def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
     """Finds melting layer from model temperature, ldr, and velocity.
 
+    Melting layer can be detected using linear depolarization ratio, *ldr*,
+    Doppler velocity, *v*, and wet-bulb temperature, *Tw*.
+
+    The algorithm is based on *ldr* having a positive, rather Gaussian
+    peak at the melting layer. Furthermore when ice melts, the water
+    droplets start to drop significantly faster towards the ground. Thus, there
+    is also a similar positive peak in the first difference of *v*.
+
+    The peak in *ldr* is the primary parameter we analyze. If
+    *ldr* has a proper peak, and *v* < -1 m/s in the base, melting layer
+    has been found. However, sometimes *ldr* is missing and we only have
+    *v* available. Then we have other conditions that needs to be fulfilled.
+
+    Model temperature is used to limit the melting layer search to a certain
+    temperature range around 0 C. For GDAS1 data the range is -8..+6 and for
+    ECMWF data -4..+3.
+
     Args:
         Tw (ndarray): 2-D wet bulb temperature.
         ldr (ndarray): 2-D linear depolarization ratio.
@@ -300,11 +317,16 @@ def _screen_insects(insect_prob, Tw, *args):
 def rain_from_radar(Z, time, time_buffer=5):
     """Find profiles affected by rain.
 
+    The rain is present in such profiles where the radar echo in
+    third range gate is > 0 dB. To make sure we do not include any
+    rainy profiles, we also flag some profiles before and after the
+    detected one as raining.
+
     Args:
         Z (MaskedArray): 2-D radar echo.
         time (ndarray): 1-D time vector.
         time_buffer (float, optional): If a profile contains rain,
-            profiles measured **time_buffer** (min) before
+            profiles measured *time_buffer* (min) before
             and after are also marked to contain rain. Default is 5 (min).
 
     Returns:
@@ -346,6 +368,14 @@ def find_clutter(v, is_rain, ngates=10, vlim=0.05):
 def find_falling_hydrometeors(Z, beta, is_clutter, is_liquid,
                               is_insects, Tw):
     """Finds falling hydrometeors.
+
+    Falling hydrometeors are the unmasked radar signals that are
+    not a) insects b) clutter. Furthermore, the falling bit is also
+    *True* for lidar-detected ice clouds.
+
+    To distinguish lidar ice from aerosols is not trivial, though.
+    This method assumes that lidar signals, that are not from liquid
+    clouds, with the temperature below -7 C are ice.
 
     Args:
         Z (MaskedArray): 2-D radar echo.
