@@ -78,18 +78,21 @@ def _bits_to_integer(bits):
 def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
     """Finds melting layer from model temperature, ldr, and velocity.
 
-    Melting layer can be detected using linear depolarization ratio, *ldr*,
+    Melting layer is detected using linear depolarization ratio, *ldr*,
     Doppler velocity, *v*, and wet-bulb temperature, *Tw*.
 
-    The algorithm is based on *ldr* having a positive, rather Gaussian
-    peak at the melting layer. Furthermore when ice melts, the water
-    droplets start to drop significantly faster towards the ground. Thus, there
-    is also a similar positive peak in the first difference of *v*.
+    The algorithm is based on *ldr* having a clear Gaussian peak around
+    the melting layer. This signature is caused by the growth of ice
+    crystals into snowflakes that are much larger. In addition, when snow and
+    ice melt, emerging heavy water droplets start to drop rapidly towards
+    ground. Thus, there is also a similar positive peak in the
+    first difference of *v*.
 
     The peak in *ldr* is the primary parameter we analyze. If
     *ldr* has a proper peak, and *v* < -1 m/s in the base, melting layer
     has been found. However, sometimes *ldr* is missing and we only have
-    *v* available. Then we have other conditions that needs to be fulfilled.
+    *v* available. Then we analyze solely the behaviour of *v* to detect
+    the melting layer.
 
     Model temperature is used to limit the melting layer search to a certain
     temperature range around 0 C. For GDAS1 data the range is -8..+6 and for
@@ -227,6 +230,26 @@ def _T0_alt(Tw, height):
 def find_insects(radar, Tw, *args, prob_lim=0.8):
     """Returns insect probability and boolean array of insect presense.
 
+    Insects are detected by calculating heuristic probability of insects using
+    radar echo, *Zh*, linear depolarization ratio, *ldr* and Doppler
+    width, *w*. Generally insects have small *Zh*, high *ldr* and small *w*.
+
+    If a small echo from temperatures above zero has high *ldr*,
+    it most probably contains insects. A probability value between 0 and 1
+    is assigned using a 2-D probability distribution in *ldr*-*Zh* space.
+
+    If *ldr* is not available, we must use *w* which is not as
+    good indicator but still usable. Here a fixed value, 0.06, is used
+    (smaller *w* values than this are insects).
+
+    The approach above generally does not give many false positives but instead
+    misses a few insect cases. If hordes of insects are present, they might
+    yield a relatively strong radar signal. This is not a typical insect
+    signature resulting in too low probability.
+
+    Finally, positive insect detections are canceled from rainy profiles,
+    liquid droplets pixels, melting layer pixels and too cold temperatures.
+
     Args:
         radar (dict): 2-D radar fields {'Zh', 'ldr', 'width'}.
         Tw (ndarray): 2-D wet bulb temperature.
@@ -317,10 +340,10 @@ def _screen_insects(insect_prob, Tw, *args):
 def rain_from_radar(Z, time, time_buffer=5):
     """Find profiles affected by rain.
 
-    The rain is present in such profiles where the radar echo in
-    third range gate is > 0 dB. To make sure we do not include any
-    rainy profiles, we also flag some profiles before and after the
-    detected one as raining.
+    Rain is present in such profiles where the radar echo in
+    the third range gate is > 0 dB. To make sure we do not include any
+    rainy profiles, we also flag a few profiles before and after
+    detections as raining.
 
     Args:
         Z (MaskedArray): 2-D radar echo.
