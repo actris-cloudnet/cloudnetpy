@@ -8,18 +8,11 @@ cloudnet.categorize
 .. automodule:: categorize
    :members:
 
-		 
-cloudnet.utils
---------------
 
-.. automodule:: utils
-   :members:
+cloudnet.classify
+-----------------
 
-
-cloudnet.ncf
-------------
-
-.. automodule:: ncf
+.. automodule:: classify
    :members:
 
 
@@ -37,16 +30,27 @@ cloudnet.droplet
    :members:
 
 
-cloudnet.classify
------------------
-
-.. automodule:: classify
-   :members:
-
-
 cloudnet.lwc
 ------------
 
 .. automodule:: lwc
    :members:
+
+
+cloudnet.ncf
+------------
+
+.. automodule:: ncf
+   :members:
+
+      
+cloudnet.utils
+--------------
+
+.. automodule:: utils
+   :members:
+
+
+
+
 

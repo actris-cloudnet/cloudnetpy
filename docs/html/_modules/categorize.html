@@ -319,6 +319,14 @@
 <div class="viewcode-block" id="fetch_model"><a class="viewcode-back" href="../api.html#categorize.fetch_model">[docs]</a><span class="k">def</span> <span class="nf">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Interpolates model variables and calculates wet bulb temperature.</span>
 
+<span class="sd">    Model profiles are first interpolated into common height grid</span>
+<span class="sd">    which is the mean of indiviudal heights of the day. Next the profiles</span>
+<span class="sd">    are interpolated into Cloudnet&#39;s much denser time / height grid. Linear</span>
+<span class="sd">    interpolation is used in both steps.</span>
+
+<span class="sd">    Finally, wet-bub temperature is derived from the interpolated</span>
+<span class="sd">    temperature, pressure and relative humidity values.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        mod_vars (dict): Model variables.</span>
 <span class="sd">        alt_site (int): Altitude of the site above mean sea level (m).</span>

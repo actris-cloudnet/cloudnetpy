@@ -10,7 +10,7 @@ from cloudnetpy import utils
 # Plot range, colormap, is log plot
 PARAMS = {
     'beta': [(1e-8, 1e-4), 'jet', True],
-    'beta_raw': [(1e-8, 1e-4), 'jet', True],
+    'beta_raw': [np.array((1e-8, 1e-4))*1e8, 'jet', True],
     'Z': [(-40, 20), 'jet'],
     'ldr': [(-35, -10), 'viridis'],
     'width': [(0, 1), 'jet'],

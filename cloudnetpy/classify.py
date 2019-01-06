@@ -20,7 +20,9 @@ def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
         height (ndarray): 1-D altitude grid (m).
         model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF'.
 
-    Returns: A dict containing the 2-D classification, 'cat_bits', where:
+    Returns: 
+        (dict): Dict containing the 2-D classification as an integer array, 
+            'cat_bits', where:
             - bit 0: Liquid droplets
             - bit 1: Falling hydrometeors
             - bit 2: Temperature < 0 Celsius
@@ -378,8 +380,7 @@ def find_clutter(v, is_rain, ngates=10, vlim=0.05):
             Default is 0.05 (m/s).
 
     Returns:
-        (ndarray): 2-D boolean array denoting pixels contaminated
-            by clutter.
+        (ndarray): 2-D boolean array denoting pixels contaminated by clutter.
 
     """
     is_clutter = np.zeros(v.shape, dtype=bool)
@@ -393,8 +394,8 @@ def find_falling_hydrometeors(Z, beta, is_clutter, is_liquid,
     """Finds falling hydrometeors.
 
     Falling hydrometeors are the unmasked radar signals that are
-    not a) insects b) clutter. Furthermore, the falling bit is also
-    *True* for lidar-detected ice clouds.
+    a) not insects b) not clutter. Furthermore, the falling bit
+    is also *True* for lidar-detected ice clouds.
 
     To distinguish lidar ice from aerosols is not trivial, though.
     This method assumes that lidar signals, that are not from liquid
@@ -424,7 +425,7 @@ def find_aerosols(beta, is_falling, is_liquid):
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are the unmasked pixels in the attenuated backscattering
-    that are: (a) not falling, (b) not liquid droplets.
+    that are: a) not falling, b) not liquid droplets.
 
     Args:
         beta (MaskedArray): 2-D attenuated backscattering coefficient.
@@ -449,7 +450,8 @@ def fetch_qual_bits(Z, beta, is_clutter, liq_atten):
             denoting where liquid attenuation was corrected and
             where it wasn't.
 
-    Returns: Integer array containing the following bits:
+    Returns: 
+        (ndarray): Integer array containing the following bits:
             - bit 0: Pixel contains radar data
             - bit 1: Pixel contains lidar data
             - bit 2: Pixel contaminated by radar clutter

@@ -244,8 +244,7 @@ def bases_and_tops(y):
         y (array_like): 1-D array of ones and zeros.
 
     Returns:
-        (tuple): 2-element tuple containing indices of bases
-            and tops.
+        (tuple): 2-element tuple containing indices of bases and tops.
 
     Examples:
         >>> y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]

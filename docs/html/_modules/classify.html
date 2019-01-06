@@ -60,7 +60,9 @@
 <span class="sd">        height (ndarray): 1-D altitude grid (m).</span>
 <span class="sd">        model_type (str): NWP model type, e.g. &#39;GDAS1&#39; or &#39;ECMWF&#39;.</span>
 
-<span class="sd">    Returns: A dict containing the 2-D classification, &#39;cat_bits&#39;, where:</span>
+<span class="sd">    Returns: </span>
+<span class="sd">        (dict): Dict containing the 2-D classification as an integer array, </span>
+<span class="sd">            &#39;cat_bits&#39;, where:</span>
 <span class="sd">            - bit 0: Liquid droplets</span>
 <span class="sd">            - bit 1: Falling hydrometeors</span>
 <span class="sd">            - bit 2: Temperature &lt; 0 Celsius</span>
@@ -418,8 +420,7 @@
 <span class="sd">            Default is 0.05 (m/s).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (ndarray): 2-D boolean array denoting pixels contaminated</span>
-<span class="sd">            by clutter.</span>
+<span class="sd">        (ndarray): 2-D boolean array denoting pixels contaminated by clutter.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">is_clutter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
@@ -433,8 +434,8 @@
     <span class="sd">&quot;&quot;&quot;Finds falling hydrometeors.</span>
 
 <span class="sd">    Falling hydrometeors are the unmasked radar signals that are</span>
-<span class="sd">    not a) insects b) clutter. Furthermore, the falling bit is also</span>
-<span class="sd">    *True* for lidar-detected ice clouds.</span>
+<span class="sd">    a) not insects b) not clutter. Furthermore, the falling bit</span>
+<span class="sd">    is also *True* for lidar-detected ice clouds.</span>
 
 <span class="sd">    To distinguish lidar ice from aerosols is not trivial, though.</span>
 <span class="sd">    This method assumes that lidar signals, that are not from liquid</span>
@@ -464,7 +465,7 @@
     <span class="sd">&quot;&quot;&quot;Estimates aerosols from lidar backscattering.</span>
 
 <span class="sd">    Aerosols are the unmasked pixels in the attenuated backscattering</span>
-<span class="sd">    that are: (a) not falling, (b) not liquid droplets.</span>
+<span class="sd">    that are: a) not falling, b) not liquid droplets.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        beta (MaskedArray): 2-D attenuated backscattering coefficient.</span>
@@ -489,7 +490,8 @@
 <span class="sd">            denoting where liquid attenuation was corrected and</span>
 <span class="sd">            where it wasn&#39;t.</span>
 
-<span class="sd">    Returns: Integer array containing the following bits:</span>
+<span class="sd">    Returns: </span>
+<span class="sd">        (ndarray): Integer array containing the following bits:</span>
 <span class="sd">            - bit 0: Pixel contains radar data</span>
 <span class="sd">            - bit 1: Pixel contains lidar data</span>
 <span class="sd">            - bit 2: Pixel contaminated by radar clutter</span>

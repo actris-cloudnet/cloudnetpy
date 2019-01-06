@@ -70,7 +70,7 @@
 <span class="sd">                   accept some other point, lower in the profile.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Base index of the peak.</span>
+<span class="sd">        (int): Base index of the peak.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        Consider a profile</span>
@@ -135,7 +135,7 @@
 <span class="sd">                   accept some other point, higher in the profile.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Top index of the peak.</span>
+<span class="sd">        (int): Top index of the peak.</span>
 
 <span class="sd">    See also:</span>
 <span class="sd">        droplet.ind_base()</span>
@@ -163,7 +163,7 @@
 <span class="sd">            is always positive. Default is 2e-7.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Boolean array denoting the liquid layers.</span>
+<span class="sd">        (ndarray): Boolean array denoting liquid layers.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">is_liquid</span><span class="p">,</span> <span class="n">liquid_top</span><span class="p">,</span> <span class="n">liquid_base</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">beta</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
@@ -213,7 +213,7 @@
 <span class="sd">        height (ndarray): 1-D altitude grid (m).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Corrected liquid cloud field.</span>
+<span class="sd">        (ndarray): Corrected liquid cloud array.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">top_above</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">n_elements</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="mi">750</span><span class="p">)</span>

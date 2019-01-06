@@ -279,6 +279,14 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
 def fetch_model(mod_vars, alt_site, freq, time, height):
     """Interpolates model variables and calculates wet bulb temperature.
 
+    Model profiles are first interpolated into common height grid
+    which is the mean of indiviudal heights of the day. Next the profiles
+    are interpolated into Cloudnet's much denser time / height grid. Linear
+    interpolation is used in both steps.
+
+    Finally, wet-bub temperature is derived from the interpolated
+    temperature, pressure and relative humidity values.
+
     Args:
         mod_vars (dict): Model variables.
         alt_site (int): Altitude of the site above mean sea level (m).
