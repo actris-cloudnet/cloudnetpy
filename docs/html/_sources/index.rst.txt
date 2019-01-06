@@ -11,13 +11,15 @@ Welcome! This is the documentation for CloudnetPy, the Python
 implementation of the Cloudnet processing scheme.
 
 .. WARNING::
-   CloudnetPy is currently under active development and should not be used yet for any serious scientific work!
+   CloudnetPy is currently under development. It does not yet cover the full Cloudnet
+   processing scheme yet.
 
 
 .. toctree::
    :maxdepth: 4
 
    overview
+   quickstart
    api
    
 	    

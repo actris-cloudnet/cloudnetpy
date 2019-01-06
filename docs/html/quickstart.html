@@ -18,7 +18,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="API reference" href="api.html" />
-    <link rel="prev" title="Installation instructions" href="installation.html" /> 
+    <link rel="prev" title="Overview" href="overview.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -33,7 +33,7 @@
           <a href="api.html" title="API reference"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="installation.html" title="Installation instructions"
+          <a href="overview.html" title="Overview"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
       </ul>
@@ -46,6 +46,33 @@
             
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
+<p>CloudnetPy is available from PyPI, the Python package index. It allows a pip-based
+installation.</p>
+<p>Create new virtual enviroment and activate it:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python3 -m venv venv
+<span class="gp">$</span> <span class="nb">source</span> venv/bin/activate
+</pre></div>
+</div>
+<p>Install required packages:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pip3 install scipy netcdf4 cloudnetpy
+</pre></div>
+</div>
+<p>That’s it! If you have cloud radar, ceilometer, microwave
+radiometer and model data as proper NetCDF files, it’s easy to
+start processing those. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="kn">import</span> <span class="n">categorize</span> <span class="k">as</span> <span class="n">cat</span>
+
+<span class="n">input_files</span> <span class="o">=</span> <span class="p">(</span>
+             <span class="s1">&#39;radar_file.nc&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;lidar_file.nc&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;mwr_file.nc&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;model_file.nc&#39;</span>
+             <span class="p">)</span>
+<span class="n">output_file</span> <span class="o">=</span> <span class="s1">&#39;test.nc&#39;</span>
+
+<span class="n">cat</span><span class="o">.</span><span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 
 
@@ -55,8 +82,8 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
-  <p class="topless"><a href="installation.html"
-                        title="previous chapter">Installation instructions</a></p>
+  <p class="topless"><a href="overview.html"
+                        title="previous chapter">Overview</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="api.html"
                         title="next chapter">API reference</a></p>
@@ -96,7 +123,7 @@
           <a href="api.html" title="API reference"
              >next</a> |</li>
         <li class="right" >
-          <a href="installation.html" title="Installation instructions"
+          <a href="overview.html" title="Overview"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
       </ul>
