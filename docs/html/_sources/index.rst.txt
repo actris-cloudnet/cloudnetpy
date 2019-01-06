@@ -11,7 +11,7 @@ Welcome! This is the documentation for CloudnetPy, the Python
 implementation of the Cloudnet processing scheme.
 
 .. WARNING::
-   CloudnetPy is still in Pre-Alpha stage. It should not be used yet for any serious scientific work!
+   CloudnetPy is currently under active development and should not be used yet for any serious scientific work!
 
 
 .. toctree::
