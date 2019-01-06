@@ -330,9 +330,10 @@ that are: a) not falling, b) not liquid droplets.</p>
 <li><strong>v</strong> (<em>MaskedArray</em>) – 2-D doppler velocity.</li>
 <li><strong>is_rain</strong> (<em>ndarray</em>) – 1-D boolean array denoting
 presense of rain.</li>
-<li><strong>vlim</strong> (<em>float</em><em>, </em><em>optional</em>) – Velocity threshold.
-Smaller values are classified as clutter.
-Default is 0.05 (m/s).</li>
+<li><strong>ngates</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of range gates from the ground
+where clutter is expected to be found. Default is 10.</li>
+<li><strong>vlim</strong> (<em>float</em><em>, </em><em>optional</em>) – Velocity threshold. Smaller values are
+classified as clutter. Default is 0.05 (m/s).</li>
 </ul>
 </td>
 </tr>

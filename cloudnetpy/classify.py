@@ -375,9 +375,10 @@ def find_clutter(v, is_rain, ngates=10, vlim=0.05):
         v (MaskedArray): 2-D doppler velocity.
         is_rain (ndarray): 1-D boolean array denoting
             presense of rain.
-        vlim (float, optional): Velocity threshold.
-            Smaller values are classified as clutter.
-            Default is 0.05 (m/s).
+        ngates (int, optional): Number of range gates from the ground
+            where clutter is expected to be found. Default is 10.
+        vlim (float, optional): Velocity threshold. Smaller values are 
+            classified as clutter. Default is 0.05 (m/s).
 
     Returns:
         (ndarray): 2-D boolean array denoting pixels contaminated by clutter.

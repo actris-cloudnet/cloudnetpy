@@ -415,9 +415,10 @@
 <span class="sd">        v (MaskedArray): 2-D doppler velocity.</span>
 <span class="sd">        is_rain (ndarray): 1-D boolean array denoting</span>
 <span class="sd">            presense of rain.</span>
-<span class="sd">        vlim (float, optional): Velocity threshold.</span>
-<span class="sd">            Smaller values are classified as clutter.</span>
-<span class="sd">            Default is 0.05 (m/s).</span>
+<span class="sd">        ngates (int, optional): Number of range gates from the ground</span>
+<span class="sd">            where clutter is expected to be found. Default is 10.</span>
+<span class="sd">        vlim (float, optional): Velocity threshold. Smaller values are </span>
+<span class="sd">            classified as clutter. Default is 0.05 (m/s).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        (ndarray): 2-D boolean array denoting pixels contaminated by clutter.</span>
