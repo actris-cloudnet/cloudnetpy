@@ -7,6 +7,6 @@ CloudnetPy is a refactored fork of the currently operational (Matlab) processing
 - CloudnetPy documentation: https://tukiains.github.io/cloudnetpy/
 
 ```diff
-- CloudnetPy is currently under heavy development and testing.
+- CloudnetPy is currently under active development and testing.
 - It should not be yet used for any serious scientific work!
 ```
