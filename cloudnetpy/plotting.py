@@ -21,7 +21,8 @@ PARAMS = {
 }
 
 
-def plot_variable(file1, file2, name, dvec, ylim=(0, 500)):
+def plot_variable(file1, file2, name, dvec, ylim=(0, 500),
+                  savefig=False, savepath=''):
     """Plot relevant data for a Cloudnet variable."""
     if name == 'insects':
         data_fields = ('Z', 'ldr', 'width', 'insect_probability')
@@ -39,7 +40,7 @@ def plot_variable(file1, file2, name, dvec, ylim=(0, 500)):
         _plot_data(nsubs, n, file1, field, ylim, *PARAMS[field])
     _plot_bit(nsubs, nfields+1, file1, bitno, ylim)
     _plot_bit(nsubs, nfields+2, file2, bitno, ylim)
-    _showpic(nsubs, dvec)
+    _showpic(nsubs, dvec, savefig, savepath, name)
 
 
 def _plot_data(nsubs, idx, filename, field, ylim,
@@ -47,15 +48,14 @@ def _plot_data(nsubs, idx, filename, field, ylim,
     """Plots 2-D data field."""
     plt.subplot(nsubs[0], nsubs[1], idx)
     ncv = netCDF4.Dataset(filename).variables
-    data = ncv[field][:].T
+    data = ncv[field][:]
     if log:
         data = np.log(data)
         clim = np.log(clim)
-    plt.imshow(data, aspect='auto', origin='lower', cmap=cmap)
+    plt.imshow(data.T, aspect='auto', origin='lower', cmap=cmap)
     plt.clim(clim)
-    plt.ylim(ylim)
-    plt.text(30, max(ylim)*0.8, field)
-    plt.grid(color=(.8, .8, .8), linestyle=':')
+    _set_axes(ylim, data.shape)
+    plt.text(20, max(ylim)*2, field, fontsize=8)
 
 
 def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):
@@ -64,18 +64,31 @@ def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):
     ncv = netCDF4.Dataset(filename).variables
     data = utils.isbit(ncv[field][:], bitno)
     plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
+    plt.text(20, max(ylim)*2, f"bit: {bitno}", fontsize=8)
+    _set_axes(ylim, data.shape)
+
+
+def _set_axes(ylim, shape):
     plt.ylim(ylim)
-    plt.text(30, max(ylim)*0.8, f"bit: {bitno}")
+    plt.xticks(np.linspace(0, shape[0], 13), [], length=20)
+    plt.yticks(np.linspace(0, shape[1], 4), [])
+    plt.gca().axes.xaxis.set_ticklabels([])
+    plt.gca().axes.yaxis.set_ticklabels([])
+    plt.tick_params(length=0)
     plt.grid(color=(.8, .8, .8), linestyle=':')
+    
 
-
-def _showpic(nsubs, dvec):
+def _showpic(nsubs, dvec, savefig, imagepath, name):
     """Adjusts layout etc. and shows the actual figure."""
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.00, hspace=0.0)
     plt.subplot(nsubs[0], nsubs[1], 1)
-    plt.title(dvec)
-    plt.show()
+    plt.title(dvec, fontsize=8)
+    if savefig:
+        plt.savefig(f"{imagepath}{dvec}_{name}", dpi=200)
+        plt.close()
+    else:
+        plt.show()
 
 
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50):
