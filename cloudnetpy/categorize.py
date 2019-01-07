@@ -735,7 +735,7 @@ def _comments(field):
          'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.'),
 
         'Tw':
-        ('Calculated from model T, P and relative humidity, which were first\n'
+        ('This variable was calculated from model T, P and relative humidity, which were first\n'
          'interpolated into measurement grid.'),
 
         'Z_sensitivity':

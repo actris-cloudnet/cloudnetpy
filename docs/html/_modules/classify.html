@@ -53,16 +53,20 @@
 <div class="viewcode-block" id="fetch_cat_bits"><a class="viewcode-back" href="../api.html#classify.fetch_cat_bits">[docs]</a><span class="k">def</span> <span class="nf">fetch_cat_bits</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">Tw</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">model_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Classifies radar/lidar observations.</span>
 
+<span class="sd">    This function classifies atmospheric scatterer from the input data. </span>
+<span class="sd">    The input data needs to be averaged or interpolated to the common</span>
+<span class="sd">    time / height grid before calling this function.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        radar (dict): 2-D radar variables {&#39;Zh&#39;, &#39;v&#39;, &#39;ldr&#39;, &#39;width&#39;}.</span>
 <span class="sd">        beta (MaskedArray): 2-D lidar attenuated backscattering coefficient.</span>
 <span class="sd">        Tw (ndarray): 2-D wet bulb temperature (K).</span>
 <span class="sd">        height (ndarray): 1-D altitude grid (m).</span>
-<span class="sd">        model_type (str): NWP model type, e.g. &#39;GDAS1&#39; or &#39;ECMWF&#39;.</span>
+<span class="sd">        model_type (str): NWP model type, e.g. &#39;GDAS1&#39; or &#39;ECMWF&#39;, that was</span>
+<span class="sd">            used to calculate *Tw*.</span>
 
 <span class="sd">    Returns: </span>
-<span class="sd">        (dict): Dict containing the 2-D classification as an integer array, </span>
-<span class="sd">            &#39;cat_bits&#39;, where:</span>
+<span class="sd">        (dict): Dict containing the 2-D classification as an integer array, &#39;cat_bits&#39;, where:</span>
 <span class="sd">            - bit 0: Liquid droplets</span>
 <span class="sd">            - bit 1: Falling hydrometeors</span>
 <span class="sd">            - bit 2: Temperature &lt; 0 Celsius</span>
@@ -70,7 +74,7 @@
 <span class="sd">            - bit 4: Aerosols</span>
 <span class="sd">            - bit 5: Insects</span>
 
-<span class="sd">        The dict also contains 1-D boolean array of rain presense,</span>
+<span class="sd">        The returned dictionary also contains 1-D boolean array of rain presense,</span>
 <span class="sd">        &#39;rain&#39;, 2-D boolean arrays of clutter and liquid cloud bases,</span>
 <span class="sd">        {&#39;is_clutter&#39;, &#39;liquid_base&#39;}, and 2-D array of</span>
 <span class="sd">        insect probability, &#39;insect_prob&#39;.</span>

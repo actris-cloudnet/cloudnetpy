@@ -13,16 +13,20 @@ from cloudnetpy.constants import T0
 def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
     """Classifies radar/lidar observations.
 
+    This function classifies atmospheric scatterer from the input data. 
+    The input data needs to be averaged or interpolated to the common
+    time / height grid before calling this function.
+
     Args:
         radar (dict): 2-D radar variables {'Zh', 'v', 'ldr', 'width'}.
         beta (MaskedArray): 2-D lidar attenuated backscattering coefficient.
         Tw (ndarray): 2-D wet bulb temperature (K).
         height (ndarray): 1-D altitude grid (m).
-        model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF'.
+        model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF', that was
+            used to calculate *Tw*.
 
     Returns: 
-        (dict): Dict containing the 2-D classification as an integer array, 
-            'cat_bits', where:
+        (dict): Dict containing the 2-D classification as an integer array, 'cat_bits', where:
             - bit 0: Liquid droplets
             - bit 1: Falling hydrometeors
             - bit 2: Temperature < 0 Celsius
@@ -30,7 +34,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
             - bit 4: Aerosols
             - bit 5: Insects
 
-        The dict also contains 1-D boolean array of rain presense,
+        The returned dictionary also contains 1-D boolean array of rain presense,
         'rain', 2-D boolean arrays of clutter and liquid cloud bases,
         {'is_clutter', 'liquid_base'}, and 2-D array of
         insect probability, 'insect_prob'.
@@ -245,11 +249,11 @@ def find_insects(radar, Tw, *args, prob_lim=0.8):
     (smaller *w* values than this are insects).
 
     The approach above generally does not give many false positives but instead
-    misses a few insect cases. If hordes of insects are present, they might
+    misses a few insect cases. If hordes of insects are present, they can
     yield a relatively strong radar signal. This is not a typical insect
     signature resulting in too low probability.
 
-    Finally, positive insect detections are canceled from rainy profiles,
+    Finally, positive insect detections are canceled from profiles with rain,
     liquid droplets pixels, melting layer pixels and too cold temperatures.
 
     Args:

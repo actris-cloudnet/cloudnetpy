@@ -6,8 +6,7 @@ from datetime import datetime, timezone
 from cloudnetpy import config
 
 class CnetVar:
-    """Class for Cloudnet variables. Needs refactoring.
-    """
+    """Class for Cloudnet variables."""
     def __init__(self, name, data, data_type='f4', size=('time', 'height'),
                  fill_value=True, **kwargs):
         # Required:
