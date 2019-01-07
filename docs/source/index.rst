@@ -12,7 +12,7 @@ implementation of the Cloudnet processing scheme.
 
 .. WARNING::
    CloudnetPy is currently under development. It does not yet cover the full Cloudnet
-   processing scheme yet.
+   processing scheme.
 
 
 .. toctree::

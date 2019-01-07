@@ -19,8 +19,8 @@ Install required packages:
    $ pip3 install scipy netcdf4 cloudnetpy
 
 That's it! If you have cloud radar, ceilometer, microwave
-radiometer and model data as proper NetCDF files, it's easy to
-start processing those. For example:
+radiometer and model data in NetCDF files, it's easy to
+start processing. For example:
 
 .. code-block:: python
 
@@ -36,4 +36,10 @@ start processing those. For example:
 
    cat.generate_categorize(input_files, output_file)
 
+However, note that the code base is rapidly developing and the PyPI package does not
+contain all the latest features. To get up-to-date version of
+CloudnetPy, download it directly from github:
 
+.. code-block:: console
+
+	$ git clone https://github.com/tukiains/cloudnetpy
