@@ -17,7 +17,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Overview" href="overview.html" /> 
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -29,7 +29,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="overview.html" title="Overview"
+          <a href="quickstart.html" title="Quickstart"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
       </ul>
@@ -179,6 +179,16 @@ Doppler velocity, ‘v’, is averaged in polar coordinates.</p>
 <dt id="categorize.generate_categorize">
 <code class="descclassname">categorize.</code><code class="descname">generate_categorize</code><span class="sig-paren">(</span><em>input_files</em>, <em>output_file</em>, <em>zlib=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#generate_categorize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.generate_categorize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet Level 1 categorize file.</p>
+<p>This is the main function to process Level 1 Cloudnet files from
+calibrated measurements and model data. <em>input_files</em> are NetCDF
+files including the required fields and metadata. Input data
+should be in native measurement resolution.</p>
+<p>The measurements are rebinned into a common height / time grid,
+and classified as different types of scatterers such as ice, liquid,
+insects, etc. Next, the radar signal is corrected for atmospheric
+attenuations, and error estimates are computed. Results are saved
+in <em>ouput_file</em> which is by default a compressed NETCDF4_CLASSIC
+file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1595,8 +1605,8 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="overview.html"
-                        title="previous chapter">Overview</a></p>
+  <p class="topless"><a href="quickstart.html"
+                        title="previous chapter">Quickstart</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -1630,7 +1640,7 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="overview.html" title="Overview"
+          <a href="quickstart.html" title="Quickstart"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
       </ul>

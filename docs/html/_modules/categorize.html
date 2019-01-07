@@ -61,6 +61,18 @@
 <div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../api.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">zlib</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generates Cloudnet Level 1 categorize file.</span>
 
+<span class="sd">    This is the main function to process Level 1 Cloudnet files from</span>
+<span class="sd">    calibrated measurements and model data. *input_files* are NetCDF</span>
+<span class="sd">    files including the required fields and metadata. Input data</span>
+<span class="sd">    should be in native measurement resolution.</span>
+
+<span class="sd">    The measurements are rebinned into a common height / time grid,</span>
+<span class="sd">    and classified as different types of scatterers such as ice, liquid, </span>
+<span class="sd">    insects, etc. Next, the radar signal is corrected for atmospheric </span>
+<span class="sd">    attenuations, and error estimates are computed. Results are saved</span>
+<span class="sd">    in *ouput_file* which is by default a compressed NETCDF4_CLASSIC </span>
+<span class="sd">    file.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        input_files (tuple): Tuple of strings containing full paths of</span>
 <span class="sd">                             the 4 input files (radar, lidar, mwr, model).</span>

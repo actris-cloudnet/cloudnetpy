@@ -14,8 +14,6 @@
 #
 import os
 import sys
-#sys.path.insert(0, os.path.abspath('../../cloudnet/categorize'))
-#sys.path.insert(0, os.path.abspath('../../cloudnet/utils'))
 sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 
 
@@ -192,3 +190,5 @@ epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------
+
+exclude_patterns = ['_temp/*']

@@ -21,6 +21,18 @@ from cloudnetpy.output import CnetVar as CV
 def generate_categorize(input_files, output_file, zlib=True):
     """Generates Cloudnet Level 1 categorize file.
 
+    This is the main function to process Level 1 Cloudnet files from
+    calibrated measurements and model data. *input_files* are NetCDF
+    files including the required fields and metadata. Input data
+    should be in native measurement resolution.
+
+    The measurements are rebinned into a common height / time grid,
+    and classified as different types of scatterers such as ice, liquid, 
+    insects, etc. Next, the radar signal is corrected for atmospheric 
+    attenuations, and error estimates are computed. Results are saved
+    in *ouput_file* which is by default a compressed NETCDF4_CLASSIC 
+    file.
+
     Args:
         input_files (tuple): Tuple of strings containing full paths of
                              the 4 input files (radar, lidar, mwr, model).
