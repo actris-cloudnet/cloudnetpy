@@ -26,7 +26,7 @@ def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
             used to calculate *Tw*.
 
     Returns: 
-        (dict): Dict containing the 2-D classification as an integer array, 'cat_bits', where:
+        dict: Dict containing the 2-D classification as an integer array, 'cat_bits', where:
             - bit 0: Liquid droplets
             - bit 1: Falling hydrometeors
             - bit 2: Temperature < 0 Celsius
@@ -70,7 +70,7 @@ def _bits_to_integer(bits):
         is saved as bit 0, bits[1] as bit 1, etc.
 
     Returns:
-        (ndarray): Array of integers containing the information
+        ndarray: Array of integers containing the information
             of the individual boolean arrays.
 
     """
@@ -112,7 +112,7 @@ def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
             Gaussian smoother to the melting layer. Default is True.
 
     Returns:
-        (ndarray): 2-D boolean array denoting the melting layer.
+        ndarray: 2-D boolean array denoting the melting layer.
 
     """
     def _slice(arg1, arg2, ii, ind):
@@ -178,7 +178,7 @@ def find_freezing_region(Tw, melting_layer, time, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        (ndarray): 2-D boolean array denoting the sub-zero region.
+        ndarray: 2-D boolean array denoting the sub-zero region.
 
     Notes:
         It is not clear how model temperature and melting layer should be
@@ -215,7 +215,7 @@ def _T0_alt(Tw, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        (ndarray): 1-D array denoting altitudes where the
+        ndarray: 1-D array denoting altitudes where the
         temperature drops below 0 deg C.
 
     """
@@ -265,7 +265,7 @@ def find_insects(radar, Tw, *args, prob_lim=0.8):
             this will lead to positive detection. Default is 0.8.
 
     Returns:
-        (tuple): 2-element tuple containing result of classification
+        tuple: 2-element tuple containing result of classification
         as 2-D boolean array and insect probability
         as 2-D MaskedArray where the values between 0 and 1.
 
@@ -285,7 +285,7 @@ def _insect_probability(z, ldr, width):
         width (MaskedArray): 2-D radar spectral width.
 
     Returns:
-        2-D insect probability between 0-1.
+        (ndarray): 2-D insect probability between 0-1.
 
     """
     def _insect_prob_ldr(z, ldr, z_loc=15, ldr_loc=-20):
@@ -358,7 +358,7 @@ def rain_from_radar(Z, time, time_buffer=5):
             and after are also marked to contain rain. Default is 5 (min).
 
     Returns:
-        (ndarray): 1-D boolean array denoting profiles affected by rain.
+        ndarray: 1-D boolean array denoting profiles affected by rain.
 
     """
     is_rain = ma.array(Z[:, 3] > 0, dtype=bool).filled(False)
@@ -384,7 +384,7 @@ def find_clutter(v, is_rain, ngates=10, vlim=0.05):
             classified as clutter. Default is 0.05 (m/s).
 
     Returns:
-        (ndarray): 2-D boolean array denoting pixels contaminated by clutter.
+        ndarray: 2-D boolean array denoting pixels contaminated by clutter.
 
     """
     is_clutter = np.zeros(v.shape, dtype=bool)
@@ -414,7 +414,7 @@ def find_falling_hydrometeors(Z, beta, is_clutter, is_liquid,
         Tw (ndarray): 2-D wet bulb temperature.
 
     Returns:
-        (ndarray): 2-D boolean array containing falling hydrometeros.
+        ndarray: 2-D boolean array containing falling hydrometeros.
 
     """
     is_z = ~Z.mask
@@ -437,7 +437,7 @@ def find_aerosols(beta, is_falling, is_liquid):
         is_liquid (ndarray): 2-D boolean array of liquid droplets.
 
     Returns:
-        (ndarray): 2-D boolean array of aerosol classification.
+        ndarray: 2-D boolean array of aerosol classification.
 
     """
     return ~beta.mask & ~is_falling & ~is_liquid
@@ -455,7 +455,7 @@ def fetch_qual_bits(Z, beta, is_clutter, liq_atten):
             where it wasn't.
 
     Returns: 
-        (ndarray): Integer array containing the following bits:
+        ndarray: Integer array containing the following bits:
             - bit 0: Pixel contains radar data
             - bit 1: Pixel contains lidar data
             - bit 2: Pixel contaminated by radar clutter

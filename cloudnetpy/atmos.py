@@ -38,7 +38,7 @@ def saturation_vapor_pressure(T, kind='accurate'):
            simpler approximation. Default is 'accurate'.
 
     Returns:
-        Saturation water vapor pressure (Pa).
+        ndarray: Saturation water vapor pressure (Pa).
 
     """
     def _saturation_vapor_pressure_accurate(T):
@@ -89,7 +89,7 @@ def dew_point(Pw):
         Pw (ndarray): Water wapor pressure (Pa).
 
     Returns:
-        Dew point temperature (K).
+        ndarray: Dew point temperature (K).
 
     Notes:
         Method from Vaisala's white paper: "Humidity conversion formulas".
@@ -113,7 +113,7 @@ def wet_bulb(Tdry, p, rh):
         rh (ndarray): Relative humidity (0-1).
 
     Returns:
-        (ndarray): Wet bulb temperature (K).
+        ndarray: Wet bulb temperature (K).
 
     """
     def _derivatives(Pw, Tdew, m=17.269, Tn=35.86):
@@ -146,7 +146,7 @@ def gas_atten(model, cat_bits, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        Attenuation due to atmospheric gases.
+        ndarray: Attenuation due to atmospheric gases.
 
     """
     dheight = utils.mdiff(height)
@@ -170,7 +170,7 @@ def liquid_atten(lwp, model, bits, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        Dict containing liquid attenuation, its error
+        dict: Dict containing liquid attenuation, its error
         and boolean arrays indicating where attenuation was corrected
         and where it was not: {'value', 'err', 'is_corr',
         'is_not_corr'}.
@@ -202,7 +202,7 @@ def _screen_liq_atten(liq_atten, bits):
         {'cat', 'rain'}.
 
     Returns:
-        3-element tuple containing screened liquid
+        tuple: 3-element tuple containing screened liquid
         attenuation (MaskedArray), and boolean arrays
         showing where it was corrected and where it
         was not.

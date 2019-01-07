@@ -57,7 +57,7 @@
 <span class="sd">        time_in (ndarray): A 1-D array.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (list): Time as desimal hour.</span>
+<span class="sd">        list: Time as desimal hour.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; epoch2desimal_hour((1970,1,1), 1095379200) # 2004-17-10 12AM</span>
@@ -85,7 +85,7 @@
 <span class="sd">            Default is 30.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (ndarray): Time vector between 0 and 24.</span>
+<span class="sd">        ndarray: Time vector between 0 and 24.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: Bad resolution as input.</span>
@@ -104,7 +104,7 @@
 <span class="sd">        x (array_like): A 1-D array of N real values.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (ndarray): N + 1 edge values.</span>
+<span class="sd">        ndarray: N + 1 edge values.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; utils.binvec([1, 2, 3])</span>
@@ -125,7 +125,7 @@
 <span class="sd">        x_new (ndarray): The new x vector (center points).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (MaskedArray): Rebinned (averaged) data.</span>
+<span class="sd">        MaskedArray: Rebinned (averaged) data.</span>
 
 <span class="sd">    Notes: 0-values are masked in the returned array.</span>
 
@@ -151,7 +151,7 @@
 <span class="sd">        array (ndarray): 2-D input data.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (ndarray): Cleaned data.</span>
+<span class="sd">        ndarray: Cleaned data.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">filtered_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
@@ -171,7 +171,7 @@
 <span class="sd">        nth_bit (int): Investigated bit.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (bool): True if set, otherwise False.</span>
+<span class="sd">        bool: True if set, otherwise False.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: negative bit as input.</span>
@@ -200,7 +200,7 @@
 <span class="sd">        nth_bit: Bit to be set.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (int): Integer where nth bit is set.</span>
+<span class="sd">        int: Integer where nth bit is set.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: negative bit as input.</span>
@@ -233,7 +233,7 @@
 <span class="sd">        z (ndarray): A 2-D array at points (x, y)</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (ndarray): Interpolated data.</span>
+<span class="sd">        ndarray: Interpolated data.</span>
 
 <span class="sd">    Notes:</span>
 <span class="sd">        Does not work with nans.</span>
@@ -266,7 +266,7 @@
 <span class="sd">           can be numpy / masked arrays.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (MaskedArray): The l2 norm.</span>
+<span class="sd">        MaskedArray: The l2 norm.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">ss</span> <span class="o">=</span> <span class="mi">0</span>
@@ -285,7 +285,7 @@
 <span class="sd">        y (array_like): 1-D array of ones and zeros.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (tuple): 2-element tuple containing indices of bases and tops.</span>
+<span class="sd">        tuple: 2-element tuple containing indices of bases and tops.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]</span>
@@ -310,7 +310,7 @@
 <span class="sd">            Default is 0.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (ndarray): Cumulative sum, restarted at 0.</span>
+<span class="sd">        ndarray: Cumulative sum, restarted at 0.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])</span>
@@ -330,7 +330,7 @@
 <span class="sd">        value (int): Value to be filled. Default is 0.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (ndarray): Forward-filled array.</span>
+<span class="sd">        ndarray: Forward-filled array.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; x = np.array([0, 5, 0, 0, 2, 0])</span>
@@ -396,7 +396,7 @@
 <span class="sd">            and distance in minutes. Default is None.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (int): Number of elements in the input array that cover *dist*.</span>
+<span class="sd">        int: Number of elements in the input array that cover *dist*.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; x = np.array([2, 4, 6, 8, 10])</span>

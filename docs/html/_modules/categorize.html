@@ -159,7 +159,7 @@
 <span class="sd">        liq_atten (MaskedArray): 2-D array of attenuation due to atmospheric liquid.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Copy of **Z**, corrected by liquid attenuation</span>
+<span class="sd">        MaskedArray: Copy of **Z**, corrected by liquid attenuation</span>
 <span class="sd">        (where applicable) and gas attenuation (everywhere).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -176,7 +176,7 @@
 <span class="sd">        rad_vars (dict): Radar variables.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (ndarray): Altitude grid (m).</span>
+<span class="sd">        ndarray: Altitude grid (m).</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: Masked values in radar altitude. This</span>
@@ -207,7 +207,7 @@
 <span class="sd">        vfold (float): Folding velocity = Pi/NyquistVelocity (m/s).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (dict): Rebinned radar fields.</span>
+<span class="sd">        dict: Rebinned radar fields.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError: Missing field.</span>
@@ -250,7 +250,7 @@
 <span class="sd">        height (ndarray): 1-D array, the target height vector (m).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (dict): Rebinned lidar fields.</span>
+<span class="sd">        dict: Rebinned lidar fields.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError: Missing field.</span>
@@ -279,7 +279,7 @@
 <span class="sd">        time (ndarray): 1-D array, the target time vector.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (dict): Interpolated LWP data and its error: {&#39;value&#39;, &#39;err&#39;}.</span>
+<span class="sd">        dict: Interpolated LWP data and its error: {&#39;value&#39;, &#39;err&#39;}.</span>
 
 <span class="sd">    Notes:</span>
 <span class="sd">        Needs to decide how to handle totally</span>
@@ -310,7 +310,7 @@
 <span class="sd">        lin_error (float): Linear error (scalar).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (tuple): 3-element tuple containing liquid water path</span>
+<span class="sd">        tuple: 3-element tuple containing liquid water path</span>
 <span class="sd">            variables (data, time, error).</span>
 
 <span class="sd">    Note:</span>
@@ -347,7 +347,7 @@
 <span class="sd">        height (ndarray): 1-D array, the target height vector (m).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (dict): Original model fields in common altitude</span>
+<span class="sd">        dict: Original model fields in common altitude</span>
 <span class="sd">        grid with the corresponding time and height vector, interpolated</span>
 <span class="sd">        fields in Cloudnet time / height grid, and wet bulb temperature:</span>
 <span class="sd">        {&#39;original&#39;, &#39;interp&#39;, &#39;time&#39;, &#39;height&#39;, &#39;Tw&#39;}</span>
@@ -378,7 +378,7 @@
 <span class="sd">        freq (float): Radar frequency (GHz).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (tuple): 3-element tuple containing (1) dict where the model fields</span>
+<span class="sd">        tuple: 3-element tuple containing (1) dict where the model fields</span>
 <span class="sd">        are in common altitude grid, (2) original model time (3) altitude</span>
 <span class="sd">        vector used in the interpolation (mean of the individual height</span>
 <span class="sd">        vectors of the day).</span>
@@ -417,7 +417,7 @@
 <span class="sd">        *args: time, height, new time, new height.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Dict containing interpolated model fields.</span>
+<span class="sd">        dict: Interpolated model fields.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
@@ -445,7 +445,7 @@
 <span class="sd">            between 0 and 1, e.g., 0.1.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (dict): Error-related variables {&#39;Z_sensitivity&#39;, &#39;Z_error&#39;}</span>
+<span class="sd">        dict: Error-related variables {&#39;Z_sensitivity&#39;, &#39;Z_error&#39;}</span>
 <span class="sd">            which are 1-D and 2-D MaskedArrays, respectively.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>

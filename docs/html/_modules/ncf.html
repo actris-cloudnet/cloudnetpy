@@ -60,7 +60,7 @@
 <span class="sd">        radar_file (str): Full path of the cloud radar netCDF file.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (dict): Radar frequency, folding velocity, measurement date,</span>
+<span class="sd">        dict: Radar frequency, folding velocity, measurement date,</span>
 <span class="sd">        and radar (i.e. site) location: {&#39;freq&#39;, &#39;vfold&#39;, &#39;date&#39;,</span>
 <span class="sd">        &#39;location&#39;}.</span>
 
@@ -94,7 +94,7 @@
 <span class="sd">        freq (float): Rardar frequency (GHz).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (float): Radar folding velocity (m/s).</span>
+<span class="sd">        float: Radar folding velocity (m/s).</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError:</span>
@@ -121,7 +121,7 @@
 <span class="sd">            searched.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (str): First matching key.</span>
+<span class="sd">        str: First matching key.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; x = {&#39;abc&#39;:1, &#39;bac&#39;:2, &#39;cba&#39;:3}</span>
@@ -148,7 +148,7 @@
 <span class="sd">        vrs (dict): Radar variables.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (float): Frequency or radar.</span>
+<span class="sd">        float: Frequency or radar.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError: No frequency in the radar file.</span>
@@ -174,7 +174,7 @@
 <span class="sd">        freq (float): Radar frequency (GHz).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Integer corresponding to freqeuency. Possible return</span>
+<span class="sd">        int: Integer corresponding to freqeuency. Possible return</span>
 <span class="sd">        values are 0 (~35.5 GHz) and 1 (~94 GHz).</span>
 
 <span class="sd">    Raises:</span>
@@ -223,7 +223,7 @@
 <span class="sd">        var: NetCDF4 variable.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Altitude (scalar or array) converted to km.</span>
+<span class="sd">        array_like: Altitude converted to km.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
@@ -242,7 +242,7 @@
 <span class="sd">        var: NetCDF4 variable.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Altitude (scalar or array)  converted to m.</span>
+<span class="sd">        array_like: Altitude converted to m.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
@@ -261,7 +261,7 @@
 <span class="sd">       *vrs: Array of dicts to be investigated.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        (float): Altitude (m) of the measurement site.</span>
+<span class="sd">        float: Altitude (m) of the measurement site.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError: If no &#39;altitude&#39; field is found from any of</span>

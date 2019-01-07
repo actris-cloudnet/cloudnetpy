@@ -10,7 +10,7 @@ CloudnetPy documentation
 Welcome! This is the documentation for CloudnetPy, the Python
 implementation of the Cloudnet processing scheme.
 
-.. WARNING::
+.. warning::
    CloudnetPy is currently under development. It does not yet cover the full Cloudnet
    processing chain.
 

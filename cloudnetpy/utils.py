@@ -17,7 +17,7 @@ def epoch2desimal_hour(epoch, time_in):
         time_in (ndarray): A 1-D array.
 
     Returns:
-        (list): Time as desimal hour.
+        list: Time as desimal hour.
 
     Examples:
         >>> epoch2desimal_hour((1970,1,1), 1095379200) # 2004-17-10 12AM
@@ -45,7 +45,7 @@ def time_grid(reso=30):
             Default is 30.
 
     Returns:
-        (ndarray): Time vector between 0 and 24.
+        ndarray: Time vector between 0 and 24.
 
     Raises:
         ValueError: Bad resolution as input.
@@ -64,7 +64,7 @@ def binvec(x):
         x (array_like): A 1-D array of N real values.
 
     Returns:
-        (ndarray): N + 1 edge values.
+        ndarray: N + 1 edge values.
 
     Examples:
         >>> utils.binvec([1, 2, 3])
@@ -85,7 +85,7 @@ def rebin_2d(x_in, data, x_new):
         x_new (ndarray): The new x vector (center points).
 
     Returns:
-        (MaskedArray): Rebinned (averaged) data.
+        MaskedArray: Rebinned (averaged) data.
 
     Notes: 0-values are masked in the returned array.
 
@@ -111,7 +111,7 @@ def filter_isolated_pixels(array):
         array (ndarray): 2-D input data.
 
     Returns:
-        (ndarray): Cleaned data.
+        ndarray: Cleaned data.
 
     """
     filtered_array = np.copy(array)
@@ -131,7 +131,7 @@ def isbit(integer, nth_bit):
         nth_bit (int): Investigated bit.
 
     Returns:
-        (bool): True if set, otherwise False.
+        bool: True if set, otherwise False.
 
     Raises:
         ValueError: negative bit as input.
@@ -160,7 +160,7 @@ def setbit(integer, nth_bit):
         nth_bit: Bit to be set.
 
     Returns:
-        (int): Integer where nth bit is set.
+        int: Integer where nth bit is set.
 
     Raises:
         ValueError: negative bit as input.
@@ -193,7 +193,7 @@ def interpolate_2d(x, y, x_new, y_new, z):
         z (ndarray): A 2-D array at points (x, y)
 
     Returns:
-        (ndarray): Interpolated data.
+        ndarray: Interpolated data.
 
     Notes:
         Does not work with nans.
@@ -226,7 +226,7 @@ def l2norm(*args):
            can be numpy / masked arrays.
 
     Returns:
-        (MaskedArray): The l2 norm.
+        MaskedArray: The l2 norm.
 
     """
     ss = 0
@@ -245,7 +245,7 @@ def bases_and_tops(y):
         y (array_like): 1-D array of ones and zeros.
 
     Returns:
-        (tuple): 2-element tuple containing indices of bases and tops.
+        tuple: 2-element tuple containing indices of bases and tops.
 
     Examples:
         >>> y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]
@@ -270,7 +270,7 @@ def cumsumr(x, axis=0):
             Default is 0.
 
     Returns:
-        (ndarray): Cumulative sum, restarted at 0.
+        ndarray: Cumulative sum, restarted at 0.
 
     Examples:
         >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])
@@ -290,7 +290,7 @@ def ffill(arr, value=0):
         value (int): Value to be filled. Default is 0.
 
     Returns:
-        (ndarray): Forward-filled array.
+        ndarray: Forward-filled array.
 
     Examples:
         >>> x = np.array([0, 5, 0, 0, 2, 0])
@@ -356,7 +356,7 @@ def n_elements(x, dist, var=None):
             and distance in minutes. Default is None.
 
     Returns:
-        (int): Number of elements in the input array that cover *dist*.
+        int: Number of elements in the input array that cover *dist*.
 
     Examples:
         >>> x = np.array([2, 4, 6, 8, 10])

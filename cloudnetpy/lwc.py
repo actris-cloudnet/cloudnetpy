@@ -15,7 +15,7 @@ def adiabatic_lwc(T, P):
         P (ndarray): Pressure of cloud base (Pa).
 
     Returns:
-        (ndarray): dlwc/dz in kg m-3 m-1
+        ndarray: dlwc/dz in kg m-3 m-1
 
     References:
         Brenguier, 1991, https://bit.ly/2QCSJtb
@@ -45,7 +45,7 @@ def temp2mixingratio(T, P):
         P (ndarray): Pressure (Pa).
 
     Returns:
-        (ndarray): Mixing ratio.
+        ndarray: Mixing ratio.
 
     """
     t1 = T/con.T0

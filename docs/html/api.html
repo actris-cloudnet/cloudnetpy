@@ -67,7 +67,7 @@ fields to be rebinned. Usually just the (‘beta’,).</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned lidar fields.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">(dict)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code> – Missing field.</p>
@@ -106,7 +106,7 @@ fields in Cloudnet time / height grid, and wet bulb temperature:
 {‘original’, ‘interp’, ‘time’, ‘height’, ‘Tw’}</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(dict)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
 </td>
 </tr>
 </tbody>
@@ -132,7 +132,7 @@ fields in Cloudnet time / height grid, and wet bulb temperature:
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated LWP data and its error: {‘value’, ‘err’}.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(dict)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
 </td>
 </tr>
 </tbody>
@@ -162,7 +162,7 @@ fields to be rebinned, e.g. (‘Zh’, ‘v’, ‘width’).</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned radar fields.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">(dict)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code> – Missing field.</p>
@@ -251,7 +251,7 @@ insect probability, ‘insect_prob’.</p>
 </p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(dict)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
 </td>
 </tr>
 </tbody>
@@ -295,7 +295,7 @@ where it wasn’t.</li>
 </p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -326,7 +326,7 @@ that are: a) not falling, b) not liquid droplets.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array of aerosol classification.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -355,7 +355,7 @@ classified as clutter. Default is 0.05 (m/s).</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting pixels contaminated by clutter.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -389,7 +389,7 @@ clouds, with the temperature below -7 C are ice.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing falling hydrometeros.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -420,7 +420,7 @@ interpolated for all profiles.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the sub-zero region.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -469,7 +469,7 @@ as 2-D boolean array and insect probability
 as 2-D MaskedArray where the values between 0 and 1.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(tuple)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple</p>
 </td>
 </tr>
 </tbody>
@@ -512,7 +512,7 @@ Gaussian smoother to the melting layer. Default is True.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the melting layer.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -543,7 +543,7 @@ and after are also marked to contain rain. Default is 5 (min).</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">1-D boolean array denoting profiles affected by rain.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -573,6 +573,8 @@ various atmospheric parameters.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dew point temperature (K).</td>
 </tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
 </tbody>
 </table>
 <p class="rubric">Notes</p>
@@ -596,7 +598,10 @@ categorize flag bits.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Attenuation due to atmospheric gases.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Attenuation due to atmospheric gases.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -627,10 +632,13 @@ path and its error {‘value’, ‘err’}.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Dict containing liquid attenuation, its error
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dict containing liquid attenuation, its error
 and boolean arrays indicating where attenuation was corrected
 and where it was not: {‘value’, ‘err’, ‘is_corr’,
 ‘is_not_corr’}.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
 </td>
 </tr>
 </tbody>
@@ -654,7 +662,10 @@ simpler approximation. Default is ‘accurate’.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Saturation water vapor pressure (Pa).</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Saturation water vapor pressure (Pa).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -682,7 +693,7 @@ expansion of a simple expression for the saturated vapour pressure.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Wet bulb temperature (K).</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -716,7 +727,7 @@ on radar data.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Corrected liquid cloud array.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -747,7 +758,7 @@ is always positive. Default is 2e-7.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Boolean array denoting liquid layers.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -785,7 +796,7 @@ accept some other point, lower in the profile.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Base index of the peak.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(int)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
 </td>
 </tr>
 </tbody>
@@ -857,7 +868,7 @@ accept some other point, higher in the profile.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Top index of the peak.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(int)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
 </td>
 </tr>
 </tbody>
@@ -891,7 +902,7 @@ height, or pressure, given the cloud base temperature and pressure.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dlwc/dz in kg m-3 m-1</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -917,7 +928,7 @@ height, or pressure, given the cloud base temperature and pressure.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Mixing ratio.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -955,7 +966,7 @@ and radar (i.e. site) location: {‘freq’, ‘vfold’, ‘date’,
 ‘location’}.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">(dict)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">dict</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
@@ -988,7 +999,7 @@ searched.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">First matching key.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(str)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
 </td>
 </tr>
 </tbody>
@@ -1024,7 +1035,7 @@ the return value if there are several matching strings:</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Radar folding velocity (m/s).</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">(float)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">float</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code> – No ‘NyquistVelocity’ or ‘prf’ in
@@ -1047,7 +1058,9 @@ have ‘units’ attribute set to ‘km’ to trigger the conversion.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var</strong> – NetCDF4 variable.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude (scalar or array) converted to km.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude converted to km.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">array_like</td>
 </tr>
 </tbody>
 </table>
@@ -1071,7 +1084,9 @@ have ‘units’ attribute set to ‘m’ to trigger the conversion.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>var</strong> – NetCDF4 variable.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude (scalar or array)  converted to m.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude converted to m.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">array_like</td>
 </tr>
 </tbody>
 </table>
@@ -1091,7 +1106,7 @@ have ‘units’ attribute set to ‘m’ to trigger the conversion.</p>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Frequency or radar.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">(float)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">float</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
@@ -1118,7 +1133,7 @@ the investigated values.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Altitude (m) of the measurement site.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">(float)</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">float</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code> – If no ‘altitude’ field is found from any of
 the input files.</td>
@@ -1140,7 +1155,9 @@ the input files.</td>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Integer corresponding to freqeuency. Possible return
 values are 0 (~35.5 GHz) and 1 (~94 GHz).</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Not supported frequency.</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Not supported frequency.</td>
 </tr>
 </tbody>
 </table>
@@ -1165,7 +1182,7 @@ ones, i.e. their starting and ending indices.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">2-element tuple containing indices of bases and tops.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">(tuple)</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
 </tr>
 </tbody>
 </table>
@@ -1189,7 +1206,7 @@ ones, i.e. their starting and ending indices.</p>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">N + 1 edge values.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">(ndarray)</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
 </tbody>
 </table>
@@ -1218,7 +1235,7 @@ Default is 0.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Cumulative sum, restarted at 0.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -1254,7 +1271,7 @@ Default is 0.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Time as desimal hour.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(list)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
 </td>
 </tr>
 </tbody>
@@ -1283,7 +1300,7 @@ Default is 0.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Forward-filled array.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -1310,7 +1327,7 @@ Default is 0.</li>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Cleaned data.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">(ndarray)</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
 </tbody>
 </table>
@@ -1372,7 +1389,7 @@ Default is True.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated data.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(ndarray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -1398,7 +1415,7 @@ Default is True.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if set, otherwise False.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">(bool)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">bool</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – negative bit as input.</p>
@@ -1432,7 +1449,7 @@ can be numpy / masked arrays.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The l2 norm.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">(MaskedArray)</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">MaskedArray</td>
 </tr>
 </tbody>
 </table>
@@ -1474,7 +1491,7 @@ and distance in minutes. Default is None.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Number of elements in the input array that cover <em>dist</em>.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(int)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
 </td>
 </tr>
 </tbody>
@@ -1518,7 +1535,7 @@ and distance in minutes. Default is None.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned (averaged) data.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(MaskedArray)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">MaskedArray</p>
 </td>
 </tr>
 </tbody>
@@ -1543,7 +1560,7 @@ and distance in minutes. Default is None.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Integer where nth bit is set.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">(int)</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">int</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – negative bit as input.</p>
@@ -1578,7 +1595,7 @@ Default is 30.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time vector between 0 and 24.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">(ndarray)</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Bad resolution as input.</td>
 </tr>

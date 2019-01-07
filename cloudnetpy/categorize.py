@@ -119,7 +119,7 @@ def _correct_atten(Z, gas_atten, liq_atten):
         liq_atten (MaskedArray): 2-D array of attenuation due to atmospheric liquid.
 
     Returns:
-        Copy of **Z**, corrected by liquid attenuation
+        MaskedArray: Copy of **Z**, corrected by liquid attenuation
         (where applicable) and gas attenuation (everywhere).
 
     """
@@ -136,7 +136,7 @@ def _altitude_grid(rad_vars):
         rad_vars (dict): Radar variables.
 
     Returns:
-        (ndarray): Altitude grid (m).
+        ndarray: Altitude grid (m).
 
     Raises:
         ValueError: Masked values in radar altitude. This
@@ -167,7 +167,7 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
         vfold (float): Folding velocity = Pi/NyquistVelocity (m/s).
 
     Returns:
-        (dict): Rebinned radar fields.
+        dict: Rebinned radar fields.
 
     Raises:
         KeyError: Missing field.
@@ -210,7 +210,7 @@ def fetch_lidar(lid_vars, fields, time, height):
         height (ndarray): 1-D array, the target height vector (m).
 
     Returns:
-        (dict): Rebinned lidar fields.
+        dict: Rebinned lidar fields.
 
     Raises:
         KeyError: Missing field.
@@ -239,7 +239,7 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
         time (ndarray): 1-D array, the target time vector.
 
     Returns:
-        (dict): Interpolated LWP data and its error: {'value', 'err'}.
+        dict: Interpolated LWP data and its error: {'value', 'err'}.
 
     Notes:
         Needs to decide how to handle totally
@@ -270,7 +270,7 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         lin_error (float): Linear error (scalar).
 
     Returns:
-        (tuple): 3-element tuple containing liquid water path
+        tuple: 3-element tuple containing liquid water path
             variables (data, time, error).
 
     Note:
@@ -307,7 +307,7 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
         height (ndarray): 1-D array, the target height vector (m).
 
     Returns:
-        (dict): Original model fields in common altitude
+        dict: Original model fields in common altitude
         grid with the corresponding time and height vector, interpolated
         fields in Cloudnet time / height grid, and wet bulb temperature:
         {'original', 'interp', 'time', 'height', 'Tw'}
@@ -338,7 +338,7 @@ def _read_model(vrs, fields, alt_site, freq):
         freq (float): Radar frequency (GHz).
 
     Returns:
-        (tuple): 3-element tuple containing (1) dict where the model fields
+        tuple: 3-element tuple containing (1) dict where the model fields
         are in common altitude grid, (2) original model time (3) altitude
         vector used in the interpolation (mean of the individual height
         vectors of the day).
@@ -377,7 +377,7 @@ def _interpolate_model(model, fields, *args):
         *args: time, height, new time, new height.
 
     Returns:
-        Dict containing interpolated model fields.
+        dict: Interpolated model fields.
 
     """
     out = {}
@@ -405,7 +405,7 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
             between 0 and 1, e.g., 0.1.
 
     Returns:
-        (dict): Error-related variables {'Z_sensitivity', 'Z_error'}
+        dict: Error-related variables {'Z_sensitivity', 'Z_error'}
             which are 1-D and 2-D MaskedArrays, respectively.
 
     """

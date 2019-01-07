@@ -18,7 +18,7 @@ def test_binning():
     arg.append([0.02, 0.04, 0.06])
     out.append([0.01, 0.03, 0.05, 0.07])
     for arg1, out1, in zip(arg, out):
-        assert_array_almost_equal(utils.binning_vector(arg1), out1)
+        assert_array_almost_equal(utils.binvec(arg1), out1)
 
 
 def test_isbit():

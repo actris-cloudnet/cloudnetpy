@@ -20,7 +20,7 @@ def fetch_radar_meta(radar_file):
         radar_file (str): Full path of the cloud radar netCDF file.
 
     Returns:
-        (dict): Radar frequency, folding velocity, measurement date,
+        dict: Radar frequency, folding velocity, measurement date,
         and radar (i.e. site) location: {'freq', 'vfold', 'date',
         'location'}.
 
@@ -54,7 +54,7 @@ def folding_velo(vrs, freq):
         freq (float): Rardar frequency (GHz).
 
     Returns:
-        (float): Radar folding velocity (m/s).
+        float: Radar folding velocity (m/s).
 
     Raises:
         KeyError:
@@ -81,7 +81,7 @@ def findkey(vrs, possible_fields):
             searched.
 
     Returns:
-        (str): First matching key.
+        str: First matching key.
 
     Examples:
         >>> x = {'abc':1, 'bac':2, 'cba':3}
@@ -108,7 +108,7 @@ def radar_freq(vrs):
         vrs (dict): Radar variables.
 
     Returns:
-        (float): Frequency or radar.
+        float: Frequency or radar.
 
     Raises:
         KeyError: No frequency in the radar file.
@@ -134,7 +134,7 @@ def wl_band(freq):
         freq (float): Radar frequency (GHz).
 
     Returns:
-        Integer corresponding to freqeuency. Possible return
+        int: Integer corresponding to freqeuency. Possible return
         values are 0 (~35.5 GHz) and 1 (~94 GHz).
 
     Raises:
@@ -183,7 +183,7 @@ def km2m(var):
         var: NetCDF4 variable.
 
     Returns:
-        Altitude (scalar or array) converted to km.
+        array_like: Altitude converted to km.
 
     """
     alt = var[:]
@@ -202,7 +202,7 @@ def m2km(var):
         var: NetCDF4 variable.
 
     Returns:
-        Altitude (scalar or array)  converted to m.
+        array_like: Altitude converted to m.
 
     """
     alt = var[:]
@@ -221,7 +221,7 @@ def site_altitude(*vrs):
        *vrs: Array of dicts to be investigated.
 
     Returns:
-        (float): Altitude (m) of the measurement site.
+        float: Altitude (m) of the measurement site.
 
     Raises:
         KeyError: If no 'altitude' field is found from any of

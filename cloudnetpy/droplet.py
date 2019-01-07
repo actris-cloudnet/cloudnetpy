@@ -30,7 +30,7 @@ def ind_base(dprof, p, dist, lim):
                    accept some other point, lower in the profile.
 
     Returns:
-        (int): Base index of the peak.
+        int: Base index of the peak.
 
     Examples:
         Consider a profile
@@ -95,7 +95,7 @@ def ind_top(dprof, p, nprof, dist, lim):
                    accept some other point, higher in the profile.
 
     Returns:
-        (int): Top index of the peak.
+        int: Top index of the peak.
 
     See also:
         droplet.ind_base()
@@ -123,7 +123,7 @@ def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
             is always positive. Default is 2e-7.
 
     Returns:
-        (ndarray): Boolean array denoting liquid layers.
+        ndarray: Boolean array denoting liquid layers.
 
     """
     is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,
@@ -173,7 +173,7 @@ def correct_liquid_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        (ndarray): Corrected liquid cloud array.
+        ndarray: Corrected liquid cloud array.
 
     """
     top_above = utils.n_elements(height, 750)
