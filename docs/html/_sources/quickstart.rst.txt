@@ -2,17 +2,25 @@
 Quickstart
 ==========
 
-CloudnetPy is available from PyPI, the Python package index. It allows a pip-based
+CloudnetPy is available from `PyPI
+<https://pypi.org/project/cloudnetpy/>`_, the Python package index. It allows a pip-based
 installation.
 
-Create new virtual enviroment and activate it:
+First, install prerequisite software (if you already haven't):
+
+.. code-block:: console
+		
+   $ sudo apt update && sudo apt upgrade
+   $ sudo apt install python3 python3-pip libnetcdf-dev 
+
+Then, create a new virtual enviroment and activate it:
 
 .. code-block:: console
 		
    $ python3 -m venv venv
    $ source venv/bin/activate
 
-Install required packages:
+Install the required Python packages:
 
 .. code-block:: console
 		
@@ -36,9 +44,10 @@ start processing. For example:
 
    cat.generate_categorize(input_files, output_file)
 
-However, note that the code base is rapidly developing and the PyPI package does not
-contain all the latest features. To get up-to-date version of
-CloudnetPy, download it directly from github:
+Note that the code base is rapidly developing and the PyPI package does not
+contain all the latest features. To get an up-to-date version of
+CloudnetPy, download it directly from `GitHub
+<https://github.com/tukiains/cloudnetpy>`_:
 
 .. code-block:: console
 

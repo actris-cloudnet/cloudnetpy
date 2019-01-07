@@ -46,14 +46,19 @@
             
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
-<p>CloudnetPy is available from PyPI, the Python package index. It allows a pip-based
+<p>CloudnetPy is available from <a class="reference external" href="https://pypi.org/project/cloudnetpy/">PyPI</a>, the Python package index. It allows a pip-based
 installation.</p>
-<p>Create new virtual enviroment and activate it:</p>
+<p>First, install prerequisite software (if you already haven’t):</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> sudo apt update <span class="o">&amp;&amp;</span> sudo apt upgrade
+<span class="gp">$</span> sudo apt install python3 python3-pip libnetcdf-dev
+</pre></div>
+</div>
+<p>Then, create a new virtual enviroment and activate it:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python3 -m venv venv
 <span class="gp">$</span> <span class="nb">source</span> venv/bin/activate
 </pre></div>
 </div>
-<p>Install required packages:</p>
+<p>Install the required Python packages:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pip3 install scipy netcdf4 cloudnetpy
 </pre></div>
 </div>
@@ -73,9 +78,9 @@ start processing. For example:</p>
 <span class="n">cat</span><span class="o">.</span><span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>However, note that the code base is rapidly developing and the PyPI package does not
-contain all the latest features. To get up-to-date version of
-CloudnetPy, download it directly from github:</p>
+<p>Note that the code base is rapidly developing and the PyPI package does not
+contain all the latest features. To get an up-to-date version of
+CloudnetPy, download it directly from <a class="reference external" href="https://github.com/tukiains/cloudnetpy">GitHub</a>:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/tukiains/cloudnetpy
 </pre></div>
 </div>
