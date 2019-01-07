@@ -96,9 +96,8 @@ def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
 
     The peak in *ldr* is the primary parameter we analyze. If
     *ldr* has a proper peak, and *v* < -1 m/s in the base, melting layer
-    has been found. However, sometimes *ldr* is missing and we only have
-    *v* available. Then we analyze solely the behaviour of *v* to detect
-    the melting layer.
+    has been found. If *ldr* is missing we only analyze the behaviour
+    of *v*, which is always present, to detect the melting layer.
 
     Model temperature is used to limit the melting layer search to a certain
     temperature range around 0 C. For GDAS1 data the range is -8..+6 and for

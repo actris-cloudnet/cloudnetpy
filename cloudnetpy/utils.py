@@ -41,7 +41,8 @@ def time_grid(reso=30):
     resolution (in seconds) where 60 is the maximum allowed value.
 
     Args:
-        reso (int, optional): Time resolution in seconds. Default is 30.
+        reso (int, optional): Time resolution in seconds between 1 and 60. 
+            Default is 30.
 
     Returns:
         (ndarray): Time vector between 0 and 24.

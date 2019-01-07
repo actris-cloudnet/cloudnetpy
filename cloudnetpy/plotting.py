@@ -9,16 +9,28 @@ from cloudnetpy import utils
 
 # Plot range, colormap, is log plot
 PARAMS = {
-    'beta': [(1e-8, 1e-4), 'jet', True],
+    'beta': [np.array((1e-8, 1e-4))*10, 'jet', True],
     'beta_raw': [np.array((1e-8, 1e-4))*1e8, 'jet', True],
     'Z': [(-40, 20), 'jet'],
     'ldr': [(-35, -10), 'viridis'],
-    'width': [(0, 1), 'jet'],
+    'width': [(0, 1), 'viridis'],
     'v': [(-4, 2), 'RdBu_r'],
     'insect_probability': [(0, 1), 'viridis'],
     'radar_liquid_atten': [(0, 10), 'viridis'],
     'radar_gas_atten': [(0, 1), 'viridis'],
 }
+
+
+def plot_overview(file1, dvec, ylim=(0, 500), savefig=False,
+                  savepath='', grid=False):
+    """Plots general image of data in categorize file."""
+    data_fields = ('Z', 'v', 'ldr', 'width', 'beta')
+    nfields = len(data_fields)
+    nsubs = (nfields, 1)
+    plt.figure()
+    for n, field in enumerate(data_fields, 1):
+        _plot_data(nsubs, n, file1, field, ylim, grid, *PARAMS[field])
+    _showpic(nsubs, dvec, savefig, savepath, 'overview')
 
 
 def plot_variable(file1, file2, name, dvec, ylim=(0, 500),
@@ -37,13 +49,13 @@ def plot_variable(file1, file2, name, dvec, ylim=(0, 500),
     nsubs = (nfields+2, 1)
     plt.figure()
     for n, field in enumerate(data_fields, 1):
-        _plot_data(nsubs, n, file1, field, ylim, *PARAMS[field])
+        _plot_data(nsubs, n, file1, field, ylim, *PARAMS[field], grid=grid)
     _plot_bit(nsubs, nfields+1, file1, bitno, ylim)
     _plot_bit(nsubs, nfields+2, file2, bitno, ylim)
     _showpic(nsubs, dvec, savefig, savepath, name)
 
 
-def _plot_data(nsubs, idx, filename, field, ylim,
+def _plot_data(nsubs, idx, filename, field, ylim, grid,
                clim, cmap='jet', log=False):
     """Plots 2-D data field."""
     plt.subplot(nsubs[0], nsubs[1], idx)
@@ -54,7 +66,7 @@ def _plot_data(nsubs, idx, filename, field, ylim,
         clim = np.log(clim)
     plt.imshow(data.T, aspect='auto', origin='lower', cmap=cmap)
     plt.clim(clim)
-    _set_axes(ylim, data.shape)
+    _set_axes(ylim, data.shape, grid)
     plt.text(20, max(ylim)*2, field, fontsize=8)
 
 
@@ -68,14 +80,15 @@ def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):
     _set_axes(ylim, data.shape)
 
 
-def _set_axes(ylim, shape):
+def _set_axes(ylim, shape, grid):
     plt.ylim(ylim)
     plt.xticks(np.linspace(0, shape[0], 13), [], length=20)
     plt.yticks(np.linspace(0, shape[1], 4), [])
     plt.gca().axes.xaxis.set_ticklabels([])
     plt.gca().axes.yaxis.set_ticklabels([])
     plt.tick_params(length=0)
-    plt.grid(color=(.8, .8, .8), linestyle=':')
+    if grid:
+        plt.grid(color=(.8, .8, .8), linestyle=':')
     
 
 def _showpic(nsubs, dvec, savefig, imagepath, name):
