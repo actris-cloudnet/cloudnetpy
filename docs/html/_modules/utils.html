@@ -79,15 +79,6 @@
 <span class="sd">    Raises:</span>
 <span class="sd">        ValueError: Bad resolution as input.</span>
 
-<span class="sd">    Notes:</span>
-<span class="sd">        Cloudnet&#39;s original implementation is different: it starts</span>
-<span class="sd">        15 s after Midnight (if 30 resolution) and the last point</span>
-<span class="sd">        is 45 s before the next Midnight.</span>
-
-<span class="sd">        The method implemented here starts from the same point</span>
-<span class="sd">        but ends one time step further, 15 s before Midnight</span>
-<span class="sd">        (as it should?).</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">reso</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">reso</span> <span class="o">&gt;</span> <span class="mi">60</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Time resolution should be between 0 and 60 [s]&#39;</span><span class="p">)</span>
