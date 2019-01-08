@@ -138,8 +138,7 @@ def _altitude_grid(rad_vars):
         ndarray: Altitude grid (m).
 
     Raises:
-        ValueError: Masked values in radar altitude. This
-            should never happen.
+        ValueError: Masked values in radar altitude.
 
     Notes:
         Altitude grid is defined as the instrument's measurement
@@ -156,7 +155,7 @@ def _altitude_grid(rad_vars):
 
 
 def fetch_radar(rad_vars, fields, time_new, vfold):
-    """Reads and rebins radar 2d fields in time.
+    """Reads and rebins radar 2-D fields in time.
 
     Args:
         rad_vars (dict): Radar variables.
@@ -199,7 +198,7 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
 
 
 def fetch_lidar(lid_vars, fields, time, height):
-    """Reads and rebins lidar fields in time and height.
+    """Reads and rebins lidar 2-D fields in time and height.
 
     Args:
         lid_vars (dict): Lidar variables.
@@ -336,14 +335,12 @@ def _read_model(vrs, fields, alt_site, freq):
         freq (float): Radar frequency (GHz).
 
     Returns:
-        tuple: 3-element tuple containing (1) dict where the model fields
-        are in common altitude grid, (2) original model time (3) altitude
-        vector used in the interpolation (mean of the individual height
-        vectors of the day).
+        3-element tuple containing
 
-    Notes:
-        The common altitude vector used in the interpolation is
-        defined above mean sea level.
+        - *dict*: Model fields in common altitude grid.
+        - *ndarray*: Original model time.
+        - *ndarray*: Common altitude vector used in the interpolation
+          (mean of the individual height vectors of the day).
 
     """
     out = {}

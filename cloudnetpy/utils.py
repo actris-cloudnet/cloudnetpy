@@ -212,8 +212,8 @@ def l2norm(*args):
     """Returns l2 norm.
 
     Args:
-       *args: variable number of input variables. They
-           can be numpy / masked arrays.
+       *args: Variable number of data (*array_like*)
+           with the same shape.
 
     Returns:
         MaskedArray: The l2 norm.
@@ -226,7 +226,7 @@ def l2norm(*args):
 
 
 def bases_and_tops(y):
-    """Finds islands of ones from boolean array.
+    """Finds islands of ones from boolean 1-D array.
 
     From a binary vector finds all "islands" of
     ones, i.e. their starting and ending indices.
