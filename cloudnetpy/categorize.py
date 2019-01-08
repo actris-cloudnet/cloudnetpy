@@ -481,7 +481,7 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
     yield(CV(var, vars_in[var],
              long_name='Altitude of site',
              units='m',
-             comment=_comments(var)))
+             comment=_COMMENTS[var]))
     # radar variables
     var = 'radar_frequency'
     yield(CV(var, vars_in[var],
@@ -494,33 +494,33 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
              units='dBZ',
              plot_range=(-40, 20),
              plot_scale=lin,
-             comment=_comments(var),
+             comment=_COMMENTS[var],
              source=radar_source,
              ancillary_variables=_anc_names(var, True, True, True)))
     var = 'Z_bias'
     yield(CV(var, vars_in[var],
              long_name=output.bias_name(lname),
              units='dB',
-             comment=_comments('bias')))
+             comment=_COMMENTS['bias']))
     var = 'Z_error'
     yield(CV(var, vars_in[var],
              long_name=output.err_name(lname),
              plot_range=(0, 3),
              units='dB',
-             comment=_comments(var)))
+             comment=_COMMENTS[var]))
     var = 'Z_sensitivity'
     yield(CV(var, vars_in[var],
              size=('height'),
              long_name='Minimum detectable radar reflectivity',
              units='dBZ',
-             comment=_comments(var)))
+             comment=_COMMENTS[var]))
     var = 'v'
     yield(CV(var, vars_in[var],
              long_name='Doppler velocity',
              units='m s-1',
              plot_range=(-4, 2),
              plot_scale=lin,
-             comment=_comments(var),
+             comment=_COMMENTS[var],
              source=radar_source))
     var = 'width'
     yield(CV(var, vars_in[var],
@@ -528,7 +528,7 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
              units='m s-1',
              plot_range=(0.03, 3),
              plot_scale=log,
-             comment=_comments(var),
+             comment=_COMMENTS[var],
              source=radar_source))
     var = 'ldr'
     yield(CV(var, vars_in[var],
@@ -536,7 +536,7 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
              units='dB',
              plot_range=(-30, 0),
              plot_scale=lin,
-             comment=_comments(var),
+             comment=_COMMENTS[var],
              source=radar_source))
     # lidar variables
     var = 'lidar_wavelength'
@@ -564,7 +564,7 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
     yield(CV(var, vars_in[var],
              long_name=output.bias_name(lname),
              units='dB',
-             comment=_comments('bias')))
+             comment=_COMMENTS['bias']))
     var = 'beta_error'
     yield(CV(var, vars_in[var],
              long_name=output.err_name(lname),
@@ -632,7 +632,7 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
              units='K',
              plot_range=(200, 300),
              plot_scale=lin,
-             comment=_comments(var)))
+             comment=_COMMENTS[var]))
     var = 'insect_probability'
     yield(CV(var, vars_in[var],
              plot_range=(0, 1),
@@ -644,7 +644,7 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
              units='dB',
              plot_range=(0, 4),
              plot_scale=lin,
-             comment=_comments(var)))
+             comment=_COMMENTS[var]))
     var = 'radar_liquid_atten'
     yield(CV(var, vars_in[var],
              long_name=('Approximate two-way radar attenuation'
@@ -652,133 +652,125 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
              units='dB',
              plot_range=(0, 4),
              plot_scale=lin,
-             comment=_comments(var)))
+             comment=_COMMENTS[var]))
     var = 'category_bits'
     yield(CV(var, vars_in[var],
              data_type='i4',
              fill_value=None,
              long_name='Target classification bits',
-             comment=_comments(var),
-             definition=_definitions(var)))
+             comment=_COMMENTS[var],
+             definition=_DEFINITIONS[var]))
     var = 'quality_bits'
     yield(CV(var, vars_in[var],
              data_type='i4',
              fill_value=None,
              long_name='Data quality bits',
-             comment=_comments(var),
-             definition=_definitions(var)))
+             comment=_COMMENTS[var],
+             definition=_DEFINITIONS[var]))
 
 
-def _definitions(field):
-    """Returns definition for a Cloudnet variable."""
-    df = {
-        'category_bits':
-        ('\nBit 0: Small liquid droplets are present.\n'
-         'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
-         '       likely ice particles, otherwise they are drizzle or rain drops.\n'
-         'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
-         '       the phase of Bit-1 particles.\n'
-         'Bit 3: Melting ice particles are present.\n'
-         'Bit 4: Aerosol particles are present and visible to the lidar.\n'
-         'Bit 5: Insects are present and visible to the radar.'),
+_DEFINITIONS = {
+    'category_bits':
+    ('\nBit 0: Small liquid droplets are present.\n'
+     'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
+     '       likely ice particles, otherwise they are drizzle or rain drops.\n'
+     'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
+     '       the phase of Bit-1 particles.\n'
+     'Bit 3: Melting ice particles are present.\n'
+     'Bit 4: Aerosol particles are present and visible to the lidar.\n'
+     'Bit 5: Insects are present and visible to the radar.'),
 
-        'quality_bits':
-        ('\nBit 0: An echo is detected by the radar.\n'
-         'Bit 1: An echo is detected by the lidar.\n'
-         'Bit 2: The apparent echo detected by the radar is ground clutter\n'
-         '       or some other non-atmospheric artifact.\n'
-         'Bit 3: The lidar echo is due to clear-air molecular scattering.\n'
-         'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
-         '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
-         '       a correction for the radar attenuation has been performed;\n'
-         '       otherwise do not trust the absolute values of reflectivity factor.\n'
-         '       No correction is performed for lidar attenuation.\n'
-         'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
-         '       using the microwave radiometer measurements of liquid water path\n'
-         '       and the lidar estimation of the location of liquid water cloud;\n'
-         '       be aware that errors in reflectivity may result.')
-    }
-    return df[field]
+    'quality_bits':
+    ('\nBit 0: An echo is detected by the radar.\n'
+     'Bit 1: An echo is detected by the lidar.\n'
+     'Bit 2: The apparent echo detected by the radar is ground clutter\n'
+     '       or some other non-atmospheric artifact.\n'
+     'Bit 3: The lidar echo is due to clear-air molecular scattering.\n'
+     'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
+     '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
+     '       a correction for the radar attenuation has been performed;\n'
+     '       otherwise do not trust the absolute values of reflectivity factor.\n'
+     '       No correction is performed for lidar attenuation.\n'
+     'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
+     '       using the microwave radiometer measurements of liquid water path\n'
+     '       and the lidar estimation of the location of liquid water cloud;\n'
+     '       be aware that errors in reflectivity may result.')
+}
 
+_COMMENTS = {
+    'category_bits':
+    ('This variable contains information on the nature of the targets\n'
+     'at each pixel, thereby facilitating the application of algorithms that work\n'
+     'with only one type of target. The information is in the form of an array of\n'
+     'bits, each of which states either whether a certain type of particle is present\n'
+     '(e.g. aerosols), or the whether some of the target particles have a particular\n'
+     'property. The definitions of each bit are given in the definition attribute.\n'
+     'Bit 0 is the least significant.'),
 
-def _comments(field):
-    """Returns comment text for a Cloudnet variable."""
-    com = {
-        'category_bits':
-        ('This variable contains information on the nature of the targets\n'
-         'at each pixel, thereby facilitating the application of algorithms that work\n'
-         'with only one type of target. The information is in the form of an array of\n'
-         'bits, each of which states either whether a certain type of particle is present\n'
-         '(e.g. aerosols), or the whether some of the target particles have a particular\n'
-         'property. The definitions of each bit are given in the definition attribute.\n'
-         'Bit 0 is the least significant.'),
+    'quality_bits':
+    ('This variable contains information on the quality of the\n'
+     'data at each pixel. The information is in the form of an array\n'
+     'of bits, and the definitions of each bit are given in the definition\n'
+     'attribute. Bit 0 is the least significant'),
 
-        'quality_bits':
-        ('This variable contains information on the quality of the\n'
-         'data at each pixel. The information is in the form of an array\n'
-         'of bits, and the definitions of each bit are given in the definition\n'
-         'attribute. Bit 0 is the least significant'),
+    'radar_liquid_atten':
+    ('This variable was calculated from the liquid water path\n'
+     'measured by microwave radiometer using lidar and radar returns to perform\n'
+     'an approximate partioning of the liquid water content with height. Bit 5 of\n'
+     'the quality_bits variable indicates where a correction for liquid water\n'
+     'attenuation has been performed.'),
 
-        'radar_liquid_atten':
-        ('This variable was calculated from the liquid water path\n'
-         'measured by microwave radiometer using lidar and radar returns to perform\n'
-         'an approximate partioning of the liquid water content with height. Bit 5 of\n'
-         'the quality_bits variable indicates where a correction for liquid water\n'
-         'attenuation has been performed.'),
+    'radar_gas_atten':
+    ('This variable was calculated from the model temperature,\n'
+     'pressure and humidity, but forcing pixels containing liquid cloud to saturation\n'
+     'with respect to liquid water. It was calculated using the millimeter-wave propagation\n'
+     'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.'),
 
-        'radar_gas_atten':
-        ('This variable was calculated from the model temperature,\n'
-         'pressure and humidity, but forcing pixels containing liquid cloud to saturation\n'
-         'with respect to liquid water. It was calculated using the millimeter-wave propagation\n'
-         'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.'),
+    'Tw':
+    ('This variable was calculated from model T, P and relative humidity, which were first\n'
+     'interpolated into measurement grid.'),
 
-        'Tw':
-        ('This variable was calculated from model T, P and relative humidity, which were first\n'
-         'interpolated into measurement grid.'),
+    'Z_sensitivity':
+    ('This variable is an estimate of the radar sensitivity,\n'
+     'i.e. the minimum detectable radar reflectivity, as a function\n'
+     'of height. It includes the effect of ground clutter and gas attenuation\n'
+     'but not liquid attenuation.'),
 
-        'Z_sensitivity':
-        ('This variable is an estimate of the radar sensitivity,\n'
-         'i.e. the minimum detectable radar reflectivity, as a function\n'
-         'of height. It includes the effect of ground clutter and gas attenuation\n'
-         'but not liquid attenuation.'),
+    'Z_error':
+    ('This variable is an estimate of the one-standard-deviation\n'
+     'random error in radar reflectivity factor. It originates\n'
+     'from the following independent sources of error:\n'
+     '1) Precision in reflectivity estimate due to finite signal to noise\n'
+     '   and finite number of pulses\n'
+     '2) 10% uncertainty in gaseous attenuation correction (mainly due to\n'
+     '   error in model humidity field)\n'
+     '3) Error in liquid water path (given by the variable lwp_error) and\n'
+     '   its partitioning with height).'),
 
-        'Z_error':
-        ('This variable is an estimate of the one-standard-deviation\n'
-         'random error in radar reflectivity factor. It originates\n'
-         'from the following independent sources of error:\n'
-         '1) Precision in reflectivity estimate due to finite signal to noise\n'
-         '   and finite number of pulses\n'
-         '2) 10% uncertainty in gaseous attenuation correction (mainly due to\n'
-         '   error in model humidity field)\n'
-         '3) Error in liquid water path (given by the variable lwp_error) and\n'
-         '   its partitioning with height).'),
+    'altitude':
+    ('Defined as the altitude of radar or lidar - the one that is lower.'),
 
-        'altitude':
-        ('Defined as the altitude of radar or lidar - the one that is lower.'),
+    'Z':
+    ('This variable has been corrected for attenuation by gaseous\n'
+     'attenuation (using the thermodynamic variables from a forecast\n'
+     'model; see the radar_gas_atten variable) and liquid attenuation\n'
+     '(using liquid water path from a microwave radiometer; see the\n'
+     'radar_liquid_atten variable) but rain and melting-layer attenuation\n'
+     'has not been corrected. Calibration convention: in the absence of\n'
+     'attenuation, a cloud at 273 K containing one million 100-micron droplets\n'
+     'per cubic metre will have a reflectivity of 0 dBZ at all frequencies.'),
 
-        'Z':
-        ('This variable has been corrected for attenuation by gaseous\n'
-         'attenuation (using the thermodynamic variables from a forecast\n'
-         'model; see the radar_gas_atten variable) and liquid attenuation\n'
-         '(using liquid water path from a microwave radiometer; see the\n'
-         'radar_liquid_atten variable) but rain and melting-layer attenuation\n'
-         'has not been corrected. Calibration convention: in the absence of\n'
-         'attenuation, a cloud at 273 K containing one million 100-micron droplets\n'
-         'per cubic metre will have a reflectivity of 0 dBZ at all frequencies.'),
+    'bias':
+    ('This variable is an estimate of the one-standard-deviation calibration error.'),
 
-        'bias':
-        ('This variable is an estimate of the one-standard-deviation calibration error.'),
+    'ldr':
+    ('This parameter is the ratio of cross-polar to co-polar reflectivity.'),
 
-        'ldr':
-        ('This parameter is the ratio of cross-polar to co-polar reflectivity.'),
+    'width':
+    ('This parameter is the standard deviation of the reflectivity-weighted\n'
+     'velocities in the radar pulse volume.'),
 
-        'width':
-        ('This parameter is the standard deviation of the reflectivity-weighted\n'
-         'velocities in the radar pulse volume.'),
-
-        'v':
-        ('This parameter is the radial component of the velocity, with positive\n'
-         'velocities are away from the radar.'),
-
-    }
-    return com[field]
+    'v':
+    ('This parameter is the radial component of the velocity, with positive\n'
+     'velocities are away from the radar.'),
+}
