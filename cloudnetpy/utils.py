@@ -17,7 +17,7 @@ def seconds2hour(time_in):
             that starts on midnight.
 
     Returns:
-        nparray: Time as fraction hour.
+        ndarray: Time as fraction hour.
 
     """
     seconds_since_midnight = np.mod(time_in, 86400)
