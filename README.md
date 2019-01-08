@@ -10,4 +10,3 @@ CloudnetPy is a refactored fork of the currently operational (Matlab) processing
 - CloudnetPy is currently under active development and testing.
 - It should not be yet used for any serious scientific work!
 ```
-
