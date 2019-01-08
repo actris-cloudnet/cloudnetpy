@@ -25,19 +25,20 @@ def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
         model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF', that was
             used to calculate *Tw*.
 
-    Returns: 
-        dict: Dict containing the 2-D classification as an integer array, 'cat_bits', where:
+    Returns:
+        Dict containing
+
+        - **cat_bits** (*ndarray*): 2-D classification as an integer array, where:
             - bit 0: Liquid droplets
             - bit 1: Falling hydrometeors
             - bit 2: Temperature < 0 Celsius
             - bit 3: Melting layer
             - bit 4: Aerosols
             - bit 5: Insects
-
-        The returned dictionary also contains 1-D boolean array of rain presense,
-        'rain', 2-D boolean arrays of clutter and liquid cloud bases,
-        {'is_clutter', 'liquid_base'}, and 2-D array of
-        insect probability, 'insect_prob'.
+        - **rain** (*ndarray*): 1-D boolean array of rain presense.
+        - **is_clutter** (*ndarray*): 2-D boolean array of clutter.
+        - **liquid_base** (*ndarray*): 2-D boolean array of liquid bases.
+        - **insect_prob** (*ndarray*): 2-D array of insect probability.
 
     See also:
         classify.fetch_qual_bits()
@@ -100,8 +101,8 @@ def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
     of *v*, which is always present, to detect the melting layer.
 
     Model temperature is used to limit the melting layer search to a certain
-    temperature range around 0 C. For GDAS1 data the range is -8..+6 and for
-    ECMWF data -4..+3.
+    temperature range around 0 C. For ECMWF the range is -4..+3, and for 
+    the rest -8..+6.
 
     Args:
         Tw (ndarray): 2-D wet bulb temperature.
@@ -124,10 +125,11 @@ def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
         base = droplet.ind_base(dprof, pind, a, b)
         return top, base
 
-    if 'gdas1' in model_type.lower():
-        trange = (-8, 6)
-    elif 'ecmwf' in model_type.lower():
+    if 'ecmwf' in model_type.lower():
         trange = (-4, 3)
+    else:
+        trange = (-8, 6)
+
     melting_layer = np.zeros(Tw.shape, dtype=bool)
     ldr_diff = np.diff(ldr, axis=1).filled(0)
     v_diff = np.diff(v, axis=1).filled(0)
@@ -265,9 +267,10 @@ def find_insects(radar, Tw, *args, prob_lim=0.8):
             this will lead to positive detection. Default is 0.8.
 
     Returns:
-        tuple: 2-element tuple containing result of classification
-        as 2-D boolean array and insect probability
-        as 2-D MaskedArray where the values between 0 and 1.
+        2-element tuple containing
+
+        - ndarray: 2-D probability of pixel containing insects.
+        - ndarray: 2-D boolean flag of insects presense.
 
     """
     iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])

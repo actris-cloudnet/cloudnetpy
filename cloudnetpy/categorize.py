@@ -237,7 +237,10 @@ def fetch_mwr(mwr_vars, lwp_errors, time):
         time (ndarray): 1-D array, the target time vector.
 
     Returns:
-        dict: Interpolated LWP data and its error: {'value', 'err'}.
+        Dict containing
+
+        - **value** (*ndarray*): Interpolated LWP.
+        - **err** (*ndarray*): Error of LWP.
 
     Notes:
         Needs to decide how to handle totally
@@ -304,10 +307,15 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
         height (ndarray): 1-D array, the target height vector (m).
 
     Returns:
-        dict: Original model fields in common altitude
-        grid with the corresponding time and height vector, interpolated
-        fields in Cloudnet time / height grid, and wet bulb temperature:
-        {'original', 'interp', 'time', 'height', 'Tw'}
+        Dict containing
+
+        - **original** (*dict*): 2-D model fields in common 
+          but sparse grid.
+        - **time** (*ndarray*): Parse model 1-D time vector.
+        - **height** (*ndarray*): Parse model 1-D height vector.
+        - **interp** (*dict*): Interpolated 2-D fields in dense 
+          Cloudnet grid.
+        - **Tw** (*ndarray*): 2-D wet bulb temperature.
 
     """
     fields = ('temperature', 'pressure', 'rh', 'gas_atten',
