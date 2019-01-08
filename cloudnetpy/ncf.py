@@ -162,8 +162,7 @@ def fetch_input_types(input_files):
         try:
             if attr == 'title':
                 return getattr(netCDF4.Dataset(f), attr).split()[0]
-            else:
-                return getattr(netCDF4.Dataset(f), attr)
+            return getattr(netCDF4.Dataset(f), attr)
         except AttributeError:
             return 'Unknown instrument or model.'
 

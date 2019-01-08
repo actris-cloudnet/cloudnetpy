@@ -1,8 +1,6 @@
 """ This module contains general
 helper functions. """
 
-import calendar
-import time
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
@@ -32,7 +30,7 @@ def time_grid(reso=30):
     resolution (in seconds) where 60 is the maximum allowed value.
 
     Args:
-        reso (int, optional): Time resolution in seconds between 1 and 60. 
+        reso (int, optional): Time resolution in seconds between 1 and 60.
             Default is 30.
 
     Returns:
@@ -45,7 +43,7 @@ def time_grid(reso=30):
     if reso < 1 or reso > 60:
         raise ValueError('Time resolution should be between 0 and 60 [s]')
     half_step = reso/7200
-    return np.arange(half_step, 24-half_step, half_step*2)
+    return np.arange(half_step, 24+half_step, half_step*2)
 
 
 def binvec(x):
@@ -301,8 +299,7 @@ def ffill(arr, value=0):
     idx = np.maximum.accumulate(idx, axis=ndims-1)
     if ndims == 2:
         return arr[np.arange(idx.shape[0])[:, None], idx]
-    else:
-        return arr[idx]
+    return arr[idx]
 
 
 def init(nvars, shape, dtype=float, masked=True):

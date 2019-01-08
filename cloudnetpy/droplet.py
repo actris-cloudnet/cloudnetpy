@@ -15,7 +15,7 @@ def ind_base(dprof, p, dist, lim):
 
     Args:
         dprof (ndarray): 1-D array of 1st discrete difference.
-            Masked values should be 0, e.g. dprof = 
+            Masked values should be 0, e.g. dprof =
             np.diff(masked_prof).filled(0)
         p (int): Index of (possibly local) peak in the original profile.
             Note that the peak must be found with some other method prior
@@ -78,7 +78,7 @@ def ind_top(dprof, p, nprof, dist, lim):
 
     Args:
         dprof (ndarray): 1-D array of 1st discrete difference.
-            Masked values should be 0, e.g. dprof = 
+            Masked values should be 0, e.g. dprof =
             np.diff(masked_prof).filled(0)
         nprof (int): Length of the profile. Top index can't be higher
             than this.
@@ -165,7 +165,7 @@ def correct_liquid_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
     Args:
         Z (MaskedArray): 2-D array of radar echo.
         Tw (ndarray): 2-D array of wet bulb temperature.
-        is_freezing (ndarray): 2-D boolean array of sub-zero temperature, 
+        is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
             derived from the model temperature and melting layer based
             on radar data.
         is_liquid (ndarray): 2-D boolean array of liquid clouds.

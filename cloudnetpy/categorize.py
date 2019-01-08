@@ -27,10 +27,10 @@ def generate_categorize(input_files, output_file, zlib=True):
     should be in native measurement resolution.
 
     The measurements are rebinned into a common height / time grid,
-    and classified as different types of scatterers such as ice, liquid, 
-    insects, etc. Next, the radar signal is corrected for atmospheric 
+    and classified as different types of scatterers such as ice, liquid,
+    insects, etc. Next, the radar signal is corrected for atmospheric
     attenuations, and error estimates are computed. Results are saved
-    in *ouput_file* which is by default a compressed NETCDF4_CLASSIC 
+    in *ouput_file* which is by default a compressed NETCDF4_CLASSIC
     file.
 
     Args:
@@ -45,11 +45,10 @@ def generate_categorize(input_files, output_file, zlib=True):
     """
     rad_vars, lid_vars, mwr_vars, mod_vars = (ncf.load_nc(f)
                                               for f in input_files)
-
     input_types = ncf.fetch_input_types(input_files)
     try:
         time = utils.time_grid()
-        height = _altitude_grid(rad_vars)  # m
+        height = _altitude_grid(rad_vars)
         radar_meta = ncf.fetch_radar_meta(input_files[0])
     except (ValueError, KeyError) as error:
         sys.exit(error)
@@ -119,7 +118,7 @@ def _correct_atten(Z, gas_atten, liq_atten):
         liq_atten (MaskedArray): 2-D array of attenuation due to atmospheric liquid.
 
     Returns:
-        MaskedArray: Copy of **Z**, corrected by liquid attenuation
+        MaskedArray: Copy of *Z*, corrected by liquid attenuation
         (where applicable) and gas attenuation (everywhere).
 
     """
@@ -282,7 +281,7 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
     data = mwr_vars[data_field][:]
     time = mwr_vars['time'][:]
     if max(time) > 24:
-        time = utils.seconds2hour(time) 
+        time = utils.seconds2hour(time)
     error = utils.l2norm(frac_err*data, lin_err)
     return data, time, error
 
