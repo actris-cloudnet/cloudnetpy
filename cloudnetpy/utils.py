@@ -39,6 +39,15 @@ def time_grid(reso=30):
     Raises:
         ValueError: Bad resolution as input.
 
+    Notes:
+        Cloudnet's original implementation is different: it starts
+        15 s after Midnight (if 30 resolution) and the last point
+        is 45 s before the next Midnight.
+
+        The method implemented here starts from the same point
+        but ends one time step further, 15 s before Midnight
+        (as it should?).
+
     """
     if reso < 1 or reso > 60:
         raise ValueError('Time resolution should be between 0 and 60 [s]')

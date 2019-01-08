@@ -1593,6 +1593,13 @@ Default is 30.</td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>Cloudnet’s original implementation is different: it starts
+15 s after Midnight (if 30 resolution) and the last point
+is 45 s before the next Midnight.</p>
+<p>The method implemented here starts from the same point
+but ends one time step further, 15 s before Midnight
+(as it should?).</p>
 </dd></dl>
 
 </div>
