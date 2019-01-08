@@ -170,11 +170,15 @@ def liquid_atten(lwp, model, bits, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        dict: Dict containing liquid attenuation, its error
-        and boolean arrays indicating where attenuation was corrected
-        and where it was not: {'value', 'err', 'is_corr',
-        'is_not_corr'}.
+        Dict containing
 
+        - **value** (*MaskedArray*): Amount of liquid attenuation.
+        - **err** (*MaskedArray*): Error in the liquid attenuation.
+        - **is_corr** (*ndarray*): Boolean array denoting where liquid
+          attenuation is present and we can compute its value.
+        - **is_not_corr** (*ndarray*): Boolean array denoting where liquid
+          attenuation is present but we can not compute its value.
+ 
     """
     spec_liq = model['specific_liquid_atten']
     is_liq = utils.isbit(bits['cat'], 0)
