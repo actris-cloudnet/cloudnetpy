@@ -123,7 +123,11 @@ def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
             is always positive. Default is 2e-7.
 
     Returns:
-        ndarray: Boolean array denoting liquid layers.
+        3-element tuple containing
+
+        - ndarray: 2-D boolean array denoting liquid layers.
+        - ndarray: 2-D boolean array denoting cloud bases.
+        - ndarray: 2-D boolean array denoting cloud tops.
 
     """
     is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,

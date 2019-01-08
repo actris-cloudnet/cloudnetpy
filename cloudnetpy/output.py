@@ -1,8 +1,8 @@
 """ Functions for Categorize output file writing."""
-import netCDF4
+from datetime import datetime, timezone
 import uuid
 import numpy as np
-from datetime import datetime, timezone
+import netCDF4
 from cloudnetpy import config
 
 class CnetVar:
@@ -13,28 +13,26 @@ class CnetVar:
         self.name = name
         self.data = data
         self.data_type = data_type
-        self.size = self._get_size(data, size)
+        self.size = self._get_size(size)
         self.fill_value = self._get_fillv(fill_value)
         # Extra:
         for key, value in kwargs.items():
             setattr(self, key, value)
         self.kwarg_keys = kwargs.keys()
 
-    def _get_size(self, data, size):
+    def _get_size(self, size):
         """Sets the size for scalars."""
-        if isinstance(data, np.ndarray) and data.size > 1:
+        if isinstance(self.data, np.ndarray) and self.data.size > 1:
             return size
-        else:
-            return ()  # it is scalar
-        
+        return ()  # it is scalar
+
     def _get_fillv(self, fill_value):
         """Returns proper fill value."""
         if not self.size:
             return None  # no fill value for scalars
         elif isinstance(fill_value, bool):
             return netCDF4.default_fillvals[self.data_type]
-        else:
-            return fill_value
+        return fill_value
 
 
 def write_vars2nc(rootgrp, obs, zlib):
@@ -69,7 +67,7 @@ def save_cat(file_name, time, height, model_time, model_height, obs, radar_meta,
     #rootgrp.git_version = ncf.git_version()
     rootgrp.file_uuid = str(uuid.uuid4().hex)
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
-    rootgrp.history = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S") + ' - categorize file created'
+    rootgrp.history = f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} - categorize file created"
     rootgrp.close()
 
 
@@ -97,8 +95,21 @@ def err_comm(long_name):
 
 def bias_comm(long_name):
     """ Default bias comment """
-    return ('This variable is an estimate of the possible systematic error in ' + long_name.lower() + 'due to the\n'
+    return ('This variable is an estimate of the possible systematic error in '
+            + long_name.lower() + 'due to the\n'
             'uncertainty in the calibration of the radar and lidar.')
+
+
+def anc_names(var, bias=False, err=False, sens=False):
+    """Returns list of ancillary variable names."""
+    out = ''
+    if bias:
+        out += f"{var}_bias "
+    if err:
+        out += f"{var}_error "
+    if sens:
+        out += f"{var}_sensitivity "
+    return out[:-1]
 
 
 def _copy_dimensions(file_from, file_to, dims_to_be_copied):

@@ -1,6 +1,4 @@
-""" This module is used to generate
-categorize (Level 1) product from pre-processed
-radar, lidar and MWR files.
+""" Functions for rebinning input data.
 """
 import os
 import sys
@@ -21,7 +19,7 @@ from cloudnetpy.output import CnetVar as CV
 def generate_categorize(input_files, output_file, zlib=True):
     """Generates Cloudnet Level 1 categorize file.
 
-    This is the main function to process Level 1 Cloudnet files from
+    High level API for processing Level 1 Cloudnet files from
     calibrated measurements and model data. *input_files* are NetCDF
     files including the required fields and metadata. Input data
     should be in native measurement resolution.
@@ -309,11 +307,11 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
     Returns:
         Dict containing
 
-        - **original** (*dict*): 2-D model fields in common 
+        - **original** (*dict*): 2-D model fields in common
           but sparse grid.
         - **time** (*ndarray*): Parse model 1-D time vector.
         - **height** (*ndarray*): Parse model 1-D height vector.
-        - **interp** (*dict*): Interpolated 2-D fields in dense 
+        - **interp** (*dict*): Interpolated 2-D fields in dense
           Cloudnet grid.
         - **Tw** (*ndarray*): 2-D wet bulb temperature.
 
@@ -431,18 +429,6 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
     return {'sensitivity': Z_sensitivity, 'error': Z_error}
 
 
-def _anc_names(var, bias=False, err=False, sens=False):
-    """Returns list of ancillary variable names."""
-    out = ''
-    if bias:
-        out += f"{var}_bias "
-    if err:
-        out += f"{var}_error "
-    if sens:
-        out += f"{var}_sensitivity "
-    return out[:-1]
-
-
 def _cat_cnet_vars(vars_in, radar_meta, input_types):
     """Creates list of variable instances for output writing."""
     lin, log = 'linear', 'logarithmic'
@@ -501,7 +487,7 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
              plot_scale=lin,
              comment=_COMMENTS[var],
              source=radar_source,
-             ancillary_variables=_anc_names(var, True, True, True)))
+             ancillary_variables=output.anc_names(var, True, True, True)))
     var = 'Z_bias'
     yield(CV(var, vars_in[var],
              long_name=output.bias_name(lname),
@@ -556,7 +542,7 @@ def _cat_cnet_vars(vars_in, radar_meta, input_types):
              plot_range=(1e-7, 1e-4),
              plot_scale=log,
              source=input_types['lidar'],
-             ancillary_variables=_anc_names(var, bias=True, err=True)))
+             ancillary_variables=output.anc_names(var, bias=True, err=True)))
     var = 'beta_raw'
     lname = 'Raw attenuated backscatter coefficient'
     yield(CV(var, vars_in[var],

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>API reference &#8212; CloudnetPy  documentation</title>
+    <title>High level APIs &#8212; CloudnetPy  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     
@@ -40,17 +40,50 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="api-reference">
-<h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="high-level-apis">
+<h1>High level APIs<a class="headerlink" href="#high-level-apis" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="categorize.generate_categorize">
+<code class="descclassname">categorize.</code><code class="descname">generate_categorize</code><span class="sig-paren">(</span><em>input_files</em>, <em>output_file</em>, <em>zlib=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#generate_categorize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.generate_categorize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates Cloudnet Level 1 categorize file.</p>
+<p>High level API for processing Level 1 Cloudnet files from
+calibrated measurements and model data. <em>input_files</em> are NetCDF
+files including the required fields and metadata. Input data
+should be in native measurement resolution.</p>
+<p>The measurements are rebinned into a common height / time grid,
+and classified as different types of scatterers such as ice, liquid,
+insects, etc. Next, the radar signal is corrected for atmospheric
+attenuations, and error estimates are computed. Results are saved
+in <em>ouput_file</em> which is by default a compressed NETCDF4_CLASSIC
+file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>input_files</strong> (<em>tuple</em>) – Tuple of strings containing full paths of
+the 4 input files (radar, lidar, mwr, model).</li>
+<li><strong>output_file</strong> (<em>str</em>) – Full path of the output file.</li>
+<li><strong>zlib</strong> (<em>bool</em>) – If True, the output file is compressed. Default is True.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883">https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883</a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="modules">
+<h1>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="module-categorize">
 <span id="cloudnet-categorize"></span><h2>cloudnet.categorize<a class="headerlink" href="#module-categorize" title="Permalink to this headline">¶</a></h2>
-<p>This module is used to generate
-categorize (Level 1) product from pre-processed
-radar, lidar and MWR files.</p>
+<p>Functions for rebinning input data.</p>
 <dl class="function">
 <dt id="categorize.fetch_lidar">
 <code class="descclassname">categorize.</code><code class="descname">fetch_lidar</code><span class="sig-paren">(</span><em>lid_vars</em>, <em>fields</em>, <em>time</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#fetch_lidar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.fetch_lidar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads and rebins lidar fields in time and height.</p>
+<dd><p>Reads and rebins lidar 2-D fields in time and height.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -100,13 +133,17 @@ temperature, pressure and relative humidity values.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Original model fields in common altitude
-grid with the corresponding time and height vector, interpolated
-fields in Cloudnet time / height grid, and wet bulb temperature:
-{‘original’, ‘interp’, ‘time’, ‘height’, ‘Tw’}</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>Dict containing</p>
+<ul class="simple">
+<li><strong>original</strong> (<em>dict</em>): 2-D model fields in common
+but sparse grid.</li>
+<li><strong>time</strong> (<em>ndarray</em>): Parse model 1-D time vector.</li>
+<li><strong>height</strong> (<em>ndarray</em>): Parse model 1-D height vector.</li>
+<li><strong>interp</strong> (<em>dict</em>): Interpolated 2-D fields in dense
+Cloudnet grid.</li>
+<li><strong>Tw</strong> (<em>ndarray</em>): 2-D wet bulb temperature.</li>
+</ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -129,10 +166,12 @@ fields in Cloudnet time / height grid, and wet bulb temperature:
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated LWP data and its error: {‘value’, ‘err’}.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>Dict containing</p>
+<ul class="simple">
+<li><strong>value</strong> (<em>ndarray</em>): Interpolated LWP.</li>
+<li><strong>err</strong> (<em>ndarray</em>): Error of LWP.</li>
+</ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -145,7 +184,7 @@ missing (or sparse) mwr data.</p>
 <dl class="function">
 <dt id="categorize.fetch_radar">
 <code class="descclassname">categorize.</code><code class="descname">fetch_radar</code><span class="sig-paren">(</span><em>rad_vars</em>, <em>fields</em>, <em>time_new</em>, <em>vfold</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#fetch_radar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.fetch_radar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads and rebins radar 2d fields in time.</p>
+<dd><p>Reads and rebins radar 2-D fields in time.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -175,38 +214,6 @@ fields to be rebinned, e.g. (‘Zh’, ‘v’, ‘width’).</li>
 Doppler velocity, ‘v’, is averaged in polar coordinates.</p>
 </dd></dl>
 
-<dl class="function">
-<dt id="categorize.generate_categorize">
-<code class="descclassname">categorize.</code><code class="descname">generate_categorize</code><span class="sig-paren">(</span><em>input_files</em>, <em>output_file</em>, <em>zlib=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#generate_categorize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.generate_categorize" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generates Cloudnet Level 1 categorize file.</p>
-<p>This is the main function to process Level 1 Cloudnet files from
-calibrated measurements and model data. <em>input_files</em> are NetCDF
-files including the required fields and metadata. Input data
-should be in native measurement resolution.</p>
-<p>The measurements are rebinned into a common height / time grid,
-and classified as different types of scatterers such as ice, liquid,
-insects, etc. Next, the radar signal is corrected for atmospheric
-attenuations, and error estimates are computed. Results are saved
-in <em>ouput_file</em> which is by default a compressed NETCDF4_CLASSIC
-file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>input_files</strong> (<em>tuple</em>) – Tuple of strings containing full paths of
-the 4 input files (radar, lidar, mwr, model).</li>
-<li><strong>output_file</strong> (<em>str</em>) – Full path of the output file.</li>
-<li><strong>zlib</strong> (<em>bool</em>) – If True, the output file is compressed. Default is True.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">References</p>
-<p><a class="reference external" href="https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883">https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883</a></p>
-</dd></dl>
-
 </div>
 <div class="section" id="module-classify">
 <span id="cloudnet-classify"></span><h2>cloudnet.classify<a class="headerlink" href="#module-classify" title="Permalink to this headline">¶</a></h2>
@@ -232,9 +239,11 @@ used to calculate <em>Tw</em>.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt>Dict containing the 2-D classification as an integer array, ‘cat_bits’, where:</dt>
-<dd><ul class="first last simple">
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>Dict containing</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt><strong>cat_bits</strong> (<em>ndarray</em>): 2-D classification as an integer array, where:</dt>
+<dd><ul class="first last">
 <li>bit 0: Liquid droplets</li>
 <li>bit 1: Falling hydrometeors</li>
 <li>bit 2: Temperature &lt; 0 Celsius</li>
@@ -244,14 +253,13 @@ used to calculate <em>Tw</em>.</li>
 </ul>
 </dd>
 </dl>
-<p>The returned dictionary also contains 1-D boolean array of rain presense,
-‘rain’, 2-D boolean arrays of clutter and liquid cloud bases,
-{‘is_clutter’, ‘liquid_base’}, and 2-D array of
-insect probability, ‘insect_prob’.</p>
+</li>
+<li><strong>rain</strong> (<em>ndarray</em>): 1-D boolean array of rain presense.</li>
+<li><strong>is_clutter</strong> (<em>ndarray</em>): 2-D boolean array of clutter.</li>
+<li><strong>liquid_base</strong> (<em>ndarray</em>): 2-D boolean array of liquid bases.</li>
+<li><strong>insect_prob</strong> (<em>ndarray</em>): 2-D array of insect probability.</li>
+</ul>
 </p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
 </td>
 </tr>
 </tbody>
@@ -464,12 +472,12 @@ this will lead to positive detection. Default is 0.8.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-element tuple containing result of classification
-as 2-D boolean array and insect probability
-as 2-D MaskedArray where the values between 0 and 1.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>2-element tuple containing</p>
+<ul class="simple">
+<li>ndarray: 2-D probability of pixel containing insects.</li>
+<li>ndarray: 2-D boolean flag of insects presense.</li>
+</ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -493,8 +501,8 @@ first difference of <em>v</em>.</p>
 has been found. If <em>ldr</em> is missing we only analyze the behaviour
 of <em>v</em>, which is always present, to detect the melting layer.</p>
 <p>Model temperature is used to limit the melting layer search to a certain
-temperature range around 0 C. For GDAS1 data the range is -8..+6 and for
-ECMWF data -4..+3.</p>
+temperature range around 0 C. For ECMWF the range is -4..+3, and for
+the rest -8..+6.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -632,13 +640,16 @@ path and its error {‘value’, ‘err’}.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dict containing liquid attenuation, its error
-and boolean arrays indicating where attenuation was corrected
-and where it was not: {‘value’, ‘err’, ‘is_corr’,
-‘is_not_corr’}.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>Dict containing</p>
+<ul class="simple">
+<li><strong>value</strong> (<em>MaskedArray</em>): Amount of liquid attenuation.</li>
+<li><strong>err</strong> (<em>MaskedArray</em>): Error in the liquid attenuation.</li>
+<li><strong>is_corr</strong> (<em>ndarray</em>): Boolean array denoting where liquid
+attenuation is present and we can compute its value.</li>
+<li><strong>is_not_corr</strong> (<em>ndarray</em>): Boolean array denoting where liquid
+attenuation is present but we can not compute its value.</li>
+</ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -755,10 +766,13 @@ is always positive. Default is 2e-7.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Boolean array denoting liquid layers.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>3-element tuple containing</p>
+<ul class="simple">
+<li>ndarray: 2-D boolean array denoting liquid layers.</li>
+<li>ndarray: 2-D boolean array denoting cloud bases.</li>
+<li>ndarray: 2-D boolean array denoting cloud tops.</li>
+</ul>
+</p>
 </td>
 </tr>
 </tbody>
@@ -1171,7 +1185,7 @@ helper functions.</p>
 <dl class="function">
 <dt id="utils.bases_and_tops">
 <code class="descclassname">utils.</code><code class="descname">bases_and_tops</code><span class="sig-paren">(</span><em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#bases_and_tops"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.bases_and_tops" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds islands of ones from boolean array.</p>
+<dd><p>Finds islands of ones from boolean 1-D array.</p>
 <p>From a binary vector finds all “islands” of
 ones, i.e. their starting and ending indices.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -1417,8 +1431,8 @@ Default is True.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*args</strong> – variable number of input variables. They
-can be numpy / masked arrays.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*args</strong> – Variable number of data (<em>array_like</em>)
+with the same shape.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The l2 norm.</td>
 </tr>
@@ -1607,7 +1621,8 @@ Default is 30.</td>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">API reference</a><ul>
+<li><a class="reference internal" href="#">High level APIs</a></li>
+<li><a class="reference internal" href="#modules">Modules</a><ul>
 <li><a class="reference internal" href="#module-categorize">cloudnet.categorize</a></li>
 <li><a class="reference internal" href="#module-classify">cloudnet.classify</a></li>
 <li><a class="reference internal" href="#module-atmos">cloudnet.atmos</a></li>

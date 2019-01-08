@@ -38,9 +38,7 @@
           <div class="body" role="main">
             
   <h1>Source code for categorize</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot; This module is used to generate</span>
-<span class="sd">categorize (Level 1) product from pre-processed</span>
-<span class="sd">radar, lidar and MWR files.</span>
+<span></span><span class="sd">&quot;&quot;&quot; Functions for rebinning input data.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
@@ -61,7 +59,7 @@
 <div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../api.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">,</span> <span class="n">zlib</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generates Cloudnet Level 1 categorize file.</span>
 
-<span class="sd">    This is the main function to process Level 1 Cloudnet files from</span>
+<span class="sd">    High level API for processing Level 1 Cloudnet files from</span>
 <span class="sd">    calibrated measurements and model data. *input_files* are NetCDF</span>
 <span class="sd">    files including the required fields and metadata. Input data</span>
 <span class="sd">    should be in native measurement resolution.</span>
@@ -178,8 +176,7 @@
 <span class="sd">        ndarray: Altitude grid (m).</span>
 
 <span class="sd">    Raises:</span>
-<span class="sd">        ValueError: Masked values in radar altitude. This</span>
-<span class="sd">            should never happen.</span>
+<span class="sd">        ValueError: Masked values in radar altitude.</span>
 
 <span class="sd">    Notes:</span>
 <span class="sd">        Altitude grid is defined as the instrument&#39;s measurement</span>
@@ -196,7 +193,7 @@
 
 
 <div class="viewcode-block" id="fetch_radar"><a class="viewcode-back" href="../api.html#categorize.fetch_radar">[docs]</a><span class="k">def</span> <span class="nf">fetch_radar</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time_new</span><span class="p">,</span> <span class="n">vfold</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Reads and rebins radar 2d fields in time.</span>
+    <span class="sd">&quot;&quot;&quot;Reads and rebins radar 2-D fields in time.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        rad_vars (dict): Radar variables.</span>
@@ -239,7 +236,7 @@
 
 
 <div class="viewcode-block" id="fetch_lidar"><a class="viewcode-back" href="../api.html#categorize.fetch_lidar">[docs]</a><span class="k">def</span> <span class="nf">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Reads and rebins lidar fields in time and height.</span>
+    <span class="sd">&quot;&quot;&quot;Reads and rebins lidar 2-D fields in time and height.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        lid_vars (dict): Lidar variables.</span>
@@ -278,7 +275,10 @@
 <span class="sd">        time (ndarray): 1-D array, the target time vector.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: Interpolated LWP data and its error: {&#39;value&#39;, &#39;err&#39;}.</span>
+<span class="sd">        Dict containing</span>
+
+<span class="sd">        - **value** (*ndarray*): Interpolated LWP.</span>
+<span class="sd">        - **err** (*ndarray*): Error of LWP.</span>
 
 <span class="sd">    Notes:</span>
 <span class="sd">        Needs to decide how to handle totally</span>
@@ -345,10 +345,15 @@
 <span class="sd">        height (ndarray): 1-D array, the target height vector (m).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: Original model fields in common altitude</span>
-<span class="sd">        grid with the corresponding time and height vector, interpolated</span>
-<span class="sd">        fields in Cloudnet time / height grid, and wet bulb temperature:</span>
-<span class="sd">        {&#39;original&#39;, &#39;interp&#39;, &#39;time&#39;, &#39;height&#39;, &#39;Tw&#39;}</span>
+<span class="sd">        Dict containing</span>
+
+<span class="sd">        - **original** (*dict*): 2-D model fields in common</span>
+<span class="sd">          but sparse grid.</span>
+<span class="sd">        - **time** (*ndarray*): Parse model 1-D time vector.</span>
+<span class="sd">        - **height** (*ndarray*): Parse model 1-D height vector.</span>
+<span class="sd">        - **interp** (*dict*): Interpolated 2-D fields in dense</span>
+<span class="sd">          Cloudnet grid.</span>
+<span class="sd">        - **Tw** (*ndarray*): 2-D wet bulb temperature.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="s1">&#39;rh&#39;</span><span class="p">,</span> <span class="s1">&#39;gas_atten&#39;</span><span class="p">,</span>
@@ -376,14 +381,12 @@
 <span class="sd">        freq (float): Radar frequency (GHz).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        tuple: 3-element tuple containing (1) dict where the model fields</span>
-<span class="sd">        are in common altitude grid, (2) original model time (3) altitude</span>
-<span class="sd">        vector used in the interpolation (mean of the individual height</span>
-<span class="sd">        vectors of the day).</span>
+<span class="sd">        3-element tuple containing</span>
 
-<span class="sd">    Notes:</span>
-<span class="sd">        The common altitude vector used in the interpolation is</span>
-<span class="sd">        defined above mean sea level.</span>
+<span class="sd">        - *dict*: Model fields in common altitude grid.</span>
+<span class="sd">        - *ndarray*: Original model time.</span>
+<span class="sd">        - *ndarray*: Common altitude vector used in the interpolation</span>
+<span class="sd">          (mean of the individual height vectors of the day).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
@@ -466,18 +469,6 @@
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;sensitivity&#39;</span><span class="p">:</span> <span class="n">Z_sensitivity</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">Z_error</span><span class="p">}</span>
 
 
-<span class="k">def</span> <span class="nf">_anc_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sens</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns list of ancillary variable names.&quot;&quot;&quot;</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">bias</span><span class="p">:</span>
-        <span class="n">out</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{var}</span><span class="s2">_bias &quot;</span>
-    <span class="k">if</span> <span class="n">err</span><span class="p">:</span>
-        <span class="n">out</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{var}</span><span class="s2">_error &quot;</span>
-    <span class="k">if</span> <span class="n">sens</span><span class="p">:</span>
-        <span class="n">out</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{var}</span><span class="s2">_sensitivity &quot;</span>
-    <span class="k">return</span> <span class="n">out</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-
 <span class="k">def</span> <span class="nf">_cat_cnet_vars</span><span class="p">(</span><span class="n">vars_in</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">,</span> <span class="n">input_types</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates list of variable instances for output writing.&quot;&quot;&quot;</span>
     <span class="n">lin</span><span class="p">,</span> <span class="n">log</span> <span class="o">=</span> <span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;logarithmic&#39;</span>
@@ -536,7 +527,7 @@
              <span class="n">plot_scale</span><span class="o">=</span><span class="n">lin</span><span class="p">,</span>
              <span class="n">comment</span><span class="o">=</span><span class="n">_COMMENTS</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
              <span class="n">source</span><span class="o">=</span><span class="n">radar_source</span><span class="p">,</span>
-             <span class="n">ancillary_variables</span><span class="o">=</span><span class="n">_anc_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)))</span>
+             <span class="n">ancillary_variables</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">anc_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;Z_bias&#39;</span>
     <span class="k">yield</span><span class="p">(</span><span class="n">CV</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>
              <span class="n">long_name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">bias_name</span><span class="p">(</span><span class="n">lname</span><span class="p">),</span>
@@ -591,7 +582,7 @@
              <span class="n">plot_range</span><span class="o">=</span><span class="p">(</span><span class="mf">1e-7</span><span class="p">,</span> <span class="mf">1e-4</span><span class="p">),</span>
              <span class="n">plot_scale</span><span class="o">=</span><span class="n">log</span><span class="p">,</span>
              <span class="n">source</span><span class="o">=</span><span class="n">input_types</span><span class="p">[</span><span class="s1">&#39;lidar&#39;</span><span class="p">],</span>
-             <span class="n">ancillary_variables</span><span class="o">=</span><span class="n">_anc_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
+             <span class="n">ancillary_variables</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">anc_names</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">err</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
     <span class="n">var</span> <span class="o">=</span> <span class="s1">&#39;beta_raw&#39;</span>
     <span class="n">lname</span> <span class="o">=</span> <span class="s1">&#39;Raw attenuated backscatter coefficient&#39;</span>
     <span class="k">yield</span><span class="p">(</span><span class="n">CV</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">var</span><span class="p">],</span>

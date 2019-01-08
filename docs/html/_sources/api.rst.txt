@@ -1,12 +1,20 @@
-API reference
-=============
+High level APIs
+===============
 
+
+.. autofunction:: categorize.generate_categorize
+
+
+
+Modules
+=======
 
 cloudnet.categorize
 -------------------
 
 .. automodule:: categorize
    :members:
+   :exclude-members: generate_categorize
 
 
 cloudnet.classify

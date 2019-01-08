@@ -2,8 +2,8 @@
 Overview
 ========
 
-The Cloudnet processing produces vertical profiles of cloud properties from ground-based remote sensing measurements.
-Cloud radar, optical lidar, microwave radiometer and model data are combined to characterize
+Cloudnet processing produces vertical profiles of cloud properties from ground-based remote sensing measurements.
+Cloud radar, optical lidar, microwave radiometer and model data are combined in order to characterize
 clouds up to 15 km with high temporal and vertical resolution.
 
 .. figure:: _static/example_data.jpg
@@ -18,11 +18,8 @@ Then, geophysical products such as ice water content can be retrieved in further
 CloudnetPy is a refactored fork of the currently operational (Matlab) processing code. It features, e.g.,
 several revised methods, open source code base, netCDF4 file format, and extensive documentation.
 
-
-
 The Cloudnet processing scheme is eventually going to be part of the ACTRIS
 reseach infrastructure. ACTRIS is moving into implementation phase in 2019.
-
 
 See also:
 

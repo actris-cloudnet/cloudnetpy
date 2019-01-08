@@ -163,7 +163,11 @@
 <span class="sd">            is always positive. Default is 2e-7.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        ndarray: Boolean array denoting liquid layers.</span>
+<span class="sd">        3-element tuple containing</span>
+
+<span class="sd">        - ndarray: 2-D boolean array denoting liquid layers.</span>
+<span class="sd">        - ndarray: 2-D boolean array denoting cloud bases.</span>
+<span class="sd">        - ndarray: 2-D boolean array denoting cloud tops.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">is_liquid</span><span class="p">,</span> <span class="n">liquid_top</span><span class="p">,</span> <span class="n">liquid_base</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">beta</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>

@@ -210,11 +210,15 @@
 <span class="sd">        height (ndarray): 1-D altitude grid (m).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: Dict containing liquid attenuation, its error</span>
-<span class="sd">        and boolean arrays indicating where attenuation was corrected</span>
-<span class="sd">        and where it was not: {&#39;value&#39;, &#39;err&#39;, &#39;is_corr&#39;,</span>
-<span class="sd">        &#39;is_not_corr&#39;}.</span>
+<span class="sd">        Dict containing</span>
 
+<span class="sd">        - **value** (*MaskedArray*): Amount of liquid attenuation.</span>
+<span class="sd">        - **err** (*MaskedArray*): Error in the liquid attenuation.</span>
+<span class="sd">        - **is_corr** (*ndarray*): Boolean array denoting where liquid</span>
+<span class="sd">          attenuation is present and we can compute its value.</span>
+<span class="sd">        - **is_not_corr** (*ndarray*): Boolean array denoting where liquid</span>
+<span class="sd">          attenuation is present but we can not compute its value.</span>
+<span class="sd"> </span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">spec_liq</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;specific_liquid_atten&#39;</span><span class="p">]</span>
     <span class="n">is_liq</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="n">bits</span><span class="p">[</span><span class="s1">&#39;cat&#39;</span><span class="p">],</span> <span class="mi">0</span><span class="p">)</span>

@@ -65,19 +65,20 @@
 <span class="sd">        model_type (str): NWP model type, e.g. &#39;GDAS1&#39; or &#39;ECMWF&#39;, that was</span>
 <span class="sd">            used to calculate *Tw*.</span>
 
-<span class="sd">    Returns: </span>
-<span class="sd">        dict: Dict containing the 2-D classification as an integer array, &#39;cat_bits&#39;, where:</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict containing</span>
+
+<span class="sd">        - **cat_bits** (*ndarray*): 2-D classification as an integer array, where:</span>
 <span class="sd">            - bit 0: Liquid droplets</span>
 <span class="sd">            - bit 1: Falling hydrometeors</span>
 <span class="sd">            - bit 2: Temperature &lt; 0 Celsius</span>
 <span class="sd">            - bit 3: Melting layer</span>
 <span class="sd">            - bit 4: Aerosols</span>
 <span class="sd">            - bit 5: Insects</span>
-
-<span class="sd">        The returned dictionary also contains 1-D boolean array of rain presense,</span>
-<span class="sd">        &#39;rain&#39;, 2-D boolean arrays of clutter and liquid cloud bases,</span>
-<span class="sd">        {&#39;is_clutter&#39;, &#39;liquid_base&#39;}, and 2-D array of</span>
-<span class="sd">        insect probability, &#39;insect_prob&#39;.</span>
+<span class="sd">        - **rain** (*ndarray*): 1-D boolean array of rain presense.</span>
+<span class="sd">        - **is_clutter** (*ndarray*): 2-D boolean array of clutter.</span>
+<span class="sd">        - **liquid_base** (*ndarray*): 2-D boolean array of liquid bases.</span>
+<span class="sd">        - **insect_prob** (*ndarray*): 2-D array of insect probability.</span>
 
 <span class="sd">    See also:</span>
 <span class="sd">        classify.fetch_qual_bits()</span>
@@ -140,8 +141,8 @@
 <span class="sd">    of *v*, which is always present, to detect the melting layer.</span>
 
 <span class="sd">    Model temperature is used to limit the melting layer search to a certain</span>
-<span class="sd">    temperature range around 0 C. For GDAS1 data the range is -8..+6 and for</span>
-<span class="sd">    ECMWF data -4..+3.</span>
+<span class="sd">    temperature range around 0 C. For ECMWF the range is -4..+3, and for </span>
+<span class="sd">    the rest -8..+6.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        Tw (ndarray): 2-D wet bulb temperature.</span>
@@ -164,10 +165,11 @@
         <span class="n">base</span> <span class="o">=</span> <span class="n">droplet</span><span class="o">.</span><span class="n">ind_base</span><span class="p">(</span><span class="n">dprof</span><span class="p">,</span> <span class="n">pind</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">top</span><span class="p">,</span> <span class="n">base</span>
 
-    <span class="k">if</span> <span class="s1">&#39;gdas1&#39;</span> <span class="ow">in</span> <span class="n">model_type</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-        <span class="n">trange</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="s1">&#39;ecmwf&#39;</span> <span class="ow">in</span> <span class="n">model_type</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+    <span class="k">if</span> <span class="s1">&#39;ecmwf&#39;</span> <span class="ow">in</span> <span class="n">model_type</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
         <span class="n">trange</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">trange</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+
     <span class="n">melting_layer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Tw</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
     <span class="n">ldr_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">ldr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">v_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -305,9 +307,10 @@
 <span class="sd">            this will lead to positive detection. Default is 0.8.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        tuple: 2-element tuple containing result of classification</span>
-<span class="sd">        as 2-D boolean array and insect probability</span>
-<span class="sd">        as 2-D MaskedArray where the values between 0 and 1.</span>
+<span class="sd">        2-element tuple containing</span>
+
+<span class="sd">        - ndarray: 2-D probability of pixel containing insects.</span>
+<span class="sd">        - ndarray: 2-D boolean flag of insects presense.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">iprob</span> <span class="o">=</span> <span class="n">_insect_probability</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">],</span> <span class="n">radar</span><span class="p">[</span><span class="s1">&#39;ldr&#39;</span><span class="p">],</span> <span class="n">radar</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">])</span>
