@@ -106,15 +106,16 @@
 
 
 <div class="viewcode-block" id="rebin_2d"><a class="viewcode-back" href="../api.html#utils.rebin_2d">[docs]</a><span class="k">def</span> <span class="nf">rebin_2d</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">x_new</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Rebins 2-D data in x-direction using mean. Handles masked data.</span>
+    <span class="sd">&quot;&quot;&quot;Rebins 2-D data in one dimension using mean.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        x_in (ndarray): A 1-D array.</span>
-<span class="sd">        data (ndarray): 2-D input data.</span>
-<span class="sd">        x_new (ndarray): The new x vector (center points).</span>
+<span class="sd">        x_in (ndarray): 1-D array with shape (n,).</span>
+<span class="sd">        data (MaskedArray): 2-D input data with shape (n, m).</span>
+<span class="sd">        x_new (ndarray): 1-D target vector (center points)</span>
+<span class="sd">            with shape (N,).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        MaskedArray: Rebinned (averaged) data.</span>
+<span class="sd">        MaskedArray: Rebinned (averaged) data with shape (N, m).</span>
 
 <span class="sd">    Notes: 0-values are masked in the returned array.</span>
 
@@ -137,7 +138,7 @@
     <span class="sd">&quot;&quot;&quot;Returns array with completely isolated single cells removed.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        array (ndarray): 2-D input data.</span>
+<span class="sd">        array (ndarray): 2-D input data with shape.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray: Cleaned data.</span>

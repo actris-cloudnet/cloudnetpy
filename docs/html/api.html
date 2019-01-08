@@ -1296,7 +1296,7 @@ Default is 0.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2-D input data.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2-D input data with shape.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Cleaned data.</td>
 </tr>
@@ -1493,19 +1493,20 @@ and distance in minutes. Default is None.</li>
 <dl class="function">
 <dt id="utils.rebin_2d">
 <code class="descclassname">utils.</code><code class="descname">rebin_2d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_2d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins 2-D data in x-direction using mean. Handles masked data.</p>
+<dd><p>Rebins 2-D data in one dimension using mean.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x_in</strong> (<em>ndarray</em>) – A 1-D array.</li>
-<li><strong>data</strong> (<em>ndarray</em>) – 2-D input data.</li>
-<li><strong>x_new</strong> (<em>ndarray</em>) – The new x vector (center points).</li>
+<li><strong>x_in</strong> (<em>ndarray</em>) – 1-D array with shape (n,).</li>
+<li><strong>data</strong> (<em>MaskedArray</em>) – 2-D input data with shape (n, m).</li>
+<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D target vector (center points)
+with shape (N,).</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned (averaged) data.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned (averaged) data with shape (N, m).</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">MaskedArray</p>

@@ -66,15 +66,16 @@ def binvec(x):
 
 
 def rebin_2d(x_in, data, x_new):
-    """Rebins 2-D data in x-direction using mean. Handles masked data.
+    """Rebins 2-D data in one dimension using mean.
 
     Args:
-        x_in (ndarray): A 1-D array.
-        data (ndarray): 2-D input data.
-        x_new (ndarray): The new x vector (center points).
+        x_in (ndarray): 1-D array with shape (n,).
+        data (MaskedArray): 2-D input data with shape (n, m).
+        x_new (ndarray): 1-D target vector (center points)
+            with shape (N,).
 
     Returns:
-        MaskedArray: Rebinned (averaged) data.
+        MaskedArray: Rebinned (averaged) data with shape (N, m).
 
     Notes: 0-values are masked in the returned array.
 
@@ -97,7 +98,7 @@ def filter_isolated_pixels(array):
     """Returns array with completely isolated single cells removed.
 
     Args:
-        array (ndarray): 2-D input data.
+        array (ndarray): 2-D input data with shape.
 
     Returns:
         ndarray: Cleaned data.
