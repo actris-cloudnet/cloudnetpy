@@ -199,13 +199,14 @@ def _screen_liq_atten(liq_atten, bits):
     Args:
         liq_atten (ndarray): Liquid attenuation.
         bits: Dict containing classification bits and rain
-        {'cat', 'rain'}.
+            {'cat', 'rain'}.
 
     Returns:
-        tuple: 3-element tuple containing screened liquid
-        attenuation (MaskedArray), and boolean arrays
-        showing where it was corrected and where it
-        was not.
+        tuple: 3-element tuple containing:
+        
+        - MaskedArray: Screened liquid attenuation.
+        - ndarray: Boolean array denoting where liquid attenuation was corrected.
+        - ndarray: Boolean array denoting where liquid attenuation was present but not corrected.
 
     """
     melting_layer = utils.isbit(bits['cat'], 3)

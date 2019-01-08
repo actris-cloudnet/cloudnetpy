@@ -49,31 +49,22 @@
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">RectBivariateSpline</span>
 
 
-<div class="viewcode-block" id="epoch2desimal_hour"><a class="viewcode-back" href="../api.html#utils.epoch2desimal_hour">[docs]</a><span class="k">def</span> <span class="nf">epoch2desimal_hour</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">time_in</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts seconds since epoch to desimal hour of that day.</span>
+<div class="viewcode-block" id="seconds2hour"><a class="viewcode-back" href="../api.html#utils.seconds2hour">[docs]</a><span class="k">def</span> <span class="nf">seconds2hour</span><span class="p">(</span><span class="n">time_in</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts seconds since some epoch to fraction hour.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        epoc (tuple): A 3-element tuple containing (year, month, day)</span>
-<span class="sd">        time_in (ndarray): A 1-D array.</span>
+<span class="sd">        time_in (ndarray): A 1-D array of seconds since some epoch</span>
+<span class="sd">            that starts on midnight.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        list: Time as desimal hour.</span>
-
-<span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; epoch2desimal_hour((1970,1,1), 1095379200) # 2004-17-10 12AM</span>
-<span class="sd">            [24]</span>
+<span class="sd">        nparray: Time as fraction hour.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">time_in</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
-        <span class="n">time_in</span> <span class="o">=</span> <span class="p">[</span><span class="n">time_in</span><span class="p">]</span>
-    <span class="n">dtime</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">epo</span> <span class="o">=</span> <span class="n">calendar</span><span class="o">.</span><span class="n">timegm</span><span class="p">((</span><span class="o">*</span><span class="n">epoch</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
-    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">time_in</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">gmtime</span><span class="p">(</span><span class="n">t</span><span class="o">+</span><span class="n">epo</span><span class="p">)</span>
-        <span class="n">dtime</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">tm_hour</span> <span class="o">+</span> <span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">tm_min</span><span class="o">*</span><span class="mi">60</span> <span class="o">+</span> <span class="n">x</span><span class="o">.</span><span class="n">tm_sec</span><span class="p">)</span><span class="o">/</span><span class="mi">3600</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">dtime</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Last point can be 24h which would be 0 (we want 24)</span>
-        <span class="n">dtime</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">24</span>
-    <span class="k">return</span> <span class="n">dtime</span></div>
+    <span class="n">seconds_since_midnight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">time_in</span><span class="p">,</span> <span class="mi">86400</span><span class="p">)</span>
+    <span class="n">fraction_hour</span> <span class="o">=</span> <span class="n">seconds_since_midnight</span><span class="o">/</span><span class="mi">3600</span>
+    <span class="k">if</span> <span class="n">fraction_hour</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">fraction_hour</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">24</span>
+    <span class="k">return</span> <span class="n">fraction_hour</span></div>
 
 
 <div class="viewcode-block" id="time_grid"><a class="viewcode-back" href="../api.html#utils.time_grid">[docs]</a><span class="k">def</span> <span class="nf">time_grid</span><span class="p">(</span><span class="n">reso</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
@@ -285,7 +276,10 @@
 <span class="sd">        y (array_like): 1-D array of ones and zeros.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        tuple: 2-element tuple containing indices of bases and tops.</span>
+<span class="sd">        2-element tuple containing</span>
+
+<span class="sd">        - *ndarray*: Indices of bases.</span>
+<span class="sd">        - *ndarray*: Indices of tops.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]</span>

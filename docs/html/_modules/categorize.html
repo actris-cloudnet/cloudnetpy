@@ -315,15 +315,14 @@
 
 <span class="sd">    Note:</span>
 <span class="sd">        hatpro time can be &#39;hours since&#39; 00h of measurement date</span>
-<span class="sd">        or &#39;seconds since&#39; some epoch (which could be site/file</span>
-<span class="sd">        dependent).</span>
+<span class="sd">        or &#39;seconds since&#39; some epoch.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">data_field</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">findkey</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;LWP_data&#39;</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">))</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">mwr_vars</span><span class="p">[</span><span class="n">data_field</span><span class="p">][:]</span>
     <span class="n">time</span> <span class="o">=</span> <span class="n">mwr_vars</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span>
     <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">24</span><span class="p">:</span>
-        <span class="n">time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">epoch2desimal_hour</span><span class="p">((</span><span class="mi">2001</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">time</span><span class="p">)</span>  <span class="c1"># fixed epoc!</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">seconds2hour</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> 
     <span class="n">error</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">l2norm</span><span class="p">(</span><span class="n">frac_err</span><span class="o">*</span><span class="n">data</span><span class="p">,</span> <span class="n">lin_err</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">error</span>
 

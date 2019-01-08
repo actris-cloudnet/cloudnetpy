@@ -285,7 +285,7 @@ def _insect_probability(z, ldr, width):
         width (MaskedArray): 2-D radar spectral width.
 
     Returns:
-        (ndarray): 2-D insect probability between 0-1.
+        ndarray: 2-D insect probability between 0-1.
 
     """
     def _insect_prob_ldr(z, ldr, z_loc=15, ldr_loc=-20):

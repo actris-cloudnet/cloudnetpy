@@ -9,31 +9,22 @@ from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
 
 
-def epoch2desimal_hour(epoch, time_in):
-    """Converts seconds since epoch to desimal hour of that day.
+def seconds2hour(time_in):
+    """Converts seconds since some epoch to fraction hour.
 
     Args:
-        epoc (tuple): A 3-element tuple containing (year, month, day)
-        time_in (ndarray): A 1-D array.
+        time_in (ndarray): A 1-D array of seconds since some epoch
+            that starts on midnight.
 
     Returns:
-        list: Time as desimal hour.
-
-    Examples:
-        >>> epoch2desimal_hour((1970,1,1), 1095379200) # 2004-17-10 12AM
-            [24]
+        nparray: Time as fraction hour.
 
     """
-    if not hasattr(time_in, "__iter__"):
-        time_in = [time_in]
-    dtime = []
-    epo = calendar.timegm((*epoch, 0, 0, 0))
-    for t in time_in:
-        x = time.gmtime(t+epo)
-        dtime.append(x.tm_hour + ((x.tm_min*60 + x.tm_sec)/3600))
-    if dtime[-1] == 0:  # Last point can be 24h which would be 0 (we want 24)
-        dtime[-1] = 24
-    return dtime
+    seconds_since_midnight = np.mod(time_in, 86400)
+    fraction_hour = seconds_since_midnight/3600
+    if fraction_hour[-1] == 0:
+        fraction_hour[-1] = 24
+    return fraction_hour
 
 
 def time_grid(reso=30):
@@ -245,7 +236,10 @@ def bases_and_tops(y):
         y (array_like): 1-D array of ones and zeros.
 
     Returns:
-        tuple: 2-element tuple containing indices of bases and tops.
+        2-element tuple containing
+
+        - *ndarray*: Indices of bases.
+        - *ndarray*: Indices of tops.
 
     Examples:
         >>> y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]

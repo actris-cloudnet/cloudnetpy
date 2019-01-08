@@ -239,13 +239,14 @@
 <span class="sd">    Args:</span>
 <span class="sd">        liq_atten (ndarray): Liquid attenuation.</span>
 <span class="sd">        bits: Dict containing classification bits and rain</span>
-<span class="sd">        {&#39;cat&#39;, &#39;rain&#39;}.</span>
+<span class="sd">            {&#39;cat&#39;, &#39;rain&#39;}.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        tuple: 3-element tuple containing screened liquid</span>
-<span class="sd">        attenuation (MaskedArray), and boolean arrays</span>
-<span class="sd">        showing where it was corrected and where it</span>
-<span class="sd">        was not.</span>
+<span class="sd">        tuple: 3-element tuple containing:</span>
+<span class="sd">        </span>
+<span class="sd">        - MaskedArray: Screened liquid attenuation.</span>
+<span class="sd">        - ndarray: Boolean array denoting where liquid attenuation was corrected.</span>
+<span class="sd">        - ndarray: Boolean array denoting where liquid attenuation was present but not corrected.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">melting_layer</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="n">bits</span><span class="p">[</span><span class="s1">&#39;cat&#39;</span><span class="p">],</span> <span class="mi">3</span><span class="p">)</span>

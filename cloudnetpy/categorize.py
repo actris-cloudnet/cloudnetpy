@@ -275,15 +275,14 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
 
     Note:
         hatpro time can be 'hours since' 00h of measurement date
-        or 'seconds since' some epoch (which could be site/file
-        dependent).
+        or 'seconds since' some epoch.
 
     """
     data_field = ncf.findkey(mwr_vars, ('LWP_data', 'lwp'))
     data = mwr_vars[data_field][:]
     time = mwr_vars['time'][:]
     if max(time) > 24:
-        time = utils.epoch2desimal_hour((2001, 1, 1), time)  # fixed epoc!
+        time = utils.seconds2hour(time) 
     error = utils.l2norm(frac_err*data, lin_err)
     return data, time, error
 

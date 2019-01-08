@@ -1180,9 +1180,11 @@ ones, i.e. their starting and ending indices.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>array_like</em>) – 1-D array of ones and zeros.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">2-element tuple containing indices of bases and tops.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">2-element tuple containing<ul class="simple">
+<li><em>ndarray</em>: Indices of bases.</li>
+<li><em>ndarray</em>: Indices of tops.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1252,35 +1254,6 @@ Default is 0.</li>
 <dt id="utils.db2lin">
 <code class="descclassname">utils.</code><code class="descname">db2lin</code><span class="sig-paren">(</span><em>x</em>, <em>scale=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#db2lin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.db2lin" title="Permalink to this definition">¶</a></dt>
 <dd><p>dB to linear conversion.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.epoch2desimal_hour">
-<code class="descclassname">utils.</code><code class="descname">epoch2desimal_hour</code><span class="sig-paren">(</span><em>epoch</em>, <em>time_in</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#epoch2desimal_hour"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.epoch2desimal_hour" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts seconds since epoch to desimal hour of that day.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>epoc</strong> (<em>tuple</em>) – A 3-element tuple containing (year, month, day)</li>
-<li><strong>time_in</strong> (<em>ndarray</em>) – A 1-D array.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Time as desimal hour.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">epoch2desimal_hour</span><span class="p">((</span><span class="mi">1970</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1095379200</span><span class="p">)</span> <span class="c1"># 2004-17-10 12AM</span>
-<span class="go">    [24]</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="function">
@@ -1541,6 +1514,25 @@ and distance in minutes. Default is None.</li>
 </tbody>
 </table>
 <p>Notes: 0-values are masked in the returned array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.seconds2hour">
+<code class="descclassname">utils.</code><code class="descname">seconds2hour</code><span class="sig-paren">(</span><em>time_in</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hour"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hour" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts seconds since some epoch to fraction hour.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_in</strong> (<em>ndarray</em>) – A 1-D array of seconds since some epoch
+that starts on midnight.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time as fraction hour.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">nparray</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
