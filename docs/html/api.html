@@ -44,7 +44,7 @@
 <h1>High level APIs<a class="headerlink" href="#high-level-apis" title="Permalink to this headline">¶</a></h1>
 <p>CloudnetPy’s high level APIs provide a simple way to process
 cloud remote sensing measurements into Cloudnet products, without
-needing to worry about implementation details too much.</p>
+needing to worry too much about implementation details.</p>
 <p>High level APIs enable users to set up an operational processing
 system that doesn’t require major modifications
 if the underlaying methods and their implementations change
@@ -87,7 +87,7 @@ the 4 input files (radar, lidar, mwr, model).</li>
 <p>The various modules of CloudnetPy also provide additional lower level functions
 that can be useful for development, testing and research purposes.</p>
 <div class="section" id="module-categorize">
-<span id="cloudnet-categorize"></span><h2>cloudnet.categorize<a class="headerlink" href="#module-categorize" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-categorize"></span><h2>cloudnetpy.categorize<a class="headerlink" href="#module-categorize" title="Permalink to this headline">¶</a></h2>
 <p>Functions for rebinning input data.</p>
 <dl class="function">
 <dt id="categorize.fetch_lidar">
@@ -225,7 +225,7 @@ Doppler velocity, ‘v’, is averaged in polar coordinates.</p>
 
 </div>
 <div class="section" id="module-classify">
-<span id="cloudnet-classify"></span><h2>cloudnet.classify<a class="headerlink" href="#module-classify" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-classify"></span><h2>cloudnetpy.classify<a class="headerlink" href="#module-classify" title="Permalink to this headline">¶</a></h2>
 <p>Classify gridded measurements.</p>
 <dl class="function">
 <dt id="classify.fetch_cat_bits">
@@ -573,7 +573,7 @@ and after are also marked to contain rain. Default is 5 (min).</li>
 
 </div>
 <div class="section" id="module-atmos">
-<span id="cloudnet-atmos"></span><h2>cloudnet.atmos<a class="headerlink" href="#module-atmos" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-atmos"></span><h2>cloudnetpy.atmos<a class="headerlink" href="#module-atmos" title="Permalink to this headline">¶</a></h2>
 <p>This module contains functions to calculate
 various atmospheric parameters.</p>
 <dl class="function">
@@ -726,7 +726,7 @@ expansion of a simple expression for the saturated vapour pressure.</p>
 
 </div>
 <div class="section" id="module-droplet">
-<span id="cloudnet-droplet"></span><h2>cloudnet.droplet<a class="headerlink" href="#module-droplet" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-droplet"></span><h2>cloudnetpy.droplet<a class="headerlink" href="#module-droplet" title="Permalink to this headline">¶</a></h2>
 <p>This module has functions for liquid layer detection.</p>
 <dl class="function">
 <dt id="droplet.correct_liquid_top">
@@ -908,7 +908,7 @@ accept some other point, higher in the profile.</li>
 
 </div>
 <div class="section" id="module-lwc">
-<span id="cloudnet-lwc"></span><h2>cloudnet.lwc<a class="headerlink" href="#module-lwc" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-lwc"></span><h2>cloudnetpy.lwc<a class="headerlink" href="#module-lwc" title="Permalink to this headline">¶</a></h2>
 <p>Module for liquid water content calculations.</p>
 <dl class="function">
 <dt id="lwc.adiabatic_lwc">
@@ -964,7 +964,7 @@ height, or pressure, given the cloud base temperature and pressure.</p>
 
 </div>
 <div class="section" id="module-ncf">
-<span id="cloudnet-ncf"></span><h2>cloudnet.ncf<a class="headerlink" href="#module-ncf" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-ncf"></span><h2>cloudnetpy.ncf<a class="headerlink" href="#module-ncf" title="Permalink to this headline">¶</a></h2>
 <p>This modules contains netCDF related functions. The functions
 in this module typically have a pointer to netCDF variable(s) as
 an argument.</p>
@@ -1192,7 +1192,7 @@ values are 0 (~35.5 GHz) and 1 (~94 GHz).</td>
 
 </div>
 <div class="section" id="module-utils">
-<span id="cloudnet-utils"></span><h2>cloudnet.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-utils"></span><h2>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h2>
 <p>This module contains general
 helper functions.</p>
 <dl class="function">
@@ -1635,13 +1635,13 @@ Default is 30.</td>
   <ul>
 <li><a class="reference internal" href="#">High level APIs</a></li>
 <li><a class="reference internal" href="#modules">Modules</a><ul>
-<li><a class="reference internal" href="#module-categorize">cloudnet.categorize</a></li>
-<li><a class="reference internal" href="#module-classify">cloudnet.classify</a></li>
-<li><a class="reference internal" href="#module-atmos">cloudnet.atmos</a></li>
-<li><a class="reference internal" href="#module-droplet">cloudnet.droplet</a></li>
-<li><a class="reference internal" href="#module-lwc">cloudnet.lwc</a></li>
-<li><a class="reference internal" href="#module-ncf">cloudnet.ncf</a></li>
-<li><a class="reference internal" href="#module-utils">cloudnet.utils</a></li>
+<li><a class="reference internal" href="#module-categorize">cloudnetpy.categorize</a></li>
+<li><a class="reference internal" href="#module-classify">cloudnetpy.classify</a></li>
+<li><a class="reference internal" href="#module-atmos">cloudnetpy.atmos</a></li>
+<li><a class="reference internal" href="#module-droplet">cloudnetpy.droplet</a></li>
+<li><a class="reference internal" href="#module-lwc">cloudnetpy.lwc</a></li>
+<li><a class="reference internal" href="#module-ncf">cloudnetpy.ncf</a></li>
+<li><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
 </ul>
 </li>
 </ul>
