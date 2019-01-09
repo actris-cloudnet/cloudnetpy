@@ -26,7 +26,7 @@ def generate_categorize(input_files, output_file, zlib=True):
 
     The measurements are rebinned into a common height / time grid,
     and classified as different types of scatterers such as ice, liquid,
-    insects, etc. Next, the radar signal is corrected for atmospheric
+    insects, etc. The radar echo is corrected for atmospheric
     attenuations, and error estimates are computed. Results are saved
     in *ouput_file* which is by default a compressed NETCDF4_CLASSIC
     file.
