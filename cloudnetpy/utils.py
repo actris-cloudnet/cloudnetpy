@@ -11,7 +11,7 @@ def seconds2hour(time_in):
     """Converts seconds since some epoch to fraction hour.
 
     Args:
-        time_in (ndarray): A 1-D array of seconds since some epoch
+        time_in (ndarray): 1-D array of seconds since some epoch
             that starts on midnight.
 
     Returns:
@@ -50,7 +50,7 @@ def binvec(x):
     """Converts 1-D center points to bins with even spacing.
 
     Args:
-        x (array_like): A 1-D array of N real values.
+        x (array_like): 1-D array of N real values.
 
     Returns:
         ndarray: N + 1 edge values.
@@ -146,8 +146,8 @@ def setbit(integer, nth_bit):
     """Sets nth bit (0, 1, 2..) on input number.
 
     Args:
-        integer: A number.
-        nth_bit: Bit to be set.
+        integer (int): A number.
+        nth_bit (int): Bit to be set.
 
     Returns:
         int: Integer where nth bit is set.
@@ -176,11 +176,11 @@ def interpolate_2d(x, y, x_new, y_new, z):
     """Linear interpolation of gridded 2d data.
 
     Args:
-        x (ndarray): A 1-D array.
-        y (ndarray): A 1-D array.
-        x_new (ndarray): A 1-D array.
-        y_new (ndarray): A 1-D array.
-        z (ndarray): A 2-D array at points (x, y)
+        x (ndarray): 1-D array.
+        y (ndarray): 1-D array.
+        x_new (ndarray): 1-D array.
+        y_new (ndarray): 1-D array.
+        z (ndarray): 2-D array at points (x, y).
 
     Returns:
         ndarray: Interpolated data.
@@ -312,8 +312,7 @@ def init(nvars, shape, dtype=float, masked=True):
         dtype (data-type, optional): The desired data-type
             for the arrays, e.g., int. Default is float.
         masked (bool): If True, generated arrays are masked
-            arrays, else ordinary numpy arrays.
-            Default is True.
+            arrays, else ordinary numpy arrays. Default is True.
 
     Yields:
         Iterator containing the empty arrays.

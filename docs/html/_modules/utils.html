@@ -51,7 +51,7 @@
     <span class="sd">&quot;&quot;&quot;Converts seconds since some epoch to fraction hour.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        time_in (ndarray): A 1-D array of seconds since some epoch</span>
+<span class="sd">        time_in (ndarray): 1-D array of seconds since some epoch</span>
 <span class="sd">            that starts on midnight.</span>
 
 <span class="sd">    Returns:</span>
@@ -90,7 +90,7 @@
     <span class="sd">&quot;&quot;&quot;Converts 1-D center points to bins with even spacing.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        x (array_like): A 1-D array of N real values.</span>
+<span class="sd">        x (array_like): 1-D array of N real values.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray: N + 1 edge values.</span>
@@ -186,8 +186,8 @@
     <span class="sd">&quot;&quot;&quot;Sets nth bit (0, 1, 2..) on input number.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        integer: A number.</span>
-<span class="sd">        nth_bit: Bit to be set.</span>
+<span class="sd">        integer (int): A number.</span>
+<span class="sd">        nth_bit (int): Bit to be set.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        int: Integer where nth bit is set.</span>
@@ -216,11 +216,11 @@
     <span class="sd">&quot;&quot;&quot;Linear interpolation of gridded 2d data.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        x (ndarray): A 1-D array.</span>
-<span class="sd">        y (ndarray): A 1-D array.</span>
-<span class="sd">        x_new (ndarray): A 1-D array.</span>
-<span class="sd">        y_new (ndarray): A 1-D array.</span>
-<span class="sd">        z (ndarray): A 2-D array at points (x, y)</span>
+<span class="sd">        x (ndarray): 1-D array.</span>
+<span class="sd">        y (ndarray): 1-D array.</span>
+<span class="sd">        x_new (ndarray): 1-D array.</span>
+<span class="sd">        y_new (ndarray): 1-D array.</span>
+<span class="sd">        z (ndarray): 2-D array at points (x, y).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray: Interpolated data.</span>
@@ -352,8 +352,7 @@
 <span class="sd">        dtype (data-type, optional): The desired data-type</span>
 <span class="sd">            for the arrays, e.g., int. Default is float.</span>
 <span class="sd">        masked (bool): If True, generated arrays are masked</span>
-<span class="sd">            arrays, else ordinary numpy arrays.</span>
-<span class="sd">            Default is True.</span>
+<span class="sd">            arrays, else ordinary numpy arrays. Default is True.</span>
 
 <span class="sd">    Yields:</span>
 <span class="sd">        Iterator containing the empty arrays.</span>

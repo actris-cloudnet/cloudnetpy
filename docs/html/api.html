@@ -1231,7 +1231,7 @@ ones, i.e. their starting and ending indices.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> (<em>array_like</em>) – A 1-D array of N real values.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> (<em>array_like</em>) – 1-D array of N real values.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">N + 1 edge values.</td>
 </tr>
@@ -1347,8 +1347,7 @@ Default is 0.</li>
 <li><strong>dtype</strong> (<em>data-type</em><em>, </em><em>optional</em>) – The desired data-type
 for the arrays, e.g., int. Default is float.</li>
 <li><strong>masked</strong> (<em>bool</em>) – If True, generated arrays are masked
-arrays, else ordinary numpy arrays.
-Default is True.</li>
+arrays, else ordinary numpy arrays. Default is True.</li>
 </ul>
 </td>
 </tr>
@@ -1378,11 +1377,11 @@ Default is True.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>ndarray</em>) – A 1-D array.</li>
-<li><strong>y</strong> (<em>ndarray</em>) – A 1-D array.</li>
-<li><strong>x_new</strong> (<em>ndarray</em>) – A 1-D array.</li>
-<li><strong>y_new</strong> (<em>ndarray</em>) – A 1-D array.</li>
-<li><strong>z</strong> (<em>ndarray</em>) – A 2-D array at points (x, y)</li>
+<li><strong>x</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>y</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>y_new</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>z</strong> (<em>ndarray</em>) – 2-D array at points (x, y).</li>
 </ul>
 </td>
 </tr>
@@ -1552,7 +1551,7 @@ with shape (N,).</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_in</strong> (<em>ndarray</em>) – A 1-D array of seconds since some epoch
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_in</strong> (<em>ndarray</em>) – 1-D array of seconds since some epoch
 that starts on midnight.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time as fraction hour.</td>
@@ -1572,8 +1571,8 @@ that starts on midnight.</td>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>integer</strong> – A number.</li>
-<li><strong>nth_bit</strong> – Bit to be set.</li>
+<li><strong>integer</strong> (<em>int</em>) – A number.</li>
+<li><strong>nth_bit</strong> (<em>int</em>) – Bit to be set.</li>
 </ul>
 </td>
 </tr>
