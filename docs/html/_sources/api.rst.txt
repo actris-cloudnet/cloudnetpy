@@ -17,6 +17,9 @@ from one software version to another.
 Modules
 =======
 
+The CloudnetPy modules contain several additional lower level functions
+that can be useful for development, testing and resarch purposes.
+
 cloudnet.categorize
 -------------------
 
