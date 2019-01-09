@@ -45,8 +45,8 @@ start processing. For example:
    cat.generate_categorize(input_files, output_file)
 
 Note that the code base is rapidly developing and the PyPI package does not
-contain all the latest features. To get an up-to-date version of
-CloudnetPy, download it directly from `GitHub
+contain all the latest features and modifications. To get an up-to-date
+version of CloudnetPy, download it directly from `GitHub
 <https://github.com/tukiains/cloudnetpy>`_:
 
 .. code-block:: console
