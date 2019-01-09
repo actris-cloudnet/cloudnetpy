@@ -104,6 +104,11 @@ def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
     temperature range around 0 C. For ECMWF the range is -4..+3, and for 
     the rest -8..+6.
 
+    Notes:
+        There might be some detection problems with strong updrafts of air. 
+        In these cases the absolute values for speed do not make sense (rain
+        drops can even move upwards instead of down).
+
     Args:
         Tw (ndarray): 2-D wet bulb temperature.
         ldr (ndarray): 2-D linear depolarization ratio.
@@ -251,12 +256,12 @@ def find_insects(radar, Tw, *args, prob_lim=0.8):
 
     The approach above generally does not give many false positives but instead
     misses a few insect cases. If hordes of insects are present, they can
-    yield a relatively strong radar signal. This is not a typical insect
-    signature resulting in too low probability.
+    yield a relatively strong radar signal. Because this is not a typical
+    insect signature, a too low probability will appear.
 
     Finally, positive insect detections are canceled from profiles with rain,
     liquid droplets pixels, melting layer pixels and too cold temperatures.
-
+    
     Args:
         radar (dict): 2-D radar fields {'Zh', 'ldr', 'width'}.
         Tw (ndarray): 2-D wet bulb temperature.

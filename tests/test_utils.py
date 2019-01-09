@@ -42,10 +42,10 @@ def test_setbit(n, k, res):
 
 def test_epoch():
     """ Unit tests for units.epoch2desimal_hour(). """
-    n0 = 1095379200
-    assert utils.epoch2desimal_hour((1970,1,1), n0) == [24]
-    n1 = 12*60*60
-    assert utils.epoch2desimal_hour((1970,1,1), n0 + n1) == [12]
+    n0 = np.array([1095379200])
+    assert utils.seconds2hour(n0) == [24]
+    n1 = np.array([12*60*60])
+    assert utils.seconds2hour(n0 + n1) == [12]
 
 
 def test_rebin():

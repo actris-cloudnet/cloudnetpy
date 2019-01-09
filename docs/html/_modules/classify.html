@@ -144,6 +144,11 @@
 <span class="sd">    temperature range around 0 C. For ECMWF the range is -4..+3, and for </span>
 <span class="sd">    the rest -8..+6.</span>
 
+<span class="sd">    Notes:</span>
+<span class="sd">        There might be some detection problems with strong updrafts of air. </span>
+<span class="sd">        In these cases the absolute values for speed do not make sense (rain</span>
+<span class="sd">        drops can even move upwards instead of down).</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        Tw (ndarray): 2-D wet bulb temperature.</span>
 <span class="sd">        ldr (ndarray): 2-D linear depolarization ratio.</span>
@@ -291,12 +296,12 @@
 
 <span class="sd">    The approach above generally does not give many false positives but instead</span>
 <span class="sd">    misses a few insect cases. If hordes of insects are present, they can</span>
-<span class="sd">    yield a relatively strong radar signal. This is not a typical insect</span>
-<span class="sd">    signature resulting in too low probability.</span>
+<span class="sd">    yield a relatively strong radar signal. Because this is not a typical</span>
+<span class="sd">    insect signature, a too low probability will appear.</span>
 
 <span class="sd">    Finally, positive insect detections are canceled from profiles with rain,</span>
 <span class="sd">    liquid droplets pixels, melting layer pixels and too cold temperatures.</span>
-
+<span class="sd">    </span>
 <span class="sd">    Args:</span>
 <span class="sd">        radar (dict): 2-D radar fields {&#39;Zh&#39;, &#39;ldr&#39;, &#39;width&#39;}.</span>
 <span class="sd">        Tw (ndarray): 2-D wet bulb temperature.</span>

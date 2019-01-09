@@ -453,8 +453,8 @@ good indicator but still usable. Here a fixed value, 0.06, is used
 (smaller <em>w</em> values than this are insects).</p>
 <p>The approach above generally does not give many false positives but instead
 misses a few insect cases. If hordes of insects are present, they can
-yield a relatively strong radar signal. This is not a typical insect
-signature resulting in too low probability.</p>
+yield a relatively strong radar signal. Because this is not a typical
+insect signature, a too low probability will appear.</p>
 <p>Finally, positive insect detections are canceled from profiles with rain,
 liquid droplets pixels, melting layer pixels and too cold temperatures.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -503,6 +503,10 @@ of <em>v</em>, which is always present, to detect the melting layer.</p>
 <p>Model temperature is used to limit the melting layer search to a certain
 temperature range around 0 C. For ECMWF the range is -4..+3, and for
 the rest -8..+6.</p>
+<p class="rubric">Notes</p>
+<p>There might be some detection problems with strong updrafts of air.
+In these cases the absolute values for speed do not make sense (rain
+drops can even move upwards instead of down).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
