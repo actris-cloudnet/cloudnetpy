@@ -1,8 +1,8 @@
 High level APIs
 ===============
 
-High level APIs provide a simple way to process cloud remote
-sensing measurements into Cloudnet products, without
+CloudnetPy's high level APIs provide a simple way to process
+cloud remote sensing measurements into Cloudnet products, without
 needing to worry about implementation details too much.
 
 These APIs enable users to set up an operational processing
@@ -17,8 +17,8 @@ from one software version to another.
 Modules
 =======
 
-The CloudnetPy modules contain several additional lower level functions
-that can be useful for development, testing and resarch purposes.
+The CloudnetPy modules also contain several additional lower level functions
+that can be useful for development, testing and research purposes.
 
 cloudnet.categorize
 -------------------
