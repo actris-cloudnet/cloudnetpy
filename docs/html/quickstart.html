@@ -59,26 +59,27 @@ installation.</p>
 </pre></div>
 </div>
 <p>Install the required Python packages:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pip3 install scipy netcdf4 cloudnetpy
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(venv)$</span> pip3 install scipy netcdf4 cloudnetpy
 </pre></div>
 </div>
 <p>That’s it! If you have cloud radar, ceilometer, microwave
 radiometer and model data in NetCDF files, it’s easy to
-start processing. For example:</p>
+start processing using CloudnetPy’s high level APIs.
+For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="kn">import</span> <span class="n">categorize</span> <span class="k">as</span> <span class="n">cat</span>
 
 <span class="n">input_files</span> <span class="o">=</span> <span class="p">(</span>
-             <span class="s1">&#39;radar_file.nc&#39;</span><span class="p">,</span>
-             <span class="s1">&#39;lidar_file.nc&#39;</span><span class="p">,</span>
-             <span class="s1">&#39;mwr_file.nc&#39;</span><span class="p">,</span>
-             <span class="s1">&#39;model_file.nc&#39;</span>
-             <span class="p">)</span>
+              <span class="s1">&#39;radar_file.nc&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;lidar_file.nc&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;mwr_file.nc&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;model_file.nc&#39;</span>
+              <span class="p">)</span>
 <span class="n">output_file</span> <span class="o">=</span> <span class="s1">&#39;test.nc&#39;</span>
 
 <span class="n">cat</span><span class="o">.</span><span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that the code base is rapidly developing and the PyPI package does not
+<p>Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
 contain all the latest features and modifications. To get an up-to-date
 version of CloudnetPy, download it directly from <a class="reference external" href="https://github.com/tukiains/cloudnetpy">GitHub</a>:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/tukiains/cloudnetpy
