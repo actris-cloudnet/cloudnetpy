@@ -1,6 +1,14 @@
 High level APIs
 ===============
 
+High level APIs provide a simple way to process cloud remote
+sensing measurements into Cloudnet products, without
+needing to worry about implementation details too much.
+
+These APIs enable users to set up an operational processing
+system that doesn't require major modifications
+if the underlaying methods and their implementations change
+from one software version to another.
 
 .. autofunction:: categorize.generate_categorize
 
