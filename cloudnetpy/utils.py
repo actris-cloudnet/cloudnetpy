@@ -5,7 +5,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
-
+import sys
 
 def seconds2hour(time_in):
     """Converts seconds since some epoch to fraction hour.
@@ -82,7 +82,7 @@ def rebin_2d(x_in, data, x_new):
     """
     edges = binvec(x_new)
     datai = np.zeros((len(x_new), data.shape[1]))
-    data = ma.masked_invalid(data)
+    data = ma.masked_invalid(data)  # data can contain nan-values
     for ind, values in enumerate(data.T):
         mask = ~values.mask
         if ma.any(values[mask]):

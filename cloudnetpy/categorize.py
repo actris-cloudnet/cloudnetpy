@@ -46,17 +46,17 @@ def generate_categorize(input_files, output_file, zlib=True):
     input_types = ncf.fetch_input_types(input_files)
     try:
         time = utils.time_grid()
-        height = _altitude_grid(rad_vars)
+        height = _height_above_sea(rad_vars)
         radar_meta = ncf.fetch_radar_meta(input_files[0])
     except (ValueError, KeyError) as error:
         sys.exit(error)
     try:
         alt_site = ncf.site_altitude(rad_vars, lid_vars, mwr_vars)
-        radar = fetch_radar(rad_vars, ('Zh', 'v', 'ldr', 'width'), time,
-                            radar_meta['vfold'])
+        radar = fetch_data(rad_vars, ('Zh', 'v', 'ldr', 'width'), time,
+                           vfold=radar_meta['vfold'])
     except KeyError as error:
         sys.exit(error)
-    lidar = fetch_lidar(lid_vars, ('beta', 'beta_raw'), time, height)
+    lidar = fetch_data(lid_vars, ('beta', 'beta_raw'), time, height_new=height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)
     bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
@@ -126,44 +126,34 @@ def _correct_atten(Z, gas_atten, liq_atten):
     return Z_corr
 
 
-def _altitude_grid(rad_vars):
-    """Returns altitude grid for Cloudnet products.
+def _height_above_sea(vars_in):
+    """Returns measurement grid above mean sea level.
 
     Args:
-        rad_vars (dict): Radar variables.
+        vars_in (dict): Instrument variables.
 
     Returns:
         ndarray: Altitude grid (m).
 
-    Raises:
-        ValueError: Masked values in radar altitude.
-
-    Notes:
-        Altitude grid is defined as the instrument's measurement
-        grid above mean sea level. Generally the instrument
-        used here should always be radar but it is possible to
-        use other instrument as well.
-
     """
-    range_instru = ncf.km2m(rad_vars['range'])
-    if ma.is_masked(range_instru):
-        raise ValueError('Masked altitude values in radar data!?')
-    alt_instru = ncf.km2m(rad_vars['altitude'])
+    range_instru = ncf.km2m(vars_in['range'])
+    alt_instru = ncf.km2m(vars_in['altitude'])
     return np.array(range_instru + alt_instru)
 
 
-def fetch_radar(rad_vars, fields, time_new, vfold):
-    """Reads and rebins radar 2-D fields in time.
+def fetch_data(vars_in, fields, time_new, height_new=None, vfold=None):
+    """Reads and rebins radar / lidar 2-D fields in time.
 
     Args:
-        rad_vars (dict): Radar variables.
-        fields (tuple): Tuple of strings containing 2-D radar
-            fields to be rebinned, e.g. ('Zh', 'v', 'width').
+        vars_in (dict): Measured variables.
+        fields (tuple): Tuple of strings containing 2-D fields to be
+            rebinned, e.g. ('Zh', 'v', 'width') or ('beta', 'beta_raw').
         time_new (ndarray): 1-D array, the target time vector.
-        vfold (float): Folding velocity = Pi/NyquistVelocity (m/s).
+        height_new (ndarray, optional): 1-D array, the target height vector.
+        vfold (float, optional): Radar folding velocity = Pi/NyquistVelocity (m/s).
 
     Returns:
-        dict: Rebinned radar fields.
+        dict: Rebinned fields.
 
     Raises:
         KeyError: Missing field.
@@ -174,54 +164,27 @@ def fetch_radar(rad_vars, fields, time_new, vfold):
 
     """
     out = {}
-    time_orig = rad_vars['time'][:]
-    out['time'] = time_orig
+    time_instru = vars_in['time'][:]
     for field in fields:
-        if field not in rad_vars:
+        if field not in vars_in:
             raise KeyError(f"No variable '{field}' in the radar file.")
-        data = rad_vars[field][:]
+        data = vars_in[field][:]
         if field == 'Zh':  # average in linear scale
             data_lin = utils.db2lin(data)
-            data_mean = utils.rebin_2d(time_orig, data_lin, time_new)
+            data_mean = utils.rebin_2d(time_instru, data_lin, time_new)
             out[field] = utils.lin2db(data_mean)
         elif field == 'v':  # average in polar coordinates
             data = data * vfold
             vx, vy = np.cos(data), np.sin(data)
-            vx_mean = utils.rebin_2d(time_orig, vx, time_new)
-            vy_mean = utils.rebin_2d(time_orig, vy, time_new)
+            vx_mean = utils.rebin_2d(time_instru, vx, time_new)
+            vy_mean = utils.rebin_2d(time_instru, vy, time_new)
             out[field] = np.arctan2(vy_mean, vx_mean) / vfold
-        else:
-            out[field] = utils.rebin_2d(time_orig, data, time_new)
-    return out
-
-
-def fetch_lidar(lid_vars, fields, time, height):
-    """Reads and rebins lidar 2-D fields in time and height.
-
-    Args:
-        lid_vars (dict): Lidar variables.
-        fields (tuple): Tuple of strings containing lidar 2-D
-            fields to be rebinned. Usually just the ('beta',).
-        time (ndarray): 1-D array, the target time vector.
-        height (ndarray): 1-D array, the target height vector (m).
-
-    Returns:
-        dict: Rebinned lidar fields.
-
-    Raises:
-        KeyError: Missing field.
-
-    """
-    out = {}
-    x = lid_vars['time'][:]
-    lidar_alt = ncf.km2m(lid_vars['altitude'])
-    y = ncf.km2m(lid_vars['range']) + lidar_alt  # m
-    for field in fields:
-        if field not in lid_vars:
-            raise KeyError(f"No variable '{field}' in the lidar file.")
-        dataim = utils.rebin_2d(x, lid_vars[field][:], time)
-        dataim = utils.rebin_2d(y, dataim.T, height).T
-        out[field] = dataim
+        elif field in ('beta', 'beta_raw'):  # average in time and altitude
+            height_lidar = _height_above_sea(vars_in)
+            data = utils.rebin_2d(time_instru, vars_in[field][:], time_new)
+            out[field] = utils.rebin_2d(height_lidar, data.T, height_new).T
+        else:  # average in time, no conversions
+            out[field] = utils.rebin_2d(time_instru, data, time_new)
     return out
 
 
