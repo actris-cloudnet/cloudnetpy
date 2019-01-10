@@ -205,7 +205,6 @@
             <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">attr</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="k">return</span> <span class="s1">&#39;Unknown instrument or model.&#39;</span>
-
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;radar&#39;</span><span class="p">:</span> <span class="n">_find_model</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;title&#39;</span><span class="p">),</span>
             <span class="s1">&#39;lidar&#39;</span><span class="p">:</span> <span class="n">_find_model</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;system&#39;</span><span class="p">),</span>
             <span class="s1">&#39;mwr&#39;</span><span class="p">:</span> <span class="n">_find_model</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;radiometer_system&#39;</span><span class="p">),</span>

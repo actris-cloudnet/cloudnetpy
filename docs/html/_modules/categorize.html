@@ -86,17 +86,17 @@
     <span class="n">input_types</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">fetch_input_types</span><span class="p">(</span><span class="n">input_files</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">time_grid</span><span class="p">()</span>
-        <span class="n">height</span> <span class="o">=</span> <span class="n">_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>
+        <span class="n">height</span> <span class="o">=</span> <span class="n">_height_above_sea</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">)</span>
         <span class="n">radar_meta</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">fetch_radar_meta</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">alt_site</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">site_altitude</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">lid_vars</span><span class="p">,</span> <span class="n">mwr_vars</span><span class="p">)</span>
-        <span class="n">radar</span> <span class="o">=</span> <span class="n">fetch_radar</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">),</span> <span class="n">time</span><span class="p">,</span>
-                            <span class="n">radar_meta</span><span class="p">[</span><span class="s1">&#39;vfold&#39;</span><span class="p">])</span>
+        <span class="n">radar</span> <span class="o">=</span> <span class="n">fetch_data</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">),</span> <span class="n">time</span><span class="p">,</span>
+                           <span class="n">vfold</span><span class="o">=</span><span class="n">radar_meta</span><span class="p">[</span><span class="s1">&#39;vfold&#39;</span><span class="p">])</span>
     <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
-    <span class="n">lidar</span> <span class="o">=</span> <span class="n">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;beta_raw&#39;</span><span class="p">),</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">lidar</span> <span class="o">=</span> <span class="n">fetch_data</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;beta_raw&#39;</span><span class="p">),</span> <span class="n">time</span><span class="p">,</span> <span class="n">height_new</span><span class="o">=</span><span class="n">height</span><span class="p">)</span>
     <span class="n">lwp</span> <span class="o">=</span> <span class="n">fetch_mwr</span><span class="p">(</span><span class="n">mwr_vars</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">LWP_ERROR</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">fetch_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">radar_meta</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
     <span class="n">bits</span> <span class="o">=</span> <span class="n">classify</span><span class="o">.</span><span class="n">fetch_cat_bits</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">],</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;Tw&#39;</span><span class="p">],</span>
@@ -166,44 +166,34 @@
     <span class="k">return</span> <span class="n">Z_corr</span>
 
 
-<span class="k">def</span> <span class="nf">_altitude_grid</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns altitude grid for Cloudnet products.</span>
+<span class="k">def</span> <span class="nf">_height_above_sea</span><span class="p">(</span><span class="n">vars_in</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns measurement grid above mean sea level.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        rad_vars (dict): Radar variables.</span>
+<span class="sd">        vars_in (dict): Instrument variables.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray: Altitude grid (m).</span>
 
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: Masked values in radar altitude.</span>
-
-<span class="sd">    Notes:</span>
-<span class="sd">        Altitude grid is defined as the instrument&#39;s measurement</span>
-<span class="sd">        grid above mean sea level. Generally the instrument</span>
-<span class="sd">        used here should always be radar but it is possible to</span>
-<span class="sd">        use other instrument as well.</span>
-
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">range_instru</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">ma</span><span class="o">.</span><span class="n">is_masked</span><span class="p">(</span><span class="n">range_instru</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Masked altitude values in radar data!?&#39;</span><span class="p">)</span>
-    <span class="n">alt_instru</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">])</span>
+    <span class="n">range_instru</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">vars_in</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">])</span>
+    <span class="n">alt_instru</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">vars_in</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">range_instru</span> <span class="o">+</span> <span class="n">alt_instru</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="fetch_radar"><a class="viewcode-back" href="../api.html#categorize.fetch_radar">[docs]</a><span class="k">def</span> <span class="nf">fetch_radar</span><span class="p">(</span><span class="n">rad_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time_new</span><span class="p">,</span> <span class="n">vfold</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Reads and rebins radar 2-D fields in time.</span>
+<div class="viewcode-block" id="fetch_data"><a class="viewcode-back" href="../api.html#categorize.fetch_data">[docs]</a><span class="k">def</span> <span class="nf">fetch_data</span><span class="p">(</span><span class="n">vars_in</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time_new</span><span class="p">,</span> <span class="n">height_new</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vfold</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads and rebins radar / lidar 2-D fields in time.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        rad_vars (dict): Radar variables.</span>
-<span class="sd">        fields (tuple): Tuple of strings containing 2-D radar</span>
-<span class="sd">            fields to be rebinned, e.g. (&#39;Zh&#39;, &#39;v&#39;, &#39;width&#39;).</span>
+<span class="sd">        vars_in (dict): Measured variables.</span>
+<span class="sd">        fields (tuple): Tuple of strings containing 2-D fields to be</span>
+<span class="sd">            rebinned, e.g. (&#39;Zh&#39;, &#39;v&#39;, &#39;width&#39;) or (&#39;beta&#39;, &#39;beta_raw&#39;).</span>
 <span class="sd">        time_new (ndarray): 1-D array, the target time vector.</span>
-<span class="sd">        vfold (float): Folding velocity = Pi/NyquistVelocity (m/s).</span>
+<span class="sd">        height_new (ndarray, optional): 1-D array, the target height vector.</span>
+<span class="sd">        vfold (float, optional): Radar folding velocity = Pi/NyquistVelocity (m/s).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        dict: Rebinned radar fields.</span>
+<span class="sd">        dict: Rebinned fields.</span>
 
 <span class="sd">    Raises:</span>
 <span class="sd">        KeyError: Missing field.</span>
@@ -214,54 +204,27 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">time_orig</span> <span class="o">=</span> <span class="n">rad_vars</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span>
-    <span class="n">out</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time_orig</span>
+    <span class="n">time_instru</span> <span class="o">=</span> <span class="n">vars_in</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span>
     <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rad_vars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vars_in</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No variable &#39;</span><span class="si">{field}</span><span class="s2">&#39; in the radar file.&quot;</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">rad_vars</span><span class="p">[</span><span class="n">field</span><span class="p">][:]</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">field</span><span class="p">][:]</span>
         <span class="k">if</span> <span class="n">field</span> <span class="o">==</span> <span class="s1">&#39;Zh&#39;</span><span class="p">:</span>  <span class="c1"># average in linear scale</span>
             <span class="n">data_lin</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">db2lin</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="n">data_mean</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">time_orig</span><span class="p">,</span> <span class="n">data_lin</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
+            <span class="n">data_mean</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">time_instru</span><span class="p">,</span> <span class="n">data_lin</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
             <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">lin2db</span><span class="p">(</span><span class="n">data_mean</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">field</span> <span class="o">==</span> <span class="s1">&#39;v&#39;</span><span class="p">:</span>  <span class="c1"># average in polar coordinates</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="n">vfold</span>
             <span class="n">vx</span><span class="p">,</span> <span class="n">vy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="n">vx_mean</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">time_orig</span><span class="p">,</span> <span class="n">vx</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
-            <span class="n">vy_mean</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">time_orig</span><span class="p">,</span> <span class="n">vy</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
+            <span class="n">vx_mean</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">time_instru</span><span class="p">,</span> <span class="n">vx</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
+            <span class="n">vy_mean</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">time_instru</span><span class="p">,</span> <span class="n">vy</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
             <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">vy_mean</span><span class="p">,</span> <span class="n">vx_mean</span><span class="p">)</span> <span class="o">/</span> <span class="n">vfold</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">time_orig</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">out</span></div>
-
-
-<div class="viewcode-block" id="fetch_lidar"><a class="viewcode-back" href="../api.html#categorize.fetch_lidar">[docs]</a><span class="k">def</span> <span class="nf">fetch_lidar</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Reads and rebins lidar 2-D fields in time and height.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        lid_vars (dict): Lidar variables.</span>
-<span class="sd">        fields (tuple): Tuple of strings containing lidar 2-D</span>
-<span class="sd">            fields to be rebinned. Usually just the (&#39;beta&#39;,).</span>
-<span class="sd">        time (ndarray): 1-D array, the target time vector.</span>
-<span class="sd">        height (ndarray): 1-D array, the target height vector (m).</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        dict: Rebinned lidar fields.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        KeyError: Missing field.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">x</span> <span class="o">=</span> <span class="n">lid_vars</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">][:]</span>
-    <span class="n">lidar_alt</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">[</span><span class="s1">&#39;altitude&#39;</span><span class="p">])</span>
-    <span class="n">y</span> <span class="o">=</span> <span class="n">ncf</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">lid_vars</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">lidar_alt</span>  <span class="c1"># m</span>
-    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">field</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">lid_vars</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No variable &#39;</span><span class="si">{field}</span><span class="s2">&#39; in the lidar file.&quot;</span><span class="p">)</span>
-        <span class="n">dataim</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">lid_vars</span><span class="p">[</span><span class="n">field</span><span class="p">][:],</span> <span class="n">time</span><span class="p">)</span>
-        <span class="n">dataim</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dataim</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
-        <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataim</span>
+        <span class="k">elif</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;beta_raw&#39;</span><span class="p">):</span>  <span class="c1"># average in time and altitude</span>
+            <span class="n">height_lidar</span> <span class="o">=</span> <span class="n">_height_above_sea</span><span class="p">(</span><span class="n">vars_in</span><span class="p">)</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">time_instru</span><span class="p">,</span> <span class="n">vars_in</span><span class="p">[</span><span class="n">field</span><span class="p">][:],</span> <span class="n">time_new</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">height_lidar</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">height_new</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># average in time, no conversions</span>
+            <span class="n">out</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">rebin_2d</span><span class="p">(</span><span class="n">time_instru</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span></div>
 
 
@@ -356,18 +319,14 @@
 <span class="sd">        - **Tw** (*ndarray*): 2-D wet bulb temperature.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="s1">&#39;rh&#39;</span><span class="p">,</span> <span class="s1">&#39;gas_atten&#39;</span><span class="p">,</span>
-              <span class="s1">&#39;specific_gas_atten&#39;</span><span class="p">,</span> <span class="s1">&#39;specific_saturated_gas_atten&#39;</span><span class="p">,</span>
-              <span class="s1">&#39;specific_liquid_atten&#39;</span><span class="p">)</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="s1">&#39;rh&#39;</span><span class="p">,</span> <span class="s1">&#39;gas_atten&#39;</span><span class="p">,</span> <span class="s1">&#39;specific_gas_atten&#39;</span><span class="p">,</span>
+              <span class="s1">&#39;specific_saturated_gas_atten&#39;</span><span class="p">,</span> <span class="s1">&#39;specific_liquid_atten&#39;</span><span class="p">)</span>
     <span class="n">fields_all</span> <span class="o">=</span> <span class="n">fields</span> <span class="o">+</span> <span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;uwind&#39;</span><span class="p">,</span> <span class="s1">&#39;vwind&#39;</span><span class="p">)</span>
-    <span class="n">model</span><span class="p">,</span> <span class="n">model_time</span><span class="p">,</span> <span class="n">model_height</span> <span class="o">=</span> <span class="n">_read_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">fields_all</span><span class="p">,</span>
-                                                  <span class="n">alt_site</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
-    <span class="n">model_i</span> <span class="o">=</span> <span class="n">_interpolate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">model_time</span><span class="p">,</span>
-                                 <span class="n">model_height</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-    <span class="n">Tw</span> <span class="o">=</span> <span class="n">atmos</span><span class="o">.</span><span class="n">wet_bulb</span><span class="p">(</span><span class="n">model_i</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">],</span> <span class="n">model_i</span><span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">],</span>
-                        <span class="n">model_i</span><span class="p">[</span><span class="s1">&#39;rh&#39;</span><span class="p">])</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;original&#39;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span> <span class="s1">&#39;interp&#39;</span><span class="p">:</span> <span class="n">model_i</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">model_time</span><span class="p">,</span>
-            <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">model_height</span><span class="p">,</span> <span class="s1">&#39;Tw&#39;</span><span class="p">:</span> <span class="n">Tw</span><span class="p">}</span></div>
+    <span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">grid</span> <span class="o">=</span> <span class="n">_read_model</span><span class="p">(</span><span class="n">mod_vars</span><span class="p">,</span> <span class="n">fields_all</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">freq</span><span class="p">)</span>
+    <span class="n">model_i</span> <span class="o">=</span> <span class="n">_interpolate_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="o">*</span><span class="n">grid</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">Tw</span> <span class="o">=</span> <span class="n">atmos</span><span class="o">.</span><span class="n">wet_bulb</span><span class="p">(</span><span class="n">model_i</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">],</span> <span class="n">model_i</span><span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">],</span> <span class="n">model_i</span><span class="p">[</span><span class="s1">&#39;rh&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;original&#39;</span><span class="p">:</span> <span class="n">model</span><span class="p">,</span> <span class="s1">&#39;interp&#39;</span><span class="p">:</span> <span class="n">model_i</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">:</span> <span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="n">grid</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;Tw&#39;</span><span class="p">:</span> <span class="n">Tw</span><span class="p">}</span></div>
 
 
 <span class="k">def</span> <span class="nf">_read_model</span><span class="p">(</span><span class="n">vrs</span><span class="p">,</span> <span class="n">fields</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>

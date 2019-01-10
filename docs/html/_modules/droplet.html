@@ -184,9 +184,6 @@
         <span class="n">dprof</span> <span class="o">=</span> <span class="n">beta_diff</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:]</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">base</span> <span class="o">=</span> <span class="n">ind_base</span><span class="p">(</span><span class="n">dprof</span><span class="p">,</span> <span class="n">peak</span><span class="p">,</span> <span class="n">base_below_peak</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="k">try</span><span class="p">:</span>
             <span class="n">top</span> <span class="o">=</span> <span class="n">ind_top</span><span class="p">(</span><span class="n">dprof</span><span class="p">,</span> <span class="n">peak</span><span class="p">,</span> <span class="n">height</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">top_above_peak</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">continue</span>
