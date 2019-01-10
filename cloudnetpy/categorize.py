@@ -283,14 +283,11 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
               'specific_gas_atten', 'specific_saturated_gas_atten',
               'specific_liquid_atten')
     fields_all = fields + ('q', 'uwind', 'vwind')
-    model, model_time, model_height = _read_model(mod_vars, fields_all,
-                                                  alt_site, freq)
-    model_i = _interpolate_model(model, fields, model_time,
-                                 model_height, time, height)
-    Tw = atmos.wet_bulb(model_i['temperature'], model_i['pressure'],
-                        model_i['rh'])
-    return {'original': model, 'interp': model_i, 'time': model_time,
-            'height': model_height, 'Tw': Tw}
+    model, *grid = _read_model(mod_vars, fields_all, alt_site, freq)
+    model_i = _interpolate_model(model, fields, *grid, time, height)
+    Tw = atmos.wet_bulb(model_i['temperature'], model_i['pressure'], model_i['rh'])
+    return {'original': model, 'interp': model_i, 'time': grid[0],
+            'height': grid[1], 'Tw': Tw}
 
 
 def _read_model(vrs, fields, alt_site, freq):
