@@ -279,9 +279,8 @@ def fetch_model(mod_vars, alt_site, freq, time, height):
         - **Tw** (*ndarray*): 2-D wet bulb temperature.
 
     """
-    fields = ('temperature', 'pressure', 'rh', 'gas_atten',
-              'specific_gas_atten', 'specific_saturated_gas_atten',
-              'specific_liquid_atten')
+    fields = ('temperature', 'pressure', 'rh', 'gas_atten', 'specific_gas_atten',
+              'specific_saturated_gas_atten', 'specific_liquid_atten')
     fields_all = fields + ('q', 'uwind', 'vwind')
     model, *grid = _read_model(mod_vars, fields_all, alt_site, freq)
     model_i = _interpolate_model(model, fields, *grid, time, height)
