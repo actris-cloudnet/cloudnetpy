@@ -144,9 +144,6 @@ def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
         dprof = beta_diff[n, :]
         try:
             base = ind_base(dprof, peak, base_below_peak, 4)
-        except:
-            continue
-        try:
             top = ind_top(dprof, peak, height.shape[0], top_above_peak, 4)
         except:
             continue

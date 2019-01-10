@@ -165,7 +165,6 @@ def fetch_input_types(input_files):
             return getattr(netCDF4.Dataset(f), attr)
         except AttributeError:
             return 'Unknown instrument or model.'
-
     return {'radar': _find_model(input_files[0], 'title'),
             'lidar': _find_model(input_files[1], 'system'),
             'mwr': _find_model(input_files[2], 'radiometer_system'),

@@ -134,7 +134,6 @@ def find_melting_layer(Tw, ldr, v, model_type, smooth=True):
         trange = (-4, 3)
     else:
         trange = (-8, 6)
-
     melting_layer = np.zeros(Tw.shape, dtype=bool)
     ldr_diff = np.diff(ldr, axis=1).filled(0)
     v_diff = np.diff(v, axis=1).filled(0)
