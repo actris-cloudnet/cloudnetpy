@@ -104,7 +104,7 @@ def _showpic(nsubs, dvec, savefig, imagepath, name):
         plt.show()
 
 
-def plot_2d(data, cbar=True, cmap='viridis', ncolors=50):
+def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     """Simple plot of 2d variable."""
     if cbar:
         cmap = plt.get_cmap(cmap, ncolors)
@@ -113,4 +113,6 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50):
     else:
         plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
         plt.pcolormesh(ma.masked_equal(data, 0).T)
+    if clim:
+        plt.clim(clim)
     plt.show()

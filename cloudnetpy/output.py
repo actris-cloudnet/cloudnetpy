@@ -1,48 +1,64 @@
 """ Functions for Categorize output file writing."""
 from datetime import datetime, timezone
 import uuid
-import numpy as np
 import netCDF4
 from cloudnetpy import config
+from cloudnetpy.metadata import ATTRIBUTES
+
 
 class CnetVar:
     """Class for Cloudnet variables."""
-    def __init__(self, name, data, data_type='f4', size=('time', 'height'),
-                 fill_value=True, **kwargs):
-        # Required:
-        self.name = name
-        self.data = data
-        self.data_type = data_type
-        self.size = self._get_size(size)
-        self.fill_value = self._get_fillv(fill_value)
-        # Extra:
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        self.kwarg_keys = kwargs.keys()
 
-    def _get_size(self, size):
-        """Sets the size for scalars."""
-        if isinstance(self.data, np.ndarray) and self.data.size > 1:
-            return size
-        return ()  # it is scalar
+    def __init__(self, name, data):
+        # Set mandatory properties
+        self._name = name
+        self._data = data
+        self._data_type = self._get_data_type()
+        self._fill_value = self._get_fill_value()
 
-    def _get_fillv(self, fill_value):
-        """Returns proper fill value."""
-        if not self.size:
-            return None  # no fill value for scalars
-        elif isinstance(fill_value, bool):
-            return netCDF4.default_fillvals[self.data_type]
-        return fill_value
+    def _get_data_type(self):
+        if isinstance(self._data, int):
+            return 'i4'
+        return 'f4'
 
+    def fetch_attributes(self):
+        """Returns list of user-defined attributes."""
+        return (x for x in self.__dict__.keys() if not x.startswith('_'))
+
+    def _get_fill_value(self):
+        """Returns valid fill values."""
+        if not hasattr(self._data, '__len__'):  # no fill value for scalars
+            return None
+        return netCDF4.default_fillvals[self._data_type]
 
 def write_vars2nc(rootgrp, obs, zlib):
     """Iterate over Cloudnet instances and write to given rootgrp."""
-    for var in obs:
-        ncvar = rootgrp.createVariable(var.name, var.data_type, var.size,
-                                       zlib=zlib, fill_value=var.fill_value)
-        ncvar[:] = var.data
-        for attr in var.kwarg_keys:
-            setattr(ncvar, attr, getattr(var, attr))
+
+    def _get_dimensions(array):
+        """Finds correct dimensions for a variable."""
+        if not hasattr(array, '__len__'):
+            return ()
+        size = ()
+        file_dims = rootgrp.dimensions
+        array_dims = array.shape
+        for length in array_dims:
+            dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
+            size = size + (dim,)
+        return size
+
+    def _check_fillvalues():
+        if obj._name in rootgrp.dimensions.keys():
+            return None
+        return obj._fill_value
+
+    for obj in obs:
+        size = _get_dimensions(obj._data)
+        fill_value = _check_fillvalues()
+        ncvar = rootgrp.createVariable(obj._name, obj._data_type, size, zlib=zlib,
+                                       fill_value=fill_value)
+        ncvar[:] = obj._data
+        for attr in obj.fetch_attributes():
+            setattr(ncvar, attr, getattr(obj, attr))
 
 
 def save_cat(file_name, time, height, model_time, model_height, obs, radar_meta, zlib):
@@ -112,14 +128,14 @@ def anc_names(var, bias=False, err=False, sens=False):
     return out[:-1]
 
 
-def _copy_dimensions(file_from, file_to, dims_to_be_copied):
+def copy_dimensions(file_from, file_to, dims_to_be_copied):
     """Copies dimensions from one file to another. """
     for dname, dim in file_from.dimensions.items():
         if dname in dims_to_be_copied:
             file_to.createDimension(dname, len(dim))
 
 
-def _copy_variables(file_from, file_to, vars_to_be_copied):
+def copy_variables(file_from, file_to, vars_to_be_copied):
     """Copies variables (and their attributes) from one file to another."""
     for vname, varin in file_from.variables.items():
         if vname in vars_to_be_copied:
@@ -128,8 +144,33 @@ def _copy_variables(file_from, file_to, vars_to_be_copied):
             varout[:] = varin[:]
 
 
-def _copy_global(file_from, file_to, attrs_to_be_copied):
+def copy_global(file_from, file_to, attrs_to_be_copied):
     """Copies global attributes from one file to another."""
     for aname in file_from.ncattrs():
         if aname in attrs_to_be_copied:
             setattr(file_to, aname, file_from.getncattr(aname))
+
+
+def create_objects_for_output(data_in):
+    """Creates list of variable instances for output writing.
+
+    Args:
+        data_in (dict): Variables to be written.
+
+    Yields:
+        Array of CloudnetData instances that contain the data
+        and metadata.
+
+    """
+    def _set_attributes():
+        attributes = ATTRIBUTES[field]
+        for key in attributes._fields:
+            data = getattr(attributes, key)
+            if data:
+                setattr(obj, key, data)
+
+    for field in data_in.keys():
+        obj = CnetVar(field, data_in[field])
+        if field in ATTRIBUTES:
+            _set_attributes()
+        yield obj

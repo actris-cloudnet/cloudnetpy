@@ -13,7 +13,6 @@ from cloudnetpy import utils
 from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
-from cloudnetpy.output import CnetVar as CV
 
 
 def generate_categorize(input_files, output_file, zlib=True):
@@ -69,40 +68,41 @@ def generate_categorize(input_files, output_file, zlib=True):
     Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                             bits['clutter'], radar_meta['freq'],
                             time, config.GAS_ATTEN_PREC)
-    cat_vars = {'height': height,
-                'time': time,
-                'latitude': rad_vars['latitude'][:],
-                'longitude': rad_vars['longitude'][:],
-                'altitude': alt_site,
-                'radar_frequency': radar_meta['freq'],
-                'lidar_wavelength': lid_vars['wavelength'][:],
-                'beta': lidar['beta'],
-                'beta_raw': lidar['beta_raw'],
-                'beta_error': config.BETA_ERROR[0],
-                'beta_bias': config.BETA_ERROR[1],
-                'Z': Z_corrected,
-                'v': radar['v'],
-                'width': radar['width'],
-                'ldr': radar['ldr'],
-                'Z_bias': config.Z_BIAS,
-                'temperature': model['original']['temperature'],
-                'pressure': model['original']['pressure'],
-                'specific_humidity': model['original']['q'],
-                'uwind': model['original']['uwind'],
-                'vwind': model['original']['vwind'],
-                'model_height': model['height'],
-                'model_time': model['time'],
-                'category_bits': bits['cat'],
-                'Tw': model['Tw'],
-                'insect_probability': bits['insect_prob'],
-                'radar_gas_atten': gas_atten,
-                'radar_liquid_atten': liq_atten['value'],
-                'lwp': lwp['value'],
-                'lwp_error': lwp['err'],
-                'quality_bits': qual_bits,
-                'Z_error': Z_err['error'],
-                'Z_sensitivity': Z_err['sensitivity']}
-    obs = _cat_cnet_vars(cat_vars, radar_meta, input_types)
+    cat_vars = {
+        'height': height,
+        'time': time,
+        'latitude': float(rad_vars['latitude'][:]),
+        'longitude': float(rad_vars['longitude'][:]),
+        'altitude': float(alt_site),
+        'radar_frequency': radar_meta['freq'],
+        'lidar_wavelength': float(lid_vars['wavelength'][:]),
+        'beta': lidar['beta'],
+        'beta_raw': lidar['beta_raw'],
+        'beta_error': config.BETA_ERROR[0],
+        'beta_bias': config.BETA_ERROR[1],
+        'Z': Z_corrected,
+        'v': radar['v'],
+        'width': radar['width'],
+        'ldr': radar['ldr'],
+        'Z_bias': config.Z_BIAS,
+        'temperature': model['original']['temperature'],
+        'pressure': model['original']['pressure'],
+        'specific_humidity': model['original']['q'],
+        'uwind': model['original']['uwind'],
+        'vwind': model['original']['vwind'],
+        'model_height': model['height'],
+        'model_time': model['time'],
+        'category_bits': bits['cat'],
+        'Tw': model['Tw'],
+        'insect_probability': bits['insect_prob'],
+        'radar_gas_atten': gas_atten,
+        'radar_liquid_atten': liq_atten['value'],
+        'lwp': lwp['value'],
+        'lwp_error': lwp['err'],
+        'quality_bits': qual_bits,
+        'Z_error': Z_err['error'],
+        'Z_sensitivity': Z_err['sensitivity']}
+    obs = output.create_objects_for_output(cat_vars)
     output.save_cat(output_file, time, height, model['time'],
                     model['height'], obs, radar_meta, zlib)
 
@@ -386,341 +386,3 @@ def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                            Z_precision)
     Z_error[liq_atten['is_not_corr']] = ma.masked
     return {'sensitivity': Z_sensitivity, 'error': Z_error}
-
-
-def _cat_cnet_vars(vars_in, radar_meta, input_types):
-    """Creates list of variable instances for output writing."""
-    lin, log = 'linear', 'logarithmic'
-    radar_source = input_types['radar']
-    model_source = input_types['model']
-    # dimensions and site location
-    var = 'height'
-    yield(CV(var, vars_in[var],
-             size=('height'),
-             fill_value=None,
-             long_name='Height above mean sea level',
-             units='m'))
-    var = 'time'
-    yield(CV(var, vars_in[var],
-             size=('time'),
-             fill_value=None,
-             long_name='Time UTC',
-             units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00'))
-    # comment='Fixed ' + str(config.TIME_RESOLUTION) + 's resolution.'))
-    var = 'model_height'
-    yield(CV(var, vars_in[var],
-             fill_value=None,
-             size=('model_height'),
-             long_name='Height of model variables above mean sea level',
-             units='m'))
-    var = 'model_time'
-    yield(CV(var, vars_in[var],
-             fill_value=None,
-             size=('model_time'),
-             long_name='Model time UTC',
-             units='hours since ' + radar_meta['date'] + ' 00:00:00 +0:00'))
-    var = 'latitude'
-    yield(CV(var, vars_in[var],
-             long_name='Latitude of site',
-             units='degrees_north'))
-    var = 'longitude'
-    yield(CV(var, vars_in[var],
-             long_name='Longitude of site',
-             units='degrees_east'))
-    var = 'altitude'
-    yield(CV(var, vars_in[var],
-             long_name='Altitude of site',
-             units='m',
-             comment=_COMMENTS[var]))
-    # radar variables
-    var = 'radar_frequency'
-    yield(CV(var, vars_in[var],
-             long_name='Transmit frequency',
-             units='GHz'))
-    var = 'Z'
-    lname = 'Radar reflectivity factor'
-    yield(CV(var, vars_in[var],
-             long_name=lname,
-             units='dBZ',
-             plot_range=(-40, 20),
-             plot_scale=lin,
-             comment=_COMMENTS[var],
-             source=radar_source,
-             ancillary_variables=output.anc_names(var, True, True, True)))
-    var = 'Z_bias'
-    yield(CV(var, vars_in[var],
-             long_name=output.bias_name(lname),
-             units='dB',
-             comment=_COMMENTS['bias']))
-    var = 'Z_error'
-    yield(CV(var, vars_in[var],
-             long_name=output.err_name(lname),
-             plot_range=(0, 3),
-             units='dB',
-             comment=_COMMENTS[var]))
-    var = 'Z_sensitivity'
-    yield(CV(var, vars_in[var],
-             size=('height'),
-             long_name='Minimum detectable radar reflectivity',
-             units='dBZ',
-             comment=_COMMENTS[var]))
-    var = 'v'
-    yield(CV(var, vars_in[var],
-             long_name='Doppler velocity',
-             units='m s-1',
-             plot_range=(-4, 2),
-             plot_scale=lin,
-             comment=_COMMENTS[var],
-             source=radar_source))
-    var = 'width'
-    yield(CV(var, vars_in[var],
-             long_name='Spectral width',
-             units='m s-1',
-             plot_range=(0.03, 3),
-             plot_scale=log,
-             comment=_COMMENTS[var],
-             source=radar_source))
-    var = 'ldr'
-    yield(CV(var, vars_in[var],
-             long_name='Linear depolarisation ratio',
-             units='dB',
-             plot_range=(-30, 0),
-             plot_scale=lin,
-             comment=_COMMENTS[var],
-             source=radar_source))
-    # lidar variables
-    var = 'lidar_wavelength'
-    yield(CV(var, vars_in[var],
-             long_name='Laser wavelength',
-             units='nm'))
-    var = 'beta'
-    lname = 'Attenuated backscatter coefficient'
-    yield(CV(var, vars_in[var],
-             long_name=lname,
-             units='sr-1 m-1',
-             plot_range=(1e-7, 1e-4),
-             plot_scale=log,
-             source=input_types['lidar'],
-             ancillary_variables=output.anc_names(var, bias=True, err=True)))
-    var = 'beta_raw'
-    lname = 'Raw attenuated backscatter coefficient'
-    yield(CV(var, vars_in[var],
-             long_name=lname,
-             units='sr-1 m-1',
-             plot_range=(1e-7, 1e-4),
-             plot_scale=log,
-             source=input_types['lidar']))
-    var = 'beta_bias'
-    yield(CV(var, vars_in[var],
-             long_name=output.bias_name(lname),
-             units='dB',
-             comment=_COMMENTS['bias']))
-    var = 'beta_error'
-    yield(CV(var, vars_in[var],
-             long_name=output.err_name(lname),
-             units='dB'))
-    # mwr variables
-    var = 'lwp'
-    lname = 'Liquid water path'
-    yield(CV(var, vars_in[var],
-             size=('time'),
-             long_name=lname,
-             units='g m-2',
-             plot_range=(-100, 1000),
-             plot_scale=lin,
-             source=input_types['mwr']))
-    var = 'lwp_error'
-    yield(CV(var, vars_in[var],
-             size=('time'),
-             long_name=output.err_name(lname),
-             units='g m-2'))
-    # model variables
-    var = 'temperature'
-    yield(CV(var, vars_in[var],
-             size=('model_time', 'model_height'),
-             long_name='Temperature',
-             units='K',
-             plot_range=(200, 300),
-             plot_scale=lin,
-             source=model_source))
-    var = 'pressure'
-    yield(CV(var, vars_in[var],
-             size=('model_time', 'model_height'),
-             long_name='Pressure',
-             units='Pa',
-             plot_range=(0, 1.1e5),
-             plot_scale=log,
-             source=model_source))
-    var = 'specific_humidity'
-    yield(CV(var, vars_in[var],
-             size=('model_time', 'model_height'),
-             long_name='Model specific humidity',
-             plot_range=(0, 0.006),
-             plot_scale=lin,
-             source=model_source))
-    var = 'uwind'
-    yield(CV(var, vars_in[var],
-             size=('model_time', 'model_height'),
-             long_name='Zonal wind',
-             units='m s-1',
-             plot_range=(-50, 50),
-             plot_scale=lin,
-             source=model_source))
-    var = 'vwind'
-    yield(CV(var, vars_in[var],
-             size=('model_time', 'model_height'),
-             long_name='Meridional wind',
-             units='m s-1',
-             plot_range=(-50, 50),
-             plot_scale=lin,
-             source=model_source))
-    # other
-    var = 'Tw'
-    yield(CV(var, vars_in[var],
-             fill_value=None,
-             long_name='Wet bulb temperature',
-             units='K',
-             plot_range=(200, 300),
-             plot_scale=lin,
-             comment=_COMMENTS[var]))
-    var = 'insect_probability'
-    yield(CV(var, vars_in[var],
-             plot_range=(0, 1),
-             plot_scale=lin,
-             long_name='Probability of insects'))
-    var = 'radar_gas_atten'
-    yield(CV(var, vars_in[var],
-             long_name='Two-way radar attenuation due to atmospheric gases',
-             units='dB',
-             plot_range=(0, 4),
-             plot_scale=lin,
-             comment=_COMMENTS[var]))
-    var = 'radar_liquid_atten'
-    yield(CV(var, vars_in[var],
-             long_name=('Approximate two-way radar attenuation'
-                        'due to liquid water'),
-             units='dB',
-             plot_range=(0, 4),
-             plot_scale=lin,
-             comment=_COMMENTS[var]))
-    var = 'category_bits'
-    yield(CV(var, vars_in[var],
-             data_type='i4',
-             fill_value=None,
-             long_name='Target classification bits',
-             comment=_COMMENTS[var],
-             definition=_DEFINITIONS[var]))
-    var = 'quality_bits'
-    yield(CV(var, vars_in[var],
-             data_type='i4',
-             fill_value=None,
-             long_name='Data quality bits',
-             comment=_COMMENTS[var],
-             definition=_DEFINITIONS[var]))
-
-
-_DEFINITIONS = {
-    'category_bits':
-    ('\nBit 0: Small liquid droplets are present.\n'
-     'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
-     '       likely ice particles, otherwise they are drizzle or rain drops.\n'
-     'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
-     '       the phase of Bit-1 particles.\n'
-     'Bit 3: Melting ice particles are present.\n'
-     'Bit 4: Aerosol particles are present and visible to the lidar.\n'
-     'Bit 5: Insects are present and visible to the radar.'),
-
-    'quality_bits':
-    ('\nBit 0: An echo is detected by the radar.\n'
-     'Bit 1: An echo is detected by the lidar.\n'
-     'Bit 2: The apparent echo detected by the radar is ground clutter\n'
-     '       or some other non-atmospheric artifact.\n'
-     'Bit 3: The lidar echo is due to clear-air molecular scattering.\n'
-     'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
-     '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
-     '       a correction for the radar attenuation has been performed;\n'
-     '       otherwise do not trust the absolute values of reflectivity factor.\n'
-     '       No correction is performed for lidar attenuation.\n'
-     'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
-     '       using the microwave radiometer measurements of liquid water path\n'
-     '       and the lidar estimation of the location of liquid water cloud;\n'
-     '       be aware that errors in reflectivity may result.')
-}
-
-_COMMENTS = {
-    'category_bits':
-    ('This variable contains information on the nature of the targets\n'
-     'at each pixel, thereby facilitating the application of algorithms that work\n'
-     'with only one type of target. The information is in the form of an array of\n'
-     'bits, each of which states either whether a certain type of particle is present\n'
-     '(e.g. aerosols), or the whether some of the target particles have a particular\n'
-     'property. The definitions of each bit are given in the definition attribute.\n'
-     'Bit 0 is the least significant.'),
-
-    'quality_bits':
-    ('This variable contains information on the quality of the\n'
-     'data at each pixel. The information is in the form of an array\n'
-     'of bits, and the definitions of each bit are given in the definition\n'
-     'attribute. Bit 0 is the least significant'),
-
-    'radar_liquid_atten':
-    ('This variable was calculated from the liquid water path\n'
-     'measured by microwave radiometer using lidar and radar returns to perform\n'
-     'an approximate partioning of the liquid water content with height. Bit 5 of\n'
-     'the quality_bits variable indicates where a correction for liquid water\n'
-     'attenuation has been performed.'),
-
-    'radar_gas_atten':
-    ('This variable was calculated from the model temperature,\n'
-     'pressure and humidity, but forcing pixels containing liquid cloud to saturation\n'
-     'with respect to liquid water. It was calculated using the millimeter-wave propagation\n'
-     'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.'),
-
-    'Tw':
-    ('This variable was calculated from model T, P and relative humidity, which were first\n'
-     'interpolated into measurement grid.'),
-
-    'Z_sensitivity':
-    ('This variable is an estimate of the radar sensitivity,\n'
-     'i.e. the minimum detectable radar reflectivity, as a function\n'
-     'of height. It includes the effect of ground clutter and gas attenuation\n'
-     'but not liquid attenuation.'),
-
-    'Z_error':
-    ('This variable is an estimate of the one-standard-deviation\n'
-     'random error in radar reflectivity factor. It originates\n'
-     'from the following independent sources of error:\n'
-     '1) Precision in reflectivity estimate due to finite signal to noise\n'
-     '   and finite number of pulses\n'
-     '2) 10% uncertainty in gaseous attenuation correction (mainly due to\n'
-     '   error in model humidity field)\n'
-     '3) Error in liquid water path (given by the variable lwp_error) and\n'
-     '   its partitioning with height).'),
-
-    'altitude':
-    ('Defined as the altitude of radar or lidar - the one that is lower.'),
-
-    'Z':
-    ('This variable has been corrected for attenuation by gaseous\n'
-     'attenuation (using the thermodynamic variables from a forecast\n'
-     'model; see the radar_gas_atten variable) and liquid attenuation\n'
-     '(using liquid water path from a microwave radiometer; see the\n'
-     'radar_liquid_atten variable) but rain and melting-layer attenuation\n'
-     'has not been corrected. Calibration convention: in the absence of\n'
-     'attenuation, a cloud at 273 K containing one million 100-micron droplets\n'
-     'per cubic metre will have a reflectivity of 0 dBZ at all frequencies.'),
-
-    'bias':
-    ('This variable is an estimate of the one-standard-deviation calibration error.'),
-
-    'ldr':
-    ('This parameter is the ratio of cross-polar to co-polar reflectivity.'),
-
-    'width':
-    ('This parameter is the standard deviation of the reflectivity-weighted\n'
-     'velocities in the radar pulse volume.'),
-
-    'v':
-    ('This parameter is the radial component of the velocity, with positive\n'
-     'velocities are away from the radar.'),
-}

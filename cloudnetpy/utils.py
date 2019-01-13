@@ -17,6 +17,9 @@ def seconds2hour(time_in):
     Returns:
         ndarray: Time as fraction hour.
 
+    Notes:
+        Excludes leap seconds.
+
     """
     seconds_since_midnight = np.mod(time_in, 86400)
     fraction_hour = seconds_since_midnight/3600
