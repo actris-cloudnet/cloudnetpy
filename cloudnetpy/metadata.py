@@ -1,5 +1,4 @@
-""" Metadata for Cloudnet variables. The values and definitions
-in this module remain same for all Cloudnet files.
+"""Initial Metadata of Cloudnet variables for NetCDF file writing.
 """
 
 from collections import namedtuple
@@ -7,90 +6,23 @@ from collections import namedtuple
 _LOG = 'logarithmic'
 _LIN = 'linear'
 
+# Is namedtuple good structure for Metadata?
+# How to add comments and history attributes, for instance,
+# that are changing between different processing steps?
+# Should this be just a dictionary instead?
+
 MetaData = namedtuple('MetaData', ['long_name',
                                    'units',
                                    'valid_range',
                                    'plot_range',
                                    'plot_scale',
-                                   'comment'])
+                                   'comment',
+                                   'definition',
+                                   'references',
+                                   'ancillary_variables'])
 
 # Default values for namedtuple. Python 3.7 has better syntax for this.
 MetaData.__new__.__defaults__ = (None,)*len(MetaData._fields)
-
-ATTRIBUTES = {
-    'time': MetaData(
-        'Time UTC',
-        'decimal hours since midnight'
-    ),
-    'model_time': MetaData(
-        'model time UTC',
-        'decimal hours since midnight'
-    ),
-    'height': MetaData(
-        'Height above mean sea level',
-        'm'
-    ),
-    'model_height': MetaData(
-        'Height of model variables above mean sea level',
-        'm'
-    ),
-    'range': MetaData(
-        'Height above ground',
-        'm'
-    ),
-    'latitude': MetaData(
-        'Latitude of site',
-        'degrees_north'
-    ),
-    'longitude': MetaData(
-        'Longitude of site',
-        'degrees_north'
-    ),
-    'altitude': MetaData(
-        'Altitude of site',
-        'm'
-    ),
-    'radar_frequency': MetaData(
-        'Radar transmit frequency',
-        'GHz'
-    ),
-    'ldr': MetaData(
-        'Linear depolarisation ratio',
-        'dB',
-        (-35, 5),
-        (-30, 0),
-        _LIN
-    ),
-    'width': MetaData(
-        'Spectral width',
-        'm s-1',
-        (0, 3),
-        (0, 3),
-        _LOG
-    ),
-    'v': MetaData(
-        'Doppler velocity',
-        'm s-1',
-        (-10, 10),
-        (-4, 2),
-        _LIN
-    ),
-    'SNR': MetaData(
-        'Signal-to-noise ratio',
-        'dB',
-        (-30, 70),
-        (-20, 60),
-        _LIN
-    ),
-    'Z': MetaData(
-        'Radar reflectivity factor',
-        'dBZ',
-        (-60, 30),
-        (-40, 20),
-        _LIN
-    ),
-
-}
 
 _DEFINITIONS = {
     'category_bits':
@@ -150,7 +82,7 @@ _COMMENTS = {
      'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.'),
 
     'Tw':
-    ('This variable was calculated from model T, P and relative humidity, which were first\n'
+    ('This variable was calculated from model T, P and relative humidity, first\n'
      'interpolated into measurement grid.'),
 
     'Z_sensitivity':
@@ -169,9 +101,6 @@ _COMMENTS = {
      '   error in model humidity field)\n'
      '3) Error in liquid water path (given by the variable lwp_error) and\n'
      '   its partitioning with height).'),
-
-    'altitude':
-    ('Defined as the altitude of radar or lidar - the one that is lower.'),
 
     'Z':
     ('This variable has been corrected for attenuation by gaseous\n'
@@ -196,4 +125,200 @@ _COMMENTS = {
     'v':
     ('This parameter is the radial component of the velocity, with positive\n'
      'velocities are away from the radar.'),
+}
+
+ATTRIBUTES = {
+    'time': MetaData(
+        'Time UTC',
+        'decimal hours since midnight'
+    ),
+    'model_time': MetaData(
+        'model time UTC',
+        'decimal hours since midnight'
+    ),
+    'height': MetaData(
+        'Height above mean sea level',
+        'm'
+    ),
+    'model_height': MetaData(
+        'Height of model variables above mean sea level',
+        'm'
+    ),
+    'range': MetaData(
+        'Height above ground',
+        'm'
+    ),
+    'latitude': MetaData(
+        'Latitude of site',
+        'degrees_north'
+    ),
+    'longitude': MetaData(
+        'Longitude of site',
+        'degrees_north'
+    ),
+    'altitude': MetaData(
+        'Altitude of site',
+        'm'
+    ),
+    'radar_frequency': MetaData(
+        'Radar transmit frequency',
+        'GHz'
+    ),
+    'lidar_wavelength': MetaData(
+        'Laser wavelength',
+        'nm'
+    ),
+    'ldr': MetaData(
+        'Linear depolarisation ratio',
+        'dB',
+        (-35, 5),
+        (-30, 0),
+        _LIN,
+        comment=_COMMENTS['ldr']
+    ),
+    'width': MetaData(
+        'Spectral width',
+        'm s-1',
+        (0, 3),
+        (0, 3),
+        _LOG,
+        comment=_COMMENTS['width']
+    ),
+    'v': MetaData(
+        'Doppler velocity',
+        'm s-1',
+        (-10, 10),
+        (-4, 2),
+        _LIN,
+        comment=_COMMENTS['v']
+    ),
+    'SNR': MetaData(
+        'Signal-to-noise ratio',
+        'dB',
+        (-30, 70),
+        (-20, 60),
+        _LIN
+    ),
+    'Z': MetaData(
+        'Radar reflectivity factor',
+        'dBZ',
+        (-60, 30),
+        (-40, 20),
+        _LIN,
+        comment=_COMMENTS['Z'],
+        ancillary_variables = 'Z_error Z_bias Z_sensitivity'
+    ),
+    'Z_error': MetaData(
+        'Error in radar reflectivity factor',
+        'dB',
+        comment=_COMMENTS['Z_error']
+    ),
+    'Z_bias': MetaData(
+        'Bias in radar reflectivity factor',
+        'dB',
+        comment=_COMMENTS['Z_error']
+    ),
+    'Z_sensitivity': MetaData(
+        'Minimum detectable radar reflectivity',
+        'dBZ',
+        comment=_COMMENTS['Z_sensitivity']
+    ),
+    'Zh': MetaData(
+        'Radar reflectivity factor (uncorrected)',
+        'dBZ',
+        (-60, 30),
+        (-40, 20),
+        _LIN
+    ),    
+    'radar_liquid_atten': MetaData(
+        'Approximate two-way radar attenuation due to liquid water',
+        'dB',
+        plot_scale=(0, 10),
+        plot_range=_LIN,
+        comment=_COMMENTS['radar_liquid_atten']
+    ),
+    'radar_gas_atten': MetaData(
+        'Two-way radar attenuation due to atmospheric gases',
+        'dB',
+        plot_scale=(0, 4),
+        plot_range=_LIN,
+        comment=_COMMENTS['radar_gas_atten']
+    ),
+    'Tw': MetaData(
+        'Wet-bulb temperature',
+        'K',
+        plot_scale=(200, 300),
+        plot_range=_LIN,
+        comment=_COMMENTS['Tw']
+    ),
+    'vwind': MetaData(
+        'Meridional wind',
+        'm s-1',        
+        plot_scale=(-50, 50),
+        plot_range=_LIN
+    ),
+    'uwind': MetaData(
+        'Zonal wind',
+        'm s-1',
+        plot_scale=(-50, 50),
+        plot_range=_LIN
+    ),
+    'specific_humidity': MetaData(
+        'Specific humidity',
+        plot_scale=(0, 0.2),
+        plot_range=_LIN
+    ),
+    'temperature': MetaData(
+        'Temperature',
+        'K',
+        plot_scale=(200, 300),
+        plot_range=_LIN
+    ),
+    'pressure': MetaData(
+        'Pressure',
+        'Pa',
+        plot_scale=(0, 110000),
+        plot_range=_LIN
+    ),
+    'beta': MetaData(
+        'Attenuated backscatter coefficient',
+        'sr-1 m-1',
+        plot_scale=(1e-7, 1e-4),
+        plot_range=_LOG,
+        ancillary_variables = 'beta_error beta_bias'
+    ),
+    'beta_raw': MetaData(
+        'Raw attenuated backscatter coefficient',
+        'sr-1 m-1',
+        plot_scale=(1e-7, 1e-4),
+        plot_range=_LOG,
+    ),
+    'beta_error': MetaData(
+        'Error in attenuated backscatter coefficient',
+        'dB',
+    ),
+    'beta_bias': MetaData(
+        'Bias in attenuated backscatter coefficient',
+        'dB',
+    ),
+    'lwp': MetaData(
+        'Liquid water path',
+        'g m-2',
+        plot_scale=(-100, 1000),
+        plot_range=_LIN
+    ),
+    'lwp_error': MetaData(
+        'Error in liquid water path',
+        'g m-2',
+    ),
+    'category_bits': MetaData(
+        'Target categorization bits',
+        comment = _COMMENTS['category_bits'],
+        definition = _DEFINITIONS['category_bits']
+    ),
+    'quality_bits': MetaData(
+        'Data quality bits',
+        comment = _COMMENTS['quality_bits'],
+        definition = _DEFINITIONS['quality_bits']
+    ),
 }
