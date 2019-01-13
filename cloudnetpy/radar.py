@@ -8,6 +8,7 @@ from cloudnetpy import ncf
 from cloudnetpy import utils
 from cloudnetpy import output
 
+
 def mmclx2nc(mmclx_file, output_file, site_name,
              site_location, rebin_data=True):
     """Converts mmclx files to compressed NetCDF files.
@@ -25,52 +26,83 @@ def mmclx2nc(mmclx_file, output_file, site_name,
             Otherwise keeps the native resolution. Default is True.
 
     """
-    radar_data = ncf.load_nc(mmclx_file)
-    radar_time = utils.seconds2hour(radar_data['time'][:])
+    raw_data = ncf.load_nc(mmclx_file)
+    time_grid, height_grid, radar_time = _create_grid(raw_data, rebin_data)
+    keymap = _change_variable_names()
+    radar_data = _read_raw_data(keymap, raw_data)
+    _remove_invalid(radar_data)
     if rebin_data:
-        time_new = utils.time_grid()
-    else:
-        time_new = radar_time
-    radar_range = radar_data['range'][:]
+        _rebin_fields(radar_data, radar_time, time_grid)
+    _screen_by_snr(radar_data)
+    _add_meta(radar_data, site_location, time_grid, height_grid)
+    obs = output.create_objects_for_output(radar_data)
+    _save_radar(mmclx_file, output_file, obs, time_grid, height_grid, site_name)
 
-    # We want different field names
-    fields = {'Zg':'Zh',
+
+def _change_variable_names():
+    """ Returns mapping from radar variable names
+    to names we use in Cloudnet files."""
+    keymap = {'Zg':'Zh',
               'VELg':'v',
-              'RMSg':'width',
+              'RMSg':'width',  # We want different variable names.
               'LDRg':'ldr',
               'SNRg':'SNR'}
-    data_fields = {}
-    for field in fields:
-        data = radar_data[field][:]
-        data = ma.masked_invalid(data)
-        if rebin_data:
-            data = utils.rebin_2d(radar_time, data, time_new)
-        data_fields[fields[field]] = data
+    return keymap
 
-    # SNR-screening
-    snr_limit = -17
-    ind = np.where(utils.lin2db(data_fields['SNR']) < snr_limit)
-    for field in data_fields:
-        data = data_fields[field]
-        data.mask[ind] = True
-        data_fields[field] = data
 
+def _add_meta(radar_data, site_location, time_grid, height_grid):
+    """ Add some meta data for output writing."""
     extra_vars = {
         'latitude': site_location[0],
         'longitude': site_location[1],
         'altitude': site_location[2],
         'radar_frequency': 35.5,  # not good to fix this
     }
-    output_data = {**extra_vars, **data_fields}
-    output_data['time'] = time_new
-    output_data['range'] = radar_range
-
-    obs = output.create_objects_for_output(output_data)
-    save_radar(mmclx_file, output_file, obs, time_new,
-               radar_range, site_name)
+    radar_data = {**extra_vars, **radar_data}
+    radar_data['time'] = time_grid
+    radar_data['range'] = height_grid
 
 
-def save_radar(raw_file, output_file, obs, time, radar_range, site_name):
+def _screen_by_snr(radar_data, snr_limit=-17):
+    """ Screens by SNR."""
+    ind = np.where(utils.lin2db(radar_data['SNR']) < snr_limit)
+    for field in radar_data:
+        data = radar_data[field]
+        data.mask[ind] = True
+        radar_data[field] = data
+
+
+def _create_grid(raw_data, rebin_data):
+    """Creates time / height grid for radar."""
+    radar_time = utils.seconds2hour(raw_data['time'][:])
+    if rebin_data:
+        time_grid = utils.time_grid()
+    else:
+        time_grid = radar_time
+    return time_grid, raw_data['range'][:], radar_time
+
+
+def _read_raw_data(keymap, raw_data):
+    """Reads correct fields and fixes the names."""
+    radar_data = {}
+    for raw_key in keymap:
+        radar_data[keymap[raw_key]] = raw_data[raw_key][:]
+    return radar_data
+
+
+def _remove_invalid(radar_data):
+    """Remove invalid values from the dict."""
+    for field in radar_data:
+        radar_data[field] = ma.masked_invalid(radar_data[field])
+
+
+def _rebin_fields(radar_data, radar_time, time_grid):
+    """Rebins the data."""
+    for field in radar_data:
+        radar_data[field] = utils.rebin_2d(radar_time, radar_data[field], time_grid)
+
+
+def _save_radar(raw_file, output_file, obs, time, radar_range, site_name):
     """Saves the radar file."""
     raw = netCDF4.Dataset(raw_file)
     rootgrp = netCDF4.Dataset(output_file, 'w', format='NETCDF4_CLASSIC')
