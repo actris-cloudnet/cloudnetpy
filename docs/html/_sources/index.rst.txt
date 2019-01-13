@@ -20,6 +20,7 @@ implementation of the Cloudnet processing scheme.
 
    overview
    quickstart
+   input_files
    api
    
 	    

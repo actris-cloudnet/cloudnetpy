@@ -7,6 +7,24 @@ import netCDF4
 from cloudnetpy import ncf
 from cloudnetpy import utils
 from cloudnetpy import output
+import sys
+
+
+class RadarVariable():
+    def __init__(self, netcdf4_variable):
+        self.data = netcdf4_variable[:]
+        self.units = netcdf4_variable.units
+
+    def lin2db(self):
+        if 'db' not in self.units.lower():
+            self.data = utils.lin2db(self.data)
+            self.units = 'dB'
+
+    def rebin_data(self, x, x_new):
+        self.data = utils.rebin_2d(x, self.data, x_new)
+
+    def mask_indices(self, ind):
+        self.data[ind] = ma.masked
 
 
 def mmclx2nc(mmclx_file, output_file, site_name,
@@ -30,19 +48,49 @@ def mmclx2nc(mmclx_file, output_file, site_name,
     time_grid, height_grid, radar_time = _create_grid(raw_data, rebin_data)
     keymap = _change_variable_names()
     radar_data = _read_raw_data(keymap, raw_data)
-    _remove_invalid(radar_data)
+    _fix_units(radar_data, ('Zh', 'ldr', 'SNR'))
+
+    #_remove_invalid(radar_data)
     if rebin_data:
         _rebin_fields(radar_data, radar_time, time_grid)
-        snr_gain = _estimate_snr_gain(radar_time, time_grid)
+        snr_gain = estimate_snr_gain(radar_time, time_grid)
     else:
         snr_gain = 1
+
     _screen_by_snr(radar_data, snr_gain)
     _add_meta(radar_data, site_location, time_grid, height_grid)
     obs = output.create_objects_for_output(radar_data)
     _save_radar(mmclx_file, output_file, obs, time_grid, height_grid, site_name)
 
 
-def _estimate_snr_gain(radar_time, time_grid):
+def _screen_by_snr(radar_data, snr_gain=1, snr_limit=-17):
+    """ Screens by SNR."""
+    ind = np.where(radar_data['SNR'].data*snr_gain < snr_limit)
+    for field in radar_data:
+        radar_data[field].mask_indices(ind)
+
+    
+def _read_raw_data(keymap, raw_data):
+    """Reads correct fields and fixes the names."""
+    radar_data = {}
+    for raw_key in keymap:
+        radar_data[keymap[raw_key]] = RadarVariable(raw_data[raw_key])
+    return radar_data
+
+
+def _fix_units(radar_data, lin2log_list):
+    """Changes some linear units to logarithmic."""
+    for name in lin2log_list:
+        radar_data[name].lin2db()
+
+
+def _rebin_fields(radar_data, radar_time, time_grid):
+    """Rebins the data."""
+    for field in radar_data:
+        radar_data[field].rebin_data(radar_time, time_grid)
+
+        
+def estimate_snr_gain(radar_time, time_grid):
     """Returns factor for SNR (dB) increase when data is binned."""
     binning_ratio = utils.mdiff(time_grid)/utils.mdiff(radar_time)
     return np.sqrt(binning_ratio)
@@ -72,15 +120,6 @@ def _add_meta(radar_data, site_location, time_grid, height_grid):
     radar_data['range'] = height_grid
 
 
-def _screen_by_snr(radar_data, snr_gain=1, snr_limit=-17):
-    """ Screens by SNR."""
-    ind = np.where(utils.lin2db(radar_data['SNR'])*snr_gain < snr_limit)
-    for field in radar_data:
-        data = radar_data[field]
-        data.mask[ind] = True
-        radar_data[field] = data
-
-
 def _create_grid(raw_data, rebin_data):
     """Creates time / height grid for radar."""
     radar_time = utils.seconds2hour(raw_data['time'][:])
@@ -91,24 +130,10 @@ def _create_grid(raw_data, rebin_data):
     return time_grid, raw_data['range'][:], radar_time
 
 
-def _read_raw_data(keymap, raw_data):
-    """Reads correct fields and fixes the names."""
-    radar_data = {}
-    for raw_key in keymap:
-        radar_data[keymap[raw_key]] = raw_data[raw_key][:]
-    return radar_data
-
-
 def _remove_invalid(radar_data):
     """Remove invalid values from the dict."""
     for field in radar_data:
         radar_data[field] = ma.masked_invalid(radar_data[field])
-
-
-def _rebin_fields(radar_data, radar_time, time_grid):
-    """Rebins the data."""
-    for field in radar_data:
-        radar_data[field] = utils.rebin_2d(radar_time, radar_data[field], time_grid)
 
 
 def _save_radar(raw_file, output_file, obs, time, radar_range, site_name):
