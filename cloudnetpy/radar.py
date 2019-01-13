@@ -29,20 +29,20 @@ def mmclx2nc(mmclx_file, output_file, site_name,
     """
     raw_data = ncf.load_nc(mmclx_file)
     time_grid, height_grid, radar_time = _create_grid(raw_data, rebin_data)
-    keymap = _change_variable_names()
+    keymap = _map_variable_names()
     radar_data = _read_raw_data(keymap, raw_data)
-    _fix_units(radar_data, ('Zh', 'ldr', 'SNR'))
+    _linear_to_db(radar_data, ('Zh', 'ldr', 'SNR'))
     if rebin_data:
         _rebin_fields(radar_data, radar_time, time_grid)
         snr_gain = _estimate_snr_gain(radar_time, time_grid)
     else:
         snr_gain = 1
     _screen_by_snr(radar_data, snr_gain)
-    #_add_meta(radar_data, site_location, time_grid, height_grid)
+    _add_meta(radar_data, site_location, time_grid, height_grid)
     _update_attributes(radar_data)
     _save_radar(mmclx_file, output_file, radar_data, time_grid, height_grid, site_name)
 
-    
+
 def _update_attributes(radar_data):
     for field in radar_data:
         if field in ATTRIBUTES:
@@ -65,9 +65,9 @@ def _read_raw_data(keymap, raw_data):
     return radar_data
 
 
-def _fix_units(radar_data, lin2log_list):
+def _linear_to_db(radar_data, variables_to_log):
     """Changes some linear units to logarithmic."""
-    for name in lin2log_list:
+    for name in variables_to_log:
         radar_data[name].lin2db()
 
 
@@ -83,7 +83,7 @@ def _estimate_snr_gain(radar_time, time_grid):
     return np.sqrt(binning_ratio)
 
 
-def _change_variable_names():
+def _map_variable_names():
     """ Returns mapping from radar variable names
     to names we use in Cloudnet files."""
     keymap = {'Zg':'Zh',
@@ -98,9 +98,9 @@ def _add_meta(radar_data, site_location, time_grid, height_grid):
     """ Add some meta data for output writing."""
     loca = ('latitude', 'longitude', 'altitude')
     for i, name in enumerate(loca):
-        radar_data[name] = CloudnetVariable(ma.array(site_location[i]), name)        
-    radar_data['time'] = CloudnetVariable(time_grid, 'time')
-    radar_data['range'] = CloudnetVariable(time_grid, 'range')
+        radar_data[name] = output.CloudnetVariable(np.array([site_location[i]]), name)
+    radar_data['time'] = output.CloudnetVariable(time_grid, 'time')
+    radar_data['range'] = output.CloudnetVariable(time_grid, 'range')
     
 
 def _create_grid(raw_data, rebin_data):
