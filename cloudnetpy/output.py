@@ -2,29 +2,52 @@
 from datetime import datetime, timezone
 import uuid
 import netCDF4
+import numpy.ma as ma
+from cloudnetpy import utils
 from cloudnetpy import config
 from cloudnetpy.metadata import ATTRIBUTES
 
 
-class CnetVar:
-    """Class for Cloudnet variables."""
-
-    def __init__(self, name, data):
+class CloudnetVariable():
+    """Creates Cloudnet variables from NetCDF variables."""
+    def __init__(self, netcdf4_variable, name):
         self._name = name
-        self._data = data
-        self._data_type = self._get_data_type()
+        self._data = netcdf4_variable[:]
+        self._data_type = self._init_data_type()
+        self._init_units(netcdf4_variable)
 
-    def _get_data_type(self):
+    def _init_units(self, netcdf4_variable):
+        if hasattr(netcdf4_variable, 'units'):
+            self.units = netcdf4_variable.units
+
+    def _init_data_type(self):
         if isinstance(self._data, int):
             return 'i4'
         return 'f4'
+        
+    def lin2db(self):
+        if 'db' not in self.units.lower():
+            self._data = utils.lin2db(self._data)
+            self.units = 'dB'
+
+    def rebin_data(self, x, x_new):
+        self._data = utils.rebin_2d(x, self._data, x_new)
+
+    def mask_indices(self, ind):
+        self._data[ind] = ma.masked
 
     def fetch_attributes(self):
         """Returns list of user-defined attributes."""
         return (x for x in self.__dict__.keys() if not x.startswith('_'))
 
+    def set_attributes(self, attributes):
+        for key in attributes._fields:
+            data = getattr(attributes, key)
+            if data:
+                setattr(self, key, data)
 
-def write_vars2nc(rootgrp, obs, zlib):
+
+def write_vars2nc(rootgrp, cnet_variables, zlib):
     """Iterate over Cloudnet instances and write to given rootgrp."""
 
     def _get_dimensions(array):
@@ -38,8 +61,9 @@ def write_vars2nc(rootgrp, obs, zlib):
             dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
             size = size + (dim,)
         return size
-
-    for obj in obs:
+    
+    for name in cnet_variables:
+        obj = cnet_variables[name]
         size = _get_dimensions(obj._data)
         ncvar = rootgrp.createVariable(obj._name, obj._data_type, size, zlib=zlib)
         ncvar[:] = obj._data
