@@ -13,8 +13,8 @@ def mmclx2nc(mmclx_file, output_file, site_name,
              site_location, rebin_data=True):
     """Converts mmclx files to compressed NetCDF files.
 
-    Reads raw cloud radar NetCDF files, converts the units,
-    and saves the essential fields to new file.
+    High level API to process raw cloud radar files into
+    files that can be used in further processing steps.
 
     Args:
         mmclx_file (str): Raw radar file.
@@ -33,10 +33,19 @@ def mmclx2nc(mmclx_file, output_file, site_name,
     _remove_invalid(radar_data)
     if rebin_data:
         _rebin_fields(radar_data, radar_time, time_grid)
-    _screen_by_snr(radar_data)
+        snr_gain = _estimate_snr_gain(radar_time, time_grid)
+    else:
+        snr_gain = 1
+    _screen_by_snr(radar_data, snr_gain)
     _add_meta(radar_data, site_location, time_grid, height_grid)
     obs = output.create_objects_for_output(radar_data)
     _save_radar(mmclx_file, output_file, obs, time_grid, height_grid, site_name)
+
+
+def _estimate_snr_gain(radar_time, time_grid):
+    """Returns factor for SNR (dB) increase when data is binned."""
+    binning_ratio = utils.mdiff(time_grid)/utils.mdiff(radar_time)
+    return np.sqrt(binning_ratio)
 
 
 def _change_variable_names():
@@ -44,7 +53,7 @@ def _change_variable_names():
     to names we use in Cloudnet files."""
     keymap = {'Zg':'Zh',
               'VELg':'v',
-              'RMSg':'width',  # We want different variable names.
+              'RMSg':'width',
               'LDRg':'ldr',
               'SNRg':'SNR'}
     return keymap
@@ -63,9 +72,9 @@ def _add_meta(radar_data, site_location, time_grid, height_grid):
     radar_data['range'] = height_grid
 
 
-def _screen_by_snr(radar_data, snr_limit=-17):
+def _screen_by_snr(radar_data, snr_gain=1, snr_limit=-17):
     """ Screens by SNR."""
-    ind = np.where(utils.lin2db(radar_data['SNR']) < snr_limit)
+    ind = np.where(utils.lin2db(radar_data['SNR'])*snr_gain < snr_limit)
     for field in radar_data:
         data = radar_data[field]
         data.mask[ind] = True
