@@ -10,11 +10,9 @@ class CnetVar:
     """Class for Cloudnet variables."""
 
     def __init__(self, name, data):
-        # Set mandatory properties
         self._name = name
         self._data = data
         self._data_type = self._get_data_type()
-        self._fill_value = self._get_fill_value()
 
     def _get_data_type(self):
         if isinstance(self._data, int):
@@ -25,11 +23,6 @@ class CnetVar:
         """Returns list of user-defined attributes."""
         return (x for x in self.__dict__.keys() if not x.startswith('_'))
 
-    def _get_fill_value(self):
-        """Returns valid fill values."""
-        if not hasattr(self._data, '__len__'):  # no fill value for scalars
-            return None
-        return netCDF4.default_fillvals[self._data_type]
 
 def write_vars2nc(rootgrp, obs, zlib):
     """Iterate over Cloudnet instances and write to given rootgrp."""
@@ -46,16 +39,9 @@ def write_vars2nc(rootgrp, obs, zlib):
             size = size + (dim,)
         return size
 
-    def _check_fillvalues():
-        if obj._name in rootgrp.dimensions.keys():
-            return None
-        return obj._fill_value
-
     for obj in obs:
         size = _get_dimensions(obj._data)
-        fill_value = _check_fillvalues()
-        ncvar = rootgrp.createVariable(obj._name, obj._data_type, size, zlib=zlib,
-                                       fill_value=fill_value)
+        ncvar = rootgrp.createVariable(obj._name, obj._data_type, size, zlib=zlib)
         ncvar[:] = obj._data
         for attr in obj.fetch_attributes():
             setattr(ncvar, attr, getattr(obj, attr))
