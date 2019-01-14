@@ -43,18 +43,12 @@ def generate_categorize(input_files, output_file, zlib=True):
     rad_vars, lid_vars, mwr_vars, mod_vars = (ncf.load_nc(f)
                                               for f in input_files)
     input_types = ncf.fetch_input_types(input_files)
-    try:
-        time = utils.time_grid()
-        height = _height_above_sea(rad_vars)
-        radar_meta = ncf.fetch_radar_meta(input_files[0])
-    except (ValueError, KeyError) as error:
-        sys.exit(error)
-    try:
-        alt_site = ncf.site_altitude(rad_vars, lid_vars, mwr_vars)
-        radar = fetch_data(rad_vars, ('Zh', 'v', 'ldr', 'width'), time,
-                           vfold=radar_meta['vfold'])
-    except KeyError as error:
-        sys.exit(error)
+    time = utils.time_grid()
+    height = _height_above_sea(rad_vars)
+    radar_meta = ncf.fetch_radar_meta(input_files[0])
+    alt_site = ncf.site_altitude(rad_vars, lid_vars, mwr_vars)
+    radar = fetch_data(rad_vars, ('Zh', 'v', 'ldr', 'width'), time,
+                       vfold=radar_meta['vfold'])
     lidar = fetch_data(lid_vars, ('beta', 'beta_raw'), time, height_new=height)
     lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
     model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)

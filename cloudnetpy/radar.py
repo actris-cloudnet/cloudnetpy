@@ -1,5 +1,6 @@
 """Module for reading raw cloud radar data."""
 
+import os
 import uuid
 import numpy as np
 import numpy.ma as ma
@@ -44,6 +45,9 @@ def mmclx2nc(mmclx_file, output_file, site_name,
 
 
 def _update_attributes(radar_data):
+    """Overrides existing attributes such as 'units' etc. 
+    using hard-coded values. New attributes are added.
+    """
     for field in radar_data:
         if field in ATTRIBUTES:
             radar_data[field].set_attributes(ATTRIBUTES[field])
@@ -57,7 +61,18 @@ def _screen_by_snr(radar_data, snr_gain=1, snr_limit=-17):
 
     
 def _read_raw_data(keymap, raw_data):
-    """Reads correct fields and fixes the names."""
+    """Reads correct fields and fixes the names.
+
+    Args:
+        keymap (dict): Fieldnames to be read from the NetCDF file
+            and the corresponding names we use instead in the Cloudnet 
+            processing. E.g. {'Zg': 'Zh', 'LDRg', 'ldr'}.
+        raw_data (dict): NetCDF variables to be read.
+
+    Returns:
+        dict: Raw data as CloudnetVariable instances.
+
+    """
     radar_data = {}
     for raw_key in keymap:
         name = keymap[raw_key]
@@ -67,9 +82,10 @@ def _read_raw_data(keymap, raw_data):
 
 def _linear_to_db(radar_data, variables_to_log):
     """Changes some linear units to logarithmic."""
+    
     for name in variables_to_log:
         radar_data[name].lin2db()
-
+    return radar_data
 
 def _rebin_fields(radar_data, radar_time, time_grid):
     """Rebins the data."""
@@ -85,7 +101,11 @@ def _estimate_snr_gain(radar_time, time_grid):
 
 def _map_variable_names():
     """ Returns mapping from radar variable names
-    to names we use in Cloudnet files."""
+    to names we use in Cloudnet files.
+
+    Notes:
+        These names probably depend on the radar / firmware.
+    """
     keymap = {'Zg':'Zh',
               'VELg':'v',
               'RMSg':'width',
@@ -113,20 +133,26 @@ def _create_grid(raw_data, rebin_data):
     return time_grid, raw_data['range'][:], radar_time
 
 
+def _date_from_filename(full_path):
+    """Returns date from the beginning of file name."""
+    plain_file = os.path.basename(full_path)
+    date = plain_file[:8]
+    return date[:4], date[4:6], date[6:8]
+
+
 def _save_radar(raw_file, output_file, obs, time, radar_range, site_name):
     """Saves the radar file."""
     raw = netCDF4.Dataset(raw_file)
     rootgrp = netCDF4.Dataset(output_file, 'w', format='NETCDF4_CLASSIC')
     rootgrp.createDimension('time', len(time))
     rootgrp.createDimension('range', len(radar_range))
-    fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg', 'lambda')
+    fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg', 'NyquistVelocity')
     output.copy_variables(raw, rootgrp, fields_from_raw)
     output.write_vars2nc(rootgrp, obs, zlib=True)
     # global attributes:
     #rootgrp.title = varname + ' from ' + cat.location + ', ' + get_date(cat)
+    rootgrp.year, rootgrp.month, rootgrp.day = _date_from_filename(raw_file)
     rootgrp.location = site_name
     rootgrp.institution = 'Data processed at the Finnish Meteorological Institute.'
     rootgrp.file_uuid = str(uuid.uuid4().hex)
-    # copy these global attributes from categorize file
-    #copy_global(cat, rootgrp, {'location', 'day', 'month', 'year', 'source', 'history'})
     rootgrp.close()

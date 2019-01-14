@@ -216,7 +216,7 @@ ATTRIBUTES = {
     'Z_bias': MetaData(
         'Bias in radar reflectivity factor',
         'dB',
-        comment=_COMMENTS['Z_error']
+        comment=_COMMENTS['bias']
     ),
     'Z_sensitivity': MetaData(
         'Minimum detectable radar reflectivity',
