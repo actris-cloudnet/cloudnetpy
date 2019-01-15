@@ -11,28 +11,29 @@ from cloudnetpy.metadata import ATTRIBUTES
 
 class CloudnetVariable():
     """Creates Cloudnet variables from NetCDF variables.
-    
+
     Attributes:
         _name (str): Name of the variable.
         _data (array_like): The actual data.
         _data_type (str): 'i4' for integers, 'f4' for floats.
-        _units (str): Copied from the original netcdf4 
+        _units (str): Copied from the original netcdf4
             variable (if existing).
 
     Notes:
-        Attributes starting with an underscore serve special purpose 
-        in output file writing and processing. Thus, they are separated 
-        from optional normal attributes such as self.comment, self.history 
-        and so on, that can be attached to the variable in various 
+        Attributes starting with an underscore serve special purpose
+        in output file writing and processing. Thus, they are separated
+        from optional normal attributes such as self.comment, self.history
+        and so on, that can be attached to the variable in various
         processing steps.
 
     """
-    
+
     def __init__(self, netcdf4_variable, name):
         self._name = name
         self._data = netcdf4_variable[:]
         self._data_type = self._init_data_type()
         self._init_units(netcdf4_variable)
+        self.units = None
 
     def _init_units(self, netcdf4_variable):
         if hasattr(netcdf4_variable, 'units'):
@@ -42,7 +43,7 @@ class CloudnetVariable():
         if isinstance(self._data, int):
             return 'i4'
         return 'f4'
-        
+
     def lin2db(self):
         """Converts linear units do log."""
         if 'db' not in self.units.lower():
@@ -55,18 +56,19 @@ class CloudnetVariable():
             self._data = utils.db2lin(self._data)
             self.units = ''
 
-    def rebin_data(self, x, x_new, y=None, y_new=None):
-        """Rebins data in time."""
-        self._data = utils.rebin_2d(x, self._data, x_new)
-        if np.any(y) and np.any(y_new):
-            self._data = utils.rebin_2d(y, self._data.T, y_new).T
+    def rebin_data(self, time, time_new, height=None, height_new=None):
+        """Rebins data in time and optionally in height."""
+        self._data = utils.rebin_2d(time, self._data, time_new)
+        if np.any(height) and np.any(height_new):
+            self._data = utils.rebin_2d(height, self._data.T, height_new).T
 
-    def rebin_in_polar(self, x, x_new, folding_velocity):
+    def rebin_in_polar(self, time, time_new, folding_velocity):
+        """Rebins velocity in polar coordinates."""
         scaled = self._data * folding_velocity
-        vx, vy = np.cos(scaled), np.sin(scaled)
-        vx_mean = utils.rebin_2d(x, vx, x_new)
-        vy_mean = utils.rebin_2d(x, vy, x_new)
-        self._data = np.arctan2(vy_mean, vx_mean) / folding_velocity
+        velo_x, velo_y = np.cos(scaled), np.sin(scaled)
+        velo_x_mean = utils.rebin_2d(time, velo_x, time_new)
+        velo_y_mean = utils.rebin_2d(time, velo_y, time_new)
+        self._data = np.arctan2(velo_y_mean, velo_x_mean) / folding_velocity
 
     def mask_indices(self, ind):
         """Masks data from given indices."""
@@ -97,7 +99,7 @@ def write_vars2nc(rootgrp, cnet_variables, zlib):
             dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
             size = size + (dim,)
         return size
-    
+
     for name in cnet_variables:
         obj = cnet_variables[name]
         size = _get_dimensions(obj._data)
@@ -195,28 +197,3 @@ def copy_global(file_from, file_to, attrs_to_be_copied):
     for aname in file_from.ncattrs():
         if aname in attrs_to_be_copied:
             setattr(file_to, aname, file_from.getncattr(aname))
-
-
-def create_objects_for_output(data_in):
-    """Creates list of variable instances for output writing.
-
-    Args:
-        data_in (dict): Variables to be written.
-
-    Yields:
-        Array of CloudnetData instances that contain the data
-        and metadata.
-
-    """
-    def _set_attributes():
-        attributes = ATTRIBUTES[field]
-        for key in attributes._fields:
-            data = getattr(attributes, key)
-            if data:
-                setattr(obj, key, data)
-
-    for field in data_in.keys():
-        obj = CnetVar(field, data_in[field])
-        if field in ATTRIBUTES:
-            _set_attributes()
-        yield obj
