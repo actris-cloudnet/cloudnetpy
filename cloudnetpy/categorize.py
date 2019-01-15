@@ -6,6 +6,7 @@ sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import math
 import numpy as np
 import numpy.ma as ma
+import scipy.constants
 from scipy.interpolate import interp1d
 from cloudnetpy import config
 from cloudnetpy import ncf
@@ -13,55 +14,169 @@ from cloudnetpy import utils
 from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
+from cloudnetpy import plotting
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from cloudnetpy.output import CloudnetVariable
+import sys
+import netCDF4
 
+#class GlobalMeta():
+#    def __init__(self, radar_file, lidar_file):
+#        pass
+        #self.site_altitude =
+        #self.date =
+
+class CloudnetDataSource():
+    """Base class for all NetCDF files."""
+    def __init__(self, netcdf_file):
+        self.dataset = netCDF4.Dataset(netcdf_file)
+        self.variables = self.dataset.variables
+        self._copy_attributes(('location', 'source'))
+
+    def netcdf_to_cloudnet(self, fields):
+        """Transforms NetCDF variables (data + attributes) to CloudnetVariables."""
+        self.data = {}
+        for name in fields:
+            self.data[name] = output.CloudnetVariable(self.variables[name], name)
+
+    def _get_height(self):
+        """Returns height above mean sea level."""
+        range_instru = ncf.km2m(self.variables['range'])
+        alt_instru = ncf.km2m(self.variables['altitude'])
+        return np.array(range_instru + alt_instru)
+        
+    def _copy_attributes(self, names):
+        for name in names:
+            if hasattr(self.dataset, name):
+                value = getattr(self.dataset, name)
+                setattr(self, name, value)
+
+
+class Radar(CloudnetDataSource):
+    """Class for radar data."""
+    def __init__(self, radar_file):
+        super().__init__(radar_file)
+        self.frequency = ncf.radar_freq(self.variables)
+        self.wl_band = ncf.wl_band(self.frequency)
+        self.folding_velocity = ncf.folding_velo(self.variables,
+                                                 self.frequency)
+        self.height = self._get_height()
+        self.altitude = self.variables['altitude'][:]
+
+
+class Lidar(CloudnetDataSource):
+    """Class for lidar data."""
+    def __init__(self, lidar_file):
+        super().__init__(lidar_file)
+        self.height = self._get_height()
+
+
+class Mwr(CloudnetDataSource):
+    """Class for microwaver radiometer data."""
+    def __init__(self, mwr_file):
+        super().__init__(mwr_file)
+        self.lwp_name = ncf.findkey(self.variables, ('LWP_data', 'lwp'))
+
+
+class Model(CloudnetDataSource):
+    """Class for model data."""
+    fields_dense = ('temperature', 'pressure', 'rh',
+                    'gas_atten', 'specific_gas_atten',
+                    'specific_saturated_gas_atten',
+                    'specific_liquid_atten')
+    fields_all = fields_dense + ('q', 'uwind', 'vwind')
+    
+    def __init__(self, model_file, alt_site):
+        super().__init__(model_file)
+        self.time = self.variables['time'][:]
+        self.model_heights = self._get_model_heights(alt_site)
+        self.mean_height = self._get_mean_height()
+
+    def _get_model_heights(self, alt_site):
+        return ncf.km2m(self.variables['height']) + alt_site
+        
+    def _get_mean_height(self):
+        return np.mean(np.array(self.model_heights), axis=0)
+        
+    def interpolate_to_common_height(self, wl_band, field_names):
+        """Interpolates model variables to common height grid."""
+
+        def _interpolate_variable(data):
+            datai = np.zeros((len(self.time), len(self.mean_height)))
+            for ind, (alt, prof) in enumerate(zip(self.model_heights, data)):
+                f = interp1d(alt, prof, fill_value='extrapolate')
+                datai[ind, :] = f(self.mean_height)
+            return datai
+        
+        self.data_sparse = {}
+        for key in field_names:
+            data = np.array(self.variables[key][:])
+            if 'atten' in key:
+                data = data[wl_band, :, :]
+            self.data_sparse[key] = _interpolate_variable(data)
+
+    def interpolate_to_cloudnet_grid(self, field_names, *newgrid):
+        self.data_dense = {}
+        for key in field_names:
+            self.data_dense[key] = utils.interpolate_2d(self.time,
+                                                        self.mean_height,
+                                                        *newgrid,
+                                                        self.data_sparse[key])
+
+    def calc_wet_bulb(self):
+        self.Tw = atmos.wet_bulb(self.data_dense['temperature'],
+                                 self.data_dense['pressure'],
+                                 self.data_dense['rh'])
+        
 
 def generate_categorize(input_files, output_file, zlib=True):
-    """Generates Cloudnet Level 1 categorize file.
 
-    High level API for processing Level 1 Cloudnet files from
-    calibrated measurements and model data. *input_files* are NetCDF
-    files including the required fields and metadata. Input data
-    should be in native measurement resolution.
+    #meta = GlobalMeta(*input_files[0:2])
+    
+    radar = Radar(input_files[0])
+    lidar = Lidar(input_files[1])
+    mwr = Mwr(input_files[2])
+    model = Model(input_files[3], radar.altitude)
 
-    The measurements are rebinned into a common height / time grid,
-    and classified as different types of scatterers such as ice, liquid,
-    insects, etc. The radar echo is corrected for atmospheric
-    attenuations, and error estimates are computed. Results are saved
-    in *ouput_file* which is by default a compressed NETCDF4_CLASSIC
-    file.
-
-    Args:
-        input_files (tuple): Tuple of strings containing full paths of
-                             the 4 input files (radar, lidar, mwr, model).
-        output_file (str): Full path of the output file.
-        zlib (bool): If True, the output file is compressed. Default is True.
-
-    References:
-        https://journals.ametsoc.org/doi/10.1175/BAMS-88-6-883
-
-    """
-    rad_vars, lid_vars, mwr_vars, mod_vars = (ncf.load_nc(f)
-                                              for f in input_files)
-    input_types = ncf.fetch_input_types(input_files)
+    # new grid
     time = utils.time_grid()
-    height = _height_above_sea(rad_vars)
-    radar_meta = ncf.fetch_radar_meta(input_files[0])
-    alt_site = ncf.site_altitude(rad_vars, lid_vars, mwr_vars)
-    radar = fetch_data(rad_vars, ('Zh', 'v', 'ldr', 'width'), time,
-                       vfold=radar_meta['vfold'])
-    lidar = fetch_data(lid_vars, ('beta', 'beta_raw'), time, height_new=height)
-    lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
-    model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)
-    bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'],
-                                   time, height, input_types['model'])
+    height = radar.height
+    
+    # measurement data
+    radar.netcdf_to_cloudnet(('Zh', 'v', 'ldr', 'width'))
+    lidar.netcdf_to_cloudnet(('beta', 'beta_raw'))
+    mwr.netcdf_to_cloudnet((mwr.lwp_name,))
+
+    # model data
+    model.netcdf_to_cloudnet(model.fields_all)
+    model.interpolate_to_common_height(radar.wl_band, model.fields_all)
+    model.interpolate_to_cloudnet_grid(model.fields_dense, time, height)
+    model.calc_wet_bulb()
+
+
+
+    
+    #input_types = ncf.fetch_input_types(input_files)
+    #time = utils.time_grid()
+    #height = _height_above_sea(rad_vars)
+    #radar_meta = ncf.fetch_radar_meta(input_files[0])
+    #alt_site = ncf.site_altitude(rad_vars, lid_vars, mwr_vars)
+    #radar = fetch_data(rad_vars, ('Zh', 'v', 'ldr', 'width'), time, vfold=radar_meta['vfold'])
+    #lidar = fetch_data(lid_vars, ('beta', 'beta_raw'), time, height_new=height)
+    #lwp = fetch_mwr(mwr_vars, config.LWP_ERROR, time)
+    #model = fetch_model(mod_vars, alt_site, radar_meta['freq'], time, height)
+
+    bits = classify.fetch_cat_bits(radar, lidar['beta'], model['Tw'], time, height, input_types['model'])
     gas_atten = atmos.gas_atten(model['interp'], bits['cat'], height)
     liq_atten = atmos.liquid_atten(lwp, model['interp'], bits, height)
-    qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'],
-                                         bits['clutter'], liq_atten)
+    qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'], bits['clutter'], liq_atten)
     Z_corrected = _correct_atten(radar['Zh'], gas_atten, liq_atten['value'])
     Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                             bits['clutter'], radar_meta['freq'],
                             time, config.GAS_ATTEN_PREC)
+
+    
     cat_vars = {
         'height': height,
         'time': time,
@@ -118,21 +233,6 @@ def _correct_atten(Z, gas_atten, liq_atten):
     ind = ~liq_atten.mask
     Z_corr[ind] = Z_corr[ind] + liq_atten[ind]
     return Z_corr
-
-
-def _height_above_sea(vars_in):
-    """Returns measurement grid above mean sea level.
-
-    Args:
-        vars_in (dict): Instrument variables.
-
-    Returns:
-        ndarray: Altitude grid (m).
-
-    """
-    range_instru = ncf.km2m(vars_in['range'])
-    alt_instru = ncf.km2m(vars_in['altitude'])
-    return np.array(range_instru + alt_instru)
 
 
 def fetch_data(vars_in, fields, time_new, height_new=None, vfold=None):
@@ -241,103 +341,6 @@ def _read_lwp(mwr_vars, frac_err, lin_err):
         time = utils.seconds2hour(time)
     error = utils.l2norm(frac_err*data, lin_err)
     return data, time, error
-
-
-def fetch_model(mod_vars, alt_site, freq, time, height):
-    """Interpolates model variables and calculates wet bulb temperature.
-
-    Model profiles are first interpolated into common height grid
-    which is the mean of indiviudal heights of the day. Next the profiles
-    are interpolated into Cloudnet's much denser time / height grid. Linear
-    interpolation is used in both steps.
-
-    Finally, wet-bub temperature is derived from the interpolated
-    temperature, pressure and relative humidity values.
-
-    Args:
-        mod_vars (dict): Model variables.
-        alt_site (int): Altitude of the site above mean sea level (m).
-        freq (float): Radar frequency (GHz).
-        time (ndarray): 1-D array, the target time vector.
-        height (ndarray): 1-D array, the target height vector (m).
-
-    Returns:
-        Dict containing
-
-        - **original** (*dict*): 2-D model fields in common
-          but sparse grid.
-        - **time** (*ndarray*): Parse model 1-D time vector.
-        - **height** (*ndarray*): Parse model 1-D height vector.
-        - **interp** (*dict*): Interpolated 2-D fields in dense
-          Cloudnet grid.
-        - **Tw** (*ndarray*): 2-D wet bulb temperature.
-
-    """
-    fields = ('temperature', 'pressure', 'rh', 'gas_atten', 'specific_gas_atten',
-              'specific_saturated_gas_atten', 'specific_liquid_atten')
-    fields_all = fields + ('q', 'uwind', 'vwind')
-    model, *grid = _read_model(mod_vars, fields_all, alt_site, freq)
-    model_i = _interpolate_model(model, fields, *grid, time, height)
-    Tw = atmos.wet_bulb(model_i['temperature'], model_i['pressure'], model_i['rh'])
-    return {'original': model, 'interp': model_i, 'time': grid[0],
-            'height': grid[1], 'Tw': Tw}
-
-
-def _read_model(vrs, fields, alt_site, freq):
-    """Reads model fields and interpolates into common altitude grid.
-
-    Args:
-        vrs (dict): Model variables.
-        fields (array_like): list of strings containing fields
-            to be interpolated.
-        alt_site (float): Site altitude (m).
-        freq (float): Radar frequency (GHz).
-
-    Returns:
-        3-element tuple containing
-
-        - *dict*: Model fields in common altitude grid.
-        - *ndarray*: Original model time.
-        - *ndarray*: Common altitude vector used in the interpolation
-          (mean of the individual height vectors of the day).
-
-    """
-    out = {}
-    wlband = ncf.wl_band(freq)
-    model_heights = ncf.km2m(vrs['height']) + alt_site  # above mean sea level
-    model_heights = np.array(model_heights)  # masked arrays not supported
-    model_time = vrs['time'][:]
-    new_grid = np.mean(model_heights, axis=0)  # is mean profile ok?
-    for field in fields:
-        data = np.array(vrs[field][:])
-        if 'atten' in field:
-            data = data[wlband, :, :]
-        datai = np.zeros((len(model_time), len(new_grid)))
-        for i, (alt, prof) in enumerate(zip(model_heights, data)):
-            f = interp1d(alt, prof, fill_value='extrapolate')
-            datai[i, :] = f(new_grid)
-        out[field] = datai
-    return out, model_time, new_grid
-
-
-def _interpolate_model(model, fields, *args):
-    """Interpolates model fields into Cloudnet's time / height grid.
-
-    Args:
-        model (dict): Model fields in arbitrary (but common) time
-            and altitude grid.
-        fields (tuple): Tuple of strings containing fields
-            to be interpolated.
-        *args: time, height, new time, new height.
-
-    Returns:
-        dict: Interpolated model fields.
-
-    """
-    out = {}
-    for field in fields:
-        out[field] = utils.interpolate_2d(*args, model[field])
-    return out
 
 
 def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,

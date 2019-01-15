@@ -171,9 +171,8 @@ ATTRIBUTES = {
     'ldr': MetaData(
         'Linear depolarisation ratio',
         'dB',
-        (-35, 5),
-        (-30, 0),
-        _LIN,
+        plot_range=(-30, 0),
+        plot_scale=_LIN,
         comment=_COMMENTS['ldr']
     ),
     'width': MetaData(
@@ -202,9 +201,8 @@ ATTRIBUTES = {
     'Z': MetaData(
         'Radar reflectivity factor',
         'dBZ',
-        (-60, 30),
-        (-40, 20),
-        _LIN,
+        plot_range=(-40, 20),
+        plot_scale=_LIN,
         comment=_COMMENTS['Z'],
         ancillary_variables = 'Z_error Z_bias Z_sensitivity'
     ),

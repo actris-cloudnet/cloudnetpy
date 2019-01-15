@@ -13,7 +13,7 @@ from cloudnetpy.metadata import ATTRIBUTES
 
 def mmclx2nc(mmclx_file, output_file, site_name,
              site_location, rebin_data=True):
-    """Converts mmclx files to compressed NetCDF files.
+    """Converts mmclx files into compressed NetCDF files.
 
     High level API to process raw cloud radar files into
     files that can be used in further processing steps.
@@ -47,6 +47,10 @@ def mmclx2nc(mmclx_file, output_file, site_name,
 def _update_attributes(radar_data):
     """Overrides existing attributes such as 'units' etc. 
     using hard-coded values. New attributes are added.
+
+    Args:
+        radar_data (dict): CloudnetVariable instances.
+
     """
     for field in radar_data:
         if field in ATTRIBUTES:
@@ -81,11 +85,11 @@ def _read_raw_data(keymap, raw_data):
 
 
 def _linear_to_db(radar_data, variables_to_log):
-    """Changes some linear units to logarithmic."""
-    
+    """Changes some linear units to logarithmic."""    
     for name in variables_to_log:
         radar_data[name].lin2db()
     return radar_data
+
 
 def _rebin_fields(radar_data, radar_time, time_grid):
     """Rebins the data."""
