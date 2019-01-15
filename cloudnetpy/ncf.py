@@ -8,44 +8,6 @@ import math
 import scipy.constants
 
 
-def load_nc(file_in):
-    """ Returns netCDF Dataset variables."""
-    return netCDF4.Dataset(file_in).variables
-
-
-def fetch_radar_meta(radar_file):
-    """Returns some global metadata from radar nc-file.
-
-    Args:
-        radar_file (str): Full path of the cloud radar netCDF file.
-
-    Returns:
-        dict: Radar frequency, folding velocity, measurement date,
-        and radar (i.e. site) location: {'freq', 'vfold', 'date',
-        'location'}.
-
-    Raises:
-        KeyError: No frequency in the radar file.
-        ValueError: Invalid frequency value, only 35 and 94 Ghz
-            radars supported.
-
-    """
-    nc = netCDF4.Dataset(radar_file)
-    try:
-        location = nc.location
-    except AttributeError:
-        location = 'Unknown location'
-    try:
-        freq = radar_freq(nc.variables)
-        vfold = folding_velo(nc.variables, freq)
-    except (ValueError, KeyError) as error:
-        raise error
-    dvec = '-'.join([str(nc.year).zfill(4), str(nc.month).zfill(2),
-                     str(nc.day).zfill(2)])
-    return {'freq': freq, 'vfold': vfold, 'date': dvec,
-            'location': location}
-
-
 def folding_velo(vrs, freq):
     """Returns radar folding velocity.
 
@@ -149,28 +111,6 @@ def wl_band(freq):
         raise ValueError('Only 35 and 94 GHz radars supported.')
 
 
-def fetch_input_types(input_files):
-    """Returns types of the instruments and nwp model.
-
-    Notes:
-        This does not really work very well because the
-        instrument meta data is not standardized.
-    """
-
-    def _find_model(f, attr):
-        """Read type from input file attributes."""
-        try:
-            if attr == 'title':
-                return getattr(netCDF4.Dataset(f), attr).split()[0]
-            return getattr(netCDF4.Dataset(f), attr)
-        except AttributeError:
-            return 'Unknown instrument or model.'
-    return {'radar': _find_model(input_files[0], 'title'),
-            'lidar': _find_model(input_files[1], 'system'),
-            'mwr': _find_model(input_files[2], 'radiometer_system'),
-            'model': _find_model(input_files[3], 'title')}
-
-
 def km2m(var):
     """ Converts km to m.
 
@@ -207,27 +147,3 @@ def m2km(var):
     if var.units == 'm':
         alt = alt/1000
     return alt
-
-
-def site_altitude(*vrs):
-    """ Returns altitude of the measurement site above mean sea level in [m].
-
-    Site altitude is defined as the lowermost value of
-    the investigated values.
-
-    Args:
-       *vrs: Array of dicts to be investigated.
-
-    Returns:
-        float: Altitude (m) of the measurement site.
-
-    Raises:
-        KeyError: If no 'altitude' field is found from any of
-                  the input files.
-
-    """
-    field = 'altitude'
-    alts = [km2m(var[field]) for var in vrs if field in var]
-    if not alts:
-        raise KeyError("Can't determine site altitude.")
-    return min(alts)

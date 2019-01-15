@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import uuid
 import netCDF4
+import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils
 from cloudnetpy import config
@@ -9,7 +10,24 @@ from cloudnetpy.metadata import ATTRIBUTES
 
 
 class CloudnetVariable():
-    """Creates Cloudnet variables from NetCDF variables."""
+    """Creates Cloudnet variables from NetCDF variables.
+    
+    Attributes:
+        _name (str): Name of the variable.
+        _data (array_like): The actual data.
+        _data_type (str): 'i4' for integers, 'f4' for floats.
+        _units (str): Copied from the original netcdf4 
+            variable (if existing).
+
+    Notes:
+        Attributes starting with an underscore serve special purpose 
+        in output file writing and processing. Thus, they are separated 
+        from optional normal attributes such as self.comment, self.history 
+        and so on, that can be attached to the variable in various 
+        processing steps.
+
+    """
+    
     def __init__(self, netcdf4_variable, name):
         self._name = name
         self._data = netcdf4_variable[:]
@@ -26,14 +44,32 @@ class CloudnetVariable():
         return 'f4'
         
     def lin2db(self):
+        """Converts linear units do log."""
         if 'db' not in self.units.lower():
             self._data = utils.lin2db(self._data)
             self.units = 'dB'
 
-    def rebin_data(self, x, x_new):
+    def db2lin(self):
+        """Converts log units to linear."""
+        if 'db' in self.units.lower():
+            self._data = utils.db2lin(self._data)
+            self.units = ''
+
+    def rebin_data(self, x, x_new, y=None, y_new=None):
+        """Rebins data in time."""
         self._data = utils.rebin_2d(x, self._data, x_new)
+        if np.any(y) and np.any(y_new):
+            self._data = utils.rebin_2d(y, self._data.T, y_new).T
+
+    def rebin_in_polar(self, x, x_new, folding_velocity):
+        scaled = self._data * folding_velocity
+        vx, vy = np.cos(scaled), np.sin(scaled)
+        vx_mean = utils.rebin_2d(x, vx, x_new)
+        vy_mean = utils.rebin_2d(x, vy, x_new)
+        self._data = np.arctan2(vy_mean, vx_mean) / folding_velocity
 
     def mask_indices(self, ind):
+        """Masks data from given indices."""
         self._data[ind] = ma.masked
 
     def fetch_attributes(self):
