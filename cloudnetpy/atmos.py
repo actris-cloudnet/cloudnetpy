@@ -7,7 +7,7 @@ import numpy.ma as ma
 from cloudnetpy import utils
 from cloudnetpy import lwc
 from cloudnetpy import constants as con
-
+from cloudnetpy.cloudnetarray import CloudnetArray
 
 def c2k(temp):
     """Converts Celsius to Kelvins."""
@@ -151,14 +151,14 @@ def gas_atten(model, cat_bits, height):
     """
     dheight = utils.mdiff(height)
     is_liquid = utils.isbit(cat_bits, 0)
-    spec = np.copy(model['specific_gas_atten'])
-    spec[is_liquid] = model['specific_saturated_gas_atten'][is_liquid]
-    layer1_att = model['gas_atten'][:, 0]
+    spec = np.copy(model['specific_gas_atten'][:])
+    spec[is_liquid] = model['specific_saturated_gas_atten'][:][is_liquid]
+    layer1_att = model['gas_atten'][:][:, 0]
     gas_att = 2*np.cumsum(spec.T, axis=0)*dheight*1e-3 + layer1_att
     return np.insert(gas_att.T, 0, layer1_att, axis=1)[:, :-1]
 
 
-def liquid_atten(lwp, model, bits, height):
+def liquid_atten(mwr, model, bits, liquid_bases, is_rain, height):
     """Calculates attenuation due to liquid water.
 
     Args:
@@ -166,7 +166,7 @@ def liquid_atten(lwp, model, bits, height):
             path and its error {'value', 'err'}.
         model (dict): Interpolated 2-D model fields {'temperature', 'pressure',
             'specific_liquid_atten'}
-        bits (dict): Classification bits and rain {'cat', 'rain'}.
+        bits (ndarray): Classification bits.
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
@@ -180,24 +180,26 @@ def liquid_atten(lwp, model, bits, height):
           attenuation is present but we can not compute its value.
  
     """
-    spec_liq = model['specific_liquid_atten']
-    is_liq = utils.isbit(bits['cat'], 0)
+    spec_liq = model['specific_liquid_atten'][:]
+    is_liq = utils.isbit(bits, 0)
     lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
-    ind = np.where(bits['liquid_base'])
-    lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind], model['pressure'][ind])
+    ind = np.where(liquid_bases)
+    lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][:][ind], model['pressure'][:][ind])
     lwc_dz_err[is_liq] = utils.ffill(lwc_dz[is_liq])
     ind_from_base = utils.cumsumr(is_liq, axis=1)
     lwc_adiab = ind_from_base*lwc_dz_err*utils.mdiff(height)*1e3
-    ind = np.isfinite(lwp['value']) & np.any(is_liq, axis=1)
-    lwp_norm[ind, :] = (lwc_adiab[ind, :].T*lwp['value'][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
-    lwp_norm_err[ind, :] = (lwc_dz_err[ind, :].T*lwp['err'][ind]/np.sum(lwc_dz_err[ind, :], axis=1)).T
+    ind = np.isfinite(mwr['lwp'][:]) & np.any(is_liq, axis=1)
+    lwp_norm[ind, :] = (lwc_adiab[ind, :].T*mwr['lwp'][:][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
+    lwp_norm_err[ind, :] = (lwc_dz_err[ind, :].T*mwr['lwp_error'][:][ind]/np.sum(lwc_dz_err[ind, :], axis=1)).T
     liq_att[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
     liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liq[:, :-1], axis=1)
-    liq_att, cbit, ucbit = _screen_liq_atten(liq_att, bits)
-    return {'value': liq_att, 'err': liq_att_err, 'is_corr': cbit, 'is_not_corr': ucbit}
+    liq_att, cbit, ucbit = _screen_liq_atten(liq_att, bits, is_rain)
+    return ({'liquid_attenuation': CloudnetArray(liq_att, 'liquid_attenuation'),
+            'err_attenuation_error': CloudnetArray(liq_att_err, 'liquid_attenuation_error')},
+            cbit, ucbit)
 
 
-def _screen_liq_atten(liq_atten, bits):
+def _screen_liq_atten(liq_atten, bits, is_rain):
     """Removes corrupted data from liquid attenuation.
 
     Args:
@@ -213,9 +215,9 @@ def _screen_liq_atten(liq_atten, bits):
         - ndarray: Boolean array denoting where liquid attenuation was present but not corrected.
 
     """
-    melting_layer = utils.isbit(bits['cat'], 3)
+    melting_layer = utils.isbit(bits, 3)
     uncorr_atten = np.cumsum(melting_layer, axis=1) >= 1
-    uncorr_atten[bits['rain'], :] = True
+    uncorr_atten[is_rain, :] = True
     corr_atten = (liq_atten > 0).filled(False) & ~uncorr_atten
     liq_atten[uncorr_atten] = ma.masked
     return liq_atten, corr_atten, uncorr_atten

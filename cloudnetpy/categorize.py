@@ -36,11 +36,6 @@ class RawDataSource():
         self.time = self._getvar('time')
         self.data = {}
 
-    def netcdf_to_cloudnet(self, fields):
-        """Transforms NetCDF variables (data + attributes) into CloudnetArrays."""
-        for name in fields:
-            self.data[name] = CloudnetArray(self.variables[name], name)
-
     def _get_height(self):
         """Returns height above mean sea level."""
         range_instrument = utils.km2m(self.variables['range'])
@@ -60,6 +55,10 @@ class RawDataSource():
                 return self.variables[arg][:]
         raise KeyError('Missing variable')
 
+    def netcdf_to_cloudnet(self, fields):
+        """Transforms NetCDF variables (data + attributes) into CloudnetArrays."""
+        for name in fields:
+            self.data[name] = CloudnetArray(self.variables[name], name)
 
 class Radar(RawDataSource):
     """Class for radar data. jee
@@ -83,6 +82,18 @@ class Radar(RawDataSource):
         self.altitude = self._getvar('altitude')
         self.netcdf_to_cloudnet(fields)
 
+    def _get_wl_band(self):
+        return 0 if (30 < self.frequency < 40) else 1
+
+    def _get_folding_velocity(self):
+        if 'NyquistVelocity' in self.variables:
+            nyquist = self.variables['NyquistVelocity'][:]
+        elif 'prf' in self.variables:
+            nyquist = self.variables['prf'][:] * scipy.constants.c / (4 * self.frequency)
+        else:
+            raise KeyError('Unable to determine folding velocity')
+        return math.pi / nyquist
+
     def rebin_data(self, time):
         """Rebins radar data using mean."""
         for variable in self.data:
@@ -95,18 +106,6 @@ class Radar(RawDataSource):
                                                    self.folding_velocity)
             else:
                 self.data[variable].rebin_data(self.time, time)
-
-    def _get_wl_band(self):
-        return 0 if (30 < self.frequency < 40) else 1
-
-    def _get_folding_velocity(self):
-        if 'NyquistVelocity' in self.variables:
-            nyquist = self.variables['NyquistVelocity'][:]
-        elif 'prf' in self.variables:
-            nyquist = self.variables['prf'][:] * scipy.constants.c / (4 * self.frequency)
-        else:
-            raise KeyError('Unable to determine folding velocity')
-        return math.pi / nyquist
 
 
 class Lidar(RawDataSource):
@@ -146,26 +145,28 @@ class Mwr(RawDataSource):
     """
     def __init__(self, mwr_file):
         super().__init__(mwr_file)
-        self.lwp_name = utils.findkey(self.variables, ('LWP_data', 'lwp'))
-        self.netcdf_to_cloudnet((self.lwp_name,))
-        self.error = self._calc_lwp_error(*config.LWP_ERROR)
+        self._get_lwp_data()
         self._fix_time()
 
-    def interpolate_to_cloudnet_grid(self, time):
-        """Interpolates liquid water path to Cloudnet's dense time grid."""
-        f = interp1d(self.time, self.data[self.lwp_name][:])
-        self.data[self.lwp_name] = CloudnetArray(f(time), 'lwp')
-        self.time = time
+    def _get_lwp_data(self):
+        data = {}
+        lwp_name = utils.findkey(self.variables, ('LWP_data', 'lwp'))
+        self.data['lwp'] = CloudnetArray(self.variables[lwp_name], 'lwp')
+        self.data['lwp_error'] = self._calc_lwp_error(*config.LWP_ERROR)
 
     def _calc_lwp_error(self, fractional_error, linear_error):
-        lwp = self.data[self.lwp_name].data
-        error = utils.l2norm(lwp*fractional_error, linear_error)
+        error = utils.l2norm(self.data['lwp'][:]*fractional_error, linear_error)
         return CloudnetArray(error, 'lwp_error')
 
     def _fix_time(self):
         if max(self.time) > 24:
             self.time = utils.seconds2hour(self.time)
 
+    def interpolate_to_cloudnet_grid(self, time):
+        """Interpolates liquid water path to Cloudnet's dense time grid."""
+        for key in self.data:
+            fun = interp1d(self.time, self.data[key][:])
+            self.data[key] = CloudnetArray(fun(time), key)
 
 class Model(RawDataSource):
     """Class for model data."""
@@ -253,10 +254,15 @@ def generate_categorize(input_files, output_file, zlib=True):
                                                                               lidar.data['beta'][:],
                                                                               model.data['Tw'][:],
                                                                               grid, 'gdas')
-    gas_atten = atmos.gas_atten(model.data_dense, cbits, grid[1])
+
+    gas_atten = atmos.gas_atten(model.data_dense, cbits['category_bits'][:], grid[1])
+
+    liq_atten, corr_bit, ucorr_bit = atmos.liquid_atten(mwr.data, model.data_dense,
+                                                        cbits['category_bits'][:], liquid_bases,
+                                                        is_rain, grid[1])
 
     output_data = {**radar.data, **lidar.data, **model.data_sparse,
-                   **mwr.data, **cbits}
+                   **mwr.data, **cbits, **liq_atten}
     output.update_attributes(output_data)
     _save_cat(output_file, grid, (model.time, model.mean_height), output_data)
 
