@@ -7,6 +7,37 @@ from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
 import sys
 
+
+def findkey(vrs, possible_fields):
+    """Finds first matching key from several possible.
+
+    Args:
+        vrs (dict): Dictionary or other
+            iterable containing strings.
+        fields (tuple): List of possible strings to be
+            searched.
+
+    Returns:
+        str: First matching key. None if nothing found.
+
+    Examples:
+        >>> x = {'abc':1, 'bac':2, 'cba':3}
+        >>> ncf.findkey(x, ('bac', 'cba'))
+            'bac'
+
+        The order of the keys to be searched is defaining
+        the return value if there are several matching strings:
+
+        >>> ncf.findkey(x, ('cba', 'bac'))
+            'cba'
+
+    """
+    for field in possible_fields:
+        if field in vrs:
+            return field
+    return None
+
+
 def seconds2hour(time_in):
     """Converts seconds since some epoch to fraction hour.
 
@@ -375,3 +406,20 @@ def n_elements(x, dist, var=None):
     if var == 'time':
         n = n/60
     return int(np.round(n))
+
+
+def km2m(var):
+    """Converts km to m."""
+    alt = var[:]
+    if var.units == 'km':
+        alt = alt*1000
+    return alt
+
+
+def m2km(var):
+    """Converts m to km."""
+    alt = var[:]
+    if var.units == 'm':
+        alt = alt/1000
+    return alt
+    

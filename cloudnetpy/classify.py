@@ -10,7 +10,7 @@ from cloudnetpy import utils
 from cloudnetpy.constants import T0
 
 
-def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
+def fetch_cat_bits(radar, beta, Tw, grid, model_type):
     """Classifies radar/lidar observations.
 
     This function classifies atmospheric scatterer from the input data. 
@@ -18,10 +18,10 @@ def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
     time / height grid before calling this function.
 
     Args:
-        radar (dict): 2-D radar variables {'Zh', 'v', 'ldr', 'width'}.
+        radar (Radar): Radar instance.
         beta (MaskedArray): 2-D lidar attenuated backscattering coefficient.
         Tw (ndarray): 2-D wet bulb temperature (K).
-        height (ndarray): 1-D altitude grid (m).
+        grid (tuple): tuple containing 1-D time and 1-D height of the grid.
         model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF', that was
             used to calculate *Tw*.
 
@@ -44,17 +44,18 @@ def fetch_cat_bits(radar, beta, Tw, time, height, model_type):
         classify.fetch_qual_bits()
 
     """
+    time, height = grid
     bits = [None]*6
-    is_rain = rain_from_radar(radar['Zh'], time)
-    is_clutter = find_clutter(radar['v'], is_rain)
+    is_rain = rain_from_radar(radar['Zh'][:], time)
+    is_clutter = find_clutter(radar['v'][:], is_rain)
     is_liquid, liquid_base, liquid_top = droplet.find_liquid(beta, height)
-    bits[3] = find_melting_layer(Tw, radar['ldr'], radar['v'], model_type)
+    bits[3] = find_melting_layer(Tw, radar['ldr'][:], radar['v'][:], model_type)
     bits[2] = find_freezing_region(Tw, bits[3], time, height)
-    bits[0] = droplet.correct_liquid_top(radar['Zh'], Tw, bits[2], is_liquid,
+    bits[0] = droplet.correct_liquid_top(radar['Zh'][:], Tw, bits[2], is_liquid,
                                          liquid_top, height)
     bits[5], insect_prob = find_insects(radar, Tw, bits[3], bits[0],
                                         is_rain, is_clutter)
-    bits[1] = find_falling_hydrometeors(radar['Zh'], beta, is_clutter,
+    bits[1] = find_falling_hydrometeors(radar['Zh'][:], beta, is_clutter,
                                         bits[0], bits[5], Tw)
     bits[4] = find_aerosols(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
@@ -277,7 +278,7 @@ def find_insects(radar, Tw, *args, prob_lim=0.8):
         - ndarray: 2-D boolean flag of insects presense.
 
     """
-    iprob = _insect_probability(radar['Zh'], radar['ldr'], radar['width'])
+    iprob = _insect_probability(radar['Zh'][:], radar['ldr'][:], radar['width'][:])
     iprob = _screen_insects(iprob, Tw, *args)
     is_insects = iprob > prob_lim
     return is_insects, ma.masked_where(iprob == 0, iprob)
