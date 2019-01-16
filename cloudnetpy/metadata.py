@@ -178,25 +178,22 @@ ATTRIBUTES = {
     'width': MetaData(
         'Spectral width',
         'm s-1',
-        (0, 3),
-        (0, 3),
-        _LOG,
+        plot_range=(0, 3),
+        plot_scale=_LOG,
         comment=_COMMENTS['width']
     ),
     'v': MetaData(
         'Doppler velocity',
         'm s-1',
-        (-10, 10),
-        (-4, 2),
-        _LIN,
+        plot_range=(-4, 2),
+        plot_scale=_LIN,
         comment=_COMMENTS['v']
     ),
     'SNR': MetaData(
         'Signal-to-noise ratio',
         'dB',
-        (-30, 70),
-        (-20, 60),
-        _LIN
+        plot_range=(-20, 60),
+        plot_scale=_LIN
     ),
     'Z': MetaData(
         'Radar reflectivity factor',
@@ -204,7 +201,7 @@ ATTRIBUTES = {
         plot_range=(-40, 20),
         plot_scale=_LIN,
         comment=_COMMENTS['Z'],
-        ancillary_variables = 'Z_error Z_bias Z_sensitivity'
+        ancillary_variables='Z_error Z_bias Z_sensitivity'
     ),
     'Z_error': MetaData(
         'Error in radar reflectivity factor',
@@ -224,9 +221,8 @@ ATTRIBUTES = {
     'Zh': MetaData(
         'Radar reflectivity factor (uncorrected)',
         'dBZ',
-        (-60, 30),
-        (-40, 20),
-        _LIN
+        plot_range=(-40, 20),
+        plot_scale=_LIN
     ),    
     'radar_liquid_atten': MetaData(
         'Approximate two-way radar attenuation due to liquid water',
@@ -311,12 +307,12 @@ ATTRIBUTES = {
     ),
     'category_bits': MetaData(
         'Target categorization bits',
-        comment = _COMMENTS['category_bits'],
-        definition = _DEFINITIONS['category_bits']
+        comment=_COMMENTS['category_bits'],
+        definition=_DEFINITIONS['category_bits']
     ),
     'quality_bits': MetaData(
         'Data quality bits',
-        comment = _COMMENTS['quality_bits'],
-        definition = _DEFINITIONS['quality_bits']
+        comment=_COMMENTS['quality_bits'],
+        definition=_DEFINITIONS['quality_bits']
     ),
 }

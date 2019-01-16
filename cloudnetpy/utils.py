@@ -22,16 +22,18 @@ def findkey(vrs, possible_fields):
 
     Examples:
         >>> x = {'abc':1, 'bac':2, 'cba':3}
-        >>> ncf.findkey(x, ('bac', 'cba'))
+        >>> utils.findkey(x, ('bac', 'cba'))
             'bac'
 
         The order of the keys to be searched is defaining
         the return value if there are several matching strings:
 
-        >>> ncf.findkey(x, ('cba', 'bac'))
+        >>> utils.findkey(x, ('cba', 'bac'))
             'cba'
 
     """
+    if isinstance(possible_fields, str):
+        possible_fields = (possible_fields, )
     for field in possible_fields:
         if field in vrs:
             return field

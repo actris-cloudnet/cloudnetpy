@@ -11,6 +11,7 @@ import os
 sys.path.insert(0, '../cloudnetpy')
 import cloudnetpy.categorize as cat
 
+
 def main():
     """ Main function. """
 
@@ -18,10 +19,10 @@ def main():
     # the 4 required files: (radar, lidar, mwr, model),
     # given in this order!
     input_files = (
-        'test_data/20180110_mace-head_mira.nc',
-        'test_data/20180110_mace-head_chm15k.nc',
-        'test_data/180110.LWP.NC',
-        'test_data/20180110_mace-head_gdas1.nc')
+        '../test_data/20180110_mace-head_mira.nc',
+        '../test_data/20180110_mace-head_chm15k.nc',
+        '../test_data/180110.LWP.NC',
+        '../test_data/20180110_mace-head_gdas1.nc')
 
     # Output file name (and path, optionally).
     output_file = 'test_cat.nc'
