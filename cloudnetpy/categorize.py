@@ -60,7 +60,7 @@ class RawDataSource():
 
 
 class Radar(RawDataSource):
-    """Class for radar data.
+    """Class for radar data. jee
 
     Child of RawDataSource class. Contains methods for radar data processing.
 
