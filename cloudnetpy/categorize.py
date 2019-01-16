@@ -150,7 +150,7 @@ class Mwr(RawDataSource):
     def interpolate_to_cloudnet_grid(self, time):
         """Interpolates liquid water path to Cloudnets dense time grid."""
         f = interp1d(self.time, self.data[self.lwp_name][:])
-        self.data = f(time)
+        self.data[self.lwp_name] = CloudnetArray(f(time), 'lwp')
         self.time = time
         
     def _calc_lwp_error(self, fractional_error, linear_error):
@@ -179,7 +179,8 @@ class Model(RawDataSource):
         self.data_sparse = None
         self.data_dense = None
         self.Tw = None
-
+        self.time = self._getvar(('time',))
+        
     def _get_model_heights(self, alt_site):
         return utils.km2m(self.variables['height']) + alt_site
 
@@ -189,20 +190,24 @@ class Model(RawDataSource):
     def interpolate_to_common_height(self, wl_band, field_names):
         """Interpolates model variables to common height grid."""
 
-        def _interpolate_variable(data):
+        def _interpolate_variable(data, key):
             datai = np.zeros((len(self.time), len(self.mean_height)))
             for ind, (alt, prof) in enumerate(zip(self.model_heights, data)):
                 f = interp1d(alt, prof, fill_value='extrapolate')
                 datai[ind, :] = f(self.mean_height)
-            return datai
+            return CloudnetArray(datai, key)
 
         self.data_sparse = {}
         for key in field_names:
             data = np.array(self.variables[key][:])
             if 'atten' in key:
                 data = data[wl_band, :, :]
-            self.data_sparse[key] = _interpolate_variable(data)
+            self.data_sparse[key] = _interpolate_variable(data, key)
 
+        for name in self.data:
+            print(name, self.data[name].units)
+
+            
     def interpolate_to_cloudnet_grid(self, field_names, *newgrid):
         """Interpolates model variables to Cloudnets dense time / height grid."""
         self.data_dense = {}
@@ -210,7 +215,7 @@ class Model(RawDataSource):
             self.data_dense[key] = utils.interpolate_2d(self.time,
                                                         self.mean_height,
                                                         *newgrid,
-                                                        self.data_sparse[key])
+                                                        self.data_sparse[key][:])
 
     def calc_wet_bulb(self):
         """Calculates wet-bulb temperature in dense grid."""
@@ -239,11 +244,49 @@ def generate_categorize(input_files, output_file, zlib=True):
     model = Model(input_files[3], radar.altitude)
     grid = (utils.time_grid(), radar.height)
     _interpolate_to_cloudnet_grid(radar, lidar, mwr, model, grid)
-    bits = classify.fetch_cat_bits(radar.data, lidar.data['beta'][:],
-                                   model.data['Tw'][:], grid, 'gdas')
-    
-    sys.exit(0)
 
+    cbits, liquid_bases, is_rain, is_clutter = classify.classify_measurements(radar.data,
+                                                                              lidar.data['beta'][:],
+                                                                              model.data['Tw'][:],
+                                                                              grid, 'gdas')
+
+    output_data = {**radar.data, **lidar.data, **model.data_sparse,
+                   **mwr.data, **cbits}
+    output.update_attributes(output_data)
+
+    _save_cat(output_file, grid, (model.time, model.mean_height), output_data)
+
+    
+
+
+
+def _save_cat(file_name, grid, model_grid, obs):
+    """Creates a categorize netCDF4 file and saves all data into it."""
+    rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
+    # create dimensions
+    time = rootgrp.createDimension('time', len(grid[0]))
+    height = rootgrp.createDimension('height', len(grid[1]))
+    model_time = rootgrp.createDimension('model_time', len(model_grid[0]))
+    model_height = rootgrp.createDimension('model_height', len(model_grid[1]))
+    # root group variables
+    output.write_vars2nc(rootgrp, obs, zlib=True)
+    # global attributes:
+    rootgrp.Conventions = 'CF-1.7'
+    #rootgrp.title = 'Categorize file from ' + radar_meta['location']
+    #rootgrp.institution = 'Data processed at the ' + config.INSTITUTE
+    #dvec = radar_meta['date']
+    #rootgrp.year = int(dvec[:4])
+    #rootgrp.month = int(dvec[5:7])
+    #rootgrp.day = int(dvec[8:])
+    #rootgrp.software_version = version
+    #rootgrp.git_version = ncf.git_version()
+    #rootgrp.file_uuid = str(uuid.uuid4().hex)
+    #rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
+    #rootgrp.history = f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} - categorize file created"
+    rootgrp.close()
+
+    
+    
     """
     
     gas_atten = atmos.gas_atten(model['interp'], bits['cat'], height)
@@ -290,8 +333,6 @@ def generate_categorize(input_files, output_file, zlib=True):
         'Z_error': Z_err['error'],
         'Z_sensitivity': Z_err['sensitivity']}
     obs = output.create_objects_for_output(cat_vars)
-    output.save_cat(output_file, time, height, model['time'],
-                    model['height'], obs, radar_meta, zlib)
 
     """
 

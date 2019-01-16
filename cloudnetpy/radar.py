@@ -40,21 +40,8 @@ def mmclx2nc(mmclx_file, output_file, site_name,
         snr_gain = 1
     _screen_by_snr(radar_data, snr_gain)
     _add_meta(radar_data, site_location, time_grid, height_grid)
-    _update_attributes(radar_data)
+    output.update_attributes(radar_data)
     _save_radar(mmclx_file, output_file, radar_data, time_grid, height_grid, site_name)
-
-
-def _update_attributes(radar_data):
-    """Overrides existing attributes such as 'units' etc. 
-    using hard-coded values. New attributes are added.
-
-    Args:
-        radar_data (dict): CloudnetVariable instances.
-
-    """
-    for field in radar_data:
-        if field in ATTRIBUTES:
-            radar_data[field].set_attributes(ATTRIBUTES[field])
 
 
 def _screen_by_snr(radar_data, snr_gain=1, snr_limit=-17):

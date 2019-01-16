@@ -33,32 +33,6 @@ def write_vars2nc(rootgrp, cnet_variables, zlib):
             setattr(ncvar, attr, getattr(obj, attr))
 
 
-def save_cat(file_name, time, height, model_time, model_height, obs, radar_meta, zlib):
-    """Creates a categorize netCDF4 file and saves all data into it."""
-    rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
-    # create dimensions
-    time = rootgrp.createDimension('time', len(time))
-    height = rootgrp.createDimension('height', len(height))
-    model_time = rootgrp.createDimension('model_time', len(model_time))
-    model_height = rootgrp.createDimension('model_height', len(model_height))
-    # root group variables
-    write_vars2nc(rootgrp, obs, zlib)
-    # global attributes:
-    rootgrp.Conventions = 'CF-1.7'
-    rootgrp.title = 'Categorize file from ' + radar_meta['location']
-    rootgrp.institution = 'Data processed at the ' + config.INSTITUTE
-    dvec = radar_meta['date']
-    rootgrp.year = int(dvec[:4])
-    rootgrp.month = int(dvec[5:7])
-    rootgrp.day = int(dvec[8:])
-    #rootgrp.software_version = version
-    #rootgrp.git_version = ncf.git_version()
-    rootgrp.file_uuid = str(uuid.uuid4().hex)
-    rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
-    rootgrp.history = f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} - categorize file created"
-    rootgrp.close()
-
-
 def status_name(long_name):
     """ Default retrieval status variable name """
     return long_name + ' retrieval status'
@@ -121,3 +95,16 @@ def copy_global(file_from, file_to, attrs_to_be_copied):
     for aname in file_from.ncattrs():
         if aname in attrs_to_be_copied:
             setattr(file_to, aname, file_from.getncattr(aname))
+
+
+def update_attributes(cloudnet_variables):
+    """Overrides existing attributes such as 'units' etc. 
+    using hard-coded values. New attributes are added.
+
+    Args:
+        cloudnet_variables (dict): CloudnetArray instances.
+
+    """
+    for field in cloudnet_variables:
+        if field in ATTRIBUTES:
+            cloudnet_variables[field].set_attributes(ATTRIBUTES[field])

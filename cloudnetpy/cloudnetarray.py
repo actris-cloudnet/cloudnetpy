@@ -73,7 +73,7 @@ class CloudnetArray():
             return units_from_user
         elif hasattr(netcdf4_variable, 'units'):
             return netcdf4_variable.units
-        return None
+        return ''
         
     def _init_data_type(self):
         if isinstance(self.data, int):

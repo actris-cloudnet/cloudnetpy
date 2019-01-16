@@ -8,9 +8,9 @@ from scipy import stats
 from cloudnetpy import droplet
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
+from cloudnetpy.cloudnetarray import CloudnetArray
 
-
-def fetch_cat_bits(radar, beta, Tw, grid, model_type):
+def classify_measurements(radar, beta, Tw, grid, model_type):
     """Classifies radar/lidar observations.
 
     This function classifies atmospheric scatterer from the input data. 
@@ -18,10 +18,10 @@ def fetch_cat_bits(radar, beta, Tw, grid, model_type):
     time / height grid before calling this function.
 
     Args:
-        radar (Radar): Radar instance.
+        radar (dict): Radar variables as CloudnetArray instances.
         beta (MaskedArray): 2-D lidar attenuated backscattering coefficient.
         Tw (ndarray): 2-D wet bulb temperature (K).
-        grid (tuple): tuple containing 1-D time and 1-D height of the grid.
+        grid (tuple): tuple containing 1-D time and 1-D height.
         model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF', that was
             used to calculate *Tw*.
 
@@ -48,19 +48,20 @@ def fetch_cat_bits(radar, beta, Tw, grid, model_type):
     bits = [None]*6
     is_rain = rain_from_radar(radar['Zh'][:], time)
     is_clutter = find_clutter(radar['v'][:], is_rain)
-    is_liquid, liquid_base, liquid_top = droplet.find_liquid(beta, height)
+    is_liquid, liquid_bases, liquid_tops = droplet.find_liquid(beta, height)
     bits[3] = find_melting_layer(Tw, radar['ldr'][:], radar['v'][:], model_type)
     bits[2] = find_freezing_region(Tw, bits[3], time, height)
     bits[0] = droplet.correct_liquid_top(radar['Zh'][:], Tw, bits[2], is_liquid,
-                                         liquid_top, height)
+                                         liquid_tops, height)
     bits[5], insect_prob = find_insects(radar, Tw, bits[3], bits[0],
                                         is_rain, is_clutter)
     bits[1] = find_falling_hydrometeors(radar['Zh'][:], beta, is_clutter,
                                         bits[0], bits[5], Tw)
     bits[4] = find_aerosols(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
-    return {'cat': cat_bits, 'rain': is_rain, 'liquid_base': liquid_base,
-            'clutter': is_clutter, 'insect_prob': insect_prob}
+    output_data = {'category_bits': CloudnetArray(cat_bits, 'category_bits'),
+                   'insect_prob': CloudnetArray(insect_prob, 'insect_prob')}
+    return output_data, liquid_bases, is_rain, is_clutter
 
 
 def _bits_to_integer(bits):
