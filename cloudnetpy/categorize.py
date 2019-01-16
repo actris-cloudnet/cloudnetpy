@@ -14,7 +14,6 @@ from cloudnetpy import utils
 from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
-from cloudnetpy import plotting
 from cloudnetpy.cloudnetarray import CloudnetArray
 
 
@@ -49,7 +48,7 @@ class RawDataSource():
         return ''
 
     def _getvar(self, *args):
-        """Returns variable from the source file."""
+        """Returns data of array from the source file."""
         for arg in args:
             if arg in self.variables:
                 return self.variables[arg][:]
@@ -149,7 +148,6 @@ class Mwr(RawDataSource):
         self._fix_time()
 
     def _get_lwp_data(self):
-        data = {}
         lwp_name = utils.findkey(self.variables, ('LWP_data', 'lwp'))
         self.data['lwp'] = CloudnetArray(self.variables[lwp_name], 'lwp')
         self.data['lwp_error'] = self._calc_lwp_error(*config.LWP_ERROR)
@@ -183,8 +181,6 @@ class Model(RawDataSource):
         self.netcdf_to_cloudnet(self.fields_all)
         self.data_sparse = None
         self.data_dense = None
-        self.Tw = None
-        self.time = self._getvar('time')
 
     def _get_model_heights(self, alt_site):
         return utils.km2m(self.variables['height']) + alt_site
@@ -271,10 +267,10 @@ def _save_cat(file_name, grid, model_grid, obs):
     """Creates a categorize netCDF4 file and saves all data into it."""
     rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     # create dimensions
-    time = rootgrp.createDimension('time', len(grid[0]))
-    height = rootgrp.createDimension('height', len(grid[1]))
-    model_time = rootgrp.createDimension('model_time', len(model_grid[0]))
-    model_height = rootgrp.createDimension('model_height', len(model_grid[1]))
+    rootgrp.createDimension('time', len(grid[0]))
+    rootgrp.createDimension('height', len(grid[1]))
+    rootgrp.createDimension('model_time', len(model_grid[0]))
+    rootgrp.createDimension('model_height', len(model_grid[1]))
     # root group variables
     output.write_vars2nc(rootgrp, obs, zlib=True)
     # global attributes:
