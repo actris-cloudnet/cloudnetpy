@@ -15,5 +15,5 @@ heat_capacity = 1005
 # Latent heat of evaporation (J kg-1)
 latent_heat = 2.5e6  # Many references say 2.26e6 ?!
 
-# Specific gas constant for dry air (J kg-1 K-1)
+# Specific gas constant for dry  air (J kg-1 K-1)
 Rs = 287.058
