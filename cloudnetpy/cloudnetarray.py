@@ -18,12 +18,29 @@ class CloudnetArray():
 
     def __init__(self, netcdf4_variable, name, units=None):
         self.name = name
-        self.data = netcdf4_variable[:]
+        self.data = self._assign_data(netcdf4_variable)
         self.data_type = self._init_data_type()
         self.units = self._init_units(units, netcdf4_variable)
 
+    def _assign_data(self, array):
+        if utils.isscalar(array):
+            return array
+        return array[:]
+
     def __getitem__(self, ind):
         return self.data[ind]
+
+    def _init_units(self, units_from_user, netcdf4_variable):
+        if units_from_user:
+            return units_from_user
+        elif hasattr(netcdf4_variable, 'units'):
+            return netcdf4_variable.units
+        return ''
+
+    def _init_data_type(self):
+        if isinstance(self.data, int):
+            return 'i4'
+        return 'f4'
 
     def lin2db(self):
         """Converts linear units do log."""
@@ -67,17 +84,3 @@ class CloudnetArray():
             data = getattr(attributes, key)
             if data:
                 setattr(self, key, data)
-
-    def _init_units(self, units_from_user, netcdf4_variable):
-        if units_from_user:
-            return units_from_user
-        elif hasattr(netcdf4_variable, 'units'):
-            return netcdf4_variable.units
-        return ''
-        
-    def _init_data_type(self):
-        if isinstance(self.data, int):
-            return 'i4'
-        return 'f4'
-
-    

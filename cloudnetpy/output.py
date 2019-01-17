@@ -14,7 +14,7 @@ def write_vars2nc(rootgrp, cnet_variables, zlib):
 
     def _get_dimensions(array):
         """Finds correct dimensions for a variable."""
-        if not hasattr(array, '__len__') or len(array) == 1:
+        if utils.isscalar(array):
             return ()
         size = ()
         file_dims = rootgrp.dimensions

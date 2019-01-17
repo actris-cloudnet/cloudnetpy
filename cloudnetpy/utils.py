@@ -424,4 +424,25 @@ def m2km(var):
     if var.units == 'm':
         alt = alt/1000
     return alt
-    
+
+
+def isscalar(array):
+    """Tests if input is scalar.
+
+    By "scalar" we mean that array has a single value.
+
+    Examples:
+        >>> utils.isscalar(1)
+        True
+        >>> utils.isscalar([1])
+        True
+        >>> utils.isscalar(np.array(1))
+        True
+        >>> utils.isscalar(np.array([1]))
+        True
+
+    """
+    arr = ma.array(array)
+    if not hasattr(arr, '__len__') or arr.shape == () or len(arr) == 1:
+        return True
+    return False
