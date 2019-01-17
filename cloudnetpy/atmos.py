@@ -146,7 +146,7 @@ def gas_atten(model, cat_bits, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        ndarray: Attenuation due to atmospheric gases.
+        CloudnetArray: Attenuation due to atmospheric gases.
 
     """
     dheight = utils.mdiff(height)
@@ -155,7 +155,8 @@ def gas_atten(model, cat_bits, height):
     spec[is_liquid] = model['specific_saturated_gas_atten'][:][is_liquid]
     layer1_att = model['gas_atten'][:][:, 0]
     gas_att = 2*np.cumsum(spec.T, axis=0)*dheight*1e-3 + layer1_att
-    return np.insert(gas_att.T, 0, layer1_att, axis=1)[:, :-1]
+    gas_att = np.insert(gas_att.T, 0, layer1_att, axis=1)[:, :-1]
+    return {'radar_gas_atten': CloudnetArray(gas_att, 'radar_gas_atten')}
 
 
 def liquid_atten(mwr, model, bits, liquid_bases, is_rain, height):
@@ -194,9 +195,8 @@ def liquid_atten(mwr, model, bits, liquid_bases, is_rain, height):
     liq_att[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
     liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liq[:, :-1], axis=1)
     liq_att, cbit, ucbit = _screen_liq_atten(liq_att, bits, is_rain)
-    return ({'liquid_attenuation': CloudnetArray(liq_att, 'liquid_attenuation'),
-            'err_attenuation_error': CloudnetArray(liq_att_err, 'liquid_attenuation_error')},
-            cbit, ucbit)
+    return ({'radar_liquid_atten': CloudnetArray(liq_att, 'radar_liquid_atten')},
+            {'liq_att_err': liq_att_err, 'is_corr': cbit, 'is_not_corr': ucbit})
 
 
 def _screen_liq_atten(liq_atten, bits, is_rain):

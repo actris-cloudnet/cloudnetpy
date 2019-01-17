@@ -111,6 +111,19 @@ class Radar(RawDataSource):
             else:
                 self.data[key].rebin_data(self.time, time_new)
 
+    def correct_atten(self, gas_atten, liq_atten):
+        """Corrects radar echo for attenuation.
+
+        Args:
+            gas_atten (ndarray): 2-D array of attenuation due to atmospheric gases.
+            liq_atten (MaskedArray): 2-D array of attenuation due to atmospheric liquid.
+
+        """
+        self.data['Zh'].data += gas_atten['radar_gas_atten'].data
+        liquid_attenuation = liq_atten['radar_liquid_atten'].data
+        ind = ~liquid_attenuation.mask
+        self.data['Zh'].data[ind] += liquid_attenuation[ind]
+
 
 class Lidar(RawDataSource):
     """Class for lidar data.
@@ -162,11 +175,19 @@ class Model(RawDataSource):
 
     def __init__(self, model_file, alt_site):
         super().__init__(model_file)
+        self.type = self._get_model_type(model_file)
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = self._get_mean_height()
         self.netcdf_to_cloudnet(self.fields_all)
         self.data_sparse = {}
         self.data_dense = {}
+
+    def _get_model_type(self, file_name):
+        possible_keys = ('ecmwf', 'gdas')
+        for key in possible_keys:
+            if key in file_name:
+                return key
+        return ''
 
     def _get_model_heights(self, alt_site):
         """Returns model heights for each time step."""
@@ -206,40 +227,49 @@ class Model(RawDataSource):
         self.data['Tw'] = CloudnetArray(Tw, 'Tw', units='K')
 
 
-def _interpolate_to_cloudnet_grid(radar, lidar, mwr, model, grid):
-    """ Interpolate variables to Cloudnet's dense grid."""
-    model.interpolate_to_common_height(radar.wl_band, model.fields_all)
-    model.interpolate_to_cloudnet_grid(model.fields_dense, *grid)
-    mwr.interpolate_to_cloudnet_grid(grid[0])
-    radar.rebin_data(grid[0])
-    lidar.rebin_data(*grid)
-    model.calc_wet_bulb()
-
-
 def generate_categorize(input_files, output_file, zlib=True):
     """ High level API to generate Cloudnet categorize file.
 
     """
+    def _interpolate_to_cloudnet_grid():
+        """ Interpolate variables to Cloudnet's dense grid."""
+        model.interpolate_to_common_height(radar.wl_band, model.fields_all)
+        model.interpolate_to_cloudnet_grid(model.fields_dense, *grid)
+        mwr.interpolate_to_cloudnet_grid(grid[0])
+        radar.rebin_data(grid[0])
+        lidar.rebin_data(*grid)
+        model.calc_wet_bulb()
+
     radar = Radar(input_files[0], ('Zh', 'v', 'ldr', 'width'))
     lidar = Lidar(input_files[1], ('beta',))
     mwr = Mwr(input_files[2])
     model = Model(input_files[3], radar.altitude)
     grid = (utils.time_grid(), radar.height)
-    _interpolate_to_cloudnet_grid(radar, lidar, mwr, model, grid)
+    _interpolate_to_cloudnet_grid()
 
-    cbits, liquid_bases, is_rain, is_clutter = classify.classify_measurements(radar.data,
-                                                                              lidar.data['beta'][:],
-                                                                              model.data['Tw'][:],
-                                                                              grid, 'gdas')
+    cbits, cbits_aux = classify.classify_measurements(radar.data['Zh'][:],
+                                                      radar.data['v'][:],
+                                                      radar.data['width'][:],
+                                                      radar.data['ldr'][:],
+                                                      lidar.data['beta'][:],
+                                                      model.data['Tw'][:],
+                                                      grid, model.type)
 
     gas_atten = atmos.gas_atten(model.data_dense, cbits['category_bits'][:], grid[1])
+    liq_atten, liq_atten_bits = atmos.liquid_atten(mwr.data, model.data_dense,
+                                                  cbits['category_bits'][:],
+                                                  cbits_aux['liquid_bases'],
+                                                  cbits_aux['is_rain'], grid[1])
+    radar.correct_atten(gas_atten, liq_atten)
 
-    liq_atten, corr_bit, ucorr_bit = atmos.liquid_atten(mwr.data, model.data_dense,
-                                                        cbits['category_bits'][:], liquid_bases,
-                                                        is_rain, grid[1])
+    quality_bits = classify.fetch_qual_bits(radar.data['Zh'][:],
+                                            lidar.data['beta'][:],
+                                            cbits_aux['is_clutter'],
+                                            liq_atten_bits)
 
-    output_data = {**radar.data, **lidar.data, **model.data_sparse,
-                   **mwr.data, **cbits, **liq_atten}
+    output_data = {**radar.data, **lidar.data, **model.data, **model.data_sparse,
+                   **mwr.data, **cbits, **gas_atten, **liq_atten, **quality_bits}
+
     output.update_attributes(output_data)
     _save_cat(output_file, grid, (model.time, model.mean_height), output_data)
 
@@ -272,11 +302,7 @@ def _save_cat(file_name, grid, model_grid, obs):
 
 
     """
-    
-    gas_atten = atmos.gas_atten(model['interp'], bits['cat'], height)
-    liq_atten = atmos.liquid_atten(lwp, model['interp'], bits, height)
     qual_bits = classify.fetch_qual_bits(radar['Zh'], lidar['beta'], bits['clutter'], liq_atten)
-    Z_corrected = _correct_atten(radar['Zh'], gas_atten, liq_atten['value'])
     Z_err = _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                             bits['clutter'], radar_meta['freq'],
                             time, config.GAS_ATTEN_PREC)
@@ -319,25 +345,6 @@ def _save_cat(file_name, grid, model_grid, obs):
     obs = output.create_objects_for_output(cat_vars)
 
     """
-
-def _correct_atten(Z, gas_atten, liq_atten):
-    """Corrects radar echo for attenuation.
-
-    Args:
-        Z (MaskedArray): 2-D array of radar echo.
-        gas_atten (ndarray): 2-D array of attenuation due to atmospheric gases.
-        liq_atten (MaskedArray): 2-D array of attenuation due to atmospheric liquid.
-
-    Returns:
-        MaskedArray: Copy of *Z*, corrected by liquid attenuation
-        (where applicable) and gas attenuation (everywhere).
-
-    """
-    Z_corr = ma.copy(Z) + gas_atten
-    ind = ~liq_atten.mask
-    Z_corr[ind] = Z_corr[ind] + liq_atten[ind]
-    return Z_corr
-
 
 def _fetch_Z_errors(radar, rad_vars, gas_atten, liq_atten,
                     is_clutter, freq, time, gas_atten_prec):
