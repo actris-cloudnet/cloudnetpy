@@ -35,10 +35,18 @@ class RawDataSource():
         self.time = self._getvar('time')
         self.data = {}
 
+    def _fix_time(self):
+        if max(self.time) > 24:
+            self.time = utils.seconds2hour(self.time)
+
+    def _get_altitude(self):
+        """Returns altitude of the instrument (m)."""
+        return utils.km2m(self.variables['altitude'])
+
     def _get_height(self):
-        """Returns height above mean sea level."""
+        """Returns height array above mean sea level (m)."""
         range_instrument = utils.km2m(self.variables['range'])
-        alt_instrument = utils.km2m(self.variables['altitude'])
+        alt_instrument = self._get_altitude()
         return np.array(range_instrument + alt_instrument)
 
     def _get_global_attribute(self, attr_name):
@@ -48,7 +56,7 @@ class RawDataSource():
         return ''
 
     def _getvar(self, *args):
-        """Returns data of array from the source file."""
+        """Returns data (without attributes) from the source file."""
         for arg in args:
             if arg in self.variables:
                 return self.variables[arg][:]
@@ -60,9 +68,7 @@ class RawDataSource():
             self.data[name] = CloudnetArray(self.variables[name], name)
 
 class Radar(RawDataSource):
-    """Class for radar data. jee
-
-    Child of RawDataSource class. Contains methods for radar data processing.
+    """Class for radar data.
 
     Attributes:
         frequency (float): Radar frequency (GHz).
@@ -77,8 +83,8 @@ class Radar(RawDataSource):
         self.frequency = self._getvar('radar_frequency', 'frequency')
         self.wl_band = self._get_wl_band()
         self.folding_velocity = self._get_folding_velocity()
+        self.altitude = self._get_altitude()
         self.height = self._get_height()
-        self.altitude = self._getvar('altitude')
         self.netcdf_to_cloudnet(fields)
 
     def _get_wl_band(self):
@@ -86,32 +92,28 @@ class Radar(RawDataSource):
 
     def _get_folding_velocity(self):
         if 'NyquistVelocity' in self.variables:
-            nyquist = self.variables['NyquistVelocity'][:]
+            nyquist = self._getvar('NyquistVelocity')
         elif 'prf' in self.variables:
-            nyquist = self.variables['prf'][:] * scipy.constants.c / (4 * self.frequency)
+            nyquist = self._getvar('prf') * scipy.constants.c / (4 * self.frequency)
         else:
             raise KeyError('Unable to determine folding velocity')
         return math.pi / nyquist
 
-    def rebin_data(self, time):
-        """Rebins radar data using mean."""
-        for variable in self.data:
-            if variable in ('Zh',):
-                self.data[variable].db2lin()
-                self.data[variable].rebin_data(self.time, time)
-                self.data[variable].lin2db()
-            elif variable in ('v',):
-                self.data[variable].rebin_in_polar(self.time, time,
-                                                   self.folding_velocity)
+    def rebin_data(self, time_new):
+        """Rebins radar data in time using mean."""
+        for key in self.data:
+            if key in ('Zh',):
+                self.data[key].db2lin()
+                self.data[key].rebin_data(self.time, time_new)
+                self.data[key].lin2db()
+            elif key in ('v',):
+                self.data[key].rebin_in_polar(self.time, time_new, self.folding_velocity)
             else:
-                self.data[variable].rebin_data(self.time, time)
+                self.data[key].rebin_data(self.time, time_new)
 
 
 class Lidar(RawDataSource):
     """Class for lidar data.
-
-    Child of RawDataSource class. Contains
-    methods for lidar data processing.
 
     Attributes:
         height (ndarray): Altitude grid above mean sea level (m).
@@ -122,43 +124,27 @@ class Lidar(RawDataSource):
         self.height = self._get_height()
         self.netcdf_to_cloudnet(fields)
 
-    def rebin_data(self, time, height):
-        """Rebins lidar data in time and height."""
-        for variable in self.data:
-            self.data[variable].rebin_data(self.time, time, self.height, height)
-
+    def rebin_data(self, time_new, height_new):
+        """Rebins lidar data in time and height using mean."""
+        for key in self.data:
+            self.data[key].rebin_data(self.time, time_new, self.height, height_new)
 
 class Mwr(RawDataSource):
-    """Class for microwave radiometer data.
+    """Class for microwave radiometer data."""
 
-    Child of RawDataSource class. Contains
-    methods for microwave radiometer processing.
-
-    Attributes:
-        lwp_name (str): Name of the data field in lwp-file, e.g.
-            'LWP_data' or 'lwp'.
-        error (ndarray): Error estimate of lwp.
-        time (ndarray): Time vector of lwp.
-        data (dict): CloudnetVariable objects.
-
-    """
     def __init__(self, mwr_file):
         super().__init__(mwr_file)
         self._get_lwp_data()
         self._fix_time()
 
     def _get_lwp_data(self):
-        lwp_name = utils.findkey(self.variables, ('LWP_data', 'lwp'))
-        self.data['lwp'] = CloudnetArray(self.variables[lwp_name], 'lwp')
+        key = utils.findkey(self.variables, ('LWP_data', 'lwp'))
+        self.data['lwp'] = CloudnetArray(self.variables[key], 'lwp')
         self.data['lwp_error'] = self._calc_lwp_error(*config.LWP_ERROR)
 
     def _calc_lwp_error(self, fractional_error, linear_error):
         error = utils.l2norm(self.data['lwp'][:]*fractional_error, linear_error)
         return CloudnetArray(error, 'lwp_error')
-
-    def _fix_time(self):
-        if max(self.time) > 24:
-            self.time = utils.seconds2hour(self.time)
 
     def interpolate_to_cloudnet_grid(self, time):
         """Interpolates liquid water path to Cloudnet's dense time grid."""
@@ -179,10 +165,11 @@ class Model(RawDataSource):
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = self._get_mean_height()
         self.netcdf_to_cloudnet(self.fields_all)
-        self.data_sparse = None
-        self.data_dense = None
+        self.data_sparse = {}
+        self.data_dense = {}
 
     def _get_model_heights(self, alt_site):
+        """Returns model heights for each time step."""
         return utils.km2m(self.variables['height']) + alt_site
 
     def _get_mean_height(self):
@@ -190,7 +177,6 @@ class Model(RawDataSource):
 
     def interpolate_to_common_height(self, wl_band, field_names):
         """Interpolates model variables to common height grid."""
-
         def _interpolate_variable(data, key):
             datai = np.zeros((len(self.time), len(self.mean_height)))
             for ind, (alt, prof) in enumerate(zip(self.model_heights, data)):
@@ -198,19 +184,14 @@ class Model(RawDataSource):
                 datai[ind, :] = f(self.mean_height)
             return CloudnetArray(datai, key)
 
-        self.data_sparse = {}
         for key in field_names:
             data = np.array(self.variables[key][:])
             if 'atten' in key:
                 data = data[wl_band, :, :]
             self.data_sparse[key] = _interpolate_variable(data, key)
 
-        for name in self.data:
-            print(name, self.data[name].units)
-
     def interpolate_to_cloudnet_grid(self, field_names, *newgrid):
         """Interpolates model variables to Cloudnet's dense time / height grid."""
-        self.data_dense = {}
         for key in field_names:
             self.data_dense[key] = utils.interpolate_2d(self.time,
                                                         self.mean_height,
