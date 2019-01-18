@@ -122,9 +122,11 @@ class Radar(RawDataSource):
 
     def correct_atten(self, gas_atten, liq_atten):
         """Corrects radar echo for attenuation."""
-        self.data['Zh'].data += gas_atten
+        z_corrected = self.data['Zh'][:]
+        z_corrected += gas_atten
         ind = ~liq_atten.mask
-        self.data['Zh'].data[ind] += liq_atten[ind]
+        z_corrected[ind] += liq_atten[ind]
+        self._append_data(z_corrected, 'Z')
 
     def calc_errors(self, gas_atten, liq_atten_err, is_clutter,
                     is_uncorrected_liquid, time):
@@ -211,14 +213,14 @@ class Model(RawDataSource):
                     'gas_atten', 'specific_gas_atten',
                     'specific_saturated_gas_atten',
                     'specific_liquid_atten')
-    fields_all = fields_dense + ('q', 'uwind', 'vwind')
+    fields_sparse = fields_dense + ('q', 'uwind', 'vwind')
 
     def __init__(self, model_file, alt_site):
         super().__init__(model_file)
         self.type = self._get_model_type()
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = self._get_mean_height()
-        self.netcdf_to_cloudnet(self.fields_all)
+        self.netcdf_to_cloudnet(self.fields_sparse)
         self.data_sparse = {}
         self.data_dense = {}
 
@@ -270,6 +272,11 @@ class Model(RawDataSource):
                                        self.data_dense['rh'])
         self._append_data(wet_bulb_temp, 'Tw', units='K')
 
+    def screen_fields(self):
+        fields_to_keep = ('temperature', 'pressure', 'q', 'uwind', 'vwind')
+        self.data_sparse = {key: self.data_sparse[key]
+                            for key in fields_to_keep}
+
 
 def generate_categorize(input_files, output_file, zlib=True):
     """ High level API to generate Cloudnet categorize file.
@@ -277,19 +284,19 @@ def generate_categorize(input_files, output_file, zlib=True):
     """
     def _interpolate_to_cloudnet_grid():
         """ Interpolate variables to Cloudnet's dense grid."""
-        model.interpolate_to_common_height(radar.wl_band, model.fields_all)
+        model.interpolate_to_common_height(radar.wl_band, model.fields_sparse)
         model.interpolate_to_cloudnet_grid(model.fields_dense, *grid)
-        mwr.interpolate_to_cloudnet_grid(grid[0])
-        radar.rebin_data(grid[0])
-        lidar.rebin_data(*grid)
         model.calc_wet_bulb()
+        mwr.interpolate_to_cloudnet_grid(final_time)
+        radar.rebin_data(final_time)
+        lidar.rebin_data(*grid)
 
     radar = Radar(input_files[0], ('Zh', 'v', 'ldr', 'width'))
     lidar = Lidar(input_files[1], ('beta',))
     mwr = Mwr(input_files[2])
     model = Model(input_files[3], radar.altitude)
-    time, height = utils.time_grid(), radar.height
-    grid = (time, height)
+    final_time, final_height = utils.time_grid(), radar.height
+    grid = (final_time, final_height)
     _interpolate_to_cloudnet_grid()
 
     cbits, cbits_aux = classify.classify_measurements(radar.data['Zh'][:],
@@ -300,18 +307,21 @@ def generate_categorize(input_files, output_file, zlib=True):
                                                       model.data['Tw'][:],
                                                       grid, model.type)
 
-    gas_atten = atmos.gas_atten(model.data_dense, cbits['category_bits'][:],
-                                height)
+    gas_atten = atmos.gas_atten(model.data_dense,
+                                cbits['category_bits'][:],
+                                final_height)
 
-    liq_atten, liq_atten_aux = atmos.liquid_atten(mwr.data, model.data_dense,
+    liq_atten, liq_atten_aux = atmos.liquid_atten(mwr.data,
+                                                  model.data_dense,
                                                   cbits['category_bits'][:],
                                                   cbits_aux['liquid_bases'],
-                                                  cbits_aux['is_rain'], height)
+                                                  cbits_aux['is_rain'],
+                                                  final_height)
 
     radar.correct_atten(gas_atten['radar_gas_atten'][:],
                         liq_atten['radar_liquid_atten'][:])
 
-    quality_bits = classify.fetch_qual_bits(radar.data['Zh'][:],
+    quality_bits = classify.fetch_qual_bits(radar.data['Z'][:],
                                             lidar.data['beta'][:],
                                             cbits_aux['is_clutter'],
                                             liq_atten_aux)
@@ -319,12 +329,16 @@ def generate_categorize(input_files, output_file, zlib=True):
     radar.calc_errors(gas_atten['radar_gas_atten'][:],
                       liq_atten_aux['liq_att_err'],
                       liq_atten_aux['is_not_corr'],
-                      cbits_aux['is_clutter'], time)
+                      cbits_aux['is_clutter'],
+                      final_time)
     radar.add_meta()
     lidar.add_meta()
-    output_data = {**radar.data, **lidar.data, **model.data,
-                   **model.data_sparse, **mwr.data, **cbits,
-                   **gas_atten, **liq_atten, **quality_bits}
+    model.screen_fields()
+
+    output_data = {**radar.data, **lidar.data, **model.data_sparse,
+                   **mwr.data, **cbits, **gas_atten, **liq_atten,
+                   **quality_bits}
+
     output.update_attributes(output_data)
     _save_cat(output_file, radar, model, output_data, zlib)
 

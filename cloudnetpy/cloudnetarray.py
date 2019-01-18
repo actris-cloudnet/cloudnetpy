@@ -22,13 +22,13 @@ class CloudnetArray():
         self.data_type = self._init_data_type()
         self.units = self._init_units(units, netcdf4_variable)
 
+    def __getitem__(self, ind):
+        return self.data[ind]
+
     def _assign_data(self, array):
         if utils.isscalar(array):
             return array
         return array[:]
-
-    def __getitem__(self, ind):
-        return self.data[ind]
 
     def _init_units(self, units_from_user, netcdf4_variable):
         if units_from_user:

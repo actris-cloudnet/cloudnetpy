@@ -227,65 +227,66 @@ ATTRIBUTES = {
     'radar_liquid_atten': MetaData(
         'Approximate two-way radar attenuation due to liquid water',
         'dB',
-        plot_scale=(0, 10),
-        plot_range=_LIN,
+        plot_range=(0, 10),
+        plot_scale=_LIN,
         comment=_COMMENTS['radar_liquid_atten']
     ),
     'radar_gas_atten': MetaData(
         'Two-way radar attenuation due to atmospheric gases',
         'dB',
-        plot_scale=(0, 4),
-        plot_range=_LIN,
+        plot_range=(0, 4),
+        plot_scale=_LIN,
         comment=_COMMENTS['radar_gas_atten']
     ),
     'Tw': MetaData(
         'Wet-bulb temperature',
         'K',
-        plot_scale=(200, 300),
-        plot_range=_LIN,
+        plot_range=(200, 300),
+        plot_scale=_LIN,
         comment=_COMMENTS['Tw']
     ),
     'vwind': MetaData(
         'Meridional wind',
         'm s-1',        
-        plot_scale=(-50, 50),
-        plot_range=_LIN
+        plot_range=(-50, 50),
+        plot_scale=_LIN
     ),
     'uwind': MetaData(
         'Zonal wind',
         'm s-1',
-        plot_scale=(-50, 50),
-        plot_range=_LIN
+        plot_range=(-50, 50),
+        plot_scale=_LIN
     ),
-    'specific_humidity': MetaData(
+    'q': MetaData(
         'Specific humidity',
-        plot_scale=(0, 0.2),
-        plot_range=_LIN
+        units='',
+        plot_range=(0, 0.2),
+        plot_scale=_LIN
     ),
     'temperature': MetaData(
         'Temperature',
         'K',
-        plot_scale=(200, 300),
-        plot_range=_LIN
+        plot_range=(200, 300),
+        plot_scale=_LIN
     ),
     'pressure': MetaData(
         'Pressure',
         'Pa',
-        plot_scale=(0, 110000),
-        plot_range=_LIN
+        plot_range=(0, 110000),
+        plot_scale=_LIN
     ),
     'beta': MetaData(
         'Attenuated backscatter coefficient',
         'sr-1 m-1',
-        plot_scale=(1e-7, 1e-4),
-        plot_range=_LOG,
+        plot_range=(1e-7, 1e-4),
+        plot_scale=_LOG,
         ancillary_variables = 'beta_error beta_bias'
     ),
     'beta_raw': MetaData(
         'Raw attenuated backscatter coefficient',
         'sr-1 m-1',
-        plot_scale=(1e-7, 1e-4),
-        plot_range=_LOG,
+        plot_range=(1e-7, 1e-4),
+        plot_scale=_LOG,
     ),
     'beta_error': MetaData(
         'Error in attenuated backscatter coefficient',
@@ -298,8 +299,8 @@ ATTRIBUTES = {
     'lwp': MetaData(
         'Liquid water path',
         'g m-2',
-        plot_scale=(-100, 1000),
-        plot_range=_LIN
+        plot_range=(-100, 1000),
+        plot_scale=_LIN
     ),
     'lwp_error': MetaData(
         'Error in liquid water path',
@@ -314,5 +315,11 @@ ATTRIBUTES = {
         'Data quality bits',
         comment=_COMMENTS['quality_bits'],
         definition=_DEFINITIONS['quality_bits']
+    ),
+    'insect_prob': MetaData(
+        'Insect probability',
+        units='',
+        plot_range=[0, 1],
+        plot_scale=_LIN
     ),
 }
