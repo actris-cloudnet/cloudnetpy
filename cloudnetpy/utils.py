@@ -1,11 +1,12 @@
 """ This module contains general
 helper functions. """
 
+from datetime import datetime
+import uuid
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
-import sys
 
 
 def findkey(vrs, possible_fields):
@@ -446,3 +447,13 @@ def isscalar(array):
     if not hasattr(arr, '__len__') or arr.shape == () or len(arr) == 1:
         return True
     return False
+
+
+def get_time():
+    """Returns current UTC-time."""
+    return datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+
+
+def get_uuid():
+    """Returns unique file identifier."""
+    return str(uuid.uuid4().hex)

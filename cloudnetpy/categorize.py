@@ -1,8 +1,8 @@
 """ Functions for rebinning input data.
 """
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
+#import os
+#import sys
+#sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import math
 import numpy as np
 import numpy.ma as ma
@@ -15,6 +15,7 @@ from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
 from cloudnetpy.cloudnetarray import CloudnetArray
+import cloudnetpy.version
 
 
 class RawDataSource():
@@ -90,6 +91,7 @@ class Radar(RawDataSource):
         self.altitude = self._get_altitude()
         self.height = self._get_height()
         self.netcdf_to_cloudnet(fields)
+        self.location = self._get_global_attribute('location')
 
     def _get_wl_band(self):
         return 0 if (30 < self.radar_frequency < 40) else 1
@@ -119,19 +121,14 @@ class Radar(RawDataSource):
         self.time = time_new
 
     def correct_atten(self, gas_atten, liq_atten):
-        """Corrects radar echo for attenuation.
-
-        Args:
-            gas_atten (MaskedArray): 2-D array of attenuation due to atmospheric gases.
-            liq_atten (MaskedArray): 2-D array of attenuation due to atmospheric liquid.
-
-        """
+        """Corrects radar echo for attenuation."""
         self.data['Zh'].data += gas_atten
         ind = ~liq_atten.mask
         self.data['Zh'].data[ind] += liq_atten[ind]
 
     def calc_errors(self, gas_atten, liq_atten_err, is_clutter,
                     is_uncorrected_liquid, time):
+        """Calculates error and sensitivity of radar echo."""
         z = self.data['Zh'][:]
         radar_range = utils.km2m(self.variables['range'])
         log_range = utils.lin2db(radar_range, scale=20)
@@ -153,6 +150,7 @@ class Radar(RawDataSource):
         self._append_data(config.Z_BIAS, 'Z_bias')
 
     def add_meta(self):
+        """Adds metadata to Radar() instance."""
         for key in ('latitude', 'longitude', 'altitude'):
             self._append_data(self._getvar(key), key)
         for key in ('time', 'height', 'radar_frequency'):
@@ -178,6 +176,7 @@ class Lidar(RawDataSource):
                                       height_new)
 
     def add_meta(self):
+        """Adds metadata to Lidar() instance."""
         self._append_data(self._getvar('wavelength'), 'lidar_wavelength')
         self._append_data(config.BETA_ERROR[0], 'beta_bias')
         self._append_data(config.BETA_ERROR[1], 'beta_error')
@@ -185,7 +184,6 @@ class Lidar(RawDataSource):
 
 class Mwr(RawDataSource):
     """Class for microwave radiometer data."""
-
     def __init__(self, mwr_file):
         super().__init__(mwr_file)
         self._get_lwp_data()
@@ -241,11 +239,10 @@ class Model(RawDataSource):
     def interpolate_to_common_height(self, wl_band, field_names):
         """Interpolates model variables to common height grid."""
         def _interpolate_variable():
-            # there must be a better way for this
             datai = np.zeros((len(self.time), len(self.mean_height)))
             for ind, (alt, prof) in enumerate(zip(self.model_heights, data)):
-                f = interp1d(alt, prof, fill_value='extrapolate')
-                datai[ind, :] = f(self.mean_height)
+                fun = interp1d(alt, prof, fill_value='extrapolate')
+                datai[ind, :] = fun(self.mean_height)
             return CloudnetArray(datai, key, units)
 
         for key in field_names:
@@ -258,20 +255,20 @@ class Model(RawDataSource):
         self._append_data(self.time, 'model_time')
         self._append_data(self.mean_height, 'model_height')
 
-    def interpolate_to_cloudnet_grid(self, field_names, *newgrid):
+    def interpolate_to_cloudnet_grid(self, field_names, time_new, height_new):
         """Interpolates model variables to Cloudnet's dense time / height grid."""
         for key in field_names:
             self.data_dense[key] = utils.interpolate_2d(self.time,
                                                         self.mean_height,
-                                                        *newgrid,
+                                                        time_new, height_new,
                                                         self.data_sparse[key][:])
 
     def calc_wet_bulb(self):
         """Calculates wet-bulb temperature in dense grid."""
-        Tw = atmos.wet_bulb(self.data_dense['temperature'],
-                            self.data_dense['pressure'],
-                            self.data_dense['rh'])
-        self._append_data(Tw, 'Tw', units='K')
+        wet_bulb_temp = atmos.wet_bulb(self.data_dense['temperature'],
+                                       self.data_dense['pressure'],
+                                       self.data_dense['rh'])
+        self._append_data(wet_bulb_temp, 'Tw', units='K')
 
 
 def generate_categorize(input_files, output_file, zlib=True):
@@ -329,30 +326,27 @@ def generate_categorize(input_files, output_file, zlib=True):
                    **model.data_sparse, **mwr.data, **cbits,
                    **gas_atten, **liq_atten, **quality_bits}
     output.update_attributes(output_data)
-    _save_cat(output_file, grid, (model.time, model.mean_height), output_data)
+    _save_cat(output_file, radar, model, output_data, zlib)
 
 
-def _save_cat(file_name, grid, model_grid, obs):
+def _save_cat(file_name, radar, model, obs, zlib):
     """Creates a categorize netCDF4 file and saves all data into it."""
     rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
-    # create dimensions
-    rootgrp.createDimension('time', len(grid[0]))
-    rootgrp.createDimension('height', len(grid[1]))
-    rootgrp.createDimension('model_time', len(model_grid[0]))
-    rootgrp.createDimension('model_height', len(model_grid[1]))
-    # root group variables
-    output.write_vars2nc(rootgrp, obs, zlib=True)
-    # global attributes:
+    rootgrp.createDimension('time', len(radar.time))
+    rootgrp.createDimension('height', len(radar.height))
+    rootgrp.createDimension('model_time', len(model.time))
+    rootgrp.createDimension('model_height', len(model.mean_height))
+    output.write_vars2nc(rootgrp, obs, zlib)
     rootgrp.Conventions = 'CF-1.7'
-    #rootgrp.title = 'Categorize file from ' + radar_meta['location']
-    #rootgrp.institution = 'Data processed at the ' + config.INSTITUTE
+    rootgrp.title = 'Categorize file from ' + radar.location
+    rootgrp.institution = 'Data processed at the ' + config.INSTITUTE
     #dvec = radar_meta['date']
     #rootgrp.year = int(dvec[:4])
     #rootgrp.month = int(dvec[5:7])
     #rootgrp.day = int(dvec[8:])
-    #rootgrp.software_version = version
+    rootgrp.cloudnetpy_version = cloudnetpy.version.__version__
     #rootgrp.git_version = ncf.git_version()
-    #rootgrp.file_uuid = str(uuid.uuid4().hex)
-    #rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
-    #rootgrp.history = f"{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} - categorize file created"
+    rootgrp.file_uuid = utils.get_uuid()
+    rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
+    rootgrp.history = f"{utils.get_time()} - categorize file created"
     rootgrp.close()

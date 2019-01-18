@@ -1,11 +1,6 @@
 """ Functions for Categorize output file writing."""
-from datetime import datetime, timezone
-import uuid
-import netCDF4
-import numpy as np
-import numpy.ma as ma
+
 from cloudnetpy import utils
-from cloudnetpy import config
 from cloudnetpy.metadata import ATTRIBUTES
 
 
@@ -31,47 +26,6 @@ def write_vars2nc(rootgrp, cnet_variables, zlib):
         ncvar[:] = obj.data
         for attr in obj.fetch_attributes():
             setattr(ncvar, attr, getattr(obj, attr))
-
-
-def status_name(long_name):
-    """ Default retrieval status variable name """
-    return long_name + ' retrieval status'
-
-
-def bias_name(long_name):
-    """ Default bias variable name """
-    return 'Possible bias in ' + long_name.lower() + ', one standard deviation'
-
-
-def err_name(long_name):
-    """ Default error variable name """
-    return 'Random error in ' + long_name.lower() + ', one standard deviation'
-
-
-def err_comm(long_name):
-    """ Default error comment """
-    return ('This variable is an estimate of the one-standard-deviation random error\n'
-            'in ' + long_name.lower() + 'due to the uncertainty of the retrieval, including\n'
-            'the random error in the radar and lidar parameters.')
-
-
-def bias_comm(long_name):
-    """ Default bias comment """
-    return ('This variable is an estimate of the possible systematic error in '
-            + long_name.lower() + 'due to the\n'
-            'uncertainty in the calibration of the radar and lidar.')
-
-
-def anc_names(var, bias=False, err=False, sens=False):
-    """Returns list of ancillary variable names."""
-    out = ''
-    if bias:
-        out += f"{var}_bias "
-    if err:
-        out += f"{var}_error "
-    if sens:
-        out += f"{var}_sensitivity "
-    return out[:-1]
 
 
 def copy_dimensions(file_from, file_to, dims_to_be_copied):
