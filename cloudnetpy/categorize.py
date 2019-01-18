@@ -62,10 +62,13 @@ class RawDataSource():
                 return self.variables[arg][:]
         raise KeyError('Missing variable')
 
+    def _append_data(self, data, key, name=None, units=None):
+        self.data[key] = CloudnetArray(data, name or key, units)
+
     def netcdf_to_cloudnet(self, fields):
-        """Transforms NetCDF variables (data + attributes) into CloudnetArrays."""
-        for name in fields:
-            self.data[name] = CloudnetArray(self.variables[name], name)
+        """Transforms NetCDF variables into CloudnetArrays."""
+        for key in fields:
+            self._append_data(self.variables[key], key)
 
 
 class Radar(RawDataSource):
@@ -81,7 +84,7 @@ class Radar(RawDataSource):
     """
     def __init__(self, radar_file, fields):
         super().__init__(radar_file)
-        self.frequency = self._getvar('radar_frequency', 'frequency')
+        self.radar_frequency = self._getvar('radar_frequency', 'frequency')
         self.wl_band = self._get_wl_band()
         self.folding_velocity = self._get_folding_velocity()
         self.altitude = self._get_altitude()
@@ -89,13 +92,14 @@ class Radar(RawDataSource):
         self.netcdf_to_cloudnet(fields)
 
     def _get_wl_band(self):
-        return 0 if (30 < self.frequency < 40) else 1
+        return 0 if (30 < self.radar_frequency < 40) else 1
 
     def _get_folding_velocity(self):
         if 'NyquistVelocity' in self.variables:
             nyquist = self._getvar('NyquistVelocity')
         elif 'prf' in self.variables:
-            nyquist = self._getvar('prf') * scipy.constants.c / (4 * self.frequency)
+            nyquist = (self._getvar('prf') * scipy.constants.c
+                       / (4 * self.radar_frequency))
         else:
             raise KeyError('Unable to determine folding velocity')
         return math.pi / nyquist
@@ -108,7 +112,8 @@ class Radar(RawDataSource):
                 self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
             elif key in ('v',):
-                self.data[key].rebin_in_polar(self.time, time_new, self.folding_velocity)
+                self.data[key].rebin_in_polar(self.time, time_new,
+                                              self.folding_velocity)
             else:
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new
@@ -125,7 +130,8 @@ class Radar(RawDataSource):
         ind = ~liq_atten.mask
         self.data['Zh'].data[ind] += liq_atten[ind]
 
-    def calc_errors(self, gas_atten, liq_atten_err, is_clutter, is_uncorrected_liquid, time):
+    def calc_errors(self, gas_atten, liq_atten_err, is_clutter,
+                    is_uncorrected_liquid, time):
         z = self.data['Zh'][:]
         radar_range = utils.km2m(self.variables['range'])
         log_range = utils.lin2db(radar_range, scale=20)
@@ -135,23 +141,22 @@ class Radar(RawDataSource):
         zc = ma.median(ma.array(z, mask=~is_clutter), axis=0)
         z_sensitivity[~zc.mask] = zc[~zc.mask]
         dwell_time = utils.mdiff(time) * 3600  # seconds
-        independent_pulses = (dwell_time * self.frequency * 1e9 * 4 * np.sqrt(math.pi)
-                              * self.data['width'][:] / 3e8)
+        independent_pulses = (dwell_time * self.radar_frequency * 1e9 * 4
+                              * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
         z_precision = 4.343 * (1 / np.sqrt(independent_pulses)
                                + utils.db2lin(z_power_min - z_power) / 3)
-        z_error = utils.l2norm(gas_atten * config.GAS_ATTEN_PREC, liq_atten_err, z_precision)
+        z_error = utils.l2norm(gas_atten * config.GAS_ATTEN_PREC, liq_atten_err,
+                               z_precision)
         z_error[is_uncorrected_liquid] = ma.masked
-        self.data['Z_error'] = CloudnetArray(z_error, 'Z_error')
-        self.data['Z_sensitivity'] = CloudnetArray(z_sensitivity, 'Z_sensitivity')
-        self.data['Z_bias'] = CloudnetArray(config.Z_BIAS, 'Z_bias')
+        self._append_data(z_error, 'Z_error')
+        self._append_data(z_sensitivity, 'Z_sensitivity')
+        self._append_data(config.Z_BIAS, 'Z_bias')
 
     def add_meta(self):
-        fields = ('latitude', 'longitude', 'altitude')
-        for field in fields:
-            self.data[field] = CloudnetArray(self._getvar(field), field)
-        self.data['radar_frequency'] = CloudnetArray(self.frequency, 'radar_frequency')
-        self.data['time'] = CloudnetArray(self.time, 'time')
-        self.data['height'] = CloudnetArray(self.height, 'height')
+        for key in ('latitude', 'longitude', 'altitude'):
+            self._append_data(self._getvar(key), key)
+        for key in ('time', 'height', 'radar_frequency'):
+            self._append_data(getattr(self, key), key)
 
 
 class Lidar(RawDataSource):
@@ -169,12 +174,13 @@ class Lidar(RawDataSource):
     def rebin_data(self, time_new, height_new):
         """Rebins lidar data in time and height using mean."""
         for key in self.data:
-            self.data[key].rebin_data(self.time, time_new, self.height, height_new)
+            self.data[key].rebin_data(self.time, time_new, self.height,
+                                      height_new)
 
     def add_meta(self):
-        self.data['lidar_wavelength'] = CloudnetArray(self._getvar('wavelength'), 'lidar_wavelength')
-        self.data['beta_bias'] = CloudnetArray(config.BETA_ERROR[0], 'beta_bias')
-        self.data['beta_error'] = CloudnetArray(config.BETA_ERROR[0], 'beta_error')
+        self._append_data(self._getvar('wavelength'), 'lidar_wavelength')
+        self._append_data(config.BETA_ERROR[0], 'beta_bias')
+        self._append_data(config.BETA_ERROR[1], 'beta_error')
 
 
 class Mwr(RawDataSource):
@@ -187,18 +193,18 @@ class Mwr(RawDataSource):
 
     def _get_lwp_data(self):
         key = utils.findkey(self.variables, ('LWP_data', 'lwp'))
-        self.data['lwp'] = CloudnetArray(self.variables[key], 'lwp')
-        self.data['lwp_error'] = self._calc_lwp_error(*config.LWP_ERROR)
+        self._append_data(self.variables[key], 'lwp')
+        self._append_data(self._calc_lwp_error(), 'lwp_error')
 
-    def _calc_lwp_error(self, fractional_error, linear_error):
-        error = utils.l2norm(self.data['lwp'][:]*fractional_error, linear_error)
-        return CloudnetArray(error, 'lwp_error')
+    def _calc_lwp_error(self):
+        fractional_error, linear_error = config.LWP_ERROR
+        return utils.l2norm(self.data['lwp'][:]*fractional_error, linear_error)
 
     def interpolate_to_cloudnet_grid(self, time):
         """Interpolates liquid water path to Cloudnet's dense time grid."""
         for key in self.data:
             fun = interp1d(self.time, self.data[key][:])
-            self.data[key] = CloudnetArray(fun(time), key)
+            self._append_data(fun(time), key)
 
 
 class Model(RawDataSource):
@@ -234,20 +240,23 @@ class Model(RawDataSource):
 
     def interpolate_to_common_height(self, wl_band, field_names):
         """Interpolates model variables to common height grid."""
-        def _interpolate_variable(data, key):
+        def _interpolate_variable():
+            # there must be a better way for this
             datai = np.zeros((len(self.time), len(self.mean_height)))
             for ind, (alt, prof) in enumerate(zip(self.model_heights, data)):
                 f = interp1d(alt, prof, fill_value='extrapolate')
                 datai[ind, :] = f(self.mean_height)
-            return CloudnetArray(datai, key)
+            return CloudnetArray(datai, key, units)
 
         for key in field_names:
-            data = np.array(self.variables[key][:])
+            variable = self.variables[key]
+            data = np.array(variable[:])
+            units = variable.units
             if 'atten' in key:
                 data = data[wl_band, :, :]
-            self.data_sparse[key] = _interpolate_variable(data, key)
-        self.data['model_time'] = CloudnetArray(self.time, 'model_time')
-        self.data['model_height'] = CloudnetArray(self.mean_height, 'model_height')
+            self.data_sparse[key] = _interpolate_variable()
+        self._append_data(self.time, 'model_time')
+        self._append_data(self.mean_height, 'model_height')
 
     def interpolate_to_cloudnet_grid(self, field_names, *newgrid):
         """Interpolates model variables to Cloudnet's dense time / height grid."""
@@ -262,7 +271,7 @@ class Model(RawDataSource):
         Tw = atmos.wet_bulb(self.data_dense['temperature'],
                             self.data_dense['pressure'],
                             self.data_dense['rh'])
-        self.data['Tw'] = CloudnetArray(Tw, 'Tw', units='K')
+        self._append_data(Tw, 'Tw', units='K')
 
 
 def generate_categorize(input_files, output_file, zlib=True):
@@ -294,24 +303,31 @@ def generate_categorize(input_files, output_file, zlib=True):
                                                       model.data['Tw'][:],
                                                       grid, model.type)
 
-    gas_atten = atmos.gas_atten(model.data_dense, cbits['category_bits'][:], height)
+    gas_atten = atmos.gas_atten(model.data_dense, cbits['category_bits'][:],
+                                height)
 
     liq_atten, liq_atten_aux = atmos.liquid_atten(mwr.data, model.data_dense,
                                                   cbits['category_bits'][:],
                                                   cbits_aux['liquid_bases'],
                                                   cbits_aux['is_rain'], height)
 
-    radar.correct_atten(gas_atten['radar_gas_atten'][:], liq_atten['radar_liquid_atten'][:])
+    radar.correct_atten(gas_atten['radar_gas_atten'][:],
+                        liq_atten['radar_liquid_atten'][:])
 
-    quality_bits = classify.fetch_qual_bits(radar.data['Zh'][:], lidar.data['beta'][:],
-                                            cbits_aux['is_clutter'], liq_atten_aux)
+    quality_bits = classify.fetch_qual_bits(radar.data['Zh'][:],
+                                            lidar.data['beta'][:],
+                                            cbits_aux['is_clutter'],
+                                            liq_atten_aux)
 
-    radar.calc_errors(gas_atten['radar_gas_atten'][:], liq_atten_aux['liq_att_err'],
-                      liq_atten_aux['is_not_corr'], cbits_aux['is_clutter'], time)
+    radar.calc_errors(gas_atten['radar_gas_atten'][:],
+                      liq_atten_aux['liq_att_err'],
+                      liq_atten_aux['is_not_corr'],
+                      cbits_aux['is_clutter'], time)
     radar.add_meta()
     lidar.add_meta()
-    output_data = {**radar.data, **lidar.data, **model.data, **model.data_sparse,
-                   **mwr.data, **cbits, **gas_atten, **liq_atten, **quality_bits}
+    output_data = {**radar.data, **lidar.data, **model.data,
+                   **model.data_sparse, **mwr.data, **cbits,
+                   **gas_atten, **liq_atten, **quality_bits}
     output.update_attributes(output_data)
     _save_cat(output_file, grid, (model.time, model.mean_height), output_data)
 
