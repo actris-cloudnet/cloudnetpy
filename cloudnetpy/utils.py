@@ -209,15 +209,15 @@ def setbit(integer, nth_bit):
     return integer
 
 
-def interpolate_2d(x, y, x_new, y_new, z):
+def interpolate_2d(x, y, z, x_new, y_new):
     """Linear interpolation of gridded 2d data.
 
     Args:
         x (ndarray): 1-D array.
         y (ndarray): 1-D array.
+        z (ndarray): 2-D array at points (x, y).
         x_new (ndarray): 1-D array.
         y_new (ndarray): 1-D array.
-        z (ndarray): 2-D array at points (x, y).
 
     Returns:
         ndarray: Interpolated data.

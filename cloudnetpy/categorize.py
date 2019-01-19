@@ -1,7 +1,7 @@
 """ Functions for rebinning input data.
 """
 #import os
-#import sys
+import sys
 #sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import math
 import numpy as np
@@ -262,8 +262,8 @@ class Model(RawDataSource):
         for key in field_names:
             self.data_dense[key] = utils.interpolate_2d(self.time,
                                                         self.mean_height,
-                                                        time_new, height_new,
-                                                        self.data_sparse[key][:])
+                                                        self.data_sparse[key][:],
+                                                        time_new, height_new)
 
     def calc_wet_bulb(self):
         """Calculates wet-bulb temperature in dense grid."""
@@ -297,6 +297,7 @@ def generate_categorize(input_files, output_file, zlib=True):
     model = Model(input_files[3], radar.altitude)
     final_time, final_height = utils.time_grid(), radar.height
     grid = (final_time, final_height)
+
     _interpolate_to_cloudnet_grid()
 
     cbits, cbits_aux = classify.classify_measurements(radar.data['Zh'][:],
@@ -363,4 +364,5 @@ def _save_cat(file_name, radar, model, obs, zlib):
     rootgrp.file_uuid = utils.get_uuid()
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
     rootgrp.history = f"{utils.get_time()} - categorize file created"
+    rootgrp.source = radar.source
     rootgrp.close()

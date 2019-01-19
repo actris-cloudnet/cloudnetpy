@@ -1,22 +1,20 @@
 """Module for reading raw cloud radar data."""
 
 import os
-import uuid
 import numpy as np
-import numpy.ma as ma
-import netCDF4
-from cloudnetpy import ncf
 from cloudnetpy import utils
 from cloudnetpy import output
-from cloudnetpy.metadata import ATTRIBUTES
+from cloudnetpy.cloudnetarray import CloudnetArray
+import cloudnetpy.version
+import netCDF4
 
 
-def mmclx2nc(mmclx_file, output_file, site_name,
-             site_location, rebin_data=True):
+def mmclx2nc(mmclx_file, output_file, site_name, site_location,
+             rebin_data=True):
     """Converts mmclx files into compressed NetCDF files.
 
-    High level API to process raw cloud radar files into
-    files that can be used in further processing steps.
+    High level API to process raw cloud radar file into
+    a smaller file that can be used in further processing steps.
 
     Args:
         mmclx_file (str): Raw radar file.
@@ -28,7 +26,7 @@ def mmclx2nc(mmclx_file, output_file, site_name,
             Otherwise keeps the native resolution. Default is True.
 
     """
-    raw_data = ncf.load_nc(mmclx_file)
+    raw_data = netCDF4.Dataset(mmclx_file).variables
     time_grid, height_grid, radar_time = _create_grid(raw_data, rebin_data)
     keymap = _map_variable_names()
     radar_data = _read_raw_data(keymap, raw_data)
@@ -41,12 +39,13 @@ def mmclx2nc(mmclx_file, output_file, site_name,
     _screen_by_snr(radar_data, snr_gain)
     _add_meta(radar_data, site_location, time_grid, height_grid)
     output.update_attributes(radar_data)
-    _save_radar(mmclx_file, output_file, radar_data, time_grid, height_grid, site_name)
+    _save_radar(mmclx_file, output_file, radar_data, time_grid,
+                height_grid, site_name)
 
 
 def _screen_by_snr(radar_data, snr_gain=1, snr_limit=-17):
     """ Screens by SNR."""
-    ind = np.where(radar_data['SNR']._data*snr_gain < snr_limit)
+    ind = np.where(radar_data['SNR'].data*snr_gain < snr_limit)
     for field in radar_data:
         radar_data[field].mask_indices(ind)
 
@@ -67,7 +66,7 @@ def _read_raw_data(keymap, raw_data):
     radar_data = {}
     for raw_key in keymap:
         name = keymap[raw_key]
-        radar_data[name] = output.CloudnetVariable(raw_data[raw_key], name)
+        radar_data[name] = CloudnetArray(raw_data[raw_key], name)
     return radar_data
 
 
@@ -97,21 +96,21 @@ def _map_variable_names():
     Notes:
         These names probably depend on the radar / firmware.
     """
-    keymap = {'Zg':'Zh',
-              'VELg':'v',
-              'RMSg':'width',
-              'LDRg':'ldr',
-              'SNRg':'SNR'}
+    keymap = {'Zg': 'Zh',
+              'VELg': 'v',
+              'RMSg': 'width',
+              'LDRg': 'ldr',
+              'SNRg': 'SNR'}
     return keymap
 
 
 def _add_meta(radar_data, site_location, time_grid, height_grid):
     """ Add some meta data for output writing."""
-    loca = ('latitude', 'longitude', 'altitude')
-    for i, name in enumerate(loca):
-        radar_data[name] = output.CloudnetVariable(np.array([site_location[i]]), name)
-    radar_data['time'] = output.CloudnetVariable(time_grid, 'time')
-    radar_data['range'] = output.CloudnetVariable(time_grid, 'range')
+    for i, name in enumerate(('latitude', 'longitude', 'altitude')):
+        radar_data[name] = CloudnetArray(np.array([site_location[i]]), name)
+    radar_data['time'] = CloudnetArray(time_grid, 'time')
+    radar_data['range'] = CloudnetArray(height_grid, 'range')
+    radar_data['radar_frequency'] = CloudnetArray(35.5, 'radar_frequency')
     
 
 def _create_grid(raw_data, rebin_data):
@@ -137,13 +136,17 @@ def _save_radar(raw_file, output_file, obs, time, radar_range, site_name):
     rootgrp = netCDF4.Dataset(output_file, 'w', format='NETCDF4_CLASSIC')
     rootgrp.createDimension('time', len(time))
     rootgrp.createDimension('range', len(radar_range))
-    fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg', 'NyquistVelocity')
+    fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg',
+                       'NyquistVelocity')
     output.copy_variables(raw, rootgrp, fields_from_raw)
     output.write_vars2nc(rootgrp, obs, zlib=True)
-    # global attributes:
     #rootgrp.title = varname + ' from ' + cat.location + ', ' + get_date(cat)
     rootgrp.year, rootgrp.month, rootgrp.day = _date_from_filename(raw_file)
     rootgrp.location = site_name
-    rootgrp.institution = 'Data processed at the Finnish Meteorological Institute.'
-    rootgrp.file_uuid = str(uuid.uuid4().hex)
+    rootgrp.cloudnetpy_version = cloudnetpy.version.__version__
+    rootgrp.institution = ('Data processed at the Finnish Meteorological '
+                           'Institute.')
+    rootgrp.file_uuid = utils.get_uuid()
+    rootgrp.history = f"{utils.get_time()} - radar file created"
+    rootgrp.source = 'MIRA-36 cloud radar'
     rootgrp.close()

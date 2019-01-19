@@ -38,9 +38,10 @@ class CloudnetArray():
         return ''
 
     def _init_data_type(self):
-        if isinstance(self.data, int):
-            return 'i4'
-        return 'f4'
+        if ((isinstance(self.data, np.ndarray) and self.data.dtype == np.float)
+                or isinstance(self.data, float)):
+            return 'f4'
+        return 'i4'
 
     def lin2db(self):
         """Converts linear units do log."""

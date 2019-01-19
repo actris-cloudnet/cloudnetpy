@@ -15,7 +15,7 @@ PARAMS = {
     'ldr': [(-35, -10), 'viridis'],
     'width': [(0, 1), 'viridis'],
     'v': [(-4, 2), 'RdBu_r'],
-    'insect_probability': [(0, 1), 'viridis'],
+    'insect_prob': [(0, 1), 'viridis'],
     'radar_liquid_atten': [(0, 10), 'viridis'],
     'radar_gas_atten': [(0, 1), 'viridis'],
 }
@@ -34,22 +34,24 @@ def plot_overview(file1, dvec, ylim=(0, 500), savefig=False,
 
 
 def plot_variable(file1, file2, name, dvec, ylim=(0, 500),
-                  savefig=False, savepath=''):
+                  savefig=False, savepath='', grid=False):
     """Plot relevant data for a Cloudnet variable."""
-    if name == 'insects':
-        data_fields = ('Z', 'ldr', 'width', 'insect_probability')
-        bitno = 5
+    if name == 'liquid':
+        data_fields = ('Z', 'beta', 'beta_raw')
+        bitno = 0
     elif name == 'melting':
         data_fields = ('Z', 'ldr', 'v')
         bitno = 3
-    elif name == 'liquid':
-        data_fields = ('Z', 'beta', 'beta_raw')
-        bitno = 0
+    else:
+        name == 'insects'
+        data_fields = ('Z', 'ldr', 'width', 'insect_prob')
+        bitno = 5
+
     nfields = len(data_fields)
     nsubs = (nfields+2, 1)
     plt.figure()
     for n, field in enumerate(data_fields, 1):
-        _plot_data(nsubs, n, file1, field, ylim, *PARAMS[field], grid=grid)
+        _plot_data(nsubs, n, file1, field, ylim, grid, *PARAMS[field])
     _plot_bit(nsubs, nfields+1, file1, bitno, ylim)
     _plot_bit(nsubs, nfields+2, file2, bitno, ylim)
     _showpic(nsubs, dvec, savefig, savepath, name)
@@ -77,7 +79,7 @@ def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):
     data = utils.isbit(ncv[field][:], bitno)
     plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
     plt.text(20, max(ylim)*2, f"bit: {bitno}", fontsize=8)
-    _set_axes(ylim, data.shape)
+    _set_axes(ylim, data.shape, grid=None)
 
 
 def _set_axes(ylim, shape, grid):
