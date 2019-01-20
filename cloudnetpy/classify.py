@@ -56,14 +56,19 @@ def classify_measurements(z, v, width, ldr, beta, tw, grid, model_type):
     is_liquid, liquid_bases, liquid_tops = droplet.find_liquid(beta, height)
     bits[3] = find_melting_layer(tw, ldr, v, model_type)
     bits[2] = find_freezing_region(tw, bits[3], time, height)
-    bits[0] = droplet.correct_liquid_top(z, tw, bits[2], is_liquid, liquid_tops, height)
-    bits[5], insect_prob = find_insects(z, ldr, width, tw, bits[3], bits[0], is_rain, is_clutter)
-    bits[1] = find_falling_hydrometeors(z, beta, is_clutter, bits[0], bits[5], tw)
+    bits[0] = droplet.correct_liquid_top(z, tw, bits[2], is_liquid,
+                                         liquid_tops, height)
+    bits[5], insect_prob = find_insects(z, ldr, width, tw, bits[3], bits[0],
+                                        is_rain, is_clutter)
+    bits[1] = find_falling_hydrometeors(z, beta, is_clutter, bits[0], bits[5],
+                                        tw)
     bits[4] = find_aerosols(beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
     results = {'category_bits': CloudnetArray(cat_bits, 'category_bits'),
                'insect_prob': CloudnetArray(insect_prob, 'insect_prob')}
-    aux = {'liquid_bases': liquid_bases, 'is_rain': is_rain, 'is_clutter': is_clutter}
+    aux = {'liquid_bases': liquid_bases,
+           'is_rain': is_rain,
+           'is_clutter': is_clutter}
     return results, aux
 
 
@@ -168,7 +173,8 @@ def find_melting_layer(tw, ldr, v, model_type, smooth=True):
                 except:
                     continue
     if smooth:
-        ml = scipy.ndimage.filters.gaussian_filter(np.array(melting_layer, dtype=float), (2, 0.1))
+        ml = scipy.ndimage.filters.gaussian_filter(np.array(melting_layer,
+                                                            dtype=float), (2, 0.1))
         melting_layer = (ml > 0.2).astype(bool)
     return melting_layer
 
@@ -218,8 +224,7 @@ def find_freezing_region(tw, melting_layer, time, height):
 
 
 def _t0_alt(tw, height):
-    """ Interpolates altitudes where model temperature goes
-        below freezing.
+    """ Interpolates altitudes where model temperature goes below freezing.
 
     Args:
         tw (ndarray): 2-D wet bulb temperature.
@@ -348,7 +353,7 @@ def _screen_insects(insect_prob, tw, *args):
 
     prob = np.copy(insect_prob)
     _screen_insects_misc(*args)
-    _screen_insects_temp(tw)
+    _screen_insects_temp()
     return prob
 
 

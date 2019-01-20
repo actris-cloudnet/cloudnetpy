@@ -38,8 +38,8 @@ class CloudnetArray():
         return ''
 
     def _init_data_type(self):
-        if ((isinstance(self.data, np.ndarray) and self.data.dtype == np.float)
-                or isinstance(self.data, float)):
+        if ((isinstance(self.data, np.ndarray) and self.data.dtype
+             in (np.float32, np.float64)) or isinstance(self.data, float)):
             return 'f4'
         return 'i4'
 

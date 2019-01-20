@@ -1,11 +1,14 @@
 """ Functions for Categorize output file writing."""
 
+import netCDF4
 from cloudnetpy import utils
 from cloudnetpy.metadata import ATTRIBUTES
+from cloudnetpy import config
+import cloudnetpy.version
 
 
 def write_vars2nc(rootgrp, cloudnet_variables, zlib):
-    """Iterate over Cloudnet instances and write to given rootgrp."""
+    """Iterates over Cloudnet instances and write to given rootgrp."""
 
     def _get_dimensions(array):
         """Finds correct dimensions for a variable."""
@@ -15,14 +18,16 @@ def write_vars2nc(rootgrp, cloudnet_variables, zlib):
         file_dims = rootgrp.dimensions
         array_dims = array.shape
         for length in array_dims:
-            dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
+            dim = [key for key in file_dims.keys()
+                   if file_dims[key].size == length][0]
             variable_size = variable_size + (dim,)
         return variable_size
 
     for key in cloudnet_variables:
         obj = cloudnet_variables[key]
         size = _get_dimensions(obj.data)
-        nc_variable = rootgrp.createVariable(obj.name, obj.data_type, size, zlib=zlib)
+        nc_variable = rootgrp.createVariable(obj.name, obj.data_type, size,
+                                             zlib=zlib)
         nc_variable[:] = obj.data
         for attr in obj.fetch_attributes():
             setattr(nc_variable, attr, getattr(obj, attr))
@@ -39,8 +44,10 @@ def copy_variables(source, target, var_list):
     """Copies variables (and their attributes) from one file to another."""
     for var_name, variable in source.variables.items():
         if var_name in var_list:
-            var_out = target.createVariable(var_name, variable.datatype, variable.dimensions)
-            var_out.setncatts({k: variable.getncattr(k) for k in variable.ncattrs()})
+            var_out = target.createVariable(var_name, variable.datatype,
+                                            variable.dimensions)
+            var_out.setncatts({k: variable.getncattr(k)
+                               for k in variable.ncattrs()})
             var_out[:] = variable[:]
 
 
@@ -52,8 +59,10 @@ def copy_global(source, target, attr_list):
 
 
 def update_attributes(cloudnet_variables):
-    """Overrides existing attributes such as 'units' etc. 
-    using hard-coded values. New attributes are added.
+    """Overrides existing CloudnetArray-attributes.
+
+    Overrides existing attributes using hard-coded values.
+    New attributes are added.
 
     Args:
         cloudnet_variables (dict): CloudnetArray instances.
@@ -62,3 +71,19 @@ def update_attributes(cloudnet_variables):
     for key in cloudnet_variables:
         if key in ATTRIBUTES:
             cloudnet_variables[key].set_attributes(ATTRIBUTES[key])
+
+
+def init_file(file_name, dimensions, obs, zlib):
+    root_group = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
+    for key, dimension in dimensions.items():
+        root_group.createDimension(key, dimension)
+    write_vars2nc(root_group, obs, zlib)
+    _add_standard_global_attributes(root_group)
+    return root_group
+
+
+def _add_standard_global_attributes(root_group):
+    root_group.Conventions = 'CF-1.7'
+    root_group.institution = f"Data processed at {config.INSTITUTE}"
+    root_group.cloudnetpy_version = cloudnetpy.version.__version__
+    root_group.file_uuid = utils.get_uuid()

@@ -185,15 +185,19 @@ def liquid_atten(mwr, model, bits, liquid_bases, is_rain, height):
     is_liq = utils.isbit(bits, 0)
     lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
     ind = np.where(liquid_bases)
-    lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][:][ind], model['pressure'][:][ind])
+    lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][:][ind],
+                                    model['pressure'][:][ind])
     lwc_dz_err[is_liq] = utils.ffill(lwc_dz[is_liq])
     ind_from_base = utils.cumsumr(is_liq, axis=1)
     lwc_adiab = ind_from_base*lwc_dz_err*utils.mdiff(height)*1e3
     ind = np.isfinite(mwr['lwp'][:]) & np.any(is_liq, axis=1)
-    lwp_norm[ind, :] = (lwc_adiab[ind, :].T*mwr['lwp'][:][ind]/np.sum(lwc_adiab[ind, :], axis=1)).T
-    lwp_norm_err[ind, :] = (lwc_dz_err[ind, :].T*mwr['lwp_error'][:][ind]/np.sum(lwc_dz_err[ind, :], axis=1)).T
+    lwp_norm[ind, :] = (lwc_adiab[ind, :].T*mwr['lwp'][:][ind]
+                        / np.sum(lwc_adiab[ind, :], axis=1)).T
+    lwp_norm_err[ind, :] = (lwc_dz_err[ind, :].T*mwr['lwp_error'][:][ind]
+                            / np.sum(lwc_dz_err[ind, :], axis=1)).T
     liq_att[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
-    liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liq[:, :-1], axis=1)
+    liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liq[:, :-1],
+                                        axis=1)
     liq_att, cbit, ucbit = _screen_liq_atten(liq_att, bits, is_rain)
     return ({'radar_liquid_atten': CloudnetArray(liq_att, 'radar_liquid_atten')},
             {'liq_att_err': liq_att_err, 'is_corr': cbit, 'is_not_corr': ucbit})

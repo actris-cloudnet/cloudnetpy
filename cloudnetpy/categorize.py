@@ -1,8 +1,8 @@
 """ Functions for rebinning input data.
 """
-#import os
-import sys
-#sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
+# import os
+# import sys
+# sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import math
 import numpy as np
 import numpy.ma as ma
@@ -15,7 +15,6 @@ from cloudnetpy import atmos
 from cloudnetpy import classify
 from cloudnetpy import output
 from cloudnetpy.cloudnetarray import CloudnetArray
-import cloudnetpy.version
 
 
 class RawDataSource():
@@ -121,7 +120,7 @@ class Radar(RawDataSource):
         self.time = time_new
 
     def correct_atten(self, gas_atten, liq_atten):
-        """Corrects radar echo for attenuation."""
+        """Corrects radar echo for liquid and gas attenuation."""
         z_corrected = self.data['Zh'][:]
         z_corrected += gas_atten
         ind = ~liq_atten.mask
@@ -279,9 +278,7 @@ class Model(RawDataSource):
 
 
 def generate_categorize(input_files, output_file, zlib=True):
-    """ High level API to generate Cloudnet categorize file.
-
-    """
+    """ High level API to generate Cloudnet categorize file."""
     def _interpolate_to_cloudnet_grid():
         """ Interpolate variables to Cloudnet's dense grid."""
         model.interpolate_to_common_height(radar.wl_band, model.fields_sparse)
@@ -341,28 +338,30 @@ def generate_categorize(input_files, output_file, zlib=True):
                    **quality_bits}
 
     output.update_attributes(output_data)
-    _save_cat(output_file, radar, model, output_data, zlib)
+    _save_cat(output_file, radar, lidar, model, output_data, zlib)
 
 
-def _save_cat(file_name, radar, model, obs, zlib):
+def _save_cat(file_name, radar, lidar, model, obs, zlib):
     """Creates a categorize netCDF4 file and saves all data into it."""
-    rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
-    rootgrp.createDimension('time', len(radar.time))
-    rootgrp.createDimension('height', len(radar.height))
-    rootgrp.createDimension('model_time', len(model.time))
-    rootgrp.createDimension('model_height', len(model.mean_height))
-    output.write_vars2nc(rootgrp, obs, zlib)
-    rootgrp.Conventions = 'CF-1.7'
-    rootgrp.title = 'Categorize file from ' + radar.location
-    rootgrp.institution = 'Data processed at the ' + config.INSTITUTE
-    #dvec = radar_meta['date']
-    #rootgrp.year = int(dvec[:4])
-    #rootgrp.month = int(dvec[5:7])
-    #rootgrp.day = int(dvec[8:])
-    rootgrp.cloudnetpy_version = cloudnetpy.version.__version__
-    #rootgrp.git_version = ncf.git_version()
-    rootgrp.file_uuid = utils.get_uuid()
+    dims = {
+        'time': len(radar.time),
+        'height': len(radar.height),
+        'model_time': len(model.time),
+        'model_height': len(model.mean_height)}
+    rootgrp = output.init_file(file_name, dims, obs, zlib)
+    output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day'))
+    rootgrp.title = f"Categorize file from {radar.location}"
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
-    rootgrp.history = f"{utils.get_time()} - categorize file created"
-    rootgrp.source = radar.source
+    _merge_history(rootgrp, radar)
+    _merge_source(rootgrp, radar, lidar)
     rootgrp.close()
+
+def _merge_history(rootgrp, radar):
+    radar_history = radar.dataset.history
+    cat_history = f"{utils.get_time()} - categorize file created"
+    rootgrp.history = f"{cat_history}\n{radar_history}"
+
+def _merge_source(rootgrp, radar, lidar):
+    rootgrp.source = f"radar: {radar.source}\nlidar: {lidar.source}"
+
+
