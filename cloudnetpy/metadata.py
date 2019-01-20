@@ -6,11 +6,6 @@ from collections import namedtuple
 _LOG = 'logarithmic'
 _LIN = 'linear'
 
-# Is namedtuple good structure for Metadata?
-# How to add comments and history attributes, for instance,
-# that are changing between different processing steps?
-# Should this be just a dictionary instead?
-
 MetaData = namedtuple('MetaData', ['long_name',
                                    'units',
                                    'valid_range',

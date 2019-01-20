@@ -23,13 +23,13 @@ def findkey(vrs, possible_fields):
 
     Examples:
         >>> x = {'abc':1, 'bac':2, 'cba':3}
-        >>> utils.findkey(x, ('bac', 'cba'))
+        >>> findkey(x, ('bac', 'cba'))
             'bac'
 
         The order of the keys to be searched is defaining
         the return value if there are several matching strings:
 
-        >>> utils.findkey(x, ('cba', 'bac'))
+        >>> findkey(x, ('cba', 'bac'))
             'cba'
 
     """
@@ -93,7 +93,7 @@ def binvec(x):
         ndarray: N + 1 edge values.
 
     Examples:
-        >>> utils.binvec([1, 2, 3])
+        >>> binvec([1, 2, 3])
             [0.5, 1.5, 2.5, 3.5]
 
     """
@@ -164,9 +164,9 @@ def isbit(integer, nth_bit):
         ValueError: negative bit as input.
 
     Examples:
-        >>> utils.isbit(4, 1)
+        >>> isbit(4, 1)
             False
-        >>> utils.isbit(4, 2)
+        >>> isbit(4, 2)
             True
 
     See also:
@@ -193,9 +193,9 @@ def setbit(integer, nth_bit):
         ValueError: negative bit as input.
 
     Examples:
-        >>> utils.setbit(1, 1)
+        >>> setbit(1, 1)
             3
-        >>> utils.setbit(0, 2)
+        >>> setbit(0, 2)
             4
 
     See also:
@@ -279,7 +279,7 @@ def bases_and_tops(y):
 
     Examples:
         >>> y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]
-        >>> utils.bases_and_tops(y)
+        >>> bases_and_tops(y)
             ([3, 7], [4, 9])
 
     """
@@ -304,7 +304,7 @@ def cumsumr(x, axis=0):
 
     Examples:
         >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])
-        >>> utils.cumsumr(x)
+        >>> cumsumr(x)
             [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]
 
     """
@@ -324,7 +324,7 @@ def ffill(arr, value=0):
 
     Examples:
         >>> x = np.array([0, 5, 0, 0, 2, 0])
-        >>> utils.ffill(x)
+        >>> ffill(x)
             [0, 5, 5, 5, 2, 2]
 
     Notes:
@@ -355,7 +355,7 @@ def init(nvars, shape, dtype=float, masked=True):
         Iterator containing the empty arrays.
 
     Examples:
-        >>> a, b = utils.init(2, (2, 3))
+        >>> a, b = init(2, (2, 3))
         >>> a
             masked_array(
               data=[[0., 0., 0.],
@@ -388,20 +388,20 @@ def n_elements(x, dist, var=None):
 
     Examples:
         >>> x = np.array([2, 4, 6, 8, 10])
-        >>> utils.n_elements(x, 6)
+        >>> n_elements(x, 6)
             3
 
         The result is rounded to the closest integer, so:
 
-        >>> utils.n_elements(x, 6.9)
+        >>> n_elements(x, 6.9)
             3
-        >>> utils.n_elements(x, 7)
+        >>> n_elements(x, 7)
             4
 
         With fraction hour time vector:
 
         >>> x = np.linspace(0, 1, 61)
-        >>> utils.n_elements(x, 10, 'time')
+        >>> n_elements(x, 10, 'time')
             10
 
     """
@@ -433,13 +433,13 @@ def isscalar(array):
     By "scalar" we mean that array has a single value.
 
     Examples:
-        >>> utils.isscalar(1)
+        >>> isscalar(1)
         True
-        >>> utils.isscalar([1])
+        >>> isscalar([1])
         True
-        >>> utils.isscalar(np.array(1))
+        >>> isscalar(np.array(1))
         True
-        >>> utils.isscalar(np.array([1]))
+        >>> isscalar(np.array([1]))
         True
 
     """

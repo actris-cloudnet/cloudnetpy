@@ -356,12 +356,12 @@ def _save_cat(file_name, radar, lidar, model, obs, zlib):
     _merge_source(rootgrp, radar, lidar)
     rootgrp.close()
 
+
 def _merge_history(rootgrp, radar):
     radar_history = radar.dataset.history
     cat_history = f"{utils.get_time()} - categorize file created"
     rootgrp.history = f"{cat_history}\n{radar_history}"
 
+
 def _merge_source(rootgrp, radar, lidar):
     rootgrp.source = f"radar: {radar.source}\nlidar: {lidar.source}"
-
-
