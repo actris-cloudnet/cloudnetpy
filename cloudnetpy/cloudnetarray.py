@@ -1,4 +1,5 @@
 """CloudnetArray class."""
+import math
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils
@@ -18,7 +19,7 @@ class CloudnetArray():
 
     def __init__(self, netcdf4_variable, name, units=None):
         self.name = name
-        self.data = self._assign_data(netcdf4_variable)
+        self.data = self._get_data(netcdf4_variable)
         self.data_type = self._init_data_type()
         self.units = self._init_units(units, netcdf4_variable)
 
@@ -26,7 +27,7 @@ class CloudnetArray():
         return self.data[ind]
 
     @staticmethod
-    def _assign_data(array):
+    def _get_data(array):
         return array if utils.isscalar(array) else array[:]
 
     @staticmethod
@@ -63,11 +64,12 @@ class CloudnetArray():
 
     def rebin_in_polar(self, time, time_new, folding_velocity):
         """Rebins velocity in polar coordinates."""
-        data_scaled = self.data * folding_velocity
+        folding_velocity_scaled = math.pi / folding_velocity
+        data_scaled = self.data * folding_velocity_scaled
         vel_x, vel_y = np.cos(data_scaled), np.sin(data_scaled)
         vel_x_mean = utils.rebin_2d(time, vel_x, time_new)
         vel_y_mean = utils.rebin_2d(time, vel_y, time_new)
-        self.data = np.arctan2(vel_y_mean, vel_x_mean) / folding_velocity
+        self.data = np.arctan2(vel_y_mean, vel_x_mean) / folding_velocity_scaled
 
     def mask_indices(self, ind):
         """Masks data from given indices."""

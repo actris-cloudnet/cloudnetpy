@@ -83,12 +83,12 @@ def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):
 
 
 def _set_axes(ylim, shape, grid):
-    plt.ylim(ylim)
     plt.xticks(np.linspace(0, shape[0], 13), [], length=20)
     plt.yticks(np.linspace(0, shape[1], 4), [])
     plt.gca().axes.xaxis.set_ticklabels([])
     plt.gca().axes.yaxis.set_ticklabels([])
     plt.tick_params(length=0)
+    plt.ylim(ylim)
     if grid:
         plt.grid(color=(.8, .8, .8), linestyle=':')
     

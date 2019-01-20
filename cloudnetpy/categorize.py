@@ -97,13 +97,12 @@ class Radar(RawDataSource):
 
     def _get_folding_velocity(self):
         if 'NyquistVelocity' in self.variables:
-            nyquist = self._getvar('NyquistVelocity')
+            return self._getvar('NyquistVelocity')
         elif 'prf' in self.variables:
-            nyquist = (self._getvar('prf') * scipy.constants.c
-                       / (4 * self.radar_frequency))
+            return (self._getvar('prf') * scipy.constants.c
+                    / (4 * self.radar_frequency * 1e9))
         else:
             raise KeyError('Unable to determine folding velocity')
-        return math.pi / nyquist
 
     def rebin_data(self, time_new):
         """Rebins radar data in time using mean."""
