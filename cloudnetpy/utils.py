@@ -3,6 +3,7 @@ helper functions. """
 
 from datetime import datetime
 import uuid
+import requests
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
@@ -457,3 +458,12 @@ def get_time():
 def get_uuid():
     """Returns unique file identifier."""
     return str(uuid.uuid4().hex)
+
+
+def read_cloudnet_database(site, *fields_in):
+    """Read metadata from Cloudnet http API."""
+    fields = ','.join((fields_in))
+    try:
+        return tuple(requests.get('http://devcloudnet.fmi.fi/api/?site=' + site + '&fields=' + fields).json().values())
+    except:
+        return tuple([0]*len(fields_in))

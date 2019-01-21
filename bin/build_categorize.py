@@ -18,8 +18,8 @@ def main():
     # the 4 required files: (radar, lidar, mwr, model),
     # given in this order!
     input_files = (
-        #'../test_data/20180110_mace-head_mira.nc',
-        '../test_data/radar_test_file.nc',
+        '../test_data/20180110_mace-head_mira.nc',
+        #'../test_data/radar_test_file.nc',
         '../test_data/20180110_mace-head_chm15k.nc',
         '../test_data/180110.LWP.NC',
         '../test_data/20180110_mace-head_gdas1.nc')

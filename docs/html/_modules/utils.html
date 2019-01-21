@@ -41,11 +41,46 @@
 <span></span><span class="sd">&quot;&quot;&quot; This module contains general</span>
 <span class="sd">helper functions. &quot;&quot;&quot;</span>
 
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+<span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">stats</span><span class="p">,</span> <span class="n">ndimage</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">RectBivariateSpline</span>
-<span class="kn">import</span> <span class="nn">sys</span>
+
+
+<div class="viewcode-block" id="findkey"><a class="viewcode-back" href="../api.html#utils.findkey">[docs]</a><span class="k">def</span> <span class="nf">findkey</span><span class="p">(</span><span class="n">vrs</span><span class="p">,</span> <span class="n">possible_fields</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds first matching key from several possible.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vrs (dict): Dictionary or other</span>
+<span class="sd">            iterable containing strings.</span>
+<span class="sd">        fields (tuple): List of possible strings to be</span>
+<span class="sd">            searched.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        str: First matching key. None if nothing found.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; x = {&#39;abc&#39;:1, &#39;bac&#39;:2, &#39;cba&#39;:3}</span>
+<span class="sd">        &gt;&gt;&gt; findkey(x, (&#39;bac&#39;, &#39;cba&#39;))</span>
+<span class="sd">            &#39;bac&#39;</span>
+
+<span class="sd">        The order of the keys to be searched is defaining</span>
+<span class="sd">        the return value if there are several matching strings:</span>
+
+<span class="sd">        &gt;&gt;&gt; findkey(x, (&#39;cba&#39;, &#39;bac&#39;))</span>
+<span class="sd">            &#39;cba&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">possible_fields</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">possible_fields</span> <span class="o">=</span> <span class="p">(</span><span class="n">possible_fields</span><span class="p">,</span> <span class="p">)</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">possible_fields</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">vrs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">field</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
 
 <div class="viewcode-block" id="seconds2hour"><a class="viewcode-back" href="../api.html#utils.seconds2hour">[docs]</a><span class="k">def</span> <span class="nf">seconds2hour</span><span class="p">(</span><span class="n">time_in</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts seconds since some epoch to fraction hour.</span>
@@ -56,6 +91,9 @@
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray: Time as fraction hour.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Excludes leap seconds.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">seconds_since_midnight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">time_in</span><span class="p">,</span> <span class="mi">86400</span><span class="p">)</span>
@@ -96,7 +134,7 @@
 <span class="sd">        ndarray: N + 1 edge values.</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; utils.binvec([1, 2, 3])</span>
+<span class="sd">        &gt;&gt;&gt; binvec([1, 2, 3])</span>
 <span class="sd">            [0.5, 1.5, 2.5, 3.5]</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -167,9 +205,9 @@
 <span class="sd">        ValueError: negative bit as input.</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; utils.isbit(4, 1)</span>
+<span class="sd">        &gt;&gt;&gt; isbit(4, 1)</span>
 <span class="sd">            False</span>
-<span class="sd">        &gt;&gt;&gt; utils.isbit(4, 2)</span>
+<span class="sd">        &gt;&gt;&gt; isbit(4, 2)</span>
 <span class="sd">            True</span>
 
 <span class="sd">    See also:</span>
@@ -196,9 +234,9 @@
 <span class="sd">        ValueError: negative bit as input.</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; utils.setbit(1, 1)</span>
+<span class="sd">        &gt;&gt;&gt; setbit(1, 1)</span>
 <span class="sd">            3</span>
-<span class="sd">        &gt;&gt;&gt; utils.setbit(0, 2)</span>
+<span class="sd">        &gt;&gt;&gt; setbit(0, 2)</span>
 <span class="sd">            4</span>
 
 <span class="sd">    See also:</span>
@@ -212,15 +250,15 @@
     <span class="k">return</span> <span class="n">integer</span></div>
 
 
-<div class="viewcode-block" id="interpolate_2d"><a class="viewcode-back" href="../api.html#utils.interpolate_2d">[docs]</a><span class="k">def</span> <span class="nf">interpolate_2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x_new</span><span class="p">,</span> <span class="n">y_new</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+<div class="viewcode-block" id="interpolate_2d"><a class="viewcode-back" href="../api.html#utils.interpolate_2d">[docs]</a><span class="k">def</span> <span class="nf">interpolate_2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">x_new</span><span class="p">,</span> <span class="n">y_new</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Linear interpolation of gridded 2d data.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        x (ndarray): 1-D array.</span>
 <span class="sd">        y (ndarray): 1-D array.</span>
+<span class="sd">        z (ndarray): 2-D array at points (x, y).</span>
 <span class="sd">        x_new (ndarray): 1-D array.</span>
 <span class="sd">        y_new (ndarray): 1-D array.</span>
-<span class="sd">        z (ndarray): 2-D array at points (x, y).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray: Interpolated data.</span>
@@ -282,7 +320,7 @@
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]</span>
-<span class="sd">        &gt;&gt;&gt; utils.bases_and_tops(y)</span>
+<span class="sd">        &gt;&gt;&gt; bases_and_tops(y)</span>
 <span class="sd">            ([3, 7], [4, 9])</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -307,7 +345,7 @@
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])</span>
-<span class="sd">        &gt;&gt;&gt; utils.cumsumr(x)</span>
+<span class="sd">        &gt;&gt;&gt; cumsumr(x)</span>
 <span class="sd">            [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -327,7 +365,7 @@
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; x = np.array([0, 5, 0, 0, 2, 0])</span>
-<span class="sd">        &gt;&gt;&gt; utils.ffill(x)</span>
+<span class="sd">        &gt;&gt;&gt; ffill(x)</span>
 <span class="sd">            [0, 5, 5, 5, 2, 2]</span>
 
 <span class="sd">    Notes:</span>
@@ -358,7 +396,7 @@
 <span class="sd">        Iterator containing the empty arrays.</span>
 
 <span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; a, b = utils.init(2, (2, 3))</span>
+<span class="sd">        &gt;&gt;&gt; a, b = init(2, (2, 3))</span>
 <span class="sd">        &gt;&gt;&gt; a</span>
 <span class="sd">            masked_array(</span>
 <span class="sd">              data=[[0., 0., 0.],</span>
@@ -391,20 +429,20 @@
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; x = np.array([2, 4, 6, 8, 10])</span>
-<span class="sd">        &gt;&gt;&gt; utils.n_elements(x, 6)</span>
+<span class="sd">        &gt;&gt;&gt; n_elements(x, 6)</span>
 <span class="sd">            3</span>
 
 <span class="sd">        The result is rounded to the closest integer, so:</span>
 
-<span class="sd">        &gt;&gt;&gt; utils.n_elements(x, 6.9)</span>
+<span class="sd">        &gt;&gt;&gt; n_elements(x, 6.9)</span>
 <span class="sd">            3</span>
-<span class="sd">        &gt;&gt;&gt; utils.n_elements(x, 7)</span>
+<span class="sd">        &gt;&gt;&gt; n_elements(x, 7)</span>
 <span class="sd">            4</span>
 
 <span class="sd">        With fraction hour time vector:</span>
 
 <span class="sd">        &gt;&gt;&gt; x = np.linspace(0, 1, 61)</span>
-<span class="sd">        &gt;&gt;&gt; utils.n_elements(x, 10, &#39;time&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; n_elements(x, 10, &#39;time&#39;)</span>
 <span class="sd">            10</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -412,6 +450,63 @@
     <span class="k">if</span> <span class="n">var</span> <span class="o">==</span> <span class="s1">&#39;time&#39;</span><span class="p">:</span>
         <span class="n">n</span> <span class="o">=</span> <span class="n">n</span><span class="o">/</span><span class="mi">60</span>
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">n</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="km2m"><a class="viewcode-back" href="../api.html#utils.km2m">[docs]</a><span class="k">def</span> <span class="nf">km2m</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts km to m.&quot;&quot;&quot;</span>
+    <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
+    <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;km&#39;</span><span class="p">:</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="o">*</span><span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">alt</span></div>
+
+
+<div class="viewcode-block" id="m2km"><a class="viewcode-back" href="../api.html#utils.m2km">[docs]</a><span class="k">def</span> <span class="nf">m2km</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts m to km.&quot;&quot;&quot;</span>
+    <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
+    <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
+        <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="o">/</span><span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">alt</span></div>
+
+
+<div class="viewcode-block" id="isscalar"><a class="viewcode-back" href="../api.html#utils.isscalar">[docs]</a><span class="k">def</span> <span class="nf">isscalar</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests if input is scalar.</span>
+
+<span class="sd">    By &quot;scalar&quot; we mean that array has a single value.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; isscalar(1)</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; isscalar([1])</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; isscalar(np.array(1))</span>
+<span class="sd">        True</span>
+<span class="sd">        &gt;&gt;&gt; isscalar(np.array([1]))</span>
+<span class="sd">        True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="s1">&#39;__len__&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">arr</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">()</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="get_time"><a class="viewcode-back" href="../api.html#utils.get_time">[docs]</a><span class="k">def</span> <span class="nf">get_time</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns current UTC-time.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_uuid"><a class="viewcode-back" href="../api.html#utils.get_uuid">[docs]</a><span class="k">def</span> <span class="nf">get_uuid</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns unique file identifier.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="read_cloudnet_database"><a class="viewcode-back" href="../api.html#utils.read_cloudnet_database">[docs]</a><span class="k">def</span> <span class="nf">read_cloudnet_database</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="o">*</span><span class="n">fields_in</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read metadata from Cloudnet http API.&quot;&quot;&quot;</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">fields_in</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://devcloudnet.fmi.fi/api/?site=&#39;</span> <span class="o">+</span> <span class="n">site</span> <span class="o">+</span> <span class="s1">&#39;&amp;fields=&#39;</span> <span class="o">+</span> <span class="n">fields</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">fields_in</span><span class="p">))</span></div>
 </pre></div>
 
           </div>

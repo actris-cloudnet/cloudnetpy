@@ -43,7 +43,7 @@ def plot_variable(file1, file2, name, dvec, ylim=(0, 500),
         data_fields = ('Z', 'ldr', 'v')
         bitno = 3
     else:
-        name == 'insects'
+        name = 'insects'
         data_fields = ('Z', 'ldr', 'width', 'insect_prob')
         bitno = 5
 
@@ -69,7 +69,7 @@ def _plot_data(nsubs, idx, filename, field, ylim, grid,
     plt.imshow(data.T, aspect='auto', origin='lower', cmap=cmap)
     plt.clim(clim)
     _set_axes(ylim, data.shape, grid)
-    plt.text(20, max(ylim)*2, field, fontsize=8)
+    plt.text(20, max(ylim)*0.8, field, fontsize=8)
 
 
 def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):
@@ -78,8 +78,8 @@ def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):
     ncv = netCDF4.Dataset(filename).variables
     data = utils.isbit(ncv[field][:], bitno)
     plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
-    plt.text(20, max(ylim)*2, f"bit: {bitno}", fontsize=8)
     _set_axes(ylim, data.shape, grid=None)
+    plt.text(20, max(ylim)*0.8, f"bit: {bitno}", fontsize=8)
 
 
 def _set_axes(ylim, shape, grid):

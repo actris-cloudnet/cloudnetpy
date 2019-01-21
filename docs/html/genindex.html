@@ -47,6 +47,7 @@
  | <a href="#D"><strong>D</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
@@ -56,16 +57,25 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#lwc.adiabatic_lwc">adiabatic_lwc() (in module lwc)</a>
+      <li><a href="api.html#categorize.Lidar.add_meta">add_meta() (categorize.Lidar method)</a>
+
+      <ul>
+        <li><a href="api.html#categorize.Radar.add_meta">(categorize.Radar method)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#lwc.adiabatic_lwc">adiabatic_lwc() (in module lwc)</a>
+</li>
+      <li><a href="api.html#categorize.Radar.altitude">altitude (categorize.Radar attribute)</a>
+</li>
       <li><a href="api.html#module-atmos">atmos (module)</a>
 </li>
   </ul></td>
@@ -88,11 +98,23 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#atmos.c2k">c2k() (in module atmos)</a>
 </li>
+      <li><a href="api.html#categorize.Radar.calc_errors">calc_errors() (categorize.Radar method)</a>
+</li>
+      <li><a href="api.html#categorize.Model.calc_wet_bulb">calc_wet_bulb() (categorize.Model method)</a>
+</li>
       <li><a href="api.html#module-categorize">categorize (module)</a>
+</li>
+      <li><a href="api.html#module-classify">classify (module)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#module-classify">classify (module)</a>
+      <li><a href="api.html#classify.classify_measurements">classify_measurements() (in module classify)</a>
+</li>
+      <li><a href="api.html#cloudnetarray.CloudnetArray">CloudnetArray (class in cloudnetarray)</a>
+</li>
+      <li><a href="api.html#module-cloudnetarray">cloudnetarray (module)</a>
+</li>
+      <li><a href="api.html#categorize.Radar.correct_atten">correct_atten() (categorize.Radar method)</a>
 </li>
       <li><a href="api.html#droplet.correct_liquid_top">correct_liquid_top() (in module droplet)</a>
 </li>
@@ -104,10 +126,28 @@
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#utils.db2lin">db2lin() (in module utils)</a>
+      <li><a href="api.html#categorize.RawDataSource.data">data (categorize.RawDataSource attribute)</a>
+
+      <ul>
+        <li><a href="api.html#cloudnetarray.CloudnetArray.data">(cloudnetarray.CloudnetArray attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#categorize.Model.data_dense">data_dense (categorize.Model attribute)</a>
+</li>
+      <li><a href="api.html#categorize.Model.data_sparse">data_sparse (categorize.Model attribute)</a>
+</li>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.data_type">data_type (cloudnetarray.CloudnetArray attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.RawDataSource.dataset">dataset (categorize.RawDataSource attribute)</a>
+</li>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.db2lin">db2lin() (cloudnetarray.CloudnetArray method)</a>
+
+      <ul>
+        <li><a href="api.html#utils.db2lin">(in module utils)</a>
+</li>
+      </ul></li>
       <li><a href="api.html#atmos.dew_point">dew_point() (in module atmos)</a>
 </li>
       <li><a href="api.html#module-droplet">droplet (module)</a>
@@ -118,30 +158,22 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#classify.fetch_cat_bits">fetch_cat_bits() (in module classify)</a>
-</li>
-      <li><a href="api.html#categorize.fetch_data">fetch_data() (in module categorize)</a>
-</li>
-      <li><a href="api.html#ncf.fetch_input_types">fetch_input_types() (in module ncf)</a>
-</li>
-      <li><a href="api.html#categorize.fetch_model">fetch_model() (in module categorize)</a>
-</li>
-      <li><a href="api.html#categorize.fetch_mwr">fetch_mwr() (in module categorize)</a>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.fetch_attributes">fetch_attributes() (cloudnetarray.CloudnetArray method)</a>
 </li>
       <li><a href="api.html#classify.fetch_qual_bits">fetch_qual_bits() (in module classify)</a>
 </li>
-      <li><a href="api.html#ncf.fetch_radar_meta">fetch_radar_meta() (in module ncf)</a>
-</li>
       <li><a href="api.html#utils.ffill">ffill() (in module utils)</a>
+</li>
+      <li><a href="api.html#categorize.RawDataSource.filename">filename (categorize.RawDataSource attribute)</a>
 </li>
       <li><a href="api.html#utils.filter_isolated_pixels">filter_isolated_pixels() (in module utils)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#classify.find_aerosols">find_aerosols() (in module classify)</a>
 </li>
       <li><a href="api.html#classify.find_clutter">find_clutter() (in module classify)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#classify.find_falling_hydrometeors">find_falling_hydrometeors() (in module classify)</a>
 </li>
       <li><a href="api.html#classify.find_freezing_region">find_freezing_region() (in module classify)</a>
@@ -152,9 +184,9 @@
 </li>
       <li><a href="api.html#classify.find_melting_layer">find_melting_layer() (in module classify)</a>
 </li>
-      <li><a href="api.html#ncf.findkey">findkey() (in module ncf)</a>
+      <li><a href="api.html#utils.findkey">findkey() (in module utils)</a>
 </li>
-      <li><a href="api.html#ncf.folding_velo">folding_velo() (in module ncf)</a>
+      <li><a href="api.html#categorize.Radar.folding_velocity">folding_velocity (categorize.Radar attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -164,10 +196,26 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#atmos.gas_atten">gas_atten() (in module atmos)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#categorize.generate_categorize">generate_categorize() (in module categorize)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#utils.get_time">get_time() (in module utils)</a>
+</li>
+      <li><a href="api.html#utils.get_uuid">get_uuid() (in module utils)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.Lidar.height">height (categorize.Lidar attribute)</a>
+
+      <ul>
+        <li><a href="api.html#categorize.Radar.height">(categorize.Radar attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -178,13 +226,23 @@
 </li>
       <li><a href="api.html#droplet.ind_top">ind_top() (in module droplet)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.init">init() (in module utils)</a>
 </li>
       <li><a href="api.html#utils.interpolate_2d">interpolate_2d() (in module utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.Model.interpolate_to_cloudnet_grid">interpolate_to_cloudnet_grid() (categorize.Model method)</a>
+
+      <ul>
+        <li><a href="api.html#categorize.Mwr.interpolate_to_cloudnet_grid">(categorize.Mwr method)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#categorize.Model.interpolate_to_common_height">interpolate_to_common_height() (categorize.Model method)</a>
+</li>
       <li><a href="api.html#utils.isbit">isbit() (in module utils)</a>
+</li>
+      <li><a href="api.html#utils.isscalar">isscalar() (in module utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -196,7 +254,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#ncf.km2m">km2m() (in module ncf)</a>
+      <li><a href="api.html#utils.km2m">km2m() (in module utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -206,13 +264,19 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.l2norm">l2norm() (in module utils)</a>
 </li>
-      <li><a href="api.html#utils.lin2db">lin2db() (in module utils)</a>
+      <li><a href="api.html#categorize.Lidar">Lidar (class in categorize)</a>
 </li>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.lin2db">lin2db() (cloudnetarray.CloudnetArray method)</a>
+
+      <ul>
+        <li><a href="api.html#utils.lin2db">(in module utils)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#atmos.liquid_atten">liquid_atten() (in module atmos)</a>
 </li>
-      <li><a href="api.html#ncf.load_nc">load_nc() (in module ncf)</a>
+      <li><a href="api.html#categorize.Radar.location">location (categorize.Radar attribute)</a>
 </li>
       <li><a href="api.html#module-lwc">lwc (module)</a>
 </li>
@@ -222,11 +286,23 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#ncf.m2km">m2km() (in module ncf)</a>
+      <li><a href="api.html#utils.m2km">m2km() (in module utils)</a>
+</li>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.mask_indices">mask_indices() (cloudnetarray.CloudnetArray method)</a>
+</li>
+      <li><a href="api.html#utils.mdiff">mdiff() (in module utils)</a>
+</li>
+      <li><a href="api.html#categorize.Model.mean_height">mean_height (categorize.Model attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#utils.mdiff">mdiff() (in module utils)</a>
+      <li><a href="api.html#radar.mmclx2nc">mmclx2nc() (in module radar)</a>
+</li>
+      <li><a href="api.html#categorize.Model">Model (class in categorize)</a>
+</li>
+      <li><a href="api.html#categorize.Model.model_heights">model_heights (categorize.Model attribute)</a>
+</li>
+      <li><a href="api.html#categorize.Mwr">Mwr (class in categorize)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -238,7 +314,9 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#module-ncf">ncf (module)</a>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.name">name (cloudnetarray.CloudnetArray attribute)</a>
+</li>
+      <li><a href="api.html#categorize.RawDataSource.netcdf_to_cloudnet">netcdf_to_cloudnet() (categorize.RawDataSource method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -246,13 +324,29 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#ncf.radar_freq">radar_freq() (in module ncf)</a>
+      <li><a href="api.html#categorize.Radar">Radar (class in categorize)</a>
+</li>
+      <li><a href="api.html#categorize.Radar.radar_frequency">radar_frequency (categorize.Radar attribute)</a>
+</li>
+      <li><a href="api.html#classify.rain_from_radar">rain_from_radar() (in module classify)</a>
+</li>
+      <li><a href="api.html#categorize.RawDataSource">RawDataSource (class in categorize)</a>
+</li>
+      <li><a href="api.html#utils.read_cloudnet_database">read_cloudnet_database() (in module utils)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#classify.rain_from_radar">rain_from_radar() (in module classify)</a>
-</li>
       <li><a href="api.html#utils.rebin_2d">rebin_2d() (in module utils)</a>
+</li>
+      <li><a href="api.html#categorize.Lidar.rebin_data">rebin_data() (categorize.Lidar method)</a>
+
+      <ul>
+        <li><a href="api.html#categorize.Radar.rebin_data">(categorize.Radar method)</a>
+</li>
+        <li><a href="api.html#cloudnetarray.CloudnetArray.rebin_data">(cloudnetarray.CloudnetArray method)</a>
+</li>
+      </ul></li>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.rebin_in_polar">rebin_in_polar() (cloudnetarray.CloudnetArray method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -262,13 +356,17 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#atmos.saturation_vapor_pressure">saturation_vapor_pressure() (in module atmos)</a>
 </li>
+      <li><a href="api.html#categorize.Model.screen_fields">screen_fields() (categorize.Model method)</a>
+</li>
       <li><a href="api.html#utils.seconds2hour">seconds2hour() (in module utils)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.set_attributes">set_attributes() (cloudnetarray.CloudnetArray method)</a>
+</li>
       <li><a href="api.html#utils.setbit">setbit() (in module utils)</a>
 </li>
-      <li><a href="api.html#ncf.site_altitude">site_altitude() (in module ncf)</a>
+      <li><a href="api.html#categorize.RawDataSource.source">source (categorize.RawDataSource attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -278,9 +376,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#lwc.temp2mixingratio">temp2mixingratio() (in module lwc)</a>
 </li>
+      <li><a href="api.html#categorize.RawDataSource.time">time (categorize.RawDataSource attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.time_grid">time_grid() (in module utils)</a>
+</li>
+      <li><a href="api.html#categorize.Model.type">type (categorize.Model attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -288,7 +390,19 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.units">units (cloudnetarray.CloudnetArray attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#module-utils">utils (module)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.RawDataSource.variables">variables (categorize.RawDataSource attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -300,7 +414,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#ncf.wl_band">wl_band() (in module ncf)</a>
+      <li><a href="api.html#categorize.Radar.wl_band">wl_band (categorize.Radar attribute)</a>
 </li>
   </ul></td>
 </tr></table>

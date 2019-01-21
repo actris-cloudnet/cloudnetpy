@@ -1,8 +1,8 @@
 """ Functions for rebinning input data.
 """
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import math
 import numpy as np
 import numpy.ma as ma
@@ -20,15 +20,20 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 class RawDataSource():
     """Base class for all Cloudnet measurements and model data.
 
+    Args:
+        input_file (str): Calibrated instrument / model NetCDF file.
+
     Attributes:
-        filename: Filename of the input file.
-        dataset: A netcdf4 Dataset instance.
-        variables: Variables of the Dataset instance.
-        source: Global attribute 'source' from input file.
-        time: The time vector.
+        filename (str): Filename of the input file.
+        dataset (Dataset): A netcdf4 Dataset instance.
+        variables (dict): Variables of the Dataset instance.
+        source (str): Global attribute 'source' from *input_file*.
+        time (MaskedArray): Time array of the instrument.
+        data (dict): Dictionary containing CloudnetArray instances.
+
     """
-    def __init__(self, filename):
-        self.filename = filename
+    def __init__(self, input_file):
+        self.filename = input_file
         self.dataset = netCDF4.Dataset(self.filename)
         self.variables = self.dataset.variables
         self.source = self._get_global_attribute('source')
@@ -41,7 +46,7 @@ class RawDataSource():
 
     def _get_altitude(self):
         """Returns altitude of the instrument (m)."""
-        return utils.km2m(self.variables['altitude'])
+        return float(utils.km2m(self.variables['altitude']))
 
     def _get_height(self):
         """Returns height array above mean sea level (m)."""
@@ -66,46 +71,66 @@ class RawDataSource():
         self.data[key] = CloudnetArray(data, name or key, units)
 
     def netcdf_to_cloudnet(self, fields):
-        """Transforms NetCDF variables into CloudnetArrays."""
+        """Transforms netCDF4-variables into CloudnetArrays.
+
+        Args:
+            fields (tuple): netCDF4-variables to be converted. The results are
+                saved in *self.data* dictionary with *fields* strings as keys.
+
+        """
         for key in fields:
             self._append_data(self.variables[key], key)
 
 
 class Radar(RawDataSource):
-    """Class for radar data.
+    """Radar class, child of RawDataSource.
+
+    Args:
+        radar_file (str): File name of the calibrated radar file.
+        fields (tuple): Tuple of strings containing fields to be extracted
+            from the *radar_file*, e.g ('Zh', 'ldr', 'v', 'width').
 
     Attributes:
-        frequency (float): Radar frequency (GHz).
+        radar_frequency (float): Radar frequency (GHz).
         wl_band (int): Int corresponding to frequency 0 = 35.5 GHz, 1 = 94 GHz.
         folding_velocity (float): Radar's folding velocity (m/s).
-        height (ndarray): Measurement height grid above mean sea level (m).
         altitude (float): Altitude of the radar above mean sea level (m).
+        height (ndarray): Measurement height grid above mean sea level (m).
+        location (str): Location of the radar, copied from the global attribute
+            'location' of the *radar_file*.
 
     """
     def __init__(self, radar_file, fields):
         super().__init__(radar_file)
-        self.radar_frequency = self._getvar('radar_frequency', 'frequency')
+        self.radar_frequency = float(self._getvar('radar_frequency',
+                                                  'frequency'))
         self.wl_band = self._get_wl_band()
         self.folding_velocity = self._get_folding_velocity()
         self.altitude = self._get_altitude()
         self.height = self._get_height()
-        self.netcdf_to_cloudnet(fields)
         self.location = self._get_global_attribute('location')
+        self.netcdf_to_cloudnet(fields)
 
     def _get_wl_band(self):
         return 0 if (30 < self.radar_frequency < 40) else 1
 
     def _get_folding_velocity(self):
         if 'NyquistVelocity' in self.variables:
-            return self._getvar('NyquistVelocity')
+            return float(self._getvar('NyquistVelocity'))
         elif 'prf' in self.variables:
-            return (self._getvar('prf') * scipy.constants.c
-                    / (4 * self.radar_frequency * 1e9))
+            return float(self._getvar('prf') * scipy.constants.c
+                         / (4 * self.radar_frequency * 1e9))
         else:
             raise KeyError('Unable to determine folding velocity')
 
     def rebin_data(self, time_new):
-        """Rebins radar data in time using mean."""
+        """Rebins radar data in time using mean.
+
+        Args:
+            time_new (ndarray): Target time array as fraction hour. Updates
+            *self.time* attribute.
+
+        """
         for key in self.data:
             if key in ('Zh',):
                 self.data[key].db2lin()
@@ -119,7 +144,13 @@ class Radar(RawDataSource):
         self.time = time_new
 
     def correct_atten(self, gas_atten, liq_atten):
-        """Corrects radar echo for liquid and gas attenuation."""
+        """Corrects radar echo for liquid and gas attenuation.
+
+        Args:
+            gas_atten (ndarray): 2-D attenuation due to atmospheric gases.
+            liq_atten (ndarray): 2-D attenuation due to liquid water.
+
+        """
         z_corrected = self.data['Zh'][:]
         z_corrected += gas_atten
         ind = ~liq_atten.mask
@@ -127,8 +158,18 @@ class Radar(RawDataSource):
         self._append_data(z_corrected, 'Z')
 
     def calc_errors(self, gas_atten, liq_atten_err, is_clutter,
-                    is_uncorrected_liquid, time):
-        """Calculates error and sensitivity of radar echo."""
+                    is_uncorrected_liquid):
+        """Calculates error and sensitivity of radar echo.
+
+        Args:
+            gas_atten (ndarray): 2-D attenuation due to atmospheric gases.
+            liq_atten (ndarray): 2-D attenuation due to atmospheric liquid.
+            liq_atten_err (ndarray): Error in liquid attenuation.
+            is_clutter (ndarray): Boolean array of clutter presence.
+            is_uncorrected_liquid (ndarray): Boolean array denoting where liquid
+                attenuation is not corrected.
+
+        """
         z = self.data['Zh'][:]
         radar_range = utils.km2m(self.variables['range'])
         log_range = utils.lin2db(radar_range, scale=20)
@@ -137,7 +178,7 @@ class Radar(RawDataSource):
         z_sensitivity = z_power_min + log_range + ma.mean(gas_atten, axis=0)
         zc = ma.median(ma.array(z, mask=~is_clutter), axis=0)
         z_sensitivity[~zc.mask] = zc[~zc.mask]
-        dwell_time = utils.mdiff(time) * 3600  # seconds
+        dwell_time = utils.mdiff(self.time) * 3600  # seconds
         independent_pulses = (dwell_time * self.radar_frequency * 1e9 * 4
                               * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
         z_precision = 4.343 * (1 / np.sqrt(independent_pulses)
@@ -150,7 +191,7 @@ class Radar(RawDataSource):
         self._append_data(config.Z_BIAS, 'Z_bias')
 
     def add_meta(self):
-        """Adds metadata to Radar() instance."""
+        """Copies misc. metadata from the input file."""
         for key in ('latitude', 'longitude', 'altitude'):
             self._append_data(self._getvar(key), key)
         for key in ('time', 'height', 'radar_frequency'):
@@ -158,10 +199,15 @@ class Radar(RawDataSource):
 
 
 class Lidar(RawDataSource):
-    """Class for lidar data.
+    """Lidar class, child of RawDataSource.
+
+    Args:
+        lidar_file (str): File name of the calibrated lidar file.
+        fields (tuple): Tuple of strings containing fields to be extracted
+            from the *lidar_file*, e.g ('beta', 'beta_raw').
 
     Attributes:
-        height (ndarray): Altitude grid above mean sea level (m).
+        height (ndarray): Measurement height grid above mean sea level (m).
 
     """
     def __init__(self, lidar_file, fields):
@@ -170,20 +216,31 @@ class Lidar(RawDataSource):
         self.netcdf_to_cloudnet(fields)
 
     def rebin_data(self, time_new, height_new):
-        """Rebins lidar data in time and height using mean."""
+        """Rebins lidar data in time and height using mean.
+
+        Args:
+            time_new (ndarray): 1-D target time array (fraction hour).
+            height_new (ndarray): 1-D target height array (m).
+
+        """
         for key in self.data:
             self.data[key].rebin_data(self.time, time_new, self.height,
                                       height_new)
 
     def add_meta(self):
-        """Adds metadata to Lidar() instance."""
+        """Copies misc. metadata from the input file."""
         self._append_data(self._getvar('wavelength'), 'lidar_wavelength')
         self._append_data(config.BETA_ERROR[0], 'beta_bias')
         self._append_data(config.BETA_ERROR[1], 'beta_error')
 
 
 class Mwr(RawDataSource):
-    """Class for microwave radiometer data."""
+    """Microwave radiometer class, child of RawDataSource.
+
+    Args:
+         mwr_file (str): File name of the calibrated mwr file.
+
+    """
     def __init__(self, mwr_file):
         super().__init__(mwr_file)
         self._get_lwp_data()
@@ -206,7 +263,23 @@ class Mwr(RawDataSource):
 
 
 class Model(RawDataSource):
-    """Class for model data."""
+    """Model class, child of RawDataSource.
+
+    Args:
+        model_file (str): File name of the NWP model file.
+        alt_site (float): Altitude of the site above mean sea level (m).
+
+    Attributes:
+        type (str): Model type, e.g. 'gdas1' or 'ecwmf'.
+        model_heights (ndarray): 2-D array of model heights (one for each time
+            step).
+        mean_height (ndarray): Mean of *model_heights*.
+        data_sparse (dict): Model variables in common height grid but without
+            interpolation in time.
+        data_dense (dict): Model variables interpolated to Cloudnet's dense
+            time / height grid.
+
+    """
     fields_dense = ('temperature', 'pressure', 'rh',
                     'gas_atten', 'specific_gas_atten',
                     'specific_saturated_gas_atten',
@@ -236,8 +309,14 @@ class Model(RawDataSource):
     def _get_mean_height(self):
         return np.mean(np.array(self.model_heights), axis=0)
 
-    def interpolate_to_common_height(self, wl_band, field_names):
-        """Interpolates model variables to common height grid."""
+    def interpolate_to_common_height(self, wl_band):
+        """Interpolates model variables to common height grid.
+
+        Args:
+            wl_band (int): Integer denoting the wavelength band of the
+                radar (0=35.5 GHz, 1=94 GHz).
+
+        """
         def _interpolate_variable():
             datai = np.zeros((len(self.time), len(self.mean_height)))
             for ind, (alt, prof) in enumerate(zip(self.model_heights, data)):
@@ -245,7 +324,7 @@ class Model(RawDataSource):
                 datai[ind, :] = fun(self.mean_height)
             return CloudnetArray(datai, key, units)
 
-        for key in field_names:
+        for key in self.fields_sparse:
             variable = self.variables[key]
             data = np.array(variable[:])
             units = variable.units
@@ -255,9 +334,15 @@ class Model(RawDataSource):
         self._append_data(self.time, 'model_time')
         self._append_data(self.mean_height, 'model_height')
 
-    def interpolate_to_cloudnet_grid(self, field_names, time_new, height_new):
-        """Interpolates model variables to Cloudnet's dense time / height grid."""
-        for key in field_names:
+    def interpolate_to_cloudnet_grid(self, time_new, height_new):
+        """Interpolates model variables to Cloudnet's dense time / height grid.
+
+        Args:
+            time_new (ndarray): The target time array (fraction hour).
+            height_new (ndarray): The target height array (m).
+
+        """
+        for key in self.fields_dense:
             self.data_dense[key] = utils.interpolate_2d(self.time,
                                                         self.mean_height,
                                                         self.data_sparse[key][:],
@@ -271,17 +356,37 @@ class Model(RawDataSource):
         self._append_data(wet_bulb_temp, 'Tw', units='K')
 
     def screen_fields(self):
+        """Removes model fields that we don't want to write in the output."""
         fields_to_keep = ('temperature', 'pressure', 'q', 'uwind', 'vwind')
         self.data_sparse = {key: self.data_sparse[key]
                             for key in fields_to_keep}
 
 
 def generate_categorize(input_files, output_file, zlib=True):
-    """ High level API to generate Cloudnet categorize file."""
+    """ High-level API to generate Cloudnet categorize file.
+
+    The measurements are rebinned into a common height / time grid,
+    and classified as different types of scatterers such as ice, liquid,
+    insects, etc. Next, the radar signal is corrected for atmospheric
+    attenuation, and error estimates are computed. Results are saved
+    in *ouput_file* which is by default a compressed NETCDF4_CLASSIC
+    file.
+
+    Args:
+        input_files (tuple): Tuple of strings containing full paths of
+                             the 4 input files (radar, lidar, mwr, model).
+        output_file (str): Full path of the output file.
+        zlib (bool): If True, the output file is compressed. Default is True.
+
+    Examples:
+        >>> from cloudnetpy import generate_categorize
+        >>> generate_categorize(('radar.nc', 'lidar.nc', 'mwr.nc', 'model.nc'), 'output.nc')
+
+    """
     def _interpolate_to_cloudnet_grid():
         """ Interpolate variables to Cloudnet's dense grid."""
-        model.interpolate_to_common_height(radar.wl_band, model.fields_sparse)
-        model.interpolate_to_cloudnet_grid(model.fields_dense, *grid)
+        model.interpolate_to_common_height(radar.wl_band)
+        model.interpolate_to_cloudnet_grid(*grid)
         model.calc_wet_bulb()
         mwr.interpolate_to_cloudnet_grid(final_time)
         radar.rebin_data(final_time)
@@ -326,8 +431,7 @@ def generate_categorize(input_files, output_file, zlib=True):
     radar.calc_errors(gas_atten['radar_gas_atten'][:],
                       liq_atten_aux['liq_att_err'],
                       liq_atten_aux['is_not_corr'],
-                      cbits_aux['is_clutter'],
-                      final_time)
+                      cbits_aux['is_clutter'])
     radar.add_meta()
     lidar.add_meta()
     model.screen_fields()

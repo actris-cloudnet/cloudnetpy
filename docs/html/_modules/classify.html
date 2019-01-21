@@ -38,8 +38,9 @@
           <div class="body" role="main">
             
   <h1>Source code for classify</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot; Classify gridded measurements. &quot;&quot;&quot;</span>
-
+<span></span><span class="sd">&quot;&quot;&quot;Module containing low-level functions to classify gridded</span>
+<span class="sd">radar / lidar measurements.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 <span class="kn">import</span> <span class="nn">scipy.ndimage</span>
@@ -48,9 +49,10 @@
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">droplet</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy.constants</span> <span class="k">import</span> <span class="n">T0</span>
+<span class="kn">from</span> <span class="nn">cloudnetpy.cloudnetarray</span> <span class="k">import</span> <span class="n">CloudnetArray</span>
 
 
-<div class="viewcode-block" id="fetch_cat_bits"><a class="viewcode-back" href="../api.html#classify.fetch_cat_bits">[docs]</a><span class="k">def</span> <span class="nf">fetch_cat_bits</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">Tw</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">,</span> <span class="n">model_type</span><span class="p">):</span>
+<div class="viewcode-block" id="classify_measurements"><a class="viewcode-back" href="../api.html#classify.classify_measurements">[docs]</a><span class="k">def</span> <span class="nf">classify_measurements</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">tw</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">model_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Classifies radar/lidar observations.</span>
 
 <span class="sd">    This function classifies atmospheric scatterer from the input data. </span>
@@ -58,12 +60,15 @@
 <span class="sd">    time / height grid before calling this function.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        radar (dict): 2-D radar variables {&#39;Zh&#39;, &#39;v&#39;, &#39;ldr&#39;, &#39;width&#39;}.</span>
+<span class="sd">        z (MaskedArray): 2-D radar echo.</span>
+<span class="sd">        v (MaskedArray): 2-D Doppler velocity.</span>
+<span class="sd">        width (MaskedArray): 2-D Spectral width.</span>
+<span class="sd">        ldr (MaskedArray): 2-D linear depolarization ratio.</span>
 <span class="sd">        beta (MaskedArray): 2-D lidar attenuated backscattering coefficient.</span>
-<span class="sd">        Tw (ndarray): 2-D wet bulb temperature (K).</span>
-<span class="sd">        height (ndarray): 1-D altitude grid (m).</span>
+<span class="sd">        tw (ndarray): 2-D wet bulb temperature (K).</span>
+<span class="sd">        grid (tuple): tuple containing 1-D time and 1-D height.</span>
 <span class="sd">        model_type (str): NWP model type, e.g. &#39;GDAS1&#39; or &#39;ECMWF&#39;, that was</span>
-<span class="sd">            used to calculate *Tw*.</span>
+<span class="sd">            used to calculate *tw*.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict containing</span>
@@ -84,22 +89,27 @@
 <span class="sd">        classify.fetch_qual_bits()</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">time</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">grid</span>
     <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="mi">6</span>
-    <span class="n">is_rain</span> <span class="o">=</span> <span class="n">rain_from_radar</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">],</span> <span class="n">time</span><span class="p">)</span>
-    <span class="n">is_clutter</span> <span class="o">=</span> <span class="n">find_clutter</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">],</span> <span class="n">is_rain</span><span class="p">)</span>
-    <span class="n">is_liquid</span><span class="p">,</span> <span class="n">liquid_base</span><span class="p">,</span> <span class="n">liquid_top</span> <span class="o">=</span> <span class="n">droplet</span><span class="o">.</span><span class="n">find_liquid</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_melting_layer</span><span class="p">(</span><span class="n">Tw</span><span class="p">,</span> <span class="n">radar</span><span class="p">[</span><span class="s1">&#39;ldr&#39;</span><span class="p">],</span> <span class="n">radar</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">],</span> <span class="n">model_type</span><span class="p">)</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_freezing_region</span><span class="p">(</span><span class="n">Tw</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">droplet</span><span class="o">.</span><span class="n">correct_liquid_top</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">],</span> <span class="n">Tw</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">is_liquid</span><span class="p">,</span>
-                                         <span class="n">liquid_top</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">insect_prob</span> <span class="o">=</span> <span class="n">find_insects</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">Tw</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">is_rain</span> <span class="o">=</span> <span class="n">rain_from_radar</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+    <span class="n">is_clutter</span> <span class="o">=</span> <span class="n">find_clutter</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">is_rain</span><span class="p">)</span>
+    <span class="n">is_liquid</span><span class="p">,</span> <span class="n">liquid_bases</span><span class="p">,</span> <span class="n">liquid_tops</span> <span class="o">=</span> <span class="n">droplet</span><span class="o">.</span><span class="n">find_liquid</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_melting_layer</span><span class="p">(</span><span class="n">tw</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">model_type</span><span class="p">)</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_freezing_region</span><span class="p">(</span><span class="n">tw</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">droplet</span><span class="o">.</span><span class="n">correct_liquid_top</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">tw</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">is_liquid</span><span class="p">,</span>
+                                         <span class="n">liquid_tops</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">insect_prob</span> <span class="o">=</span> <span class="n">find_insects</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">tw</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                                         <span class="n">is_rain</span><span class="p">,</span> <span class="n">is_clutter</span><span class="p">)</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_falling_hydrometeors</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">],</span> <span class="n">beta</span><span class="p">,</span> <span class="n">is_clutter</span><span class="p">,</span>
-                                        <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">Tw</span><span class="p">)</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_falling_hydrometeors</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">is_clutter</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+                                        <span class="n">tw</span><span class="p">)</span>
     <span class="n">bits</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_aerosols</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">cat_bits</span> <span class="o">=</span> <span class="n">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;cat&#39;</span><span class="p">:</span> <span class="n">cat_bits</span><span class="p">,</span> <span class="s1">&#39;rain&#39;</span><span class="p">:</span> <span class="n">is_rain</span><span class="p">,</span> <span class="s1">&#39;liquid_base&#39;</span><span class="p">:</span> <span class="n">liquid_base</span><span class="p">,</span>
-            <span class="s1">&#39;clutter&#39;</span><span class="p">:</span> <span class="n">is_clutter</span><span class="p">,</span> <span class="s1">&#39;insect_prob&#39;</span><span class="p">:</span> <span class="n">insect_prob</span><span class="p">}</span></div>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;category_bits&#39;</span><span class="p">:</span> <span class="n">CloudnetArray</span><span class="p">(</span><span class="n">cat_bits</span><span class="p">,</span> <span class="s1">&#39;category_bits&#39;</span><span class="p">),</span>
+               <span class="s1">&#39;insect_prob&#39;</span><span class="p">:</span> <span class="n">CloudnetArray</span><span class="p">(</span><span class="n">insect_prob</span><span class="p">,</span> <span class="s1">&#39;insect_prob&#39;</span><span class="p">)}</span>
+    <span class="n">aux</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;liquid_bases&#39;</span><span class="p">:</span> <span class="n">liquid_bases</span><span class="p">,</span>
+           <span class="s1">&#39;is_rain&#39;</span><span class="p">:</span> <span class="n">is_rain</span><span class="p">,</span>
+           <span class="s1">&#39;is_clutter&#39;</span><span class="p">:</span> <span class="n">is_clutter</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="n">aux</span></div>
 
 
 <span class="k">def</span> <span class="nf">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">):</span>
@@ -122,7 +132,7 @@
     <span class="k">return</span> <span class="n">int_array</span>
 
 
-<div class="viewcode-block" id="find_melting_layer"><a class="viewcode-back" href="../api.html#classify.find_melting_layer">[docs]</a><span class="k">def</span> <span class="nf">find_melting_layer</span><span class="p">(</span><span class="n">Tw</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">model_type</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="find_melting_layer"><a class="viewcode-back" href="../api.html#classify.find_melting_layer">[docs]</a><span class="k">def</span> <span class="nf">find_melting_layer</span><span class="p">(</span><span class="n">tw</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">model_type</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Finds melting layer from model temperature, ldr, and velocity.</span>
 
 <span class="sd">    Melting layer is detected using linear depolarization ratio, *ldr*,</span>
@@ -150,7 +160,7 @@
 <span class="sd">        drops can even move upwards instead of down).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        Tw (ndarray): 2-D wet bulb temperature.</span>
+<span class="sd">        tw (ndarray): 2-D wet bulb temperature.</span>
 <span class="sd">        ldr (ndarray): 2-D linear depolarization ratio.</span>
 <span class="sd">        v (ndarray): 2-D doppler velocity.</span>
 <span class="sd">        model_type (str): NWP model type, e.g. &#39;GDAS1&#39; or &#39;ECMWF&#39;.</span>
@@ -171,23 +181,23 @@
         <span class="k">return</span> <span class="n">top</span><span class="p">,</span> <span class="n">base</span>
 
     <span class="k">if</span> <span class="s1">&#39;ecmwf&#39;</span> <span class="ow">in</span> <span class="n">model_type</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
-        <span class="n">trange</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">t_range</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">trange</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
-    <span class="n">melting_layer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Tw</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">t_range</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+    <span class="n">melting_layer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
     <span class="n">ldr_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">ldr</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">v_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">tprof</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">Tw</span><span class="p">):</span>
-        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">tprof</span> <span class="o">&gt;</span> <span class="n">T0</span><span class="o">+</span><span class="n">trange</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span>
-                       <span class="p">(</span><span class="n">tprof</span> <span class="o">&lt;</span> <span class="n">T0</span><span class="o">+</span><span class="n">trange</span><span class="p">[</span><span class="mi">1</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">nind</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">t_prof</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tw</span><span class="p">):</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">t_prof</span> <span class="o">&gt;</span> <span class="n">T0</span><span class="o">+</span><span class="n">t_range</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span>
+                       <span class="p">(</span><span class="n">t_prof</span> <span class="o">&lt;</span> <span class="n">T0</span><span class="o">+</span><span class="n">t_range</span><span class="p">[</span><span class="mi">1</span><span class="p">]))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">n_ind</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
         <span class="n">ldr_prof</span><span class="p">,</span> <span class="n">ldr_dprof</span><span class="p">,</span> <span class="n">nldr</span> <span class="o">=</span> <span class="n">_slice</span><span class="p">(</span><span class="n">ldr</span><span class="p">,</span> <span class="n">ldr_diff</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
         <span class="n">v_prof</span><span class="p">,</span> <span class="n">v_dprof</span><span class="p">,</span> <span class="n">nv</span> <span class="o">=</span> <span class="n">_slice</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">v_diff</span><span class="p">,</span> <span class="n">ii</span><span class="p">,</span> <span class="n">ind</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nldr</span> <span class="o">&gt;</span> <span class="mi">3</span> <span class="ow">or</span> <span class="n">nv</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
             <span class="n">ldr_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">ldr_prof</span><span class="p">)</span>
             <span class="n">v_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">v_dprof</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">top</span><span class="p">,</span> <span class="n">base</span> <span class="o">=</span> <span class="n">_basetop</span><span class="p">(</span><span class="n">ldr_dprof</span><span class="p">,</span> <span class="n">ldr_p</span><span class="p">,</span> <span class="n">nind</span><span class="p">)</span>
+                <span class="n">top</span><span class="p">,</span> <span class="n">base</span> <span class="o">=</span> <span class="n">_basetop</span><span class="p">(</span><span class="n">ldr_dprof</span><span class="p">,</span> <span class="n">ldr_p</span><span class="p">,</span> <span class="n">n_ind</span><span class="p">)</span>
                 <span class="n">conds</span> <span class="o">=</span> <span class="p">(</span><span class="n">ldr_prof</span><span class="p">[</span><span class="n">ldr_p</span><span class="p">]</span> <span class="o">-</span> <span class="n">ldr_prof</span><span class="p">[</span><span class="n">top</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">,</span>
                          <span class="n">ldr_prof</span><span class="p">[</span><span class="n">ldr_p</span><span class="p">]</span> <span class="o">-</span> <span class="n">ldr_prof</span><span class="p">[</span><span class="n">base</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">,</span>
                          <span class="n">ldr_prof</span><span class="p">[</span><span class="n">ldr_p</span><span class="p">]</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span>
@@ -196,19 +206,20 @@
                     <span class="n">melting_layer</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">ind</span><span class="p">[</span><span class="n">ldr_p</span><span class="p">]:</span><span class="n">ind</span><span class="p">[</span><span class="n">top</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">except</span><span class="p">:</span>
                 <span class="k">try</span><span class="p">:</span>
-                    <span class="n">top</span><span class="p">,</span> <span class="n">base</span> <span class="o">=</span> <span class="n">_basetop</span><span class="p">(</span><span class="n">v_dprof</span><span class="p">,</span> <span class="n">v_p</span><span class="p">,</span> <span class="n">nind</span><span class="p">)</span>
+                    <span class="n">top</span><span class="p">,</span> <span class="n">base</span> <span class="o">=</span> <span class="n">_basetop</span><span class="p">(</span><span class="n">v_dprof</span><span class="p">,</span> <span class="n">v_p</span><span class="p">,</span> <span class="n">n_ind</span><span class="p">)</span>
                     <span class="n">diff</span> <span class="o">=</span> <span class="n">v_prof</span><span class="p">[</span><span class="n">top</span><span class="p">]</span> <span class="o">-</span> <span class="n">v_prof</span><span class="p">[</span><span class="n">base</span><span class="p">]</span>
                     <span class="k">if</span> <span class="n">diff</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">v_prof</span><span class="p">[</span><span class="n">base</span><span class="p">]</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">2</span><span class="p">:</span>
                         <span class="n">melting_layer</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">ind</span><span class="p">[</span><span class="n">v_p</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="n">v_p</span><span class="o">+</span><span class="mi">2</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="k">except</span><span class="p">:</span>
                     <span class="k">continue</span>
     <span class="k">if</span> <span class="n">smooth</span><span class="p">:</span>
-        <span class="n">ml</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">melting_layer</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
+        <span class="n">ml</span> <span class="o">=</span> <span class="n">scipy</span><span class="o">.</span><span class="n">ndimage</span><span class="o">.</span><span class="n">filters</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">melting_layer</span><span class="p">,</span>
+                                                            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">))</span>
         <span class="n">melting_layer</span> <span class="o">=</span> <span class="p">(</span><span class="n">ml</span> <span class="o">&gt;</span> <span class="mf">0.2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">melting_layer</span></div>
 
 
-<div class="viewcode-block" id="find_freezing_region"><a class="viewcode-back" href="../api.html#classify.find_freezing_region">[docs]</a><span class="k">def</span> <span class="nf">find_freezing_region</span><span class="p">(</span><span class="n">Tw</span><span class="p">,</span> <span class="n">melting_layer</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+<div class="viewcode-block" id="find_freezing_region"><a class="viewcode-back" href="../api.html#classify.find_freezing_region">[docs]</a><span class="k">def</span> <span class="nf">find_freezing_region</span><span class="p">(</span><span class="n">tw</span><span class="p">,</span> <span class="n">melting_layer</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Finds freezing region using the model temperature and melting layer.</span>
 
 <span class="sd">    Every profile that contains melting layer, subzero region starts from</span>
@@ -218,7 +229,7 @@
 <span class="sd">    interpolated for all profiles.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        Tw (ndarray): 2-D wet bulb temperature.</span>
+<span class="sd">        tw (ndarray): 2-D wet bulb temperature.</span>
 <span class="sd">        melting_layer (ndarray): 2-D boolean array denoting melting layer.</span>
 <span class="sd">        time (ndarray): 1-D time grid.</span>
 <span class="sd">        height (ndarray): 1-D altitude grid (m).</span>
@@ -231,10 +242,10 @@
 <span class="sd">        ideally combined to determine the sub-zero region.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">is_freezing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Tw</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-    <span class="n">ntime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">t0_alt</span> <span class="o">=</span> <span class="n">_T0_alt</span><span class="p">(</span><span class="n">Tw</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
-    <span class="n">alt_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="p">(</span><span class="n">ntime</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">is_freezing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">tw</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">n_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">t0_alt</span> <span class="o">=</span> <span class="n">_t0_alt</span><span class="p">(</span><span class="n">tw</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">alt_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="p">(</span><span class="n">n_time</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">melting_alts</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">alt_array</span><span class="p">,</span> <span class="n">mask</span><span class="o">=~</span><span class="n">melting_layer</span><span class="p">)</span>
     <span class="n">mean_melting_alt</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">melting_alts</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">freezing_alt</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">mean_melting_alt</span><span class="p">)</span>
@@ -242,7 +253,7 @@
         <span class="n">freezing_alt</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">mean_melting_alt</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="ow">or</span> <span class="n">t0_alt</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
     <span class="n">win</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">n_elements</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="mi">240</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">)</span>  <span class="c1"># 4h window</span>
     <span class="n">mid_win</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">win</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntime</span><span class="o">-</span><span class="n">win</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_time</span><span class="o">-</span><span class="n">win</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">mean_melting_alt</span><span class="p">[</span><span class="n">n</span><span class="p">:</span><span class="n">n</span><span class="o">+</span><span class="n">win</span><span class="p">]</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
             <span class="n">freezing_alt</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="n">mid_win</span><span class="p">]</span> <span class="o">=</span> <span class="n">t0_alt</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="n">mid_win</span><span class="p">]</span>
     <span class="n">ind</span> <span class="o">=</span> <span class="o">~</span><span class="n">freezing_alt</span><span class="o">.</span><span class="n">mask</span>
@@ -252,12 +263,11 @@
     <span class="k">return</span> <span class="n">is_freezing</span></div>
 
 
-<span class="k">def</span> <span class="nf">_T0_alt</span><span class="p">(</span><span class="n">Tw</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Interpolates altitudes where model temperature goes</span>
-<span class="sd">        below freezing.</span>
+<span class="k">def</span> <span class="nf">_t0_alt</span><span class="p">(</span><span class="n">tw</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Interpolates altitudes where model temperature goes below freezing.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        Tw (ndarray): 2-D wet bulb temperature.</span>
+<span class="sd">        tw (ndarray): 2-D wet bulb temperature.</span>
 <span class="sd">        height (ndarray): 1-D altitude grid (m).</span>
 
 <span class="sd">    Returns:</span>
@@ -266,7 +276,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">alt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
-    <span class="k">for</span> <span class="n">prof</span> <span class="ow">in</span> <span class="n">Tw</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">prof</span> <span class="ow">in</span> <span class="n">tw</span><span class="p">:</span>
         <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">prof</span> <span class="o">&lt;</span> <span class="n">T0</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">ind</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">alt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">alt</span><span class="p">,</span> <span class="n">height</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
@@ -278,8 +288,8 @@
     <span class="k">return</span> <span class="n">alt</span>
 
 
-<div class="viewcode-block" id="find_insects"><a class="viewcode-back" href="../api.html#classify.find_insects">[docs]</a><span class="k">def</span> <span class="nf">find_insects</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">Tw</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">prob_lim</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns insect probability and boolean array of insect presense.</span>
+<div class="viewcode-block" id="find_insects"><a class="viewcode-back" href="../api.html#classify.find_insects">[docs]</a><span class="k">def</span> <span class="nf">find_insects</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">tw</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">prob_lim</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns insect probability and boolean array of insect presence.</span>
 
 <span class="sd">    Insects are detected by calculating heuristic probability of insects using</span>
 <span class="sd">    radar echo, *Zh*, linear depolarization ratio, *ldr* and Doppler</span>
@@ -302,8 +312,10 @@
 <span class="sd">    liquid droplets pixels, melting layer pixels and too cold temperatures.</span>
 <span class="sd">    </span>
 <span class="sd">    Args:</span>
-<span class="sd">        radar (dict): 2-D radar fields {&#39;Zh&#39;, &#39;ldr&#39;, &#39;width&#39;}.</span>
-<span class="sd">        Tw (ndarray): 2-D wet bulb temperature.</span>
+<span class="sd">        z (MaskedArray): 2-D radar echo.</span>
+<span class="sd">        ldr (MaskedArray): 2-D linear depolarization ratio.</span>
+<span class="sd">        width (MaskedArray): 2-D Spectral width.</span>
+<span class="sd">        tw (ndarray): 2-D wet bulb temperature.</span>
 <span class="sd">        *args: Binary fields that are used to screen the</span>
 <span class="sd">            insect probability. E.g. rain, clutter,</span>
 <span class="sd">            melting_layer, etc.</span>
@@ -317,10 +329,10 @@
 <span class="sd">        - ndarray: 2-D boolean flag of insects presense.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">iprob</span> <span class="o">=</span> <span class="n">_insect_probability</span><span class="p">(</span><span class="n">radar</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">],</span> <span class="n">radar</span><span class="p">[</span><span class="s1">&#39;ldr&#39;</span><span class="p">],</span> <span class="n">radar</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">])</span>
-    <span class="n">iprob</span> <span class="o">=</span> <span class="n">_screen_insects</span><span class="p">(</span><span class="n">iprob</span><span class="p">,</span> <span class="n">Tw</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
-    <span class="n">is_insects</span> <span class="o">=</span> <span class="n">iprob</span> <span class="o">&gt;</span> <span class="n">prob_lim</span>
-    <span class="k">return</span> <span class="n">is_insects</span><span class="p">,</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">iprob</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">iprob</span><span class="p">)</span></div>
+    <span class="n">i_prob</span> <span class="o">=</span> <span class="n">_insect_probability</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">i_prob</span> <span class="o">=</span> <span class="n">_screen_insects</span><span class="p">(</span><span class="n">i_prob</span><span class="p">,</span> <span class="n">tw</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">is_insects</span> <span class="o">=</span> <span class="n">i_prob</span> <span class="o">&gt;</span> <span class="n">prob_lim</span>
+    <span class="k">return</span> <span class="n">is_insects</span><span class="p">,</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">i_prob</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">i_prob</span><span class="p">)</span></div>
 
 
 <span class="k">def</span> <span class="nf">_insect_probability</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
@@ -335,61 +347,57 @@
 <span class="sd">        ndarray: 2-D insect probability between 0-1.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">_insect_prob_ldr</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">z_loc</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ldr_loc</span><span class="o">=-</span><span class="mi">20</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_insect_prob_ldr</span><span class="p">(</span><span class="n">z_loc</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ldr_loc</span><span class="o">=-</span><span class="mi">20</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Finds probability of insects, based on echo and ldr.&quot;&quot;&quot;</span>
-        <span class="n">zp</span><span class="p">,</span> <span class="n">ldrp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">zp</span><span class="p">,</span> <span class="n">ldr_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="n">ind</span> <span class="o">=</span> <span class="o">~</span><span class="n">z</span><span class="o">.</span><span class="n">mask</span>
         <span class="n">zp</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">*-</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">z_loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
         <span class="n">ind</span> <span class="o">=</span> <span class="o">~</span><span class="n">ldr</span><span class="o">.</span><span class="n">mask</span>
-        <span class="n">ldrp</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">ldr</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="n">ldr_loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">zp</span> <span class="o">*</span> <span class="n">ldrp</span>
+        <span class="n">ldr_prob</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">ldr</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="n">ldr_loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">zp</span> <span class="o">*</span> <span class="n">ldr_prob</span>
 
-    <span class="k">def</span> <span class="nf">_insect_prob_width</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">w_limit</span><span class="o">=</span><span class="mf">0.06</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_insect_prob_width</span><span class="p">(</span><span class="n">w_limit</span><span class="o">=</span><span class="mf">0.06</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Finds (0, 1) probability of insects, based on spectral width.&quot;&quot;&quot;</span>
         <span class="n">temp_w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="n">ind</span> <span class="o">=</span> <span class="n">ldr</span><span class="o">.</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">z</span><span class="o">.</span><span class="n">mask</span>  <span class="c1"># pixels that have Z but no LDR</span>
-        <span class="n">temp_w</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+        <span class="n">temp_w</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">width</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">temp_w</span> <span class="o">&lt;</span> <span class="n">w_limit</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
-    <span class="n">p1</span> <span class="o">=</span> <span class="n">_insect_prob_ldr</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ldr</span><span class="p">)</span>
-    <span class="n">p2</span> <span class="o">=</span> <span class="n">_insect_prob_width</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+    <span class="n">p1</span> <span class="o">=</span> <span class="n">_insect_prob_ldr</span><span class="p">()</span>
+    <span class="n">p2</span> <span class="o">=</span> <span class="n">_insect_prob_width</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">p2</span>
 
 
-<span class="k">def</span> <span class="nf">_screen_insects</span><span class="p">(</span><span class="n">insect_prob</span><span class="p">,</span> <span class="n">Tw</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_screen_insects</span><span class="p">(</span><span class="n">insect_prob</span><span class="p">,</span> <span class="n">tw</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Screens insects by temperature and other misc. conditions.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        insect_prob (ndarray): Insect probability with the shape (m, n).</span>
-<span class="sd">        Tw (ndarray): Wet bulb temperature with the shape (m, n).</span>
+<span class="sd">        tw (ndarray): Wet bulb temperature with the shape (m, n).</span>
 <span class="sd">        *args (ndrray): Variable number of boolean arrays where True</span>
 <span class="sd">            means that insect probablity should be 0. Shape of these</span>
 <span class="sd">            fields can be (m, n), or (m,) when the whole profile</span>
 <span class="sd">            is flagged.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">_screen_insects_misc</span><span class="p">(</span><span class="n">insect_prob</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_screen_insects_misc</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Sets insect probability to 0, indicated by *args.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">insect_prob</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                <span class="n">insect_prob</span><span class="p">[</span><span class="n">arg</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">prob</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="n">prob</span><span class="p">[</span><span class="n">arg</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">insect_prob</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">return</span> <span class="n">insect_prob</span>
+                <span class="n">prob</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">def</span> <span class="nf">_screen_insects_temp</span><span class="p">(</span><span class="n">insect_prob</span><span class="p">,</span> <span class="n">Tw</span><span class="p">,</span> <span class="n">t_lim</span><span class="o">=-</span><span class="mi">5</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Removes insects from cold temperatures.</span>
-<span class="sd">        Default limit is -5 degrees of Celsius.&quot;&quot;&quot;</span>
-        <span class="n">insect_prob</span><span class="p">[</span><span class="n">Tw</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">T0</span><span class="o">+</span><span class="n">t_lim</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="k">return</span> <span class="n">insect_prob</span>
+    <span class="k">def</span> <span class="nf">_screen_insects_temp</span><span class="p">(</span><span class="n">t_lim</span><span class="o">=-</span><span class="mi">5</span><span class="p">):</span>
+        <span class="n">prob</span><span class="p">[</span><span class="n">tw</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">T0</span><span class="o">+</span><span class="n">t_lim</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">insect_prob</span><span class="p">)</span>
-    <span class="n">prob</span> <span class="o">=</span> <span class="n">_screen_insects_misc</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
-    <span class="n">prob</span> <span class="o">=</span> <span class="n">_screen_insects_temp</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="n">Tw</span><span class="p">)</span>
+    <span class="n">_screen_insects_misc</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">_screen_insects_temp</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">prob</span>
 
 
-<div class="viewcode-block" id="rain_from_radar"><a class="viewcode-back" href="../api.html#classify.rain_from_radar">[docs]</a><span class="k">def</span> <span class="nf">rain_from_radar</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">time_buffer</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+<div class="viewcode-block" id="rain_from_radar"><a class="viewcode-back" href="../api.html#classify.rain_from_radar">[docs]</a><span class="k">def</span> <span class="nf">rain_from_radar</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">time_buffer</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Find profiles affected by rain.</span>
 
 <span class="sd">    Rain is present in such profiles where the radar echo in</span>
@@ -398,7 +406,7 @@
 <span class="sd">    detections as raining.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        Z (MaskedArray): 2-D radar echo.</span>
+<span class="sd">        z (MaskedArray): 2-D radar echo.</span>
 <span class="sd">        time (ndarray): 1-D time vector.</span>
 <span class="sd">        time_buffer (float, optional): If a profile contains rain,</span>
 <span class="sd">            profiles measured *time_buffer* (min) before</span>
@@ -408,26 +416,26 @@
 <span class="sd">        ndarray: 1-D boolean array denoting profiles affected by rain.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">is_rain</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Z</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">nprofs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
-    <span class="n">nsteps</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">n_elements</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">time_buffer</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">)</span>
+    <span class="n">is_rain</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">z</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">n_profs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+    <span class="n">n_steps</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">n_elements</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">time_buffer</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_rain</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
-        <span class="n">i1</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ind</span><span class="o">-</span><span class="n">nsteps</span><span class="p">)</span>
-        <span class="n">i2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ind</span><span class="o">+</span><span class="n">nsteps</span><span class="p">,</span> <span class="n">nprofs</span><span class="p">)</span>
+        <span class="n">i1</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ind</span><span class="o">-</span><span class="n">n_steps</span><span class="p">)</span>
+        <span class="n">i2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ind</span><span class="o">+</span><span class="n">n_steps</span><span class="p">,</span> <span class="n">n_profs</span><span class="p">)</span>
         <span class="n">is_rain</span><span class="p">[</span><span class="n">i1</span><span class="p">:</span><span class="n">i2</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">return</span> <span class="n">is_rain</span></div>
 
 
-<div class="viewcode-block" id="find_clutter"><a class="viewcode-back" href="../api.html#classify.find_clutter">[docs]</a><span class="k">def</span> <span class="nf">find_clutter</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">is_rain</span><span class="p">,</span> <span class="n">ngates</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">vlim</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+<div class="viewcode-block" id="find_clutter"><a class="viewcode-back" href="../api.html#classify.find_clutter">[docs]</a><span class="k">def</span> <span class="nf">find_clutter</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">is_rain</span><span class="p">,</span> <span class="n">n_gates</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">v_lim</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Estimates clutter from doppler velocity.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        v (MaskedArray): 2-D doppler velocity.</span>
 <span class="sd">        is_rain (ndarray): 1-D boolean array denoting</span>
-<span class="sd">            presense of rain.</span>
-<span class="sd">        ngates (int, optional): Number of range gates from the ground</span>
+<span class="sd">            presence of rain.</span>
+<span class="sd">        n_gates (int, optional): Number of range gates from the ground</span>
 <span class="sd">            where clutter is expected to be found. Default is 10.</span>
-<span class="sd">        vlim (float, optional): Velocity threshold. Smaller values are </span>
+<span class="sd">        v_lim (float, optional): Velocity threshold. Smaller values are</span>
 <span class="sd">            classified as clutter. Default is 0.05 (m/s).</span>
 
 <span class="sd">    Returns:</span>
@@ -435,13 +443,12 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">is_clutter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-    <span class="n">tiny_velocity</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span><span class="p">[:,</span> <span class="p">:</span><span class="n">ngates</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">vlim</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">is_clutter</span><span class="p">[:,</span> <span class="p">:</span><span class="n">ngates</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">tiny_velocity</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="p">(</span><span class="o">~</span><span class="n">is_rain</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">tiny_velocity</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_gates</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">v_lim</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">is_clutter</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_gates</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">tiny_velocity</span><span class="o">.</span><span class="n">T</span><span class="o">*</span><span class="p">(</span><span class="o">~</span><span class="n">is_rain</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
     <span class="k">return</span> <span class="n">is_clutter</span></div>
 
 
-<div class="viewcode-block" id="find_falling_hydrometeors"><a class="viewcode-back" href="../api.html#classify.find_falling_hydrometeors">[docs]</a><span class="k">def</span> <span class="nf">find_falling_hydrometeors</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">is_clutter</span><span class="p">,</span> <span class="n">is_liquid</span><span class="p">,</span>
-                              <span class="n">is_insects</span><span class="p">,</span> <span class="n">Tw</span><span class="p">):</span>
+<div class="viewcode-block" id="find_falling_hydrometeors"><a class="viewcode-back" href="../api.html#classify.find_falling_hydrometeors">[docs]</a><span class="k">def</span> <span class="nf">find_falling_hydrometeors</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">is_clutter</span><span class="p">,</span> <span class="n">is_liquid</span><span class="p">,</span> <span class="n">is_insects</span><span class="p">,</span> <span class="n">tw</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Finds falling hydrometeors.</span>
 
 <span class="sd">    Falling hydrometeors are the unmasked radar signals that are</span>
@@ -453,21 +460,21 @@
 <span class="sd">    clouds, with the temperature below -7 C are ice.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        Z (MaskedArray): 2-D radar echo.</span>
+<span class="sd">        z (MaskedArray): 2-D radar echo.</span>
 <span class="sd">        beta (MaskedArray): 2-D lidar echo.</span>
 <span class="sd">        is_clutter (ndarray): 2-D boolean array of clutter.</span>
 <span class="sd">        is_liquid (ndarray): 2-D boolean array of liquid droplets.</span>
 <span class="sd">        is_insects (ndarray): 2-D boolean array of insects.</span>
-<span class="sd">        Tw (ndarray): 2-D wet bulb temperature.</span>
+<span class="sd">        tw (ndarray): 2-D wet bulb temperature.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray: 2-D boolean array containing falling hydrometeros.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">is_z</span> <span class="o">=</span> <span class="o">~</span><span class="n">Z</span><span class="o">.</span><span class="n">mask</span>
+    <span class="n">is_z</span> <span class="o">=</span> <span class="o">~</span><span class="n">z</span><span class="o">.</span><span class="n">mask</span>
     <span class="n">no_clutter</span> <span class="o">=</span> <span class="o">~</span><span class="n">is_clutter</span>
     <span class="n">no_insects</span> <span class="o">=</span> <span class="o">~</span><span class="n">is_insects</span>
-    <span class="n">ice_from_lidar</span> <span class="o">=</span> <span class="o">~</span><span class="n">beta</span><span class="o">.</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_liquid</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">Tw</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">T0</span><span class="o">-</span><span class="mi">7</span><span class="p">))</span>
+    <span class="n">ice_from_lidar</span> <span class="o">=</span> <span class="o">~</span><span class="n">beta</span><span class="o">.</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_liquid</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">tw</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">T0</span><span class="o">-</span><span class="mi">7</span><span class="p">))</span>
     <span class="n">is_falling</span> <span class="o">=</span> <span class="p">(</span><span class="n">is_z</span> <span class="o">&amp;</span> <span class="n">no_clutter</span> <span class="o">&amp;</span> <span class="n">no_insects</span><span class="p">)</span> <span class="o">|</span> <span class="n">ice_from_lidar</span>
     <span class="k">return</span> <span class="n">utils</span><span class="o">.</span><span class="n">filter_isolated_pixels</span><span class="p">(</span><span class="n">is_falling</span><span class="p">)</span></div>
 
@@ -490,14 +497,14 @@
     <span class="k">return</span> <span class="o">~</span><span class="n">beta</span><span class="o">.</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_falling</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_liquid</span></div>
 
 
-<div class="viewcode-block" id="fetch_qual_bits"><a class="viewcode-back" href="../api.html#classify.fetch_qual_bits">[docs]</a><span class="k">def</span> <span class="nf">fetch_qual_bits</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">is_clutter</span><span class="p">,</span> <span class="n">liq_atten</span><span class="p">):</span>
+<div class="viewcode-block" id="fetch_qual_bits"><a class="viewcode-back" href="../api.html#classify.fetch_qual_bits">[docs]</a><span class="k">def</span> <span class="nf">fetch_qual_bits</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">is_clutter</span><span class="p">,</span> <span class="n">liq_atten_bits</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns Cloudnet quality bits.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        Z (MaskedArray): 2-D radar echo.</span>
+<span class="sd">        z (MaskedArray): 2-D radar echo.</span>
 <span class="sd">        beta (MaskedArray): 2-D attenuated backscattering.</span>
 <span class="sd">        is_clutter (ndarray): 2-D boolean array of clutter.</span>
-<span class="sd">        liq_atten (dict): 2-D boolean arrays {&#39;is_corr&#39;, &#39;is_not_corr&#39;}</span>
+<span class="sd">        liq_atten_bits (dict): 2-D boolean arrays {&#39;is_corr&#39;, &#39;is_not_corr&#39;}</span>
 <span class="sd">            denoting where liquid attenuation was corrected and</span>
 <span class="sd">            where it wasn&#39;t.</span>
 
@@ -515,12 +522,13 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="mi">6</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">~</span><span class="n">Z</span><span class="o">.</span><span class="n">mask</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">~</span><span class="n">z</span><span class="o">.</span><span class="n">mask</span>
     <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">~</span><span class="n">beta</span><span class="o">.</span><span class="n">mask</span>
     <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">is_clutter</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">liq_atten</span><span class="p">[</span><span class="s1">&#39;is_corr&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="n">liq_atten</span><span class="p">[</span><span class="s1">&#39;is_not_corr&#39;</span><span class="p">]</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">liq_atten</span><span class="p">[</span><span class="s1">&#39;is_corr&#39;</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span></div>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">liq_atten_bits</span><span class="p">[</span><span class="s1">&#39;is_corr&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="n">liq_atten_bits</span><span class="p">[</span><span class="s1">&#39;is_not_corr&#39;</span><span class="p">]</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">liq_atten_bits</span><span class="p">[</span><span class="s1">&#39;is_corr&#39;</span><span class="p">]</span>
+    <span class="n">qbits</span> <span class="o">=</span> <span class="n">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;quality_bits&#39;</span><span class="p">:</span> <span class="n">CloudnetArray</span><span class="p">(</span><span class="n">qbits</span><span class="p">,</span> <span class="s1">&#39;quality_bits&#39;</span><span class="p">)}</span></div>
 </pre></div>
 
           </div>

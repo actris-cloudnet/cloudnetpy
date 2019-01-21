@@ -1,6 +1,8 @@
 """Module for reading raw cloud radar data."""
 
 import os
+import sys
+sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import numpy as np
 from cloudnetpy import utils
 from cloudnetpy import output
@@ -10,10 +12,10 @@ import netCDF4
 
 def mmclx2nc(mmclx_file, output_file, site_name, site_location,
              rebin_data=False):
-    """Converts mmclx files into compressed NetCDF files.
+    """High-level API to convert mmclx file into compressed NetCDF file.
 
-    High level API to process raw cloud radar file into
-    a smaller file that can be used in further processing steps.
+    This function converts raw cloud radar file into a much smaller file that
+    contains only the relevant data and can be used in further processing steps.
 
     Args:
         mmclx_file (str): Raw radar file in NetCDF format.
@@ -23,6 +25,10 @@ def mmclx2nc(mmclx_file, output_file, site_name, site_location,
             latitude, longitude and altitude.
         rebin_data (bool, optional): If True, rebins data to 30s resolution.
             Otherwise keeps the native resolution. Default is False.
+
+    Examples:
+          >>> from cloudnetpy import mmclx2nc
+          >>> mmclx2nc('raw_radar.mmclx', 'output.nc', 'Vehmasmäki', (62.74, 27.54, 155))
 
     """
     raw_data = netCDF4.Dataset(mmclx_file).variables
