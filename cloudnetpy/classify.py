@@ -1,15 +1,15 @@
 """Module containing low-level functions to classify gridded
 radar / lidar measurements.
 """
+from dataclasses import dataclass
 import numpy as np
 import numpy.ma as ma
 import scipy.ndimage
-from scipy.interpolate import interp1d
 from scipy import stats
+from scipy.interpolate import interp1d
 from cloudnetpy import droplet
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
-from dataclasses import dataclass
 
 
 class ClassData:
@@ -161,10 +161,10 @@ def find_melting_layer(obs, smooth=True):
         out1, out2 = arg1[ii, temp_indices], arg2[ii, temp_indices]
         return out1, out2, ma.count(out1)
 
-    def _basetop(dprof, pind, nind):
-        top = droplet.ind_top(dprof, pind, nind, 10, 2)
-        base = droplet.ind_base(dprof, pind, 10, 2)
-        return top, base
+    def _basetop(dprof, pind):
+        top1 = droplet.ind_top(dprof, pind, len(temp_indices), 10, 2)
+        base1 = droplet.ind_base(dprof, pind, 10, 2)
+        return top1, base1
 
     if 'ecmwf' in obs.model_type.lower():
         t_range = (-4, 3)
@@ -183,7 +183,7 @@ def find_melting_layer(obs, smooth=True):
             ldr_p = np.argmax(ldr_prof)
             v_p = np.argmax(v_dprof)
             try:
-                top, base = _basetop(ldr_dprof, ldr_p, len(temp_indices))
+                top, base = _basetop(ldr_dprof, ldr_p)
                 conds = (ldr_prof[ldr_p] - ldr_prof[top] > 4,
                          ldr_prof[ldr_p] - ldr_prof[base] > 4,
                          ldr_prof[ldr_p] > -30,
@@ -192,7 +192,7 @@ def find_melting_layer(obs, smooth=True):
                     melting_layer[ii, temp_indices[ldr_p]:temp_indices[top]+1] = True
             except:
                 try:
-                    top, base = _basetop(v_dprof, v_p, len(temp_indices))
+                    top, base = _basetop(v_dprof, v_p)
                     diff = v_prof[top] - v_prof[base]
                     if diff > 2 and v_prof[base] < -2:
                         melting_layer[ii, temp_indices[v_p-1:v_p+2]] = True

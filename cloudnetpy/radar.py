@@ -1,10 +1,11 @@
 """Module for reading raw cloud radar data."""
 
-import numpy as np
-from cloudnetpy import utils
-from cloudnetpy import output
-from cloudnetpy.cloudnetarray import CloudnetArray
+import os
 import netCDF4
+import numpy as np
+from cloudnetpy import output
+from cloudnetpy import utils
+from cloudnetpy.cloudnetarray import CloudnetArray
 
 
 def mmclx2nc(mmclx_file, output_file, site_name, site_location,

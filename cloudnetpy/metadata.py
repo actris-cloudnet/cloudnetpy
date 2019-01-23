@@ -107,10 +107,10 @@ _COMMENTS = {
      'per cubic metre will have a reflectivity of 0 dBZ at all frequencies.'),
 
     'bias':
-    ('This variable is an estimate of the one-standard-deviation calibration error.'),
+    'This variable is an estimate of the one-standard-deviation calibration error.',
 
     'ldr':
-    ('This parameter is the ratio of cross-polar to co-polar reflectivity.'),
+    'This parameter is the ratio of cross-polar to co-polar reflectivity.',
 
     'width':
     ('This parameter is the standard deviation of the reflectivity-weighted\n'

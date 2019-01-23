@@ -1,16 +1,16 @@
 """ Functions for rebinning input data.
 """
 import math
+import netCDF4
 import numpy as np
 import numpy.ma as ma
 import scipy.constants
 from scipy.interpolate import interp1d
-import netCDF4
-from cloudnetpy import config
-from cloudnetpy import utils
 from cloudnetpy import atmos
 from cloudnetpy import classify
+from cloudnetpy import config
 from cloudnetpy import output
+from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 
 
@@ -397,14 +397,15 @@ def generate_categorize(input_files, output_file):
         radar.add_meta()
         lidar.add_meta()
         model.screen_fields()
-        radar.append_data(classification.category_bits, 'category_bits')
-        radar.append_data(quality['quality_bits'], 'quality_bits')
+        for key in ('category_bits', 'insect_prob'):
+            radar.append_data(getattr(classification, key), key)
         for key in ('radar_liquid_atten', 'radar_gas_atten'):
             radar.append_data(attenuations[key], key)
+        radar.append_data(quality['quality_bits'], 'quality_bits')
         return {**radar.data, **lidar.data, **model.data_sparse, **mwr.data}
 
     radar = Radar(input_files[0], ('Zh', 'v', 'ldr', 'width'))
-    lidar = Lidar(input_files[1], ('beta',))
+    lidar = Lidar(input_files[1], ('beta','beta_raw'))
     mwr = Mwr(input_files[2])
     model = Model(input_files[3], radar.altitude)
     time = utils.time_grid()

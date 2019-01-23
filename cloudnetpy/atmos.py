@@ -4,9 +4,10 @@ various atmospheric parameters.
 
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import utils
-from cloudnetpy import lwc
+from collections import namedtuple
 from cloudnetpy import constants as con
+from cloudnetpy import lwc
+from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 
 
@@ -20,74 +21,32 @@ def k2c(temp):
     return np.array(temp) - 273.15
 
 
-def _vaisala_params():
-    """Returns parameters for Vaisala's empirical formulas."""
-    A = 6.116441
-    m = 7.591386
-    Tn = 240.7263
-    return A, m, Tn
+VAISALA_PARAMS = (6.116441, 7.591386, 240.7263)
 
 
-def saturation_vapor_pressure(T, kind='accurate'):
-    """Returns water vapour saturation pressure (over liquid).
+def saturation_vapor_pressure(temp_kelvin):
+    """Returns approximate water vapour saturation pressure.
 
     Args:
-        T (ndarray): Temperature (K).
-        kind (str, optional): Specifies the used method as a string
-           ('accurate', 'fast'), where 'accurate' is the
-           IAPWS-95 formulation and 'fast' is Vaisala's
-           simpler approximation. Default is 'accurate'.
+        temp_kelvin (ndarray): Temperature in K.
 
     Returns:
-        ndarray: Saturation water vapor pressure (Pa).
+        ndarray: Vapor saturation pressure in Pa.
 
-    """
-    def _saturation_vapor_pressure_accurate(T):
-        """Accurate method for water vapour saturation pressure.
-
-        References:
-            The IAPWS Formulation 1995 for the Thermodynamic
-            Properties of Ordinary Water Substance for General and Scientific
-            Use, Journal of Physical and Chemical Reference Data, June 2002 ,
-            Volume 31, Issue 2, pp. 387535.
+    References:
+        Vaisala's white paper: "Humidity conversion formulas".
 
         """
-        Tc = 647.096
-        Pc = 220640  # hPa
-        C = [-7.85951783, 1.84408259, -11.7866497,
-             22.6807411, -15.9618719, 1.80122502]
-        v = 1 - T/Tc
-        X = (Tc/T) * (C[0]*v
-                      + C[1]*v**1.5
-                      + C[2]*v**3
-                      + C[3]*v**3.5
-                      + C[4]*v**4
-                      + C[5]*v**7.5)
-        return Pc * np.exp(X) * 100
-
-    def _saturation_vapor_pressure_fast(T):
-        """Fast method for water vapour saturation.
-
-        Notes:
-            Method from Vaisala's white paper: "Humidity conversion formulas".
-
-        """
-        A, m, Tn = _vaisala_params()
-        Tc = k2c(T)
-        return A * 10**((m*Tc) / (Tc+Tn)) * 100
-
-    if kind == 'fast':
-        Pws = _saturation_vapor_pressure_fast(T)
-    elif kind == 'accurate':
-        Pws = _saturation_vapor_pressure_accurate(T)
-    return Pws
+    a, m, tn = VAISALA_PARAMS
+    temp_celcius = k2c(temp_kelvin)
+    return a * 10**((m*temp_celcius) / (temp_celcius+tn)) * 100
 
 
-def dew_point(Pw):
+def dew_point_temperature(vapor_pressure):
     """ Returns dew point temperature.
 
     Args:
-        Pw (ndarray): Water wapor pressure (Pa).
+        vapor_pressure (ndarray): Water vapor pressure (Pa).
 
     Returns:
         ndarray: Dew point temperature (K).
@@ -96,9 +55,9 @@ def dew_point(Pw):
         Method from Vaisala's white paper: "Humidity conversion formulas".
 
     """
-    A, m, Tn = _vaisala_params()
-    Td = Tn / ((m/np.log10(Pw/100/A))-1)
-    return c2k(Td)
+    a, m, tn = VAISALA_PARAMS
+    dew_point_celcius = tn / ((m/np.log10(vapor_pressure/100/a))-1)
+    return c2k(dew_point_celcius)
 
 
 def wet_bulb(model_data):
@@ -114,25 +73,41 @@ def wet_bulb(model_data):
     Returns:
         ndarray: Wet bulb temperature (K).
 
-    """
-    def _derivatives(Pw, Tdew, m=17.269, Tn=35.86):
-        a = m*(Tn - con.T0)
-        b = Tdew - Tn
-        Pw_d = -Pw*a/b**2
-        Pw_dd = Pw*((a/b**2)**2 + 2*a/b**3)
-        return Pw_d, Pw_dd
+    References:
+        J. Sullivan and L. D. Sanders: Method for obtaining wet-bulb
+        temperatures by modifying the psychrometric formula.
 
-    rh = model_data['rh']
-    rh[rh < 1e-5] = 1e-5  # rh cant be 0
-    Pws = saturation_vapor_pressure(model_data['temperature'], kind='fast')
-    Pw = Pws * rh
-    Tdew = dew_point(Pw)
-    Pw_d, Pw_dd = _derivatives(Pw, Tdew)
-    F = model_data['pressure']*1004 / (con.latent_heat*con.mw_ratio)
-    A = Pw_dd/2
-    B = Pw_d + F - Tdew*Pw_dd
-    C = -model_data['temperature']*F - Tdew*Pw_d + 0.5*Tdew**2*Pw_dd
-    return (-B + np.sqrt(B*B - 4*A*C)) / (2*A)
+    """
+
+    def _screen_rh():
+        rh = model_data['rh']
+        rh[rh < 1e-5] = 1e-5
+        return rh
+
+    def _vapor_derivatives():
+        m = 17.269
+        tn = 35.86
+        a = m*(tn - con.T0)
+        b = dew_point - tn
+        first = -vapor_pressure*a/(b**2)
+        second = vapor_pressure*((a/(b**2))**2 + 2*a/(b**3))
+        return first, second
+
+    def _psychrometric_constant():
+        return (model_data['pressure'] * con.specific_heat
+                / (con.latent_heat * con.mw_ratio))
+
+    relative_humidity = _screen_rh()
+    saturation_pressure = saturation_vapor_pressure(model_data['temperature'])
+    vapor_pressure = saturation_pressure * relative_humidity
+    dew_point = dew_point_temperature(vapor_pressure)
+    first_der, second_der = _vapor_derivatives()
+    psychrometric_const = _psychrometric_constant()
+    a = 0.5*second_der
+    b = first_der + psychrometric_const - dew_point*second_der
+    c = (-model_data['temperature']*psychrometric_const - dew_point*first_der
+         + 0.5*dew_point**2*second_der)
+    return (-b+np.sqrt(b*b-4*a*c))/(2*a)
 
 
 def gas_atten(model, cat_bits, height):
@@ -163,21 +138,19 @@ def liquid_atten(mwr, model, classification, height):
     """Calculates attenuation due to liquid water.
 
     Args:
-        lwp (dict): Interpolated liquid water
-            path and its error {'value', 'err'}.
-        model (dict): Interpolated 2-D model fields {'temperature', 'pressure',
-            'specific_liquid_atten'}
-        bits (ndarray): Classification bits.
+        mwr (Mwr): Mwr data container.
+        model (Model): Model data container.
+        classification (ClassificationResult): Classification container.
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
         Dict containing
 
-        - **value** (*MaskedArray*): Amount of liquid attenuation.
-        - **err** (*MaskedArray*): Error in the liquid attenuation.
-        - **is_corr** (*ndarray*): Boolean array denoting where liquid
+        - **radar_liquid_atten** (*MaskedArray*): Amount of liquid attenuation.
+        - **liquid_atten_err** (*MaskedArray*): Error in the liquid attenuation.
+        - **liquid_corrected** (*ndarray*): Boolean array denoting where liquid
           attenuation is present and we can compute its value.
-        - **is_not_corr** (*ndarray*): Boolean array denoting where liquid
+        - **liquid_uncorrected** (*ndarray*): Boolean array denoting where liquid
           attenuation is present but we can not compute its value.
  
     """
@@ -204,13 +177,13 @@ def liquid_atten(mwr, model, classification, height):
             'liquid_corrected': corr_atten,
             'liquid_uncorrected': uncorr_atten}
 
+
 def _screen_liq_atten(liq_atten, classification):
     """Removes corrupted data from liquid attenuation.
 
     Args:
         liq_atten (ndarray): Liquid attenuation.
-        bits: Dict containing classification bits and rain
-            {'cat', 'rain'}.
+        classification (ClassificationResult): Classification container.
 
     Returns:
         tuple: 3-element tuple containing:
