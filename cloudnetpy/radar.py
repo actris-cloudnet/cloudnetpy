@@ -1,8 +1,5 @@
 """Module for reading raw cloud radar data."""
 
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import numpy as np
 from cloudnetpy import utils
 from cloudnetpy import output
@@ -27,7 +24,7 @@ def mmclx2nc(mmclx_file, output_file, site_name, site_location,
             Otherwise keeps the native resolution. Default is False.
 
     Examples:
-          >>> from cloudnetpy import mmclx2nc
+          >>> from cloudnetpy.radar import mmclx2nc
           >>> mmclx2nc('raw_radar.mmclx', 'output.nc', 'Vehmasmäki', (62.74, 27.54, 155))
 
     """

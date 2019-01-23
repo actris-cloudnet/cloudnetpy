@@ -1,8 +1,5 @@
 """ Functions for rebinning input data.
 """
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import math
 import numpy as np
 import numpy.ma as ma
@@ -36,13 +33,15 @@ class RawDataSource:
         self.filename = input_file
         self.dataset = netCDF4.Dataset(self.filename)
         self.variables = self.dataset.variables
-        self.source = self._get_global_attribute('source')
-        self.time = self._getvar('time')
+        self.source = getattr(self.dataset, 'source', '')
+        self.time = self._get_time()
         self.data = {}
 
-    def _fix_time(self):
-        if max(self.time) > 24:
-            self.time = utils.seconds2hour(self.time)
+    def _get_time(self):
+        time = self._getvar('time')
+        if max(time) > 24:
+            time = utils.seconds2hour(time)
+        return time
 
     def _get_altitude(self):
         """Returns altitude of the instrument (m)."""
@@ -54,12 +53,6 @@ class RawDataSource:
         alt_instrument = self._get_altitude()
         return np.array(range_instrument + alt_instrument)
 
-    def _get_global_attribute(self, attr_name):
-        """Returns attribute from the source file."""
-        if hasattr(self.dataset, attr_name):
-            return getattr(self.dataset, attr_name)
-        return ''
-
     def _getvar(self, *args):
         """Returns data (without attributes) from the source file."""
         for arg in args:
@@ -67,10 +60,7 @@ class RawDataSource:
                 return self.variables[arg][:]
         raise KeyError('Missing variable')
 
-    def append_data(self, data, key, name=None, units=None):
-        self.data[key] = CloudnetArray(data, name or key, units)
-
-    def netcdf_to_cloudnet(self, fields):
+    def _netcdf_to_cloudnet(self, fields):
         """Transforms netCDF4-variables into CloudnetArrays.
 
         Args:
@@ -81,12 +71,18 @@ class RawDataSource:
         for key in fields:
             self.append_data(self.variables[key], key)
 
-    def show_data(self, *args):
-        out = ()
-        for arg in args:
-            if arg in self.data:
-                out = out + (self.data[arg][:],)
-        return out
+    def append_data(self, data, key, name=None, units=None):
+        """Adds new CloudnetVariable into self.data dictionary.
+
+        Args:
+            data (ndarray): Data to be added.
+            key (str): Key for self.data dict.
+            name (str, optional): CloudnetArray.name attribute that is *key*
+                by default but *name* if given.
+            units (str, optional): CloudnetArray.units attribute if given.
+
+        """
+        self.data[key] = CloudnetArray(data, name or key, units)
 
 
 class Radar(RawDataSource):
@@ -115,8 +111,8 @@ class Radar(RawDataSource):
         self.folding_velocity = self._get_folding_velocity()
         self.altitude = self._get_altitude()
         self.height = self._get_height()
-        self.location = self._get_global_attribute('location')
-        self.netcdf_to_cloudnet(fields)
+        self.location = getattr(self.dataset, 'location', '')
+        self._netcdf_to_cloudnet(fields)
 
     def _get_wl_band(self):
         return 0 if (30 < self.radar_frequency < 40) else 1
@@ -159,9 +155,8 @@ class Radar(RawDataSource):
         """
         z_corrected = self.data['Zh'][:]
         z_corrected += attenuations['radar_gas_atten']
-        liq_atten = attenuations['radar_liquid_atten']
-        ind = ~liq_atten.mask
-        z_corrected[ind] += liq_atten[ind]
+        ind = ma.where(attenuations['radar_liquid_atten'])
+        z_corrected[ind] += attenuations['radar_liquid_atten'][ind]
         self.append_data(z_corrected, 'Z')
 
     def calc_errors(self, attenuations, classification):
@@ -222,7 +217,7 @@ class Lidar(RawDataSource):
     def __init__(self, lidar_file, fields):
         super().__init__(lidar_file)
         self.height = self._get_height()
-        self.netcdf_to_cloudnet(fields)
+        self._netcdf_to_cloudnet(fields)
 
     def rebin_to_grid(self, time_new, height_new):
         """Rebins lidar data in time and height using mean.
@@ -253,7 +248,6 @@ class Mwr(RawDataSource):
     def __init__(self, mwr_file):
         super().__init__(mwr_file)
         self._get_lwp_data()
-        self._fix_time()
 
     def _get_lwp_data(self):
         key = utils.findkey(self.variables, ('LWP_data', 'lwp'))
@@ -300,7 +294,7 @@ class Model(RawDataSource):
         self.type = self._get_model_type()
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = self._get_mean_height()
-        self.netcdf_to_cloudnet(self.fields_sparse)
+        self._netcdf_to_cloudnet(self.fields_sparse)
         self.data_sparse = {}
         self.data_dense = {}
 
@@ -359,9 +353,7 @@ class Model(RawDataSource):
 
     def calc_wet_bulb(self):
         """Calculates wet-bulb temperature in dense grid."""
-        wet_bulb_temp = atmos.wet_bulb(self.data_dense['temperature'],
-                                       self.data_dense['pressure'],
-                                       self.data_dense['rh'])
+        wet_bulb_temp = atmos.wet_bulb(self.data_dense)
         self.append_data(wet_bulb_temp, 'Tw', units='K')
 
     def screen_fields(self):
@@ -371,7 +363,7 @@ class Model(RawDataSource):
                             for key in fields_to_keep}
 
 
-def generate_categorize(input_files, output_file, zlib=True):
+def generate_categorize(input_files, output_file):
     """ High-level API to generate Cloudnet categorize file.
 
     The measurements are rebinned into a common height / time grid,
@@ -396,12 +388,15 @@ def generate_categorize(input_files, output_file, zlib=True):
     def _interpolate_to_cloudnet_grid():
         """ Interpolate variables to Cloudnet's dense grid."""
         model.interpolate_to_common_height(radar.wl_band)
-        model.interpolate_to_grid(*grid)
-        mwr.interpolate_in_time(grid[0])
-        radar.rebin_to_grid(grid[0])
-        lidar.rebin_to_grid(*grid)
+        model.interpolate_to_grid(time, height)
+        mwr.interpolate_in_time(time)
+        radar.rebin_to_grid(time)
+        lidar.rebin_to_grid(time, height)
 
     def _prepare_output():
+        radar.add_meta()
+        lidar.add_meta()
+        model.screen_fields()
         radar.append_data(classification.category_bits, 'category_bits')
         radar.append_data(quality['quality_bits'], 'quality_bits')
         for key in ('radar_liquid_atten', 'radar_gas_atten'):
@@ -412,30 +407,28 @@ def generate_categorize(input_files, output_file, zlib=True):
     lidar = Lidar(input_files[1], ('beta',))
     mwr = Mwr(input_files[2])
     model = Model(input_files[3], radar.altitude)
-    grid = (utils.time_grid(), radar.height)
+    time = utils.time_grid()
+    height = radar.height
     _interpolate_to_cloudnet_grid()
     model.calc_wet_bulb()
     classification = classify.classify_measurements(radar, lidar, model)
-    attenuations = atmos.get_attenuations(model, mwr, classification, grid[1])
+    attenuations = atmos.get_attenuations(model, mwr, classification, height)
     radar.correct_atten(attenuations)
     radar.calc_errors(attenuations, classification)
     quality = classify.fetch_quality(radar, lidar, classification, attenuations)
-    radar.add_meta()
-    lidar.add_meta()
-    model.screen_fields()
     output_data = _prepare_output()
     output.update_attributes(output_data)
-    _save_cat(output_file, radar, lidar, model, output_data, zlib)
+    _save_cat(output_file, radar, lidar, model, output_data)
 
 
-def _save_cat(file_name, radar, lidar, model, obs, zlib):
+def _save_cat(file_name, radar, lidar, model, obs):
     """Creates a categorize netCDF4 file and saves all data into it."""
     dims = {
         'time': len(radar.time),
         'height': len(radar.height),
         'model_time': len(model.time),
         'model_height': len(model.mean_height)}
-    rootgrp = output.init_file(file_name, dims, obs, zlib)
+    rootgrp = output.init_file(file_name, dims, obs, zlib=True)
     output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day'))
     rootgrp.title = f"Categorize file from {radar.location}"
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'

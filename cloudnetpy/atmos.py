@@ -101,7 +101,7 @@ def dew_point(Pw):
     return c2k(Td)
 
 
-def wet_bulb(Tdry, p, rh):
+def wet_bulb(model_data):
     """Returns wet bulb temperature.
 
     Returns wet bulb temperature for given temperature,
@@ -109,9 +109,7 @@ def wet_bulb(Tdry, p, rh):
     expansion of a simple expression for the saturated vapour pressure.
 
     Args:
-        Tdry (ndarray): Temperature (K).
-        p (ndarray): Pressure (Pa).
-        rh (ndarray): Relative humidity (0-1).
+        model_data (dict): Model variables 'temperature', 'pressure', 'rh'.
 
     Returns:
         ndarray: Wet bulb temperature (K).
@@ -124,15 +122,16 @@ def wet_bulb(Tdry, p, rh):
         Pw_dd = Pw*((a/b**2)**2 + 2*a/b**3)
         return Pw_d, Pw_dd
 
+    rh = model_data['rh']
     rh[rh < 1e-5] = 1e-5  # rh cant be 0
-    Pws = saturation_vapor_pressure(Tdry, kind='fast')
+    Pws = saturation_vapor_pressure(model_data['temperature'], kind='fast')
     Pw = Pws * rh
     Tdew = dew_point(Pw)
     Pw_d, Pw_dd = _derivatives(Pw, Tdew)
-    F = p*1004 / (con.latent_heat*con.mw_ratio)
+    F = model_data['pressure']*1004 / (con.latent_heat*con.mw_ratio)
     A = Pw_dd/2
     B = Pw_d + F - Tdew*Pw_dd
-    C = -Tdry*F - Tdew*Pw_d + 0.5*Tdew**2*Pw_dd
+    C = -model_data['temperature']*F - Tdew*Pw_d + 0.5*Tdew**2*Pw_dd
     return (-B + np.sqrt(B*B - 4*A*C)) / (2*A)
 
 

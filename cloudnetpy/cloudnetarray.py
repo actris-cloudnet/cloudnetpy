@@ -6,7 +6,7 @@ from cloudnetpy import utils
 
 
 class CloudnetArray():
-    """Transforms Cloudnet variables into NetCDF variables.
+    """Stores NetCDF variables as CloudnetArrays.
 
     Attributes:
         name (str): Name of the variable.
@@ -17,11 +17,11 @@ class CloudnetArray():
 
     """
 
-    def __init__(self, netcdf4_variable, name, units=None):
+    def __init__(self, netcdf4_variable, name, units_from_user=None):
         self.name = name
         self.data = self._get_data(netcdf4_variable)
         self.data_type = self._init_data_type()
-        self.units = self._init_units(units, netcdf4_variable)
+        self.units = self._init_units(units_from_user, netcdf4_variable)
 
     def __getitem__(self, ind):
         return self.data[ind]
@@ -34,9 +34,8 @@ class CloudnetArray():
     def _init_units(units_from_user, netcdf4_variable):
         if units_from_user:
             return units_from_user
-        elif hasattr(netcdf4_variable, 'units'):
-            return netcdf4_variable.units
-        return ''
+        else:
+            return getattr(netcdf4_variable, 'units', '')
 
     def _init_data_type(self):
         if ((isinstance(self.data, np.ndarray) and self.data.dtype
