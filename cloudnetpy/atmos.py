@@ -9,6 +9,7 @@ from cloudnetpy import lwc
 from cloudnetpy import constants as con
 from cloudnetpy.cloudnetarray import CloudnetArray
 
+
 def c2k(temp):
     """Converts Celsius to Kelvins."""
     return np.array(temp) + 273.15
@@ -156,10 +157,10 @@ def gas_atten(model, cat_bits, height):
     layer1_att = model['gas_atten'][:][:, 0]
     gas_att = 2*np.cumsum(spec.T, axis=0)*dheight*1e-3 + layer1_att
     gas_att = np.insert(gas_att.T, 0, layer1_att, axis=1)[:, :-1]
-    return {'radar_gas_atten': CloudnetArray(gas_att, 'radar_gas_atten')}
+    return {'radar_gas_atten': gas_att}
 
 
-def liquid_atten(mwr, model, bits, liquid_bases, is_rain, height):
+def liquid_atten(mwr, model, classification, height):
     """Calculates attenuation due to liquid water.
 
     Args:
@@ -181,12 +182,12 @@ def liquid_atten(mwr, model, bits, liquid_bases, is_rain, height):
           attenuation is present but we can not compute its value.
  
     """
-    spec_liq = model['specific_liquid_atten'][:]
-    is_liq = utils.isbit(bits, 0)
+    spec_liq = model['specific_liquid_atten']
+    is_liq = utils.isbit(classification.category_bits, 0)
     lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
-    ind = np.where(liquid_bases)
-    lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][:][ind],
-                                    model['pressure'][:][ind])
+    ind = np.where(classification.liquid_bases)
+    lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind],
+                                    model['pressure'][ind])
     lwc_dz_err[is_liq] = utils.ffill(lwc_dz[is_liq])
     ind_from_base = utils.cumsumr(is_liq, axis=1)
     lwc_adiab = ind_from_base*lwc_dz_err*utils.mdiff(height)*1e3
@@ -198,12 +199,13 @@ def liquid_atten(mwr, model, bits, liquid_bases, is_rain, height):
     liq_att[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
     liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liq[:, :-1],
                                         axis=1)
-    liq_att, cbit, ucbit = _screen_liq_atten(liq_att, bits, is_rain)
-    return ({'radar_liquid_atten': CloudnetArray(liq_att, 'radar_liquid_atten')},
-            {'liq_att_err': liq_att_err, 'is_corr': cbit, 'is_not_corr': ucbit})
+    liq_att, corr_atten, uncorr_atten = _screen_liq_atten(liq_att, classification)
+    return {'radar_liquid_atten': liq_att,
+            'liquid_atten_err': liq_att_err,
+            'liquid_corrected': corr_atten,
+            'liquid_uncorrected': uncorr_atten}
 
-
-def _screen_liq_atten(liq_atten, bits, is_rain):
+def _screen_liq_atten(liq_atten, classification):
     """Removes corrupted data from liquid attenuation.
 
     Args:
@@ -219,9 +221,16 @@ def _screen_liq_atten(liq_atten, bits, is_rain):
         - ndarray: Boolean array denoting where liquid attenuation was present but not corrected.
 
     """
-    melting_layer = utils.isbit(bits, 3)
+    melting_layer = utils.isbit(classification.category_bits, 3)
     uncorr_atten = np.cumsum(melting_layer, axis=1) >= 1
-    uncorr_atten[is_rain, :] = True
+    uncorr_atten[classification.is_rain, :] = True
     corr_atten = (liq_atten > 0).filled(False) & ~uncorr_atten
     liq_atten[uncorr_atten] = ma.masked
     return liq_atten, corr_atten, uncorr_atten
+
+
+def get_attenuations(model, mwr, classification, height):
+    """Wrapper for attenuations."""
+    gas = gas_atten(model.data_dense, classification.category_bits, height)
+    liquid = liquid_atten(mwr.data, model.data_dense, classification, height)
+    return {**gas, **liquid}

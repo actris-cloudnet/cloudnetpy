@@ -17,7 +17,7 @@ from cloudnetpy import output
 from cloudnetpy.cloudnetarray import CloudnetArray
 
 
-class RawDataSource():
+class RawDataSource:
     """Base class for all Cloudnet measurements and model data.
 
     Args:
@@ -67,7 +67,7 @@ class RawDataSource():
                 return self.variables[arg][:]
         raise KeyError('Missing variable')
 
-    def _append_data(self, data, key, name=None, units=None):
+    def append_data(self, data, key, name=None, units=None):
         self.data[key] = CloudnetArray(data, name or key, units)
 
     def netcdf_to_cloudnet(self, fields):
@@ -79,7 +79,14 @@ class RawDataSource():
 
         """
         for key in fields:
-            self._append_data(self.variables[key], key)
+            self.append_data(self.variables[key], key)
+
+    def show_data(self, *args):
+        out = ()
+        for arg in args:
+            if arg in self.data:
+                out = out + (self.data[arg][:],)
+        return out
 
 
 class Radar(RawDataSource):
@@ -123,7 +130,7 @@ class Radar(RawDataSource):
         else:
             raise KeyError('Unable to determine folding velocity')
 
-    def rebin_data(self, time_new):
+    def rebin_to_grid(self, time_new):
         """Rebins radar data in time using mean.
 
         Args:
@@ -143,59 +150,61 @@ class Radar(RawDataSource):
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new
 
-    def correct_atten(self, gas_atten, liq_atten):
+    def correct_atten(self, attenuations):
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
-            gas_atten (ndarray): 2-D attenuation due to atmospheric gases.
-            liq_atten (ndarray): 2-D attenuation due to liquid water.
+            attenuations (dict): 2-D attenuations due to atmospheric gases.
 
         """
         z_corrected = self.data['Zh'][:]
-        z_corrected += gas_atten
+        z_corrected += attenuations['radar_gas_atten']
+        liq_atten = attenuations['radar_liquid_atten']
         ind = ~liq_atten.mask
         z_corrected[ind] += liq_atten[ind]
-        self._append_data(z_corrected, 'Z')
+        self.append_data(z_corrected, 'Z')
 
-    def calc_errors(self, gas_atten, liq_atten_err, is_clutter,
-                    is_uncorrected_liquid):
-        """Calculates error and sensitivity of radar echo.
+    def calc_errors(self, attenuations, classification):
+        """Calculates error and sensitivity of radar echo."""
 
-        Args:
-            gas_atten (ndarray): 2-D attenuation due to atmospheric gases.
-            liq_atten (ndarray): 2-D attenuation due to atmospheric liquid.
-            liq_atten_err (ndarray): Error in liquid attenuation.
-            is_clutter (ndarray): Boolean array of clutter presence.
-            is_uncorrected_liquid (ndarray): Boolean array denoting where liquid
-                attenuation is not corrected.
+        def _calc_sensitivity():
+            """Returns sensitivity of radar as function of altitude."""
+            mean_gas_atten = ma.mean(attenuations['radar_gas_atten'], axis=0)
+            z_sensitivity = (z_power_min + log_range + mean_gas_atten)
+            zc = ma.median(ma.array(z, mask=~classification.is_clutter), axis=0)
+            z_sensitivity[~zc.mask] = zc[~zc.mask]
+            return z_sensitivity
 
-        """
+        def _calc_error():
+            z_precision = 4.343 * (1 / np.sqrt(_number_of_pulses())
+                                   + utils.db2lin(z_power_min - z_power) / 3)
+            gas_error = attenuations['radar_gas_atten'] * config.GAS_ATTEN_PREC
+            liq_error = attenuations['liquid_atten_err']
+            z_error = utils.l2norm(gas_error, liq_error, z_precision)
+            z_error[attenuations['liquid_uncorrected']] = ma.masked
+            return z_error
+
+        def _number_of_pulses():
+            """Returns number of independent pulses."""
+            dwell_time = utils.mdiff(self.time) * 3600  # seconds
+            return (dwell_time * self.radar_frequency * 1e9 * 4
+                    * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
+
         z = self.data['Zh'][:]
         radar_range = utils.km2m(self.variables['range'])
         log_range = utils.lin2db(radar_range, scale=20)
         z_power = z - log_range
         z_power_min = np.percentile(z_power.compressed(), 0.1)
-        z_sensitivity = z_power_min + log_range + ma.mean(gas_atten, axis=0)
-        zc = ma.median(ma.array(z, mask=~is_clutter), axis=0)
-        z_sensitivity[~zc.mask] = zc[~zc.mask]
-        dwell_time = utils.mdiff(self.time) * 3600  # seconds
-        independent_pulses = (dwell_time * self.radar_frequency * 1e9 * 4
-                              * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
-        z_precision = 4.343 * (1 / np.sqrt(independent_pulses)
-                               + utils.db2lin(z_power_min - z_power) / 3)
-        z_error = utils.l2norm(gas_atten * config.GAS_ATTEN_PREC, liq_atten_err,
-                               z_precision)
-        z_error[is_uncorrected_liquid] = ma.masked
-        self._append_data(z_error, 'Z_error')
-        self._append_data(z_sensitivity, 'Z_sensitivity')
-        self._append_data(config.Z_BIAS, 'Z_bias')
+        self.append_data(_calc_error(), 'Z_error')
+        self.append_data(_calc_sensitivity(), 'Z_sensitivity')
+        self.append_data(config.Z_BIAS, 'Z_bias')
 
     def add_meta(self):
         """Copies misc. metadata from the input file."""
         for key in ('latitude', 'longitude', 'altitude'):
-            self._append_data(self._getvar(key), key)
+            self.append_data(self._getvar(key), key)
         for key in ('time', 'height', 'radar_frequency'):
-            self._append_data(getattr(self, key), key)
+            self.append_data(getattr(self, key), key)
 
 
 class Lidar(RawDataSource):
@@ -215,7 +224,7 @@ class Lidar(RawDataSource):
         self.height = self._get_height()
         self.netcdf_to_cloudnet(fields)
 
-    def rebin_data(self, time_new, height_new):
+    def rebin_to_grid(self, time_new, height_new):
         """Rebins lidar data in time and height using mean.
 
         Args:
@@ -229,9 +238,9 @@ class Lidar(RawDataSource):
 
     def add_meta(self):
         """Copies misc. metadata from the input file."""
-        self._append_data(self._getvar('wavelength'), 'lidar_wavelength')
-        self._append_data(config.BETA_ERROR[0], 'beta_bias')
-        self._append_data(config.BETA_ERROR[1], 'beta_error')
+        self.append_data(self._getvar('wavelength'), 'lidar_wavelength')
+        self.append_data(config.BETA_ERROR[0], 'beta_bias')
+        self.append_data(config.BETA_ERROR[1], 'beta_error')
 
 
 class Mwr(RawDataSource):
@@ -248,18 +257,18 @@ class Mwr(RawDataSource):
 
     def _get_lwp_data(self):
         key = utils.findkey(self.variables, ('LWP_data', 'lwp'))
-        self._append_data(self.variables[key], 'lwp')
-        self._append_data(self._calc_lwp_error(), 'lwp_error')
+        self.append_data(self.variables[key], 'lwp')
+        self.append_data(self._calc_lwp_error(), 'lwp_error')
 
     def _calc_lwp_error(self):
         fractional_error, linear_error = config.LWP_ERROR
         return utils.l2norm(self.data['lwp'][:]*fractional_error, linear_error)
 
-    def interpolate_to_cloudnet_grid(self, time):
+    def interpolate_in_time(self, time_grid):
         """Interpolates liquid water path to Cloudnet's dense time grid."""
         for key in self.data:
             fun = interp1d(self.time, self.data[key][:])
-            self._append_data(fun(time), key)
+            self.append_data(fun(time_grid), key)
 
 
 class Model(RawDataSource):
@@ -331,29 +340,29 @@ class Model(RawDataSource):
             if 'atten' in key:
                 data = data[wl_band, :, :]
             self.data_sparse[key] = _interpolate_variable()
-        self._append_data(self.time, 'model_time')
-        self._append_data(self.mean_height, 'model_height')
+        self.append_data(self.time, 'model_time')
+        self.append_data(self.mean_height, 'model_height')
 
-    def interpolate_to_cloudnet_grid(self, time_new, height_new):
+    def interpolate_to_grid(self, time_grid, height_grid):
         """Interpolates model variables to Cloudnet's dense time / height grid.
 
         Args:
-            time_new (ndarray): The target time array (fraction hour).
-            height_new (ndarray): The target height array (m).
+            time_grid (ndarray): The target time array (fraction hour).
+            height_grid (ndarray): The target height array (m).
 
         """
         for key in self.fields_dense:
             self.data_dense[key] = utils.interpolate_2d(self.time,
                                                         self.mean_height,
                                                         self.data_sparse[key][:],
-                                                        time_new, height_new)
+                                                        time_grid, height_grid)
 
     def calc_wet_bulb(self):
         """Calculates wet-bulb temperature in dense grid."""
         wet_bulb_temp = atmos.wet_bulb(self.data_dense['temperature'],
                                        self.data_dense['pressure'],
                                        self.data_dense['rh'])
-        self._append_data(wet_bulb_temp, 'Tw', units='K')
+        self.append_data(wet_bulb_temp, 'Tw', units='K')
 
     def screen_fields(self):
         """Removes model fields that we don't want to write in the output."""
@@ -379,67 +388,42 @@ def generate_categorize(input_files, output_file, zlib=True):
         zlib (bool): If True, the output file is compressed. Default is True.
 
     Examples:
-        >>> from cloudnetpy import generate_categorize
+        >>> from cloudnetpy.categorize import generate_categorize
         >>> generate_categorize(('radar.nc', 'lidar.nc', 'mwr.nc', 'model.nc'), 'output.nc')
 
     """
+
     def _interpolate_to_cloudnet_grid():
         """ Interpolate variables to Cloudnet's dense grid."""
         model.interpolate_to_common_height(radar.wl_band)
-        model.interpolate_to_cloudnet_grid(*grid)
-        model.calc_wet_bulb()
-        mwr.interpolate_to_cloudnet_grid(final_time)
-        radar.rebin_data(final_time)
-        lidar.rebin_data(*grid)
+        model.interpolate_to_grid(*grid)
+        mwr.interpolate_in_time(grid[0])
+        radar.rebin_to_grid(grid[0])
+        lidar.rebin_to_grid(*grid)
+
+    def _prepare_output():
+        radar.append_data(classification.category_bits, 'category_bits')
+        radar.append_data(quality['quality_bits'], 'quality_bits')
+        for key in ('radar_liquid_atten', 'radar_gas_atten'):
+            radar.append_data(attenuations[key], key)
+        return {**radar.data, **lidar.data, **model.data_sparse, **mwr.data}
 
     radar = Radar(input_files[0], ('Zh', 'v', 'ldr', 'width'))
     lidar = Lidar(input_files[1], ('beta',))
     mwr = Mwr(input_files[2])
     model = Model(input_files[3], radar.altitude)
-    final_time, final_height = utils.time_grid(), radar.height
-    grid = (final_time, final_height)
-
+    grid = (utils.time_grid(), radar.height)
     _interpolate_to_cloudnet_grid()
-
-    cbits, cbits_aux = classify.classify_measurements(radar.data['Zh'][:],
-                                                      radar.data['v'][:],
-                                                      radar.data['width'][:],
-                                                      radar.data['ldr'][:],
-                                                      lidar.data['beta'][:],
-                                                      model.data['Tw'][:],
-                                                      grid, model.type)
-
-    gas_atten = atmos.gas_atten(model.data_dense,
-                                cbits['category_bits'][:],
-                                final_height)
-
-    liq_atten, liq_atten_aux = atmos.liquid_atten(mwr.data,
-                                                  model.data_dense,
-                                                  cbits['category_bits'][:],
-                                                  cbits_aux['liquid_bases'],
-                                                  cbits_aux['is_rain'],
-                                                  final_height)
-
-    radar.correct_atten(gas_atten['radar_gas_atten'][:],
-                        liq_atten['radar_liquid_atten'][:])
-
-    quality_bits = classify.fetch_qual_bits(radar.data['Z'][:],
-                                            lidar.data['beta'][:],
-                                            cbits_aux['is_clutter'],
-                                            liq_atten_aux)
-
-    radar.calc_errors(gas_atten['radar_gas_atten'][:],
-                      liq_atten_aux['liq_att_err'],
-                      liq_atten_aux['is_not_corr'],
-                      cbits_aux['is_clutter'])
+    model.calc_wet_bulb()
+    classification = classify.classify_measurements(radar, lidar, model)
+    attenuations = atmos.get_attenuations(model, mwr, classification, grid[1])
+    radar.correct_atten(attenuations)
+    radar.calc_errors(attenuations, classification)
+    quality = classify.fetch_quality(radar, lidar, classification, attenuations)
     radar.add_meta()
     lidar.add_meta()
     model.screen_fields()
-
-    output_data = {**radar.data, **lidar.data, **model.data_sparse,
-                   **mwr.data, **cbits, **gas_atten, **liq_atten,
-                   **quality_bits}
-
+    output_data = _prepare_output()
     output.update_attributes(output_data)
     _save_cat(output_file, radar, lidar, model, output_data, zlib)
 

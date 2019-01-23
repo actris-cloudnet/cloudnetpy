@@ -107,8 +107,8 @@ def ind_top(dprof, p, nprof, dist, lim):
     return p + np.where(diffs < diffs[mind]/lim)[0][-1] + 1
 
 
-def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
-                min_points=3, min_top_der=2e-7):
+def find_liquid(obs, peak_amp=2e-5, max_width=300, min_points=3,
+                min_top_der=2e-7):
     """ Estimate liquid layers from SNR-screened attenuated backscattering.
 
     Args:
@@ -130,6 +130,9 @@ def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
         - ndarray: 2-D boolean array denoting cloud tops.
 
     """
+
+    beta = obs.beta
+    height = obs.height
     is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,
                                                     masked=False)
     base_below_peak = utils.n_elements(height, 200)
@@ -157,10 +160,10 @@ def find_liquid(beta, height, peak_amp=2e-5, max_width=300,
             is_liquid[n, base:top+1] = True
             liquid_top[n, top] = True
             liquid_base[n, base] = True
-    return is_liquid, liquid_base, liquid_top
+    return {'presence': is_liquid, 'bases': liquid_base, 'tops': liquid_top}
 
 
-def correct_liquid_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
+def correct_liquid_top(obs, liquid, is_freezing):
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
@@ -177,12 +180,12 @@ def correct_liquid_top(Z, Tw, is_freezing, is_liquid, liquid_top, height):
         ndarray: Corrected liquid cloud array.
 
     """
-    top_above = utils.n_elements(height, 750)
-    for prof, top in zip(*np.where(liquid_top)):
+    top_above = utils.n_elements(obs.height, 750)
+    for prof, top in zip(*np.where(liquid['tops'])):
         ind = np.where(is_freezing[prof, top:])[0][0] + top_above
-        rad = Z[prof, top:top+ind+1]
+        rad = obs.z[prof, top:top+ind+1]
         if not (rad.mask.all() or ~rad.mask.any()):
             first_masked = ma.where(rad.mask)[0][0]
-            is_liquid[prof, top:top+first_masked+1] = True
-    is_liquid[Tw < (T0-40)] = False
-    return is_liquid
+            liquid['presence'][prof, top:top+first_masked+1] = True
+    liquid['presence'][obs.tw < (T0-40)] = False
+    return liquid['presence']

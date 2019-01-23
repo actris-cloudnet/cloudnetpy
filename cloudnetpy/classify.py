@@ -9,67 +9,95 @@ from scipy import stats
 from cloudnetpy import droplet
 from cloudnetpy import utils
 from cloudnetpy.constants import T0
-from cloudnetpy.cloudnetarray import CloudnetArray
+from dataclasses import dataclass
 
 
-def classify_measurements(z, v, width, ldr, beta, tw, grid, model_type):
+class ClassData:
+    def __init__(self, radar, lidar, model):
+        self.z = radar.data['Zh'][:]
+        self.ldr = radar.data['ldr'][:]
+        self.v = radar.data['v'][:]
+        self.width = radar.data['width'][:]
+        self.tw = model.data['Tw'][:]
+        self.beta = lidar.data['beta'][:]
+        self.time = radar.time
+        self.height = radar.height
+        self.model_type = model.type
+        self.is_rain = self._find_rain()
+        self.is_clutter = self._find_clutter()
+
+    def _find_rain(self, time_buffer=5):
+        """Find profiles affected by rain.
+
+        Rain is present in such profiles where the radar echo in
+        the third range gate is > 0 dB. To make sure we do not include any
+        rainy profiles, we also flag a few profiles before and after
+        detections as raining.
+
+        Args:
+            time_buffer (int): Time in minutes.
+
+        """
+        is_rain = ma.array(self.z[:, 3] > 0, dtype=bool).filled(False)
+        n_profiles = len(self.time)
+        n_steps = utils.n_elements(self.time, time_buffer, 'time')
+        for ind in np.where(is_rain)[0]:
+            i1 = max(0, ind - n_steps)
+            i2 = min(ind + n_steps, n_profiles)
+            is_rain[i1:i2 + 1] = True
+        return is_rain
+
+    def _find_clutter(self, n_gates=10, v_lim=0.05):
+        """Estimates clutter from doppler velocity.
+
+        Args:
+            n_gates (int, optional): Number of range gates from the ground
+                where clutter is expected to be found. Default is 10.
+            v_lim (float, optional): Velocity threshold. Smaller values are
+                classified as clutter. Default is 0.05 (m/s).
+
+        Returns:
+            ndarray: 2-D boolean array denoting pixels contaminated by clutter.
+
+        """
+        is_clutter = np.zeros(self.v.shape, dtype=bool)
+        tiny_velocity = (np.abs(self.v[:, :n_gates]) < v_lim).filled(False)
+        is_clutter[:, :n_gates] = (tiny_velocity.T * (~self.is_rain)).T
+        return is_clutter
+
+
+@dataclass
+class ClassificationResult:
+    category_bits: np.ndarray
+    is_rain: np.ndarray
+    is_clutter: np.ndarray
+    insect_prob: np.ndarray
+    liquid_bases: np.ndarray
+
+
+def classify_measurements(radar, lidar, model):
     """Classifies radar/lidar observations.
 
     This function classifies atmospheric scatterer from the input data. 
     The input data needs to be averaged or interpolated to the common
     time / height grid before calling this function.
 
-    Args:
-        z (MaskedArray): 2-D radar echo.
-        v (MaskedArray): 2-D Doppler velocity.
-        width (MaskedArray): 2-D Spectral width.
-        ldr (MaskedArray): 2-D linear depolarization ratio.
-        beta (MaskedArray): 2-D lidar attenuated backscattering coefficient.
-        tw (ndarray): 2-D wet bulb temperature (K).
-        grid (tuple): tuple containing 1-D time and 1-D height.
-        model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF', that was
-            used to calculate *tw*.
-
-    Returns:
-        Dict containing
-
-        - **cat_bits** (*ndarray*): 2-D classification as an integer array, where:
-            - bit 0: Liquid droplets
-            - bit 1: Falling hydrometeors
-            - bit 2: Temperature < 0 Celsius
-            - bit 3: Melting layer
-            - bit 4: Aerosols
-            - bit 5: Insects
-        - **rain** (*ndarray*): 1-D boolean array of rain presense.
-        - **is_clutter** (*ndarray*): 2-D boolean array of clutter.
-        - **liquid_base** (*ndarray*): 2-D boolean array of liquid bases.
-        - **insect_prob** (*ndarray*): 2-D array of insect probability.
-
     See also:
         classify.fetch_qual_bits()
 
     """
-    time, height = grid
-    bits = [None]*6
-    is_rain = rain_from_radar(z, time)
-    is_clutter = find_clutter(v, is_rain)
-    is_liquid, liquid_bases, liquid_tops = droplet.find_liquid(beta, height)
-    bits[3] = find_melting_layer(tw, ldr, v, model_type)
-    bits[2] = find_freezing_region(tw, bits[3], time, height)
-    bits[0] = droplet.correct_liquid_top(z, tw, bits[2], is_liquid,
-                                         liquid_tops, height)
-    bits[5], insect_prob = find_insects(z, ldr, width, tw, bits[3], bits[0],
-                                        is_rain, is_clutter)
-    bits[1] = find_falling_hydrometeors(z, beta, is_clutter, bits[0], bits[5],
-                                        tw)
-    bits[4] = find_aerosols(beta, bits[1], bits[0])
+    obs = ClassData(radar, lidar, model)
+    bits = [None] * 6
+    liquid = droplet.find_liquid(obs)
+    bits[3] = find_melting_layer(obs)
+    bits[2] = find_freezing_region(obs, bits[3])
+    bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2])
+    bits[5], insect_prob = find_insects(obs, bits[3], bits[0])
+    bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
+    bits[4] = find_aerosols(obs.beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
-    results = {'category_bits': CloudnetArray(cat_bits, 'category_bits'),
-               'insect_prob': CloudnetArray(insect_prob, 'insect_prob')}
-    aux = {'liquid_bases': liquid_bases,
-           'is_rain': is_rain,
-           'is_clutter': is_clutter}
-    return results, aux
+    return ClassificationResult(cat_bits, obs.is_rain, obs.is_clutter,
+                                insect_prob, liquid['bases'])
 
 
 def _bits_to_integer(bits):
@@ -92,7 +120,7 @@ def _bits_to_integer(bits):
     return int_array
 
 
-def find_melting_layer(tw, ldr, v, model_type, smooth=True):
+def find_melting_layer(obs, smooth=True):
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Melting layer is detected using linear depolarization ratio, *ldr*,
@@ -120,10 +148,7 @@ def find_melting_layer(tw, ldr, v, model_type, smooth=True):
         drops can even move upwards instead of down).
 
     Args:
-        tw (ndarray): 2-D wet bulb temperature.
-        ldr (ndarray): 2-D linear depolarization ratio.
-        v (ndarray): 2-D doppler velocity.
-        model_type (str): NWP model type, e.g. 'GDAS1' or 'ECMWF'.
+        obs (ClassData): Input data container.
         smooth (bool, optional): If True, apply a small
             Gaussian smoother to the melting layer. Default is True.
 
@@ -131,45 +156,46 @@ def find_melting_layer(tw, ldr, v, model_type, smooth=True):
         ndarray: 2-D boolean array denoting the melting layer.
 
     """
-    def _slice(arg1, arg2, ii, ind):
-        out1, out2 = arg1[ii, ind], arg2[ii, ind]
+
+    def _slice(arg1, arg2):
+        out1, out2 = arg1[ii, temp_indices], arg2[ii, temp_indices]
         return out1, out2, ma.count(out1)
 
-    def _basetop(dprof, pind, nind, a=10, b=2):
-        top = droplet.ind_top(dprof, pind, nind, a, b)
-        base = droplet.ind_base(dprof, pind, a, b)
+    def _basetop(dprof, pind, nind):
+        top = droplet.ind_top(dprof, pind, nind, 10, 2)
+        base = droplet.ind_base(dprof, pind, 10, 2)
         return top, base
 
-    if 'ecmwf' in model_type.lower():
+    if 'ecmwf' in obs.model_type.lower():
         t_range = (-4, 3)
     else:
         t_range = (-8, 6)
-    melting_layer = np.zeros(tw.shape, dtype=bool)
-    ldr_diff = np.diff(ldr, axis=1).filled(0)
-    v_diff = np.diff(v, axis=1).filled(0)
-    for ii, t_prof in enumerate(tw):
-        ind = np.where((t_prof > T0+t_range[0]) &
+
+    melting_layer = np.zeros(obs.tw.shape, dtype=bool)
+    ldr_diff = np.diff(obs.ldr, axis=1).filled(0)
+    v_diff = np.diff(obs.v, axis=1).filled(0)
+    for ii, t_prof in enumerate(obs.tw):
+        temp_indices = np.where((t_prof > T0+t_range[0]) &
                        (t_prof < T0+t_range[1]))[0]
-        n_ind = len(ind)
-        ldr_prof, ldr_dprof, nldr = _slice(ldr, ldr_diff, ii, ind)
-        v_prof, v_dprof, nv = _slice(v, v_diff, ii, ind)
+        ldr_prof, ldr_dprof, nldr = _slice(obs.ldr, ldr_diff)
+        v_prof, v_dprof, nv = _slice(obs.v, v_diff)
         if nldr > 3 or nv > 3:
             ldr_p = np.argmax(ldr_prof)
             v_p = np.argmax(v_dprof)
             try:
-                top, base = _basetop(ldr_dprof, ldr_p, n_ind)
+                top, base = _basetop(ldr_dprof, ldr_p, len(temp_indices))
                 conds = (ldr_prof[ldr_p] - ldr_prof[top] > 4,
                          ldr_prof[ldr_p] - ldr_prof[base] > 4,
                          ldr_prof[ldr_p] > -30,
                          v_prof[base] < -1)
                 if all(conds):
-                    melting_layer[ii, ind[ldr_p]:ind[top]+1] = True
+                    melting_layer[ii, temp_indices[ldr_p]:temp_indices[top]+1] = True
             except:
                 try:
-                    top, base = _basetop(v_dprof, v_p, n_ind)
+                    top, base = _basetop(v_dprof, v_p, len(temp_indices))
                     diff = v_prof[top] - v_prof[base]
                     if diff > 2 and v_prof[base] < -2:
-                        melting_layer[ii, ind[v_p-1:v_p+2]] = True
+                        melting_layer[ii, temp_indices[v_p-1:v_p+2]] = True
                 except:
                     continue
     if smooth:
@@ -179,7 +205,7 @@ def find_melting_layer(tw, ldr, v, model_type, smooth=True):
     return melting_layer
 
 
-def find_freezing_region(tw, melting_layer, time, height):
+def find_freezing_region(obs, melting_layer):
     """Finds freezing region using the model temperature and melting layer.
 
     Every profile that contains melting layer, subzero region starts from
@@ -189,10 +215,8 @@ def find_freezing_region(tw, melting_layer, time, height):
     interpolated for all profiles.
 
     Args:
-        tw (ndarray): 2-D wet bulb temperature.
+        obs (ClassData): Input data container.
         melting_layer (ndarray): 2-D boolean array denoting melting layer.
-        time (ndarray): 1-D time grid.
-        height (ndarray): 1-D altitude grid (m).
 
     Returns:
         ndarray: 2-D boolean array denoting the sub-zero region.
@@ -202,24 +226,24 @@ def find_freezing_region(tw, melting_layer, time, height):
         ideally combined to determine the sub-zero region.
 
     """
-    is_freezing = np.zeros(tw.shape, dtype=bool)
-    n_time = time.shape[0]
-    t0_alt = _t0_alt(tw, height)
-    alt_array = np.tile(height, (n_time, 1))
+    is_freezing = np.zeros(obs.tw.shape, dtype=bool)
+    n_time = obs.time.shape[0]
+    t0_alt = _t0_alt(obs.tw, obs.height)
+    alt_array = np.tile(obs.height, (n_time, 1))
     melting_alts = ma.array(alt_array, mask=~melting_layer)
     mean_melting_alt = ma.median(melting_alts, axis=1)
     freezing_alt = ma.copy(mean_melting_alt)
     for ind in (0, -1):
         freezing_alt[ind] = mean_melting_alt[ind] or t0_alt[ind]
-    win = utils.n_elements(time, 240, 'time')  # 4h window
+    win = utils.n_elements(obs.time, 240, 'time')  # 4h window
     mid_win = int(win/2)
     for n in range(n_time-win):
         if mean_melting_alt[n:n+win].mask.all():
             freezing_alt[n+mid_win] = t0_alt[n+mid_win]
     ind = ~freezing_alt.mask
-    f = interp1d(time[ind], freezing_alt[ind])
-    for ii, alt in enumerate(f(time)):
-        is_freezing[ii, height > alt] = True
+    f = interp1d(obs.time[ind], freezing_alt[ind])
+    for ii, alt in enumerate(f(obs.time)):
+        is_freezing[ii, obs.height > alt] = True
     return is_freezing
 
 
@@ -248,7 +272,7 @@ def _t0_alt(tw, height):
     return alt
 
 
-def find_insects(z, ldr, width, tw, *args, prob_lim=0.8):
+def find_insects(obs, *args, prob_lim=0.8):
     """Returns insect probability and boolean array of insect presence.
 
     Insects are detected by calculating heuristic probability of insects using
@@ -272,10 +296,7 @@ def find_insects(z, ldr, width, tw, *args, prob_lim=0.8):
     liquid droplets pixels, melting layer pixels and too cold temperatures.
     
     Args:
-        z (MaskedArray): 2-D radar echo.
-        ldr (MaskedArray): 2-D linear depolarization ratio.
-        width (MaskedArray): 2-D Spectral width.
-        tw (ndarray): 2-D wet bulb temperature.
+        obs (ClassData): Input data container.
         *args: Binary fields that are used to screen the
             insect probability. E.g. rain, clutter,
             melting_layer, etc.
@@ -289,8 +310,8 @@ def find_insects(z, ldr, width, tw, *args, prob_lim=0.8):
         - ndarray: 2-D boolean flag of insects presense.
 
     """
-    i_prob = _insect_probability(z, ldr, width)
-    i_prob = _screen_insects(i_prob, tw, *args)
+    i_prob = _insect_probability(obs.z, obs.ldr, obs.width)
+    i_prob = _screen_insects(i_prob, obs.tw, *args)
     is_insects = i_prob > prob_lim
     return is_insects, ma.masked_where(i_prob == 0, i_prob)
 
@@ -340,7 +361,7 @@ def _screen_insects(insect_prob, tw, *args):
             is flagged.
 
     """
-    def _screen_insects_misc(*args):
+    def _screen_insects_misc():
         """Sets insect probability to 0, indicated by *args."""
         for arg in args:
             if arg.size == prob.shape[0]:
@@ -352,63 +373,12 @@ def _screen_insects(insect_prob, tw, *args):
         prob[tw < (T0+t_lim)] = 0
 
     prob = np.copy(insect_prob)
-    _screen_insects_misc(*args)
+    _screen_insects_misc()
     _screen_insects_temp()
     return prob
 
 
-def rain_from_radar(z, time, time_buffer=5):
-    """Find profiles affected by rain.
-
-    Rain is present in such profiles where the radar echo in
-    the third range gate is > 0 dB. To make sure we do not include any
-    rainy profiles, we also flag a few profiles before and after
-    detections as raining.
-
-    Args:
-        z (MaskedArray): 2-D radar echo.
-        time (ndarray): 1-D time vector.
-        time_buffer (float, optional): If a profile contains rain,
-            profiles measured *time_buffer* (min) before
-            and after are also marked to contain rain. Default is 5 (min).
-
-    Returns:
-        ndarray: 1-D boolean array denoting profiles affected by rain.
-
-    """
-    is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(False)
-    n_profs = len(time)
-    n_steps = utils.n_elements(time, time_buffer, 'time')
-    for ind in np.where(is_rain)[0]:
-        i1 = max(0, ind-n_steps)
-        i2 = min(ind+n_steps, n_profs)
-        is_rain[i1:i2+1] = True
-    return is_rain
-
-
-def find_clutter(v, is_rain, n_gates=10, v_lim=0.05):
-    """Estimates clutter from doppler velocity.
-
-    Args:
-        v (MaskedArray): 2-D doppler velocity.
-        is_rain (ndarray): 1-D boolean array denoting
-            presence of rain.
-        n_gates (int, optional): Number of range gates from the ground
-            where clutter is expected to be found. Default is 10.
-        v_lim (float, optional): Velocity threshold. Smaller values are
-            classified as clutter. Default is 0.05 (m/s).
-
-    Returns:
-        ndarray: 2-D boolean array denoting pixels contaminated by clutter.
-
-    """
-    is_clutter = np.zeros(v.shape, dtype=bool)
-    tiny_velocity = (np.abs(v[:, :n_gates]) < v_lim).filled(False)
-    is_clutter[:, :n_gates] = (tiny_velocity.T*(~is_rain)).T
-    return is_clutter
-
-
-def find_falling_hydrometeors(z, beta, is_clutter, is_liquid, is_insects, tw):
+def find_falling_hydrometeors(obs, is_liquid, is_insects):
     """Finds falling hydrometeors.
 
     Falling hydrometeors are the unmasked radar signals that are
@@ -431,10 +401,10 @@ def find_falling_hydrometeors(z, beta, is_clutter, is_liquid, is_insects, tw):
         ndarray: 2-D boolean array containing falling hydrometeros.
 
     """
-    is_z = ~z.mask
-    no_clutter = ~is_clutter
+    is_z = ~obs.z.mask
+    no_clutter = ~obs.is_clutter
     no_insects = ~is_insects
-    ice_from_lidar = ~beta.mask & ~is_liquid & (tw < (T0-7))
+    ice_from_lidar = ~obs.beta.mask & ~is_liquid & (obs.tw < (T0-7))
     is_falling = (is_z & no_clutter & no_insects) | ice_from_lidar
     return utils.filter_isolated_pixels(is_falling)
 
@@ -457,16 +427,15 @@ def find_aerosols(beta, is_falling, is_liquid):
     return ~beta.mask & ~is_falling & ~is_liquid
 
 
-def fetch_qual_bits(z, beta, is_clutter, liq_atten_bits):
+def fetch_quality(radar, lidar, classification, attenuations):
     """Returns Cloudnet quality bits.
 
     Args:
-        z (MaskedArray): 2-D radar echo.
-        beta (MaskedArray): 2-D attenuated backscattering.
-        is_clutter (ndarray): 2-D boolean array of clutter.
-        liq_atten_bits (dict): 2-D boolean arrays {'is_corr', 'is_not_corr'}
-            denoting where liquid attenuation was corrected and
-            where it wasn't.
+        radar (Radar): Radar data container.
+        lidar (Lidar): Lidar data container.
+        classification (ClassificationResult): Container for classification
+            results.
+        attenuations (dict):
 
     Returns: 
         ndarray: Integer array containing the following bits:
@@ -482,10 +451,10 @@ def fetch_qual_bits(z, beta, is_clutter, liq_atten_bits):
 
     """
     bits = [None]*6
-    bits[0] = ~z.mask
-    bits[1] = ~beta.mask
-    bits[2] = is_clutter
-    bits[4] = liq_atten_bits['is_corr'] | liq_atten_bits['is_not_corr']
-    bits[5] = liq_atten_bits['is_corr']
+    bits[0] = ~radar.data['Z'][:].mask
+    bits[1] = ~lidar.data['beta'][:].mask
+    bits[2] = classification.is_clutter
+    bits[4] = attenuations['liquid_corrected'] | attenuations['liquid_uncorrected']
+    bits[5] = attenuations['liquid_corrected']
     qbits = _bits_to_integer(bits)
-    return {'quality_bits': CloudnetArray(qbits, 'quality_bits')}
+    return {'quality_bits': qbits}
