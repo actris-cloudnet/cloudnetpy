@@ -3,20 +3,20 @@
 
 from collections import namedtuple
 
+FIELDS = (
+    'long_name',
+    'units',
+    'plot_range',
+    'plot_scale',
+    'comment',
+    'definition',
+    'references',
+    'ancillary_variables')
+
+MetaData = namedtuple('MetaData', FIELDS, defaults=(None,)*len(FIELDS))
+
 _LOG = 'logarithmic'
 _LIN = 'linear'
-
-MetaData = namedtuple('MetaData', ['long_name',
-                                   'units',
-                                   'plot_range',
-                                   'plot_scale',
-                                   'comment',
-                                   'definition',
-                                   'references',
-                                   'ancillary_variables'])
-
-# Default values for namedtuple. Python 3.7 has better syntax for this.
-MetaData.__new__.__defaults__ = (None,)*len(MetaData._fields)
 
 _DEFINITIONS = {
     'category_bits':

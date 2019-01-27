@@ -390,12 +390,9 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
     clouds, with the temperature below -7 C are ice.
 
     Args:
-        z (MaskedArray): 2-D radar echo.
-        beta (MaskedArray): 2-D lidar echo.
-        is_clutter (ndarray): 2-D boolean array of clutter.
+        obs (ClassData): Container for observations.
         is_liquid (ndarray): 2-D boolean array of liquid droplets.
         is_insects (ndarray): 2-D boolean array of insects.
-        tw (ndarray): 2-D wet bulb temperature.
 
     Returns:
         ndarray: 2-D boolean array containing falling hydrometeros.

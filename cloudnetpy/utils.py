@@ -126,7 +126,7 @@ def rebin_2d(x_in, data, x_new):
     """
     edges = binvec(x_new)
     datai = np.zeros((len(x_new), data.shape[1]))
-    data = ma.masked_invalid(data)  # data can contain nan-values
+    data = ma.masked_invalid(data)  # data may contain nan-values
     for ind, values in enumerate(data.T):
         mask = ~values.mask
         if ma.any(values[mask]):
@@ -230,7 +230,8 @@ def interpolate_2d(x, y, z, x_new, y_new):
         ndarray: Interpolated data.
 
     Notes:
-        Does not work with nans.
+        Does not work with nans. Ignores mask of masked data.
+        Does not extrapolate.
 
     """
     fun = RectBivariateSpline(x, y, z, kx=1, ky=1)  # linear interpolation
@@ -469,7 +470,8 @@ def get_uuid():
 def read_cloudnet_database(site, *fields_in):
     """Read metadata from Cloudnet http API."""
     fields = ','.join(fields_in)
+    url = 'http://devcloudnet.fmi.fi/api/'
     try:
-        return tuple(requests.get('http://devcloudnet.fmi.fi/api/?site=' + site + '&fields=' + fields).json().values())
+        return tuple(requests.get(f"{url}?site={site}&fields={fields}").json().values())
     except:
         return tuple([0]*len(fields_in))

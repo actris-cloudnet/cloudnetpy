@@ -4,20 +4,27 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>atmos &#8212; CloudnetPy  documentation</title>
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
-    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
-  </head><body>
+  </head>
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -48,6 +55,7 @@
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">lwc</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">constants</span> <span class="k">as</span> <span class="n">con</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy.cloudnetarray</span> <span class="k">import</span> <span class="n">CloudnetArray</span>
+
 
 <div class="viewcode-block" id="c2k"><a class="viewcode-back" href="../api.html#atmos.c2k">[docs]</a><span class="k">def</span> <span class="nf">c2k</span><span class="p">(</span><span class="n">temp</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts Celsius to Kelvins.&quot;&quot;&quot;</span>
@@ -140,7 +148,7 @@
     <span class="k">return</span> <span class="n">c2k</span><span class="p">(</span><span class="n">Td</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="wet_bulb"><a class="viewcode-back" href="../api.html#atmos.wet_bulb">[docs]</a><span class="k">def</span> <span class="nf">wet_bulb</span><span class="p">(</span><span class="n">Tdry</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">rh</span><span class="p">):</span>
+<div class="viewcode-block" id="wet_bulb"><a class="viewcode-back" href="../api.html#atmos.wet_bulb">[docs]</a><span class="k">def</span> <span class="nf">wet_bulb</span><span class="p">(</span><span class="n">model_data</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns wet bulb temperature.</span>
 
 <span class="sd">    Returns wet bulb temperature for given temperature,</span>
@@ -148,9 +156,7 @@
 <span class="sd">    expansion of a simple expression for the saturated vapour pressure.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        Tdry (ndarray): Temperature (K).</span>
-<span class="sd">        p (ndarray): Pressure (Pa).</span>
-<span class="sd">        rh (ndarray): Relative humidity (0-1).</span>
+<span class="sd">        model_data (dict): Model variables &#39;temperature&#39;, &#39;pressure&#39;, &#39;rh&#39;.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray: Wet bulb temperature (K).</span>
@@ -163,15 +169,16 @@
         <span class="n">Pw_dd</span> <span class="o">=</span> <span class="n">Pw</span><span class="o">*</span><span class="p">((</span><span class="n">a</span><span class="o">/</span><span class="n">b</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="o">/</span><span class="n">b</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Pw_d</span><span class="p">,</span> <span class="n">Pw_dd</span>
 
+    <span class="n">rh</span> <span class="o">=</span> <span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;rh&#39;</span><span class="p">]</span>
     <span class="n">rh</span><span class="p">[</span><span class="n">rh</span> <span class="o">&lt;</span> <span class="mf">1e-5</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-5</span>  <span class="c1"># rh cant be 0</span>
-    <span class="n">Pws</span> <span class="o">=</span> <span class="n">saturation_vapor_pressure</span><span class="p">(</span><span class="n">Tdry</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;fast&#39;</span><span class="p">)</span>
+    <span class="n">Pws</span> <span class="o">=</span> <span class="n">saturation_vapor_pressure</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">],</span> <span class="n">kind</span><span class="o">=</span><span class="s1">&#39;fast&#39;</span><span class="p">)</span>
     <span class="n">Pw</span> <span class="o">=</span> <span class="n">Pws</span> <span class="o">*</span> <span class="n">rh</span>
     <span class="n">Tdew</span> <span class="o">=</span> <span class="n">dew_point</span><span class="p">(</span><span class="n">Pw</span><span class="p">)</span>
     <span class="n">Pw_d</span><span class="p">,</span> <span class="n">Pw_dd</span> <span class="o">=</span> <span class="n">_derivatives</span><span class="p">(</span><span class="n">Pw</span><span class="p">,</span> <span class="n">Tdew</span><span class="p">)</span>
-    <span class="n">F</span> <span class="o">=</span> <span class="n">p</span><span class="o">*</span><span class="mi">1004</span> <span class="o">/</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">latent_heat</span><span class="o">*</span><span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span><span class="p">)</span>
+    <span class="n">F</span> <span class="o">=</span> <span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">]</span><span class="o">*</span><span class="mi">1004</span> <span class="o">/</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">latent_heat</span><span class="o">*</span><span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span><span class="p">)</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">Pw_dd</span><span class="o">/</span><span class="mi">2</span>
     <span class="n">B</span> <span class="o">=</span> <span class="n">Pw_d</span> <span class="o">+</span> <span class="n">F</span> <span class="o">-</span> <span class="n">Tdew</span><span class="o">*</span><span class="n">Pw_dd</span>
-    <span class="n">C</span> <span class="o">=</span> <span class="o">-</span><span class="n">Tdry</span><span class="o">*</span><span class="n">F</span> <span class="o">-</span> <span class="n">Tdew</span><span class="o">*</span><span class="n">Pw_d</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">Tdew</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">Pw_dd</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="o">-</span><span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">F</span> <span class="o">-</span> <span class="n">Tdew</span><span class="o">*</span><span class="n">Pw_d</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">Tdew</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">Pw_dd</span>
     <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="n">B</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">B</span><span class="o">*</span><span class="n">B</span> <span class="o">-</span> <span class="mi">4</span><span class="o">*</span><span class="n">A</span><span class="o">*</span><span class="n">C</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">A</span><span class="p">)</span></div>
 
 
@@ -196,10 +203,10 @@
     <span class="n">layer1_att</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;gas_atten&#39;</span><span class="p">][:][:,</span> <span class="mi">0</span><span class="p">]</span>
     <span class="n">gas_att</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="n">dheight</span><span class="o">*</span><span class="mf">1e-3</span> <span class="o">+</span> <span class="n">layer1_att</span>
     <span class="n">gas_att</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">gas_att</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">layer1_att</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;radar_gas_atten&#39;</span><span class="p">:</span> <span class="n">CloudnetArray</span><span class="p">(</span><span class="n">gas_att</span><span class="p">,</span> <span class="s1">&#39;radar_gas_atten&#39;</span><span class="p">)}</span></div>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;radar_gas_atten&#39;</span><span class="p">:</span> <span class="n">gas_att</span><span class="p">}</span></div>
 
 
-<div class="viewcode-block" id="liquid_atten"><a class="viewcode-back" href="../api.html#atmos.liquid_atten">[docs]</a><span class="k">def</span> <span class="nf">liquid_atten</span><span class="p">(</span><span class="n">mwr</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">liquid_bases</span><span class="p">,</span> <span class="n">is_rain</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+<div class="viewcode-block" id="liquid_atten"><a class="viewcode-back" href="../api.html#atmos.liquid_atten">[docs]</a><span class="k">def</span> <span class="nf">liquid_atten</span><span class="p">(</span><span class="n">mwr</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Calculates attenuation due to liquid water.</span>
 
 <span class="sd">    Args:</span>
@@ -221,12 +228,12 @@
 <span class="sd">          attenuation is present but we can not compute its value.</span>
 <span class="sd"> </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">spec_liq</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;specific_liquid_atten&#39;</span><span class="p">][:]</span>
-    <span class="n">is_liq</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="n">bits</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">spec_liq</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;specific_liquid_atten&#39;</span><span class="p">]</span>
+    <span class="n">is_liq</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="n">classification</span><span class="o">.</span><span class="n">category_bits</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">lwc_dz</span><span class="p">,</span> <span class="n">lwc_dz_err</span><span class="p">,</span> <span class="n">liq_att</span><span class="p">,</span> <span class="n">liq_att_err</span><span class="p">,</span> <span class="n">lwp_norm</span><span class="p">,</span> <span class="n">lwp_norm_err</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">is_liq</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">liquid_bases</span><span class="p">)</span>
-    <span class="n">lwc_dz</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">lwc</span><span class="o">.</span><span class="n">adiabatic_lwc</span><span class="p">(</span><span class="n">model</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">][:][</span><span class="n">ind</span><span class="p">],</span>
-                                    <span class="n">model</span><span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">][:][</span><span class="n">ind</span><span class="p">])</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">classification</span><span class="o">.</span><span class="n">liquid_bases</span><span class="p">)</span>
+    <span class="n">lwc_dz</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">lwc</span><span class="o">.</span><span class="n">adiabatic_lwc</span><span class="p">(</span><span class="n">model</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">],</span>
+                                    <span class="n">model</span><span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
     <span class="n">lwc_dz_err</span><span class="p">[</span><span class="n">is_liq</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">ffill</span><span class="p">(</span><span class="n">lwc_dz</span><span class="p">[</span><span class="n">is_liq</span><span class="p">])</span>
     <span class="n">ind_from_base</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">cumsumr</span><span class="p">(</span><span class="n">is_liq</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">lwc_adiab</span> <span class="o">=</span> <span class="n">ind_from_base</span><span class="o">*</span><span class="n">lwc_dz_err</span><span class="o">*</span><span class="n">utils</span><span class="o">.</span><span class="n">mdiff</span><span class="p">(</span><span class="n">height</span><span class="p">)</span><span class="o">*</span><span class="mf">1e3</span>
@@ -238,12 +245,13 @@
     <span class="n">liq_att</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mf">2e-3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">lwp_norm</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">spec_liq</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">liq_att_err</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="mf">2e-3</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">lwp_norm_err</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">spec_liq</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
                                         <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">liq_att</span><span class="p">,</span> <span class="n">cbit</span><span class="p">,</span> <span class="n">ucbit</span> <span class="o">=</span> <span class="n">_screen_liq_atten</span><span class="p">(</span><span class="n">liq_att</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">is_rain</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">({</span><span class="s1">&#39;radar_liquid_atten&#39;</span><span class="p">:</span> <span class="n">CloudnetArray</span><span class="p">(</span><span class="n">liq_att</span><span class="p">,</span> <span class="s1">&#39;radar_liquid_atten&#39;</span><span class="p">)},</span>
-            <span class="p">{</span><span class="s1">&#39;liq_att_err&#39;</span><span class="p">:</span> <span class="n">liq_att_err</span><span class="p">,</span> <span class="s1">&#39;is_corr&#39;</span><span class="p">:</span> <span class="n">cbit</span><span class="p">,</span> <span class="s1">&#39;is_not_corr&#39;</span><span class="p">:</span> <span class="n">ucbit</span><span class="p">})</span></div>
+    <span class="n">liq_att</span><span class="p">,</span> <span class="n">corr_atten</span><span class="p">,</span> <span class="n">uncorr_atten</span> <span class="o">=</span> <span class="n">_screen_liq_atten</span><span class="p">(</span><span class="n">liq_att</span><span class="p">,</span> <span class="n">classification</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;radar_liquid_atten&#39;</span><span class="p">:</span> <span class="n">liq_att</span><span class="p">,</span>
+            <span class="s1">&#39;liquid_atten_err&#39;</span><span class="p">:</span> <span class="n">liq_att_err</span><span class="p">,</span>
+            <span class="s1">&#39;liquid_corrected&#39;</span><span class="p">:</span> <span class="n">corr_atten</span><span class="p">,</span>
+            <span class="s1">&#39;liquid_uncorrected&#39;</span><span class="p">:</span> <span class="n">uncorr_atten</span><span class="p">}</span></div>
 
-
-<span class="k">def</span> <span class="nf">_screen_liq_atten</span><span class="p">(</span><span class="n">liq_atten</span><span class="p">,</span> <span class="n">bits</span><span class="p">,</span> <span class="n">is_rain</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_screen_liq_atten</span><span class="p">(</span><span class="n">liq_atten</span><span class="p">,</span> <span class="n">classification</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Removes corrupted data from liquid attenuation.</span>
 
 <span class="sd">    Args:</span>
@@ -259,12 +267,19 @@
 <span class="sd">        - ndarray: Boolean array denoting where liquid attenuation was present but not corrected.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">melting_layer</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="n">bits</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+    <span class="n">melting_layer</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="n">classification</span><span class="o">.</span><span class="n">category_bits</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
     <span class="n">uncorr_atten</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">melting_layer</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span>
-    <span class="n">uncorr_atten</span><span class="p">[</span><span class="n">is_rain</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">uncorr_atten</span><span class="p">[</span><span class="n">classification</span><span class="o">.</span><span class="n">is_rain</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">corr_atten</span> <span class="o">=</span> <span class="p">(</span><span class="n">liq_atten</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">uncorr_atten</span>
     <span class="n">liq_atten</span><span class="p">[</span><span class="n">uncorr_atten</span><span class="p">]</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
     <span class="k">return</span> <span class="n">liq_atten</span><span class="p">,</span> <span class="n">corr_atten</span><span class="p">,</span> <span class="n">uncorr_atten</span>
+
+
+<div class="viewcode-block" id="get_attenuations"><a class="viewcode-back" href="../api.html#atmos.get_attenuations">[docs]</a><span class="k">def</span> <span class="nf">get_attenuations</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mwr</span><span class="p">,</span> <span class="n">classification</span><span class="p">,</span> <span class="n">height</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wrapper for attenuations.&quot;&quot;&quot;</span>
+    <span class="n">gas</span> <span class="o">=</span> <span class="n">gas_atten</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">data_dense</span><span class="p">,</span> <span class="n">classification</span><span class="o">.</span><span class="n">category_bits</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="n">liquid</span> <span class="o">=</span> <span class="n">liquid_atten</span><span class="p">(</span><span class="n">mwr</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">data_dense</span><span class="p">,</span> <span class="n">classification</span><span class="p">,</span> <span class="n">height</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">gas</span><span class="p">,</span> <span class="o">**</span><span class="n">liquid</span><span class="p">}</span></div>
 </pre></div>
 
           </div>
@@ -274,14 +289,12 @@
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
-    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -303,7 +316,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Finnish Meteorological Institute.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>

@@ -4,7 +4,6 @@ various atmospheric parameters.
 
 import numpy as np
 import numpy.ma as ma
-from collections import namedtuple
 from cloudnetpy import constants as con
 from cloudnetpy import lwc
 from cloudnetpy import utils
@@ -38,8 +37,8 @@ def saturation_vapor_pressure(temp_kelvin):
 
         """
     a, m, tn = VAISALA_PARAMS
-    temp_celcius = k2c(temp_kelvin)
-    return a * 10**((m*temp_celcius) / (temp_celcius+tn)) * 100
+    temp_celsius = k2c(temp_kelvin)
+    return a * 10**((m*temp_celsius) / (temp_celsius+tn)) * 100
 
 
 def dew_point_temperature(vapor_pressure):
@@ -56,8 +55,8 @@ def dew_point_temperature(vapor_pressure):
 
     """
     a, m, tn = VAISALA_PARAMS
-    dew_point_celcius = tn / ((m/np.log10(vapor_pressure/100/a))-1)
-    return c2k(dew_point_celcius)
+    dew_point_celsius = tn / ((m/np.log10(vapor_pressure/100/a))-1)
+    return c2k(dew_point_celsius)
 
 
 def wet_bulb(model_data):
@@ -78,7 +77,6 @@ def wet_bulb(model_data):
         temperatures by modifying the psychrometric formula.
 
     """
-
     def _screen_rh():
         rh = model_data['rh']
         rh[rh < 1e-5] = 1e-5
@@ -105,7 +103,8 @@ def wet_bulb(model_data):
     psychrometric_const = _psychrometric_constant()
     a = 0.5*second_der
     b = first_der + psychrometric_const - dew_point*second_der
-    c = (-model_data['temperature']*psychrometric_const - dew_point*first_der
+    c = (-model_data['temperature']*psychrometric_const
+         - dew_point*first_der
          + 0.5*dew_point**2*second_der)
     return (-b+np.sqrt(b*b-4*a*c))/(2*a)
 

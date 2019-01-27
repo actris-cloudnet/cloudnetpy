@@ -112,8 +112,7 @@ def find_liquid(obs, peak_amp=2e-5, max_width=300, min_points=3,
     """ Estimate liquid layers from SNR-screened attenuated backscattering.
 
     Args:
-        beta (MaskedArray): 2-D array of attenuated backscattering.
-        height (ndarray): 1-D altitude grid (m).
+        obs (ClassData): Observations container.
         peak_amp (float, optional): Minimum value of peak. Default is 2e-5.
         max_width (float, optional): Maximum width of peak. Default is 300 (m).
         min_points (int, optional): Minimum number of valid points in peak.
@@ -123,11 +122,7 @@ def find_liquid(obs, peak_amp=2e-5, max_width=300, min_points=3,
             is always positive. Default is 2e-7.
 
     Returns:
-        3-element tuple containing
-
-        - ndarray: 2-D boolean array denoting liquid layers.
-        - ndarray: 2-D boolean array denoting cloud bases.
-        - ndarray: 2-D boolean array denoting cloud tops.
+        dict: Dict containing 'presence', 'bases' and 'tops'.
 
     """
 
@@ -167,17 +162,17 @@ def correct_liquid_top(obs, liquid, is_freezing):
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
-        Z (MaskedArray): 2-D array of radar echo.
-        Tw (ndarray): 2-D array of wet bulb temperature.
+        obs (ClassData): Observations container.
+        liquid (dict): Dictionary for liquid clouds.
         is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
             derived from the model temperature and melting layer based
             on radar data.
-        is_liquid (ndarray): 2-D boolean array of liquid clouds.
-        liquid_top (ndarray): 2-D boolean array of liquid cloud tops.
-        height (ndarray): 1-D altitude grid (m).
 
     Returns:
         ndarray: Corrected liquid cloud array.
+
+    See also:
+        droplet.find_liquid()
 
     """
     top_above = utils.n_elements(obs.height, 750)

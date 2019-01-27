@@ -4,22 +4,29 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Quickstart &#8212; CloudnetPy  documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="High level APIs" href="api.html" />
+    <link rel="next" title="High-level APIs" href="api.html" />
     <link rel="prev" title="Overview" href="overview.html" /> 
-  </head><body>
+  </head>
+  <body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -30,7 +37,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="api.html" title="High level APIs"
+          <a href="api.html" title="High-level APIs"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="overview.html" title="Overview"
@@ -49,24 +56,24 @@
 <p>CloudnetPy is available from <a class="reference external" href="https://pypi.org/project/cloudnetpy/">PyPI</a>, the Python package index. It allows a pip-based
 installation.</p>
 <p>First, install prerequisite software (if you already haven’t):</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> sudo apt update <span class="o">&amp;&amp;</span> sudo apt upgrade
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> sudo apt update <span class="o">&amp;&amp;</span> sudo apt upgrade
 <span class="gp">$</span> sudo apt install python3 python3-pip libnetcdf-dev
 </pre></div>
 </div>
 <p>Then, create a new virtual enviroment and activate it:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python3 -m venv venv
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> python3 -m venv venv
 <span class="gp">$</span> <span class="nb">source</span> venv/bin/activate
 </pre></div>
 </div>
 <p>Install the required Python packages:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(venv)$</span> pip3 install scipy netcdf4 cloudnetpy
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">(venv)$</span> pip3 install scipy netcdf4 cloudnetpy
 </pre></div>
 </div>
 <p>That’s it! If you have cloud radar, ceilometer, microwave
 radiometer and model data in NetCDF files, it’s easy to
 start processing using CloudnetPy’s high level APIs.
 For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="kn">import</span> <span class="n">categorize</span> <span class="k">as</span> <span class="n">cat</span>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="kn">import</span> <span class="n">categorize</span> <span class="k">as</span> <span class="n">cat</span>
 
 <span class="n">input_files</span> <span class="o">=</span> <span class="p">(</span>
               <span class="s1">&#39;radar_file.nc&#39;</span><span class="p">,</span>
@@ -82,7 +89,7 @@ For example:</p>
 <p>Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
 contain all the latest features and modifications. To get an up-to-date
 version of CloudnetPy, download it directly from <a class="reference external" href="https://github.com/tukiains/cloudnetpy">GitHub</a>:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/tukiains/cloudnetpy
+<div class="highlight-console"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/tukiains/cloudnetpy
 </pre></div>
 </div>
 </div>
@@ -98,7 +105,7 @@ version of CloudnetPy, download it directly from <a class="reference external" h
                         title="previous chapter">Overview</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="api.html"
-                        title="next chapter">High level APIs</a></p>
+                        title="next chapter">High-level APIs</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -108,14 +115,12 @@ version of CloudnetPy, download it directly from <a class="reference external" h
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
-    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -132,7 +137,7 @@ version of CloudnetPy, download it directly from <a class="reference external" h
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="api.html" title="High level APIs"
+          <a href="api.html" title="High-level APIs"
              >next</a> |</li>
         <li class="right" >
           <a href="overview.html" title="Overview"
@@ -142,7 +147,7 @@ version of CloudnetPy, download it directly from <a class="reference external" h
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Finnish Meteorological Institute.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
     </div>
   </body>
 </html>
