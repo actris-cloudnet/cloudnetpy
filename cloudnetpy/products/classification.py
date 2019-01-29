@@ -6,10 +6,6 @@ import numpy as np
 from ncf import CnetVar
 import utils
 
-
-
-
-
 def generate_class(cat_file):
     cat = netCDF4.Dataset(cat_file)
     vrs = cat.variables
