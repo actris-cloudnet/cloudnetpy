@@ -419,22 +419,6 @@ def n_elements(x, dist, var=None):
     return int(np.round(n))
 
 
-def km2m(var):
-    """Converts km to m."""
-    alt = var[:]
-    if var.units == 'km':
-        alt = alt*1000
-    return alt
-
-
-def m2km(var):
-    """Converts m to km."""
-    alt = var[:]
-    if var.units == 'm':
-        alt = alt/1000
-    return alt
-
-
 def isscalar(array):
     """Tests if input is scalar.
 

@@ -4,27 +4,21 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>utils &#8212; CloudnetPy  documentation</title>
     <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../',
-        VERSION:     '',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true,
-        SOURCELINK_SUFFIX: '.txt'
-      };
-    </script>
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
-  </head>
-  <body>
+  </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
       <ul>
@@ -48,13 +42,61 @@
 <span></span><span class="sd">&quot;&quot;&quot; This module contains general</span>
 <span class="sd">helper functions. &quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">import</span> <span class="nn">uuid</span>
-<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
+<span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">stats</span><span class="p">,</span> <span class="n">ndimage</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">RectBivariateSpline</span>
+
+
+<span class="n">SECONDS_PER_HOUR</span> <span class="o">=</span> <span class="mi">3600</span>
+<span class="n">SECONDS_PER_DAY</span> <span class="o">=</span> <span class="mi">86400</span>
+
+
+<div class="viewcode-block" id="seconds2hour"><a class="viewcode-back" href="../api.html#utils.seconds2hour">[docs]</a><span class="k">def</span> <span class="nf">seconds2hour</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts seconds since some epoch to fraction hour.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        time_in_seconds (ndarray): 1-D array of seconds since some epoch</span>
+<span class="sd">            that starts on midnight.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Time as fraction hour.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Excludes leap seconds.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seconds_since_midnight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">,</span> <span class="n">SECONDS_PER_DAY</span><span class="p">)</span>
+    <span class="n">fraction_hour</span> <span class="o">=</span> <span class="n">seconds_since_midnight</span><span class="o">/</span><span class="n">SECONDS_PER_HOUR</span>
+    <span class="k">if</span> <span class="n">fraction_hour</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">fraction_hour</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">24</span>
+    <span class="k">return</span> <span class="n">fraction_hour</span></div>
+
+
+<div class="viewcode-block" id="time_grid"><a class="viewcode-back" href="../api.html#utils.time_grid">[docs]</a><span class="k">def</span> <span class="nf">time_grid</span><span class="p">(</span><span class="n">time_step</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns decimal hour array between 0 and 24.</span>
+
+<span class="sd">    Computes fraction hour time vector 0-24 with user-given</span>
+<span class="sd">    resolution (in seconds) where 60 is the maximum allowed value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        time_step (int, optional): Time resolution in seconds between</span>
+<span class="sd">            1 and 60. Default is 30.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Time vector between 0 and 24.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: Bad resolution as input.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">time_step</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">60</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Time resolution should be between 0 and 60 [s]&#39;</span><span class="p">)</span>
+    <span class="n">half_step</span> <span class="o">=</span> <span class="n">time_step</span><span class="o">/</span><span class="n">SECONDS_PER_HOUR</span><span class="o">/</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">half_step</span><span class="p">,</span> <span class="mi">24</span><span class="o">+</span><span class="n">half_step</span><span class="p">,</span> <span class="n">half_step</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="findkey"><a class="viewcode-back" href="../api.html#utils.findkey">[docs]</a><span class="k">def</span> <span class="nf">findkey</span><span class="p">(</span><span class="n">vrs</span><span class="p">,</span> <span class="n">possible_fields</span><span class="p">):</span>
@@ -63,7 +105,7 @@
 <span class="sd">    Args:</span>
 <span class="sd">        vrs (dict): Dictionary or other</span>
 <span class="sd">            iterable containing strings.</span>
-<span class="sd">        fields (tuple): List of possible strings to be</span>
+<span class="sd">        possible_fields (tuple): List of possible strings to be</span>
 <span class="sd">            searched.</span>
 
 <span class="sd">    Returns:</span>
@@ -87,48 +129,6 @@
         <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">vrs</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">field</span>
     <span class="k">return</span> <span class="kc">None</span></div>
-
-
-<div class="viewcode-block" id="seconds2hour"><a class="viewcode-back" href="../api.html#utils.seconds2hour">[docs]</a><span class="k">def</span> <span class="nf">seconds2hour</span><span class="p">(</span><span class="n">time_in</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts seconds since some epoch to fraction hour.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        time_in (ndarray): 1-D array of seconds since some epoch</span>
-<span class="sd">            that starts on midnight.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        ndarray: Time as fraction hour.</span>
-
-<span class="sd">    Notes:</span>
-<span class="sd">        Excludes leap seconds.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">seconds_since_midnight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">time_in</span><span class="p">,</span> <span class="mi">86400</span><span class="p">)</span>
-    <span class="n">fraction_hour</span> <span class="o">=</span> <span class="n">seconds_since_midnight</span><span class="o">/</span><span class="mi">3600</span>
-    <span class="k">if</span> <span class="n">fraction_hour</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">fraction_hour</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">24</span>
-    <span class="k">return</span> <span class="n">fraction_hour</span></div>
-
-
-<div class="viewcode-block" id="time_grid"><a class="viewcode-back" href="../api.html#utils.time_grid">[docs]</a><span class="k">def</span> <span class="nf">time_grid</span><span class="p">(</span><span class="n">reso</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Computes fraction hour time vector 0-24 with user-given</span>
-<span class="sd">    resolution (in seconds) where 60 is the maximum allowed value.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        reso (int, optional): Time resolution in seconds between 1 and 60.</span>
-<span class="sd">            Default is 30.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        ndarray: Time vector between 0 and 24.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: Bad resolution as input.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">reso</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">reso</span> <span class="o">&gt;</span> <span class="mi">60</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Time resolution should be between 0 and 60 [s]&#39;</span><span class="p">)</span>
-    <span class="n">half_step</span> <span class="o">=</span> <span class="n">reso</span><span class="o">/</span><span class="mi">7200</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">half_step</span><span class="p">,</span> <span class="mi">24</span><span class="o">+</span><span class="n">half_step</span><span class="p">,</span> <span class="n">half_step</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="binvec"><a class="viewcode-back" href="../api.html#utils.binvec">[docs]</a><span class="k">def</span> <span class="nf">binvec</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -167,7 +167,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">edges</span> <span class="o">=</span> <span class="n">binvec</span><span class="p">(</span><span class="n">x_new</span><span class="p">)</span>
     <span class="n">datai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">x_new</span><span class="p">),</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># data can contain nan-values</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># data may contain nan-values</span>
     <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">T</span><span class="p">):</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">values</span><span class="o">.</span><span class="n">mask</span>
         <span class="k">if</span> <span class="n">ma</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">mask</span><span class="p">]):</span>
@@ -271,7 +271,8 @@
 <span class="sd">        ndarray: Interpolated data.</span>
 
 <span class="sd">    Notes:</span>
-<span class="sd">        Does not work with nans.</span>
+<span class="sd">        Does not work with nans. Ignores mask of masked data.</span>
+<span class="sd">        Does not extrapolate.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">fun</span> <span class="o">=</span> <span class="n">RectBivariateSpline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">kx</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ky</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># linear interpolation</span>
@@ -459,22 +460,6 @@
     <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">n</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="km2m"><a class="viewcode-back" href="../api.html#utils.km2m">[docs]</a><span class="k">def</span> <span class="nf">km2m</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts km to m.&quot;&quot;&quot;</span>
-    <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
-    <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;km&#39;</span><span class="p">:</span>
-        <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="o">*</span><span class="mi">1000</span>
-    <span class="k">return</span> <span class="n">alt</span></div>
-
-
-<div class="viewcode-block" id="m2km"><a class="viewcode-back" href="../api.html#utils.m2km">[docs]</a><span class="k">def</span> <span class="nf">m2km</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Converts m to km.&quot;&quot;&quot;</span>
-    <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
-    <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
-        <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span><span class="o">/</span><span class="mi">1000</span>
-    <span class="k">return</span> <span class="n">alt</span></div>
-
-
 <div class="viewcode-block" id="isscalar"><a class="viewcode-back" href="../api.html#utils.isscalar">[docs]</a><span class="k">def</span> <span class="nf">isscalar</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Tests if input is scalar.</span>
 
@@ -503,15 +488,16 @@
 
 
 <div class="viewcode-block" id="get_uuid"><a class="viewcode-back" href="../api.html#utils.get_uuid">[docs]</a><span class="k">def</span> <span class="nf">get_uuid</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Returns unique file identifier.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Returns unique identifier.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="read_cloudnet_database"><a class="viewcode-back" href="../api.html#utils.read_cloudnet_database">[docs]</a><span class="k">def</span> <span class="nf">read_cloudnet_database</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="o">*</span><span class="n">fields_in</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Read metadata from Cloudnet http API.&quot;&quot;&quot;</span>
-    <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">fields_in</span><span class="p">))</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields_in</span><span class="p">)</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;http://devcloudnet.fmi.fi/api/&#39;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;http://devcloudnet.fmi.fi/api/?site=&#39;</span> <span class="o">+</span> <span class="n">site</span> <span class="o">+</span> <span class="s1">&#39;&amp;fields=&#39;</span> <span class="o">+</span> <span class="n">fields</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{url}</span><span class="s2">?site=</span><span class="si">{site}</span><span class="s2">&amp;fields=</span><span class="si">{fields}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
     <span class="k">except</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">fields_in</span><span class="p">))</span></div>
 </pre></div>
@@ -523,12 +509,14 @@
         <div class="sphinxsidebarwrapper">
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
+    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <div><input type="text" name="q" /></div>
-      <div><input type="submit" value="Go" /></div>
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
+    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
         </div>
@@ -550,7 +538,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Finnish Meteorological Institute.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.6.7.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

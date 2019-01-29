@@ -20,7 +20,7 @@ def k2c(temp):
     return np.array(temp) - 273.15
 
 
-VAISALA_PARAMS = (6.116441, 7.591386, 240.7263)
+VAISALA_PARAMS_OVER_WATER = (6.116441, 7.591386, 240.7263)
 
 
 def saturation_vapor_pressure(temp_kelvin):
@@ -36,7 +36,7 @@ def saturation_vapor_pressure(temp_kelvin):
         Vaisala's white paper: "Humidity conversion formulas".
 
         """
-    a, m, tn = VAISALA_PARAMS
+    a, m, tn = VAISALA_PARAMS_OVER_WATER
     temp_celsius = k2c(temp_kelvin)
     return a * 10**((m*temp_celsius) / (temp_celsius+tn)) * 100
 
@@ -54,7 +54,7 @@ def dew_point_temperature(vapor_pressure):
         Method from Vaisala's white paper: "Humidity conversion formulas".
 
     """
-    a, m, tn = VAISALA_PARAMS
+    a, m, tn = VAISALA_PARAMS_OVER_WATER
     dew_point_celsius = tn / ((m/np.log10(vapor_pressure/100/a))-1)
     return c2k(dew_point_celsius)
 
