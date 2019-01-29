@@ -1,4 +1,4 @@
-from classification_vanha import generate_class
+from classification import generate_class
 from ncf import save_Cnet
 
 # test file

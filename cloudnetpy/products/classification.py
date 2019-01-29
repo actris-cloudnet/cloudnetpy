@@ -1,9 +1,14 @@
 import sys
 sys.path.insert(0, '/home/korpinen/Documents/ACTRIS/cloudnetpy/cloudnetpy')
+
 import netCDF4
 import numpy as np
 from ncf import CnetVar
 import utils
+
+
+
+
 
 def generate_class(cat_file):
     cat = netCDF4.Dataset(cat_file)
