@@ -1,10 +1,9 @@
 import sys
 sys.path.insert(0, '/home/korpinen/Documents/ACTRIS/cloudnetpy/cloudnetpy')
-
 import netCDF4
 import numpy as np
-from ncf import CnetVar
 import utils
+from ncf import CnetVar
 
 def generate_class(cat_file):
     cat = netCDF4.Dataset(cat_file)
@@ -28,70 +27,20 @@ def class2cnet(vars_in):
     obs = []
     s, lname = ('target_classification', 'Target classification')
     obs.append(CnetVar(s, vars_in[s], data_type='b', fill_value=None, long_name=lname, plot_range=(0,10),
-                       comment=('This variable is a simplification of the bitfield "category_bits" in the target categorization and data quality dataset.\n',
-                     'It provides the 9 main atmospheric target classifications that can be distinguished by radar and lidar.\n',
-                     'The classes are defined in the definition and long_definition attributes.'),
-                       extra_attributes={'definition':('0: Clear sky',
-                                                       '1: Cloud droplets only',
-                                                       '2: Drizzle or rain',
-                                                       '3: Drizzle/rain & cloud droplets',
-                                                       '4: Ice',
-                                                       '5: Ice & supercooled droplets',
-                                                       '6: Melting ice',
-                                                       '7: Melting ice & cloud droplets',
-                                                       '8: Aerosol',
-                                                       '9: Insects',
-                                                       '10: Aerosol & insects'),
-                                         'long_definition':('0: Clear sky',
-                                                            '1: Cloud liquid droplets only',
-                                                            '2: Drizzle or rain',
-                                                            '3: Drizzle or rain coexisting with cloud liquid droplets',
-                                                            '4: Ice particles',
-                                                            '5: Ice coexisting with supercooled liquid droplets',
-                                                            '6: Melting ice particles',
-                                                            '7: Melting ice particles coexisting with cloud liquid droplets',
-                                                            '8: Aerosol particles, no cloud or precipitation',
-                                                            '9: Insects, no cloud or precipitation',
-                                                            '10: Aerosol coexisting with insects, no cloud or precipitation'),
-                                         'legend_key_red':(1, 0.4, 1, 0, 1, 0, 1, 0, 0.8, 0.6, 0.4),
-                                         'legend_key_green':(1, 0.8, 0, 0, 0.9, 0.8, 0.6, 0.6, 0.8, 0.6, 0.4),
-                                         'legend_key_blue':(1, 1, 0, 1, 0, 0, 0, 0.6, 0.8, 0.6, 0.4)}))
+                       comment='classification_pixels' ,
+                       extra_attributes={'definition':'definition'}))
 
     s, lname = ('detection_status', 'Radar and lidar detection status')
     obs.append(CnetVar(s, vars_in[s], long_name=lname, plot_range=(0, 9), fill_value=None,
-                       comment=('This variable is a simplification of the bitfield "quality_bits" in the target categorization and data quality dataset.',
-                                'It reports on the reliability of the radar and lidar data used to perform the classification.',
-                                'The classes are defined in the definition and long_definition attributes.'),
-                       extra_attributes={'definition':('0: Clear sky',
-                                                       '1: Lidar echo only',
-                                                       '2: Radar echo but uncorrected atten.',
-                                                       '3: Good radar & lidar echos',
-                                                       '4: No radar but unknown attenuation',
-                                                       '5: Good radar echo only',
-                                                       '6: No radar but known attenuation',
-                                                       '7: Radar corrected for liquid atten.',
-                                                       '8: Radar ground clutter',
-                                                       '9: Lidar molecular scattering'),
-                                         'long_definition':('0: Clear sky',
-                                                            '1: Lidar echo only',
-                                                            '2: Radar echo but reflectivity may be unreliable as attenuation by rain, melting ice or liquid cloud has not been corrected',
-                                                            '3: Good radar and lidar echos',
-                                                            '4: No radar echo but rain or liquid cloud beneath mean that attenuation that would be experienced is unknown',
-                                                            '5: Good radar echo only',
-                                                            '6: No radar echo but known attenuation',
-                                                            '7: Radar echo corrected for liquid cloud attenuation using microwave radiometer data',
-                                                            '8: Radar ground clutter',
-                                                            '9: Lidar clear-air molecular scattering'),
-                                         'legend_key_red':(1, 1, 0.4, 0, 0.6, 0.4, 0.8, 0, 1, 1),
-                                         'legend_key_green':(1, 0.9, 0.4, 0.8, 0.6, 0.8, 0.8, 0, 0, 0.6),
-                                         'legend_key_blue':(1, 0, 0.4, 0, 0.6, 1, 0.8, 1, 0, 0)}))
+                       comment=('comment'),
+                       extra_attributes={'definition':'definition'}))
 
     s, lname = ('cloud_base_height', 'Height of cloud base above ground')
     obs.append(CnetVar(s, vars_in[s], size='time', long_name=lname, units='m',
-                       comment='This variable was calculated from the instance of cloud in the cloud mask variable and provides cloud base height for a maximum of 1 cloud layers'))
+                       comment='cloud_bottom'))
     s, lname = ('cloud_top_height', 'Height of cloud top above ground')
     obs.append(CnetVar(s, vars_in[s], size='time', long_name=lname, units='m',
-                       comment='This variable was calculated from the instance of cloud in the cloud mask variable and provides cloud base top for a maximum of 1 cloud layers'))
+                       comment='cloud_top'))
 
     return obs
 
