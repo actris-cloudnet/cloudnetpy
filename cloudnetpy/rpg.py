@@ -5,12 +5,12 @@ import numpy.ma as ma
 
 
 class Rpg:
-    """RPG Cloud Radar Level 1 reader."""
+    """RPG Cloud Radar Level 1 data reader."""
     def __init__(self, filename):
         self.filename = filename
         self._file_position = 0
+        self._dual_pol = False
         self.header = self.read_rpg_header()
-        self.dual_pol = self.is_dual_pol()
         self.data = self.read_rpg_data()
 
     @staticmethod
@@ -25,40 +25,38 @@ class Rpg:
                 break
         return str_out
 
-    def is_dual_pol(self):
-        if self.header['DualPol'] > 0:
-            return True
-        return False
-
     def read_rpg_header(self):
         """Reads the header or rpg binary file."""
-        def insert(names, dtype=np.int32, n_values=1):
+
+        def append(names, dtype=np.int32, n_values=1):
             for name in names:
                 header[name] = np.fromfile(f, dtype, int(n_values))
 
         header = {}
         f = open(self.filename, 'rb')
-        insert(('FileCode', 'HeaderLen'))
-        insert(('StartTime', 'StopTime'), np.uint32)
-        insert(('CGProg', 'ModelNo'))
+        append(('FileCode', 'HeaderLen'))
+        append(('StartTime', 'StopTime'), np.uint32)
+        append(('CGProg', 'ModelNo'))
         header['ProgName'] = Rpg.read_string(f)
         header['CustName'] = Rpg.read_string(f)
-        insert(('Freq', 'AntSep', 'AntDia', 'AntGain', 'AntBW'), np.float32)
+        append(('Freq', 'AntSep', 'AntDia', 'AntGain', 'AntBW'), np.float32)
         header['AntGain'] = 10*np.log10(header['AntGain'])
-        insert(('DualPol',), np.int8)
-        insert(('SampDur', 'GPSLat', 'GPSLon'), np.float32)
-        insert(('CalInt', 'NumbGates', 'NumbLayersT', 'NumbLayersH', 'SequN'))
-        insert(('RAlts',), np.float32, header['NumbGates'])
-        insert(('TAlts',), np.float32, header['NumbLayersT'])
-        insert(('HAlts',), np.float32, header['NumbLayersH'])
-        seq_un = header['SequN']
-        insert(('SpecN', 'RngOffs', 'ChirpReps'), n_values=seq_un)
-        insert(('SeqIntTime', 'dR', 'MaxVel'), np.float32, seq_un)
-        insert(('SupPowLev', 'SpkFilEna', 'PhaseCorr', 'RelPowCorr', 'FFTWin'), np.int8)
-        insert(('FFTIntRng',))
-        insert(('NoiseFilt',), np.float32)
+        append(('DualPol',), np.int8)
+        append(('SampDur', 'GPSLat', 'GPSLon'), np.float32)
+        append(('CalInt', 'NumbGates', 'NumbLayersT', 'NumbLayersH', 'SequN'))
+        append(('RAlts',), np.float32, header['NumbGates'])
+        append(('TAlts',), np.float32, header['NumbLayersT'])
+        append(('HAlts',), np.float32, header['NumbLayersH'])
+        append(('SpecN', 'RngOffs', 'ChirpReps'), n_values=header['SequN'])
+        append(('SeqIntTime', 'dR', 'MaxVel'), np.float32, header['SequN'])
+        append(('SupPowLev', 'SpkFilEna', 'PhaseCorr', 'RelPowCorr', 'FFTWin'),
+               np.int8)
+        append(('FFTIntRng',))
+        append(('NoiseFilt',), np.float32)
         self._file_position = f.tell()
         f.close()
+        if header['DualPol'] > 0:
+            self._dual_pol = True
         return header
 
     def read_rpg_data(self):
@@ -93,10 +91,12 @@ class Rpg:
             shapes = create_shapes()
             fun = np.zeros
             vrs = {}
+            # Variable group 0
             vrs['SampBytes'] = (fun(shapes[0], np.int), np.int32)
             vrs['Time'] = (fun(shapes[0], np.int), np.uint32)
             vrs['Time_usec'] = (fun(shapes[0], np.int), np.int32)
             vrs['QF'] = (fun(shapes[0], np.int), np.int8)
+            # Variable group 1
             for var_name in ('RR', 'RH', 'T', 'P', 'WS', 'WD', 'DD_V', 'Tb',
                              'LWP', 'PowIF', 'El', 'Az', 'BlwStatus',
                              'TransPow', 'TransT', 'RecT', 'PCT'):
@@ -104,24 +104,15 @@ class Rpg:
             vrs['T_Prof'] = (fun(shapes[1]), np.float32)
             for var_name in ('AbsHumid_Prof', 'RH_Prof'):
                 vrs[var_name] = (fun(shapes[2]), np.float32)
+            # Variable group 2
             for var_name in ('Sensit_v', 'Sensit_h'):
                 vrs[var_name] = (fun(shapes[3]), np.float32)
             vrs['PrMsk'] = (fun(shapes[3], np.int), np.int8)
-            for var_name in ('Zv', 'Vel', 'SW', 'Skew', 'Kurt', 'LDR', 'CorrC',
-                             'PhiX'):
+            # Variable groups 3 and 4
+            for var_name in ('Zv', 'Vel', 'SW', 'Skew', 'Kurt',   # group 3
+                             'LDR', 'CorrC', 'PhiX'):             # group 4
                 vrs[var_name] = (fun(shapes[3]), np.float32)
             return vrs
-
-        def append(name, n_elements):
-            """Append data into already allocated arrays."""
-            array, dtype = data[name]
-            values = np.fromfile(f, dtype, n_elements)
-            if n_elements == 1 and array.ndim == 1:
-                array[sample] = values
-            elif n_elements == 1 and array.ndim == 2:
-                array[sample][gate] = values
-            else:
-                array[sample][:] = values
 
         def get_keyranges():
             """Returns dict-names for the different 'groups' of variables.
@@ -143,6 +134,17 @@ class Rpg:
                     _keyrange('Sensit_v', 'PrMsk'),
                     _keyrange('Zv', 'Kurt'),
                     _keyrange('LDR', 'PhiX'))
+
+        def append(name, n_elements):
+            """Append data into already allocated arrays."""
+            array, dtype = data[name]
+            values = np.fromfile(f, dtype, n_elements)
+            if n_elements == 1 and array.ndim == 1:
+                array[sample] = values
+            elif n_elements == 1 and array.ndim == 2:
+                array[sample][gate] = values
+            else:
+                array[sample][:] = values
 
         def _fix_output():
             """Returns just the data arrays as MaskedArrays."""
@@ -178,7 +180,7 @@ class Rpg:
                     for key in keyranges[3]:
                         append(key, 1)
 
-                    if self.dual_pol:
+                    if self._dual_pol:
                         for key in keyranges[4]:
                             append(key, 1)
         f.close()
@@ -187,11 +189,8 @@ class Rpg:
 
 def get_rpg_files(path_to_l1_files):
     """Returns list of RPG Level 1 files for one day - sorted by filename."""
-    l1_files = []
-    for _, _, files in os.walk(path_to_l1_files):
-        for filename in files:
-            if filename.endswith('LV1'):
-                l1_files.append(f"{path_to_l1_files}{filename}")
+    all_files = os.listdir(path_to_l1_files)
+    l1_files = [path_to_l1_files+f for f in all_files if f.endswith('LV1')]
     l1_files.sort()
     return l1_files
 
