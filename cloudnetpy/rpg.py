@@ -1,3 +1,4 @@
+import os
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
@@ -221,3 +222,30 @@ class Rpg:
         f.close()
         return _fix_output()
 
+
+def get_rpg_files(path_to_l1_files):
+    """Returns list of RPG Level 1 files for one day - sorted by filename."""
+    l1_files = []
+    for _, _, files in os.walk(path_to_l1_files):
+        for filename in files:
+            if filename.endswith('LV1'):
+                l1_files.append(f"{path_to_l1_files}{filename}")
+    l1_files.sort()
+    return l1_files
+
+
+def get_rpg_objects(rpg_files):
+    for f in rpg_files:
+        yield Rpg(f)
+
+
+def concatenate_rpg_data(rpg_objects):
+    """Combines data from hourly Rpg() objects."""
+    fields = ('Time', 'Zv', 'LDR', 'CorrC', 'PhiX', 'SW', 'Skew',
+              'Kurt', 'Vel', 'LWP', 'T', 'RH', 'TransPow')
+    radar = dict.fromkeys(fields, np.array([]))
+    for rpg in rpg_objects:
+        for name in fields:
+            radar[name] = (np.concatenate((radar[name], rpg.data[name]))
+                           if radar[name].size else rpg.data[name])
+    return radar
