@@ -1,3 +1,4 @@
+"""This module contains RPG Cloud Radar related functions."""
 import os
 from collections import namedtuple
 import numpy as np
@@ -29,16 +30,17 @@ class Rpg:
         """Reads the header or rpg binary file."""
 
         def append(names, dtype=np.int32, n_values=1):
+            """Updates header dictionary."""
             for name in names:
-                header[name] = np.fromfile(f, dtype, int(n_values))
+                header[name] = np.fromfile(file, dtype, int(n_values))
 
         header = {}
-        f = open(self.filename, 'rb')
+        file = open(self.filename, 'rb')
         append(('FileCode', 'HeaderLen'))
         append(('StartTime', 'StopTime'), np.uint32)
         append(('CGProg', 'ModelNo'))
-        header['ProgName'] = Rpg.read_string(f)
-        header['CustName'] = Rpg.read_string(f)
+        header['ProgName'] = Rpg.read_string(file)
+        header['CustName'] = Rpg.read_string(file)
         append(('Freq', 'AntSep', 'AntDia', 'AntGain', 'AntBW'), np.float32)
         header['AntGain'] = 10*np.log10(header['AntGain'])
         append(('DualPol',), np.int8)
@@ -53,29 +55,29 @@ class Rpg:
                np.int8)
         append(('FFTIntRng',))
         append(('NoiseFilt',), np.float32)
-        self._file_position = f.tell()
-        f.close()
+        self._file_position = file.tell()
+        file.close()
         if header['DualPol'] > 0:
             self._dual_pol = True
         return header
 
     def read_rpg_data(self):
-        """Read the actual data from rpg binary file."""
+        """Reads the actual data from rpg binary file."""
         Dimensions = namedtuple('Dimensions', ['n_samples',
                                                'n_gates',
                                                'n_layers_t',
                                                'n_layers_h'])
 
         def create_dimensions():
-            """Loop lengths in the data read."""
-            n_samples = np.fromfile(f, np.int32, 1)
+            """Returns loop lengths for the data read."""
+            n_samples = np.fromfile(file, np.int32, 1)
             return Dimensions(int(n_samples),
                               int(self.header['NumbGates']),
                               int(self.header['NumbLayersT']),
                               int(self.header['NumbLayersH']))
 
         def create_shapes():
-            """Possible shapes of the data arrays."""
+            """Returns possible shapes of the data arrays."""
             return((dims.n_samples,),
                    (dims.n_samples, dims.n_layers_t),
                    (dims.n_samples, dims.n_layers_h),
@@ -138,7 +140,7 @@ class Rpg:
         def append(name, n_elements):
             """Append data into already allocated arrays."""
             array, dtype = data[name]
-            values = np.fromfile(f, dtype, n_elements)
+            values = np.fromfile(file, dtype, n_elements)
             if n_elements == 1 and array.ndim == 1:
                 array[sample] = values
             elif n_elements == 1 and array.ndim == 2:
@@ -153,8 +155,8 @@ class Rpg:
                 out[name] = ma.masked_equal(data[name][0], 0)
             return out
 
-        f = open(self.filename, 'rb')
-        f.seek(self._file_position)
+        file = open(self.filename, 'rb')
+        file.seek(self._file_position)
         dims = create_dimensions()
         data = create_variables()
         keyranges = get_keyranges()
@@ -164,7 +166,7 @@ class Rpg:
             for key in keyranges[0]:
                 append(key, 1)
 
-            _ = np.fromfile(f, np.int32, 3)
+            _ = np.fromfile(file, np.int32, 3)
 
             append('T_Prof', dims.n_layers_t)
 
@@ -183,21 +185,22 @@ class Rpg:
                     if self._dual_pol:
                         for key in keyranges[4]:
                             append(key, 1)
-        f.close()
+        file.close()
         return _fix_output()
 
 
 def get_rpg_files(path_to_l1_files):
     """Returns list of RPG Level 1 files for one day - sorted by filename."""
-    all_files = os.listdir(path_to_l1_files)
-    l1_files = [path_to_l1_files+f for f in all_files if f.endswith('LV1')]
+    files = os.listdir(path_to_l1_files)
+    l1_files = [path_to_l1_files+file for file in files if file.endswith('LV1')]
     l1_files.sort()
     return l1_files
 
 
 def get_rpg_objects(rpg_files):
-    for f in rpg_files:
-        yield Rpg(f)
+    """Creates a list of Rpg() objects from the filenames."""
+    for file in rpg_files:
+        yield Rpg(file)
 
 
 def concatenate_rpg_data(rpg_objects):
