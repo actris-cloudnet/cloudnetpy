@@ -5,11 +5,10 @@ import numpy.ma as ma
 
 
 class Rpg:
-    """RPG Cloud Radar reader."""
+    """RPG Cloud Radar Level 1 reader."""
     def __init__(self, filename):
         self.filename = filename
-        self.file_position = 0
-        self.is_level0 = self.get_file_type()
+        self._file_position = 0
         self.header = self.read_rpg_header()
         self.dual_pol = self.is_dual_pol()
         self.data = self.read_rpg_data()
@@ -26,12 +25,6 @@ class Rpg:
                 break
         return str_out
 
-    def get_file_type(self):
-        """Returns True if file is Level 0 file."""
-        if self.filename[-3:].lower() == 'lv0':
-            return True
-        return False
-
     def is_dual_pol(self):
         if self.header['DualPol'] > 0:
             return True
@@ -45,57 +38,26 @@ class Rpg:
 
         header = {}
         f = open(self.filename, 'rb')
-
         insert(('FileCode', 'HeaderLen'))
         insert(('StartTime', 'StopTime'), np.uint32)
         insert(('CGProg', 'ModelNo'))
-
         header['ProgName'] = Rpg.read_string(f)
         header['CustName'] = Rpg.read_string(f)
-
         insert(('Freq', 'AntSep', 'AntDia', 'AntGain', 'AntBW'), np.float32)
-
         header['AntGain'] = 10*np.log10(header['AntGain'])
-
-        if self.is_level0:
-            insert(('RadarConst',), np.float32)
-
         insert(('DualPol',), np.int8)
-
-        if self.is_level0:
-            insert(('CompEna', 'AntiAlias'), np.int8)
-
         insert(('SampDur', 'GPSLat', 'GPSLon'), np.float32)
         insert(('CalInt', 'NumbGates', 'NumbLayersT', 'NumbLayersH', 'SequN'))
-
         insert(('RAlts',), np.float32, header['NumbGates'])
         insert(('TAlts',), np.float32, header['NumbLayersT'])
         insert(('HAlts',), np.float32, header['NumbLayersH'])
-
-        if self.is_level0:
-            insert(('RangeFact',), n_values=header['NumbGates'])
-
         seq_un = header['SequN']
         insert(('SpecN', 'RngOffs', 'ChirpReps'), n_values=seq_un)
         insert(('SeqIntTime', 'dR', 'MaxVel'), np.float32, seq_un)
-
-        if self.is_level0:
-            insert(('ChanBW',), np.float32, seq_un)
-            insert(('ChirpLowIF', 'ChirpHighIF', 'RangeMin', 'RangeMax',
-                    'ChirpFFTSize', 'ChirpInvSmpl'), n_values=seq_un)
-            insert(('ChirpCntrFreq', 'ChirpBWFreq'), np.float32, seq_un)
-            insert(('FFTStrtInd', 'FFTStopInd', 'ChirpFFTNo'), n_values=seq_un)
-            insert(('SampRate', 'MaxRange'))
-
         insert(('SupPowLev', 'SpkFilEna', 'PhaseCorr', 'RelPowCorr', 'FFTWin'), np.int8)
         insert(('FFTIntRng',))
         insert(('NoiseFilt',), np.float32)
-
-        if self.is_level0:
-            insert(('RSV1',), np.int32, 25)
-            insert(('RSV2', 'RSV3'), np.uint32, 5000)
-
-        self.file_position = f.tell()
+        self._file_position = f.tell()
         f.close()
         return header
 
@@ -190,7 +152,7 @@ class Rpg:
             return out
 
         f = open(self.filename, 'rb')
-        f.seek(self.file_position)
+        f.seek(self._file_position)
         dims = create_dimensions()
         data = create_variables()
         keyranges = get_keyranges()
