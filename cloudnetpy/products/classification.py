@@ -23,6 +23,8 @@ def generate_class(cat_file):
 
 def class2cnet(vars_in):
     """ Defines Classification Cloudnet objects """
+    #TODO: Tee tämä jossain vaiheessa valmiiksi, pitää siis hakea haluttu data metadatasta
+
     log, lin = ('logarithmic', 'linear')
     obs = []
     s, lname = ('target_classification', 'Target classification')
