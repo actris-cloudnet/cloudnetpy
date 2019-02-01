@@ -11,7 +11,7 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.categorize import DataSource
 
 
-class RawRadar(DataSource):
+class Mira(DataSource):
     """Class for MIRA-36 raw radar data. Child of DataSource().
 
     Args:
@@ -26,10 +26,10 @@ class RawRadar(DataSource):
               'LDRg': 'ldr',
               'SNRg': 'SNR'}
 
-    def __init__(self, raw_radar_file, radar_frequency=35.5, source='MIRA-36'):
+    def __init__(self, raw_radar_file, source='MIRA-36'):
         super().__init__(raw_radar_file)
         self.source = source
-        self.radar_frequency = radar_frequency
+        self.radar_frequency = 35.5  # All MIRA radars are this? Check!
         self._init_data()
         self.range = self._getvar(self, 'range')
 
@@ -72,7 +72,7 @@ class RawRadar(DataSource):
                 self.data[key] = CloudnetArray(site_properties[key], key)
 
 
-def mmclx2nc(mmclx_file, output_file, site_properties, rebin_data=False):
+def mira2nc(mmclx_file, output_file, site_properties, rebin_data=False):
     """High-level API to convert mmclx file into compressed NetCDF file.
 
     This function converts raw cloud radar file into a much smaller file that
@@ -87,29 +87,29 @@ def mmclx2nc(mmclx_file, output_file, site_properties, rebin_data=False):
             Otherwise keeps the native resolution. Default is False.
 
     Examples:
-          >>> from cloudnetpy.radar import mmclx2nc
+          >>> from cloudnetpy.mira import mira2nc
           >>> site_properties = {
           'location': 'Vehmasmäki',
           'latitude': 62.74,
           'longitude': 27.53,
           'altitude': 155}
-          >>> mmclx2nc('raw_radar.mmclx', 'radar.nc', site_properties)
+          >>> mira2nc('raw_radar.mmclx', 'radar.nc', site_properties)
 
     """
-    raw_radar = RawRadar(mmclx_file)
-    raw_radar.linear_to_db(('Zh', 'ldr', 'SNR'))
+    raw_mira = Mira(mmclx_file)
+    raw_mira.linear_to_db(('Zh', 'ldr', 'SNR'))
     if rebin_data:
-        snr_gain = raw_radar.rebin_fields()
+        snr_gain = raw_mira.rebin_fields()
     else:
         snr_gain = 1
-    raw_radar.screen_by_snr(snr_gain)
-    raw_radar.add_meta(site_properties)
-    output.update_attributes(raw_radar.data)
-    _save_radar(mmclx_file, raw_radar, output_file, site_properties['location'])
+    raw_mira.screen_by_snr(snr_gain)
+    raw_mira.add_meta(site_properties)
+    output.update_attributes(raw_mira.data)
+    _save_mira(mmclx_file, raw_mira, output_file, site_properties['location'])
 
 
-def _save_radar(mmclx_file, raw_radar, output_file, location):
-    """Saves the radar file."""
+def _save_mira(mmclx_file, raw_radar, output_file, location):
+    """Saves the MIRA radar file."""
     dims = {'time': len(raw_radar.time),
             'range': len(raw_radar.range)}
     rootgrp = output.init_file(output_file, dims, raw_radar.data, zlib=True)
