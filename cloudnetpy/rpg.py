@@ -3,6 +3,7 @@ import os
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
+import sys
 
 
 class Rpg:
@@ -92,121 +93,79 @@ class Rpg:
                    (dims.n_samples, dims.n_gates))
 
         def create_variables():
-            """Variable names, data arrays and input data types.
 
-            These need to be defined in the same order as they appear in
-            the file.
-
-            """
             shapes = create_shapes()
             fun = np.zeros
             vrs = {}
-            # Variable group 0
-            vrs['sample_length'] = (fun(shapes[0], np.int), np.int32)  # in Bytes without 'sample_length' itself
-            vrs['time'] = (fun(shapes[0], np.int), np.uint32)
-            vrs['time_ms'] = (fun(shapes[0], np.int), np.int32)
-            # Quality flag: bit 2 = ADC saturation, bit 3 = spectral width too high, bit 4 = no transm. power leveling
-            vrs['quality_flag'] = (fun(shapes[0], np.int), np.int8)
-            # Variable group 1
-            for var_name in ('rain_rate', 'relative_humidity', 'temperature',
-                             'pressure', 'wind_speed', 'wind_direction',
-                             'voltage', 'brightness_temperature',
-                             'liquid_water_path', 'IF_power', 'elevation',
-                             'azimuth', 'status_flags', 'transmitted_power',
-                             'transmitter_temperature', 'receiver_temperature',
+            vrs['sample_length'] = fun(shapes[0], np.int)
+            vrs['time'] = fun(shapes[0], np.int)
+            vrs['time_ms'] = fun(shapes[0], np.int)
+            vrs['quality_flag'] = fun(shapes[0], np.int)
+            for var_name in ('rain_rate',
+                             'relative_humidity',
+                             'temperature',
+                             'pressure',
+                             'wind_speed',
+                             'wind_direction',
+                             'voltage',
+                             'brightness_temperature',
+                             'liquid_water_path',
+                             'if_power',
+                             'elevation',
+                             'azimuth',
+                             'status_flag',
+                             'transmitted_power',
+                             'transmitter_temperature',
+                             'receiver_temperature',
                              'pc_temperature'):
-                vrs[var_name] = (fun(shapes[0]), np.float32)
-            vrs['temperature_profile'] = (fun(shapes[1]), np.float32)
+                vrs[var_name] = fun(shapes[0])
+            vrs['temperature_profile'] = fun(shapes[1])
             for var_name in ('absolute_humidity_profile',
                              'relative_humidity_profile'):
-                vrs[var_name] = (fun(shapes[2]), np.float32)
-            # Variable group 2
-            for var_name in ('sensitivity_limit_of_vertical_polarization',
-                             'sensitivity_limit_of_horizontal_polarization'):
-                vrs[var_name] = (fun(shapes[3]), np.float32)
-            vrs['is_data_in_cell'] = (fun(shapes[3], np.int), np.int8)
-            # Variable groups 3 and 4
-            for var_name in ('reflectivity', 'velocity', 'width',  # group 3
-                             'skewness', 'kurtosis',
-                             'ldr', 'spectral_correlation_coeff',  # group 4
+                vrs[var_name] = fun(shapes[2])
+            for var_name in ('sensitivity_limit_of_v_polarization',
+                             'sensitivity_limit_of_h_polarization'):
+                vrs[var_name] = fun(shapes[3])
+            # ...end reading floats
+            vrs['is_data_in_cell'] = fun(shapes[3], np.int)
+            # if data in cell, start reading floats again
+            for var_name in ('reflectivity',
+                             'velocity',
+                             'width',
+                             'skewness',
+                             'kurtosis',
+                             'ldr',
+                             'spectral_correlation_coefficient',
                              'differential_phase'):
-                vrs[var_name] = (fun(shapes[3]), np.float32)
+                vrs[var_name] = fun(shapes[3])
             return vrs
-
-        def get_keyranges():
-            """Returns dict-names for the different 'groups' of variables.
-
-            The variables are grouped in the binary file into 5 groups.
-            The keyranges make it easy to separate these groups once
-            you know the first and last variable name in each group.
-
-            """
-            def _keyrange(key1, key2):
-                """List of keys from one key to another."""
-                ind1 = keys.index(key1)
-                ind2 = keys.index(key2)
-                return keys[ind1:ind2 + 1]
-
-            keys = list(data.keys())
-            return (_keyrange('sample_length', 'pc_temperature'),
-                    _keyrange('absolute_humidity_profile',
-                              'relative_humidity_profile'),
-                    _keyrange('sensitivity_limit_of_vertical_polarization',
-                              'is_data_in_cell'),
-                    _keyrange('reflectivity', 'kurtosis'),
-                    _keyrange('ldr', 'differential_phase'))
-
-        def append(name, n_elements):
-            """Append data into already allocated arrays."""
-            array, dtype = data[name]
-            values = np.fromfile(file, dtype, n_elements)
-            if n_elements == 1 and array.ndim == 1:
-                array[sample] = values
-            elif n_elements == 1 and array.ndim == 2:
-                array[sample][gate] = values
-            else:
-                array[sample][:] = values
-
-        def _fix_output():
-            """Returns just the data arrays as MaskedArrays."""
-            out = {}
-            for name in data:
-                out[name] = ma.masked_equal(data[name][0], 0)
-            return out
 
         file = open(self.filename, 'rb')
         file.seek(self._file_position)
         dims = create_dimensions()
         data = create_variables()
-        keyranges = get_keyranges()
+
+        nfloats1 = 17 + dims.n_layers_t + (2*dims.n_layers_h) + (2*dims.n_gates)
+        nfloats2 = 8  # depends on polarization actually
+
+        float_block1 = np.zeros((dims.n_samples, nfloats1))
+        float_block2 = np.zeros((dims.n_samples, dims.n_gates, nfloats2))
 
         for sample in range(dims.n_samples):
-
-            for key in keyranges[0]:
-                append(key, 1)
-
+            data['sample_length'][sample] = np.fromfile(file, np.int32, 1)
+            data['time'][sample] = np.fromfile(file, np.uint32, 1)
+            data['time_ms'][sample] = np.fromfile(file, np.int32, 1)
+            data['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
             _ = np.fromfile(file, np.int32, 3)
+            float_block1[sample, :] = np.fromfile(file, np.float32, nfloats1)
+            is_data = np.fromfile(file, np.int8, dims.n_gates)
+            data_inds = np.where(is_data)[0]
+            n_valid = len(data_inds)
+            values = np.fromfile(file, np.float32, nfloats2*n_valid)
+            float_block2[sample, data_inds, :] = values.reshape(n_valid, nfloats2)
 
-            append('temperature_profile', dims.n_layers_t)
-
-            for key in keyranges[1]:
-                append(key, dims.n_layers_h)
-
-            for key in keyranges[2]:
-                append(key, dims.n_gates)
-
-            for gate in range(dims.n_gates):
-
-                if data['is_data_in_cell'][0][sample][gate]:
-
-                    for key in keyranges[3]:
-                        append(key, 1)
-
-                    if self._dual_pol:
-                        for key in keyranges[4]:
-                            append(key, 1)
         file.close()
-        return _fix_output()
+        return data
 
 
 def get_rpg_files(path_to_l1_files):
@@ -225,10 +184,11 @@ def get_rpg_objects(rpg_files):
 
 def concatenate_rpg_data(rpg_objects):
     """Combines data from hourly Rpg() objects."""
-    fields = ('Time', 'Zv', 'LDR', 'CorrC', 'PhiX', 'SW', 'Skew',
-              'Kurt', 'Vel', 'LWP', 'T', 'RH', 'TransPow')
+    fields = ('time', 'reflectivity', 'ldr', 'velocity', 'width', 'skewness',
+              'kurtosis')
     radar = dict.fromkeys(fields, np.array([]))
     for rpg in rpg_objects:
+        print(rpg)
         for name in fields:
             radar[name] = (np.concatenate((radar[name], rpg.data[name]))
                            if radar[name].size else rpg.data[name])
@@ -239,5 +199,6 @@ def rpg2nc(path_to_l1_files, output_file):
     l1_files = get_rpg_files(path_to_l1_files)
     rpg_objects = get_rpg_objects(l1_files)
     rpg_data = concatenate_rpg_data(rpg_objects)
+    return rpg_data
 
 
