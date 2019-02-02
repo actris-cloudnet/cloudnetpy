@@ -11,7 +11,6 @@ class Rpg:
     def __init__(self, filename):
         self.filename = filename
         self._file_position = 0
-        self._dual_pol = False
         self.header = self.read_rpg_header()
         self.data = self.read_rpg_data()
 
@@ -65,8 +64,6 @@ class Rpg:
         append(('noise_filter_threshold_factor',), np.float32)
         self._file_position = file.tell()
         file.close()
-        if header['dual_polarization'] > 0:
-            self._dual_pol = True
         header['antenna_gain'] = 10 * np.log10(header['antenna_gain'])
         return header
 
@@ -117,10 +114,21 @@ class Rpg:
                 'velocity',
                 'width',
                 'skewness',
-                'kurtosis',
-                'ldr',
-                'spectral_correlation_coefficient',
-                'differential_phase'))
+                'kurtosis'))
+
+            if self.header['dual_polarization'] > 0:
+                block2_vars.update(dict.fromkeys((
+                    'ldr',
+                    'spectral_correlation_coefficient',
+                    'differential_phase')))
+
+            if self.header['dual_polarization'] == 2:
+                block2_vars.update(dict.fromkeys((
+                    '_',
+                    'spectral_slanted_ldr',
+                    'spectral_slanted_correlation_coefficient',
+                    'specific_differential_phase_shift',
+                    'differential_attenuation')))
 
             return vrs, block1_vars, block2_vars
 
@@ -129,10 +137,10 @@ class Rpg:
         dims = create_dimensions()
         aux, block1, block2 = create_variables()
 
-        n_floats1 = 17 + dims.n_layers_t + (2*dims.n_layers_h) + (2*dims.n_gates)
+        n_floats1 = len(block1) + dims.n_layers_t + 2*(dims.n_layers_h + dims.n_gates)
         float_block1 = np.zeros((dims.n_samples, n_floats1))
 
-        n_floats2 = 8
+        n_floats2 = len(block2)
         float_block2 = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
 
         for sample in range(dims.n_samples):
@@ -159,7 +167,7 @@ class Rpg:
 def get_rpg_files(path_to_l1_files):
     """Returns list of RPG Level 1 files for one day - sorted by filename."""
     files = os.listdir(path_to_l1_files)
-    l1_files = [path_to_l1_files+file for file in files if file.endswith('LV1')]
+    l1_files = [f"{path_to_l1_files}{file}" for file in files if file.endswith('LV1')]
     l1_files.sort()
     return l1_files
 
@@ -187,5 +195,4 @@ def rpg2nc(path_to_l1_files, output_file):
     rpg_objects = get_rpg_objects(l1_files)
     rpg_data = concatenate_rpg_data(rpg_objects)
     return rpg_data
-
 
