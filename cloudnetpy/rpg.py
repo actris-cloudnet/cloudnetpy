@@ -93,7 +93,7 @@ class Rpg:
                    (dims.n_samples, dims.n_gates))
 
         def create_variables():
-
+            """Allocates data variables."""
             shapes = create_shapes()
             fun = np.zeros
             vrs = {}
@@ -101,6 +101,13 @@ class Rpg:
             vrs['time'] = fun(shapes[0], np.int)
             vrs['time_ms'] = fun(shapes[0], np.int)
             vrs['quality_flag'] = fun(shapes[0], np.int)
+            # vrs['temperature_profile'] = fun(shapes[1])
+            # vrs['absolute_humidity_profile'] = fun(shapes[2])
+            # vrs['relative_humidity_profile'] = fun(shapes[2])
+            # vrs['sensitivity_limit_of_v_polarization'] = fun(shapes[3])
+            # vrs['sensitivity_limit_of_h_polarization'] = fun(shapes[3])
+
+            block1_vars = {}
             for var_name in ('rain_rate',
                              'relative_humidity',
                              'temperature',
@@ -118,17 +125,9 @@ class Rpg:
                              'transmitter_temperature',
                              'receiver_temperature',
                              'pc_temperature'):
-                vrs[var_name] = fun(shapes[0])
-            vrs['temperature_profile'] = fun(shapes[1])
-            for var_name in ('absolute_humidity_profile',
-                             'relative_humidity_profile'):
-                vrs[var_name] = fun(shapes[2])
-            for var_name in ('sensitivity_limit_of_v_polarization',
-                             'sensitivity_limit_of_h_polarization'):
-                vrs[var_name] = fun(shapes[3])
-            # ...end reading floats
-            vrs['is_data_in_cell'] = fun(shapes[3], np.int)
-            # if data in cell, start reading floats again
+                block1_vars[var_name] = fun(shapes[0])
+
+            block2_vars = {}
             for var_name in ('reflectivity',
                              'velocity',
                              'width',
@@ -137,35 +136,42 @@ class Rpg:
                              'ldr',
                              'spectral_correlation_coefficient',
                              'differential_phase'):
-                vrs[var_name] = fun(shapes[3])
-            return vrs
+                block2_vars[var_name] = fun(shapes[3])
+
+            return vrs, block1_vars, block2_vars
 
         file = open(self.filename, 'rb')
         file.seek(self._file_position)
         dims = create_dimensions()
-        data = create_variables()
+        aux, block1, block2 = create_variables()
 
-        nfloats1 = 17 + dims.n_layers_t + (2*dims.n_layers_h) + (2*dims.n_gates)
-        nfloats2 = 8  # depends on polarization actually
+        n_floats1 = 17 + dims.n_layers_t + (2*dims.n_layers_h) + (2*dims.n_gates)
+        float_block1 = np.zeros((dims.n_samples, n_floats1))
 
-        float_block1 = np.zeros((dims.n_samples, nfloats1))
-        float_block2 = np.zeros((dims.n_samples, dims.n_gates, nfloats2))
+        n_floats2 = 8
+        float_block2 = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
 
         for sample in range(dims.n_samples):
-            data['sample_length'][sample] = np.fromfile(file, np.int32, 1)
-            data['time'][sample] = np.fromfile(file, np.uint32, 1)
-            data['time_ms'][sample] = np.fromfile(file, np.int32, 1)
-            data['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
+            aux['sample_length'][sample] = np.fromfile(file, np.int32, 1)
+            aux['time'][sample] = np.fromfile(file, np.uint32, 1)
+            aux['time_ms'][sample] = np.fromfile(file, np.int32, 1)
+            aux['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
             _ = np.fromfile(file, np.int32, 3)
-            float_block1[sample, :] = np.fromfile(file, np.float32, nfloats1)
+            float_block1[sample, :] = np.fromfile(file, np.float32, n_floats1)
             is_data = np.fromfile(file, np.int8, dims.n_gates)
             data_inds = np.where(is_data)[0]
             n_valid = len(data_inds)
-            values = np.fromfile(file, np.float32, nfloats2*n_valid)
-            float_block2[sample, data_inds, :] = values.reshape(n_valid, nfloats2)
-
+            values = np.fromfile(file, np.float32, n_floats2*n_valid)
+            float_block2[sample, data_inds, :] = values.reshape(n_valid, n_floats2)
         file.close()
-        return data
+
+        for n, name in enumerate(block1):
+            block1[name] = float_block1[:, n]
+
+        for n, name in enumerate(block2):
+            block2[name] = float_block2[:, :, n]
+
+        return {**aux, **block1, **block2}
 
 
 def get_rpg_files(path_to_l1_files):
@@ -184,11 +190,10 @@ def get_rpg_objects(rpg_files):
 
 def concatenate_rpg_data(rpg_objects):
     """Combines data from hourly Rpg() objects."""
-    fields = ('time', 'reflectivity', 'ldr', 'velocity', 'width', 'skewness',
-              'kurtosis')
+    fields = ('reflectivity', 'ldr', 'velocity', 'width', 'skewness',
+              'kurtosis', 'time', 'pressure', 'temperature')
     radar = dict.fromkeys(fields, np.array([]))
     for rpg in rpg_objects:
-        print(rpg)
         for name in fields:
             radar[name] = (np.concatenate((radar[name], rpg.data[name]))
                            if radar[name].size else rpg.data[name])
