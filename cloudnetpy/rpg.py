@@ -85,58 +85,42 @@ class Rpg:
                               int(self.header['n_temperature_levels']),
                               int(self.header['n_humidity_levels']))
 
-        def create_shapes():
-            """Returns possible shapes of the data arrays."""
-            return((dims.n_samples,),
-                   (dims.n_samples, dims.n_layers_t),
-                   (dims.n_samples, dims.n_layers_h),
-                   (dims.n_samples, dims.n_gates))
-
         def create_variables():
             """Allocates data variables."""
-            shapes = create_shapes()
-            fun = np.zeros
-            vrs = {}
-            vrs['sample_length'] = fun(shapes[0], np.int)
-            vrs['time'] = fun(shapes[0], np.int)
-            vrs['time_ms'] = fun(shapes[0], np.int)
-            vrs['quality_flag'] = fun(shapes[0], np.int)
-            # vrs['temperature_profile'] = fun(shapes[1])
-            # vrs['absolute_humidity_profile'] = fun(shapes[2])
-            # vrs['relative_humidity_profile'] = fun(shapes[2])
-            # vrs['sensitivity_limit_of_v_polarization'] = fun(shapes[3])
-            # vrs['sensitivity_limit_of_h_polarization'] = fun(shapes[3])
 
-            block1_vars = {}
-            for var_name in ('rain_rate',
-                             'relative_humidity',
-                             'temperature',
-                             'pressure',
-                             'wind_speed',
-                             'wind_direction',
-                             'voltage',
-                             'brightness_temperature',
-                             'liquid_water_path',
-                             'if_power',
-                             'elevation',
-                             'azimuth',
-                             'status_flag',
-                             'transmitted_power',
-                             'transmitter_temperature',
-                             'receiver_temperature',
-                             'pc_temperature'):
-                block1_vars[var_name] = fun(shapes[0])
+            vrs = {'sample_length': np.zeros(dims.n_samples, np.int),
+                   'time': np.zeros(dims.n_samples, np.int),
+                   'time_ms': np.zeros(dims.n_samples, np.int),
+                   'quality_flag': np.zeros(dims.n_samples, np.int)}
 
-            block2_vars = {}
-            for var_name in ('reflectivity',
-                             'velocity',
-                             'width',
-                             'skewness',
-                             'kurtosis',
-                             'ldr',
-                             'spectral_correlation_coefficient',
-                             'differential_phase'):
-                block2_vars[var_name] = fun(shapes[3])
+            block1_vars = dict.fromkeys((
+                'rain_rate',
+                'relative_humidity',
+                'temperature',
+                'pressure',
+                'wind_speed',
+                'wind_direction',
+                'voltage',
+                'brightness_temperature',
+                'liquid_water_path',
+                'if_power',
+                'elevation',
+                'azimuth',
+                'status_flag',
+                'transmitted_power',
+                'transmitter_temperature',
+                'receiver_temperature',
+                'pc_temperature'))
+
+            block2_vars = dict.fromkeys((
+                'reflectivity',
+                'velocity',
+                'width',
+                'skewness',
+                'kurtosis',
+                'ldr',
+                'spectral_correlation_coefficient',
+                'differential_phase'))
 
             return vrs, block1_vars, block2_vars
 
@@ -159,18 +143,16 @@ class Rpg:
             _ = np.fromfile(file, np.int32, 3)
             float_block1[sample, :] = np.fromfile(file, np.float32, n_floats1)
             is_data = np.fromfile(file, np.int8, dims.n_gates)
-            data_inds = np.where(is_data)[0]
-            n_valid = len(data_inds)
+            is_data_ind = np.where(is_data)[0]
+            n_valid = len(is_data_ind)
             values = np.fromfile(file, np.float32, n_floats2*n_valid)
-            float_block2[sample, data_inds, :] = values.reshape(n_valid, n_floats2)
+            float_block2[sample, is_data_ind, :] = values.reshape(n_valid, n_floats2)
         file.close()
 
         for n, name in enumerate(block1):
             block1[name] = float_block1[:, n]
-
         for n, name in enumerate(block2):
             block2[name] = float_block2[:, :, n]
-
         return {**aux, **block1, **block2}
 
 
