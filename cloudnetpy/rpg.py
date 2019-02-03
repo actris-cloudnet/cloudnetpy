@@ -170,7 +170,6 @@ class Rpg:
             block1[name] = float_block1[:, n]
         for n, name in enumerate(block2):
             block2[name] = float_block2[:, :, n]
-
         return {**aux, **block1, **block2}
 
 
@@ -206,7 +205,6 @@ def _stack_rpg_data(rpg_objects):
     for rpg in rpg_objects:
         _stack(rpg.data, data, data_fields, np.concatenate)
         _stack(rpg.header, header, header_fields, np.vstack)
-
     return data, header
 
 
@@ -221,7 +219,7 @@ def _reduce_header(header):
 def _mask_invalid_data(rpg_data):
     for name in rpg_data:
         rpg_data[name] = ma.masked_equal(rpg_data[name], 0)
-        return rpg_data
+    return rpg_data
 
 
 def rpg2nc(path_to_l1_files, output_file):
