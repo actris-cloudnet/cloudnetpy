@@ -3,7 +3,6 @@ import os
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
-import sys
 
 
 class Rpg:
@@ -41,7 +40,7 @@ class Rpg:
         append(('start_time',
                 'stop_time'), np.uint32)
         append(('program_number',))
-        append(('model_number',))  # 0 = single pol, 1 = dual pol., 2 = dual pol. in LDR config. ??
+        append(('model_number',))  # 0 = single polarization, 1 = dual pol.
         header['program_name'] = Rpg.read_string(file)
         header['customer_name'] = Rpg.read_string(file)
         append(('frequency',
@@ -49,7 +48,7 @@ class Rpg:
                 'antenna_diameter',
                 'antenna_gain',  # linear
                 'half_power_beam_width'), np.float32)
-        append(('dual_polarization',), np.int8)  # 0 = single pol, 1 = dual pol (LDR), 2 = dual pol (STSR) ??
+        append(('dual_polarization',), np.int8)  # 0 = single pol, 1 = dual pol (LDR), 2 = dual pol (STSR) ?
         append(('sample_duration',), np.float32)
         append(('latitude',
                 'longitude'), np.float32)
@@ -66,7 +65,7 @@ class Rpg:
                 'n_averaged_chirps'), n_values=header['n_chirp_sequences'])
         append(('integration_time',
                 'range_resolution',
-                'max_velocity'), np.float32, header['n_chirp_sequences'])
+                'nyquist_velocity'), np.float32, header['n_chirp_sequences'])
         append(('is_power_levelling',
                 'is_spike_filter',
                 'is_phase_correction',
@@ -86,7 +85,7 @@ class Rpg:
                                                'n_layers_h'])
 
         def create_dimensions():
-            """Returns loop lengths for the data read."""
+            """Returns possible lengths of the data arrays."""
             n_samples = np.fromfile(file, np.int32, 1)
             return Dimensions(int(n_samples),
                               int(self.header['n_range_gates']),
@@ -94,8 +93,7 @@ class Rpg:
                               int(self.header['n_humidity_levels']))
 
         def create_variables():
-            """Allocates data variables."""
-
+            """Initializes dictionaries for data arrays."""
             vrs = {'sample_length': np.zeros(dims.n_samples, np.int),
                    'time': np.zeros(dims.n_samples, np.int),
                    'time_ms': np.zeros(dims.n_samples, np.int),
@@ -172,6 +170,7 @@ class Rpg:
             block1[name] = float_block1[:, n]
         for n, name in enumerate(block2):
             block2[name] = float_block2[:, :, n]
+
         return {**aux, **block1, **block2}
 
 
@@ -189,21 +188,47 @@ def get_rpg_objects(rpg_files):
         yield Rpg(file)
 
 
-def concatenate_rpg_data(rpg_objects):
-    """Combines data from hourly Rpg() objects."""
-    fields = ('reflectivity', 'ldr', 'velocity', 'width', 'skewness',
-              'kurtosis', 'time', 'pressure', 'temperature')
-    radar = dict.fromkeys(fields, np.array([]))
-    for rpg in rpg_objects:
+def _stack_rpg_data(rpg_objects):
+    """Combines selected data from hourly Rpg() objects."""
+    data_fields = ('reflectivity', 'ldr', 'velocity', 'width', 'skewness',
+                   'kurtosis', 'time', 'pressure', 'temperature')
+
+    header_fields = ('range', 'nyquist_velocity', 'latitude', 'longitude',
+                     'frequency')
+
+    data = dict.fromkeys(data_fields, np.array([]))
+    header = dict.fromkeys(header_fields, np.array([]))
+
+    def _stack(source, target, fields, fun):
         for name in fields:
-            radar[name] = (np.concatenate((radar[name], rpg.data[name]))
-                           if radar[name].size else rpg.data[name])
-    return radar
+            target[name] = (fun((target[name], source[name]))
+                            if target[name].size else source[name])
+    for rpg in rpg_objects:
+        _stack(rpg.data, data, data_fields, np.concatenate)
+        _stack(rpg.header, header, header_fields, np.vstack)
+
+    return data, header
+
+
+def _reduce_header(header):
+    for name in header:
+        first_row = header[name][0]
+        assert np.isclose(header[name], first_row).all(), 'Inconsistent header.'
+        header[name] = first_row
+    return header
+
+
+def _mask_invalid_data(rpg_data):
+    for name in rpg_data:
+        rpg_data[name] = ma.masked_equal(rpg_data[name], 0)
+        return rpg_data
 
 
 def rpg2nc(path_to_l1_files, output_file):
     l1_files = get_rpg_files(path_to_l1_files)
     rpg_objects = get_rpg_objects(l1_files)
-    rpg_data = concatenate_rpg_data(rpg_objects)
-    return rpg_data
+    rpg_data, rpg_header = _stack_rpg_data(rpg_objects)
+    rpg_header = _reduce_header(rpg_header)
+    rpg_data = _mask_invalid_data(rpg_data)
+    return {** rpg_header, **rpg_data}
 
