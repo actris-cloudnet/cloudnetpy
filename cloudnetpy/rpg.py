@@ -228,5 +228,5 @@ def rpg2nc(path_to_l1_files, output_file):
     rpg_data, rpg_header = _stack_rpg_data(rpg_objects)
     rpg_header = _reduce_header(rpg_header)
     rpg_data = _mask_invalid_data(rpg_data)
-    return {** rpg_header, **rpg_data}
+    return {**rpg_header, **rpg_data}
 
