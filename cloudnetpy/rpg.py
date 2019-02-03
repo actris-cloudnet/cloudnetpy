@@ -36,35 +36,46 @@ class Rpg:
 
         header = {}
         file = open(self.filename, 'rb')
-        append(('file_code', 'header_length'))
-        append(('start_time', 'stop_time'), np.uint32)
-        append(('program_number', ))
-        append(('model_number', ))  # 0 = single pol, 1 = dual pol., 2 = dual pol. in LDR config. ????
+        append(('file_code',
+                'header_length'), np.int32)
+        append(('start_time',
+                'stop_time'), np.uint32)
+        append(('program_number',))
+        append(('model_number',))  # 0 = single pol, 1 = dual pol., 2 = dual pol. in LDR config. ??
         header['program_name'] = Rpg.read_string(file)
         header['customer_name'] = Rpg.read_string(file)
-        append(('frequency', 'antenna_separation', 'antenna_diameter',
-                'antenna_gain', 'half_power_beam_width'), np.float32)
-        append(('dual_polarization',), np.int8)  # 0 = single pol, 1 = dual pol (LDR), 2 = dual pol (STSR)   ????
-        append(('sample_duration', ), np.float32)
-        append(('latitude', 'longitude'), np.float32)
-        append(('calibration_interval_in_samples', ))
-        append(('n_range_gates', 'n_temperature_levels', 'n_humidity_levels',
+        append(('frequency',
+                'antenna_separation',
+                'antenna_diameter',
+                'antenna_gain',  # linear
+                'half_power_beam_width'), np.float32)
+        append(('dual_polarization',), np.int8)  # 0 = single pol, 1 = dual pol (LDR), 2 = dual pol (STSR) ??
+        append(('sample_duration',), np.float32)
+        append(('latitude',
+                'longitude'), np.float32)
+        append(('calibration_interval_in_samples',
+                'n_range_gates',
+                'n_temperature_levels',
+                'n_humidity_levels',
                 'n_chirp_sequences'))
         append(('range',), np.float32, header['n_range_gates'])
         append(('temperature_levels',), np.float32, header['n_temperature_levels'])
         append(('humidity_levels',), np.float32, header['n_humidity_levels'])
-        append(('n_spectral_samples_in_chirp', 'chirp_start_indices',
+        append(('n_spectral_samples_in_chirp',
+                'chirp_start_indices',
                 'n_averaged_chirps'), n_values=header['n_chirp_sequences'])
-        append(('integration_time', 'range_resolution', 'max_velocity'),
-               np.float32, header['n_chirp_sequences'])
-        append(('is_power_levelling', 'is_spike_filter', 'is_phase_correction',
+        append(('integration_time',
+                'range_resolution',
+                'max_velocity'), np.float32, header['n_chirp_sequences'])
+        append(('is_power_levelling',
+                'is_spike_filter',
+                'is_phase_correction',
                 'is_relative_power_correction'), np.int8)
-        append(('FFT_window', ), np.int8)  # 0 = square, 1 = parzen, 2 = blackman, 3 = welch, = slepian2, 5 = slepian3
-        append(('input_voltage_mV',))
+        append(('FFT_window',), np.int8)  # 0 = square, 1 = parzen, 2 = blackman, 3 = welch, = slepian2, 5 = slepian3
+        append(('input_voltage',))
         append(('noise_filter_threshold_factor',), np.float32)
         self._file_position = file.tell()
         file.close()
-        header['antenna_gain'] = 10 * np.log10(header['antenna_gain'])
         return header
 
     def read_rpg_data(self):
