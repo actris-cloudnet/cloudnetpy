@@ -37,12 +37,12 @@ class Rpg:
         file = open(self.filename, 'rb')
         append(('file_code',
                 'header_length'), np.int32)
-        append(('start_time',
-                'stop_time'), np.uint32)
+        append(('_start_time',
+                '_stop_time'), np.uint32)
         append(('program_number',))
         append(('model_number',))  # 0 = single polarization, 1 = dual pol.
-        header['program_name'] = Rpg.read_string(file)
-        header['customer_name'] = Rpg.read_string(file)
+        header['_program_name'] = Rpg.read_string(file)
+        header['_customer_name'] = Rpg.read_string(file)
         append(('frequency',
                 'antenna_separation',
                 'antenna_diameter',
@@ -189,29 +189,24 @@ def get_rpg_objects(rpg_files):
 
 def _stack_rpg_data(rpg_objects):
     """Combines selected data from hourly Rpg() objects."""
-    data_fields = ('reflectivity', 'ldr', 'velocity', 'width', 'skewness',
-                   'kurtosis', 'time', 'pressure', 'temperature')
+    def _stack(source, target, fun):
+        for name, value in source.items():
+            if not name.startswith('_'):
+                target[name] = (fun((target[name], value))
+                                if name in target else value)
 
-    header_fields = ('range', 'nyquist_velocity', 'latitude', 'longitude',
-                     'frequency')
-
-    data = dict.fromkeys(data_fields, np.array([]))
-    header = dict.fromkeys(header_fields, np.array([]))
-
-    def _stack(source, target, fields, fun):
-        for name in fields:
-            target[name] = (fun((target[name], source[name]))
-                            if target[name].size else source[name])
+    data = {}
+    header = {}
     for rpg in rpg_objects:
-        _stack(rpg.data, data, data_fields, np.concatenate)
-        _stack(rpg.header, header, header_fields, np.vstack)
+        _stack(rpg.data, data, np.concatenate)
+        _stack(rpg.header, header, np.vstack)
     return data, header
 
 
 def _reduce_header(header):
     for name in header:
         first_row = header[name][0]
-        assert np.isclose(header[name], first_row).all(), 'Inconsistent header.'
+        assert np.isclose(header[name], first_row).all(), f"Inconsistent header: {name}"
         header[name] = first_row
     return header
 
