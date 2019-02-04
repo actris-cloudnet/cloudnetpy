@@ -84,7 +84,7 @@ class Rpg:
                                                'n_layers_t',
                                                'n_layers_h'])
 
-        def create_dimensions():
+        def _create_dimensions():
             """Returns possible lengths of the data arrays."""
             n_samples = np.fromfile(file, np.int32, 1)
             return Dimensions(int(n_samples),
@@ -92,7 +92,7 @@ class Rpg:
                               int(self.header['n_temperature_levels']),
                               int(self.header['n_humidity_levels']))
 
-        def create_variables():
+        def _create_variables():
             """Initializes dictionaries for data arrays."""
             vrs = {'sample_length': np.zeros(dims.n_samples, np.int),
                    'time': np.zeros(dims.n_samples, np.int),
@@ -125,7 +125,7 @@ class Rpg:
                 'skewness',
                 'kurtosis'))
 
-            if self.header['dual_polarization'] > 0:
+            if self.header['dual_polarization']:
                 block2_vars.update(dict.fromkeys((
                     'ldr',
                     'spectral_correlation_coefficient',
@@ -141,23 +141,45 @@ class Rpg:
 
             return vrs, block1_vars, block2_vars
 
+        def _add_sensitivities():
+            ind0 = len(block1) + n_dummy
+            ind1 = ind0 + dims.n_gates
+            block1['sensitivity_limit_v'] = float_block1[:, ind0:ind1]
+            if self.header['dual_polarization']:
+                block1['sensitivity_limit_h'] = float_block1[:, ind1:]
+
+        def _get_length_of_dummy_data():
+            return 3 + dims.n_layers_t + 2 * dims.n_layers_h
+
+        def _get_length_of_sensitivity_data():
+            if self.header['dual_polarization']:
+                return 2*dims.n_gates
+            return dims.n_gates
+
+        def _get_float_block_lengths():
+            block_one_length = len(block1) + n_dummy + n_sens
+            block_two_length = len(block2)
+            return block_one_length, block_two_length
+
+        def _init_float_blocks():
+            block_one = np.zeros((dims.n_samples, n_floats1))
+            block_two = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
+            return block_one, block_two
+
         file = open(self.filename, 'rb')
         file.seek(self._file_position)
-        dims = create_dimensions()
-        aux, block1, block2 = create_variables()
-
-        n_floats1 = len(block1) + dims.n_layers_t + 2*(dims.n_layers_h + dims.n_gates)
-        float_block1 = np.zeros((dims.n_samples, n_floats1))
-
-        n_floats2 = len(block2)
-        float_block2 = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
+        dims = _create_dimensions()
+        aux, block1, block2 = _create_variables()
+        n_dummy = _get_length_of_dummy_data()
+        n_sens = _get_length_of_sensitivity_data()
+        n_floats1, n_floats2 = _get_float_block_lengths()
+        float_block1, float_block2 = _init_float_blocks()
 
         for sample in range(dims.n_samples):
             aux['sample_length'][sample] = np.fromfile(file, np.int32, 1)
             aux['time'][sample] = np.fromfile(file, np.uint32, 1)
             aux['time_ms'][sample] = np.fromfile(file, np.int32, 1)
             aux['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
-            _ = np.fromfile(file, np.int32, 3)
             float_block1[sample, :] = np.fromfile(file, np.float32, n_floats1)
             is_data = np.fromfile(file, np.int8, dims.n_gates)
             is_data_ind = np.where(is_data)[0]
@@ -165,9 +187,9 @@ class Rpg:
             values = np.fromfile(file, np.float32, n_floats2*n_valid)
             float_block2[sample, is_data_ind, :] = values.reshape(n_valid, n_floats2)
         file.close()
-
         for n, name in enumerate(block1):
             block1[name] = float_block1[:, n]
+        _add_sensitivities()
         for n, name in enumerate(block2):
             block2[name] = float_block2[:, :, n]
         return {**aux, **block1, **block2}
@@ -188,7 +210,13 @@ def get_rpg_objects(rpg_files):
 
 
 def _stack_rpg_data(rpg_objects):
-    """Combines selected data from hourly Rpg() objects."""
+    """Combines selected data from hourly Rpg() objects.
+
+    Notes:
+        Concatenate is slow (?) because we don't have the size
+        of the problem beforehand.. maybe try to fix this.
+
+    """
     def _stack(source, target, fun):
         for name, value in source.items():
             if not name.startswith('_'):
@@ -204,6 +232,7 @@ def _stack_rpg_data(rpg_objects):
 
 
 def _reduce_header(header):
+    """Removes duplicate header data."""
     for name in header:
         first_row = header[name][0]
         assert np.isclose(header[name], first_row).all(), f"Inconsistent header: {name}"
