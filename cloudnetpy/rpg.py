@@ -138,7 +138,6 @@ class Rpg:
                     'spectral_slanted_correlation_coefficient',
                     'specific_differential_phase_shift',
                     'differential_attenuation')))
-
             return vrs, block1_vars, block2_vars
 
         def _add_sensitivities():
@@ -210,21 +209,13 @@ def get_rpg_objects(rpg_files):
 
 
 def _stack_rpg_data(rpg_objects):
-    """Combines selected data from hourly Rpg() objects.
-
-    Notes:
-        Concatenate is slow (?) because we don't have the size
-        of the problem beforehand.. maybe try to fix this.
-
-    """
+    """Combines data from hourly Rpg() objects."""
     def _stack(source, target, fun):
         for name, value in source.items():
             if not name.startswith('_'):
                 target[name] = (fun((target[name], value))
                                 if name in target else value)
-
-    data = {}
-    header = {}
+    data, header = {}, {}
     for rpg in rpg_objects:
         _stack(rpg.data, data, np.concatenate)
         _stack(rpg.header, header, np.vstack)
@@ -247,6 +238,11 @@ def _mask_invalid_data(rpg_data):
 
 
 def rpg2nc(path_to_l1_files, output_file):
+    """Writes one day of  RPG Level1 binary data into a NetCDF file.
+
+    (Does not yet write anything. Just returns the all data as a dictionary.)
+
+    """
     l1_files = get_rpg_files(path_to_l1_files)
     rpg_objects = get_rpg_objects(l1_files)
     rpg_data, rpg_header = _stack_rpg_data(rpg_objects)
