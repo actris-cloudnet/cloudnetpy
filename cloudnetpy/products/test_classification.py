@@ -1,5 +1,5 @@
-from classification import generate_class
-from ncf import save_Cnet
+from cloudnetpy.products.classification import generate_class
+from cloudnetpy.products.ncf import save_Cnet
 
 # test file
 #fname = '20170608_lindenberg_categorize.nc'

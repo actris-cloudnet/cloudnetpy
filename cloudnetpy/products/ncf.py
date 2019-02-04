@@ -3,7 +3,11 @@ from numpy import tile
 import numpy as np
 import netCDF4
 import uuid
-
+"""
+Muutetaan tämä vastaamaan enemmän cloudnetpy:n output moduulia.
+Tällöin saadaan se todennäköisesti pätemään varsin hyvin muillekin
+datoille, joita käsitellään ja talletetaan uuteen muotoon.
+"""
 
 def copy_dimensions(file_from, file_to, dims_to_be_copied):
     """ copy nc dimensions from one file to another """

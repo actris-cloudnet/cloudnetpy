@@ -1,20 +1,29 @@
-import sys
-sys.path.insert(0, '/home/korpinen/Documents/ACTRIS/cloudnetpy/cloudnetpy')
-import netCDF4
 import numpy as np
-import utils
-from ncf import CnetVar
+import cloudnetpy.utils as utils
+from cloudnetpy.categorize import RawDataSource
+from cloudnetpy.metadata import _COMMENTS, _DEFINITIONS
+from cloudnetpy.products.ncf import CnetVar
+
+class DataCollect(RawDataSource):
+    def __init__(self, cat_file):
+        super().__init__(cat_file)
+        # Lisätään tänne tarpeellisia juttuja, jos tulee tarvetta
 
 def generate_class(cat_file):
-    cat = netCDF4.Dataset(cat_file)
-    vrs = cat.variables
+    # Kutsutaan luokkaa DataCollect
+    # Pitää tarkastaa onko parempaa tapaa implementoida
+    data = DataCollect(cat_file)
+    cat = data.dataset
+    vrs = data.variables
 
     target_classification = class_masks(vrs['category_bits'][:])
     status = class_status(vrs['quality_bits'][:])
     cloud_mask, base_height, top_height = cloud_layer_heights(target_classification, vrs['height'])
 
+    # Muutetaan tämä siten, että talletetaan suoraan data
     obs = class2cnet({'target_classification':target_classification,
                       'detection_status':status,
+                      'cloud_mask':cloud_mask,
                       'cloud_base_height':base_height,
                       'cloud_top_height':top_height})
 
