@@ -3,9 +3,12 @@ import os
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
+from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy import utils
+from cloudnetpy import output
 
 
-class Rpg:
+class RpgBin:
     """RPG Cloud Radar Level 1 data reader."""
     def __init__(self, filename):
         self.filename = filename
@@ -41,9 +44,9 @@ class Rpg:
                 '_stop_time'), np.uint32)
         append(('program_number',))
         append(('model_number',))  # 0 = single polarization, 1 = dual pol.
-        header['_program_name'] = Rpg.read_string(file)
-        header['_customer_name'] = Rpg.read_string(file)
-        append(('frequency',
+        header['_program_name'] = self.read_string(file)
+        header['_customer_name'] = self.read_string(file)
+        append(('radar_frequency',
                 'antenna_separation',
                 'antenna_diameter',
                 'antenna_gain',  # linear
@@ -108,7 +111,7 @@ class Rpg:
                 'wind_direction',
                 'voltage',
                 'brightness_temperature',
-                'liquid_water_path',
+                'lwp',
                 'if_power',
                 'elevation',
                 'azimuth',
@@ -118,9 +121,9 @@ class Rpg:
                 'receiver_temperature',
                 'pc_temperature'))
 
-            block2_vars = dict.fromkeys((
-                'reflectivity',
-                'velocity',
+            block2_vars = dict.fromkeys((  # vertical polarization
+                'Zv',
+                'v',
                 'width',
                 'skewness',
                 'kurtosis'))
@@ -148,7 +151,7 @@ class Rpg:
                 block1['sensitivity_limit_h'] = float_block1[:, ind1:]
 
         def _get_length_of_dummy_data():
-            return 3 + dims.n_layers_t + 2 * dims.n_layers_h
+            return 3 + dims.n_layers_t + 2*dims.n_layers_h
 
         def _get_length_of_sensitivity_data():
             if self.header['dual_polarization']:
@@ -203,9 +206,9 @@ def get_rpg_files(path_to_l1_files):
 
 
 def get_rpg_objects(rpg_files):
-    """Creates a list of Rpg() objects from the filenames."""
+    """Creates a list of Rpg() objects from the file names."""
     for file in rpg_files:
-        yield Rpg(file)
+        yield RpgBin(file)
 
 
 def _stack_rpg_data(rpg_objects):
@@ -237,16 +240,62 @@ def _mask_invalid_data(rpg_data):
     return rpg_data
 
 
-def rpg2nc(path_to_l1_files, output_file):
+def _create_one_day_data_record(l1_files):
+    """Concatenates all RPG data from one day."""
+    rpg_objects = get_rpg_objects(l1_files)
+    rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
+    rpg_header = _reduce_header(rpg_header)
+    rpg_raw_data = _mask_invalid_data(rpg_raw_data)
+    return {**rpg_header, **rpg_raw_data}
+
+
+def rpg2nc(path_to_l1_files, output_file, location):
     """Writes one day of  RPG Level1 binary data into a NetCDF file.
-
-    (Does not yet write anything. Just returns the all data as a dictionary.)
-
     """
     l1_files = get_rpg_files(path_to_l1_files)
-    rpg_objects = get_rpg_objects(l1_files)
-    rpg_data, rpg_header = _stack_rpg_data(rpg_objects)
-    rpg_header = _reduce_header(rpg_header)
-    rpg_data = _mask_invalid_data(rpg_data)
-    return {**rpg_header, **rpg_data}
+    one_day_of_data = _create_one_day_data_record(l1_files)
+    rpg = Rpg(one_day_of_data, location)
+    rpg.linear_to_db(('Zv', 'ldr'))
+    output.update_attributes(rpg.data)
+    _save_rpg(rpg, output_file)
+
+
+class Rpg:
+
+    variables_to_file = ('Zv', 'v', 'width', 'ldr', 'range', 'time',
+                         'latitude', 'longitude', 'radar_frequency', 'lwp')
+
+    def __init__(self, raw_data, location):
+        self.raw_data = raw_data
+        self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
+        self.data = {}
+        self._init_data()
+        self.source = 'RPG Cloud Radar'
+        self.location = location
+
+    def _init_data(self):
+        for key in self.variables_to_file:
+            self.data[key] = CloudnetArray(self.raw_data[key], key)
+
+    def linear_to_db(self, variables_to_log):
+        """Changes some linear units to logarithmic."""
+        for name in variables_to_log:
+            self.data[name].lin2db()
+
+
+def _save_rpg(rpg, output_file):
+    """Saves the RPG radar file."""
+    dims = {'time': len(rpg.data['time'][:]),
+            'range': len(rpg.data['range'][:])}
+    rootgrp = output.init_file(output_file, dims, rpg.data, zlib=True)
+    rootgrp.title = f"Radar file from {rpg.location}"
+    rootgrp.location = rpg.location
+    rootgrp.history = f"{utils.get_time()} - radar file created"
+    rootgrp.source = rpg.source
+    rootgrp.close()
+
+
+
+
+
 
