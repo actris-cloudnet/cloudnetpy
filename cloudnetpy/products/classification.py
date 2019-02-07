@@ -8,11 +8,8 @@ class DataCollect(RawDataSource):
     def __init__(self, cat_file):
         super().__init__(cat_file)
         self.height = self._getvar('height')
-        # Lisätään tänne tarpeellisia juttuja, jos tulee tarvetta
 
 def generate_class(cat_file):
-    # Kutsutaan luokkaa DataCollect
-    # Pitää tarkastaa onko parempaa tapaa implementoida
     data = DataCollect(cat_file)
     vrs = data.variables
 
@@ -20,14 +17,12 @@ def generate_class(cat_file):
     status = class_status(vrs['quality_bits'][:])
     cloud_mask, base_height, top_height = cloud_layer_heights(target_classification, vrs['height'])
 
-    # Muutetaan tämä siten, että talletetaan suoraan data
     classification_data = class2cnet({'target_classification':target_classification,
                                       'detection_status':status,
                                       'cloud_mask':cloud_mask,
                                       'cloud_base_height':base_height,
                                       'cloud_top_height':top_height})
 
-    # Lisätään tähän vielä datan talletus
     save_Cnet(data, classification_data, 'test_class.nc', 'Classification', 0.1)
 
 

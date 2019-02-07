@@ -79,7 +79,6 @@ class CnetVar:
                  data_type='f4', zlib=True, fill_value=True,
                  long_name='', units='', comment='', bias_variable=None, error_variable=None, extra_attributes=None):
 
-
         size = ('time', 'height')
         if sizes == '1d':
             size = 'time'
