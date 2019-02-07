@@ -7,15 +7,20 @@ import uuid
 Muutetaan tämä vastaamaan enemmän cloudnetpy:n output moduulia.
 Tällöin saadaan se todennäköisesti pätemään varsin hyvin muillekin
 datoille, joita käsitellään ja talletetaan uuteen muotoon.
+
+Oletettavaa on, että tässäkin tiedostossa on paljon turhaa, joka on
+nykyään toteutettu jollain toisella tavalla, pitää selvittää.
 """
 
+#löytyy outputista
 def copy_dimensions(file_from, file_to, dims_to_be_copied):
     """ copy nc dimensions from one file to another """
     for dname, the_dim in file_from.dimensions.items():
         if dname in dims_to_be_copied:
             file_to.createDimension(dname, len(the_dim))
 
-            
+
+# löytyy outputista
 def copy_variables(file_from, file_to, vars_to_be_copied):
     """ copy nc variables (and their attributes) from one file to another """
     for vname, varin in file_from.variables.items():
@@ -24,7 +29,8 @@ def copy_variables(file_from, file_to, vars_to_be_copied):
             outVar.setncatts({k: varin.getncattr(k) for k in varin.ncattrs()})      
             outVar[:] = varin[:]
 
-            
+
+# löytyy outputista
 def copy_global(file_from, file_to, attrs_to_be_copied):
     """ copy nc global attributes from one file to another """
     for aname in file_from.ncattrs():
@@ -69,20 +75,23 @@ def expand_to_alt(x, nalt):
 
 class CnetVar:
     """ Class for Cloudnet retrieved variables """
-    def __init__(self, name, data,
-                 data_type='f4', size=('time','height'), zlib=True, fill_value=True,
-                 long_name='', units='', comment='',
-                 plot_scale=None, plot_range=None, bias_variable=None, error_variable=None, extra_attributes=None):
+    def __init__(self, name, data, sizes,
+                 data_type='f4', zlib=True, fill_value=True,
+                 long_name='', units='', comment='', bias_variable=None, error_variable=None, extra_attributes=None):
+
+
+        size = ('time', 'height')
+        if sizes == '1d':
+            size = 'time'
+
         self.name = name
         self.data = data
-        self.data_type = data_type
         self.size = size
+        self.data_type = data_type
         self.zlib = zlib
         self.long_name = long_name
         self.units = units
         self.comment = comment
-        self.plot_scale = plot_scale
-        self.plot_range = plot_range
         self.extra_attributes = extra_attributes
         # bias variable:
         if (bias_variable and type(bias_variable) == bool): # True
@@ -100,10 +109,10 @@ class CnetVar:
         else:
             self.fill_value = fill_value
 
-            
+# jossain muodossaan löytyy outputista
 def write_vars2nc(rootgrp, obs):
     """ Iterate over Cloudnet instances and write to given rootgrp """
-    for var in obs:
+    for key, var in obs.items():
         ncvar = rootgrp.createVariable(var.name, var.data_type, var.size, zlib=var.zlib, fill_value=var.fill_value)
         ncvar[:] = var.data
         ncvar.long_name = var.long_name
@@ -111,33 +120,31 @@ def write_vars2nc(rootgrp, obs):
         if var.error_variable : ncvar.error_variable = var.error_variable
         if var.bias_variable : ncvar.bias_variable = var.bias_variable
         if var.comment : ncvar.comment = var.comment
-        if var.plot_range : ncvar.plot_range = var.plot_range
-        if var.plot_scale : ncvar.plot_scale = var.plot_scale
         # iterate Dict of (possible) extra attributes
         if var.extra_attributes:
             for attr, value in var.extra_attributes.items():
                 setattr(ncvar, attr, value)
                 
-        
-def save_Cnet(cat, obs, file_name, varname, version):
+
+# Myös löytyy outputista jossain muodossa
+def save_Cnet(data, obs, fname, varname, version):
+    # TODO: mieti mitä halutaan tallettaa
     """ open netcdf file and write data into it 
     Works for all Cloudnet variables """
-    rootgrp = netCDF4.Dataset(file_name, 'w', format='NETCDF4')
-    time = len(cat.dimensions['time'])
-    height = len(cat.dimensions['height'])
+    rootgrp = netCDF4.Dataset(fname, 'w', format='NETCDF4')
     # copy dimensions/variables from categorize file:
-    copy_dimensions(cat, rootgrp, {'time', 'height'})
-    copy_variables(cat, rootgrp, {'altitude', 'latitude', 'longitude', 'time', 'height'})
+    copy_dimensions(data.dataset, rootgrp, {'time', 'height'})
+    copy_variables(data.dataset, rootgrp, {'altitude', 'latitude', 'longitude', 'time', 'height'})
     # write variables into file
     write_vars2nc(rootgrp, obs)
     # global attributes:
-    rootgrp.title = varname + ' from ' + cat.location + ', ' + get_date(cat)
+    rootgrp.title = varname + ' from ' + data.dataset.location + ', ' + get_date(data.dataset)
     rootgrp.institution = 'Data processed at the Finnish Meteorological Institute.'
     rootgrp.software_version = version
     rootgrp.git_version = git_version()
     rootgrp.file_uuid = str(uuid.uuid4().hex)
     # copy these global attributes from categorize file
-    copy_global(cat, rootgrp, {'Conventions', 'location', 'day', 'month', 'year', 'source', 'history'})
+    copy_global(data.dataset, rootgrp, {'Conventions', 'location', 'day', 'month', 'year', 'source', 'history'})
     rootgrp.close()
 
     

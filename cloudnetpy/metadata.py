@@ -102,6 +102,10 @@ _COMMENTS = {
     'It reports on the reliability of the radar and lidar data used to perform the classification.\n'
     'The classes are defined in the definition and long_definition attributes.'),
 
+    'cloud_mask':
+    ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
+     'and provides array of total cloud layer.'),
+
     'cloud_bottom':
     ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
      'and provides cloud base height for a maximum of 1 cloud layers.'),

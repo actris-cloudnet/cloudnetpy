@@ -2,18 +2,18 @@ import numpy as np
 import cloudnetpy.utils as utils
 from cloudnetpy.categorize import RawDataSource
 from cloudnetpy.metadata import _COMMENTS, _DEFINITIONS
-from cloudnetpy.products.ncf import CnetVar
+from cloudnetpy.products.ncf import CnetVar, save_Cnet
 
 class DataCollect(RawDataSource):
     def __init__(self, cat_file):
         super().__init__(cat_file)
+        self.height = self._getvar('height')
         # Lisätään tänne tarpeellisia juttuja, jos tulee tarvetta
 
 def generate_class(cat_file):
     # Kutsutaan luokkaa DataCollect
     # Pitää tarkastaa onko parempaa tapaa implementoida
     data = DataCollect(cat_file)
-    cat = data.dataset
     vrs = data.variables
 
     target_classification = class_masks(vrs['category_bits'][:])
@@ -21,39 +21,45 @@ def generate_class(cat_file):
     cloud_mask, base_height, top_height = cloud_layer_heights(target_classification, vrs['height'])
 
     # Muutetaan tämä siten, että talletetaan suoraan data
-    obs = class2cnet({'target_classification':target_classification,
-                      'detection_status':status,
-                      'cloud_mask':cloud_mask,
-                      'cloud_base_height':base_height,
-                      'cloud_top_height':top_height})
+    classification_data = class2cnet({'target_classification':target_classification,
+                                      'detection_status':status,
+                                      'cloud_mask':cloud_mask,
+                                      'cloud_base_height':base_height,
+                                      'cloud_top_height':top_height})
 
-    return (cat, obs)
+    # Lisätään tähän vielä datan talletus
+    save_Cnet(data, classification_data, 'test_class.nc', 'Classification', 0.1)
 
 
 def class2cnet(vars_in):
     """ Defines Classification Cloudnet objects """
-    #TODO: Tee tämä jossain vaiheessa valmiiksi, pitää siis hakea haluttu data metadatasta
+    lname = ['Target classification', 'Radar and lidar detection status', 'Total area of clouds',
+            'Height of cloud base above ground', 'Height of cloud top above ground']
+    comments = ['classification_pixels', 'classification_quality_pixels',
+                'cloud_mask', 'cloud_bottom', 'cloud_top']
+    definitions = ['classification_pixels', 'classification_quality_pixels',
+                   'cloud_mask', 'cloud_bottom', 'cloud_top']
+    classification_data = {}
+    i = 0
+    for key,value in vars_in.items():
+        if 'cloud' in key:
+            unit = 'm'
+            size = '1d'
+            fill_f = True
+            definition = 'None'
+        else:
+            unit = None
+            size = '2d'
+            fill_f = None
+            definition = _DEFINITIONS[definitions[i]]
+        if key == 'cloud_mask':
+            size = '2d'
 
-    log, lin = ('logarithmic', 'linear')
-    obs = []
-    s, lname = ('target_classification', 'Target classification')
-    obs.append(CnetVar(s, vars_in[s], data_type='b', fill_value=None, long_name=lname, plot_range=(0,10),
-                       comment='classification_pixels' ,
-                       extra_attributes={'definition':'definition'}))
+        classification_data[key] = CnetVar(key, value, size, fill_value=fill_f, long_name=lname[i], units=unit,
+                            comment=_COMMENTS[comments[i]], extra_attributes={'definition': definition})
+        i += 1
 
-    s, lname = ('detection_status', 'Radar and lidar detection status')
-    obs.append(CnetVar(s, vars_in[s], long_name=lname, plot_range=(0, 9), fill_value=None,
-                       comment=('comment'),
-                       extra_attributes={'definition':'definition'}))
-
-    s, lname = ('cloud_base_height', 'Height of cloud base above ground')
-    obs.append(CnetVar(s, vars_in[s], size='time', long_name=lname, units='m',
-                       comment='cloud_bottom'))
-    s, lname = ('cloud_top_height', 'Height of cloud top above ground')
-    obs.append(CnetVar(s, vars_in[s], size='time', long_name=lname, units='m',
-                       comment='cloud_top'))
-
-    return obs
+    return classification_data
 
 
 def cloud_layer_heights(target_classification, height):
