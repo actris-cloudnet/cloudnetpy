@@ -290,7 +290,11 @@ class Rpg:
 
 
 def _save_rpg(rpg, output_file):
-    """Saves the RPG radar file."""
+    """Saves the RPG radar file.
+
+    Notes:
+
+    """
     dims = {'time': len(rpg.data['time'][:]),
             'range': len(rpg.data['range'][:]),
             'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}

@@ -14,7 +14,7 @@ SECONDS_PER_HOUR = 3600
 SECONDS_PER_DAY = 86400
 
 
-def seconds2hour(time_in_seconds):
+def seconds2hours(time_in_seconds):
     """Converts seconds since some epoch to fraction hour.
 
     Args:

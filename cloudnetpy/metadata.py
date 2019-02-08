@@ -11,7 +11,8 @@ FIELDS = (
     'comment',
     'definition',
     'references',
-    'ancillary_variables')
+    'ancillary_variables',
+    'positive')
 
 MetaData = namedtuple('MetaData', FIELDS, defaults=(None,)*len(FIELDS))
 
@@ -88,7 +89,7 @@ _COMMENTS = {
     ('This variable contains information on the quality of the\n'
      'data at each pixel. The information is in the form of an array\n'
      'of bits, and the definitions of each bit are given in the definition\n'
-     'attribute. Bit 0 is the least significant'),
+     'attribute. Bit 0 is the least significant.'),
 
     'classification_pixels':
     ('This variable is a simplification of the bitfield "category_bits" in the target categorization\n'
@@ -233,7 +234,8 @@ ATTRIBUTES = {
         'm s-1',
         (-4, 2),
         _LIN,
-        comment=_COMMENTS['v']
+        comment=_COMMENTS['v'],
+        positive='up',
     ),
     'SNR': MetaData(
         'Signal-to-noise ratio',
@@ -265,11 +267,11 @@ ATTRIBUTES = {
         comment=_COMMENTS['Z_sensitivity']
     ),
     'Zh': MetaData(
-        'Radar reflectivity factor (uncorrected)',
+        'Radar reflectivity factor (uncorrected), horizontal polarization',
         'dBZ',
         (-40, 20),
         _LIN
-    ),    
+    ),
     'radar_liquid_atten': MetaData(
         'Approximate two-way radar attenuation due to liquid water',
         'dB',
@@ -365,7 +367,67 @@ ATTRIBUTES = {
     'insect_prob': MetaData(
         'Insect probability',
         '',
-        [0, 1],
+        (0, 1),
         _LIN
     ),
+    # RPG variables:
+    'Zv': MetaData(
+        'Radar reflectivity factor (uncorrected), vertical polarization',
+        'dBZ',
+        (-40, 20),
+        _LIN
+    ),
+    'rain_rate': MetaData(
+        'Rain rate',
+        'mm h-1',
+    ),
+    'input_voltage_range': MetaData(
+        'ADC input voltage range (+/-)',
+        'mV',
+    ),
+    'noise_threshold': MetaData(
+        'Noise filter threshold factor',
+        '',
+        comment='Multiple of the standard deviation of Doppler spectra.'
+    ),
+    'antenna_separation': MetaData(
+        'Antenna separation',
+        'm',
+    ),
+    'antenna_diameter': MetaData(
+        'Antenna diameter',
+        'm',
+    ),
+    'antenna_gain': MetaData(
+        'Antenna gain',
+        'dB',
+    ),
+    'range_resolution': MetaData(
+        'Vertical resolution of range',
+        'm',
+    ),
+    'half_power_beam_width': MetaData(
+        'Half power beam width',
+        'degrees',
+    ),
+    'transmitter_temperature': MetaData(
+        'Transmitter temperature',
+        'K',
+    ),
+    'transmitted_power': MetaData(
+        'Transmitted power',
+        'W',
+    ),
+    'number_of_spectral_samples': MetaData(
+        'Number of spectral samples in each chirp sequence',
+        '',
+    ),
+    'skewness': MetaData(
+        'Skewness of spectra',
+        '',
+    ),
+    'kurtosis': MetaData(
+        'Kurtosis of spectra',
+    ),
+
 }
