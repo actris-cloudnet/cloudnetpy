@@ -1,10 +1,10 @@
 """ Functions for Categorize output file writing."""
 
 import netCDF4
+import cloudnetpy.version
+from cloudnetpy import config
 from cloudnetpy import utils
 from cloudnetpy.metadata import ATTRIBUTES
-from cloudnetpy import config
-import cloudnetpy.version
 
 
 def write_vars2nc(rootgrp, cloudnet_variables, zlib):

@@ -5,7 +5,7 @@ import numpy.ma as ma
 from cloudnetpy import utils
 
 
-class CloudnetArray():
+class CloudnetArray:
     """Stores NetCDF variables as CloudnetArrays.
 
     Attributes:

@@ -14,6 +14,7 @@
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" /> 
@@ -61,11 +62,12 @@
 <span class="sd">        Brenguier, 1991, https://bit.ly/2QCSJtb</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">e</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span>  <span class="c1"># Ratio of the molecular weight of water vapor to dry air</span>
-    <span class="n">g</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">g</span>  <span class="c1"># acceleration due to gravity</span>
-    <span class="n">cp</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">heat_capacity</span>  <span class="c1"># heat capacity of air at const pressure</span>
-    <span class="n">L</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">latent_heat</span>  <span class="c1"># latent heat of evaporation</span>
-    <span class="n">R</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">Rs</span>  <span class="c1"># specific gas constant for dry air</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">g</span>
+    <span class="n">cp</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">specific_heat</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">latent_heat</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">Rs</span>
+
     <span class="n">qs</span><span class="p">,</span> <span class="n">es</span> <span class="o">=</span> <span class="n">temp2mixingratio</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
     <span class="n">rhoa</span> <span class="o">=</span> <span class="n">P</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span><span class="o">*</span><span class="n">T</span><span class="o">*</span><span class="p">(</span><span class="mf">0.6</span><span class="o">*</span><span class="n">qs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">cp</span><span class="o">*</span><span class="n">T</span><span class="o">/</span><span class="p">(</span><span class="n">L</span><span class="o">*</span><span class="n">e</span><span class="p">),</span> <span class="n">P</span><span class="o">-</span><span class="n">es</span>
@@ -88,9 +90,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">t1</span> <span class="o">=</span> <span class="n">T</span><span class="o">/</span><span class="n">con</span><span class="o">.</span><span class="n">T0</span>
     <span class="n">t2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">T0</span><span class="o">/</span><span class="n">T</span><span class="p">)</span>
-    <span class="n">svp</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="mf">10.79574</span><span class="o">*</span><span class="p">(</span><span class="n">t2</span><span class="p">)</span><span class="o">-</span><span class="mf">5.028</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
+    <span class="n">svp</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="mf">10.79574</span><span class="o">*</span><span class="n">t2</span><span class="o">-</span><span class="mf">5.028</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
                <span class="o">+</span> <span class="mf">1.50475e-4</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">8.2969</span><span class="o">*</span><span class="p">(</span><span class="n">t1</span><span class="o">-</span><span class="mi">1</span><span class="p">))))</span>
-               <span class="o">+</span> <span class="mf">0.42873e-3</span><span class="o">*</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="mf">4.76955</span><span class="o">*</span><span class="p">(</span><span class="n">t2</span><span class="p">)))</span>
+               <span class="o">+</span> <span class="mf">0.42873e-3</span><span class="o">*</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="mf">4.76955</span><span class="o">*</span><span class="n">t2</span><span class="p">))</span>
                <span class="o">+</span> <span class="mf">2.78614</span><span class="p">)</span>
     <span class="n">mixing_ratio</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span><span class="o">*</span><span class="n">svp</span><span class="o">/</span><span class="p">(</span><span class="n">P</span><span class="o">-</span><span class="n">svp</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mixing_ratio</span><span class="p">,</span> <span class="n">svp</span></div>
@@ -132,7 +134,7 @@
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2018, Finnish Meteorological Institute.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.2.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>
 </html>

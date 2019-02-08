@@ -1,13 +1,61 @@
 """ This module contains general
 helper functions. """
 
-from datetime import datetime
 import uuid
-import requests
+from datetime import datetime
 import numpy as np
 import numpy.ma as ma
+import requests
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
+
+
+SECONDS_PER_HOUR = 3600
+SECONDS_PER_DAY = 86400
+
+
+def seconds2hour(time_in_seconds):
+    """Converts seconds since some epoch to fraction hour.
+
+    Args:
+        time_in_seconds (ndarray): 1-D array of seconds since some epoch
+            that starts on midnight.
+
+    Returns:
+        ndarray: Time as fraction hour.
+
+    Notes:
+        Excludes leap seconds.
+
+    """
+    seconds_since_midnight = np.mod(time_in_seconds, SECONDS_PER_DAY)
+    fraction_hour = seconds_since_midnight/SECONDS_PER_HOUR
+    if fraction_hour[-1] == 0:
+        fraction_hour[-1] = 24
+    return fraction_hour
+
+
+def time_grid(time_step=30):
+    """Returns decimal hour array between 0 and 24.
+
+    Computes fraction hour time vector 0-24 with user-given
+    resolution (in seconds) where 60 is the maximum allowed value.
+
+    Args:
+        time_step (int, optional): Time resolution in seconds between
+            1 and 60. Default is 30.
+
+    Returns:
+        ndarray: Time vector between 0 and 24.
+
+    Raises:
+        ValueError: Bad resolution as input.
+
+    """
+    if time_step < 1 or time_step > 60:
+        raise ValueError('Time resolution should be between 0 and 60 [s]')
+    half_step = time_step/SECONDS_PER_HOUR/2
+    return np.arange(half_step, 24+half_step, half_step*2)
 
 
 def findkey(vrs, possible_fields):
@@ -16,7 +64,7 @@ def findkey(vrs, possible_fields):
     Args:
         vrs (dict): Dictionary or other
             iterable containing strings.
-        fields (tuple): List of possible strings to be
+        possible_fields (tuple): List of possible strings to be
             searched.
 
     Returns:
@@ -40,48 +88,6 @@ def findkey(vrs, possible_fields):
         if field in vrs:
             return field
     return None
-
-
-def seconds2hour(time_in):
-    """Converts seconds since some epoch to fraction hour.
-
-    Args:
-        time_in (ndarray): 1-D array of seconds since some epoch
-            that starts on midnight.
-
-    Returns:
-        ndarray: Time as fraction hour.
-
-    Notes:
-        Excludes leap seconds.
-
-    """
-    seconds_since_midnight = np.mod(time_in, 86400)
-    fraction_hour = seconds_since_midnight/3600
-    if fraction_hour[-1] == 0:
-        fraction_hour[-1] = 24
-    return fraction_hour
-
-
-def time_grid(reso=30):
-    """Computes fraction hour time vector 0-24 with user-given
-    resolution (in seconds) where 60 is the maximum allowed value.
-
-    Args:
-        reso (int, optional): Time resolution in seconds between 1 and 60.
-            Default is 30.
-
-    Returns:
-        ndarray: Time vector between 0 and 24.
-
-    Raises:
-        ValueError: Bad resolution as input.
-
-    """
-    if reso < 1 or reso > 60:
-        raise ValueError('Time resolution should be between 0 and 60 [s]')
-    half_step = reso/7200
-    return np.arange(half_step, 24+half_step, half_step*2)
 
 
 def binvec(x):
@@ -120,7 +126,7 @@ def rebin_2d(x_in, data, x_new):
     """
     edges = binvec(x_new)
     datai = np.zeros((len(x_new), data.shape[1]))
-    data = ma.masked_invalid(data)  # data can contain nan-values
+    data = ma.masked_invalid(data)  # data may contain nan-values
     for ind, values in enumerate(data.T):
         mask = ~values.mask
         if ma.any(values[mask]):
@@ -224,7 +230,8 @@ def interpolate_2d(x, y, z, x_new, y_new):
         ndarray: Interpolated data.
 
     Notes:
-        Does not work with nans.
+        Does not work with nans. Ignores mask of masked data.
+        Does not extrapolate.
 
     """
     fun = RectBivariateSpline(x, y, z, kx=1, ky=1)  # linear interpolation
@@ -412,22 +419,6 @@ def n_elements(x, dist, var=None):
     return int(np.round(n))
 
 
-def km2m(var):
-    """Converts km to m."""
-    alt = var[:]
-    if var.units == 'km':
-        alt = alt*1000
-    return alt
-
-
-def m2km(var):
-    """Converts m to km."""
-    alt = var[:]
-    if var.units == 'm':
-        alt = alt/1000
-    return alt
-
-
 def isscalar(array):
     """Tests if input is scalar.
 
@@ -456,14 +447,15 @@ def get_time():
 
 
 def get_uuid():
-    """Returns unique file identifier."""
+    """Returns unique identifier."""
     return str(uuid.uuid4().hex)
 
 
 def read_cloudnet_database(site, *fields_in):
     """Read metadata from Cloudnet http API."""
-    fields = ','.join((fields_in))
+    fields = ','.join(fields_in)
+    url = 'http://devcloudnet.fmi.fi/api/'
     try:
-        return tuple(requests.get('http://devcloudnet.fmi.fi/api/?site=' + site + '&fields=' + fields).json().values())
+        return tuple(requests.get(f"{url}?site={site}&fields={fields}").json().values())
     except:
         return tuple([0]*len(fields_in))

@@ -3,20 +3,20 @@
 
 from collections import namedtuple
 
+FIELDS = (
+    'long_name',
+    'units',
+    'plot_range',
+    'plot_scale',
+    'comment',
+    'definition',
+    'references',
+    'ancillary_variables')
+
+MetaData = namedtuple('MetaData', FIELDS, defaults=(None,)*len(FIELDS))
+
 _LOG = 'logarithmic'
 _LIN = 'linear'
-
-MetaData = namedtuple('MetaData', ['long_name',
-                                   'units',
-                                   'plot_range',
-                                   'plot_scale',
-                                   'comment',
-                                   'definition',
-                                   'references',
-                                   'ancillary_variables'])
-
-# Default values for namedtuple. Python 3.7 has better syntax for this.
-MetaData.__new__.__defaults__ = (None,)*len(MetaData._fields)
 
 _DEFINITIONS = {
     'category_bits':
@@ -159,10 +159,10 @@ _COMMENTS = {
      'per cubic metre will have a reflectivity of 0 dBZ at all frequencies.'),
 
     'bias':
-    ('This variable is an estimate of the one-standard-deviation calibration error.'),
+    'This variable is an estimate of the one-standard-deviation calibration error.',
 
     'ldr':
-    ('This parameter is the ratio of cross-polar to co-polar reflectivity.'),
+    'This parameter is the ratio of cross-polar to co-polar reflectivity.',
 
     'width':
     ('This parameter is the standard deviation of the reflectivity-weighted\n'

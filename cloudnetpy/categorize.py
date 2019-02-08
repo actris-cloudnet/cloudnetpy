@@ -1,24 +1,24 @@
 """ Functions for rebinning input data.
 """
 import math
+import netCDF4
 import numpy as np
 import numpy.ma as ma
 import scipy.constants
 from scipy.interpolate import interp1d
-import netCDF4
-from cloudnetpy import config
-from cloudnetpy import utils
 from cloudnetpy import atmos
 from cloudnetpy import classify
+from cloudnetpy import config
 from cloudnetpy import output
+from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 
 
-class RawDataSource:
+class DataSource:
     """Base class for all Cloudnet measurements and model data.
 
     Args:
-        input_file (str): Calibrated instrument / model NetCDF file.
+        filename (str): Calibrated instrument / model NetCDF file.
 
     Attributes:
         filename (str): Filename of the input file.
@@ -26,39 +26,38 @@ class RawDataSource:
         variables (dict): Variables of the Dataset instance.
         source (str): Global attribute 'source' from *input_file*.
         time (MaskedArray): Time array of the instrument.
+        altitude (float): Altitude of instrument above mean sea level (m).
         data (dict): Dictionary containing CloudnetArray instances.
 
     """
-    def __init__(self, input_file):
-        self.filename = input_file
-        self.dataset = netCDF4.Dataset(self.filename)
+    def __init__(self, filename):
+        self.filename = filename
+        self.dataset = netCDF4.Dataset(filename)
         self.variables = self.dataset.variables
-        self.source = getattr(self.dataset, 'source', '')
-        self.time = self._get_time()
+        self.source = getattr(self.dataset, 'source', '')  # is this ok here?
+        self.time = self._init_time()
+        self.altitude = self._init_altitude()
         self.data = {}
 
-    def _get_time(self):
+    def _init_time(self):
         time = self._getvar('time')
         if max(time) > 24:
-            time = utils.seconds2hour(time)
+            time = self._seconds2hours(time)
         return time
 
-    def _get_altitude(self):
+    def _init_altitude(self):
         """Returns altitude of the instrument (m)."""
-        return float(utils.km2m(self.variables['altitude']))
-
-    def _get_height(self):
-        """Returns height array above mean sea level (m)."""
-        range_instrument = utils.km2m(self.variables['range'])
-        alt_instrument = self._get_altitude()
-        return np.array(range_instrument + alt_instrument)
+        if 'altitude' in self.variables:
+            altitude_above_sea = self.km2m(self.variables['altitude'])
+            return float(altitude_above_sea)
+        return None
 
     def _getvar(self, *args):
         """Returns data (without attributes) from the source file."""
         for arg in args:
             if arg in self.variables:
                 return self.variables[arg][:]
-        raise KeyError('Missing variable')
+        raise KeyError('Missing variable in the input file.')
 
     def _netcdf_to_cloudnet(self, fields):
         """Transforms netCDF4-variables into CloudnetArrays.
@@ -70,6 +69,45 @@ class RawDataSource:
         """
         for key in fields:
             self.append_data(self.variables[key], key)
+
+    @staticmethod
+    def _seconds2hours(time_in_seconds):
+        """Converts seconds since some epoch to fraction hour.
+
+        Args:
+            time_in_seconds (ndarray): 1-D array of seconds since some epoch
+                that starts on midnight.
+
+        Returns:
+            ndarray: Time as fraction hour.
+
+        Notes:
+            Excludes leap seconds.
+
+        """
+        seconds_per_hour = 3600
+        seconds_per_day = 86400
+        seconds_since_midnight = np.mod(time_in_seconds, seconds_per_day)
+        fraction_hour = seconds_since_midnight / seconds_per_hour
+        if fraction_hour[-1] == 0:
+            fraction_hour[-1] = 24
+        return fraction_hour
+
+    @staticmethod
+    def km2m(var):
+        """Converts km to m."""
+        alt = var[:]
+        if var.units == 'km':
+            alt = alt * 1000
+        return alt
+
+    @staticmethod
+    def m2km(var):
+        """Converts m to km."""
+        alt = var[:]
+        if var.units == 'm':
+            alt = alt / 1000
+        return alt
 
     def append_data(self, data, key, name=None, units=None):
         """Adds new CloudnetVariable into self.data dictionary.
@@ -85,8 +123,28 @@ class RawDataSource:
         self.data[key] = CloudnetArray(data, name or key, units)
 
 
-class Radar(RawDataSource):
-    """Radar class, child of RawDataSource.
+class ProfileDataSource(DataSource):
+    """ProfileDataSource class, child of DataSource.
+
+    Args:
+        filename (str): Raw lidar or radar file.
+
+    Attributes:
+        height (ndarray): Measurement height grid above mean sea level (m).
+
+    """
+    def __init__(self, filename):
+        super().__init__(filename)
+        self.height = self._get_height()
+
+    def _get_height(self):
+        """Returns height array above mean sea level (m)."""
+        range_instrument = self.km2m(self.variables['range'])
+        return np.array(range_instrument + self.altitude)
+
+
+class Radar(ProfileDataSource):
+    """Radar class, child of ProfileDataSource.
 
     Args:
         radar_file (str): File name of the calibrated radar file.
@@ -97,8 +155,6 @@ class Radar(RawDataSource):
         radar_frequency (float): Radar frequency (GHz).
         wl_band (int): Int corresponding to frequency 0 = 35.5 GHz, 1 = 94 GHz.
         folding_velocity (float): Radar's folding velocity (m/s).
-        altitude (float): Altitude of the radar above mean sea level (m).
-        height (ndarray): Measurement height grid above mean sea level (m).
         location (str): Location of the radar, copied from the global attribute
             'location' of the *radar_file*.
 
@@ -109,8 +165,6 @@ class Radar(RawDataSource):
                                                   'frequency'))
         self.wl_band = self._get_wl_band()
         self.folding_velocity = self._get_folding_velocity()
-        self.altitude = self._get_altitude()
-        self.height = self._get_height()
         self.location = getattr(self.dataset, 'location', '')
         self._netcdf_to_cloudnet(fields)
 
@@ -131,7 +185,7 @@ class Radar(RawDataSource):
 
         Args:
             time_new (ndarray): Target time array as fraction hour. Updates
-            *self.time* attribute.
+                *time* attribute.
 
         """
         for key in self.data:
@@ -186,7 +240,7 @@ class Radar(RawDataSource):
                     * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
 
         z = self.data['Zh'][:]
-        radar_range = utils.km2m(self.variables['range'])
+        radar_range = self.km2m(self.variables['range'])
         log_range = utils.lin2db(radar_range, scale=20)
         z_power = z - log_range
         z_power_min = np.percentile(z_power.compressed(), 0.1)
@@ -202,8 +256,8 @@ class Radar(RawDataSource):
             self.append_data(getattr(self, key), key)
 
 
-class Lidar(RawDataSource):
-    """Lidar class, child of RawDataSource.
+class Lidar(ProfileDataSource):
+    """Lidar class, child of ProfileDataSource.
 
     Args:
         lidar_file (str): File name of the calibrated lidar file.
@@ -211,13 +265,13 @@ class Lidar(RawDataSource):
             from the *lidar_file*, e.g ('beta', 'beta_raw').
 
     Attributes:
-        height (ndarray): Measurement height grid above mean sea level (m).
+        wavelength (float): Lidar wavelength (nm).
 
     """
     def __init__(self, lidar_file, fields):
         super().__init__(lidar_file)
-        self.height = self._get_height()
         self._netcdf_to_cloudnet(fields)
+        self.wavelength = float(self._getvar('wavelength'))
 
     def rebin_to_grid(self, time_new, height_new):
         """Rebins lidar data in time and height using mean.
@@ -233,13 +287,13 @@ class Lidar(RawDataSource):
 
     def add_meta(self):
         """Copies misc. metadata from the input file."""
-        self.append_data(self._getvar('wavelength'), 'lidar_wavelength')
+        self.append_data(self.wavelength, 'lidar_wavelength')
         self.append_data(config.BETA_ERROR[0], 'beta_bias')
         self.append_data(config.BETA_ERROR[1], 'beta_error')
 
 
-class Mwr(RawDataSource):
-    """Microwave radiometer class, child of RawDataSource.
+class Mwr(DataSource):
+    """Microwave radiometer class, child of DataSource.
 
     Args:
          mwr_file (str): File name of the calibrated mwr file.
@@ -247,16 +301,21 @@ class Mwr(RawDataSource):
     """
     def __init__(self, mwr_file):
         super().__init__(mwr_file)
-        self._get_lwp_data()
+        self._init_lwp_data()
+        self._init_lwp_error()
 
-    def _get_lwp_data(self):
-        key = utils.findkey(self.variables, ('LWP_data', 'lwp'))
-        self.append_data(self.variables[key], 'lwp')
-        self.append_data(self._calc_lwp_error(), 'lwp_error')
+    def _init_lwp_data(self):
+        try:
+            lwp_data = self._getvar('LWP_data', 'lwp')
+            self.append_data(lwp_data, 'lwp')
+        except KeyError as error:
+            print(error)
 
-    def _calc_lwp_error(self):
+    def _init_lwp_error(self):
         fractional_error, linear_error = config.LWP_ERROR
-        return utils.l2norm(self.data['lwp'][:]*fractional_error, linear_error)
+        lwp_error = utils.l2norm(self.data['lwp'][:]*fractional_error,
+                                 linear_error)
+        self.append_data(lwp_error, 'lwp_error')
 
     def interpolate_in_time(self, time_grid):
         """Interpolates liquid water path to Cloudnet's dense time grid."""
@@ -265,8 +324,8 @@ class Mwr(RawDataSource):
             self.append_data(fun(time_grid), key)
 
 
-class Model(RawDataSource):
-    """Model class, child of RawDataSource.
+class Model(DataSource):
+    """Model class, child of DataSource.
 
     Args:
         model_file (str): File name of the NWP model file.
@@ -307,7 +366,7 @@ class Model(RawDataSource):
 
     def _get_model_heights(self, alt_site):
         """Returns model heights for each time step."""
-        return utils.km2m(self.variables['height']) + alt_site
+        return self.km2m(self.variables['height']) + alt_site
 
     def _get_mean_height(self):
         return np.mean(np.array(self.model_heights), axis=0)
@@ -377,7 +436,6 @@ def generate_categorize(input_files, output_file):
         input_files (tuple): Tuple of strings containing full paths of
                              the 4 input files (radar, lidar, mwr, model).
         output_file (str): Full path of the output file.
-        zlib (bool): If True, the output file is compressed. Default is True.
 
     Examples:
         >>> from cloudnetpy.categorize import generate_categorize
@@ -397,14 +455,15 @@ def generate_categorize(input_files, output_file):
         radar.add_meta()
         lidar.add_meta()
         model.screen_fields()
-        radar.append_data(classification.category_bits, 'category_bits')
-        radar.append_data(quality['quality_bits'], 'quality_bits')
+        for key in ('category_bits', 'insect_prob'):
+            radar.append_data(getattr(classification, key), key)
         for key in ('radar_liquid_atten', 'radar_gas_atten'):
             radar.append_data(attenuations[key], key)
+        radar.append_data(quality['quality_bits'], 'quality_bits')
         return {**radar.data, **lidar.data, **model.data_sparse, **mwr.data}
 
     radar = Radar(input_files[0], ('Zh', 'v', 'ldr', 'width'))
-    lidar = Lidar(input_files[1], ('beta',))
+    lidar = Lidar(input_files[1], ('beta', 'beta_raw'))
     mwr = Mwr(input_files[2])
     model = Model(input_files[3], radar.altitude)
     time = utils.time_grid()
