@@ -42,7 +42,7 @@ class DataSource:
     def _init_time(self):
         time = self._getvar('time')
         if max(time) > 24:
-            time = self._seconds2hours(time)
+            time = utils.seconds2hours(time)
         return time
 
     def _init_altitude(self):
@@ -69,29 +69,6 @@ class DataSource:
         """
         for key in fields:
             self.append_data(self.variables[key], key)
-
-    @staticmethod
-    def _seconds2hours(time_in_seconds):
-        """Converts seconds since some epoch to fraction hour.
-
-        Args:
-            time_in_seconds (ndarray): 1-D array of seconds since some epoch
-                that starts on midnight.
-
-        Returns:
-            ndarray: Time as fraction hour.
-
-        Notes:
-            Excludes leap seconds.
-
-        """
-        seconds_per_hour = 3600
-        seconds_per_day = 86400
-        seconds_since_midnight = np.mod(time_in_seconds, seconds_per_day)
-        fraction_hour = seconds_since_midnight / seconds_per_hour
-        if fraction_hour[-1] == 0:
-            fraction_hour[-1] = 24
-        return fraction_hour
 
     @staticmethod
     def km2m(var):
