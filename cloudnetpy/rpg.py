@@ -39,7 +39,7 @@ class RpgBin:
         header = {}
         file = open(self.filename, 'rb')
         append(('file_code',
-                'header_length'), np.int32)
+                '_header_length'), np.int32)
         append(('_start_time',
                 '_stop_time'), np.uint32)
         append(('program_number',))
@@ -56,26 +56,30 @@ class RpgBin:
         append(('latitude',
                 'longitude'), np.float32)
         append(('calibration_interval_in_samples',
-                'n_range_gates',
-                'n_temperature_levels',
-                'n_humidity_levels',
-                'n_chirp_sequences'))
-        append(('range',), np.float32, header['n_range_gates'])
-        append(('temperature_levels',), np.float32, header['n_temperature_levels'])
-        append(('humidity_levels',), np.float32, header['n_humidity_levels'])
-        append(('n_spectral_samples_in_chirp',
+                '_number_of_range_gates',
+                '_number_of_temperature_levels',
+                '_number_of_humidity_levels',
+                '_number_of_chirp_sequences'))
+        append(('range',), np.float32, header['_number_of_range_gates'])
+        append(('_temperature_levels',), np.float32,
+               header['_number_of_temperature_levels'])
+        append(('_humidity_levels',), np.float32,
+               header['_number_of_humidity_levels'])
+        append(('number_of_spectral_samples',
                 'chirp_start_indices',
-                'n_averaged_chirps'), n_values=header['n_chirp_sequences'])
+                'number_of_averaged_chirps'),
+               n_values=header['_number_of_chirp_sequences'])
         append(('integration_time',
                 'range_resolution',
-                'nyquist_velocity'), np.float32, header['n_chirp_sequences'])
-        append(('is_power_levelling',
-                'is_spike_filter',
-                'is_phase_correction',
-                'is_relative_power_correction'), np.int8)
+                'nyquist_velocity'), np.float32,
+               header['_number_of_chirp_sequences'])
+        append(('_is_power_levelling',
+                '_is_spike_filter',
+                '_is_phase_correction',
+                '_is_relative_power_correction'), np.int8)
         append(('FFT_window',), np.int8)  # 0 = square, 1 = parzen, 2 = blackman, 3 = welch, = slepian2, 5 = slepian3
-        append(('input_voltage',))
-        append(('noise_filter_threshold_factor',), np.float32)
+        append(('input_voltage_range',))
+        append(('noise_threshold',), np.float32)
         self._file_position = file.tell()
         file.close()
         return header
@@ -91,9 +95,9 @@ class RpgBin:
             """Returns possible lengths of the data arrays."""
             n_samples = np.fromfile(file, np.int32, 1)
             return Dimensions(int(n_samples),
-                              int(self.header['n_range_gates']),
-                              int(self.header['n_temperature_levels']),
-                              int(self.header['n_humidity_levels']))
+                              int(self.header['_number_of_range_gates']),
+                              int(self.header['_number_of_temperature_levels']),
+                              int(self.header['_number_of_humidity_levels']))
 
         def _create_variables():
             """Initializes dictionaries for data arrays."""
@@ -212,7 +216,12 @@ def get_rpg_objects(rpg_files):
 
 
 def _stack_rpg_data(rpg_objects):
-    """Combines data from hourly Rpg() objects."""
+    """Combines data from hourly Rpg() objects.
+
+    Notes:
+        Ignores variable names starting with an underscore.
+
+    """
     def _stack(source, target, fun):
         for name, value in source.items():
             if not name.startswith('_'):
@@ -255,15 +264,12 @@ def rpg2nc(path_to_l1_files, output_file, location):
     l1_files = get_rpg_files(path_to_l1_files)
     one_day_of_data = _create_one_day_data_record(l1_files)
     rpg = Rpg(one_day_of_data, location)
-    rpg.linear_to_db(('Zv', 'ldr'))
+    rpg.linear_to_db(('Zv', 'ldr', 'antenna_gain'))
     output.update_attributes(rpg.data)
     _save_rpg(rpg, output_file)
 
 
 class Rpg:
-
-    variables_to_file = ('Zv', 'v', 'width', 'ldr', 'range', 'time',
-                         'latitude', 'longitude', 'radar_frequency', 'lwp')
 
     def __init__(self, raw_data, location):
         self.raw_data = raw_data
@@ -274,7 +280,7 @@ class Rpg:
         self.location = location
 
     def _init_data(self):
-        for key in self.variables_to_file:
+        for key in self.raw_data:
             self.data[key] = CloudnetArray(self.raw_data[key], key)
 
     def linear_to_db(self, variables_to_log):
@@ -286,7 +292,8 @@ class Rpg:
 def _save_rpg(rpg, output_file):
     """Saves the RPG radar file."""
     dims = {'time': len(rpg.data['time'][:]),
-            'range': len(rpg.data['range'][:])}
+            'range': len(rpg.data['range'][:]),
+            'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}
     rootgrp = output.init_file(output_file, dims, rpg.data, zlib=True)
     rootgrp.title = f"Radar file from {rpg.location}"
     rootgrp.location = rpg.location
