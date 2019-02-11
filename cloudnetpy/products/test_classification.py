@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0,'/home/korpinen/Documents/ACTRIS/cloudnetpy/')
 from cloudnetpy.products.classification import generate_class
 from cloudnetpy.products.ncf import save_Cnet
 
@@ -9,6 +11,3 @@ fname = '/home/korpinen/Documents/ACTRIS/cloudnet_data/20190113_juelich_categori
 
 # generate classification
 generate_class(fname)
-
-    
-
