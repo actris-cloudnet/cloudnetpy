@@ -1,8 +1,8 @@
 import numpy as np
 import cloudnetpy.utils as utils
+import cloudnetpy.output as output
 from cloudnetpy.categorize import RawDataSource
-from cloudnetpy.metadata import _COMMENTS, _DEFINITIONS
-from cloudnetpy.products.ncf import CnetVar, save_Cnet
+from cloudnetpy.products.ncf import save_Cnet
 
 class DataCollect(RawDataSource):
     def __init__(self, cat_file):
@@ -17,45 +17,24 @@ def generate_class(cat_file):
     status = class_status(vrs['quality_bits'][:])
     cloud_mask, base_height, top_height = cloud_layer_heights(target_classification, vrs['height'])
 
-    classification_data = class2cnet({'target_classification':target_classification,
-                                      'detection_status':status,
-                                      'cloud_mask':cloud_mask,
-                                      'cloud_base_height':base_height,
-                                      'cloud_top_height':top_height})
-
-    save_Cnet(data, classification_data, 'test_class.nc', 'Classification', 0.1)
+    class2cnet(data, {'classification_pixels':target_classification,
+                      'classification_quality_pixels':status,
+                      'cloud_mask':cloud_mask,
+                      'cloud_bottom':base_height,
+                      'cloud_top':top_height})
 
 
-def class2cnet(vars_in):
+def class2cnet(data, vars_in):
     """ Defines Classification Cloudnet objects """
-    lname = ['Target classification', 'Radar and lidar detection status', 'Total area of clouds',
-            'Height of cloud base above ground', 'Height of cloud top above ground']
-    comments = ['classification_pixels', 'classification_quality_pixels',
-                'cloud_mask', 'cloud_bottom', 'cloud_top']
-    definitions = ['classification_pixels', 'classification_quality_pixels',
-                   'cloud_mask', 'cloud_bottom', 'cloud_top']
     classification_data = {}
     i = 0
     for key,value in vars_in.items():
-        if 'cloud' in key:
-            unit = 'm'
-            size = '1d'
-            fill_f = True
-            definition = 'None'
-        else:
-            unit = None
-            size = '2d'
-            fill_f = None
-            definition = _DEFINITIONS[definitions[i]]
-        if key == 'cloud_mask':
-            size = '2d'
-
-        classification_data[key] = CnetVar(key, value, size, fill_value=fill_f, long_name=lname[i], units=unit,
-                            comment=_COMMENTS[comments[i]], extra_attributes={'definition': definition})
+        data.append_data(value, key)
         i += 1
+    output.update_attributes(data.data)
+    save_Cnet(data, 'test_class2.nc', 'Classification', 0.1)
 
-    return classification_data
-
+    
 
 def cloud_layer_heights(target_classification, height):
     cloud_mask = np.zeros_like(target_classification, dtype=int)

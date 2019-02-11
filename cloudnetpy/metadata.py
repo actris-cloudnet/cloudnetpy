@@ -364,6 +364,30 @@ ATTRIBUTES = {
         comment=_COMMENTS['quality_bits'],
         definition=_DEFINITIONS['quality_bits']
     ),
+    'classification_pixels': MetaData(
+        'Target classification',
+        comment=_COMMENTS['classification_pixels'],
+        definition=_DEFINITIONS['classification_pixels']
+    ),
+    'classification_quality_pixels': MetaData(
+        'Radar and lidar detection status',
+        comment=_COMMENTS['classification_quality_pixels'],
+        definition=_DEFINITIONS['classification_quality_pixels']
+    ),
+    'cloud_mask': MetaData(
+        'Total area of clouds',
+        comment=_COMMENTS['cloud_mask'],
+    ),
+    'cloud_bottom': MetaData(
+        'Height of cloud base above ground',
+        'm',
+        comment=_COMMENTS['cloud_bottom'],
+    ),
+    'cloud_top': MetaData(
+        'Height of cloud top above ground',
+        'm',
+        comment=_COMMENTS['cloud_top'],
+    ),
     'insect_prob': MetaData(
         'Insect probability',
         '',
