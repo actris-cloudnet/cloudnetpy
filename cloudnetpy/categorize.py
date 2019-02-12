@@ -70,6 +70,11 @@ class DataSource:
         for key in fields:
             self.append_data(self.variables[key], key)
 
+    def _unknown_to_cloudnet(self, possible_names, key, units=None):
+        """Transforms netCDF4 variable with several possible names into CloudnetArray."""
+        array = self._getvar(*possible_names)
+        self.append_data(array, key, units=units)
+
     @staticmethod
     def km2m(var):
         """Converts km to m."""
@@ -125,8 +130,6 @@ class Radar(ProfileDataSource):
 
     Args:
         radar_file (str): File name of the calibrated radar file.
-        fields (tuple): Tuple of strings containing fields to be extracted
-            from the *radar_file*, e.g ('Zh', 'ldr', 'v', 'width').
 
     Attributes:
         radar_frequency (float): Radar frequency (GHz).
@@ -136,26 +139,37 @@ class Radar(ProfileDataSource):
             'location' of the *radar_file*.
 
     """
-    def __init__(self, radar_file, fields):
+    def __init__(self, radar_file):
         super().__init__(radar_file)
         self.radar_frequency = float(self._getvar('radar_frequency',
                                                   'frequency'))
         self.wl_band = self._get_wl_band()
         self.folding_velocity = self._get_folding_velocity()
+        self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, 'location', '')
-        self._netcdf_to_cloudnet(fields)
+        self._netcdf_to_cloudnet(('v', 'width', 'ldr'))
+        self._unknown_to_cloudnet(('Zh', 'Zv', 'Ze'), 'Z', units='dBZ')
 
     def _get_wl_band(self):
         return 0 if (30 < self.radar_frequency < 40) else 1
 
+    def _get_sequence_indices(self):
+        """Mira has only one sequence and one folding velocity. RPG has
+        several sequences with different folding velocities."""
+        all_indices = np.arange(0, len(self.height))
+        if not utils.isscalar(self.folding_velocity):
+            starting_indices = self._getvar('chirp_start_indices')
+            return np.split(all_indices, starting_indices[1:])
+        return [all_indices]
+
     def _get_folding_velocity(self):
-        if 'NyquistVelocity' in self.variables:
-            return float(self._getvar('NyquistVelocity'))
-        elif 'prf' in self.variables:
+        for key in ('nyquist_velocity', 'NyquistVelocity'):
+            if key in self.variables:
+                return self._getvar(key)
+        if 'prf' in self.variables:
             return float(self._getvar('prf') * scipy.constants.c
                          / (4 * self.radar_frequency * 1e9))
-        else:
-            raise KeyError('Unable to determine folding velocity')
+        raise KeyError('Unable to determine folding velocity')
 
     def rebin_to_grid(self, time_new):
         """Rebins radar data in time using mean.
@@ -166,13 +180,15 @@ class Radar(ProfileDataSource):
 
         """
         for key in self.data:
-            if key in ('Zh',):
+            if key in ('Z',):
                 self.data[key].db2lin()
                 self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
             elif key in ('v',):
+                # This has some problems with RPG data when folding is present
                 self.data[key].rebin_in_polar(self.time, time_new,
-                                              self.folding_velocity)
+                                              self.folding_velocity,
+                                              self.sequence_indices)
             else:
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new
@@ -184,7 +200,7 @@ class Radar(ProfileDataSource):
             attenuations (dict): 2-D attenuations due to atmospheric gases.
 
         """
-        z_corrected = self.data['Zh'][:]
+        z_corrected = self.data['Z'][:]
         z_corrected += attenuations['radar_gas_atten']
         ind = ma.where(attenuations['radar_liquid_atten'])
         z_corrected[ind] += attenuations['radar_liquid_atten'][ind]
@@ -216,7 +232,7 @@ class Radar(ProfileDataSource):
             return (dwell_time * self.radar_frequency * 1e9 * 4
                     * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
 
-        z = self.data['Zh'][:]
+        z = self.data['Z'][:]
         radar_range = self.km2m(self.variables['range'])
         log_range = utils.lin2db(radar_range, scale=20)
         z_power = z - log_range
@@ -283,8 +299,7 @@ class Mwr(DataSource):
 
     def _init_lwp_data(self):
         try:
-            lwp_data = self._getvar('LWP_data', 'lwp')
-            self.append_data(lwp_data, 'lwp')
+            self._unknown_to_cloudnet(('LWP_data', 'lwp'), 'lwp')
         except KeyError as error:
             print(error)
 
@@ -410,13 +425,18 @@ def generate_categorize(input_files, output_file):
     file.
 
     Args:
-        input_files (tuple): Tuple of strings containing full paths of
-                             the 4 input files (radar, lidar, mwr, model).
+        input_files (dict): dict containing file names for 'radar', 'lidar'
+            'model' and optionally 'mwr' if liquid water path is not
+            included in the radar file.
         output_file (str): Full path of the output file.
 
     Examples:
         >>> from cloudnetpy.categorize import generate_categorize
-        >>> generate_categorize(('radar.nc', 'lidar.nc', 'mwr.nc', 'model.nc'), 'output.nc')
+        >>> input_files = {'radar': 'radar.nc',
+                           'lidar': 'lidar.nc',
+                           'model': 'model.nc',
+                           'mwr': 'mwr.nc'}
+        >>> generate_categorize(input_files, 'output.nc')
 
     """
 
@@ -439,10 +459,10 @@ def generate_categorize(input_files, output_file):
         radar.append_data(quality['quality_bits'], 'quality_bits')
         return {**radar.data, **lidar.data, **model.data_sparse, **mwr.data}
 
-    radar = Radar(input_files[0], ('Zh', 'v', 'ldr', 'width'))
-    lidar = Lidar(input_files[1], ('beta', 'beta_raw'))
-    mwr = Mwr(input_files[2])
-    model = Model(input_files[3], radar.altitude)
+    radar = Radar(input_files['radar'])
+    lidar = Lidar(input_files['lidar'], ('beta', ))
+    model = Model(input_files['model'], radar.altitude)
+    mwr = Mwr(input_files['mwr'])
     time = utils.time_grid()
     height = radar.height
     _interpolate_to_cloudnet_grid()

@@ -345,7 +345,7 @@ ATTRIBUTES = {
     ),
     # RPG variables:
     'Ze': MetaData(
-        'Radar reflectivity factor (uncorrected), vertical polarization',
+        'Equivalent radar reflectivity factor',
         'dBZ',
         (-40, 20),
         _LIN
@@ -401,11 +401,9 @@ ATTRIBUTES = {
     ),
     'number_of_spectral_samples': MetaData(
         'Number of spectral samples in each chirp sequence',
-        '',
     ),
     'skewness': MetaData(
         'Skewness of spectra',
-        '',
     ),
     'kurtosis': MetaData(
         'Kurtosis of spectra',
@@ -492,15 +490,11 @@ ATTRIBUTES = {
     ),
     'correlation_coefficient': MetaData(
         'Correlation coefficient',
-        ''
     ),
     'Zdr': MetaData(
         'Differential reflectivity',
         'dB'
     ),
     'spectral_differential_phase': MetaData(
-        'Spectral differential phase',
-        ''
-    ),
-
+        'Spectral differential phase'),
 }

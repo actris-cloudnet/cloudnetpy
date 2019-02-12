@@ -261,26 +261,27 @@ def _create_one_day_data_record(l1_files):
     return {**rpg_header, **rpg_raw_data}
 
 
-def rpg2nc(path_to_l1_files, output_file, location):
+def rpg2nc(path_to_l1_files, output_file, site_properties):
     """Writes one day of  RPG Level1 binary data into a NetCDF file.
     """
     l1_files = get_rpg_files(path_to_l1_files)
     one_day_of_data = _create_one_day_data_record(l1_files)
-    rpg = Rpg(one_day_of_data, location)
+    rpg = Rpg(one_day_of_data, site_properties)
     rpg.linear_to_db(('Ze', 'ldr', 'antenna_gain'))
     output.update_attributes(rpg.data)
     _save_rpg(rpg, output_file)
 
 
 class Rpg:
-    def __init__(self, raw_data, location):
+    def __init__(self, raw_data, site_properties):
         self.raw_data = raw_data
         self.date = self._get_date()
         self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
+        self.raw_data['altitude'] = site_properties['altitude']
         self.data = {}
         self._init_data()
-        self.source = 'RPG Cloud Radar'
-        self.location = location
+        self.source = 'RPG-FMCW'
+        self.location = site_properties['name']
 
     def _init_data(self):
         for key in self.raw_data:
@@ -308,14 +309,8 @@ def _save_rpg(rpg, output_file):
             'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}
     rootgrp = output.init_file(output_file, dims, rpg.data, zlib=True)
     rootgrp.title = f"Radar file from {rpg.location}"
-    rootgrp.location = rpg.location
     rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
+    rootgrp.location = rpg.location
     rootgrp.history = f"{utils.get_time()} - radar file created"
     rootgrp.source = rpg.source
     rootgrp.close()
-
-
-
-
-
-
