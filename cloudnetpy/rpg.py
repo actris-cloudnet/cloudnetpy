@@ -1,5 +1,6 @@
 """This module contains RPG Cloud Radar related functions."""
 import os
+from datetime import datetime
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
@@ -55,7 +56,7 @@ class RpgBin:
         append(('sample_duration',), np.float32)
         append(('latitude',
                 'longitude'), np.float32)
-        append(('calibration_interval_in_samples',
+        append(('calibration_interval',
                 '_number_of_range_gates',
                 '_number_of_temperature_levels',
                 '_number_of_humidity_levels',
@@ -77,7 +78,7 @@ class RpgBin:
                 '_is_spike_filter',
                 '_is_phase_correction',
                 '_is_relative_power_correction'), np.int8)
-        append(('FFT_window',), np.int8)  # 0 = square, 1 = parzen, 2 = blackman, 3 = welch, = slepian2, 5 = slepian3
+        append(('FFT_window',), np.int8)  # 0=square, 1=parzen, 2=blackman, 3=welch, 4=slepian2, 5=slepian3
         append(('input_voltage_range',))
         append(('noise_threshold',), np.float32)
         self._file_position = file.tell()
@@ -126,20 +127,22 @@ class RpgBin:
                 'pc_temperature'))
 
             block2_vars = dict.fromkeys((  # vertical polarization
-                'Zv',
+                'Ze',
                 'v',
                 'width',
                 'skewness',
-                'kurtosis'))
+                '_kurtosis'))
 
-            if self.header['dual_polarization']:
+            if self.header['dual_polarization'] == 1:
                 block2_vars.update(dict.fromkeys((
                     'ldr',
-                    'spectral_correlation_coefficient',
-                    'differential_phase')))
-
-            if self.header['dual_polarization'] == 2:
+                    'correlation_coefficient',
+                    'spectral_differential_phase')))
+            elif self.header['dual_polarization'] == 2:
                 block2_vars.update(dict.fromkeys((
+                    'Zdr'
+                    'correlation_coefficient'
+                    'spectral_differential_phase'
                     '_',
                     'spectral_slanted_ldr',
                     'spectral_slanted_correlation_coefficient',
@@ -150,9 +153,9 @@ class RpgBin:
         def _add_sensitivities():
             ind0 = len(block1) + n_dummy
             ind1 = ind0 + dims.n_gates
-            block1['sensitivity_limit_v'] = float_block1[:, ind0:ind1]
+            block1['_sensitivity_limit_v'] = float_block1[:, ind0:ind1]
             if self.header['dual_polarization']:
-                block1['sensitivity_limit_h'] = float_block1[:, ind1:]
+                block1['_sensitivity_limit_h'] = float_block1[:, ind1:]
 
         def _get_length_of_dummy_data():
             return 3 + dims.n_layers_t + 2*dims.n_layers_h
@@ -264,15 +267,15 @@ def rpg2nc(path_to_l1_files, output_file, location):
     l1_files = get_rpg_files(path_to_l1_files)
     one_day_of_data = _create_one_day_data_record(l1_files)
     rpg = Rpg(one_day_of_data, location)
-    rpg.linear_to_db(('Zv', 'ldr', 'antenna_gain'))
+    rpg.linear_to_db(('Ze', 'ldr', 'antenna_gain'))
     output.update_attributes(rpg.data)
     _save_rpg(rpg, output_file)
 
 
 class Rpg:
-
     def __init__(self, raw_data, location):
         self.raw_data = raw_data
+        self.date = self._get_date()
         self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
         self.data = {}
         self._init_data()
@@ -288,6 +291,11 @@ class Rpg:
         for name in variables_to_log:
             self.data[name].lin2db()
 
+    def _get_date(self):
+        time_median = float(ma.median(self.raw_data['time']))
+        year, month, day = datetime.utcfromtimestamp(time_median).strftime('%Y %m %d').split()
+        return str(int(year)+31), month, day  # rpg time is seconds since 2001.01.01
+
 
 def _save_rpg(rpg, output_file):
     """Saves the RPG radar file.
@@ -301,6 +309,7 @@ def _save_rpg(rpg, output_file):
     rootgrp = output.init_file(output_file, dims, rpg.data, zlib=True)
     rootgrp.title = f"Radar file from {rpg.location}"
     rootgrp.location = rpg.location
+    rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
     rootgrp.history = f"{utils.get_time()} - radar file created"
     rootgrp.source = rpg.source
     rootgrp.close()
