@@ -124,12 +124,12 @@ def save_Cnet(data, output_file, varname, version):
 
     rootgrp = output.init_file(output_file, dims, data.data, zlib=True)
     output.copy_variables(data.dataset, rootgrp, ('altitude', 'latitude', 'longitude', 'time', 'height'))
-    rootgrp.title = varname + ' from ' + data.dataset.location + ', ' + get_date(data.dataset)
-    rootgrp.institution = 'Data processed at the Finnish Meteorological Institute.'
-    rootgrp.software_version = version
-    rootgrp.git_version = git_version()
-    rootgrp.file_uuid = str(uuid.uuid4().hex)
-    output.copy_global(data.dataset, rootgrp, ('Conventions', 'location', 'day', 'month', 'year', 'source', 'history'))
+    rootgrp.title = f"Classification file from {data.dataset.location}"
+    #rootgrp.institution = 'Data processed at the Finnish Meteorological Institute.'
+    #rootgrp.software_version = version
+    #rootgrp.git_version = git_version()
+    #rootgrp.file_uuid = str(uuid.uuid4().hex)
+    output.copy_global(data.dataset, rootgrp, ('location', 'day', 'month', 'year', 'source', 'history'))
     rootgrp.close()
 
     
