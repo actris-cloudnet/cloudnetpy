@@ -21,30 +21,54 @@ _LIN = 'linear'
 
 _DEFINITIONS = {
     'category_bits':
-    ('\nBit 0: Small liquid droplets are present.\n'
-     'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
-     '       likely ice particles, otherwise they are drizzle or rain drops.\n'
-     'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
-     '       the phase of Bit-1 particles.\n'
-     'Bit 3: Melting ice particles are present.\n'
-     'Bit 4: Aerosol particles are present and visible to the lidar.\n'
-     'Bit 5: Insects are present and visible to the radar.'),
+    ('\nBit 0: Small liquid droplets are present.'
+     '\nBit 1: Falling hydrometeors are present; if Bit 2 is set then these are most'
+     '       \nlikely ice particles, otherwise they are drizzle or rain drops.'
+     '\nBit 2: Wet-bulb temperature is less than 0 degrees C, implying'
+     '       \nthe phase of Bit-1 particles.'
+     '\nBit 3: Melting ice particles are present.'
+     '\nBit 4: Aerosol particles are present and visible to the lidar.'
+     '\nBit 5: Insects are present and visible to the radar.'),
 
     'quality_bits':
-    ('\nBit 0: An echo is detected by the radar.\n'
-     'Bit 1: An echo is detected by the lidar.\n'
-     'Bit 2: The apparent echo detected by the radar is ground clutter\n'
-     '       or some other non-atmospheric artifact.\n'
-     'Bit 3: The lidar echo is due to clear-air molecular scattering.\n'
-     'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
-     '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
-     '       a correction for the radar attenuation has been performed;\n'
-     '       otherwise do not trust the absolute values of reflectivity factor.\n'
-     '       No correction is performed for lidar attenuation.\n'
-     'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
-     '       using the microwave radiometer measurements of liquid water path\n'
-     '       and the lidar estimation of the location of liquid water cloud;\n'
-     '       be aware that errors in reflectivity may result.')
+    ('\nBit 0: An echo is detected by the radar.'
+     '\nBit 1: An echo is detected by the lidar.'
+     '\nBit 2: The apparent echo detected by the radar is ground clutter'
+     '       \nor some other non-atmospheric artifact.'
+     '\nBit 3: The lidar echo is due to clear-air molecular scattering.'
+     '\nBit 4: Liquid water cloud, rainfall or melting ice below this pixel'
+     '       \nwill have caused radar and lidar attenuation; if bit 5 is set then'
+     '       \na correction for the radar attenuation has been performed;'
+     '       \notherwise do not trust the absolute values of reflectivity factor.'
+     '       \nNo correction is performed for lidar attenuation.'
+     '\nBit 5: Radar reflectivity has been corrected for liquid-water attenuation'
+     '       \nusing the microwave radiometer measurements of liquid water path'
+     '       \nand the lidar estimation of the location of liquid water cloud;'
+     '       \nbe aware that errors in reflectivity may result.'),
+
+    'model_number':
+        ('\n0: Single polarisation radar.'
+         '\n1: Dual polarisation radar.'),
+
+    'dual_polarization':
+        ('\n0: Single polarisation radar.'
+         '\n1: Dual polarisation radar in linear depolarisation ratio (LDR) mode.'
+         '\n2: Dual polarisation radar in simultaneous transmission simultaneous reception (STSR) mode.'),
+
+    'FFT_window':
+        ('\n0: square'
+         '\n1: parzen'
+         '\n2: blackman'
+         '\n3: welch'
+         '\n4: slepian2'
+         '\n5: slepian3'),
+
+    'quality_flag':
+        ('\nBit 0: ADC saturation.'
+         '\nBit 1: Spectral width too high.'
+         '\nBit 2: No transmission power levelling.')
+
+
 }
 
 _COMMENTS = {
@@ -120,6 +144,7 @@ _COMMENTS = {
     'v':
     ('This parameter is the radial component of the velocity, with positive\n'
      'velocities are away from the radar.'),
+
 }
 
 ATTRIBUTES = {
@@ -319,7 +344,7 @@ ATTRIBUTES = {
         _LIN
     ),
     # RPG variables:
-    'Zv': MetaData(
+    'Ze': MetaData(
         'Radar reflectivity factor (uncorrected), vertical polarization',
         'dBZ',
         (-40, 20),
@@ -362,6 +387,14 @@ ATTRIBUTES = {
         'Transmitter temperature',
         'K',
     ),
+    'pc_temperature': MetaData(
+        'PC temperature',
+        'K',
+    ),
+    'receiver_temperature': MetaData(
+        'Receiver temperature',
+        'K',
+    ),
     'transmitted_power': MetaData(
         'Transmitted power',
         'W',
@@ -376,6 +409,98 @@ ATTRIBUTES = {
     ),
     'kurtosis': MetaData(
         'Kurtosis of spectra',
+    ),
+    'azimuth': MetaData(
+        'Azimuth angle of the instrument',
+        'degrees',
+    ),
+    'elevation': MetaData(
+        'Elevation above horizon',
+        'degrees',
+    ),
+    'if_power': MetaData(
+        'IF power',
+        'uW',
+    ),
+    'brightness_temperature': MetaData(
+        'Brightness temperature',
+        'K',
+    ),
+    'voltage': MetaData(
+        'Voltage',
+        'V',
+    ),
+    'wind_direction': MetaData(
+        'Wind direction',
+        'degrees',
+    ),
+    'wind_speed': MetaData(
+        'Wind speed',
+        'm s-1',
+    ),
+    'time_ms': MetaData(
+        'Time ms',
+        'ms',
+    ),
+    'integration_time': MetaData(
+        'Integration time',
+        's',
+        comment='Effective integration time of chirp sequence',
+    ),
+    'file_code': MetaData(
+        'File code',
+        comment='Indicates the RPG software version.',
+    ),
+    'program_number': MetaData(
+        'Program number',
+    ),
+    'model_number': MetaData(
+        'Model number',
+        definition=_DEFINITIONS['model_number']
+    ),
+    'sample_duration': MetaData(
+        'Sample duration',
+        's'
+    ),
+    'dual_polarization': MetaData(
+        'Dual polarisation type',
+        definition=_DEFINITIONS['dual_polarization']
+    ),
+    'number_of_averaged_chirps': MetaData(
+        'Number of averaged chirps in sequence'
+    ),
+    'chirp_start_indices': MetaData(
+        'Chirp sequences start indices'
+    ),
+    'calibration_interval': MetaData(
+        'Calibration interval in samples'
+    ),
+    'status_flag': MetaData(
+        'Status flag for heater and blower'
+    ),
+    'FFT_window': MetaData(
+        'FFT window type',
+        definition=_DEFINITIONS['FFT_window']
+    ),
+    'quality_flag': MetaData(
+        'Quality flag',
+        definition=_DEFINITIONS['quality_flag']
+    ),
+    'nyquist_velocity': MetaData(
+        'Nyquist velocity',
+        'm s-1'
+    ),
+    'correlation_coefficient': MetaData(
+        'Correlation coefficient',
+        ''
+    ),
+    'Zdr': MetaData(
+        'Differential reflectivity',
+        'dB'
+    ),
+    'spectral_differential_phase': MetaData(
+        'Spectral differential phase',
+        ''
     ),
 
 }
