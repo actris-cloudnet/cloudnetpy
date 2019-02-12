@@ -129,7 +129,6 @@ def save_Cnet(data, output_file, varname, version):
     rootgrp.software_version = version
     rootgrp.git_version = git_version()
     rootgrp.file_uuid = str(uuid.uuid4().hex)
-    # copy these global attributes from categorize file
     output.copy_global(data.dataset, rootgrp, ('Conventions', 'location', 'day', 'month', 'year', 'source', 'history'))
     rootgrp.close()
 
