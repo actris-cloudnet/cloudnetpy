@@ -21,29 +21,19 @@ class DataCollect(DataSource):
 
 def generate_class(cat_file):
     data = DataCollect(cat_file)
-    vrs = data.variables
-
-    target_classification = class_masks(vrs['category_bits'][:])
-    status = class_status(vrs['quality_bits'][:])
-    cloud_mask, base_height, top_height = cloud_layer_heights(target_classification, vrs['height'])
-
-    class2cnet(data, {'classification_pixels':target_classification,
-                      'classification_quality_pixels':status,
-                      'cloud_mask':cloud_mask,
-                      'cloud_bottom':base_height,
-                      'cloud_top':top_height})
-
-
-def class2cnet(data, vars_in):
-    """ Defines Classification Cloudnet objects """
-    for key,value in vars_in.items():
-        data.append_data(value, key)
+    class_masks(data)
+    class_status(data)
+    cloud_layer_heights(data)
 
     output.update_attributes(data.data)
     save_Cnet(data, 'test_class2.nc', 'Classification', 0.1)
 
 
-def cloud_layer_heights(target_classification, height):
+def cloud_layer_heights(data):
+    #TODO: voisi miettiä, josko siistisi tätä
+    target_classification = data['target_classification']
+    height = data.dataset['height']
+
     cloud_mask = np.zeros_like(target_classification, dtype=int)
 
     for i in range(np.max(target_classification)):
@@ -58,7 +48,9 @@ def cloud_layer_heights(target_classification, height):
             base_height[ii] = height[inds[0]]
             top_height[ii] = height[inds[-1]]
 
-    return (cloud_mask, base_height, top_height)
+    data.append_data(cloud_mask, 'cloud_mask')
+    data.append_data(base_height, 'cloud_bottom')
+    data.append_data(top_height, 'cloud_top')
 
 
 def class_bits(cb, keys):
@@ -70,7 +62,9 @@ def class_bits(cb, keys):
     return bits
 
 
-def class_status(qb):
+def class_status(data):
+    qb = data.dataset['quality_bits'][:]
+
     keys = ['radar_bit', 'lidar_bit', 'radar_clutter_bit', 'lidar_molecular_bit',
             'radar_attenuated_bit', 'radar_corrected_bit']
     q_bits = class_bits(qb, keys)
@@ -86,10 +80,12 @@ def class_status(qb):
     quality_mask[q_bits['radar_clutter_bit']] = 8
     quality_mask[q_bits['lidar_molecular_bit'] & q_bits['radar_bit']] = 9
 
-    return quality_mask
+    data.append_data(quality_mask, 'quality_mask')
 
 
-def class_masks(cb):
+def class_masks(data):
+    cb = data.dataset['category_bits'][:]
+
     keys = ['droplet_bit', 'falling_bit', 'cold_bit', 'melting_bit',
             'aerosol_bit', 'insect_bit']
     bits = class_bits(cb, keys)
@@ -104,6 +100,7 @@ def class_masks(cb):
     target_classification[bits['insect_bit']] = 9
     target_classification[bits['aerosol_bit'] & bits['insect_bit']] = 10
 
-    return target_classification
+    data.append_data(target_classification, 'target_classification')
+
 
 
