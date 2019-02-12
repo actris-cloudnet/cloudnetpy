@@ -47,31 +47,31 @@ _DEFINITIONS = {
      '       be aware that errors in reflectivity may result.'),
 
     'classification_pixels':
-    ('\nValue 0: Clear sky.\n',
-    'Value 1: Cloud liquid droplets only.\n',
-    'Value 2: Drizzle or rain.\n',
-    'Value 3: Drizzle or rain coexisting with cloud liquid droplets.\n',
-    'Value 4: Ice particles.\n',
-    'Value 5: Ice coexisting with supercooled liquid droplets.\n',
-    'Value 6: Melting ice particles.\n',
-    'Value 7: Melting ice particles coexisting with cloud liquid droplets.\n',
-    'Value 8: Aerosol particles, no cloud or precipitation.\n',
-    'Value 9: Insects, no cloud or precipitation.\n',
+    ('\nValue 0: Clear sky.\n'
+    'Value 1: Cloud liquid droplets only.\n'
+    'Value 2: Drizzle or rain.\n'
+    'Value 3: Drizzle or rain coexisting with cloud liquid droplets.\n'
+    'Value 4: Ice particles.\n'
+    'Value 5: Ice coexisting with supercooled liquid droplets.\n'
+    'Value 6: Melting ice particles.\n'
+    'Value 7: Melting ice particles coexisting with cloud liquid droplets.\n'
+    'Value 8: Aerosol particles, no cloud or precipitation.\n'
+    'Value 9: Insects, no cloud or precipitation.\n'
     'Value 10: Aerosol coexisting with insects, no cloud or precipitation.'),
 
     'classification_quality_pixels':
-    ('\nValue 0: Clear sky.\n',
-    'Value 1: Lidar echo only.\n',
+    ('\nValue 0: Clear sky.\n'
+    'Value 1: Lidar echo only.\n'
     'Value 2: Radar echo but reflectivity may be unreliable as attenuation by rain,\n'
-    '         melting ice or liquid cloud has not been corrected.\n',
-    'Value 3: Good radar and lidar echos.\n',
+    '         melting ice or liquid cloud has not been corrected.\n'
+    'Value 3: Good radar and lidar echos.\n'
     'Value 4: No radar echo but rain or liquid cloud beneath mean that attenuation\n'
-    '         that would be experienced is unknown.\n',
-    'Value 5: Good radar echo only.\n',
-    'Value 6: No radar echo but known attenuation.\n',
+    '         that would be experienced is unknown.\n'
+    'Value 5: Good radar echo only.\n'
+    'Value 6: No radar echo but known attenuation.\n'
     'Value 7: Radar echo corrected for liquid cloud attenuation\n'
-    '         using microwave radiometer data.\n',
-    'Value 8: Radar ground clutter.\n',
+    '         using microwave radiometer data.\n'
+    'Value 8: Radar ground clutter.\n'
     'Value 9: Lidar clear-air molecular scattering.')
 }
 

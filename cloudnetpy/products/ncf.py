@@ -3,16 +3,8 @@ from numpy import tile
 import numpy as np
 import netCDF4
 import uuid
-"""
-Muutetaan tämä vastaamaan enemmän cloudnetpy:n output moduulia.
-Tällöin saadaan se todennäköisesti pätemään varsin hyvin muillekin
-datoille, joita käsitellään ja talletetaan uuteen muotoon.
+import cloudnetpy.output as output
 
-Oletettavaa on, että tässäkin tiedostossa on paljon turhaa, joka on
-nykyään toteutettu jollain toisella tavalla, pitää selvittää.
-"""
-
-#löytyy outputista
 def copy_dimensions(file_from, file_to, dims_to_be_copied):
     """ copy nc dimensions from one file to another """
     for dname, the_dim in file_from.dimensions.items():
@@ -20,7 +12,6 @@ def copy_dimensions(file_from, file_to, dims_to_be_copied):
             file_to.createDimension(dname, len(the_dim))
 
 
-# löytyy outputista
 def copy_variables(file_from, file_to, vars_to_be_copied):
     """ copy nc variables (and their attributes) from one file to another """
     for vname, varin in file_from.variables.items():
@@ -30,7 +21,6 @@ def copy_variables(file_from, file_to, vars_to_be_copied):
             outVar[:] = varin[:]
 
 
-# löytyy outputista
 def copy_global(file_from, file_to, attrs_to_be_copied):
     """ copy nc global attributes from one file to another """
     for aname in file_from.ncattrs():
@@ -126,26 +116,21 @@ def write_vars2nc(rootgrp, obs):
                 
 
 # Myös löytyy outputista jossain muodossa
-def save_Cnet(data, fname, varname, version):
+def save_Cnet(data, output_file, varname, version):
     """ open netcdf file and write data into it 
     Works for all Cloudnet variables """
-
     dims = {'time': len(data.time),
             'height': len(data.height)}
 
-    rootgrp = netCDF4.Dataset(fname, 'w', format='NETCDF4')
-    #copy_dimensions(data.dataset, rootgrp, {'time', 'height'})
-    copy_variables(data.dataset, rootgrp, {'altitude', 'latitude', 'longitude', 'time', 'height'})
-    # write variables into file
-    write_vars2nc(rootgrp, data.data)
-    # global attributes:
+    rootgrp = output.init_file(output_file, dims, data.data, zlib=True)
+    output.copy_variables(data.dataset, rootgrp, ('altitude', 'latitude', 'longitude', 'time', 'height'))
     rootgrp.title = varname + ' from ' + data.dataset.location + ', ' + get_date(data.dataset)
     rootgrp.institution = 'Data processed at the Finnish Meteorological Institute.'
     rootgrp.software_version = version
     rootgrp.git_version = git_version()
     rootgrp.file_uuid = str(uuid.uuid4().hex)
     # copy these global attributes from categorize file
-    copy_global(data.dataset, rootgrp, {'Conventions', 'location', 'day', 'month', 'year', 'source', 'history'})
+    output.copy_global(data.dataset, rootgrp, ('Conventions', 'location', 'day', 'month', 'year', 'source', 'history'))
     rootgrp.close()
 
     

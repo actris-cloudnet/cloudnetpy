@@ -4,6 +4,16 @@ import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.products.ncf import save_Cnet
 
+"""
+Nyt tämä toimii periaatteessa oikein. Pitää vielä hoitaa seuraavat asiat:
+- Muuta data paremman nimiseksi
+- Muuta bit_class funktio paremman nimiseksi
+
+-Tiedoston talletuspaikka jossain vaiheessa kuntoon, samoin nimi
+- ncf tiedostoa pitää hinkata
+- Dokumentaatio docstring ja testit pitää vielä kirjoittaa
+"""
+
 class DataCollect(DataSource):
     def __init__(self, cat_file):
         super().__init__(cat_file)
@@ -26,11 +36,9 @@ def generate_class(cat_file):
 
 def class2cnet(data, vars_in):
     """ Defines Classification Cloudnet objects """
-    classification_data = {}
-    i = 0
     for key,value in vars_in.items():
         data.append_data(value, key)
-        i += 1
+
     output.update_attributes(data.data)
     save_Cnet(data, 'test_class2.nc', 'Classification', 0.1)
 
@@ -63,11 +71,13 @@ def class_bits(cb, keys):
 
 
 def class_status(qb):
-    keys = ['radar_bit', 'lidar_bit', 'radar_clutter_bit', 'lidar_molecular_bit', 'radar_attenuated_bit', 'radar_corrected_bit']
+    keys = ['radar_bit', 'lidar_bit', 'radar_clutter_bit', 'lidar_molecular_bit',
+            'radar_attenuated_bit', 'radar_corrected_bit']
     q_bits = class_bits(qb, keys)
 
     quality_mask = np.copy(q_bits['lidar_bit'].astype(int))
-    quality_mask[q_bits['radar_attenuated_bit'] & q_bits['radar_corrected_bit'] & q_bits['radar_bit']] = 2
+    quality_mask[q_bits['radar_attenuated_bit'] & q_bits['radar_corrected_bit']
+                 & q_bits['radar_bit']] = 2
     quality_mask[q_bits['radar_bit'] & q_bits['lidar_bit']] = 3
     quality_mask[q_bits['radar_attenuated_bit'] & q_bits['radar_corrected_bit']] = 4
     quality_mask[q_bits['radar_bit']] = 5
@@ -80,11 +90,13 @@ def class_status(qb):
 
 
 def class_masks(cb):
-    keys = ['droplet_bit', 'falling_bit', 'cold_bit', 'melting_bit', 'aerosol_bit', 'insect_bit']
+    keys = ['droplet_bit', 'falling_bit', 'cold_bit', 'melting_bit',
+            'aerosol_bit', 'insect_bit']
     bits = class_bits(cb, keys)
 
     ind = np.where(bits['falling_bit'] & bits['cold_bit'])
-    target_classification = bits['droplet_bit'].astype(int) + 2 * bits['falling_bit'].astype(int)
+    target_classification = bits['droplet_bit'].astype(int) + \
+                            2 * bits['falling_bit'].astype(int)
     target_classification[ind] = target_classification[ind] + 1
     target_classification[bits['melting_bit']] = 6
     target_classification[bits['melting_bit'] & bits['droplet_bit']] = 7
