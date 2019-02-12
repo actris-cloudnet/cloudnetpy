@@ -1,10 +1,10 @@
 import numpy as np
 import cloudnetpy.utils as utils
 import cloudnetpy.output as output
-from cloudnetpy.categorize import RawDataSource
+from cloudnetpy.categorize import DataSource
 from cloudnetpy.products.ncf import save_Cnet
 
-class DataCollect(RawDataSource):
+class DataCollect(DataSource):
     def __init__(self, cat_file):
         super().__init__(cat_file)
         self.height = self._getvar('height')
@@ -34,7 +34,6 @@ def class2cnet(data, vars_in):
     output.update_attributes(data.data)
     save_Cnet(data, 'test_class2.nc', 'Classification', 0.1)
 
-    
 
 def cloud_layer_heights(target_classification, height):
     cloud_mask = np.zeros_like(target_classification, dtype=int)

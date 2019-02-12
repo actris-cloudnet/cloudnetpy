@@ -127,12 +127,14 @@ def write_vars2nc(rootgrp, obs):
 
 # Myös löytyy outputista jossain muodossa
 def save_Cnet(data, fname, varname, version):
-    # TODO: mieti mitä halutaan tallettaa
     """ open netcdf file and write data into it 
     Works for all Cloudnet variables """
+
+    dims = {'time': len(data.time),
+            'height': len(data.height)}
+
     rootgrp = netCDF4.Dataset(fname, 'w', format='NETCDF4')
-    # copy dimensions/variables from categorize file:
-    copy_dimensions(data.dataset, rootgrp, {'time', 'height'})
+    #copy_dimensions(data.dataset, rootgrp, {'time', 'height'})
     copy_variables(data.dataset, rootgrp, {'altitude', 'latitude', 'longitude', 'time', 'height'})
     # write variables into file
     write_vars2nc(rootgrp, data.data)
