@@ -14,7 +14,7 @@ from cloudnetpy.constants import T0
 
 class ClassData:
     def __init__(self, radar, lidar, model):
-        self.z = radar.data['Zh'][:]
+        self.z = radar.data['Z'][:]
         self.ldr = radar.data['ldr'][:]
         self.v = radar.data['v'][:]
         self.width = radar.data['width'][:]

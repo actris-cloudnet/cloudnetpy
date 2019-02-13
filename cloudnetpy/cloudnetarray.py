@@ -61,14 +61,29 @@ class CloudnetArray:
         if np.any(height) and np.any(height_new):
             self.data = utils.rebin_2d(height, self.data.T, height_new).T
 
-    def rebin_in_polar(self, time, time_new, folding_velocity):
+    def rebin_in_polar(self, time, time_new, folding_velocity,
+                       sequence_indices):
         """Rebins velocity in polar coordinates."""
-        folding_velocity_scaled = math.pi / folding_velocity
-        data_scaled = self.data * folding_velocity_scaled
-        vel_x, vel_y = np.cos(data_scaled), np.sin(data_scaled)
+        def _scale(source, target, fun):
+            for i, ind in enumerate(sequence_indices):
+                target[:, ind] = fun(source[:, ind], folding_velocity_scaled[i])
+
+        def _get_scaled_vfold():
+            vfold_scaled = math.pi / folding_velocity
+            if isinstance(vfold_scaled, float):
+                vfold_scaled = [vfold_scaled]
+            return vfold_scaled
+
+        folding_velocity_scaled = _get_scaled_vfold()
+        data_scaled = ma.copy(self.data)
+        _scale(self.data, data_scaled, np.multiply)
+        vel_x = np.cos(data_scaled)
+        vel_y = np.sin(data_scaled)
         vel_x_mean = utils.rebin_2d(time, vel_x, time_new)
         vel_y_mean = utils.rebin_2d(time, vel_y, time_new)
-        self.data = np.arctan2(vel_y_mean, vel_x_mean) / folding_velocity_scaled
+        mean_vel_scaled = np.arctan2(vel_y_mean, vel_x_mean)
+        self.data = self.data[:len(time_new), :]
+        _scale(mean_vel_scaled, self.data, np.divide)
 
     def mask_indices(self, ind):
         """Masks data from given indices."""

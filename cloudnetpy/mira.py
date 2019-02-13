@@ -20,7 +20,7 @@ class Mira(DataSource):
         source (str, optional): Cloud radar model. Default is 'MIRA-36'.
 
     """
-    keymap = {'Zg': 'Zh',
+    keymap = {'Zg': 'Ze',
               'VELg': 'v',
               'RMSg': 'width',
               'LDRg': 'ldr',
@@ -58,7 +58,7 @@ class Mira(DataSource):
         self.time = time_grid
         return snr_gain
 
-    def screen_by_snr(self, snr_gain, snr_limit=-17):
+    def screen_by_snr(self, snr_gain=1, snr_limit=-17):
         """ Screens by SNR."""
         ind = np.where(self.data['SNR'][:] * snr_gain < snr_limit)
         for field in self.data:
@@ -97,7 +97,7 @@ def mira2nc(mmclx_file, output_file, site_properties, rebin_data=False):
 
     """
     raw_mira = Mira(mmclx_file)
-    raw_mira.linear_to_db(('Zh', 'ldr', 'SNR'))
+    raw_mira.linear_to_db(('Ze', 'ldr', 'SNR'))
     if rebin_data:
         snr_gain = raw_mira.rebin_fields()
     else:
