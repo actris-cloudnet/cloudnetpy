@@ -95,13 +95,13 @@ _COMMENTS = {
     ('This variable is a simplification of the bitfield "category_bits" in the target categorization\n'
      'and data quality dataset. It provides the 9 main atmospheric target classifications\n'
      'that can be distinguished by radar and lidar.\n'
-     'The classes are defined in the definition and long_definition attributes.'),
+     'The classes are defined in the definition attributes.'),
 
     'classification_quality_pixels':
     ('This variable is a simplification of the bitfield "quality_bits"\n'
     'in the target categorization and data quality dataset.\n'
     'It reports on the reliability of the radar and lidar data used to perform the classification.\n'
-    'The classes are defined in the definition and long_definition attributes.'),
+    'The classes are defined in the definition attributes.'),
 
     'cloud_mask':
     ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
