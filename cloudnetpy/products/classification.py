@@ -29,7 +29,6 @@ def generate_class(cat_file):
     class_masks(data_handler)
     class_status(data_handler)
     #cloud_layer_heights(data_handler)
-
     output.update_attributes(data_handler.data)
     save_Cnet(data_handler, 'test_class2.nc', 'Classification', 0.1)
 
@@ -93,7 +92,7 @@ def class_status(data_handler):
     quality_mask[q_bits['radar_clutter_bit']] = 8
     quality_mask[q_bits['lidar_molecular_bit'] & q_bits['radar_bit']] = 9
 
-    data_handler.append_data(quality_mask, 'quality_mask')
+    data_handler.append_data(quality_mask, 'detection_status')
 
 
 def class_masks(data_handler):

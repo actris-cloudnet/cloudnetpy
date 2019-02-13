@@ -364,12 +364,12 @@ ATTRIBUTES = {
         comment=_COMMENTS['quality_bits'],
         definition=_DEFINITIONS['quality_bits']
     ),
-    'classification_pixels': MetaData(
+    'target_classification': MetaData(
         'Target classification',
         comment=_COMMENTS['classification_pixels'],
         definition=_DEFINITIONS['classification_pixels']
     ),
-    'classification_quality_pixels': MetaData(
+    'detection_status': MetaData(
         'Radar and lidar detection status',
         comment=_COMMENTS['classification_quality_pixels'],
         definition=_DEFINITIONS['classification_quality_pixels']
