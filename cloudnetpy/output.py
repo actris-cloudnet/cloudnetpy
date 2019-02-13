@@ -1,5 +1,4 @@
 """ Functions for Categorize output file writing."""
-
 import netCDF4
 import cloudnetpy.version
 from cloudnetpy import config
@@ -87,3 +86,12 @@ def _add_standard_global_attributes(root_group):
     root_group.institution = f"Data processed at {config.INSTITUTE}"
     root_group.cloudnetpy_version = cloudnetpy.version.__version__
     root_group.file_uuid = utils.get_uuid()
+
+
+def merge_history(root_group, file_type, *sources):
+    """Merges history fields from one or several files and creates a new record."""
+    new_record = f"{utils.get_time()} - {file_type} file created"
+    old_history = ''
+    for source in sources:
+        old_history += f"\n{source.dataset.history}"
+    root_group.history = f"{new_record}{old_history}"

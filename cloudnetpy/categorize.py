@@ -53,7 +53,21 @@ class DataSource:
         return None
 
     def _getvar(self, *args):
-        """Returns data (without attributes) from the source file."""
+        """Returns data array from the source file variables.
+
+        Returns just the data (and no attributes) from the original variables
+        dictionary, fetched from the input NetCDF file.
+
+        Args:
+            *args: possible names of the variable. The first match is returned.
+
+        Returns:
+            MaskedArray: The actual data.
+
+        Raises:
+             KeyError: The variable is not found.
+
+        """
         for arg in args:
             if arg in self.variables:
                 return self.variables[arg][:]
@@ -66,12 +80,26 @@ class DataSource:
             fields (tuple): netCDF4-variables to be converted. The results are
                 saved in *self.data* dictionary with *fields* strings as keys.
 
+        Notes:
+            The attributes of the variables are not copied. Just the data.
+
         """
         for key in fields:
             self.append_data(self.variables[key], key)
 
     def _unknown_to_cloudnet(self, possible_names, key, units=None):
-        """Transforms netCDF4 variable with several possible names into CloudnetArray."""
+        """Transforms single netCDF4 variable into CloudnetArray.
+
+        Args:
+            possible_names(tuple): Tuple of strings containing the possible
+                names of the variable in the input NetCDF file.
+
+            key(str): Key for self.data dictionary and name-attribute for
+                the saved CloudnetArray object.
+
+            units(str, optional): Units-attribute for the CloudnetArray object.
+
+        """
         array = self._getvar(*possible_names)
         self.append_data(array, key, units=units)
 
@@ -80,7 +108,7 @@ class DataSource:
         """Converts km to m."""
         alt = var[:]
         if var.units == 'km':
-            alt = alt * 1000
+            alt *= 1000
         return alt
 
     @staticmethod
@@ -88,7 +116,7 @@ class DataSource:
         """Converts m to km."""
         alt = var[:]
         if var.units == 'm':
-            alt = alt / 1000
+            alt /= 1000
         return alt
 
     def append_data(self, data, key, name=None, units=None):
@@ -97,9 +125,9 @@ class DataSource:
         Args:
             data (ndarray): Data to be added.
             key (str): Key for self.data dict.
-            name (str, optional): CloudnetArray.name attribute that is *key*
-                by default but *name* if given.
-            units (str, optional): CloudnetArray.units attribute if given.
+            name (str, optional): CloudnetArray.name attribute. Default value
+                is *key*.
+            units (str, optional): CloudnetArray.units attribute.
 
         """
         self.data[key] = CloudnetArray(data, name or key, units)
@@ -485,18 +513,12 @@ def _save_cat(file_name, radar, lidar, model, obs):
         'model_time': len(model.time),
         'model_height': len(model.mean_height)}
     rootgrp = output.init_file(file_name, dims, obs, zlib=True)
-    output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day'))
+    output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
     rootgrp.title = f"Categorize file from {radar.location}"
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
-    _merge_history(rootgrp, radar)
+    output.merge_history(rootgrp, 'categorize', radar)
     _merge_source(rootgrp, radar, lidar)
     rootgrp.close()
-
-
-def _merge_history(rootgrp, radar):
-    radar_history = radar.dataset.history
-    cat_history = f"{utils.get_time()} - categorize file created"
-    rootgrp.history = f"{cat_history}\n{radar_history}"
 
 
 def _merge_source(rootgrp, radar, lidar):

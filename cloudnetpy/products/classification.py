@@ -35,7 +35,7 @@ def generate_class(cat_file, output_file):
     class_masks(data_handler)
     class_status(data_handler)
     output.update_attributes(data_handler.data)
-    save_classification(data_handler, output_file)
+    _save_classification(data_handler, output_file)
 
 
 def check_active_bits(cb, keys):
@@ -95,7 +95,7 @@ def class_masks(data_handler):
     data_handler.append_data(target_classification, 'target_classification')
 
 
-def save_classification(data_handler, output_file):
+def _save_classification(data_handler, output_file):
     """
     Saves wanted information to NetCDF file.
     """
@@ -104,5 +104,7 @@ def save_classification(data_handler, output_file):
     rootgrp = output.init_file(output_file, dims, data_handler.data, zlib=True)
     output.copy_variables(data_handler.dataset, rootgrp, ('altitude', 'latitude', 'longitude', 'time', 'height'))
     rootgrp.title = f"Classification file from {data_handler.dataset.location}"
-    output.copy_global(data_handler.dataset, rootgrp, ('location', 'day', 'month', 'year', 'source', 'history'))
+    rootgrp.source = f"Categorize file: {data_handler.dataset.file_uuid}"
+    output.copy_global(data_handler.dataset, rootgrp, ('location', 'day', 'month', 'year'))
+    output.merge_history(rootgrp, 'classification', data_handler)
     rootgrp.close()
