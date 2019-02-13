@@ -1,7 +1,9 @@
+"""Module for creating classification file."""
 import numpy as np
 import cloudnetpy.utils as utils
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
+
 
 class DataCollect(DataSource):
     def __init__(self, cat_file):
@@ -14,7 +16,8 @@ class DataCollect(DataSource):
         super().__init__(cat_file)
         self.height = self._getvar('height')
 
-def generate_class(cat_file):
+
+def generate_class(cat_file, output_file):
     """Makes classification for different types of targets at atmosphere.
 
     Generates categorized bins to 10 types of different targets in atmosphere
@@ -22,42 +25,17 @@ def generate_class(cat_file):
     NetCDF file with information of classification and measurements.
 
     Args:
-        cat_file: NetCDf file of categorized bins and information of
-                measurements and instruments
+        cat_file: NetCDF file of categorized bins and information of
+                measurements and instruments.
+
+        output_file(str): Output file name.
+
     """
     data_handler = DataCollect(cat_file)
     class_masks(data_handler)
     class_status(data_handler)
-    #cloud_layer_heights(data_handler)
     output.update_attributes(data_handler.data)
-    save_Cnet(data_handler, 'test_class2.nc', 'Classification', 0.1)
-
-
-def cloud_layer_heights(data_handler):
-    """
-    Define cloudmask from categorized bins and finds hieghts of all clouds bases
-    and tops
-    """
-    # Not in use
-    target_classification = data_handler.data['target_classification'].data
-    height = data_handler.dataset.variables['height']
-    cloud_mask = np.zeros_like(target_classification, dtype=int)
-
-    for i in range(np.max(target_classification)):
-        if i == 1 or i == 3 or i == 4 or i == 5:
-            cloud_mask[target_classification == i] = 1
-
-    base_heights = np.full(target_classification.shape, np.nan)
-    top_heights = np.full(target_classification.shape, np.nan)
-
-    for i in range(len(cloud_mask[0])):
-        base_height, top_height = utils.bases_and_tops(cloud_mask[i])
-        base_heights[i][base_height] = height[base_height]
-        top_heights[i][top_height] = height[top_height]
-
-    data_handler.append_data(cloud_mask, 'cloud_mask')
-    data_handler.append_data(base_heights, 'cloud_bottom')
-    data_handler.append_data(top_heights, 'cloud_top')
+    save_classification(data_handler, output_file)
 
 
 def check_active_bits(cb, keys):
@@ -77,8 +55,8 @@ def class_status(data_handler):
     """
     qb = data_handler.dataset['quality_bits'][:]
 
-    keys = ['radar_bit', 'lidar_bit', 'radar_clutter_bit', 'lidar_molecular_bit',
-            'radar_attenuated_bit', 'radar_corrected_bit']
+    keys = ('radar_bit', 'lidar_bit', 'radar_clutter_bit', 'lidar_molecular_bit',
+            'radar_attenuated_bit', 'radar_corrected_bit')
     q_bits = check_active_bits(qb, keys)
 
     quality_mask = np.copy(q_bits['lidar_bit'])
@@ -101,8 +79,8 @@ def class_masks(data_handler):
     """
     cb = data_handler.dataset['category_bits'][:]
 
-    keys = ['droplet_bit', 'falling_bit', 'cold_bit', 'melting_bit',
-            'aerosol_bit', 'insect_bit']
+    keys = ('droplet_bit', 'falling_bit', 'cold_bit', 'melting_bit',
+            'aerosol_bit', 'insect_bit')
     bits = check_active_bits(cb, keys)
 
     ind = np.where(bits['falling_bit'] & bits['cold_bit'])
@@ -117,7 +95,7 @@ def class_masks(data_handler):
     data_handler.append_data(target_classification, 'target_classification')
 
 
-def save_Cnet(data_handler, output_file, varname, version):
+def save_classification(data_handler, output_file):
     """
     Saves wanted information to NetCDF file.
     """
@@ -126,10 +104,5 @@ def save_Cnet(data_handler, output_file, varname, version):
     rootgrp = output.init_file(output_file, dims, data_handler.data, zlib=True)
     output.copy_variables(data_handler.dataset, rootgrp, ('altitude', 'latitude', 'longitude', 'time', 'height'))
     rootgrp.title = f"Classification file from {data_handler.dataset.location}"
-    #rootgrp.institution = 'Data processed at the Finnish Meteorological Institute.'
-    #rootgrp.software_version = version
-    #rootgrp.git_version = git_version()
-    #rootgrp.file_uuid = str(uuid.uuid4().hex)
     output.copy_global(data_handler.dataset, rootgrp, ('location', 'day', 'month', 'year', 'source', 'history'))
     rootgrp.close()
-
