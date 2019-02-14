@@ -1,7 +1,9 @@
 
 from setuptools import setup, find_packages
 
-exec(open('cloudnetpy/version.py').read())
+version = {}
+with open("cloudnetpy/version.py") as f:
+    exec(f.read(), version)
 
 with open('README.md') as f:
     readme = f.read()
@@ -11,7 +13,7 @@ with open('LICENSE') as f:
 
 setup(
     name='cloudnetpy',
-    version='__version__',
+    version=version['__version__'],
     description='Python package for Cloudnet processing',
     long_description=readme,
     author='Simo Tukiainen',

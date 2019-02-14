@@ -80,6 +80,9 @@ cloudnetpy.utils
 Products modules
 ================
 
+Products is a CloudnetPy's sub-package. It contains
+several modules that correspond to different Cloudnet
+products.
 
 products.classification
 -----------------------

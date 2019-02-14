@@ -12,7 +12,7 @@ from cloudnetpy import utils
 from cloudnetpy.constants import T0
 
 
-class ClassData:
+class _ClassData:
     def __init__(self, radar, lidar, model):
         self.z = radar.data['Z'][:]
         self.ldr = radar.data['ldr'][:]
@@ -67,7 +67,7 @@ class ClassData:
 
 
 @dataclass
-class ClassificationResult:
+class _ClassificationResult:
     category_bits: np.ndarray
     is_rain: np.ndarray
     is_clutter: np.ndarray
@@ -86,7 +86,7 @@ def classify_measurements(radar, lidar, model):
         classify.fetch_qual_bits()
 
     """
-    obs = ClassData(radar, lidar, model)
+    obs = _ClassData(radar, lidar, model)
     bits = [None] * 6
     liquid = droplet.find_liquid(obs)
     bits[3] = find_melting_layer(obs)
@@ -96,8 +96,8 @@ def classify_measurements(radar, lidar, model):
     bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4] = find_aerosols(obs.beta, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
-    return ClassificationResult(cat_bits, obs.is_rain, obs.is_clutter,
-                                insect_prob, liquid['bases'])
+    return _ClassificationResult(cat_bits, obs.is_rain, obs.is_clutter,
+                                 insect_prob, liquid['bases'])
 
 
 def _bits_to_integer(bits):
@@ -148,7 +148,7 @@ def find_melting_layer(obs, smooth=True):
         drops can even move upwards instead of down).
 
     Args:
-        obs (ClassData): Input data container.
+        obs (_ClassData): Input data container.
         smooth (bool, optional): If True, apply a small
             Gaussian smoother to the melting layer. Default is True.
 
@@ -224,7 +224,7 @@ def find_freezing_region(obs, melting_layer):
     interpolated for all profiles.
 
     Args:
-        obs (ClassData): Input data container.
+        obs (_ClassData): Input data container.
         melting_layer (ndarray): 2-D boolean array denoting melting layer.
 
     Returns:
@@ -305,7 +305,7 @@ def find_insects(obs, *args, prob_lim=0.8):
     liquid droplets pixels, melting layer pixels and too cold temperatures.
     
     Args:
-        obs (ClassData): Input data container.
+        obs (_ClassData): Input data container.
         *args: Binary fields that are used to screen the
             insect probability. E.g. rain, clutter,
             melting_layer, etc.
@@ -399,7 +399,7 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
     clouds, with the temperature below -7 C are ice.
 
     Args:
-        obs (ClassData): Container for observations.
+        obs (_ClassData): Container for observations.
         is_liquid (ndarray): 2-D boolean array of liquid droplets.
         is_insects (ndarray): 2-D boolean array of insects.
 
@@ -439,7 +439,7 @@ def fetch_quality(radar, lidar, classification, attenuations):
     Args:
         radar (Radar): Radar data container.
         lidar (Lidar): Lidar data container.
-        classification (ClassificationResult): Container for classification
+        classification (_ClassificationResult): Container for classification
             results.
         attenuations (dict):
 

@@ -262,7 +262,7 @@ def _create_one_day_data_record(l1_files):
 
 
 def rpg2nc(path_to_l1_files, output_file, site_properties):
-    """High-level API to convert RPG binary files into NetCDF file.
+    """High-level API to convert RPG cloud radar binary files into NetCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
     concatenates the data and writes it into NetCDF file.
@@ -275,8 +275,9 @@ def rpg2nc(path_to_l1_files, output_file, site_properties):
             'name'.
 
     Examples:
+        >>> from cloudnetpy.rpg import rpg2nc
         >>> site_properties = {'name': Hyytiala, 'altitude': 174}
-        >>> rpg.rpg2nc('/path/to/files/', 'test.nc', site_properties)
+        >>> rpg2nc('/path/to/files/', 'test.nc', site_properties)
 
     """
     l1_files = get_rpg_files(path_to_l1_files)

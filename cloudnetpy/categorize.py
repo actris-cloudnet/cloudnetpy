@@ -459,6 +459,11 @@ def generate_categorize(input_files, output_file):
             included in the radar file.
         output_file (str): Full path of the output file.
 
+    Notes:
+        Separate mwr-file is not needed when using RPG cloud radar which
+        measures liquid water path. Then, the radar file can be used as
+        a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
+
     Examples:
         >>> from cloudnetpy.categorize import generate_categorize
         >>> input_files = {'radar': 'radar.nc',

@@ -4,27 +4,27 @@ Quickstart
 
 CloudnetPy is available from `PyPI
 <https://pypi.org/project/cloudnetpy/>`_, the Python package index. It allows a pip-based
-installation.
+installation. CloudnetPy requires Python 3.7 or newer.
 
 First, install prerequisite software (if you already haven't):
 
 .. code-block:: console
 		
    $ sudo apt update && sudo apt upgrade
-   $ sudo apt install python3 python3-pip libnetcdf-dev 
+   $ sudo apt install python3.7 python3.7-venv python3-pip
 
-Then, create a new virtual enviroment and activate it:
+Then, create a new virtual environment and activate it:
 
 .. code-block:: console
 		
-   $ python3 -m venv venv
+   $ python3.7 -m venv venv
    $ source venv/bin/activate
 
-Install the required Python packages:
+Install cloudnetpy:
 
 .. code-block:: console
 		
-   (venv)$ pip3 install scipy netcdf4 cloudnetpy
+   (venv)$ pip3 install cloudnetpy
 
 That's it! If you have cloud radar, ceilometer, microwave
 radiometer and model data in NetCDF files, it's easy to

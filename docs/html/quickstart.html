@@ -48,19 +48,19 @@
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
 <p>CloudnetPy is available from <a class="reference external" href="https://pypi.org/project/cloudnetpy/">PyPI</a>, the Python package index. It allows a pip-based
-installation.</p>
+installation. CloudnetPy requires Python 3.7 or newer.</p>
 <p>First, install prerequisite software (if you already haven’t):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> sudo apt update <span class="o">&amp;&amp;</span> sudo apt upgrade
-<span class="gp">$</span> sudo apt install python3 python3-pip libnetcdf-dev
+<span class="gp">$</span> sudo apt install python3.7 python3.7-venv python3-pip
 </pre></div>
 </div>
-<p>Then, create a new virtual enviroment and activate it:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python3 -m venv venv
+<p>Then, create a new virtual environment and activate it:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python3.7 -m venv venv
 <span class="gp">$</span> <span class="nb">source</span> venv/bin/activate
 </pre></div>
 </div>
-<p>Install the required Python packages:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(venv)$</span> pip3 install scipy netcdf4 cloudnetpy
+<p>Install cloudnetpy:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(venv)$</span> pip3 install cloudnetpy
 </pre></div>
 </div>
 <p>That’s it! If you have cloud radar, ceilometer, microwave
