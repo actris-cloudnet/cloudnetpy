@@ -500,6 +500,11 @@
 <span class="sd">            included in the radar file.</span>
 <span class="sd">        output_file (str): Full path of the output file.</span>
 
+<span class="sd">    Notes:</span>
+<span class="sd">        Separate mwr-file is not needed when using RPG cloud radar which</span>
+<span class="sd">        measures liquid water path. Then, the radar file can be used as</span>
+<span class="sd">        a mwr-file as well, i.e. {&#39;mwr&#39;: &#39;radar.nc&#39;}.</span>
+
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from cloudnetpy.categorize import generate_categorize</span>
 <span class="sd">        &gt;&gt;&gt; input_files = {&#39;radar&#39;: &#39;radar.nc&#39;,</span>

@@ -10,6 +10,14 @@ system that doesn't require major modifications
 if the underlaying methods and their implementations change
 from one software version to another.
 
+Raw data to categorize
+----------------------
+
+Cloudnet instruments provide raw data in various formats that need to
+be first converted into netCDF with standardized metadata. After that,
+the data can be combined in a single categorize file.
+
+
 .. autofunction:: mira.mira2nc
 
 .. autofunction:: rpg.rpg2nc
@@ -17,21 +25,21 @@ from one software version to another.
 .. autofunction:: categorize.generate_categorize
 
 
+Categorize to products
+----------------------
 
-Modules
-=======
+Starting from the categorize file, several geophysical products can be
+generated.
+
+.. autofunction:: products.classification.generate_class
+
+
+Cloudnetpy modules
+==================
 
 The various modules of CloudnetPy provide additional lower-level
 functions that are useful for development, testing and research
 purposes.
-
-cloudnetpy.categorize
----------------------
-
-.. automodule:: categorize
-   :members:
-   :exclude-members: generate_categorize
-   :member-order: bysource
 
 
 cloudnetpy.classify
@@ -62,13 +70,6 @@ cloudnetpy.lwc
    :members:
 
 
-cloudnetpy.cloudnetarray
-------------------------
-
-.. automodule:: cloudnetarray
-   :members:
-
-
 cloudnetpy.utils
 ----------------
 
@@ -76,6 +77,14 @@ cloudnetpy.utils
    :members:
 
 
+Products modules
+================
 
+
+products.classification
+-----------------------
+
+.. automodule:: products.classification
+   :members:
 
 
