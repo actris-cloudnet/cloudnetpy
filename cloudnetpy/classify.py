@@ -181,13 +181,6 @@ def find_melting_layer(obs, smooth=True):
         ldr_prof, ldr_dprof, nldr = _slice(obs.ldr, ldr_diff)
         v_prof, v_dprof, nv = _slice(obs.v, v_diff)
 
-        if ii > 1920 and 0:
-            plt.subplot(121)
-            plt.plot(v_prof)
-            plt.subplot(122)
-            plt.plot(v_dprof)
-            plt.show()
-
         if nldr > 3 or nv > 3:
             ldr_p = np.argmax(ldr_prof)
             v_p = np.argmax(v_dprof)
