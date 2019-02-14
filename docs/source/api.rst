@@ -10,7 +10,9 @@ system that doesn't require major modifications
 if the underlaying methods and their implementations change
 from one software version to another.
 
-.. autofunction:: radar.mmclx2nc
+.. autofunction:: mira.mira2nc
+
+.. autofunction:: rpg.rpg2nc
 
 .. autofunction:: categorize.generate_categorize
 

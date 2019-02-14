@@ -72,7 +72,30 @@ _DEFINITIONS = {
      'Value 7: Radar echo corrected for liquid cloud attenuation\n'
      '         using microwave radiometer data.\n'
      'Value 8: Radar ground clutter.\n'
-     'Value 9: Lidar clear-air molecular scattering.')
+     'Value 9: Lidar clear-air molecular scattering.'),
+
+    'model_number':
+        ('\n0: Single polarisation radar.'
+         '\n1: Dual polarisation radar.'),
+
+    'dual_polarization':
+        ('\n0: Single polarisation radar.'
+         '\n1: Dual polarisation radar in linear depolarisation ratio (LDR) mode.'
+         '\n2: Dual polarisation radar in simultaneous transmission simultaneous reception (STSR) mode.'),
+
+    'FFT_window':
+        ('\n0: square'
+         '\n1: parzen'
+         '\n2: blackman'
+         '\n3: welch'
+         '\n4: slepian2'
+         '\n5: slepian3'),
+
+    'quality_flag':
+        ('\nBit 0: ADC saturation.'
+         '\nBit 1: Spectral width too high.'
+         '\nBit 2: No transmission power levelling.')
+
 }
 
 _COMMENTS = {
@@ -395,7 +418,7 @@ ATTRIBUTES = {
         _LIN
     ),
     # RPG variables:
-    'Zv': MetaData(
+    'Ze': MetaData(
         'Radar reflectivity factor (uncorrected), vertical polarization',
         'dBZ',
         (-40, 20),
@@ -453,5 +476,101 @@ ATTRIBUTES = {
     'kurtosis': MetaData(
         'Kurtosis of spectra',
     ),
-
+    'azimuth': MetaData(
+        'Azimuth angle',
+        'degrees',
+    ),
+    'elevation': MetaData(
+        'Elevation angle above horizon',
+        'degrees',
+    ),
+    'if_power': MetaData(
+        'IF power at ACD',
+        'uW',
+    ),
+    'brightness_temperature': MetaData(
+        'Brightness temperature',
+        'K',
+    ),
+    'voltage': MetaData(
+        'Voltage',
+        'V',
+    ),
+    'wind_direction': MetaData(
+        'Wind direction',
+        'degrees',
+    ),
+    'wind_speed': MetaData(
+        'Wind speed',
+        'm s-1',
+    ),
+    'pc_temperature': MetaData(
+        'PC temperature',
+        'K',
+    ),
+    'receiver_temperature': MetaData(
+        'Receiver temperature',
+        'K',
+    ),
+    'time_ms': MetaData(
+        'Time ms',
+        'ms',
+    ),
+    'integration_time': MetaData(
+        'Integration time',
+        's',
+        comment='Effective integration time of chirp sequence',
+    ),
+    'file_code': MetaData(
+        'File code',
+        comment='Indicates the RPG software version.',
+    ),
+    'program_number': MetaData(
+        'Program number',
+    ),
+    'model_number': MetaData(
+        'Model number',
+        definition=_DEFINITIONS['model_number']
+    ),
+    'sample_duration': MetaData(
+        'Sample duration',
+        's'
+    ),
+    'dual_polarization': MetaData(
+        'Dual polarisation type',
+        definition=_DEFINITIONS['dual_polarization']
+    ),
+    'number_of_averaged_chirps': MetaData(
+        'Number of averaged chirps in sequence'
+    ),
+    'chirp_start_indices': MetaData(
+        'Chirp sequences start indices'
+    ),
+    'calibration_interval': MetaData(
+        'Calibration interval in samples'
+    ),
+    'status_flag': MetaData(
+        'Status flag for heater and blower'
+    ),
+    'FFT_window': MetaData(
+        'FFT window type',
+        definition=_DEFINITIONS['FFT_window']
+    ),
+    'quality_flag': MetaData(
+        'Quality flag',
+        definition=_DEFINITIONS['quality_flag']
+    ),
+    'nyquist_velocity': MetaData(
+        'Nyquist velocity',
+        'm s-1'
+    ),
+    'correlation_coefficient': MetaData(
+        'Correlation coefficient',
+    ),
+    'Zdr': MetaData(
+        'Differential reflectivity',
+        'dB'
+    ),
+    'spectral_differential_phase': MetaData(
+        'Spectral differential phase'),
 }

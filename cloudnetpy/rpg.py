@@ -262,7 +262,22 @@ def _create_one_day_data_record(l1_files):
 
 
 def rpg2nc(path_to_l1_files, output_file, site_properties):
-    """Writes one day of  RPG Level1 binary data into a NetCDF file.
+    """High-level API to convert RPG binary files into NetCDF file.
+
+    This function reads one day of RPG Level 1 cloud radar binary files,
+    concatenates the data and writes it into NetCDF file.
+
+    Args:
+        path_to_l1_files (str): Folder containing one day of RPG LV1 files.
+        output_file (str): Output file name.
+        site_properties (dict): Dictionary containing information about the
+            site. Required key value pairs are 'altitude' (in metres) and
+            'name'.
+
+    Examples:
+        >>> site_properties = {'name': Hyytiala, 'altitude': 174}
+        >>> rpg.rpg2nc('/path/to/files/', 'test.nc', site_properties)
+
     """
     l1_files = get_rpg_files(path_to_l1_files)
     one_day_of_data = _create_one_day_data_record(l1_files)

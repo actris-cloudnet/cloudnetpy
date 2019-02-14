@@ -51,9 +51,9 @@ system that doesn’t require major modifications
 if the underlaying methods and their implementations change
 from one software version to another.</p>
 <dl class="function">
-<dt id="radar.mmclx2nc">
-<code class="descclassname">radar.</code><code class="descname">mmclx2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_properties</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/radar.html#mmclx2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#radar.mmclx2nc" title="Permalink to this definition">¶</a></dt>
-<dd><p>High-level API to convert mmclx file into compressed NetCDF file.</p>
+<dt id="mira.mira2nc">
+<code class="descclassname">mira.</code><code class="descname">mira2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_properties</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mira.html#mira2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mira.mira2nc" title="Permalink to this definition">¶</a></dt>
+<dd><p>High-level API to convert Mira cloud radar Level 1 file into NetCDF file.</p>
 <p>This function converts raw cloud radar file into a much smaller file that
 contains only the relevant data and can be used in further processing steps.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -73,13 +73,41 @@ Otherwise keeps the native resolution. Default is False.</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.radar</span> <span class="k">import</span> <span class="n">mmclx2nc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.mira</span> <span class="k">import</span> <span class="n">mira2nc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">site_properties</span> <span class="o">=</span> <span class="p">{</span>
 <span class="go">&#39;location&#39;: &#39;Vehmasmäki&#39;,</span>
 <span class="go">&#39;latitude&#39;: 62.74,</span>
 <span class="go">&#39;longitude&#39;: 27.53,</span>
 <span class="go">&#39;altitude&#39;: 155}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mmclx2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="n">site_properties</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mira2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="n">site_properties</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="rpg.rpg2nc">
+<code class="descclassname">rpg.</code><code class="descname">rpg2nc</code><span class="sig-paren">(</span><em>path_to_l1_files</em>, <em>output_file</em>, <em>site_properties</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpg.html#rpg2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpg.rpg2nc" title="Permalink to this definition">¶</a></dt>
+<dd><p>High-level API to convert RPG binary files into NetCDF file.</p>
+<p>This function reads one day of RPG Level 1 cloud radar binary files,
+concatenates the data and writes it into NetCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path_to_l1_files</strong> (<em>str</em>) – Folder containing one day of RPG LV1 files.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+<li><strong>site_properties</strong> (<em>dict</em>) – Dictionary containing information about the
+site. Required key value pairs are ‘altitude’ (in metres) and
+‘name’.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">site_properties</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">Hyytiala</span><span class="p">,</span> <span class="s1">&#39;altitude&#39;</span><span class="p">:</span> <span class="mi">174</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rpg</span><span class="o">.</span><span class="n">rpg2nc</span><span class="p">(</span><span class="s1">&#39;/path/to/files/&#39;</span><span class="p">,</span> <span class="s1">&#39;test.nc&#39;</span><span class="p">,</span> <span class="n">site_properties</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -99,8 +127,9 @@ file.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>input_files</strong> (<em>tuple</em>) – Tuple of strings containing full paths of
-the 4 input files (radar, lidar, mwr, model).</li>
+<li><strong>input_files</strong> (<em>dict</em>) – dict containing file names for ‘radar’, ‘lidar’
+‘model’ and optionally ‘mwr’ if liquid water path is not
+included in the radar file.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Full path of the output file.</li>
 </ul>
 </td>
@@ -109,7 +138,11 @@ the 4 input files (radar, lidar, mwr, model).</li>
 </table>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.categorize</span> <span class="k">import</span> <span class="n">generate_categorize</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_categorize</span><span class="p">((</span><span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lidar.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;mwr.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;model.nc&#39;</span><span class="p">),</span> <span class="s1">&#39;output.nc&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_files</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;radar&#39;</span><span class="p">:</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span>
+<span class="go">                   &#39;lidar&#39;: &#39;lidar.nc&#39;,</span>
+<span class="go">                   &#39;model&#39;: &#39;model.nc&#39;,</span>
+<span class="go">                   &#39;mwr&#39;: &#39;mwr.nc&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="s1">&#39;output.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -256,9 +289,9 @@ purposes.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>data</strong> (<em>ndarray</em>) – Data to be added.</li>
 <li><strong>key</strong> (<em>str</em>) – Key for self.data dict.</li>
-<li><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – CloudnetArray.name attribute that is <em>key</em>
-by default but <em>name</em> if given.</li>
-<li><strong>units</strong> (<em>str</em><em>, </em><em>optional</em>) – CloudnetArray.units attribute if given.</li>
+<li><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – CloudnetArray.name attribute. Default value
+is <em>key</em>.</li>
+<li><strong>units</strong> (<em>str</em><em>, </em><em>optional</em>) – CloudnetArray.units attribute.</li>
 </ul>
 </td>
 </tr>
@@ -298,18 +331,13 @@ by default but <em>name</em> if given.</li>
 
 <dl class="class">
 <dt id="categorize.Radar">
-<em class="property">class </em><code class="descclassname">categorize.</code><code class="descname">Radar</code><span class="sig-paren">(</span><em>radar_file</em>, <em>fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Radar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Radar" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">categorize.</code><code class="descname">Radar</code><span class="sig-paren">(</span><em>radar_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Radar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Radar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Radar class, child of ProfileDataSource.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>radar_file</strong> (<em>str</em>) – File name of the calibrated radar file.</li>
-<li><strong>fields</strong> (<em>tuple</em>) – Tuple of strings containing fields to be extracted
-from the <em>radar_file</em>, e.g (‘Zh’, ‘ldr’, ‘v’, ‘width’).</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radar_file</strong> (<em>str</em>) – File name of the calibrated radar file.</td>
 </tr>
 </tbody>
 </table>
@@ -1349,8 +1377,9 @@ variable (if existing).</p>
 
 <dl class="method">
 <dt id="cloudnetarray.CloudnetArray.rebin_in_polar">
-<code class="descname">rebin_in_polar</code><span class="sig-paren">(</span><em>time</em>, <em>time_new</em>, <em>folding_velocity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.rebin_in_polar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.rebin_in_polar" title="Permalink to this definition">¶</a></dt>
+<code class="descname">rebin_in_polar</code><span class="sig-paren">(</span><em>time</em>, <em>time_new</em>, <em>folding_velocity</em>, <em>sequence_indices</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.rebin_in_polar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.rebin_in_polar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rebins velocity in polar coordinates.</p>
+<p>Velocity needs to be averaged in polar coordinates due to folding.</p>
 </dd></dl>
 
 <dl class="method">
@@ -1790,8 +1819,8 @@ with shape (N,).</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.seconds2hour">
-<code class="descclassname">utils.</code><code class="descname">seconds2hour</code><span class="sig-paren">(</span><em>time_in_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hour"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hour" title="Permalink to this definition">¶</a></dt>
+<dt id="utils.seconds2hours">
+<code class="descclassname">utils.</code><code class="descname">seconds2hours</code><span class="sig-paren">(</span><em>time_in_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hours"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hours" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts seconds since some epoch to fraction hour.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />

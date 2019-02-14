@@ -174,11 +174,20 @@ def find_melting_layer(obs, smooth=True):
     melting_layer = np.zeros(obs.tw.shape, dtype=bool)
     ldr_diff = np.diff(obs.ldr, axis=1).filled(0)
     v_diff = np.diff(obs.v, axis=1).filled(0)
+
     for ii, t_prof in enumerate(obs.tw):
         temp_indices = np.where((t_prof > T0+t_range[0]) &
                        (t_prof < T0+t_range[1]))[0]
         ldr_prof, ldr_dprof, nldr = _slice(obs.ldr, ldr_diff)
         v_prof, v_dprof, nv = _slice(obs.v, v_diff)
+
+        if ii > 1920 and 0:
+            plt.subplot(121)
+            plt.plot(v_prof)
+            plt.subplot(122)
+            plt.plot(v_dprof)
+            plt.show()
+
         if nldr > 3 or nv > 3:
             ldr_p = np.argmax(ldr_prof)
             v_p = np.argmax(v_dprof)
@@ -194,7 +203,7 @@ def find_melting_layer(obs, smooth=True):
                 try:
                     top, base = _basetop(v_dprof, v_p)
                     diff = v_prof[top] - v_prof[base]
-                    if diff > 2 and v_prof[base] < -2:
+                    if diff > 0.5 and v_prof[base] < -2:
                         melting_layer[ii, temp_indices[v_p-1:v_p+2]] = True
                 except:
                     continue
