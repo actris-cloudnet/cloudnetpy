@@ -5,18 +5,6 @@ import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 
 
-class DataCollect(DataSource):
-    def __init__(self, cat_file):
-        """ Class to generate and storage data and information
-
-        Args:
-            cat_file: NetCDf file of categorized bins and information of
-                measurements and instruments
-        """
-        super().__init__(cat_file)
-        self.height = self._getvar('height')
-
-
 def generate_class(cat_file, output_file):
     """Makes classification for different types of targets at atmosphere.
 
@@ -31,7 +19,7 @@ def generate_class(cat_file, output_file):
         output_file(str): Output file name.
 
     """
-    data_handler = DataCollect(cat_file)
+    data_handler = DataSource(cat_file)
     _append_target_classification(data_handler)
     _append_detection_status(data_handler)
     output.update_attributes(data_handler.data)
@@ -83,7 +71,7 @@ def _append_target_classification(data_handler):
     classification = bits['droplet'] + 2*bits['falling']
 
     falling_cold = np.where(bits['falling'] & bits['cold'])
-    classification[falling_cold] += 1
+    classification[falling_cold] += 2
 
     classification[bits['melting']] = 6
     classification[bits['melting'] & bits['droplet']] = 7
@@ -99,12 +87,12 @@ def _save_classification(data_handler, output_file):
     Saves wanted information to NetCDF file.
     """
     dims = {'time': len(data_handler.time),
-            'height': len(data_handler.height)}
+            'height': len(data_handler.variables['height'])}
     rootgrp = output.init_file(output_file, dims, data_handler.data, zlib=True)
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height')
     output.copy_variables(data_handler.dataset, rootgrp, vars_from_source)
     rootgrp.title = f"Classification file from {data_handler.dataset.location}"
-    rootgrp.source = f"Categorize file: {data_handler.dataset.file_uuid}"
+    #rootgrp.source = f"Categorize file: {data_handler.dataset.file_uuid}"
     output.copy_global(data_handler.dataset, rootgrp, ('location', 'day',
                                                        'month', 'year'))
     output.merge_history(rootgrp, 'classification', data_handler)
