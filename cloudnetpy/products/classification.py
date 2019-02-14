@@ -83,7 +83,7 @@ def _append_target_classification(data_handler):
     classification = bits['droplet'] + 2*bits['falling']
 
     falling_cold = np.where(bits['falling'] & bits['cold'])
-    classification[falling_cold] += 2
+    classification[falling_cold] += 1
 
     classification[bits['melting']] = 6
     classification[bits['melting'] & bits['droplet']] = 7
@@ -104,7 +104,7 @@ def _save_classification(data_handler, output_file):
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height')
     output.copy_variables(data_handler.dataset, rootgrp, vars_from_source)
     rootgrp.title = f"Classification file from {data_handler.dataset.location}"
-    #rootgrp.source = f"Categorize file: {data_handler.dataset.file_uuid}"
+    rootgrp.source = f"Categorize file: {data_handler.dataset.file_uuid}"
     output.copy_global(data_handler.dataset, rootgrp, ('location', 'day',
                                                        'month', 'year'))
     output.merge_history(rootgrp, 'classification', data_handler)
