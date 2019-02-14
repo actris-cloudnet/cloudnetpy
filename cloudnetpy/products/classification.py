@@ -92,8 +92,14 @@ def _save_classification(data_handler, output_file):
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height')
     output.copy_variables(data_handler.dataset, rootgrp, vars_from_source)
     rootgrp.title = f"Classification file from {data_handler.dataset.location}"
-    #rootgrp.source = f"Categorize file: {data_handler.dataset.file_uuid}"
+    rootgrp.source = f"Categorize file: {_get_source(data_handler)}"
     output.copy_global(data_handler.dataset, rootgrp, ('location', 'day',
                                                        'month', 'year'))
     output.merge_history(rootgrp, 'classification', data_handler)
     rootgrp.close()
+
+
+def _get_source(data_handler):
+    """Returns uuid (or filename if uuid not found) of the source file."""
+    return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
+

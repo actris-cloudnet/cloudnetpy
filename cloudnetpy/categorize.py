@@ -1,5 +1,6 @@
 """ Functions for rebinning input data.
 """
+import os
 import math
 import netCDF4
 import numpy as np
@@ -31,7 +32,7 @@ class DataSource:
 
     """
     def __init__(self, filename):
-        self.filename = filename
+        self.filename = os.path.basename(filename)
         self.dataset = netCDF4.Dataset(filename)
         self.variables = self.dataset.variables
         self.source = getattr(self.dataset, 'source', '')  # is this ok here?
