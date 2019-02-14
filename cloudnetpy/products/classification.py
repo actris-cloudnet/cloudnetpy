@@ -32,8 +32,8 @@ def generate_class(cat_file, output_file):
 
     """
     data_handler = DataCollect(cat_file)
-    class_masks(data_handler)
-    class_status(data_handler)
+    _append_target_classification(data_handler)
+    _append_detection_status(data_handler)
     output.update_attributes(data_handler.data)
     _save_classification(data_handler, output_file)
 
@@ -49,50 +49,49 @@ def check_active_bits(cb, keys):
     return bits
 
 
-def class_status(data_handler):
+def _append_detection_status(data_handler):
     """
     Makes classifications of instruments status by combining active bins
     """
-    qb = data_handler.dataset['quality_bits'][:]
+    quality_bits = data_handler.dataset['quality_bits'][:]
 
-    keys = ('radar_bit', 'lidar_bit', 'radar_clutter_bit', 'lidar_molecular_bit',
-            'radar_attenuated_bit', 'radar_corrected_bit')
-    q_bits = check_active_bits(qb, keys)
+    keys = ('radar', 'lidar', 'clutter', 'molecular', 'attenuated', 'corrected')
+    bits = check_active_bits(quality_bits, keys)
 
-    quality_mask = np.copy(q_bits['lidar_bit'])
-    quality_mask[q_bits['radar_attenuated_bit'] & q_bits['radar_corrected_bit']
-                 & q_bits['radar_bit']] = 2
-    quality_mask[q_bits['radar_bit'] & q_bits['lidar_bit']] = 3
-    quality_mask[q_bits['radar_attenuated_bit'] & q_bits['radar_corrected_bit']] = 4
-    quality_mask[q_bits['radar_bit']] = 5
-    quality_mask[q_bits['radar_corrected_bit']] = 6
-    quality_mask[q_bits['radar_corrected_bit'] & q_bits['radar_bit']] = 7
-    quality_mask[q_bits['radar_clutter_bit']] = 8
-    quality_mask[q_bits['lidar_molecular_bit'] & q_bits['radar_bit']] = 9
+    quality = np.copy(bits['lidar'])
+    quality[bits['attenuated'] & bits['corrected'] & bits['radar']] = 2
+    quality[bits['radar'] & bits['lidar']] = 3
+    quality[bits['attenuated'] & bits['corrected']] = 4
+    quality[bits['radar']] = 5
+    quality[bits['corrected']] = 6
+    quality[bits['corrected'] & bits['radar']] = 7
+    quality[bits['clutter']] = 8
+    quality[bits['molecular'] & bits['radar']] = 9
 
-    data_handler.append_data(quality_mask, 'detection_status')
+    data_handler.append_data(quality, 'detection_status')
 
 
-def class_masks(data_handler):
+def _append_target_classification(data_handler):
     """
     Makes classifications for the atmospheric targets by combining active bins
     """
-    cb = data_handler.dataset['category_bits'][:]
+    category_bits = data_handler.dataset['category_bits'][:]
 
-    keys = ('droplet_bit', 'falling_bit', 'cold_bit', 'melting_bit',
-            'aerosol_bit', 'insect_bit')
-    bits = check_active_bits(cb, keys)
+    keys = ('droplet', 'falling', 'cold', 'melting', 'aerosol', 'insect')
+    bits = check_active_bits(category_bits, keys)
 
-    ind = np.where(bits['falling_bit'] & bits['cold_bit'])
-    target_classification = bits['droplet_bit'] + 2 * bits['falling_bit']
-    target_classification[ind] = target_classification[ind] + 1
-    target_classification[bits['melting_bit']] = 6
-    target_classification[bits['melting_bit'] & bits['droplet_bit']] = 7
-    target_classification[bits['aerosol_bit']] = 8
-    target_classification[bits['insect_bit']] = 9
-    target_classification[bits['aerosol_bit'] & bits['insect_bit']] = 10
+    classification = bits['droplet'] + 2*bits['falling']
 
-    data_handler.append_data(target_classification, 'target_classification')
+    falling_cold = np.where(bits['falling'] & bits['cold'])
+    classification[falling_cold] += 1
+
+    classification[bits['melting']] = 6
+    classification[bits['melting'] & bits['droplet']] = 7
+    classification[bits['aerosol']] = 8
+    classification[bits['insect']] = 9
+    classification[bits['aerosol'] & bits['insect']] = 10
+
+    data_handler.append_data(classification, 'target_classification')
 
 
 def _save_classification(data_handler, output_file):
@@ -102,9 +101,11 @@ def _save_classification(data_handler, output_file):
     dims = {'time': len(data_handler.time),
             'height': len(data_handler.height)}
     rootgrp = output.init_file(output_file, dims, data_handler.data, zlib=True)
-    output.copy_variables(data_handler.dataset, rootgrp, ('altitude', 'latitude', 'longitude', 'time', 'height'))
+    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height')
+    output.copy_variables(data_handler.dataset, rootgrp, vars_from_source)
     rootgrp.title = f"Classification file from {data_handler.dataset.location}"
     rootgrp.source = f"Categorize file: {data_handler.dataset.file_uuid}"
-    output.copy_global(data_handler.dataset, rootgrp, ('location', 'day', 'month', 'year'))
+    output.copy_global(data_handler.dataset, rootgrp, ('location', 'day',
+                                                       'month', 'year'))
     output.merge_history(rootgrp, 'classification', data_handler)
     rootgrp.close()
