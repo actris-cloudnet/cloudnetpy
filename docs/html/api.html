@@ -63,8 +63,8 @@ contains only the relevant data and can be used in further processing steps.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>mmclx_file</strong> (<em>str</em>) – Raw radar file in NetCDF format.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-<li><strong>site_properties</strong> (<em>dict</em>) – ‘location’, ‘latitude’, ‘longitude’,
-‘altitude’ (m).</li>
+<li><strong>site_properties</strong> (<em>dict</em>) – Dictionary containing information about the
+site. Required key value pairs are ‘name’.</li>
 <li><strong>rebin_data</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, rebins data to 30s resolution.
 Otherwise keeps the native resolution. Default is False.</li>
 </ul>
@@ -74,11 +74,7 @@ Otherwise keeps the native resolution. Default is False.</li>
 </table>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.mira</span> <span class="k">import</span> <span class="n">mira2nc</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">site_properties</span> <span class="o">=</span> <span class="p">{</span>
-<span class="go">&#39;location&#39;: &#39;Vehmasmäki&#39;,</span>
-<span class="go">&#39;latitude&#39;: 62.74,</span>
-<span class="go">&#39;longitude&#39;: 27.53,</span>
-<span class="go">&#39;altitude&#39;: 155}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">site_properties</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Vehmasmäki&#39;</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mira2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="n">site_properties</span><span class="p">)</span>
 </pre></div>
 </div>

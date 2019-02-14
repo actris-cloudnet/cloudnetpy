@@ -41,6 +41,7 @@
   <h1>Source code for categorize</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot; Functions for rebinning input data.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">netCDF4</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -72,7 +73,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">variables</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>  <span class="c1"># is this ok here?</span>
@@ -554,18 +555,12 @@
         <span class="s1">&#39;model_time&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">time</span><span class="p">),</span>
         <span class="s1">&#39;model_height&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">mean_height</span><span class="p">)}</span>
     <span class="n">rootgrp</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">init_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">zlib</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">output</span><span class="o">.</span><span class="n">copy_global</span><span class="p">(</span><span class="n">radar</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">rootgrp</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;month&#39;</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">))</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">copy_global</span><span class="p">(</span><span class="n">radar</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">rootgrp</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;month&#39;</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">))</span>
     <span class="n">rootgrp</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Categorize file from </span><span class="si">{radar.location}</span><span class="s2">&quot;</span>
     <span class="n">rootgrp</span><span class="o">.</span><span class="n">references</span> <span class="o">=</span> <span class="s1">&#39;https://doi.org/10.1175/BAMS-88-6-883&#39;</span>
-    <span class="n">_merge_history</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="n">radar</span><span class="p">)</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">merge_history</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="s1">&#39;categorize&#39;</span><span class="p">,</span> <span class="n">radar</span><span class="p">)</span>
     <span class="n">_merge_source</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">)</span>
     <span class="n">rootgrp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-
-<span class="k">def</span> <span class="nf">_merge_history</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="n">radar</span><span class="p">):</span>
-    <span class="n">radar_history</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">history</span>
-    <span class="n">cat_history</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{utils.get_time()} - categorize file created&quot;</span>
-    <span class="n">rootgrp</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{cat_history}</span><span class="se">\n</span><span class="si">{radar_history}</span><span class="s2">&quot;</span>
 
 
 <span class="k">def</span> <span class="nf">_merge_source</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">):</span>
