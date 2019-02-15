@@ -388,6 +388,31 @@ ATTRIBUTES = {
         'm',
         comment=_COMMENTS['cloud_top'],
     ),
+    'iwc': MetaData(
+        'Height of cloud top above ground',
+        'm',
+        comment=_COMMENTS['cloud_top'],
+    ),
+    'iwc_error': MetaData(
+        'Height of cloud top above ground',
+        'm',
+        comment=_COMMENTS['cloud_top'],
+    ),
+    'iwc_bias': MetaData(
+        'Height of cloud top above ground',
+        'm',
+        comment=_COMMENTS['cloud_top'],
+    ),
+    'iwc_sensitivity': MetaData(
+        'Height of cloud top above ground',
+        'm',
+        comment=_COMMENTS['cloud_top'],
+    ),
+    'iwc_retrieval_status': MetaData(
+        'Height of cloud top above ground',
+        'm',
+        comment=_COMMENTS['cloud_top'],
+    ),
     'insect_prob': MetaData(
         'Insect probability',
         '',

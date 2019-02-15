@@ -1,9 +1,8 @@
 import netCDF4
 import numpy as np
-from numpy.ma import masked_invalid as masknan
 from scipy.interpolate import interp1d
-import ncf
-from ncf import CnetVar
+import cloudnetpy.products.ncf as ncf
+from cloudnetpy.products.ncf import CnetVar
 
 def generate_iwc(cat_file):
     cat = netCDF4.Dataset(cat_file) # open file
