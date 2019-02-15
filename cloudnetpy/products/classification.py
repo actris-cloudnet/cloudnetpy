@@ -18,6 +18,10 @@ def generate_class(cat_file, output_file):
 
         output_file(str): Output file name.
 
+    Examples:
+        >>> from cloudnetpy.products.classification import generate_class
+        >>> generate_class('categorize.nc', 'classification.nc')
+
     """
     data_handler = DataSource(cat_file)
     _append_target_classification(data_handler)
