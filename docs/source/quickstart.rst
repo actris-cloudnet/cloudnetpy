@@ -28,7 +28,7 @@ Install cloudnetpy into the virtual environment:
 
 That's it! Processing is easy using CloudnetPy's high level APIs.
 
-For example, let's convert a raw METEK MIRA-36 netCDF file into
+In the first example we convert a raw METEK MIRA-36 netCDF file into
 Cloudnet netCDF file that can be used in further processing steps.
 
 .. code-block:: python
@@ -48,8 +48,15 @@ calibrated measurement files.
        'model': 'model.nc',
        'mwr': 'mwr.nc'
        }
-   output_file = 'test.nc'
-   generate_categorize(input_files, output_file)
+   generate_categorize(input_files, 'categorize.nc')
+
+In the last example we create the smallest and simplest Cloudnet
+product, the classification product.
+
+.. code-block:: python
+
+    from cloudnetpy.products.classification import generate_class
+    generate_class('cagegorize.nc', 'classification.nc')
 
 Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
 contain all the latest features and modifications. To get an up-to-date

@@ -64,7 +64,7 @@ installation. CloudnetPy requires Python 3.7 or newer.</p>
 </pre></div>
 </div>
 <p>That’s it! Processing is easy using CloudnetPy’s high level APIs.</p>
-<p>For example, let’s convert a raw METEK MIRA-36 netCDF file into
+<p>In the first example we convert a raw METEK MIRA-36 netCDF file into
 Cloudnet netCDF file that can be used in further processing steps.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy.mira</span> <span class="kn">import</span> <span class="n">mira2nc</span>
 <span class="n">mira2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Mace-Head&#39;</span><span class="p">})</span>
@@ -79,8 +79,13 @@ calibrated measurement files.</p>
     <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="s1">&#39;model.nc&#39;</span><span class="p">,</span>
     <span class="s1">&#39;mwr&#39;</span><span class="p">:</span> <span class="s1">&#39;mwr.nc&#39;</span>
     <span class="p">}</span>
-<span class="n">output_file</span> <span class="o">=</span> <span class="s1">&#39;test.nc&#39;</span>
-<span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+<span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="s1">&#39;categorize.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the last example we create the smallest and simplest Cloudnet
+product, the classification product.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="kn">import</span> <span class="n">generate_class</span>
+<span class="n">generate_class</span><span class="p">(</span><span class="s1">&#39;cagegorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
