@@ -5,10 +5,9 @@ import sys
 sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import netCDF4
 import numpy as np
-from cloudnetpy import output
-from cloudnetpy import utils
-from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.categorize import DataSource
+from . import output, utils
+from .cloudnetarray import CloudnetArray
+from .categorize import DataSource
 
 
 class Mira(DataSource):

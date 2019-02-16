@@ -2,7 +2,7 @@
 import math
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import utils
+from . import utils
 
 
 class CloudnetArray:

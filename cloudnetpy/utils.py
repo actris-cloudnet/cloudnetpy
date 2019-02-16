@@ -5,7 +5,6 @@ import uuid
 from datetime import datetime
 import numpy as np
 import numpy.ma as ma
-import requests
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
 
@@ -449,13 +448,3 @@ def get_time():
 def get_uuid():
     """Returns unique identifier."""
     return str(uuid.uuid4().hex)
-
-
-def read_cloudnet_database(site, *fields_in):
-    """Read metadata from Cloudnet http API."""
-    fields = ','.join(fields_in)
-    url = 'http://devcloudnet.fmi.fi/api/'
-    try:
-        return tuple(requests.get(f"{url}?site={site}&fields={fields}").json().values())
-    except:
-        return tuple([0]*len(fields_in))
