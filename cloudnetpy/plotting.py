@@ -37,7 +37,7 @@ def plot_variable(file1, file2, name, dvec, ylim=(0, 500),
                   savefig=False, savepath='', grid=False):
     """Plot relevant data for a Cloudnet variable."""
     if name == 'liquid':
-        data_fields = ('Z', 'beta', 'beta_raw')
+        data_fields = ('Z', 'beta')
         bitno = 0
     elif name == 'melting':
         data_fields = ('Z', 'ldr', 'v')

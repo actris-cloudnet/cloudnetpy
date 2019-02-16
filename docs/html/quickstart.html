@@ -59,25 +59,28 @@ installation. CloudnetPy requires Python 3.7 or newer.</p>
 <span class="gp">$</span> <span class="nb">source</span> venv/bin/activate
 </pre></div>
 </div>
-<p>Install cloudnetpy:</p>
+<p>Install cloudnetpy into the virtual environment:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(venv)$</span> pip3 install cloudnetpy
 </pre></div>
 </div>
-<p>That’s it! If you have cloud radar, ceilometer, microwave
-radiometer and model data in NetCDF files, it’s easy to
-start processing using CloudnetPy’s high level APIs.
-For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="kn">import</span> <span class="n">categorize</span> <span class="k">as</span> <span class="n">cat</span>
-
-<span class="n">input_files</span> <span class="o">=</span> <span class="p">(</span>
-              <span class="s1">&#39;radar_file.nc&#39;</span><span class="p">,</span>
-              <span class="s1">&#39;lidar_file.nc&#39;</span><span class="p">,</span>
-              <span class="s1">&#39;mwr_file.nc&#39;</span><span class="p">,</span>
-              <span class="s1">&#39;model_file.nc&#39;</span>
-              <span class="p">)</span>
+<p>That’s it! Processing is easy using CloudnetPy’s high level APIs.</p>
+<p>For example, let’s convert a raw METEK MIRA-36 netCDF file into
+Cloudnet netCDF file that can be used in further processing steps.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy.mira</span> <span class="kn">import</span> <span class="n">mira2nc</span>
+<span class="n">mira2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Mace-Head&#39;</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>In the next example we create a categorize file from already
+calibrated measurement files.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy.categorize</span> <span class="kn">import</span> <span class="n">generate_categorize</span>
+<span class="n">input_files</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;radar&#39;</span><span class="p">:</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;lidar&#39;</span><span class="p">:</span> <span class="s1">&#39;lidar.nc&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;model&#39;</span><span class="p">:</span> <span class="s1">&#39;model.nc&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;mwr&#39;</span><span class="p">:</span> <span class="s1">&#39;mwr.nc&#39;</span>
+    <span class="p">}</span>
 <span class="n">output_file</span> <span class="o">=</span> <span class="s1">&#39;test.nc&#39;</span>
-
-<span class="n">cat</span><span class="o">.</span><span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+<span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not

@@ -16,8 +16,8 @@ class Mira(DataSource):
 
     Args:
         raw_radar_file (str): Filename of raw MIRA NetCDF file.
-        radar_frequency (float, optional): Radar frequency GHz. Default is 35.5.
-        source (str, optional): Cloud radar model. Default is 'MIRA-36'.
+        site_properties (dict): Site properties in a dictionary. Required
+            keys: 'name'.
 
     """
     keymap = {'Zg': 'Ze',
@@ -93,7 +93,7 @@ def mira2nc(mmclx_file, output_file, site_properties, rebin_data=False):
 
     Examples:
           >>> from cloudnetpy.mira import mira2nc
-          >>> site_properties = {'name': 'Vehmasmäki'}
+          >>> site_properties = {'name': 'Vehmasmaki'}
           >>> mira2nc('raw_radar.mmclx', 'radar.nc', site_properties)
 
     """

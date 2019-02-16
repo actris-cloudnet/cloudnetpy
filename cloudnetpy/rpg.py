@@ -276,7 +276,7 @@ def rpg2nc(path_to_l1_files, output_file, site_properties):
 
     Examples:
         >>> from cloudnetpy.rpg import rpg2nc
-        >>> site_properties = {'name': Hyytiala, 'altitude': 174}
+        >>> site_properties = {'name': 'Hyytiala', 'altitude': 174}
         >>> rpg2nc('/path/to/files/', 'test.nc', site_properties)
 
     """

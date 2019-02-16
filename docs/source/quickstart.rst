@@ -20,30 +20,36 @@ Then, create a new virtual environment and activate it:
    $ python3.7 -m venv venv
    $ source venv/bin/activate
 
-Install cloudnetpy:
+Install cloudnetpy into the virtual environment:
 
 .. code-block:: console
 		
    (venv)$ pip3 install cloudnetpy
 
-That's it! If you have cloud radar, ceilometer, microwave
-radiometer and model data in NetCDF files, it's easy to
-start processing using CloudnetPy's high level APIs.
-For example:
+That's it! Processing is easy using CloudnetPy's high level APIs.
+
+For example, let's convert a raw METEK MIRA-36 netCDF file into
+Cloudnet netCDF file that can be used in further processing steps.
 
 .. code-block:: python
 
-   from cloudnetpy import categorize as cat
-   
-   input_files = (
-		 'radar_file.nc',
-		 'lidar_file.nc',
-		 'mwr_file.nc',
-		 'model_file.nc'
-		 )
-   output_file = 'test.nc'
+    from cloudnetpy.mira import mira2nc
+    mira2nc('raw_radar.mmclx', 'radar.nc', {'name': 'Mace-Head'})
 
-   cat.generate_categorize(input_files, output_file)
+In the next example we create a categorize file from already
+calibrated measurement files.
+
+.. code-block:: python
+
+   from cloudnetpy.categorize import generate_categorize
+   input_files = {
+       'radar': 'radar.nc',
+       'lidar': 'lidar.nc',
+       'model': 'model.nc',
+       'mwr': 'mwr.nc'
+       }
+   output_file = 'test.nc'
+   generate_categorize(input_files, output_file)
 
 Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
 contain all the latest features and modifications. To get an up-to-date
