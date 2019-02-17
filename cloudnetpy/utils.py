@@ -447,4 +447,4 @@ def get_time():
 
 def get_uuid():
     """Returns unique identifier."""
-    return str(uuid.uuid4().hex)
+    return uuid.uuid4().hex
