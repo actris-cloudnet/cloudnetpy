@@ -1,9 +1,7 @@
 """ Functions for Categorize output file writing."""
 import netCDF4
-import cloudnetpy.version
-from cloudnetpy import config
-from cloudnetpy import utils
-from cloudnetpy.metadata import ATTRIBUTES
+from . import config, utils, version
+from .metadata import ATTRIBUTES
 
 
 def write_vars2nc(rootgrp, cloudnet_variables, zlib):
@@ -84,7 +82,7 @@ def init_file(file_name, dimensions, obs, zlib):
 def _add_standard_global_attributes(root_group):
     root_group.Conventions = 'CF-1.7'
     root_group.institution = f"Data processed at {config.INSTITUTE}"
-    root_group.cloudnetpy_version = cloudnetpy.version.__version__
+    root_group.cloudnetpy_version = version.__version__
     root_group.file_uuid = utils.get_uuid()
 
 

@@ -50,10 +50,15 @@ needing to worry about implementation details.</p>
 system that doesn’t require major modifications
 if the underlaying methods and their implementations change
 from one software version to another.</p>
+<div class="section" id="raw-data-to-categorize">
+<h2>Raw data to categorize<a class="headerlink" href="#raw-data-to-categorize" title="Permalink to this headline">¶</a></h2>
+<p>Cloudnet instruments provide raw data in various formats that need to
+be first converted into netCDF with standardized metadata. After that,
+the data can be combined in a single categorize file.</p>
 <dl class="function">
-<dt id="radar.mmclx2nc">
-<code class="descclassname">radar.</code><code class="descname">mmclx2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_properties</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/radar.html#mmclx2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#radar.mmclx2nc" title="Permalink to this definition">¶</a></dt>
-<dd><p>High-level API to convert mmclx file into compressed NetCDF file.</p>
+<dt id="mira.mira2nc">
+<code class="descclassname">mira.</code><code class="descname">mira2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_properties</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mira.html#mira2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mira.mira2nc" title="Permalink to this definition">¶</a></dt>
+<dd><p>High-level API to convert Mira cloud radar Level 1 file into NetCDF file.</p>
 <p>This function converts raw cloud radar file into a much smaller file that
 contains only the relevant data and can be used in further processing steps.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -63,8 +68,8 @@ contains only the relevant data and can be used in further processing steps.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>mmclx_file</strong> (<em>str</em>) – Raw radar file in NetCDF format.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-<li><strong>site_properties</strong> (<em>dict</em>) – ‘location’, ‘latitude’, ‘longitude’,
-‘altitude’ (m).</li>
+<li><strong>site_properties</strong> (<em>dict</em>) – Dictionary containing information about the
+site. Required key value pairs are ‘name’.</li>
 <li><strong>rebin_data</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, rebins data to 30s resolution.
 Otherwise keeps the native resolution. Default is False.</li>
 </ul>
@@ -73,13 +78,38 @@ Otherwise keeps the native resolution. Default is False.</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.radar</span> <span class="k">import</span> <span class="n">mmclx2nc</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">site_properties</span> <span class="o">=</span> <span class="p">{</span>
-<span class="go">&#39;location&#39;: &#39;Vehmasmäki&#39;,</span>
-<span class="go">&#39;latitude&#39;: 62.74,</span>
-<span class="go">&#39;longitude&#39;: 27.53,</span>
-<span class="go">&#39;altitude&#39;: 155}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mmclx2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="n">site_properties</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.mira</span> <span class="k">import</span> <span class="n">mira2nc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">site_properties</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Vehmasmaki&#39;</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mira2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="n">site_properties</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="rpg.rpg2nc">
+<code class="descclassname">rpg.</code><code class="descname">rpg2nc</code><span class="sig-paren">(</span><em>path_to_l1_files</em>, <em>output_file</em>, <em>site_properties</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpg.html#rpg2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpg.rpg2nc" title="Permalink to this definition">¶</a></dt>
+<dd><p>High-level API to convert RPG cloud radar binary files into NetCDF file.</p>
+<p>This function reads one day of RPG Level 1 cloud radar binary files,
+concatenates the data and writes it into NetCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>path_to_l1_files</strong> (<em>str</em>) – Folder containing one day of RPG LV1 files.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+<li><strong>site_properties</strong> (<em>dict</em>) – Dictionary containing information about the
+site. Required key value pairs are ‘altitude’ (in metres) and
+‘name’.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.rpg</span> <span class="k">import</span> <span class="n">rpg2nc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">site_properties</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Hyytiala&#39;</span><span class="p">,</span> <span class="s1">&#39;altitude&#39;</span><span class="p">:</span> <span class="mi">174</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rpg2nc</span><span class="p">(</span><span class="s1">&#39;/path/to/files/&#39;</span><span class="p">,</span> <span class="s1">&#39;test.nc&#39;</span><span class="p">,</span> <span class="n">site_properties</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -99,543 +129,73 @@ file.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>input_files</strong> (<em>tuple</em>) – Tuple of strings containing full paths of
-the 4 input files (radar, lidar, mwr, model).</li>
+<li><strong>input_files</strong> (<em>dict</em>) – dict containing file names for ‘radar’, ‘lidar’
+‘model’ and optionally ‘mwr’ if liquid water path is not
+included in the radar file.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Full path of the output file.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>Separate mwr-file is not needed when using RPG cloud radar which
+measures liquid water path. Then, the radar file can be used as
+a mwr-file as well, i.e. {‘mwr’: ‘radar.nc’}.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.categorize</span> <span class="k">import</span> <span class="n">generate_categorize</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_categorize</span><span class="p">((</span><span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lidar.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;mwr.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;model.nc&#39;</span><span class="p">),</span> <span class="s1">&#39;output.nc&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_files</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;radar&#39;</span><span class="p">:</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span>
+<span class="go">                   &#39;lidar&#39;: &#39;lidar.nc&#39;,</span>
+<span class="go">                   &#39;model&#39;: &#39;model.nc&#39;,</span>
+<span class="go">                   &#39;mwr&#39;: &#39;mwr.nc&#39;}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="s1">&#39;output.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 </div>
-<div class="section" id="modules">
-<h1>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h1>
-<p>The various modules of CloudnetPy provide additional lower-level
-functions that are useful for development, testing and research
-purposes.</p>
-<div class="section" id="module-categorize">
-<span id="cloudnetpy-categorize"></span><h2>cloudnetpy.categorize<a class="headerlink" href="#module-categorize" title="Permalink to this headline">¶</a></h2>
-<p>Functions for rebinning input data.</p>
-<dl class="class">
-<dt id="categorize.DataSource">
-<em class="property">class </em><code class="descclassname">categorize.</code><code class="descname">DataSource</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#DataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.DataSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for all Cloudnet measurements and model data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – Calibrated instrument / model NetCDF file.</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="categorize.DataSource.filename">
-<code class="descname">filename</code><a class="headerlink" href="#categorize.DataSource.filename" title="Permalink to this definition">¶</a></dt>
-<dd><p>Filename of the input file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.DataSource.dataset">
-<code class="descname">dataset</code><a class="headerlink" href="#categorize.DataSource.dataset" title="Permalink to this definition">¶</a></dt>
-<dd><p>A netcdf4 Dataset instance.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">Dataset</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.DataSource.variables">
-<code class="descname">variables</code><a class="headerlink" href="#categorize.DataSource.variables" title="Permalink to this definition">¶</a></dt>
-<dd><p>Variables of the Dataset instance.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dict</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.DataSource.source">
-<code class="descname">source</code><a class="headerlink" href="#categorize.DataSource.source" title="Permalink to this definition">¶</a></dt>
-<dd><p>Global attribute ‘source’ from <em>input_file</em>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.DataSource.time">
-<code class="descname">time</code><a class="headerlink" href="#categorize.DataSource.time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Time array of the instrument.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">MaskedArray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.DataSource.altitude">
-<code class="descname">altitude</code><a class="headerlink" href="#categorize.DataSource.altitude" title="Permalink to this definition">¶</a></dt>
-<dd><p>Altitude of instrument above mean sea level (m).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.DataSource.data">
-<code class="descname">data</code><a class="headerlink" href="#categorize.DataSource.data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Dictionary containing CloudnetArray instances.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dict</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="categorize.DataSource.km2m">
-<em class="property">static </em><code class="descname">km2m</code><span class="sig-paren">(</span><em>var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#DataSource.km2m"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.DataSource.km2m" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts km to m.</p>
-</dd></dl>
-
-<dl class="staticmethod">
-<dt id="categorize.DataSource.m2km">
-<em class="property">static </em><code class="descname">m2km</code><span class="sig-paren">(</span><em>var</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#DataSource.m2km"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.DataSource.m2km" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts m to km.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.DataSource.append_data">
-<code class="descname">append_data</code><span class="sig-paren">(</span><em>data</em>, <em>key</em>, <em>name=None</em>, <em>units=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#DataSource.append_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.DataSource.append_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds new CloudnetVariable into self.data dictionary.</p>
+<div class="section" id="categorize-to-products">
+<h2>Categorize to products<a class="headerlink" href="#categorize-to-products" title="Permalink to this headline">¶</a></h2>
+<p>Starting from the categorize file, several geophysical products can be
+generated.</p>
+<dl class="function">
+<dt id="products.classification.generate_class">
+<code class="descclassname">products.classification.</code><code class="descname">generate_class</code><span class="sig-paren">(</span><em>cat_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.generate_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes classification for different types of targets at atmosphere.</p>
+<p>Generates categorized bins to 10 types of different targets in atmosphere
+as well as instrument status classification. Classifications are saved to
+NetCDF file with information of classification and measurements.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<em>ndarray</em>) – Data to be added.</li>
-<li><strong>key</strong> (<em>str</em>) – Key for self.data dict.</li>
-<li><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – CloudnetArray.name attribute that is <em>key</em>
-by default but <em>name</em> if given.</li>
-<li><strong>units</strong> (<em>str</em><em>, </em><em>optional</em>) – CloudnetArray.units attribute if given.</li>
+<li><strong>cat_file</strong> – NetCDF file of categorized bins and information of
+measurements and instruments.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="categorize.ProfileDataSource">
-<em class="property">class </em><code class="descclassname">categorize.</code><code class="descname">ProfileDataSource</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#ProfileDataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.ProfileDataSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>ProfileDataSource class, child of DataSource.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – Raw lidar or radar file.</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="categorize.ProfileDataSource.height">
-<code class="descname">height</code><a class="headerlink" href="#categorize.ProfileDataSource.height" title="Permalink to this definition">¶</a></dt>
-<dd><p>Measurement height grid above mean sea level (m).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="categorize.Radar">
-<em class="property">class </em><code class="descclassname">categorize.</code><code class="descname">Radar</code><span class="sig-paren">(</span><em>radar_file</em>, <em>fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Radar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Radar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Radar class, child of ProfileDataSource.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>radar_file</strong> (<em>str</em>) – File name of the calibrated radar file.</li>
-<li><strong>fields</strong> (<em>tuple</em>) – Tuple of strings containing fields to be extracted
-from the <em>radar_file</em>, e.g (‘Zh’, ‘ldr’, ‘v’, ‘width’).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="categorize.Radar.radar_frequency">
-<code class="descname">radar_frequency</code><a class="headerlink" href="#categorize.Radar.radar_frequency" title="Permalink to this definition">¶</a></dt>
-<dd><p>Radar frequency (GHz).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.Radar.wl_band">
-<code class="descname">wl_band</code><a class="headerlink" href="#categorize.Radar.wl_band" title="Permalink to this definition">¶</a></dt>
-<dd><p>Int corresponding to frequency 0 = 35.5 GHz, 1 = 94 GHz.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">int</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.Radar.folding_velocity">
-<code class="descname">folding_velocity</code><a class="headerlink" href="#categorize.Radar.folding_velocity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Radar’s folding velocity (m/s).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.Radar.location">
-<code class="descname">location</code><a class="headerlink" href="#categorize.Radar.location" title="Permalink to this definition">¶</a></dt>
-<dd><p>Location of the radar, copied from the global attribute
-‘location’ of the <em>radar_file</em>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Radar.rebin_to_grid">
-<code class="descname">rebin_to_grid</code><span class="sig-paren">(</span><em>time_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Radar.rebin_to_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Radar.rebin_to_grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins radar data in time using mean.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_new</strong> (<em>ndarray</em>) – Target time array as fraction hour. Updates
-<em>time</em> attribute.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Radar.correct_atten">
-<code class="descname">correct_atten</code><span class="sig-paren">(</span><em>attenuations</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Radar.correct_atten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Radar.correct_atten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrects radar echo for liquid and gas attenuation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>attenuations</strong> (<em>dict</em>) – 2-D attenuations due to atmospheric gases.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Radar.calc_errors">
-<code class="descname">calc_errors</code><span class="sig-paren">(</span><em>attenuations</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Radar.calc_errors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Radar.calc_errors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates error and sensitivity of radar echo.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Radar.add_meta">
-<code class="descname">add_meta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Radar.add_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Radar.add_meta" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copies misc. metadata from the input file.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="categorize.Lidar">
-<em class="property">class </em><code class="descclassname">categorize.</code><code class="descname">Lidar</code><span class="sig-paren">(</span><em>lidar_file</em>, <em>fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Lidar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Lidar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Lidar class, child of ProfileDataSource.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>lidar_file</strong> (<em>str</em>) – File name of the calibrated lidar file.</li>
-<li><strong>fields</strong> (<em>tuple</em>) – Tuple of strings containing fields to be extracted
-from the <em>lidar_file</em>, e.g (‘beta’, ‘beta_raw’).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="categorize.Lidar.wavelength">
-<code class="descname">wavelength</code><a class="headerlink" href="#categorize.Lidar.wavelength" title="Permalink to this definition">¶</a></dt>
-<dd><p>Lidar wavelength (nm).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Lidar.rebin_to_grid">
-<code class="descname">rebin_to_grid</code><span class="sig-paren">(</span><em>time_new</em>, <em>height_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Lidar.rebin_to_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Lidar.rebin_to_grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins lidar data in time and height using mean.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>time_new</strong> (<em>ndarray</em>) – 1-D target time array (fraction hour).</li>
-<li><strong>height_new</strong> (<em>ndarray</em>) – 1-D target height array (m).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Lidar.add_meta">
-<code class="descname">add_meta</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Lidar.add_meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Lidar.add_meta" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copies misc. metadata from the input file.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="categorize.Mwr">
-<em class="property">class </em><code class="descclassname">categorize.</code><code class="descname">Mwr</code><span class="sig-paren">(</span><em>mwr_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Mwr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Mwr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Microwave radiometer class, child of DataSource.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mwr_file</strong> (<em>str</em>) – File name of the calibrated mwr file.</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
-<dt id="categorize.Mwr.interpolate_in_time">
-<code class="descname">interpolate_in_time</code><span class="sig-paren">(</span><em>time_grid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Mwr.interpolate_in_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Mwr.interpolate_in_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interpolates liquid water path to Cloudnet’s dense time grid.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="categorize.Model">
-<em class="property">class </em><code class="descclassname">categorize.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>model_file</em>, <em>alt_site</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Model class, child of DataSource.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>model_file</strong> (<em>str</em>) – File name of the NWP model file.</li>
-<li><strong>alt_site</strong> (<em>float</em>) – Altitude of the site above mean sea level (m).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
-<dt id="categorize.Model.type">
-<code class="descname">type</code><a class="headerlink" href="#categorize.Model.type" title="Permalink to this definition">¶</a></dt>
-<dd><p>Model type, e.g. ‘gdas1’ or ‘ecwmf’.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.Model.model_heights">
-<code class="descname">model_heights</code><a class="headerlink" href="#categorize.Model.model_heights" title="Permalink to this definition">¶</a></dt>
-<dd><p>2-D array of model heights (one for each time
-step).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.Model.mean_height">
-<code class="descname">mean_height</code><a class="headerlink" href="#categorize.Model.mean_height" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mean of <em>model_heights</em>.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.Model.data_sparse">
-<code class="descname">data_sparse</code><a class="headerlink" href="#categorize.Model.data_sparse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Model variables in common height grid but without
-interpolation in time.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dict</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.Model.data_dense">
-<code class="descname">data_dense</code><a class="headerlink" href="#categorize.Model.data_dense" title="Permalink to this definition">¶</a></dt>
-<dd><p>Model variables interpolated to Cloudnet’s dense
-time / height grid.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dict</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Model.interpolate_to_common_height">
-<code class="descname">interpolate_to_common_height</code><span class="sig-paren">(</span><em>wl_band</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Model.interpolate_to_common_height"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Model.interpolate_to_common_height" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interpolates model variables to common height grid.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>wl_band</strong> (<em>int</em>) – Integer denoting the wavelength band of the
-radar (0=35.5 GHz, 1=94 GHz).</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Model.interpolate_to_grid">
-<code class="descname">interpolate_to_grid</code><span class="sig-paren">(</span><em>time_grid</em>, <em>height_grid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Model.interpolate_to_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Model.interpolate_to_grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interpolates model variables to Cloudnet’s dense time / height grid.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>time_grid</strong> (<em>ndarray</em>) – The target time array (fraction hour).</li>
-<li><strong>height_grid</strong> (<em>ndarray</em>) – The target height array (m).</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Model.calc_wet_bulb">
-<code class="descname">calc_wet_bulb</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Model.calc_wet_bulb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Model.calc_wet_bulb" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates wet-bulb temperature in dense grid.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="categorize.Model.screen_fields">
-<code class="descname">screen_fields</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize.html#Model.screen_fields"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.Model.screen_fields" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes model fields that we don’t want to write in the output.</p>
-</dd></dl>
-
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_class</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_class</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
+</div>
+<div class="section" id="cloudnetpy-modules">
+<h1>Cloudnetpy modules<a class="headerlink" href="#cloudnetpy-modules" title="Permalink to this headline">¶</a></h1>
+<p>The various modules of CloudnetPy provide additional lower-level
+functions that are useful for development, testing and research
+purposes.</p>
 <div class="section" id="module-classify">
 <span id="cloudnetpy-classify"></span><h2>cloudnetpy.classify<a class="headerlink" href="#module-classify" title="Permalink to this headline">¶</a></h2>
 <p>Module containing low-level functions to classify gridded
 radar / lidar measurements.</p>
-<dl class="class">
-<dt id="classify.ClassificationResult">
-<em class="property">class </em><code class="descclassname">classify.</code><code class="descname">ClassificationResult</code><span class="sig-paren">(</span><em>category_bits: numpy.ndarray</em>, <em>is_rain: numpy.ndarray</em>, <em>is_clutter: numpy.ndarray</em>, <em>insect_prob: numpy.ndarray</em>, <em>liquid_bases: numpy.ndarray</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#ClassificationResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.ClassificationResult" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="function">
 <dt id="classify.classify_measurements">
 <code class="descclassname">classify.</code><code class="descname">classify_measurements</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#classify_measurements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.classify_measurements" title="Permalink to this definition">¶</a></dt>
@@ -658,9 +218,9 @@ time / height grid before calling this function.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>radar</strong> (<a class="reference internal" href="#categorize.Radar" title="categorize.Radar"><em>Radar</em></a>) – Radar data container.</li>
-<li><strong>lidar</strong> (<a class="reference internal" href="#categorize.Lidar" title="categorize.Lidar"><em>Lidar</em></a>) – Lidar data container.</li>
-<li><strong>classification</strong> (<a class="reference internal" href="#classify.ClassificationResult" title="classify.ClassificationResult"><em>ClassificationResult</em></a>) – Container for classification
+<li><strong>radar</strong> (<em>Radar</em>) – Radar data container.</li>
+<li><strong>lidar</strong> (<em>Lidar</em>) – Lidar data container.</li>
+<li><strong>classification</strong> (<em>_ClassificationResult</em>) – Container for classification
 results.</li>
 <li><strong>attenuations</strong> (<em>dict</em>) – </li>
 </ul>
@@ -734,7 +294,7 @@ clouds, with the temperature below -7 C are ice.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>ClassData</em>) – Container for observations.</li>
+<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
 <li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
 <li><strong>is_insects</strong> (<em>ndarray</em>) – 2-D boolean array of insects.</li>
 </ul>
@@ -764,7 +324,7 @@ interpolated for all profiles.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>ClassData</em>) – Input data container.</li>
+<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
 <li><strong>melting_layer</strong> (<em>ndarray</em>) – 2-D boolean array denoting melting layer.</li>
 </ul>
 </td>
@@ -806,7 +366,7 @@ liquid droplets pixels, melting layer pixels and too cold temperatures.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>ClassData</em>) – Input data container.</li>
+<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
 <li><strong>*args</strong> – Binary fields that are used to screen the
 insect probability. E.g. rain, clutter,
 melting_layer, etc.</li>
@@ -855,7 +415,7 @@ drops can even move upwards instead of down).</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>ClassData</em>) – Input data container.</li>
+<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
 <li><strong>smooth</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, apply a small
 Gaussian smoother to the melting layer. Default is True.</li>
 </ul>
@@ -922,7 +482,7 @@ categorize flag bits.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Attenuation due to atmospheric gases.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#cloudnetarray.CloudnetArray" title="cloudnetarray.CloudnetArray">CloudnetArray</a></p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">CloudnetArray</p>
 </td>
 </tr>
 </tbody>
@@ -950,9 +510,9 @@ categorize flag bits.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>mwr</strong> (<a class="reference internal" href="#categorize.Mwr" title="categorize.Mwr"><em>Mwr</em></a>) – Mwr data container.</li>
-<li><strong>model</strong> (<a class="reference internal" href="#categorize.Model" title="categorize.Model"><em>Model</em></a>) – Model data container.</li>
-<li><strong>classification</strong> (<a class="reference internal" href="#classify.ClassificationResult" title="classify.ClassificationResult"><em>ClassificationResult</em></a>) – Classification container.</li>
+<li><strong>mwr</strong> (<em>Mwr</em>) – Mwr data container.</li>
+<li><strong>model</strong> (<em>Model</em>) – Model data container.</li>
+<li><strong>classification</strong> (<em>ClassificationResult</em>) – Classification container.</li>
 <li><strong>height</strong> (<em>ndarray</em>) – 1-D altitude grid (m).</li>
 </ul>
 </td>
@@ -1250,115 +810,6 @@ height, or pressure, given the cloud base temperature and pressure.</p>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-cloudnetarray">
-<span id="cloudnetpy-cloudnetarray"></span><h2>cloudnetpy.cloudnetarray<a class="headerlink" href="#module-cloudnetarray" title="Permalink to this headline">¶</a></h2>
-<p>CloudnetArray class.</p>
-<dl class="class">
-<dt id="cloudnetarray.CloudnetArray">
-<em class="property">class </em><code class="descclassname">cloudnetarray.</code><code class="descname">CloudnetArray</code><span class="sig-paren">(</span><em>netcdf4_variable</em>, <em>name</em>, <em>units_from_user=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores NetCDF variables as CloudnetArrays.</p>
-<dl class="attribute">
-<dt id="cloudnetarray.CloudnetArray.name">
-<code class="descname">name</code><a class="headerlink" href="#cloudnetarray.CloudnetArray.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>Name of the variable.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="cloudnetarray.CloudnetArray.data">
-<code class="descname">data</code><a class="headerlink" href="#cloudnetarray.CloudnetArray.data" title="Permalink to this definition">¶</a></dt>
-<dd><p>The actual data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">array_like</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="cloudnetarray.CloudnetArray.data_type">
-<code class="descname">data_type</code><a class="headerlink" href="#cloudnetarray.CloudnetArray.data_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>‘i4’ for integers, ‘f4’ for floats.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="cloudnetarray.CloudnetArray.units">
-<code class="descname">units</code><a class="headerlink" href="#cloudnetarray.CloudnetArray.units" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copied from the original netcdf4
-variable (if existing).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="cloudnetarray.CloudnetArray.db2lin">
-<code class="descname">db2lin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.db2lin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.db2lin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts log units to linear.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cloudnetarray.CloudnetArray.fetch_attributes">
-<code class="descname">fetch_attributes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.fetch_attributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.fetch_attributes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns list of user-defined attributes.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cloudnetarray.CloudnetArray.lin2db">
-<code class="descname">lin2db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.lin2db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.lin2db" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts linear units do log.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cloudnetarray.CloudnetArray.mask_indices">
-<code class="descname">mask_indices</code><span class="sig-paren">(</span><em>ind</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.mask_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.mask_indices" title="Permalink to this definition">¶</a></dt>
-<dd><p>Masks data from given indices.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cloudnetarray.CloudnetArray.rebin_data">
-<code class="descname">rebin_data</code><span class="sig-paren">(</span><em>time</em>, <em>time_new</em>, <em>height=None</em>, <em>height_new=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.rebin_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.rebin_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins data in time and optionally in height.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cloudnetarray.CloudnetArray.rebin_in_polar">
-<code class="descname">rebin_in_polar</code><span class="sig-paren">(</span><em>time</em>, <em>time_new</em>, <em>folding_velocity</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.rebin_in_polar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.rebin_in_polar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins velocity in polar coordinates.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="cloudnetarray.CloudnetArray.set_attributes">
-<code class="descname">set_attributes</code><span class="sig-paren">(</span><em>attributes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.set_attributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.set_attributes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set some attributes if they exist.</p>
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -1790,8 +1241,8 @@ with shape (N,).</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.seconds2hour">
-<code class="descclassname">utils.</code><code class="descname">seconds2hour</code><span class="sig-paren">(</span><em>time_in_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hour"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hour" title="Permalink to this definition">¶</a></dt>
+<dt id="utils.seconds2hours">
+<code class="descclassname">utils.</code><code class="descname">seconds2hours</code><span class="sig-paren">(</span><em>time_in_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hours"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hours" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts seconds since some epoch to fraction hour.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1873,6 +1324,50 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
 
 </div>
 </div>
+<div class="section" id="products-modules">
+<h1>Products modules<a class="headerlink" href="#products-modules" title="Permalink to this headline">¶</a></h1>
+<p>Products is a CloudnetPy’s sub-package. It contains
+several modules that correspond to different Cloudnet
+products.</p>
+<div class="section" id="module-products.classification">
+<span id="products-classification"></span><h2>products.classification<a class="headerlink" href="#module-products.classification" title="Permalink to this headline">¶</a></h2>
+<p>Module for creating classification file.</p>
+<dl class="function">
+<dt id="products.classification.check_active_bits">
+<code class="descclassname">products.classification.</code><code class="descname">check_active_bits</code><span class="sig-paren">(</span><em>cb</em>, <em>keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#check_active_bits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.check_active_bits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check is observed bin active or not, returns boolean array of
+active and unactive bin index</p>
+</dd></dl>
+
+<dl class="function">
+<dt>
+<code class="descclassname">products.classification.</code><code class="descname">generate_class</code><span class="sig-paren">(</span><em>cat_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_class"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Makes classification for different types of targets at atmosphere.</p>
+<p>Generates categorized bins to 10 types of different targets in atmosphere
+as well as instrument status classification. Classifications are saved to
+NetCDF file with information of classification and measurements.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>cat_file</strong> – NetCDF file of categorized bins and information of
+measurements and instruments.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_class</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_class</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
 
 
           </div>
@@ -1882,15 +1377,21 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">High-level APIs</a></li>
-<li><a class="reference internal" href="#modules">Modules</a><ul>
-<li><a class="reference internal" href="#module-categorize">cloudnetpy.categorize</a></li>
+<li><a class="reference internal" href="#">High-level APIs</a><ul>
+<li><a class="reference internal" href="#raw-data-to-categorize">Raw data to categorize</a></li>
+<li><a class="reference internal" href="#categorize-to-products">Categorize to products</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cloudnetpy-modules">Cloudnetpy modules</a><ul>
 <li><a class="reference internal" href="#module-classify">cloudnetpy.classify</a></li>
 <li><a class="reference internal" href="#module-atmos">cloudnetpy.atmos</a></li>
 <li><a class="reference internal" href="#module-droplet">cloudnetpy.droplet</a></li>
 <li><a class="reference internal" href="#module-lwc">cloudnetpy.lwc</a></li>
-<li><a class="reference internal" href="#module-cloudnetarray">cloudnetpy.cloudnetarray</a></li>
 <li><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#products-modules">Products modules</a><ul>
+<li><a class="reference internal" href="#module-products.classification">products.classification</a></li>
 </ul>
 </li>
 </ul>

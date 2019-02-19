@@ -2,7 +2,7 @@
 import math
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import utils
+from . import utils
 
 
 class CloudnetArray:
@@ -63,7 +63,11 @@ class CloudnetArray:
 
     def rebin_in_polar(self, time, time_new, folding_velocity,
                        sequence_indices):
-        """Rebins velocity in polar coordinates."""
+        """Rebins velocity in polar coordinates.
+
+        Velocity needs to be averaged in polar coordinates due to folding.
+
+        """
         def _scale(source, target, fun):
             for i, ind in enumerate(sequence_indices):
                 target[:, ind] = fun(source[:, ind], folding_velocity_scaled[i])

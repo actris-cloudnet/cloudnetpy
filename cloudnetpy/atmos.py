@@ -1,13 +1,10 @@
 """ This module contains functions to calculate
 various atmospheric parameters.
 """
-
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import constants as con
-from cloudnetpy import lwc
-from cloudnetpy import utils
-from cloudnetpy.cloudnetarray import CloudnetArray
+from . import constants as con
+from . import lwc, utils
 
 
 def c2k(temp):
@@ -120,7 +117,8 @@ def gas_atten(model, cat_bits, height):
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
-        CloudnetArray: Attenuation due to atmospheric gases.
+        dict: 'radar_gas_atten' containing the attenuation
+            due to atmospheric gases.
 
     """
     dheight = utils.mdiff(height)

@@ -41,6 +41,7 @@
   <h1>Source code for categorize</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot; Functions for rebinning input data.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">netCDF4</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -55,7 +56,7 @@
 <span class="kn">from</span> <span class="nn">cloudnetpy.cloudnetarray</span> <span class="k">import</span> <span class="n">CloudnetArray</span>
 
 
-<div class="viewcode-block" id="DataSource"><a class="viewcode-back" href="../api.html#categorize.DataSource">[docs]</a><span class="k">class</span> <span class="nc">DataSource</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">DataSource</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Base class for all Cloudnet measurements and model data.</span>
 
 <span class="sd">    Args:</span>
@@ -72,7 +73,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">netCDF4</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">variables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">variables</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>  <span class="c1"># is this ok here?</span>
@@ -83,7 +84,7 @@
     <span class="k">def</span> <span class="nf">_init_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">max</span><span class="p">(</span><span class="n">time</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">24</span><span class="p">:</span>
-            <span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seconds2hours</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+            <span class="n">time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">seconds2hours</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">time</span>
 
     <span class="k">def</span> <span class="nf">_init_altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -94,7 +95,21 @@
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_getvar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Returns data (without attributes) from the source file.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Returns data array from the source file variables.</span>
+
+<span class="sd">        Returns just the data (and no attributes) from the original variables</span>
+<span class="sd">        dictionary, fetched from the input NetCDF file.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            *args: possible names of the variable. The first match is returned.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            MaskedArray: The actual data.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">             KeyError: The variable is not found.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">arg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">arg</span><span class="p">][:]</span>
@@ -107,64 +122,60 @@
 <span class="sd">            fields (tuple): netCDF4-variables to be converted. The results are</span>
 <span class="sd">                saved in *self.data* dictionary with *fields* strings as keys.</span>
 
+<span class="sd">        Notes:</span>
+<span class="sd">            The attributes of the variables are not copied. Just the data.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">key</span><span class="p">)</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_seconds2hours</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Converts seconds since some epoch to fraction hour.</span>
+    <span class="k">def</span> <span class="nf">_unknown_to_cloudnet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">possible_names</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Transforms single netCDF4 variable into CloudnetArray.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            time_in_seconds (ndarray): 1-D array of seconds since some epoch</span>
-<span class="sd">                that starts on midnight.</span>
+<span class="sd">            possible_names(tuple): Tuple of strings containing the possible</span>
+<span class="sd">                names of the variable in the input NetCDF file.</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            ndarray: Time as fraction hour.</span>
+<span class="sd">            key(str): Key for self.data dictionary and name-attribute for</span>
+<span class="sd">                the saved CloudnetArray object.</span>
 
-<span class="sd">        Notes:</span>
-<span class="sd">            Excludes leap seconds.</span>
+<span class="sd">            units(str, optional): Units-attribute for the CloudnetArray object.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">seconds_per_hour</span> <span class="o">=</span> <span class="mi">3600</span>
-        <span class="n">seconds_per_day</span> <span class="o">=</span> <span class="mi">86400</span>
-        <span class="n">seconds_since_midnight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">time_in_seconds</span><span class="p">,</span> <span class="n">seconds_per_day</span><span class="p">)</span>
-        <span class="n">fraction_hour</span> <span class="o">=</span> <span class="n">seconds_since_midnight</span> <span class="o">/</span> <span class="n">seconds_per_hour</span>
-        <span class="k">if</span> <span class="n">fraction_hour</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">fraction_hour</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">24</span>
-        <span class="k">return</span> <span class="n">fraction_hour</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="o">*</span><span class="n">possible_names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">units</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DataSource.km2m"><a class="viewcode-back" href="../api.html#categorize.DataSource.km2m">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">km2m</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Converts km to m.&quot;&quot;&quot;</span>
         <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
         <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;km&#39;</span><span class="p">:</span>
-            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span> <span class="o">*</span> <span class="mi">1000</span>
-        <span class="k">return</span> <span class="n">alt</span></div>
+            <span class="n">alt</span> <span class="o">*=</span> <span class="mi">1000</span>
+        <span class="k">return</span> <span class="n">alt</span>
 
-<div class="viewcode-block" id="DataSource.m2km"><a class="viewcode-back" href="../api.html#categorize.DataSource.m2km">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">m2km</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Converts m to km.&quot;&quot;&quot;</span>
         <span class="n">alt</span> <span class="o">=</span> <span class="n">var</span><span class="p">[:]</span>
         <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">units</span> <span class="o">==</span> <span class="s1">&#39;m&#39;</span><span class="p">:</span>
-            <span class="n">alt</span> <span class="o">=</span> <span class="n">alt</span> <span class="o">/</span> <span class="mi">1000</span>
-        <span class="k">return</span> <span class="n">alt</span></div>
+            <span class="n">alt</span> <span class="o">/=</span> <span class="mi">1000</span>
+        <span class="k">return</span> <span class="n">alt</span>
 
-<div class="viewcode-block" id="DataSource.append_data"><a class="viewcode-back" href="../api.html#categorize.DataSource.append_data">[docs]</a>    <span class="k">def</span> <span class="nf">append_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">append_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Adds new CloudnetVariable into self.data dictionary.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            data (ndarray): Data to be added.</span>
 <span class="sd">            key (str): Key for self.data dict.</span>
-<span class="sd">            name (str, optional): CloudnetArray.name attribute that is *key*</span>
-<span class="sd">                by default but *name* if given.</span>
-<span class="sd">            units (str, optional): CloudnetArray.units attribute if given.</span>
+<span class="sd">            name (str, optional): CloudnetArray.name attribute. Default value</span>
+<span class="sd">                is *key*.</span>
+<span class="sd">            units (str, optional): CloudnetArray.units attribute.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">CloudnetArray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">key</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">CloudnetArray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">key</span><span class="p">,</span> <span class="n">units</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ProfileDataSource"><a class="viewcode-back" href="../api.html#categorize.ProfileDataSource">[docs]</a><span class="k">class</span> <span class="nc">ProfileDataSource</span><span class="p">(</span><span class="n">DataSource</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ProfileDataSource</span><span class="p">(</span><span class="n">DataSource</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;ProfileDataSource class, child of DataSource.</span>
 
 <span class="sd">    Args:</span>
@@ -181,16 +192,14 @@
     <span class="k">def</span> <span class="nf">_get_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns height array above mean sea level (m).&quot;&quot;&quot;</span>
         <span class="n">range_instrument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">range_instrument</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">range_instrument</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">altitude</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Radar"><a class="viewcode-back" href="../api.html#categorize.Radar">[docs]</a><span class="k">class</span> <span class="nc">Radar</span><span class="p">(</span><span class="n">ProfileDataSource</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Radar</span><span class="p">(</span><span class="n">ProfileDataSource</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Radar class, child of ProfileDataSource.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        radar_file (str): File name of the calibrated radar file.</span>
-<span class="sd">        fields (tuple): Tuple of strings containing fields to be extracted</span>
-<span class="sd">            from the *radar_file*, e.g (&#39;Zh&#39;, &#39;ldr&#39;, &#39;v&#39;, &#39;width&#39;).</span>
 
 <span class="sd">    Attributes:</span>
 <span class="sd">        radar_frequency (float): Radar frequency (GHz).</span>
@@ -200,28 +209,39 @@
 <span class="sd">            &#39;location&#39; of the *radar_file*.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radar_file</span><span class="p">,</span> <span class="n">fields</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radar_file</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">radar_file</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">radar_frequency</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="s1">&#39;radar_frequency&#39;</span><span class="p">,</span>
                                                   <span class="s1">&#39;frequency&#39;</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wl_band</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_wl_band</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">folding_velocity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_folding_velocity</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequence_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_sequence_indices</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_netcdf_to_cloudnet</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_netcdf_to_cloudnet</span><span class="p">((</span><span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_unknown_to_cloudnet</span><span class="p">((</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;Zv&#39;</span><span class="p">,</span> <span class="s1">&#39;Ze&#39;</span><span class="p">),</span> <span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;dBZ&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_get_wl_band</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="p">(</span><span class="mi">30</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">radar_frequency</span> <span class="o">&lt;</span> <span class="mi">40</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
 
+    <span class="k">def</span> <span class="nf">_get_sequence_indices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Mira has only one sequence and one folding velocity. RPG has</span>
+<span class="sd">        several sequences with different folding velocities.&quot;&quot;&quot;</span>
+        <span class="n">all_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">utils</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">folding_velocity</span><span class="p">):</span>
+            <span class="n">starting_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="s1">&#39;chirp_start_indices&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">all_indices</span><span class="p">,</span> <span class="n">starting_indices</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">all_indices</span><span class="p">]</span>
+
     <span class="k">def</span> <span class="nf">_get_folding_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="s1">&#39;NyquistVelocity&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="s1">&#39;NyquistVelocity&#39;</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="s1">&#39;prf&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;nyquist_velocity&#39;</span><span class="p">,</span> <span class="s1">&#39;NyquistVelocity&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;prf&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="s1">&#39;prf&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">scipy</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">c</span>
                          <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radar_frequency</span> <span class="o">*</span> <span class="mf">1e9</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Unable to determine folding velocity&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Unable to determine folding velocity&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Radar.rebin_to_grid"><a class="viewcode-back" href="../api.html#categorize.Radar.rebin_to_grid">[docs]</a>    <span class="k">def</span> <span class="nf">rebin_to_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_new</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">rebin_to_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_new</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Rebins radar data in time using mean.</span>
 
 <span class="sd">        Args:</span>
@@ -230,31 +250,33 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,):</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;Z&#39;</span><span class="p">,):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">db2lin</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">rebin_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">lin2db</span><span class="p">()</span>
             <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;v&#39;</span><span class="p">,):</span>
+                <span class="c1"># This has some problems with RPG data when folding is present</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">rebin_in_polar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">time_new</span><span class="p">,</span>
-                                              <span class="bp">self</span><span class="o">.</span><span class="n">folding_velocity</span><span class="p">)</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">folding_velocity</span><span class="p">,</span>
+                                              <span class="bp">self</span><span class="o">.</span><span class="n">sequence_indices</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">rebin_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">time_new</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time_new</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time_new</span>
 
-<div class="viewcode-block" id="Radar.correct_atten"><a class="viewcode-back" href="../api.html#categorize.Radar.correct_atten">[docs]</a>    <span class="k">def</span> <span class="nf">correct_atten</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attenuations</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">correct_atten</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attenuations</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Corrects radar echo for liquid and gas attenuation.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            attenuations (dict): 2-D attenuations due to atmospheric gases.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">z_corrected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">][:]</span>
+        <span class="n">z_corrected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">][:]</span>
         <span class="n">z_corrected</span> <span class="o">+=</span> <span class="n">attenuations</span><span class="p">[</span><span class="s1">&#39;radar_gas_atten&#39;</span><span class="p">]</span>
         <span class="n">ind</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">attenuations</span><span class="p">[</span><span class="s1">&#39;radar_liquid_atten&#39;</span><span class="p">])</span>
         <span class="n">z_corrected</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">+=</span> <span class="n">attenuations</span><span class="p">[</span><span class="s1">&#39;radar_liquid_atten&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">z_corrected</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">z_corrected</span><span class="p">,</span> <span class="s1">&#39;Z&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Radar.calc_errors"><a class="viewcode-back" href="../api.html#categorize.Radar.calc_errors">[docs]</a>    <span class="k">def</span> <span class="nf">calc_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attenuations</span><span class="p">,</span> <span class="n">classification</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">calc_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attenuations</span><span class="p">,</span> <span class="n">classification</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculates error and sensitivity of radar echo.&quot;&quot;&quot;</span>
 
         <span class="k">def</span> <span class="nf">_calc_sensitivity</span><span class="p">():</span>
@@ -280,24 +302,24 @@
             <span class="k">return</span> <span class="p">(</span><span class="n">dwell_time</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radar_frequency</span> <span class="o">*</span> <span class="mf">1e9</span> <span class="o">*</span> <span class="mi">4</span>
                     <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">][:]</span> <span class="o">/</span> <span class="mf">3e8</span><span class="p">)</span>
 
-        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Zh&#39;</span><span class="p">][:]</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">][:]</span>
         <span class="n">radar_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;range&#39;</span><span class="p">])</span>
         <span class="n">log_range</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">lin2db</span><span class="p">(</span><span class="n">radar_range</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
         <span class="n">z_power</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">log_range</span>
         <span class="n">z_power_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">z_power</span><span class="o">.</span><span class="n">compressed</span><span class="p">(),</span> <span class="mf">0.1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">_calc_error</span><span class="p">(),</span> <span class="s1">&#39;Z_error&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">_calc_sensitivity</span><span class="p">(),</span> <span class="s1">&#39;Z_sensitivity&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">Z_BIAS</span><span class="p">,</span> <span class="s1">&#39;Z_bias&#39;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">Z_BIAS</span><span class="p">,</span> <span class="s1">&#39;Z_bias&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Radar.add_meta"><a class="viewcode-back" href="../api.html#categorize.Radar.add_meta">[docs]</a>    <span class="k">def</span> <span class="nf">add_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">add_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Copies misc. metadata from the input file.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">,</span> <span class="s1">&#39;altitude&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;time&#39;</span><span class="p">,</span> <span class="s1">&#39;height&#39;</span><span class="p">,</span> <span class="s1">&#39;radar_frequency&#39;</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span></div></div>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Lidar"><a class="viewcode-back" href="../api.html#categorize.Lidar">[docs]</a><span class="k">class</span> <span class="nc">Lidar</span><span class="p">(</span><span class="n">ProfileDataSource</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Lidar</span><span class="p">(</span><span class="n">ProfileDataSource</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Lidar class, child of ProfileDataSource.</span>
 
 <span class="sd">    Args:</span>
@@ -314,7 +336,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_netcdf_to_cloudnet</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="s1">&#39;wavelength&#39;</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Lidar.rebin_to_grid"><a class="viewcode-back" href="../api.html#categorize.Lidar.rebin_to_grid">[docs]</a>    <span class="k">def</span> <span class="nf">rebin_to_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_new</span><span class="p">,</span> <span class="n">height_new</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">rebin_to_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_new</span><span class="p">,</span> <span class="n">height_new</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Rebins lidar data in time and height using mean.</span>
 
 <span class="sd">        Args:</span>
@@ -324,16 +346,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">rebin_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">time_new</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span>
-                                      <span class="n">height_new</span><span class="p">)</span></div>
+                                      <span class="n">height_new</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Lidar.add_meta"><a class="viewcode-back" href="../api.html#categorize.Lidar.add_meta">[docs]</a>    <span class="k">def</span> <span class="nf">add_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">add_meta</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Copies misc. metadata from the input file.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wavelength</span><span class="p">,</span> <span class="s1">&#39;lidar_wavelength&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">BETA_ERROR</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;beta_bias&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">BETA_ERROR</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;beta_error&#39;</span><span class="p">)</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">BETA_ERROR</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="s1">&#39;beta_error&#39;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Mwr"><a class="viewcode-back" href="../api.html#categorize.Mwr">[docs]</a><span class="k">class</span> <span class="nc">Mwr</span><span class="p">(</span><span class="n">DataSource</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Mwr</span><span class="p">(</span><span class="n">DataSource</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Microwave radiometer class, child of DataSource.</span>
 
 <span class="sd">    Args:</span>
@@ -347,8 +369,7 @@
 
     <span class="k">def</span> <span class="nf">_init_lwp_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">lwp_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getvar</span><span class="p">(</span><span class="s1">&#39;LWP_data&#39;</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">lwp_data</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_unknown_to_cloudnet</span><span class="p">((</span><span class="s1">&#39;LWP_data&#39;</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">),</span> <span class="s1">&#39;lwp&#39;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
 
@@ -358,14 +379,14 @@
                                  <span class="n">linear_error</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">lwp_error</span><span class="p">,</span> <span class="s1">&#39;lwp_error&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Mwr.interpolate_in_time"><a class="viewcode-back" href="../api.html#categorize.Mwr.interpolate_in_time">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate_in_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_grid</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">interpolate_in_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_grid</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Interpolates liquid water path to Cloudnet&#39;s dense time grid.&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
-            <span class="n">fun</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][:])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">fun</span><span class="p">(</span><span class="n">time_grid</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span></div></div>
+            <span class="n">fun</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][:],</span> <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;extrapolate&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">fun</span><span class="p">(</span><span class="n">time_grid</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../api.html#categorize.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">DataSource</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">DataSource</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Model class, child of DataSource.</span>
 
 <span class="sd">    Args:</span>
@@ -412,7 +433,7 @@
     <span class="k">def</span> <span class="nf">_get_mean_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_heights</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Model.interpolate_to_common_height"><a class="viewcode-back" href="../api.html#categorize.Model.interpolate_to_common_height">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate_to_common_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wl_band</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">interpolate_to_common_height</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wl_band</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Interpolates model variables to common height grid.</span>
 
 <span class="sd">        Args:</span>
@@ -435,9 +456,9 @@
                 <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">wl_band</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">data_sparse</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_interpolate_variable</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="s1">&#39;model_time&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_height</span><span class="p">,</span> <span class="s1">&#39;model_height&#39;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean_height</span><span class="p">,</span> <span class="s1">&#39;model_height&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Model.interpolate_to_grid"><a class="viewcode-back" href="../api.html#categorize.Model.interpolate_to_grid">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate_to_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_grid</span><span class="p">,</span> <span class="n">height_grid</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">interpolate_to_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_grid</span><span class="p">,</span> <span class="n">height_grid</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Interpolates model variables to Cloudnet&#39;s dense time / height grid.</span>
 
 <span class="sd">        Args:</span>
@@ -449,18 +470,18 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">data_dense</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">interpolate_2d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span>
                                                         <span class="bp">self</span><span class="o">.</span><span class="n">mean_height</span><span class="p">,</span>
                                                         <span class="bp">self</span><span class="o">.</span><span class="n">data_sparse</span><span class="p">[</span><span class="n">key</span><span class="p">][:],</span>
-                                                        <span class="n">time_grid</span><span class="p">,</span> <span class="n">height_grid</span><span class="p">)</span></div>
+                                                        <span class="n">time_grid</span><span class="p">,</span> <span class="n">height_grid</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Model.calc_wet_bulb"><a class="viewcode-back" href="../api.html#categorize.Model.calc_wet_bulb">[docs]</a>    <span class="k">def</span> <span class="nf">calc_wet_bulb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">calc_wet_bulb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Calculates wet-bulb temperature in dense grid.&quot;&quot;&quot;</span>
         <span class="n">wet_bulb_temp</span> <span class="o">=</span> <span class="n">atmos</span><span class="o">.</span><span class="n">wet_bulb</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_dense</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">wet_bulb_temp</span><span class="p">,</span> <span class="s1">&#39;Tw&#39;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">wet_bulb_temp</span><span class="p">,</span> <span class="s1">&#39;Tw&#39;</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;K&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Model.screen_fields"><a class="viewcode-back" href="../api.html#categorize.Model.screen_fields">[docs]</a>    <span class="k">def</span> <span class="nf">screen_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">screen_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Removes model fields that we don&#39;t want to write in the output.&quot;&quot;&quot;</span>
         <span class="n">fields_to_keep</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;pressure&#39;</span><span class="p">,</span> <span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="s1">&#39;uwind&#39;</span><span class="p">,</span> <span class="s1">&#39;vwind&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">data_sparse</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_sparse</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-                            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fields_to_keep</span><span class="p">}</span></div></div>
+                            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fields_to_keep</span><span class="p">}</span>
 
 
 <div class="viewcode-block" id="generate_categorize"><a class="viewcode-back" href="../api.html#categorize.generate_categorize">[docs]</a><span class="k">def</span> <span class="nf">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="n">output_file</span><span class="p">):</span>
@@ -474,13 +495,23 @@
 <span class="sd">    file.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        input_files (tuple): Tuple of strings containing full paths of</span>
-<span class="sd">                             the 4 input files (radar, lidar, mwr, model).</span>
+<span class="sd">        input_files (dict): dict containing file names for &#39;radar&#39;, &#39;lidar&#39;</span>
+<span class="sd">            &#39;model&#39; and optionally &#39;mwr&#39; if liquid water path is not</span>
+<span class="sd">            included in the radar file.</span>
 <span class="sd">        output_file (str): Full path of the output file.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Separate mwr-file is not needed when using RPG cloud radar which</span>
+<span class="sd">        measures liquid water path. Then, the radar file can be used as</span>
+<span class="sd">        a mwr-file as well, i.e. {&#39;mwr&#39;: &#39;radar.nc&#39;}.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; from cloudnetpy.categorize import generate_categorize</span>
-<span class="sd">        &gt;&gt;&gt; generate_categorize((&#39;radar.nc&#39;, &#39;lidar.nc&#39;, &#39;mwr.nc&#39;, &#39;model.nc&#39;), &#39;output.nc&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; input_files = {&#39;radar&#39;: &#39;radar.nc&#39;,</span>
+<span class="sd">                           &#39;lidar&#39;: &#39;lidar.nc&#39;,</span>
+<span class="sd">                           &#39;model&#39;: &#39;model.nc&#39;,</span>
+<span class="sd">                           &#39;mwr&#39;: &#39;mwr.nc&#39;}</span>
+<span class="sd">        &gt;&gt;&gt; generate_categorize(input_files, &#39;output.nc&#39;)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -503,10 +534,10 @@
         <span class="n">radar</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">quality</span><span class="p">[</span><span class="s1">&#39;quality_bits&#39;</span><span class="p">],</span> <span class="s1">&#39;quality_bits&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">lidar</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">model</span><span class="o">.</span><span class="n">data_sparse</span><span class="p">,</span> <span class="o">**</span><span class="n">mwr</span><span class="o">.</span><span class="n">data</span><span class="p">}</span>
 
-    <span class="n">radar</span> <span class="o">=</span> <span class="n">Radar</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="s1">&#39;Zh&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">))</span>
-    <span class="n">lidar</span> <span class="o">=</span> <span class="n">Lidar</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;beta_raw&#39;</span><span class="p">))</span>
-    <span class="n">mwr</span> <span class="o">=</span> <span class="n">Mwr</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">radar</span><span class="o">.</span><span class="n">altitude</span><span class="p">)</span>
+    <span class="n">radar</span> <span class="o">=</span> <span class="n">Radar</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="s1">&#39;radar&#39;</span><span class="p">])</span>
+    <span class="n">lidar</span> <span class="o">=</span> <span class="n">Lidar</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="s1">&#39;lidar&#39;</span><span class="p">],</span> <span class="p">(</span><span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="p">))</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">Model</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="s1">&#39;model&#39;</span><span class="p">],</span> <span class="n">radar</span><span class="o">.</span><span class="n">altitude</span><span class="p">)</span>
+    <span class="n">mwr</span> <span class="o">=</span> <span class="n">Mwr</span><span class="p">(</span><span class="n">input_files</span><span class="p">[</span><span class="s1">&#39;mwr&#39;</span><span class="p">])</span>
     <span class="n">time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">time_grid</span><span class="p">()</span>
     <span class="n">height</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">height</span>
     <span class="n">_interpolate_to_cloudnet_grid</span><span class="p">()</span>
@@ -529,18 +560,12 @@
         <span class="s1">&#39;model_time&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">time</span><span class="p">),</span>
         <span class="s1">&#39;model_height&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">mean_height</span><span class="p">)}</span>
     <span class="n">rootgrp</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">init_file</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">zlib</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">output</span><span class="o">.</span><span class="n">copy_global</span><span class="p">(</span><span class="n">radar</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">rootgrp</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;month&#39;</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">))</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">copy_global</span><span class="p">(</span><span class="n">radar</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">rootgrp</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;month&#39;</span><span class="p">,</span> <span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">))</span>
     <span class="n">rootgrp</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Categorize file from </span><span class="si">{radar.location}</span><span class="s2">&quot;</span>
     <span class="n">rootgrp</span><span class="o">.</span><span class="n">references</span> <span class="o">=</span> <span class="s1">&#39;https://doi.org/10.1175/BAMS-88-6-883&#39;</span>
-    <span class="n">_merge_history</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="n">radar</span><span class="p">)</span>
+    <span class="n">output</span><span class="o">.</span><span class="n">merge_history</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="s1">&#39;categorize&#39;</span><span class="p">,</span> <span class="n">radar</span><span class="p">)</span>
     <span class="n">_merge_source</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">)</span>
     <span class="n">rootgrp</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-
-
-<span class="k">def</span> <span class="nf">_merge_history</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="n">radar</span><span class="p">):</span>
-    <span class="n">radar_history</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">history</span>
-    <span class="n">cat_history</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;{utils.get_time()} - categorize file created&quot;</span>
-    <span class="n">rootgrp</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{cat_history}</span><span class="se">\n</span><span class="si">{radar_history}</span><span class="s2">&quot;</span>
 
 
 <span class="k">def</span> <span class="nf">_merge_source</span><span class="p">(</span><span class="n">rootgrp</span><span class="p">,</span> <span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">):</span>

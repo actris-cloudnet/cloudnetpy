@@ -1,17 +1,14 @@
 """ Functions for rebinning input data.
 """
+import os
 import math
 import netCDF4
 import numpy as np
 import numpy.ma as ma
 import scipy.constants
 from scipy.interpolate import interp1d
-from cloudnetpy import atmos
-from cloudnetpy import classify
-from cloudnetpy import config
-from cloudnetpy import output
-from cloudnetpy import utils
-from cloudnetpy.cloudnetarray import CloudnetArray
+from . import atmos, classify, config, output, utils
+from .cloudnetarray import CloudnetArray
 
 
 class DataSource:
@@ -31,7 +28,7 @@ class DataSource:
 
     """
     def __init__(self, filename):
-        self.filename = filename
+        self.filename = os.path.basename(filename)
         self.dataset = netCDF4.Dataset(filename)
         self.variables = self.dataset.variables
         self.source = getattr(self.dataset, 'source', '')  # is this ok here?
@@ -53,7 +50,21 @@ class DataSource:
         return None
 
     def _getvar(self, *args):
-        """Returns data (without attributes) from the source file."""
+        """Returns data array from the source file variables.
+
+        Returns just the data (and no attributes) from the original variables
+        dictionary, fetched from the input NetCDF file.
+
+        Args:
+            *args: possible names of the variable. The first match is returned.
+
+        Returns:
+            MaskedArray: The actual data.
+
+        Raises:
+             KeyError: The variable is not found.
+
+        """
         for arg in args:
             if arg in self.variables:
                 return self.variables[arg][:]
@@ -66,12 +77,26 @@ class DataSource:
             fields (tuple): netCDF4-variables to be converted. The results are
                 saved in *self.data* dictionary with *fields* strings as keys.
 
+        Notes:
+            The attributes of the variables are not copied. Just the data.
+
         """
         for key in fields:
             self.append_data(self.variables[key], key)
 
     def _unknown_to_cloudnet(self, possible_names, key, units=None):
-        """Transforms netCDF4 variable with several possible names into CloudnetArray."""
+        """Transforms single netCDF4 variable into CloudnetArray.
+
+        Args:
+            possible_names(tuple): Tuple of strings containing the possible
+                names of the variable in the input NetCDF file.
+
+            key(str): Key for self.data dictionary and name-attribute for
+                the saved CloudnetArray object.
+
+            units(str, optional): Units-attribute for the CloudnetArray object.
+
+        """
         array = self._getvar(*possible_names)
         self.append_data(array, key, units=units)
 
@@ -80,7 +105,7 @@ class DataSource:
         """Converts km to m."""
         alt = var[:]
         if var.units == 'km':
-            alt = alt * 1000
+            alt *= 1000
         return alt
 
     @staticmethod
@@ -88,7 +113,7 @@ class DataSource:
         """Converts m to km."""
         alt = var[:]
         if var.units == 'm':
-            alt = alt / 1000
+            alt /= 1000
         return alt
 
     def append_data(self, data, key, name=None, units=None):
@@ -97,9 +122,9 @@ class DataSource:
         Args:
             data (ndarray): Data to be added.
             key (str): Key for self.data dict.
-            name (str, optional): CloudnetArray.name attribute that is *key*
-                by default but *name* if given.
-            units (str, optional): CloudnetArray.units attribute if given.
+            name (str, optional): CloudnetArray.name attribute. Default value
+                is *key*.
+            units (str, optional): CloudnetArray.units attribute.
 
         """
         self.data[key] = CloudnetArray(data, name or key, units)
@@ -312,7 +337,7 @@ class Mwr(DataSource):
     def interpolate_in_time(self, time_grid):
         """Interpolates liquid water path to Cloudnet's dense time grid."""
         for key in self.data:
-            fun = interp1d(self.time, self.data[key][:])
+            fun = interp1d(self.time, self.data[key][:], fill_value='extrapolate')
             self.append_data(fun(time_grid), key)
 
 
@@ -430,6 +455,11 @@ def generate_categorize(input_files, output_file):
             included in the radar file.
         output_file (str): Full path of the output file.
 
+    Notes:
+        Separate mwr-file is not needed when using RPG cloud radar which
+        measures liquid water path. Then, the radar file can be used as
+        a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
+
     Examples:
         >>> from cloudnetpy.categorize import generate_categorize
         >>> input_files = {'radar': 'radar.nc',
@@ -485,18 +515,12 @@ def _save_cat(file_name, radar, lidar, model, obs):
         'model_time': len(model.time),
         'model_height': len(model.mean_height)}
     rootgrp = output.init_file(file_name, dims, obs, zlib=True)
-    output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day'))
+    output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
     rootgrp.title = f"Categorize file from {radar.location}"
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
-    _merge_history(rootgrp, radar)
+    output.merge_history(rootgrp, 'categorize', radar)
     _merge_source(rootgrp, radar, lidar)
     rootgrp.close()
-
-
-def _merge_history(rootgrp, radar):
-    radar_history = radar.dataset.history
-    cat_history = f"{utils.get_time()} - categorize file created"
-    rootgrp.history = f"{cat_history}\n{radar_history}"
 
 
 def _merge_source(rootgrp, radar, lidar):

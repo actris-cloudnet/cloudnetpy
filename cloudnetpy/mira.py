@@ -5,10 +5,9 @@ import sys
 sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import netCDF4
 import numpy as np
-from cloudnetpy import output
-from cloudnetpy import utils
-from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.categorize import DataSource
+from . import output, utils
+from .cloudnetarray import CloudnetArray
+from .categorize import DataSource
 
 
 class Mira(DataSource):
@@ -16,8 +15,8 @@ class Mira(DataSource):
 
     Args:
         raw_radar_file (str): Filename of raw MIRA NetCDF file.
-        radar_frequency (float, optional): Radar frequency GHz. Default is 35.5.
-        source (str, optional): Cloud radar model. Default is 'MIRA-36'.
+        site_properties (dict): Site properties in a dictionary. Required
+            keys: 'name'.
 
     """
     keymap = {'Zg': 'Ze',
@@ -26,12 +25,13 @@ class Mira(DataSource):
               'LDRg': 'ldr',
               'SNRg': 'SNR'}
 
-    def __init__(self, raw_radar_file, source='MIRA-36'):
+    def __init__(self, raw_radar_file, site_properties):
         super().__init__(raw_radar_file)
-        self.source = source
-        self.radar_frequency = 35.5  # All MIRA radars are this? Check!
+        self.source = 'METEK MIRA-36'
+        self.radar_frequency = 35.5
         self._init_data()
         self.range = self._getvar(self, 'range')
+        self.location = site_properties['name']
 
     def _init_data(self):
         """Reads correct fields and fixes the names."""
@@ -64,16 +64,20 @@ class Mira(DataSource):
         for field in self.data:
             self.data[field].mask_indices(ind)
 
-    def add_meta(self, site_properties):
+    def add_meta(self):
+        self._add_geolocation()
         for key in ('time', 'range', 'radar_frequency'):
             self.data[key] = CloudnetArray(getattr(self, key), key)
-        for key in site_properties:
-            if key not in 'location':
-                self.data[key] = CloudnetArray(site_properties[key], key)
+
+    def _add_geolocation(self):
+        for key in ('Latitude', 'Longitude', 'Altitude'):
+            value = getattr(self.dataset, key).split()[0]
+            key = key.lower()
+            self.data[key] = CloudnetArray(float(value), key)
 
 
 def mira2nc(mmclx_file, output_file, site_properties, rebin_data=False):
-    """High-level API to convert mmclx file into compressed NetCDF file.
+    """High-level API to convert Mira cloud radar Level 1 file into NetCDF file.
 
     This function converts raw cloud radar file into a much smaller file that
     contains only the relevant data and can be used in further processing steps.
@@ -81,34 +85,30 @@ def mira2nc(mmclx_file, output_file, site_properties, rebin_data=False):
     Args:
         mmclx_file (str): Raw radar file in NetCDF format.
         output_file (str): Output file name.
-        site_properties (dict): 'location', 'latitude', 'longitude',
-            'altitude' (m).
+        site_properties (dict): Dictionary containing information about the
+            site. Required key value pairs are 'name'.
         rebin_data (bool, optional): If True, rebins data to 30s resolution.
             Otherwise keeps the native resolution. Default is False.
 
     Examples:
           >>> from cloudnetpy.mira import mira2nc
-          >>> site_properties = {
-          'location': 'Vehmasmäki',
-          'latitude': 62.74,
-          'longitude': 27.53,
-          'altitude': 155}
+          >>> site_properties = {'name': 'Vehmasmaki'}
           >>> mira2nc('raw_radar.mmclx', 'radar.nc', site_properties)
 
     """
-    raw_mira = Mira(mmclx_file)
+    raw_mira = Mira(mmclx_file, site_properties)
     raw_mira.linear_to_db(('Ze', 'ldr', 'SNR'))
     if rebin_data:
         snr_gain = raw_mira.rebin_fields()
     else:
         snr_gain = 1
     raw_mira.screen_by_snr(snr_gain)
-    raw_mira.add_meta(site_properties)
+    raw_mira.add_meta()
     output.update_attributes(raw_mira.data)
-    _save_mira(mmclx_file, raw_mira, output_file, site_properties['location'])
+    _save_mira(mmclx_file, raw_mira, output_file)
 
 
-def _save_mira(mmclx_file, raw_radar, output_file, location):
+def _save_mira(mmclx_file, raw_radar, output_file):
     """Saves the MIRA radar file."""
     dims = {'time': len(raw_radar.time),
             'range': len(raw_radar.range)}
@@ -116,9 +116,9 @@ def _save_mira(mmclx_file, raw_radar, output_file, location):
     fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg',
                        'NyquistVelocity')
     output.copy_variables(netCDF4.Dataset(mmclx_file), rootgrp, fields_from_raw)
-    rootgrp.title = f"Radar file from {location}"
+    rootgrp.title = f"Radar file from {raw_radar.location}"
     rootgrp.year, rootgrp.month, rootgrp.day = _date_from_filename(raw_radar.filename)
-    rootgrp.location = location
+    rootgrp.location = raw_radar.location
     rootgrp.history = f"{utils.get_time()} - radar file created"
     rootgrp.source = raw_radar.source
     rootgrp.close()
@@ -129,4 +129,3 @@ def _date_from_filename(full_path):
     plain_file = os.path.basename(full_path)
     date = plain_file[:8]
     return date[:4], date[4:6], date[6:8]
-

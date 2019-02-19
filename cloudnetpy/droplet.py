@@ -3,8 +3,8 @@
 import numpy as np
 import numpy.ma as ma
 import scipy.signal
-from cloudnetpy import utils
-from cloudnetpy.constants import T0
+from . import utils
+from .constants import T0
 
 
 def ind_base(dprof, p, dist, lim):
