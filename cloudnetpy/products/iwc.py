@@ -24,6 +24,7 @@ class Data_collecter(DataSource):
         self.T, self.meanT = self._get_T()
         self.Z_factor = self.Z_scalefactor()
 
+
     def _get_freq(self):
         """ Read and return radar frequency """
         is35 = None
