@@ -428,11 +428,15 @@ ATTRIBUTES = {
     ),
     'target_classification': MetaData(
         'Target classification',
+        '',
+        (0, 10),
         comment=_COMMENTS['classification_pixels'],
         definition=_DEFINITIONS['classification_pixels']
     ),
     'detection_status': MetaData(
         'Radar and lidar detection status',
+        '',
+        (0, 9),
         comment=_COMMENTS['classification_quality_pixels'],
         definition=_DEFINITIONS['classification_quality_pixels']
     ),
