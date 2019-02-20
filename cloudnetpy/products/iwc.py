@@ -21,8 +21,8 @@ class Data_collecter(DataSource):
         self.is35 = self._get_freq()
         self.spec_liq_atten = self._get_sla()
         self.coeffs = self._get_iwc_coeffs()
-        (self.T, self.meanT) = self._get_T()
-
+        self.T, self.meanT = self._get_T()
+        self.Z_factor = self.Z_scalefactor()
 
     def _get_freq(self):
         """ Read and return radar frequency """
@@ -62,15 +62,17 @@ class Data_collecter(DataSource):
         """ linear interpolation of model temperature into target grid """
         f = interp1d(np.array(self.dataset.variables['model_height'][:]),
                      np.array(self.dataset.variables['temperature'][:]))
-        T_height = f(np.array(self.dataset.variables['height'][:])) - 273.15
-        T_mean = np.mean(T_height, axis=0)
+        t_height = f(np.array(self.dataset.variables['height'][:])) - 273.15
+        t_mean = np.mean(t_height, axis=0)
 
         # TODO: miksi plus-arvot pois?
-        T_height[T_height > 0] = 0
-        T_mean[T_mean > 0] = 0
+        t_height[t_height > 0] = 0
+        t_mean[t_mean > 0] = 0
 
-        return (T_height, T_mean)
+        return t_height, t_mean
 
+    def Z_scalefactor(self):
+        return 10 * np.log10(self.coeffs['K2liquid0'] / 0.93)
 
 
 def generate_iwc(cat_file,output_file):
@@ -92,8 +94,7 @@ def generate_iwc(cat_file,output_file):
 
 def calc_iwc(data_handler, is_ice, rain_below_ice):
     """ calculation of ice water content """
-    Z = data_handler.dataset.variables['Z'][:] + \
-        Z_scalefactor(data_handler.coeffs['K2liquid0'])
+    Z = data_handler.dataset.variables['Z'][:] + data_handler.Z_factor
     iwc = 10 ** (data_handler.coeffs['cZT']*Z*data_handler.T +
                  data_handler.coeffs['cT']*data_handler.T +
                  data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
@@ -108,15 +109,14 @@ def calc_iwc(data_handler, is_ice, rain_below_ice):
 
 
 def calc_iwc_error(data_handler, ice_class, rain_below_ice):
-    # iwc_error = calc_iwc_error(vrs, coeffs, T, ice_class, spec_liq_atten, rain_below_ice)
-    MISSING_LWP = 250
+    #MISSING_LWP = 250
     error = data_handler.dataset.variables['Z_error'][:] * \
             (data_handler.coeffs['cZT']*data_handler.T + data_handler.coeffs['cZ'])
     error = 1.7**2 + (error * 10)**2
     error[error > 0] = np.sqrt(error[error > 0])
 
-    error[ice_class['uncorrected_ice']] = np.sqrt\
-        (1.7**2 + ((MISSING_LWP*0.001*2*data_handler.spec_liq_atten)*
+    error[ice_class['uncorrected_ice']] = \
+        np.sqrt(1.7**2 + ((250*0.001*2*data_handler.spec_liq_atten)*
                    data_handler.coeffs['cZ']*10)**2)
 
     error[ice_class['is_ice']] = np.nan
@@ -131,18 +131,11 @@ def calc_iwc_bias(data_handler):
 
 
 def calc_iwc_sens(data_handler):
-    Z = data_handler.dataset.variables['Z_sensitivity'][:] \
-        + Z_scalefactor(data_handler.coeffs['K2liquid0'])
+    Z = data_handler.dataset.variables['Z_sensitivity'][:] + data_handler.Z_factor
     sensitivity = 10 ** (data_handler.coeffs['cZT']*Z*data_handler.meanT +
                          data_handler.coeffs['cT']*data_handler.meanT +
                          data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
     data_handler.append_data(sensitivity,'iwc_sensitivity')
-
-
-
-def Z_scalefactor(K2liquid0):
-    return 10 * np.log10(K2liquid0 / 0.93)
-
 
 
 def check_active_bits(cb, keys):
