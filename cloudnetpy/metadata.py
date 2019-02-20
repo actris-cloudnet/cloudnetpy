@@ -12,6 +12,7 @@ FIELDS = (
     'definition',
     'references',
     'ancillary_variables',
+    'sensitivity_variable',
     'positive')
 
 MetaData = namedtuple('MetaData', FIELDS, defaults=(None,)*len(FIELDS))
@@ -135,7 +136,7 @@ _COMMENTS = {
     'The formula has been used where the \"categorization\" data has diagnosed that the radar echo is due to ice, but note that in some cases\n'
     'supercooled drizzle will erroneously be identified as ice. Missing data indicates either that ice cloud was present but it was only\n'
     'detected by the lidar so its ice water content could not be estimated, or that there was rain below the ice associated with uncertain\n'
-    'attenuation of the reflectivities in the ice.\n',
+    'attenuation of the reflectivities in the ice.\n'
     'Note that where microwave radiometer liquid water path was available it was used to correct the radar for liquid attenuation when liquid\n'
     'cloud occurred below the ice; this is indicated a value of 3 in the iwc_retrieval_status variable.  There is some uncertainty in this\n'
     'prodedure which is reflected by an increase in the associated values in the iwc_error variable.\n'
@@ -162,12 +163,19 @@ _COMMENTS = {
     ('This variable is an estimate of the minimum detectable ice water content as a function of height.'),
 
     'iwc_retrieval_status':
-    ('This variable describes whether a retrieval was performed for each pixel, and its associated quality, in the form of 8 different classes.\n',
-    'The classes are defined in the definition and long_definition attributes. The most reliable retrieval is that without any rain or liquid\n',
-    'cloud beneath, indicated by the value 1, then the next most reliable is when liquid water attenuation has been corrected using a microwave\n',
-    'radiometer, indicated by the value 3, while a value 2 indicates that liquid water cloud was present but microwave radiometer data were not\n',
-    'available so no correction was performed. No attempt is made to retrieve ice water content when rain is present below the ice; this is\n',
+    ('This variable describes whether a retrieval was performed for each pixel, and its associated quality, in the form of 8 different classes.\n'
+    'The classes are defined in the definition and long_definition attributes. The most reliable retrieval is that without any rain or liquid\n'
+    'cloud beneath, indicated by the value 1, then the next most reliable is when liquid water attenuation has been corrected using a microwave\n'
+    'radiometer, indicated by the value 3, while a value 2 indicates that liquid water cloud was present but microwave radiometer data were not\n'
+    'available so no correction was performed. No attempt is made to retrieve ice water content when rain is present below the ice; this is\n'
     'indicated by the value 5.'),
+
+    'iwc_inc_rain':
+    ('This variable is the same as iwc, \n'
+     'except that values of iwc in ice above rain have been included. \n'
+     'This variable contains values \n'
+     'which have been severely affected by attenuation \n'
+     'and should only be used when the effect of attenuation is being studied.'),
 
     'radar_liquid_atten':
     ('This variable was calculated from the liquid water path\n'
@@ -443,30 +451,42 @@ ATTRIBUTES = {
         comment=_COMMENTS['cloud_top'],
     ),
     'iwc': MetaData(
-        'Height of cloud top above ground',
-        'm',
+        'Ice water content',
+        'kg m-3',
+        (1e-7, 0.001),
+        _LOG,
         comment=_COMMENTS['iwc'],
+        sensitivity_variable='iwc_sensitivity',
     ),
     'iwc_error': MetaData(
-        'Height of cloud top above ground',
-        'm',
+        'Random error in ice water content, one standard deviation',
+        'dB',
+        (0, 3),
+        _LIN,
         comment=_COMMENTS['iwc_error'],
     ),
     'iwc_bias': MetaData(
-        'Height of cloud top above ground',
-        'm',
+        'Possible bias in ice water content, one standard deviation',
+        'dB',
         comment=_COMMENTS['iwc_bias'],
     ),
     'iwc_sensitivity': MetaData(
-        'Height of cloud top above ground',
-        'm',
+        'Minimum detectable ice water content',
+        'kg m-3',
         comment=_COMMENTS['iwc_sensitivity'],
     ),
     'iwc_retrieval_status': MetaData(
-        'Height of cloud top above ground',
-        'm',
+        'Ice water content retrieval status',
         comment=_COMMENTS['iwc_retrieval_status'],
-        definition=_DEFINITIONS['iwc_retrieval_status']
+        definition=_DEFINITIONS['iwc_retrieval_status'],
+    ),
+    'iwc_inc_rain': MetaData(
+        'Ice water content',
+        'kg m-3',
+        (1e-7, 0.001),
+        _LOG,
+        comment=_COMMENTS['iwc_inc_rain'],
+        sensitivity_variable='iwc_sensitivity'
     ),
     'insect_prob': MetaData(
         'Insect probability',
