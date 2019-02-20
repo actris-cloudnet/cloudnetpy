@@ -185,8 +185,6 @@ def classificate_ice(data_handler):
 
 def get_raining(data_handler, is_ice):
     """ True or False fields indicating raining below a) ice b) cold """
-    #TODO: tile ei toimi, pitää selvittää mikä on sen ongelma
-    # En tiedä mitä tilellä halutaan tehdä
     a = (data_handler.dataset.variables['category_bits'][:] & 4) > 0
     rate = data_handler.dataset.variables['rainrate'][:] > 0
     rate = np.tile(rate,(len(data_handler.dataset.variables['height'][:]),1)).T
