@@ -4,7 +4,7 @@ import cloudnetpy.utils as utils
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 
-class Data_collecter(DataSource):
+class DataCollecter(DataSource):
     def __init__(self, catfile):
         super().__init__(catfile)
         self.radar_frequency = float(self._getvar('radar_frequency',
@@ -70,7 +70,7 @@ class Data_collecter(DataSource):
 
 
 def generate_iwc(cat_file,output_file):
-    data_handler = Data_collecter(cat_file)
+    data_handler = DataCollecter(cat_file)
 
     ice_class = classificate_ice(data_handler)
     rain_below_ice, rain_below_cold = get_raining(data_handler, ice_class['is_ice'])
@@ -121,7 +121,7 @@ def calc_iwc_error(data_handler, ice_class, rain_below_ice):
 def calc_iwc_bias(data_handler):
     iwc_bias = data_handler.variables['Z_bias'][:] * \
            data_handler.coeffs['cZ'] * 10
-    data_handler.append_data(iwc_bias,'iwc_bias')
+    data_handler.append_data(iwc_bias, 'iwc_bias')
 
 
 def calc_iwc_sens(data_handler):
@@ -129,7 +129,7 @@ def calc_iwc_sens(data_handler):
     sensitivity = 10 ** (data_handler.coeffs['cZT']*Z*data_handler.meanT +
                          data_handler.coeffs['cT']*data_handler.meanT +
                          data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
-    data_handler.append_data(sensitivity,'iwc_sensitivity')
+    data_handler.append_data(sensitivity, 'iwc_sensitivity')
 
 
 def check_active_bits(cb, keys):
@@ -161,29 +161,29 @@ def classificate_ice(data_handler):
     cb, qb = data_handler.variables['category_bits'][:],\
              data_handler.variables['quality_bits'][:]
 
-    keys = ('b1','b2','b4','b8','b16','b32')
+    keys = ('b1', 'b2', 'b4', 'b8', 'b16', 'b32')
     c_bits = check_active_bits(cb, keys)
     qb16 = utils.isbit(qb, 4)
     qb32 = utils.isbit(qb, 5)
 
-    is_ice = c_bits['b2'] & c_bits['b4'] & (c_bits['b8'] == 0) & \
-             (c_bits['b32'] == 0)
+    is_ice = c_bits['b2'] & c_bits['b4'] & (c_bits['b8'] == 0) \
+             & (c_bits['b32'] == 0)
     would_be_ice = c_bits['b2'] & (c_bits['b4'] == 0) & (c_bits['b32'] == 0)
     corrected_ice = qb16 & qb32 & is_ice
     uncorrected_ice = qb16 & (qb32 == 0) & is_ice
 
-    return {'is_ice':is_ice, 'would_be_ice':would_be_ice,
-            'corrected_ice':corrected_ice, 'uncorrected_ice':uncorrected_ice}
+    return {'is_ice': is_ice, 'would_be_ice': would_be_ice,
+            'corrected_ice': corrected_ice, 'uncorrected_ice': uncorrected_ice}
 
 
 def get_raining(data_handler, is_ice):
     """ True or False fields indicating raining below a) ice b) cold """
     a = (data_handler.variables['category_bits'][:] & 4) > 0
     rate = data_handler.variables['rainrate'][:] > 0
-    rate = np.tile(rate,(len(data_handler.variables['height'][:]),1)).T
+    rate = np.tile(rate, (len(data_handler.variables['height'][:]), 1)).T
     rain_below_ice = rate & is_ice
     rain_below_cold = rate & a
-    return (rain_below_ice, rain_below_cold)
+    return rain_below_ice, rain_below_cold
 
 
 def _save_data_and_meta(data_handler, output_file):

@@ -19,7 +19,7 @@ pätee tosin kaikkiin tuotteisiin, joten voinee tehdä kerralla, kun kaikki on v
 Kunhan nämä iwc ja iwc on vähän kauniimmat, voidaan ruveta pohtimaan plottaamista
 """
 
-class Data_collecter(DataSource):
+class DataCollecter(DataSource):
     def __init__(self, catfile):
         super().__init__(catfile)
         self.T, self.P = self.get_T_and_P()
@@ -61,7 +61,7 @@ class Data_collecter(DataSource):
         ptype['is_melting_layer_in_profile'] = np.any(self.bits['melting'], axis=1)
         ptype['is_some_liquid'] = np.any(self.bits['droplet'], axis=1)
         ptype['is_rain'] = np.tile(ptype['is_rain_in_profile'],
-                                   (len(self.variables['height'][:]),1)).T
+                                   (len(self.variables['height'][:]), 1)).T
         return ptype
 
 
@@ -81,8 +81,8 @@ class Data_collecter(DataSource):
         Returns: dlwc/dz in kg m-3 m-1
         From Brenguier (1991) """
         if bool(args) == True:
-            T = self.T[args[0],args[1]]
-            P = self.P[args[0], args[1]]
+            T = self.T[args[0], args[1]]
+            P = self.P[args[0],  args[1]]
         else:
             T = self.T
             P = self.P
@@ -126,7 +126,7 @@ class Data_collecter(DataSource):
 
 
 
-def generate_lwc(cat_file,output_file):
+def generate_lwc(cat_file, output_file):
     """Main function for generating liquid water content for Cloudnet.
     
     Args:
@@ -136,7 +136,7 @@ def generate_lwc(cat_file,output_file):
         - Pointer to (opened) categorize file.
         - ....
     """
-    data_handler = Data_collecter(cat_file)
+    data_handler = DataCollecter(cat_file)
 
     # Mitäs hittoa, palauttetaan kaksi kertaa lwp?
     # Näkyy muokkaavan vain vanhaa jotenkin, ei siis ongelma
@@ -158,12 +158,12 @@ def generate_lwc(cat_file,output_file):
 
 def calc_lwc_error(lwc, data_handler):
     lwc_error = np.zeros(data_handler.size2d)
-    cloud_boundary_uncertainty = np.zeros((data_handler.size2d))
+    cloud_boundary_uncertainty = np.zeros(data_handler.size2d)
     lwp_error = data_handler.variables['lwp_error'][:]
 
-    ind = np.where(~np.isnan(data_handler.lwp)) # to avoid dividing with nan
+    ind = np.where(~np.isnan(data_handler.lwp))  # to avoid dividing with nan
     lwp_error[ind] = lwp_error[ind] / data_handler.lwp[ind]
-    lwp_uncertainty = np.tile(lwp_error, (len(data_handler.variables['height'][:]),1)).T
+    lwp_uncertainty = np.tile(lwp_error, (len(data_handler.variables['height'][:]), 1)).T
     lwp_uncertainty[(~np.isnan(lwp_uncertainty)) & ((lwp_uncertainty < 0.1) | (lwp_uncertainty > 10))] = 10
     index = np.where(lwc != 0)
 
@@ -178,7 +178,7 @@ def calc_lwc_error(lwc, data_handler):
     lwc_error[index] = c
     lwc_error[(np.isnan(lwc)) | (data_handler.ptype['is_rain']) | (lwc == 0)] = np.nan
 
-    data_handler.append_data(lwc_error,'lwc_error')
+    data_handler.append_data(lwc_error, 'lwc_error')
 
 
 def redistribute_lwc(lwc, data_handler):
@@ -186,18 +186,18 @@ def redistribute_lwc(lwc, data_handler):
     lwc_th = np.zeros(data_handler.size2d)
     droplet_bit = np.zeros(data_handler.size2d)
     lwc[np.isnan(lwc)] = 0
-    droplet_bit[lwc > 0] = 1 # is this always the same as ptype['is_some_liquid'] ??
+    droplet_bit[lwc > 0] = 1  # is this always the same as ptype['is_some_liquid'] ??
     is_some_liquid = np.any(droplet_bit, axis=1)
     
     for ii in np.where(is_some_liquid)[0]:
-        db = np.concatenate((zero, droplet_bit[ii,:], zero))
+        db = np.concatenate((zero, droplet_bit[ii, :], zero))
         db_diff = np.diff(db)
         liquid_bases = np.where(db_diff == 1)[0]
         liquid_tops = np.where(db_diff == -1)[0] - 1        
         for base, top in zip(liquid_bases, liquid_tops):
-            lwc_th[ii,base:top+1] = np.sum(lwc[ii,base:top+1]) / (top-base + 1)
+            lwc_th[ii, base:top+1] = np.sum(lwc[ii, base:top+1]) / (top-base + 1)
 
-    data_handler.append_data(lwc_th,'lwc_th')
+    data_handler.append_data(lwc_th, 'lwc_th')
             
 
 def estimate_lwc(data_handler):
@@ -210,7 +210,7 @@ def estimate_lwc(data_handler):
 
     # indeksit joissa 'is_some_liquid' == TRUE
     for ii in np.where(data_handler.ptype['is_some_liquid'])[0]:
-        db = np.concatenate((zero, data_handler.bits['droplet'][ii,:], zero))
+        db = np.concatenate((zero, data_handler.bits['droplet'][ii, :], zero))
         db_diff = np.diff(db)
         liquid_bases = np.where(db_diff == 1)[0]
         liquid_tops = np.where(db_diff == -1)[0] - 1
@@ -219,49 +219,49 @@ def estimate_lwc(data_handler):
             npoints = top - base + 1
             idx = np.arange(npoints) + base
             dlwc_dz = data_handler.theory_adiabatic_lwc(ii, base)  # constant
-            lwc_adiabatic[ii,idx] = dlwc_dz * dheight * (np.arange(npoints)+1)
+            lwc_adiabatic[ii, idx] = dlwc_dz * dheight * (np.arange(npoints)+1)
 
-            if np.any(data_handler.bits['radar_layer'][ii,idx]) or \
-                    np.any(data_handler.bits['layer'][ii,top+1:]):
+            if np.any(data_handler.bits['radar_layer'][ii, idx]) or \
+                    np.any(data_handler.bits['layer'][ii, top+1:]):
                 # good cloud boundaries
-                retrieval_status[ii,idx] = 4
+                retrieval_status[ii, idx] = 4
             else:
                 # unknown cloud top; may need to adjust cloud top
-                retrieval_status[ii,idx] = 5
+                retrieval_status[ii, idx] = 5
 
-        if (data_handler.lwp[ii] > 0 and data_handler.ptype['is_melting_layer_in_profile'][ii]):
-            lwc[ii,:] = lwc_adiabatic[ii,:]
+        if data_handler.lwp[ii] > 0 and data_handler.ptype['is_melting_layer_in_profile'][ii]:
+            lwc[ii, :] = lwc_adiabatic[ii, :]
             
-            if data_handler.lwp[ii] > (np.sum(lwc[ii,:]) * dheight):
-                index = np.where(retrieval_status[ii,:] == 5)[0]
+            if data_handler.lwp[ii] > (np.sum(lwc[ii, :]) * dheight):
+                index = np.where(retrieval_status[ii, :] == 5)[0]
 
                 if len(index) > 0:
                     # Tänne tulee harvemmin, ei vielä kertaakaan
-                    retrieval_status[ii,retrieval_status[ii,:] > 0] = 2
+                    retrieval_status[ii, retrieval_status[ii, :] > 0] = 2
                     # index is now first cloud free pixel
                     index = index[-1]
                     ind = np.where(index == liquid_tops)[0]
                     index = index + 1
-                    dlwc_dz = data_handler.theory_adiabatic_lwc(ii,liquid_bases[ind])
-                    while (data_handler.lwp[ii] > (np.sum(lwc[ii,:])*dheight)) \
+                    dlwc_dz = data_handler.theory_adiabatic_lwc(ii, liquid_bases[ind])
+                    while (data_handler.lwp[ii] > (np.sum(lwc[ii, :])*dheight)) \
                             and index <= data_handler.variables['height'][:]:
-                        lwc[ii,index] = dheight * dlwc_dz * (index-liquid_bases[ind]+1)
-                        retrieval_status[ii,index] = 3
+                        lwc[ii, index] = dheight * dlwc_dz * (index-liquid_bases[ind]+1)
+                        retrieval_status[ii, index] = 3
                         index = index + 1
-                        lwc[ii,index-1] = (data_handler.lwp[ii] - (np.sum(lwc[ii,0:index-1]) * dheight)) / dheight
+                        lwc[ii, index-1] = (data_handler.lwp[ii] - (np.sum(lwc[ii, 0:index-1]) * dheight)) / dheight
                 else:
                     # Välillä myös tänne
-                    lwc[ii,:] = data_handler.lwp[ii] * lwc[ii,:] / (np.sum(lwc[ii,:]) * dheight)
-                    retrieval_status[ii,retrieval_status[ii,:] > 2] = 1
+                    lwc[ii, :] = data_handler.lwp[ii] * lwc[ii, :] / (np.sum(lwc[ii, :]) * dheight)
+                    retrieval_status[ii, retrieval_status[ii, :] > 2] = 1
             else:
                 # Yleensä tulee tänne
-                lwc[ii,:] = data_handler.lwp[ii] * lwc[ii,:] / (np.sum(lwc[ii,:]) * dheight)
-                retrieval_status[ii,retrieval_status[ii,:] > 2] = 1
+                lwc[ii, :] = data_handler.lwp[ii] * lwc[ii, :] / (np.sum(lwc[ii, :]) * dheight)
+                retrieval_status[ii, retrieval_status[ii, :] > 2] = 1
 
     # some additional screening..
     retrieval_status[data_handler.ptype['is_rain']] = 6
     lwc[data_handler.ptype['is_rain']] = np.nan
-    lwc[(retrieval_status == 4) | (retrieval_status == 5) ] = np.nan
+    lwc[(retrieval_status == 4) | (retrieval_status == 5)] = np.nan
     data_handler.lwp[(data_handler.ptype['is_rain_in_profile']) |
                      (data_handler.lwp == 0) |
                      (data_handler.ptype['is_melting_layer_in_profile'])] = np.nan
@@ -292,10 +292,3 @@ def _save_data_and_meta(data_handler, output_file):
 def _get_source(data_handler):
     """Returns uuid (or filename if uuid not found) of the source file."""
     return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
-
-
-
-
-
-    
-
