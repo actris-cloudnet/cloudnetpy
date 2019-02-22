@@ -1,17 +1,8 @@
-import netCDF4
 import numpy as np
 from scipy.interpolate import interp1d
 import cloudnetpy.utils as utils
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
-import cloudnetpy.products.ncf as ncf
-from cloudnetpy.products.ncf import CnetVar
-
-"""
-Tää koko homma on vähän palapeli, jossa on kaikki osat vähän levällään.
-Pitää katsoa, mitä saa pois, minkä siirrettyä toisaalle ym.
-Aika paljon yksittäisiä funktioita moduuli täynnä.
-"""
 
 class Data_collecter(DataSource):
     def __init__(self, catfile):
@@ -61,9 +52,9 @@ class Data_collecter(DataSource):
 
     def _get_T(self):
         """ linear interpolation of model temperature into target grid """
-        f = interp1d(np.array(self.dataset.variables['model_height'][:]),
-                     np.array(self.dataset.variables['temperature'][:]))
-        t_height = f(np.array(self.dataset.variables['height'][:])) - 273.15
+        f = interp1d(np.array(self.variables['model_height'][:]),
+                     np.array(self.variables['temperature'][:]))
+        t_height = f(np.array(self.variables['height'][:])) - 273.15
         t_mean = np.mean(t_height, axis=0)
 
         # TODO: miksi plus-arvot pois?
@@ -105,13 +96,12 @@ def calc_iwc(data_handler, is_ice, rain_below_ice):
 
     data_handler.append_data(iwc, 'iwc')
     data_handler.append_data(iwc_inc_rain, 'iwc_inc_rain')
-
     return iwc
 
 
 def calc_iwc_error(data_handler, ice_class, rain_below_ice):
     #MISSING_LWP = 250
-    error = data_handler.dataset.variables['Z_error'][:] * \
+    error = data_handler.variables['Z_error'][:] * \
             (data_handler.coeffs['cZT']*data_handler.T + data_handler.coeffs['cZ'])
     error = 1.7**2 + (error * 10)**2
     error[error > 0] = np.sqrt(error[error > 0])
@@ -126,13 +116,13 @@ def calc_iwc_error(data_handler, ice_class, rain_below_ice):
 
 
 def calc_iwc_bias(data_handler):
-    iwc_bias = data_handler.dataset.variables['Z_bias'][:] * \
+    iwc_bias = data_handler.variables['Z_bias'][:] * \
            data_handler.coeffs['cZ'] * 10
     data_handler.append_data(iwc_bias,'iwc_bias')
 
 
 def calc_iwc_sens(data_handler):
-    Z = data_handler.dataset.variables['Z_sensitivity'][:] + data_handler.Z_factor
+    Z = data_handler.variables['Z_sensitivity'][:] + data_handler.Z_factor
     sensitivity = 10 ** (data_handler.coeffs['cZT']*Z*data_handler.meanT +
                          data_handler.coeffs['cT']*data_handler.meanT +
                          data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
@@ -165,8 +155,8 @@ def calc_iwc_status(iwc, ice_class, rain_below_cold, rain_below_ice, data_handle
 
 
 def classificate_ice(data_handler):
-    cb, qb = data_handler.dataset.variables['category_bits'][:],\
-             data_handler.dataset.variables['quality_bits'][:]
+    cb, qb = data_handler.variables['category_bits'][:],\
+             data_handler.variables['quality_bits'][:]
 
     keys = ('b1','b2','b4','b8','b16','b32')
     c_bits = check_active_bits(cb, keys)
@@ -185,9 +175,9 @@ def classificate_ice(data_handler):
 
 def get_raining(data_handler, is_ice):
     """ True or False fields indicating raining below a) ice b) cold """
-    a = (data_handler.dataset.variables['category_bits'][:] & 4) > 0
-    rate = data_handler.dataset.variables['rainrate'][:] > 0
-    rate = np.tile(rate,(len(data_handler.dataset.variables['height'][:]),1)).T
+    a = (data_handler.variables['category_bits'][:] & 4) > 0
+    rate = data_handler.variables['rainrate'][:] > 0
+    rate = np.tile(rate,(len(data_handler.variables['height'][:]),1)).T
     rain_below_ice = rate & is_ice
     rain_below_cold = rate & a
     return (rain_below_ice, rain_below_cold)
@@ -214,4 +204,3 @@ def _save_data_and_meta(data_handler, output_file):
 def _get_source(data_handler):
     """Returns uuid (or filename if uuid not found) of the source file."""
     return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
-    
