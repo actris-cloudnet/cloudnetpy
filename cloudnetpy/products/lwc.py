@@ -124,6 +124,8 @@ class Data_collecter(DataSource):
         return (self.variables['lwp'][:] / n, self.variables['lwp_error'][:] / m)
 
 
+
+
 def generate_lwc(cat_file,output_file):
     """Main function for generating liquid water content for Cloudnet.
     
@@ -199,21 +201,21 @@ def redistribute_lwc(lwc, data_handler):
             
 
 def estimate_lwc(data_handler):
+    # Alustetaan arrayt, joita muokataan
     zero = np.zeros(1)
     lwc = np.zeros(data_handler.size2d)
     lwc_adiabatic = np.zeros(data_handler.size2d)
     retrieval_status = np.zeros(data_handler.size2d)
     dheight = np.median(np.diff(data_handler.variables['height'][:]))
 
+    # indeksit joissa 'is_some_liquid' == TRUE
     for ii in np.where(data_handler.ptype['is_some_liquid'])[0]:
-
         db = np.concatenate((zero, data_handler.bits['droplet'][ii,:], zero))
         db_diff = np.diff(db)
         liquid_bases = np.where(db_diff == 1)[0]
         liquid_tops = np.where(db_diff == -1)[0] - 1
 
         for base, top in zip(liquid_bases, liquid_tops):
-
             npoints = top - base + 1
             idx = np.arange(npoints) + base
             dlwc_dz = data_handler.theory_adiabatic_lwc(ii, base)  # constant
@@ -228,21 +230,18 @@ def estimate_lwc(data_handler):
                 retrieval_status[ii,idx] = 5
 
         if (data_handler.lwp[ii] > 0 and data_handler.ptype['is_melting_layer_in_profile'][ii]):
-
             lwc[ii,:] = lwc_adiabatic[ii,:]
             
             if data_handler.lwp[ii] > (np.sum(lwc[ii,:]) * dheight):
-                
                 index = np.where(retrieval_status[ii,:] == 5)[0]
 
                 if len(index) > 0:
-
+                    # Tänne tulee harvemmin, ei vielä kertaakaan
                     retrieval_status[ii,retrieval_status[ii,:] > 0] = 2
                     # index is now first cloud free pixel
                     index = index[-1]
                     ind = np.where(index == liquid_tops)[0]
                     index = index + 1
-                    # TODO: Alla oleva rivi ei tod. näk. toimi, tsekkaa se
                     dlwc_dz = data_handler.theory_adiabatic_lwc(ii,liquid_bases[ind])
                     while (data_handler.lwp[ii] > (np.sum(lwc[ii,:])*dheight)) \
                             and index <= data_handler.variables['height'][:]:
@@ -251,17 +250,15 @@ def estimate_lwc(data_handler):
                         index = index + 1
                         lwc[ii,index-1] = (data_handler.lwp[ii] - (np.sum(lwc[ii,0:index-1]) * dheight)) / dheight
                 else:
-                    
+                    # Välillä myös tänne
                     lwc[ii,:] = data_handler.lwp[ii] * lwc[ii,:] / (np.sum(lwc[ii,:]) * dheight)
                     retrieval_status[ii,retrieval_status[ii,:] > 2] = 1
             else:
-                
+                # Yleensä tulee tänne
                 lwc[ii,:] = data_handler.lwp[ii] * lwc[ii,:] / (np.sum(lwc[ii,:]) * dheight)
                 retrieval_status[ii,retrieval_status[ii,:] > 2] = 1
 
     # some additional screening..
-
-
     retrieval_status[data_handler.ptype['is_rain']] = 6
     lwc[data_handler.ptype['is_rain']] = np.nan
     lwc[(retrieval_status == 4) | (retrieval_status == 5) ] = np.nan

@@ -67,6 +67,8 @@ class Data_collecter(DataSource):
         return 10 * np.log10(self.coeffs['K2liquid0'] / 0.93)
 
 
+
+
 def generate_iwc(cat_file,output_file):
     data_handler = Data_collecter(cat_file)
 
@@ -87,11 +89,12 @@ def generate_iwc(cat_file,output_file):
 def calc_iwc(data_handler, is_ice, rain_below_ice):
     """ calculation of ice water content """
     Z = data_handler.dataset.variables['Z'][:] + data_handler.Z_factor
+
     iwc = 10 ** (data_handler.coeffs['cZT']*Z*data_handler.T +
                  data_handler.coeffs['cT']*data_handler.T +
                  data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
     iwc[is_ice] = 0.0
-    iwc_inc_rain = np.copy(iwc) 
+    iwc_inc_rain = iwc
     iwc[rain_below_ice] = np.nan
 
     data_handler.append_data(iwc, 'iwc')
@@ -144,12 +147,12 @@ def calc_iwc_status(iwc, ice_class, rain_below_cold, rain_below_ice, data_handle
     retrieval_status = np.zeros(iwc.shape)
 
     retrieval_status[iwc > 0] = 1
-    retrieval_status[(iwc > 0 & ice_class['uncorrected_ice'])] = 2
-    retrieval_status[(iwc > 0 & ice_class['corrected_ice'])] = 3
-    retrieval_status[(iwc > 0 & ice_class['is_ice'])] = 4
+    retrieval_status[iwc > 0 & ice_class['uncorrected_ice']] = 2
+    retrieval_status[iwc > 0 & ice_class['corrected_ice']] = 3
+    retrieval_status[iwc > 0 & ice_class['is_ice']] = 4
     retrieval_status[rain_below_ice] = 5
     retrieval_status[rain_below_cold] = 6
-    retrieval_status[(ice_class['would_be_ice'] & (retrieval_status == 0))] = 7
+    retrieval_status[ice_class['would_be_ice'] & (retrieval_status == 0)] = 7
 
     data_handler.append_data(retrieval_status, 'iwc_retrieval_status')
 
@@ -181,7 +184,6 @@ def get_raining(data_handler, is_ice):
     rain_below_ice = rate & is_ice
     rain_below_cold = rate & a
     return (rain_below_ice, rain_below_cold)
-
 
 
 def _save_data_and_meta(data_handler, output_file):

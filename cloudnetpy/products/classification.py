@@ -27,7 +27,7 @@ def generate_class(cat_file, output_file):
     _append_target_classification(data_handler)
     _append_detection_status(data_handler)
     output.update_attributes(data_handler.data)
-    _save_classification(data_handler, output_file)
+    _save_data_and_meta(data_handler, output_file)
 
 
 def check_active_bits(cb, keys):
@@ -86,7 +86,7 @@ def _append_target_classification(data_handler):
     data_handler.append_data(classification, 'target_classification')
 
 
-def _save_classification(data_handler, output_file):
+def _save_data_and_meta(data_handler, output_file):
     """
     Saves wanted information to NetCDF file.
     """
