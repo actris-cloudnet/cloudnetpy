@@ -168,15 +168,12 @@ class Radar(ProfileDataSource):
         super().__init__(radar_file)
         self.radar_frequency = float(self._getvar('radar_frequency',
                                                   'frequency'))
-        self.wl_band = self._get_wl_band()
+        self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, 'location', '')
         self._netcdf_to_cloudnet(('v', 'width', 'ldr'))
         self._unknown_to_cloudnet(('Zh', 'Zv', 'Ze'), 'Z', units='dBZ')
-
-    def _get_wl_band(self):
-        return 0 if (30 < self.radar_frequency < 40) else 1
 
     def _get_sequence_indices(self):
         """Mira has only one sequence and one folding velocity. RPG has
