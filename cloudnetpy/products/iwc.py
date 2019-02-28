@@ -54,8 +54,14 @@ class DataCollecter(DataSource):
         """ linear interpolation of model temperature into target grid """
         f = interp1d(np.array(self.variables['model_height'][:]),
                      np.array(self.variables['temperature'][:]))
+
         t_height = f(np.array(self.variables['height'][:])) - 273.15
+
+        print(t_height.shape)
+        print("")
         t_mean = np.mean(t_height, axis=0)
+
+        print(t_mean.shape)
 
         # TODO: miksi plus-arvot pois?
         t_height[t_height > 0] = 0
@@ -94,7 +100,7 @@ def calc_iwc(data_handler, is_ice, rain_below_ice):
                  data_handler.coeffs['cT']*data_handler.T +
                  data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
     iwc[is_ice] = 0.0
-    iwc_inc_rain = iwc
+    iwc_inc_rain = np.copy(iwc)
     iwc[rain_below_ice] = np.nan
 
     data_handler.append_data(iwc, 'iwc')
