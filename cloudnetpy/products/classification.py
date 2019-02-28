@@ -3,6 +3,7 @@ import numpy as np
 import cloudnetpy.utils as utils
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
+import cloudnetpy.products.product_tools as p_tools
 
 
 def generate_class(cat_file, output_file):
@@ -27,28 +28,17 @@ def generate_class(cat_file, output_file):
     _append_target_classification(data_handler)
     _append_detection_status(data_handler)
     output.update_attributes(data_handler.data)
-    _save_classification(data_handler, output_file)
-
-
-def check_active_bits(cb, keys):
-    """
-    Check is observed bin active or not, returns boolean array of
-    active and unactive bin index
-    """
-    bits = {}
-    for i, key in enumerate(keys):
-        bits[key] = utils.isbit(cb, i)
-    return bits
+    _save_data_and_meta(data_handler, output_file)
 
 
 def _append_detection_status(data_handler):
     """
     Makes classifications of instruments status by combining active bins
     """
-    quality_bits = data_handler.dataset['quality_bits'][:]
+    qb = data_handler.dataset['quality_bits'][:]
 
-    keys = ('radar', 'lidar', 'clutter', 'molecular', 'attenuated', 'corrected')
-    bits = check_active_bits(quality_bits, keys)
+    keys = p_tools.get_status_keys()
+    bits = p_tools.check_active_bits(qb, keys)
 
     quality = np.copy(bits['lidar'])
     quality[bits['attenuated'] & bits['corrected'] & bits['radar']] = 2
@@ -67,10 +57,10 @@ def _append_target_classification(data_handler):
     """
     Makes classifications for the atmospheric targets by combining active bins
     """
-    category_bits = data_handler.dataset['category_bits'][:]
+    cb = data_handler.dataset['category_bits'][:]
 
-    keys = ('droplet', 'falling', 'cold', 'melting', 'aerosol', 'insect')
-    bits = check_active_bits(category_bits, keys)
+    keys = p_tools.get_categorize_keys()
+    bits = p_tools.check_active_bits(cb, keys)
 
     classification = bits['droplet'] + 2*bits['falling']
 
@@ -86,7 +76,7 @@ def _append_target_classification(data_handler):
     data_handler.append_data(classification, 'target_classification')
 
 
-def _save_classification(data_handler, output_file):
+def _save_data_and_meta(data_handler, output_file):
     """
     Saves wanted information to NetCDF file.
     """
