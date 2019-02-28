@@ -65,8 +65,6 @@ def generate_iwc(cat_file,output_file):
     rain_below_ice, rain_below_cold = get_raining(data_handler, ice_class['is_ice'])
     iwc = calc_iwc(data_handler, ice_class['is_ice'], rain_below_ice)
 
-
-
     calc_iwc_bias(data_handler)
     calc_iwc_error(data_handler, ice_class, rain_below_ice)
     calc_iwc_sens(data_handler)
@@ -74,9 +72,6 @@ def generate_iwc(cat_file,output_file):
                    rain_below_cold, data_handler)
 
     output.update_attributes(data_handler.data)
-
-    plotting.plot_2d(iwc, cmap='jet', clim=(1e-7, 1e-3))
-
     _save_data_and_meta(data_handler, output_file)
 
 
@@ -169,11 +164,11 @@ def classificate_ice(data_handler):
 
 def get_raining(data_handler, is_ice):
     """ True or False fields indicating raining below a) ice b) cold """
-    a = (data_handler.variables['category_bits'][:] & 4) > 0
+    cold_bit = utils.isbit(data_handler.variables['category_bits'][:],3)
     rate = data_handler.variables['rainrate'][:] > 0
     rate = np.tile(rate, (len(data_handler.variables['height'][:]), 1)).T
     rain_below_ice = rate & is_ice
-    rain_below_cold = rate & a
+    rain_below_cold = rate & cold_bit
     return rain_below_ice, rain_below_cold
 
 
