@@ -1,29 +1,21 @@
 import numpy as np
+import numpy.ma as ma
 from scipy.interpolate import interp1d
 import cloudnetpy.utils as utils
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
+import cloudnetpy.products.product_tools as p_tools
 
 class DataCollecter(DataSource):
     def __init__(self, catfile):
         super().__init__(catfile)
         self.radar_frequency = float(self._getvar('radar_frequency',
                                                   'frequency'))
-        self.is35 = self._get_freq()
+        self.is35 = utils.get_wl_band(self.radar_frequency)
         self.spec_liq_atten = self._get_sla()
         self.coeffs = self._get_iwc_coeffs()
         self.T, self.meanT = self._get_T()
-        self.Z_factor = self.Z_scalefactor()
-
-
-    def _get_freq(self):
-        """ Read and return radar frequency """
-        is35 = None
-        if 30 < self.radar_frequency < 40:
-            is35 = True
-        elif 90 < self.radar_frequency < 100:
-            is35 = False
-        return is35
+        self.Z_factor = utils.lin2db(self.coeffs['K2liquid0'] / 0.93)
 
 
     def _get_sla(self):
@@ -56,23 +48,13 @@ class DataCollecter(DataSource):
                      np.array(self.variables['temperature'][:]))
 
         t_height = f(np.array(self.variables['height'][:])) - 273.15
-
-        print(t_height.shape)
-        print("")
         t_mean = np.mean(t_height, axis=0)
-
-        print(t_mean.shape)
 
         # TODO: miksi plus-arvot pois?
         t_height[t_height > 0] = 0
         t_mean[t_mean > 0] = 0
 
         return t_height, t_mean
-
-    def Z_scalefactor(self):
-        return 10 * np.log10(self.coeffs['K2liquid0'] / 0.93)
-
-
 
 
 def generate_iwc(cat_file,output_file):
@@ -101,7 +83,7 @@ def calc_iwc(data_handler, is_ice, rain_below_ice):
                  data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
     iwc[is_ice] = 0.0
     iwc_inc_rain = np.copy(iwc)
-    iwc[rain_below_ice] = np.nan
+    iwc[rain_below_ice] = ma.array(iwc[rain_below_ice], mask=iwc[rain_below_ice])
 
     data_handler.append_data(iwc, 'iwc')
     data_handler.append_data(iwc_inc_rain, 'iwc_inc_rain')
@@ -109,18 +91,22 @@ def calc_iwc(data_handler, is_ice, rain_below_ice):
 
 
 def calc_iwc_error(data_handler, ice_class, rain_below_ice):
+    # TODO: Mikä on missing LWP? voiko hakea muualta?
     #MISSING_LWP = 250
     error = data_handler.variables['Z_error'][:] * \
             (data_handler.coeffs['cZT']*data_handler.T + data_handler.coeffs['cZ'])
     error = 1.7**2 + (error * 10)**2
     error[error > 0] = np.sqrt(error[error > 0])
 
-    error[ice_class['uncorrected_ice']] = \
-        np.sqrt(1.7**2 + ((250*0.001*2*data_handler.spec_liq_atten)*
-                   data_handler.coeffs['cZ']*10)**2)
+    lwb_square = (250*0.001*2*data_handler.spec_liq_atten)\
+                 * data_handler.coeffs['cZ']*10
+    error[ice_class['uncorrected_ice']] = utils.l2norm(1.7, lwb_square)
 
-    error[ice_class['is_ice']] = np.nan
-    error[rain_below_ice] = np.nan
+    error[ice_class['is_ice']] = ma.array\
+        (error[ice_class['is_ice']], mask=error[ice_class['is_ice']])
+    error[rain_below_ice] = ma.array\
+        (error[rain_below_ice], mask=error[rain_below_ice])
+
     data_handler.append_data(error, 'iwc_error')
 
 
@@ -136,17 +122,6 @@ def calc_iwc_sens(data_handler):
                          data_handler.coeffs['cT']*data_handler.meanT +
                          data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
     data_handler.append_data(sensitivity, 'iwc_sensitivity')
-
-
-def check_active_bits(cb, keys):
-    """
-    Check is observed bin active or not, returns boolean array of
-    active and unactive bin index
-    """
-    bits = {}
-    for i, key in enumerate(keys):
-        bits[key] = utils.isbit(cb, i)
-    return bits
 
 
 def calc_iwc_status(iwc, ice_class, rain_below_cold, rain_below_ice, data_handler):
@@ -167,16 +142,16 @@ def classificate_ice(data_handler):
     cb, qb = data_handler.variables['category_bits'][:],\
              data_handler.variables['quality_bits'][:]
 
-    keys = ('b1', 'b2', 'b4', 'b8', 'b16', 'b32')
-    c_bits = check_active_bits(cb, keys)
-    qb16 = utils.isbit(qb, 4)
-    qb32 = utils.isbit(qb, 5)
+    c_keys = p_tools.get_categorize_keys()
+    c_bits = p_tools.check_active_bits(cb, c_keys)
+    q_keys = p_tools.get_status_keys()
+    q_bits = p_tools.check_active_bits(qb, q_keys)
 
-    is_ice = c_bits['b2'] & c_bits['b4'] & (c_bits['b8'] == 0) \
-             & (c_bits['b32'] == 0)
-    would_be_ice = c_bits['b2'] & (c_bits['b4'] == 0) & (c_bits['b32'] == 0)
-    corrected_ice = qb16 & qb32 & is_ice
-    uncorrected_ice = qb16 & (qb32 == 0) & is_ice
+    is_ice = c_bits['falling'] & c_bits['cold'] & ~c_bits['melting'] \
+             & ~c_bits['insect']
+    would_be_ice = c_bits['falling'] & ~c_bits['cold'] & ~c_bits['insect']
+    corrected_ice = q_bits['attenuated'] & q_bits['corrected'] & is_ice
+    uncorrected_ice = q_bits['attenuated'] & ~q_bits['corrected'] & is_ice
 
     return {'is_ice': is_ice, 'would_be_ice': would_be_ice,
             'corrected_ice': corrected_ice, 'uncorrected_ice': uncorrected_ice}
