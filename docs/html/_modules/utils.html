@@ -46,7 +46,6 @@
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
-<span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">stats</span><span class="p">,</span> <span class="n">ndimage</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">RectBivariateSpline</span>
 
@@ -489,17 +488,20 @@
 
 <div class="viewcode-block" id="get_uuid"><a class="viewcode-back" href="../api.html#utils.get_uuid">[docs]</a><span class="k">def</span> <span class="nf">get_uuid</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;Returns unique identifier.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()</span><span class="o">.</span><span class="n">hex</span></div>
 
 
-<div class="viewcode-block" id="read_cloudnet_database"><a class="viewcode-back" href="../api.html#utils.read_cloudnet_database">[docs]</a><span class="k">def</span> <span class="nf">read_cloudnet_database</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="o">*</span><span class="n">fields_in</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Read metadata from Cloudnet http API.&quot;&quot;&quot;</span>
-    <span class="n">fields</span> <span class="o">=</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">fields_in</span><span class="p">)</span>
-    <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;http://devcloudnet.fmi.fi/api/&#39;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{url}</span><span class="s2">?site=</span><span class="si">{site}</span><span class="s2">&amp;fields=</span><span class="si">{fields}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-    <span class="k">except</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">fields_in</span><span class="p">))</span></div>
+<div class="viewcode-block" id="get_wl_band"><a class="viewcode-back" href="../api.html#utils.get_wl_band">[docs]</a><span class="k">def</span> <span class="nf">get_wl_band</span><span class="p">(</span><span class="n">radar_frequency</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns integer corresponding to radar frequency.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        radar_frequency (float): Radar frequency (GHz).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        int: 0=35GHz radar, 1=94Ghz radar.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="p">(</span><span class="mi">30</span> <span class="o">&lt;</span> <span class="n">radar_frequency</span> <span class="o">&lt;</span> <span class="mi">40</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span></div>
 </pre></div>
 
           </div>

@@ -448,3 +448,16 @@ def get_time():
 def get_uuid():
     """Returns unique identifier."""
     return uuid.uuid4().hex
+
+
+def get_wl_band(radar_frequency):
+    """Returns integer corresponding to radar frequency.
+
+    Args:
+        radar_frequency (float): Radar frequency (GHz).
+
+    Returns:
+        int: 0=35GHz radar, 1=94Ghz radar.
+
+    """
+    return 0 if (30 < radar_frequency < 40) else 1
