@@ -5,6 +5,7 @@ import cloudnetpy.utils as utils
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
+from cloudnetpy import plotting
 
 class DataCollecter(DataSource):
     def __init__(self, catfile):
@@ -64,6 +65,8 @@ def generate_iwc(cat_file,output_file):
     rain_below_ice, rain_below_cold = get_raining(data_handler, ice_class['is_ice'])
     iwc = calc_iwc(data_handler, ice_class['is_ice'], rain_below_ice)
 
+
+
     calc_iwc_bias(data_handler)
     calc_iwc_error(data_handler, ice_class, rain_below_ice)
     calc_iwc_sens(data_handler)
@@ -71,6 +74,9 @@ def generate_iwc(cat_file,output_file):
                    rain_below_cold, data_handler)
 
     output.update_attributes(data_handler.data)
+
+    plotting.plot_2d(iwc, cmap='jet', clim=(1e-7, 1e-3))
+
     _save_data_and_meta(data_handler, output_file)
 
 
@@ -83,7 +89,7 @@ def calc_iwc(data_handler, is_ice, rain_below_ice):
                  data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
     iwc[is_ice] = 0.0
     iwc_inc_rain = np.copy(iwc)
-    iwc[rain_below_ice] = ma.array(iwc[rain_below_ice], mask=iwc[rain_below_ice])
+    iwc[rain_below_ice] = ma.masked
 
     data_handler.append_data(iwc, 'iwc')
     data_handler.append_data(iwc_inc_rain, 'iwc_inc_rain')
@@ -91,21 +97,24 @@ def calc_iwc(data_handler, is_ice, rain_below_ice):
 
 
 def calc_iwc_error(data_handler, ice_class, rain_below_ice):
-    # TODO: Mikä on missing LWP? voiko hakea muualta?
+    """
+    TODO:
+        Mikä on missing LWP? voiko hakea muualta?
+        Mikä on 1.7
+    """
     #MISSING_LWP = 250
     error = data_handler.variables['Z_error'][:] * \
-            (data_handler.coeffs['cZT']*data_handler.T + data_handler.coeffs['cZ'])
-    error = 1.7**2 + (error * 10)**2
-    error[error > 0] = np.sqrt(error[error > 0])
+            (data_handler.coeffs['cZT']*data_handler.T
+             + data_handler.coeffs['cZ'])
+
+    error = utils.l2norm(1.7, error*10)
 
     lwb_square = (250*0.001*2*data_handler.spec_liq_atten)\
                  * data_handler.coeffs['cZ']*10
     error[ice_class['uncorrected_ice']] = utils.l2norm(1.7, lwb_square)
 
-    error[ice_class['is_ice']] = ma.array\
-        (error[ice_class['is_ice']], mask=error[ice_class['is_ice']])
-    error[rain_below_ice] = ma.array\
-        (error[rain_below_ice], mask=error[rain_below_ice])
+    error[ice_class['is_ice']] = ma.masked
+    error[rain_below_ice] = ma.masked
 
     data_handler.append_data(error, 'iwc_error')
 
@@ -139,8 +148,9 @@ def calc_iwc_status(iwc, ice_class, rain_below_cold, rain_below_ice, data_handle
 
 
 def classificate_ice(data_handler):
-    cb, qb = data_handler.variables['category_bits'][:],\
-             data_handler.variables['quality_bits'][:]
+
+    cb = data_handler.variables['category_bits'][:]
+    qb = data_handler.variables['quality_bits'][:]
 
     c_keys = p_tools.get_categorize_keys()
     c_bits = p_tools.check_active_bits(cb, c_keys)
