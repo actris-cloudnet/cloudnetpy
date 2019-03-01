@@ -79,11 +79,11 @@ def generate_iwc(categorize_file, output_file):
 
 def calc_iwc(data_handler, is_ice, ice_above_rain):
     """Calculates ice water content."""
-    z = data_handler.dataset.variables['Z'][:] + data_handler.Z_factor
+    z = data_handler.getvar('Z') + data_handler.Z_factor
 
     iwc = 10**(data_handler.coeffs['cZT']*z*data_handler.T +
                data_handler.coeffs['cT']*data_handler.T +
-               data_handler.coeffs['cZ']*z + data_handler.coeffs['c']) * 0.001
+               data_handler.coeffs['cZ']*z + data_handler.coeffs['c'])*0.001
 
     iwc[~is_ice] = ma.masked
     iwc_inc_rain = ma.copy(iwc)
@@ -125,7 +125,7 @@ def calc_iwc_sens(data_handler):
     z = data_handler.getvar('Z_sensitivity') + data_handler.Z_factor
     sensitivity = 10 ** (data_handler.coeffs['cZT']*z*data_handler.meanT +
                          data_handler.coeffs['cT']*data_handler.meanT +
-                         data_handler.coeffs['cZ']*z + data_handler.coeffs['c']) * 0.001
+                         data_handler.coeffs['cZ']*z + data_handler.coeffs['c'])*0.001
     data_handler.append_data(sensitivity, 'iwc_sensitivity')
 
 
