@@ -34,3 +34,7 @@ def get_status_keys():
     return ('radar', 'lidar', 'clutter',
             'molecular', 'attenuated', 'corrected')
 
+
+def get_source(data_handler):
+    """Returns uuid (or filename if uuid not found) of the source file."""
+    return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
