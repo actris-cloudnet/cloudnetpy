@@ -21,7 +21,7 @@ def main():
         'mwr': '../test_data/20180611_hyytiala_rpg.nc',
         }
 
-    input_files2 = {
+    input_files = {
         'radar': '../test_data/20160614_mace-head_mira.nc',
         'lidar': '../test_data/20160614_mace-head_chm15k.nc',
         'model': '../test_data/20160614_mace-head_gdas1.nc',
@@ -36,8 +36,8 @@ def main():
 
     f2 = '/home/tukiains/Documents/PYTHON/cloudnetpy/test_data/20160614_mace-head_categorize.nc'
 
-    #plot.plot_overview(output_file, '20160614', ylim=(0, 360))
-    plot.plot_variable(output_file, f2, 'melting', '20160614', ylim=(0, 360))
+    plot.plot_overview(output_file, '20160614', ylim=(0, 360), savefig=True, savepath='/home/tukiains/Pictures/')
+    #plot.plot_variable(output_file, f2, 'melting', '20160614', ylim=(0, 360))
 
 
 if __name__ == "__main__":
