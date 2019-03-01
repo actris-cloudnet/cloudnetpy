@@ -30,14 +30,14 @@ class Mira(DataSource):
         self.source = 'METEK MIRA-36'
         self.radar_frequency = 35.5
         self._init_data()
-        self.range = self._getvar(self, 'range')
+        self.range = self.getvar(self, 'range')
         self.location = site_properties['name']
 
     def _init_data(self):
         """Reads correct fields and fixes the names."""
         for raw_key in self.keymap:
             name = self.keymap[raw_key]
-            self.data[name] = CloudnetArray(self._getvar(raw_key), name)
+            self.data[name] = CloudnetArray(self.getvar(raw_key), name)
 
     @staticmethod
     def _estimate_snr_gain(time_sparse, time_dense):

@@ -5,12 +5,14 @@ import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
 import cloudnetpy.atmos as atmos
+from cloudnetpy import  plotting
+
 
 
 class DataCollecter(DataSource):
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
-        self.radar_frequency = self._getvar('radar_frequency')
+        self.radar_frequency = self.getvar('radar_frequency')
         self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.spec_liq_atten = self._get_sla()
         self.coeffs = self._get_iwc_coeffs()
@@ -48,7 +50,7 @@ class DataCollecter(DataSource):
             Positive values are masked.
 
         """
-        temperature = atmos.k2c(self._getvar('Tw'))
+        temperature = atmos.k2c(self.getvar('Tw'))
         temperature[temperature > 0] = ma.masked
         mean_temperature = ma.mean(temperature, axis=0)
         return temperature, mean_temperature
@@ -102,8 +104,8 @@ def calc_iwc_error(data_handler, ice_class, ice_above_rain):
         Mikä on 1.7
     """
     #MISSING_LWP = 250
-    error = data_handler.variables['Z_error'][:] * (data_handler.coeffs['cZT']*data_handler.T
-                                                    + data_handler.coeffs['cZ'])
+    error = data_handler.getvar('Z_error') * (data_handler.coeffs['cZT']*data_handler.T
+                                              + data_handler.coeffs['cZ'])
 
     error = utils.l2norm(1.7, error*10)
 
@@ -117,27 +119,27 @@ def calc_iwc_error(data_handler, ice_class, ice_above_rain):
 
 
 def calc_iwc_bias(data_handler):
-    iwc_bias = data_handler.variables['Z_bias'][:] * data_handler.coeffs['cZ']*10
+    iwc_bias = data_handler.getvar('Z_bias') * data_handler.coeffs['cZ']*10
     data_handler.append_data(iwc_bias, 'iwc_bias')
 
 
 def calc_iwc_sens(data_handler):
-    Z = data_handler.variables['Z_sensitivity'][:] + data_handler.Z_factor
+    Z = data_handler.getvar('Z_sensitivity') + data_handler.Z_factor
     sensitivity = 10 ** (data_handler.coeffs['cZT']*Z*data_handler.meanT +
                          data_handler.coeffs['cT']*data_handler.meanT +
                          data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
     data_handler.append_data(sensitivity, 'iwc_sensitivity')
 
 
-def calc_iwc_status(iwc, ice_class, rain_below_cold, rain_below_ice, data_handler):
+def calc_iwc_status(iwc, ice_class, ice_above_rain, cold_above_rain, data_handler):
     retrieval_status = np.zeros(iwc.shape)
 
     retrieval_status[iwc > 0] = 1
     retrieval_status[iwc > 0 & ice_class['uncorrected_ice']] = 2
     retrieval_status[iwc > 0 & ice_class['corrected_ice']] = 3
     retrieval_status[iwc > 0 & ice_class['is_ice']] = 4
-    retrieval_status[rain_below_ice] = 5
-    retrieval_status[rain_below_cold] = 6
+    retrieval_status[ice_above_rain] = 5
+    retrieval_status[cold_above_rain] = 6
     retrieval_status[ice_class['would_be_ice'] & (retrieval_status == 0)] = 7
 
     data_handler.append_data(retrieval_status, 'iwc_retrieval_status')
@@ -145,8 +147,8 @@ def calc_iwc_status(iwc, ice_class, rain_below_cold, rain_below_ice, data_handle
 
 def classify_ice(data_handler):
 
-    cb = data_handler.variables['category_bits'][:]
-    qb = data_handler.variables['quality_bits'][:]
+    cb = data_handler.getvar('category_bits')
+    qb = data_handler.getvar('quality_bits')
 
     c_keys = p_tools.get_categorize_keys()
     c_bits = p_tools.check_active_bits(cb, c_keys)
@@ -165,12 +167,11 @@ def classify_ice(data_handler):
 def get_raining(data_handler, is_ice):
     """ True or False fields indicating raining below a) ice b) cold
     """
-    is_cold = utils.isbit(data_handler.variables['category_bits'][:], 2)
-    is_rain = data_handler.variables['is_rain'][:] == 1
-    is_rain = np.tile(is_rain, (len(data_handler.variables['height'][:]), 1)).T
+    is_cold = utils.isbit(data_handler.getvar('category_bits'), 2)
+    is_rain = data_handler.getvar('is_rain')[:, np.newaxis]
 
-    ice_above_rain = is_rain & is_ice
-    cold_above_rain = is_rain & is_cold
+    ice_above_rain = (is_ice * is_rain) > 0
+    cold_above_rain = (is_cold * is_rain) > 0
 
     return ice_above_rain, cold_above_rain
 
