@@ -5,8 +5,6 @@ import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
 import cloudnetpy.atmos as atmos
-from cloudnetpy import  plotting
-
 
 
 class DataCollecter(DataSource):
@@ -124,10 +122,10 @@ def calc_iwc_bias(data_handler):
 
 
 def calc_iwc_sens(data_handler):
-    Z = data_handler.getvar('Z_sensitivity') + data_handler.Z_factor
-    sensitivity = 10 ** (data_handler.coeffs['cZT']*Z*data_handler.meanT +
+    z = data_handler.getvar('Z_sensitivity') + data_handler.Z_factor
+    sensitivity = 10 ** (data_handler.coeffs['cZT']*z*data_handler.meanT +
                          data_handler.coeffs['cT']*data_handler.meanT +
-                         data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
+                         data_handler.coeffs['cZ']*z + data_handler.coeffs['c']) * 0.001
     data_handler.append_data(sensitivity, 'iwc_sensitivity')
 
 
