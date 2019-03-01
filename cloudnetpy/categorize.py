@@ -367,9 +367,13 @@ class Model(DataSource):
         self.type = self._get_model_type()
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = self._get_mean_height()
-        self._netcdf_to_cloudnet(self.fields_sparse)
         self.data_sparse = {}
         self.data_dense = {}
+        self._append_grid()
+
+    def _append_grid(self):
+        self.append_data(self.time, 'model_time')
+        self.append_data(self.mean_height, 'model_height')
 
     def _get_model_type(self):
         possible_keys = ('ecmwf', 'gdas')
@@ -407,8 +411,6 @@ class Model(DataSource):
             if 'atten' in key:
                 data = data[wl_band, :, :]
             self.data_sparse[key] = _interpolate_variable()
-        self.append_data(self.time, 'model_time')
-        self.append_data(self.mean_height, 'model_height')
 
     def interpolate_to_grid(self, time_grid, height_grid):
         """Interpolates model variables to Cloudnet's dense time / height grid.
@@ -429,7 +431,7 @@ class Model(DataSource):
         wet_bulb_temp = atmos.wet_bulb(self.data_dense)
         self.append_data(wet_bulb_temp, 'Tw', units='K')
 
-    def screen_fields(self):
+    def screen_sparse_fields(self):
         """Removes model fields that we don't want to write in the output."""
         fields_to_keep = ('temperature', 'pressure', 'q', 'uwind', 'vwind')
         self.data_sparse = {key: self.data_sparse[key]
@@ -478,13 +480,14 @@ def generate_categorize(input_files, output_file):
     def _prepare_output():
         radar.add_meta()
         lidar.add_meta()
-        model.screen_fields()
-        for key in ('category_bits', 'insect_prob'):
+        model.screen_sparse_fields()
+        for key in ('category_bits', 'insect_prob', 'is_rain'):
             radar.append_data(getattr(classification, key), key)
         for key in ('radar_liquid_atten', 'radar_gas_atten'):
             radar.append_data(attenuations[key], key)
         radar.append_data(quality['quality_bits'], 'quality_bits')
-        return {**radar.data, **lidar.data, **model.data_sparse, **mwr.data}
+        return {**radar.data, **lidar.data, **model.data,
+                **model.data_sparse, **mwr.data}
 
     radar = Radar(input_files['radar'])
     lidar = Lidar(input_files['lidar'], ('beta', ))

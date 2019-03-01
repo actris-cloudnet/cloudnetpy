@@ -9,12 +9,12 @@ from . import lwc, utils
 
 def c2k(temp):
     """Converts Celsius to Kelvins."""
-    return np.array(temp) + 273.15
+    return ma.array(temp) + 273.15
 
 
 def k2c(temp):
     """Converts Kelvins to Celsius."""
-    return np.array(temp) - 273.15
+    return ma.array(temp) - 273.15
 
 
 VAISALA_PARAMS_OVER_WATER = (6.116441, 7.591386, 240.7263)

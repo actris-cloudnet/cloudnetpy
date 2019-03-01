@@ -69,7 +69,7 @@ def _plot_data(nsubs, idx, filename, field, ylim, grid,
     plt.imshow(data.T, aspect='auto', origin='lower', cmap=cmap)
     plt.clim(clim)
     _set_axes(ylim, data.shape, grid)
-    plt.text(20, max(ylim)*0.8, field, fontsize=8)
+    plt.text(20, max(ylim)*0.8, field, fontsize=12)
 
 
 def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):
@@ -100,8 +100,10 @@ def _showpic(nsubs, dvec, savefig, imagepath, name):
     plt.subplot(nsubs[0], nsubs[1], 1)
     plt.title(dvec, fontsize=8)
     if savefig:
+        print('saving..')
         plt.savefig(f"{imagepath}{dvec}_{name}", dpi=200)
         plt.close()
+        print('..done')
     else:
         plt.show()
 

@@ -1,34 +1,33 @@
 import numpy as np
 import numpy.ma as ma
-from scipy.interpolate import interp1d
 import cloudnetpy.utils as utils
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
-from cloudnetpy import plotting
+import cloudnetpy.atmos as atmos
+
 
 class DataCollecter(DataSource):
-    def __init__(self, catfile):
-        super().__init__(catfile)
-        self.radar_frequency = float(self._getvar('radar_frequency',
-                                                  'frequency'))
-        self.is35 = utils.get_wl_band(self.radar_frequency)
+    def __init__(self, categorize_file):
+        super().__init__(categorize_file)
+        self.radar_frequency = self._getvar('radar_frequency')
+        self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.spec_liq_atten = self._get_sla()
         self.coeffs = self._get_iwc_coeffs()
-        self.T, self.meanT = self._get_T()
-        self.Z_factor = utils.lin2db(self.coeffs['K2liquid0'] / 0.93)
+        self.T, self.meanT = self._get_subzero_temperatures()
+        self.Z_factor = self._get_z_factor()
 
+    def _get_z_factor(self):
+        return utils.lin2db(self.coeffs['K2liquid0'] / 0.93)
 
     def _get_sla(self):
         """ specific liquid attenuation """
-        if self.is35:
+        if self.wl_band == 0:
             return 1.0
-        else:
-            return 4.5
-
+        return 4.5
 
     def _get_iwc_coeffs(self):
-        if self.is35:
+        if self.wl_band == 0:
             a = 0.878
             b = 0.000242
             c = -0.0186
@@ -42,52 +41,57 @@ class DataCollecter(DataSource):
             e = -0.992
         return {'K2liquid0': a, 'cZT': b, 'cT': c, 'cZ': d, 'c': e}
 
+    def _get_subzero_temperatures(self):
+        """Returns freezing wet-bulb temperatures as Celsius.
 
-    def _get_T(self):
-        """ linear interpolation of model temperature into target grid """
-        f = interp1d(np.array(self.variables['model_height'][:]),
-                     np.array(self.variables['temperature'][:]))
+        Notes:
+            Positive values are masked.
 
-        t_height = f(np.array(self.variables['height'][:])) - 273.15
-        t_mean = np.mean(t_height, axis=0)
-
-        # TODO: miksi plus-arvot pois?
-        t_height[t_height > 0] = 0
-        t_mean[t_mean > 0] = 0
-
-        return t_height, t_mean
+        """
+        temperature = atmos.k2c(self._getvar('Tw'))
+        temperature[temperature > 0] = ma.masked
+        mean_temperature = ma.mean(temperature, axis=0)
+        return temperature, mean_temperature
 
 
-def generate_iwc(cat_file,output_file):
-    data_handler = DataCollecter(cat_file)
+def generate_iwc(categorize_file, output_file):
+    """High level API to generate Cloudnet ice water content file.
 
-    ice_class = classificate_ice(data_handler)
-    rain_below_ice, rain_below_cold = get_raining(data_handler, ice_class['is_ice'])
-    iwc = calc_iwc(data_handler, ice_class['is_ice'], rain_below_ice)
+    Args:
+        categorize_file (str): Categorize file.
+        output_file (str): Output file name.
 
+    """
+    data_handler = DataCollecter(categorize_file)
+    ice_class = classify_ice(data_handler)
+    ice_above_rain, cold_above_rain = get_raining(data_handler,
+                                                  ice_class['is_ice'])
+    iwc = calc_iwc(data_handler, ice_class['is_ice'], ice_above_rain)
     calc_iwc_bias(data_handler)
-    calc_iwc_error(data_handler, ice_class, rain_below_ice)
+    calc_iwc_error(data_handler, ice_class, ice_above_rain)
     calc_iwc_sens(data_handler)
-    calc_iwc_status(iwc, ice_class, rain_below_ice,
-                   rain_below_cold, data_handler)
+    calc_iwc_status(iwc, ice_class, ice_above_rain, cold_above_rain,
+                    data_handler)
 
     output.update_attributes(data_handler.data)
     _save_data_and_meta(data_handler, output_file)
 
 
-def calc_iwc(data_handler, is_ice, rain_below_ice):
-    """ calculation of ice water content """
-    Z = data_handler.dataset.variables['Z'][:] + data_handler.Z_factor
+def calc_iwc(data_handler, is_ice, ice_above_rain):
+    """Calculates ice water content."""
+    z = data_handler.dataset.variables['Z'][:] + data_handler.Z_factor
 
-    iwc = 10 ** (data_handler.coeffs['cZT']*Z*data_handler.T +
-                 data_handler.coeffs['cT']*data_handler.T +
-                 data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
-    iwc[is_ice] = 0.0
-    iwc_inc_rain = np.copy(iwc)
-    iwc[rain_below_ice] = ma.masked
+    iwc = 10**(data_handler.coeffs['cZT']*z*data_handler.T +
+               data_handler.coeffs['cT']*data_handler.T +
+               data_handler.coeffs['cZ']*z + data_handler.coeffs['c']) * 0.001
+
+    iwc[~is_ice] = ma.masked
+    iwc_inc_rain = ma.copy(iwc)
+    iwc[ice_above_rain] = ma.masked
 
     data_handler.append_data(iwc, 'iwc')
     data_handler.append_data(iwc_inc_rain, 'iwc_inc_rain')
+
     return iwc
 
 
@@ -98,14 +102,13 @@ def calc_iwc_error(data_handler, ice_class, rain_below_ice):
         Mikä on 1.7
     """
     #MISSING_LWP = 250
-    error = data_handler.variables['Z_error'][:] * \
-            (data_handler.coeffs['cZT']*data_handler.T
-             + data_handler.coeffs['cZ'])
+    error = data_handler.variables['Z_error'][:] * (data_handler.coeffs['cZT']*data_handler.T
+                                                    + data_handler.coeffs['cZ'])
 
     error = utils.l2norm(1.7, error*10)
 
-    lwb_square = (250*0.001*2*data_handler.spec_liq_atten)\
-                 * data_handler.coeffs['cZ']*10
+    lwb_square = 250*0.001*2*data_handler.spec_liq_atten*data_handler.coeffs['cZ']*10
+
     error[ice_class['uncorrected_ice']] = utils.l2norm(1.7, lwb_square)
 
     error[ice_class['is_ice']] = ma.masked
@@ -115,8 +118,7 @@ def calc_iwc_error(data_handler, ice_class, rain_below_ice):
 
 
 def calc_iwc_bias(data_handler):
-    iwc_bias = data_handler.variables['Z_bias'][:] * \
-           data_handler.coeffs['cZ'] * 10
+    iwc_bias = data_handler.variables['Z_bias'][:] * data_handler.coeffs['cZ']*10
     data_handler.append_data(iwc_bias, 'iwc_bias')
 
 
@@ -142,7 +144,7 @@ def calc_iwc_status(iwc, ice_class, rain_below_cold, rain_below_ice, data_handle
     data_handler.append_data(retrieval_status, 'iwc_retrieval_status')
 
 
-def classificate_ice(data_handler):
+def classify_ice(data_handler):
 
     cb = data_handler.variables['category_bits'][:]
     qb = data_handler.variables['quality_bits'][:]
@@ -152,8 +154,7 @@ def classificate_ice(data_handler):
     q_keys = p_tools.get_status_keys()
     q_bits = p_tools.check_active_bits(qb, q_keys)
 
-    is_ice = c_bits['falling'] & c_bits['cold'] & ~c_bits['melting'] \
-             & ~c_bits['insect']
+    is_ice = c_bits['falling'] & c_bits['cold'] & ~c_bits['melting'] & ~c_bits['insect']
     would_be_ice = c_bits['falling'] & ~c_bits['cold'] & ~c_bits['insect']
     corrected_ice = q_bits['attenuated'] & q_bits['corrected'] & is_ice
     uncorrected_ice = q_bits['attenuated'] & ~q_bits['corrected'] & is_ice
@@ -163,13 +164,16 @@ def classificate_ice(data_handler):
 
 
 def get_raining(data_handler, is_ice):
-    """ True or False fields indicating raining below a) ice b) cold """
-    cold_bit = utils.isbit(data_handler.variables['category_bits'][:],3)
-    rate = data_handler.variables['rainrate'][:] > 0
-    rate = np.tile(rate, (len(data_handler.variables['height'][:]), 1)).T
-    rain_below_ice = rate & is_ice
-    rain_below_cold = rate & cold_bit
-    return rain_below_ice, rain_below_cold
+    """ True or False fields indicating raining below a) ice b) cold
+    """
+    is_cold = utils.isbit(data_handler.variables['category_bits'][:], 2)
+    is_rain = data_handler.variables['is_rain'][:] == 1
+    is_rain = np.tile(is_rain, (len(data_handler.variables['height'][:]), 1)).T
+
+    ice_above_rain = is_rain & is_ice
+    cold_above_rain = is_rain & is_cold
+
+    return ice_above_rain, cold_above_rain
 
 
 def _save_data_and_meta(data_handler, output_file):
