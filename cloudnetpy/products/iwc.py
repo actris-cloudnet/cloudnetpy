@@ -95,7 +95,7 @@ def calc_iwc(data_handler, is_ice, ice_above_rain):
     return iwc
 
 
-def calc_iwc_error(data_handler, ice_class, rain_below_ice):
+def calc_iwc_error(data_handler, ice_class, ice_above_rain):
     """
     TODO:
         Mikä on missing LWP? voiko hakea muualta?
@@ -110,9 +110,8 @@ def calc_iwc_error(data_handler, ice_class, rain_below_ice):
     lwb_square = 250*0.001*2*data_handler.spec_liq_atten*data_handler.coeffs['cZ']*10
 
     error[ice_class['uncorrected_ice']] = utils.l2norm(1.7, lwb_square)
-
-    error[ice_class['is_ice']] = ma.masked
-    error[rain_below_ice] = ma.masked
+    error[~ice_class['is_ice']] = ma.masked
+    error[ice_above_rain] = ma.masked
 
     data_handler.append_data(error, 'iwc_error')
 
