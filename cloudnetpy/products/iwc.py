@@ -82,9 +82,11 @@ def calc_iwc(data_handler, is_ice, rain_below_ice):
     iwc = 10 ** (data_handler.coeffs['cZT']*Z*data_handler.T +
                  data_handler.coeffs['cT']*data_handler.T +
                  data_handler.coeffs['cZ']*Z + data_handler.coeffs['c']) * 0.001
-    iwc[is_ice] = 0.0
+    iwc[~is_ice] = 0.0
     iwc_inc_rain = np.copy(iwc)
     iwc[rain_below_ice] = ma.masked
+
+    #plotting.plot_2d(iwc, cmap='jet',clim=(10e-7,10e-3))
 
     data_handler.append_data(iwc, 'iwc')
     data_handler.append_data(iwc_inc_rain, 'iwc_inc_rain')
@@ -108,8 +110,10 @@ def calc_iwc_error(data_handler, ice_class, rain_below_ice):
                  * data_handler.coeffs['cZ']*10
     error[ice_class['uncorrected_ice']] = utils.l2norm(1.7, lwb_square)
 
-    error[ice_class['is_ice']] = ma.masked
+    error[~ice_class['is_ice']] = ma.masked
     error[rain_below_ice] = ma.masked
+
+    plotting.plot_2d(error, cmap='jet', clim=(0, 3))
 
     data_handler.append_data(error, 'iwc_error')
 
