@@ -1,6 +1,5 @@
 """Module for creating classification file."""
 import numpy as np
-import cloudnetpy.utils as utils
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
@@ -35,10 +34,10 @@ def _append_detection_status(data_handler):
     """
     Makes classifications of instruments status by combining active bins
     """
-    qb = data_handler.dataset['quality_bits'][:]
+    quality_bits = data_handler.getvar('quality_bits')
 
     keys = p_tools.get_status_keys()
-    bits = p_tools.check_active_bits(qb, keys)
+    bits = p_tools.check_active_bits(quality_bits, keys)
 
     quality = np.copy(bits['lidar'])
     quality[bits['attenuated'] & bits['corrected'] & bits['radar']] = 2
@@ -57,10 +56,10 @@ def _append_target_classification(data_handler):
     """
     Makes classifications for the atmospheric targets by combining active bins
     """
-    cb = data_handler.dataset['category_bits'][:]
+    category_bits = data_handler.getvar('category_bits')
 
     keys = p_tools.get_categorize_keys()
-    bits = p_tools.check_active_bits(cb, keys)
+    bits = p_tools.check_active_bits(category_bits, keys)
 
     classification = bits['droplet'] + 2*bits['falling']
 

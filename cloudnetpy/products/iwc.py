@@ -101,7 +101,7 @@ def calc_iwc_error(data_handler, ice_class, ice_above_rain):
         Mikä on missing LWP? voiko hakea muualta?
         Mikä on 1.7
     """
-    #MISSING_LWP = 250
+    # MISSING_LWP = 250
     error = data_handler.getvar('Z_error') * (data_handler.coeffs['cZT']*data_handler.T
                                               + data_handler.coeffs['cZ'])
 
@@ -145,13 +145,13 @@ def calc_iwc_status(iwc, ice_class, ice_above_rain, cold_above_rain, data_handle
 
 def classify_ice(data_handler):
 
-    cb = data_handler.getvar('category_bits')
-    qb = data_handler.getvar('quality_bits')
+    category_bits = data_handler.getvar('category_bits')
+    quality_bits = data_handler.getvar('quality_bits')
 
     c_keys = p_tools.get_categorize_keys()
-    c_bits = p_tools.check_active_bits(cb, c_keys)
+    c_bits = p_tools.check_active_bits(category_bits, c_keys)
     q_keys = p_tools.get_status_keys()
-    q_bits = p_tools.check_active_bits(qb, q_keys)
+    q_bits = p_tools.check_active_bits(quality_bits, q_keys)
 
     is_ice = c_bits['falling'] & c_bits['cold'] & ~c_bits['melting'] & ~c_bits['insect']
     would_be_ice = c_bits['falling'] & ~c_bits['cold'] & ~c_bits['insect']
