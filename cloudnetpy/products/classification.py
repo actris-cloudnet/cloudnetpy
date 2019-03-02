@@ -34,10 +34,7 @@ def _append_detection_status(data_handler):
     """
     Makes classifications of instruments status by combining active bins
     """
-    quality_bits = data_handler.getvar('quality_bits')
-
-    keys = p_tools.get_status_keys()
-    bits = p_tools.check_active_bits(quality_bits, keys)
+    bits = p_tools.read_quality_bits(data_handler)
 
     quality = np.copy(bits['lidar'])
     quality[bits['attenuated'] & bits['corrected'] & bits['radar']] = 2
@@ -56,16 +53,11 @@ def _append_target_classification(data_handler):
     """
     Makes classifications for the atmospheric targets by combining active bins
     """
-    category_bits = data_handler.getvar('category_bits')
-
-    keys = p_tools.get_categorize_keys()
-    bits = p_tools.check_active_bits(category_bits, keys)
+    bits = p_tools.read_category_bits(data_handler)
 
     classification = bits['droplet'] + 2*bits['falling']
-
     falling_cold = np.where(bits['falling'] & bits['cold'])
     classification[falling_cold] += 2
-
     classification[bits['melting']] = 6
     classification[bits['melting'] & bits['droplet']] = 7
     classification[bits['aerosol']] = 8

@@ -461,3 +461,7 @@ def get_wl_band(radar_frequency):
 
     """
     return 0 if (30 < radar_frequency < 40) else 1
+
+
+def transpose(x):
+    return x[:, np.newaxis]

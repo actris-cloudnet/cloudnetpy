@@ -2,6 +2,18 @@
 import cloudnetpy.utils as utils
 
 
+def read_quality_bits(categorize_object):
+    bitfield = categorize_object.getvar('quality_bits')
+    keys = _get_quality_keys()
+    return check_active_bits(bitfield, keys)
+
+
+def read_category_bits(categorize_object):
+    bitfield = categorize_object.getvar('category_bits')
+    keys = _get_category_keys()
+    return check_active_bits(bitfield, keys)
+
+
 def check_active_bits(bitfield, keys):
     """
     Converts bitfield into dictionary.
@@ -23,16 +35,16 @@ def check_active_bits(bitfield, keys):
     return bits
 
 
-def get_categorize_keys():
+def _get_category_keys():
     """Returns names of the 'category_bits' bits."""
     return ('droplet', 'falling', 'cold',
             'melting', 'aerosol', 'insect')
 
 
-def get_status_keys():
+def _get_quality_keys():
     """Returns names of the 'quality_bits' bits."""
-    return ('radar', 'lidar', 'clutter',
-            'molecular', 'attenuated', 'corrected')
+    return ('radar', 'lidar', 'clutter', 'molecular',
+            'attenuated', 'corrected')
 
 
 def get_source(data_handler):
