@@ -139,11 +139,11 @@ def calc_iwc_bias(data_handler):
 def calc_iwc_status(iwc, ice_class, data_handler):
     """Returns information about the status of iwc retrieval."""
     retrieval_status = np.zeros(iwc.shape)
-
-    retrieval_status[iwc > 0] = 1
-    retrieval_status[iwc > 0 & ice_class.uncorrected_ice] = 2
-    retrieval_status[iwc > 0 & ice_class.corrected_ice] = 3
-    retrieval_status[iwc > 0 & ice_class.is_ice] = 4
+    is_iwc = iwc > 0
+    retrieval_status[is_iwc] = 1
+    retrieval_status[is_iwc & ice_class.uncorrected_ice] = 2
+    retrieval_status[is_iwc & ice_class.corrected_ice] = 3
+    retrieval_status[is_iwc & ice_class.is_ice] = 4
     retrieval_status[ice_class.ice_above_rain] = 5
     retrieval_status[ice_class.cold_above_rain] = 6
     retrieval_status[ice_class.would_be_ice & (retrieval_status == 0)] = 7
