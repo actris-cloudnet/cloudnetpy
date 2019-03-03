@@ -12,7 +12,7 @@ class DataCollector(DataSource):
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.wl_band = utils.get_wl_band(self.getvar('radar_frequency'))
-        self.spec_liq_atten = self._get_sla()
+        self.spec_liq_atten = self._get_approximative_specific_liquid_atten()
         self.coeffs = self._get_iwc_coeffs()
         self.T, self.meanT = self._get_subzero_temperatures()
         self.Z_factor = self._get_z_factor()
@@ -21,8 +21,7 @@ class DataCollector(DataSource):
         """Returns empirical scaling factor for radar echo."""
         return utils.lin2db(self.coeffs.K2liquid0 / 0.93)
 
-    def _get_sla(self):
-        """Returns approximate specific liquid attenuation."""
+    def _get_approximative_specific_liquid_atten(self):
         if self.wl_band == 0:
             return 1.0
         return 4.5

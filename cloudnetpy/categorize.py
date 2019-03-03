@@ -166,8 +166,7 @@ class Radar(ProfileDataSource):
     """
     def __init__(self, radar_file):
         super().__init__(radar_file)
-        self.radar_frequency = float(self.getvar('radar_frequency',
-                                                  'frequency'))
+        self.radar_frequency = float(self.getvar('radar_frequency', 'frequency'))
         self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()

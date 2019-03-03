@@ -55,9 +55,8 @@ def _append_target_classification(data_handler):
     """
     bits = p_tools.read_category_bits(data_handler)
 
-    classification = bits['droplet'] + 2*bits['falling']
-    falling_cold = np.where(bits['falling'] & bits['cold'])
-    classification[falling_cold] += 2
+    classification = bits['droplet'] + 2*bits['falling']  # 0, 1, 2, 3
+    classification[bits['falling'] & bits['cold']] += 2  # 4, 5
     classification[bits['melting']] = 6
     classification[bits['melting'] & bits['droplet']] = 7
     classification[bits['aerosol']] = 8
