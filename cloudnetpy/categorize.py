@@ -37,7 +37,7 @@ class DataSource:
         self.data = {}
 
     def _init_time(self):
-        time = self._getvar('time')
+        time = self.getvar('time')
         if max(time) > 24:
             time = utils.seconds2hours(time)
         return time
@@ -49,7 +49,7 @@ class DataSource:
             return float(altitude_above_sea)
         return None
 
-    def _getvar(self, *args):
+    def getvar(self, *args):
         """Returns data array from the source file variables.
 
         Returns just the data (and no attributes) from the original variables
@@ -97,7 +97,7 @@ class DataSource:
             units(str, optional): Units-attribute for the CloudnetArray object.
 
         """
-        array = self._getvar(*possible_names)
+        array = self.getvar(*possible_names)
         self.append_data(array, key, units=units)
 
     @staticmethod
@@ -166,8 +166,7 @@ class Radar(ProfileDataSource):
     """
     def __init__(self, radar_file):
         super().__init__(radar_file)
-        self.radar_frequency = float(self._getvar('radar_frequency',
-                                                  'frequency'))
+        self.radar_frequency = float(self.getvar('radar_frequency', 'frequency'))
         self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
@@ -180,16 +179,16 @@ class Radar(ProfileDataSource):
         several sequences with different folding velocities."""
         all_indices = np.arange(0, len(self.height))
         if not utils.isscalar(self.folding_velocity):
-            starting_indices = self._getvar('chirp_start_indices')
+            starting_indices = self.getvar('chirp_start_indices')
             return np.split(all_indices, starting_indices[1:])
         return [all_indices]
 
     def _get_folding_velocity(self):
         for key in ('nyquist_velocity', 'NyquistVelocity'):
             if key in self.variables:
-                return self._getvar(key)
+                return self.getvar(key)
         if 'prf' in self.variables:
-            return float(self._getvar('prf') * scipy.constants.c
+            return float(self.getvar('prf') * scipy.constants.c
                          / (4 * self.radar_frequency * 1e9))
         raise KeyError('Unable to determine folding velocity')
 
@@ -266,7 +265,7 @@ class Radar(ProfileDataSource):
     def add_meta(self):
         """Copies misc. metadata from the input file."""
         for key in ('latitude', 'longitude', 'altitude'):
-            self.append_data(self._getvar(key), key)
+            self.append_data(self.getvar(key), key)
         for key in ('time', 'height', 'radar_frequency'):
             self.append_data(getattr(self, key), key)
 
@@ -286,7 +285,7 @@ class Lidar(ProfileDataSource):
     def __init__(self, lidar_file, fields):
         super().__init__(lidar_file)
         self._netcdf_to_cloudnet(fields)
-        self.wavelength = float(self._getvar('wavelength'))
+        self.wavelength = float(self.getvar('wavelength'))
 
     def rebin_to_grid(self, time_new, height_new):
         """Rebins lidar data in time and height using mean.

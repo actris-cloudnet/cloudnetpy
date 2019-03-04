@@ -120,6 +120,10 @@ def gas_atten(model, cat_bits, height):
         dict: 'radar_gas_atten' containing the attenuation
             due to atmospheric gases.
 
+    Notes:
+        Could be combined with liquid_atten if a common
+            Attenuations class is created.
+
     """
     dheight = utils.mdiff(height)
     is_liquid = utils.isbit(cat_bits, 0)
@@ -149,8 +153,12 @@ def liquid_atten(mwr, model, classification, height):
           attenuation is present and we can compute its value.
         - **liquid_uncorrected** (*ndarray*): Boolean array denoting where liquid
           attenuation is present but we can not compute its value.
- 
+
+    Notes:
+        Too complicated function! Needs to be broken into a class.
+
     """
+
     spec_liq = model['specific_liquid_atten']
     is_liq = utils.isbit(classification.category_bits, 0)
     lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)

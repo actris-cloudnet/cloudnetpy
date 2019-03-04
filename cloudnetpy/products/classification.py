@@ -1,6 +1,5 @@
 """Module for creating classification file."""
 import numpy as np
-import cloudnetpy.utils as utils
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
@@ -36,10 +35,7 @@ def _append_detection_status(data_handler):
     """
     Makes classifications of instruments status by combining active bins
     """
-    qb = data_handler.dataset['quality_bits'][:]
-
-    keys = p_tools.get_status_keys()
-    bits = p_tools.check_active_bits(qb, keys)
+    bits = p_tools.read_quality_bits(data_handler)
 
     # TODO: Tää pätkä ei vielä toimi, negaatiot puuttuu, saattaa kaatua siihen
     #       Mutta antaa silti vain true falsea, pitää selvittää.
@@ -70,16 +66,10 @@ def _append_target_classification(data_handler):
     """
     Makes classifications for the atmospheric targets by combining active bins
     """
-    cb = data_handler.dataset['category_bits'][:]
+    bits = p_tools.read_category_bits(data_handler)
 
-    keys = p_tools.get_categorize_keys()
-    bits = p_tools.check_active_bits(cb, keys)
-
-    classification = bits['droplet'] + 2*bits['falling']
-
-    falling_cold = np.where(bits['falling'] & bits['cold'])
-    classification[falling_cold] += 2
-
+    classification = bits['droplet'] + 2*bits['falling']  # 0, 1, 2, 3
+    classification[bits['falling'] & bits['cold']] += 2  # 4, 5
     classification[bits['melting']] = 6
     classification[bits['melting'] & bits['droplet']] = 7
     classification[bits['aerosol']] = 8
@@ -103,14 +93,10 @@ def _save_data_and_meta(data_handler, output_file):
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height')
     output.copy_variables(data_handler.dataset, rootgrp, vars_from_source)
     rootgrp.title = f"Classification file from {data_handler.dataset.location}"
-    rootgrp.source = f"Categorize file: {_get_source(data_handler)}"
+    rootgrp.source = f"Categorize file: {p_tools.get_source(data_handler)}"
     output.copy_global(data_handler.dataset, rootgrp, ('location', 'day',
                                                        'month', 'year'))
     output.merge_history(rootgrp, 'classification', data_handler)
     rootgrp.close()
 
-
-def _get_source(data_handler):
-    """Returns uuid (or filename if uuid not found) of the source file."""
-    return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
 
