@@ -36,15 +36,15 @@ def _append_detection_status(data_handler):
     """
     bits = p_tools.read_quality_bits(data_handler)
 
-    quality = np.copy(bits['lidar'])
-    quality[bits['attenuated'] & bits['corrected'] & bits['radar']] = 2
-    quality[bits['radar'] & bits['lidar']] = 3
-    quality[bits['attenuated'] & bits['corrected']] = 4
+    quality = np.copy(bits['lidar'].astype(int))
     quality[bits['radar']] = 5
+    quality[bits['lidar'] & bits['radar']] = 3
     quality[bits['corrected']] = 6
     quality[bits['corrected'] & bits['radar']] = 7
+    quality[bits['attenuated'] & ~bits['corrected']] = 4
+    quality[bits['attenuated'] & ~bits['corrected'] & bits['radar']] = 2
     quality[bits['clutter']] = 8
-    quality[bits['molecular'] & bits['radar']] = 9
+    quality[bits['molecular'] & ~bits['radar']] = 9
 
     data_handler.append_data(quality, 'detection_status')
 
