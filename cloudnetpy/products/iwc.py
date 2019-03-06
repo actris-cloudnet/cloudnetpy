@@ -6,7 +6,6 @@ import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
 import cloudnetpy.atmos as atmos
-import cloudnetpy.plotting as plotting
 
 
 class DataCollector(DataSource):
@@ -101,9 +100,7 @@ def calc_iwc_including_rain(data_handler, ice_class):
 def calc_iwc(iwc_including_rain, ice_class, data_handler):
     """Returns ice water content ignoring the ice clouds above rain."""
     iwc = ma.copy(iwc_including_rain)
-    #TODO: Jostain syystä maski poistaa palan pois väärästä paikasta
     iwc[ice_class.ice_above_rain] = ma.masked
-    #plotting.plot_2d(np.log10(iwc), cmap='jet', clim=(-7, -3))
     data_handler.append_data(iwc, 'iwc')
     return iwc
 
@@ -141,54 +138,16 @@ def calc_iwc_bias(data_handler):
 
 def calc_iwc_status(iwc, ice_class, data_handler):
     """Returns information about the status of iwc retrieval."""
-    # TODO: Jostain syystä korvaa kokonaan nollat ykkösiksi
-    #       Ei mitään hajua mistä voisi johtua.
+    retrieval_status = np.zeros(iwc.shape, dtype=int)
 
-    retrieval_status = np.zeros(iwc.shape)
-    print(retrieval_status)
-    print(np.unique(retrieval_status))
-    print("")
-
-    is_iwc = iwc > 0
-    print(is_iwc)
-    print(np.unique(is_iwc))
-    print("")
-
+    is_iwc = ~iwc.mask
     retrieval_status[is_iwc] = 1
-    print(retrieval_status)
-    print(np.unique(retrieval_status))
-    print("")
-
     retrieval_status[is_iwc & ice_class.uncorrected_ice] = 2
-    print(retrieval_status)
-    print(np.unique(retrieval_status))
-    print("")
-
     retrieval_status[is_iwc & ice_class.corrected_ice] = 3
-    print(retrieval_status)
-    print(np.unique(retrieval_status))
-    print("")
-
-    retrieval_status[is_iwc & ice_class.is_ice] = 4
-    print(retrieval_status)
-    print(np.unique(retrieval_status))
-    print("")
+    retrieval_status[~is_iwc & ice_class.is_ice] = 4
     retrieval_status[ice_class.cold_above_rain] = 6
-    print(retrieval_status)
-    print(np.unique(retrieval_status))
-    print("")
-
     retrieval_status[ice_class.ice_above_rain] = 5
-    print(retrieval_status)
-    print(np.unique(retrieval_status))
-    print("")
-
     retrieval_status[ice_class.would_be_ice & (retrieval_status == 0)] = 7
-    print(retrieval_status)
-    print(np.unique(retrieval_status))
-    print("")
-
-    print(np.unique(retrieval_status))
 
     data_handler.append_data(retrieval_status, 'iwc_retrieval_status')
 
@@ -205,12 +164,6 @@ def generate_iwc(categorize_file, output_file):
     ice_class = IceClassification(data_handler)
     iwc_including_rain = calc_iwc_including_rain(data_handler, ice_class)
     iwc = calc_iwc(iwc_including_rain, ice_class, data_handler)
-
-
-    #p_targ = np.ma.masked_array(classification, classification != 10)
-    #plotting.plot_2d(p_targ, cmap='tab10', clim=(1,10))
-    #plotting.plot_2d(iwc, cmap='jet')
-
     calc_iwc_bias(data_handler)
     calc_iwc_error(data_handler, ice_class)
     calc_iwc_sensitivity(data_handler)
