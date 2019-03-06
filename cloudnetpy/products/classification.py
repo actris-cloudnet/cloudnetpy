@@ -3,7 +3,6 @@ import numpy as np
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
-from cloudnetpy import plotting
 
 
 def generate_class(cat_file, output_file):
@@ -37,27 +36,15 @@ def _append_detection_status(data_handler):
     """
     bits = p_tools.read_quality_bits(data_handler)
 
-    # TODO: Tää pätkä ei vielä toimi, negaatiot puuttuu, saattaa kaatua siihen
-    #       Mutta antaa silti vain true falsea, pitää selvittää.
-    quality = np.copy(bits['lidar'])
-    quality[bits['attenuated'] & bits['corrected'] & bits['radar']] = 2
-    quality[bits['radar'] & bits['lidar']] = 3
-    quality[bits['attenuated'] & bits['corrected']] = 4
+    quality = np.copy(bits['lidar'].astype(int))
     quality[bits['radar']] = 5
+    quality[bits['lidar'] & bits['radar']] = 3
     quality[bits['corrected']] = 6
     quality[bits['corrected'] & bits['radar']] = 7
+    quality[bits['attenuated'] & ~bits['corrected']] = 4
+    quality[bits['attenuated'] & ~bits['corrected'] & bits['radar']] = 2
     quality[bits['clutter']] = 8
-    quality[bits['molecular'] & bits['radar']] = 9
-
-    print(quality)
-    print(bits['lidar'])
-    print(bits['attenuated'])
-    print(bits['radar'])
-    print(bits['corrected'])
-    print(bits['molecular'])
-    print(bits['clutter'])
-
-    #plotting.plot_2d(quality, cmap='Set1', clim=(1,9))
+    quality[bits['molecular'] & ~bits['radar']] = 9
 
     data_handler.append_data(quality, 'detection_status')
 
@@ -75,10 +62,6 @@ def _append_target_classification(data_handler):
     classification[bits['aerosol']] = 8
     classification[bits['insect']] = 9
     classification[bits['aerosol'] & bits['insect']] = 10
-
-    print(classification)
-
-    #plotting.plot_2d(classification, cmap='tab10', clim=(1,10))
 
     data_handler.append_data(classification, 'target_classification')
 
