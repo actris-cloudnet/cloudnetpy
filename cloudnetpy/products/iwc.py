@@ -34,7 +34,7 @@ class DataCollector(DataSource):
         return Coefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
 
     def _get_subzero_temperatures(self):
-         """Returns freezing temperatures as Celsius."""
+        """Returns freezing temperatures as Celsius."""
         temperature = utils.interpolate_2d(self.getvar('model_time'),
                                            self.getvar('model_height'),
                                            self.getvar('temperature'),
