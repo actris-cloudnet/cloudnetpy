@@ -6,6 +6,56 @@ import cloudnetpy.products.product_tools as p_tools
 from cloudnetpy import plotting
 
 
+def _append_detection_status(data_handler):
+    """
+    Makes classifications of instruments status by combining active bins
+    """
+    bits = p_tools.read_quality_bits(data_handler)
+
+    quality = np.copy(bits['lidar'].astype(int))
+    quality[bits['radar']] = 5
+    quality[bits['radar'] & bits['lidar']] = 3
+    quality[bits['corrected']] = 6
+    quality[bits['corrected'] & bits['radar']] = 7
+    quality[bits['attenuated'] & ~bits['corrected']] = 4
+    quality[bits['attenuated'] & ~bits['corrected'] & bits['radar']] = 2
+    quality[bits['clutter']] = 8
+    quality[bits['molecular'] & ~bits['radar']] = 9
+
+    print(np.unique(quality))
+    """
+    for i in range(9):
+        p_targ = np.ma.masked_array(quality, quality != i+1)
+        plotting.plot_2d(p_targ, cmap='Set1', clim=(1, 9))
+    plotting.plot_2d(quality, cmap='Set1',clim=(1, 9))
+    """
+    data_handler.append_data(quality, 'detection_status')
+
+
+def _append_target_classification(data_handler):
+    """
+    Makes classifications for the atmospheric targets by combining active bins
+    """
+    bits = p_tools.read_category_bits(data_handler)
+
+    classification = bits['droplet'] + 2*bits['falling']  # 0, 1, 2, 3
+    classification[bits['falling'] & bits['cold']] += 2  # 4, 5
+    classification[bits['melting']] = 6
+    classification[bits['melting'] & bits['droplet']] = 7
+    classification[bits['aerosol']] = 8
+    classification[bits['insect']] = 9
+    classification[bits['aerosol'] & bits['insect']] = 10
+
+    print(np.unique(classification))
+    """
+    for i in range(10):
+        p_targ = np.ma.masked_array(classification, classification != i+1)
+        plotting.plot_2d(p_targ, cmap='tab10', clim=(1,10))
+    #plotting.plot_2d(classification, cmap='tab10', clim=(1,10))
+    """
+    data_handler.append_data(classification, 'target_classification')
+
+
 def generate_class(cat_file, output_file):
     """Makes classification for different types of targets at atmosphere.
 
@@ -29,58 +79,6 @@ def generate_class(cat_file, output_file):
     _append_detection_status(data_handler)
     output.update_attributes(data_handler.data)
     _save_data_and_meta(data_handler, output_file)
-
-
-def _append_detection_status(data_handler):
-    """
-    Makes classifications of instruments status by combining active bins
-    """
-    bits = p_tools.read_quality_bits(data_handler)
-
-    # TODO: Tää pätkä ei vielä toimi, negaatiot puuttuu, saattaa kaatua siihen
-    #       Mutta antaa silti vain true falsea, pitää selvittää.
-    quality = np.copy(bits['lidar'])
-    quality[bits['attenuated'] & bits['corrected'] & bits['radar']] = 2
-    quality[bits['radar'] & bits['lidar']] = 3
-    quality[bits['attenuated'] & bits['corrected']] = 4
-    quality[bits['radar']] = 5
-    quality[bits['corrected']] = 6
-    quality[bits['corrected'] & bits['radar']] = 7
-    quality[bits['clutter']] = 8
-    quality[bits['molecular'] & bits['radar']] = 9
-
-    print(quality)
-    print(bits['lidar'])
-    print(bits['attenuated'])
-    print(bits['radar'])
-    print(bits['corrected'])
-    print(bits['molecular'])
-    print(bits['clutter'])
-
-    #plotting.plot_2d(quality, cmap='Set1', clim=(1,9))
-
-    data_handler.append_data(quality, 'detection_status')
-
-
-def _append_target_classification(data_handler):
-    """
-    Makes classifications for the atmospheric targets by combining active bins
-    """
-    bits = p_tools.read_category_bits(data_handler)
-
-    classification = bits['droplet'] + 2*bits['falling']  # 0, 1, 2, 3
-    classification[bits['falling'] & bits['cold']] += 2  # 4, 5
-    classification[bits['melting']] = 6
-    classification[bits['melting'] & bits['droplet']] = 7
-    classification[bits['aerosol']] = 8
-    classification[bits['insect']] = 9
-    classification[bits['aerosol'] & bits['insect']] = 10
-
-    print(classification)
-
-    #plotting.plot_2d(classification, cmap='tab10', clim=(1,10))
-
-    data_handler.append_data(classification, 'target_classification')
 
 
 def _save_data_and_meta(data_handler, output_file):
