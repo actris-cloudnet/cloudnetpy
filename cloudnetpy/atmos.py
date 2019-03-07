@@ -3,8 +3,8 @@ various atmospheric parameters.
 """
 import numpy as np
 import numpy.ma as ma
-from . import constants as con
-from . import lwc, utils
+from cloudnetpy import constants as con
+from cloudnetpy import lwc, utils
 
 
 def c2k(temp):

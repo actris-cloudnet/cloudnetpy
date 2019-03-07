@@ -1,13 +1,10 @@
 """Module for reading raw cloud radar data."""
 
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
 import netCDF4
 import numpy as np
-from . import output, utils
-from .cloudnetarray import CloudnetArray
-from .categorize import DataSource
+from cloudnetpy import output, utils
+from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.categorize import DataSource
 
 
 class Mira(DataSource):
@@ -16,7 +13,7 @@ class Mira(DataSource):
     Args:
         raw_radar_file (str): Filename of raw MIRA NetCDF file.
         site_properties (dict): Site properties in a dictionary. Required
-            keys: 'name'.
+            keys are: 'name'.
 
     """
     keymap = {'Zg': 'Ze',

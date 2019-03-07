@@ -42,23 +42,20 @@
 <span></span><span class="sd">&quot;&quot;&quot; This module contains functions to calculate</span>
 <span class="sd">various atmospheric parameters.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">constants</span> <span class="k">as</span> <span class="n">con</span>
-<span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">lwc</span>
-<span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">cloudnetpy.cloudnetarray</span> <span class="k">import</span> <span class="n">CloudnetArray</span>
+<span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">lwc</span><span class="p">,</span> <span class="n">utils</span>
 
 
 <div class="viewcode-block" id="c2k"><a class="viewcode-back" href="../api.html#atmos.c2k">[docs]</a><span class="k">def</span> <span class="nf">c2k</span><span class="p">(</span><span class="n">temp</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts Celsius to Kelvins.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">+</span> <span class="mf">273.15</span></div>
+    <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">+</span> <span class="mf">273.15</span></div>
 
 
 <div class="viewcode-block" id="k2c"><a class="viewcode-back" href="../api.html#atmos.k2c">[docs]</a><span class="k">def</span> <span class="nf">k2c</span><span class="p">(</span><span class="n">temp</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts Kelvins to Celsius.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">273.15</span></div>
+    <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">273.15</span></div>
 
 
 <span class="n">VAISALA_PARAMS_OVER_WATER</span> <span class="o">=</span> <span class="p">(</span><span class="mf">6.116441</span><span class="p">,</span> <span class="mf">7.591386</span><span class="p">,</span> <span class="mf">240.7263</span><span class="p">)</span>
@@ -161,7 +158,12 @@
 <span class="sd">        height (ndarray): 1-D altitude grid (m).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        CloudnetArray: Attenuation due to atmospheric gases.</span>
+<span class="sd">        dict: &#39;radar_gas_atten&#39; containing the attenuation</span>
+<span class="sd">            due to atmospheric gases.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Could be combined with liquid_atten if a common</span>
+<span class="sd">            Attenuations class is created.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dheight</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">mdiff</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
@@ -192,8 +194,12 @@
 <span class="sd">          attenuation is present and we can compute its value.</span>
 <span class="sd">        - **liquid_uncorrected** (*ndarray*): Boolean array denoting where liquid</span>
 <span class="sd">          attenuation is present but we can not compute its value.</span>
-<span class="sd"> </span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Too complicated function! Needs to be broken into a class.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">spec_liq</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;specific_liquid_atten&#39;</span><span class="p">]</span>
     <span class="n">is_liq</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="n">classification</span><span class="o">.</span><span class="n">category_bits</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">lwc_dz</span><span class="p">,</span> <span class="n">lwc_dz_err</span><span class="p">,</span> <span class="n">liq_att</span><span class="p">,</span> <span class="n">liq_att_err</span><span class="p">,</span> <span class="n">lwp_norm</span><span class="p">,</span> <span class="n">lwp_norm_err</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">is_liq</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -283,7 +289,7 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2018, Finnish Meteorological Institute.
+        &#169; Copyright 2019, Finnish Meteorological Institute.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>

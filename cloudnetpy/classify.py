@@ -7,8 +7,8 @@ import numpy.ma as ma
 import scipy.ndimage
 from scipy import stats
 from scipy.interpolate import interp1d
-from . import droplet, utils
-from .constants import T0
+from cloudnetpy import droplet, utils
+from cloudnetpy.constants import T0
 
 
 class _ClassData:
