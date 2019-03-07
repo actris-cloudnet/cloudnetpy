@@ -6,15 +6,14 @@ import cloudnetpy.products.product_tools as p_tools
 
 
 def generate_class(cat_file, output_file):
-    """Makes classification for different types of targets at atmosphere.
+    """High level API to generate Cloudnet classification product.
 
     Generates categorized bins to 10 types of different targets in atmosphere
     as well as instrument status classification. Classifications are saved to
     NetCDF file with information of classification and measurements.
 
     Args:
-        cat_file: NetCDF file of categorized bins and information of
-                measurements and instruments.
+        cat_file: Categorize file name.
 
         output_file(str): Output file name.
 

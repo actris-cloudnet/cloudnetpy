@@ -159,11 +159,15 @@ def append_iwc_status(data_handler, ice_class):
 
 
 def generate_iwc(categorize_file, output_file):
-    """High level API to generate Cloudnet ice water content file.
+    """High level API to generate Cloudnet ice water content product.
 
     Args:
-        categorize_file (str): Categorize file.
+        categorize_file (str): Categorize file name.
         output_file (str): Output file name.
+
+    Examples:
+        >>> from cloudnetpy.products.iwc import generate_iwc
+        >>> generate_iwc('categorize.nc', 'iwc.nc')
 
     """
     data_handler = DataCollector(categorize_file)

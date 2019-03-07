@@ -33,6 +33,8 @@ generated.
 
 .. autofunction:: products.classification.generate_class
 
+.. autofunction:: products.iwc.generate_iwc
+
 
 Cloudnetpy modules
 ==================

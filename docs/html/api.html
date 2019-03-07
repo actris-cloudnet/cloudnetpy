@@ -161,7 +161,7 @@ generated.</p>
 <dl class="function">
 <dt id="products.classification.generate_class">
 <code class="descclassname">products.classification.</code><code class="descname">generate_class</code><span class="sig-paren">(</span><em>cat_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.generate_class" title="Permalink to this definition">¶</a></dt>
-<dd><p>Makes classification for different types of targets at atmosphere.</p>
+<dd><p>High level API to generate Cloudnet classification product.</p>
 <p>Generates categorized bins to 10 types of different targets in atmosphere
 as well as instrument status classification. Classifications are saved to
 NetCDF file with information of classification and measurements.</p>
@@ -170,8 +170,7 @@ NetCDF file with information of classification and measurements.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>cat_file</strong> – NetCDF file of categorized bins and information of
-measurements and instruments.</li>
+<li><strong>cat_file</strong> – Categorize file name.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 </ul>
 </td>
@@ -181,6 +180,29 @@ measurements and instruments.</li>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_class</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_class</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.iwc.generate_iwc">
+<code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.generate_iwc" title="Permalink to this definition">¶</a></dt>
+<dd><p>High level API to generate Cloudnet ice water content product.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.iwc</span> <span class="k">import</span> <span class="n">generate_iwc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1356,7 +1378,7 @@ products.</p>
 <dl class="function">
 <dt>
 <code class="descclassname">products.classification.</code><code class="descname">generate_class</code><span class="sig-paren">(</span><em>cat_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_class"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Makes classification for different types of targets at atmosphere.</p>
+<dd><p>High level API to generate Cloudnet classification product.</p>
 <p>Generates categorized bins to 10 types of different targets in atmosphere
 as well as instrument status classification. Classifications are saved to
 NetCDF file with information of classification and measurements.</p>
@@ -1365,8 +1387,7 @@ NetCDF file with information of classification and measurements.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>cat_file</strong> – NetCDF file of categorized bins and information of
-measurements and instruments.</li>
+<li><strong>cat_file</strong> – Categorize file name.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 </ul>
 </td>
