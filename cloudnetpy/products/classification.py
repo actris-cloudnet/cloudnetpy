@@ -5,7 +5,7 @@ from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
 
 
-def generate_class(cat_file, output_file):
+def generate_class(categorize_file, output_file):
     """High level API to generate Cloudnet classification product.
 
     Generates categorized bins to 10 types of different targets in atmosphere
@@ -13,7 +13,7 @@ def generate_class(cat_file, output_file):
     NetCDF file with information of classification and measurements.
 
     Args:
-        cat_file: Categorize file name.
+        categorize_file: Categorize file name.
 
         output_file(str): Output file name.
 
@@ -22,7 +22,7 @@ def generate_class(cat_file, output_file):
         >>> generate_class('categorize.nc', 'classification.nc')
 
     """
-    data_handler = DataSource(cat_file)
+    data_handler = DataSource(categorize_file)
     _append_target_classification(data_handler)
     _append_detection_status(data_handler)
     output.update_attributes(data_handler.data)
