@@ -34,8 +34,12 @@ class DataCollector(DataSource):
         return Coefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
 
     def _get_subzero_temperatures(self):
-        """Returns freezing wet-bulb temperatures as Celsius."""
-        temperature = atmos.k2c(self.getvar('Tw'))
+        """Returns freezing temperatures as Celsius."""
+        temperature = utils.interpolate_2d(self.getvar('model_time'),
+                                           self.getvar('model_height'),
+                                           self.getvar('temperature'),
+                                           self.time, self.getvar('height'))
+        temperature = atmos.k2c(temperature)
         temperature[temperature > 0] = ma.masked
         mean_temperature = ma.mean(temperature, axis=0)
         return temperature, mean_temperature
@@ -54,18 +58,6 @@ class IceClassification:
         self.ice_above_rain = self._find_ice_above_rain()
         self.cold_above_rain = self._find_cold_above_rain()
 
-    def _transpose_rain(self):
-        return utils.transpose(self.data_handler.getvar('is_rain'))
-
-    def _find_cold_above_rain(self):
-        is_cold = self.category_bits['cold']
-        is_rain = self._transpose_rain()
-        return (is_cold * is_rain) > 0
-
-    def _find_ice_above_rain(self):
-        is_rain = self._transpose_rain()
-        return (self.is_ice * is_rain) > 0
-
     def _find_ice(self):
         return (self.category_bits['falling'] & self.category_bits['cold']
                 & ~self.category_bits['melting'] & ~self.category_bits['insect'])
@@ -81,6 +73,18 @@ class IceClassification:
     def _find_uncorrected_ice(self):
         return (self.is_ice & self.quality_bits['attenuated'] &
                 ~self.quality_bits['corrected'])
+
+    def _find_ice_above_rain(self):
+        is_rain = self._transpose_rain()
+        return (self.is_ice * is_rain) > 0
+
+    def _find_cold_above_rain(self):
+        is_cold = self.category_bits['cold']
+        is_rain = self._transpose_rain()
+        return (is_cold * is_rain) > 0
+
+    def _transpose_rain(self):
+        return utils.transpose(self.data_handler.getvar('is_rain'))
 
 
 def calc_iwc_including_rain(data_handler, ice_class):
