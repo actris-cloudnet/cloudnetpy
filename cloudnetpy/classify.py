@@ -382,13 +382,10 @@ def _screen_insects(insect_prob, tw, *args):
 def find_falling_hydrometeors(obs, is_liquid, is_insects):
     """Finds falling hydrometeors.
 
-    Falling hydrometeors are the unmasked radar signals that are
-    a) not insects b) not clutter. Furthermore, the falling bit
-    is also *True* for lidar-detected ice clouds.
-
-    To distinguish lidar ice from aerosols is not trivial, though.
-    This method assumes that lidar signals, that are not from liquid
-    clouds, with the temperature below -7 C are ice.
+    Falling hydrometeors are radar signals that are
+    a) not insects b) not clutter. Furthermore, falling hydrometeors
+    are strong lidar pixels that excluding liquid layer (thus these pixels
+    are ice or rain).
 
     Args:
         obs (_ClassData): Container for observations.
@@ -402,9 +399,9 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
     is_z = ~obs.z.mask
     no_clutter = ~obs.is_clutter
     no_insects = ~is_insects
-    ice_from_lidar = ~obs.beta.mask & ~is_liquid & (obs.tw < (T0-7))
-    is_falling = (is_z & no_clutter & no_insects) | ice_from_lidar
-    return utils.filter_isolated_pixels(is_falling)
+    falling_from_lidar = ~obs.beta.mask & (obs.beta.data > 1e-6) & ~is_liquid
+    is_falling = (is_z & no_clutter & no_insects) | falling_from_lidar
+    return is_falling
 
 
 def find_aerosols(beta, is_falling, is_liquid):
