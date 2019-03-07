@@ -384,7 +384,7 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
 
     Falling hydrometeors are radar signals that are
     a) not insects b) not clutter. Furthermore, falling hydrometeors
-    are strong lidar pixels that excluding liquid layer (thus these pixels
+    are strong lidar pixels excluding liquid layers (thus these pixels
     are ice or rain).
 
     Args:
@@ -393,7 +393,7 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
         is_insects (ndarray): 2-D boolean array of insects.
 
     Returns:
-        ndarray: 2-D boolean array containing falling hydrometeros.
+        ndarray: 2-D boolean array containing falling hydrometeors.
 
     """
     is_z = ~obs.z.mask
@@ -407,8 +407,7 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
 def find_aerosols(beta, is_falling, is_liquid):
     """Estimates aerosols from lidar backscattering.
 
-    Aerosols are the unmasked pixels in the attenuated backscattering
-    that are: a) not falling, b) not liquid droplets.
+    Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
 
     Args:
         beta (MaskedArray): 2-D attenuated backscattering coefficient.
@@ -416,7 +415,7 @@ def find_aerosols(beta, is_falling, is_liquid):
         is_liquid (ndarray): 2-D boolean array of liquid droplets.
 
     Returns:
-        ndarray: 2-D boolean array of aerosol classification.
+        ndarray: 2-D boolean array containing aerosols.
 
     """
     return ~beta.mask & ~is_falling & ~is_liquid
