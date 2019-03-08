@@ -41,12 +41,12 @@ def test_setbit(n, k, res):
     assert utils.setbit(n, k) == res
 
 
-def test_seconds2hour():
+def test_seconds2hours():
     """ Unit tests for units.seconds2hour_hour(). """
     n0 = np.array([1095379200])
-    assert utils.seconds2hour(n0) == [24]
+    assert utils.seconds2hours(n0) == [24]
     n1 = np.array([12*60*60])
-    assert utils.seconds2hour(n0 + n1) == [12]
+    assert utils.seconds2hours(n0 + n1) == [12]
 
 
 def test_rebin_2d():
@@ -142,28 +142,6 @@ class Data:
 
     def __getitem__(self, item):
         return self.alt
-
-
-def test_km2m():
-    """Unit tests for utils.km2m()"""
-    y = Data(np.array([1, 2]), 'km')
-    assert_array_almost_equal(np.array([1000, 2000]), utils.km2m(y))
-    y.units = 'feet'
-    assert_array_almost_equal(np.array([1, 2]), utils.km2m(y))
-    y = Data(ma.array([1]), 'km')
-    assert_array_almost_equal(np.array([1000]), utils.km2m(y))
-    y = Data(ma.array(1), 'km')
-    assert_array_almost_equal(np.array([1000]), utils.km2m(y))
-
-
-def test_m2km():
-    """Unit tests for utils.m2km()"""
-    y = Data(np.array([1000, 2000]), 'm')
-    assert_array_almost_equal(np.array([1, 2]), utils.m2km(y))
-    y.units = 'feet'
-    assert_array_almost_equal(np.array([1000, 2000]), utils.m2km(y))
-    y = Data(ma.array([1000]), 'm')
-    assert_array_almost_equal(np.array([1]), utils.m2km(y))
 
 
 def test_n_elements():

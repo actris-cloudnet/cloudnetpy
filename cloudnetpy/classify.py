@@ -81,6 +81,15 @@ def classify_measurements(radar, lidar, model):
     The input data needs to be averaged or interpolated to the common
     time / height grid before calling this function.
 
+    Args:
+        radar (Radar): A Radar object.
+        lidar (Lidar): A Lidar object.
+        model (Model): A Model object.
+
+    Returns:
+        _ClassificationResult: Object containing the result
+            of classification.
+
     See also:
         classify.fetch_qual_bits()
 

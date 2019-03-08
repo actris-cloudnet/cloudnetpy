@@ -225,6 +225,30 @@ radar / lidar measurements.</p>
 <p>This function classifies atmospheric scatterer from the input data.
 The input data needs to be averaged or interpolated to the common
 time / height grid before calling this function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>radar</strong> (<em>Radar</em>) – A Radar object.</li>
+<li><strong>lidar</strong> (<em>Lidar</em>) – A Lidar object.</li>
+<li><strong>model</strong> (<em>Model</em>) – A Model object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>Object containing the result</dt>
+<dd><p class="first last">of classification.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">_ClassificationResult</p>
+</td>
+</tr>
+</tbody>
+</table>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last">classify.fetch_qual_bits()</p>
