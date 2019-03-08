@@ -1,5 +1,6 @@
 """Module for reading raw cloud radar data."""
 
+import os
 import netCDF4
 import numpy as np
 from cloudnetpy import output, utils
