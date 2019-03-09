@@ -8,7 +8,7 @@ import cloudnetpy.products.product_tools as p_tools
 import cloudnetpy.atmos as atmos
 
 
-class DataCollector(DataSource):
+class _DataCollector(DataSource):
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.wl_band = utils.get_wl_band(self.getvar('radar_frequency'))
@@ -45,7 +45,7 @@ class DataCollector(DataSource):
         return temperature, mean_temperature
 
 
-class IceClassification:
+class _IceClassification:
     """Class storing the information about different ice types."""
     def __init__(self, data_handler):
         self.data_handler = data_handler
@@ -103,21 +103,21 @@ def _z_to_iwc(data_handler, z_variable):
                   + coeffs.c) * 0.001
 
 
-def append_iwc_including_rain(data_handler, ice_class):
+def _append_iwc_including_rain(data_handler, ice_class):
     """Calculates ice water content (including ice above rain)."""
     iwc_including_rain = _z_to_iwc(data_handler, 'Z')
     iwc_including_rain[~ice_class.is_ice] = ma.masked
     data_handler.append_data(iwc_including_rain, 'iwc_inc_rain')
 
 
-def append_iwc(data_handler, ice_class):
+def _append_iwc(data_handler, ice_class):
     """Masks ice clouds above rain from ice water content."""
     iwc = ma.copy(data_handler.data['iwc_inc_rain'][:])
     iwc[ice_class.ice_above_rain] = ma.masked
     data_handler.append_data(iwc, 'iwc')
 
 
-def append_iwc_error(data_handler, ice_class):
+def _append_iwc_error(data_handler, ice_class):
     """Estimates error of ice water content."""
     coeffs = data_handler.coeffs
     error = data_handler.getvar('Z_error')*(coeffs.ZT*data_handler.T
@@ -131,19 +131,19 @@ def append_iwc_error(data_handler, ice_class):
     data_handler.append_data(error, 'iwc_error')
 
 
-def append_iwc_sensitivity(data_handler):
+def _append_iwc_sensitivity(data_handler):
     """Calculates sensitivity of ice water content."""
     iwc_sensitivity = _z_to_iwc(data_handler, 'Z_sensitivity')
     data_handler.append_data(iwc_sensitivity, 'iwc_sensitivity')
 
 
-def append_iwc_bias(data_handler):
+def _append_iwc_bias(data_handler):
     """Calculates bias of ice water content."""
     iwc_bias = data_handler.getvar('Z_bias')*data_handler.coeffs.Z * 10
     data_handler.append_data(iwc_bias, 'iwc_bias')
 
 
-def append_iwc_status(data_handler, ice_class):
+def _append_iwc_status(data_handler, ice_class):
     """Returns information about the status of iwc retrieval."""
     iwc = data_handler.data['iwc'][:]
     retrieval_status = np.zeros(iwc.shape, dtype=int)
@@ -170,14 +170,14 @@ def generate_iwc(categorize_file, output_file):
         >>> generate_iwc('categorize.nc', 'iwc.nc')
 
     """
-    data_handler = DataCollector(categorize_file)
-    ice_class = IceClassification(data_handler)
-    append_iwc_including_rain(data_handler, ice_class)
-    append_iwc(data_handler, ice_class)
-    append_iwc_bias(data_handler)
-    append_iwc_error(data_handler, ice_class)
-    append_iwc_sensitivity(data_handler)
-    append_iwc_status(data_handler, ice_class)
+    data_handler = _DataCollector(categorize_file)
+    ice_class = _IceClassification(data_handler)
+    _append_iwc_including_rain(data_handler, ice_class)
+    _append_iwc(data_handler, ice_class)
+    _append_iwc_bias(data_handler)
+    _append_iwc_error(data_handler, ice_class)
+    _append_iwc_sensitivity(data_handler)
+    _append_iwc_status(data_handler, ice_class)
     output.update_attributes(data_handler.data)
     _save_data_and_meta(data_handler, output_file)
 

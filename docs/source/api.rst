@@ -7,7 +7,7 @@ needing to worry about implementation details.
 
 The APIs enable users to set up an operational processing
 system that doesn't require major modifications
-if the underlaying methods and their implementations change
+if the underlying methods and their implementations change
 from one software version to another.
 
 Raw data to categorize
@@ -83,6 +83,13 @@ products.classification
 -----------------------
 
 .. automodule:: products.classification
+   :members:
+
+
+products.iwc
+-----------------------
+
+.. automodule:: products.iwc
    :members:
 
 

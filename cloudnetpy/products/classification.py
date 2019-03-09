@@ -13,9 +13,9 @@ def generate_class(categorize_file, output_file):
     NetCDF file with information of classification and measurements.
 
     Args:
-        categorize_file: Categorize file name.
+        categorize_file (str): Categorize file name.
 
-        output_file(str): Output file name.
+        output_file (str): Output file name.
 
     Examples:
         >>> from cloudnetpy.products.classification import generate_class

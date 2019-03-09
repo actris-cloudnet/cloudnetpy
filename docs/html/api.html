@@ -48,7 +48,7 @@ cloud remote sensing measurements into Cloudnet products, without
 needing to worry about implementation details.</p>
 <p>The APIs enable users to set up an operational processing
 system that doesn’t require major modifications
-if the underlaying methods and their implementations change
+if the underlying methods and their implementations change
 from one software version to another.</p>
 <div class="section" id="raw-data-to-categorize">
 <h2>Raw data to categorize<a class="headerlink" href="#raw-data-to-categorize" title="Permalink to this headline">¶</a></h2>
@@ -170,7 +170,7 @@ NetCDF file with information of classification and measurements.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> – Categorize file name.</li>
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 </ul>
 </td>
@@ -1375,7 +1375,7 @@ NetCDF file with information of classification and measurements.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> – Categorize file name.</li>
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 </ul>
 </td>
@@ -1385,6 +1385,32 @@ NetCDF file with information of classification and measurements.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_class</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_class</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-products.iwc">
+<span id="products-iwc"></span><h2>products.iwc<a class="headerlink" href="#module-products.iwc" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt>
+<code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>High level API to generate Cloudnet ice water content product.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.iwc</span> <span class="k">import</span> <span class="n">generate_iwc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1414,6 +1440,7 @@ NetCDF file with information of classification and measurements.</p>
 </li>
 <li><a class="reference internal" href="#products-modules">Products modules</a><ul>
 <li><a class="reference internal" href="#module-products.classification">products.classification</a></li>
+<li><a class="reference internal" href="#module-products.iwc">products.iwc</a></li>
 </ul>
 </li>
 </ul>
