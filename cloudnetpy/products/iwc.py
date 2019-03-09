@@ -84,7 +84,7 @@ class IceClassification:
         return (is_cold * is_rain) > 0
 
     def _transpose_rain(self):
-        return utils.transpose(self.data_handler.getvar('is_rain'))
+        return utils.transpose_1d_array(self.data_handler.getvar('is_rain'))
 
 
 def _z_to_iwc(data_handler, z_variable):
@@ -95,7 +95,7 @@ def _z_to_iwc(data_handler, z_variable):
         return data_handler.meanT
 
     temperature = _get_correct_temperature()
-    z_scaled = data_handler.getvar(z_variable) * data_handler.Z_factor
+    z_scaled = data_handler.getvar(z_variable) + data_handler.Z_factor
     coeffs = data_handler.coeffs
     return 10 ** (coeffs.ZT*z_scaled*temperature
                   + coeffs.T*temperature

@@ -4,7 +4,7 @@ various atmospheric parameters.
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import constants as con
-from cloudnetpy import lwc, utils
+from cloudnetpy import utils
 
 
 def c2k(temp):
@@ -18,6 +18,52 @@ def k2c(temp):
 
 
 VAISALA_PARAMS_OVER_WATER = (6.116441, 7.591386, 240.7263)
+HPA_TO_P = 100
+P_TO_HPA = 0.01
+
+
+def adiabatic_lwc(temperature, pressure):
+    """Returns adiabatic LWC change rate.
+
+    Calculates the theoretical adiabatic rate of increase of LWC with
+    height, or pressure, given the cloud base temperature and pressure.
+
+    Args:
+        temperature (ndarray): Temperature of cloud base (K).
+        pressure (ndarray): Pressure of cloud base (Pa).
+
+    Returns:
+        ndarray: dlwc/dz in kg m-3 m-1
+
+    References:
+        Brenguier, 1991, https://bit.ly/2QCSJtb
+
+    """
+
+    svp = saturation_vapor_pressure(temperature)
+    mixing_ratio = calc_mixing_ratio(svp, pressure)
+
+    rhoa = pressure / (con.Rs*temperature*(0.6*mixing_ratio + 1))
+    a = con.specific_heat*temperature / (con.latent_heat*con.mw_ratio)
+    b = pressure - svp
+    f1 = -1 + a
+    f2 = 1/(a + (con.latent_heat*mixing_ratio*rhoa/b))
+    f3 = rhoa*con.g*con.mw_ratio*svp*b**-2
+    return rhoa*f1*f2*f3
+
+
+def calc_mixing_ratio(svp, pressure):
+    """Calculates mixing ratio from saturation vapor pressure and pressure.
+
+    Args:
+        svp (ndarray): Saturation vapor pressure (Pa).
+        pressure (ndarray): Atmospheric pressure (Pa).
+
+    Returns:
+        ndarray: Mixing ratio.
+
+    """
+    return con.mw_ratio*svp/(pressure-svp)
 
 
 def saturation_vapor_pressure(temp_kelvin):
@@ -35,7 +81,7 @@ def saturation_vapor_pressure(temp_kelvin):
         """
     a, m, tn = VAISALA_PARAMS_OVER_WATER
     temp_celsius = k2c(temp_kelvin)
-    return a * 10**((m*temp_celsius) / (temp_celsius+tn)) * 100
+    return a * 10**((m*temp_celsius)/(temp_celsius+tn)) * HPA_TO_P
 
 
 def dew_point_temperature(vapor_pressure):
@@ -52,7 +98,7 @@ def dew_point_temperature(vapor_pressure):
 
     """
     a, m, tn = VAISALA_PARAMS_OVER_WATER
-    dew_point_celsius = tn / ((m/np.log10(vapor_pressure/100/a))-1)
+    dew_point_celsius = tn / ((m/np.log10(vapor_pressure*P_TO_HPA/a))-1)
     return c2k(dew_point_celsius)
 
 
@@ -163,8 +209,8 @@ def liquid_atten(mwr, model, classification, height):
     is_liq = utils.isbit(classification.category_bits, 0)
     lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
     ind = np.where(classification.liquid_bases)
-    lwc_dz[ind] = lwc.adiabatic_lwc(model['temperature'][ind],
-                                    model['pressure'][ind])
+    lwc_dz[ind] = adiabatic_lwc(model['temperature'][ind],
+                                model['pressure'][ind])
     lwc_dz_err[is_liq] = utils.ffill(lwc_dz[is_liq])
     ind_from_base = utils.cumsumr(is_liq, axis=1)
     lwc_adiab = ind_from_base*lwc_dz_err*utils.mdiff(height)*1e3
@@ -211,3 +257,4 @@ def get_attenuations(model, mwr, classification, height):
     gas = gas_atten(model.data_dense, classification.category_bits, height)
     liquid = liquid_atten(mwr.data, model.data_dense, classification, height)
     return {**gas, **liquid}
+
