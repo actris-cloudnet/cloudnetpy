@@ -427,7 +427,7 @@ class Model(DataSource):
 
     def calc_wet_bulb(self):
         """Calculates wet-bulb temperature in dense grid."""
-        wet_bulb_temp = atmos.wet_bulb(self.data_dense)
+        wet_bulb_temp = atmos.calc_wet_bulb_temperature(self.data_dense)
         self.append_data(wet_bulb_temp, 'Tw', units='K')
 
     def screen_sparse_fields(self):

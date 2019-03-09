@@ -1,4 +1,4 @@
-"""Constans used in Cloudnet processing."""
+"""Constants used in Cloudnet processing."""
 
 # Triple point of water
 T0 = 273.16

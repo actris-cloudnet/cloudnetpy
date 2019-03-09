@@ -22,34 +22,34 @@ HPA_TO_P = 100
 P_TO_HPA = 0.01
 
 
-def adiabatic_lwc(temperature, pressure):
+def calc_lwc_change_rate(temperature, pressure):
     """Returns adiabatic LWC change rate.
 
     Calculates the theoretical adiabatic rate of increase of LWC with
-    height, or pressure, given the cloud base temperature and pressure.
+    height given the cloud base temperature and pressure.
 
     Args:
         temperature (ndarray): Temperature of cloud base (K).
         pressure (ndarray): Pressure of cloud base (Pa).
 
     Returns:
-        ndarray: dlwc/dz in kg m-3 m-1
+        ndarray: dlwc/dz (kg m-3 m-1)
 
     References:
         Brenguier, 1991, https://bit.ly/2QCSJtb
 
     """
 
-    svp = saturation_vapor_pressure(temperature)
-    mixing_ratio = calc_mixing_ratio(svp, pressure)
+    svp = calc_saturation_vapor_pressure(temperature)
+    svp_mixing_ratio = calc_mixing_ratio(svp, pressure)
 
-    rhoa = pressure / (con.Rs*temperature*(0.6*mixing_ratio + 1))
+    air_density = pressure / (con.Rs*temperature*(0.6*svp_mixing_ratio + 1))
     a = con.specific_heat*temperature / (con.latent_heat*con.mw_ratio)
     b = pressure - svp
     f1 = a - 1
-    f2 = 1 / (a + (con.latent_heat*mixing_ratio*rhoa/b))
-    f3 = rhoa*con.g*con.mw_ratio*svp*b**-2
-    return rhoa*f1*f2*f3
+    f2 = 1 / (a + (con.latent_heat*svp_mixing_ratio*air_density/b))
+    f3 = air_density*con.g*con.mw_ratio*svp*b**-2
+    return air_density*f1*f2*f3
 
 
 def calc_mixing_ratio(svp, pressure):
@@ -66,7 +66,7 @@ def calc_mixing_ratio(svp, pressure):
     return con.mw_ratio*svp/(pressure-svp)
 
 
-def saturation_vapor_pressure(temp_kelvin):
+def calc_saturation_vapor_pressure(temp_kelvin):
     """Returns approximate water vapour saturation pressure.
 
     Args:
@@ -84,7 +84,7 @@ def saturation_vapor_pressure(temp_kelvin):
     return a * 10**((m*temp_celsius)/(temp_celsius+tn)) * HPA_TO_P
 
 
-def dew_point_temperature(vapor_pressure):
+def calc_dew_point_temperature(vapor_pressure):
     """ Returns dew point temperature.
 
     Args:
@@ -102,7 +102,23 @@ def dew_point_temperature(vapor_pressure):
     return c2k(dew_point_celsius)
 
 
-def wet_bulb(model_data):
+def calc_psychrometric_constant(pressure):
+    """Returns psychrometric constant.
+
+    Psychrometric constant relates the partial pressure
+    of water in air to the air temperature.
+
+    Args:
+        pressure (ndarray): Atmospheric pressure (Pa).
+
+    Returns:
+        ndarray: Psychrometric constant value (Pa C-1)
+
+    """
+    return pressure*con.specific_heat / (con.latent_heat * con.mw_ratio)
+
+
+def calc_wet_bulb_temperature(model_data):
     """Returns wet bulb temperature.
 
     Returns wet bulb temperature for given temperature,
@@ -134,19 +150,15 @@ def wet_bulb(model_data):
         second = vapor_pressure*((a/(b**2))**2 + 2*a/(b**3))
         return first, second
 
-    def _psychrometric_constant():
-        return (model_data['pressure'] * con.specific_heat
-                / (con.latent_heat * con.mw_ratio))
-
     relative_humidity = _screen_rh()
-    saturation_pressure = saturation_vapor_pressure(model_data['temperature'])
+    saturation_pressure = calc_saturation_vapor_pressure(model_data['temperature'])
     vapor_pressure = saturation_pressure * relative_humidity
-    dew_point = dew_point_temperature(vapor_pressure)
+    dew_point = calc_dew_point_temperature(vapor_pressure)
+    psychrometric_constant = calc_psychrometric_constant(model_data['pressure'])
     first_der, second_der = _vapor_derivatives()
-    psychrometric_const = _psychrometric_constant()
     a = 0.5*second_der
-    b = first_der + psychrometric_const - dew_point*second_der
-    c = (-model_data['temperature']*psychrometric_const
+    b = first_der + psychrometric_constant - dew_point*second_der
+    c = (-model_data['temperature']*psychrometric_constant
          - dew_point*first_der
          + 0.5*dew_point**2*second_der)
     return (-b+np.sqrt(b*b-4*a*c))/(2*a)
@@ -209,8 +221,8 @@ def liquid_atten(mwr, model, classification, height):
     is_liq = utils.isbit(classification.category_bits, 0)
     lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
     ind = np.where(classification.liquid_bases)
-    lwc_dz[ind] = adiabatic_lwc(model['temperature'][ind],
-                                model['pressure'][ind])
+    lwc_dz[ind] = calc_lwc_change_rate(model['temperature'][ind],
+                                       model['pressure'][ind])
     lwc_dz_err[is_liq] = utils.ffill(lwc_dz[is_liq])
     ind_from_base = utils.cumsumr(is_liq, axis=1)
     lwc_adiab = ind_from_base*lwc_dz_err*utils.mdiff(height)*1e3
