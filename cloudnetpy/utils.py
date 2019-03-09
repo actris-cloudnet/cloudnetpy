@@ -57,38 +57,6 @@ def time_grid(time_step=30):
     return np.arange(half_step, 24+half_step, half_step*2)
 
 
-def findkey(vrs, possible_fields):
-    """Finds first matching key from several possible.
-
-    Args:
-        vrs (dict): Dictionary or other
-            iterable containing strings.
-        possible_fields (tuple): List of possible strings to be
-            searched.
-
-    Returns:
-        str: First matching key. None if nothing found.
-
-    Examples:
-        >>> x = {'abc':1, 'bac':2, 'cba':3}
-        >>> findkey(x, ('bac', 'cba'))
-            'bac'
-
-        The order of the keys to be searched is defaining
-        the return value if there are several matching strings:
-
-        >>> findkey(x, ('cba', 'bac'))
-            'cba'
-
-    """
-    if isinstance(possible_fields, str):
-        possible_fields = (possible_fields, )
-    for field in possible_fields:
-        if field in vrs:
-            return field
-    return None
-
-
 def binvec(x):
     """Converts 1-D center points to bins with even spacing.
 
