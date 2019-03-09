@@ -65,13 +65,6 @@ cloudnetpy.droplet
    :members:
 
 
-cloudnetpy.lwc
---------------
-
-.. automodule:: lwc
-   :members:
-
-
 cloudnetpy.utils
 ----------------
 

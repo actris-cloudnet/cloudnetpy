@@ -480,9 +480,61 @@ Gaussian smoother to the melting layer. Default is True.</li>
 <p>This module contains functions to calculate
 various atmospheric parameters.</p>
 <dl class="function">
+<dt id="atmos.adiabatic_lwc">
+<code class="descclassname">atmos.</code><code class="descname">adiabatic_lwc</code><span class="sig-paren">(</span><em>temperature</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#adiabatic_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.adiabatic_lwc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns adiabatic LWC change rate.</p>
+<p>Calculates the theoretical adiabatic rate of increase of LWC with
+height, or pressure, given the cloud base temperature and pressure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>temperature</strong> (<em>ndarray</em>) – Temperature of cloud base (K).</li>
+<li><strong>pressure</strong> (<em>ndarray</em>) – Pressure of cloud base (Pa).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dlwc/dz in kg m-3 m-1</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>Brenguier, 1991, <a class="reference external" href="https://bit.ly/2QCSJtb">https://bit.ly/2QCSJtb</a></p>
+</dd></dl>
+
+<dl class="function">
 <dt id="atmos.c2k">
 <code class="descclassname">atmos.</code><code class="descname">c2k</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#c2k"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.c2k" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts Celsius to Kelvins.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.calc_mixing_ratio">
+<code class="descclassname">atmos.</code><code class="descname">calc_mixing_ratio</code><span class="sig-paren">(</span><em>svp</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_mixing_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_mixing_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates mixing ratio from saturation vapor pressure and pressure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>svp</strong> (<em>ndarray</em>) – Saturation vapor pressure (Pa).</li>
+<li><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Mixing ratio.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -812,62 +864,6 @@ accept some other point, higher in the profile.</li>
 </dd></dl>
 
 </div>
-<div class="section" id="module-lwc">
-<span id="cloudnetpy-lwc"></span><h2>cloudnetpy.lwc<a class="headerlink" href="#module-lwc" title="Permalink to this headline">¶</a></h2>
-<p>Module for liquid water content calculations.</p>
-<dl class="function">
-<dt id="lwc.adiabatic_lwc">
-<code class="descclassname">lwc.</code><code class="descname">adiabatic_lwc</code><span class="sig-paren">(</span><em>T</em>, <em>P</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lwc.html#adiabatic_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lwc.adiabatic_lwc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns adiabatic LWC change rate.</p>
-<p>Calculates the theoretical adiabatic rate of increase of LWC with
-height, or pressure, given the cloud base temperature and pressure.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>T</strong> (<em>ndarray</em>) – Temperature of cloud base (K).</li>
-<li><strong>P</strong> (<em>ndarray</em>) – Pressure of cloud base (Pa).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dlwc/dz in kg m-3 m-1</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">References</p>
-<p>Brenguier, 1991, <a class="reference external" href="https://bit.ly/2QCSJtb">https://bit.ly/2QCSJtb</a></p>
-</dd></dl>
-
-<dl class="function">
-<dt id="lwc.temp2mixingratio">
-<code class="descclassname">lwc.</code><code class="descname">temp2mixingratio</code><span class="sig-paren">(</span><em>T</em>, <em>P</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/lwc.html#temp2mixingratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#lwc.temp2mixingratio" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts temperature and pressure to mixing ratio.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>T</strong> (<em>ndarray</em>) – Temperature (K).</li>
-<li><strong>P</strong> (<em>ndarray</em>) – Pressure (Pa).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Mixing ratio.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
 <div class="section" id="module-utils">
 <span id="cloudnetpy-utils"></span><h2>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h2>
 <p>This module contains general
@@ -1008,44 +1004,6 @@ Default is 0.</li>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.findkey">
-<code class="descclassname">utils.</code><code class="descname">findkey</code><span class="sig-paren">(</span><em>vrs</em>, <em>possible_fields</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#findkey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.findkey" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds first matching key from several possible.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>vrs</strong> (<em>dict</em>) – Dictionary or other
-iterable containing strings.</li>
-<li><strong>possible_fields</strong> (<em>tuple</em>) – List of possible strings to be
-searched.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">First matching key. None if nothing found.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;abc&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;bac&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;cba&#39;</span><span class="p">:</span><span class="mi">3</span><span class="p">}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">findkey</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;bac&#39;</span><span class="p">,</span> <span class="s1">&#39;cba&#39;</span><span class="p">))</span>
-<span class="go">    &#39;bac&#39;</span>
-</pre></div>
-</div>
-<p>The order of the keys to be searched is defaining
-the return value if there are several matching strings:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">findkey</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;cba&#39;</span><span class="p">,</span> <span class="s1">&#39;bac&#39;</span><span class="p">))</span>
-<span class="go">    &#39;cba&#39;</span>
-</pre></div>
-</div>
 </dd></dl>
 
 <dl class="function">
@@ -1389,6 +1347,12 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="utils.transpose_1d_array">
+<code class="descclassname">utils.</code><code class="descname">transpose_1d_array</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#transpose_1d_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.transpose_1d_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transposes numpy array of (n, ) to (n, 1).</p>
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="products-modules">
@@ -1445,7 +1409,6 @@ NetCDF file with information of classification and measurements.</p>
 <li><a class="reference internal" href="#module-classify">cloudnetpy.classify</a></li>
 <li><a class="reference internal" href="#module-atmos">cloudnetpy.atmos</a></li>
 <li><a class="reference internal" href="#module-droplet">cloudnetpy.droplet</a></li>
-<li><a class="reference internal" href="#module-lwc">cloudnetpy.lwc</a></li>
 <li><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
 </ul>
 </li>

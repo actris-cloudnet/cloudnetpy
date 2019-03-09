@@ -10,6 +10,8 @@ import sys
 sys.path.insert(0, '../cloudnetpy')
 import cloudnetpy.categorize as cat
 from cloudnetpy import plotting as plot
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 def main():
     """ Main function. """
@@ -28,6 +30,17 @@ def main():
     cat.generate_categorize(input_files, output_file)
 
     #import netCDF4
+    #liquid_att = netCDF4.Dataset(output_file).variables['radar_liquid_atten'][:]
+    #liquid_att = netCDF4.Dataset(output_file).variables['radar_liquid_atten'][:]
+    #plt.figure()
+    #plot.plot_2d(liquid_att)
+
+
+    #liquid_att2 = netCDF4.Dataset(prefix + '20181204_mace-head_categorize.nc').variables['radar_liquid_atten'][:]
+    #plt.figure()
+    #plot.plot_2d(liquid_att2)
+    #plt.show()
+
     #category_bits = netCDF4.Dataset(output_file).variables['category_bits'][:]
     #plot.plot_2d(category_bits, cmap='Set1', ncolors=6)
 

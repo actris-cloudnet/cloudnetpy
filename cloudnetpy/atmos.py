@@ -46,8 +46,8 @@ def adiabatic_lwc(temperature, pressure):
     rhoa = pressure / (con.Rs*temperature*(0.6*mixing_ratio + 1))
     a = con.specific_heat*temperature / (con.latent_heat*con.mw_ratio)
     b = pressure - svp
-    f1 = -1 + a
-    f2 = 1/(a + (con.latent_heat*mixing_ratio*rhoa/b))
+    f1 = a - 1
+    f2 = 1 / (a + (con.latent_heat*mixing_ratio*rhoa/b))
     f3 = rhoa*con.g*con.mw_ratio*svp*b**-2
     return rhoa*f1*f2*f3
 
@@ -257,4 +257,3 @@ def get_attenuations(model, mwr, classification, height):
     gas = gas_atten(model.data_dense, classification.category_bits, height)
     liquid = liquid_atten(mwr.data, model.data_dense, classification, height)
     return {**gas, **liquid}
-
