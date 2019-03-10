@@ -164,108 +164,129 @@ def calc_wet_bulb_temperature(model_data):
     return (-b+np.sqrt(b*b-4*a*c))/(2*a)
 
 
-def gas_atten(model, cat_bits, height):
-    """Returns gas attenuation (assumes saturation inside liquid droplets).
-
-    Args:
-        model (dict): Interpolated 2-D model fields {'gas_atten',
-            'specific_gas_atten', 'specific_saturated_gas_atten'}.
-        cat_bits (ndarray): 2-D array of integers containing
-            categorize flag bits.
-        height (ndarray): 1-D altitude grid (m).
-
-    Returns:
-        dict: 'radar_gas_atten' containing the attenuation
-            due to atmospheric gases.
-
-    Notes:
-        Could be combined with liquid_atten if a common
-            Attenuations class is created.
-
-    """
-    dheight = utils.mdiff(height)
-    is_liquid = utils.isbit(cat_bits, 0)
-    spec = np.copy(model['specific_gas_atten'][:])
-    spec[is_liquid] = model['specific_saturated_gas_atten'][:][is_liquid]
-    layer1_att = model['gas_atten'][:][:, 0]
-    gas_att = 2*np.cumsum(spec.T, axis=0)*dheight*1e-3 + layer1_att
-    gas_att = np.insert(gas_att.T, 0, layer1_att, axis=1)[:, :-1]
-    return {'radar_gas_atten': gas_att}
-
-
-def liquid_atten(mwr, model, classification, height):
-    """Calculates attenuation due to liquid water.
-
-    Args:
-        mwr (Mwr): Mwr data container.
-        model (Model): Model data container.
-        classification (ClassificationResult): Classification container.
-        height (ndarray): 1-D altitude grid (m).
-
-    Returns:
-        Dict containing
-
-        - **radar_liquid_atten** (*MaskedArray*): Amount of liquid attenuation.
-        - **liquid_atten_err** (*MaskedArray*): Error in the liquid attenuation.
-        - **liquid_corrected** (*ndarray*): Boolean array denoting where liquid
-          attenuation is present and we can compute its value.
-        - **liquid_uncorrected** (*ndarray*): Boolean array denoting where liquid
-          attenuation is present but we can not compute its value.
-
-    Notes:
-        Too complicated function! Needs to be broken into a class.
-
-    """
-
-    spec_liq = model['specific_liquid_atten']
-    is_liq = utils.isbit(classification.category_bits, 0)
-    lwc_dz, lwc_dz_err, liq_att, liq_att_err, lwp_norm, lwp_norm_err = utils.init(6, is_liq.shape)
-    ind = np.where(classification.liquid_bases)
-    lwc_dz[ind] = calc_lwc_change_rate(model['temperature'][ind],
-                                       model['pressure'][ind])
-    lwc_dz_err[is_liq] = utils.ffill(lwc_dz[is_liq])
-    ind_from_base = utils.cumsumr(is_liq, axis=1)
-    lwc_adiab = ind_from_base*lwc_dz_err*utils.mdiff(height)*1e3
-    ind = np.isfinite(mwr['lwp'][:]) & np.any(is_liq, axis=1)
-    lwp_norm[ind, :] = (lwc_adiab[ind, :].T*mwr['lwp'][:][ind]
-                        / np.sum(lwc_adiab[ind, :], axis=1)).T
-    lwp_norm_err[ind, :] = (lwc_dz_err[ind, :].T*mwr['lwp_error'][:][ind]
-                            / np.sum(lwc_dz_err[ind, :], axis=1)).T
-    liq_att[:, 1:] = 2e-3*np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
-    liq_att_err[:, 1:] = 2e-3*np.cumsum(lwp_norm_err[:, :-1]*spec_liq[:, :-1],
-                                        axis=1)
-    liq_att, corr_atten, uncorr_atten = _screen_liq_atten(liq_att, classification)
-    return {'radar_liquid_atten': liq_att,
-            'liquid_atten_err': liq_att_err,
-            'liquid_corrected': corr_atten,
-            'liquid_uncorrected': uncorr_atten}
-
-
-def _screen_liq_atten(liq_atten, classification):
-    """Removes corrupted data from liquid attenuation.
-
-    Args:
-        liq_atten (ndarray): Liquid attenuation.
-        classification (ClassificationResult): Classification container.
-
-    Returns:
-        tuple: 3-element tuple containing:
-        
-        - MaskedArray: Screened liquid attenuation.
-        - ndarray: Boolean array denoting where liquid attenuation was corrected.
-        - ndarray: Boolean array denoting where liquid attenuation was present but not corrected.
-
-    """
-    melting_layer = utils.isbit(classification.category_bits, 3)
-    uncorr_atten = np.cumsum(melting_layer, axis=1) >= 1
-    uncorr_atten[classification.is_rain, :] = True
-    corr_atten = (liq_atten > 0).filled(False) & ~uncorr_atten
-    liq_atten[uncorr_atten] = ma.masked
-    return liq_atten, corr_atten, uncorr_atten
-
-
-def get_attenuations(model, mwr, classification, height):
+def get_attenuations(model, mwr, classification):
     """Wrapper for attenuations."""
-    gas = gas_atten(model.data_dense, classification.category_bits, height)
-    liquid = liquid_atten(mwr.data, model.data_dense, classification, height)
-    return {**gas, **liquid}
+    gas = GasAttenuation(model, classification)
+    liquid = LiquidAttenuation(model, classification, mwr)
+    return {'radar_gas_atten': gas.atten,
+            'radar_liquid_atten': liquid.atten,
+            'liquid_atten_err': liquid.atten_err,
+            'liquid_corrected': liquid.corrected,
+            'liquid_uncorrected': liquid.uncorrected
+            }
+
+
+class Attenuation:
+    """Base class for gas and liquid attenuations."""
+    def __init__(self, model, classification):
+        self._dheight = utils.mdiff(model.height)
+        self._model = model.data_dense
+        self._liquid_in_pixel = utils.isbit(classification.category_bits, 0)
+        self.classification = classification
+
+
+class GasAttenuation(Attenuation):
+    """Radar gas attenuation class."""
+    def __init__(self, model, classification):
+        super().__init__(model, classification)
+        self.atten = self._calc_gas_atten()
+
+    def _calc_gas_atten(self):
+        atten = self._init_gas_atten()
+        self._fix_atten_in_liquid(atten)
+        return self._specific_to_gas_atten(atten)
+
+    def _init_gas_atten(self):
+        return np.copy(self._model['specific_gas_atten'][:])
+
+    def _fix_atten_in_liquid(self, atten):
+        saturated_atten = self._model['specific_saturated_gas_atten'][:]
+        atten[self._liquid_in_pixel] = saturated_atten[self._liquid_in_pixel]
+
+    def _specific_to_gas_atten(self, atten):
+        layer1_atten = self._model['gas_atten'][:][:, 0]
+        atten_cumsum = np.cumsum(atten.T, axis=0)
+        atten = 2 * atten_cumsum * self._dheight * 1e-3 + layer1_atten
+        atten = np.insert(atten.T, 0, layer1_atten, axis=1)[:, :-1]
+        return atten
+
+
+class LiquidAttenuation(Attenuation):
+    """Radar liquid attenuation class."""
+    def __init__(self, model, classification, mwr):
+        super().__init__(model, classification)
+        self._mwr = mwr.data
+        self._lwc_dz_err = self._get_lwc_change_rate_error()
+        self.atten = self.get_liquid_atten()
+        self.atten_err = self._get_liquid_atten_err()
+        self.corrected, self.uncorrected = self._screen_attenuations()
+
+    def _get_lwc_change_rate_error(self):
+        """Fills cloud pixels with the LWC change rate of base."""
+        lwc_dz = self._get_lwc_change_rate()
+        lwc_dz_err = ma.zeros(lwc_dz.shape)
+        lwc_dz_err[self._liquid_in_pixel] = utils.ffill(lwc_dz[self._liquid_in_pixel])
+        return lwc_dz_err
+
+    def _get_lwc_change_rate(self):
+        """Finds LWC change rate in liquid cloud bases."""
+        liquid_bases = self.classification.liquid_bases
+        lwc_dz = ma.zeros(self._liquid_in_pixel.shape)
+        temperature = self._model['temperature'][liquid_bases]
+        pressure = self._model['pressure'][liquid_bases]
+        lwc_dz[liquid_bases] = calc_lwc_change_rate(temperature, pressure)
+        return lwc_dz
+
+    def get_liquid_atten(self):
+        """Finds radar liquid attenuation."""
+        def _get_lwc_adiabatic():
+            ind_from_base = utils.cumsumr(self._liquid_in_pixel, axis=1)
+            return ind_from_base * self._lwc_dz_err * self._dheight * 1e3
+
+        def _get_lwp_normalized():
+            lwc = _get_lwc_adiabatic()
+            mwr = self._mwr['lwp']
+            return self._normalize_lwp(lwc, mwr)
+
+        lwp_norm = _get_lwp_normalized()
+        return self._calc_attenuation(lwp_norm)
+
+    def _get_liquid_atten_err(self):
+        """Finds radar liquid attenuation error."""
+        def _get_lwp_normalized():
+            lwc = self._lwc_dz_err
+            mwr = self._mwr['lwp_error']
+            return self._normalize_lwp(lwc, mwr)
+
+        lwp_norm = _get_lwp_normalized()
+        return self._calc_attenuation(lwp_norm)
+
+    def _normalize_lwp(self, lwc_var, mwr_var):
+        """Normalizes measured LWP with model LWC."""
+        def _get_lwp_ind():
+            mwr_lwp = self._mwr['lwp'][:]
+            return np.isfinite(mwr_lwp) & np.any(self._liquid_in_pixel, axis=1)
+
+        lwp_norm = ma.zeros(self._liquid_in_pixel.shape, dtype=float)
+        lwp_and_liquid = _get_lwp_ind()
+        mwr = mwr_var[lwp_and_liquid]
+        lwc = lwc_var[lwp_and_liquid, :]
+        lwc_sum = np.sum(lwc, axis=1)
+        lwp_norm[lwp_and_liquid] = (lwc.T*mwr/lwc_sum).T
+        return lwp_norm
+
+    def _calc_attenuation(self, lwp_norm):
+        liq_att = ma.zeros(self._liquid_in_pixel.shape, dtype=float)
+        spec_liq = self._model['specific_liquid_atten']
+        lwp_cumsum = np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
+        liq_att[:, 1:] = 2e-3 * lwp_cumsum
+        return liq_att
+
+    def _screen_attenuations(self):
+        melting_layer = utils.isbit(self.classification.category_bits, 3)
+        uncorrected = np.cumsum(melting_layer, axis=1) >= 1
+        uncorrected[self.classification.is_rain, :] = True
+        corrected = (self.atten > 0).filled(False) & ~uncorrected
+        self.atten[uncorrected] = ma.masked
+        return corrected, uncorrected
+

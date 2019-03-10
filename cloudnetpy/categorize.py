@@ -233,7 +233,7 @@ class Radar(ProfileDataSource):
         def _calc_sensitivity():
             """Returns sensitivity of radar as function of altitude."""
             mean_gas_atten = ma.mean(attenuations['radar_gas_atten'], axis=0)
-            z_sensitivity = (z_power_min + log_range + mean_gas_atten)
+            z_sensitivity = z_power_min + log_range + mean_gas_atten
             zc = ma.median(ma.array(z, mask=~classification.is_clutter), axis=0)
             z_sensitivity[~zc.mask] = zc[~zc.mask]
             return z_sensitivity
@@ -366,6 +366,7 @@ class Model(DataSource):
         self.type = self._get_model_type()
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = self._get_mean_height()
+        self.height = None
         self.data_sparse = {}
         self.data_dense = {}
         self._append_grid()
@@ -424,6 +425,7 @@ class Model(DataSource):
                                                         self.mean_height,
                                                         self.data_sparse[key][:],
                                                         time_grid, height_grid)
+        self.height = height_grid
 
     def calc_wet_bulb(self):
         """Calculates wet-bulb temperature in dense grid."""
@@ -497,7 +499,7 @@ def generate_categorize(input_files, output_file):
     _interpolate_to_cloudnet_grid()
     model.calc_wet_bulb()
     classification = classify.classify_measurements(radar, lidar, model)
-    attenuations = atmos.get_attenuations(model, mwr, classification, height)
+    attenuations = atmos.get_attenuations(model, mwr, classification)
     radar.correct_atten(attenuations)
     radar.calc_errors(attenuations, classification)
     quality = classify.fetch_quality(radar, lidar, classification, attenuations)
