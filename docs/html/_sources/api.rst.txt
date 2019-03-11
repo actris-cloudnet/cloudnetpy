@@ -7,7 +7,7 @@ needing to worry about implementation details.
 
 The APIs enable users to set up an operational processing
 system that doesn't require major modifications
-if the underlaying methods and their implementations change
+if the underlying methods and their implementations change
 from one software version to another.
 
 Raw data to categorize
@@ -32,6 +32,8 @@ Starting from the categorize file, several geophysical products can be
 generated.
 
 .. autofunction:: products.classification.generate_class
+
+.. autofunction:: products.iwc.generate_iwc
 
 
 Cloudnetpy modules
@@ -63,13 +65,6 @@ cloudnetpy.droplet
    :members:
 
 
-cloudnetpy.lwc
---------------
-
-.. automodule:: lwc
-   :members:
-
-
 cloudnetpy.utils
 ----------------
 
@@ -88,6 +83,13 @@ products.classification
 -----------------------
 
 .. automodule:: products.classification
+   :members:
+
+
+products.iwc
+-----------------------
+
+.. automodule:: products.iwc
    :members:
 
 

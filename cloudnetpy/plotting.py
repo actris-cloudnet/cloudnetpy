@@ -12,6 +12,7 @@ PARAMS = {
     'beta': [np.array((1e-8, 1e-4))*10, 'jet', True],
     'beta_raw': [np.array((1e-8, 1e-4))*1e8, 'jet', True],
     'Z': [(-40, 20), 'jet'],
+    'Ze': [(-40, 20), 'jet'],
     'ldr': [(-35, -10), 'viridis'],
     'width': [(0, 1), 'viridis'],
     'v': [(-4, 2), 'RdBu_r'],
@@ -21,10 +22,10 @@ PARAMS = {
 }
 
 
-def plot_overview(file1, dvec, ylim=(0, 500), savefig=False,
-                  savepath='', grid=False):
+def plot_overview(file1, dvec, ylim=(0, 500),
+                  savefig=False, savepath='', grid=False,
+                  data_fields=('Z', 'v', 'ldr', 'width')):
     """Plots general image of data in categorize file."""
-    data_fields = ('Z', 'v', 'ldr', 'width', 'beta')
     nfields = len(data_fields)
     nsubs = (nfields, 1)
     plt.figure()
@@ -69,7 +70,7 @@ def _plot_data(nsubs, idx, filename, field, ylim, grid,
     plt.imshow(data.T, aspect='auto', origin='lower', cmap=cmap)
     plt.clim(clim)
     _set_axes(ylim, data.shape, grid)
-    plt.text(20, max(ylim)*0.8, field, fontsize=12)
+    plt.text(20, max(ylim)*0.8, field, fontsize=8)
 
 
 def _plot_bit(nsubs, idx, filename, bitno, ylim, field='category_bits'):

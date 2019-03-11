@@ -7,8 +7,8 @@ import numpy.ma as ma
 import scipy.ndimage
 from scipy import stats
 from scipy.interpolate import interp1d
-from . import droplet, utils
-from .constants import T0
+from cloudnetpy import droplet, utils
+from cloudnetpy.constants import T0
 
 
 class _ClassData:
@@ -80,6 +80,15 @@ def classify_measurements(radar, lidar, model):
     This function classifies atmospheric scatterer from the input data. 
     The input data needs to be averaged or interpolated to the common
     time / height grid before calling this function.
+
+    Args:
+        radar (Radar): A Radar object.
+        lidar (Lidar): A Lidar object.
+        model (Model): A Model object.
+
+    Returns:
+        _ClassificationResult: Object containing the result
+            of classification.
 
     See also:
         classify.fetch_qual_bits()
@@ -382,13 +391,10 @@ def _screen_insects(insect_prob, tw, *args):
 def find_falling_hydrometeors(obs, is_liquid, is_insects):
     """Finds falling hydrometeors.
 
-    Falling hydrometeors are the unmasked radar signals that are
-    a) not insects b) not clutter. Furthermore, the falling bit
-    is also *True* for lidar-detected ice clouds.
-
-    To distinguish lidar ice from aerosols is not trivial, though.
-    This method assumes that lidar signals, that are not from liquid
-    clouds, with the temperature below -7 C are ice.
+    Falling hydrometeors are radar signals that are
+    a) not insects b) not clutter. Furthermore, falling hydrometeors
+    are strong lidar pixels excluding liquid layers (thus these pixels
+    are ice or rain).
 
     Args:
         obs (_ClassData): Container for observations.
@@ -396,22 +402,21 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
         is_insects (ndarray): 2-D boolean array of insects.
 
     Returns:
-        ndarray: 2-D boolean array containing falling hydrometeros.
+        ndarray: 2-D boolean array containing falling hydrometeors.
 
     """
     is_z = ~obs.z.mask
     no_clutter = ~obs.is_clutter
     no_insects = ~is_insects
-    ice_from_lidar = ~obs.beta.mask & ~is_liquid & (obs.tw < (T0-7))
-    is_falling = (is_z & no_clutter & no_insects) | ice_from_lidar
-    return utils.filter_isolated_pixels(is_falling)
+    falling_from_lidar = ~obs.beta.mask & (obs.beta.data > 1e-6) & ~is_liquid
+    is_falling = (is_z & no_clutter & no_insects) | falling_from_lidar
+    return is_falling
 
 
 def find_aerosols(beta, is_falling, is_liquid):
     """Estimates aerosols from lidar backscattering.
 
-    Aerosols are the unmasked pixels in the attenuated backscattering
-    that are: a) not falling, b) not liquid droplets.
+    Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
 
     Args:
         beta (MaskedArray): 2-D attenuated backscattering coefficient.
@@ -419,7 +424,7 @@ def find_aerosols(beta, is_falling, is_liquid):
         is_liquid (ndarray): 2-D boolean array of liquid droplets.
 
     Returns:
-        ndarray: 2-D boolean array of aerosol classification.
+        ndarray: 2-D boolean array containing aerosols.
 
     """
     return ~beta.mask & ~is_falling & ~is_liquid

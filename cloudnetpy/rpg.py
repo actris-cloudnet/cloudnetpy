@@ -4,8 +4,8 @@ from datetime import datetime
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
-from .cloudnetarray import CloudnetArray
-from . import utils, output
+from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy import utils, output
 
 
 class RpgBin:
