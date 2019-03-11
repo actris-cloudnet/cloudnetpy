@@ -98,38 +98,6 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">half_step</span><span class="p">,</span> <span class="mi">24</span><span class="o">+</span><span class="n">half_step</span><span class="p">,</span> <span class="n">half_step</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="findkey"><a class="viewcode-back" href="../api.html#utils.findkey">[docs]</a><span class="k">def</span> <span class="nf">findkey</span><span class="p">(</span><span class="n">vrs</span><span class="p">,</span> <span class="n">possible_fields</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Finds first matching key from several possible.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        vrs (dict): Dictionary or other</span>
-<span class="sd">            iterable containing strings.</span>
-<span class="sd">        possible_fields (tuple): List of possible strings to be</span>
-<span class="sd">            searched.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        str: First matching key. None if nothing found.</span>
-
-<span class="sd">    Examples:</span>
-<span class="sd">        &gt;&gt;&gt; x = {&#39;abc&#39;:1, &#39;bac&#39;:2, &#39;cba&#39;:3}</span>
-<span class="sd">        &gt;&gt;&gt; findkey(x, (&#39;bac&#39;, &#39;cba&#39;))</span>
-<span class="sd">            &#39;bac&#39;</span>
-
-<span class="sd">        The order of the keys to be searched is defaining</span>
-<span class="sd">        the return value if there are several matching strings:</span>
-
-<span class="sd">        &gt;&gt;&gt; findkey(x, (&#39;cba&#39;, &#39;bac&#39;))</span>
-<span class="sd">            &#39;cba&#39;</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">possible_fields</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="n">possible_fields</span> <span class="o">=</span> <span class="p">(</span><span class="n">possible_fields</span><span class="p">,</span> <span class="p">)</span>
-    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">possible_fields</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">vrs</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">field</span>
-    <span class="k">return</span> <span class="kc">None</span></div>
-
-
 <div class="viewcode-block" id="binvec"><a class="viewcode-back" href="../api.html#utils.binvec">[docs]</a><span class="k">def</span> <span class="nf">binvec</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts 1-D center points to bins with even spacing.</span>
 
@@ -502,6 +470,11 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="p">(</span><span class="mi">30</span> <span class="o">&lt;</span> <span class="n">radar_frequency</span> <span class="o">&lt;</span> <span class="mi">40</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="transpose_1d_array"><a class="viewcode-back" href="../api.html#utils.transpose_1d_array">[docs]</a><span class="k">def</span> <span class="nf">transpose_1d_array</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transposes numpy array of (n, ) to (n, 1).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span></div>
 </pre></div>
 
           </div>
@@ -539,7 +512,7 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2018, Finnish Meteorological Institute.
+        &#169; Copyright 2019, Finnish Meteorological Institute.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>

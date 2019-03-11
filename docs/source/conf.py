@@ -12,16 +12,16 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
 import sys
-sys.path.insert(0, os.path.abspath('../../cloudnetpy'))
-
+sys.path.insert(0, '/home/tukiains/Documents/PYTHON/cloudnetpy/')
+sys.path.insert(0, '/home/tukiains/Documents/PYTHON/cloudnetpy/cloudnetpy/')
+sys.path.insert(0, '/home/tukiains/Documents/PYTHON/cloudnetpy/cloudnetpy/products')
 
 
 # -- Project information -----------------------------------------------------
 
 project = 'CloudnetPy'
-copyright = '2018, Finnish Meteorological Institute'
+copyright = '2019, Finnish Meteorological Institute'
 author = 'Finnish Meteorological Institute'
 
 # The short X.Y version

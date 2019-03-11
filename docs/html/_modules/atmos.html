@@ -42,26 +42,69 @@
 <span></span><span class="sd">&quot;&quot;&quot; This module contains functions to calculate</span>
 <span class="sd">various atmospheric parameters.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">constants</span> <span class="k">as</span> <span class="n">con</span>
-<span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">lwc</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">cloudnetpy.cloudnetarray</span> <span class="k">import</span> <span class="n">CloudnetArray</span>
 
 
 <div class="viewcode-block" id="c2k"><a class="viewcode-back" href="../api.html#atmos.c2k">[docs]</a><span class="k">def</span> <span class="nf">c2k</span><span class="p">(</span><span class="n">temp</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts Celsius to Kelvins.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">+</span> <span class="mf">273.15</span></div>
+    <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">+</span> <span class="mf">273.15</span></div>
 
 
 <div class="viewcode-block" id="k2c"><a class="viewcode-back" href="../api.html#atmos.k2c">[docs]</a><span class="k">def</span> <span class="nf">k2c</span><span class="p">(</span><span class="n">temp</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Converts Kelvins to Celsius.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">273.15</span></div>
+    <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">273.15</span></div>
 
 
 <span class="n">VAISALA_PARAMS_OVER_WATER</span> <span class="o">=</span> <span class="p">(</span><span class="mf">6.116441</span><span class="p">,</span> <span class="mf">7.591386</span><span class="p">,</span> <span class="mf">240.7263</span><span class="p">)</span>
+<span class="n">HPA_TO_P</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">P_TO_HPA</span> <span class="o">=</span> <span class="mf">0.01</span>
+
+
+<div class="viewcode-block" id="adiabatic_lwc"><a class="viewcode-back" href="../api.html#atmos.adiabatic_lwc">[docs]</a><span class="k">def</span> <span class="nf">adiabatic_lwc</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns adiabatic LWC change rate.</span>
+
+<span class="sd">    Calculates the theoretical adiabatic rate of increase of LWC with</span>
+<span class="sd">    height, or pressure, given the cloud base temperature and pressure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        temperature (ndarray): Temperature of cloud base (K).</span>
+<span class="sd">        pressure (ndarray): Pressure of cloud base (Pa).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: dlwc/dz in kg m-3 m-1</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        Brenguier, 1991, https://bit.ly/2QCSJtb</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">svp</span> <span class="o">=</span> <span class="n">saturation_vapor_pressure</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
+    <span class="n">mixing_ratio</span> <span class="o">=</span> <span class="n">calc_mixing_ratio</span><span class="p">(</span><span class="n">svp</span><span class="p">,</span> <span class="n">pressure</span><span class="p">)</span>
+
+    <span class="n">rhoa</span> <span class="o">=</span> <span class="n">pressure</span> <span class="o">/</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">Rs</span><span class="o">*</span><span class="n">temperature</span><span class="o">*</span><span class="p">(</span><span class="mf">0.6</span><span class="o">*</span><span class="n">mixing_ratio</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">specific_heat</span><span class="o">*</span><span class="n">temperature</span> <span class="o">/</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">latent_heat</span><span class="o">*</span><span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">pressure</span> <span class="o">-</span> <span class="n">svp</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">a</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">latent_heat</span><span class="o">*</span><span class="n">mixing_ratio</span><span class="o">*</span><span class="n">rhoa</span><span class="o">/</span><span class="n">b</span><span class="p">))</span>
+    <span class="n">f3</span> <span class="o">=</span> <span class="n">rhoa</span><span class="o">*</span><span class="n">con</span><span class="o">.</span><span class="n">g</span><span class="o">*</span><span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span><span class="o">*</span><span class="n">svp</span><span class="o">*</span><span class="n">b</span><span class="o">**-</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">rhoa</span><span class="o">*</span><span class="n">f1</span><span class="o">*</span><span class="n">f2</span><span class="o">*</span><span class="n">f3</span></div>
+
+
+<div class="viewcode-block" id="calc_mixing_ratio"><a class="viewcode-back" href="../api.html#atmos.calc_mixing_ratio">[docs]</a><span class="k">def</span> <span class="nf">calc_mixing_ratio</span><span class="p">(</span><span class="n">svp</span><span class="p">,</span> <span class="n">pressure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates mixing ratio from saturation vapor pressure and pressure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        svp (ndarray): Saturation vapor pressure (Pa).</span>
+<span class="sd">        pressure (ndarray): Atmospheric pressure (Pa).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Mixing ratio.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span><span class="o">*</span><span class="n">svp</span><span class="o">/</span><span class="p">(</span><span class="n">pressure</span><span class="o">-</span><span class="n">svp</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="saturation_vapor_pressure"><a class="viewcode-back" href="../api.html#atmos.saturation_vapor_pressure">[docs]</a><span class="k">def</span> <span class="nf">saturation_vapor_pressure</span><span class="p">(</span><span class="n">temp_kelvin</span><span class="p">):</span>
@@ -79,7 +122,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
     <span class="n">a</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">tn</span> <span class="o">=</span> <span class="n">VAISALA_PARAMS_OVER_WATER</span>
     <span class="n">temp_celsius</span> <span class="o">=</span> <span class="n">k2c</span><span class="p">(</span><span class="n">temp_kelvin</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="p">((</span><span class="n">m</span><span class="o">*</span><span class="n">temp_celsius</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">temp_celsius</span><span class="o">+</span><span class="n">tn</span><span class="p">))</span> <span class="o">*</span> <span class="mi">100</span></div>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">*</span> <span class="mi">10</span><span class="o">**</span><span class="p">((</span><span class="n">m</span><span class="o">*</span><span class="n">temp_celsius</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">temp_celsius</span><span class="o">+</span><span class="n">tn</span><span class="p">))</span> <span class="o">*</span> <span class="n">HPA_TO_P</span></div>
 
 
 <div class="viewcode-block" id="dew_point_temperature"><a class="viewcode-back" href="../api.html#atmos.dew_point_temperature">[docs]</a><span class="k">def</span> <span class="nf">dew_point_temperature</span><span class="p">(</span><span class="n">vapor_pressure</span><span class="p">):</span>
@@ -96,7 +139,7 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">a</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">tn</span> <span class="o">=</span> <span class="n">VAISALA_PARAMS_OVER_WATER</span>
-    <span class="n">dew_point_celsius</span> <span class="o">=</span> <span class="n">tn</span> <span class="o">/</span> <span class="p">((</span><span class="n">m</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">vapor_pressure</span><span class="o">/</span><span class="mi">100</span><span class="o">/</span><span class="n">a</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">dew_point_celsius</span> <span class="o">=</span> <span class="n">tn</span> <span class="o">/</span> <span class="p">((</span><span class="n">m</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">vapor_pressure</span><span class="o">*</span><span class="n">P_TO_HPA</span><span class="o">/</span><span class="n">a</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">c2k</span><span class="p">(</span><span class="n">dew_point_celsius</span><span class="p">)</span></div>
 
 
@@ -161,7 +204,12 @@
 <span class="sd">        height (ndarray): 1-D altitude grid (m).</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        CloudnetArray: Attenuation due to atmospheric gases.</span>
+<span class="sd">        dict: &#39;radar_gas_atten&#39; containing the attenuation</span>
+<span class="sd">            due to atmospheric gases.</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Could be combined with liquid_atten if a common</span>
+<span class="sd">            Attenuations class is created.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">dheight</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">mdiff</span><span class="p">(</span><span class="n">height</span><span class="p">)</span>
@@ -192,14 +240,18 @@
 <span class="sd">          attenuation is present and we can compute its value.</span>
 <span class="sd">        - **liquid_uncorrected** (*ndarray*): Boolean array denoting where liquid</span>
 <span class="sd">          attenuation is present but we can not compute its value.</span>
-<span class="sd"> </span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Too complicated function! Needs to be broken into a class.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">spec_liq</span> <span class="o">=</span> <span class="n">model</span><span class="p">[</span><span class="s1">&#39;specific_liquid_atten&#39;</span><span class="p">]</span>
     <span class="n">is_liq</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="n">classification</span><span class="o">.</span><span class="n">category_bits</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="n">lwc_dz</span><span class="p">,</span> <span class="n">lwc_dz_err</span><span class="p">,</span> <span class="n">liq_att</span><span class="p">,</span> <span class="n">liq_att_err</span><span class="p">,</span> <span class="n">lwp_norm</span><span class="p">,</span> <span class="n">lwp_norm_err</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">is_liq</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">classification</span><span class="o">.</span><span class="n">liquid_bases</span><span class="p">)</span>
-    <span class="n">lwc_dz</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">lwc</span><span class="o">.</span><span class="n">adiabatic_lwc</span><span class="p">(</span><span class="n">model</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">],</span>
-                                    <span class="n">model</span><span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
+    <span class="n">lwc_dz</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">adiabatic_lwc</span><span class="p">(</span><span class="n">model</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">],</span>
+                                <span class="n">model</span><span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">][</span><span class="n">ind</span><span class="p">])</span>
     <span class="n">lwc_dz_err</span><span class="p">[</span><span class="n">is_liq</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">ffill</span><span class="p">(</span><span class="n">lwc_dz</span><span class="p">[</span><span class="n">is_liq</span><span class="p">])</span>
     <span class="n">ind_from_base</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">cumsumr</span><span class="p">(</span><span class="n">is_liq</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">lwc_adiab</span> <span class="o">=</span> <span class="n">ind_from_base</span><span class="o">*</span><span class="n">lwc_dz_err</span><span class="o">*</span><span class="n">utils</span><span class="o">.</span><span class="n">mdiff</span><span class="p">(</span><span class="n">height</span><span class="p">)</span><span class="o">*</span><span class="mf">1e3</span>
@@ -283,7 +335,7 @@
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &#169; Copyright 2018, Finnish Meteorological Institute.
+        &#169; Copyright 2019, Finnish Meteorological Institute.
       Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
     </div>
   </body>

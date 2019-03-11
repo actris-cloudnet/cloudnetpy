@@ -15,7 +15,7 @@ from cloudnetpy import atmos
 def test_saturation_vapor_pressure1(t, res):
     """ Unit tests for atmos.saturation_vapor_pressure(). """
     cnet = atmos.saturation_vapor_pressure(t)
-    assert_array_almost_equal(cnet/100, res/100, decimal=1)
+    assert_array_almost_equal(cnet, res, decimal=1)
 
 
 @pytest.mark.parametrize("vapor_pressure, res", [
@@ -27,7 +27,6 @@ def test_saturation_vapor_pressure1(t, res):
 def test_dew_point_temperature(vapor_pressure, res):
     """ Unit tests for atmos.dew_point(). """
     assert_array_almost_equal(atmos.dew_point_temperature(vapor_pressure), res, decimal=1)
-
 
 
 @pytest.mark.parametrize("t, p, rh, res", [
