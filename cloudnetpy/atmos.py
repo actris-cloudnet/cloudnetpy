@@ -115,7 +115,7 @@ def calc_psychrometric_constant(pressure):
         ndarray: Psychrometric constant value (Pa C-1)
 
     """
-    return pressure*con.specific_heat / (con.latent_heat * con.mw_ratio)
+    return pressure*con.specific_heat / (con.latent_heat*con.mw_ratio)
 
 
 def calc_wet_bulb_temperature(model_data):
@@ -172,8 +172,7 @@ def get_attenuations(model, mwr, classification):
             'radar_liquid_atten': liquid.atten,
             'liquid_atten_err': liquid.atten_err,
             'liquid_corrected': liquid.corrected,
-            'liquid_uncorrected': liquid.uncorrected
-            }
+            'liquid_uncorrected': liquid.uncorrected}
 
 
 class Attenuation:
@@ -197,14 +196,14 @@ class GasAttenuation(Attenuation):
         return self._specific_to_gas_atten(atten)
 
     def _init_gas_atten(self):
-        return np.copy(self._model['specific_gas_atten'][:])
+        return np.copy(self._model['specific_gas_atten'])
 
     def _fix_atten_in_liquid(self, atten):
-        saturated_atten = self._model['specific_saturated_gas_atten'][:]
+        saturated_atten = self._model['specific_saturated_gas_atten']
         atten[self._liquid_in_pixel] = saturated_atten[self._liquid_in_pixel]
 
     def _specific_to_gas_atten(self, atten):
-        layer1_atten = self._model['gas_atten'][:][:, 0]
+        layer1_atten = self._model['gas_atten'][:, 0]
         atten_cumsum = np.cumsum(atten.T, axis=0)
         atten = 2 * atten_cumsum * self._dheight * 1e-3 + layer1_atten
         atten = np.insert(atten.T, 0, layer1_atten, axis=1)[:, :-1]
@@ -217,7 +216,7 @@ class LiquidAttenuation(Attenuation):
         super().__init__(model, classification)
         self._mwr = mwr.data
         self._lwc_dz_err = self._get_lwc_change_rate_error()
-        self.atten = self.get_liquid_atten()
+        self.atten = self._get_liquid_atten()
         self.atten_err = self._get_liquid_atten_err()
         self.corrected, self.uncorrected = self._screen_attenuations()
 
@@ -237,11 +236,11 @@ class LiquidAttenuation(Attenuation):
         lwc_dz[liquid_bases] = calc_lwc_change_rate(temperature, pressure)
         return lwc_dz
 
-    def get_liquid_atten(self):
+    def _get_liquid_atten(self):
         """Finds radar liquid attenuation."""
         def _get_lwc_adiabatic():
             ind_from_base = utils.cumsumr(self._liquid_in_pixel, axis=1)
-            return ind_from_base * self._lwc_dz_err * self._dheight * 1e3
+            return ind_from_base*self._lwc_dz_err*self._dheight*1e3
 
         def _get_lwp_normalized():
             lwc = _get_lwc_adiabatic()
