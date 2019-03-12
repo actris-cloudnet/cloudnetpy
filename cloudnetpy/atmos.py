@@ -23,10 +23,10 @@ P_TO_HPA = 0.01
 
 
 def calc_lwc_change_rate(temperature, pressure):
-    """Returns adiabatic LWC change rate.
+    """Returns rate of change of condensable water (LWC).
 
-    Calculates the theoretical adiabatic rate of increase of LWC with
-    height given the cloud base temperature and pressure.
+    Calculates the theoretical adiabatic rate of increase of LWC
+    with height, given the cloud base temperature and pressure.
 
     Args:
         temperature (ndarray): Temperature of cloud base (K).
@@ -39,7 +39,6 @@ def calc_lwc_change_rate(temperature, pressure):
         Brenguier, 1991, https://bit.ly/2QCSJtb
 
     """
-
     svp = calc_saturation_vapor_pressure(temperature)
     svp_mixing_ratio = calc_mixing_ratio(svp, pressure)
 
