@@ -27,7 +27,14 @@ class _DataCollector(DataSource):
         return 4.5
 
     def _get_iwc_coeffs(self):
-        """Returns empirical coefficients for ice water content retrieval."""
+        """Returns coefficients for ice water content retrieval.
+
+        References:
+            Hogan et.al. 2006, J. Appl. Meteor. Climatol., The Retrieval of
+            Ice Water Content from Radar Reflectivity Factor and Temperature
+            and Its Use in Evaluating a Mesoscale Model.
+            https://doi.org/10.1175/JAM2340.1
+        """
         Coefficients = namedtuple('Coefficients', 'K2liquid0 ZT T Z c')
         if self.wl_band == 0:
             return Coefficients(0.878, 0.000242, -0.0186, 0.0699, -1.63)
@@ -84,7 +91,7 @@ class _IceClassification:
         return (is_cold * is_rain) > 0
 
     def _transpose_rain(self):
-        return utils.transpose_1d_array(self.data_handler.getvar('is_rain'))
+        return utils.transpose(self.data_handler.getvar('is_rain'))
 
 
 def _z_to_iwc(data_handler, z_variable):
