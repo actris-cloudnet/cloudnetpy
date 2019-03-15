@@ -4,7 +4,7 @@ radar / lidar measurements.
 from dataclasses import dataclass
 import numpy as np
 import numpy.ma as ma
-import scipy.ndimage
+from scipy.ndimage.filters import gaussian_filter
 from scipy import stats
 from scipy.interpolate import interp1d
 from cloudnetpy import droplet, utils
@@ -209,9 +209,8 @@ def find_melting_layer(obs, smooth=True):
                 except:
                     continue
     if smooth:
-        ml = scipy.ndimage.filters.gaussian_filter(np.array(melting_layer,
-                                                            dtype=float), (2, 0.1))
-        melting_layer = (ml > 0.2).astype(bool)
+        smoothed_layer = gaussian_filter(np.array(melting_layer, dtype=float), (2, 0.1))
+        melting_layer = (smoothed_layer > 0.2).astype(bool)
     return melting_layer
 
 
@@ -350,7 +349,7 @@ def _insect_probability(z, ldr, width):
     def _insect_prob_width(w_limit=0.06):
         """Finds (0, 1) probability of insects, based on spectral width."""
         temp_w = np.ones(z.shape)
-        ind = ldr.mask & ~z.mask  # pixels that have Z but no LDR
+        ind = ldr.mask & ~z.mask
         temp_w[ind] = width[ind]
         return (temp_w < w_limit).astype(int)
 
