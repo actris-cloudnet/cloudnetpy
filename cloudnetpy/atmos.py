@@ -220,29 +220,16 @@ class LiquidAttenuation(Attenuation):
         self.corrected, self.uncorrected = self._screen_attenuations()
 
     def _get_lwc_change_rate_error(self):
-        """Fills cloud pixels with the LWC change rate of base."""
-        lwc_dz = self._get_lwc_change_rate()
-        lwc_dz_err = ma.zeros(lwc_dz.shape)
-        lwc_dz_err[self._liquid_in_pixel] = utils.ffill(lwc_dz[self._liquid_in_pixel])
-        return lwc_dz_err
-
-    def _get_lwc_change_rate(self):
-        """Finds LWC change rate in liquid cloud bases."""
-        liquid_bases = self.classification.liquid_bases
-        lwc_dz = ma.zeros(self._liquid_in_pixel.shape)
-        temperature = self._model['temperature'][liquid_bases]
-        pressure = self._model['pressure'][liquid_bases]
-        lwc_dz[liquid_bases] = calc_lwc_change_rate(temperature, pressure)
-        return lwc_dz
+        return fill_clouds_with_lwc_dz(self._model['temperature'],
+                                       self._model['pressure'],
+                                       self._liquid_in_pixel)
 
     def _get_liquid_atten(self):
         """Finds radar liquid attenuation."""
-        def _get_lwc_adiabatic():
-            ind_from_base = utils.cumsumr(self._liquid_in_pixel, axis=1)
-            return ind_from_base*self._lwc_dz_err*self._dheight*1e3
-
         def _get_lwp_normalized():
-            lwc = _get_lwc_adiabatic()
+            lwc = calc_liquid_water_content(self._lwc_dz_err,
+                                            self._liquid_in_pixel,
+                                            self._dheight)
             mwr = self._mwr['lwp']
             return self._normalize_lwp(lwc, mwr)
 
@@ -288,3 +275,73 @@ class LiquidAttenuation(Attenuation):
         self.atten[uncorrected] = ma.masked
         return corrected, uncorrected
 
+
+def find_cloud_bases(is_cloud):
+    """Finds cloud base pixels from a 2D boolean field.
+
+    Args:
+        is_cloud (ndarray): Boolean array indicating presence of cloud.
+
+    """
+    cloud_bases = np.zeros_like(is_cloud, dtype=bool)
+    for ind, profile in enumerate(is_cloud):
+        bases, _ = utils.bases_and_tops(profile)
+        cloud_bases[ind, bases] = 1
+    return cloud_bases
+
+
+def get_lwc_change_rate_at_bases(temperature, pressure, is_liquid):
+    """Finds LWC change rate in liquid cloud bases.
+
+    Args:
+        temperature (ndarray): Temperature (K).
+        pressure (ndarray): Pressure (Pa).
+        is_liquid (ndarray): Boolean array indicating presence of liquid clouds.
+
+    Returns:
+        liquid water content change rate at cloud bases (kg/m3/m).
+
+    """
+    liquid_bases = find_cloud_bases(is_liquid)
+    lwc_dz = ma.zeros(liquid_bases.shape)
+    base_temperature = temperature[liquid_bases]
+    base_pressure = pressure[liquid_bases]
+    lwc_dz[liquid_bases] = calc_lwc_change_rate(base_temperature, base_pressure)
+    return lwc_dz
+
+
+def fill_clouds_with_lwc_dz(temperature, pressure, is_liquid):
+    """Fills liquid clouds with lwc change rate at the cloud bases.
+
+    Args:
+        temperature (ndarray): Temperature (K).
+        pressure (ndarray): Pressure (Pa).
+        is_liquid (ndarray): Boolean array indicating presence of liquid clouds.
+
+    Returns:
+        liquid water content change rate (kg/m3/m), so that the base value of
+            each cloud is filled for the whole cloud.
+
+    """
+    lwc_dz = get_lwc_change_rate_at_bases(temperature, pressure, is_liquid)
+    lwc_dz_filled = ma.zeros(lwc_dz.shape)
+    lwc_dz_filled[is_liquid] = utils.ffill(lwc_dz[is_liquid])
+    return lwc_dz_filled
+
+
+def calc_liquid_water_content(lwc_change_rate, is_liquid, dheight):
+    """Calculates adiabatic liquid water content.
+
+    Args:
+        lwc_change_rate (ndarray): Liquid water content change rate (kg/m3/m)
+            calculated at the base of each cloud and then filled to that cloud.
+        is_liquid (ndarray): Boolean array indicating presense of liquid clouds.
+        dheight: Median difference of the height vector (m).
+
+    Returns:
+        liquid water content (g/m3).
+
+    """
+    ind_from_base = utils.cumsumr(is_liquid, axis=1)
+    lwc = ind_from_base * lwc_change_rate * dheight * 1e3
+    return lwc
