@@ -4,7 +4,7 @@ radar / lidar measurements.
 from dataclasses import dataclass
 import numpy as np
 import numpy.ma as ma
-import scipy.ndimage
+from scipy.ndimage.filters import gaussian_filter
 from scipy import stats
 from scipy.interpolate import interp1d
 from cloudnetpy import droplet, utils
@@ -41,9 +41,9 @@ class _ClassData:
         n_profiles = len(self.time)
         n_steps = utils.n_elements(self.time, time_buffer, 'time')
         for ind in np.where(is_rain)[0]:
-            i1 = max(0, ind - n_steps)
-            i2 = min(ind + n_steps, n_profiles)
-            is_rain[i1:i2 + 1] = True
+            ind1 = max(0, ind - n_steps)
+            ind2 = min(ind + n_steps, n_profiles)
+            is_rain[ind1:ind2 + 1] = True
         return is_rain
 
     def _find_clutter(self, n_gates=10, v_lim=0.05):
@@ -61,7 +61,7 @@ class _ClassData:
         """
         is_clutter = np.zeros(self.v.shape, dtype=bool)
         tiny_velocity = (np.abs(self.v[:, :n_gates]) < v_lim).filled(False)
-        is_clutter[:, :n_gates] = (tiny_velocity.T * (~self.is_rain)).T
+        is_clutter[:, :n_gates] = tiny_velocity * utils.transpose(~self.is_rain)
         return is_clutter
 
 
@@ -77,7 +77,7 @@ class _ClassificationResult:
 def classify_measurements(radar, lidar, model):
     """Classifies radar/lidar observations.
 
-    This function classifies atmospheric scatterer from the input data. 
+    This function classifies atmospheric scatterer from the input data.
     The input data needs to be averaged or interpolated to the common
     time / height grid before calling this function.
 
@@ -147,11 +147,11 @@ def find_melting_layer(obs, smooth=True):
     of *v*, which is always present, to detect the melting layer.
 
     Model temperature is used to limit the melting layer search to a certain
-    temperature range around 0 C. For ECMWF the range is -4..+3, and for 
+    temperature range around 0 C. For ECMWF the range is -4..+3, and for
     the rest -8..+6.
 
     Notes:
-        There might be some detection problems with strong updrafts of air. 
+        There might be some detection problems with strong updrafts of air.
         In these cases the absolute values for speed do not make sense (rain
         drops can even move upwards instead of down).
 
@@ -166,7 +166,7 @@ def find_melting_layer(obs, smooth=True):
     """
 
     def _slice(arg1, arg2):
-        out1, out2 = arg1[ii, temp_indices], arg2[ii, temp_indices]
+        out1, out2 = arg1[ind, temp_indices], arg2[ind, temp_indices]
         return out1, out2, ma.count(out1)
 
     def _basetop(dprof, pind):
@@ -183,9 +183,9 @@ def find_melting_layer(obs, smooth=True):
     ldr_diff = np.diff(obs.ldr, axis=1).filled(0)
     v_diff = np.diff(obs.v, axis=1).filled(0)
 
-    for ii, t_prof in enumerate(obs.tw):
+    for ind, t_prof in enumerate(obs.tw):
         temp_indices = np.where((t_prof > T0+t_range[0]) &
-                       (t_prof < T0+t_range[1]))[0]
+                                (t_prof < T0+t_range[1]))[0]
         ldr_prof, ldr_dprof, nldr = _slice(obs.ldr, ldr_diff)
         v_prof, v_dprof, nv = _slice(obs.v, v_diff)
 
@@ -199,19 +199,18 @@ def find_melting_layer(obs, smooth=True):
                          ldr_prof[ldr_p] > -30,
                          v_prof[base] < -1)
                 if all(conds):
-                    melting_layer[ii, temp_indices[ldr_p]:temp_indices[top]+1] = True
+                    melting_layer[ind, temp_indices[ldr_p]:temp_indices[top]+1] = True
             except:
                 try:
                     top, base = _basetop(v_dprof, v_p)
                     diff = v_prof[top] - v_prof[base]
                     if diff > 0.5 and v_prof[base] < -2:
-                        melting_layer[ii, temp_indices[v_p-1:v_p+2]] = True
+                        melting_layer[ind, temp_indices[v_p-1:v_p+2]] = True
                 except:
                     continue
     if smooth:
-        ml = scipy.ndimage.filters.gaussian_filter(np.array(melting_layer,
-                                                            dtype=float), (2, 0.1))
-        melting_layer = (ml > 0.2).astype(bool)
+        smoothed_layer = gaussian_filter(np.array(melting_layer, dtype=float), (2, 0.1))
+        melting_layer = (smoothed_layer > 0.2).astype(bool)
     return melting_layer
 
 
@@ -238,7 +237,7 @@ def find_freezing_region(obs, melting_layer):
     """
     is_freezing = np.zeros(obs.tw.shape, dtype=bool)
     n_time = obs.time.shape[0]
-    t0_alt = _t0_alt(obs.tw, obs.height)
+    t0_alt = find_t0_alt(obs.tw, obs.height)
     alt_array = np.tile(obs.height, (n_time, 1))
     melting_alts = ma.array(alt_array, mask=~melting_layer)
     mean_melting_alt = ma.median(melting_alts, axis=1)
@@ -257,11 +256,11 @@ def find_freezing_region(obs, melting_layer):
     return is_freezing
 
 
-def _t0_alt(tw, height):
-    """ Interpolates altitudes where model temperature goes below freezing.
+def find_t0_alt(temperature, height):
+    """ Interpolates altitudes where temperature goes below freezing.
 
     Args:
-        tw (ndarray): 2-D wet bulb temperature.
+        temperature (ndarray): 2-D temperature (K).
         height (ndarray): 1-D altitude grid (m).
 
     Returns:
@@ -270,7 +269,7 @@ def _t0_alt(tw, height):
 
     """
     alt = np.array([])
-    for prof in tw:
+    for prof in temperature:
         ind = np.where(prof < T0)[0][0]
         if ind == 0:
             alt = np.append(alt, height[0])
@@ -304,7 +303,7 @@ def find_insects(obs, *args, prob_lim=0.8):
 
     Finally, positive insect detections are canceled from profiles with rain,
     liquid droplets pixels, melting layer pixels and too cold temperatures.
-    
+
     Args:
         obs (_ClassData): Input data container.
         *args: Binary fields that are used to screen the
@@ -340,31 +339,31 @@ def _insect_probability(z, ldr, width):
     """
     def _insect_prob_ldr(z_loc=15, ldr_loc=-20):
         """Finds probability of insects, based on echo and ldr."""
-        zp, ldr_prob = np.zeros(z.shape), np.zeros(z.shape)
+        z_prob, ldr_prob = np.zeros(z.shape), np.zeros(z.shape)
         ind = ~z.mask
-        zp[ind] = stats.norm.cdf(z[ind]*-1, loc=z_loc, scale=8)
+        z_prob[ind] = stats.norm.cdf(z[ind]*-1, loc=z_loc, scale=8)
         ind = ~ldr.mask
         ldr_prob[ind] = stats.norm.cdf(ldr[ind], loc=ldr_loc, scale=5)
-        return zp * ldr_prob
+        return z_prob * ldr_prob
 
     def _insect_prob_width(w_limit=0.06):
         """Finds (0, 1) probability of insects, based on spectral width."""
         temp_w = np.ones(z.shape)
-        ind = ldr.mask & ~z.mask  # pixels that have Z but no LDR
+        ind = ldr.mask & ~z.mask
         temp_w[ind] = width[ind]
         return (temp_w < w_limit).astype(int)
 
-    p1 = _insect_prob_ldr()
-    p2 = _insect_prob_width()
-    return p1 + p2
+    probability_from_ldr = _insect_prob_ldr()
+    probability_from_width = _insect_prob_width()
+    return probability_from_ldr + probability_from_width
 
 
-def _screen_insects(insect_prob, tw, *args):
+def _screen_insects(insect_prob, temperature, *args):
     """Screens insects by temperature and other misc. conditions.
 
     Args:
         insect_prob (ndarray): Insect probability with the shape (m, n).
-        tw (ndarray): Wet bulb temperature with the shape (m, n).
+        temperature (ndarray): Wet bulb temperature with the shape (m, n).
         *args (ndrray): Variable number of boolean arrays where True
             means that insect probablity should be 0. Shape of these
             fields can be (m, n), or (m,) when the whole profile
@@ -380,7 +379,7 @@ def _screen_insects(insect_prob, tw, *args):
                 prob[arg] = 0
 
     def _screen_insects_temp(t_lim=-5):
-        prob[tw < (T0+t_lim)] = 0
+        prob[temperature < (T0 + t_lim)] = 0
 
     prob = np.copy(insect_prob)
     _screen_insects_misc()
@@ -440,7 +439,7 @@ def fetch_quality(radar, lidar, classification, attenuations):
             results.
         attenuations (dict):
 
-    Returns: 
+    Returns:
         ndarray: Integer array containing the following bits:
             - bit 0: Pixel contains radar data
             - bit 1: Pixel contains lidar data
