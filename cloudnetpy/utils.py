@@ -266,6 +266,24 @@ def bases_and_tops(y):
     return bases, tops
 
 
+def find_cloud_bases(array):
+    """Finds bases of clouds.
+
+    Args:
+        array (ndarray): 2D boolean array.
+
+    Returns:
+        ndarray: Boolean array indicating cloud
+            bases.
+
+    """
+    n_times, n_height = array.shape
+    zeros = np.zeros(n_times)
+    array_padded = np.insert(array, 0, zeros, axis=1).astype(int)
+    array_diff = np.diff(array_padded, axis=1)
+    return array_diff == 1
+
+
 def cumsumr(x, axis=0):
     """Finds cumulative sum that resets on 0.
 

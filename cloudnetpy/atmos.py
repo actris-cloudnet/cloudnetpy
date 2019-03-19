@@ -272,20 +272,6 @@ def scale_lwc(lwc, lwp):
     return lwc_scaled
 
 
-def find_cloud_bases(is_cloud):
-    """Finds cloud base pixels from a 2D boolean field.
-
-    Args:
-        is_cloud (ndarray): Boolean array indicating presence of cloud.
-
-    """
-    cloud_bases = np.zeros_like(is_cloud, dtype=bool)
-    for ind, profile in enumerate(is_cloud):
-        bases, _ = utils.bases_and_tops(profile)
-        cloud_bases[ind, bases] = 1
-    return cloud_bases
-
-
 def get_lwc_change_rate_at_bases(atmosphere, is_liquid):
     """Finds LWC change rate in liquid cloud bases.
 
@@ -298,7 +284,7 @@ def get_lwc_change_rate_at_bases(atmosphere, is_liquid):
         liquid water content change rate at cloud bases (kg/m3/m).
 
     """
-    liquid_bases = find_cloud_bases(is_liquid)
+    liquid_bases = utils.find_cloud_bases(is_liquid)
     lwc_dz = ma.zeros(liquid_bases.shape)
     lwc_dz[liquid_bases] = calc_lwc_change_rate(atmosphere[0][liquid_bases],
                                                 atmosphere[1][liquid_bases])
