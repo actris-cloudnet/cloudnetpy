@@ -6,6 +6,7 @@ from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy import plotting
 from cloudnetpy import atmos
 
+G_TO_KG = 0.001
 
 class LwcSource(DataSource):
     def __init__(self, categorize_file):
@@ -28,14 +29,7 @@ class Liquid:
     def __init__(self, categorize_object):
         self._category_bits = p_tools.read_category_bits(categorize_object)
         self.is_liquid = self._category_bits['droplet']
-        self.liquid_bases = self._find_liquid_bases()
-
-    def _find_liquid_bases(self):
-        liquid_bases = np.zeros_like(self.is_liquid, dtype=bool)
-        for ind, profile in enumerate(self.is_liquid):
-            bases, _ = utils.bases_and_tops(profile)
-            liquid_bases[ind, bases] = 1
-        return liquid_bases
+        self.liquid_bases = atmos.find_cloud_bases(self.is_liquid)
 
 
 class Lwc:
@@ -51,7 +45,7 @@ class Lwc:
         dheight = self.lwc_input.dheight
         lwc_change_rate = atmos.fill_clouds_with_lwc_dz(atmosphere, is_liquid)
         lwc = atmos.calc_adiabatic_lwc(lwc_change_rate, is_liquid, dheight)
-        lwc_norm = atmos.scale_lwc(lwc, lwp)
+        lwc_norm = atmos.scale_lwc(lwc, lwp) * G_TO_KG
         return lwc_norm
 
 
@@ -60,3 +54,4 @@ def generate_lwc(categorize_file):
     liquid = Liquid(lwc_input)
     lwc = Lwc(lwc_input, liquid)
 
+    plotting.plot_2d(lwc.lwc, clim=(1e-5, 1e-2), cmap='jet')
