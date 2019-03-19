@@ -254,20 +254,22 @@ class LiquidAttenuation(Attenuation):
         return corrected, uncorrected
 
 
-def scale_lwc(lwc, lwp):
-    """Scales theoretical liquid water content to match the measured LWP.
+def fill_clouds_with_lwc_dz(atmosphere, is_liquid):
+    """Fills liquid clouds with lwc change rate at the cloud bases.
 
     Args:
-        lwc (ndarray): 2D liquid water content (g/m3).
-        lwp (ndarray): 1D liquid water path (g/m2).
+        atmosphere (tuple): 2-element tuple containing temperature (K) and pressure (Pa).
+        is_liquid (ndarray): Boolean array indicating presence of liquid clouds.
 
     Returns:
-        ndarray: Scaled liquid water content.
+        liquid water content change rate (g/m3/m), so that for each cloud
+            the base value is filled for the whole cloud.
 
     """
-    lwc_sum = np.sum(lwc, axis=1)
-    lwc_scaled = (lwc.T/lwc_sum*lwp).T
-    return lwc_scaled
+    lwc_dz = get_lwc_change_rate_at_bases(atmosphere, is_liquid)
+    lwc_dz_filled = ma.zeros(lwc_dz.shape)
+    lwc_dz_filled[is_liquid] = utils.ffill(lwc_dz[is_liquid])
+    return lwc_dz_filled
 
 
 def get_lwc_change_rate_at_bases(atmosphere, is_liquid):
@@ -289,22 +291,20 @@ def get_lwc_change_rate_at_bases(atmosphere, is_liquid):
     return lwc_dz
 
 
-def fill_clouds_with_lwc_dz(atmosphere, is_liquid):
-    """Fills liquid clouds with lwc change rate at the cloud bases.
+def find_cloud_bases(array):
+    """Finds bases of clouds.
 
     Args:
-        atmosphere (tuple): 2-element tuple containing temperature (K) and pressure (Pa).
-        is_liquid (ndarray): Boolean array indicating presence of liquid clouds.
+        array (ndarray): 2D boolean array denoting clouds or some other
+            similar field.
 
     Returns:
-        liquid water content change rate (g/m3/m), so that for each cloud
-            the base value is filled for the whole cloud.
+        ndarray: Boolean array indicating bases of the individual clouds.
 
     """
-    lwc_dz = get_lwc_change_rate_at_bases(atmosphere, is_liquid)
-    lwc_dz_filled = ma.zeros(lwc_dz.shape)
-    lwc_dz_filled[is_liquid] = utils.ffill(lwc_dz[is_liquid])
-    return lwc_dz_filled
+    zeros = np.zeros(array.shape[0])
+    array_padded = np.insert(array, 0, zeros, axis=1).astype(int)
+    return np.diff(array_padded, axis=1) == 1
 
 
 def calc_adiabatic_lwc(lwc_change_rate, dheight):
@@ -324,19 +324,17 @@ def calc_adiabatic_lwc(lwc_change_rate, dheight):
     return ind_from_base * dheight * lwc_change_rate
 
 
-def find_cloud_bases(array):
-    """Finds bases of clouds.
+def scale_lwc(lwc, lwp):
+    """Scales theoretical liquid water content to match the measured LWP.
 
     Args:
-        array (ndarray): 2D boolean array denoting clouds or some other
-            similar field.
+        lwc (ndarray): 2D liquid water content (g/m3).
+        lwp (ndarray): 1D liquid water path (g/m2).
 
     Returns:
-        ndarray: Boolean array indicating bases of the individual clouds.
+        ndarray: Scaled liquid water content.
 
     """
-    zeros = np.zeros(array.shape[0])
-    array_padded = np.insert(array, 0, zeros, axis=1).astype(int)
-    return np.diff(array_padded, axis=1) == 1
-
-
+    lwc_sum = np.sum(lwc, axis=1)
+    lwc_scaled = (lwc.T/lwc_sum*lwp).T
+    return lwc_scaled
