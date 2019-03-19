@@ -20,6 +20,9 @@ def k2c(temp):
 VAISALA_PARAMS_OVER_WATER = (6.116441, 7.591386, 240.7263)
 HPA_TO_P = 100
 P_TO_HPA = 0.01
+KM_TO_M = 0.001
+KG_TO_G = 1000
+TWO_WAY = 2
 
 
 def calc_lwc_change_rate(temperature, pressure):
@@ -33,7 +36,7 @@ def calc_lwc_change_rate(temperature, pressure):
         pressure (ndarray): Pressure of cloud base (Pa).
 
     Returns:
-        ndarray: dlwc/dz (kg m-3 m-1)
+        ndarray: dlwc/dz (g m-3 m-1)
 
     References:
         Brenguier, 1991, https://bit.ly/2QCSJtb
@@ -48,7 +51,7 @@ def calc_lwc_change_rate(temperature, pressure):
     f1 = a - 1
     f2 = 1 / (a + (con.latent_heat*svp_mixing_ratio*air_density/b))
     f3 = air_density*con.g*con.mw_ratio*svp*b**-2
-    return air_density*f1*f2*f3
+    return air_density*f1*f2*f3 * KG_TO_G
 
 
 def calc_mixing_ratio(svp, pressure):
@@ -204,7 +207,7 @@ class GasAttenuation(Attenuation):
     def _specific_to_gas_atten(self, atten):
         layer1_atten = self._model['gas_atten'][:, 0]
         atten_cumsum = np.cumsum(atten.T, axis=0)
-        atten = 2 * atten_cumsum * self._dheight * 1e-3 + layer1_atten
+        atten = TWO_WAY * atten_cumsum * self._dheight * 1e-3 + layer1_atten
         atten = np.insert(atten.T, 0, layer1_atten, axis=1)[:, :-1]
         return atten
 
@@ -220,9 +223,8 @@ class LiquidAttenuation(Attenuation):
         self.corrected, self.uncorrected = self._screen_attenuations()
 
     def _get_lwc_change_rate_error(self):
-        return fill_clouds_with_lwc_dz(self._model['temperature'],
-                                       self._model['pressure'],
-                                       self._liquid_in_pixel)
+        atmosphere = (self._model['temperature'], self._model['pressure'])
+        return fill_clouds_with_lwc_dz(atmosphere, self._liquid_in_pixel)
 
     def _get_liquid_atten(self):
         """Finds radar liquid attenuation."""
@@ -261,10 +263,11 @@ class LiquidAttenuation(Attenuation):
         return lwp_norm
 
     def _calc_attenuation(self, lwp_norm):
+        """Finds liquid attenuation (dB)."""
         liq_att = ma.zeros(self._liquid_in_pixel.shape, dtype=float)
         spec_liq = self._model['specific_liquid_atten']
         lwp_cumsum = np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
-        liq_att[:, 1:] = 2e-3 * lwp_cumsum
+        liq_att[:, 1:] = TWO_WAY * KM_TO_M * lwp_cumsum
         return liq_att
 
     def _screen_attenuations(self):
@@ -317,8 +320,8 @@ def fill_clouds_with_lwc_dz(atmosphere, is_liquid):
         is_liquid (ndarray): Boolean array indicating presence of liquid clouds.
 
     Returns:
-        liquid water content change rate (kg/m3/m), so that the base value of
-            each cloud is filled for the whole cloud.
+        liquid water content change rate (g/m3/m), so that for each cloud
+            the base value is filled for the whole cloud.
 
     """
     lwc_dz = get_lwc_change_rate_at_bases(atmosphere, is_liquid)
@@ -331,7 +334,7 @@ def calc_liquid_water_content(lwc_change_rate, is_liquid, dheight):
     """Calculates adiabatic liquid water content.
 
     Args:
-        lwc_change_rate (ndarray): Liquid water content change rate (kg/m3/m)
+        lwc_change_rate (ndarray): Liquid water content change rate (g/m3/m)
             calculated at the base of each cloud and then filled to that cloud.
         is_liquid (ndarray): Boolean array indicating presense of liquid clouds.
         dheight: Median difference of the height vector (m).
@@ -341,5 +344,5 @@ def calc_liquid_water_content(lwc_change_rate, is_liquid, dheight):
 
     """
     ind_from_base = utils.cumsumr(is_liquid, axis=1)
-    lwc = ind_from_base * lwc_change_rate * dheight * 1e3
+    lwc = ind_from_base * dheight * lwc_change_rate
     return lwc
