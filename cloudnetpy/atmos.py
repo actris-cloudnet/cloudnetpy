@@ -323,25 +323,23 @@ def calc_adiabatic_lwc(lwc_change_rate, is_liquid, dheight):
 
     """
     ind_from_base = utils.cumsumr(is_liquid, axis=1)
-    lwc = ind_from_base * dheight * lwc_change_rate
-    return lwc
+    return ind_from_base * dheight * lwc_change_rate
 
 
 def find_cloud_bases(array):
     """Finds bases of clouds.
 
     Args:
-        array (ndarray): 2D boolean array.
+        array (ndarray): 2D boolean array denoting clouds or some other
+            similar field.
 
     Returns:
-        ndarray: Boolean array indicating cloud
-            bases.
+        ndarray: Boolean array indicating bases of the individual clouds.
 
     """
     n_times, n_height = array.shape
     zeros = np.zeros(n_times)
     array_padded = np.insert(array, 0, zeros, axis=1).astype(int)
-    array_diff = np.diff(array_padded, axis=1)
-    return array_diff == 1
+    return np.diff(array_padded, axis=1) == 1
 
 

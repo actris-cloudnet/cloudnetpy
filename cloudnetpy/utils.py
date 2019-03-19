@@ -237,35 +237,6 @@ def l2norm(*args):
     return ma.sqrt(ss)
 
 
-def bases_and_tops(y):
-    """Finds islands of ones from boolean 1-D array.
-
-    From a binary vector finds all "islands" of
-    ones, i.e. their starting and ending indices.
-
-    Args:
-        y (array_like): 1-D array of ones and zeros.
-
-    Returns:
-        2-element tuple containing
-
-        - *ndarray*: Indices of bases.
-        - *ndarray*: Indices of tops.
-
-    Examples:
-        >>> y = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1]
-        >>> bases_and_tops(y)
-            ([3, 7], [4, 9])
-
-    """
-    zero = np.zeros(1)
-    y2 = np.concatenate((zero, y, zero))
-    y2_diff = np.diff(y2)
-    bases = np.where(y2_diff == 1)[0]
-    tops = np.where(y2_diff == -1)[0] - 1
-    return bases, tops
-
-
 def cumsumr(x, axis=0):
     """Finds cumulative sum that resets on 0.
 
