@@ -1,9 +1,5 @@
 """ Main testing file for Categorize file creation 
 
-Test data is here:
-
-http://tukiains.kapsi.fi/omia/test_data.tar.gz
-
 """
 
 import sys
@@ -16,7 +12,7 @@ import matplotlib.pyplot as plt
 def main():
     """ Main function. """
 
-    prefix = '/home/tukiains/Documents/PYTHON/cloudnetpy/test_data/'
+    prefix = '/home/tukiains/Documents/PYTHON/cloudnetpy_lwc/cloudnetpy/test_data/'
 
     input_files = {
         'radar': prefix + '20181204_mace-head_mira.nc',

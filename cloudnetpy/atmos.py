@@ -290,12 +290,12 @@ def find_cloud_bases(is_cloud):
     return cloud_bases
 
 
-def get_lwc_change_rate_at_bases(temperature, pressure, is_liquid):
+def get_lwc_change_rate_at_bases(atmosphere, is_liquid):
     """Finds LWC change rate in liquid cloud bases.
 
     Args:
-        temperature (ndarray): Temperature (K).
-        pressure (ndarray): Pressure (Pa).
+        atmosphere (tuple): 2-element tuple containing temperature (K) and
+            pressure (Pa).
         is_liquid (ndarray): Boolean array indicating presence of liquid clouds.
 
     Returns:
@@ -304,18 +304,16 @@ def get_lwc_change_rate_at_bases(temperature, pressure, is_liquid):
     """
     liquid_bases = find_cloud_bases(is_liquid)
     lwc_dz = ma.zeros(liquid_bases.shape)
-    base_temperature = temperature[liquid_bases]
-    base_pressure = pressure[liquid_bases]
-    lwc_dz[liquid_bases] = calc_lwc_change_rate(base_temperature, base_pressure)
+    lwc_dz[liquid_bases] = calc_lwc_change_rate(atmosphere[0][liquid_bases],
+                                                atmosphere[1][liquid_bases])
     return lwc_dz
 
 
-def fill_clouds_with_lwc_dz(temperature, pressure, is_liquid):
+def fill_clouds_with_lwc_dz(atmosphere, is_liquid):
     """Fills liquid clouds with lwc change rate at the cloud bases.
 
     Args:
-        temperature (ndarray): Temperature (K).
-        pressure (ndarray): Pressure (Pa).
+        atmosphere (tuple): 2-element tuple containing temperature (K) and pressure (Pa).
         is_liquid (ndarray): Boolean array indicating presence of liquid clouds.
 
     Returns:
@@ -323,7 +321,7 @@ def fill_clouds_with_lwc_dz(temperature, pressure, is_liquid):
             each cloud is filled for the whole cloud.
 
     """
-    lwc_dz = get_lwc_change_rate_at_bases(temperature, pressure, is_liquid)
+    lwc_dz = get_lwc_change_rate_at_bases(atmosphere, is_liquid)
     lwc_dz_filled = ma.zeros(lwc_dz.shape)
     lwc_dz_filled[is_liquid] = utils.ffill(lwc_dz[is_liquid])
     return lwc_dz_filled
