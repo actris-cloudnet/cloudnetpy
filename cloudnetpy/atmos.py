@@ -337,8 +337,7 @@ def find_cloud_bases(array):
         ndarray: Boolean array indicating bases of the individual clouds.
 
     """
-    n_times, n_height = array.shape
-    zeros = np.zeros(n_times)
+    zeros = np.zeros(array.shape[0])
     array_padded = np.insert(array, 0, zeros, axis=1).astype(int)
     return np.diff(array_padded, axis=1) == 1
 
