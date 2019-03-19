@@ -284,7 +284,7 @@ def get_lwc_change_rate_at_bases(atmosphere, is_liquid):
         liquid water content change rate at cloud bases (kg/m3/m).
 
     """
-    liquid_bases = utils.find_cloud_bases(is_liquid)
+    liquid_bases = find_cloud_bases(is_liquid)
     lwc_dz = ma.zeros(liquid_bases.shape)
     lwc_dz[liquid_bases] = calc_lwc_change_rate(atmosphere[0][liquid_bases],
                                                 atmosphere[1][liquid_bases])
@@ -325,3 +325,23 @@ def calc_adiabatic_lwc(lwc_change_rate, is_liquid, dheight):
     ind_from_base = utils.cumsumr(is_liquid, axis=1)
     lwc = ind_from_base * dheight * lwc_change_rate
     return lwc
+
+
+def find_cloud_bases(array):
+    """Finds bases of clouds.
+
+    Args:
+        array (ndarray): 2D boolean array.
+
+    Returns:
+        ndarray: Boolean array indicating cloud
+            bases.
+
+    """
+    n_times, n_height = array.shape
+    zeros = np.zeros(n_times)
+    array_padded = np.insert(array, 0, zeros, axis=1).astype(int)
+    array_diff = np.diff(array_padded, axis=1)
+    return array_diff == 1
+
+
