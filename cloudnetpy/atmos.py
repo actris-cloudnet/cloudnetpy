@@ -231,13 +231,13 @@ class LiquidAttenuation(Attenuation):
         lwc = calc_adiabatic_lwc(self._lwc_dz_err,
                                  self._liquid_in_pixel,
                                  self._dheight)
-        lwc_norm = normalize_lwc(lwc, self._mwr['lwp'][:])
-        return self._calc_attenuation(lwc_norm)
+        lwc_scaled = scale_lwc(lwc, self._mwr['lwp'][:])
+        return self._calc_attenuation(lwc_scaled)
 
     def _get_liquid_atten_err(self):
         """Finds radar liquid attenuation error."""
-        lwc_err_norm = normalize_lwc(self._lwc_dz_err, self._mwr['lwp_error'][:])
-        return self._calc_attenuation(lwc_err_norm)
+        lwc_err_scaled = scale_lwc(self._lwc_dz_err, self._mwr['lwp_error'][:])
+        return self._calc_attenuation(lwc_err_scaled)
 
     def _calc_attenuation(self, lwc_norm):
         """Finds liquid attenuation (dB)."""
@@ -256,20 +256,20 @@ class LiquidAttenuation(Attenuation):
         return corrected, uncorrected
 
 
-def normalize_lwc(lwc, lwp):
-    """Normalises theoretical liquid water content with measured liquid water path.
+def scale_lwc(lwc, lwp):
+    """Scales theoretical liquid water content to match the measured LWP.
 
     Args:
         lwc (ndarray): 2D liquid water content (g/m3).
         lwp (ndarray): 1D liquid water path (g/m2).
 
     Returns:
-        ndarray: Normalised liquid water content.
+        ndarray: Scaled liquid water content.
 
     """
     lwc_sum = np.sum(lwc, axis=1)
-    lwc_normalized = (lwc.T*lwp/lwc_sum).T
-    return lwc_normalized
+    lwc_scaled = (lwc.T/lwc_sum*lwp).T
+    return lwc_scaled
 
 
 def find_cloud_bases(is_cloud):

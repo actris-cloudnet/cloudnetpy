@@ -51,11 +51,7 @@ class Lwc:
         dheight = self.lwc_input.dheight
         lwc_change_rate = atmos.fill_clouds_with_lwc_dz(atmosphere, is_liquid)
         lwc = atmos.calc_adiabatic_lwc(lwc_change_rate, is_liquid, dheight)
-        lwc_norm = atmos.normalize_lwc(lwc, lwp)
-
-        plotting.plot_2d(lwc)
-        #plotting.plot_2d(lwc_norm)
-
+        lwc_norm = atmos.scale_lwc(lwc, lwp)
         return lwc_norm
 
 
