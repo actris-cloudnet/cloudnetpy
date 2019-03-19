@@ -228,9 +228,7 @@ class LiquidAttenuation(Attenuation):
 
     def _get_liquid_atten(self):
         """Finds radar liquid attenuation."""
-        lwc = calc_adiabatic_lwc(self._lwc_dz_err,
-                                 self._liquid_in_pixel,
-                                 self._dheight)
+        lwc = calc_adiabatic_lwc(self._lwc_dz_err, self._dheight)
         lwc_scaled = scale_lwc(lwc, self._mwr['lwp'][:])
         return self._calc_attenuation(lwc_scaled)
 
@@ -309,19 +307,19 @@ def fill_clouds_with_lwc_dz(atmosphere, is_liquid):
     return lwc_dz_filled
 
 
-def calc_adiabatic_lwc(lwc_change_rate, is_liquid, dheight):
+def calc_adiabatic_lwc(lwc_change_rate, dheight):
     """Calculates adiabatic liquid water content.
 
     Args:
         lwc_change_rate (ndarray): Liquid water content change rate (g/m3/m)
             calculated at the base of each cloud and then filled to that cloud.
-        is_liquid (ndarray): Boolean array indicating presense of liquid clouds.
         dheight: Median difference of the height vector (m).
 
     Returns:
         Liquid water content (g/m3).
 
     """
+    is_liquid = lwc_change_rate != 0
     ind_from_base = utils.cumsumr(is_liquid, axis=1)
     return ind_from_base * dheight * lwc_change_rate
 

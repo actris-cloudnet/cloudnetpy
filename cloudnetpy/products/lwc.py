@@ -67,9 +67,8 @@ class Lwc:
         is_liquid = self.liquid.is_liquid
         dheight = self.lwc_input.dheight
         lwc_change_rate = atmos.fill_clouds_with_lwc_dz(atmosphere, is_liquid)
-        lwc = atmos.calc_adiabatic_lwc(lwc_change_rate, is_liquid, dheight)
+        lwc = atmos.calc_adiabatic_lwc(lwc_change_rate, dheight)
         self.lwc_adiabatic = lwc
-
         self._check_suspicious_profiles(self)
 
         lwc_norm = atmos.scale_lwc(lwc, lwp) * G_TO_KG
