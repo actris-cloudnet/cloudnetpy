@@ -8,7 +8,9 @@ from cloudnetpy import atmos
 
 G_TO_KG = 0.001
 
+
 class LwcSource(DataSource):
+    """Data container for liquid water content calculations."""
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.temperature = self._interpolate_model_field('temperature')
@@ -26,6 +28,7 @@ class LwcSource(DataSource):
 
 
 class Liquid:
+    """Data container for liquid droplets."""
     def __init__(self, categorize_object):
         self._category_bits = p_tools.read_category_bits(categorize_object)
         self.is_liquid = self._category_bits['droplet']
@@ -33,6 +36,7 @@ class Liquid:
 
 
 class Lwc:
+    """Class handling the liquid water content calculations."""
     def __init__(self, lwc_input, liquid):
         self.lwc_input = lwc_input
         self.liquid = liquid
@@ -50,8 +54,8 @@ class Lwc:
 
 
 def generate_lwc(categorize_file):
+    """High level API to generate Cloudnet liquid water content file."""
     lwc_input = LwcSource(categorize_file)
     liquid = Liquid(lwc_input)
     lwc = Lwc(lwc_input, liquid)
 
-    plotting.plot_2d(lwc.lwc, clim=(1e-5, 1e-2), cmap='jet')
