@@ -39,26 +39,28 @@ class Liquid:
 
 
 class Lwc:
-    def __init__(self, lwc_input_data, liquid):
-        self.lwc_input_data = lwc_input_data
+    def __init__(self, lwc_input, liquid):
+        self.lwc_input = lwc_input
         self.liquid = liquid
         self.lwc = self._get_lwc()
 
     def _get_lwc(self):
-        temperature = self.lwc_input_data.temperature
-        pressure = self.lwc_input_data.pressure
+        lwp = self.lwc_input.lwp
+        atmosphere = (self.lwc_input.temperature, self.lwc_input.pressure)
         is_liquid = self.liquid.is_liquid
-        dheight = self.lwc_input_data.dheight
-        lwc_change_rate = atmos.fill_clouds_with_lwc_dz(temperature,
-                                                        pressure,
-                                                        is_liquid)
-        return atmos.calc_liquid_water_content(lwc_change_rate,
-                                               is_liquid,
-                                               dheight)
+        dheight = self.lwc_input.dheight
+        lwc_change_rate = atmos.fill_clouds_with_lwc_dz(atmosphere, is_liquid)
+        lwc = atmos.calc_adiabatic_lwc(lwc_change_rate, is_liquid, dheight)
+        lwc_norm = atmos.normalize_lwc(lwc, lwp)
+
+        plotting.plot_2d(lwc)
+        #plotting.plot_2d(lwc_norm)
+
+        return lwc_norm
 
 
 def generate_lwc(categorize_file):
-    lwc_input_data = LwcSource(categorize_file)
-    liquid = Liquid(lwc_input_data)
-    lwc = Lwc(lwc_input_data, liquid)
+    lwc_input = LwcSource(categorize_file)
+    liquid = Liquid(lwc_input)
+    lwc = Lwc(lwc_input, liquid)
 

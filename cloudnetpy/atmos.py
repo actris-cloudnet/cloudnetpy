@@ -228,45 +228,22 @@ class LiquidAttenuation(Attenuation):
 
     def _get_liquid_atten(self):
         """Finds radar liquid attenuation."""
-        def _get_lwp_normalized():
-            lwc = calc_liquid_water_content(self._lwc_dz_err,
-                                            self._liquid_in_pixel,
-                                            self._dheight)
-            mwr = self._mwr['lwp']
-            return self._normalize_lwp(lwc, mwr)
-
-        lwp_norm = _get_lwp_normalized()
-        return self._calc_attenuation(lwp_norm)
+        lwc = calc_adiabatic_lwc(self._lwc_dz_err,
+                                 self._liquid_in_pixel,
+                                 self._dheight)
+        lwc_norm = normalize_lwc(lwc, self._mwr['lwp'][:])
+        return self._calc_attenuation(lwc_norm)
 
     def _get_liquid_atten_err(self):
         """Finds radar liquid attenuation error."""
-        def _get_lwp_normalized():
-            lwc = self._lwc_dz_err
-            mwr = self._mwr['lwp_error']
-            return self._normalize_lwp(lwc, mwr)
+        lwc_err_norm = normalize_lwc(self._lwc_dz_err, self._mwr['lwp_error'][:])
+        return self._calc_attenuation(lwc_err_norm)
 
-        lwp_norm = _get_lwp_normalized()
-        return self._calc_attenuation(lwp_norm)
-
-    def _normalize_lwp(self, lwc_var, mwr_var):
-        """Normalizes measured LWP with model LWC."""
-        def _get_lwp_ind():
-            mwr_lwp = self._mwr['lwp'][:]
-            return np.isfinite(mwr_lwp) & np.any(self._liquid_in_pixel, axis=1)
-
-        lwp_norm = ma.zeros(self._liquid_in_pixel.shape, dtype=float)
-        lwp_and_liquid = _get_lwp_ind()
-        mwr = mwr_var[lwp_and_liquid]
-        lwc = lwc_var[lwp_and_liquid, :]
-        lwc_sum = np.sum(lwc, axis=1)
-        lwp_norm[lwp_and_liquid] = (lwc.T*mwr/lwc_sum).T
-        return lwp_norm
-
-    def _calc_attenuation(self, lwp_norm):
+    def _calc_attenuation(self, lwc_norm):
         """Finds liquid attenuation (dB)."""
         liq_att = ma.zeros(self._liquid_in_pixel.shape, dtype=float)
         spec_liq = self._model['specific_liquid_atten']
-        lwp_cumsum = np.cumsum(lwp_norm[:, :-1]*spec_liq[:, :-1], axis=1)
+        lwp_cumsum = np.cumsum(lwc_norm[:, :-1] * spec_liq[:, :-1], axis=1)
         liq_att[:, 1:] = TWO_WAY * KM_TO_M * lwp_cumsum
         return liq_att
 
@@ -277,6 +254,22 @@ class LiquidAttenuation(Attenuation):
         corrected = (self.atten > 0).filled(False) & ~uncorrected
         self.atten[uncorrected] = ma.masked
         return corrected, uncorrected
+
+
+def normalize_lwc(lwc, lwp):
+    """Normalises theoretical liquid water content with measured liquid water path.
+
+    Args:
+        lwc (ndarray): 2D liquid water content (g/m3).
+        lwp (ndarray): 1D liquid water path (g/m2).
+
+    Returns:
+        ndarray: Normalised liquid water content.
+
+    """
+    lwc_sum = np.sum(lwc, axis=1)
+    lwc_normalized = (lwc.T*lwp/lwc_sum).T
+    return lwc_normalized
 
 
 def find_cloud_bases(is_cloud):
@@ -330,7 +323,7 @@ def fill_clouds_with_lwc_dz(atmosphere, is_liquid):
     return lwc_dz_filled
 
 
-def calc_liquid_water_content(lwc_change_rate, is_liquid, dheight):
+def calc_adiabatic_lwc(lwc_change_rate, is_liquid, dheight):
     """Calculates adiabatic liquid water content.
 
     Args:
@@ -340,7 +333,7 @@ def calc_liquid_water_content(lwc_change_rate, is_liquid, dheight):
         dheight: Median difference of the height vector (m).
 
     Returns:
-        liquid water content (g/m3).
+        Liquid water content (g/m3).
 
     """
     ind_from_base = utils.cumsumr(is_liquid, axis=1)
