@@ -336,5 +336,5 @@ def scale_lwc(lwc, lwp):
 
     """
     lwc_sum = np.sum(lwc, axis=1)
-    lwc_scaled = (lwc.T/lwc_sum*lwp).T
-    return lwc_scaled
+    return (lwc.T/lwc_sum*lwp).T
+
