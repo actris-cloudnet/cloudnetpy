@@ -20,7 +20,8 @@ def k2c(temp):
 VAISALA_PARAMS_OVER_WATER = (6.116441, 7.591386, 240.7263)
 HPA_TO_P = 100
 P_TO_HPA = 0.01
-KM_TO_M = 0.001
+M_TO_KM = 0.001
+KM_TO_M = 1000
 KG_TO_G = 1000
 TWO_WAY = 2
 
@@ -140,16 +141,17 @@ def calc_wet_bulb_temperature(model_data):
     """
     def _screen_rh():
         rh = model_data['rh']
-        rh[rh < 1e-5] = 1e-5
+        rh_min = 1e-5
+        rh[rh < rh_min] = rh_min
         return rh
 
     def _vapor_derivatives():
         m = 17.269
         tn = 35.86
-        a = m*(tn - con.T0)
-        b = dew_point - tn
-        first = -vapor_pressure*a/(b**2)
-        second = vapor_pressure*((a/(b**2))**2 + 2*a/(b**3))
+        f1 = m*(tn - con.T0)
+        f2 = dew_point - tn
+        first = -vapor_pressure*f1/(f2**2)
+        second = vapor_pressure*((f1/(f2**2))**2 + 2*f1/(f2**3))
         return first, second
 
     relative_humidity = _screen_rh()
@@ -207,7 +209,7 @@ class GasAttenuation(Attenuation):
     def _specific_to_gas_atten(self, atten):
         layer1_atten = self._model['gas_atten'][:, 0]
         atten_cumsum = np.cumsum(atten.T, axis=0)
-        atten = TWO_WAY * atten_cumsum * self._dheight * 1e-3 + layer1_atten
+        atten = TWO_WAY * atten_cumsum * self._dheight * M_TO_KM + layer1_atten
         atten = np.insert(atten.T, 0, layer1_atten, axis=1)[:, :-1]
         return atten
 
@@ -242,7 +244,7 @@ class LiquidAttenuation(Attenuation):
         liq_att = ma.zeros(self._liquid_in_pixel.shape, dtype=float)
         spec_liq = self._model['specific_liquid_atten']
         lwp_cumsum = np.cumsum(lwc_norm[:, :-1] * spec_liq[:, :-1], axis=1)
-        liq_att[:, 1:] = TWO_WAY * KM_TO_M * lwp_cumsum
+        liq_att[:, 1:] = TWO_WAY * lwp_cumsum * M_TO_KM
         return liq_att
 
     def _screen_attenuations(self):
