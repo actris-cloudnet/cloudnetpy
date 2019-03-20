@@ -3,6 +3,7 @@ from scipy.interpolate import interp1d
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.utils as utils
 import cloudnetpy.output as output
+import matplotlib.pyplot as plt
 
 """
 Käydään vielä läpi, mitä kaikkea koodi touhuaa.
@@ -231,11 +232,18 @@ def estimate_lwc(data_handler):
 
         if data_handler.lwp[ii] > 0 and data_handler.ptype['is_melting_layer_in_profile'][ii]:
             lwc[ii, :] = lwc_adiabatic[ii, :]
-            
+
+
+            plt.plot(ii,data_handler.lwp[ii],'b.')
+            plt.plot(ii,(np.sum(lwc[ii, :]) * dheight),'r.')
+
             if data_handler.lwp[ii] > (np.sum(lwc[ii, :]) * dheight):
+
                 index = np.where(retrieval_status[ii, :] == 5)[0]
 
                 if len(index) > 0:
+
+                    print('jee')
                     # Tänne tulee harvemmin, ei vielä kertaakaan
                     retrieval_status[ii, retrieval_status[ii, :] > 0] = 2
                     # index is now first cloud free pixel
@@ -251,12 +259,15 @@ def estimate_lwc(data_handler):
                         lwc[ii, index-1] = (data_handler.lwp[ii] - (np.sum(lwc[ii, 0:index-1]) * dheight)) / dheight
                 else:
                     # Välillä myös tänne
+                    print('jees')
                     lwc[ii, :] = data_handler.lwp[ii] * lwc[ii, :] / (np.sum(lwc[ii, :]) * dheight)
                     retrieval_status[ii, retrieval_status[ii, :] > 2] = 1
             else:
                 # Yleensä tulee tänne
                 lwc[ii, :] = data_handler.lwp[ii] * lwc[ii, :] / (np.sum(lwc[ii, :]) * dheight)
                 retrieval_status[ii, retrieval_status[ii, :] > 2] = 1
+
+    plt.show()
 
     # some additional screening..
     retrieval_status[data_handler.ptype['is_rain']] = 6
