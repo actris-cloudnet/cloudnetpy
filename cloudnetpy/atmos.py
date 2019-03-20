@@ -238,13 +238,13 @@ class LiquidAttenuation(Attenuation):
         lwc_err_scaled = scale_lwc(self._lwc_dz_err, self._mwr['lwp_error'][:])
         return self._calc_attenuation(lwc_err_scaled)
 
-    def _calc_attenuation(self, lwc_norm):
+    def _calc_attenuation(self, lwc_scaled):
         """Finds liquid attenuation (dB)."""
-        liq_att = ma.zeros(self._liquid_in_pixel.shape, dtype=float)
+        liquid_attenuation = ma.zeros(lwc_scaled.shape)
         spec_liq = self._model['specific_liquid_atten']
-        lwp_cumsum = np.cumsum(lwc_norm[:, :-1] * spec_liq[:, :-1], axis=1)
-        liq_att[:, 1:] = TWO_WAY * lwp_cumsum * M_TO_KM
-        return liq_att
+        lwp_cumsum = np.cumsum(lwc_scaled[:, :-1] * spec_liq[:, :-1], axis=1)
+        liquid_attenuation[:, 1:] = TWO_WAY * lwp_cumsum * M_TO_KM
+        return liquid_attenuation
 
     def _screen_attenuations(self):
         melting_layer = utils.isbit(self.classification.category_bits, 3)
