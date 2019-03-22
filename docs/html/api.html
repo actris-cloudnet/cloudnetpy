@@ -474,17 +474,108 @@ Gaussian smoother to the melting layer. Default is True.</li>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="classify.find_t0_alt">
+<code class="descclassname">classify.</code><code class="descname">find_t0_alt</code><span class="sig-paren">(</span><em>temperature</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_t0_alt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_t0_alt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates altitudes where temperature goes below freezing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>temperature</strong> (<em>ndarray</em>) – 2-D temperature (K).</li>
+<li><strong>height</strong> (<em>ndarray</em>) – 1-D altitude grid (m).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">1-D array denoting altitudes where the
+temperature drops below 0 deg C.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 <div class="section" id="module-atmos">
 <span id="cloudnetpy-atmos"></span><h2>cloudnetpy.atmos<a class="headerlink" href="#module-atmos" title="Permalink to this headline">¶</a></h2>
 <p>This module contains functions to calculate
 various atmospheric parameters.</p>
+<dl class="class">
+<dt id="atmos.Attenuation">
+<em class="property">class </em><code class="descclassname">atmos.</code><code class="descname">Attenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#Attenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.Attenuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for gas and liquid attenuations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="atmos.GasAttenuation">
+<em class="property">class </em><code class="descclassname">atmos.</code><code class="descname">GasAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#GasAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.GasAttenuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Radar gas attenuation class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="atmos.LiquidAttenuation">
+<em class="property">class </em><code class="descclassname">atmos.</code><code class="descname">LiquidAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#LiquidAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.LiquidAttenuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Radar liquid attenuation class.</p>
+</dd></dl>
+
 <dl class="function">
-<dt id="atmos.adiabatic_lwc">
-<code class="descclassname">atmos.</code><code class="descname">adiabatic_lwc</code><span class="sig-paren">(</span><em>temperature</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#adiabatic_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.adiabatic_lwc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns adiabatic LWC change rate.</p>
-<p>Calculates the theoretical adiabatic rate of increase of LWC with
-height, or pressure, given the cloud base temperature and pressure.</p>
+<dt id="atmos.c2k">
+<code class="descclassname">atmos.</code><code class="descname">c2k</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#c2k"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.c2k" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts Celsius to Kelvins.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.calc_adiabatic_lwc">
+<code class="descclassname">atmos.</code><code class="descname">calc_adiabatic_lwc</code><span class="sig-paren">(</span><em>lwc_change_rate</em>, <em>dheight</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_adiabatic_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_adiabatic_lwc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates adiabatic liquid water content.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lwc_change_rate</strong> (<em>ndarray</em>) – Liquid water content change rate (g/m3/m)
+calculated at the base of each cloud and then filled to that cloud.</li>
+<li><strong>dheight</strong> – Median difference of the height vector (m).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Liquid water content (g/m3).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.calc_dew_point_temperature">
+<code class="descclassname">atmos.</code><code class="descname">calc_dew_point_temperature</code><span class="sig-paren">(</span><em>vapor_pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_dew_point_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_dew_point_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns dew point temperature.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vapor_pressure</strong> (<em>ndarray</em>) – Water vapor pressure (Pa).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dew point temperature (K).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Method from Vaisala’s white paper: “Humidity conversion formulas”.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.calc_lwc_change_rate">
+<code class="descclassname">atmos.</code><code class="descname">calc_lwc_change_rate</code><span class="sig-paren">(</span><em>temperature</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_lwc_change_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_lwc_change_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns rate of change of condensable water (LWC).</p>
+<p>Calculates the theoretical adiabatic rate of increase of LWC
+with height, given the cloud base temperature and pressure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -495,7 +586,7 @@ height, or pressure, given the cloud base temperature and pressure.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dlwc/dz in kg m-3 m-1</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dlwc/dz (g m-3 m-1)</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
@@ -505,12 +596,6 @@ height, or pressure, given the cloud base temperature and pressure.</p>
 </table>
 <p class="rubric">References</p>
 <p>Brenguier, 1991, <a class="reference external" href="https://bit.ly/2QCSJtb">https://bit.ly/2QCSJtb</a></p>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.c2k">
-<code class="descclassname">atmos.</code><code class="descname">c2k</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#c2k"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.c2k" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts Celsius to Kelvins.</p>
 </dd></dl>
 
 <dl class="function">
@@ -538,111 +623,28 @@ height, or pressure, given the cloud base temperature and pressure.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="atmos.dew_point_temperature">
-<code class="descclassname">atmos.</code><code class="descname">dew_point_temperature</code><span class="sig-paren">(</span><em>vapor_pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#dew_point_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.dew_point_temperature" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns dew point temperature.</p>
+<dt id="atmos.calc_psychrometric_constant">
+<code class="descclassname">atmos.</code><code class="descname">calc_psychrometric_constant</code><span class="sig-paren">(</span><em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_psychrometric_constant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_psychrometric_constant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns psychrometric constant.</p>
+<p>Psychrometric constant relates the partial pressure
+of water in air to the air temperature.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vapor_pressure</strong> (<em>ndarray</em>) – Water vapor pressure (Pa).</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dew point temperature (K).</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Psychrometric constant value (Pa C-1)</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Notes</p>
-<p>Method from Vaisala’s white paper: “Humidity conversion formulas”.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="atmos.gas_atten">
-<code class="descclassname">atmos.</code><code class="descname">gas_atten</code><span class="sig-paren">(</span><em>model</em>, <em>cat_bits</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#gas_atten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.gas_atten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns gas attenuation (assumes saturation inside liquid droplets).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>model</strong> (<em>dict</em>) – Interpolated 2-D model fields {‘gas_atten’,
-‘specific_gas_atten’, ‘specific_saturated_gas_atten’}.</li>
-<li><strong>cat_bits</strong> (<em>ndarray</em>) – 2-D array of integers containing
-categorize flag bits.</li>
-<li><strong>height</strong> (<em>ndarray</em>) – 1-D altitude grid (m).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt>‘radar_gas_atten’ containing the attenuation</dt>
-<dd><p class="first last">due to atmospheric gases.</p>
-</dd>
-</dl>
-</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<dl class="docutils">
-<dt>Could be combined with liquid_atten if a common</dt>
-<dd>Attenuations class is created.</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.get_attenuations">
-<code class="descclassname">atmos.</code><code class="descname">get_attenuations</code><span class="sig-paren">(</span><em>model</em>, <em>mwr</em>, <em>classification</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#get_attenuations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.get_attenuations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for attenuations.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.k2c">
-<code class="descclassname">atmos.</code><code class="descname">k2c</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#k2c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.k2c" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts Kelvins to Celsius.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.liquid_atten">
-<code class="descclassname">atmos.</code><code class="descname">liquid_atten</code><span class="sig-paren">(</span><em>mwr</em>, <em>model</em>, <em>classification</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#liquid_atten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.liquid_atten" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates attenuation due to liquid water.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>mwr</strong> (<em>Mwr</em>) – Mwr data container.</li>
-<li><strong>model</strong> (<em>Model</em>) – Model data container.</li>
-<li><strong>classification</strong> (<em>ClassificationResult</em>) – Classification container.</li>
-<li><strong>height</strong> (<em>ndarray</em>) – 1-D altitude grid (m).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>Dict containing</p>
-<ul class="simple">
-<li><strong>radar_liquid_atten</strong> (<em>MaskedArray</em>): Amount of liquid attenuation.</li>
-<li><strong>liquid_atten_err</strong> (<em>MaskedArray</em>): Error in the liquid attenuation.</li>
-<li><strong>liquid_corrected</strong> (<em>ndarray</em>): Boolean array denoting where liquid
-attenuation is present and we can compute its value.</li>
-<li><strong>liquid_uncorrected</strong> (<em>ndarray</em>): Boolean array denoting where liquid
-attenuation is present but we can not compute its value.</li>
-</ul>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Too complicated function! Needs to be broken into a class.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.saturation_vapor_pressure">
-<code class="descclassname">atmos.</code><code class="descname">saturation_vapor_pressure</code><span class="sig-paren">(</span><em>temp_kelvin</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#saturation_vapor_pressure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.saturation_vapor_pressure" title="Permalink to this definition">¶</a></dt>
+<dt id="atmos.calc_saturation_vapor_pressure">
+<code class="descclassname">atmos.</code><code class="descname">calc_saturation_vapor_pressure</code><span class="sig-paren">(</span><em>temp_kelvin</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_saturation_vapor_pressure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_saturation_vapor_pressure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns approximate water vapour saturation pressure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -661,8 +663,8 @@ attenuation is present but we can not compute its value.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="atmos.wet_bulb">
-<code class="descclassname">atmos.</code><code class="descname">wet_bulb</code><span class="sig-paren">(</span><em>model_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#wet_bulb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.wet_bulb" title="Permalink to this definition">¶</a></dt>
+<dt id="atmos.calc_wet_bulb_temperature">
+<code class="descclassname">atmos.</code><code class="descname">calc_wet_bulb_temperature</code><span class="sig-paren">(</span><em>model_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_wet_bulb_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_wet_bulb_temperature" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns wet bulb temperature.</p>
 <p>Returns wet bulb temperature for given temperature,
 pressure and relative humidity. Algorithm is based on a Taylor
@@ -682,6 +684,109 @@ expansion of a simple expression for the saturated vapour pressure.</p>
 <p class="rubric">References</p>
 <p>J. Sullivan and L. D. Sanders: Method for obtaining wet-bulb
 temperatures by modifying the psychrometric formula.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.fill_clouds_with_lwc_dz">
+<code class="descclassname">atmos.</code><code class="descname">fill_clouds_with_lwc_dz</code><span class="sig-paren">(</span><em>atmosphere</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#fill_clouds_with_lwc_dz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.fill_clouds_with_lwc_dz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills liquid clouds with lwc change rate at the cloud bases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>atmosphere</strong> (<em>tuple</em>) – 2-element tuple containing temperature (K) and pressure (Pa).</li>
+<li><strong>is_liquid</strong> (<em>ndarray</em>) – Boolean array indicating presence of liquid clouds.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><dl class="docutils">
+<dt>liquid water content change rate (g/m3/m), so that for each cloud</dt>
+<dd><p class="first last">the base value is filled for the whole cloud.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.find_cloud_bases">
+<code class="descclassname">atmos.</code><code class="descname">find_cloud_bases</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#find_cloud_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.find_cloud_bases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds bases of clouds.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2D boolean array denoting clouds or some other
+similar field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Boolean array indicating bases of the individual clouds.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.get_attenuations">
+<code class="descclassname">atmos.</code><code class="descname">get_attenuations</code><span class="sig-paren">(</span><em>model</em>, <em>mwr</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#get_attenuations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.get_attenuations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for attenuations.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.get_lwc_change_rate_at_bases">
+<code class="descclassname">atmos.</code><code class="descname">get_lwc_change_rate_at_bases</code><span class="sig-paren">(</span><em>atmosphere</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#get_lwc_change_rate_at_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.get_lwc_change_rate_at_bases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds LWC change rate in liquid cloud bases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>atmosphere</strong> (<em>tuple</em>) – 2-element tuple containing temperature (K) and
+pressure (Pa).</li>
+<li><strong>is_liquid</strong> (<em>ndarray</em>) – Boolean array indicating presence of liquid clouds.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">liquid water content change rate at cloud bases (kg/m3/m).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.k2c">
+<code class="descclassname">atmos.</code><code class="descname">k2c</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#k2c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.k2c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts Kelvins to Celsius.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.scale_lwc">
+<code class="descclassname">atmos.</code><code class="descname">scale_lwc</code><span class="sig-paren">(</span><em>lwc</em>, <em>lwp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#scale_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.scale_lwc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scales theoretical liquid water content to match the measured LWP.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lwc</strong> (<em>ndarray</em>) – 2D liquid water content (g/m3).</li>
+<li><strong>lwp</strong> (<em>ndarray</em>) – 1D liquid water path (g/m2).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Scaled liquid water content.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -868,34 +973,6 @@ accept some other point, higher in the profile.</li>
 <span id="cloudnetpy-utils"></span><h2>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h2>
 <p>This module contains general
 helper functions.</p>
-<dl class="function">
-<dt id="utils.bases_and_tops">
-<code class="descclassname">utils.</code><code class="descname">bases_and_tops</code><span class="sig-paren">(</span><em>y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#bases_and_tops"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.bases_and_tops" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds islands of ones from boolean 1-D array.</p>
-<p>From a binary vector finds all “islands” of
-ones, i.e. their starting and ending indices.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>y</strong> (<em>array_like</em>) – 1-D array of ones and zeros.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">2-element tuple containing<ul class="simple">
-<li><em>ndarray</em>: Indices of bases.</li>
-<li><em>ndarray</em>: Indices of tops.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">bases_and_tops</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
-<span class="go">    ([3, 7], [4, 9])</span>
-</pre></div>
-</div>
-</dd></dl>
-
 <dl class="function">
 <dt id="utils.binvec">
 <code class="descclassname">utils.</code><code class="descname">binvec</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#binvec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.binvec" title="Permalink to this definition">¶</a></dt>
@@ -1348,8 +1425,8 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.transpose_1d_array">
-<code class="descclassname">utils.</code><code class="descname">transpose_1d_array</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#transpose_1d_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.transpose_1d_array" title="Permalink to this definition">¶</a></dt>
+<dt id="utils.transpose">
+<code class="descclassname">utils.</code><code class="descname">transpose</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.transpose" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transposes numpy array of (n, ) to (n, 1).</p>
 </dd></dl>
 
@@ -1392,6 +1469,14 @@ NetCDF file with information of classification and measurements.</p>
 </div>
 <div class="section" id="module-products.iwc">
 <span id="products-iwc"></span><h2>products.iwc<a class="headerlink" href="#module-products.iwc" title="Permalink to this headline">¶</a></h2>
+<p>Module for creating Cloudnet ice water content file
+using Z-T method.</p>
+<dl class="class">
+<dt id="products.iwc.IwcSource">
+<em class="property">class </em><code class="descclassname">products.iwc.</code><code class="descname">IwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#IwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.IwcSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class containing data needed in the ice water content Z-T method.</p>
+</dd></dl>
+
 <dl class="function">
 <dt>
 <code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a></dt>

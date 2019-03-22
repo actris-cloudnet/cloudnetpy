@@ -58,27 +58,22 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
- | <a href="#W"><strong>W</strong></a>
  
 </div>
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#atmos.adiabatic_lwc">adiabatic_lwc() (in module atmos)</a>
+      <li><a href="api.html#module-atmos">atmos (module)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#module-atmos">atmos (module)</a>
+      <li><a href="api.html#atmos.Attenuation">Attenuation (class in atmos)</a>
 </li>
   </ul></td>
 </tr></table>
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#utils.bases_and_tops">bases_and_tops() (in module utils)</a>
-</li>
-  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.binvec">binvec() (in module utils)</a>
 </li>
@@ -90,12 +85,24 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#atmos.c2k">c2k() (in module atmos)</a>
 </li>
+      <li><a href="api.html#atmos.calc_adiabatic_lwc">calc_adiabatic_lwc() (in module atmos)</a>
+</li>
+      <li><a href="api.html#atmos.calc_dew_point_temperature">calc_dew_point_temperature() (in module atmos)</a>
+</li>
+      <li><a href="api.html#atmos.calc_lwc_change_rate">calc_lwc_change_rate() (in module atmos)</a>
+</li>
       <li><a href="api.html#atmos.calc_mixing_ratio">calc_mixing_ratio() (in module atmos)</a>
 </li>
-      <li><a href="api.html#module-classify">classify (module)</a>
+      <li><a href="api.html#atmos.calc_psychrometric_constant">calc_psychrometric_constant() (in module atmos)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#atmos.calc_saturation_vapor_pressure">calc_saturation_vapor_pressure() (in module atmos)</a>
+</li>
+      <li><a href="api.html#atmos.calc_wet_bulb_temperature">calc_wet_bulb_temperature() (in module atmos)</a>
+</li>
+      <li><a href="api.html#module-classify">classify (module)</a>
+</li>
       <li><a href="api.html#classify.classify_measurements">classify_measurements() (in module classify)</a>
 </li>
       <li><a href="api.html#droplet.correct_liquid_top">correct_liquid_top() (in module droplet)</a>
@@ -112,8 +119,6 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#atmos.dew_point_temperature">dew_point_temperature() (in module atmos)</a>
-</li>
       <li><a href="api.html#module-droplet">droplet (module)</a>
 </li>
   </ul></td>
@@ -126,9 +131,13 @@
 </li>
       <li><a href="api.html#utils.ffill">ffill() (in module utils)</a>
 </li>
+      <li><a href="api.html#atmos.fill_clouds_with_lwc_dz">fill_clouds_with_lwc_dz() (in module atmos)</a>
+</li>
       <li><a href="api.html#utils.filter_isolated_pixels">filter_isolated_pixels() (in module utils)</a>
 </li>
       <li><a href="api.html#classify.find_aerosols">find_aerosols() (in module classify)</a>
+</li>
+      <li><a href="api.html#atmos.find_cloud_bases">find_cloud_bases() (in module atmos)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -142,13 +151,15 @@
 </li>
       <li><a href="api.html#classify.find_melting_layer">find_melting_layer() (in module classify)</a>
 </li>
+      <li><a href="api.html#classify.find_t0_alt">find_t0_alt() (in module classify)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="G">G</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#atmos.gas_atten">gas_atten() (in module atmos)</a>
+      <li><a href="api.html#atmos.GasAttenuation">GasAttenuation (class in atmos)</a>
 </li>
       <li><a href="api.html#categorize.generate_categorize">generate_categorize() (in module categorize)</a>
 </li>
@@ -159,6 +170,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#atmos.get_attenuations">get_attenuations() (in module atmos)</a>
+</li>
+      <li><a href="api.html#atmos.get_lwc_change_rate_at_bases">get_lwc_change_rate_at_bases() (in module atmos)</a>
 </li>
       <li><a href="api.html#utils.get_time">get_time() (in module utils)</a>
 </li>
@@ -186,6 +199,8 @@
 </li>
       <li><a href="api.html#utils.isscalar">isscalar() (in module utils)</a>
 </li>
+      <li><a href="api.html#products.iwc.IwcSource">IwcSource (class in products.iwc)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -206,7 +221,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.lin2db">lin2db() (in module utils)</a>
 </li>
-      <li><a href="api.html#atmos.liquid_atten">liquid_atten() (in module atmos)</a>
+      <li><a href="api.html#atmos.LiquidAttenuation">LiquidAttenuation (class in atmos)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -258,7 +273,7 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#atmos.saturation_vapor_pressure">saturation_vapor_pressure() (in module atmos)</a>
+      <li><a href="api.html#atmos.scale_lwc">scale_lwc() (in module atmos)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -276,7 +291,7 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#utils.transpose_1d_array">transpose_1d_array() (in module utils)</a>
+      <li><a href="api.html#utils.transpose">transpose() (in module utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -285,14 +300,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#module-utils">utils (module)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="W">W</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#atmos.wet_bulb">wet_bulb() (in module atmos)</a>
 </li>
   </ul></td>
 </tr></table>
