@@ -46,34 +46,31 @@ class Lwc:
         self.liquid = liquid
         self.lwp = lwc_input.lwp
         self.lwc_adiabatic = None
-        self.lwc_scaled = self._get_lwc()
+        self.lwc_scaled = None
+        self._init_lwc()
 
-    def _get_lwc(self):
+    def _init_lwc(self):
         atmosphere = (self.lwc_input.temperature, self.lwc_input.pressure)
         is_liquid = self.liquid.is_liquid
         dheight = self.lwc_input.dheight
         lwc_change_rate = atmos.fill_clouds_with_lwc_dz(atmosphere, is_liquid)
-        lwc = atmos.calc_adiabatic_lwc(lwc_change_rate, dheight)
-        self.lwc_adiabatic = lwc
-        lwc_scaled = atmos.scale_lwc(lwc, self.lwp) * G_TO_KG
-        return lwc_scaled
+        self.lwc_adiabatic = atmos.calc_adiabatic_lwc(lwc_change_rate, dheight)
+        self.lwc_scaled = atmos.scale_lwc(self.lwc_adiabatic, self.lwp) * G_TO_KG
 
 
 def init_status(categorize_object, lwc_object):
 
     category_bits = p_tools.read_category_bits(categorize_object)
     quality_bits = p_tools.read_quality_bits(categorize_object)
-
     no_rain = ~categorize_object.rain_in_profile.astype(bool)
     dheight = categorize_object.dheight
     lwp = lwc_object.lwp / dheight
     lwc_adiabatic = lwc_object.lwc_adiabatic
-    lwc = ma.zeros(lwc_adiabatic.shape)
     status = ma.zeros(lwc_adiabatic.shape, dtype=int)
     lwc_sum = ma.sum(lwc_adiabatic, axis=1)
     lwc = atmos.scale_lwc(lwc_adiabatic, lwp)
-
-    good_profiles = (lwc_sum > lwp) & no_rain
+    lwc_difference = lwc_sum - lwp
+    good_profiles = (lwc_difference > 0) & no_rain
 
     # These are valid lwc-values and they seem to correct
     lwc[~good_profiles, :] = ma.masked
@@ -82,18 +79,29 @@ def init_status(categorize_object, lwc_object):
     # now suspicious profiles that we maybe can adjust
     is_liquid = category_bits['droplet']
     echo = {'radar': quality_bits['radar'], 'lidar': quality_bits['lidar']}
-
-    dubious_profiles = (lwc_sum < lwp) & no_rain
-
-    # adjust status-5 clouds in bad profiles. They are at top.
-    adjustable_clouds = find_status5_clouds(is_liquid, echo)
-
-    ind = dubious_profiles & (np.any(adjustable_clouds, axis=1))
-
-    print(np.sum(ind))
+    adjustable_clouds = find_adjustable_clouds(is_liquid, echo)
+    dubious_profiles = (lwc_difference < 0) & no_rain
+    adjustable_clouds[~dubious_profiles, :] = 0
+    lwc_adiabatic = adjust_cloud_tops(adjustable_clouds, lwc_adiabatic, lwc_difference, dheight)
+    plotting.plot_2d(lwc_adiabatic)
 
 
-def find_status5_clouds(is_liquid, echo):
+def adjust_cloud_tops(adjustable_clouds, lwc_adiabatic, lwc_difference, dheight):
+    """Adjusts cloud top index so that measured lwc corresponds to
+    theoretical value.
+    """
+    for time_ind in np.unique(np.where(adjustable_clouds)[0]):
+        cloud_inds = np.where(adjustable_clouds[time_ind, :])[0]
+        base_ind = cloud_inds[0]
+        lwc_dz = lwc_adiabatic[time_ind, base_ind] * dheight
+        difference = np.abs(lwc_difference[time_ind])
+        n_steps_needed = np.sqrt(2*(1/lwc_dz)*difference)
+        adjusted_lwc = lwc_dz * np.arange(n_steps_needed)
+        lwc_adiabatic[time_ind, base_ind:base_ind+len(adjusted_lwc)] = adjusted_lwc
+    return lwc_adiabatic
+
+
+def find_adjustable_clouds(is_liquid, echo):
     top_clouds = find_topmost_clouds(is_liquid)
     detection_type = find_echo_combinations_in_liquid(is_liquid, echo)
     detection_type[~top_clouds] = 0
@@ -103,19 +111,50 @@ def find_status5_clouds(is_liquid, echo):
 
 
 def find_lidar_only_top_clouds(detection_type):
+    """Finds top clouds that contain only lidar-detected pixels.
+
+    Args:
+        detection_type (ndarray): Array of integers where 1=lidar, 2=radar,
+            3=both.
+
+    Returns:
+        ndarray: Boolean array containing top-clouds that are detected only
+            by lidar.
+
+    """
     sum_of_cloud_pixels = ma.sum(detection_type > 0, axis=1)
     sum_of_detection_type = ma.sum(detection_type, axis=1)
     return sum_of_cloud_pixels / sum_of_detection_type == 1
 
 
 def find_echo_combinations_in_liquid(is_liquid, echo):
-    lidar_detected_cloud = (is_liquid & echo['lidar']).astype(int)
-    radar_detected_cloud = (is_liquid & echo['radar']).astype(int) * 2
-    return lidar_detected_cloud + radar_detected_cloud
+    """Classifies liquid clouds by detection type: 1=lidar, 2=radar, 3=both.
+
+    Args:
+        is_liquid (ndarray): Boolean array denoting classified liquid layers.
+        echo (dict): Dict containing 'lidar' and 'radar' which are boolean
+            arrays of denoting detection.
+
+    Returns:
+        ndarray: Array of integers where 1=lidar, 2=radar, 3=both.
+
+    """
+    lidar_detected_liquid = (is_liquid & echo['lidar']).astype(int)
+    radar_detected_liquid = (is_liquid & echo['radar']).astype(int) * 2
+    return lidar_detected_liquid + radar_detected_liquid
 
 
 def find_topmost_clouds(is_cloud):
-    """From 2d binary cloud field, return the topmost clouds only."""
+    """From 2d binary cloud field, return the uppermost cloud layer only.
+
+    Args:
+        is_cloud (ndarray): Boolean array denoting presence of clouds.
+
+    Returns:
+        ndarray: Copy of input array containing only the uppermost cloud
+             layer in each profile.
+
+    """
     top_clouds = np.copy(is_cloud)
     cloud_edges = top_clouds[:, :-1][:, ::-1] < top_clouds[:, 1:][:, ::-1]
     topmost_bases = is_cloud.shape[1] - 1 - np.argmax(cloud_edges, axis=1)
