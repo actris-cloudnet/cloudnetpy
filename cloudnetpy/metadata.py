@@ -559,7 +559,7 @@ ATTRIBUTES = {
         definition=_DEFINITIONS['iwc_retrieval_status']
     ),
     'iwc_inc_rain': MetaData(
-        'Ice water content',
+        'Ice water content including rain',
         'kg m-3',
         (1e-7, 0.001),
         _LOG,
@@ -575,7 +575,7 @@ ATTRIBUTES = {
     ),
     'lwc_error': MetaData(
         'Random error in liquid water content, one standard deviation',
-        'kg m-3',
+        'dB',
         comment=_COMMENTS['lwc_error'],
     ),
     'lwc_retrieval_status': MetaData(

@@ -5,7 +5,9 @@ import numpy.ma as ma
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import netCDF4
+import cloudnetpy.products.product_tools as ptools
 from cloudnetpy import utils
+from .plot_meta import ATTRIBUTES
 
 # Plot range, colormap, is log plot
 PARAMS = {
@@ -120,4 +122,97 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None, color=None):
         plt.pcolormesh(ma.masked_equal(data, 0).T)
     if clim:
         plt.clim(clim)
-    #plt.show()
+    plt.show()
+
+
+def plot_segment_data(ax, fig, data, xaxes, yaxes, name, subtit):
+    """
+    Plotting data with segments as 2d variable
+    Args:
+        ax(array): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
+        fig(object): Figure object
+        xaxes(array): time in datetime format
+        yaxes(array): height
+        name(string): name of plotted data
+        date(date): date of case date object
+    """
+    variables = ATTRIBUTES[name]
+    n = len(variables.cbar)
+    cmap = ptools.colors_to_colormap(variables.cbar)
+
+    ax = ptools.initialize_time_height_axes(ax)
+
+    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap,
+                       vmin=-0.5, vmax=n-0.5)
+
+    cbaxes = fig.add_axes([0.75, 0.11, 0.01, 0.77])
+    cb = plt.colorbar(pl, ax=ax, cax=cbaxes)
+    cb.set_ticks(np.arange(0, n + 1, 1))
+    cb.ax.set_yticklabels(variables.clabel, fontsize= 13)
+
+    ax.set_title(variables.name + subtit, fontsize=14)
+
+
+def plot_colormesh_data(ax, fig, data, xaxes, yaxes, name, subtit):
+    """
+    Plot data with range of variability.
+
+    Args:
+        ax(array): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
+        fig(object): Figure object
+        xaxes(array): time in datetime format
+        yaxes(array): height
+        name(string): name of plotted data
+        date(date): date of case date object
+        subtit(string): title of fig
+    """
+    variables = ATTRIBUTES[name]
+    cmap = variables.cbar
+
+    ax = ptools.initialize_time_height_axes(ax)
+
+    if variables.plot_scale == 'logarithmic':
+        data = np.log10(data)
+        vmin = np.log10(variables.plot_range[0])
+        vmax = np.log10(variables.plot_range[-1])
+        logs = ptools.generate_log_cbar_ticklabel_list(vmin,vmax)
+    else:
+        vmin = variables.plot_range[0]
+        vmax = variables.plot_range[-1]
+
+    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin,
+                       vmax=vmax)
+
+    cbaxes = fig.add_axes([0.75, 0.11, 0.01, 0.77])
+    cb = plt.colorbar(pl, ax=ax, cax=cbaxes)
+    # TODO: Jos ei logaritminen, mikä tulee rangeksi 1 paikalle?
+    cb.set_ticks(np.arange(vmin,vmax+1,1))
+
+    if variables.plot_scale == 'logarithmic':
+        cb.ax.set_yticklabels(logs)
+    cb.set_label(variables.clabel, fontsize = 13)
+
+    ax.set_title(variables.name + subtit, fontsize=14)
+
+
+def generate_one_figure(data_name, nc_file, save_path, show=False, save=False):
+    """ Usage to generate figure and plot wanted fig """
+    data, time_array, height, case_date = \
+        ptools.read_variables_and_date(data_name, nc_file)
+    time_array = ptools.convert_dtime_to_datetime(case_date, time_array)
+    subtit = " from CloudnetPy"
+
+    fig, ax = plt.subplots(1, 1, figsize=(16, 4))
+    fig.subplots_adjust(left=0.06, right=0.73)
+
+    # Change to wanted one fig plot type
+    plot_colormesh_data(ax, fig, data, time_array, height, data_name, subtit)
+
+    fig.suptitle(case_date.strftime("%-d %b %Y"),
+                 fontsize=13, y=0.93, x=0.1)
+
+    if bool(save) is True:
+        plt.savefig(save_path+case_date.strftime("%Y%m%d")+"_"+data_name+".png",
+                    bbox_inches='tight')
+    if bool(show) is True:
+        plt.show()
