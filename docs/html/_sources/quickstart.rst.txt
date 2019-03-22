@@ -56,7 +56,7 @@ product, the classification product.
 .. code-block:: python
 
     from cloudnetpy.products.classification import generate_class
-    generate_class('cagegorize.nc', 'classification.nc')
+    generate_class('categorize.nc', 'classification.nc')
 
 Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
 contain all the latest features and modifications. To get an up-to-date

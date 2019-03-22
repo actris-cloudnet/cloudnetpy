@@ -51,7 +51,7 @@ class IwcSource(DataSource):
         return 4.5
 
     def _get_subzero_temperatures(self):
-        """Returns freezing temperatures as Celsius."""
+        """Returns freezing temperatures in Celsius."""
         temperature = utils.interpolate_2d(self.getvar('model_time'),
                                            self.getvar('model_height'),
                                            self.getvar('temperature'),
