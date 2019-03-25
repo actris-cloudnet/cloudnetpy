@@ -137,19 +137,19 @@ class Lwc:
                 return True
             return False
 
-        def _adjust_lwc(time_ind):
+        def _adjust_lwc(time_ind, base_ind):
             scale = self.lwc_adiabatic[time_ind, base_ind] * self.dheight
             ind_from_base = 1
             while True:
                 lwc_value = scale * ind_from_base
-                self.lwc_adiabatic[time_ind, base_ind+ind_from_base] = lwc_value
+                self.lwc_adiabatic[time_ind, base_ind + ind_from_base] = lwc_value
                 if _has_converged(time_ind):
                     break
                 ind_from_base += 1
 
-        for time_ind in np.unique(np.where(adjustable_clouds)[0]):
-            base_ind = np.where(adjustable_clouds[time_ind, :])[0][0]
-            _adjust_lwc(time_ind)
+        for time_index in np.unique(np.where(adjustable_clouds)[0]):
+            base_index = np.where(adjustable_clouds[time_index, :])[0][0]
+            _adjust_lwc(time_index, base_index)
 
 
 def find_topmost_clouds(is_cloud):
