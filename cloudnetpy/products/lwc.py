@@ -1,3 +1,6 @@
+"""Module for creating Cloudnet liquid water content file
+using adiabatic method.
+"""
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy.categorize import DataSource
@@ -35,6 +38,7 @@ class Lwc:
     """Class handling the liquid water content calculations."""
     def __init__(self, categorize_file):
         self.lwc_input = LwcSource(categorize_file)
+        self.dheight = self.lwc_input.dheight
         self.echo = self._get_echo()
         self.is_liquid = self._get_liquid()
         self.lwc_adiabatic = self._init_lwc_adiabatic()
@@ -53,7 +57,7 @@ class Lwc:
         """Returns theoretical adiabatic lwc in liquid clouds (g/m3)."""
         lwc_dz = atmos.fill_clouds_with_lwc_dz(self.lwc_input.atmosphere,
                                                self.is_liquid)
-        return atmos.calc_adiabatic_lwc(lwc_dz, self.lwc_input.dheight)
+        return atmos.calc_adiabatic_lwc(lwc_dz, self.dheight)
 
     def _adiabatic_lwc_to_lwc(self):
         """Initialises liquid water content (g/m3).
@@ -62,14 +66,15 @@ class Lwc:
         """
         lwc_scaled = atmos.distribute_lwp_to_liquid_clouds(self.lwc_adiabatic,
                                                            self.lwc_input.lwp)
-        return lwc_scaled / self.lwc_input.dheight
+        return lwc_scaled / self.dheight
 
     def _init_status(self):
         status = ma.zeros(self.lwc.shape, dtype=int)
         status[self.lwc_adiabatic > 0] = 1
         return status
 
-    def adjust_clouds_to_match_measured_lwp(self):
+    def adjust_clouds_to_match_lwp(self):
+        """Adjust clouds (where possible) so that theoretical and measured LWP agree."""
         adjustable_clouds = self._find_adjustable_clouds()
         self._adjust_cloud_tops(adjustable_clouds)
         self.lwc = self._adiabatic_lwc_to_lwc()
@@ -80,7 +85,7 @@ class Lwc:
         In theory, this difference should be always positive. Negative values
         indicate missing (or too narrow) liquid clouds.
         """
-        lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.lwc_input.dheight
+        lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.dheight
         difference = lwc_sum - self.lwc_input.lwp
         return difference
 
@@ -126,25 +131,25 @@ class Lwc:
         """Adjusts cloud top index so that measured lwc corresponds to
         theoretical value.
         """
-        def _has_converged():
+        def _has_converged(time_ind):
             lwc_sum = ma.sum(self.lwc_adiabatic[time_ind, :])
-            if lwc_sum * self.lwc_input.dheight > self.lwc_input.lwp[time_ind]:
+            if lwc_sum * self.dheight > self.lwc_input.lwp[time_ind]:
                 return True
             return False
 
-        def _adjust_lwc():
-            scale = self.lwc_adiabatic[time_ind, base_ind]*self.lwc_input.dheight
+        def _adjust_lwc(time_ind):
+            scale = self.lwc_adiabatic[time_ind, base_ind] * self.dheight
             ind_from_base = 1
             while True:
                 lwc_value = scale * ind_from_base
                 self.lwc_adiabatic[time_ind, base_ind+ind_from_base] = lwc_value
-                if _has_converged():
+                if _has_converged(time_ind):
                     break
                 ind_from_base += 1
 
         for time_ind in np.unique(np.where(adjustable_clouds)[0]):
             base_ind = np.where(adjustable_clouds[time_ind, :])[0][0]
-            _adjust_lwc()
+            _adjust_lwc(time_ind)
 
 
 def find_topmost_clouds(is_cloud):
@@ -169,4 +174,4 @@ def find_topmost_clouds(is_cloud):
 def generate_lwc(categorize_file):
     """High level API to generate Cloudnet liquid water content file."""
     lwc = Lwc(categorize_file)
-    lwc.adjust_clouds_to_match_measured_lwp()
+    lwc.adjust_clouds_to_match_lwp()
