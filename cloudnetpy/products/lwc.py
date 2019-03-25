@@ -4,9 +4,6 @@ from cloudnetpy.categorize import DataSource
 from cloudnetpy import utils
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy import atmos
-from cloudnetpy import plotting
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 
 G_TO_KG = 0.001
@@ -73,22 +70,19 @@ class Lwc:
         return status
 
     def adjust_clouds_to_match_measured_lwp(self):
-        no_rain = ~self.lwc_input.is_rain.astype(bool)
-        lwp_difference = self._find_lwp_difference()
         adjustable_clouds = self._find_adjustable_clouds()
-        dubious_profiles = (lwp_difference < 0) & no_rain
-        adjustable_clouds[~dubious_profiles, :] = 0
-        self._adjust_cloud_tops(adjustable_clouds, lwp_difference)
+        self._adjust_cloud_tops(adjustable_clouds)
         self.lwc = self._adiabatic_lwc_to_lwc()
 
     def _find_lwp_difference(self):
-        """Returns difference of theoretical LWP and measured LWP.
+        """Returns difference of theoretical LWP and measured LWP (g/m2).
 
         In theory, this difference should be always positive. Negative values
         indicate missing (or too narrow) liquid clouds.
         """
         lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.lwc_input.dheight
-        return lwc_sum - self.lwc_input.lwp
+        difference = lwc_sum - self.lwc_input.lwp
+        return difference
 
     def _find_adjustable_clouds(self):
 
@@ -114,31 +108,43 @@ class Lwc:
             sum_of_detection_type = ma.sum(detection, axis=1)
             return sum_of_cloud_pixels / sum_of_detection_type == 1
 
+        def _remove_good_profiles():
+            no_rain = ~self.lwc_input.is_rain.astype(bool)
+            lwp_difference = self._find_lwp_difference()
+            dubious_profiles = (lwp_difference < 0) & no_rain
+            top_clouds[~dubious_profiles, :] = 0
+
         top_clouds = find_topmost_clouds(self.is_liquid)
         detection_type = _find_echo_combinations_in_liquid()
         detection_type[~top_clouds] = 0
         lidar_only_clouds = _find_lidar_only_clouds(detection_type)
         top_clouds[~lidar_only_clouds, :] = 0
+        _remove_good_profiles()
         return top_clouds
 
-    def _adjust_cloud_tops(self, adjustable_clouds, lwc_difference):
+    def _adjust_cloud_tops(self, adjustable_clouds):
         """Adjusts cloud top index so that measured lwc corresponds to
         theoretical value.
         """
-        def _calc_steps_to_cover_area(derivative, area):
-            n_steps = np.sqrt(2 * (1 / derivative) * area)
-            return np.floor(n_steps).astype(int)
+        def _has_converged():
+            lwc_sum = ma.sum(self.lwc_adiabatic[time_ind, :])
+            if lwc_sum * self.lwc_input.dheight > self.lwc_input.lwp[time_ind]:
+                return True
+            return False
 
-        def _adjust_lwc(difference, derivative):
-            abs_difference = np.abs(difference)
-            n_steps_needed = _calc_steps_to_cover_area(derivative, abs_difference)
-            return derivative * np.arange(n_steps_needed)
+        def _adjust_lwc():
+            scale = self.lwc_adiabatic[time_ind, base_ind]*self.lwc_input.dheight
+            ind_from_base = 1
+            while True:
+                lwc_value = scale * ind_from_base
+                self.lwc_adiabatic[time_ind, base_ind+ind_from_base] = lwc_value
+                if _has_converged():
+                    break
+                ind_from_base += 1
 
         for time_ind in np.unique(np.where(adjustable_clouds)[0]):
             base_ind = np.where(adjustable_clouds[time_ind, :])[0][0]
-            lwc_dz = self.lwc_adiabatic[time_ind, base_ind] * self.lwc_input.dheight
-            adjusted_lwc = _adjust_lwc(lwc_difference[time_ind], lwc_dz)
-            self.lwc_adiabatic[time_ind, base_ind:base_ind+len(adjusted_lwc)] = adjusted_lwc
+            _adjust_lwc()
 
 
 def find_topmost_clouds(is_cloud):
