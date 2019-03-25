@@ -40,8 +40,8 @@ class Lwc:
         self.lwc_input = LwcSource(categorize_file)
         self.echo = self._get_echo()
         self.is_liquid = self._get_liquid()
-        self.lwc_adiabatic = self._init_lwc_adiabatic()  # g/m3
-        self.lwc = self._init_lwc()
+        self.lwc_adiabatic = self._init_lwc_adiabatic()
+        self.lwc = self._adiabatic_lwc_to_lwc()
         self.status = self._init_status()
 
     def _get_echo(self):
@@ -58,7 +58,7 @@ class Lwc:
                                                self.is_liquid)
         return atmos.calc_adiabatic_lwc(lwc_dz, self.lwc_input.dheight)
 
-    def _init_lwc(self):
+    def _adiabatic_lwc_to_lwc(self):
         """Initialises liquid water content (g/m3).
 
         Calculates LWC for ALL profiles (rain, lwp > theoretical, etc.),
@@ -75,13 +75,11 @@ class Lwc:
     def adjust_clouds_to_match_measured_lwp(self):
         no_rain = ~self.lwc_input.is_rain.astype(bool)
         lwp_difference = self._find_lwp_difference()
-        adjustable_clouds = find_adjustable_clouds(self.is_liquid, self.echo)
+        adjustable_clouds = self._find_adjustable_clouds()
         dubious_profiles = (lwp_difference < 0) & no_rain
         adjustable_clouds[~dubious_profiles, :] = 0
-        self.lwc_adiabatic = adjust_cloud_tops(adjustable_clouds,
-                                               self.lwc_adiabatic,
-                                               lwp_difference,
-                                               self.lwc_input.dheight)
+        self._adjust_cloud_tops(adjustable_clouds, lwp_difference)
+        self.lwc = self._adiabatic_lwc_to_lwc()
 
     def _find_lwp_difference(self):
         """Returns difference of theoretical LWP and measured LWP.
@@ -92,48 +90,55 @@ class Lwc:
         lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.lwc_input.dheight
         return lwc_sum - self.lwc_input.lwp
 
+    def _find_adjustable_clouds(self):
 
-def find_adjustable_clouds(is_liquid, echo):
-    top_clouds = find_topmost_clouds(is_liquid)
-    detection_type = find_echo_combinations_in_liquid(is_liquid, echo)
-    detection_type[~top_clouds] = 0
-    lidar_only = find_lidar_only_top_clouds(detection_type)
-    top_clouds[~lidar_only, :] = 0
-    return top_clouds
+        def _find_echo_combinations_in_liquid():
+            """Classifies liquid clouds by detection type: 1=lidar, 2=radar, 3=both."""
+            lidar_detected = (self.is_liquid & self.echo['lidar']).astype(int)
+            radar_detected = (self.is_liquid & self.echo['radar']).astype(int) * 2
+            return lidar_detected + radar_detected
 
+        def _find_lidar_only_clouds(detection):
+            """Finds top clouds that contain only lidar-detected pixels.
 
-def find_lidar_only_top_clouds(detection_type):
-    """Finds top clouds that contain only lidar-detected pixels.
+            Args:
+                detection_type (ndarray): Array of integers where 1=lidar, 2=radar,
+                3=both.
 
-    Args:
-        detection_type (ndarray): Array of integers where 1=lidar, 2=radar,
-            3=both.
+            Returns:
+                ndarray: Boolean array containing top-clouds that are detected only
+                by lidar.
 
-    Returns:
-        ndarray: Boolean array containing top-clouds that are detected only
-            by lidar.
+            """
+            sum_of_cloud_pixels = ma.sum(detection > 0, axis=1)
+            sum_of_detection_type = ma.sum(detection, axis=1)
+            return sum_of_cloud_pixels / sum_of_detection_type == 1
 
-    """
-    sum_of_cloud_pixels = ma.sum(detection_type > 0, axis=1)
-    sum_of_detection_type = ma.sum(detection_type, axis=1)
-    return sum_of_cloud_pixels / sum_of_detection_type == 1
+        top_clouds = find_topmost_clouds(self.is_liquid)
+        detection_type = _find_echo_combinations_in_liquid()
+        detection_type[~top_clouds] = 0
+        lidar_only_clouds = _find_lidar_only_clouds(detection_type)
+        top_clouds[~lidar_only_clouds, :] = 0
+        return top_clouds
 
+    def _adjust_cloud_tops(self, adjustable_clouds, lwc_difference):
+        """Adjusts cloud top index so that measured lwc corresponds to
+        theoretical value.
+        """
+        def _calc_steps_to_cover_area(derivative, area):
+            n_steps = np.sqrt(2 * (1 / derivative) * area)
+            return np.floor(n_steps).astype(int)
 
-def find_echo_combinations_in_liquid(is_liquid, echo):
-    """Classifies liquid clouds by detection type: 1=lidar, 2=radar, 3=both.
+        def _adjust_lwc(difference, derivative):
+            abs_difference = np.abs(difference)
+            n_steps_needed = _calc_steps_to_cover_area(derivative, abs_difference)
+            return derivative * np.arange(n_steps_needed)
 
-    Args:
-        is_liquid (ndarray): Boolean array denoting classified liquid layers.
-        echo (dict): Dict containing 'lidar' and 'radar' which are boolean
-            arrays of denoting detection.
-
-    Returns:
-        ndarray: Array of integers where 1=lidar, 2=radar, 3=both.
-
-    """
-    lidar_detected_liquid = (is_liquid & echo['lidar']).astype(int)
-    radar_detected_liquid = (is_liquid & echo['radar']).astype(int) * 2
-    return lidar_detected_liquid + radar_detected_liquid
+        for time_ind in np.unique(np.where(adjustable_clouds)[0]):
+            base_ind = np.where(adjustable_clouds[time_ind, :])[0][0]
+            lwc_dz = self.lwc_adiabatic[time_ind, base_ind] * self.lwc_input.dheight
+            adjusted_lwc = _adjust_lwc(lwc_difference[time_ind], lwc_dz)
+            self.lwc_adiabatic[time_ind, base_ind:base_ind+len(adjusted_lwc)] = adjusted_lwc
 
 
 def find_topmost_clouds(is_cloud):
@@ -153,21 +158,6 @@ def find_topmost_clouds(is_cloud):
     for n, base in enumerate(topmost_bases):
         top_clouds[n, :base] = 0
     return top_clouds
-
-
-def adjust_cloud_tops(adjustable_clouds, lwc_adiabatic, lwc_difference, dheight):
-    """Adjusts cloud top index so that measured lwc corresponds to
-    theoretical value.
-    """
-    for time_ind in np.unique(np.where(adjustable_clouds)[0]):
-        cloud_inds = np.where(adjustable_clouds[time_ind, :])[0]
-        base_ind = cloud_inds[0]
-        lwc_dz = lwc_adiabatic[time_ind, base_ind] * dheight
-        difference = np.abs(lwc_difference[time_ind])
-        n_steps_needed = np.sqrt(2*(1/lwc_dz)*difference)
-        adjusted_lwc = lwc_dz * np.arange(n_steps_needed)
-        lwc_adiabatic[time_ind, base_ind:base_ind+len(adjusted_lwc)] = adjusted_lwc
-    return lwc_adiabatic
 
 
 def generate_lwc(categorize_file):
