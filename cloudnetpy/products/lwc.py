@@ -3,8 +3,8 @@ import numpy.ma as ma
 from cloudnetpy.categorize import DataSource
 from cloudnetpy import utils
 from cloudnetpy.products import product_tools as p_tools
-from cloudnetpy import plotting
 from cloudnetpy import atmos
+from cloudnetpy import plotting
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -16,12 +16,15 @@ class LwcSource(DataSource):
     """Data container for liquid water content calculations."""
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
-        self.temperature = self._interpolate_model_field('temperature')
-        self.pressure = self._interpolate_model_field('pressure')
+        self.atmosphere = self._get_atmosphere()
         self.lwp = self.getvar('lwp')
         self.lwp_error = self.getvar('lwp_error')
         self.dheight = utils.mdiff(self.getvar('height'))
-        self.rain_in_profile = self.getvar('is_rain')
+        self.is_rain = self.getvar('is_rain')
+
+    def _get_atmosphere(self):
+        return (self._interpolate_model_field('temperature'),
+                self._interpolate_model_field('pressure'))
 
     def _interpolate_model_field(self, variable_name):
         """Interpolates 2D model field into Cloudnet grid."""
@@ -31,74 +34,63 @@ class LwcSource(DataSource):
                                     self.time, self.getvar('height'))
 
 
-class Liquid:
-    """Data container for liquid droplets."""
-    def __init__(self, categorize_object):
-        self.category_bits = p_tools.read_category_bits(categorize_object)
-        self.quality_bits = p_tools.read_quality_bits(categorize_object)
-        self.is_liquid = self.category_bits['droplet']
-
-
 class Lwc:
     """Class handling the liquid water content calculations."""
-    def __init__(self, lwc_input, liquid):
-        self.lwc_input = lwc_input
-        self.liquid = liquid
-        self.lwp = lwc_input.lwp
-        self.lwc_adiabatic = None
-        self.lwc_scaled = None
-        self._init_lwc()
+    def __init__(self, categorize_file):
+        self.lwc_input = LwcSource(categorize_file)
+        self.echo = self._get_echo()
+        self.is_liquid = self._get_liquid()
+        self.lwc_adiabatic = self._init_lwc_adiabatic()  # g/m3
+        self.lwc = self._init_lwc()
+        self.status = self._init_status()
+
+    def _get_echo(self):
+        quality_bits = p_tools.read_quality_bits(self.lwc_input)
+        return {'radar': quality_bits['radar'], 'lidar': quality_bits['lidar']}
+
+    def _get_liquid(self):
+        category_bits = p_tools.read_category_bits(self.lwc_input)
+        return category_bits['droplet']
+
+    def _init_lwc_adiabatic(self):
+        """Returns theoretical adiabatic lwc in liquid clouds (g/m3)."""
+        lwc_dz = atmos.fill_clouds_with_lwc_dz(self.lwc_input.atmosphere,
+                                               self.is_liquid)
+        return atmos.calc_adiabatic_lwc(lwc_dz, self.lwc_input.dheight)
 
     def _init_lwc(self):
-        atmosphere = (self.lwc_input.temperature, self.lwc_input.pressure)
-        is_liquid = self.liquid.is_liquid
-        dheight = self.lwc_input.dheight
-        lwc_change_rate = atmos.fill_clouds_with_lwc_dz(atmosphere, is_liquid)
-        self.lwc_adiabatic = atmos.calc_adiabatic_lwc(lwc_change_rate, dheight)
-        self.lwc_scaled = atmos.scale_lwc(self.lwc_adiabatic, self.lwp) * G_TO_KG
+        """Initialises liquid water content (g/m3).
 
+        Calculates LWC for ALL profiles (rain, lwp > theoretical, etc.),
+        """
+        lwc_scaled = atmos.distribute_lwp_to_liquid_clouds(self.lwc_adiabatic,
+                                                           self.lwc_input.lwp)
+        return lwc_scaled / self.lwc_input.dheight
 
-def init_status(categorize_object, lwc_object):
+    def _init_status(self):
+        status = ma.zeros(self.lwc.shape, dtype=int)
+        status[self.lwc_adiabatic > 0] = 1
+        return status
 
-    category_bits = p_tools.read_category_bits(categorize_object)
-    quality_bits = p_tools.read_quality_bits(categorize_object)
-    no_rain = ~categorize_object.rain_in_profile.astype(bool)
-    dheight = categorize_object.dheight
-    lwp = lwc_object.lwp / dheight
-    lwc_adiabatic = lwc_object.lwc_adiabatic
-    status = ma.zeros(lwc_adiabatic.shape, dtype=int)
-    lwc_sum = ma.sum(lwc_adiabatic, axis=1)
-    lwc = atmos.scale_lwc(lwc_adiabatic, lwp)
-    lwc_difference = lwc_sum - lwp
-    good_profiles = (lwc_difference > 0) & no_rain
+    def adjust_clouds_to_match_measured_lwp(self):
+        no_rain = ~self.lwc_input.is_rain.astype(bool)
+        lwp_difference = self._find_lwp_difference()
+        adjustable_clouds = find_adjustable_clouds(self.is_liquid, self.echo)
+        dubious_profiles = (lwp_difference < 0) & no_rain
+        adjustable_clouds[~dubious_profiles, :] = 0
+        self.lwc_adiabatic = adjust_cloud_tops(adjustable_clouds,
+                                               self.lwc_adiabatic,
+                                               lwp_difference,
+                                               self.lwc_input.dheight)
 
-    # These are valid lwc-values and they seem to correct
-    lwc[~good_profiles, :] = ma.masked
-    status[lwc > 0] = 1
+    def _find_lwp_difference(self):
+        """Returns difference of theoretical LWP and measured LWP.
 
-    # now suspicious profiles that we maybe can adjust
-    is_liquid = category_bits['droplet']
-    echo = {'radar': quality_bits['radar'], 'lidar': quality_bits['lidar']}
-    adjustable_clouds = find_adjustable_clouds(is_liquid, echo)
-    dubious_profiles = (lwc_difference < 0) & no_rain
-    adjustable_clouds[~dubious_profiles, :] = 0
-    lwc_adiabatic = adjust_cloud_tops(adjustable_clouds, lwc_adiabatic, lwc_difference, dheight)
-    plotting.plot_2d(lwc_adiabatic)
-
-
-def adjust_cloud_tops(adjustable_clouds, lwc_adiabatic, lwc_difference, dheight):
-    """Adjusts cloud top index so that measured lwc corresponds to
-    theoretical value.
-    """
-    for time_ind in np.unique(np.where(adjustable_clouds)[0]):
-        cloud_inds = np.where(adjustable_clouds[time_ind, :])[0]
-        base_ind = cloud_inds[0]
-        lwc_dz = lwc_adiabatic[time_ind, base_ind] * dheight
-        difference = np.abs(lwc_difference[time_ind])
-        n_steps_needed = np.sqrt(2*(1/lwc_dz)*difference)
-        adjusted_lwc = lwc_dz * np.arange(n_steps_needed)
-        lwc_adiabatic[time_ind, base_ind:base_ind+len(adjusted_lwc)] = adjusted_lwc
-    return lwc_adiabatic
+        In theory, this difference should be always positive. Negative values
+        indicate missing (or too narrow) liquid clouds.
+        """
+        lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.lwc_input.dheight
+        return lwc_sum - self.lwc_input.lwp
 
 
 def find_adjustable_clouds(is_liquid, echo):
@@ -163,16 +155,22 @@ def find_topmost_clouds(is_cloud):
     return top_clouds
 
 
+def adjust_cloud_tops(adjustable_clouds, lwc_adiabatic, lwc_difference, dheight):
+    """Adjusts cloud top index so that measured lwc corresponds to
+    theoretical value.
+    """
+    for time_ind in np.unique(np.where(adjustable_clouds)[0]):
+        cloud_inds = np.where(adjustable_clouds[time_ind, :])[0]
+        base_ind = cloud_inds[0]
+        lwc_dz = lwc_adiabatic[time_ind, base_ind] * dheight
+        difference = np.abs(lwc_difference[time_ind])
+        n_steps_needed = np.sqrt(2*(1/lwc_dz)*difference)
+        adjusted_lwc = lwc_dz * np.arange(n_steps_needed)
+        lwc_adiabatic[time_ind, base_ind:base_ind+len(adjusted_lwc)] = adjusted_lwc
+    return lwc_adiabatic
+
+
 def generate_lwc(categorize_file):
     """High level API to generate Cloudnet liquid water content file."""
-    lwc_input = LwcSource(categorize_file)
-    liquid = Liquid(lwc_input)
-    lwc = Lwc(lwc_input, liquid)
-
-    init_status(lwc_input, lwc)
-
-    #liquid = Liquid(lwc_input)
-    #lwc = Lwc(lwc_input, liquid)
-    #import netCDF4
-    #refe = netCDF4.Dataset('/home/tukiains/Documents/PYTHON/cloudnetpy/test_data/20181204_mace-head_lwc-scaled-adiabatic.nc').variables['lwc'][:]
-    #plotting.plot_2d(np.log10(refe), cmap='jet', clim=(-5, -2))
+    lwc = Lwc(categorize_file)
+    lwc.adjust_clouds_to_match_measured_lwp()
