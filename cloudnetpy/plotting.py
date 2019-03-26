@@ -115,7 +115,7 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None, color=None):
     """Simple plot of 2d variable."""
     if cbar:
         cmap = plt.get_cmap(cmap, ncolors)
-        plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
+        plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower', cmap=cmap)
         plt.colorbar()
     else:
         plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')

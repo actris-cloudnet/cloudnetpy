@@ -231,12 +231,13 @@ class LiquidAttenuation(Attenuation):
     def _get_liquid_atten(self):
         """Finds radar liquid attenuation."""
         lwc = calc_adiabatic_lwc(self._lwc_dz_err, self._dheight)
-        lwc_scaled = scale_lwc(lwc, self._mwr['lwp'][:])
+        lwc_scaled = distribute_lwp_to_liquid_clouds(lwc, self._mwr['lwp'][:])
         return self._calc_attenuation(lwc_scaled)
 
     def _get_liquid_atten_err(self):
         """Finds radar liquid attenuation error."""
-        lwc_err_scaled = scale_lwc(self._lwc_dz_err, self._mwr['lwp_error'][:])
+        lwc_err_scaled = distribute_lwp_to_liquid_clouds(self._lwc_dz_err,
+                                                         self._mwr['lwp_error'][:])
         return self._calc_attenuation(lwc_err_scaled)
 
     def _calc_attenuation(self, lwc_scaled):
@@ -310,11 +311,11 @@ def find_cloud_bases(array):
 
 
 def calc_adiabatic_lwc(lwc_change_rate, dheight):
-    """Calculates adiabatic liquid water content.
+    """Calculates adiabatic liquid water content (g/m3).
 
     Args:
         lwc_change_rate (ndarray): Liquid water content change rate (g/m3/m)
-            calculated at the base of each cloud and then filled to that cloud.
+            calculated at the base of each cloud and filled to that cloud.
         dheight: Median difference of the height vector (m).
 
     Returns:
@@ -326,17 +327,20 @@ def calc_adiabatic_lwc(lwc_change_rate, dheight):
     return ind_from_base * dheight * lwc_change_rate
 
 
-def scale_lwc(lwc, lwp):
-    """Scales theoretical liquid water content to match the measured LWP.
+def distribute_lwp_to_liquid_clouds(lwc, lwp):
+    """Finds LWC that would produce measured LWP.
+
+    Calculates LWP-weighted, normalized LWC. This is the measured
+    LWP distributed to liquid cloud pixels according to their
+    theoretical proportion, i.e., sum(scaled LWC) = measured LWP.
 
     Args:
         lwc (ndarray): 2D liquid water content (g/m3).
         lwp (ndarray): 1D liquid water path (g/m2).
 
     Returns:
-        ndarray: Scaled liquid water content.
+        ndarray: 2D LWP-weighted, normalized LWC (g/m2).
 
     """
     lwc_sum = np.sum(lwc, axis=1)
-    return (lwc.T/lwc_sum*lwp).T
-
+    return (lwc.T / lwc_sum * lwp).T
