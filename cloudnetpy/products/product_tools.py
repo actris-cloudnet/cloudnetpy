@@ -2,6 +2,7 @@
 import numpy as np
 import netCDF4
 from datetime import time, date, datetime
+import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 import matplotlib.dates as mdates
 import seaborn as sns
@@ -76,16 +77,19 @@ def read_variables_and_date(data_name, ncdf_file):
     """Read variables from generated product file
         data_name: name of wanted product
     """
-    data = netCDF4.Dataset(ncdf_file).variables[data_name][:]
+    datas = []
+    for i in range(len(data_name)):
+        data = netCDF4.Dataset(ncdf_file).variables[data_name[i]][:]
+        datas.append(data)
     time_array = netCDF4.Dataset(ncdf_file).variables['time'][:]
     height = netCDF4.Dataset(ncdf_file).variables['height'][:]/1000
     case_date = date(int(netCDF4.Dataset(ncdf_file).year),
                      int(netCDF4.Dataset(ncdf_file).month),
                      int(netCDF4.Dataset(ncdf_file).day))
-    return data, time_array, height, case_date
+    return datas, time_array, height, case_date
 
 
-def initialize_time_height_axes(ax):
+def initialize_time_height_axes(ax, n, i):
     xlabel = 'Time ' + r'(UTC)'
     ylabel = 'Height ' + '$(km)$'
 
@@ -93,7 +97,9 @@ def initialize_time_height_axes(ax):
     ax.xaxis.set_major_formatter(date_format)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=4))
     ax.tick_params(axis='x', labelsize=12)
-    ax.set_xlabel(xlabel, fontsize=13)
+    #TODO: Voi varmaan tehdä ilman apumuuttujia
+    if i == n-1:
+        ax.set_xlabel(xlabel, fontsize=13)
 
     ax.tick_params(axis='y', labelsize=12)
     ax.set_ylim(0, 12)
@@ -113,3 +119,12 @@ def generate_log_cbar_ticklabel_list(vmin, vmax):
         vmin = + 1
 
     return log_string
+
+
+def initialize_figure(n):
+    """ Usage is to create figure suitable different situations"""
+    fig, ax = plt.subplots(n, 1, figsize=(16, 4+(n-1)*4))
+    if n == 1:
+        ax = [ax]
+    return fig, ax
+
