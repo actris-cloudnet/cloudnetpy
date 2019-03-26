@@ -3,17 +3,19 @@ using scaled-adiabatic method.
 """
 import numpy as np
 import numpy.ma as ma
+from cloudnetpy import utils, atmos, output
 from cloudnetpy.categorize import DataSource
-from cloudnetpy import utils
 from cloudnetpy.products import product_tools as p_tools
-from cloudnetpy import atmos
 
 
 G_TO_KG = 0.001
 
 
 class LwcSource(DataSource):
-    """Data container for liquid water content calculations."""
+    """Data container for liquid water content calculations. It reads
+    input data from a categorize file and provides data structures and
+    methods for holding the results.
+    """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.atmosphere = self._get_atmosphere()
@@ -35,9 +37,9 @@ class LwcSource(DataSource):
 
 
 class Lwc:
-    """Class handling the liquid water content calculations."""
-    def __init__(self, categorize_file):
-        self.lwc_input = LwcSource(categorize_file)
+    """Class handling the actual LWC calculations."""
+    def __init__(self, lwc_input):
+        self.lwc_input = lwc_input
         self.dheight = self.lwc_input.dheight
         self.echo = self._get_echo()
         self.is_liquid = self._get_liquid()
@@ -86,8 +88,7 @@ class Lwc:
         indicate missing (or too narrow) liquid clouds.
         """
         lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.dheight
-        difference = lwc_sum - self.lwc_input.lwp
-        return difference
+        return lwc_sum - self.lwc_input.lwp
 
     def _find_adjustable_clouds(self):
 
@@ -185,9 +186,33 @@ def find_topmost_clouds(is_cloud):
     return top_clouds
 
 
-def generate_lwc(categorize_file):
+def generate_lwc(categorize_file, output_file):
     """High level API to generate Cloudnet liquid water content file."""
-    lwc = Lwc(categorize_file)
-    lwc.adjust_clouds_to_match_lwp()
-    lwc.screen_rain()
+    lwc_data = LwcSource(categorize_file)
+    lwc_obj = Lwc(lwc_data)
+    lwc_obj.adjust_clouds_to_match_lwp()
+    lwc_obj.screen_rain()
+    _append_data_for_output(lwc_data, lwc_obj)
+    _save_data_and_meta(lwc_data, output_file)
 
+
+def _append_data_for_output(lwc_data, lwc_obj):
+    lwc_data.append_data(lwc_obj.lwc, 'lwc')
+    lwc_data.append_data(lwc_obj.status, 'retrieval_status')
+
+
+def _save_data_and_meta(lwc_data, output_file):
+    """
+    Saves wanted information to NetCDF file.
+    """
+    dims = {'time': len(lwc_data.time),
+            'height': len(lwc_data.variables['height'])}
+    rootgrp = output.init_file(output_file, dims, lwc_data.data, zlib=True)
+    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height')
+    output.copy_variables(lwc_data.dataset, rootgrp, vars_from_source)
+    rootgrp.title = f"Liquid water content file from {lwc_data.dataset.location}"
+    rootgrp.source = f"Categorize file: {p_tools.get_source(lwc_data)}"
+    output.copy_global(lwc_data.dataset, rootgrp, ('location', 'day',
+                                                   'month', 'year'))
+    output.merge_history(rootgrp, 'liquid water content', lwc_data)
+    rootgrp.close()
