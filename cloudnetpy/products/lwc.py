@@ -71,8 +71,8 @@ class Lwc:
         return lwc_scaled / self.dheight
 
     def _init_status(self):
-        status = ma.zeros(self.lwc.shape, dtype=int)
-        status[self.lwc_adiabatic > 0] = 1
+        status = ma.zeros(self.is_liquid.shape, dtype=int)
+        status[self.is_liquid] = 1
         return status
 
     def adjust_clouds_to_match_lwp(self):
@@ -197,7 +197,7 @@ def generate_lwc(categorize_file, output_file):
 
 
 def _append_data_for_output(lwc_data, lwc_obj):
-    lwc_data.append_data(lwc_obj.lwc, 'lwc')
+    lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc')
     lwc_data.append_data(lwc_obj.status, 'retrieval_status')
 
 

@@ -4,7 +4,7 @@
 T0 = 273.16
 
 # Ratio of the molecular weight of water vapor to dry air
-mw_ratio = 0.622
+mw_ratio = 0.62198
 
 # Acceleration due to gravity (m s-1)
 g = -9.81
@@ -13,6 +13,7 @@ g = -9.81
 specific_heat = 1004
 
 # Latent heat of evaporation (J kg-1)
+# Note: Cloudnet Matlab version: 2.5e-6 ?!
 latent_heat = 2.26e6
 
 # Specific gas constant for dry  air (J kg-1 K-1)

@@ -17,7 +17,6 @@ def k2c(temp):
     return ma.array(temp) - 273.15
 
 
-VAISALA_PARAMS_OVER_WATER = (6.116441, 7.591386, 240.7263)
 HPA_TO_P = 100
 P_TO_HPA = 0.01
 M_TO_KM = 0.001
@@ -44,7 +43,6 @@ def calc_lwc_change_rate(temperature, pressure):
     """
     svp = calc_saturation_vapor_pressure(temperature)
     svp_mixing_ratio = calc_mixing_ratio(svp, pressure)
-
     air_density = pressure / (con.Rs*temperature*(0.6*svp_mixing_ratio + 1))
     a = con.specific_heat*temperature / (con.latent_heat*con.mw_ratio)
     b = pressure - svp
@@ -68,22 +66,23 @@ def calc_mixing_ratio(svp, pressure):
     return con.mw_ratio*svp/(pressure-svp)
 
 
-def calc_saturation_vapor_pressure(temp_kelvin):
-    """Returns approximate water vapour saturation pressure.
+def calc_saturation_vapor_pressure(temperature):
+    """Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.
 
     Args:
-        temp_kelvin (ndarray): Temperature in K.
+        temperature (ndarray): Temperature (K).
 
     Returns:
-        ndarray: Vapor saturation pressure in Pa.
+        ndarray: Saturation vapor pressure (Pa).
 
-    References:
-        Vaisala's white paper: "Humidity conversion formulas".
-
-        """
-    a, m, tn = VAISALA_PARAMS_OVER_WATER
-    temp_celsius = k2c(temp_kelvin)
-    return a * 10**((m*temp_celsius)/(temp_celsius+tn)) * HPA_TO_P
+    """
+    ratio = con.T0 / temperature
+    inv_ratio = temperature / con.T0
+    return (10 ** (10.79574 * (1-ratio)
+            - 5.028 * np.log10(inv_ratio)
+            + 1.50475e-4 * (1 - (10**(-8.2969*(inv_ratio-1))))
+            + 0.42873e-3 * (10**(4.76955*(1-ratio)) - 1)
+            + 0.78614)) * HPA_TO_P
 
 
 def calc_dew_point_temperature(vapor_pressure):
@@ -99,7 +98,8 @@ def calc_dew_point_temperature(vapor_pressure):
         Method from Vaisala's white paper: "Humidity conversion formulas".
 
     """
-    a, m, tn = VAISALA_PARAMS_OVER_WATER
+    vaisala_parameters_over_water = (6.116441, 7.591386, 240.7263)
+    a, m, tn = vaisala_parameters_over_water
     dew_point_celsius = tn / ((m/np.log10(vapor_pressure*P_TO_HPA/a))-1)
     return c2k(dew_point_celsius)
 
@@ -342,5 +342,5 @@ def distribute_lwp_to_liquid_clouds(lwc, lwp):
         ndarray: 2D LWP-weighted, normalized LWC (g/m2).
 
     """
-    lwc_sum = np.sum(lwc, axis=1)
+    lwc_sum = ma.sum(lwc, axis=1)
     return (lwc.T / lwc_sum * lwp).T
