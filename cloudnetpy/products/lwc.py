@@ -1,5 +1,5 @@
 """Module for creating Cloudnet liquid water content file
-using adiabatic method.
+using scaled-adiabatic method.
 """
 import numpy as np
 import numpy.ma as ma
@@ -142,14 +142,28 @@ class Lwc:
             ind_from_base = 1
             while True:
                 lwc_value = scale * ind_from_base
-                self.lwc_adiabatic[time_ind, base_ind + ind_from_base] = lwc_value
+                top_ind = base_ind + ind_from_base
+                self.lwc_adiabatic[time_ind, top_ind] = lwc_value
+                if not self.status[time_ind, top_ind]:
+                    self.status[time_ind, top_ind] = 3
                 if _has_converged(time_ind):
                     break
                 ind_from_base += 1
 
+        def _update_status(time_ind):
+            alt_indices = np.where(self.is_liquid[time_ind, :])[0]
+            self.status[time_ind, alt_indices] = 2
+
         for time_index in np.unique(np.where(adjustable_clouds)[0]):
             base_index = np.where(adjustable_clouds[time_index, :])[0][0]
+            _update_status(time_index)
             _adjust_lwc(time_index, base_index)
+
+    def screen_rain(self):
+        """Masks profiles with rain."""
+        is_rain = self.lwc_input.is_rain.astype(bool)
+        self.lwc[is_rain, :] = ma.masked
+        self.status[is_rain, :] = 6
 
 
 def find_topmost_clouds(is_cloud):
@@ -175,3 +189,5 @@ def generate_lwc(categorize_file):
     """High level API to generate Cloudnet liquid water content file."""
     lwc = Lwc(categorize_file)
     lwc.adjust_clouds_to_match_lwp()
+    lwc.screen_rain()
+
