@@ -6,19 +6,13 @@ from collections import namedtuple
 FIELDS = (
     'long_name',
     'units',
-    'plot_range',
-    'plot_scale',
     'comment',
     'definition',
     'references',
     'ancillary_variables',
-    'sensitivity_variable',
     'positive')
 
 MetaData = namedtuple('MetaData', FIELDS, defaults=(None,)*len(FIELDS))
-
-_LOG = 'logarithmic'
-_LIN = 'linear'
 
 _DEFINITIONS = {
     'category_bits':
@@ -346,454 +340,375 @@ _COMMENTS = {
 
 ATTRIBUTES = {
     'time': MetaData(
-        'Time UTC',
-        'decimal hours since midnight'
+        long_name='Time UTC',
+        units='decimal hours since midnight'
     ),
     'model_time': MetaData(
-        'model time UTC',
-        'decimal hours since midnight'
+        long_name='model time UTC',
+        units='decimal hours since midnight'
     ),
     'height': MetaData(
-        'Height above mean sea level',
-        'm'
+        long_name='Height above mean sea level',
+        units='m'
     ),
     'model_height': MetaData(
-        'Height of model variables above mean sea level',
-        'm'
+        long_name='Height of model variables above mean sea level',
+        units='m'
     ),
     'range': MetaData(
-        'Height above ground',
-        'm'
+        long_name='Height above ground',
+        units='m'
     ),
     'latitude': MetaData(
-        'Latitude of site',
-        'degrees_north'
+        long_name='Latitude of site',
+        units='degrees_north'
     ),
     'longitude': MetaData(
-        'Longitude of site',
-        'degrees_north'
+        long_name='Longitude of site',
+        units='degrees_north'
     ),
     'altitude': MetaData(
-        'Altitude of site',
-        'm'
+        long_name='Altitude of site',
+        units='m'
     ),
     'radar_frequency': MetaData(
-        'Radar transmit frequency',
-        'GHz'
+        long_name='Radar transmit frequency',
+        units='GHz'
     ),
     'lidar_wavelength': MetaData(
-        'Laser wavelength',
-        'nm'
+        long_name='Laser wavelength',
+        units='nm'
     ),
     'ldr': MetaData(
-        'Linear depolarisation ratio',
-        'dB',
-        (-30, 0),
-        _LIN,
+        long_name='Linear depolarisation ratio',
+        units='dB',
         comment=_COMMENTS['ldr']
     ),
     'width': MetaData(
-        'Spectral width',
-        'm s-1',
-        (0, 3),
-        _LOG,
+        long_name='Spectral width',
+        units='m s-1',
         comment=_COMMENTS['width']
     ),
     'v': MetaData(
-        'Doppler velocity',
-        'm s-1',
-        (-4, 2),
-        _LIN,
+        long_name='Doppler velocity',
+        units='m s-1',
         comment=_COMMENTS['v'],
         positive='up',
     ),
     'SNR': MetaData(
-        'Signal-to-noise ratio',
-        'dB',
-        (-20, 60),
-        _LIN
+        long_name='Signal-to-noise ratio',
+        units='dB',
     ),
     'Z': MetaData(
-        'Radar reflectivity factor',
-        'dBZ',
-        (-40, 20),
-        _LIN,
+        long_name='Radar reflectivity factor',
+        units='dBZ',
         comment=_COMMENTS['Z'],
         ancillary_variables='Z_error Z_bias Z_sensitivity'
     ),
     'Z_error': MetaData(
-        'Error in radar reflectivity factor',
-        'dB',
+        long_name='Error in radar reflectivity factor',
+        units='dB',
         comment=_COMMENTS['Z_error']
     ),
     'Z_bias': MetaData(
-        'Bias in radar reflectivity factor',
-        'dB',
+        long_name='Bias in radar reflectivity factor',
+        units='dB',
         comment=_COMMENTS['bias']
     ),
     'Z_sensitivity': MetaData(
-        'Minimum detectable radar reflectivity',
-        'dBZ',
+        long_name='Minimum detectable radar reflectivity',
+        units='dBZ',
         comment=_COMMENTS['Z_sensitivity']
     ),
     'Zh': MetaData(
-        'Radar reflectivity factor (uncorrected), horizontal polarization',
-        'dBZ',
-        (-40, 20),
-        _LIN
+        long_name='Radar reflectivity factor (uncorrected), horizontal polarization',
+        units='dBZ',
     ),
     'radar_liquid_atten': MetaData(
-        'Approximate two-way radar attenuation due to liquid water',
-        'dB',
-        (0, 10),
-        _LIN,
+        long_name='Approximate two-way radar attenuation due to liquid water',
+        units='dB',
         comment=_COMMENTS['radar_liquid_atten']
     ),
     'radar_gas_atten': MetaData(
-        'Two-way radar attenuation due to atmospheric gases',
-        'dB',
-        (0, 4),
-        _LIN,
+        long_name='Two-way radar attenuation due to atmospheric gases',
+        units='dB',
         comment=_COMMENTS['radar_gas_atten']
     ),
     'Tw': MetaData(
-        'Wet-bulb temperature',
-        'K',
-        (200, 300),
-        _LIN,
+        long_name='Wet-bulb temperature',
+        units='K',
         comment=_COMMENTS['Tw']
     ),
     'vwind': MetaData(
-        'Meridional wind',
-        'm s-1',        
-        (-50, 50),
-        _LIN
+        long_name='Meridional wind',
+        units='m s-1',
     ),
     'uwind': MetaData(
-        'Zonal wind',
-        'm s-1',
-        (-50, 50),
-        _LIN
+        long_name='Zonal wind',
+        units='m s-1',
     ),
     'q': MetaData(
-        'Specific humidity',
-        '',
-        (0, 0.2),
-        _LIN
+        long_name='Specific humidity',
+        units='',
     ),
     'temperature': MetaData(
-        'Temperature',
-        'K',
-        (200, 300),
-        _LIN
+        long_name='Temperature',
+        units='K',
     ),
     'pressure': MetaData(
-        'Pressure',
-        'Pa',
-        (0, 110000),
-        _LIN
+        long_name='Pressure',
+        units='Pa',
     ),
     'beta': MetaData(
-        'Attenuated backscatter coefficient',
-        'sr-1 m-1',
-        (1e-7, 1e-4),
-        _LOG,
+        long_name='Attenuated backscatter coefficient',
+        units='sr-1 m-1',
         ancillary_variables='beta_error beta_bias'
     ),
     'beta_raw': MetaData(
-        'Raw attenuated backscatter coefficient',
-        'sr-1 m-1',
-        (1e-7, 1e-4),
-        _LOG,
+        long_name='Raw attenuated backscatter coefficient',
+        units='sr-1 m-1',
     ),
     'beta_error': MetaData(
-        'Error in attenuated backscatter coefficient',
-        'dB',
+        long_name='Error in attenuated backscatter coefficient',
+        units='dB',
     ),
     'beta_bias': MetaData(
-        'Bias in attenuated backscatter coefficient',
-        'dB',
+        long_name='Bias in attenuated backscatter coefficient',
+        units='dB',
     ),
     'lwp': MetaData(
-        'Liquid water path',
-        'g m-2',
-        (-100, 1000),
-        _LIN
+        long_name='Liquid water path',
+        units='',
     ),
     'lwp_error': MetaData(
-        'Error in liquid water path',
-        'g m-2',
+        long_name='Error in liquid water path',
+        units='',
     ),
     'category_bits': MetaData(
-        'Target categorization bits',
+        long_name='Target categorization bits',
         comment=_COMMENTS['category_bits'],
         definition=_DEFINITIONS['category_bits']
     ),
     'quality_bits': MetaData(
-        'Data quality bits',
+        long_name='Data quality bits',
         comment=_COMMENTS['quality_bits'],
         definition=_DEFINITIONS['quality_bits']
     ),
     # product variables
     'target_classification': MetaData(
-        'Target classification',
+        long_name='Target classification',
         comment=_COMMENTS['classification_pixels'],
         definition=_DEFINITIONS['classification_pixels']
     ),
     'detection_status': MetaData(
-        'Radar and lidar detection status',
+        long_name='Radar and lidar detection status',
         comment=_COMMENTS['classification_quality_pixels'],
         definition=_DEFINITIONS['classification_quality_pixels']
     ),
-    'cloud_mask': MetaData(
-        'Total area of clouds',
-        comment=_COMMENTS['cloud_mask'],
-    ),
-    'cloud_bottom': MetaData(
-        'Height of cloud base above ground',
-        'm',
-        comment=_COMMENTS['cloud_bottom'],
-    ),
-    'cloud_top': MetaData(
-        'Height of cloud top above ground',
-        'm',
-        comment=_COMMENTS['cloud_top'],
-    ),
     'iwc': MetaData(
-        'Ice water content',
-        'kg m-3',
-        (1e-7, 0.001),
-        _LOG,
+        long_name='Ice water content',
+        units='',
         comment=_COMMENTS['iwc'],
-        sensitivity_variable='iwc_sensitivity'
+        ancillary_variables='iwc_sensitivity'
     ),
     'iwc_error': MetaData(
-        'Random error in ice water content, one standard deviation',
-        'dB',
-        (0, 3),
-        _LIN,
+        long_name='Random error in ice water content, one standard deviation',
+        units='dB',
         comment=_COMMENTS['iwc_error']
     ),
     'iwc_bias': MetaData(
-        'Possible bias in ice water content, one standard deviation',
-        'dB',
+        long_name='Possible bias in ice water content, one standard deviation',
+        units='dB',
         comment=_COMMENTS['iwc_bias']
     ),
     'iwc_sensitivity': MetaData(
-        'Minimum detectable ice water content',
-        'kg m-3',
+        long_name='Minimum detectable ice water content',
+        units='',
         comment=_COMMENTS['iwc_sensitivity']
     ),
     'iwc_retrieval_status': MetaData(
-        'Ice water content retrieval status',
+        long_name='Ice water content retrieval status',
         comment=_COMMENTS['iwc_retrieval_status'],
         definition=_DEFINITIONS['iwc_retrieval_status']
     ),
     'iwc_inc_rain': MetaData(
-        'Ice water content',
-        'kg m-3',
-        (1e-7, 0.001),
-        _LOG,
+        long_name='Ice water content',
         comment=_COMMENTS['iwc_inc_rain'],
-        sensitivity_variable='iwc_sensitivity'
+        ancillary_variables='iwc_sensitivity'
     ),
     'lwc': MetaData(
-        'Liquid water content',
-        'kg m-3',
-        (1e-5, 0.01),
-        _LOG,
+        long_name='Liquid water content',
+        units='',
         comment=_COMMENTS['lwc']
     ),
     'lwc_error': MetaData(
-        'Random error in liquid water content, one standard deviation',
-        'kg m-3',
+        long_name='Random error in liquid water content, one standard deviation',
+        units='',
         comment=_COMMENTS['lwc_error'],
     ),
     'lwc_retrieval_status': MetaData(
-        'Liquid water content retrieval status',
-        'scalar',
-        (0,6),
+        long_name='Liquid water content retrieval status',
         comment=_COMMENTS['lwc_retrieval_status'],
         definition=_DEFINITIONS['lwc_retrieval_status']
     ),
-    'LWP': MetaData(
-        'Liquid water path',
-        'kg m-2',
-        (-100, 1000),
-        _LIN,
-        comment=_COMMENTS['LWP']
-    ),
-    'LWP_error': MetaData(
-        'Random error in liquid water path, one standard deviation',
-        'kg m-2',
-        comment=_COMMENTS['LWP_error']
-    ),
-    'lwc_th': MetaData(
-        'Liquid water content (tophat distribution)',
-        'kg m-3',
-        comment=_COMMENTS['lwc_th']
-    ),
     'insect_prob': MetaData(
-        'Insect probability',
-        '',
-        (0, 1),
-        _LIN
+        long_name='Insect probability',
+        units='',
     ),
-    # RPG variables:
+    # RPG variables.
     'Ze': MetaData(
-        'Radar reflectivity factor (uncorrected), vertical polarization',
-        'dBZ',
-        (-40, 20),
-        _LIN
+        long_name='Radar reflectivity factor (uncorrected), vertical polarization',
+        units='dBZ',
     ),
     'rain_rate': MetaData(
-        'Rain rate',
-        'mm h-1',
+        long_name='Rain rate',
+        units='mm h-1',
     ),
     'input_voltage_range': MetaData(
-        'ADC input voltage range (+/-)',
-        'mV',
+        long_name='ADC input voltage range (+/-)',
+        units='mV',
     ),
     'noise_threshold': MetaData(
-        'Noise filter threshold factor',
-        '',
+        long_name='Noise filter threshold factor',
+        units='',
         comment='Multiple of the standard deviation of Doppler spectra.'
     ),
     'antenna_separation': MetaData(
-        'Antenna separation',
-        'm',
+        long_name='Antenna separation',
+        units='m',
     ),
     'antenna_diameter': MetaData(
-        'Antenna diameter',
-        'm',
+        long_name='Antenna diameter',
+        units='m',
     ),
     'antenna_gain': MetaData(
-        'Antenna gain',
-        'dB',
+        long_name='Antenna gain',
+        units='dB',
     ),
     'range_resolution': MetaData(
-        'Vertical resolution of range',
-        'm',
+        long_name='Vertical resolution of range',
+        units='m',
     ),
     'half_power_beam_width': MetaData(
-        'Half power beam width',
-        'degrees',
+        long_name='Half power beam width',
+        units='degrees',
     ),
     'transmitter_temperature': MetaData(
-        'Transmitter temperature',
-        'K',
+        long_name='Transmitter temperature',
+        units='K',
     ),
     'transmitted_power': MetaData(
-        'Transmitted power',
-        'W',
+        long_name='Transmitted power',
+        units='W',
     ),
     'number_of_spectral_samples': MetaData(
-        'Number of spectral samples in each chirp sequence',
-        '',
+        long_name='Number of spectral samples in each chirp sequence',
+        units='',
     ),
     'skewness': MetaData(
-        'Skewness of spectra',
-        '',
+        long_name='Skewness of spectra',
+        units='',
     ),
     'kurtosis': MetaData(
-        'Kurtosis of spectra',
+        long_name='Kurtosis of spectra',
+        units='',
     ),
     'azimuth': MetaData(
-        'Azimuth angle',
-        'degrees',
+        long_name='Azimuth angle',
+        units='degrees',
     ),
     'elevation': MetaData(
-        'Elevation angle above horizon',
-        'degrees',
+        long_name='Elevation angle above horizon',
+        units='degrees',
     ),
     'if_power': MetaData(
-        'IF power at ACD',
-        'uW',
+        long_name='IF power at ACD',
+        units='uW',
     ),
     'brightness_temperature': MetaData(
-        'Brightness temperature',
-        'K',
+        long_name='Brightness temperature',
+        units='K',
     ),
     'voltage': MetaData(
-        'Voltage',
-        'V',
+        long_name='Voltage',
+        units='V',
     ),
     'wind_direction': MetaData(
-        'Wind direction',
-        'degrees',
+        long_name='Wind direction',
+        units='degrees',
     ),
     'wind_speed': MetaData(
-        'Wind speed',
-        'm s-1',
+        long_name='Wind speed',
+        units='m s-1',
     ),
     'pc_temperature': MetaData(
-        'PC temperature',
-        'K',
+        long_name='PC temperature',
+        units='K',
     ),
     'receiver_temperature': MetaData(
-        'Receiver temperature',
-        'K',
+        long_name='Receiver temperature',
+        units='K',
     ),
     'time_ms': MetaData(
-        'Time ms',
-        'ms',
+        long_name='Time ms',
+        units='ms',
     ),
     'integration_time': MetaData(
-        'Integration time',
-        's',
+        long_name='Integration time',
+        units='s',
         comment='Effective integration time of chirp sequence',
     ),
     'file_code': MetaData(
-        'File code',
+        long_name='File code',
         comment='Indicates the RPG software version.',
     ),
     'program_number': MetaData(
-        'Program number',
+        long_name='Program number',
     ),
     'model_number': MetaData(
-        'Model number',
+        long_name='Model number',
         definition=_DEFINITIONS['model_number']
     ),
     'sample_duration': MetaData(
-        'Sample duration',
-        's'
+        long_name='Sample duration',
+        units='s'
     ),
     'dual_polarization': MetaData(
-        'Dual polarisation type',
+        long_name='Dual polarisation type',
         definition=_DEFINITIONS['dual_polarization']
     ),
     'number_of_averaged_chirps': MetaData(
-        'Number of averaged chirps in sequence'
+        long_name='Number of averaged chirps in sequence'
     ),
     'chirp_start_indices': MetaData(
-        'Chirp sequences start indices'
+        long_name='Chirp sequences start indices'
     ),
     'calibration_interval': MetaData(
-        'Calibration interval in samples'
+        long_name='Calibration interval in samples'
     ),
     'status_flag': MetaData(
-        'Status flag for heater and blower'
+        long_name='Status flag for heater and blower'
     ),
     'FFT_window': MetaData(
-        'FFT window type',
+        long_name='FFT window type',
         definition=_DEFINITIONS['FFT_window']
     ),
     'quality_flag': MetaData(
-        'Quality flag',
+        long_name='Quality flag',
         definition=_DEFINITIONS['quality_flag']
     ),
     'nyquist_velocity': MetaData(
-        'Nyquist velocity',
-        'm s-1'
+        long_name='Nyquist velocity',
+        units='m s-1'
     ),
     'correlation_coefficient': MetaData(
-        'Correlation coefficient',
+        long_name='Correlation coefficient',
     ),
     'Zdr': MetaData(
-        'Differential reflectivity',
-        'dB'
+        long_name='Differential reflectivity',
+        units='dB'
     ),
     'spectral_differential_phase': MetaData(
-        'Spectral differential phase'
+        long_name='Spectral differential phase'
     ),
 }
