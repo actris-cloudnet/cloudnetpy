@@ -77,11 +77,11 @@ def calc_saturation_vapor_pressure(temperature):
 
     """
     ratio = con.T0 / temperature
-    inv_ratio = temperature / con.T0
+    inv_ratio = ratio**-1
     return (10 ** (10.79574 * (1-ratio)
             - 5.028 * np.log10(inv_ratio)
-            + 1.50475e-4 * (1 - (10**(-8.2969*(inv_ratio-1))))
-            + 0.42873e-3 * (10**(4.76955*(1-ratio)) - 1)
+            + 1.50475e-4 * (1 - (10 ** (-8.2969 * (inv_ratio-1))))
+            + 0.42873e-3 * (10 ** (4.76955 * (1-ratio)) - 1)
             + 0.78614)) * HPA_TO_P
 
 
@@ -244,7 +244,7 @@ class LiquidAttenuation(Attenuation):
         """Finds liquid attenuation (dB)."""
         liquid_attenuation = ma.zeros(lwc_scaled.shape)
         spec_liq = self._model['specific_liquid_atten']
-        lwp_cumsum = np.cumsum(lwc_scaled[:, :-1] * spec_liq[:, :-1], axis=1)
+        lwp_cumsum = ma.cumsum(lwc_scaled[:, :-1] * spec_liq[:, :-1], axis=1)
         liquid_attenuation[:, 1:] = TWO_WAY * lwp_cumsum * M_TO_KM
         return liquid_attenuation
 

@@ -139,17 +139,17 @@ class Lwc:
             return False
 
         def _adjust_lwc(time_ind, base_ind):
-            scale = self.lwc_adiabatic[time_ind, base_ind] * self.dheight
-            ind_from_base = 1
+            lwc_adiabatic = self.lwc_adiabatic[time_ind, base_ind]
+            distance_from_base = 1
             while True:
-                lwc_value = scale * ind_from_base
-                top_ind = base_ind + ind_from_base
-                self.lwc_adiabatic[time_ind, top_ind] = lwc_value
+                lwc_adiabatic_new = lwc_adiabatic * distance_from_base
+                top_ind = base_ind + distance_from_base
+                self.lwc_adiabatic[time_ind, top_ind] = lwc_adiabatic_new
                 if not self.status[time_ind, top_ind]:
                     self.status[time_ind, top_ind] = 3
                 if _has_converged(time_ind):
                     break
-                ind_from_base += 1
+                distance_from_base += 1
 
         def _update_status(time_ind):
             alt_indices = np.where(self.is_liquid[time_ind, :])[0]
