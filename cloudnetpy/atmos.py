@@ -41,15 +41,46 @@ def calc_lwc_change_rate(temperature, pressure):
         Brenguier, 1991, https://bit.ly/2QCSJtb
 
     """
-    svp = calc_saturation_vapor_pressure(temperature)
-    svp_mixing_ratio = calc_mixing_ratio(svp, pressure)
-    air_density = pressure / (con.Rs*temperature*(0.6*svp_mixing_ratio + 1))
-    a = con.specific_heat*temperature / (con.latent_heat*con.mw_ratio)
-    b = pressure - svp
+    svp = calc_saturation_vapor_pressure(temperature)      # Pa
+    svp_mixing_ratio = calc_mixing_ratio(svp, pressure)    # kg kg-1
+    air_density = calc_air_density(pressure, temperature, svp_mixing_ratio)  # kg m-3
+
+    # The equation in Brenguier paper needs hPa
+    svp *= P_TO_HPA
+    pressure_hpa = pressure * P_TO_HPA
+
+    a = con.specific_heat * temperature / (con.latent_heat * con.mw_ratio)  # unitless
+    b = pressure_hpa - svp  # hPa
+
     f1 = a - 1
-    f2 = 1 / (a + (con.latent_heat*svp_mixing_ratio*air_density/b))
-    f3 = air_density*con.g*con.mw_ratio*svp*b**-2
-    return air_density*f1*f2*f3 * KG_TO_G
+    f2 = 1 / (a + (con.latent_heat * svp_mixing_ratio * air_density / b))  # m3 hPa J-1
+    f3 = con.mw_ratio * svp * b**-2  # hPa-1
+
+    # saturation mixing ratio change in respect to pressure
+    # m3 J-1 = m3 s2 kg-1 m-2
+    #        = m s2 kg-1
+    #        = kg kg-1 Pa-1
+    dqs_dp = f1 * f2 * f3
+
+    dqs_dp *= KG_TO_G  # g kg-1 Pa-1
+
+    # Conversion in Cloudnet code: g m-3 m-1
+    return air_density**2 * con.g * dqs_dp
+
+
+def calc_air_density(pressure, temperature, svp_mixing_ratio):
+    """Calculates air density (kg m-3).
+
+    Args:
+        pressure (ndarray): Pressure (Pa).
+        temperature (ndarray): Temperature (K).
+        svp_mixing_ratio (ndarray): Saturation vapor pressure mixing ratio (kg/kg).
+
+    Returns:
+        ndarray: Air density (kg m-3).
+
+    """
+    return pressure / (con.Rs * temperature * (0.6 * svp_mixing_ratio + 1))
 
 
 def calc_mixing_ratio(svp, pressure):
@@ -60,10 +91,10 @@ def calc_mixing_ratio(svp, pressure):
         pressure (ndarray): Atmospheric pressure (Pa).
 
     Returns:
-        ndarray: Mixing ratio.
+        ndarray: Mixing ratio (kg kg-1).
 
     """
-    return con.mw_ratio*svp/(pressure-svp)
+    return con.mw_ratio * svp / (pressure-svp)
 
 
 def calc_saturation_vapor_pressure(temperature):

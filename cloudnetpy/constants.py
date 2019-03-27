@@ -6,10 +6,10 @@ T0 = 273.16
 # Ratio of the molecular weight of water vapor to dry air
 mw_ratio = 0.62198
 
-# Acceleration due to gravity (m s-1)
+# Acceleration due to gravity (m s-2)
 g = -9.81
 
-# Specific heat capacity of air at around 275K (J kg-1 C-1)
+# Specific heat capacity of air at around 275K (J kg-1 K-1)
 specific_heat = 1004
 
 # Latent heat of evaporation (J kg-1)
