@@ -139,12 +139,12 @@ class Lwc:
             return False
 
         def _adjust_lwc(time_ind, base_ind):
-            lwc_adiabatic = self.lwc_adiabatic[time_ind, base_ind]
+            lwc_base = self.lwc_adiabatic[time_ind, base_ind]
             distance_from_base = 1
             while True:
-                lwc_adiabatic_new = lwc_adiabatic * distance_from_base
                 top_ind = base_ind + distance_from_base
-                self.lwc_adiabatic[time_ind, top_ind] = lwc_adiabatic_new
+                lwc_top = lwc_base * (distance_from_base + 1)
+                self.lwc_adiabatic[time_ind, top_ind] = lwc_top
                 if not self.status[time_ind, top_ind]:
                     self.status[time_ind, top_ind] = 3
                 if _has_converged(time_ind):
