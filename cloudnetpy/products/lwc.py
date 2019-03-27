@@ -193,12 +193,13 @@ def generate_lwc(categorize_file, output_file):
     lwc_obj.adjust_clouds_to_match_lwp()
     lwc_obj.screen_rain()
     _append_data_for_output(lwc_data, lwc_obj)
+    output.update_attributes(lwc_data.data)
     _save_data_and_meta(lwc_data, output_file)
 
 
 def _append_data_for_output(lwc_data, lwc_obj):
     lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc')
-    lwc_data.append_data(lwc_obj.status, 'retrieval_status')
+    lwc_data.append_data(lwc_obj.status, 'lwc_retrieval_status')
 
 
 def _save_data_and_meta(lwc_data, output_file):

@@ -63,11 +63,11 @@ _DEFINITIONS = {
     'classification_quality_pixels':
     ('\nValue 0: Clear sky.\n'
      'Value 1: Lidar echo only.\n'
-     'Value 2: Radar echo but reflectivity may be unreliable as attenuation by rain,\n'
-     '         melting ice or liquid cloud has not been corrected.\n'
+     'Value 2: Radar echo but reflectivity may be unreliable as attenuation by\n'
+     '         rain, melting ice or liquid cloud has not been corrected.\n'
      'Value 3: Good radar and lidar echos.\n'
-     'Value 4: No radar echo but rain or liquid cloud beneath mean that attenuation\n'
-     '         that would be experienced is unknown.\n'
+     'Value 4: No radar echo but rain or liquid cloud beneath mean that\n'
+     '         attenuation that would be experienced is unknown.\n'
      'Value 5: Good radar echo only.\n'
      'Value 6: No radar echo but known attenuation.\n'
      'Value 7: Radar echo corrected for liquid cloud attenuation\n'
@@ -77,45 +77,58 @@ _DEFINITIONS = {
 
     'iwc_retrieval_status':
     ('\n0: No ice present\n'
-      '1: Reliable retrieval\n'
-      '2: Unreliable retrieval due to uncorrected attenuation from liquid water below the ice (no liquid water path measurement available)\n'
-      '3: Retrieval performed but radar corrected for liquid attenuation using radiometer liquid water path which is not always accurate\n'
-      '4: Ice detected only by the lidar\n'
-      '5: Ice detected by radar but rain below so no retrieval performed due to very uncertain attenuation\n'
-      '6: Clear sky above rain, wet-bulb temperature less than 0degC: if rain attenuation were strong then ice could be present but undetected\n'
-      '7: Drizzle or rain that would have been classified as ice if the wet-bulb temperature were less than 0degC: may be ice if temperature is in error'),
+     '1: Reliable retrieval\n'
+     '2: Unreliable retrieval due to uncorrected attenuation from liquid water\n'
+     '   below the ice (no liquid water path measurement available)\n'
+     '3: Retrieval performed but radar corrected for liquid attenuation using\n'
+     '   radiometer liquid water path which is not always accurate\n'
+     '4: Ice detected only by the lidar\n'
+     '5: Ice detected by radar but rain below so no retrieval performed due to\n'
+     '   very uncertain attenuation\n'
+     '6: Clear sky above rain, wet-bulb temperature less than 0degC: if rain\n'
+     '   attenuation were strong then ice could be present but undetected\n'
+     '7: Drizzle or rain that would have been classified as ice if the wet-bulb\n'
+     '   temperature were less than 0degC: may be ice if temperature is in error'),
 
     'lwc_retrieval_status':
     ('\n0: No liquid water detected\n'
-      '1: Reliable retrieval \n'
-      '2: Adiabatic retrieval where cloud top has been adjusted to match liquid water path from microwave radiometer because layer is not detected by radar\n'
-      '3: Adiabatic retrieval: new cloud pixels where cloud top has been adjusted to match liquid water path from microwave radiometer because layer is not detected by radar\n'
-      '4: No retrieval: either no liquid water path is available or liquid water path is uncertain\n'
-      '5: No retrieval: liquid water layer detected only by the lidar and liquid water path is unavailable or uncertain:\n'
-      '   cloud top may be higher than diagnosed cloud top since lidar signal has been attenuated\n'
-      '6: Rain present: cloud extent is difficult to ascertain and liquid water path also uncertain.'),
+     '1: Reliable retrieval\n'
+     '2: Adiabatic retrieval where cloud top has been adjusted to match liquid\n'
+     '   water path from microwave radiometer because layer is not detected by radar\n'
+     '3: Adiabatic retrieval: new cloud pixels where cloud top has been adjusted\n'
+     '   to match liquid water path from microwave radiometer because layer is\n'
+     '   not detected by radar\n'
+     '4: No retrieval: either no liquid water path is available or liquid water\n'
+     '   path is uncertain\n'
+     '5: No retrieval: liquid water layer detected only by the lidar and liquid\n'
+     '   water path is unavailable or uncertain:\n'
+     '   cloud top may be higher than diagnosed cloud top since lidar signal has\n'
+     '   been attenuated\n'
+     '6: Rain present: cloud extent is difficult to ascertain and liquid water\n'
+     '   path also uncertain.'),
 
     'model_number':
-        ('\n0: Single polarisation radar.'
-         '\n1: Dual polarisation radar.'),
+        ('\n0: Single polarisation radar.\n'
+         '1: Dual polarisation radar.'),
 
     'dual_polarization':
-        ('\n0: Single polarisation radar.'
-         '\n1: Dual polarisation radar in linear depolarisation ratio (LDR) mode.'
-         '\n2: Dual polarisation radar in simultaneous transmission simultaneous reception (STSR) mode.'),
+        ('\n0: Single polarisation radar.\n'
+         '1: Dual polarisation radar in linear depolarisation ratio (LDR) mode.\n'
+         '2: Dual polarisation radar in simultaneous transmission simultaneous\n'
+         '   reception (STSR) mode.'),
 
     'FFT_window':
-        ('\n0: square'
-         '\n1: parzen'
-         '\n2: blackman'
-         '\n3: welch'
-         '\n4: slepian2'
-         '\n5: slepian3'),
+        ('\n0: square\n'
+         '1: parzen\n'
+         '2: blackman\n'
+         '3: welch\n'
+         '4: slepian2\n'
+         '5: slepian3'),
 
     'quality_flag':
-        ('\nBit 0: ADC saturation.'
-         '\nBit 1: Spectral width too high.'
-         '\nBit 2: No transmission power levelling.')
+        ('\nBit 0: ADC saturation.\n'
+         'Bit 1: Spectral width too high.\n'
+         'Bit 2: No transmission power levelling.')
 
 }
 
@@ -136,72 +149,64 @@ _COMMENTS = {
      'attribute. Bit 0 is the least significant.'),
 
     'classification_pixels':
-    ('This variable is a simplification of the bitfield "category_bits" in the target categorization\n'
-     'and data quality dataset. It provides the 9 main atmospheric target classifications\n'
-     'that can be distinguished by radar and lidar.\n'
-     'The classes are defined in the definition attributes.'),
+    ('This variable is a simplification of the bitfield "category_bits" in the\n'
+     'target categorization and data quality dataset. It provides the 9 main\n'
+     'atmospheric target classifications that can be distinguished by radar and\n'
+     'lidar. The classes are defined in the definition attributes.'),
 
     'classification_quality_pixels':
-    ('This variable is a simplification of the bitfield "quality_bits"\n'
-     'in the target categorization and data quality dataset.\n'
-     'It reports on the reliability of the radar and lidar data used to perform the classification.\n'
+    ('This variable is a simplification of the bitfield "quality_bits" in the\n'
+     'target categorization and data quality dataset. It reports on the\n'
+     'reliability of the radar and lidar data used to perform the classification.\n'
      'The classes are defined in the definition attributes.'),
 
     'cloud_mask':
-    ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
-     'and provides array of total cloud layer.'),
+    ('This variable was calculated from the instance of cloud in the cloud mask\n'
+     'variable and provides array of total cloud layer.'),
 
     'cloud_bottom':
-    ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
-     'and provides cloud base height for a maximum of 1 cloud layers.'),
+    ('This variable was calculated from the instance of cloud in the cloud mask\n'
+     'variable and provides cloud base height for a maximum of 1 cloud layers.'),
 
     'cloud_top':
-    ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
-     'and provides cloud base top for a maximum of 1 cloud layers.'),
+    ('This variable was calculated from the instance of cloud in the cloud mask\n'
+     'variable and provides cloud base top for a maximum of 1 cloud layers.'),
 
     'iwc':
-    ('This variable was calculated from the x-GHz radar reflectivity factor after correction for gaseous attenuation,\n'
-    'and temperature taken from a forecast model, using the following empirical formula:\n'
-    'log10(iwc[g m-3]) = 0.00058Z[dBZ]T[degC] + 0.0923Z[dBZ] + -0.00706T[degC] + -0.992.\n'
-    'In this formula Z is taken to be defined such that all frequencies of radar would measure the same Z in Rayleigh scattering ice.\n'
-    'However, the radar is more likely to have been calibrated such that all frequencies would measure the same Z in Rayleigh scattering\n'
-    'liquid cloud at 0 degrees C. The measured Z is therefore multiplied by |K(liquid,0degC,94GHz)|^2/0.93 = 0.7194 before applying this formula.\n'
-    'The formula has been used where the \"categorization\" data has diagnosed that the radar echo is due to ice, but note that in some cases\n'
-    'supercooled drizzle will erroneously be identified as ice. Missing data indicates either that ice cloud was present but it was only\n'
-    'detected by the lidar so its ice water content could not be estimated, or that there was rain below the ice associated with uncertain\n'
-    'attenuation of the reflectivities in the ice.\n'
-    'Note that where microwave radiometer liquid water path was available it was used to correct the radar for liquid attenuation when liquid\n'
-    'cloud occurred below the ice; this is indicated a value of 3 in the iwc_retrieval_status variable.  There is some uncertainty in this\n'
-    'prodedure which is reflected by an increase in the associated values in the iwc_error variable.\n'
-    'When microwave radiometer data were not available and liquid cloud occurred below the ice, the retrieval was still performed but its\n'
-    'reliability is questionable due to the uncorrected liquid water attenuation. This is indicated by a value of 2 in the iwc_retrieval_status\n'
-    'variable, and an increase in the value of the iwc_error variable'),
+    ('This variable was calculated from the radar reflectivity factor, after\n'
+     'correction for gaseous and liquid attenuation, and temperature taken\n'
+     'from a forecast model, using an empirical formula.'),
 
     'iwc_error':
-    ('This variable is an estimate of the one-standard-deviation random error in ice water content\n'
-    'due to both the uncertainty of the retrieval (about +50%/-33%, or 1.7 dB), and the random error in radar reflectivity factor from which ice water\n'
-    'content was calculated. When liquid water is present beneath the ice but no microwave radiometer data were available to correct for the\n'
-    'associated attenuation, the error also includes a contribution equivalent to approximately 250 g m-2 of liquid water path being uncorrected for.\n'
-    'As uncorrected liquid attenuation actually results in a systematic underestimate of ice water content, users may wish to reject affected data;\n'
-    'these pixels may be identified by a value of 2 in the iwc_retrieval_status variable.\n'
-    'Typical errors in temperature contribute much less to the overall uncertainty in retrieved ice water content so are not considered.\n'
-    'Missing data in iwc_error indicates either zero ice water content (for which an error in dB would be meaningless), or no ice water content value being reported.\n'
-    'Note that when zero ice water content is reported, it is possible that ice cloud was present but was just not detected by any of the instruments.'),
+    ('This variable is an estimate of the one-standard-deviation random error\n'
+     'in ice water content due to both the uncertainty of the retrieval\n'
+     '(about +50%/-33%, or 1.7 dB), and the random error in radar reflectivity\n'
+     'factor from which ice water content was calculated. When liquid water is\n'
+     'present beneath the ice but no microwave radiometer data were available to\n'
+     'correct for the associated attenuation, the error also includes a\n'
+     'contribution equivalent to approximately 250 g m-2 of liquid water path\n'
+     'being uncorrected for.'),
 
     'iwc_bias':
-    ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
-     'and provides cloud base top for a maximum of 1 cloud layers.'),
+    ('This variable was calculated from the instance of cloud in the cloud mask\n'
+     'variable and provides cloud base top for a maximum of 1 cloud layers.'),
 
     'iwc_sensitivity':
-    ('This variable is an estimate of the minimum detectable ice water content as a function of height.'),
+    ('This variable is an estimate of the minimum detectable ice water content\n'
+     'as a function of height.'),
 
     'iwc_retrieval_status':
-    ('This variable describes whether a retrieval was performed for each pixel, and its associated quality, in the form of 8 different classes.\n'
-    'The classes are defined in the definition and long_definition attributes. The most reliable retrieval is that without any rain or liquid\n'
-    'cloud beneath, indicated by the value 1, then the next most reliable is when liquid water attenuation has been corrected using a microwave\n'
-    'radiometer, indicated by the value 3, while a value 2 indicates that liquid water cloud was present but microwave radiometer data were not\n'
-    'available so no correction was performed. No attempt is made to retrieve ice water content when rain is present below the ice; this is\n'
-    'indicated by the value 5.'),
+    ('This variable describes whether a retrieval was performed for each pixel,\n'
+     'and its associated quality, in the form of 8 different classes.\n'
+     'The classes are defined in the definition and long_definition attributes.\n'
+     'The most reliable retrieval is that without any rain or liquid\n'
+     'cloud beneath, indicated by the value 1, then the next most reliable is\n'
+     'when liquid water attenuation has been corrected using a microwave\n'
+     'radiometer, indicated by the value 3, while a value 2 indicates that\n'
+     'liquid water cloud was present but microwave radiometer data were not\n'
+     'available so no correction was performed. No attempt is made to retrieve\n'
+     'ice water content when rain is present below the ice; this is indicated\n'
+     'by the value 5.'),
 
     'iwc_inc_rain':
     ('This variable is the same as iwc, \n'
@@ -211,76 +216,102 @@ _COMMENTS = {
      'and should only be used when the effect of attenuation is being studied.'),
 
     'lwc':
-    ('This variable was calculated for the profiles where the \"categorization\" data has diagnosed that liquid water is present \n'
-    'and liquid water path is available from a coincident microwave radiometer. The model temperature and pressure were used to estimate the \n'
-    'theoretical adiabatic liquid water content gradient for each cloud base and the adiabatic liquid water content is then scaled so that its \n'
-    'integral matches the radiometer measurement so that the liquid water content now follows a quasi-adiabatic profile. If the liquid layer is \n'
-    'detected by the lidar only, there is the potential for cloud top height to be underestimated and so if the adiabatic integrated liquid water \n'
-    'content is less than that measured by the microwave radiometer, the cloud top is extended until the adiabatic integrated liquid water content \n'
-    'agrees with the value measured by the microwave radiometer. \n'
-    'Missing values indicate that either 1) a liquid water layer was diagnosed but no microwave radiometer data was available, \n'
-    '2) a liquid water layer was diagnosed but the microwave radiometer data was unreliable; this may be because a melting layer was present in the profile, \n'
-    'or because the retrieved lwp was unphysical (values of zero are not uncommon for thin supercooled liquid layers), or \n'
-    '3) that rain is present in the profile and therefore, the vertical extent of liquid layers is difficult to ascertain. '),
+    ('This variable was calculated for the profiles where the categorization\n'
+     'data has diagnosed that liquid water is present and liquid water path is\n'
+     'available from a coincident microwave radiometer. The model temperature\n'
+     'and pressure were used to estimate the theoretical adiabatic liquid water\n'
+     'content gradient for each cloud base and the adiabatic liquid water\n'
+     'content is then scaled that its integral matches the radiometer\n'
+     'measurement so that the liquid water content now follows a quasi-adiabatic\n'
+     'profile. If the liquid layer is detected by the lidar only, there is the\n'
+     'potential for cloud top height to be underestimated and so if the\n'
+     'adiabatic integrated liquid water content is less than that measured by\n'
+     'the microwave radiometer, the cloud top is extended until the adiabatic\n'
+     'integrated liquid water content agrees with the value measured by the\n'
+     'microwave radiometer. Missing values indicate that either\n'
+     '1) a liquid water layer was diagnosed but no microwave radiometer data was\n'
+     '   available,\n'
+     '2) a liquid water layer was diagnosed but the microwave radiometer data\n'
+     '   was unreliable; this may be because a melting layer was present in the\n'
+     '   profile, or because the retrieved lwp was unphysical (values of zero\n'
+     '   are not uncommon for thin supercooled liquid layers)\n'
+     '3) that rain is present in the profile and therefore, the vertical extent\n'
+     '   of liquid layers is difficult to ascertain.'),
 
     'lwc_error':
-    ('This variable is an estimate of the random error in liquid water content due to the uncertainty in the microwave radiometer \n'
-    'liquid water path retrieval and the uncertainty in cloud base and/or cloud top height. This is associated with the resolution of the grid used, 20 m, \n'
-    'which can affect both cloud base and cloud top. If the liquid layer is detected by the lidar only, there is the potential for cloud top height to be underestimated. \n'
-    'Similarly, there is the possibility that the lidar may not detect the second cloud base when multiple layers are present and the cloud base will be \n'
-    'overestimated. It is assumed that the error contribution arising from using the model temperature and pressure at cloud base is negligible.'),
+    ('This variable is an estimate of the random error in liquid water content\n'
+     'due to the uncertainty in the microwave radiometer liquid water path\n'
+     'retrieval and the uncertainty in cloud base and/or cloud top height.\n'
+     'This is associated with the resolution of the grid used, 20 m,\n'
+     'which can affect both cloud base and cloud top. If the liquid layer is\n'
+     'detected by the lidar only, there is the potential for cloud top height\n'
+     'to be underestimated. Similarly, there is the possibility that the lidar\n'
+     'may not detect the second cloud base when multiple layers are present and\n'
+     'the cloud base will be overestimated. It is assumed that the error\n'
+     'contribution arising from using the model temperature and pressure at\n'
+     'cloud base is negligible.'),
 
     'lwc_retrieval_status':
-    ('This variable describes whether a retrieval was performed for each pixel, and its associated quality, in the form of 6 different classes.\n'
-    'The classes are defined in the definition and long_definition attributes. The most reliable retrieval is that when both radar and lidar detect the liquid layer, and \n'
-    'microwave radiometer data is present, indicated by the value 1. The next most reliable is when microwave radiometer data is used to adjust the cloud depth when \n'
-    'the radar does not detect the liquid layer, indicated by the value 2, with a value of 3 indicating the cloud pixels that have been added at cloud top to avoid the \n'
-    'profile becoming superadiabatic. A value of 4 indicates that microwave radiometer data were not available or not reliable (melting level present or unphysical values) \n'
-    'but the liquid layers were well defined.  If cloud top was not well defined then this is indicated by a value of 5. \n'
-    'The full retrieval of liquid water content, which requires reliable liquid water path from the microwave radiometer, was only performed for classes 1-3. \n'
-    'No attempt is made to retrieve liquid water content when rain is present; this is indicated by the value 6.'),
+    ('This variable describes whether a retrieval was performed for each pixel,\n'
+     'and its associated quality, in the form of 6 different classes. The classes\n'
+     'are defined in the definition and long_definition attributes.\n'
+     'The most reliable retrieval is that when both radar and lidar detect the\n'
+     'liquid layer, and microwave radiometer data is present, indicated by the\n'
+     'value 1. The next most reliable is when microwave radiometer data is used\n'
+     'to adjust the cloud depth when the radar does not detect the liquid layer,\n'
+     'indicated by the value 2, with a value of 3 indicating the cloud pixels\n'
+     'that have been added at cloud top to avoid the profile becoming\n'
+     'superadiabatic. A value of 4 indicates that microwave radiometer data\n'
+     'were not available or not reliable (melting level present or unphysical\n'
+     'values) but the liquid layers were well defined.  If cloud top was not\n'
+     'well defined then this is indicated by a value of 5. The full retrieval of\n'
+     'liquid water content, which requires reliable liquid water path from the\n'
+     'microwave radiometer, was only performed for classes 1-3. No attempt is\n'
+     'made to retrieve liquid water content when rain is present; this is\n'
+     'indicated by the value 6.'),
 
     'LWP':
-    ('This variable is the vertically integrated liquid water directly over the site.\n'
-    'The temporal correlation of errors in liquid water path means that it is not really meaningful to distinguish bias from random error,\n'
-    'so only an error variable is provided.\n'
-    'Original comment: These values denote the vertically integrated amount of condensed water from the surface to TOA.'),
+    ('This variable is the vertically integrated liquid water directly over the\n'
+     'site. The temporal correlation of errors in liquid water path means that\n'
+     'it is not really meaningful to distinguish bias from random error, so only\n'
+     'an error variable is provided.'),
 
     'LWP_error':
-    ('This variable is a rough estimate of the one-standard-deviation error in liquid water path, calculated as a'
-    'combination of a 20 g m-2 linear error and a 25% fractional error.'),
+    ('This variable is a rough estimate of the one-standard-deviation error\n'
+     'in liquid water path, calculated as a combination of a 20 g m-2 linear\n'
+     'error and a 25% fractional error.'),
 
     'lwc_th':
-    ('This variable is the liquid water content assuming a tophat distribution.'
-    'I.e. the profile of liquid water content in each layer is constant.'),
+    ('This variable is the liquid water content assuming a tophat distribution.\n'
+     'I.e. the profile of liquid water content in each layer is constant.'),
 
     'radar_liquid_atten':
-    ('This variable was calculated from the liquid water path\n'
-     'measured by microwave radiometer using lidar and radar returns to perform\n'
-     'an approximate partitioning of the liquid water content with height. Bit 5 of\n'
-     'the quality_bits variable indicates where a correction for liquid water\n'
-     'attenuation has been performed.'),
+    ('This variable was calculated from the liquid water path measured by\n'
+     'microwave radiometer using lidar and radar returns to perform an \n'
+     'approximate partitioning of the liquid water content with height.\n'
+     'Bit 5 of the quality_bits variable indicates where a correction for\n'
+     'liquid water attenuation has been performed.'),
 
     'radar_gas_atten':
-    ('This variable was calculated from the model temperature,\n'
-     'pressure and humidity, but forcing pixels containing liquid cloud to saturation\n'
-     'with respect to liquid water. It was calculated using the millimeter-wave propagation\n'
-     'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.'),
+    ('This variable was calculated from the model temperature, pressure and\n'
+     'humidity, but forcing pixels containing liquid cloud to saturation with\n'
+     'respect to liquid water. It was calculated using the millimeter-wave\n'
+     'propagation model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has\n'
+     'been used to correct Z.'),
 
     'Tw':
     ('This variable was calculated from model T, P and relative humidity, first\n'
      'interpolated into measurement grid.'),
 
     'Z_sensitivity':
-    ('This variable is an estimate of the radar sensitivity,\n'
-     'i.e. the minimum detectable radar reflectivity, as a function\n'
-     'of height. It includes the effect of ground clutter and gas attenuation\n'
-     'but not liquid attenuation.'),
+    ('This variable is an estimate of the radar sensitivity, i.e. the minimum\n'
+     'detectable radar reflectivity, as a function of height. It includes the\n'
+     'effect of ground clutter and gas attenuation but not liquid attenuation.'),
 
     'Z_error':
-    ('This variable is an estimate of the one-standard-deviation\n'
-     'random error in radar reflectivity factor. It originates\n'
-     'from the following independent sources of error:\n'
+    ('This variable is an estimate of the one-standard-deviation random error in\n'
+     'radar reflectivity factor. It originates from the following independent\n'
+     'sources of error:\n'
      '1) Precision in reflectivity estimate due to finite signal to noise\n'
      '   and finite number of pulses\n'
      '2) 10% uncertainty in gaseous attenuation correction (mainly due to\n'
@@ -763,5 +794,6 @@ ATTRIBUTES = {
         'dB'
     ),
     'spectral_differential_phase': MetaData(
-        'Spectral differential phase'),
+        'Spectral differential phase'
+    ),
 }
