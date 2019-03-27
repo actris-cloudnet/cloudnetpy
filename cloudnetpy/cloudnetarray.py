@@ -34,8 +34,7 @@ class CloudnetArray:
     def _init_units(units_from_user, netcdf4_variable):
         if units_from_user:
             return units_from_user
-        else:
-            return getattr(netcdf4_variable, 'units', '')
+        return getattr(netcdf4_variable, 'units', '')
 
     def _init_data_type(self):
         if ((isinstance(self.data, np.ndarray) and self.data.dtype
