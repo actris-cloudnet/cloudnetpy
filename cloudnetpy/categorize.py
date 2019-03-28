@@ -331,10 +331,10 @@ class Mwr(DataSource):
         self.append_data(lwp_error, 'lwp_error')
 
     def interpolate_in_time(self, time_grid):
-        """Interpolates liquid water path to Cloudnet's dense time grid."""
+        """Interpolates liquid water path and its error to Cloudnet's dense time grid."""
         for key in self.data:
             fun = interp1d(self.time, self.data[key][:], fill_value='extrapolate')
-            self.append_data(fun(time_grid), key)
+            self.append_data(fun(time_grid), key, units='g m-2')
 
 
 class Model(DataSource):

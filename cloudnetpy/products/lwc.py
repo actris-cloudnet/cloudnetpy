@@ -71,8 +71,8 @@ class Lwc:
         return lwc_scaled / self.dheight
 
     def _init_status(self):
-        status = ma.zeros(self.lwc.shape, dtype=int)
-        status[self.lwc_adiabatic > 0] = 1
+        status = ma.zeros(self.is_liquid.shape, dtype=int)
+        status[self.is_liquid] = 1
         return status
 
     def adjust_clouds_to_match_lwp(self):
@@ -139,17 +139,17 @@ class Lwc:
             return False
 
         def _adjust_lwc(time_ind, base_ind):
-            scale = self.lwc_adiabatic[time_ind, base_ind] * self.dheight
-            ind_from_base = 1
+            lwc_base = self.lwc_adiabatic[time_ind, base_ind]
+            distance_from_base = 1
             while True:
-                lwc_value = scale * ind_from_base
-                top_ind = base_ind + ind_from_base
-                self.lwc_adiabatic[time_ind, top_ind] = lwc_value
+                top_ind = base_ind + distance_from_base
+                lwc_top = lwc_base * (distance_from_base + 1)
+                self.lwc_adiabatic[time_ind, top_ind] = lwc_top
                 if not self.status[time_ind, top_ind]:
                     self.status[time_ind, top_ind] = 3
                 if _has_converged(time_ind):
                     break
-                ind_from_base += 1
+                distance_from_base += 1
 
         def _update_status(time_ind):
             alt_indices = np.where(self.is_liquid[time_ind, :])[0]
@@ -192,13 +192,16 @@ def generate_lwc(categorize_file, output_file):
     lwc_obj = Lwc(lwc_data)
     lwc_obj.adjust_clouds_to_match_lwp()
     lwc_obj.screen_rain()
-    _append_data_for_output(lwc_data, lwc_obj)
+    _append_data(lwc_data, lwc_obj)
+    output.update_attributes(lwc_data.data)
     _save_data_and_meta(lwc_data, output_file)
 
 
-def _append_data_for_output(lwc_data, lwc_obj):
-    lwc_data.append_data(lwc_obj.lwc, 'lwc')
-    lwc_data.append_data(lwc_obj.status, 'retrieval_status')
+def _append_data(lwc_data, lwc_obj):
+    lwc_data.append_data(lwc_obj.lwc, 'lwc', units='g m-3')
+    lwc_data.append_data(lwc_obj.status, 'lwc_retrieval_status')
+    lwc_data.append_data(lwc_data.lwp, 'lwp')
+    lwc_data.append_data(lwc_data.lwp_error, 'lwp_error')
 
 
 def _save_data_and_meta(lwc_data, output_file):

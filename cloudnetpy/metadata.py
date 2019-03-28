@@ -6,23 +6,18 @@ from collections import namedtuple
 FIELDS = (
     'long_name',
     'units',
-    'plot_range',
-    'plot_scale',
     'comment',
     'definition',
     'references',
     'ancillary_variables',
-    'sensitivity_variable',
     'positive')
 
 MetaData = namedtuple('MetaData', FIELDS, defaults=(None,)*len(FIELDS))
 
-_LOG = 'logarithmic'
-_LIN = 'linear'
-
 _DEFINITIONS = {
     'category_bits':
-    ('\nBit 0: Small liquid droplets are present.\n'
+    ('\n'
+     'Bit 0: Small liquid droplets are present.\n'
      'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
      '       likely ice particles, otherwise they are drizzle or rain drops.\n'
      'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
@@ -32,7 +27,8 @@ _DEFINITIONS = {
      'Bit 5: Insects are present and visible to the radar.'),
 
     'quality_bits':
-    ('\nBit 0: An echo is detected by the radar.\n'
+    ('\n'
+     'Bit 0: An echo is detected by the radar.\n'
      'Bit 1: An echo is detected by the lidar.\n'
      'Bit 2: The apparent echo detected by the radar is ground clutter\n'
      '       or some other non-atmospheric artifact.\n'
@@ -47,8 +43,9 @@ _DEFINITIONS = {
      '       and the lidar estimation of the location of liquid water cloud;\n'
      '       be aware that errors in reflectivity may result.'),
 
-    'classification_pixels':
-    ('\nValue 0: Clear sky.\n'
+    'target_classification':
+    ('\n'
+     'Value 0: Clear sky.\n'
      'Value 1: Cloud liquid droplets only.\n'
      'Value 2: Drizzle or rain.\n'
      'Value 3: Drizzle or rain coexisting with cloud liquid droplets.\n'
@@ -60,14 +57,15 @@ _DEFINITIONS = {
      'Value 9: Insects, no cloud or precipitation.\n'
      'Value 10: Aerosol coexisting with insects, no cloud or precipitation.'),
 
-    'classification_quality_pixels':
-    ('\nValue 0: Clear sky.\n'
+    'detection_status':
+    ('\n'
+     'Value 0: Clear sky.\n'
      'Value 1: Lidar echo only.\n'
-     'Value 2: Radar echo but reflectivity may be unreliable as attenuation by rain,\n'
-     '         melting ice or liquid cloud has not been corrected.\n'
+     'Value 2: Radar echo but reflectivity may be unreliable as attenuation by\n'
+     '         rain, melting ice or liquid cloud has not been corrected.\n'
      'Value 3: Good radar and lidar echos.\n'
-     'Value 4: No radar echo but rain or liquid cloud beneath mean that attenuation\n'
-     '         that would be experienced is unknown.\n'
+     'Value 4: No radar echo but rain or liquid cloud beneath mean that\n'
+     '         attenuation that would be experienced is unknown.\n'
      'Value 5: Good radar echo only.\n'
      'Value 6: No radar echo but known attenuation.\n'
      'Value 7: Radar echo corrected for liquid cloud attenuation\n'
@@ -76,46 +74,68 @@ _DEFINITIONS = {
      'Value 9: Lidar clear-air molecular scattering.'),
 
     'iwc_retrieval_status':
-    ('\n0: No ice present\n'
-      '1: Reliable retrieval\n'
-      '2: Unreliable retrieval due to uncorrected attenuation from liquid water below the ice (no liquid water path measurement available)\n'
-      '3: Retrieval performed but radar corrected for liquid attenuation using radiometer liquid water path which is not always accurate\n'
-      '4: Ice detected only by the lidar\n'
-      '5: Ice detected by radar but rain below so no retrieval performed due to very uncertain attenuation\n'
-      '6: Clear sky above rain, wet-bulb temperature less than 0degC: if rain attenuation were strong then ice could be present but undetected\n'
-      '7: Drizzle or rain that would have been classified as ice if the wet-bulb temperature were less than 0degC: may be ice if temperature is in error'),
+    ('\n'
+     'Value 0: No ice present\n'
+     'Value 1: Reliable retrieval\n'
+     'Value 2: Unreliable retrieval due to uncorrected attenuation from liquid\n'
+     '         water below the ice (no liquid water path measurement available).\n'
+     'Value 3: Retrieval performed but radar corrected for liquid attenuation\n'
+     '         using radiometer liquid water path which is not always accurate.\n'
+     'Value 4: Ice detected only by the lidar.\n'
+     'Value 5: Ice detected by radar but rain below so no retrieval performed\n'
+     '         due to very uncertain attenuation.\n'
+     'Value 6: Clear sky above rain, wet-bulb temperature less than 0degC: if rain\n'
+     '         attenuation were strong then ice could be present but undetected.\n'
+     'Value 7: Drizzle or rain that would have been classified as ice if the\n'
+     '         wet-bulb temperature were less than 0degC: may be ice if\n'
+     '         temperature is in error.'),
 
     'lwc_retrieval_status':
-    ('\n0: No liquid water detected\n'
-      '1: Reliable retrieval \n'
-      '2: Adiabatic retrieval where cloud top has been adjusted to match liquid water path from microwave radiometer because layer is not detected by radar\n'
-      '3: Adiabatic retrieval: new cloud pixels where cloud top has been adjusted to match liquid water path from microwave radiometer because layer is not detected by radar\n'
-      '4: No retrieval: either no liquid water path is available or liquid water path is uncertain\n'
-      '5: No retrieval: liquid water layer detected only by the lidar and liquid water path is unavailable or uncertain:\n'
-      '   cloud top may be higher than diagnosed cloud top since lidar signal has been attenuated\n'
-      '6: Rain present: cloud extent is difficult to ascertain and liquid water path also uncertain.'),
+    ('\n'
+     'Value 0: No liquid water detected\n'
+     'Value 1: Reliable retrieval\n'
+     'Value 2: Adiabatic retrieval where cloud top has been adjusted to match\n'
+     '         liquid water path from microwave radiometer because layer is not\n'
+     '         detected by radar.\n'
+     'Value 3: Adiabatic retrieval: new cloud pixels where cloud top has been\n'
+     '         adjusted to match liquid water path from microwave radiometer\n'
+     '         because layer is not detected by radar.\n'
+     'Value 4: No retrieval: either no liquid water path is available or liquid\n'
+     '         water path is uncertain.\n'
+     'Value 5: No retrieval: liquid water layer detected only by the lidar and\n'
+     '         liquid water path is unavailable or uncertain:\n'
+     '         cloud top may be higher than diagnosed cloud top since lidar\n'
+     '         signal has been attenuated.\n'
+     'Value 6: Rain present: cloud extent is difficult to ascertain and liquid\n'
+     '         water path also uncertain.'),
 
     'model_number':
-        ('\n0: Single polarisation radar.'
-         '\n1: Dual polarisation radar.'),
+        ('\n'
+         '0: Single polarisation radar.\n'
+         '1: Dual polarisation radar.'),
 
     'dual_polarization':
-        ('\n0: Single polarisation radar.'
-         '\n1: Dual polarisation radar in linear depolarisation ratio (LDR) mode.'
-         '\n2: Dual polarisation radar in simultaneous transmission simultaneous reception (STSR) mode.'),
+        ('\n'
+         'Value 0: Single polarisation radar.\n'
+         'Value 1: Dual polarisation radar in linear depolarisation ratio (LDR)\n'
+         '         mode.\n'
+         'Value 2: Dual polarisation radar in simultaneous transmission\n'
+         '         simultaneous reception (STSR) mode.'),
 
     'FFT_window':
-        ('\n0: square'
-         '\n1: parzen'
-         '\n2: blackman'
-         '\n3: welch'
-         '\n4: slepian2'
-         '\n5: slepian3'),
+        ('\n'
+         'Value 0: Square\n'
+         'Value 1: Parzen\n'
+         'Value 2: Blackman\n'
+         'Value 3: Welch\n'
+         'Value 4: Slepian2\n'
+         'Value 5: Slepian3'),
 
     'quality_flag':
-        ('\nBit 0: ADC saturation.'
-         '\nBit 1: Spectral width too high.'
-         '\nBit 2: No transmission power levelling.')
+        ('\n'
+         'Bit 0: ADC saturation.\n'
+         'Bit 1: Spectral width too high.\n'
+         'Bit 2: No transmission power levelling.')
 
 }
 
@@ -135,73 +155,65 @@ _COMMENTS = {
      'of bits, and the definitions of each bit are given in the definition\n'
      'attribute. Bit 0 is the least significant.'),
 
-    'classification_pixels':
-    ('This variable is a simplification of the bitfield "category_bits" in the target categorization\n'
-     'and data quality dataset. It provides the 9 main atmospheric target classifications\n'
-     'that can be distinguished by radar and lidar.\n'
-     'The classes are defined in the definition attributes.'),
+    'target_classification':
+    ('This variable is a simplification of the bitfield "category_bits" in the\n'
+     'target categorization and data quality dataset. It provides the 9 main\n'
+     'atmospheric target classifications that can be distinguished by radar and\n'
+     'lidar. The classes are defined in the definition attributes.'),
 
-    'classification_quality_pixels':
-    ('This variable is a simplification of the bitfield "quality_bits"\n'
-     'in the target categorization and data quality dataset.\n'
-     'It reports on the reliability of the radar and lidar data used to perform the classification.\n'
+    'detection_status':
+    ('This variable is a simplification of the bitfield "quality_bits" in the\n'
+     'target categorization and data quality dataset. It reports on the\n'
+     'reliability of the radar and lidar data used to perform the classification.\n'
      'The classes are defined in the definition attributes.'),
 
     'cloud_mask':
-    ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
-     'and provides array of total cloud layer.'),
+    ('This variable was calculated from the instance of cloud in the cloud mask\n'
+     'variable and provides array of total cloud layer.'),
 
     'cloud_bottom':
-    ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
-     'and provides cloud base height for a maximum of 1 cloud layers.'),
+    ('This variable was calculated from the instance of cloud in the cloud mask\n'
+     'variable and provides cloud base height for a maximum of 1 cloud layers.'),
 
     'cloud_top':
-    ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
-     'and provides cloud base top for a maximum of 1 cloud layers.'),
+    ('This variable was calculated from the instance of cloud in the cloud mask\n'
+     'variable and provides cloud base top for a maximum of 1 cloud layers.'),
 
     'iwc':
-    ('This variable was calculated from the x-GHz radar reflectivity factor after correction for gaseous attenuation,\n'
-    'and temperature taken from a forecast model, using the following empirical formula:\n'
-    'log10(iwc[g m-3]) = 0.00058Z[dBZ]T[degC] + 0.0923Z[dBZ] + -0.00706T[degC] + -0.992.\n'
-    'In this formula Z is taken to be defined such that all frequencies of radar would measure the same Z in Rayleigh scattering ice.\n'
-    'However, the radar is more likely to have been calibrated such that all frequencies would measure the same Z in Rayleigh scattering\n'
-    'liquid cloud at 0 degrees C. The measured Z is therefore multiplied by |K(liquid,0degC,94GHz)|^2/0.93 = 0.7194 before applying this formula.\n'
-    'The formula has been used where the \"categorization\" data has diagnosed that the radar echo is due to ice, but note that in some cases\n'
-    'supercooled drizzle will erroneously be identified as ice. Missing data indicates either that ice cloud was present but it was only\n'
-    'detected by the lidar so its ice water content could not be estimated, or that there was rain below the ice associated with uncertain\n'
-    'attenuation of the reflectivities in the ice.\n'
-    'Note that where microwave radiometer liquid water path was available it was used to correct the radar for liquid attenuation when liquid\n'
-    'cloud occurred below the ice; this is indicated a value of 3 in the iwc_retrieval_status variable.  There is some uncertainty in this\n'
-    'prodedure which is reflected by an increase in the associated values in the iwc_error variable.\n'
-    'When microwave radiometer data were not available and liquid cloud occurred below the ice, the retrieval was still performed but its\n'
-    'reliability is questionable due to the uncorrected liquid water attenuation. This is indicated by a value of 2 in the iwc_retrieval_status\n'
-    'variable, and an increase in the value of the iwc_error variable'),
+    ('This variable was calculated from the radar reflectivity factor, after\n'
+     'correction for gaseous and liquid attenuation, and temperature taken\n'
+     'from a forecast model, using an empirical formula.'),
 
     'iwc_error':
-    ('This variable is an estimate of the one-standard-deviation random error in ice water content\n'
-    'due to both the uncertainty of the retrieval (about +50%/-33%, or 1.7 dB), and the random error in radar reflectivity factor from which ice water\n'
-    'content was calculated. When liquid water is present beneath the ice but no microwave radiometer data were available to correct for the\n'
-    'associated attenuation, the error also includes a contribution equivalent to approximately 250 g m-2 of liquid water path being uncorrected for.\n'
-    'As uncorrected liquid attenuation actually results in a systematic underestimate of ice water content, users may wish to reject affected data;\n'
-    'these pixels may be identified by a value of 2 in the iwc_retrieval_status variable.\n'
-    'Typical errors in temperature contribute much less to the overall uncertainty in retrieved ice water content so are not considered.\n'
-    'Missing data in iwc_error indicates either zero ice water content (for which an error in dB would be meaningless), or no ice water content value being reported.\n'
-    'Note that when zero ice water content is reported, it is possible that ice cloud was present but was just not detected by any of the instruments.'),
+    ('This variable is an estimate of the one-standard-deviation random error\n'
+     'in ice water content due to both the uncertainty of the retrieval\n'
+     '(about +50%/-33%, or 1.7 dB), and the random error in radar reflectivity\n'
+     'factor from which ice water content was calculated. When liquid water is\n'
+     'present beneath the ice but no microwave radiometer data were available to\n'
+     'correct for the associated attenuation, the error also includes a\n'
+     'contribution equivalent to approximately 250 g m-2 of liquid water path\n'
+     'being uncorrected for.'),
 
     'iwc_bias':
-    ('This variable was calculated from the instance of cloud in the cloud mask variable\n'
-     'and provides cloud base top for a maximum of 1 cloud layers.'),
+    ('This variable was calculated from the instance of cloud in the cloud mask\n'
+     'variable and provides cloud base top for a maximum of 1 cloud layers.'),
 
     'iwc_sensitivity':
-    ('This variable is an estimate of the minimum detectable ice water content as a function of height.'),
+    ('This variable is an estimate of the minimum detectable ice water content\n'
+     'as a function of height.'),
 
     'iwc_retrieval_status':
-    ('This variable describes whether a retrieval was performed for each pixel, and its associated quality, in the form of 8 different classes.\n'
-    'The classes are defined in the definition and long_definition attributes. The most reliable retrieval is that without any rain or liquid\n'
-    'cloud beneath, indicated by the value 1, then the next most reliable is when liquid water attenuation has been corrected using a microwave\n'
-    'radiometer, indicated by the value 3, while a value 2 indicates that liquid water cloud was present but microwave radiometer data were not\n'
-    'available so no correction was performed. No attempt is made to retrieve ice water content when rain is present below the ice; this is\n'
-    'indicated by the value 5.'),
+    ('This variable describes whether a retrieval was performed for each pixel,\n'
+     'and its associated quality, in the form of 8 different classes.\n'
+     'The classes are defined in the definition and long_definition attributes.\n'
+     'The most reliable retrieval is that without any rain or liquid\n'
+     'cloud beneath, indicated by the value 1, then the next most reliable is\n'
+     'when liquid water attenuation has been corrected using a microwave\n'
+     'radiometer, indicated by the value 3, while a value 2 indicates that\n'
+     'liquid water cloud was present but microwave radiometer data were not\n'
+     'available so no correction was performed. No attempt is made to retrieve\n'
+     'ice water content when rain is present below the ice; this is indicated\n'
+     'by the value 5.'),
 
     'iwc_inc_rain':
     ('This variable is the same as iwc, \n'
@@ -211,76 +223,100 @@ _COMMENTS = {
      'and should only be used when the effect of attenuation is being studied.'),
 
     'lwc':
-    ('This variable was calculated for the profiles where the \"categorization\" data has diagnosed that liquid water is present \n'
-    'and liquid water path is available from a coincident microwave radiometer. The model temperature and pressure were used to estimate the \n'
-    'theoretical adiabatic liquid water content gradient for each cloud base and the adiabatic liquid water content is then scaled so that its \n'
-    'integral matches the radiometer measurement so that the liquid water content now follows a quasi-adiabatic profile. If the liquid layer is \n'
-    'detected by the lidar only, there is the potential for cloud top height to be underestimated and so if the adiabatic integrated liquid water \n'
-    'content is less than that measured by the microwave radiometer, the cloud top is extended until the adiabatic integrated liquid water content \n'
-    'agrees with the value measured by the microwave radiometer. \n'
-    'Missing values indicate that either 1) a liquid water layer was diagnosed but no microwave radiometer data was available, \n'
-    '2) a liquid water layer was diagnosed but the microwave radiometer data was unreliable; this may be because a melting layer was present in the profile, \n'
-    'or because the retrieved lwp was unphysical (values of zero are not uncommon for thin supercooled liquid layers), or \n'
-    '3) that rain is present in the profile and therefore, the vertical extent of liquid layers is difficult to ascertain. '),
+    ('This variable was calculated for the profiles where the categorization\n'
+     'data has diagnosed that liquid water is present and liquid water path is\n'
+     'available from a coincident microwave radiometer. The model temperature\n'
+     'and pressure were used to estimate the theoretical adiabatic liquid water\n'
+     'content gradient for each cloud base and the adiabatic liquid water\n'
+     'content is then scaled that its integral matches the radiometer\n'
+     'measurement so that the liquid water content now follows a quasi-adiabatic\n'
+     'profile. If the liquid layer is detected by the lidar only, there is the\n'
+     'potential for cloud top height to be underestimated and so if the\n'
+     'adiabatic integrated liquid water content is less than that measured by\n'
+     'the microwave radiometer, the cloud top is extended until the adiabatic\n'
+     'integrated liquid water content agrees with the value measured by the\n'
+     'microwave radiometer. Missing values indicate that either\n'
+     '1) a liquid water layer was diagnosed but no microwave radiometer data was\n'
+     '   available,\n'
+     '2) a liquid water layer was diagnosed but the microwave radiometer data\n'
+     '   was unreliable; this may be because a melting layer was present in the\n'
+     '   profile, or because the retrieved lwp was unphysical (values of zero\n'
+     '   are not uncommon for thin supercooled liquid layers)\n'
+     '3) that rain is present in the profile and therefore, the vertical extent\n'
+     '   of liquid layers is difficult to ascertain.'),
 
     'lwc_error':
-    ('This variable is an estimate of the random error in liquid water content due to the uncertainty in the microwave radiometer \n'
-    'liquid water path retrieval and the uncertainty in cloud base and/or cloud top height. This is associated with the resolution of the grid used, 20 m, \n'
-    'which can affect both cloud base and cloud top. If the liquid layer is detected by the lidar only, there is the potential for cloud top height to be underestimated. \n'
-    'Similarly, there is the possibility that the lidar may not detect the second cloud base when multiple layers are present and the cloud base will be \n'
-    'overestimated. It is assumed that the error contribution arising from using the model temperature and pressure at cloud base is negligible.'),
+    ('This variable is an estimate of the random error in liquid water content\n'
+     'due to the uncertainty in the microwave radiometer liquid water path\n'
+     'retrieval and the uncertainty in cloud base and/or cloud top height.\n'
+     'This is associated with the resolution of the grid used, 20 m,\n'
+     'which can affect both cloud base and cloud top. If the liquid layer is\n'
+     'detected by the lidar only, there is the potential for cloud top height\n'
+     'to be underestimated. Similarly, there is the possibility that the lidar\n'
+     'may not detect the second cloud base when multiple layers are present and\n'
+     'the cloud base will be overestimated. It is assumed that the error\n'
+     'contribution arising from using the model temperature and pressure at\n'
+     'cloud base is negligible.'),
 
     'lwc_retrieval_status':
-    ('This variable describes whether a retrieval was performed for each pixel, and its associated quality, in the form of 6 different classes.\n'
-    'The classes are defined in the definition and long_definition attributes. The most reliable retrieval is that when both radar and lidar detect the liquid layer, and \n'
-    'microwave radiometer data is present, indicated by the value 1. The next most reliable is when microwave radiometer data is used to adjust the cloud depth when \n'
-    'the radar does not detect the liquid layer, indicated by the value 2, with a value of 3 indicating the cloud pixels that have been added at cloud top to avoid the \n'
-    'profile becoming superadiabatic. A value of 4 indicates that microwave radiometer data were not available or not reliable (melting level present or unphysical values) \n'
-    'but the liquid layers were well defined.  If cloud top was not well defined then this is indicated by a value of 5. \n'
-    'The full retrieval of liquid water content, which requires reliable liquid water path from the microwave radiometer, was only performed for classes 1-3. \n'
-    'No attempt is made to retrieve liquid water content when rain is present; this is indicated by the value 6.'),
+    ('This variable describes whether a retrieval was performed for each pixel,\n'
+     'and its associated quality, in the form of 6 different classes. The classes\n'
+     'are defined in the definition and long_definition attributes.\n'
+     'The most reliable retrieval is that when both radar and lidar detect the\n'
+     'liquid layer, and microwave radiometer data is present, indicated by the\n'
+     'value 1. The next most reliable is when microwave radiometer data is used\n'
+     'to adjust the cloud depth when the radar does not detect the liquid layer,\n'
+     'indicated by the value 2, with a value of 3 indicating the cloud pixels\n'
+     'that have been added at cloud top to avoid the profile becoming\n'
+     'superadiabatic. A value of 4 indicates that microwave radiometer data\n'
+     'were not available or not reliable (melting level present or unphysical\n'
+     'values) but the liquid layers were well defined.  If cloud top was not\n'
+     'well defined then this is indicated by a value of 5. The full retrieval of\n'
+     'liquid water content, which requires reliable liquid water path from the\n'
+     'microwave radiometer, was only performed for classes 1-3. No attempt is\n'
+     'made to retrieve liquid water content when rain is present; this is\n'
+     'indicated by the value 6.'),
 
     'LWP':
-    ('This variable is the vertically integrated liquid water directly over the site.\n'
-    'The temporal correlation of errors in liquid water path means that it is not really meaningful to distinguish bias from random error,\n'
-    'so only an error variable is provided.\n'
-    'Original comment: These values denote the vertically integrated amount of condensed water from the surface to TOA.'),
+    ('This variable is the vertically integrated liquid water directly over the\n'
+     'site. The temporal correlation of errors in liquid water path means that\n'
+     'it is not really meaningful to distinguish bias from random error, so only\n'
+     'an error variable is provided.'),
 
     'LWP_error':
-    ('This variable is a rough estimate of the one-standard-deviation error in liquid water path, calculated as a'
-    'combination of a 20 g m-2 linear error and a 25% fractional error.'),
+    ('This variable is a rough estimate of the one-standard-deviation error\n'
+     'in liquid water path, calculated as a combination of a 20 g m-2 linear\n'
+     'error and a 25% fractional error.'),
 
     'lwc_th':
-    ('This variable is the liquid water content assuming a tophat distribution.'
-    'I.e. the profile of liquid water content in each layer is constant.'),
+    ('This variable is the liquid water content assuming a tophat distribution.\n'
+     'I.e. the profile of liquid water content in each layer is constant.'),
 
     'radar_liquid_atten':
-    ('This variable was calculated from the liquid water path\n'
-     'measured by microwave radiometer using lidar and radar returns to perform\n'
-     'an approximate partitioning of the liquid water content with height. Bit 5 of\n'
-     'the quality_bits variable indicates where a correction for liquid water\n'
-     'attenuation has been performed.'),
+    ('This variable was calculated from the liquid water path measured by\n'
+     'microwave radiometer using lidar and radar returns to perform an \n'
+     'approximate partitioning of the liquid water content with height.\n'
+     'Bit 5 of the quality_bits variable indicates where a correction for\n'
+     'liquid water attenuation has been performed.'),
 
     'radar_gas_atten':
-    ('This variable was calculated from the model temperature,\n'
-     'pressure and humidity, but forcing pixels containing liquid cloud to saturation\n'
-     'with respect to liquid water. It was calculated using the millimeter-wave propagation\n'
-     'model of Liebe (1985, Radio Sci. 20(5), 1069-1089). It has been used to correct Z.'),
+    ('This variable was calculated from the model temperature, pressure and\n'
+     'humidity, but forcing pixels containing liquid cloud to saturation with\n'
+     'respect to liquid water. It has been used to correct Z.'),
 
     'Tw':
     ('This variable was calculated from model T, P and relative humidity, first\n'
      'interpolated into measurement grid.'),
 
     'Z_sensitivity':
-    ('This variable is an estimate of the radar sensitivity,\n'
-     'i.e. the minimum detectable radar reflectivity, as a function\n'
-     'of height. It includes the effect of ground clutter and gas attenuation\n'
-     'but not liquid attenuation.'),
+    ('This variable is an estimate of the radar sensitivity, i.e. the minimum\n'
+     'detectable radar reflectivity, as a function of height. It includes the\n'
+     'effect of ground clutter and gas attenuation but not liquid attenuation.'),
 
     'Z_error':
-    ('This variable is an estimate of the one-standard-deviation\n'
-     'random error in radar reflectivity factor. It originates\n'
-     'from the following independent sources of error:\n'
+    ('This variable is an estimate of the one-standard-deviation random error in\n'
+     'radar reflectivity factor. It originates from the following independent\n'
+     'sources of error:\n'
      '1) Precision in reflectivity estimate due to finite signal to noise\n'
      '   and finite number of pulses\n'
      '2) 10% uncertainty in gaseous attenuation correction (mainly due to\n'
@@ -315,453 +351,378 @@ _COMMENTS = {
 
 ATTRIBUTES = {
     'time': MetaData(
-        'Time UTC',
-        'decimal hours since midnight'
+        long_name='Time UTC',
+        units='decimal hours since midnight'
     ),
     'model_time': MetaData(
-        'model time UTC',
-        'decimal hours since midnight'
+        long_name='model time UTC',
+        units='decimal hours since midnight'
     ),
     'height': MetaData(
-        'Height above mean sea level',
-        'm'
+        long_name='Height above mean sea level',
+        units='m'
     ),
     'model_height': MetaData(
-        'Height of model variables above mean sea level',
-        'm'
+        long_name='Height of model variables above mean sea level',
+        units='m'
     ),
     'range': MetaData(
-        'Height above ground',
-        'm'
+        long_name='Height above ground',
+        units='m'
     ),
     'latitude': MetaData(
-        'Latitude of site',
-        'degrees_north'
+        long_name='Latitude of site',
+        units='degrees_north'
     ),
     'longitude': MetaData(
-        'Longitude of site',
-        'degrees_north'
+        long_name='Longitude of site',
+        units='degrees_north'
     ),
     'altitude': MetaData(
-        'Altitude of site',
-        'm'
+        long_name='Altitude of site',
+        units='m'
     ),
     'radar_frequency': MetaData(
-        'Radar transmit frequency',
-        'GHz'
+        long_name='Radar transmit frequency',
+        units='GHz'
     ),
     'lidar_wavelength': MetaData(
-        'Laser wavelength',
-        'nm'
+        long_name='Laser wavelength',
+        units='nm'
     ),
     'ldr': MetaData(
-        'Linear depolarisation ratio',
-        'dB',
-        (-30, 0),
-        _LIN,
+        long_name='Linear depolarisation ratio',
+        units='dB',
         comment=_COMMENTS['ldr']
     ),
     'width': MetaData(
-        'Spectral width',
-        'm s-1',
-        (0, 3),
-        _LOG,
+        long_name='Spectral width',
+        units='m s-1',
         comment=_COMMENTS['width']
     ),
     'v': MetaData(
-        'Doppler velocity',
-        'm s-1',
-        (-4, 2),
-        _LIN,
+        long_name='Doppler velocity',
+        units='m s-1',
         comment=_COMMENTS['v'],
         positive='up',
     ),
     'SNR': MetaData(
-        'Signal-to-noise ratio',
-        'dB',
-        (-20, 60),
-        _LIN
+        long_name='Signal-to-noise ratio',
+        units='dB',
     ),
     'Z': MetaData(
-        'Radar reflectivity factor',
-        'dBZ',
-        (-40, 20),
-        _LIN,
+        long_name='Radar reflectivity factor',
+        units='dBZ',
         comment=_COMMENTS['Z'],
         ancillary_variables='Z_error Z_bias Z_sensitivity'
     ),
     'Z_error': MetaData(
-        'Error in radar reflectivity factor',
-        'dB',
+        long_name='Error in radar reflectivity factor',
+        units='dB',
         comment=_COMMENTS['Z_error']
     ),
     'Z_bias': MetaData(
-        'Bias in radar reflectivity factor',
-        'dB',
+        long_name='Bias in radar reflectivity factor',
+        units='dB',
         comment=_COMMENTS['bias']
     ),
     'Z_sensitivity': MetaData(
-        'Minimum detectable radar reflectivity',
-        'dBZ',
+        long_name='Minimum detectable radar reflectivity',
+        units='dBZ',
         comment=_COMMENTS['Z_sensitivity']
     ),
     'Zh': MetaData(
-        'Radar reflectivity factor (uncorrected), horizontal polarization',
-        'dBZ',
-        (-40, 20),
-        _LIN
+        long_name='Radar reflectivity factor (uncorrected), horizontal polarization',
+        units='dBZ',
     ),
     'radar_liquid_atten': MetaData(
-        'Approximate two-way radar attenuation due to liquid water',
-        'dB',
-        (0, 10),
-        _LIN,
+        long_name='Approximate two-way radar attenuation due to liquid water',
+        units='dB',
         comment=_COMMENTS['radar_liquid_atten']
     ),
     'radar_gas_atten': MetaData(
-        'Two-way radar attenuation due to atmospheric gases',
-        'dB',
-        (0, 4),
-        _LIN,
-        comment=_COMMENTS['radar_gas_atten']
+        long_name='Two-way radar attenuation due to atmospheric gases',
+        units='dB',
+        comment=_COMMENTS['radar_gas_atten'],
+        references='Liebe (1985, Radio Sci. 20(5), 1069-1089)'
     ),
     'Tw': MetaData(
-        'Wet-bulb temperature',
-        'K',
-        (200, 300),
-        _LIN,
+        long_name='Wet-bulb temperature',
+        units='K',
         comment=_COMMENTS['Tw']
     ),
     'vwind': MetaData(
-        'Meridional wind',
-        'm s-1',        
-        (-50, 50),
-        _LIN
+        long_name='Meridional wind',
+        units='m s-1',
     ),
     'uwind': MetaData(
-        'Zonal wind',
-        'm s-1',
-        (-50, 50),
-        _LIN
+        long_name='Zonal wind',
+        units='m s-1',
+    ),
+    'is_rain': MetaData(
+        long_name='Presence of rain',
+        comment='Integer denoting the rain (1) or no rain (0).'
     ),
     'q': MetaData(
-        'Specific humidity',
-        '',
-        (0, 0.2),
-        _LIN
+        long_name='Specific humidity',
+        units=''
     ),
     'temperature': MetaData(
-        'Temperature',
-        'K',
-        (200, 300),
-        _LIN
+        long_name='Temperature',
+        units='K',
     ),
     'pressure': MetaData(
-        'Pressure',
-        'Pa',
-        (0, 110000),
-        _LIN
+        long_name='Pressure',
+        units='Pa',
     ),
     'beta': MetaData(
-        'Attenuated backscatter coefficient',
-        'sr-1 m-1',
-        (1e-7, 1e-4),
-        _LOG,
+        long_name='Attenuated backscatter coefficient',
+        units='sr-1 m-1',
         ancillary_variables='beta_error beta_bias'
     ),
     'beta_raw': MetaData(
-        'Raw attenuated backscatter coefficient',
-        'sr-1 m-1',
-        (1e-7, 1e-4),
-        _LOG,
+        long_name='Raw attenuated backscatter coefficient',
+        units='sr-1 m-1',
     ),
     'beta_error': MetaData(
-        'Error in attenuated backscatter coefficient',
-        'dB',
+        long_name='Error in attenuated backscatter coefficient',
+        units='dB',
     ),
     'beta_bias': MetaData(
-        'Bias in attenuated backscatter coefficient',
-        'dB',
+        long_name='Bias in attenuated backscatter coefficient',
+        units='dB',
     ),
     'lwp': MetaData(
-        'Liquid water path',
-        'g m-2',
-        (-100, 1000),
-        _LIN
+        long_name='Liquid water path',
+        units='',
     ),
     'lwp_error': MetaData(
-        'Error in liquid water path',
-        'g m-2',
+        long_name='Error in liquid water path',
+        units='',
     ),
     'category_bits': MetaData(
-        'Target categorization bits',
+        long_name='Target categorization bits',
         comment=_COMMENTS['category_bits'],
         definition=_DEFINITIONS['category_bits']
     ),
     'quality_bits': MetaData(
-        'Data quality bits',
+        long_name='Data quality bits',
         comment=_COMMENTS['quality_bits'],
         definition=_DEFINITIONS['quality_bits']
     ),
     # product variables
     'target_classification': MetaData(
-        'Target classification',
-        comment=_COMMENTS['classification_pixels'],
-        definition=_DEFINITIONS['classification_pixels']
+        long_name='Target classification',
+        comment=_COMMENTS['target_classification'],
+        definition=_DEFINITIONS['target_classification']
     ),
     'detection_status': MetaData(
-        'Radar and lidar detection status',
-        comment=_COMMENTS['classification_quality_pixels'],
-        definition=_DEFINITIONS['classification_quality_pixels']
-    ),
-    'cloud_mask': MetaData(
-        'Total area of clouds',
-        comment=_COMMENTS['cloud_mask'],
-    ),
-    'cloud_bottom': MetaData(
-        'Height of cloud base above ground',
-        'm',
-        comment=_COMMENTS['cloud_bottom'],
-    ),
-    'cloud_top': MetaData(
-        'Height of cloud top above ground',
-        'm',
-        comment=_COMMENTS['cloud_top'],
+        long_name='Radar and lidar detection status',
+        comment=_COMMENTS['detection_status'],
+        definition=_DEFINITIONS['detection_status']
     ),
     'iwc': MetaData(
-        'Ice water content',
-        'kg m-3',
-        (1e-7, 0.001),
-        _LOG,
+        long_name='Ice water content',
+        units='',
         comment=_COMMENTS['iwc'],
-        sensitivity_variable='iwc_sensitivity'
+        ancillary_variables='iwc_sensitivity'
     ),
     'iwc_error': MetaData(
-        'Random error in ice water content, one standard deviation',
-        'dB',
-        (0, 3),
-        _LIN,
+        long_name='Random error in ice water content, one standard deviation',
+        units='dB',
         comment=_COMMENTS['iwc_error']
     ),
     'iwc_bias': MetaData(
-        'Possible bias in ice water content, one standard deviation',
-        'dB',
+        long_name='Possible bias in ice water content, one standard deviation',
+        units='dB',
         comment=_COMMENTS['iwc_bias']
     ),
     'iwc_sensitivity': MetaData(
-        'Minimum detectable ice water content',
-        'kg m-3',
+        long_name='Minimum detectable ice water content',
+        units='',
         comment=_COMMENTS['iwc_sensitivity']
     ),
     'iwc_retrieval_status': MetaData(
-        'Ice water content retrieval status',
+        long_name='Ice water content retrieval status',
         comment=_COMMENTS['iwc_retrieval_status'],
         definition=_DEFINITIONS['iwc_retrieval_status']
     ),
     'iwc_inc_rain': MetaData(
-        'Ice water content including rain',
-        'kg m-3',
-        (1e-7, 0.001),
-        _LOG,
+        long_name='Ice water content including rain',
         comment=_COMMENTS['iwc_inc_rain'],
-        sensitivity_variable='iwc_sensitivity'
+        ancillary_variables='iwc_sensitivity'
     ),
     'lwc': MetaData(
-        'Liquid water content',
-        'kg m-3',
-        (1e-5, 0.01),
-        _LOG,
+        long_name='Liquid water content',
         comment=_COMMENTS['lwc']
     ),
     'lwc_error': MetaData(
-        'Random error in liquid water content, one standard deviation',
-        'dB',
+        long_name='Random error in liquid water content, one standard deviation',
         comment=_COMMENTS['lwc_error'],
     ),
     'lwc_retrieval_status': MetaData(
-        'Liquid water content retrieval status',
-        'scalar',
-        (0,6),
+        long_name='Liquid water content retrieval status',
         comment=_COMMENTS['lwc_retrieval_status'],
         definition=_DEFINITIONS['lwc_retrieval_status']
     ),
-    'LWP': MetaData(
-        'Liquid water path',
-        'kg m-2',
-        (-100, 1000),
-        _LIN,
-        comment=_COMMENTS['LWP']
-    ),
-    'LWP_error': MetaData(
-        'Random error in liquid water path, one standard deviation',
-        'kg m-2',
-        comment=_COMMENTS['LWP_error']
-    ),
-    'lwc_th': MetaData(
-        'Liquid water content (tophat distribution)',
-        'kg m-3',
-        comment=_COMMENTS['lwc_th']
-    ),
     'insect_prob': MetaData(
-        'Insect probability',
-        '',
-        (0, 1),
-        _LIN
+        long_name='Insect probability',
+        units='',
     ),
-    # RPG variables:
+    # RPG variables.
     'Ze': MetaData(
-        'Radar reflectivity factor (uncorrected), vertical polarization',
-        'dBZ',
-        (-40, 20),
-        _LIN
+        long_name='Radar reflectivity factor (uncorrected), vertical polarization',
+        units='dBZ',
     ),
     'rain_rate': MetaData(
-        'Rain rate',
-        'mm h-1',
+        long_name='Rain rate',
+        units='mm h-1',
     ),
     'input_voltage_range': MetaData(
-        'ADC input voltage range (+/-)',
-        'mV',
+        long_name='ADC input voltage range (+/-)',
+        units='mV',
     ),
     'noise_threshold': MetaData(
-        'Noise filter threshold factor',
-        '',
+        long_name='Noise filter threshold factor',
+        units='',
         comment='Multiple of the standard deviation of Doppler spectra.'
     ),
     'antenna_separation': MetaData(
-        'Antenna separation',
-        'm',
+        long_name='Antenna separation',
+        units='m',
     ),
     'antenna_diameter': MetaData(
-        'Antenna diameter',
-        'm',
+        long_name='Antenna diameter',
+        units='m',
     ),
     'antenna_gain': MetaData(
-        'Antenna gain',
-        'dB',
+        long_name='Antenna gain',
+        units='dB',
     ),
     'range_resolution': MetaData(
-        'Vertical resolution of range',
-        'm',
+        long_name='Vertical resolution of range',
+        units='m',
     ),
     'half_power_beam_width': MetaData(
-        'Half power beam width',
-        'degrees',
+        long_name='Half power beam width',
+        units='degrees',
     ),
     'transmitter_temperature': MetaData(
-        'Transmitter temperature',
-        'K',
+        long_name='Transmitter temperature',
+        units='K',
     ),
     'transmitted_power': MetaData(
-        'Transmitted power',
-        'W',
+        long_name='Transmitted power',
+        units='W',
     ),
     'number_of_spectral_samples': MetaData(
-        'Number of spectral samples in each chirp sequence',
-        '',
+        long_name='Number of spectral samples in each chirp sequence',
+        units='',
     ),
     'skewness': MetaData(
-        'Skewness of spectra',
-        '',
+        long_name='Skewness of spectra',
+        units='',
     ),
     'kurtosis': MetaData(
-        'Kurtosis of spectra',
+        long_name='Kurtosis of spectra',
+        units='',
     ),
     'azimuth': MetaData(
-        'Azimuth angle',
-        'degrees',
+        long_name='Azimuth angle',
+        units='degrees',
     ),
     'elevation': MetaData(
-        'Elevation angle above horizon',
-        'degrees',
+        long_name='Elevation angle above horizon',
+        units='degrees',
     ),
     'if_power': MetaData(
-        'IF power at ACD',
-        'uW',
+        long_name='IF power at ACD',
+        units='uW',
     ),
     'brightness_temperature': MetaData(
-        'Brightness temperature',
-        'K',
+        long_name='Brightness temperature',
+        units='K',
     ),
     'voltage': MetaData(
-        'Voltage',
-        'V',
+        long_name='Voltage',
+        units='V',
     ),
     'wind_direction': MetaData(
-        'Wind direction',
-        'degrees',
+        long_name='Wind direction',
+        units='degrees',
     ),
     'wind_speed': MetaData(
-        'Wind speed',
-        'm s-1',
+        long_name='Wind speed',
+        units='m s-1',
     ),
     'pc_temperature': MetaData(
-        'PC temperature',
-        'K',
+        long_name='PC temperature',
+        units='K',
     ),
     'receiver_temperature': MetaData(
-        'Receiver temperature',
-        'K',
+        long_name='Receiver temperature',
+        units='K',
     ),
     'time_ms': MetaData(
-        'Time ms',
-        'ms',
+        long_name='Time ms',
+        units='ms',
     ),
     'integration_time': MetaData(
-        'Integration time',
-        's',
+        long_name='Integration time',
+        units='s',
         comment='Effective integration time of chirp sequence',
     ),
     'file_code': MetaData(
-        'File code',
+        long_name='File code',
         comment='Indicates the RPG software version.',
     ),
     'program_number': MetaData(
-        'Program number',
+        long_name='Program number',
     ),
     'model_number': MetaData(
-        'Model number',
+        long_name='Model number',
         definition=_DEFINITIONS['model_number']
     ),
     'sample_duration': MetaData(
-        'Sample duration',
-        's'
+        long_name='Sample duration',
+        units='s'
     ),
     'dual_polarization': MetaData(
-        'Dual polarisation type',
+        long_name='Dual polarisation type',
         definition=_DEFINITIONS['dual_polarization']
     ),
     'number_of_averaged_chirps': MetaData(
-        'Number of averaged chirps in sequence'
+        long_name='Number of averaged chirps in sequence'
     ),
     'chirp_start_indices': MetaData(
-        'Chirp sequences start indices'
+        long_name='Chirp sequences start indices'
     ),
     'calibration_interval': MetaData(
-        'Calibration interval in samples'
+        long_name='Calibration interval in samples'
     ),
     'status_flag': MetaData(
-        'Status flag for heater and blower'
+        long_name='Status flag for heater and blower'
     ),
     'FFT_window': MetaData(
-        'FFT window type',
+        long_name='FFT window type',
         definition=_DEFINITIONS['FFT_window']
     ),
     'quality_flag': MetaData(
-        'Quality flag',
+        long_name='Quality flag',
         definition=_DEFINITIONS['quality_flag']
     ),
     'nyquist_velocity': MetaData(
-        'Nyquist velocity',
-        'm s-1'
+        long_name='Nyquist velocity',
+        units='m s-1'
     ),
     'correlation_coefficient': MetaData(
-        'Correlation coefficient',
+        long_name='Correlation coefficient',
     ),
     'Zdr': MetaData(
-        'Differential reflectivity',
-        'dB'
+        long_name='Differential reflectivity',
+        units='dB'
     ),
     'spectral_differential_phase': MetaData(
-        'Spectral differential phase'),
+        long_name='Spectral differential phase'
+    ),
 }

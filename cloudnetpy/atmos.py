@@ -17,7 +17,6 @@ def k2c(temp):
     return ma.array(temp) - 273.15
 
 
-VAISALA_PARAMS_OVER_WATER = (6.116441, 7.591386, 240.7263)
 HPA_TO_P = 100
 P_TO_HPA = 0.01
 M_TO_KM = 0.001
@@ -42,16 +41,46 @@ def calc_lwc_change_rate(temperature, pressure):
         Brenguier, 1991, https://bit.ly/2QCSJtb
 
     """
-    svp = calc_saturation_vapor_pressure(temperature)
-    svp_mixing_ratio = calc_mixing_ratio(svp, pressure)
+    svp = calc_saturation_vapor_pressure(temperature)      # Pa
+    svp_mixing_ratio = calc_mixing_ratio(svp, pressure)    # kg kg-1
+    air_density = calc_air_density(pressure, temperature, svp_mixing_ratio)  # kg m-3
 
-    air_density = pressure / (con.Rs*temperature*(0.6*svp_mixing_ratio + 1))
-    a = con.specific_heat*temperature / (con.latent_heat*con.mw_ratio)
-    b = pressure - svp
+    # The equation in Brenguier paper needs hPa
+    svp *= P_TO_HPA
+    pressure_hpa = pressure * P_TO_HPA
+
+    a = con.specific_heat * temperature / (con.latent_heat * con.mw_ratio)  # unitless
+    b = pressure_hpa - svp  # hPa
+
     f1 = a - 1
-    f2 = 1 / (a + (con.latent_heat*svp_mixing_ratio*air_density/b))
-    f3 = air_density*con.g*con.mw_ratio*svp*b**-2
-    return air_density*f1*f2*f3 * KG_TO_G
+    f2 = 1 / (a + (con.latent_heat * svp_mixing_ratio * air_density / b))  # m3 hPa J-1
+    f3 = con.mw_ratio * svp * b**-2  # hPa-1
+
+    # saturation mixing ratio change in respect to pressure
+    # m3 J-1 = m3 s2 kg-1 m-2
+    #        = m s2 kg-1
+    #        = kg kg-1 Pa-1
+    dqs_dp = f1 * f2 * f3
+
+    dqs_dp *= KG_TO_G  # g kg-1 Pa-1
+
+    # Conversion in Cloudnet code: g m-3 m-1
+    return air_density**2 * con.g * dqs_dp
+
+
+def calc_air_density(pressure, temperature, svp_mixing_ratio):
+    """Calculates air density (kg m-3).
+
+    Args:
+        pressure (ndarray): Pressure (Pa).
+        temperature (ndarray): Temperature (K).
+        svp_mixing_ratio (ndarray): Saturation vapor pressure mixing ratio (kg/kg).
+
+    Returns:
+        ndarray: Air density (kg m-3).
+
+    """
+    return pressure / (con.Rs * temperature * (0.6 * svp_mixing_ratio + 1))
 
 
 def calc_mixing_ratio(svp, pressure):
@@ -62,28 +91,29 @@ def calc_mixing_ratio(svp, pressure):
         pressure (ndarray): Atmospheric pressure (Pa).
 
     Returns:
-        ndarray: Mixing ratio.
+        ndarray: Mixing ratio (kg kg-1).
 
     """
-    return con.mw_ratio*svp/(pressure-svp)
+    return con.mw_ratio * svp / (pressure-svp)
 
 
-def calc_saturation_vapor_pressure(temp_kelvin):
-    """Returns approximate water vapour saturation pressure.
+def calc_saturation_vapor_pressure(temperature):
+    """Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.
 
     Args:
-        temp_kelvin (ndarray): Temperature in K.
+        temperature (ndarray): Temperature (K).
 
     Returns:
-        ndarray: Vapor saturation pressure in Pa.
+        ndarray: Saturation vapor pressure (Pa).
 
-    References:
-        Vaisala's white paper: "Humidity conversion formulas".
-
-        """
-    a, m, tn = VAISALA_PARAMS_OVER_WATER
-    temp_celsius = k2c(temp_kelvin)
-    return a * 10**((m*temp_celsius)/(temp_celsius+tn)) * HPA_TO_P
+    """
+    ratio = con.T0 / temperature
+    inv_ratio = ratio**-1
+    return (10 ** (10.79574 * (1-ratio)
+            - 5.028 * np.log10(inv_ratio)
+            + 1.50475e-4 * (1 - (10 ** (-8.2969 * (inv_ratio-1))))
+            + 0.42873e-3 * (10 ** (4.76955 * (1-ratio)) - 1)
+            + 0.78614)) * HPA_TO_P
 
 
 def calc_dew_point_temperature(vapor_pressure):
@@ -99,7 +129,8 @@ def calc_dew_point_temperature(vapor_pressure):
         Method from Vaisala's white paper: "Humidity conversion formulas".
 
     """
-    a, m, tn = VAISALA_PARAMS_OVER_WATER
+    vaisala_parameters_over_water = (6.116441, 7.591386, 240.7263)
+    a, m, tn = vaisala_parameters_over_water
     dew_point_celsius = tn / ((m/np.log10(vapor_pressure*P_TO_HPA/a))-1)
     return c2k(dew_point_celsius)
 
@@ -244,7 +275,7 @@ class LiquidAttenuation(Attenuation):
         """Finds liquid attenuation (dB)."""
         liquid_attenuation = ma.zeros(lwc_scaled.shape)
         spec_liq = self._model['specific_liquid_atten']
-        lwp_cumsum = np.cumsum(lwc_scaled[:, :-1] * spec_liq[:, :-1], axis=1)
+        lwp_cumsum = ma.cumsum(lwc_scaled[:, :-1] * spec_liq[:, :-1], axis=1)
         liquid_attenuation[:, 1:] = TWO_WAY * lwp_cumsum * M_TO_KM
         return liquid_attenuation
 
@@ -342,5 +373,5 @@ def distribute_lwp_to_liquid_clouds(lwc, lwp):
         ndarray: 2D LWP-weighted, normalized LWC (g/m2).
 
     """
-    lwc_sum = np.sum(lwc, axis=1)
+    lwc_sum = ma.sum(lwc, axis=1)
     return (lwc.T / lwc_sum * lwp).T
