@@ -8,11 +8,19 @@ import pytest
 from cloudnetpy import atmos
 
 
+@pytest.mark.parametrize("t, p, res", [
+    (270, 85513, 0.001415)
+])
+def test_calc_lwc_change_rate(t, p, res):
+    myres = atmos.calc_lwc_change_rate(t, p)
+    assert_array_almost_equal(res, myres, decimal=6)
+
+
 @pytest.mark.parametrize("t, res", [
     (300, 3546.1),
     (280, 995.02),
 ])
-def test_saturation_vapor_pressure1(t, res):
+def test_saturation_vapor_pressure(t, res):
     """ Unit tests for atmos.saturation_vapor_pressure(). """
     cnet = atmos.calc_saturation_vapor_pressure(t)
     assert_array_almost_equal(cnet, res, decimal=1)
