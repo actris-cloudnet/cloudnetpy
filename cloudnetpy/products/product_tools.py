@@ -1,5 +1,6 @@
 """General helper functions for all products."""
 import numpy as np
+import numpy.ma as ma
 import netCDF4
 from datetime import time, date, datetime
 import matplotlib.pyplot as plt
@@ -128,3 +129,24 @@ def initialize_figure(n):
         ax = [ax]
     return fig, ax
 
+
+def interpolate_data_and_dimensions(data, times, height, new_time, new_height, n):
+    data = [utils.interpolate_2d(times, height, data[i],new_time, new_height)
+                 for i in range(n)]
+    # TODO: interplotaatio ei toimi maskatuille, hoidetaan jossain vaiheessa
+    data = [ma.masked_where(data[i] < 0, data[i]) for i in range(n)]
+    times = new_time
+    height = new_height
+    return data, times, height
+
+
+def calculate_relative_error(old_data, new_data):
+    ind = np.where((old_data > 0) & (new_data > 0))
+    inds = np.full(new_data.shape, False, dtype=bool)
+    inds[ind] = True
+
+    old_data[~inds] = ma.masked
+    new_data[~inds] = ma.masked
+
+    error = ((new_data - old_data) / old_data) * 100
+    return error
