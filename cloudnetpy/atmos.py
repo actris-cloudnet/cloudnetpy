@@ -41,31 +41,17 @@ def calc_lwc_change_rate(temperature, pressure):
         Brenguier, 1991, https://bit.ly/2QCSJtb
 
     """
-    svp = calc_saturation_vapor_pressure(temperature)      # Pa
-    svp_mixing_ratio = calc_mixing_ratio(svp, pressure)    # kg kg-1
-    air_density = calc_air_density(pressure, temperature, svp_mixing_ratio)  # kg m-3
-
-    # The equation in Brenguier paper needs hPa
-    svp *= P_TO_HPA
-    pressure_hpa = pressure * P_TO_HPA
-
-    a = con.specific_heat * temperature / (con.latent_heat * con.mw_ratio)  # unitless
-    b = pressure_hpa - svp  # hPa
-
+    svp = calc_saturation_vapor_pressure(temperature)
+    svp_mixing_ratio = calc_mixing_ratio(svp, pressure)
+    air_density = calc_air_density(pressure, temperature, svp_mixing_ratio)
+    a = con.specific_heat * temperature / (con.latent_heat * con.mw_ratio)
+    b = pressure - svp
     f1 = a - 1
-    f2 = 1 / (a + (con.latent_heat * svp_mixing_ratio * air_density / b))  # m3 hPa J-1
-    f3 = con.mw_ratio * svp * b**-2  # hPa-1
-
-    # saturation mixing ratio change in respect to pressure
-    # m3 J-1 = m3 s2 kg-1 m-2
-    #        = m s2 kg-1
-    #        = kg kg-1 Pa-1
+    f2 = 1 / (a + (con.latent_heat * svp_mixing_ratio * air_density / b))
+    f3 = con.mw_ratio * svp * b**-2
     dqs_dp = f1 * f2 * f3
-
-    dqs_dp *= KG_TO_G  # g kg-1 Pa-1
-
-    # Conversion in Cloudnet code: g m-3 m-1
-    return air_density**2 * con.g * dqs_dp
+    dqs_dz = dqs_dp * air_density**2 * con.g
+    return dqs_dz * KG_TO_G
 
 
 def calc_air_density(pressure, temperature, svp_mixing_ratio):
