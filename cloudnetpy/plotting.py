@@ -226,3 +226,11 @@ def generate_figure(data_names, nc_file, saving_path, show=False, save=False):
                     bbox_inches='tight')
     if bool(show) is True:
         plt.show()
+
+
+def figure_from_two_files(data_names, nc_old, nc_new):
+    """ Compare product from two different files by subplotting
+        Can plot several variables in loop,
+        assuming all plotted variables being in one file
+    """
+
