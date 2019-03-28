@@ -210,9 +210,9 @@ def plot_relative_error(name, date, old_data, new_data, xaxes, yaxes, path,
 
     ax.set_title("Relative error of " + name, fontsize=14)
 
-    #plt.savefig(path+date.strftime("%Y%m%d")+save_name+"_relative_error.png",
-    #        bbox_inches='tight')
-    plt.show()
+    plt.savefig(path+date.strftime("%Y%m%d")+save_name+"_relative_error.png",
+            bbox_inches='tight')
+    #plt.show()
 
 
 def generate_figure(data_names, nc_file, saving_path, show=False, save=False):
@@ -312,5 +312,5 @@ def generate_figure_from_two_files(data_names, nc_files, saving_path, bool_error
         if bool_error[i] is True:
             plot_relative_error(ATTRIBUTES[data_names[i]].name, case_date,
                                 datas[i][0], datas[i][-1], time_array[0], height[0],
-                                save, data_names[i])
+                                saving_path, data_names[i])
 
