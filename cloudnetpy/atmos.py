@@ -97,10 +97,10 @@ def calc_saturation_vapor_pressure(temperature):
     ratio = con.T0 / temperature
     inv_ratio = ratio**-1
     return (10 ** (10.79574 * (1-ratio)
-            - 5.028 * np.log10(inv_ratio)
-            + 1.50475e-4 * (1 - (10 ** (-8.2969 * (inv_ratio-1))))
-            + 0.42873e-3 * (10 ** (4.76955 * (1-ratio)) - 1)
-            + 0.78614)) * HPA_TO_P
+                   - 5.028 * np.log10(inv_ratio)
+                   + 1.50475e-4 * (1 - (10 ** (-8.2969 * (inv_ratio-1))))
+                   + 0.42873e-3 * (10 ** (4.76955 * (1-ratio)) - 1)
+                   + 0.78614)) * HPA_TO_P
 
 
 def calc_dew_point_temperature(vapor_pressure):
