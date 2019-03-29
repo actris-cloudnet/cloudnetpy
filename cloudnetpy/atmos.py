@@ -44,11 +44,12 @@ def calc_lwc_change_rate(temperature, pressure):
     svp = calc_saturation_vapor_pressure(temperature)
     svp_mixing_ratio = calc_mixing_ratio(svp, pressure)
     air_density = calc_air_density(pressure, temperature, svp_mixing_ratio)
-    a = con.specific_heat * temperature / (con.latent_heat * con.mw_ratio)
-    b = pressure - svp
-    f1 = a - 1
-    f2 = 1 / (a + (con.latent_heat * svp_mixing_ratio * air_density / b))
-    f3 = con.mw_ratio * svp * b**-2
+    kelvin_per_kg = calc_psychrometric_constant(temperature)
+    pressure_difference = pressure - svp
+    f1 = kelvin_per_kg - 1
+    f2 = 1 / (kelvin_per_kg + (con.latent_heat * svp_mixing_ratio
+                               * air_density / pressure_difference))
+    f3 = con.mw_ratio * svp * pressure_difference**-2
     dqs_dp = f1 * f2 * f3
     dqs_dz = dqs_dp * air_density**2 * con.g
     return dqs_dz * KG_TO_G
@@ -131,7 +132,7 @@ def calc_psychrometric_constant(pressure):
         pressure (ndarray): Atmospheric pressure (Pa).
 
     Returns:
-        ndarray: Psychrometric constant value (Pa C-1)
+        ndarray: Psychrometric constant value (Pa K-1)
 
     """
     return pressure*con.specific_heat / (con.latent_heat*con.mw_ratio)
