@@ -7,6 +7,8 @@ class VaisalaCeilo:
     def __init__(self, file_name):
         self.file_name = file_name
         self.params = None
+        self.backscatter = None
+        self.metadata = None
 
     def _read_lines_in_file(self):
         """Returns file contents as list, one line per cell."""
@@ -18,17 +20,16 @@ class VaisalaCeilo:
         """Returns indices of empty cells in list."""
         return [n for n, _ in enumerate(data) if isempty(data[n])]
 
-    def _convert_data(self, lines, n_gates):
-        n_gates = [int(x) for x in n_gates]  # we should convert if n_gates is still string
-        assert min(n_gates) == max(n_gates), 'Error: variable number of range gates in profile.'
+    def _convert_data(self, lines):
         n_chars = self.params[0]
-        n_gates = n_gates[0]
-        ran = range(0, n_gates*n_chars, n_chars)
+        n_gates = int((len(lines[0])-1)/n_chars)
         profiles = np.zeros((len(lines), n_gates), dtype=int)
+        ran = range(0, n_gates*n_chars, n_chars)
         for ind, line in enumerate(lines):
             try:
                 profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
             except ValueError as error:
+                print(error)
                 profiles[ind, :] = np.zeros(n_gates, dtype=int)
         ind = np.where(profiles & self.params[1] != 0)
         profiles[ind] -= self.params[2]
@@ -48,8 +49,9 @@ class ClCeilo(VaisalaCeilo):
         data_lines = self._parse_lines(all_lines, empty_lines)
         header_line1 = self._read_header_line_1(data_lines[1])
         header_line2 = self._read_header_line_2(data_lines[2])
-        header_line4 = self._read_header_line_4(data_lines[4])
-        profiles = self._convert_data(data_lines[5], header_line4['number_of_gates'])
+        header_line4 = self._read_header_line_4(data_lines[-2])
+        self.metadata = {**header_line1, **header_line2, **header_line4}
+        self.backscatter = self._convert_data(data_lines[-1])
 
     @staticmethod
     def _parse_lines(data, empty_lines):
@@ -71,6 +73,7 @@ class ClCeilo(VaisalaCeilo):
 
     @staticmethod
     def _read_header_line_2(lines):
+        """Reading of Vaisala cloud base heights is not yet included here."""
         keys = ('detection_status', 'warning')
         values = []
         for line in lines:
