@@ -1,16 +1,12 @@
 import linecache
-import sys
 import numpy as np
-from collections import namedtuple
-import numpy.ma as ma
-from cloudnetpy import utils
 
 
 class VaisalaCeilo:
     """Base class for Vaisala ceilometers."""
     def __init__(self, file_name):
         self.file_name = file_name
-        self.data = None
+        self.params = None
 
     def _read_lines_in_file(self):
         """Returns file contents as list, one line per cell."""
@@ -21,6 +17,21 @@ class VaisalaCeilo:
     def _get_empty_lines(data):
         """Returns indices of empty cells in list."""
         return [n for n, _ in enumerate(data) if isempty(data[n])]
+
+    def _convert_data(self, lines, n_gates):
+        assert min(n_gates) == max(n_gates), 'Error: variable number of range gates in profile.'
+        n_chars = self.params[0]
+        n_gates = n_gates[0]
+        ran = range(0, n_gates*n_chars, n_chars)
+        profiles = np.zeros((len(lines), n_gates), dtype=int)
+        for ind, line in enumerate(lines):
+            try:
+                profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
+            except ValueError as error:
+                profiles[ind, :] = np.zeros(n_gates, dtype=int)
+        ind = np.where(profiles & self.params[1] != 0)
+        profiles[ind] -= self.params[2]
+        return profiles
 
 
 class ClCeilo(VaisalaCeilo):
@@ -33,13 +44,18 @@ class ClCeilo(VaisalaCeilo):
         """Read all lines of data from the file."""
         data = self._read_lines_in_file()
         empty_lines = self._get_empty_lines(data)
+        lines = self._parse_lines(data, empty_lines)
+        header_line1 = self._read_header_line_1(lines[1])
+        header_line4 = self._read_header_line_4(lines[4])
+        profiles = self._convert_data(lines[5], header_line4['number_of_gates'])
+
+    @staticmethod
+    def _parse_lines(data, empty_lines):
         lines = [[data[n+1][1:-1] for n in empty_lines],
                  [data[n+2][1:-2] for n in empty_lines]]
         for m in range(3, 7):
             lines.append([data[n+m] for n in empty_lines])
-        self.data = lines
-        line1 = self._read_header_line_1(lines[1])
-        line4 = self._read_header_line_4(lines[4])
+        return lines
 
     @staticmethod
     def _read_header_line_1(lines):
@@ -63,15 +79,6 @@ class ClCeilo(VaisalaCeilo):
         for i, key in enumerate(keys):
             out[key] = np.array([int(x[i+1]) for x in values])
         return out
-
-    @staticmethod
-    def _convert_data(self, line, ran):
-        line = [int(line[i:i + self.params[0]], 16) for i in ran]
-        # compute twos complement
-        line = np.array(line)
-        ind = np.where((line & a) != 0)
-        line[ind] = line[ind] - b
-        return line
 
 
 class Cl51(ClCeilo):
@@ -124,7 +131,8 @@ def _find_ceilo_model(file):
 def _find_first_empty_line(file):
     line_number = 0
     while True:
-        if isempty(linecache.getline(file, line_number)):
+        line = linecache.getline(file, line_number)
+        if isempty(line):
             return line_number
         line_number += 1
 
