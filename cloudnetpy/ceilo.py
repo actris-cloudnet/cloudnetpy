@@ -19,6 +19,7 @@ class VaisalaCeilo:
         return [n for n, _ in enumerate(data) if isempty(data[n])]
 
     def _convert_data(self, lines, n_gates):
+        n_gates = [int(x) for x in n_gates]  # we should convert if n_gates is still string
         assert min(n_gates) == max(n_gates), 'Error: variable number of range gates in profile.'
         n_chars = self.params[0]
         n_gates = n_gates[0]
@@ -42,18 +43,20 @@ class ClCeilo(VaisalaCeilo):
 
     def read_data(self):
         """Read all lines of data from the file."""
-        data = self._read_lines_in_file()
-        empty_lines = self._get_empty_lines(data)
-        lines = self._parse_lines(data, empty_lines)
-        header_line1 = self._read_header_line_1(lines[1])
-        header_line4 = self._read_header_line_4(lines[4])
-        profiles = self._convert_data(lines[5], header_line4['number_of_gates'])
+        all_lines = self._read_lines_in_file()
+        empty_lines = self._get_empty_lines(all_lines)
+        data_lines = self._parse_lines(all_lines, empty_lines)
+        header_line1 = self._read_header_line_1(data_lines[1])
+        header_line2 = self._read_header_line_2(data_lines[2])
+        header_line4 = self._read_header_line_4(data_lines[4])
+        profiles = self._convert_data(data_lines[5], header_line4['number_of_gates'])
 
     @staticmethod
     def _parse_lines(data, empty_lines):
-        lines = [[data[n+1][1:-1] for n in empty_lines],
+        number_of_data_lines = empty_lines[1] - empty_lines[0] - 1
+        lines = [[data[n+1][1:-1] for n in empty_lines],  # time stamp
                  [data[n+2][1:-2] for n in empty_lines]]
-        for m in range(3, 7):
+        for m in range(3, number_of_data_lines):
             lines.append([data[n+m] for n in empty_lines])
         return lines
 
@@ -61,24 +64,35 @@ class ClCeilo(VaisalaCeilo):
     def _read_header_line_1(lines):
         keys = ('model_id', 'unit_id', 'software_version', 'message_number',
                 'message_subclass')
-        values, out = [], {}
+        values = []
         for line in lines:
             values.append([line[:2], line[2:3], line[3:6], line[6], line[7]])
-        for i, key in enumerate(keys):
-            out[key] = np.array([x[i] for x in values])
-        return out
+        return _values_to_dict(keys, values)
+
+    @staticmethod
+    def _read_header_line_2(lines):
+        keys = ('detection_status', 'warning')
+        values = []
+        for line in lines:
+            values.append([line[0], line[1], line[2:]])
+        return _values_to_dict(keys, values)
 
     @staticmethod
     def _read_header_line_4(lines):
-        keys = ('range_resolution', 'number_of_gates', 'laser_energy',
+        keys = ('scale', 'range_resolution', 'number_of_gates', 'laser_energy',
                 'laser_temperature', 'window_transmission',
                 'receiver_sensitivity', 'window_contamination')
-        values, out = [], {}
+        values = []
         for line in lines:
             values.append(line.split())
-        for i, key in enumerate(keys):
-            out[key] = np.array([int(x[i+1]) for x in values])
-        return out
+        return _values_to_dict(keys, values)
+
+
+def _values_to_dict(keys, values):
+    out = {}
+    for i, key in enumerate(keys):
+        out[key] = np.array([x[i] for x in values])
+    return out
 
 
 class Cl51(ClCeilo):
