@@ -1,6 +1,7 @@
 import linecache
 import sys
 import numpy as np
+from collections import namedtuple
 import numpy.ma as ma
 from cloudnetpy import utils
 
@@ -26,6 +27,7 @@ class ClCeilo(VaisalaCeilo):
     """Base class for more modern Vaisala CL31/CL51 ceilometers."""
     def __init__(self, file_name):
         super().__init__(file_name)
+        self.params = (5, 524288, 1048576)
 
     def read_data(self):
         """Read all lines of data from the file."""
@@ -36,6 +38,40 @@ class ClCeilo(VaisalaCeilo):
         for m in range(3, 7):
             lines.append([data[n+m] for n in empty_lines])
         self.data = lines
+        line1 = self._read_header_line_1(lines[1])
+        line4 = self._read_header_line_4(lines[4])
+
+    @staticmethod
+    def _read_header_line_1(lines):
+        keys = ('model_id', 'unit_id', 'software_version', 'message_number',
+                'message_subclass')
+        values, out = [], {}
+        for line in lines:
+            values.append([line[:2], line[2:3], line[3:6], line[6], line[7]])
+        for i, key in enumerate(keys):
+            out[key] = np.array([x[i] for x in values])
+        return out
+
+    @staticmethod
+    def _read_header_line_4(lines):
+        keys = ('range_resolution', 'number_of_gates', 'laser_energy',
+                'laser_temperature', 'window_transmission',
+                'receiver_sensitivity', 'window_contamination')
+        values, out = [], {}
+        for line in lines:
+            values.append(line.split())
+        for i, key in enumerate(keys):
+            out[key] = np.array([int(x[i+1]) for x in values])
+        return out
+
+    @staticmethod
+    def _convert_data(self, line, ran):
+        line = [int(line[i:i + self.params[0]], 16) for i in ran]
+        # compute twos complement
+        line = np.array(line)
+        ind = np.where((line & a) != 0)
+        line[ind] = line[ind] - b
+        return line
 
 
 class Cl51(ClCeilo):
@@ -86,12 +122,11 @@ def _find_ceilo_model(file):
 
 
 def _find_first_empty_line(file):
-    index = 0
+    line_number = 0
     while True:
-        line = linecache.getline(file, index)
-        if line in ('\n', '\r\n'):
-            return index
-        index += 1
+        if isempty(linecache.getline(file, line_number)):
+            return line_number
+        line_number += 1
 
 
 def isempty(line):
