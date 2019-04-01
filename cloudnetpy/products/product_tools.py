@@ -1,10 +1,12 @@
 """General helper functions for all products."""
 import numpy as np
 import numpy.ma as ma
+import scipy
 import netCDF4
 from datetime import time, date, datetime
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.dates as mdates
 import seaborn as sns
 import cloudnetpy.utils as utils
@@ -103,7 +105,7 @@ def initialize_time_height_axes(ax, n, i):
         ax.set_xlabel(xlabel, fontsize=13)
 
     ax.tick_params(axis='y', labelsize=12)
-    ax.set_ylim(0, 12)
+    ax.set_ylim(0, 3)
     ax.set_ylabel(ylabel, fontsize=13)
 
     return ax
@@ -124,20 +126,19 @@ def generate_log_cbar_ticklabel_list(vmin, vmax):
 
 def initialize_figure(n):
     """ Usage is to create figure suitable different situations"""
-    fig, ax = plt.subplots(n, 1, figsize=(16, 4+(n-1)*4))
+    fig, ax = plt.subplots(n, 1, figsize=(16, 4+(n-1)*4.8))
     if n == 1:
         ax = [ax]
     return fig, ax
 
 
-def interpolate_data_and_dimensions(data, times, height, new_time, new_height, n):
-    data = [utils.interpolate_2d(times, height, data[i],new_time, new_height)
-                 for i in range(n)]
+def interpolate_data_and_dimensions(data, times, height, new_time, new_height):
+    n = np.min(data)
+    data = np.asarray(data)
+    data = utils.interpolate_2d(times, height, data, new_time, new_height)
     # TODO: interplotaatio ei toimi maskatuille, hoidetaan jossain vaiheessa
-    data = [ma.masked_where(data[i] < 0, data[i]) for i in range(n)]
-    times = new_time
-    height = new_height
-    return data, times, height
+    data = ma.masked_where(data < n, data)
+    return data
 
 
 def calculate_relative_error(old_data, new_data):
@@ -150,3 +151,7 @@ def calculate_relative_error(old_data, new_data):
 
     error = ((new_data - old_data) / old_data) * 100
     return error
+
+
+def convert_int2decimal(x):
+    return round(float(str(x) + ".0" + str(x + 1)), 2)

@@ -349,6 +349,20 @@ _COMMENTS = {
      'velocities are away from the radar.'),
 }
 
+COMMON_ATTRIBUTES = {}
+
+IWC_ATTRIBUTES = {}
+
+LWC_ATTRIBUTES = {}
+
+CLASSIFICATION_ATTRIBUTES = {}
+
+CATEGORIZE_ATTRIBUTES = {}
+
+RPG_ATTRIBUTES = {}
+
+MIRA_ATTRIBUTES = {}
+
 ATTRIBUTES = {
     'time': MetaData(
         long_name='Time UTC',

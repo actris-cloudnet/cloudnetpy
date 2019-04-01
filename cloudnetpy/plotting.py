@@ -139,6 +139,7 @@ def plot_segment_data(ax, data, xaxes, yaxes, name, subtit):
     n = len(variables.cbar)
     cmap = ptools.colors_to_colormap(variables.cbar)
 
+    # kokeile imshow():lla
     pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap,
                        vmin=-0.5, vmax=n-0.5)
 
@@ -173,9 +174,9 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
 
     if variables.plot_scale == 'logarithmic':
         data = np.log10(data)
-        vmin = np.log10(variables.plot_range[0])
-        vmax = np.log10(variables.plot_range[-1])
-        logs = ptools.generate_log_cbar_ticklabel_list(vmin,vmax)
+        vmin = np.log10(vmin)
+        vmax = np.log10(vmax)
+        logs = ptools.generate_log_cbar_ticklabel_list(vmin, vmax)
 
     pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin,
                        vmax=vmax)
@@ -187,130 +188,39 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
     if variables.plot_scale == 'logarithmic':
         cb.set_ticks(np.arange(vmin, vmax + 1, 1))
         cb.ax.set_yticklabels(logs)
-    cb.set_label(variables.clabel, fontsize = 13)
+    cb.set_label(variables.clabel, fontsize=13)
 
     ax.set_title(variables.name + subtit, fontsize=14)
 
 
-def plot_relative_error(name, date, old_data, new_data, xaxes, yaxes, path,
-                        save_name):
-    """Calculates and plots relative error"""
-    error = ptools.calculate_relative_error(old_data, new_data)
-
-    fig, ax = ptools.initialize_figure(1)
-    ax = ptools.initialize_time_height_axes(ax[0], 1, 1)
-    fig.subplots_adjust(left=0.06, right=0.73, hspace=0.35)
-
-    pl = ax.pcolormesh(xaxes, yaxes, error.T, cmap='RdBu', vmin=-40,
-                       vmax=40)
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="1%", pad=0.25)
-    cb = plt.colorbar(pl, fraction=1.0, ax=ax, cax=cax)
-    cb.set_label("%", fontsize = 13)
-
-    ax.set_title("Relative error of " + name, fontsize=14)
-
-    plt.savefig(path+date.strftime("%Y%m%d")+save_name+"_relative_error.png",
-            bbox_inches='tight')
-    #plt.show()
-
-
-def generate_figure(data_names, nc_file, saving_path, show=False, save=False):
+def generate_figure(data_names, nc_file, saving_path, show=True, save=False):
     """ Usage to generate figure and plot wanted fig.
         Can be used for plotting both one fig and subplots.
         data_names is list of product names on select nc-file.
     """
+    n = len(data_names)
     datas, time_array, height, case_date = \
-        ptools.read_variables_and_date(data_names, nc_file)
+        ptools.read_variables_and_date(n, nc_file)
     time_array = ptools.convert_dtime_to_datetime(case_date, time_array)
     subtit = " from CloudnetPy"
 
-    fig, ax = ptools.initialize_figure(len(data_names))
-    fig.subplots_adjust(left=0.06, right=0.73, hspace=0.35)
+    fig, ax = ptools.initialize_figure(n)
+    fig.subplots_adjust(left=0.06, right=0.73)
 
     saving_name = ""
-    for i in range(len(data_names)):
-        ax[i] = ptools.initialize_time_height_axes(ax[i], len(data_names), i)
-        if ATTRIBUTES[data_names[i]].plot_type == 'segment':
-            plot_segment_data(ax[i], datas[i], time_array, height,
-                              data_names[i], subtit)
+    for i, name in enumerate(data_names):
+        ax[i] = ptools.initialize_time_height_axes(ax[i], n, i)
+        if ATTRIBUTES[name].plot_type == 'segment':
+            plot_segment_data(ax[i], datas[i], time_array, height, name, subtit)
         else:
-            plot_colormesh_data(ax[i], datas[i], time_array, height,
-                                data_names[i], subtit)
-        saving_name += ("_" + data_names[i])
+            plot_colormesh_data(ax[i], datas[i], time_array, height, name, subtit)
+        saving_name += ("_" + name)
 
-    fig.suptitle(case_date.strftime("%-d %b %Y"),
-                 fontsize=13, x=0.09, fontweight='bold')
-    fig.tight_layout()
-
-    if bool(save) is True:
+    x = ptools.convert_int2decimal(n)
+    fig.suptitle(case_date.strftime("%-d %b %Y"), fontsize=13,
+                 y=0.94+(n-x), x=0.11, fontweight='bold')
+    if save:
         plt.savefig(saving_path+case_date.strftime("%Y%m%d")+saving_name+".png",
                     bbox_inches='tight')
-    if bool(show) is True:
+    if show:
         plt.show()
-
-
-def generate_figure_from_two_files(data_names, nc_files, saving_path, bool_error,
-                                   show=False, save=False):
-    """ Compare product from two different files by subplotting
-        Can plot several variables in loop,
-        assuming all plotted variables being in one file
-
-        data_names(list): list of plotted variables
-        nc_files(list): list of two files to compare
-                        [0] = old file
-                        [1] = new file
-    """
-    #TODO: jos voi tehdä lista looppina, pohdi onnistuuko
-    old_datas, old_time_array, old_height, case_date = \
-        ptools.read_variables_and_date(data_names, nc_files[0])
-    new_datas, new_time_array, new_height, case_date = \
-        ptools.read_variables_and_date(data_names, nc_files[1])
-
-    if len(old_time_array) != len(new_time_array) and \
-            ATTRIBUTES[data_names[0]].plot_type == 'mesh':
-
-        old_datas, old_time_array, old_height = \
-            ptools.interpolate_data_and_dimensions(old_datas, old_time_array,
-                                                   old_height, new_time_array,
-                                                   new_height, len(data_names))
-
-    datas =list(zip(old_datas, new_datas))
-    time_array = [ptools.convert_dtime_to_datetime(case_date, time)
-                  for time in [old_time_array, new_time_array]]
-    height = [old_height, new_height]
-
-    subtit = (" from Cloudnet", " from CloudnetPy")
-    saving_name = ""
-
-    for i in range(len(data_names)):
-        fig, ax = ptools.initialize_figure(len(nc_files))
-        fig.subplots_adjust(left=0.06, right=0.73, hspace=0.35)
-
-        for ii in range(len(nc_files)):
-            ax[ii] = ptools.initialize_time_height_axes(ax[ii], len(nc_files), ii)
-            if ATTRIBUTES[data_names[i]].plot_type == 'segment':
-                plot_segment_data(ax[ii], datas[i][ii], time_array[ii], height[ii],
-                                  data_names[i], subtit[ii])
-            else:
-                plot_colormesh_data(ax[ii], datas[i][ii], time_array[ii], height[ii],
-                                    data_names[i], subtit[ii])
-            saving_name += ("_compare_" + data_names[i])
-
-        fig.suptitle(case_date.strftime("%-d %b %Y"),
-                     fontsize=13, x=0.09, fontweight='bold')
-        fig.tight_layout()
-
-        if bool(save) is True:
-            plt.savefig(saving_path+case_date.strftime("%Y%m%d")+saving_name+".png",
-                        bbox_inches='tight')
-        if bool(show) is True:
-            plt.show()
-        plt.close()
-
-    for i in range(len(data_names)):
-        if bool_error[i] is True:
-            plot_relative_error(ATTRIBUTES[data_names[i]].name, case_date,
-                                datas[i][0], datas[i][-1], time_array[0], height[0],
-                                saving_path, data_names[i])
-
