@@ -147,7 +147,7 @@ def plot_segment_data(ax, data, xaxes, yaxes, name, subtit):
     cax = divider.append_axes("right", size="1%", pad=0.25)
     cb = plt.colorbar(pl, fraction=1.0, ax=ax, cax=cax)
     cb.set_ticks(np.arange(0, n + 1, 1))
-    cb.ax.set_yticklabels(variables.clabel, fontsize= 13)
+    cb.ax.set_yticklabels(variables.clabel, fontsize=13)
 
     ax.set_title(variables.name + subtit, fontsize=14)
 
@@ -180,6 +180,8 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
 
     pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin,
                        vmax=vmax)
+    # TODO: Vielä en saanut toimimaan tätä hommaa, selvittele myöhemmin
+    #pl = ax.imshow(data)
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="1%", pad=0.25)
@@ -200,7 +202,7 @@ def generate_figure(data_names, nc_file, saving_path, show=True, save=False):
     """
     n = len(data_names)
     datas, time_array, height, case_date = \
-        ptools.read_variables_and_date(n, nc_file)
+        ptools.read_variables_and_date(data_names, nc_file)
     time_array = ptools.convert_dtime_to_datetime(case_date, time_array)
     subtit = " from CloudnetPy"
 

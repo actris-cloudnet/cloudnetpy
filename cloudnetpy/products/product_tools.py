@@ -105,7 +105,7 @@ def initialize_time_height_axes(ax, n, i):
         ax.set_xlabel(xlabel, fontsize=13)
 
     ax.tick_params(axis='y', labelsize=12)
-    ax.set_ylim(0, 3)
+    ax.set_ylim(0, 12)
     ax.set_ylabel(ylabel, fontsize=13)
 
     return ax
