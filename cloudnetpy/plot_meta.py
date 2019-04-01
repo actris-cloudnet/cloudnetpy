@@ -80,8 +80,6 @@ _CBAR = {
         ("#f8f8ff", "#00bfff", "#ff4500", "#0000ff", "#ffff00",
          "#2f4f4f", "#778899", "#d3d3d3"),
 
-    'iwc_sensitivity': 'jet',
-    'iwc_bias': 'jet',
     'iwc_inc_rain':'jet',
 
     'lwc':'jet',
@@ -123,16 +121,6 @@ ATTRIBUTES = {
         clabel='dB',
         plot_range=(0, 3),
         plot_scale=_LIN,
-        plot_type='mesh'
-    ),
-    'iwc_bias': PlotMeta(
-        'Possible bias in ice water content, one standard deviation',
-        clabel='dB',
-        plot_type='mesh'
-    ),
-    'iwc_sensitivity': PlotMeta(
-        'Minimum detectable ice water content',
-        clabel='$kg$'+' $m^{-3}$',
         plot_type='mesh'
     ),
     'iwc_retrieval_status': PlotMeta(
