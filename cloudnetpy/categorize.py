@@ -249,7 +249,8 @@ class Radar(ProfileDataSource):
 
         def _number_of_pulses():
             """Returns number of independent pulses."""
-            dwell_time = utils.mdiff(self.time) * 3600  # seconds
+            seconds_in_hour = 3600
+            dwell_time = utils.mdiff(self.time) * seconds_in_hour
             return (dwell_time * self.radar_frequency * 1e9 * 4
                     * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
 
