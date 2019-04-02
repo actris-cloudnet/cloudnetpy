@@ -80,6 +80,8 @@ def read_variables_and_date(data_name, ncdf_file):
     """Read variables from generated product file
         data_name: name of wanted product
     """
+
+    print(data_name)
     datas = []
     for i in range(len(data_name)):
         data = netCDF4.Dataset(ncdf_file).variables[data_name[i]][:]

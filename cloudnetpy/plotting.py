@@ -171,18 +171,19 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
     cmap = variables.cbar
     vmin = variables.plot_range[0]
     vmax = variables.plot_range[-1]
-
+    """
     if variables.plot_scale == 'logarithmic':
         data = np.log10(data)
         vmin = np.log10(vmin)
         vmax = np.log10(vmax)
         logs = ptools.generate_log_cbar_ticklabel_list(vmin, vmax)
-
-    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin,
-                       vmax=vmax)
+    """
+    #pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin,
+    #                   vmax=vmax)
     # TODO: Vielä en saanut toimimaan tätä hommaa, selvittele myöhemmin
-    #pl = ax.imshow(data)
-
+    pl = ax.imshow(data)
+    cb = plt.colorbar(pl)
+    """
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="1%", pad=0.25)
     cb = plt.colorbar(pl, fraction=1.0, ax=ax, cax=cax)
@@ -191,11 +192,11 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
         cb.set_ticks(np.arange(vmin, vmax + 1, 1))
         cb.ax.set_yticklabels(logs)
     cb.set_label(variables.clabel, fontsize=13)
-
+    """
     ax.set_title(variables.name + subtit, fontsize=14)
 
 
-def generate_figure(data_names, nc_file, saving_path, show=True, save=False):
+def generate_figure(nc_file, data_names, saving_path, show=True, save=False):
     """ Usage to generate figure and plot wanted fig.
         Can be used for plotting both one fig and subplots.
         data_names is list of product names on select nc-file.
