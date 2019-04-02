@@ -10,7 +10,6 @@ from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
 import cloudnetpy.atmos as atmos
 
-
 class IwcSource(DataSource):
     """Class containing data needed in the ice water content Z-T method."""
     def __init__(self, categorize_file):
