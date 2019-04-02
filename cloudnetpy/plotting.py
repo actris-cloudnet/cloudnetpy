@@ -132,7 +132,7 @@ def _colors_to_colormap(color_l):
     return ListedColormap(sns.color_palette(color_l).as_hex())
 
 
-def _initialize_time_height_axes(ax, n, i):
+def _initialize_time_height_axes(ax, n, i, max_y):
     xlabel = 'Time ' + r'(UTC)'
     ylabel = 'Height ' + '$(km)$'
     date_format = mdates.DateFormatter('%H:%M')
@@ -142,7 +142,7 @@ def _initialize_time_height_axes(ax, n, i):
     if i == n-1:
         ax.set_xlabel(xlabel, fontsize=13)
     ax.tick_params(axis='y', labelsize=12)
-    ax.set_ylim(0, 12)
+    ax.set_ylim(0, max_y)
     ax.set_ylabel(ylabel, fontsize=13)
 
     return ax
@@ -191,11 +191,9 @@ def _plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
 
     Args:
         ax(array): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
-        fig(object): Figure object
         xaxes(array): time in datetime format
         yaxes(array): height
         name(string): name of plotted data
-        date(date): date of case date object
         subtit(string): title of fig
     """
     variables = ATTRIBUTES[name]
@@ -223,7 +221,7 @@ def _plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
     ax.set_title(variables.name + subtit, fontsize=14)
 
 
-def generate_figure(nc_file, data_names, saving_path, show=True, save=False):
+def generate_figure(nc_file, data_names, show=True, saving_path=None, max_y=12):
     """ Usage to generate figure and plot wanted fig.
         Can be used for plotting both one fig and subplots.
         data_names is list of product names on select nc-file.
@@ -239,7 +237,7 @@ def generate_figure(nc_file, data_names, saving_path, show=True, save=False):
 
     saving_name = ""
     for i, name in enumerate(data_names):
-        ax[i] = _initialize_time_height_axes(ax[i], n, i)
+        ax[i] = _initialize_time_height_axes(ax[i], n, i, max_y)
         if ATTRIBUTES[name].plot_type == 'segment':
             _plot_segment_data(ax[i], datas[i], time_array, height, name, subtit)
         else:
@@ -249,7 +247,7 @@ def generate_figure(nc_file, data_names, saving_path, show=True, save=False):
     x = ptools.convert_int2decimal(n)
     fig.suptitle(case_date.strftime("%-d %b %Y"), fontsize=13,
                  y=0.94+(n-x), x=0.11, fontweight='bold')
-    if save:
+    if saving_path:
         plt.savefig(saving_path+case_date.strftime("%Y%m%d")+saving_name+".png",
                     bbox_inches='tight')
     if show:
