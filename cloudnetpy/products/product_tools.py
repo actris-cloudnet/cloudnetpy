@@ -4,11 +4,6 @@ import numpy.ma as ma
 import scipy
 import netCDF4
 from datetime import time, date, datetime
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import matplotlib.dates as mdates
-import seaborn as sns
 import cloudnetpy.utils as utils
 
 def read_quality_bits(categorize_object):
@@ -71,17 +66,10 @@ def convert_dtime_to_datetime(case_date, time_array):
     return np.asanyarray(time_array)
 
 
-def colors_to_colormap(color_l):
-    """Transforms list of colors to colormap"""
-    return ListedColormap(sns.color_palette(color_l).as_hex())
-
-
 def read_variables_and_date(data_name, ncdf_file):
     """Read variables from generated product file
         data_name: name of wanted product
     """
-
-    print(data_name)
     datas = []
     for i in range(len(data_name)):
         data = netCDF4.Dataset(ncdf_file).variables[data_name[i]][:]
@@ -92,25 +80,6 @@ def read_variables_and_date(data_name, ncdf_file):
                      int(netCDF4.Dataset(ncdf_file).month),
                      int(netCDF4.Dataset(ncdf_file).day))
     return datas, time_array, height, case_date
-
-
-def initialize_time_height_axes(ax, n, i):
-    xlabel = 'Time ' + r'(UTC)'
-    ylabel = 'Height ' + '$(km)$'
-
-    date_format = mdates.DateFormatter('%H:%M')
-    ax.xaxis.set_major_formatter(date_format)
-    ax.xaxis.set_major_locator(mdates.HourLocator(interval=4))
-    ax.tick_params(axis='x', labelsize=12)
-    #TODO: Voi varmaan tehdä ilman apumuuttujia
-    if i == n-1:
-        ax.set_xlabel(xlabel, fontsize=13)
-
-    ax.tick_params(axis='y', labelsize=12)
-    ax.set_ylim(0, 12)
-    ax.set_ylabel(ylabel, fontsize=13)
-
-    return ax
 
 
 def generate_log_cbar_ticklabel_list(vmin, vmax):
@@ -124,14 +93,6 @@ def generate_log_cbar_ticklabel_list(vmin, vmax):
         vmin = + 1
 
     return log_string
-
-
-def initialize_figure(n):
-    """ Usage is to create figure suitable different situations"""
-    fig, ax = plt.subplots(n, 1, figsize=(16, 4+(n-1)*4.8))
-    if n == 1:
-        ax = [ax]
-    return fig, ax
 
 
 def interpolate_data_and_dimensions(data, times, height, new_time, new_height):

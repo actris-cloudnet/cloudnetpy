@@ -2,10 +2,12 @@
 
 import numpy as np
 import numpy.ma as ma
-import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import netCDF4
+import seaborn as sns
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.colors import ListedColormap
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy import utils
 from .plot_meta import ATTRIBUTES
@@ -125,7 +127,36 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None, color=None):
     plt.show()
 
 
-def plot_segment_data(ax, data, xaxes, yaxes, name, subtit):
+def _colors_to_colormap(color_l):
+    """Transforms list of colors to colormap"""
+    return ListedColormap(sns.color_palette(color_l).as_hex())
+
+
+def _initialize_time_height_axes(ax, n, i):
+    xlabel = 'Time ' + r'(UTC)'
+    ylabel = 'Height ' + '$(km)$'
+    date_format = mdates.DateFormatter('%H:%M')
+    ax.xaxis.set_major_formatter(date_format)
+    ax.xaxis.set_major_locator(mdates.HourLocator(interval=4))
+    ax.tick_params(axis='x', labelsize=12)
+    if i == n-1:
+        ax.set_xlabel(xlabel, fontsize=13)
+    ax.tick_params(axis='y', labelsize=12)
+    ax.set_ylim(0, 12)
+    ax.set_ylabel(ylabel, fontsize=13)
+
+    return ax
+
+
+def _initialize_figure(n):
+    """ Usage is to create figure suitable different situations"""
+    fig, ax = plt.subplots(n, 1, figsize=(16, 4+(n-1)*4.8))
+    if n == 1:
+        ax = [ax]
+    return fig, ax
+
+
+def _plot_segment_data(ax, data, xaxes, yaxes, name, subtit):
     """
     Plotting data with segments as 2d variable
     Args:
@@ -137,7 +168,7 @@ def plot_segment_data(ax, data, xaxes, yaxes, name, subtit):
     """
     variables = ATTRIBUTES[name]
     n = len(variables.cbar)
-    cmap = ptools.colors_to_colormap(variables.cbar)
+    cmap = _colors_to_colormap(variables.cbar)
 
     # kokeile imshow():lla
     pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap,
@@ -152,7 +183,7 @@ def plot_segment_data(ax, data, xaxes, yaxes, name, subtit):
     ax.set_title(variables.name + subtit, fontsize=14)
 
 
-def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
+def _plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
     """
     Plot data with range of variability.
 
@@ -171,19 +202,15 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
     cmap = variables.cbar
     vmin = variables.plot_range[0]
     vmax = variables.plot_range[-1]
-    """
+
     if variables.plot_scale == 'logarithmic':
         data = np.log10(data)
         vmin = np.log10(vmin)
         vmax = np.log10(vmax)
         logs = ptools.generate_log_cbar_ticklabel_list(vmin, vmax)
-    """
-    #pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin,
-    #                   vmax=vmax)
-    # TODO: Vielä en saanut toimimaan tätä hommaa, selvittele myöhemmin
-    pl = ax.imshow(data)
-    cb = plt.colorbar(pl)
-    """
+
+    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin,
+                       vmax=vmax)
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="1%", pad=0.25)
     cb = plt.colorbar(pl, fraction=1.0, ax=ax, cax=cax)
@@ -192,7 +219,7 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
         cb.set_ticks(np.arange(vmin, vmax + 1, 1))
         cb.ax.set_yticklabels(logs)
     cb.set_label(variables.clabel, fontsize=13)
-    """
+
     ax.set_title(variables.name + subtit, fontsize=14)
 
 
@@ -207,16 +234,16 @@ def generate_figure(nc_file, data_names, saving_path, show=True, save=False):
     time_array = ptools.convert_dtime_to_datetime(case_date, time_array)
     subtit = " from CloudnetPy"
 
-    fig, ax = ptools.initialize_figure(n)
+    fig, ax = _initialize_figure(n)
     fig.subplots_adjust(left=0.06, right=0.73)
 
     saving_name = ""
     for i, name in enumerate(data_names):
-        ax[i] = ptools.initialize_time_height_axes(ax[i], n, i)
+        ax[i] = _initialize_time_height_axes(ax[i], n, i)
         if ATTRIBUTES[name].plot_type == 'segment':
-            plot_segment_data(ax[i], datas[i], time_array, height, name, subtit)
+            _plot_segment_data(ax[i], datas[i], time_array, height, name, subtit)
         else:
-            plot_colormesh_data(ax[i], datas[i], time_array, height, name, subtit)
+            _plot_colormesh_data(ax[i], datas[i], time_array, height, name, subtit)
         saving_name += ("_" + name)
 
     x = ptools.convert_int2decimal(n)
