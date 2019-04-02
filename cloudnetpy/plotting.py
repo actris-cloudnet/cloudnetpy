@@ -126,46 +126,45 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None, color=None):
 
 
 def plot_segment_data(ax, data, xaxes, yaxes, name, subtit):
-    """
-    Plotting data with segments as 2d variable
+    """ Plotting data with segments as 2d variable.
+
     Args:
-        ax(array): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
-        xaxes(array): time in datetime format
-        yaxes(array): height
-        name(string): name of plotted data
-        subtit(string): tool to manipulate title
+        ax (array): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
+        data (ndarray): 2D data array.
+        xaxes (array): time in datetime format
+        yaxes (array): height
+        name (string): name of plotted data
+        subtit (string): tool to manipulate title
+
     """
     variables = ATTRIBUTES[name]
     n = len(variables.cbar)
     cmap = ptools.colors_to_colormap(variables.cbar)
 
-    # kokeile imshow():lla
-    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap,
-                       vmin=-0.5, vmax=n-0.5)
+    # imshow would be faster
+    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=-0.5, vmax=n-0.5)
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="1%", pad=0.25)
     cb = plt.colorbar(pl, fraction=1.0, ax=ax, cax=cax)
     cb.set_ticks(np.arange(0, n + 1, 1))
-    cb.ax.set_yticklabels(variables.clabel, fontsize= 13)
+    cb.ax.set_yticklabels(variables.clabel, fontsize=13)
 
     ax.set_title(variables.name + subtit, fontsize=14)
 
 
 def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
-    """
-    Plot data with range of variability.
+    """ Plot data with range of variability.
 
     Creates only one plot, so can be used both one plot and subplot type of figs
 
     Args:
-        ax(array): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
-        fig(object): Figure object
-        xaxes(array): time in datetime format
-        yaxes(array): height
-        name(string): name of plotted data
-        date(date): date of case date object
-        subtit(string): title of fig
+        ax (array): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
+        data (ndarray): Figure object
+        xaxes (array): time in datetime format
+        yaxes (array): height
+        name (string): name of plotted data
+        subtit (string): title of fig
     """
     variables = ATTRIBUTES[name]
     cmap = variables.cbar
@@ -178,8 +177,7 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
         vmax = np.log10(vmax)
         logs = ptools.generate_log_cbar_ticklabel_list(vmin, vmax)
 
-    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin,
-                       vmax=vmax)
+    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin, vmax=vmax)
 
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="1%", pad=0.25)
@@ -188,37 +186,38 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
     if variables.plot_scale == 'logarithmic':
         cb.set_ticks(np.arange(vmin, vmax + 1, 1))
         cb.ax.set_yticklabels(logs)
+
     cb.set_label(variables.clabel, fontsize=13)
 
     ax.set_title(variables.name + subtit, fontsize=14)
 
 
-def generate_figure(data_names, nc_file, saving_path, show=True, save=False):
+def generate_figure(field_names, nc_file, saving_path, show=True, save=False):
     """ Usage to generate figure and plot wanted fig.
         Can be used for plotting both one fig and subplots.
         data_names is list of product names on select nc-file.
     """
-    n = len(data_names)
+    n_fields = len(field_names)
     datas, time_array, height, case_date = \
-        ptools.read_variables_and_date(n, nc_file)
+        ptools.read_variables_and_date(field_names, nc_file)
     time_array = ptools.convert_dtime_to_datetime(case_date, time_array)
     subtit = " from CloudnetPy"
 
-    fig, ax = ptools.initialize_figure(n)
+    fig, ax = ptools.initialize_figure(n_fields)
     fig.subplots_adjust(left=0.06, right=0.73)
 
     saving_name = ""
-    for i, name in enumerate(data_names):
-        ax[i] = ptools.initialize_time_height_axes(ax[i], n, i)
+    for i, name in enumerate(field_names):
+        ax[i] = ptools.initialize_time_height_axes(ax[i], n_fields, i)
         if ATTRIBUTES[name].plot_type == 'segment':
             plot_segment_data(ax[i], datas[i], time_array, height, name, subtit)
         else:
             plot_colormesh_data(ax[i], datas[i], time_array, height, name, subtit)
         saving_name += ("_" + name)
 
-    x = ptools.convert_int2decimal(n)
+    x = ptools.convert_int2decimal(n_fields)
     fig.suptitle(case_date.strftime("%-d %b %Y"), fontsize=13,
-                 y=0.94+(n-x), x=0.11, fontweight='bold')
+                 y=0.94+(n_fields-x), x=0.11, fontweight='bold')
     if save:
         plt.savefig(saving_path+case_date.strftime("%Y%m%d")+saving_name+".png",
                     bbox_inches='tight')

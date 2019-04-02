@@ -1,9 +1,5 @@
-# Tähän tiedostoon kirjataan kaikkien tuotteiden tarvittavat tiedot, jotta saadaan tietyn tyyppiset plotit tehtyä
+"""Metadata for plotting module."""
 from collections import namedtuple
-
-#TODO: - Lisää tarvittaviin muuttujiin yksikkömuutos termi, että plottaus aina
-#        samassa yksikössä. Oletus, että alkuperäisyksikkö aina sama.
-#      - Muokkaa colorbaria jetissä siten, että minimi valkoinen ja max musta
 
 FIELDS = ('name',
           'cbar',
@@ -73,8 +69,8 @@ _CBAR = {
         ("#f8f8ff", "#ffff00", "#2f4f4f", "#3cb371", "#778899", "#87cefa",
          "#d3d3d3", "#0000ff", "#ff4500", "#ffa500"),
 
-    'iwc':'jet',
-    'iwc_error':'jet',
+    'iwc': 'jet',
+    'iwc_error': 'jet',
 
     'iwc_retrieval_status':
         ("#f8f8ff", "#00bfff", "#ff4500", "#0000ff", "#ffff00",
@@ -82,18 +78,18 @@ _CBAR = {
 
     'iwc_sensitivity': 'jet',
     'iwc_bias': 'jet',
-    'iwc_inc_rain':'jet',
+    'iwc_inc_rain': 'jet',
 
-    'lwc':'jet',
-    'lwc_error':'jet',
-    'lwc_th':'jet',
+    'lwc': 'jet',
+    'lwc_error': 'jet',
+    'lwc_th': 'jet',
     
     'lwc_retrieval_status':
         ("#f8f8ff", "#00bfff", "#0000ff", "#2f4f4f", "#ffa500", 
          "#ff4500", "#2f4f4f"),
     
-    'lwp':'jet',
-    'lwp_error':'jet'
+    'lwp': 'jet',
+    'lwp_error': 'jet'
 }
 
 ATTRIBUTES = {
@@ -145,7 +141,7 @@ ATTRIBUTES = {
         'Ice water content including rain',
         cbar=_CBAR['iwc_inc_rain'],
         clabel='$kg$'+' $m^{-3}$',
-        plot_range=(1e-5, 1e-2),
+        plot_range=(1e-7, 1e-3),
         plot_scale=_LOG,
         plot_type='mesh'
     ),

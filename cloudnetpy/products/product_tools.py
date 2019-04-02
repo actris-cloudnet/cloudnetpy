@@ -1,15 +1,14 @@
 """General helper functions for all products."""
 import numpy as np
 import numpy.ma as ma
-import scipy
 import netCDF4
 from datetime import time, date, datetime
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-from mpl_toolkits.axes_grid1 import make_axes_locatable
 import matplotlib.dates as mdates
 import seaborn as sns
 import cloudnetpy.utils as utils
+
 
 def read_quality_bits(categorize_object):
     bitfield = categorize_object.getvar('quality_bits')
@@ -76,20 +75,19 @@ def colors_to_colormap(color_l):
     return ListedColormap(sns.color_palette(color_l).as_hex())
 
 
-def read_variables_and_date(data_name, ncdf_file):
-    """Read variables from generated product file
-        data_name: name of wanted product
+def read_variables_and_date(field_names, nc_file):
+    """Read variables from generated product file data_name: name of wanted product
     """
-    datas = []
-    for i in range(len(data_name)):
-        data = netCDF4.Dataset(ncdf_file).variables[data_name[i]][:]
-        datas.append(data)
-    time_array = netCDF4.Dataset(ncdf_file).variables['time'][:]
-    height = netCDF4.Dataset(ncdf_file).variables['height'][:]/1000
-    case_date = date(int(netCDF4.Dataset(ncdf_file).year),
-                     int(netCDF4.Dataset(ncdf_file).month),
-                     int(netCDF4.Dataset(ncdf_file).day))
-    return datas, time_array, height, case_date
+    data_out = []
+    for name in field_names:
+        data_field = netCDF4.Dataset(nc_file).variables[name][:]
+        data_out.append(data_field)
+    time_array = netCDF4.Dataset(nc_file).variables['time'][:]
+    height = netCDF4.Dataset(nc_file).variables['height'][:] / 1000
+    case_date = date(int(netCDF4.Dataset(nc_file).year),
+                     int(netCDF4.Dataset(nc_file).month),
+                     int(netCDF4.Dataset(nc_file).day))
+    return data_out, time_array, height, case_date
 
 
 def initialize_time_height_axes(ax, n, i):
