@@ -90,22 +90,18 @@ def read_variables_and_date(field_names, nc_file):
     return data_out, time_array, height, case_date
 
 
-def initialize_time_height_axes(ax, n, i):
+def initialize_time_height_axes(ax, n, i, max_y):
     xlabel = 'Time ' + r'(UTC)'
     ylabel = 'Height ' + '$(km)$'
-
     date_format = mdates.DateFormatter('%H:%M')
     ax.xaxis.set_major_formatter(date_format)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=4))
     ax.tick_params(axis='x', labelsize=12)
-    #TODO: Voi varmaan tehdä ilman apumuuttujia
     if i == n-1:
         ax.set_xlabel(xlabel, fontsize=13)
-
     ax.tick_params(axis='y', labelsize=12)
-    ax.set_ylim(0, 3)
+    ax.set_ylim(0, max_y)
     ax.set_ylabel(ylabel, fontsize=13)
-
     return ax
 
 
@@ -134,7 +130,6 @@ def interpolate_data_and_dimensions(data, times, height, new_time, new_height):
     n = np.min(data)
     data = np.asarray(data)
     data = utils.interpolate_2d(times, height, data, new_time, new_height)
-    # TODO: interplotaatio ei toimi maskatuille, hoidetaan jossain vaiheessa
     data = ma.masked_where(data < n, data)
     return data
 
@@ -143,10 +138,8 @@ def calculate_relative_error(old_data, new_data):
     ind = np.where((old_data > 0) & (new_data > 0))
     inds = np.full(new_data.shape, False, dtype=bool)
     inds[ind] = True
-
     old_data[~inds] = ma.masked
     new_data[~inds] = ma.masked
-
     error = ((new_data - old_data) / old_data) * 100
     return error
 

@@ -192,7 +192,8 @@ def plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
     ax.set_title(variables.name + subtit, fontsize=14)
 
 
-def generate_figure(field_names, nc_file, saving_path, show=True, save=False):
+def generate_figure(field_names, nc_file, saving_path, show=True, save=False,
+                    max_y=12):
     """ Usage to generate figure and plot wanted fig.
         Can be used for plotting both one fig and subplots.
         data_names is list of product names on select nc-file.
@@ -208,7 +209,7 @@ def generate_figure(field_names, nc_file, saving_path, show=True, save=False):
 
     saving_name = ""
     for i, name in enumerate(field_names):
-        ax[i] = ptools.initialize_time_height_axes(ax[i], n_fields, i)
+        ax[i] = ptools.initialize_time_height_axes(ax[i], n_fields, i, max_y)
         if ATTRIBUTES[name].plot_type == 'segment':
             plot_segment_data(ax[i], datas[i], time_array, height, name, subtit)
         else:
