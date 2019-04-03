@@ -144,11 +144,8 @@ def _plot_segment_data(ax, data, axes, name):
     variables = ATTRIBUTES[name]
     n = len(variables.cbar)
     cmap = _colors_to_colormap(variables.cbar)
-
     pl = ax.pcolormesh(*axes, data.T, cmap=cmap, vmin=-0.5, vmax=n-0.5)
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="1%", pad=0.25)
-    colorbar = plt.colorbar(pl, fraction=1.0, ax=ax, cax=cax)
+    colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(0, n + 1, 1))
     colorbar.ax.set_yticklabels(variables.clabel, fontsize=13)
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
@@ -175,9 +172,7 @@ def _plot_colormesh_data(ax, data, axes, name):
         vmax = np.log10(vmax)
 
     pl = ax.pcolormesh(*axes, data.T, cmap=cmap, vmin=vmin, vmax=vmax)
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="1%", pad=0.25)
-    colorbar = plt.colorbar(pl, fraction=1.0, ax=ax, cax=cax)
+    colorbar = _init_colorbar(pl, ax)
 
     if variables.plot_scale == 'logarithmic':
         tick_labels = _generate_log_cbar_ticklabel_list(vmin, vmax)
@@ -186,6 +181,12 @@ def _plot_colormesh_data(ax, data, axes, name):
 
     colorbar.set_label(variables.clabel, fontsize=13)
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+
+
+def _init_colorbar(plot, axis):
+    divider = make_axes_locatable(axis)
+    cax = divider.append_axes("right", size="1%", pad=0.25)
+    return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
 def generate_figure(nc_file, field_names, show=True, save_path=None, max_y=12):
