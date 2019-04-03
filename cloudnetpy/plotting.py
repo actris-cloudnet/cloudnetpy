@@ -1,7 +1,6 @@
 """Misc. plotting routines for Cloudnet products."""
 
 from datetime import date
-
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
@@ -198,7 +197,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None, max_y=12):
     n_fields = len(field_names)
     case_date = _read_case_date(nc_file)
     axes = _read_axes(nc_file, case_date)
-    data_fields = ptools.read_selected_fields(nc_file, field_names)
+    data_fields = ptools.read_nc_fields(nc_file, field_names)
 
     fig, ax = _initialize_figure(n_fields)
 
@@ -242,10 +241,10 @@ def _read_case_date(nc_file):
 
 def _read_axes(nc_file, case_date):
     """Returns time (datetime format) and height (km)."""
-    decimal_hour = netCDF4.Dataset(nc_file).variables['time'][:]
+    decimal_hour, height = ptools.read_nc_fields(nc_file, ('time', 'height'))
     datetime_time = ptools.convert_dtime_to_datetime(case_date, decimal_hour)
-    height_array = netCDF4.Dataset(nc_file).variables['height'][:] / 1000
-    return datetime_time, height_array
+    height_km = height / 1000
+    return datetime_time, height_km
 
 
 def _generate_log_cbar_ticklabel_list(vmin, vmax):

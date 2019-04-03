@@ -55,7 +55,7 @@ def get_source(data_handler):
     return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
 
 
-def read_selected_fields(nc_file, field_names):
+def read_nc_fields(nc_file, field_names):
     """Reads selected variables from a netCDF file and returns as a list."""
     nc_variables = netCDF4.Dataset(nc_file).variables
     return [nc_variables[name][:] for name in field_names]
