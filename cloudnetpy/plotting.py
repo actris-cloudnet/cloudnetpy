@@ -267,9 +267,9 @@ def _initialize_figure(n_subplots):
     return fig, ax
 
 
-def _colors_to_colormap(color_l):
+def _colors_to_colormap(color_list):
     """Transforms list of colors to colormap"""
-    return ListedColormap(seaborn.color_palette(color_l).as_hex())
+    return ListedColormap(seaborn.color_palette(color_list).as_hex())
 
 
 def _initialize_time_height_axes(ax, n_subplots, current_subplot, max_y):
