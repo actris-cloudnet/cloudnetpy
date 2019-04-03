@@ -167,8 +167,7 @@ def _plot_colormesh_data(ax, data, axes, name):
     """
     variables = ATTRIBUTES[name]
     cmap = variables.cbar
-    vmin = variables.plot_range[0]
-    vmax = variables.plot_range[-1]
+    vmin, vmax = variables.plot_range
 
     if variables.plot_scale == 'logarithmic':
         data = np.log10(data)
