@@ -22,6 +22,7 @@ _LOG = 'logarithmic'
 _LIN = 'linear'
 _KGM2 = '$kg$'+' $m^{-2}$'
 _KGM3 = '$kg$'+' $m^{-3}$'
+_MS2 = '$m$' + ' $s^{-1}$'
 
 _CLABEL = {
     'target_classification':
@@ -91,7 +92,7 @@ ATTRIBUTES = {
         clabel='$mm$' + ' $h^{-1}$',
         plot_range=(0, 50),
         plot_scale=_LIN,
-        plot_type='mesh' #Jet
+        plot_type='mesh'
      ),
     'beta': PlotMeta(
         'Attenuated backscatter coefficient',
@@ -99,7 +100,7 @@ ATTRIBUTES = {
         clabel='$sr^{-1}$' + ' $m^{-1}$',
         plot_range=(1e-7, 1e-3),
         plot_scale=_LOG,
-        plot_type='mesh' #Jet
+        plot_type='mesh'
      ),
     'beta_raw': PlotMeta(
         'Attenuated backscatter coefficient',
@@ -136,7 +137,7 @@ ATTRIBUTES = {
     'width': PlotMeta(
         'Spectral width',
         cbar='viridius',
-        clabel='$m$' + ' $s^{-1}$',
+        clabel=_MS2,
         plot_range=(0, 1),
         plot_scale=_LIN,
         plot_type='mesh'
@@ -144,7 +145,7 @@ ATTRIBUTES = {
     'v': PlotMeta(
         'Doppler velocity',
         cbar='RdBu_r',
-        clabel='$$m$' + ' $s^{-1}$$',
+        clabel=_MS2,
         plot_range=(-4, 2),
         plot_scale=_LIN,
         plot_type='mesh'
@@ -176,7 +177,7 @@ ATTRIBUTES = {
     'lwp': PlotMeta(
         'Liquid water path',
         cbar='Blues',
-        clabel='$kg$'+' $m^{-2}$',
+        clabel=_KGM2,
         plot_range=(-100, 1000),
         plot_scale=_LIN,
         plot_type='bar'
@@ -198,7 +199,7 @@ ATTRIBUTES = {
     'iwc': PlotMeta(
         'Ice water content',
         cbar='jet',
-        clabel='$kg$'+' $m^{-3}$',
+        clabel=_KGM3,
         plot_range=(1e-7, 1e-3),
         plot_scale=_LOG,
         plot_type='mesh'
@@ -220,7 +221,7 @@ ATTRIBUTES = {
     'iwc_inc_rain': PlotMeta(
         'Ice water content including rain',
         cbar='jet',
-        clabel='$kg$'+' $m^{-3}$',
+        clabel=_KGM3,
         plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
@@ -228,7 +229,7 @@ ATTRIBUTES = {
     'lwc': PlotMeta(
         'Liquid water content',
         cbar='jet',
-        clabel='$kg$'+' $m^{-3}$',
+        clabel=_KGM3,
         plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
@@ -249,7 +250,7 @@ ATTRIBUTES = {
     'lwc_th': PlotMeta(
         'Liquid water content (tophat distribution)',
         cbar='jet',
-        clabel='$kg$'+' $m^{-3}$',
+        clabel=_KGM3,
         plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
