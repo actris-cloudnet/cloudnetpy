@@ -163,7 +163,7 @@ def _plot_colormesh_data(ax, data, axes, name):
         name (string): name of plotted data
     """
     variables = ATTRIBUTES[name]
-    cmap = variables.cbar
+    cmap = plt.get_cmap(variables.cbar, 8)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
         data = np.log10(data)
@@ -188,7 +188,8 @@ def _init_colorbar(plot, axis):
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
-def generate_figure(nc_file, field_names, show=True, save_path=None, max_y=12):
+def generate_figure(nc_file, field_names, show=True, save_path=None,
+                    max_y=12, dpi=200):
     """ Usage to generate figure and plot wanted fig.
         Can be used for plotting both one fig and subplots.
         data_names is list of product names on select nc-file.
@@ -214,7 +215,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None, max_y=12):
 
     if save_path:
         plt.savefig(save_path+case_date.strftime("%Y%m%d")+saving_name+".png",
-                    bbox_inches='tight')
+                    bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
 
@@ -228,7 +229,8 @@ def _add_subtitle(fig, n_fields, case_date):
 
 def _calc_subtitle_y(n_fields):
     """Returns the correct y-position of subtitle. """
-    return 0.92 - (n_fields - 1)*0.01
+    pos = 0.927 - n_fields*0.01
+    return pos*1.02 if n_fields == 1 else pos
 
 
 def _read_case_date(nc_file):
