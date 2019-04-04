@@ -94,15 +94,15 @@ ATTRIBUTES = {
     ),
     'iwc': PlotMeta(
         name='Ice water content',
-        cbar='jet',
+        cbar='viridis',
         clabel=_KGM3,
-        plot_range=(1e-7, 1e-3),
+        plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
     'iwc_inc_rain': PlotMeta(
         name='Ice water content including rain',
-        cbar='jet',
+        cbar='viridis',
         clabel=_KGM3,
         plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
@@ -132,7 +132,7 @@ ATTRIBUTES = {
     ),
     'lwc': PlotMeta(
         name='Liquid water content',
-        cbar='jet',
+        cbar='viridis',
         clabel=_KGM3,
         plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
@@ -140,7 +140,7 @@ ATTRIBUTES = {
     ),
     'lwc_error': PlotMeta(
         name='Random error in liquid water content, one standard deviation',
-        cbar='jet',
+        cbar='viridis',
         clabel='dB',
         plot_range=(0, 2),
         plot_scale=_LIN,
