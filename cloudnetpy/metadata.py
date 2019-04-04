@@ -419,6 +419,7 @@ COMMON_ATTRIBUTES = {
         long_name='Liquid water path',
         units='',
     ),
+
     'kurtosis': MetaData(
         long_name='Kurtosis of spectra',
         units='',
@@ -434,7 +435,7 @@ COMMON_ATTRIBUTES = {
     'rain_rate': MetaData(
         long_name='Rain rate',
         units='mm h-1',
-    ),
+    )
 }
 
 IWC_ATTRIBUTES = {
@@ -741,5 +742,5 @@ MIRA_ATTRIBUTES = {
     'SNR': MetaData(
         long_name='Signal-to-noise ratio',
         units='dB',
-    ),
+    )
 }

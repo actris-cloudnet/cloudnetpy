@@ -6,6 +6,7 @@ import numpy as np
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.categorize import DataSource
+from .metadata import MIRA_ATTRIBUTES
 
 
 class Mira(DataSource):
@@ -102,7 +103,7 @@ def mira2nc(mmclx_file, output_file, site_properties, rebin_data=False):
         snr_gain = 1
     raw_mira.screen_by_snr(snr_gain)
     raw_mira.add_meta()
-    output.update_attributes(raw_mira.data)
+    output.update_attributes(raw_mira.data, MIRA_ATTRIBUTES)
     _save_mira(mmclx_file, raw_mira, output_file)
 
 

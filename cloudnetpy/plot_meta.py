@@ -96,7 +96,9 @@ _CBAR = {
     'lwc_th':'jet',
     'lwc_retrieval_status':
         ("#f8f8ff", "#00bfff", "#0000ff", "#2f4f4f", "#ffa500", 
-         "#ff4500", "#2f4f4f")
+         "#ff4500", "#2f4f4f"),
+    'lwp': 'jet',
+    'rain_rate': 'jet'
 }
 
 ATTRIBUTES = {
@@ -159,7 +161,7 @@ ATTRIBUTES = {
      ),
     'v': PlotMeta(
         'Doppler velocity',
-        cbar=_CBAR['V'],
+        cbar=_CBAR['v'],
         clabel='$$m$' + ' $s^{-1}$$',
         plot_range=(-4, 2),
         plot_scale=_LIN,

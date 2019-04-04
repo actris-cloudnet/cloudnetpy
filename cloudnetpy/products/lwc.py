@@ -6,7 +6,7 @@ import numpy.ma as ma
 from cloudnetpy import utils, atmos, output
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.products import product_tools as p_tools
-
+from cloudnetpy.metadata import LWC_ATTRIBUTES
 
 G_TO_KG = 0.001
 
@@ -193,7 +193,7 @@ def generate_lwc(categorize_file, output_file):
     lwc_obj.adjust_clouds_to_match_lwp()
     lwc_obj.screen_rain()
     _append_data(lwc_data, lwc_obj)
-    output.update_attributes(lwc_data.data)
+    output.update_attributes(lwc_data.data, LWC_ATTRIBUTES)
     _save_data_and_meta(lwc_data, output_file)
 
 
