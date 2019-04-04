@@ -165,7 +165,6 @@ def _plot_colormesh_data(ax, data, axes, name):
     variables = ATTRIBUTES[name]
     cmap = variables.cbar
     vmin, vmax = variables.plot_range
-
     if variables.plot_scale == 'logarithmic':
         data = np.log10(data)
         vmin = np.log10(vmin)
@@ -249,13 +248,7 @@ def _read_axes(nc_file, case_date):
 
 def _generate_log_cbar_ticklabel_list(vmin, vmax):
     """Create list of log format colorbar label ticks as string"""
-    log_string = []
-    n = int(abs(vmin - vmax) + 1)
-    for i in range(n):
-        log = ('10$^{%s}$' % (int(vmin) + i))
-        log_string.append(log)
-        vmin += 1
-    return log_string
+    return ['10$^{%s}$' % int(i) for i in np.arange(vmin, vmax+1)]
 
 
 def _initialize_figure(n_subplots):

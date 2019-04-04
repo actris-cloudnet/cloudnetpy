@@ -21,7 +21,8 @@ _CLABEL = {
          "Cloud droplets only",
          "Drizzle or rain",
          "Drizzle/rain or cloud droplets",
-         "Ice", "Ice & supercooled droplets",
+         "Ice",
+         "Ice & supercooled droplets",
          "Melting ice",
          "Melting ice & cloud droplets",
          "Aerosols",
@@ -103,7 +104,7 @@ ATTRIBUTES = {
         name='Ice water content including rain',
         cbar='jet',
         clabel=_KGM3,
-        plot_range=(1e-7, 1e-3),
+        plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
