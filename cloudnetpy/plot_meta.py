@@ -1,5 +1,6 @@
-# Tähän tiedostoon kirjataan kaikkien tuotteiden tarvittavat tiedot, jotta saadaan tietyn tyyppiset plotit tehtyä
 from collections import namedtuple
+
+"""Information for plotting of all parameter in CloudnetPy"""
 
 #TODO: - Lisää tarvittaviin muuttujiin yksikkömuutos termi, että plottaus aina
 #        samassa yksikössä. Oletus, että alkuperäisyksikkö aina sama.
