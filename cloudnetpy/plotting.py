@@ -1,13 +1,14 @@
 """Misc. plotting routines for Cloudnet products."""
 
+from datetime import date
+import matplotlib.dates as mdates
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+import netCDF4
 import numpy as np
 import numpy.ma as ma
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-import netCDF4
-import seaborn as sns
+import seaborn
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.colors import ListedColormap
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy import utils
 from .plot_meta import ATTRIBUTES
@@ -114,7 +115,7 @@ def _showpic(nsubs, dvec, savefig, imagepath, name):
         plt.show()
 
 
-def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None, color=None):
+def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     """Simple plot of 2d variable."""
     if cbar:
         cmap = plt.get_cmap(cmap, ncolors)
@@ -127,128 +128,160 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None, color=None):
     plt.show()
 
 
-def _colors_to_colormap(color_l):
+IDENTIFIER = " from CloudnetPy"
+
+
+def _plot_segment_data(ax, data, axes, name):
+    """ Plotting data with segments as 2d variable.
+
+    Args:
+        ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
+        data (ndarray): 2D data array.
+        axes (tuple): Tuple containing time (datetime format) and height (km).
+        name (string): name of plotted data
+
+    """
+    variables = ATTRIBUTES[name]
+    n = len(variables.cbar)
+    cmap = _colors_to_colormap(variables.cbar)
+    pl = ax.pcolormesh(*axes, data.T, cmap=cmap, vmin=-0.5, vmax=n-0.5)
+    colorbar = _init_colorbar(pl, ax)
+    colorbar.set_ticks(np.arange(0, n + 1, 1))
+    colorbar.ax.set_yticklabels(variables.clabel, fontsize=13)
+    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+
+
+def _plot_colormesh_data(ax, data, axes, name):
+    """ Plot data with range of variability.
+
+    Creates only one plot, so can be used both one plot and subplot type of figs
+
+    Args:
+        ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
+        data (ndarray): Figure object
+        axes (tuple): Tuple containing time (datetime format) and height (km).
+        name (string): name of plotted data
+    """
+    variables = ATTRIBUTES[name]
+    cmap = variables.cbar
+    vmin, vmax = variables.plot_range
+
+    if variables.plot_scale == 'logarithmic':
+        data = np.log10(data)
+        vmin = np.log10(vmin)
+        vmax = np.log10(vmax)
+
+    pl = ax.pcolormesh(*axes, data.T, cmap=cmap, vmin=vmin, vmax=vmax)
+    colorbar = _init_colorbar(pl, ax)
+
+    if variables.plot_scale == 'logarithmic':
+        tick_labels = _generate_log_cbar_ticklabel_list(vmin, vmax)
+        colorbar.set_ticks(np.arange(vmin, vmax + 1, 1))
+        colorbar.ax.set_yticklabels(tick_labels)
+
+    colorbar.set_label(variables.clabel, fontsize=13)
+    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+
+
+def _init_colorbar(plot, axis):
+    divider = make_axes_locatable(axis)
+    cax = divider.append_axes("right", size="1%", pad=0.25)
+    return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
+
+
+def generate_figure(nc_file, field_names, show=True, save_path=None, max_y=12):
+    """ Usage to generate figure and plot wanted fig.
+        Can be used for plotting both one fig and subplots.
+        data_names is list of product names on select nc-file.
+    """
+    n_fields = len(field_names)
+    case_date = _read_case_date(nc_file)
+    axes = _read_axes(nc_file, case_date)
+    data_fields = ptools.read_nc_fields(nc_file, field_names)
+
+    fig, ax = _initialize_figure(n_fields)
+
+    saving_name = ""
+    for i, name in enumerate(field_names):
+        ax[i] = _initialize_time_height_axes(ax[i], n_fields, i, max_y)
+        if ATTRIBUTES[name].plot_type == 'segment':
+            plotting_func = _plot_segment_data
+        else:
+            plotting_func = _plot_colormesh_data
+        plotting_func(ax[i], data_fields[i], axes, name)
+        saving_name += ("_" + name)
+
+    _add_subtitle(fig, n_fields, case_date)
+
+    if save_path:
+        plt.savefig(save_path+case_date.strftime("%Y%m%d")+saving_name+".png",
+                    bbox_inches='tight')
+    if show:
+        plt.show()
+
+
+def _add_subtitle(fig, n_fields, case_date):
+    """Adds subtitle into figure."""
+    y = _calc_subtitle_y(n_fields)
+    fig.suptitle(case_date.strftime("%-d %b %Y"), fontsize=13,
+                 y=y, x=0.11, fontweight='bold')
+
+
+def _calc_subtitle_y(n_fields):
+    """Returns the correct y-position of subtitle. """
+    return 0.92 - (n_fields - 1)*0.01
+
+
+def _read_case_date(nc_file):
+    """Returns measurement date string."""
+    return date(int(netCDF4.Dataset(nc_file).year),
+                int(netCDF4.Dataset(nc_file).month),
+                int(netCDF4.Dataset(nc_file).day))
+
+
+def _read_axes(nc_file, case_date):
+    """Returns time (datetime format) and height (km)."""
+    decimal_hour, height = ptools.read_nc_fields(nc_file, ('time', 'height'))
+    datetime_time = ptools.convert_dtime_to_datetime(case_date, decimal_hour)
+    height_km = height / 1000
+    return datetime_time, height_km
+
+
+def _generate_log_cbar_ticklabel_list(vmin, vmax):
+    """Create list of log format colorbar label ticks as string"""
+    log_string = []
+    n = int(abs(vmin - vmax) + 1)
+    for i in range(n):
+        log = ('10$^{%s}$' % (int(vmin) + i))
+        log_string.append(log)
+        vmin += 1
+    return log_string
+
+
+def _initialize_figure(n_subplots):
+    """Creates an empty figure according to the number of subplots."""
+    fig, ax = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8))
+    fig.subplots_adjust(left=0.06, right=0.73)
+    if n_subplots == 1:
+        ax = [ax]
+    return fig, ax
+
+
+def _colors_to_colormap(color_list):
     """Transforms list of colors to colormap"""
-    return ListedColormap(sns.color_palette(color_l).as_hex())
+    return ListedColormap(seaborn.color_palette(color_list).as_hex())
 
 
-def _initialize_time_height_axes(ax, n, i, max_y):
+def _initialize_time_height_axes(ax, n_subplots, current_subplot, max_y):
     xlabel = 'Time ' + r'(UTC)'
     ylabel = 'Height ' + '$(km)$'
     date_format = mdates.DateFormatter('%H:%M')
     ax.xaxis.set_major_formatter(date_format)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=4))
     ax.tick_params(axis='x', labelsize=12)
-    if i == n-1:
+    if current_subplot == n_subplots - 1:
         ax.set_xlabel(xlabel, fontsize=13)
     ax.tick_params(axis='y', labelsize=12)
     ax.set_ylim(0, max_y)
     ax.set_ylabel(ylabel, fontsize=13)
-
     return ax
-
-
-def _initialize_figure(n):
-    """ Usage is to create figure suitable different situations"""
-    fig, ax = plt.subplots(n, 1, figsize=(16, 4+(n-1)*4.8))
-    if n == 1:
-        ax = [ax]
-    return fig, ax
-
-
-def _plot_segment_data(ax, data, xaxes, yaxes, name, subtit):
-    """
-    Plotting data with segments as 2d variable
-    Args:
-        ax(array): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
-        xaxes(array): time in datetime format
-        yaxes(array): height
-        name(string): name of plotted data
-        subtit(string): tool to manipulate title
-    """
-    variables = ATTRIBUTES[name]
-    n = len(variables.cbar)
-    cmap = _colors_to_colormap(variables.cbar)
-
-    # kokeile imshow():lla
-    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap,
-                       vmin=-0.5, vmax=n-0.5)
-
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="1%", pad=0.25)
-    cb = plt.colorbar(pl, fraction=1.0, ax=ax, cax=cax)
-    cb.set_ticks(np.arange(0, n + 1, 1))
-    cb.ax.set_yticklabels(variables.clabel, fontsize=13)
-
-    ax.set_title(variables.name + subtit, fontsize=14)
-
-
-def _plot_colormesh_data(ax, data, xaxes, yaxes, name, subtit):
-    """
-    Plot data with range of variability.
-
-    Creates only one plot, so can be used both one plot and subplot type of figs
-
-    Args:
-        ax(array): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
-        xaxes(array): time in datetime format
-        yaxes(array): height
-        name(string): name of plotted data
-        subtit(string): title of fig
-    """
-    variables = ATTRIBUTES[name]
-    cmap = variables.cbar
-    vmin = variables.plot_range[0]
-    vmax = variables.plot_range[-1]
-
-    if variables.plot_scale == 'logarithmic':
-        data = np.log10(data)
-        vmin = np.log10(vmin)
-        vmax = np.log10(vmax)
-        logs = ptools.generate_log_cbar_ticklabel_list(vmin, vmax)
-
-    pl = ax.pcolormesh(xaxes, yaxes, data.T, cmap=cmap, vmin=vmin,
-                       vmax=vmax)
-    divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="1%", pad=0.25)
-    cb = plt.colorbar(pl, fraction=1.0, ax=ax, cax=cax)
-
-    if variables.plot_scale == 'logarithmic':
-        cb.set_ticks(np.arange(vmin, vmax + 1, 1))
-        cb.ax.set_yticklabels(logs)
-    cb.set_label(variables.clabel, fontsize=13)
-
-    ax.set_title(variables.name + subtit, fontsize=14)
-
-
-def generate_figure(nc_file, data_names, show=True, saving_path=None, max_y=12):
-    """ Usage to generate figure and plot wanted fig.
-        Can be used for plotting both one fig and subplots.
-        data_names is list of product names on select nc-file.
-    """
-    n = len(data_names)
-    datas, time_array, height, case_date = \
-        ptools.read_variables_and_date(data_names, nc_file)
-    time_array = ptools.convert_dtime_to_datetime(case_date, time_array)
-    subtit = " from CloudnetPy"
-
-    fig, ax = _initialize_figure(n)
-    fig.subplots_adjust(left=0.06, right=0.73)
-
-    saving_name = ""
-    for i, name in enumerate(data_names):
-        ax[i] = _initialize_time_height_axes(ax[i], n, i, max_y)
-        if ATTRIBUTES[name].plot_type == 'segment':
-            _plot_segment_data(ax[i], datas[i], time_array, height, name, subtit)
-        else:
-            _plot_colormesh_data(ax[i], datas[i], time_array, height, name, subtit)
-        saving_name += ("_" + name)
-
-    x = ptools.convert_int2decimal(n)
-    fig.suptitle(case_date.strftime("%-d %b %Y"), fontsize=13,
-                 y=0.94+(n-x), x=0.11, fontweight='bold')
-    if saving_path:
-        plt.savefig(saving_path+case_date.strftime("%Y%m%d")+saving_name+".png",
-                    bbox_inches='tight')
-    if show:
-        plt.show()

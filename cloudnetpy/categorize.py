@@ -249,7 +249,8 @@ class Radar(ProfileDataSource):
 
         def _number_of_pulses():
             """Returns number of independent pulses."""
-            dwell_time = utils.mdiff(self.time) * 3600  # seconds
+            seconds_in_hour = 3600
+            dwell_time = utils.mdiff(self.time) * seconds_in_hour
             return (dwell_time * self.radar_frequency * 1e9 * 4
                     * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
 
@@ -331,7 +332,9 @@ class Mwr(DataSource):
         self.append_data(lwp_error, 'lwp_error')
 
     def interpolate_in_time(self, time_grid):
-        """Interpolates liquid water path and its error to Cloudnet's dense time grid."""
+        """Interpolates liquid water path and its error to Cloudnet's dense time grid.
+        This is wrong. We need to use binning instead.
+        """
         for key in self.data:
             fun = interp1d(self.time, self.data[key][:], fill_value='extrapolate')
             self.append_data(fun(time_grid), key, units='g m-2')
