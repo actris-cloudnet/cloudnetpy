@@ -156,7 +156,7 @@ ATTRIBUTES = {
     'lwc_error': PlotMeta(
         'Random error in liquid water content, one standard deviation',
         clabel='dB',
-        plot_range=(0,2),
+        plot_range=(0, 2),
         plot_scale=_LIN,
         plot_type='mesh'
     ),

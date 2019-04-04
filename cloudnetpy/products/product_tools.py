@@ -1,4 +1,7 @@
 """General helper functions for all products."""
+import numpy as np
+import netCDF4
+from datetime import time, datetime
 import cloudnetpy.utils as utils
 
 
@@ -50,3 +53,17 @@ def _get_quality_keys():
 def get_source(data_handler):
     """Returns uuid (or filename if uuid not found) of the source file."""
     return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
+
+
+def read_nc_fields(nc_file, field_names):
+    """Reads selected variables from a netCDF file and returns as a list."""
+    nc_variables = netCDF4.Dataset(nc_file).variables
+    return [nc_variables[name][:] for name in field_names]
+
+
+def convert_dtime_to_datetime(case_date, time_array):
+    """Converts decimal time array to datetime array"""
+    time_array = [time(int(t), int((t*60) % 60), int((t*3600) % 60))
+                  for t in time_array]
+    time_array = [datetime.combine(case_date, t) for t in time_array]
+    return np.asanyarray(time_array)
