@@ -19,6 +19,8 @@ PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 
 _LOG = 'logarithmic'
 _LIN = 'linear'
+_KGM2 = '$kg$'+' $m^{-2}$'
+_KGM3 = '$kg$'+' $m^{-3}$'
 
 _CLABEL = {
     'target_classification':
@@ -194,7 +196,7 @@ ATTRIBUTES = {
     'lwp': PlotMeta(
         'Liquid water path',
         cbar=_CBAR['lwp'],
-        clabel='$kg$'+' $m^{-2}$',
+        clabel=_KGM2,
         plot_range=(-100, 1000),
         plot_scale=_LIN,
         plot_type='bar'
@@ -216,7 +218,7 @@ ATTRIBUTES = {
     'iwc': PlotMeta(
         'Ice water content',
         cbar=_CBAR['iwc'],
-        clabel='$kg$'+' $m^{-3}$',
+        clabel=_KGM3,
         plot_range=(1e-7, 1e-3),
         plot_scale=_LOG,
         plot_type='mesh'
@@ -238,7 +240,7 @@ ATTRIBUTES = {
     'iwc_inc_rain': PlotMeta(
         'Ice water content including rain',
         cbar=_CBAR['iwc_inc_rain'],
-        clabel='$kg$'+' $m^{-3}$',
+        clabel=_KGM3,
         plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
@@ -246,7 +248,7 @@ ATTRIBUTES = {
     'lwc': PlotMeta(
         'Liquid water content',
         cbar=_CBAR['lwc'],
-        clabel='$kg$'+' $m^{-3}$',
+        clabel=_KGM3,
         plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
@@ -267,7 +269,7 @@ ATTRIBUTES = {
     'lwc_th': PlotMeta(
         'Liquid water content (tophat distribution)',
         cbar=_CBAR['lwc_th'],
-        clabel='$kg$'+' $m^{-3}$',
+        clabel=_KGM3,
         plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
