@@ -175,7 +175,7 @@ def _plot_colormesh_data(ax, data, axes, name):
 
     if variables.plot_scale == 'logarithmic':
         tick_labels = _generate_log_cbar_ticklabel_list(vmin, vmax)
-        colorbar.set_ticks(np.arange(vmin, vmax + 1, 1))
+        colorbar.set_ticks(np.arange(vmin, vmax+1))
         colorbar.ax.set_yticklabels(tick_labels)
 
     colorbar.set_label(variables.clabel, fontsize=13)
@@ -190,9 +190,18 @@ def _init_colorbar(plot, axis):
 
 def generate_figure(nc_file, field_names, show=True, save_path=None,
                     max_y=12, dpi=200):
-    """ Usage to generate figure and plot wanted fig.
-        Can be used for plotting both one fig and subplots.
-        data_names is list of product names on select nc-file.
+    """Generates a Cloudnet figure.
+
+    Args:
+        nc_file (str): Input file.
+        field_names (list): Variable names to be plotted.
+        show (bool, optional): If True, shows the figure. Default is True.
+        save_path (str, optional): Setting this path will save the figure (in the
+            given path). Default is None, when the figure is not saved.
+        max_y (int, optional): Upper limit in the plots (km). Default is 12.
+        dpi (int, optional): Figure quality (if saved). Higher value means
+            more pixels, i.e., better image quality. Default is 200.
+
     """
     n_fields = len(field_names)
     case_date = _read_case_date(nc_file)
