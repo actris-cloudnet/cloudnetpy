@@ -23,6 +23,7 @@ _LIN = 'linear'
 _KGM2 = '$kg$'+' $m^{-2}$'
 _KGM3 = '$kg$'+' $m^{-3}$'
 _MS2 = '$m$' + ' $s^{-1}$'
+_SR1 = '$sr^{-1}$' + ' $m^{-1}$'
 
 _CLABEL = {
     'target_classification':
@@ -97,7 +98,7 @@ ATTRIBUTES = {
     'beta': PlotMeta(
         'Attenuated backscatter coefficient',
         cbar='jet',
-        clabel='$sr^{-1}$' + ' $m^{-1}$',
+        clabel=_SR1,
         plot_range=(1e-7, 1e-3),
         plot_scale=_LOG,
         plot_type='mesh'
@@ -105,7 +106,7 @@ ATTRIBUTES = {
     'beta_raw': PlotMeta(
         'Attenuated backscatter coefficient',
         cbar='jet',
-        clabel='$sr^{-1}$' + ' $m^{-1}$',
+        clabel=_SR1,
         plot_range=(1e-7, 1e-3), #*10?
         plot_scale=_LOG,
         plot_type='mesh'
@@ -150,6 +151,7 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
      ),
+    # This need to be fixed
     'insect_prob': PlotMeta(
         'Attenuated backscatter coefficient',
         cbar='viridius',
