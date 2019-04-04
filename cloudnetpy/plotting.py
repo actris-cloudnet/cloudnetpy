@@ -1,14 +1,14 @@
 """Misc. plotting routines for Cloudnet products."""
 
 from datetime import date
+import numpy as np
+import numpy.ma as ma
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-import netCDF4
-import numpy as np
-import numpy.ma as ma
-import seaborn
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import netCDF4
+import seaborn
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy import utils
 from .plot_meta import ATTRIBUTES
@@ -98,7 +98,7 @@ def _set_axes(ylim, shape, grid):
     plt.ylim(ylim)
     if grid:
         plt.grid(color=(.8, .8, .8), linestyle=':')
-    
+
 
 def _showpic(nsubs, dvec, savefig, imagepath, name):
     """Adjusts layout etc. and shows the actual figure."""
@@ -223,8 +223,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None, max_y=12):
 def _add_subtitle(fig, n_fields, case_date):
     """Adds subtitle into figure."""
     y = _calc_subtitle_y(n_fields)
-    fig.suptitle(case_date.strftime("%-d %b %Y"), fontsize=13,
-                 y=y, x=0.11, fontweight='bold')
+    fig.suptitle(case_date.strftime("%-d %b %Y"), fontsize=13, y=y, x=0.11,
+                 fontweight='bold')
 
 
 def _calc_subtitle_y(n_fields):
