@@ -110,9 +110,9 @@ ATTRIBUTES = {
     ),
     'iwc_error': PlotMeta(
         name='Random error in ice water content, one standard deviation',
-        cbar='jet',
+        cbar='RdYlGn_r',
         clabel='dB',
-        plot_range=(0, 3),
+        plot_range=(0, 5),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
