@@ -253,8 +253,12 @@ def _add_subtitle(fig, n_fields, case_date):
 
 def _calc_subtitle_y(n_fields):
     """Returns the correct y-position of subtitle. """
-    pos = 0.927 - n_fields*0.01
-    return pos*1.02 if n_fields == 1 else pos
+    pos = 0.903
+    step = 0.008
+    for _ in np.arange(2, n_fields):
+        pos -= step
+        step /= 2
+    return 0.93 if n_fields == 1 else pos
 
 
 def _read_case_date(nc_file):

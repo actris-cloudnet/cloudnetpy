@@ -104,7 +104,7 @@ ATTRIBUTES = {
         name='Radar reflectivity factor',
         cbar='viridis',
         clabel=_DBZ,
-        plot_range=(-40, 30),
+        plot_range=(-40, 15),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
@@ -136,7 +136,7 @@ ATTRIBUTES = {
         name='Doppler velocity',
         cbar='RdBu_r',
         clabel=_MS1,
-        plot_range=(-4, 2),
+        plot_range=(-4, 4),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
