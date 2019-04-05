@@ -198,7 +198,7 @@ def generate_lwc(categorize_file, output_file):
 
 
 def _append_data(lwc_data, lwc_obj):
-    lwc_data.append_data(lwc_obj.lwc, 'lwc', units='g m-3')
+    lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc', units='kg m-3')
     lwc_data.append_data(lwc_obj.status, 'lwc_retrieval_status')
     lwc_data.append_data(lwc_data.lwp, 'lwp')
     lwc_data.append_data(lwc_data.lwp_error, 'lwp_error')

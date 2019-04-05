@@ -1,12 +1,6 @@
 """Metadata for plotting module."""
 from collections import namedtuple
 
-"""Information for plotting of all parameter in CloudnetPy"""
-
-#TODO: - Lisää tarvittaviin muuttujiin yksikkömuutos termi, että plottaus aina
-#        samassa yksikössä. Oletus, että alkuperäisyksikkö aina sama.
-#      - Muokkaa colorbaria jetissä siten, että minimi valkoinen ja max musta
-
 FIELDS = ('name',
           'cbar',
           'clabel',
@@ -20,10 +14,13 @@ PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 
 _LOG = 'logarithmic'
 _LIN = 'linear'
-_KGM2 = '$kg$'+' $m^{-2}$'
-_KGM3 = '$kg$'+' $m^{-3}$'
-_MS2 = '$m$' + ' $s^{-1}$'
-_SR1 = '$sr^{-1}$' + ' $m^{-1}$'
+
+_MS1 = 'm $s^{-1}$'
+_SR1M1 = 'sr$^{-1}$ m$^{-1}$'
+_KGM2 = 'kg m$^{-2}$'
+_KGM3 = 'kg m$^{-3}$'
+_DB = 'dB'
+_DBZ = 'dBZ'
 
 _CLABEL = {
     'target_classification':
@@ -31,7 +28,8 @@ _CLABEL = {
          "Cloud droplets only",
          "Drizzle or rain",
          "Drizzle/rain or cloud droplets",
-         "Ice", "Ice & supercooled droplets",
+         "Ice",
+         "Ice & supercooled droplets",
          "Melting ice",
          "Melting ice & cloud droplets",
          "Aerosols",
@@ -86,159 +84,148 @@ _CBAR = {
 }
 
 ATTRIBUTES = {
-    # Categorize
-    'rain_rate': PlotMeta(
-        'Rain rate',
-        cbar='jet',
-        clabel='$mm$' + ' $h^{-1}$',
-        plot_range=(0, 50),
-        plot_scale=_LIN,
-        plot_type='mesh'
-     ),
     'beta': PlotMeta(
-        'Attenuated backscatter coefficient',
-        cbar='jet',
-        clabel=_SR1,
+        name='Attenuated backscatter coefficient',
+        cbar='viridis',
+        clabel=_SR1M1,
         plot_range=(1e-7, 1e-3),
         plot_scale=_LOG,
         plot_type='mesh'
      ),
     'beta_raw': PlotMeta(
-        'Attenuated backscatter coefficient',
-        cbar='jet',
-        clabel=_SR1,
-        plot_range=(1e-7, 1e-3), #*10?
+        name='Raw attenuated backscatter coefficient',
+        cbar='viridis',
+        clabel=_SR1M1,
+        plot_range=(1e-7, 1e-3),
         plot_scale=_LOG,
         plot_type='mesh'
      ),
     'Z': PlotMeta(
-        'Radar reflectivity factor',
-        cbar='jet',
-        clabel='$dBZ$',
+        name='Radar reflectivity factor',
+        cbar='viridis',
+        clabel=_DBZ,
         plot_range=(-40, 30),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
     'Ze': PlotMeta(
-        'Radar reflectivity factor',
-        cbar='jet',
-        clabel='$dBZ$',
+        name='Radar reflectivity factor',
+        cbar='viridis',
+        clabel=_DBZ,
         plot_range=(-40, 20),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
     'ldr': PlotMeta(
-        'Linear depolarisation ratio',
-        cbar='viridius',
-        clabel='$dB$',
+        name='Linear depolarisation ratio',
+        cbar='viridis',
+        clabel=_DB,
         plot_range=(-35, -10),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
     'width': PlotMeta(
-        'Spectral width',
-        cbar='viridius',
-        clabel=_MS2,
+        name='Spectral width',
+        cbar='viridis',
+        clabel=_MS1,
         plot_range=(0, 1),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
     'v': PlotMeta(
-        'Doppler velocity',
+        name='Doppler velocity',
         cbar='RdBu_r',
-        clabel=_MS2,
+        clabel=_MS1,
         plot_range=(-4, 2),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
-    # This need to be fixed
     'insect_prob': PlotMeta(
-        'Attenuated backscatter coefficient',
+        name='Insect probability',
         cbar='viridius',
-        clabel='$sr^{-1}$' + ' $m^{-1}$',
+        clabel=_SR1M1,
         plot_range=(0, 1),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
     'radar_liquid_atten': PlotMeta(
-        'Approximate two-way radar attenuation due to liquid water',
-        cbar='viridius',
-        clabel='$dB$',
+        name='Approximate two-way radar attenuation due to liquid water',
+        cbar='viridis',
+        clabel=_DB,
         plot_range=(0, 10),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
     'radar_gas_atten': PlotMeta(
-        'Two-way radar attenuation due to atmospheric gases',
-        cbar='viridius',
-        clabel='$dB$',
+        name='Two-way radar attenuation due to atmospheric gases',
+        cbar='viridis',
+        clabel=_DB,
         plot_range=(0, 1),
         plot_scale=_LIN,
         plot_type='mesh'
      ),
     'lwp': PlotMeta(
-        'Liquid water path',
+        name='Liquid water path',
         cbar='Blues',
         clabel=_KGM2,
-        plot_range=(-100, 1000),
+        plot_range=(0, 1),
         plot_scale=_LIN,
         plot_type='bar'
     ),
-
-    # products
     'target_classification': PlotMeta(
-        'Target classification',
+        name='Target classification',
         cbar=_CBAR['target_classification'],
         clabel=_CLABEL['target_classification'],
         plot_type='segment'
     ),
     'detection_status': PlotMeta(
-        'Radar and lidar detection status',
+        name='Radar and lidar detection status',
         cbar=_CBAR['detection_status'],
         clabel=_CLABEL['detection_status'],
         plot_type='segment'
     ),
     'iwc': PlotMeta(
-        'Ice water content',
-        cbar='jet',
+        name='Ice water content',
+        cbar='viridis',
         clabel=_KGM3,
-        plot_range=(1e-7, 1e-3),
+        plot_range=(1e-7, 1e-4),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'iwc_inc_rain': PlotMeta(
+        name='Ice water content (including rain)',
+        cbar='viridis',
+        clabel=_KGM3,
+        plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
     'iwc_error': PlotMeta(
-        'Random error in ice water content, one standard deviation',
-        cbar='jet',
-        clabel='dB',
-        plot_range=(0, 3),
+        name='Ice water content error',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0, 5),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
     'iwc_retrieval_status': PlotMeta(
-        'Ice water content retrieval status',
+        name='Ice water content retrieval status',
         cbar=_CBAR['iwc_retrieval_status'],
         clabel=_CLABEL['iwc_retrieval_status'],
         plot_type='segment'
     ),
-    'iwc_inc_rain': PlotMeta(
-        'Ice water content including rain',
-        cbar='jet',
-        clabel=_KGM3,
-        plot_range=(1e-5, 1e-2),
-        plot_scale=_LOG,
-        plot_type='mesh'
-    ),
     'lwc': PlotMeta(
-        'Liquid water content',
-        cbar='jet',
+        name='Liquid water content',
+        cbar='viridis',
         clabel=_KGM3,
         plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
     'lwc_error': PlotMeta(
-        'Random error in liquid water content, one standard deviation',
-        clabel='dB',
+        name='Liquid water content error',
+        cbar='viridis',
+        clabel=_DB,
         plot_range=(0, 2),
         plot_scale=_LIN,
         plot_type='mesh'
@@ -249,12 +236,4 @@ ATTRIBUTES = {
         clabel=_CLABEL['lwc_retrieval_status'],
         plot_type='segment'
     ),
-    'lwc_th': PlotMeta(
-        'Liquid water content (tophat distribution)',
-        cbar='jet',
-        clabel=_KGM3,
-        plot_range=(1e-5, 1e-2),
-        plot_scale=_LOG,
-        plot_type='mesh'
-    )
 }
