@@ -128,7 +128,8 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     plt.show()
 
 
-IDENTIFIER = " from CloudnetPy"
+#IDENTIFIER = " from CloudnetPy"
+IDENTIFIER = ""
 
 
 def _plot_segment_data(ax, data, axes, name):
@@ -151,6 +152,11 @@ def _plot_segment_data(ax, data, axes, name):
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
+#def _lin2log(list_in):
+#    for item in list_in:
+#        item = np.log10(item)
+
+
 def _plot_colormesh_data(ax, data, axes, name):
     """ Plot data with range of variability.
 
@@ -163,10 +169,10 @@ def _plot_colormesh_data(ax, data, axes, name):
         name (string): name of plotted data
     """
     variables = ATTRIBUTES[name]
-    cmap = variables.cbar
+    cmap = plt.get_cmap(variables.cbar, 10)
     vmin, vmax = variables.plot_range
-
     if variables.plot_scale == 'logarithmic':
+        #_lin2log([data, vmin, vmax])
         data = np.log10(data)
         vmin = np.log10(vmin)
         vmax = np.log10(vmax)
@@ -176,7 +182,7 @@ def _plot_colormesh_data(ax, data, axes, name):
 
     if variables.plot_scale == 'logarithmic':
         tick_labels = _generate_log_cbar_ticklabel_list(vmin, vmax)
-        colorbar.set_ticks(np.arange(vmin, vmax + 1, 1))
+        colorbar.set_ticks(np.arange(vmin, vmax+1))
         colorbar.ax.set_yticklabels(tick_labels)
 
     colorbar.set_label(variables.clabel, fontsize=13)
@@ -189,15 +195,33 @@ def _init_colorbar(plot, axis):
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
-def generate_figure(nc_file, field_names, show=True, save_path=None, max_y=12):
-    """ Usage to generate figure and plot wanted fig.
-        Can be used for plotting both one fig and subplots.
-        data_names is list of product names on select nc-file.
+def _parse_field_names(nc_file, field_names):
+    variables = netCDF4.Dataset(nc_file).variables
+    return [field for field in field_names if field in variables]
+
+
+def generate_figure(nc_file, field_names, show=True, save_path=None,
+                    max_y=12, dpi=200):
+    """Generates a Cloudnet figure.
+
+    Args:
+        nc_file (str): Input file.
+        field_names (list): Variable names to be plotted.
+        show (bool, optional): If True, shows the figure. Default is True.
+        save_path (str, optional): Setting this path will save the figure (in the
+            given path). Default is None, when the figure is not saved.
+        max_y (int, optional): Upper limit in the plots (km). Default is 12.
+        dpi (int, optional): Figure quality (if saved). Higher value means
+            more pixels, i.e., better image quality. Default is 200.
+
     """
-    n_fields = len(field_names)
+
+    field_names = _parse_field_names(nc_file, field_names)
+
+    data_fields = ptools.read_nc_fields(nc_file, field_names)
+    n_fields = len(data_fields)
     case_date = _read_case_date(nc_file)
     axes = _read_axes(nc_file, case_date)
-    data_fields = ptools.read_nc_fields(nc_file, field_names)
 
     fig, ax = _initialize_figure(n_fields)
 
@@ -215,7 +239,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None, max_y=12):
 
     if save_path:
         plt.savefig(save_path+case_date.strftime("%Y%m%d")+saving_name+".png",
-                    bbox_inches='tight')
+                    bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
 
@@ -229,7 +253,8 @@ def _add_subtitle(fig, n_fields, case_date):
 
 def _calc_subtitle_y(n_fields):
     """Returns the correct y-position of subtitle. """
-    return 0.92 - (n_fields - 1)*0.01
+    pos = 0.927 - n_fields*0.01
+    return pos*1.02 if n_fields == 1 else pos
 
 
 def _read_case_date(nc_file):
@@ -249,13 +274,7 @@ def _read_axes(nc_file, case_date):
 
 def _generate_log_cbar_ticklabel_list(vmin, vmax):
     """Create list of log format colorbar label ticks as string"""
-    log_string = []
-    n = int(abs(vmin - vmax) + 1)
-    for i in range(n):
-        log = ('10$^{%s}$' % (int(vmin) + i))
-        log_string.append(log)
-        vmin += 1
-    return log_string
+    return ['10$^{%s}$' % int(i) for i in np.arange(vmin, vmax+1)]
 
 
 def _initialize_figure(n_subplots):
@@ -274,7 +293,7 @@ def _colors_to_colormap(color_list):
 
 def _initialize_time_height_axes(ax, n_subplots, current_subplot, max_y):
     xlabel = 'Time ' + r'(UTC)'
-    ylabel = 'Height ' + '$(km)$'
+    ylabel = 'Height (km)'
     date_format = mdates.DateFormatter('%H:%M')
     ax.xaxis.set_major_formatter(date_format)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=4))

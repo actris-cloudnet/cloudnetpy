@@ -62,8 +62,14 @@ def read_nc_fields(nc_file, field_names):
 
 
 def convert_dtime_to_datetime(case_date, time_array):
-    """Converts decimal time array to datetime array"""
-    time_array = [time(int(t), int((t*60) % 60), int((t*3600) % 60))
-                  for t in time_array]
+    """Converts decimal time and date to datetime."""
+    time_array = [_dtime2time(t) for t in time_array]
     time_array = [datetime.combine(case_date, t) for t in time_array]
     return np.asanyarray(time_array)
+
+
+def _dtime2time(t):
+    hour = int(t)
+    minute = int((t*60) % 60)
+    sec = int((t*3600) % 60)
+    return time(hour, minute, sec)
