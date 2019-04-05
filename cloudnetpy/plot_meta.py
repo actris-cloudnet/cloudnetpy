@@ -12,8 +12,9 @@ PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 
 _LOG = 'logarithmic'
 _LIN = 'linear'
-_KGM2 = '$kg$'+' $m^{-2}$'
-_KGM3 = '$kg$'+' $m^{-3}$'
+_KGM2 = 'kg m^{-2}$'
+_KGM3 = 'kg m$^{-3}$'
+_DB = 'dB'
 
 _CLABEL = {
     'target_classification':
@@ -101,7 +102,7 @@ ATTRIBUTES = {
         plot_type='mesh'
     ),
     'iwc_inc_rain': PlotMeta(
-        name='Ice water content including rain',
+        name='Ice water content (including rain)',
         cbar='viridis',
         clabel=_KGM3,
         plot_range=(1e-7, 1e-4),
@@ -109,9 +110,9 @@ ATTRIBUTES = {
         plot_type='mesh'
     ),
     'iwc_error': PlotMeta(
-        name='Random error in ice water content, one standard deviation',
+        name='Ice water content error',
         cbar='RdYlGn_r',
-        clabel='dB',
+        clabel=_DB,
         plot_range=(0, 5),
         plot_scale=_LIN,
         plot_type='mesh'
@@ -124,7 +125,7 @@ ATTRIBUTES = {
     ),
     'iwc_bias': PlotMeta(
         name='Possible bias in ice water content, one standard deviation',
-        clabel='dB',
+        clabel=_DB,
     ),
     'iwc_sensitivity': PlotMeta(
         name='Minimum detectable ice water content',
@@ -139,9 +140,9 @@ ATTRIBUTES = {
         plot_type='mesh'
     ),
     'lwc_error': PlotMeta(
-        name='Random error in liquid water content, one standard deviation',
+        name='Liquid water content error',
         cbar='viridis',
-        clabel='dB',
+        clabel=_DB,
         plot_range=(0, 2),
         plot_scale=_LIN,
         plot_type='mesh'

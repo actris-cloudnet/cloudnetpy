@@ -128,7 +128,8 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     plt.show()
 
 
-IDENTIFIER = " from CloudnetPy"
+#IDENTIFIER = " from CloudnetPy"
+IDENTIFIER = ""
 
 
 def _plot_segment_data(ax, data, axes, name):
@@ -151,6 +152,11 @@ def _plot_segment_data(ax, data, axes, name):
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
+#def _lin2log(list_in):
+#    for item in list_in:
+#        item = np.log10(item)
+
+
 def _plot_colormesh_data(ax, data, axes, name):
     """ Plot data with range of variability.
 
@@ -163,9 +169,10 @@ def _plot_colormesh_data(ax, data, axes, name):
         name (string): name of plotted data
     """
     variables = ATTRIBUTES[name]
-    cmap = plt.get_cmap(variables.cbar, 8)
+    cmap = plt.get_cmap(variables.cbar, 10)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
+        #_lin2log([data, vmin, vmax])
         data = np.log10(data)
         vmin = np.log10(vmin)
         vmax = np.log10(vmax)
@@ -188,6 +195,11 @@ def _init_colorbar(plot, axis):
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
+def _parse_field_names(nc_file, field_names):
+    variables = netCDF4.Dataset(nc_file).variables
+    return [field for field in field_names if field in variables]
+
+
 def generate_figure(nc_file, field_names, show=True, save_path=None,
                     max_y=12, dpi=200):
     """Generates a Cloudnet figure.
@@ -203,10 +215,13 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             more pixels, i.e., better image quality. Default is 200.
 
     """
-    n_fields = len(field_names)
+
+    field_names = _parse_field_names(nc_file, field_names)
+
+    data_fields = ptools.read_nc_fields(nc_file, field_names)
+    n_fields = len(data_fields)
     case_date = _read_case_date(nc_file)
     axes = _read_axes(nc_file, case_date)
-    data_fields = ptools.read_nc_fields(nc_file, field_names)
 
     fig, ax = _initialize_figure(n_fields)
 
@@ -278,7 +293,7 @@ def _colors_to_colormap(color_list):
 
 def _initialize_time_height_axes(ax, n_subplots, current_subplot, max_y):
     xlabel = 'Time ' + r'(UTC)'
-    ylabel = 'Height ' + '$(km)$'
+    ylabel = 'Height (km)'
     date_format = mdates.DateFormatter('%H:%M')
     ax.xaxis.set_major_formatter(date_format)
     ax.xaxis.set_major_locator(mdates.HourLocator(interval=4))
