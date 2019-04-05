@@ -3,6 +3,7 @@ import numpy as np
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
+from cloudnetpy.metadata import CLASSIFICATION_ATTRIBUTES
 
 
 def generate_class(categorize_file, output_file):
@@ -25,7 +26,7 @@ def generate_class(categorize_file, output_file):
     data_handler = DataSource(categorize_file)
     _append_target_classification(data_handler)
     _append_detection_status(data_handler)
-    output.update_attributes(data_handler.data)
+    output.update_attributes(data_handler.data, CLASSIFICATION_ATTRIBUTES)
     _save_data_and_meta(data_handler, output_file)
 
 
