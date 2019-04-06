@@ -259,9 +259,8 @@ def _calc_subtitle_y(n_fields):
 
 def _read_case_date(nc_file):
     """Returns measurement date string."""
-    return date(int(netCDF4.Dataset(nc_file).year),
-                int(netCDF4.Dataset(nc_file).month),
-                int(netCDF4.Dataset(nc_file).day))
+    obj = netCDF4.Dataset(nc_file)
+    return date(int(obj.year), int(obj.month), int(obj.day))
 
 
 def _read_axes(nc_file, case_date):
