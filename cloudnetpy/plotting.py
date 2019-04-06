@@ -152,11 +152,6 @@ def _plot_segment_data(ax, data, axes, name):
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
-#def _lin2log(list_in):
-#    for item in list_in:
-#        item = np.log10(item)
-
-
 def _plot_colormesh_data(ax, data, axes, name):
     """ Plot data with range of variability.
 
@@ -172,7 +167,6 @@ def _plot_colormesh_data(ax, data, axes, name):
     cmap = plt.get_cmap(variables.cbar, 10)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
-        #_lin2log([data, vmin, vmax])
         data = np.log10(data)
         vmin = np.log10(vmin)
         vmax = np.log10(vmax)
@@ -196,6 +190,7 @@ def _init_colorbar(plot, axis):
 
 
 def _parse_field_names(nc_file, field_names):
+    """Returns field names that actually exist in the nc-file."""
     variables = netCDF4.Dataset(nc_file).variables
     return [field for field in field_names if field in variables]
 
@@ -215,17 +210,13 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             more pixels, i.e., better image quality. Default is 200.
 
     """
-
     field_names = _parse_field_names(nc_file, field_names)
-
     data_fields = ptools.read_nc_fields(nc_file, field_names)
     n_fields = len(data_fields)
     case_date = _read_case_date(nc_file)
     axes = _read_axes(nc_file, case_date)
-
     fig, ax = _initialize_figure(n_fields)
 
-    saving_name = ""
     for i, name in enumerate(field_names):
         ax[i] = _initialize_time_height_axes(ax[i], n_fields, i, max_y)
         if ATTRIBUTES[name].plot_type == 'segment':
@@ -233,15 +224,20 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         else:
             plotting_func = _plot_colormesh_data
         plotting_func(ax[i], data_fields[i], axes, name)
-        saving_name += ("_" + name)
 
     _add_subtitle(fig, n_fields, case_date)
 
     if save_path:
-        plt.savefig(save_path+case_date.strftime("%Y%m%d")+saving_name+".png",
-                    bbox_inches='tight', dpi=dpi)
+        file_name = _create_save_name(save_path, case_date, field_names)
+        plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
+
+
+def _create_save_name(save_path, case_date, field_names):
+    """Creates file name for saved images."""
+    date_string = case_date.strftime("%Y%m%d")
+    return f"{save_path}{date_string}_{'_'.join(field_names)}.png"
 
 
 def _add_subtitle(fig, n_fields, case_date):
