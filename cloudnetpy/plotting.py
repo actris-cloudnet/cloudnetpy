@@ -149,7 +149,7 @@ def _calc_subtitle_y(n_fields):
     """Returns the correct y-position of subtitle. """
     pos = 0.903
     step = 0.008
-    for _ in np.arange(2, n_fields):
+    for _ in range(2, n_fields):
         pos -= step
         step /= 2
     return 0.93 if n_fields == 1 else pos
