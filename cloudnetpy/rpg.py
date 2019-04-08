@@ -6,6 +6,7 @@ import numpy as np
 import numpy.ma as ma
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy import utils, output
+from .metadata import RPG_ATTRIBUTES
 
 
 class RpgBin:
@@ -283,7 +284,7 @@ def rpg2nc(path_to_l1_files, output_file, site_properties):
     one_day_of_data = _create_one_day_data_record(l1_files)
     rpg = Rpg(one_day_of_data, site_properties)
     rpg.linear_to_db(('Ze', 'ldr', 'antenna_gain'))
-    output.update_attributes(rpg.data)
+    output.update_attributes(rpg.data, RPG_ATTRIBUTES)
     _save_rpg(rpg, output_file)
 
 

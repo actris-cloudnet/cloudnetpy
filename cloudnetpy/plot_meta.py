@@ -4,6 +4,8 @@ from collections import namedtuple
 FIELDS = ('name',
           'cbar',
           'clabel',
+          'xlabel',
+          'ylabel',
           'plot_range',
           'plot_scale',
           'plot_type')
@@ -12,9 +14,13 @@ PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 
 _LOG = 'logarithmic'
 _LIN = 'linear'
-_KGM2 = 'kg m^{-2}$'
+
+_MS1 = 'm $s^{-1}$'
+_SR1M1 = 'sr$^{-1}$ m$^{-1}$'
+_KGM2 = 'kg m$^{-2}$'
 _KGM3 = 'kg m$^{-3}$'
 _DB = 'dB'
+_DBZ = 'dBZ'
 
 _CLABEL = {
     'target_classification':
@@ -66,21 +72,106 @@ _CBAR = {
     'target_classification':
         ("#f8f8ff", "#00bfff", "#ff4500", "#0000ff", "#ffff00", "#32cd32",
          "#ffa500", "#66cdaa", "#d3d3d3", "#778899", "#2f4f4f"),
-
     'detection_status':
         ("#f8f8ff", "#ffff00", "#2f4f4f", "#3cb371", "#778899", "#87cefa",
          "#d3d3d3", "#0000ff", "#ff4500", "#ffa500"),
-
     'iwc_retrieval_status':
         ("#f8f8ff", "#00bfff", "#ff4500", "#0000ff", "#ffff00",
          "#2f4f4f", "#778899", "#d3d3d3"),
-
     'lwc_retrieval_status':
-        ("#f8f8ff", "#00bfff", "#0000ff", "#2f4f4f", "#ffa500", 
+        ("#f8f8ff", "#00bfff", "#0000ff", "#2f4f4f", "#ffa500",
          "#ff4500", "#2f4f4f"),
 }
 
 ATTRIBUTES = {
+    'beta': PlotMeta(
+        name='Attenuated backscatter coefficient',
+        cbar='viridis',
+        clabel=_SR1M1,
+        plot_range=(1e-7, 1e-3),
+        plot_scale=_LOG,
+        plot_type='mesh'
+     ),
+    'beta_raw': PlotMeta(
+        name='Raw attenuated backscatter coefficient',
+        cbar='viridis',
+        clabel=_SR1M1,
+        plot_range=(1e-7, 1e-3),
+        plot_scale=_LOG,
+        plot_type='mesh'
+     ),
+    'Z': PlotMeta(
+        name='Radar reflectivity factor',
+        cbar='viridis',
+        clabel=_DBZ,
+        plot_range=(-40, 15),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
+    'Ze': PlotMeta(
+        name='Radar reflectivity factor',
+        cbar='viridis',
+        clabel=_DBZ,
+        plot_range=(-40, 20),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
+    'ldr': PlotMeta(
+        name='Linear depolarisation ratio',
+        cbar='viridis',
+        clabel=_DB,
+        plot_range=(-35, -10),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
+    'width': PlotMeta(
+        name='Spectral width',
+        cbar='viridis',
+        clabel=_MS1,
+        plot_range=(0, 1),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
+    'v': PlotMeta(
+        name='Doppler velocity',
+        cbar='RdBu_r',
+        clabel=_MS1,
+        plot_range=(-4, 4),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
+    'insect_prob': PlotMeta(
+        name='Insect probability',
+        cbar='viridius',
+        clabel=_SR1M1,
+        plot_range=(0, 1),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
+    'radar_liquid_atten': PlotMeta(
+        name='Approximate two-way radar attenuation due to liquid water',
+        cbar='viridis',
+        clabel=_DB,
+        plot_range=(0, 10),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
+    'radar_gas_atten': PlotMeta(
+        name='Two-way radar attenuation due to atmospheric gases',
+        cbar='viridis',
+        clabel=_DB,
+        plot_range=(0, 1),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
+    'lwp': PlotMeta(
+        name='Liquid water path',
+        cbar='Blues',
+        clabel=_KGM2,
+        plot_range=(0, 1),
+        plot_scale=_LIN,
+        plot_type='bar'
+    ),
     'target_classification': PlotMeta(
         name='Target classification',
         cbar=_CBAR['target_classification'],
@@ -123,14 +214,6 @@ ATTRIBUTES = {
         clabel=_CLABEL['iwc_retrieval_status'],
         plot_type='segment'
     ),
-    'iwc_bias': PlotMeta(
-        name='Possible bias in ice water content, one standard deviation',
-        clabel=_DB,
-    ),
-    'iwc_sensitivity': PlotMeta(
-        name='Minimum detectable ice water content',
-        clabel=_KGM3,
-    ),
     'lwc': PlotMeta(
         name='Liquid water content',
         cbar='viridis',
@@ -148,19 +231,9 @@ ATTRIBUTES = {
         plot_type='mesh'
     ),
     'lwc_retrieval_status': PlotMeta(
-        name='Liquid water content retrieval status',
+        'Liquid water content retrieval status',
         cbar=_CBAR['lwc_retrieval_status'],
         clabel=_CLABEL['lwc_retrieval_status'],
         plot_type='segment'
-    ),
-    'lwp': PlotMeta(
-        name='Liquid water path',
-        clabel=_KGM2,
-        plot_range=(0, 1),
-        plot_scale=_LIN,
-    ),
-    'lwp_error': PlotMeta(
-        name='Random error in liquid water path, one standard deviation',
-        clabel=_KGM2,
     ),
 }

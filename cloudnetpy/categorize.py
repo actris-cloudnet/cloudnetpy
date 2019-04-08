@@ -9,6 +9,7 @@ import scipy.constants
 from scipy.interpolate import interp1d
 from cloudnetpy import atmos, classify, config, output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
+from .metadata import CATEGORIZE_ATTRIBUTES
 
 
 class DataSource:
@@ -507,7 +508,7 @@ def generate_categorize(input_files, output_file):
     radar.calc_errors(attenuations, classification)
     quality = classify.fetch_quality(radar, lidar, classification, attenuations)
     output_data = _prepare_output()
-    output.update_attributes(output_data)
+    output.update_attributes(output_data, CATEGORIZE_ATTRIBUTES)
     _save_cat(output_file, radar, lidar, model, output_data)
 
 

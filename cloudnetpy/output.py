@@ -1,7 +1,7 @@
 """ Functions for Categorize output file writing."""
 import netCDF4
 from . import config, utils, version
-from .metadata import ATTRIBUTES
+from .metadata import COMMON_ATTRIBUTES
 
 
 def write_vars2nc(rootgrp, cloudnet_variables, zlib):
@@ -55,7 +55,7 @@ def copy_global(source, target, attr_list):
             setattr(target, attr_name, source.getncattr(attr_name))
 
 
-def update_attributes(cloudnet_variables):
+def update_attributes(cloudnet_variables, ATTRIBUTES):
     """Overrides existing CloudnetArray-attributes.
 
     Overrides existing attributes using hard-coded values.
@@ -68,7 +68,8 @@ def update_attributes(cloudnet_variables):
     for key in cloudnet_variables:
         if key in ATTRIBUTES:
             cloudnet_variables[key].set_attributes(ATTRIBUTES[key])
-
+        if key in COMMON_ATTRIBUTES:
+            cloudnet_variables[key].set_attributes(COMMON_ATTRIBUTES[key])
 
 def init_file(file_name, dimensions, obs, zlib):
     root_group = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')

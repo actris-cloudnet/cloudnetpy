@@ -9,6 +9,7 @@ import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
 import cloudnetpy.atmos as atmos
+from cloudnetpy.metadata import IWC_ATTRIBUTES
 
 
 class IwcSource(DataSource):
@@ -207,7 +208,7 @@ def generate_iwc(categorize_file, output_file):
     _append_iwc_error(iwc_data, ice_class)
     _append_iwc_sensitivity(iwc_data)
     _append_iwc_status(iwc_data, ice_class)
-    output.update_attributes(iwc_data.data)
+    output.update_attributes(iwc_data.data, IWC_ATTRIBUTES)
     _save_data_and_meta(iwc_data, output_file)
 
 
