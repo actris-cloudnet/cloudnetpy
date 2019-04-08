@@ -1,6 +1,8 @@
 """Module for reading and processing Vaisala ceilometers."""
 import linecache
 import numpy as np
+from cloudnetpy import plotting
+import matplotlib.pyplot as plt
 import sys
 
 
@@ -21,14 +23,9 @@ class VaisalaCeilo:
         range_resolution = int(self.metadata['range_resolution'][0])
         return np.arange(1, n_gates + 1) * range_resolution
 
-    def _read_all_lines(self):
-        """Returns file contents as list, one line per element."""
-        with open(self.file_name) as file:
-            return file.readlines()
-
     def _read_backscatter(self, lines):
         n_chars = self.hex_conversion_params[0]
-        n_gates = int((len(lines[0])-1)/n_chars)
+        n_gates = int(len(lines[0])/n_chars)
         profiles = np.zeros((len(lines), n_gates), dtype=int)
         ran = range(0, n_gates*n_chars, n_chars)
         for ind, line in enumerate(lines):
@@ -36,6 +33,7 @@ class VaisalaCeilo:
                 profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
             except ValueError as error:
                 print(error)
+
         ind = np.where(profiles & self.hex_conversion_params[1] != 0)
         profiles[ind] -= self.hex_conversion_params[2]
         return profiles
@@ -46,23 +44,32 @@ class VaisalaCeilo:
         return np.array(time)
 
     @staticmethod
-    def _parse_empty_lines(data):
-        """Returns indices of empty elements in list."""
-        return [n for n, _ in enumerate(data) if is_empty_line(data[n])]
+    def _screen_empty_lines(data):
+        """Removes empty lines from the list of data."""
 
-    @staticmethod
-    def _parse_data_lines(data, empty_lines):
-        number_of_data_lines = empty_lines[1] - empty_lines[0] - 1
-        lines = []
-        for line_number in range(number_of_data_lines):
-            lines.append([data[n+line_number+1] for n in empty_lines])
-        return lines
+        def _parse_empty_lines():
+            return [n for n, _ in enumerate(data) if is_empty_line(data[n])]
 
-    @classmethod
-    def _find_data_lines(cls, data):
-        empty_lines = cls._parse_empty_lines(data)
-        data_lines = cls._parse_data_lines(data, empty_lines)
+        def _parse_data_lines(empty_indices):
+            number_of_data_lines = empty_indices[1] - empty_indices[0] - 1
+            lines = []
+            for line_number in range(number_of_data_lines):
+                lines.append([data[n + line_number + 1] for n in empty_indices])
+            return lines
+
+        empty_lines = _parse_empty_lines()
+        data_lines = _parse_data_lines(empty_lines)
         return data_lines
+
+    def _fetch_data_lines(self):
+        """Finds data lines (header + backscatter) from ceilometer file."""
+        def _read_all_lines():
+            """Returns file contents as list, one line per element."""
+            with open(self.file_name) as file:
+                return file.readlines()
+
+        all_lines = _read_all_lines()
+        return self._screen_empty_lines(all_lines)
 
     def _read_header_line_1(self, lines):
         """Reads all first header lines from CT25k and CL ceilometers."""
@@ -104,8 +111,7 @@ class ClCeilo(VaisalaCeilo):
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
-        all_lines = self._read_all_lines()
-        data_lines = self._find_data_lines(all_lines)
+        data_lines = self._fetch_data_lines()
         header_line_1 = self._read_header_line_1(data_lines[1])
         self.message_number = self._get_message_number(header_line_1)
         header_line_2 = self._read_header_line_2(data_lines[2])
@@ -132,18 +138,6 @@ class ClCeilo(VaisalaCeilo):
         for line in lines:
             values.append(line.split())
         return _values_to_dict(keys, values)
-
-
-def _values_to_dict(keys, values):
-    out = {}
-    for i, key in enumerate(keys):
-        out[key] = np.array([x[i] for x in values])
-    return out
-
-
-def _split_string(string, indices):
-    """Split string between indices."""
-    return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
 
 
 class Cl51(ClCeilo):
@@ -174,8 +168,7 @@ class Ct25k(VaisalaCeilo):
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
-        all_lines = self._read_all_lines()
-        data_lines = self._find_data_lines(all_lines)
+        data_lines = self._fetch_data_lines()
         header_line_1 = self._read_header_line_1(data_lines[1])
         self.message_number = self._get_message_number(header_line_1)
         header_line_2 = self._read_header_line_2(data_lines[2])
@@ -187,7 +180,7 @@ class Ct25k(VaisalaCeilo):
     def _parse_hex_profiles(lines):
         """Collects ct25k profiles into list (one profile / element)."""
         n_profiles = len(lines[0])
-        return [''.join([lines[l][n] for l in range(16)]).strip()
+        return [''.join([lines[l][n][3:].strip() for l in range(16)])
                 for n in range(n_profiles)]
 
     def _read_header_line_3(self, lines):
@@ -207,6 +200,18 @@ def ceilo2nc(input_file, output_file):
     """Converts Vaisala ceilometer txt-file to netCDF."""
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()
+
+
+def _values_to_dict(keys, values):
+    out = {}
+    for i, key in enumerate(keys):
+        out[key] = np.array([x[i] for x in values])
+    return out
+
+
+def _split_string(string, indices):
+    """Split string between indices."""
+    return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
 
 
 def _initialize_ceilo(file):
