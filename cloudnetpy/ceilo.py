@@ -81,17 +81,18 @@ class VaisalaCeilo:
     @staticmethod
     def _read_header_line_2(lines):
         """Same for all data messages."""
-        keys = ('detection_status', 'warning')
+        keys = ('detection_status', 'warning', 'cloud_base_data', 'warning_flags')
         values = []
         for line in lines:
-            values.append([line[0], line[1], line[2:]])
+            distinct_values = [line[0], line[1], line[3:20], line[21:].strip()]
+            values.append(distinct_values)
         return _values_to_dict(keys, values)
 
     @staticmethod
     def _get_message_number(header_line_1):
         msg_no = header_line_1['message_number']
         assert len(np.unique(msg_no)) == 1, 'Error: inconsistent message numbers.'
-        return msg_no[0]
+        return int(msg_no[0])
 
 
 class ClCeilo(VaisalaCeilo):
@@ -103,17 +104,30 @@ class ClCeilo(VaisalaCeilo):
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
-
         all_lines = self._read_all_lines()
         data_lines = self._find_data_lines(all_lines)
         header_line_1 = self._read_header_line_1(data_lines[1])
         self.message_number = self._get_message_number(header_line_1)
+        header_line_2 = self._read_header_line_2(data_lines[2])
+        header_line_3 = self._read_header_line_3(data_lines[3])
+        header_line_4 = self._read_header_line_4(data_lines[-3])
+        self.backscatter = self._read_backscatter(data_lines[-2])
+
+    def _read_header_line_3(self, lines):
+        if self.message_number != 2:
+            return None
+        keys = ('cloud_detection_status', 'cloud_amount_data')
+        values = []
+        for line in lines:
+            distinct_values = [line[0:3], line[3:].strip()]
+            values.append(distinct_values)
+        return _values_to_dict(keys, values)
 
     @staticmethod
     def _read_header_line_4(lines):
         keys = ('scale', 'range_resolution', 'number_of_gates', 'laser_energy',
-                'laser_temperature', 'window_transmission',
-                'receiver_sensitivity', 'window_contamination')
+                'laser_temperature', 'window_transmission', 'tilt_angle',
+                'background_light', 'measurement_parameters', 'backscatter_sum')
         values = []
         for line in lines:
             values.append(line.split())
@@ -166,10 +180,18 @@ class Ct25k(VaisalaCeilo):
         self.message_number = self._get_message_number(header_line_1)
         header_line_2 = self._read_header_line_2(data_lines[2])
         header_line_3 = self._read_header_line_3(data_lines[3])
-        header_line_4 = self._read_header_line_4(data_lines[4])
+        hex_profiles = self._parse_hex_profiles(data_lines[4:20])
+        self.backscatter = self._read_backscatter(hex_profiles)
+
+    @staticmethod
+    def _parse_hex_profiles(lines):
+        """Collects ct25k profiles into list (one profile / element)."""
+        n_profiles = len(lines[0])
+        return [''.join([lines[l][n] for l in range(16)]).strip()
+                for n in range(n_profiles)]
 
     def _read_header_line_3(self, lines):
-        if self.message_number == 1:
+        if self.message_number in (1, 3, 6):
             return None
         keys = ('scale', 'measurement_mode', 'laser_energy',
                 'laser_temperature', 'receiver_sensitivity',
@@ -179,11 +201,6 @@ class Ct25k(VaisalaCeilo):
         for line in lines:
             values.append(line.split())
         return _values_to_dict(keys, values)
-
-    def _read_header_line_4(self, lines):
-        if self.message_number < 3:
-            return None
-        return 0
 
 
 def ceilo2nc(input_file, output_file):
