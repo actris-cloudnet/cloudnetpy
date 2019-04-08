@@ -39,8 +39,7 @@ class VaisalaCeilo:
             return lines
 
         empty_lines = _parse_empty_lines()
-        data_lines = _parse_data_lines(empty_lines)
-        return data_lines
+        return _parse_data_lines(empty_lines)
 
     def _read_header_line_1(self, lines):
         """Reads all first header lines from CT25k and CL ceilometers."""
