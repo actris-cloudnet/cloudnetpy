@@ -18,31 +18,12 @@ class VaisalaCeilo:
         self.range = None
         self.time = None
 
-    def _calc_range(self):
-        n_gates = int(self.metadata['number_of_gates'][0])
-        range_resolution = int(self.metadata['range_resolution'][0])
-        return np.arange(1, n_gates + 1) * range_resolution
-
-    def _read_backscatter(self, lines):
-        n_chars = self.hex_conversion_params[0]
-        n_gates = int(len(lines[0])/n_chars)
-        profiles = np.zeros((len(lines), n_gates), dtype=int)
-        ran = range(0, n_gates*n_chars, n_chars)
-        for ind, line in enumerate(lines):
-            try:
-                profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
-            except ValueError as error:
-                print(error)
-
-        ind = np.where(profiles & self.hex_conversion_params[1] != 0)
-        profiles[ind] -= self.hex_conversion_params[2]
-        return profiles
-
-    @staticmethod
-    def _calc_time(time_lines):
-        time = [time_to_fraction_hour(line.split()[1]) for line in time_lines]
-        return np.array(time)
-
+    def _fetch_data_lines(self):
+        """Finds data lines (header + backscatter) from ceilometer file."""
+        with open(self.file_name) as file:
+            all_lines = file.readlines()
+        return self._screen_empty_lines(all_lines)
+        
     @staticmethod
     def _screen_empty_lines(data):
         """Removes empty lines from the list of data."""
@@ -60,16 +41,6 @@ class VaisalaCeilo:
         empty_lines = _parse_empty_lines()
         data_lines = _parse_data_lines(empty_lines)
         return data_lines
-
-    def _fetch_data_lines(self):
-        """Finds data lines (header + backscatter) from ceilometer file."""
-        def _read_all_lines():
-            """Returns file contents as list, one line per element."""
-            with open(self.file_name) as file:
-                return file.readlines()
-
-        all_lines = _read_all_lines()
-        return self._screen_empty_lines(all_lines)
 
     def _read_header_line_1(self, lines):
         """Reads all first header lines from CT25k and CL ceilometers."""
@@ -101,7 +72,32 @@ class VaisalaCeilo:
         assert len(np.unique(msg_no)) == 1, 'Error: inconsistent message numbers.'
         return int(msg_no[0])
 
+    def _read_backscatter(self, lines):
+        n_chars = self.hex_conversion_params[0]
+        n_gates = int(len(lines[0])/n_chars)
+        profiles = np.zeros((len(lines), n_gates), dtype=int)
+        ran = range(0, n_gates*n_chars, n_chars)
+        for ind, line in enumerate(lines):
+            try:
+                profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
+            except ValueError as error:
+                print(error)
 
+        ind = np.where(profiles & self.hex_conversion_params[1] != 0)
+        profiles[ind] -= self.hex_conversion_params[2]
+        return profiles
+
+    @staticmethod
+    def _calc_time(time_lines):
+        time = [time_to_fraction_hour(line.split()[1]) for line in time_lines]
+        return np.array(time)
+
+    def _calc_range(self):
+        n_gates = int(self.metadata['number_of_gates'][0])
+        range_resolution = int(self.metadata['range_resolution'][0])
+        return np.arange(1, n_gates + 1) * range_resolution
+
+    
 class ClCeilo(VaisalaCeilo):
     """Base class for Vaisala CL31/CL51 ceilometers."""
 
