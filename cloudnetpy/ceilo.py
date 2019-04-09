@@ -113,13 +113,12 @@ class VaisalaCeilo:
                 if field in int_variables:
                     meta[field] = int(values)
             else:
-                int_array = [None] * len(values)
+                meta[field] = [None] * len(values)
                 for ind, valu in enumerate(values):
                     try:
-                        int_array[ind] = int(valu)
+                        meta[field][ind] = int(valu)
                     except (ValueError, TypeError):
                         continue
-                meta[field] = int_array
         return meta
 
     @staticmethod
