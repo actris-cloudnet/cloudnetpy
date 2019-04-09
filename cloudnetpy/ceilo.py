@@ -1,6 +1,7 @@
 """Module for reading and processing Vaisala ceilometers."""
 import linecache
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy import plotting
 import matplotlib.pyplot as plt
 import sys
@@ -96,7 +97,46 @@ class VaisalaCeilo:
         range_resolution = int(self.metadata['range_resolution'][0])
         return np.arange(1, n_gates + 1) * range_resolution
 
-    
+    @classmethod
+    def _handle_metadata(cls, header):
+        meta = cls._concatenate_meta(header)
+        meta = cls._remove_meta_duplicates(meta)
+        meta = cls._convert_meta_strings(meta)
+        return meta
+
+    @staticmethod
+    def _convert_meta_strings(meta):
+        int_variables = ('tilt_angle', 'message_number', 'scale')
+        for field in meta:
+            values = meta[field]
+            if isinstance(values, str):
+                if field in int_variables:
+                    meta[field] = int(values)
+            else:
+                int_array = [None] * len(values)
+                for ind, valu in enumerate(values):
+                    try:
+                        int_array[ind] = int(valu)
+                    except (ValueError, TypeError):
+                        continue
+                meta[field] = int_array
+        return meta
+
+    @staticmethod
+    def _concatenate_meta(header):
+        meta = {}
+        for head in header:
+            meta = {**meta, **head}
+        return meta
+
+    @staticmethod
+    def _remove_meta_duplicates(meta):
+        for field in meta:
+            if len(np.unique(meta[field])) == 1:
+                meta[field] = meta[field][0]
+        return meta
+
+
 class ClCeilo(VaisalaCeilo):
     """Base class for Vaisala CL31/CL51 ceilometers."""
 
@@ -106,12 +146,14 @@ class ClCeilo(VaisalaCeilo):
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
+        header = []
         data_lines = self._fetch_data_lines()
-        header_line_1 = self._read_header_line_1(data_lines[1])
-        self.message_number = self._get_message_number(header_line_1)
-        header_line_2 = self._read_header_line_2(data_lines[2])
-        header_line_3 = self._read_header_line_3(data_lines[3])
-        header_line_4 = self._read_header_line_4(data_lines[-3])
+        header.append(self._read_header_line_1(data_lines[1]))
+        self.message_number = self._get_message_number(header[0])
+        header.append(self._read_header_line_2(data_lines[2]))
+        header.append(self._read_header_line_3(data_lines[3]))
+        header.append(self._read_header_line_4(data_lines[-3]))
+        self.metadata = self._handle_metadata(header)
         self.backscatter = self._read_backscatter(data_lines[-2])
 
     def _read_header_line_3(self, lines):
@@ -163,13 +205,15 @@ class Ct25k(VaisalaCeilo):
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
+        header = []
         data_lines = self._fetch_data_lines()
-        header_line_1 = self._read_header_line_1(data_lines[1])
-        self.message_number = self._get_message_number(header_line_1)
-        header_line_2 = self._read_header_line_2(data_lines[2])
-        header_line_3 = self._read_header_line_3(data_lines[3])
+        header.append(self._read_header_line_1(data_lines[1]))
+        self.message_number = self._get_message_number(header[0])
+        header.append(self._read_header_line_2(data_lines[2]))
+        header.append(self._read_header_line_3(data_lines[3]))
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.backscatter = self._read_backscatter(hex_profiles)
+        self.metadata = self._handle_metadata(header)
 
     @staticmethod
     def _parse_hex_profiles(lines):
