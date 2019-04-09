@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import netCDF4
-import seaborn
 import cloudnetpy.products.product_tools as ptools
 from .plot_meta import ATTRIBUTES
 
@@ -42,7 +41,7 @@ def _plot_segment_data(ax, data, axes, name):
     """
     variables = ATTRIBUTES[name]
     n = len(variables.cbar)
-    cmap = _colors_to_colormap(variables.cbar)
+    cmap = ListedColormap(variables.cbar)
     pl = ax.pcolormesh(*axes, data.T, cmap=cmap, vmin=-0.5, vmax=n-0.5)
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(0, n + 1, 1))
@@ -181,11 +180,6 @@ def _initialize_figure(n_subplots):
     if n_subplots == 1:
         ax = [ax]
     return fig, ax
-
-
-def _colors_to_colormap(color_list):
-    """Transforms list of colors to colormap"""
-    return ListedColormap(seaborn.color_palette(color_list).as_hex())
 
 
 def _initialize_time_height_axes(ax, n_subplots, current_subplot, max_y):
