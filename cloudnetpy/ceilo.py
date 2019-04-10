@@ -2,10 +2,16 @@
 import linecache
 import numpy as np
 import numpy.ma as ma
+import scipy.ndimage
 from cloudnetpy import utils
+
+# from collections import namedtuple
 from cloudnetpy import plotting
 import matplotlib.pyplot as plt
 import sys
+
+
+M2KM = 0.001
 
 
 class VaisalaCeilo:
@@ -15,6 +21,7 @@ class VaisalaCeilo:
         self.model = None
         self.message_number = None
         self._hex_conversion_params = None
+        self.noise_params = None
         self.backscatter = None
         self._backscatter_scale_factor = None
         self.metadata = None
@@ -42,8 +49,12 @@ class VaisalaCeilo:
         return _values_to_dict(keys, values)
 
     def _calc_range(self):
-        n_gates = int(self.metadata['number_of_gates'])
-        range_resolution = int(self.metadata['range_resolution'])
+        if self.model == 'ct25k':
+            range_resolution = 30
+            n_gates = 256
+        else:
+            n_gates = int(self.metadata['number_of_gates'])
+            range_resolution = int(self.metadata['range_resolution'])
         return np.arange(1, n_gates + 1) * range_resolution
 
     def _read_backscatter(self, lines):
@@ -158,6 +169,7 @@ class ClCeilo(VaisalaCeilo):
         super().__init__(file_name)
         self._hex_conversion_params = (5, 524288, 1048576)
         self._backscatter_scale_factor = 1e8
+        self.noise_params = (100, 1e-12, 3e-6, (1.1e-8, 2.9e-8))
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
@@ -214,6 +226,7 @@ class Ct25k(VaisalaCeilo):
         self.model = 'ct25k'
         self._hex_conversion_params = (4, 32768, 65536)
         self._backscatter_scale_factor = 1e7
+        self.noise_params = (40, 2e-14, 0.3e-6, (3e-10, 1.5e-9))
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
@@ -222,6 +235,13 @@ class Ct25k(VaisalaCeilo):
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.backscatter = self._read_backscatter(hex_profiles)
         self.range = self._calc_range()  # this is duplicate, should be elsewhere
+        self._range_correct_upper_part()
+
+    def _range_correct_upper_part(self):
+        """In CT25k only altitudes below 2.4 km are range corrected"""
+        altitude_limit = 2400
+        ind = np.where(self.range > altitude_limit)
+        self.backscatter[:, ind] *= (self.range[ind]*M2KM)**2
 
     @staticmethod
     def _parse_hex_profiles(lines):
@@ -247,28 +267,88 @@ def ceilo2nc(input_file, output_file):
     """Converts Vaisala ceilometer txt-file to netCDF."""
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()
-    calc_beta(ceilo)
+    beta, beta_smooth = calc_beta(ceilo)
 
 
 def calc_beta(ceilo):
     """From raw beta to beta."""
-    beta_raw = ceilo.backscatter
+
+    def _screening_wrapper(beta_in, smooth):
+        beta_in = _uncorrect_range(ceilo.backscatter, range_squared)
+        beta_in = _screen_by_snr(beta_in, ceilo, is_saturation, smooth=smooth)
+        return _correct_range(beta_in, range_squared)
+
+    range_squared = _get_range_squared(ceilo)
+    is_saturation = _find_saturated_profiles(ceilo)
+    beta = _screening_wrapper(ceilo.backscatter, False)
+    # smoothed version:
+    beta_smooth = ma.copy(beta)
+    cloud_ind, cloud_values = _estimate_clouds_from_beta(beta)
     sigma = _calc_sigma_units(ceilo)
-    ind_good, ind_saturated = _find_saturated_profiles(ceilo)
-    print(ind_saturated)
+    beta_smooth = scipy.ndimage.filters.gaussian_filter(beta_smooth, sigma)
+    beta_smooth[cloud_ind] = cloud_values
+    beta_smooth = _screening_wrapper(beta_smooth, True)
+    return beta, beta_smooth
+
+
+def _estimate_clouds_from_beta(beta):
+    """Naively finds strong clouds from ceilometer backscatter."""
+    cloud_limit = 1e-6
+    cloud_ind = np.where(beta > cloud_limit)
+    return cloud_ind, beta[cloud_ind]
+
+
+def _screen_by_snr(beta_uncorrected, ceilo, is_saturation, smooth=False, snr_lim=5):
+    """ beta needs to be range-UN-corrected.
+
+    Args:
+        beta (ndarray): Range-uncorrected backscatter.
+        ceilo (obj): Ceilometer object.
+        is_saturation (ndarray): Boolean array denoting saturated profiles.
+        smooth (bool): Should be true if input beta is smoothed. Default is False.
+        snr_lim (int): SNR limit for screening. Default is 5.
+    """
+
+    beta = ma.copy(beta_uncorrected)
+    n_gates, _, saturation_noise, noise_min = ceilo.noise_params
+    noise_min = noise_min[0] if smooth else noise_min[1]
+
+    # Too small noise would be problem.
+    noise_at_top = np.std(beta[:, -n_gates:], axis=1)
+    noise_at_top[np.where(noise_at_top < noise_min)] = noise_min
+
+    # Low values in saturated profiles above peak are noise.
+    for ind in np.where(is_saturation)[0]:
+        prof = beta[ind, :]
+        peak_ind = np.argmax(prof)
+        noise_indices = np.where(prof[peak_ind:] < saturation_noise)[0] + peak_ind
+        beta[ind, noise_indices] = 0
+
+    snr = (beta.T / noise_at_top)
+    beta[snr.T < snr_lim] = 0.0
+    return beta
+
+
+def _get_range_squared(ceilo):
+    """Returns range squared (km2)."""
+    return (ceilo.range*M2KM)**2
+
+
+def _uncorrect_range(beta, range_squared):
+    """Return range-uncorrected backscatter."""
+    return beta / range_squared
+
+
+def _correct_range(beta, range_squared):
+    """Return range-corrected backscatter."""
+    return beta * range_squared
 
 
 def _find_saturated_profiles(ceilo):
-    if ceilo.model == 'ct25k':
-        var_lim = 2e-14
-        n_gates = 40
-    else:
-        var_lim = 1e-12
-        n_gates = 100
+    """Estimates saturated profiles using the variance of the top range gates."""
+    n_gates, var_lim, _, _ = ceilo.noise_params
     var = np.var(ceilo.backscatter[:, -n_gates:], axis=1)
-    ind_good = np.where(var > var_lim)[0]
-    ind_saturated = np.where(var <= var_lim)[0]
-    return ind_good, ind_saturated
+    return var < var_lim
 
 
 def _calc_sigma_units(ceilo):
