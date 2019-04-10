@@ -2,6 +2,7 @@
 import linecache
 import numpy as np
 import numpy.ma as ma
+from cloudnetpy import utils
 from cloudnetpy import plotting
 import matplotlib.pyplot as plt
 import sys
@@ -13,8 +14,9 @@ class VaisalaCeilo:
         self.file_name = file_name
         self.model = None
         self.message_number = None
-        self.hex_conversion_params = None
+        self._hex_conversion_params = None
         self.backscatter = None
+        self._backscatter_scale_factor = None
         self.metadata = None
         self.range = None
         self.time = None
@@ -24,7 +26,41 @@ class VaisalaCeilo:
         with open(self.file_name) as file:
             all_lines = file.readlines()
         return self._screen_empty_lines(all_lines)
-        
+
+    def _read_header_line_1(self, lines):
+        """Reads all first header lines from CT25k and CL ceilometers."""
+        keys = ('model_id', 'unit_id', 'software_version', 'message_number',
+                'message_subclass')
+        values = []
+        if 'cl' in self.model:
+            indices = [1, 3, 4, 7, 8, 9]
+        else:
+            indices = [1, 3, 4, 6, 7, 8]
+        for line in lines:
+            distinct_values = _split_string(line, indices)
+            values.append(distinct_values)
+        return _values_to_dict(keys, values)
+
+    def _calc_range(self):
+        n_gates = int(self.metadata['number_of_gates'])
+        range_resolution = int(self.metadata['range_resolution'])
+        return np.arange(1, n_gates + 1) * range_resolution
+
+    def _read_backscatter(self, lines):
+        n_chars = self._hex_conversion_params[0]
+        n_gates = int(len(lines[0])/n_chars)
+        profiles = np.zeros((len(lines), n_gates), dtype=int)
+        ran = range(0, n_gates*n_chars, n_chars)
+        for ind, line in enumerate(lines):
+            try:
+                profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
+            except ValueError as error:
+                print(error)
+
+        ind = np.where(profiles & self._hex_conversion_params[1] != 0)
+        profiles[ind] -= self._hex_conversion_params[2]
+        return profiles.astype(float) / self._backscatter_scale_factor
+
     @staticmethod
     def _screen_empty_lines(data):
         """Removes empty lines from the list of data."""
@@ -42,20 +78,6 @@ class VaisalaCeilo:
         empty_lines = _parse_empty_lines()
         return _parse_data_lines(empty_lines)
 
-    def _read_header_line_1(self, lines):
-        """Reads all first header lines from CT25k and CL ceilometers."""
-        keys = ('model_id', 'unit_id', 'software_version', 'message_number',
-                'message_subclass')
-        values = []
-        if 'cl' in self.model:
-            indices = [1, 3, 4, 7, 8, 9]
-        else:
-            indices = [1, 3, 4, 6, 7, 8]
-        for line in lines:
-            distinct_values = _split_string(line, indices)
-            values.append(distinct_values)
-        return _values_to_dict(keys, values)
-
     @staticmethod
     def _read_header_line_2(lines):
         """Same for all data messages."""
@@ -72,53 +94,16 @@ class VaisalaCeilo:
         assert len(np.unique(msg_no)) == 1, 'Error: inconsistent message numbers.'
         return int(msg_no[0])
 
-    def _read_backscatter(self, lines):
-        n_chars = self.hex_conversion_params[0]
-        n_gates = int(len(lines[0])/n_chars)
-        profiles = np.zeros((len(lines), n_gates), dtype=int)
-        ran = range(0, n_gates*n_chars, n_chars)
-        for ind, line in enumerate(lines):
-            try:
-                profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
-            except ValueError as error:
-                print(error)
-
-        ind = np.where(profiles & self.hex_conversion_params[1] != 0)
-        profiles[ind] -= self.hex_conversion_params[2]
-        return profiles
-
     @staticmethod
     def _calc_time(time_lines):
         time = [time_to_fraction_hour(line.split()[1]) for line in time_lines]
         return np.array(time)
-
-    def _calc_range(self):
-        n_gates = int(self.metadata['number_of_gates'][0])
-        range_resolution = int(self.metadata['range_resolution'][0])
-        return np.arange(1, n_gates + 1) * range_resolution
 
     @classmethod
     def _handle_metadata(cls, header):
         meta = cls._concatenate_meta(header)
         meta = cls._remove_meta_duplicates(meta)
         meta = cls._convert_meta_strings(meta)
-        return meta
-
-    @staticmethod
-    def _convert_meta_strings(meta):
-        int_variables = ('tilt_angle', 'message_number', 'scale')
-        for field in meta:
-            values = meta[field]
-            if isinstance(values, str):
-                if field in int_variables:
-                    meta[field] = int(values)
-            else:
-                meta[field] = [None] * len(values)
-                for ind, valu in enumerate(values):
-                    try:
-                        meta[field][ind] = int(valu)
-                    except (ValueError, TypeError):
-                        continue
         return meta
 
     @staticmethod
@@ -135,25 +120,52 @@ class VaisalaCeilo:
                 meta[field] = meta[field][0]
         return meta
 
+    @staticmethod
+    def _convert_meta_strings(meta):
+        int_variables = ('tilt_angle', 'message_number', 'scale')
+        for field in meta:
+            values = meta[field]
+            if isinstance(values, str):
+                if field in int_variables:
+                    meta[field] = int(values)
+            else:
+                meta[field] = [None] * len(meta[field])
+                for ind, value in enumerate(values):
+                    try:
+                        meta[field][ind] = int(value)
+                    except (ValueError, TypeError):
+                        continue
+        return meta
+
+    def _read_header_line_3(self, data):
+        raise NotImplementedError
+
+    def _read_common_header_part(self):
+        header = []
+        data_lines = self._fetch_data_lines()
+        self.time = self._calc_time(data_lines[0])
+        header.append(self._read_header_line_1(data_lines[1]))
+        self.message_number = self._get_message_number(header[0])
+        header.append(self._read_header_line_2(data_lines[2]))
+        header.append(self._read_header_line_3(data_lines[3]))
+        return header, data_lines
+
 
 class ClCeilo(VaisalaCeilo):
     """Base class for Vaisala CL31/CL51 ceilometers."""
 
     def __init__(self, file_name):
         super().__init__(file_name)
-        self.hex_conversion_params = (5, 524288, 1048576)
+        self._hex_conversion_params = (5, 524288, 1048576)
+        self._backscatter_scale_factor = 1e8
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
-        header = []
-        data_lines = self._fetch_data_lines()
-        header.append(self._read_header_line_1(data_lines[1]))
-        self.message_number = self._get_message_number(header[0])
-        header.append(self._read_header_line_2(data_lines[2]))
-        header.append(self._read_header_line_3(data_lines[3]))
+        header, data_lines = self._read_common_header_part()
         header.append(self._read_header_line_4(data_lines[-3]))
         self.metadata = self._handle_metadata(header)
         self.backscatter = self._read_backscatter(data_lines[-2])
+        self.range = self._calc_range()  # this is duplicate, should be elsewhere
 
     def _read_header_line_3(self, lines):
         if self.message_number != 2:
@@ -200,19 +212,16 @@ class Ct25k(VaisalaCeilo):
     def __init__(self, input_file):
         super().__init__(input_file)
         self.model = 'ct25k'
-        self.hex_conversion_params = (4, 32768, 65536)
+        self._hex_conversion_params = (4, 32768, 65536)
+        self._backscatter_scale_factor = 1e7
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
-        header = []
-        data_lines = self._fetch_data_lines()
-        header.append(self._read_header_line_1(data_lines[1]))
-        self.message_number = self._get_message_number(header[0])
-        header.append(self._read_header_line_2(data_lines[2]))
-        header.append(self._read_header_line_3(data_lines[3]))
+        header, data_lines = self._read_common_header_part()
+        self.metadata = self._handle_metadata(header)
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.backscatter = self._read_backscatter(hex_profiles)
-        self.metadata = self._handle_metadata(header)
+        self.range = self._calc_range()  # this is duplicate, should be elsewhere
 
     @staticmethod
     def _parse_hex_profiles(lines):
@@ -238,6 +247,38 @@ def ceilo2nc(input_file, output_file):
     """Converts Vaisala ceilometer txt-file to netCDF."""
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()
+    calc_beta(ceilo)
+
+
+def calc_beta(ceilo):
+    """From raw beta to beta."""
+    beta_raw = ceilo.backscatter
+    sigma = _calc_sigma_units(ceilo)
+    ind_good, ind_saturated = _find_saturated_profiles(ceilo)
+    print(ind_saturated)
+
+
+def _find_saturated_profiles(ceilo):
+    if ceilo.model == 'ct25k':
+        var_lim = 2e-14
+        n_gates = 40
+    else:
+        var_lim = 1e-12
+        n_gates = 100
+    var = np.var(ceilo.backscatter[:, -n_gates:], axis=1)
+    ind_good = np.where(var > var_lim)[0]
+    ind_saturated = np.where(var <= var_lim)[0]
+    return ind_good, ind_saturated
+
+
+def _calc_sigma_units(ceilo):
+    """Calculates Gaussian peak std parameters."""
+    sigma = (2, 5)
+    time_step = utils.mdiff(ceilo.time) * 60
+    alt_step = utils.mdiff(ceilo.range)
+    x = sigma[0] / time_step
+    y = sigma[1] / alt_step
+    return x, y
 
 
 def _values_to_dict(keys, values):
