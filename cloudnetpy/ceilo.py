@@ -6,9 +6,9 @@ import scipy.ndimage
 from cloudnetpy import utils
 
 # from collections import namedtuple
-from cloudnetpy import plotting
-import matplotlib.pyplot as plt
-import sys
+# from cloudnetpy import plotting
+# import matplotlib.pyplot as plt
+# import sys
 
 
 M2KM = 0.001
@@ -274,7 +274,7 @@ def calc_beta(ceilo):
     """From raw beta to beta."""
 
     def _screening_wrapper(beta_in, smooth):
-        beta_in = _uncorrect_range(ceilo.backscatter, range_squared)
+        beta_in = _uncorrect_range(beta_in, range_squared)
         beta_in = _screen_by_snr(beta_in, ceilo, is_saturation, smooth=smooth)
         return _correct_range(beta_in, range_squared)
 
