@@ -299,9 +299,9 @@ def calc_beta(ceilo):
     """From raw beta to beta."""
 
     def _screen_beta(beta_in, smooth):
-        beta_in = _calc_uncorrected_range(beta_in, range_squared)
+        beta_in = _calc_range_uncorrected_beta(beta_in, range_squared)
         beta_in = _screen_by_snr(beta_in, ceilo, is_saturation, smooth=smooth)
-        return _calc_corrected_range(beta_in, range_squared)
+        return _calc_range_corrected_beta(beta_in, range_squared)
 
     range_squared = _get_range_squared(ceilo)
     is_saturation = _find_saturated_profiles(ceilo)
@@ -373,12 +373,12 @@ def _get_range_squared(ceilo):
     return (ceilo.range*M2KM)**2
 
 
-def _calc_uncorrected_range(beta, range_squared):
+def _calc_range_uncorrected_beta(beta, range_squared):
     """Return range-uncorrected backscatter."""
     return beta / range_squared
 
 
-def _calc_corrected_range(beta, range_squared):
+def _calc_range_corrected_beta(beta, range_squared):
     """Return range-corrected backscatter."""
     return beta * range_squared
 
