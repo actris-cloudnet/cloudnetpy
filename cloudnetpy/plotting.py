@@ -115,12 +115,11 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     case_date = _read_case_date(nc_file)
     fig, ax = _initialize_figure(n_fields)
 
-    for axis, name, field in zip(ax, field_names, data_fields):
+    for axis, field, name in zip(ax, data_fields, field_names):
         if ATTRIBUTES[name].plot_type == 'segment':
-            plotting_func = _plot_segment_data
+            _plot_segment_data(axis, field, name)
         else:
-            plotting_func = _plot_colormesh_data
-        plotting_func(axis, field, name)
+            _plot_colormesh_data(axis, field, name)
 
     axes = _read_axes(nc_file)
     _set_axes(ax, axes, max_y)
