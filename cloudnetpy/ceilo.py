@@ -334,7 +334,8 @@ def calc_beta(ceilo):
     beta = _screen_beta(ceilo.backscatter, False)
     # smoothed version:
     beta_smooth = ma.copy(ceilo.backscatter)
-    cloud_ind, cloud_values = _estimate_clouds_from_beta(beta)
+    cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
+    beta_smooth[cloud_ind] = cloud_limit  # to reduce artifacts between smoothed and not-smoothed values
     sigma = _calc_sigma_units(ceilo)
     beta_smooth = scipy.ndimage.filters.gaussian_filter(beta_smooth, sigma)
     beta_smooth[cloud_ind] = cloud_values
@@ -346,7 +347,7 @@ def _estimate_clouds_from_beta(beta):
     """Naively finds strong clouds from ceilometer backscatter."""
     cloud_limit = 1e-6
     cloud_ind = np.where(beta > cloud_limit)
-    return cloud_ind, beta[cloud_ind]
+    return cloud_ind, beta[cloud_ind], cloud_limit
 
 
 def _screen_by_snr(beta_uncorrected, ceilo, is_saturation, smooth=False):
