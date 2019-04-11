@@ -9,6 +9,9 @@ from cloudnetpy.metadata import MetaData
 
 
 M2KM = 0.001
+MINUTES_IN_HOUR = 60
+SECONDS_IN_MINUTE = 60
+SECONDS_IN_HOUR = 3600
 
 
 class VaisalaCeilo:
@@ -413,11 +416,12 @@ def _find_saturated_profiles(ceilo):
 
 def _calc_sigma_units(ceilo):
     """Calculates Gaussian peak std parameters."""
-    sigma = (2, 5)
-    time_step = utils.mdiff(ceilo.time) * 60
+    sigma_x_minutes = 2
+    sigma_y_metres = 5
+    time_step = utils.mdiff(ceilo.time) * MINUTES_IN_HOUR
     alt_step = utils.mdiff(ceilo.range)
-    x = sigma[0] / time_step
-    y = sigma[1] / alt_step
+    x = sigma_x_minutes / time_step
+    y = sigma_y_metres / alt_step
     return x, y
 
 
@@ -477,7 +481,7 @@ def is_empty_line(line):
 def time_to_fraction_hour(time):
     """ Time (hh:mm:ss) as fraction hour """
     h, m, s = time.split(':')
-    return int(h) + (int(m) * 60 + int(s)) / 3600
+    return int(h) + (int(m) * SECONDS_IN_MINUTE + int(s)) / SECONDS_IN_HOUR
 
 
 ATTRIBUTES = {
