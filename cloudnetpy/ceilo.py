@@ -572,5 +572,16 @@ ATTRIBUTES = {
     'warning_flags': MetaData(
         long_name='Warning flags',
         units='',
+    ),
+    'receiver_sensitivity': MetaData(
+        long_name='Receiver sensitivity',
+        units='%',
+        comment='Expressed as % of nominal factory setting.'
+    ),
+    'window_contamination': MetaData(
+        long_name='Window contamination',
+        units='mV',
+        comment='Measured at internal ADC input.'
     )
+
 }
