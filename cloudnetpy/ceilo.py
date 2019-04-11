@@ -382,7 +382,7 @@ def _reset_low_values_above_saturation(beta, is_saturation, saturation_noise):
         profile = beta[saturated_profile, :]
         peak_ind = np.argmax(profile)
         alt_ind = np.where(profile[peak_ind:] < saturation_noise)[0] + peak_ind
-        beta[saturated_profile, alt_ind] = 0
+        beta[saturated_profile, alt_ind] = ma.masked
     return beta
 
 
@@ -390,7 +390,7 @@ def _remove_noise(beta, noise):
     """Removes points where snr < 5."""
     snr_limit = 5
     snr = (beta.T / noise)
-    beta[snr.T < snr_limit] = 0.0
+    beta[snr.T < snr_limit] = ma.masked
     return beta
 
 
