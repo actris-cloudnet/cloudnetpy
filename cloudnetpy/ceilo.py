@@ -3,13 +3,11 @@ import linecache
 import numpy as np
 import numpy.ma as ma
 import scipy.ndimage
-from cloudnetpy import utils
+from cloudnetpy import utils, output
+from cloudnetpy.cloudnetarray import CloudnetArray
 
-# from collections import namedtuple
-# from cloudnetpy import plotting
 # import matplotlib.pyplot as plt
-# import sys
-
+# from cloudnetpy import plotting
 
 M2KM = 0.001
 
@@ -27,6 +25,7 @@ class VaisalaCeilo:
         self.metadata = None
         self.range = None
         self.time = None
+        self.data = {}
 
     def _fetch_data_lines(self):
         """Finds data lines (header + backscatter) from ceilometer file."""
@@ -268,26 +267,52 @@ def ceilo2nc(input_file, output_file):
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()
     beta, beta_smooth = calc_beta(ceilo)
+    _append_data(ceilo, beta, beta_smooth)
+    output.update_attributes(ceilo.data, {})
+    _save_ceilo(ceilo, output_file)
+
+
+def _append_data(ceilo, beta, beta_smooth):
+    ceilo.data['beta'] = CloudnetArray(beta, 'beta')
+    ceilo.data['beta_smooth'] = CloudnetArray(beta_smooth, 'beta_smoothed')
+    ceilo.data['range'] = CloudnetArray(ceilo.range, 'range')
+    ceilo.data['time'] = CloudnetArray(ceilo.range, 'time')
+    #for field in ceilo.metadata:
+        #print(field, type(ceilo.metadata[field]))
+        #print(np.array(ceilo.metadata[field]))
+        #if field not in ('model_id', 'measurement_parameters'):
+        #    ceilo.data[field] = CloudnetArray(np.asarray(ceilo.metadata[field]), field)
+
+
+def _save_ceilo(ceilo, output_file):
+    dims = {'time': len(ceilo.time), 'range': len(ceilo.range)}
+    rootgrp = output.init_file(output_file, dims, ceilo.data, zlib=True)
+    rootgrp.title = f"Ceilometer file from XXX"
+    #rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
+    #rootgrp.location = rpg.location
+    rootgrp.history = f"{utils.get_time()} - radar file created"
+    rootgrp.source = ceilo.model
+    rootgrp.close()
 
 
 def calc_beta(ceilo):
     """From raw beta to beta."""
 
-    def _screening_wrapper(beta_in, smooth):
-        beta_in = _uncorrect_range(beta_in, range_squared)
+    def _screen_beta(beta_in, smooth):
+        beta_in = _calc_uncorrected_range(beta_in, range_squared)
         beta_in = _screen_by_snr(beta_in, ceilo, is_saturation, smooth=smooth)
-        return _correct_range(beta_in, range_squared)
+        return _calc_corrected_range(beta_in, range_squared)
 
     range_squared = _get_range_squared(ceilo)
     is_saturation = _find_saturated_profiles(ceilo)
-    beta = _screening_wrapper(ceilo.backscatter, False)
+    beta = _screen_beta(ceilo.backscatter, False)
     # smoothed version:
     beta_smooth = ma.copy(beta)
     cloud_ind, cloud_values = _estimate_clouds_from_beta(beta)
     sigma = _calc_sigma_units(ceilo)
     beta_smooth = scipy.ndimage.filters.gaussian_filter(beta_smooth, sigma)
     beta_smooth[cloud_ind] = cloud_values
-    beta_smooth = _screening_wrapper(beta_smooth, True)
+    beta_smooth = _screen_beta(beta_smooth, True)
     return beta, beta_smooth
 
 
@@ -298,34 +323,48 @@ def _estimate_clouds_from_beta(beta):
     return cloud_ind, beta[cloud_ind]
 
 
-def _screen_by_snr(beta_uncorrected, ceilo, is_saturation, smooth=False, snr_lim=5):
-    """ beta needs to be range-UN-corrected.
+def _screen_by_snr(beta_uncorrected, ceilo, is_saturation, smooth=False):
+    """Screens noise from ceilometer backscatter.
 
     Args:
-        beta (ndarray): Range-uncorrected backscatter.
+        beta_uncorrected (ndarray): Range-uncorrected backscatter.
         ceilo (obj): Ceilometer object.
         is_saturation (ndarray): Boolean array denoting saturated profiles.
         smooth (bool): Should be true if input beta is smoothed. Default is False.
         snr_lim (int): SNR limit for screening. Default is 5.
-    """
 
+    """
     beta = ma.copy(beta_uncorrected)
     n_gates, _, saturation_noise, noise_min = ceilo.noise_params
     noise_min = noise_min[0] if smooth else noise_min[1]
+    noise = _estimate_noise_from_top_gates(beta, n_gates, noise_min)
+    beta = _reset_low_values_above_saturation(beta, is_saturation, saturation_noise)
+    beta = _remove_noise(beta, noise)
+    return beta
 
-    # Too small noise would be problem.
-    noise_at_top = np.std(beta[:, -n_gates:], axis=1)
-    noise_at_top[np.where(noise_at_top < noise_min)] = noise_min
 
-    # Low values in saturated profiles above peak are noise.
-    for ind in np.where(is_saturation)[0]:
-        prof = beta[ind, :]
-        peak_ind = np.argmax(prof)
-        noise_indices = np.where(prof[peak_ind:] < saturation_noise)[0] + peak_ind
-        beta[ind, noise_indices] = 0
+def _estimate_noise_from_top_gates(beta, n_gates, noise_min):
+    """Estimates backscatter noise from topmost range gates."""
+    noise = ma.std(beta[:, -n_gates:], axis=1)
+    noise[noise < noise_min] = noise_min
+    return noise
 
-    snr = (beta.T / noise_at_top)
-    beta[snr.T < snr_lim] = 0.0
+
+def _reset_low_values_above_saturation(beta, is_saturation, saturation_noise):
+    """Removes low values in saturated profiles above peak."""
+    for saturated_profile in np.where(is_saturation)[0]:
+        profile = beta[saturated_profile, :]
+        peak_ind = np.argmax(profile)
+        alt_ind = np.where(profile[peak_ind:] < saturation_noise)[0] + peak_ind
+        beta[saturated_profile, alt_ind] = 0
+    return beta
+
+
+def _remove_noise(beta, noise):
+    """Removes points where snr < 5."""
+    snr_limit = 5
+    snr = (beta.T / noise)
+    beta[snr.T < snr_limit] = 0.0
     return beta
 
 
@@ -334,12 +373,12 @@ def _get_range_squared(ceilo):
     return (ceilo.range*M2KM)**2
 
 
-def _uncorrect_range(beta, range_squared):
+def _calc_uncorrected_range(beta, range_squared):
     """Return range-uncorrected backscatter."""
     return beta / range_squared
 
 
-def _correct_range(beta, range_squared):
+def _calc_corrected_range(beta, range_squared):
     """Return range-corrected backscatter."""
     return beta * range_squared
 
@@ -379,7 +418,10 @@ def _initialize_ceilo(file):
         return Cl51(file)
     elif model == 'cl31':
         return Cl31(file)
-    return Ct25k(file)
+    elif model == 'ct25k':
+        return Ct25k(file)
+    else:
+        raise SystemExit('Error: Unknown ceilo model.')
 
 
 def _find_ceilo_model(file):
