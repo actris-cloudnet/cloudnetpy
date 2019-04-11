@@ -112,7 +112,6 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     field_names = _parse_field_names(nc_file, field_names)
     data_fields = ptools.read_nc_fields(nc_file, field_names)
     n_fields = len(data_fields)
-    case_date = _read_case_date(nc_file)
     fig, ax = _initialize_figure(n_fields)
 
     for axis, field, name in zip(ax, data_fields, field_names):
@@ -123,6 +122,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
     axes = _read_axes(nc_file)
     _set_axes(ax, axes, max_y)
+    case_date = _read_case_date(nc_file)
     _add_subtitle(fig, n_fields, case_date)
 
     if save_path:
@@ -133,6 +133,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
 
 def _set_axes(ax, axes, max_y):
+    """Sets ticks and tick labels for plt.imshow()."""
     time, alt = axes
     ticks_y, ticks_y_labels, n_max_y = _get_ticks(alt, max_y, 2)
     ticks_x, _, n_max_x = _get_ticks(time, 24, 4)
@@ -149,6 +150,7 @@ def _set_axes(ax, axes, max_y):
 
 
 def _get_ticks(x, x_max, tick_step):
+    """Calculates ticks and their labels."""
     step = utils.mdiff(x)
     n_steps_to_reach_max = round(x_max/step)
     n_steps_in_one_tick = round(tick_step/step)
