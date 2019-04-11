@@ -3,13 +3,13 @@
 from datetime import date
 import numpy as np
 import numpy.ma as ma
-import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import netCDF4
 import cloudnetpy.products.product_tools as ptools
 from .plot_meta import ATTRIBUTES
+from cloudnetpy import utils
 
 
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
@@ -29,7 +29,7 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
 IDENTIFIER = ""
 
 
-def _plot_segment_data(ax, data, axes, name):
+def _plot_segment_data(ax, data, name):
     """ Plotting data with segments as 2d variable.
 
     Args:
@@ -40,16 +40,17 @@ def _plot_segment_data(ax, data, axes, name):
 
     """
     variables = ATTRIBUTES[name]
-    n = len(variables.cbar)
+    n_fields = len(variables.cbar)
     cmap = ListedColormap(variables.cbar)
-    pl = ax.pcolormesh(*axes, data.T, cmap=cmap, vmin=-0.5, vmax=n-0.5)
+    pl = ax.imshow(data.T, cmap=cmap, origin='lower', vmin=0, vmax=n_fields,
+                   aspect='auto')
     colorbar = _init_colorbar(pl, ax)
-    colorbar.set_ticks(np.arange(0, n + 1, 1))
+    colorbar.set_ticks(np.arange(n_fields+1)+0.5)
     colorbar.ax.set_yticklabels(variables.clabel, fontsize=13)
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
-def _plot_colormesh_data(ax, data, axes, name):
+def _plot_colormesh_data(ax, data, name):
     """ Plot data with range of variability.
 
     Creates only one plot, so can be used both one plot and subplot type of figs
@@ -68,7 +69,8 @@ def _plot_colormesh_data(ax, data, axes, name):
         vmin = np.log10(vmin)
         vmax = np.log10(vmax)
 
-    pl = ax.pcolormesh(*axes, data.T, cmap=cmap, vmin=vmin, vmax=vmax)
+    pl = ax.imshow(data.T, cmap=cmap, origin='lower', vmin=vmin, vmax=vmax,
+                   aspect='auto')
     colorbar = _init_colorbar(pl, ax)
 
     if variables.plot_scale == 'logarithmic':
@@ -111,17 +113,17 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     data_fields = ptools.read_nc_fields(nc_file, field_names)
     n_fields = len(data_fields)
     case_date = _read_case_date(nc_file)
-    axes = _read_axes(nc_file, case_date)
     fig, ax = _initialize_figure(n_fields)
 
-    for i, name in enumerate(field_names):
-        ax[i] = _initialize_time_height_axes(ax[i], n_fields, i, max_y)
+    for axis, name, field in zip(ax, field_names, data_fields):
         if ATTRIBUTES[name].plot_type == 'segment':
             plotting_func = _plot_segment_data
         else:
             plotting_func = _plot_colormesh_data
-        plotting_func(ax[i], data_fields[i], axes, name)
+        plotting_func(axis, field, name)
 
+    axes = _read_axes(nc_file)
+    _set_axes(ax, axes, max_y)
     _add_subtitle(fig, n_fields, case_date)
 
     if save_path:
@@ -129,6 +131,32 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
+
+
+def _set_axes(ax, axes, max_y):
+    time, alt = axes
+    ticks_y, ticks_y_labels, n_max_y = _get_ticks(alt, max_y, 2)
+    ticks_x, _, n_max_x = _get_ticks(time, 24, 4)
+    ticks_x_labels = ['', '04:00', '08:00', '12:00', '16:00', '20:00', '']
+    for axis in ax:
+        axis.set_yticks(ticks_y)
+        axis.set_yticklabels(ticks_y_labels, fontsize=12)
+        axis.set_ylim(0, n_max_y)
+        axis.set_xticks(ticks_x)
+        axis.set_xticklabels(ticks_x_labels, fontsize=12)
+        axis.set_xlim(0, n_max_x)
+        axis.set_ylabel('Height (km)', fontsize=13)
+    ax[-1].set_xlabel('Time (UTC)', fontsize=13)
+
+
+def _get_ticks(x, x_max, tick_step):
+    step = utils.mdiff(x)
+    n_steps_to_reach_max = round(x_max/step)
+    n_steps_in_one_tick = round(tick_step/step)
+    max_value = np.round(x[-1])
+    ticks = np.linspace(0, max_value*n_steps_in_one_tick, max_value+1)
+    ticks_labels = (np.arange(max_value+1)*tick_step).astype(int).astype(str)
+    return ticks, ticks_labels, n_steps_to_reach_max
 
 
 def _create_save_name(save_path, case_date, field_names):
@@ -160,12 +188,11 @@ def _read_case_date(nc_file):
     return date(int(obj.year), int(obj.month), int(obj.day))
 
 
-def _read_axes(nc_file, case_date):
+def _read_axes(nc_file):
     """Returns time (datetime format) and height (km)."""
     decimal_hour, height = ptools.read_nc_fields(nc_file, ('time', 'height'))
-    datetime_time = ptools.convert_dtime_to_datetime(case_date, decimal_hour)
     height_km = height / 1000
-    return datetime_time, height_km
+    return decimal_hour, height_km
 
 
 def _generate_log_cbar_ticklabel_list(vmin, vmax):
@@ -180,18 +207,3 @@ def _initialize_figure(n_subplots):
     if n_subplots == 1:
         ax = [ax]
     return fig, ax
-
-
-def _initialize_time_height_axes(ax, n_subplots, current_subplot, max_y):
-    xlabel = 'Time ' + r'(UTC)'
-    ylabel = 'Height (km)'
-    date_format = mdates.DateFormatter('%H:%M')
-    ax.xaxis.set_major_formatter(date_format)
-    ax.xaxis.set_major_locator(mdates.HourLocator(interval=4))
-    ax.tick_params(axis='x', labelsize=12)
-    if current_subplot == n_subplots - 1:
-        ax.set_xlabel(xlabel, fontsize=13)
-    ax.tick_params(axis='y', labelsize=12)
-    ax.set_ylim(0, max_y)
-    ax.set_ylabel(ylabel, fontsize=13)
-    return ax

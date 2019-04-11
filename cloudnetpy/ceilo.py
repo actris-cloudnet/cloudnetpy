@@ -19,16 +19,16 @@ class VaisalaCeilo:
     def __init__(self, file_name):
         self.file_name = file_name
         self.model = None
-        self.message_number = None
-        self._hex_conversion_params = None
         self.noise_params = None
         self.backscatter = None
-        self._backscatter_scale_factor = None
         self.metadata = None
         self.range = None
         self.time = None
         self.date = None
         self.data = {}
+        self._backscatter_scale_factor = None
+        self._hex_conversion_params = None
+        self._message_number = None
 
     def _fetch_data_lines(self):
         """Finds data lines (header + backscatter) from ceilometer file."""
@@ -174,7 +174,7 @@ class VaisalaCeilo:
         self.time = self._calc_time(data_lines[0])
         self.date = self._calc_date(data_lines[0])
         header.append(self._read_header_line_1(data_lines[1]))
-        self.message_number = self._get_message_number(header[0])
+        self._message_number = self._get_message_number(header[0])
         header.append(self._read_header_line_2(data_lines[2]))
         header.append(self._read_header_line_3(data_lines[3]))
         return header, data_lines
@@ -198,7 +198,7 @@ class ClCeilo(VaisalaCeilo):
         self.range = self._calc_range()  # this is duplicate, should be elsewhere
 
     def _read_header_line_3(self, lines):
-        if self.message_number != 2:
+        if self._message_number != 2:
             return None
         keys = ('cloud_detection_status', 'cloud_amount_data')
         values = []
@@ -256,7 +256,7 @@ class Ct25k(VaisalaCeilo):
         self._range_correct_upper_part()
 
     def _range_correct_upper_part(self):
-        """In CT25k only altitudes below 2.4 km are range corrected"""
+        """In CT25k only altitudes below 2.4 km are range corrected (?)"""
         altitude_limit = 2400
         ind = np.where(self.range > altitude_limit)
         self.backscatter[:, ind] *= (self.range[ind]*M2KM)**2
@@ -269,7 +269,7 @@ class Ct25k(VaisalaCeilo):
                 for n in range(n_profiles)]
 
     def _read_header_line_3(self, lines):
-        if self.message_number in (1, 3, 6):
+        if self._message_number in (1, 3, 6):
             return None
         keys = ('scale', 'measurement_mode', 'laser_energy',
                 'laser_temperature', 'receiver_sensitivity',
@@ -358,7 +358,6 @@ def _screen_by_snr(beta_uncorrected, ceilo, is_saturation, smooth=False):
         ceilo (obj): Ceilometer object.
         is_saturation (ndarray): Boolean array denoting saturated profiles.
         smooth (bool): Should be true if input beta is smoothed. Default is False.
-        snr_lim (int): SNR limit for screening. Default is 5.
 
     """
     beta = ma.copy(beta_uncorrected)
@@ -584,5 +583,4 @@ ATTRIBUTES = {
         units='mV',
         comment='Measured at internal ADC input.'
     )
-
 }
