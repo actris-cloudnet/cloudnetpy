@@ -35,7 +35,6 @@ def _plot_segment_data(ax, data, name):
     Args:
         ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
         data (ndarray): 2D data array.
-        axes (tuple): Tuple containing time (datetime format) and height (km).
         name (string): name of plotted data
 
     """
@@ -58,7 +57,6 @@ def _plot_colormesh_data(ax, data, name):
     Args:
         ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
         data (ndarray): Figure object
-        axes (tuple): Tuple containing time (datetime format) and height (km).
         name (string): name of plotted data
     """
     variables = ATTRIBUTES[name]
