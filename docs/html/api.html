@@ -531,19 +531,44 @@ various atmospheric parameters.</p>
 <dl class="function">
 <dt id="atmos.calc_adiabatic_lwc">
 <code class="descclassname">atmos.</code><code class="descname">calc_adiabatic_lwc</code><span class="sig-paren">(</span><em>lwc_change_rate</em>, <em>dheight</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_adiabatic_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_adiabatic_lwc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates adiabatic liquid water content.</p>
+<dd><p>Calculates adiabatic liquid water content (g/m3).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>lwc_change_rate</strong> (<em>ndarray</em>) – Liquid water content change rate (g/m3/m)
-calculated at the base of each cloud and then filled to that cloud.</li>
+calculated at the base of each cloud and filled to that cloud.</li>
 <li><strong>dheight</strong> – Median difference of the height vector (m).</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Liquid water content (g/m3).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.calc_air_density">
+<code class="descclassname">atmos.</code><code class="descname">calc_air_density</code><span class="sig-paren">(</span><em>pressure</em>, <em>temperature</em>, <em>svp_mixing_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_air_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_air_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates air density (kg m-3).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pressure</strong> (<em>ndarray</em>) – Pressure (Pa).</li>
+<li><strong>temperature</strong> (<em>ndarray</em>) – Temperature (K).</li>
+<li><strong>svp_mixing_ratio</strong> (<em>ndarray</em>) – Saturation vapor pressure mixing ratio (kg/kg).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Air density (kg m-3).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -612,7 +637,7 @@ with height, given the cloud base temperature and pressure.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Mixing ratio.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Mixing ratio (kg kg-1).</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
@@ -634,7 +659,7 @@ of water in air to the air temperature.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Psychrometric constant value (Pa C-1)</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Psychrometric constant value (Pa K-1)</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
@@ -644,22 +669,20 @@ of water in air to the air temperature.</p>
 
 <dl class="function">
 <dt id="atmos.calc_saturation_vapor_pressure">
-<code class="descclassname">atmos.</code><code class="descname">calc_saturation_vapor_pressure</code><span class="sig-paren">(</span><em>temp_kelvin</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_saturation_vapor_pressure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_saturation_vapor_pressure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns approximate water vapour saturation pressure.</p>
+<code class="descclassname">atmos.</code><code class="descname">calc_saturation_vapor_pressure</code><span class="sig-paren">(</span><em>temperature</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_saturation_vapor_pressure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_saturation_vapor_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>temp_kelvin</strong> (<em>ndarray</em>) – Temperature in K.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>temperature</strong> (<em>ndarray</em>) – Temperature (K).</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Vapor saturation pressure in Pa.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Saturation vapor pressure (Pa).</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">References</p>
-<p>Vaisala’s white paper: “Humidity conversion formulas”.</p>
 </dd></dl>
 
 <dl class="function">
@@ -684,6 +707,33 @@ expansion of a simple expression for the saturated vapour pressure.</p>
 <p class="rubric">References</p>
 <p>J. Sullivan and L. D. Sanders: Method for obtaining wet-bulb
 temperatures by modifying the psychrometric formula.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.distribute_lwp_to_liquid_clouds">
+<code class="descclassname">atmos.</code><code class="descname">distribute_lwp_to_liquid_clouds</code><span class="sig-paren">(</span><em>lwc</em>, <em>lwp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#distribute_lwp_to_liquid_clouds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.distribute_lwp_to_liquid_clouds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds LWC that would produce measured LWP.</p>
+<p>Calculates LWP-weighted, normalized LWC. This is the measured
+LWP distributed to liquid cloud pixels according to their
+theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lwc</strong> (<em>ndarray</em>) – 2D liquid water content (g/m3).</li>
+<li><strong>lwp</strong> (<em>ndarray</em>) – 1D liquid water path (g/m2).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2D LWP-weighted, normalized LWC (g/m2).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -763,30 +813,6 @@ pressure (Pa).</li>
 <dt id="atmos.k2c">
 <code class="descclassname">atmos.</code><code class="descname">k2c</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#k2c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.k2c" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts Kelvins to Celsius.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.scale_lwc">
-<code class="descclassname">atmos.</code><code class="descname">scale_lwc</code><span class="sig-paren">(</span><em>lwc</em>, <em>lwp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#scale_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.scale_lwc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Scales theoretical liquid water content to match the measured LWP.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>lwc</strong> (<em>ndarray</em>) – 2D liquid water content (g/m3).</li>
-<li><strong>lwp</strong> (<em>ndarray</em>) – 1D liquid water path (g/m2).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Scaled liquid water content.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </div>

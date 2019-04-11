@@ -24,6 +24,7 @@ class VaisalaCeilo:
         self.metadata = None
         self.range = None
         self.time = None
+        self.date = None
         self.data = {}
 
     def _fetch_data_lines(self):
@@ -34,7 +35,7 @@ class VaisalaCeilo:
 
     def _read_header_line_1(self, lines):
         """Reads all first header lines from CT25k and CL ceilometers."""
-        fields = ('model_id', 'unit_id', 'software_version', 'message_number',
+        fields = ('model_id', 'unit_id', 'software_level', 'message_number',
                   'message_subclass')
         values = []
         if 'cl' in self.model:
@@ -114,6 +115,10 @@ class VaisalaCeilo:
         time = [time_to_fraction_hour(line.split()[1]) for line in time_lines]
         return np.array(time)
 
+    @staticmethod
+    def _calc_date(time_lines):
+        return time_lines[0].split()[0].strip('-').split('-')
+
     @classmethod
     def _handle_metadata(cls, header):
         meta = cls._concatenate_meta(header)
@@ -164,6 +169,7 @@ class VaisalaCeilo:
         header = []
         data_lines = self._fetch_data_lines()
         self.time = self._calc_time(data_lines[0])
+        self.date = self._calc_date(data_lines[0])
         header.append(self._read_header_line_1(data_lines[1]))
         self.message_number = self._get_message_number(header[0])
         header.append(self._read_header_line_2(data_lines[2]))
@@ -272,19 +278,25 @@ class Ct25k(VaisalaCeilo):
         return _values_to_dict(keys, values)
 
 
-def ceilo2nc(input_file, output_file):
+def ceilo2nc(input_file, output_file, location='Kumpula', altitude=0):
     """Converts Vaisala ceilometer txt-file to netCDF."""
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()
     beta_variants = calc_beta(ceilo)
     _append_data(ceilo, beta_variants)
+    _append_height(ceilo, altitude)
     output.update_attributes(ceilo.data, ATTRIBUTES)
-    _save_ceilo(ceilo, output_file)
+    _save_ceilo(ceilo, output_file, location)
+
+
+def _append_height(ceilo, site_altitude):
+    height = ceilo.range + site_altitude
+    ceilo.data['height'] = CloudnetArray(height, 'height')
 
 
 def _append_data(ceilo, beta_variants):
     """Add data and metadata as CloudnetArray's to ceilo.data attribute."""
-    for data, name in zip(beta_variants, ('beta', 'beta_smooth')):
+    for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
         ceilo.data[name] = CloudnetArray(data, name)
     for field in ('range', 'time'):
         ceilo.data[field] = CloudnetArray(getattr(ceilo, field), field)
@@ -295,13 +307,13 @@ def _append_data(ceilo, beta_variants):
                                                        dtype=float), field)
 
 
-def _save_ceilo(ceilo, output_file):
+def _save_ceilo(ceilo, output_file, location):
     dims = {'time': len(ceilo.time), 'range': len(ceilo.range)}
     rootgrp = output.init_file(output_file, dims, ceilo.data, zlib=True)
-    rootgrp.title = f"Ceilometer file from XXX"
-    #rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
-    #rootgrp.location = rpg.location
-    rootgrp.history = f"{utils.get_time()} - radar file created"
+    rootgrp.title = f"Ceilometer file from {location}"
+    rootgrp.year, rootgrp.month, rootgrp.day = ceilo.date
+    rootgrp.location = location
+    rootgrp.history = f"{utils.get_time()} - ceilometer file created"
     rootgrp.source = ceilo.model
     rootgrp.close()
 
@@ -318,13 +330,13 @@ def calc_beta(ceilo):
     is_saturation = _find_saturated_profiles(ceilo)
     beta = _screen_beta(ceilo.backscatter, False)
     # smoothed version:
-    beta_smooth = ma.copy(beta)
+    beta_smooth = ma.copy(ceilo.backscatter)
     cloud_ind, cloud_values = _estimate_clouds_from_beta(beta)
     sigma = _calc_sigma_units(ceilo)
     beta_smooth = scipy.ndimage.filters.gaussian_filter(beta_smooth, sigma)
     beta_smooth[cloud_ind] = cloud_values
     beta_smooth = _screen_beta(beta_smooth, True)
-    return beta, beta_smooth
+    return ceilo.backscatter, beta, beta_smooth
 
 
 def _estimate_clouds_from_beta(beta):
@@ -472,14 +484,18 @@ ATTRIBUTES = {
     'beta': MetaData(
         long_name='Attenuated backscatter coefficient',
         units='sr-1 m-1',
+        comment='Range corrected, SNR screened, attenuated backscatter.'
     ),
     'beta_raw': MetaData(
         long_name='Raw attenuated backscatter coefficient',
         units='sr-1 m-1',
+        comment="Range corrected, attenuated backscatter."
     ),
     'beta_smooth': MetaData(
         long_name='Smoothed attenuated backscatter coefficient',
         units='sr-1 m-1',
+        comment=('Range corrected, SNR screened backscatter coefficient.\n'
+                 'Weak background is smoothed using Gaussian 2D-kernel.')
     ),
     'scale': MetaData(
         long_name='Scale',
@@ -506,5 +522,51 @@ ATTRIBUTES = {
         long_name='Laser pulse energy',
         units='%',
     ),
-
+    'background_light': MetaData(
+        long_name='Background light',
+        units='mV',
+        comment='Measured at internal ADC input.'
+    ),
+    'backscatter_sum': MetaData(
+        long_name='Sum of detected and normalized backscatter',
+        units='sr-1',
+        comment='Multiplied by scaling factor times 1e4.',
+    ),
+    'range_resolution': MetaData(
+        long_name='Range resolution',
+        units='m',
+    ),
+    'number_of_gates': MetaData(
+        long_name='Number of range gates in profile',
+        units='',
+    ),
+    'unit_id': MetaData(
+        long_name='Ceilometer unit number',
+        units='',
+    ),
+    'message_number': MetaData(
+        long_name='Message number',
+        units='',
+    ),
+    'message_subclass': MetaData(
+        long_name='Message subclass number',
+        units='',
+    ),
+    'detection_status': MetaData(
+        long_name='Detection status',
+        units='',
+        comment='From the internal software of the instrument.'
+    ),
+    'warning': MetaData(
+        long_name='Warning and Alarm flag',
+        units='',
+        definition=('\n'
+                    'Value 0: Self-check OK\n'
+                    'Value W: At least one warning on\n'
+                    'Value A: At least one error active.')
+    ),
+    'warning_flags': MetaData(
+        long_name='Warning flags',
+        units='',
+    )
 }

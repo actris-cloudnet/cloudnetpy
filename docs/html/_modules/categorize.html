@@ -290,7 +290,8 @@
 
         <span class="k">def</span> <span class="nf">_number_of_pulses</span><span class="p">():</span>
             <span class="sd">&quot;&quot;&quot;Returns number of independent pulses.&quot;&quot;&quot;</span>
-            <span class="n">dwell_time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">mdiff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="o">*</span> <span class="mi">3600</span>  <span class="c1"># seconds</span>
+            <span class="n">seconds_in_hour</span> <span class="o">=</span> <span class="mi">3600</span>
+            <span class="n">dwell_time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">mdiff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span> <span class="o">*</span> <span class="n">seconds_in_hour</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">dwell_time</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">radar_frequency</span> <span class="o">*</span> <span class="mf">1e9</span> <span class="o">*</span> <span class="mi">4</span>
                     <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">][:]</span> <span class="o">/</span> <span class="mf">3e8</span><span class="p">)</span>
 
@@ -372,10 +373,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">lwp_error</span><span class="p">,</span> <span class="s1">&#39;lwp_error&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">interpolate_in_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_grid</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Interpolates liquid water path to Cloudnet&#39;s dense time grid.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Interpolates liquid water path and its error to Cloudnet&#39;s dense time grid.</span>
+<span class="sd">        This is wrong. We need to use binning instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
             <span class="n">fun</span> <span class="o">=</span> <span class="n">interp1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">][:],</span> <span class="n">fill_value</span><span class="o">=</span><span class="s1">&#39;extrapolate&#39;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">fun</span><span class="p">(</span><span class="n">time_grid</span><span class="p">),</span> <span class="n">key</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">fun</span><span class="p">(</span><span class="n">time_grid</span><span class="p">),</span> <span class="n">key</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;g m-2&#39;</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">DataSource</span><span class="p">):</span>
