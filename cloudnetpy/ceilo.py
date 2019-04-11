@@ -5,9 +5,8 @@ import numpy.ma as ma
 import scipy.ndimage
 from cloudnetpy import utils, output
 from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.metadata import MetaData
 
-# import matplotlib.pyplot as plt
-# from cloudnetpy import plotting
 
 M2KM = 0.001
 
@@ -35,8 +34,8 @@ class VaisalaCeilo:
 
     def _read_header_line_1(self, lines):
         """Reads all first header lines from CT25k and CL ceilometers."""
-        keys = ('model_id', 'unit_id', 'software_version', 'message_number',
-                'message_subclass')
+        fields = ('model_id', 'unit_id', 'software_version', 'message_number',
+                  'message_subclass')
         values = []
         if 'cl' in self.model:
             indices = [1, 3, 4, 7, 8, 9]
@@ -45,7 +44,12 @@ class VaisalaCeilo:
         for line in lines:
             distinct_values = _split_string(line, indices)
             values.append(distinct_values)
-        return _values_to_dict(keys, values)
+        return _values_to_dict(fields, values)
+
+    @staticmethod
+    def _convert_data_types(fields, values):
+        return [[fields[name](element) for name, element in zip(fields, array)]
+                for array in values]
 
     def _calc_range(self):
         if self.model == 'ct25k':
@@ -91,12 +95,13 @@ class VaisalaCeilo:
     @staticmethod
     def _read_header_line_2(lines):
         """Same for all data messages."""
-        keys = ('detection_status', 'warning', 'cloud_base_data', 'warning_flags')
+        fields = ('detection_status', 'warning', 'cloud_base_data',
+                  'warning_flags')
         values = []
         for line in lines:
             distinct_values = [line[0], line[1], line[3:20], line[21:].strip()]
             values.append(distinct_values)
-        return _values_to_dict(keys, values)
+        return _values_to_dict(fields, values)
 
     @staticmethod
     def _get_message_number(header_line_1):
@@ -132,12 +137,16 @@ class VaisalaCeilo:
 
     @staticmethod
     def _convert_meta_strings(meta):
-        int_variables = ('tilt_angle', 'message_number', 'scale')
+        strings = ('cloud_base_data', 'measurement_parameters', 'cloud_amount_data')
         for field in meta:
+            if field in strings:
+                continue
             values = meta[field]
-            if isinstance(values, str):
-                if field in int_variables:
+            if isinstance(values, str):  # only one unique value
+                try:
                     meta[field] = int(values)
+                except (ValueError, TypeError):
+                    continue
             else:
                 meta[field] = [None] * len(meta[field])
                 for ind, value in enumerate(values):
@@ -145,6 +154,7 @@ class VaisalaCeilo:
                         meta[field][ind] = int(value)
                     except (ValueError, TypeError):
                         continue
+                meta[field] = np.array(meta[field])
         return meta
 
     def _read_header_line_3(self, data):
@@ -266,22 +276,23 @@ def ceilo2nc(input_file, output_file):
     """Converts Vaisala ceilometer txt-file to netCDF."""
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()
-    beta, beta_smooth = calc_beta(ceilo)
-    _append_data(ceilo, beta, beta_smooth)
-    output.update_attributes(ceilo.data, {})
+    beta_variants = calc_beta(ceilo)
+    _append_data(ceilo, beta_variants)
+    output.update_attributes(ceilo.data, ATTRIBUTES)
     _save_ceilo(ceilo, output_file)
 
 
-def _append_data(ceilo, beta, beta_smooth):
-    ceilo.data['beta'] = CloudnetArray(beta, 'beta')
-    ceilo.data['beta_smooth'] = CloudnetArray(beta_smooth, 'beta_smoothed')
-    ceilo.data['range'] = CloudnetArray(ceilo.range, 'range')
-    ceilo.data['time'] = CloudnetArray(ceilo.range, 'time')
-    #for field in ceilo.metadata:
-        #print(field, type(ceilo.metadata[field]))
-        #print(np.array(ceilo.metadata[field]))
-        #if field not in ('model_id', 'measurement_parameters'):
-        #    ceilo.data[field] = CloudnetArray(np.asarray(ceilo.metadata[field]), field)
+def _append_data(ceilo, beta_variants):
+    """Add data and metadata as CloudnetArray's to ceilo.data attribute."""
+    for data, name in zip(beta_variants, ('beta', 'beta_smooth')):
+        ceilo.data[name] = CloudnetArray(data, name)
+    for field in ('range', 'time'):
+        ceilo.data[field] = CloudnetArray(getattr(ceilo, field), field)
+    for field, data in ceilo.metadata.items():
+        first_element = data if utils.isscalar(data) else data[0]
+        if not isinstance(first_element, str):  # String array writing not yet supported
+            ceilo.data[field] = CloudnetArray(np.array(ceilo.metadata[field],
+                                                       dtype=float), field)
 
 
 def _save_ceilo(ceilo, output_file):
@@ -374,12 +385,10 @@ def _get_range_squared(ceilo):
 
 
 def _calc_range_uncorrected_beta(beta, range_squared):
-    """Return range-uncorrected backscatter."""
     return beta / range_squared
 
 
 def _calc_range_corrected_beta(beta, range_squared):
-    """Return range-corrected backscatter."""
     return beta * range_squared
 
 
@@ -457,3 +466,45 @@ def time_to_fraction_hour(time):
     """ Time (hh:mm:ss) as fraction hour """
     h, m, s = time.split(':')
     return int(h) + (int(m) * 60 + int(s)) / 3600
+
+
+ATTRIBUTES = {
+    'beta': MetaData(
+        long_name='Attenuated backscatter coefficient',
+        units='sr-1 m-1',
+    ),
+    'beta_raw': MetaData(
+        long_name='Raw attenuated backscatter coefficient',
+        units='sr-1 m-1',
+    ),
+    'beta_smooth': MetaData(
+        long_name='Smoothed attenuated backscatter coefficient',
+        units='sr-1 m-1',
+    ),
+    'scale': MetaData(
+        long_name='Scale',
+        units='%',
+        comment='100 (%) is normal.'
+    ),
+    'software_level': MetaData(
+        long_name='Software level ID',
+        units='',
+    ),
+    'laser_temperature': MetaData(
+        long_name='Laser temperature',
+        units='C',
+    ),
+    'window_transmission': MetaData(
+        long_name='Window transmission estimate',
+        units='%',
+    ),
+    'tilt_angle': MetaData(
+        long_name='Tilt angle from vertical',
+        units='degrees',
+    ),
+    'laser_energy': MetaData(
+        long_name='Laser pulse energy',
+        units='%',
+    ),
+
+}
