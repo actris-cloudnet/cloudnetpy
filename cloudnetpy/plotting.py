@@ -25,7 +25,7 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     plt.show()
 
 
-#IDENTIFIER = " from CloudnetPy"
+# IDENTIFIER = " from CloudnetPy"
 IDENTIFIER = ""
 
 
@@ -63,9 +63,7 @@ def _plot_colormesh_data(ax, data, name):
     cmap = plt.get_cmap(variables.cbar, 10)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
-        data = np.log10(data)
-        vmin = np.log10(vmin)
-        vmax = np.log10(vmax)
+        data, vmin, vmax = _lin2log(data, vmin, vmax)
 
     pl = ax.imshow(data.T, cmap=cmap, origin='lower', vmin=vmin, vmax=vmax,
                    aspect='auto')
@@ -78,6 +76,10 @@ def _plot_colormesh_data(ax, data, name):
 
     colorbar.set_label(variables.clabel, fontsize=13)
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+
+
+def _lin2log(*args):
+    return [ma.log10(x) for x in args]
 
 
 def _init_colorbar(plot, axis):
@@ -110,16 +112,16 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     field_names = _parse_field_names(nc_file, field_names)
     data_fields = ptools.read_nc_fields(nc_file, field_names)
     n_fields = len(data_fields)
-    fig, ax = _initialize_figure(n_fields)
+    fig, axes = _initialize_figure(n_fields)
 
-    for axis, field, name in zip(ax, data_fields, field_names):
+    for axis, field, name in zip(axes, data_fields, field_names):
         if ATTRIBUTES[name].plot_type == 'segment':
             _plot_segment_data(axis, field, name)
         else:
             _plot_colormesh_data(axis, field, name)
 
-    axes = _read_axes(nc_file)
-    _set_axes(ax, axes, max_y)
+    axes_data = _read_axes(nc_file)
+    _set_axes(axes, axes_data, max_y)
     case_date = _read_case_date(nc_file)
     _add_subtitle(fig, n_fields, case_date)
 
@@ -130,13 +132,13 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.show()
 
 
-def _set_axes(ax, axes, max_y):
+def _set_axes(axes, axes_data, max_y):
     """Sets ticks and tick labels for plt.imshow()."""
-    time, alt = axes
+    time, alt = axes_data
     ticks_y, ticks_y_labels, n_max_y = _get_ticks(alt, max_y, 2)
     ticks_x, _, n_max_x = _get_ticks(time, 24, 4)
     ticks_x_labels = ['', '04:00', '08:00', '12:00', '16:00', '20:00', '']
-    for axis in ax:
+    for axis in axes:
         axis.set_yticks(ticks_y)
         axis.set_yticklabels(ticks_y_labels, fontsize=12)
         axis.set_ylim(0, n_max_y)
@@ -144,11 +146,11 @@ def _set_axes(ax, axes, max_y):
         axis.set_xticklabels(ticks_x_labels, fontsize=12)
         axis.set_xlim(0, n_max_x)
         axis.set_ylabel('Height (km)', fontsize=13)
-    ax[-1].set_xlabel('Time (UTC)', fontsize=13)
+    axes[-1].set_xlabel('Time (UTC)', fontsize=13)
 
 
 def _get_ticks(x, x_max, tick_step):
-    """Calculates ticks and their labels."""
+    """Calculates tick positions and their labels."""
     step = utils.mdiff(x)
     n_steps_to_reach_max = round(x_max/step)
     n_steps_in_one_tick = round(tick_step/step)
