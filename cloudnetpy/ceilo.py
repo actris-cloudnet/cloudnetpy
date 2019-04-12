@@ -1,9 +1,17 @@
 """Module for reading and processing Vaisala ceilometers."""
 import linecache
 import numpy as np
-from cloudnetpy import plotting
-import matplotlib.pyplot as plt
-import sys
+import numpy.ma as ma
+import scipy.ndimage
+from cloudnetpy import utils, output
+from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.metadata import MetaData
+
+
+M2KM = 0.001
+MINUTES_IN_HOUR = 60
+SECONDS_IN_MINUTE = 60
+SECONDS_IN_HOUR = 3600
 
 
 class VaisalaCeilo:
@@ -11,19 +19,66 @@ class VaisalaCeilo:
     def __init__(self, file_name):
         self.file_name = file_name
         self.model = None
-        self.message_number = None
-        self.hex_conversion_params = None
+        self.noise_params = None
         self.backscatter = None
         self.metadata = None
         self.range = None
         self.time = None
+        self.date = None
+        self.data = {}
+        self._backscatter_scale_factor = None
+        self._hex_conversion_params = None
+        self._message_number = None
 
     def _fetch_data_lines(self):
         """Finds data lines (header + backscatter) from ceilometer file."""
         with open(self.file_name) as file:
             all_lines = file.readlines()
         return self._screen_empty_lines(all_lines)
-        
+
+    def _read_header_line_1(self, lines):
+        """Reads all first header lines from CT25k and CL ceilometers."""
+        fields = ('model_id', 'unit_id', 'software_level', 'message_number',
+                  'message_subclass')
+        values = []
+        if 'cl' in self.model:
+            indices = [1, 3, 4, 7, 8, 9]
+        else:
+            indices = [1, 3, 4, 6, 7, 8]
+        for line in lines:
+            distinct_values = _split_string(line, indices)
+            values.append(distinct_values)
+        return _values_to_dict(fields, values)
+
+    @staticmethod
+    def _convert_data_types(fields, values):
+        return [[fields[name](element) for name, element in zip(fields, array)]
+                for array in values]
+
+    def _calc_range(self):
+        if self.model == 'ct25k':
+            range_resolution = 30
+            n_gates = 256
+        else:
+            n_gates = int(self.metadata['number_of_gates'])
+            range_resolution = int(self.metadata['range_resolution'])
+        return np.arange(1, n_gates + 1) * range_resolution
+
+    def _read_backscatter(self, lines):
+        n_chars = self._hex_conversion_params[0]
+        n_gates = int(len(lines[0])/n_chars)
+        profiles = np.zeros((len(lines), n_gates), dtype=int)
+        ran = range(0, n_gates*n_chars, n_chars)
+        for ind, line in enumerate(lines):
+            try:
+                profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
+            except ValueError as error:
+                print(error)
+
+        ind = np.where(profiles & self._hex_conversion_params[1] != 0)
+        profiles[ind] -= self._hex_conversion_params[2]
+        return profiles.astype(float) / self._backscatter_scale_factor
+
     @staticmethod
     def _screen_empty_lines(data):
         """Removes empty lines from the list of data."""
@@ -41,29 +96,16 @@ class VaisalaCeilo:
         empty_lines = _parse_empty_lines()
         return _parse_data_lines(empty_lines)
 
-    def _read_header_line_1(self, lines):
-        """Reads all first header lines from CT25k and CL ceilometers."""
-        keys = ('model_id', 'unit_id', 'software_version', 'message_number',
-                'message_subclass')
-        values = []
-        if 'cl' in self.model:
-            indices = [1, 3, 4, 7, 8, 9]
-        else:
-            indices = [1, 3, 4, 6, 7, 8]
-        for line in lines:
-            distinct_values = _split_string(line, indices)
-            values.append(distinct_values)
-        return _values_to_dict(keys, values)
-
     @staticmethod
     def _read_header_line_2(lines):
         """Same for all data messages."""
-        keys = ('detection_status', 'warning', 'cloud_base_data', 'warning_flags')
+        fields = ('detection_status', 'warning', 'cloud_base_data',
+                  'warning_flags')
         values = []
         for line in lines:
             distinct_values = [line[0], line[1], line[3:20], line[21:].strip()]
             values.append(distinct_values)
-        return _values_to_dict(keys, values)
+        return _values_to_dict(fields, values)
 
     @staticmethod
     def _get_message_number(header_line_1):
@@ -71,51 +113,92 @@ class VaisalaCeilo:
         assert len(np.unique(msg_no)) == 1, 'Error: inconsistent message numbers.'
         return int(msg_no[0])
 
-    def _read_backscatter(self, lines):
-        n_chars = self.hex_conversion_params[0]
-        n_gates = int(len(lines[0])/n_chars)
-        profiles = np.zeros((len(lines), n_gates), dtype=int)
-        ran = range(0, n_gates*n_chars, n_chars)
-        for ind, line in enumerate(lines):
-            try:
-                profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
-            except ValueError as error:
-                print(error)
-
-        ind = np.where(profiles & self.hex_conversion_params[1] != 0)
-        profiles[ind] -= self.hex_conversion_params[2]
-        return profiles
-
     @staticmethod
     def _calc_time(time_lines):
         time = [time_to_fraction_hour(line.split()[1]) for line in time_lines]
         return np.array(time)
 
-    def _calc_range(self):
-        n_gates = int(self.metadata['number_of_gates'][0])
-        range_resolution = int(self.metadata['range_resolution'][0])
-        return np.arange(1, n_gates + 1) * range_resolution
+    @staticmethod
+    def _calc_date(time_lines):
+        return time_lines[0].split()[0].strip('-').split('-')
 
-    
+    @classmethod
+    def _handle_metadata(cls, header):
+        meta = cls._concatenate_meta(header)
+        meta = cls._remove_meta_duplicates(meta)
+        meta = cls._convert_meta_strings(meta)
+        return meta
+
+    @staticmethod
+    def _concatenate_meta(header):
+        meta = {}
+        for head in header:
+            meta = {**meta, **head}
+        return meta
+
+    @staticmethod
+    def _remove_meta_duplicates(meta):
+        for field in meta:
+            if len(np.unique(meta[field])) == 1:
+                meta[field] = meta[field][0]
+        return meta
+
+    @staticmethod
+    def _convert_meta_strings(meta):
+        strings = ('cloud_base_data', 'measurement_parameters', 'cloud_amount_data')
+        for field in meta:
+            if field in strings:
+                continue
+            values = meta[field]
+            if isinstance(values, str):  # only one unique value
+                try:
+                    meta[field] = int(values)
+                except (ValueError, TypeError):
+                    continue
+            else:
+                meta[field] = [None] * len(meta[field])
+                for ind, value in enumerate(values):
+                    try:
+                        meta[field][ind] = int(value)
+                    except (ValueError, TypeError):
+                        continue
+                meta[field] = np.array(meta[field])
+        return meta
+
+    def _read_header_line_3(self, data):
+        raise NotImplementedError
+
+    def _read_common_header_part(self):
+        header = []
+        data_lines = self._fetch_data_lines()
+        self.time = self._calc_time(data_lines[0])
+        self.date = self._calc_date(data_lines[0])
+        header.append(self._read_header_line_1(data_lines[1]))
+        self._message_number = self._get_message_number(header[0])
+        header.append(self._read_header_line_2(data_lines[2]))
+        header.append(self._read_header_line_3(data_lines[3]))
+        return header, data_lines
+
+
 class ClCeilo(VaisalaCeilo):
     """Base class for Vaisala CL31/CL51 ceilometers."""
 
     def __init__(self, file_name):
         super().__init__(file_name)
-        self.hex_conversion_params = (5, 524288, 1048576)
+        self._hex_conversion_params = (5, 524288, 1048576)
+        self._backscatter_scale_factor = 1e8
+        self.noise_params = (100, 1e-12, 3e-6, (1.1e-8, 2.9e-8))
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
-        data_lines = self._fetch_data_lines()
-        header_line_1 = self._read_header_line_1(data_lines[1])
-        self.message_number = self._get_message_number(header_line_1)
-        header_line_2 = self._read_header_line_2(data_lines[2])
-        header_line_3 = self._read_header_line_3(data_lines[3])
-        header_line_4 = self._read_header_line_4(data_lines[-3])
+        header, data_lines = self._read_common_header_part()
+        header.append(self._read_header_line_4(data_lines[-3]))
+        self.metadata = self._handle_metadata(header)
         self.backscatter = self._read_backscatter(data_lines[-2])
+        self.range = self._calc_range()  # this is duplicate, should be elsewhere
 
     def _read_header_line_3(self, lines):
-        if self.message_number != 2:
+        if self._message_number != 2:
             return None
         keys = ('cloud_detection_status', 'cloud_amount_data')
         values = []
@@ -159,17 +242,24 @@ class Ct25k(VaisalaCeilo):
     def __init__(self, input_file):
         super().__init__(input_file)
         self.model = 'ct25k'
-        self.hex_conversion_params = (4, 32768, 65536)
+        self._hex_conversion_params = (4, 32768, 65536)
+        self._backscatter_scale_factor = 1e7
+        self.noise_params = (40, 2e-14, 0.3e-6, (3e-10, 1.5e-9))
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
-        data_lines = self._fetch_data_lines()
-        header_line_1 = self._read_header_line_1(data_lines[1])
-        self.message_number = self._get_message_number(header_line_1)
-        header_line_2 = self._read_header_line_2(data_lines[2])
-        header_line_3 = self._read_header_line_3(data_lines[3])
+        header, data_lines = self._read_common_header_part()
+        self.metadata = self._handle_metadata(header)
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.backscatter = self._read_backscatter(hex_profiles)
+        self.range = self._calc_range()  # this is duplicate, should be elsewhere
+        self._range_correct_upper_part()
+
+    def _range_correct_upper_part(self):
+        """In CT25k only altitudes below 2.4 km are range corrected (?)"""
+        altitude_limit = 2400
+        ind = np.where(self.range > altitude_limit)
+        self.backscatter[:, ind] *= (self.range[ind]*M2KM)**2
 
     @staticmethod
     def _parse_hex_profiles(lines):
@@ -179,7 +269,7 @@ class Ct25k(VaisalaCeilo):
                 for n in range(n_profiles)]
 
     def _read_header_line_3(self, lines):
-        if self.message_number in (1, 3, 6):
+        if self._message_number in (1, 3, 6):
             return None
         keys = ('scale', 'measurement_mode', 'laser_energy',
                 'laser_temperature', 'receiver_sensitivity',
@@ -191,10 +281,148 @@ class Ct25k(VaisalaCeilo):
         return _values_to_dict(keys, values)
 
 
-def ceilo2nc(input_file, output_file):
+def ceilo2nc(input_file, output_file, location='Kumpula', altitude=0):
     """Converts Vaisala ceilometer txt-file to netCDF."""
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()
+    beta_variants = calc_beta(ceilo)
+    _append_data(ceilo, beta_variants)
+    _append_height(ceilo, altitude)
+    output.update_attributes(ceilo.data, ATTRIBUTES)
+    _save_ceilo(ceilo, output_file, location)
+
+
+def _append_height(ceilo, site_altitude):
+    height = ceilo.range + site_altitude
+    ceilo.data['height'] = CloudnetArray(height, 'height')
+
+
+def _append_data(ceilo, beta_variants):
+    """Add data and metadata as CloudnetArray's to ceilo.data attribute."""
+    for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
+        ceilo.data[name] = CloudnetArray(data, name)
+    for field in ('range', 'time'):
+        ceilo.data[field] = CloudnetArray(getattr(ceilo, field), field)
+    for field, data in ceilo.metadata.items():
+        first_element = data if utils.isscalar(data) else data[0]
+        if not isinstance(first_element, str):  # String array writing not yet supported
+            ceilo.data[field] = CloudnetArray(np.array(ceilo.metadata[field],
+                                                       dtype=float), field)
+
+
+def _save_ceilo(ceilo, output_file, location):
+    dims = {'time': len(ceilo.time), 'range': len(ceilo.range)}
+    rootgrp = output.init_file(output_file, dims, ceilo.data, zlib=True)
+    rootgrp.title = f"Ceilometer file from {location}"
+    rootgrp.year, rootgrp.month, rootgrp.day = ceilo.date
+    rootgrp.location = location
+    rootgrp.history = f"{utils.get_time()} - ceilometer file created"
+    rootgrp.source = ceilo.model
+    rootgrp.close()
+
+
+def calc_beta(ceilo):
+    """From raw beta to beta."""
+
+    def _screen_beta(beta_in, smooth):
+        beta_in = _calc_range_uncorrected_beta(beta_in, range_squared)
+        beta_in = _screen_by_snr(beta_in, ceilo, is_saturation, smooth=smooth)
+        return _calc_range_corrected_beta(beta_in, range_squared)
+
+    range_squared = _get_range_squared(ceilo)
+    is_saturation = _find_saturated_profiles(ceilo)
+    beta = _screen_beta(ceilo.backscatter, False)
+    # smoothed version:
+    beta_smooth = ma.copy(ceilo.backscatter)
+    cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
+    beta_smooth[cloud_ind] = cloud_limit  # to reduce artifacts between smoothed and not-smoothed values
+    sigma = _calc_sigma_units(ceilo)
+    beta_smooth = scipy.ndimage.filters.gaussian_filter(beta_smooth, sigma)
+    beta_smooth[cloud_ind] = cloud_values
+    beta_smooth = _screen_beta(beta_smooth, True)
+    return ceilo.backscatter, beta, beta_smooth
+
+
+def _estimate_clouds_from_beta(beta):
+    """Naively finds strong clouds from ceilometer backscatter."""
+    cloud_limit = 1e-6
+    cloud_ind = np.where(beta > cloud_limit)
+    return cloud_ind, beta[cloud_ind], cloud_limit
+
+
+def _screen_by_snr(beta_uncorrected, ceilo, is_saturation, smooth=False):
+    """Screens noise from ceilometer backscatter.
+
+    Args:
+        beta_uncorrected (ndarray): Range-uncorrected backscatter.
+        ceilo (obj): Ceilometer object.
+        is_saturation (ndarray): Boolean array denoting saturated profiles.
+        smooth (bool): Should be true if input beta is smoothed. Default is False.
+
+    """
+    beta = ma.copy(beta_uncorrected)
+    n_gates, _, saturation_noise, noise_min = ceilo.noise_params
+    noise_min = noise_min[0] if smooth else noise_min[1]
+    noise = _estimate_noise_from_top_gates(beta, n_gates, noise_min)
+    beta = _reset_low_values_above_saturation(beta, is_saturation, saturation_noise)
+    beta = _remove_noise(beta, noise)
+    return beta
+
+
+def _estimate_noise_from_top_gates(beta, n_gates, noise_min):
+    """Estimates backscatter noise from topmost range gates."""
+    noise = ma.std(beta[:, -n_gates:], axis=1)
+    noise[noise < noise_min] = noise_min
+    return noise
+
+
+def _reset_low_values_above_saturation(beta, is_saturation, saturation_noise):
+    """Removes low values in saturated profiles above peak."""
+    for saturated_profile in np.where(is_saturation)[0]:
+        profile = beta[saturated_profile, :]
+        peak_ind = np.argmax(profile)
+        alt_ind = np.where(profile[peak_ind:] < saturation_noise)[0] + peak_ind
+        beta[saturated_profile, alt_ind] = ma.masked
+    return beta
+
+
+def _remove_noise(beta, noise):
+    """Removes points where snr < 5."""
+    snr_limit = 5
+    snr = (beta.T / noise)
+    beta[snr.T < snr_limit] = ma.masked
+    return beta
+
+
+def _get_range_squared(ceilo):
+    """Returns range squared (km2)."""
+    return (ceilo.range*M2KM)**2
+
+
+def _calc_range_uncorrected_beta(beta, range_squared):
+    return beta / range_squared
+
+
+def _calc_range_corrected_beta(beta, range_squared):
+    return beta * range_squared
+
+
+def _find_saturated_profiles(ceilo):
+    """Estimates saturated profiles using the variance of the top range gates."""
+    n_gates, var_lim, _, _ = ceilo.noise_params
+    var = np.var(ceilo.backscatter[:, -n_gates:], axis=1)
+    return var < var_lim
+
+
+def _calc_sigma_units(ceilo):
+    """Calculates Gaussian peak std parameters."""
+    sigma_x_minutes = 2
+    sigma_y_metres = 5
+    time_step = utils.mdiff(ceilo.time) * MINUTES_IN_HOUR
+    alt_step = utils.mdiff(ceilo.range)
+    x = sigma_x_minutes / time_step
+    y = sigma_y_metres / alt_step
+    return x, y
 
 
 def _values_to_dict(keys, values):
@@ -215,7 +443,10 @@ def _initialize_ceilo(file):
         return Cl51(file)
     elif model == 'cl31':
         return Cl31(file)
-    return Ct25k(file)
+    elif model == 'ct25k':
+        return Ct25k(file)
+    else:
+        raise SystemExit('Error: Unknown ceilo model.')
 
 
 def _find_ceilo_model(file):
@@ -250,4 +481,106 @@ def is_empty_line(line):
 def time_to_fraction_hour(time):
     """ Time (hh:mm:ss) as fraction hour """
     h, m, s = time.split(':')
-    return int(h) + (int(m) * 60 + int(s)) / 3600
+    return int(h) + (int(m) * SECONDS_IN_MINUTE + int(s)) / SECONDS_IN_HOUR
+
+
+ATTRIBUTES = {
+    'beta': MetaData(
+        long_name='Attenuated backscatter coefficient',
+        units='sr-1 m-1',
+        comment='Range corrected, SNR screened, attenuated backscatter.'
+    ),
+    'beta_raw': MetaData(
+        long_name='Raw attenuated backscatter coefficient',
+        units='sr-1 m-1',
+        comment="Range corrected, attenuated backscatter."
+    ),
+    'beta_smooth': MetaData(
+        long_name='Smoothed attenuated backscatter coefficient',
+        units='sr-1 m-1',
+        comment=('Range corrected, SNR screened backscatter coefficient.\n'
+                 'Weak background is smoothed using Gaussian 2D-kernel.')
+    ),
+    'scale': MetaData(
+        long_name='Scale',
+        units='%',
+        comment='100 (%) is normal.'
+    ),
+    'software_level': MetaData(
+        long_name='Software level ID',
+        units='',
+    ),
+    'laser_temperature': MetaData(
+        long_name='Laser temperature',
+        units='C',
+    ),
+    'window_transmission': MetaData(
+        long_name='Window transmission estimate',
+        units='%',
+    ),
+    'tilt_angle': MetaData(
+        long_name='Tilt angle from vertical',
+        units='degrees',
+    ),
+    'laser_energy': MetaData(
+        long_name='Laser pulse energy',
+        units='%',
+    ),
+    'background_light': MetaData(
+        long_name='Background light',
+        units='mV',
+        comment='Measured at internal ADC input.'
+    ),
+    'backscatter_sum': MetaData(
+        long_name='Sum of detected and normalized backscatter',
+        units='sr-1',
+        comment='Multiplied by scaling factor times 1e4.',
+    ),
+    'range_resolution': MetaData(
+        long_name='Range resolution',
+        units='m',
+    ),
+    'number_of_gates': MetaData(
+        long_name='Number of range gates in profile',
+        units='',
+    ),
+    'unit_id': MetaData(
+        long_name='Ceilometer unit number',
+        units='',
+    ),
+    'message_number': MetaData(
+        long_name='Message number',
+        units='',
+    ),
+    'message_subclass': MetaData(
+        long_name='Message subclass number',
+        units='',
+    ),
+    'detection_status': MetaData(
+        long_name='Detection status',
+        units='',
+        comment='From the internal software of the instrument.'
+    ),
+    'warning': MetaData(
+        long_name='Warning and Alarm flag',
+        units='',
+        definition=('\n'
+                    'Value 0: Self-check OK\n'
+                    'Value W: At least one warning on\n'
+                    'Value A: At least one error active.')
+    ),
+    'warning_flags': MetaData(
+        long_name='Warning flags',
+        units='',
+    ),
+    'receiver_sensitivity': MetaData(
+        long_name='Receiver sensitivity',
+        units='%',
+        comment='Expressed as % of nominal factory setting.'
+    ),
+    'window_contamination': MetaData(
+        long_name='Window contamination',
+        units='mV',
+        comment='Measured at internal ADC input.'
+    )
+}

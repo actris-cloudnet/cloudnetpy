@@ -88,7 +88,7 @@ ATTRIBUTES = {
         name='Attenuated backscatter coefficient',
         cbar='viridis',
         clabel=_SR1M1,
-        plot_range=(1e-7, 1e-3),
+        plot_range=(1e-7, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
      ),
@@ -100,6 +100,14 @@ ATTRIBUTES = {
         plot_scale=_LOG,
         plot_type='mesh'
      ),
+    'beta_smooth': PlotMeta(
+        name='Attenuated backscatter coefficient (smoothed)',
+        cbar='viridis',
+        clabel=_SR1M1,
+        plot_range=(1e-7, 1e-3),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
     'Z': PlotMeta(
         name='Radar reflectivity factor',
         cbar='viridis',
@@ -186,7 +194,7 @@ ATTRIBUTES = {
     ),
     'iwc': PlotMeta(
         name='Ice water content',
-        cbar='viridis',
+        cbar='Blues',
         clabel=_KGM3,
         plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
@@ -194,7 +202,7 @@ ATTRIBUTES = {
     ),
     'iwc_inc_rain': PlotMeta(
         name='Ice water content (including rain)',
-        cbar='viridis',
+        cbar='Blues',
         clabel=_KGM3,
         plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
@@ -216,9 +224,9 @@ ATTRIBUTES = {
     ),
     'lwc': PlotMeta(
         name='Liquid water content',
-        cbar='viridis',
+        cbar='Blues',
         clabel=_KGM3,
-        plot_range=(1e-5, 1e-2),
+        plot_range=(1e-6, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
