@@ -86,7 +86,7 @@ _CBAR = {
 ATTRIBUTES = {
     'uwind': PlotMeta(
         name='Model zonal wind',
-        cbar='jet', #'RdBu_r',
+        cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-50, 50),
         plot_scale=_LIN,
@@ -94,16 +94,23 @@ ATTRIBUTES = {
     ),
     'vwind': PlotMeta(
         name='Model meridional wind',
-        cbar='jet', #'RdBu_r',
+        cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-50, 50),
         plot_scale=_LIN,
         plot_type='model'
     ),
-
+    'Tw': PlotMeta(
+        name='Wet-bulb temperature',
+        cbar='RdBu_r',
+        clabel='K',
+        plot_range=(200, 300),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'temperature': PlotMeta(
         name='Model temperature',
-        cbar='jet', #'RdBu_r',
+        cbar='RdBu_r',
         clabel='K',
         plot_range=(200, 300),
         plot_scale=_LIN,
@@ -201,7 +208,7 @@ ATTRIBUTES = {
         name='Approximate two-way radar attenuation due to liquid water',
         cbar='viridis',
         clabel=_DB,
-        plot_range=(0, 10),
+        plot_range=(0, 6),
         plot_scale=_LIN,
         plot_type='mesh'
      ),

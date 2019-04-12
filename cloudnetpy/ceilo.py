@@ -50,12 +50,8 @@ class VaisalaCeilo:
             values.append(distinct_values)
         return _values_to_dict(fields, values)
 
-    @staticmethod
-    def _convert_data_types(fields, values):
-        return [[fields[name](element) for name, element in zip(fields, array)]
-                for array in values]
-
     def _calc_range(self):
+        """Calculates range vector from the resolution and number of gates."""
         if self.model == 'ct25k':
             range_resolution = 30
             n_gates = 256
@@ -65,6 +61,7 @@ class VaisalaCeilo:
         return np.arange(1, n_gates + 1) * range_resolution
 
     def _read_backscatter(self, lines):
+        """Converts backscatter profile from 2-complement hex to floats."""
         n_chars = self._hex_conversion_params[0]
         n_gates = int(len(lines[0])/n_chars)
         profiles = np.zeros((len(lines), n_gates), dtype=int)
@@ -74,7 +71,6 @@ class VaisalaCeilo:
                 profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
             except ValueError as error:
                 print(error)
-
         ind = np.where(profiles & self._hex_conversion_params[1] != 0)
         profiles[ind] -= self._hex_conversion_params[2]
         return profiles.astype(float) / self._backscatter_scale_factor
@@ -98,7 +94,7 @@ class VaisalaCeilo:
 
     @staticmethod
     def _read_header_line_2(lines):
-        """Same for all data messages."""
+        """Reads the second header line."""
         fields = ('detection_status', 'warning', 'cloud_base_data',
                   'warning_flags')
         values = []
@@ -109,17 +105,20 @@ class VaisalaCeilo:
 
     @staticmethod
     def _get_message_number(header_line_1):
+        """Returns the message number."""
         msg_no = header_line_1['message_number']
         assert len(np.unique(msg_no)) == 1, 'Error: inconsistent message numbers.'
         return int(msg_no[0])
 
     @staticmethod
     def _calc_time(time_lines):
+        """Returns the time vector as fraction hour."""
         time = [time_to_fraction_hour(line.split()[1]) for line in time_lines]
         return np.array(time)
 
     @staticmethod
     def _calc_date(time_lines):
+        """Returns the date [yyyy, mm, dd]"""
         return time_lines[0].split()[0].strip('-').split('-')
 
     @classmethod
@@ -133,7 +132,7 @@ class VaisalaCeilo:
     def _concatenate_meta(header):
         meta = {}
         for head in header:
-            meta = {**meta, **head}
+            meta.update(head)
         return meta
 
     @staticmethod
@@ -178,6 +177,12 @@ class VaisalaCeilo:
         header.append(self._read_header_line_2(data_lines[2]))
         header.append(self._read_header_line_3(data_lines[3]))
         return header, data_lines
+
+    def _range_correct_upper_part(self):
+        """Range corrects the upper part of profile."""
+        altitude_limit = 2400
+        ind = np.where(self.range > altitude_limit)
+        self.backscatter[:, ind] *= (self.range[ind]*M2KM)**2
 
 
 class ClCeilo(VaisalaCeilo):
@@ -253,13 +258,9 @@ class Ct25k(VaisalaCeilo):
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.backscatter = self._read_backscatter(hex_profiles)
         self.range = self._calc_range()  # this is duplicate, should be elsewhere
+        # should study the background noise to determine if the
+        # next call is needed. It can be the case with cl31/51 also.
         self._range_correct_upper_part()
-
-    def _range_correct_upper_part(self):
-        """In CT25k only altitudes below 2.4 km are range corrected (?)"""
-        altitude_limit = 2400
-        ind = np.where(self.range > altitude_limit)
-        self.backscatter[:, ind] *= (self.range[ind]*M2KM)**2
 
     @staticmethod
     def _parse_hex_profiles(lines):
@@ -293,6 +294,7 @@ def ceilo2nc(input_file, output_file, location='Kumpula', altitude=0):
 
 
 def _append_height(ceilo, site_altitude):
+    """This would need to take account the tilt angle."""
     height = ceilo.range + site_altitude
     ceilo.data['height'] = CloudnetArray(height, 'height')
 
@@ -311,6 +313,7 @@ def _append_data(ceilo, beta_variants):
 
 
 def _save_ceilo(ceilo, output_file, location):
+    """Saves the ceilometer netcdf-file."""
     dims = {'time': len(ceilo.time), 'range': len(ceilo.range)}
     rootgrp = output.init_file(output_file, dims, ceilo.data, zlib=True)
     rootgrp.title = f"Ceilometer file from {location}"
