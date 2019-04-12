@@ -49,7 +49,7 @@ def _plot_segment_data(ax, data, name):
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
-def _plot_colormesh_data(ax, data, name):
+def _plot_colormesh_data(ax, data, name, axes=None):
     """ Plot data with range of variability.
 
     Creates only one plot, so can be used both one plot and subplot type of figs
@@ -60,13 +60,17 @@ def _plot_colormesh_data(ax, data, name):
         name (string): name of plotted data
     """
     variables = ATTRIBUTES[name]
-    cmap = plt.get_cmap(variables.cbar, 8)
+    cmap = plt.get_cmap(variables.cbar, 12)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
 
-    pl = ax.imshow(data.T, cmap=cmap, origin='lower', vmin=vmin, vmax=vmax,
-                   aspect='auto')
+    if axes:
+        pl = ax.pcolormesh(*axes, data.T, vmin=vmin, vmax=vmax, cmap=cmap)
+    else:
+        pl = ax.imshow(data.T, cmap=cmap, origin='lower', vmin=vmin,
+                       vmax=vmax, aspect='auto')
+
     colorbar = _init_colorbar(pl, ax)
 
     if variables.plot_scale == 'logarithmic':
@@ -115,13 +119,28 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     fig, axes = _initialize_figure(n_fields)
 
     for axis, field, name in zip(axes, data_fields, field_names):
-        if ATTRIBUTES[name].plot_type == 'segment':
+
+        plot_type = ATTRIBUTES[name].plot_type
+
+        if plot_type == 'model':
+            axes_data = _read_axes(nc_file, 'model')
+            _plot_colormesh_data(axis, field, name, axes_data)
+            _set_pcolor_axes(axis, max_y)
+
+        elif plot_type == 'segment':
             _plot_segment_data(axis, field, name)
+            axes_data = _read_axes(nc_file)
+            _set_imshow_axes(axis, axes_data, max_y)
+
+        elif plot_type == 'bar':
+            pass
+
         else:
             _plot_colormesh_data(axis, field, name)
+            axes_data = _read_axes(nc_file)
+            _set_imshow_axes(axis, axes_data, max_y)
 
-    axes_data = _read_axes(nc_file)
-    _set_axes(axes, axes_data, max_y)
+    axes[-1].set_xlabel('Time (UTC)', fontsize=13)
     case_date = _read_case_date(nc_file)
     _add_subtitle(fig, n_fields, case_date)
 
@@ -132,12 +151,24 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.show()
 
 
-def _get_standard_time_ticks(time, resolution=4):
-    """Returns typical ticks / labels for a time vector between 0-24h."""
-    ticks, _, n_max = _get_ticks(time, 24, resolution)
-    labels = [f"{int(i):02d}:00" if 24 > i > 0 else ''
-              for i in np.arange(0, 24.01, resolution)]
-    return ticks, labels, n_max
+def _set_pcolor_axes(axis, max_y):
+    axis.set_ylim(0, max_y)
+    axis.set_xlim(0, 24)
+    axis.set_ylabel('Height (km)', fontsize=13)
+
+
+def _set_imshow_axes(axis, axes_data, max_y):
+    """Sets ticks and tick labels for plt.imshow()."""
+    time, alt = axes_data
+    ticks_y, ticks_y_labels, n_max_y = _get_standard_alt_ticks(alt, max_y)
+    ticks_x, ticks_x_labels, n_max_x = _get_standard_time_ticks(time)
+    axis.set_yticks(ticks_y)
+    axis.set_yticklabels(ticks_y_labels, fontsize=12)
+    axis.set_ylim(0, n_max_y)
+    axis.set_xticks(ticks_x)
+    axis.set_xticklabels(ticks_x_labels, fontsize=12)
+    axis.set_xlim(0, n_max_x)
+    axis.set_ylabel('Height (km)', fontsize=13)
 
 
 def _get_standard_alt_ticks(alt, max_y, resolution=2):
@@ -145,20 +176,12 @@ def _get_standard_alt_ticks(alt, max_y, resolution=2):
     return _get_ticks(alt, max_y, resolution)
 
 
-def _set_axes(axes, axes_data, max_y):
-    """Sets ticks and tick labels for plt.imshow()."""
-    time, alt = axes_data
-    ticks_y, ticks_y_labels, n_max_y = _get_standard_alt_ticks(alt, max_y)
-    ticks_x, ticks_x_labels, n_max_x = _get_standard_time_ticks(time)
-    for axis in axes:
-        axis.set_yticks(ticks_y)
-        axis.set_yticklabels(ticks_y_labels, fontsize=12)
-        axis.set_ylim(0, n_max_y)
-        axis.set_xticks(ticks_x)
-        axis.set_xticklabels(ticks_x_labels, fontsize=12)
-        axis.set_xlim(0, n_max_x)
-        axis.set_ylabel('Height (km)', fontsize=13)
-    axes[-1].set_xlabel('Time (UTC)', fontsize=13)
+def _get_standard_time_ticks(time, resolution=4):
+    """Returns typical ticks / labels for a time vector between 0-24h."""
+    ticks, _, n_max = _get_ticks(time, 24, resolution)
+    labels = [f"{int(i):02d}:00" if 24 > i > 0 else ''
+              for i in np.arange(0, 24.01, resolution)]
+    return ticks, labels, n_max
 
 
 def _get_ticks(x, x_max, tick_step):
@@ -201,11 +224,15 @@ def _read_case_date(nc_file):
     return date(int(obj.year), int(obj.month), int(obj.day))
 
 
-def _read_axes(nc_file):
-    """Returns time (datetime format) and height (km)."""
-    decimal_hour, height = ptools.read_nc_fields(nc_file, ('time', 'height'))
+def _read_axes(nc_file, axes_type='measurement'):
+    """Returns time and height arrays."""
+    if axes_type == 'model':
+        fields = ('model_time', 'model_height')
+    else:
+        fields = ('time', 'height')
+    time, height = ptools.read_nc_fields(nc_file, fields)
     height_km = height / 1000
-    return decimal_hour, height_km
+    return time, height_km
 
 
 def _generate_log_cbar_ticklabel_list(vmin, vmax):
