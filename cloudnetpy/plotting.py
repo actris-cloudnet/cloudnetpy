@@ -29,6 +29,13 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
 IDENTIFIER = ""
 
 
+def _plot_bar_data(ax, data, name):
+    """ Plot 1d data to bar plot"""
+    position= np.arange(len(data))
+    wight = 1
+    ax.bar(position, data, wight, align='center', alpha=0.5, color='b')
+
+
 def _plot_segment_data(ax, data, name):
     """ Plotting data with segments as 2d variable.
 
@@ -174,6 +181,11 @@ def _set_imshow_axes(axis, axes_data, max_y):
 def _get_standard_alt_ticks(alt, max_y, resolution=2):
     """Returns typical ticks / labels for a height vector."""
     return _get_ticks(alt, max_y, resolution)
+
+
+def _get_standard_lwp_ticks(kgm2, max_kgm2, resolution=2):
+    """Returns typical ticks / labels for a height vector."""
+    return _get_ticks(kgm2, max_kgm2, resolution)
 
 
 def _get_standard_time_ticks(time, resolution=4):
