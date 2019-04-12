@@ -60,7 +60,7 @@ def _plot_colormesh_data(ax, data, name):
         name (string): name of plotted data
     """
     variables = ATTRIBUTES[name]
-    cmap = plt.get_cmap(variables.cbar, 10)
+    cmap = plt.get_cmap(variables.cbar, 8)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
@@ -132,12 +132,24 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.show()
 
 
+def _get_standard_time_ticks(time, resolution=4):
+    """Returns typical ticks / labels for a time vector between 0-24h."""
+    ticks, _, n_max = _get_ticks(time, 24, resolution)
+    labels = [f"{int(i):02d}:00" if 24 > i > 0 else ''
+              for i in np.arange(0, 24.01, resolution)]
+    return ticks, labels, n_max
+
+
+def _get_standard_alt_ticks(alt, max_y, resolution=2):
+    """Returns typical ticks / labels for a height vector."""
+    return _get_ticks(alt, max_y, resolution)
+
+
 def _set_axes(axes, axes_data, max_y):
     """Sets ticks and tick labels for plt.imshow()."""
     time, alt = axes_data
-    ticks_y, ticks_y_labels, n_max_y = _get_ticks(alt, max_y, 2)
-    ticks_x, _, n_max_x = _get_ticks(time, 24, 4)
-    ticks_x_labels = ['', '04:00', '08:00', '12:00', '16:00', '20:00', '']
+    ticks_y, ticks_y_labels, n_max_y = _get_standard_alt_ticks(alt, max_y)
+    ticks_x, ticks_x_labels, n_max_x = _get_standard_time_ticks(time)
     for axis in axes:
         axis.set_yticks(ticks_y)
         axis.set_yticklabels(ticks_y_labels, fontsize=12)
