@@ -29,6 +29,13 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
 IDENTIFIER = ""
 
 
+def _plot_bar_data(ax, data, name):
+    """ Plot 1d data to bar plot"""
+    position= np.arange(len(data))
+    wight = 1
+    ax.bar(position, data, wight, align='center', alpha=0.5, color='b')
+
+
 def _plot_segment_data(ax, data, name):
     """ Plotting data with segments as 2d variable.
 
@@ -117,6 +124,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     for axis, field, name in zip(axes, data_fields, field_names):
         if ATTRIBUTES[name].plot_type == 'segment':
             _plot_segment_data(axis, field, name)
+        elif ATTRIBUTES[name].plot_type == 'bar':
+            _plot_bar_data(axis, field, name)
         else:
             _plot_colormesh_data(axis, field, name)
 
@@ -145,11 +154,17 @@ def _get_standard_alt_ticks(alt, max_y, resolution=2):
     return _get_ticks(alt, max_y, resolution)
 
 
+def _get_standard_lwp_ticks(kgm2, max_kgm2, resolution=2):
+    """Returns typical ticks / labels for a height vector."""
+    return _get_ticks(kgm2, max_kgm2, resolution)
+
+
 def _set_axes(axes, axes_data, max_y):
     """Sets ticks and tick labels for plt.imshow()."""
     time, alt = axes_data
     ticks_y, ticks_y_labels, n_max_y = _get_standard_alt_ticks(alt, max_y)
     ticks_x, ticks_x_labels, n_max_x = _get_standard_time_ticks(time)
+
     for axis in axes:
         axis.set_yticks(ticks_y)
         axis.set_yticklabels(ticks_y_labels, fontsize=12)

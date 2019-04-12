@@ -178,7 +178,7 @@ ATTRIBUTES = {
         clabel=_KGM2,
         plot_range=(0, 1),
         plot_scale=_LIN,
-        plot_type='hist'
+        plot_type='bar'
     ),
     'target_classification': PlotMeta(
         name='Target classification',
