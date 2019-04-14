@@ -81,10 +81,8 @@ class VaisalaCeilo:
 
         def _parse_data_lines(empty_indices):
             number_of_data_lines = empty_indices[1] - empty_indices[0] - 1
-            lines = []
-            for line_number in range(number_of_data_lines):
-                lines.append([data[n + line_number + 1] for n in empty_indices])
-            return lines
+            return [[data[n + line_number + 1] for n in empty_indices]
+                    for line_number in range(number_of_data_lines)]
 
         empty_lines = _parse_empty_lines()
         return _parse_data_lines(empty_lines)
