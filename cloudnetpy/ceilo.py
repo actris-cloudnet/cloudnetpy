@@ -40,14 +40,11 @@ class VaisalaCeilo:
         """Reads all first header lines from CT25k and CL ceilometers."""
         fields = ('model_id', 'unit_id', 'software_level', 'message_number',
                   'message_subclass')
-        values = []
         if 'cl' in self.model:
             indices = [1, 3, 4, 7, 8, 9]
         else:
             indices = [1, 3, 4, 6, 7, 8]
-        for line in lines:
-            distinct_values = _split_string(line, indices)
-            values.append(distinct_values)
+        values = [_split_string(line, indices) for line in lines]
         return _values_to_dict(fields, values)
 
     def _calc_range(self):
@@ -97,10 +94,7 @@ class VaisalaCeilo:
         """Reads the second header line."""
         fields = ('detection_status', 'warning', 'cloud_base_data',
                   'warning_flags')
-        values = []
-        for line in lines:
-            distinct_values = [line[0], line[1], line[3:20], line[21:].strip()]
-            values.append(distinct_values)
+        values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
         return _values_to_dict(fields, values)
 
     @staticmethod
@@ -155,7 +149,7 @@ class VaisalaCeilo:
                 except (ValueError, TypeError):
                     continue
             else:
-                meta[field] = [None] * len(meta[field])
+                meta[field] = [None] * len(values)
                 for ind, value in enumerate(values):
                     try:
                         meta[field][ind] = int(value)
@@ -206,10 +200,7 @@ class ClCeilo(VaisalaCeilo):
         if self._message_number != 2:
             return None
         keys = ('cloud_detection_status', 'cloud_amount_data')
-        values = []
-        for line in lines:
-            distinct_values = [line[0:3], line[3:].strip()]
-            values.append(distinct_values)
+        values = [[line[0:3], line[3:].strip()] for line in lines]
         return _values_to_dict(keys, values)
 
     @staticmethod
@@ -217,9 +208,7 @@ class ClCeilo(VaisalaCeilo):
         keys = ('scale', 'range_resolution', 'number_of_gates', 'laser_energy',
                 'laser_temperature', 'window_transmission', 'tilt_angle',
                 'background_light', 'measurement_parameters', 'backscatter_sum')
-        values = []
-        for line in lines:
-            values.append(line.split())
+        values = [line.split() for line in lines]
         return _values_to_dict(keys, values)
 
 
@@ -276,9 +265,7 @@ class Ct25k(VaisalaCeilo):
                 'laser_temperature', 'receiver_sensitivity',
                 'window_contamination', 'tilt_angle', 'background_light',
                 'measurement_parameters', 'backscatter_sum')
-        values = []
-        for line in lines:
-            values.append(line.split())
+        values = [line.split() for line in lines]
         return _values_to_dict(keys, values)
 
 
@@ -294,9 +281,16 @@ def ceilo2nc(input_file, output_file, location='Kumpula', altitude=0):
 
 
 def _append_height(ceilo, site_altitude):
-    """This would need to take account the tilt angle."""
-    height = ceilo.range + site_altitude
+    """Finds height above mean sea level."""
+    tilt_angle = np.median(ceilo.metadata['tilt_angle'])
+    height = _calc_height(ceilo.range, tilt_angle)
+    height += site_altitude
     ceilo.data['height'] = CloudnetArray(height, 'height')
+
+
+def _calc_height(ceilo_range, tilt_angle):
+    """Calculates height from range and tilt angle."""
+    return ceilo_range * np.sin(np.rad2deg(tilt_angle))
 
 
 def _append_data(ceilo, beta_variants):
