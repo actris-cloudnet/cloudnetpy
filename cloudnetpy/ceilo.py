@@ -14,18 +14,33 @@ SECONDS_IN_MINUTE = 60
 SECONDS_IN_HOUR = 3600
 
 
-class VaisalaCeilo:
-    """Base class for Vaisala ceilometers."""
+class Ceilometer:
     def __init__(self, file_name):
         self.file_name = file_name
         self.model = None
-        self.noise_params = None
         self.backscatter = None
         self.metadata = None
         self.range = None
         self.time = None
         self.date = None
+        self.noise_params = None
         self.data = {}
+
+
+class JenoptikCeilo(Ceilometer):
+    """Class for Jenoptik ceilometers"""
+    def __init__(self, file_name):
+        super().__init__(file_name)
+        self.model = 'ch15k'
+
+    def read_ceilometer_file(self):
+        pass
+
+
+class VaisalaCeilo(Ceilometer):
+    """Base class for Vaisala ceilometers."""
+    def __init__(self, file_name):
+        super().__init__(file_name)
         self._backscatter_scale_factor = None
         self._hex_conversion_params = None
         self._message_number = None
@@ -191,8 +206,8 @@ class ClCeilo(VaisalaCeilo):
         header, data_lines = self._read_common_header_part()
         header.append(self._read_header_line_4(data_lines[-3]))
         self.metadata = self._handle_metadata(header)
+        self.range = self._calc_range()
         self.backscatter = self._read_backscatter(data_lines[-2])
-        self.range = self._calc_range()  # this is duplicate, should be elsewhere
 
     def _read_header_line_3(self, lines):
         if self._message_number != 2:
@@ -242,9 +257,9 @@ class Ct25k(VaisalaCeilo):
         """Read all lines of data from the file."""
         header, data_lines = self._read_common_header_part()
         self.metadata = self._handle_metadata(header)
+        self.range = self._calc_range()
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.backscatter = self._read_backscatter(hex_profiles)
-        self.range = self._calc_range()  # this is duplicate, should be elsewhere
         # should study the background noise to determine if the
         # next call is needed. It can be the case with cl31/51 also.
         self._range_correct_upper_part()
@@ -440,11 +455,15 @@ def _initialize_ceilo(file):
         return Cl31(file)
     elif model == 'ct25k':
         return Ct25k(file)
+    elif model == 'ch15k':
+        return JenoptikCeilo(file)
     else:
         raise SystemExit('Error: Unknown ceilo model.')
 
 
 def _find_ceilo_model(file):
+    if file.endswith('nc'):
+        return 'ch15k'
     first_empty_line = _find_first_empty_line(file)
     hint = linecache.getline(file, first_empty_line + 2)[1:5]
     if hint == 'CL01':
