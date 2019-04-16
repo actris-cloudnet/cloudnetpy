@@ -55,6 +55,19 @@ def get_source(data_handler):
     return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
 
 
+def get_correct_dimensions(nc_file, field_names):
+    """ Check if "model"-dimension exist. if not
+        change model-dimension to normal dimension
+    """
+    variables = netCDF4.Dataset(nc_file).variables
+    field_names = list(field_names)
+    for i in range(len(field_names)):
+        if field_names[i] not in variables:
+            name = field_names[i].split('_')
+            field_names[i] = name[-1]
+    return tuple(field_names)
+
+
 def read_nc_fields(nc_file, field_names):
     """Reads selected variables from a netCDF file and returns as a list."""
     nc_variables = netCDF4.Dataset(nc_file).variables

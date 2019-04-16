@@ -29,11 +29,13 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
 IDENTIFIER = ""
 
 
-def _plot_bar_data(ax, data, name):
+def _plot_bar_data(ax, data, time):
     """ Plot 1d data to bar plot"""
-    position= np.arange(len(data))
-    wight = 1
-    ax.bar(position, data, wight, align='center', alpha=0.5, color='b')
+    pos = np.arange(len(time))
+    wight = 1/120
+    ax.plot(time, data/1000, color='navy')
+    data[data < np.min(data)] = 0
+    ax.bar(time, data/1000, wight, align='center', alpha=0.5, color='royalblue')
 
 
 def _plot_segment_data(ax, data, name):
@@ -67,7 +69,7 @@ def _plot_colormesh_data(ax, data, name, axes=None):
         name (string): name of plotted data
     """
     variables = ATTRIBUTES[name]
-    cmap = plt.get_cmap(variables.cbar, 12)
+    cmap = plt.get_cmap(variables.cbar, 22)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
@@ -126,26 +128,27 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     fig, axes = _initialize_figure(n_fields)
 
     for axis, field, name in zip(axes, data_fields, field_names):
-
         plot_type = ATTRIBUTES[name].plot_type
 
         if plot_type == 'model':
             axes_data = _read_axes(nc_file, 'model')
             _plot_colormesh_data(axis, field, name, axes_data)
-            _set_pcolor_axes(axis, max_y)
+            _set_axes(axis, axes_data, max_y, plot_type=plot_type)
 
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name)
             axes_data = _read_axes(nc_file)
-            _set_imshow_axes(axis, axes_data, max_y)
+            _set_axes(axis, axes_data, max_y)
 
         elif plot_type == 'bar':
-            pass
+            axes_data = _read_axes(nc_file)
+            _plot_bar_data(axis, field, axes_data[0])
+            _set_axes(axis, axes_data, 1, plot_type=plot_type)
 
         else:
             _plot_colormesh_data(axis, field, name)
             axes_data = _read_axes(nc_file)
-            _set_imshow_axes(axis, axes_data, max_y)
+            _set_axes(axis, axes_data, max_y)
 
     axes[-1].set_xlabel('Time (UTC)', fontsize=13)
     case_date = _read_case_date(nc_file)
@@ -158,24 +161,25 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.show()
 
 
-def _set_pcolor_axes(axis, max_y):
-    axis.set_ylim(0, max_y)
-    axis.set_xlim(0, 24)
-    axis.set_ylabel('Height (km)', fontsize=13)
-
-
-def _set_imshow_axes(axis, axes_data, max_y):
+def _set_axes(axis, axes_data, max_y, plot_type=None):
     """Sets ticks and tick labels for plt.imshow()."""
     time, alt = axes_data
     ticks_y, ticks_y_labels, n_max_y = _get_standard_alt_ticks(alt, max_y)
     ticks_x, ticks_x_labels, n_max_x = _get_standard_time_ticks(time)
-    axis.set_yticks(ticks_y)
-    axis.set_yticklabels(ticks_y_labels, fontsize=12)
-    axis.set_ylim(0, n_max_y)
-    axis.set_xticks(ticks_x)
+    if plot_type:
+        axis.set_ylim(0, max_y)
+        axis.set_xlim(0, 24)
+        axis.set_xticks([0,4,8,12,16,20,23])
+    else:
+        axis.set_yticks(ticks_y)
+        axis.set_yticklabels(ticks_y_labels, fontsize=12)
+        axis.set_ylim(0, n_max_y)
+        axis.set_xticks(ticks_x)
+        axis.set_xlim(0, n_max_x)
     axis.set_xticklabels(ticks_x_labels, fontsize=12)
-    axis.set_xlim(0, n_max_x)
     axis.set_ylabel('Height (km)', fontsize=13)
+    if plot_type == 'bar':
+        axis.set_ylabel('kg m$^{-2}$', fontsize=13)
 
 
 def _get_standard_alt_ticks(alt, max_y, resolution=2):
@@ -183,7 +187,7 @@ def _get_standard_alt_ticks(alt, max_y, resolution=2):
     return _get_ticks(alt, max_y, resolution)
 
 
-def _get_standard_lwp_ticks(kgm2, max_kgm2, resolution=2):
+def _get_standard_lwp_ticks(kgm2, max_kgm2, resolution=0.2):
     """Returns typical ticks / labels for a height vector."""
     return _get_ticks(kgm2, max_kgm2, resolution)
 
@@ -242,6 +246,7 @@ def _read_axes(nc_file, axes_type='measurement'):
         fields = ('model_time', 'model_height')
     else:
         fields = ('time', 'height')
+    fields = ptools.get_correct_dimensions(nc_file, fields)
     time, height = ptools.read_nc_fields(nc_file, fields)
     height_km = height / 1000
     return time, height_km

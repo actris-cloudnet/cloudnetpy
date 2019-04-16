@@ -109,7 +109,7 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='model'
     ),
-    'q': PlotMeta(
+    'specific_humidity': PlotMeta(
         name='Model specific humidity',
         cbar='viridis',
         clabel='',
