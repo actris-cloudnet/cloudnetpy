@@ -31,7 +31,6 @@ IDENTIFIER = ""
 
 def _plot_bar_data(ax, data, time):
     """ Plot 1d data to bar plot"""
-    pos = np.arange(len(time))
     wight = 1/120
     ax.plot(time, data/1000, color='navy')
     data[data < np.min(data)] = 0
