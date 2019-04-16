@@ -6,6 +6,7 @@ import scipy.ndimage
 from cloudnetpy import utils, output
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.metadata import MetaData
+import netCDF4
 
 
 M2KM = 0.001
@@ -28,13 +29,59 @@ class Ceilometer:
 
 
 class JenoptikCeilo(Ceilometer):
-    """Class for Jenoptik ceilometers"""
+    """Class for Jenoptik ch15k ceilometer."""
     def __init__(self, file_name):
         super().__init__(file_name)
         self.model = 'ch15k'
+        self.dataset = netCDF4.Dataset(self.file_name)
+        self.variables = self.dataset.variables
+        self.noise_params = (70, 2e-14, 0.3e-6, (1e-9, 4e-9))
+        self.calibration_factor = 4.5e-11  # mace-head value
 
     def read_ceilometer_file(self):
-        pass
+        self.range = self._calc_range()
+        self.time = self._convert_time()
+        self.date = self._read_date()
+        self.backscatter = self._convert_backscatter()
+        self.metadata = self._read_metadata()
+
+    def _read_date(self):
+        """Read year, month, day from global attributes."""
+        return [self.dataset.year, self.dataset.month, self.dataset.day]
+
+    def _read_metadata(self):
+        meta = {'tilt_angle': self._getvar('zenith')}
+        return meta
+
+    def _convert_backscatter(self):
+        """Steps to convert (at least Mace Head) Jenoptik SNR to raw beta."""
+        beta_raw = self._getvar('beta_raw')
+        data_std = self._getvar('stddev')
+        normalised_apd = self._get_nn()
+        beta_raw *= utils.transpose(data_std / normalised_apd)
+        beta_raw *= self.range**2
+        beta_raw *= self.calibration_factor
+        return beta_raw
+
+    def _get_nn(self):
+        """Taken from the Matlab code. Not sure what this is.."""
+        nn1 = self._getvar('nn1')
+        nn_reference = 140
+        nn_step_factor = 1.24
+        return nn_step_factor**(-(nn1-nn_reference)/5)
+
+    def _calc_range(self):
+        ceilo_range = self._getvar('range')[:]
+        return ceilo_range + utils.mdiff(ceilo_range)/2
+
+    def _convert_time(self):
+        time = self.variables['time']
+        return utils.seconds2hours(time)
+
+    def _getvar(self, name):
+        """Reads data of variable (array or scalar) from netcdf-file."""
+        var = self.variables[name]
+        return var[0] if utils.isscalar(var) else var[:]
 
 
 class VaisalaCeilo(Ceilometer):
@@ -282,7 +329,7 @@ class Ct25k(VaisalaCeilo):
         return _values_to_dict(keys, values)
 
 
-def ceilo2nc(input_file, output_file, location='Kumpula', altitude=0):
+def ceilo2nc(input_file, output_file, location='unknown', altitude=0):
     """Converts Vaisala ceilometer txt-file to netCDF."""
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()
@@ -303,7 +350,7 @@ def _append_height(ceilo, site_altitude):
 
 def _calc_height(ceilo_range, tilt_angle):
     """Calculates height from range and tilt angle."""
-    return ceilo_range * np.sin(np.rad2deg(tilt_angle))
+    return ceilo_range * np.cos(np.deg2rad(tilt_angle))
 
 
 def _append_data(ceilo, beta_variants):
@@ -332,7 +379,7 @@ def _save_ceilo(ceilo, output_file, location):
 
 
 def calc_beta(ceilo):
-    """From raw beta to beta."""
+    """Converts range-corrected raw beta to beta."""
 
     def _screen_beta(beta_in, smooth):
         beta_in = _calc_range_uncorrected_beta(beta_in, range_squared)
