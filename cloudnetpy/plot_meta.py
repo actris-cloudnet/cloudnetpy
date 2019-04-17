@@ -104,7 +104,7 @@ ATTRIBUTES = {
         name='Model temperature',
         cbar='RdBu_r',
         clabel='K',
-        plot_range=(253, 293),
+        plot_range=(203, 303),
         plot_scale=_LIN,
         plot_type='model'
     ),

@@ -30,12 +30,14 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
 IDENTIFIER = ""
 
 
-def _plot_bar_data(ax, data, time):
+def _plot_bar_data(ax, data, name, time):
     """ Plot 1d data to bar plot"""
+    variables = ATTRIBUTES[name]
     width = 1/120
     ax.plot(time, data/1000, color='navy')
     data[data < np.min(data)] = 0
     ax.bar(time, data/1000, width, align='center', alpha=0.5, color='royalblue')
+    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
 def _plot_segment_data(ax, data, name, axes):
@@ -73,6 +75,11 @@ def _plot_colormesh_data(ax, data, name, axes):
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
+    if variables.plot_type == 'model':
+        # Removes whitespace if fig is saved
+        h = axes[-1][:65]
+        data = data[:,:65]
+        axes = (axes[0], h)
 
     pl = ax.pcolorfast(*axes, data[:-1,:-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
     colorbar = _init_colorbar(pl, ax)
@@ -122,6 +129,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     n_fields = len(data_fields)
     fig, axes = _initialize_figure(n_fields)
 
+    print(len(axes))
+
     for axis, field, name in zip(axes, data_fields, field_names):
         plot_type = ATTRIBUTES[name].plot_type
         axes_data = _read_axes(nc_file)
@@ -130,10 +139,10 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         if plot_type == 'model':
             axes_data = _read_axes(nc_file, 'model')
             _plot_colormesh_data(axis, field, name, axes_data)
-            _set_axes(axis, axes_data, max_y, plot_type=plot_type)
+            _set_axes(axis, axes_data, max_y)
 
         elif plot_type == 'bar':
-            _plot_bar_data(axis, field, axes_data[0])
+            _plot_bar_data(axis, field, name, axes_data[0])
             _set_axes(axis, axes_data, 1, plot_type=plot_type)
 
         elif plot_type == 'segment':
@@ -161,7 +170,7 @@ def _set_axes(axis, axes_data, max_y, plot_type=None):
     axis.set_xticks([0, 4, 8, 12, 16, 20, 24])
     axis.set_xticklabels(ticks_x_labels, fontsize=12)
     axis.set_ylabel('Height (km)', fontsize=13)
-    if plot_type == 'bar':
+    if plot_type:
         axis.set_xlim(0, 24)
         axis.set_ylabel('kg m$^{-2}$', fontsize=13)
 
