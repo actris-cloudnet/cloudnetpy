@@ -71,7 +71,7 @@ class JenoptikCeilo(Ceilometer):
         return nn_step_factor**(-(nn1-nn_reference)/5)
 
     def _calc_range(self):
-        ceilo_range = self._getvar('range')[:]
+        ceilo_range = self._getvar('range')
         return ceilo_range + utils.mdiff(ceilo_range)/2
 
     def _convert_time(self):
@@ -117,7 +117,7 @@ class VaisalaCeilo(Ceilometer):
         else:
             n_gates = int(self.metadata['number_of_gates'])
             range_resolution = int(self.metadata['range_resolution'])
-        return np.arange(1, n_gates + 1) * range_resolution
+        return np.arange(n_gates)*range_resolution + range_resolution/2
 
     def _read_backscatter(self, lines):
         """Converts backscatter profile from 2-complement hex to floats."""
@@ -473,12 +473,12 @@ def _find_saturated_profiles(ceilo):
 
 def _calc_sigma_units(ceilo):
     """Calculates Gaussian peak std parameters."""
-    sigma_x_minutes = 2
-    sigma_y_metres = 5
+    sigma_minutes = 2
+    sigma_metres = 5
     time_step = utils.mdiff(ceilo.time) * MINUTES_IN_HOUR
     alt_step = utils.mdiff(ceilo.range)
-    x = sigma_x_minutes / time_step
-    y = sigma_y_metres / alt_step
+    x = sigma_minutes / time_step
+    y = sigma_metres / alt_step
     return x, y
 
 
