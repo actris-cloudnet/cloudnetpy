@@ -60,12 +60,10 @@ def get_correct_dimensions(nc_file, field_names):
         change model-dimension to normal dimension
     """
     variables = netCDF4.Dataset(nc_file).variables
-    field_names = list(field_names)
-    for i in range(len(field_names)):
-        if field_names[i] not in variables:
-            name = field_names[i].split('_')
-            field_names[i] = name[-1]
-    return tuple(field_names)
+    for i, name in enumerate(field_names):
+        if name not in variables:
+            field_names[i] = name.split('_')[-1]
+    return field_names
 
 
 def read_nc_fields(nc_file, field_names):

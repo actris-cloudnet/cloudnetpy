@@ -86,7 +86,7 @@ _CBAR = {
 ATTRIBUTES = {
     'uwind': PlotMeta(
         name='Model zonal wind',
-        cbar='jet', #'RdBu_r',
+        cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-50, 50),
         plot_scale=_LIN,
@@ -94,22 +94,29 @@ ATTRIBUTES = {
     ),
     'vwind': PlotMeta(
         name='Model meridional wind',
-        cbar='jet', #'RdBu_r',
+        cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-50, 50),
         plot_scale=_LIN,
         plot_type='model'
     ),
-
     'temperature': PlotMeta(
         name='Model temperature',
-        cbar='jet', #'RdBu_r',
+        cbar='RdBu_r',
         clabel='K',
-        plot_range=(200, 300),
+        plot_range=(253, 293),
         plot_scale=_LIN,
         plot_type='model'
     ),
     'specific_humidity': PlotMeta(
+        name='Model specific humidity',
+        cbar='viridis',
+        clabel='',
+        plot_range=(1e-5, 1e-2),
+        plot_scale=_LOG,
+        plot_type='model'
+    ),
+    'q': PlotMeta(
         name='Model specific humidity',
         cbar='viridis',
         clabel='',
