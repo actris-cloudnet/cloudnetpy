@@ -129,21 +129,18 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     n_fields = len(data_fields)
     fig, axes = _initialize_figure(n_fields)
 
-    print(len(axes))
-
     for axis, field, name in zip(axes, data_fields, field_names):
         plot_type = ATTRIBUTES[name].plot_type
         axes_data = _read_axes(nc_file)
-        _set_axes(axis, axes_data, max_y)
+        _set_axes(axis, max_y)
 
         if plot_type == 'model':
             axes_data = _read_axes(nc_file, 'model')
             _plot_colormesh_data(axis, field, name, axes_data)
-            _set_axes(axis, axes_data, max_y)
 
         elif plot_type == 'bar':
             _plot_bar_data(axis, field, name, axes_data[0])
-            _set_axes(axis, axes_data, 1, plot_type=plot_type)
+            _set_axes(axis, 1, plot_type=plot_type)
 
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name, axes_data)
@@ -162,10 +159,9 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.show()
 
 
-def _set_axes(axis, axes_data, max_y, plot_type=None):
+def _set_axes(axis, max_y, plot_type=None):
     """Sets ticks and tick labels for plt.imshow()."""
-    time, alt = axes_data
-    ticks_x_labels = _get_standard_time_ticks(time)
+    ticks_x_labels = _get_standard_time_ticks()
     axis.set_ylim(0, max_y)
     axis.set_xticks([0, 4, 8, 12, 16, 20, 24])
     axis.set_xticklabels(ticks_x_labels, fontsize=12)
@@ -175,7 +171,7 @@ def _set_axes(axis, axes_data, max_y, plot_type=None):
         axis.set_ylabel('kg m$^{-2}$', fontsize=13)
 
 
-def _get_standard_time_ticks(time, resolution=4):
+def _get_standard_time_ticks(resolution=4):
     """Returns typical ticks / labels for a time vector between 0-24h."""
     labels = [f"{int(i):02d}:00" if 24 > i > 0 else ''
               for i in np.arange(0, 24.01, resolution)]
