@@ -75,11 +75,6 @@ def _plot_colormesh_data(ax, data, name, axes):
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
-    if variables.plot_type == 'model':
-        # Removes whitespace if fig is saved
-        h = axes[-1][:65]
-        data = data[:,:65]
-        axes = (axes[0], h)
 
     pl = ax.pcolorfast(*axes, data[:-1,:-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
     colorbar = _init_colorbar(pl, ax)
@@ -110,7 +105,7 @@ def _parse_field_names(nc_file, field_names):
 
 
 def generate_figure(nc_file, field_names, show=True, save_path=None,
-                    max_y=12, dpi=200):
+                    max_y=5, dpi=200):
     """Generates a Cloudnet figure.
 
     Args:
@@ -131,11 +126,11 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
     for axis, field, name in zip(axes, data_fields, field_names):
         plot_type = ATTRIBUTES[name].plot_type
-        axes_data = _read_axes(nc_file)
+        axes_data = _read_axes(nc_file, plot_type)
+        field, axes_data = _fix_data_limitation(field, axes_data, max_y)
         _set_axes(axis, max_y)
 
         if plot_type == 'model':
-            axes_data = _read_axes(nc_file, 'model')
             _plot_colormesh_data(axis, field, name, axes_data)
 
         elif plot_type == 'bar':
@@ -153,10 +148,20 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     _add_subtitle(fig, n_fields, case_date)
 
     if save_path:
-        file_name = _create_save_name(save_path, case_date, field_names)
+        file_name = _create_save_name(save_path, case_date, max_y, field_names)
         plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
+
+
+def _fix_data_limitation(data_field, axes, max_y):
+    """ Bug in pcolorfast causing effect to axis not noticing limitation while saving fig.
+        This fixes that bug till pcolorfast does fixing themselves
+    """
+    ind = (np.abs(axes[-1] - max_y)).argmin() + 1
+    data_field = data_field[:, :ind]
+    alt = axes[-1][:ind]
+    return data_field, (axes[0], alt)
 
 
 def _set_axes(axis, max_y, plot_type=None):
@@ -178,10 +183,10 @@ def _get_standard_time_ticks(resolution=4):
     return labels
 
 
-def _create_save_name(save_path, case_date, field_names):
+def _create_save_name(save_path, case_date, max_y, field_names):
     """Creates file name for saved images."""
     date_string = case_date.strftime("%Y%m%d")
-    return f"{save_path}{date_string}_{'_'.join(field_names)}.png"
+    return f"{save_path}{date_string}_{max_y}km_{'_'.join(field_names)}.png"
 
 
 def _add_subtitle(fig, n_fields, case_date):
