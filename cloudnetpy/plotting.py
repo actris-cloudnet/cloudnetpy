@@ -145,7 +145,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
         elif plot_type == 'bar':
             _plot_bar_data(axis, field, name, axes_data[0])
-            _set_axes(axis, 1, name)
+            _set_axes(axis, 1, ATTRIBUTES[name].ylabel)
 
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name, axes_data)
@@ -184,7 +184,7 @@ def _fix_data_limitation(data_field, axes, max_y):
     return data_field, (axes[0], alt)
 
 
-def _set_axes(axis, max_y, name=None):
+def _set_axes(axis, max_y, ylabel=None):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
     axis.set_ylim(0, max_y)
@@ -192,8 +192,8 @@ def _set_axes(axis, max_y, name=None):
     axis.set_xticklabels(ticks_x_labels, fontsize=12)
     axis.set_ylabel('Height (km)', fontsize=13)
     axis.set_xlim(0, 24)
-    if name == 'lwp':
-        axis.set_ylabel('kg m$^{-2}$', fontsize=13)
+    if ylabel:
+        axis.set_ylabel(ylabel, fontsize=13)
 
 
 def _get_standard_time_ticks(resolution=4):
