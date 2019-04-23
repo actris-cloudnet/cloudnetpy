@@ -4,13 +4,11 @@ from datetime import date
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import netCDF4
 import cloudnetpy.products.product_tools as ptools
 from .plot_meta import ATTRIBUTES
-from cloudnetpy import utils
 
 
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
@@ -31,22 +29,33 @@ IDENTIFIER = ""
 
 
 def _plot_bar_data(ax, data, name, time):
-    """ Plot 1d data to bar plot"""
+    """Plots 1D variable as bar plot.
+
+    Args:
+        ax (obj): Axes object.
+        data (ndarray): 1D data array.
+        name (string): Name of plotted data.
+        time (ndarray): 1D time array.
+
+    """
     variables = ATTRIBUTES[name]
     width = 1/120
     ax.plot(time, data/1000, color='navy')
     data[data < np.min(data)] = 0
     ax.bar(time, data/1000, width, align='center', alpha=0.5, color='royalblue')
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+    pos = ax.get_position()
+    ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
 
 def _plot_segment_data(ax, data, name, axes):
-    """ Plotting data with segments as 2d variable.
+    """Plots categorical 2D variable.
 
     Args:
         ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
         data (ndarray): 2D data array.
-        name (string): name of plotted data
+        name (string): Name of plotted data.
+        axes (tuple): Time and height 1D arrays.
 
     """
     variables = ATTRIBUTES[name]
@@ -61,14 +70,15 @@ def _plot_segment_data(ax, data, name, axes):
 
 
 def _plot_colormesh_data(ax, data, name, axes):
-    """ Plot data with range of variability.
+    """Plots continuous 2D variable.
 
-    Creates only one plot, so can be used both one plot and subplot type of figs
+    Creates only one plot, so can be used both one plot and subplot type of figs.
 
     Args:
         ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
-        data (ndarray): Figure object
-        name (string): name of plotted data
+        data (ndarray): 2D data array.
+        name (string): Name of plotted data.
+        axes (tuple): Time and height 1D arrays.
     """
     variables = ATTRIBUTES[name]
     cmap = plt.get_cmap(variables.cbar, 22)
@@ -76,7 +86,7 @@ def _plot_colormesh_data(ax, data, name, axes):
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
 
-    pl = ax.pcolorfast(*axes, data[:-1,:-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
+    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
     colorbar = _init_colorbar(pl, ax)
 
     if variables.plot_scale == 'logarithmic':
@@ -105,7 +115,7 @@ def _parse_field_names(nc_file, field_names):
 
 
 def generate_figure(nc_file, field_names, show=True, save_path=None,
-                    max_y=5, dpi=200):
+                    max_y=12, dpi=200):
     """Generates a Cloudnet figure.
 
     Args:
@@ -135,7 +145,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
         elif plot_type == 'bar':
             _plot_bar_data(axis, field, name, axes_data[0])
-            _set_axes(axis, 1, plot_type=plot_type)
+            _set_axes(axis, 1, ATTRIBUTES[name].ylabel)
 
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name, axes_data)
@@ -155,27 +165,35 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
 
 def _fix_data_limitation(data_field, axes, max_y):
-    """ Bug in pcolorfast causing effect to axis not noticing limitation while saving fig.
-        This fixes that bug till pcolorfast does fixing themselves
+    """Removes altitudes from 2D data that are not visible in the figure.
+
+    Bug in pcolorfast causing effect to axis not noticing limitation while
+    saving fig. This fixes that bug till pcolorfast does fixing themselves.
+
+    Args:
+        data_field (ndarray): 2D data array.
+        axes (tuple): Time and height 1D arrays.
+        max_y (int): Upper limit in the plots (km).
+
     """
     alt = axes[-1]
     if data_field.ndim > 1:
-        ind = np.argmax(alt > max_y)
+        ind = (np.argmax(alt > max_y) or len(alt)) + 1
         data_field = data_field[:, :ind]
         alt = alt[:ind]
     return data_field, (axes[0], alt)
 
 
-def _set_axes(axis, max_y, plot_type=None):
+def _set_axes(axis, max_y, ylabel=None):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
     axis.set_ylim(0, max_y)
-    axis.set_xticks([0, 4, 8, 12, 16, 20, 24])
+    axis.set_xticks(np.arange(0, 25, 4, dtype=int))
     axis.set_xticklabels(ticks_x_labels, fontsize=12)
     axis.set_ylabel('Height (km)', fontsize=13)
-    if plot_type:
-        axis.set_xlim(0, 24)
-        axis.set_ylabel('kg m$^{-2}$', fontsize=13)
+    axis.set_xlim(0, 24)
+    if ylabel:
+        axis.set_ylabel(ylabel, fontsize=13)
 
 
 def _get_standard_time_ticks(resolution=4):
@@ -216,11 +234,11 @@ def _read_case_date(nc_file):
 
 def _read_axes(nc_file, axes_type=None):
     """Returns time and height arrays."""
-    if axes_type:
+    if axes_type == 'model':
         fields = ['model_time', 'model_height']
+        fields = ptools.get_correct_dimensions(nc_file, fields)
     else:
         fields = ['time', 'height']
-    fields = ptools.get_correct_dimensions(nc_file, fields)
     time, height = ptools.read_nc_fields(nc_file, fields)
     height_km = height / 1000
     return time, height_km
