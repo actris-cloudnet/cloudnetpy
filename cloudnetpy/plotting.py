@@ -29,7 +29,15 @@ IDENTIFIER = ""
 
 
 def _plot_bar_data(ax, data, name, time):
-    """ Plot 1d data to bar plot"""
+    """Plots 1D variable as bar plot.
+
+    Args:
+        ax (obj): Axes object.
+        data (ndarray): 1D data array.
+        name (string): Name of plotted data.
+        time (ndarray): 1D time array.
+
+    """
     variables = ATTRIBUTES[name]
     width = 1/120
     ax.plot(time, data/1000, color='navy')
@@ -41,12 +49,13 @@ def _plot_bar_data(ax, data, name, time):
 
 
 def _plot_segment_data(ax, data, name, axes):
-    """ Plotting data with segments as 2d variable.
+    """Plots categorical 2D variable.
 
     Args:
         ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
         data (ndarray): 2D data array.
-        name (string): name of plotted data
+        name (string): Name of plotted data.
+        axes (tuple): Time and height 1D arrays.
 
     """
     variables = ATTRIBUTES[name]
@@ -61,14 +70,15 @@ def _plot_segment_data(ax, data, name, axes):
 
 
 def _plot_colormesh_data(ax, data, name, axes):
-    """ Plot data with range of variability.
+    """Plots continuous 2D variable.
 
-    Creates only one plot, so can be used both one plot and subplot type of figs
+    Creates only one plot, so can be used both one plot and subplot type of figs.
 
     Args:
         ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
-        data (ndarray): Figure object
-        name (string): name of plotted data
+        data (ndarray): 2D data array.
+        name (string): Name of plotted data.
+        axes (tuple): Time and height 1D arrays.
     """
     variables = ATTRIBUTES[name]
     cmap = plt.get_cmap(variables.cbar, 22)
@@ -105,7 +115,7 @@ def _parse_field_names(nc_file, field_names):
 
 
 def generate_figure(nc_file, field_names, show=True, save_path=None,
-                    max_y=5, dpi=200):
+                    max_y=12, dpi=200):
     """Generates a Cloudnet figure.
 
     Args:
@@ -155,12 +165,20 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
 
 def _fix_data_limitation(data_field, axes, max_y):
-    """ Bug in pcolorfast causing effect to axis not noticing limitation while saving fig.
-        This fixes that bug till pcolorfast does fixing themselves
+    """Removes altitudes from 2D data that are not visible in the figure.
+
+    Bug in pcolorfast causing effect to axis not noticing limitation while
+    saving fig. This fixes that bug till pcolorfast does fixing themselves.
+
+    Args:
+        data_field (ndarray): 2D data array.
+        axes (tuple): Time and height 1D arrays.
+        max_y (int): Upper limit in the plots (km).
+
     """
     alt = axes[-1]
     if data_field.ndim > 1:
-        ind = np.argmax(alt > max_y)
+        ind = (np.argmax(alt > max_y) or len(alt)) + 1
         data_field = data_field[:, :ind]
         alt = alt[:ind]
     return data_field, (axes[0], alt)
