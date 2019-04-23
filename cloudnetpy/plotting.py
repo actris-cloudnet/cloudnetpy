@@ -158,9 +158,11 @@ def _fix_data_limitation(data_field, axes, max_y):
     """ Bug in pcolorfast causing effect to axis not noticing limitation while saving fig.
         This fixes that bug till pcolorfast does fixing themselves
     """
-    ind = (np.abs(axes[-1] - max_y)).argmin() + 1
-    data_field = data_field[:, :ind]
-    alt = axes[-1][:ind]
+    alt = axes[-1]
+    if data_field.ndim > 1:
+        ind = np.argmax(alt > max_y)
+        data_field = data_field[:, :ind]
+        alt = alt[:ind]
     return data_field, (axes[0], alt)
 
 
@@ -212,13 +214,13 @@ def _read_case_date(nc_file):
     return date(int(obj.year), int(obj.month), int(obj.day))
 
 
-def _read_axes(nc_file, axes_type='measurement'):
+def _read_axes(nc_file, axes_type=None):
     """Returns time and height arrays."""
     if axes_type == 'model':
         fields = ['model_time', 'model_height']
+        fields = ptools.get_correct_dimensions(nc_file, fields)
     else:
         fields = ['time', 'height']
-    fields = ptools.get_correct_dimensions(nc_file, fields)
     time, height = ptools.read_nc_fields(nc_file, fields)
     height_km = height / 1000
     return time, height_km
