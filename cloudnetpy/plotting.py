@@ -214,9 +214,9 @@ def _read_case_date(nc_file):
     return date(int(obj.year), int(obj.month), int(obj.day))
 
 
-def _read_axes(nc_file, axes_type='measurement'):
+def _read_axes(nc_file, axes_type=None):
     """Returns time and height arrays."""
-    if axes_type == 'model':
+    if axes_type:
         fields = ['model_time', 'model_height']
     else:
         fields = ['time', 'height']
