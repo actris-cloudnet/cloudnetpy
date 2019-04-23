@@ -100,20 +100,20 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='model'
     ),
-    'Tw': PlotMeta(
-        name='Wet-bulb temperature',
-        cbar='RdBu_r',
-        clabel='K',
-        plot_range=(200, 300),
-        plot_scale=_LIN,
-        plot_type='mesh'
-    ),
     'temperature': PlotMeta(
         name='Model temperature',
         cbar='RdBu_r',
         clabel='K',
-        plot_range=(200, 300),
+        plot_range=(203, 303),
         plot_scale=_LIN,
+        plot_type='model'
+    ),
+    'specific_humidity': PlotMeta(
+        name='Model specific humidity',
+        cbar='viridis',
+        clabel='',
+        plot_range=(1e-5, 1e-2),
+        plot_scale=_LOG,
         plot_type='model'
     ),
     'q': PlotMeta(
@@ -208,7 +208,7 @@ ATTRIBUTES = {
         name='Approximate two-way radar attenuation due to liquid water',
         cbar='viridis',
         clabel=_DB,
-        plot_range=(0, 6),
+        plot_range=(0, 10),
         plot_scale=_LIN,
         plot_type='mesh'
      ),

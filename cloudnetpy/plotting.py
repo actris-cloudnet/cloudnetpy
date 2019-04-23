@@ -4,6 +4,7 @@ from datetime import date
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import netCDF4
@@ -29,7 +30,17 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
 IDENTIFIER = ""
 
 
-def _plot_segment_data(ax, data, name):
+def _plot_bar_data(ax, data, name, time):
+    """ Plot 1d data to bar plot"""
+    variables = ATTRIBUTES[name]
+    width = 1/120
+    ax.plot(time, data/1000, color='navy')
+    data[data < np.min(data)] = 0
+    ax.bar(time, data/1000, width, align='center', alpha=0.5, color='royalblue')
+    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+
+
+def _plot_segment_data(ax, data, name, axes):
     """ Plotting data with segments as 2d variable.
 
     Args:
@@ -41,15 +52,15 @@ def _plot_segment_data(ax, data, name):
     variables = ATTRIBUTES[name]
     n_fields = len(variables.cbar)
     cmap = ListedColormap(variables.cbar)
-    pl = ax.imshow(data.T, cmap=cmap, origin='lower', vmin=0, vmax=n_fields,
-                   aspect='auto')
+    pl = ax.pcolorfast(*axes, data.T, cmap=cmap, vmin=-0.5,
+                       vmax=n_fields - 0.5)
     colorbar = _init_colorbar(pl, ax)
-    colorbar.set_ticks(np.arange(n_fields+1)+0.5)
+    colorbar.set_ticks(np.arange(n_fields+1))
     colorbar.ax.set_yticklabels(variables.clabel, fontsize=13)
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
-def _plot_colormesh_data(ax, data, name, axes=None):
+def _plot_colormesh_data(ax, data, name, axes):
     """ Plot data with range of variability.
 
     Creates only one plot, so can be used both one plot and subplot type of figs
@@ -60,17 +71,12 @@ def _plot_colormesh_data(ax, data, name, axes=None):
         name (string): name of plotted data
     """
     variables = ATTRIBUTES[name]
-    cmap = plt.get_cmap(variables.cbar, 12)
+    cmap = plt.get_cmap(variables.cbar, 22)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
 
-    if axes:
-        pl = ax.pcolormesh(*axes, data.T, vmin=vmin, vmax=vmax, cmap=cmap)
-    else:
-        pl = ax.imshow(data.T, cmap=cmap, origin='lower', vmin=vmin,
-                       vmax=vmax, aspect='auto')
-
+    pl = ax.pcolorfast(*axes, data[:-1,:-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
     colorbar = _init_colorbar(pl, ax)
 
     if variables.plot_scale == 'logarithmic':
@@ -99,7 +105,7 @@ def _parse_field_names(nc_file, field_names):
 
 
 def generate_figure(nc_file, field_names, show=True, save_path=None,
-                    max_y=12, dpi=200):
+                    max_y=5, dpi=200):
     """Generates a Cloudnet figure.
 
     Args:
@@ -119,86 +125,68 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     fig, axes = _initialize_figure(n_fields)
 
     for axis, field, name in zip(axes, data_fields, field_names):
-
         plot_type = ATTRIBUTES[name].plot_type
+        axes_data = _read_axes(nc_file, plot_type)
+        field, axes_data = _fix_data_limitation(field, axes_data, max_y)
+        _set_axes(axis, max_y)
 
         if plot_type == 'model':
-            axes_data = _read_axes(nc_file, 'model')
             _plot_colormesh_data(axis, field, name, axes_data)
-            _set_pcolor_axes(axis, max_y)
-
-        elif plot_type == 'segment':
-            _plot_segment_data(axis, field, name)
-            axes_data = _read_axes(nc_file)
-            _set_imshow_axes(axis, axes_data, max_y)
 
         elif plot_type == 'bar':
-            pass
+            _plot_bar_data(axis, field, name, axes_data[0])
+            _set_axes(axis, 1, plot_type=plot_type)
+
+        elif plot_type == 'segment':
+            _plot_segment_data(axis, field, name, axes_data)
 
         else:
-            _plot_colormesh_data(axis, field, name)
-            axes_data = _read_axes(nc_file)
-            _set_imshow_axes(axis, axes_data, max_y)
+            _plot_colormesh_data(axis, field, name, axes_data)
 
     axes[-1].set_xlabel('Time (UTC)', fontsize=13)
     case_date = _read_case_date(nc_file)
     _add_subtitle(fig, n_fields, case_date)
 
     if save_path:
-        file_name = _create_save_name(save_path, case_date, field_names)
+        file_name = _create_save_name(save_path, case_date, max_y, field_names)
         plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
 
 
-def _set_pcolor_axes(axis, max_y):
-    axis.set_ylim(0, max_y)
-    axis.set_xlim(0, 24)
-    axis.set_ylabel('Height (km)', fontsize=13)
+def _fix_data_limitation(data_field, axes, max_y):
+    """ Bug in pcolorfast causing effect to axis not noticing limitation while saving fig.
+        This fixes that bug till pcolorfast does fixing themselves
+    """
+    ind = (np.abs(axes[-1] - max_y)).argmin() + 1
+    data_field = data_field[:, :ind]
+    alt = axes[-1][:ind]
+    return data_field, (axes[0], alt)
 
 
-def _set_imshow_axes(axis, axes_data, max_y):
+def _set_axes(axis, max_y, plot_type=None):
     """Sets ticks and tick labels for plt.imshow()."""
-    time, alt = axes_data
-    ticks_y, ticks_y_labels, n_max_y = _get_standard_alt_ticks(alt, max_y)
-    ticks_x, ticks_x_labels, n_max_x = _get_standard_time_ticks(time)
-    axis.set_yticks(ticks_y)
-    axis.set_yticklabels(ticks_y_labels, fontsize=12)
-    axis.set_ylim(0, n_max_y)
-    axis.set_xticks(ticks_x)
+    ticks_x_labels = _get_standard_time_ticks()
+    axis.set_ylim(0, max_y)
+    axis.set_xticks([0, 4, 8, 12, 16, 20, 24])
     axis.set_xticklabels(ticks_x_labels, fontsize=12)
-    axis.set_xlim(0, n_max_x)
     axis.set_ylabel('Height (km)', fontsize=13)
+    if plot_type:
+        axis.set_xlim(0, 24)
+        axis.set_ylabel('kg m$^{-2}$', fontsize=13)
 
 
-def _get_standard_alt_ticks(alt, max_y, resolution=2):
-    """Returns typical ticks / labels for a height vector."""
-    return _get_ticks(alt, max_y, resolution)
-
-
-def _get_standard_time_ticks(time, resolution=4):
+def _get_standard_time_ticks(resolution=4):
     """Returns typical ticks / labels for a time vector between 0-24h."""
-    ticks, _, n_max = _get_ticks(time, 24, resolution)
     labels = [f"{int(i):02d}:00" if 24 > i > 0 else ''
               for i in np.arange(0, 24.01, resolution)]
-    return ticks, labels, n_max
+    return labels
 
 
-def _get_ticks(x, x_max, tick_step):
-    """Calculates tick positions and their labels."""
-    step = utils.mdiff(x)
-    n_steps_to_reach_max = round(x_max/step)
-    n_steps_in_one_tick = round(tick_step/step)
-    max_value = np.round(x[-1])
-    ticks = np.linspace(0, max_value*n_steps_in_one_tick, max_value+1)
-    ticks_labels = (np.arange(max_value+1)*tick_step).astype(int).astype(str)
-    return ticks, ticks_labels, n_steps_to_reach_max
-
-
-def _create_save_name(save_path, case_date, field_names):
+def _create_save_name(save_path, case_date, max_y, field_names):
     """Creates file name for saved images."""
     date_string = case_date.strftime("%Y%m%d")
-    return f"{save_path}{date_string}_{'_'.join(field_names)}.png"
+    return f"{save_path}{date_string}_{max_y}km_{'_'.join(field_names)}.png"
 
 
 def _add_subtitle(fig, n_fields, case_date):
@@ -227,9 +215,10 @@ def _read_case_date(nc_file):
 def _read_axes(nc_file, axes_type='measurement'):
     """Returns time and height arrays."""
     if axes_type == 'model':
-        fields = ('model_time', 'model_height')
+        fields = ['model_time', 'model_height']
     else:
-        fields = ('time', 'height')
+        fields = ['time', 'height']
+    fields = ptools.get_correct_dimensions(nc_file, fields)
     time, height = ptools.read_nc_fields(nc_file, fields)
     height_km = height / 1000
     return time, height_km
