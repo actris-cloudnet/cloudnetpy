@@ -4,13 +4,11 @@ from datetime import date
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import netCDF4
 import cloudnetpy.products.product_tools as ptools
 from .plot_meta import ATTRIBUTES
-from cloudnetpy import utils
 
 
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
@@ -38,6 +36,8 @@ def _plot_bar_data(ax, data, name, time):
     data[data < np.min(data)] = 0
     ax.bar(time, data/1000, width, align='center', alpha=0.5, color='royalblue')
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+    pos = ax.get_position()
+    ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
 
 def _plot_segment_data(ax, data, name, axes):
@@ -76,7 +76,7 @@ def _plot_colormesh_data(ax, data, name, axes):
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
 
-    pl = ax.pcolorfast(*axes, data[:-1,:-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
+    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
     colorbar = _init_colorbar(pl, ax)
 
     if variables.plot_scale == 'logarithmic':
@@ -135,7 +135,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
         elif plot_type == 'bar':
             _plot_bar_data(axis, field, name, axes_data[0])
-            _set_axes(axis, 1, plot_type=plot_type)
+            _set_axes(axis, 1, name)
 
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name, axes_data)
@@ -166,15 +166,15 @@ def _fix_data_limitation(data_field, axes, max_y):
     return data_field, (axes[0], alt)
 
 
-def _set_axes(axis, max_y, plot_type=None):
+def _set_axes(axis, max_y, name=None):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
     axis.set_ylim(0, max_y)
-    axis.set_xticks([0, 4, 8, 12, 16, 20, 24])
+    axis.set_xticks(np.arange(0, 25, 4, dtype=int))
     axis.set_xticklabels(ticks_x_labels, fontsize=12)
     axis.set_ylabel('Height (km)', fontsize=13)
-    if plot_type:
-        axis.set_xlim(0, 24)
+    axis.set_xlim(0, 24)
+    if name == 'lwp':
         axis.set_ylabel('kg m$^{-2}$', fontsize=13)
 
 
