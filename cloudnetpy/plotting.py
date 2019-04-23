@@ -158,9 +158,11 @@ def _fix_data_limitation(data_field, axes, max_y):
     """ Bug in pcolorfast causing effect to axis not noticing limitation while saving fig.
         This fixes that bug till pcolorfast does fixing themselves
     """
-    ind = (np.abs(axes[-1] - max_y)).argmin() + 1
-    data_field = data_field[:, :ind]
-    alt = axes[-1][:ind]
+    alt = axes[-1]
+    if data_field.ndim > 1:
+        ind = np.argmax(alt > max_y)
+        data_field = data_field[:, :ind]
+        alt = alt[:ind]
     return data_field, (axes[0], alt)
 
 
