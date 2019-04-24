@@ -4,7 +4,12 @@ import cloudnetpy.utils as utils
 
 
 class CategorizeBits:
-    """Class holding information about category and quality bits."""
+    """Class holding information about category and quality bits.
+
+    Args:
+        categorize_file (str): Categorize file name.
+
+    """
     category_keys = ('droplet', 'falling', 'cold', 'melting', 'aerosol',
                      'insect')
 
@@ -26,6 +31,9 @@ class CategorizeBits:
 class ProductClassification(CategorizeBits):
     """Base class for creating different classifications in the child classes
     of various Cloudnet products. Child of CategorizeBits class.
+
+    Args:
+        categorize_file (str): Categorize file name.
 
     """
     def __init__(self, categorize_file):
