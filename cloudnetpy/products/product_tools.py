@@ -1,53 +1,36 @@
 """General helper functions for all products."""
-import numpy as np
 import netCDF4
-from datetime import time, datetime
 import cloudnetpy.utils as utils
 
 
-def read_quality_bits(categorize_object):
-    bitfield = categorize_object.getvar('quality_bits')
-    keys = _get_quality_keys()
-    return check_active_bits(bitfield, keys)
+class CategorizeBits:
+    """Class holding information about category and quality bits."""
+    category_keys = ('droplet', 'falling', 'cold', 'melting', 'aerosol',
+                     'insect')
+
+    quality_keys = ('radar', 'lidar', 'clutter', 'molecular', 'attenuated',
+                    'corrected')
+
+    def __init__(self, categorize_file):
+        self.variables = netCDF4.Dataset(categorize_file).variables
+        self.category_bits = self._read_bits('category')
+        self.quality_bits = self._read_bits('quality')
+
+    def _read_bits(self, bit_type):
+        """ Converts bitfield into dictionary."""
+        bitfield = self.variables[f"{bit_type}_bits"][:]
+        keys = getattr(CategorizeBits, f"{bit_type}_keys")
+        return {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
 
 
-def read_category_bits(categorize_object):
-    bitfield = categorize_object.getvar('category_bits')
-    keys = _get_category_keys()
-    return check_active_bits(bitfield, keys)
-
-
-def check_active_bits(bitfield, keys):
-    """
-    Converts bitfield into dictionary.
-
-    Args:
-        bitfield (int): Array of integers containing yes/no
-            information coded in the individual bits.
-
-        keys (array_like): list of strings containing the names of the bits.
-            They will be the keys in the returned dictionary.
-
-    Returns:
-        dict: Individual bits in a dictionary (with proper names).
+class ProductClassification(CategorizeBits):
+    """Base class for creating different classifications in the child classes
+    of various Cloudnet products. Child of CategorizeBits class.
 
     """
-    bits = {}
-    for i, key in enumerate(keys):
-        bits[key] = utils.isbit(bitfield, i)
-    return bits
-
-
-def _get_category_keys():
-    """Returns names of the 'category_bits' bits."""
-    return ('droplet', 'falling', 'cold',
-            'melting', 'aerosol', 'insect')
-
-
-def _get_quality_keys():
-    """Returns names of the 'quality_bits' bits."""
-    return ('radar', 'lidar', 'clutter', 'molecular',
-            'attenuated', 'corrected')
+    def __init__(self, categorize_file):
+        super().__init__(categorize_file)
+        self.is_rain = self.variables['is_rain'][:]
 
 
 def get_source(data_handler):
@@ -70,17 +53,3 @@ def read_nc_fields(nc_file, field_names):
     """Reads selected variables from a netCDF file and returns as a list."""
     nc_variables = netCDF4.Dataset(nc_file).variables
     return [nc_variables[name][:] for name in field_names]
-
-
-def convert_dtime_to_datetime(case_date, time_array):
-    """Converts decimal time and date to datetime."""
-    time_array = [_dtime2time(t) for t in time_array]
-    time_array = [datetime.combine(case_date, t) for t in time_array]
-    return np.asanyarray(time_array)
-
-
-def _dtime2time(t):
-    hour = int(t)
-    minute = int((t*60) % 60)
-    sec = int((t*3600) % 60)
-    return time(hour, minute, sec)

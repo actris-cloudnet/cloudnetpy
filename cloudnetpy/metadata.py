@@ -356,10 +356,11 @@ COMMON_ATTRIBUTES = {
     ),
     'height': MetaData(
         long_name='Height above mean sea level',
-        units='m'
+        units='m',
+        comment='Height grid from the mean sea level towards zenith.'
     ),
     'model_time': MetaData(
-        long_name='model time UTC',
+        long_name='Model time UTC',
         units='decimal hours since midnight'
     ),
     'model_height': MetaData(
@@ -379,8 +380,9 @@ COMMON_ATTRIBUTES = {
         units='m'
     ),
     'range': MetaData(
-        long_name='Height above ground',
-        units='m'
+        long_name='Range from instrument',
+        units='m',
+        comment='Height grid from the instrument towards the line of sight.'
     ),
 
     'Ze': MetaData(

@@ -20,7 +20,7 @@ class DataSource:
 
     Attributes:
         filename (str): Filename of the input file.
-        dataset (Dataset): A netcdf4 Dataset instance.
+        dataset (Dataset): A netCDF4 Dataset instance.
         variables (dict): Variables of the Dataset instance.
         source (str): Global attribute 'source' from *input_file*.
         time (MaskedArray): Time array of the instrument.
@@ -32,7 +32,7 @@ class DataSource:
         self.filename = os.path.basename(filename)
         self.dataset = netCDF4.Dataset(filename)
         self.variables = self.dataset.variables
-        self.source = getattr(self.dataset, 'source', '')  # is this ok here?
+        self.source = getattr(self.dataset, 'source', '')
         self.time = self._init_time()
         self.altitude = self._init_altitude()
         self.data = {}

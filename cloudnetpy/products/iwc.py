@@ -10,6 +10,7 @@ from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
 import cloudnetpy.atmos as atmos
 from cloudnetpy.metadata import IWC_ATTRIBUTES
+from cloudnetpy.products.product_tools import ProductClassification
 
 
 class IwcSource(DataSource):
@@ -17,7 +18,7 @@ class IwcSource(DataSource):
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.wl_band = utils.get_wl_band(self.getvar('radar_frequency'))
-        self.spec_liq_atten = self._get_approximative_specific_liquid_atten()
+        self.spec_liq_atten = self._get_approximate_specific_liquid_atten()
         self.coeffs = self._get_iwc_coeffs()
         self.z_factor = self._get_z_factor()
         self.temperature = self._get_subzero_temperatures()
@@ -38,8 +39,8 @@ class IwcSource(DataSource):
             return Coefficients(0.878, 0.000242, -0.0186, 0.0699, -1.63)
         return Coefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
 
-    def _get_approximative_specific_liquid_atten(self):
-        """Returns approximative liquid water attenuation (dB).
+    def _get_approximate_specific_liquid_atten(self):
+        """Returns approximate liquid water attenuation (dB).
 
         Returns estimate of the liquid water attenuation for
         pixels that are affected by it but not corrected
@@ -66,12 +67,12 @@ class IwcSource(DataSource):
         return ma.mean(self.temperature, axis=0)
 
 
-class _IceClassification:
-    """Class storing the information about different ice types."""
-    def __init__(self, iwc_data):
-        self.iwc_data = iwc_data
-        self.quality_bits = p_tools.read_quality_bits(iwc_data)
-        self.category_bits = p_tools.read_category_bits(iwc_data)
+class _IceClassification(ProductClassification):
+    """Class storing the information about different ice types.
+       Child of ProductClassification().
+    """
+    def __init__(self, categorize_file):
+        super().__init__(categorize_file)
         self.is_ice = self._find_ice()
         self.would_be_ice = self._find_would_be_ice()
         self.corrected_ice = self._find_corrected_ice()
@@ -80,32 +81,34 @@ class _IceClassification:
         self.cold_above_rain = self._find_cold_above_rain()
 
     def _find_ice(self):
-        return (self.category_bits['falling'] & self.category_bits['cold']
-                & ~self.category_bits['melting'] & ~self.category_bits['insect'])
+        return (self.category_bits['falling']
+                & self.category_bits['cold']
+                & ~self.category_bits['melting']
+                & ~self.category_bits['insect'])
 
     def _find_would_be_ice(self):
-        return (self.category_bits['falling'] & ~self.category_bits['cold']
+        return (self.category_bits['falling']
+                & ~self.category_bits['cold']
                 & ~self.category_bits['insect'])
 
     def _find_corrected_ice(self):
-        return (self.is_ice & self.quality_bits['attenuated'] &
-                self.quality_bits['corrected'])
+        return (self.is_ice
+                & self.quality_bits['attenuated']
+                & self.quality_bits['corrected'])
 
     def _find_uncorrected_ice(self):
-        return (self.is_ice & self.quality_bits['attenuated'] &
-                ~self.quality_bits['corrected'])
+        return (self.is_ice
+                & self.quality_bits['attenuated']
+                & ~self.quality_bits['corrected'])
 
     def _find_ice_above_rain(self):
-        is_rain = self._transpose_rain()
+        is_rain = utils.transpose(self.is_rain)
         return (self.is_ice * is_rain) > 0
 
     def _find_cold_above_rain(self):
         is_cold = self.category_bits['cold']
-        is_rain = self._transpose_rain()
+        is_rain = utils.transpose(self.is_rain)
         return (is_cold * is_rain) > 0
-
-    def _transpose_rain(self):
-        return utils.transpose(self.iwc_data.getvar('is_rain'))
 
 
 def _z_to_iwc(iwc_data, z_variable):
@@ -201,7 +204,7 @@ def generate_iwc(categorize_file, output_file):
 
     """
     iwc_data = IwcSource(categorize_file)
-    ice_class = _IceClassification(iwc_data)
+    ice_class = _IceClassification(categorize_file)
     _append_iwc_including_rain(iwc_data, ice_class)
     _append_iwc(iwc_data, ice_class)
     _append_iwc_bias(iwc_data)

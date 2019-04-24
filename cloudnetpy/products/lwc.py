@@ -7,6 +7,7 @@ from cloudnetpy import utils, atmos, output
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.metadata import LWC_ATTRIBUTES
+from cloudnetpy.products.product_tools import CategorizeBits
 
 G_TO_KG = 0.001
 
@@ -23,6 +24,7 @@ class LwcSource(DataSource):
         self.lwp_error = self.getvar('lwp_error')
         self.dheight = utils.mdiff(self.getvar('height'))
         self.is_rain = self.getvar('is_rain')
+        self.categorize_bits = CategorizeBits(categorize_file)
 
     def _get_atmosphere(self):
         return (self._interpolate_model_field('temperature'),
@@ -38,9 +40,9 @@ class LwcSource(DataSource):
 
 class Lwc:
     """Class handling the actual LWC calculations."""
-    def __init__(self, lwc_input):
-        self.lwc_input = lwc_input
-        self.dheight = self.lwc_input.dheight
+    def __init__(self, lwc_source):
+        self.lwc_source = lwc_source
+        self.dheight = self.lwc_source.dheight
         self.echo = self._get_echo()
         self.is_liquid = self._get_liquid()
         self.lwc_adiabatic = self._init_lwc_adiabatic()
@@ -48,16 +50,16 @@ class Lwc:
         self.status = self._init_status()
 
     def _get_echo(self):
-        quality_bits = p_tools.read_quality_bits(self.lwc_input)
+        quality_bits = self.lwc_source.categorize_bits.quality_bits
         return {'radar': quality_bits['radar'], 'lidar': quality_bits['lidar']}
 
     def _get_liquid(self):
-        category_bits = p_tools.read_category_bits(self.lwc_input)
+        category_bits = self.lwc_source.categorize_bits.category_bits
         return category_bits['droplet']
 
     def _init_lwc_adiabatic(self):
         """Returns theoretical adiabatic lwc in liquid clouds (g/m3)."""
-        lwc_dz = atmos.fill_clouds_with_lwc_dz(self.lwc_input.atmosphere,
+        lwc_dz = atmos.fill_clouds_with_lwc_dz(self.lwc_source.atmosphere,
                                                self.is_liquid)
         return atmos.calc_adiabatic_lwc(lwc_dz, self.dheight)
 
@@ -67,7 +69,7 @@ class Lwc:
         Calculates LWC for ALL profiles (rain, lwp > theoretical, etc.),
         """
         lwc_scaled = atmos.distribute_lwp_to_liquid_clouds(self.lwc_adiabatic,
-                                                           self.lwc_input.lwp)
+                                                           self.lwc_source.lwp)
         return lwc_scaled / self.dheight
 
     def _init_status(self):
@@ -88,7 +90,7 @@ class Lwc:
         indicate missing (or too narrow) liquid clouds.
         """
         lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.dheight
-        return lwc_sum - self.lwc_input.lwp
+        return lwc_sum - self.lwc_source.lwp
 
     def _find_adjustable_clouds(self):
 
@@ -115,7 +117,7 @@ class Lwc:
             return sum_of_cloud_pixels / sum_of_detection_type == 1
 
         def _remove_good_profiles():
-            no_rain = ~self.lwc_input.is_rain.astype(bool)
+            no_rain = ~self.lwc_source.is_rain.astype(bool)
             lwp_difference = self._find_lwp_difference()
             dubious_profiles = (lwp_difference < 0) & no_rain
             top_clouds[~dubious_profiles, :] = 0
@@ -134,7 +136,7 @@ class Lwc:
         """
         def _has_converged(time_ind):
             lwc_sum = ma.sum(self.lwc_adiabatic[time_ind, :])
-            if lwc_sum * self.dheight > self.lwc_input.lwp[time_ind]:
+            if lwc_sum * self.dheight > self.lwc_source.lwp[time_ind]:
                 return True
             return False
 
@@ -162,7 +164,7 @@ class Lwc:
 
     def screen_rain(self):
         """Masks profiles with rain."""
-        is_rain = self.lwc_input.is_rain.astype(bool)
+        is_rain = self.lwc_source.is_rain.astype(bool)
         self.lwc[is_rain, :] = ma.masked
         self.status[is_rain, :] = 6
 
@@ -188,13 +190,13 @@ def find_topmost_clouds(is_cloud):
 
 def generate_lwc(categorize_file, output_file):
     """High level API to generate Cloudnet liquid water content file."""
-    lwc_data = LwcSource(categorize_file)
-    lwc_obj = Lwc(lwc_data)
+    lwc_source = LwcSource(categorize_file)
+    lwc_obj = Lwc(lwc_source)
     lwc_obj.adjust_clouds_to_match_lwp()
     lwc_obj.screen_rain()
-    _append_data(lwc_data, lwc_obj)
-    output.update_attributes(lwc_data.data, LWC_ATTRIBUTES)
-    _save_data_and_meta(lwc_data, output_file)
+    _append_data(lwc_source, lwc_obj)
+    output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
+    _save_data_and_meta(lwc_source, output_file)
 
 
 def _append_data(lwc_data, lwc_obj):
