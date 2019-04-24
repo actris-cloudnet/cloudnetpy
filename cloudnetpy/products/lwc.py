@@ -6,7 +6,7 @@ import numpy.ma as ma
 from cloudnetpy import utils, atmos, output
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.products import product_tools as p_tools
-from cloudnetpy.metadata import LWC_ATTRIBUTES
+from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
 
 G_TO_KG = 0.001
@@ -221,3 +221,102 @@ def _save_data_and_meta(lwc_data, output_file):
                                                    'month', 'year'))
     output.merge_history(rootgrp, 'liquid water content', lwc_data)
     rootgrp.close()
+
+
+COMMENTS = {
+    'lwc':
+        ('This variable was calculated for the profiles where the categorization\n'
+         'data has diagnosed that liquid water is present and liquid water path is\n'
+         'available from a coincident microwave radiometer. The model temperature\n'
+         'and pressure were used to estimate the theoretical adiabatic liquid water\n'
+         'content gradient for each cloud base and the adiabatic liquid water\n'
+         'content is then scaled that its integral matches the radiometer\n'
+         'measurement so that the liquid water content now follows a quasi-adiabatic\n'
+         'profile. If the liquid layer is detected by the lidar only, there is the\n'
+         'potential for cloud top height to be underestimated and so if the\n'
+         'adiabatic integrated liquid water content is less than that measured by\n'
+         'the microwave radiometer, the cloud top is extended until the adiabatic\n'
+         'integrated liquid water content agrees with the value measured by the\n'
+         'microwave radiometer. Missing values indicate that either\n'
+         '1) a liquid water layer was diagnosed but no microwave radiometer data was\n'
+         '   available,\n'
+         '2) a liquid water layer was diagnosed but the microwave radiometer data\n'
+         '   was unreliable; this may be because a melting layer was present in the\n'
+         '   profile, or because the retrieved lwp was unphysical (values of zero\n'
+         '   are not uncommon for thin supercooled liquid layers)\n'
+         '3) that rain is present in the profile and therefore, the vertical extent\n'
+         '   of liquid layers is difficult to ascertain.'),
+
+    'lwc_error':
+        ('This variable is an estimate of the random error in liquid water content\n'
+         'due to the uncertainty in the microwave radiometer liquid water path\n'
+         'retrieval and the uncertainty in cloud base and/or cloud top height.\n'
+         'This is associated with the resolution of the grid used, 20 m,\n'
+         'which can affect both cloud base and cloud top. If the liquid layer is\n'
+         'detected by the lidar only, there is the potential for cloud top height\n'
+         'to be underestimated. Similarly, there is the possibility that the lidar\n'
+         'may not detect the second cloud base when multiple layers are present and\n'
+         'the cloud base will be overestimated. It is assumed that the error\n'
+         'contribution arising from using the model temperature and pressure at\n'
+         'cloud base is negligible.'),
+
+    'lwc_retrieval_status':
+        ('This variable describes whether a retrieval was performed for each pixel,\n'
+         'and its associated quality, in the form of 6 different classes. The classes\n'
+         'are defined in the definition and long_definition attributes.\n'
+         'The most reliable retrieval is that when both radar and lidar detect the\n'
+         'liquid layer, and microwave radiometer data is present, indicated by the\n'
+         'value 1. The next most reliable is when microwave radiometer data is used\n'
+         'to adjust the cloud depth when the radar does not detect the liquid layer,\n'
+         'indicated by the value 2, with a value of 3 indicating the cloud pixels\n'
+         'that have been added at cloud top to avoid the profile becoming\n'
+         'superadiabatic. A value of 4 indicates that microwave radiometer data\n'
+         'were not available or not reliable (melting level present or unphysical\n'
+         'values) but the liquid layers were well defined.  If cloud top was not\n'
+         'well defined then this is indicated by a value of 5. The full retrieval of\n'
+         'liquid water content, which requires reliable liquid water path from the\n'
+         'microwave radiometer, was only performed for classes 1-3. No attempt is\n'
+         'made to retrieve liquid water content when rain is present; this is\n'
+         'indicated by the value 6.'),
+}
+
+DEFINITIONS = {
+    'lwc_retrieval_status':
+        ('\n'
+         'Value 0: No liquid water detected\n'
+         'Value 1: Reliable retrieval\n'
+         'Value 2: Adiabatic retrieval where cloud top has been adjusted to match\n'
+         '         liquid water path from microwave radiometer because layer is not\n'
+         '         detected by radar.\n'
+         'Value 3: Adiabatic retrieval: new cloud pixels where cloud top has been\n'
+         '         adjusted to match liquid water path from microwave radiometer\n'
+         '         because layer is not detected by radar.\n'
+         'Value 4: No retrieval: either no liquid water path is available or liquid\n'
+         '         water path is uncertain.\n'
+         'Value 5: No retrieval: liquid water layer detected only by the lidar and\n'
+         '         liquid water path is unavailable or uncertain:\n'
+         '         cloud top may be higher than diagnosed cloud top since lidar\n'
+         '         signal has been attenuated.\n'
+         'Value 6: Rain present: cloud extent is difficult to ascertain and liquid\n'
+         '         water path also uncertain.'),
+}
+
+LWC_ATTRIBUTES = {
+    'lwc': MetaData(
+        long_name='Liquid water content',
+        comment=COMMENTS['lwc']
+    ),
+    'lwc_error': MetaData(
+        long_name='Random error in liquid water content, one standard deviation',
+        comment=COMMENTS['lwc_error'],
+    ),
+    'lwc_retrieval_status': MetaData(
+        long_name='Liquid water content retrieval status',
+        comment=COMMENTS['lwc_retrieval_status'],
+        definition=DEFINITIONS['lwc_retrieval_status']
+    ),
+    'lwp_error': MetaData(
+        long_name='Error in liquid water path',
+        units='',
+    )
+}
