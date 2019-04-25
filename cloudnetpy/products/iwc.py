@@ -9,7 +9,8 @@ import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
 import cloudnetpy.atmos as atmos
-from cloudnetpy.metadata import IWC_ATTRIBUTES
+from cloudnetpy.metadata import MetaData
+from cloudnetpy.products.product_tools import ProductClassification
 
 
 class IwcSource(DataSource):
@@ -17,7 +18,7 @@ class IwcSource(DataSource):
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.wl_band = utils.get_wl_band(self.getvar('radar_frequency'))
-        self.spec_liq_atten = self._get_approximative_specific_liquid_atten()
+        self.spec_liq_atten = self._get_approximate_specific_liquid_atten()
         self.coeffs = self._get_iwc_coeffs()
         self.z_factor = self._get_z_factor()
         self.temperature = self._get_subzero_temperatures()
@@ -38,8 +39,8 @@ class IwcSource(DataSource):
             return Coefficients(0.878, 0.000242, -0.0186, 0.0699, -1.63)
         return Coefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
 
-    def _get_approximative_specific_liquid_atten(self):
-        """Returns approximative liquid water attenuation (dB).
+    def _get_approximate_specific_liquid_atten(self):
+        """Returns approximate liquid water attenuation (dB).
 
         Returns estimate of the liquid water attenuation for
         pixels that are affected by it but not corrected
@@ -66,12 +67,12 @@ class IwcSource(DataSource):
         return ma.mean(self.temperature, axis=0)
 
 
-class _IceClassification:
-    """Class storing the information about different ice types."""
-    def __init__(self, iwc_data):
-        self.iwc_data = iwc_data
-        self.quality_bits = p_tools.read_quality_bits(iwc_data)
-        self.category_bits = p_tools.read_category_bits(iwc_data)
+class _IceClassification(ProductClassification):
+    """Class storing the information about different ice types.
+       Child of ProductClassification().
+    """
+    def __init__(self, categorize_file):
+        super().__init__(categorize_file)
         self.is_ice = self._find_ice()
         self.would_be_ice = self._find_would_be_ice()
         self.corrected_ice = self._find_corrected_ice()
@@ -80,32 +81,34 @@ class _IceClassification:
         self.cold_above_rain = self._find_cold_above_rain()
 
     def _find_ice(self):
-        return (self.category_bits['falling'] & self.category_bits['cold']
-                & ~self.category_bits['melting'] & ~self.category_bits['insect'])
+        return (self.category_bits['falling']
+                & self.category_bits['cold']
+                & ~self.category_bits['melting']
+                & ~self.category_bits['insect'])
 
     def _find_would_be_ice(self):
-        return (self.category_bits['falling'] & ~self.category_bits['cold']
+        return (self.category_bits['falling']
+                & ~self.category_bits['cold']
                 & ~self.category_bits['insect'])
 
     def _find_corrected_ice(self):
-        return (self.is_ice & self.quality_bits['attenuated'] &
-                self.quality_bits['corrected'])
+        return (self.is_ice
+                & self.quality_bits['attenuated']
+                & self.quality_bits['corrected'])
 
     def _find_uncorrected_ice(self):
-        return (self.is_ice & self.quality_bits['attenuated'] &
-                ~self.quality_bits['corrected'])
+        return (self.is_ice
+                & self.quality_bits['attenuated']
+                & ~self.quality_bits['corrected'])
 
     def _find_ice_above_rain(self):
-        is_rain = self._transpose_rain()
+        is_rain = utils.transpose(self.is_rain)
         return (self.is_ice * is_rain) > 0
 
     def _find_cold_above_rain(self):
         is_cold = self.category_bits['cold']
-        is_rain = self._transpose_rain()
+        is_rain = utils.transpose(self.is_rain)
         return (is_cold * is_rain) > 0
-
-    def _transpose_rain(self):
-        return utils.transpose(self.iwc_data.getvar('is_rain'))
 
 
 def _z_to_iwc(iwc_data, z_variable):
@@ -201,7 +204,7 @@ def generate_iwc(categorize_file, output_file):
 
     """
     iwc_data = IwcSource(categorize_file)
-    ice_class = _IceClassification(iwc_data)
+    ice_class = _IceClassification(categorize_file)
     _append_iwc_including_rain(iwc_data, ice_class)
     _append_iwc(iwc_data, ice_class)
     _append_iwc_bias(iwc_data)
@@ -227,3 +230,102 @@ def _save_data_and_meta(iwc_data, output_file):
                                                    'month', 'year'))
     output.merge_history(rootgrp, 'ice water content', iwc_data)
     rootgrp.close()
+
+
+COMMENTS = {
+    'iwc':
+        ('This variable was calculated from the radar reflectivity factor, after\n'
+         'correction for gaseous and liquid attenuation, and temperature taken\n'
+         'from a forecast model, using an empirical formula.'),
+
+    'iwc_error':
+        ('This variable is an estimate of the one-standard-deviation random error\n'
+         'in ice water content due to both the uncertainty of the retrieval\n'
+         '(about +50%/-33%, or 1.7 dB), and the random error in radar reflectivity\n'
+         'factor from which ice water content was calculated. When liquid water is\n'
+         'present beneath the ice but no microwave radiometer data were available to\n'
+         'correct for the associated attenuation, the error also includes a\n'
+         'contribution equivalent to approximately 250 g m-2 of liquid water path\n'
+         'being uncorrected for.'),
+
+    'iwc_bias':
+        ('This variable was calculated from the instance of cloud in the cloud mask\n'
+         'variable and provides cloud base top for a maximum of 1 cloud layers.'),
+
+    'iwc_sensitivity':
+        ('This variable is an estimate of the minimum detectable ice water content\n'
+         'as a function of height.'),
+
+    'iwc_retrieval_status':
+        ('This variable describes whether a retrieval was performed for each pixel,\n'
+         'and its associated quality, in the form of 8 different classes.\n'
+         'The classes are defined in the definition and long_definition attributes.\n'
+         'The most reliable retrieval is that without any rain or liquid\n'
+         'cloud beneath, indicated by the value 1, then the next most reliable is\n'
+         'when liquid water attenuation has been corrected using a microwave\n'
+         'radiometer, indicated by the value 3, while a value 2 indicates that\n'
+         'liquid water cloud was present but microwave radiometer data were not\n'
+         'available so no correction was performed. No attempt is made to retrieve\n'
+         'ice water content when rain is present below the ice; this is indicated\n'
+         'by the value 5.'),
+
+    'iwc_inc_rain':
+        ('This variable is the same as iwc, \n'
+         'except that values of iwc in ice above rain have been included. \n'
+         'This variable contains values \n'
+         'which have been severely affected by attenuation \n'
+         'and should only be used when the effect of attenuation is being studied.'),
+}
+
+DEFINITIONS = {
+    'iwc_retrieval_status':
+    ('\n'
+     'Value 0: No ice present\n'
+     'Value 1: Reliable retrieval\n'
+     'Value 2: Unreliable retrieval due to uncorrected attenuation from liquid\n'
+     '         water below the ice (no liquid water path measurement available).\n'
+     'Value 3: Retrieval performed but radar corrected for liquid attenuation\n'
+     '         using radiometer liquid water path which is not always accurate.\n'
+     'Value 4: Ice detected only by the lidar.\n'
+     'Value 5: Ice detected by radar but rain below so no retrieval performed\n'
+     '         due to very uncertain attenuation.\n'
+     'Value 6: Clear sky above rain, wet-bulb temperature less than 0degC: if rain\n'
+     '         attenuation were strong then ice could be present but undetected.\n'
+     'Value 7: Drizzle or rain that would have been classified as ice if the\n'
+     '         wet-bulb temperature were less than 0degC: may be ice if\n'
+     '         temperature is in error.')
+}
+
+IWC_ATTRIBUTES = {
+    'iwc': MetaData(
+        long_name='Ice water content',
+        units='',
+        comment=COMMENTS['iwc'],
+        ancillary_variables='iwc_sensitivity iwc_bias'
+    ),
+    'iwc_error': MetaData(
+        long_name='Random error in ice water content, one standard deviation',
+        units='dB',
+        comment=COMMENTS['iwc_error']
+    ),
+    'iwc_bias': MetaData(
+        long_name='Possible bias in ice water content, one standard deviation',
+        units='dB',
+        comment=COMMENTS['iwc_bias']
+    ),
+    'iwc_sensitivity': MetaData(
+        long_name='Minimum detectable ice water content',
+        units='',
+        comment=COMMENTS['iwc_sensitivity']
+    ),
+    'iwc_retrieval_status': MetaData(
+        long_name='Ice water content retrieval status',
+        comment=COMMENTS['iwc_retrieval_status'],
+        definition=DEFINITIONS['iwc_retrieval_status'],
+    ),
+    'iwc_inc_rain': MetaData(
+        long_name='Ice water content including rain',
+        comment=COMMENTS['iwc_inc_rain'],
+        ancillary_variables='iwc_sensitivity iwc_bias'
+    )
+}

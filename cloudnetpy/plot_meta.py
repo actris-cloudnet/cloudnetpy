@@ -4,7 +4,6 @@ from collections import namedtuple
 FIELDS = ('name',
           'cbar',
           'clabel',
-          'xlabel',
           'ylabel',
           'plot_range',
           'plot_scale',
@@ -223,7 +222,7 @@ ATTRIBUTES = {
     'lwp': PlotMeta(
         name='Liquid water path',
         cbar='Blues',
-        clabel=_KGM2,
+        ylabel=_KGM2,
         plot_range=(0, 1),
         plot_scale=_LIN,
         plot_type='bar'
