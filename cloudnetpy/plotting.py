@@ -234,7 +234,7 @@ def _read_case_date(nc_file):
 
 def _read_axes(nc_file, axes_type=None):
     """Returns time and height arrays."""
-    if axes_type == 'model':
+    if axes_type:
         fields = ['model_time', 'model_height']
         fields = ptools.get_correct_dimensions(nc_file, fields)
     else:
