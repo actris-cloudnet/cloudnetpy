@@ -431,7 +431,18 @@ class Ct25k(VaisalaCeilo):
 
 
 def ceilo2nc(input_file, output_file, location='unknown', altitude=0):
-    """Converts Vaisala ceilometer txt-file to netCDF."""
+    """Converts Vaisala and Jenoptik raw files into netCDF.
+
+    Args:
+        input_file (str): Ceilometer file name. For Vaisala it is a text file,
+            for Jenoptik it is a netCDF file.
+        output_file (str): Output file name, e.g. 'ceilo.nc'.
+        location (str, optional): Name of the measurement site, e.g. 'Kumpula'.
+            Default is 'unknown'.
+        altitude (int, optional): Altitude of the instrument above
+            mean sea level (m). Default is 0.
+
+    """
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()
     beta_variants = ceilo.calc_beta()
