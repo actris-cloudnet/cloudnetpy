@@ -9,6 +9,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import netCDF4
 import cloudnetpy.products.product_tools as ptools
 from .plot_meta import ATTRIBUTES
+from .products.product_tools import CategorizeBits
 
 
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
@@ -162,6 +163,38 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
+
+
+def generate_bit_figure(nc_file, bit_names, show=True, save_path=None,
+                        max_y=12, dpi=200):
+    """
+    Generate figure of bit data from categorize file
+
+    nc_file(str):    path and name of source file
+    bit_names(list): List of bit names which are to plot
+    """
+    categorize_bits = CategorizeBits(nc_file)
+    # Luetaan haluttujen bittien data, luodaan data_field lista
+    data_fields = _get_bit_data(categorize_bits, bit_names)
+    n_fields = len(data_fields)
+    fig, axes = _initialize_figure(n_fields)
+
+    for axis, field, name in zip(axes, data_fields, bit_names):
+        plot_type = 'bit'
+        axes_data = _read_axes(nc_file, plot_type)
+        field, axes_data = _fix_data_limitation(field, axes_data, max_y)
+        _set_axes(axis, max_y)
+
+
+
+def _get_bit_data(categorize_bits, bit_names):
+    data_fields = []
+    for bit in bit_names:
+        if bit in categorize_bits.category_keys:
+            data_fields.append(categorize_bits.category_bits[bit])
+        if bit in categorize_bits.quality_keys:
+            data_fields.append(categorize_bits.quality_bits[bit])
+    return data_fields
 
 
 def _fix_data_limitation(data_field, axes, max_y):
