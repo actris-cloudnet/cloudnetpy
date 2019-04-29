@@ -49,6 +49,10 @@ def _plot_bar_data(ax, data, name, time):
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
 
+def _plot_bit_data(ax, data, name, axes):
+    """Plotting select 2d bit with one color and no colorbar"""
+
+
 def _plot_segment_data(ax, data, name, axes):
     """Plots categorical 2D variable.
 
