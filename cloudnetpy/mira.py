@@ -6,7 +6,7 @@ import numpy as np
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.categorize import DataSource
-from .metadata import MIRA_ATTRIBUTES
+from .metadata import MetaData
 
 
 class Mira(DataSource):
@@ -128,3 +128,15 @@ def _date_from_filename(full_path):
     plain_file = os.path.basename(full_path)
     date = plain_file[:8]
     return date[:4], date[4:6], date[6:8]
+
+
+MIRA_ATTRIBUTES = {
+    'Ze': MetaData(
+        long_name='Radar reflectivity factor (uncorrected), vertical polarization',
+        units='dBZ',
+    ),
+    'SNR': MetaData(
+        long_name='Signal-to-noise ratio',
+        units='dB',
+    )
+}

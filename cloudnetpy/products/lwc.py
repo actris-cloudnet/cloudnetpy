@@ -21,7 +21,6 @@ class LwcSource(DataSource):
         super().__init__(categorize_file)
         self.atmosphere = self._get_atmosphere()
         self.lwp = self.getvar('lwp')
-        self.lwp_error = self.getvar('lwp_error')
         self.dheight = utils.mdiff(self.getvar('height'))
         self.is_rain = self.getvar('is_rain')
         self.categorize_bits = CategorizeBits(categorize_file)
@@ -202,8 +201,6 @@ def generate_lwc(categorize_file, output_file):
 def _append_data(lwc_data, lwc_obj):
     lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc', units='kg m-3')
     lwc_data.append_data(lwc_obj.status, 'lwc_retrieval_status')
-    lwc_data.append_data(lwc_data.lwp, 'lwp')
-    lwc_data.append_data(lwc_data.lwp_error, 'lwp_error')
 
 
 def _save_data_and_meta(lwc_data, output_file):
@@ -213,7 +210,7 @@ def _save_data_and_meta(lwc_data, output_file):
     dims = {'time': len(lwc_data.time),
             'height': len(lwc_data.variables['height'])}
     rootgrp = output.init_file(output_file, dims, lwc_data.data, zlib=True)
-    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height')
+    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height', 'lwp', 'lwp_error')
     output.copy_variables(lwc_data.dataset, rootgrp, vars_from_source)
     rootgrp.title = f"Liquid water content file from {lwc_data.dataset.location}"
     rootgrp.source = f"Categorize file: {p_tools.get_source(lwc_data)}"
@@ -304,7 +301,8 @@ DEFINITIONS = {
 LWC_ATTRIBUTES = {
     'lwc': MetaData(
         long_name='Liquid water content',
-        comment=COMMENTS['lwc']
+        comment=COMMENTS['lwc'],
+        ancillary_variables='lwc_error'
     ),
     'lwc_error': MetaData(
         long_name='Random error in liquid water content, one standard deviation',
@@ -315,8 +313,4 @@ LWC_ATTRIBUTES = {
         comment=COMMENTS['lwc_retrieval_status'],
         definition=DEFINITIONS['lwc_retrieval_status']
     ),
-    'lwp_error': MetaData(
-        long_name='Error in liquid water path',
-        units='',
-    )
 }
