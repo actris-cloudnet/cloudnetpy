@@ -51,6 +51,12 @@ def _plot_bar_data(ax, data, name, time):
 
 def _plot_bit_data(ax, data, name, axes):
     """Plotting select 2d bit with one color and no colorbar"""
+    variables = ATTRIBUTES[name]
+    cmap = ListedColormap(variables.cbar)
+    ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap)
+    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+    pos = ax.get_position()
+    ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
 
 def _plot_segment_data(ax, data, name, axes):
@@ -135,6 +141,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
     """
     field_names = _parse_field_names(nc_file, field_names)
+
     data_fields = ptools.read_nc_fields(nc_file, field_names)
     n_fields = len(data_fields)
     fig, axes = _initialize_figure(n_fields)
@@ -188,7 +195,7 @@ def generate_bit_figure(nc_file, bit_names, show=True, save_path=None,
         axes_data = _read_axes(nc_file, plot_type)
         field, axes_data = _fix_data_limitation(field, axes_data, max_y)
         _set_axes(axis, max_y)
-
+        _plot_bit_data(axis, field, name, axes_data)
 
 
 def _get_bit_data(categorize_bits, bit_names):
