@@ -185,17 +185,26 @@ def generate_bit_figure(nc_file, bit_names, show=True, save_path=None,
     bit_names(list): List of bit names which are to plot
     """
     categorize_bits = CategorizeBits(nc_file)
-    # Luetaan haluttujen bittien data, luodaan data_field lista
     data_fields = _get_bit_data(categorize_bits, bit_names)
+
     n_fields = len(data_fields)
     fig, axes = _initialize_figure(n_fields)
 
     for axis, field, name in zip(axes, data_fields, bit_names):
-        plot_type = 'bit'
-        axes_data = _read_axes(nc_file, plot_type)
+        axes_data = _read_axes(nc_file)
         field, axes_data = _fix_data_limitation(field, axes_data, max_y)
         _set_axes(axis, max_y)
         _plot_bit_data(axis, field, name, axes_data)
+
+    axes[-1].set_xlabel('Time (UTC)', fontsize=13)
+    case_date = _read_case_date(nc_file)
+    _add_subtitle(fig, n_fields, case_date)
+
+    if save_path:
+        file_name = _create_save_name(save_path, case_date, max_y, bit_names)
+        plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
+    if show:
+        plt.show()
 
 
 def _get_bit_data(categorize_bits, bit_names):
