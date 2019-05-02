@@ -173,7 +173,13 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
 
 def _generate_data_and_names(nc_file, field_name, bit_name):
-    """ Parse and connect data if bit data is also called """
+    """ Parse and connect data and name list to the generic form.
+        Data can be read directly from categorize file or wanted data can be
+        BITs and reading is different.
+
+        Data from BITs will be formed [data, index in list], so input will remain
+        in same order
+    """
     if bit_name:
         categorize_bits = CategorizeBits(nc_file)
         data_bit, bit_name = _get_bit_data(categorize_bits, bit_name)
@@ -193,7 +199,9 @@ def _generate_data_and_names(nc_file, field_name, bit_name):
 
 
 def _parse_field_names(nc_file, field_names):
-    """Returns field names that actually exist in the nc-file."""
+    """Returns field names that actually exist in the nc-file.
+        Second list of name includes those which are not found in variables.
+    """
     bit_name = []
     field_name = list(field_names)
     variables = netCDF4.Dataset(nc_file).variables
