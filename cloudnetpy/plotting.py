@@ -134,8 +134,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             more pixels, i.e., better image quality. Default is 200.
 
     """
-    field_name, bit_name = _parse_field_names(nc_file, field_names)
-    data_fields, field_names = _generate_data_and_names(nc_file, field_name, bit_name)
+    variable_names, other_names = _parse_field_names(nc_file, field_names)
+    data_fields, field_names = _generate_data_and_names(nc_file, variable_names, other_names)
     n_fields = len(data_fields)
     fig, axes = _initialize_figure(n_fields)
 
@@ -172,7 +172,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.show()
 
 
-def _generate_data_and_names(nc_file, field_name, bit_name):
+def _generate_data_and_names(nc_file, variable_names, other_names):
     """ Parse and connect data and name list to the generic form.
         Data can be read directly from categorize file or wanted data can be
         BITs and reading is different.
@@ -180,18 +180,18 @@ def _generate_data_and_names(nc_file, field_name, bit_name):
         Data from BITs will be formed [data, index in list], so input will remain
         in same order
     """
-    if bit_name:
+    if other_names:
         categorize_bits = CategorizeBits(nc_file)
-        data_bit, bit_name = _get_bit_data(categorize_bits, bit_name)
-    if field_name:
-        data_field = ptools.read_nc_fields(nc_file, field_name)
+        data_bit, bit_name = _get_bit_data(categorize_bits, other_names)
+    if variable_names:
+        data_field = ptools.read_nc_fields(nc_file, variable_names)
 
     if 'data_field' in locals() and 'data_bit' in locals():
         data_fields = _connect_lists(data_field, data_bit)
-        field_names = _connect_lists(field_name, bit_name)
+        field_names = _connect_lists(variable_names, bit_name)
     elif 'data_field' in locals() and not data_bit:
         data_fields = data_field
-        field_names = field_name
+        field_names = variable_names
     else:
         data_fields = list(zip(*data_bit))[0]
         field_names = list(zip(*bit_name))[0]
@@ -202,20 +202,20 @@ def _parse_field_names(nc_file, field_names):
     """Returns field names that actually exist in the nc-file.
         Second list of name includes those which are not found in variables.
     """
-    bit_name = []
-    field_name = list(field_names)
+    other_names = []
+    variable_names = list(field_names)
     variables = netCDF4.Dataset(nc_file).variables
     for i, field in enumerate(field_names):
         if field not in variables:
-            field_name.remove(field)
-            bit_name.append([field, i])
-    return field_name, bit_name
+            variable_names.remove(field)
+            other_names.append([field, i])
+    return variable_names, other_names
 
 
-def _get_bit_data(categorize_bits, bit_names):
+def _get_bit_data(categorize_bits, other_names):
     data_fields = []
-    bit_name = list(bit_names)
-    for bit, i in bit_names:
+    bit_name = list(other_names)
+    for bit, i in other_names:
         if bit in categorize_bits.category_keys:
             data_fields.append([categorize_bits.category_bits[bit], i])
         elif bit in categorize_bits.quality_keys:
