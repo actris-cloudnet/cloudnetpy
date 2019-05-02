@@ -119,12 +119,6 @@ def _init_colorbar(plot, axis):
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
-def _parse_field_names(nc_file, field_names):
-    """Returns field names that actually exist in the nc-file."""
-    variables = netCDF4.Dataset(nc_file).variables
-    return [field for field in field_names if field in variables]
-
-
 def generate_figure(nc_file, field_names, show=True, save_path=None,
                     max_y=12, dpi=200):
     """Generates a Cloudnet figure.
@@ -140,9 +134,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             more pixels, i.e., better image quality. Default is 200.
 
     """
-    field_names = _parse_field_names(nc_file, field_names)
-
-    data_fields = ptools.read_nc_fields(nc_file, field_names)
+    field_name, bit_name = _parse_field_names(nc_file, field_names)
+    data_fields, field_names = _generate_data_and_names(nc_file, field_name, bit_name)
     n_fields = len(data_fields)
     fig, axes = _initialize_figure(n_fields)
 
@@ -162,6 +155,9 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name, axes_data)
 
+        elif plot_type == 'bit':
+            _plot_bit_data(axis, field, name, axes_data)
+
         else:
             _plot_colormesh_data(axis, field, name, axes_data)
 
@@ -176,45 +172,56 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.show()
 
 
-def generate_bit_figure(nc_file, bit_names, show=True, save_path=None,
-                        max_y=12, dpi=200):
-    """
-    Generate figure of bit data from categorize file
+def _generate_data_and_names(nc_file, field_name, bit_name):
+    """ Parse and connect data if bit data is also called """
+    if bit_name:
+        categorize_bits = CategorizeBits(nc_file)
+        data_bit, bit_name = _get_bit_data(categorize_bits, bit_name)
+    if field_name:
+        data_field = ptools.read_nc_fields(nc_file, field_name)
 
-    nc_file(str):    path and name of source file
-    bit_names(list): List of bit names which are to plot
-    """
-    categorize_bits = CategorizeBits(nc_file)
-    data_fields = _get_bit_data(categorize_bits, bit_names)
+    if 'data_field' in locals() and 'data_bit' in locals():
+        data_fields = _connect_lists(data_field, data_bit)
+        field_names = _connect_lists(field_name, bit_name)
+    elif 'data_field' in locals() and not data_bit:
+        data_fields = data_field
+        field_names = field_name
+    else:
+        data_fields = list(zip(*data_bit))[0]
+        field_names = list(zip(*bit_name))[0]
+    return data_fields, field_names
 
-    n_fields = len(data_fields)
-    fig, axes = _initialize_figure(n_fields)
 
-    for axis, field, name in zip(axes, data_fields, bit_names):
-        axes_data = _read_axes(nc_file)
-        field, axes_data = _fix_data_limitation(field, axes_data, max_y)
-        _set_axes(axis, max_y)
-        _plot_bit_data(axis, field, name, axes_data)
-
-    axes[-1].set_xlabel('Time (UTC)', fontsize=13)
-    case_date = _read_case_date(nc_file)
-    _add_subtitle(fig, n_fields, case_date)
-
-    if save_path:
-        file_name = _create_save_name(save_path, case_date, max_y, bit_names)
-        plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
-    if show:
-        plt.show()
+def _parse_field_names(nc_file, field_names):
+    """Returns field names that actually exist in the nc-file."""
+    bit_name = []
+    field_name = list(field_names)
+    variables = netCDF4.Dataset(nc_file).variables
+    for i, field in enumerate(field_names):
+        if field not in variables:
+            field_name.remove(field)
+            bit_name.append([field, i])
+    return field_name, bit_name
 
 
 def _get_bit_data(categorize_bits, bit_names):
     data_fields = []
-    for bit in bit_names:
+    bit_name = list(bit_names)
+    for bit, i in bit_names:
         if bit in categorize_bits.category_keys:
-            data_fields.append(categorize_bits.category_bits[bit])
-        if bit in categorize_bits.quality_keys:
-            data_fields.append(categorize_bits.quality_bits[bit])
-    return data_fields
+            data_fields.append([categorize_bits.category_bits[bit], i])
+        elif bit in categorize_bits.quality_keys:
+            data_fields.append([categorize_bits.quality_bits[bit], i])
+        else:
+            bit_name.remove([bit, i])
+    return data_fields, bit_name
+
+
+def _connect_lists(data_field, data_bit):
+    """ Connects two list with index information"""
+    for bit, i in data_bit:
+        data_field.insert(i, bit)
+    return data_field
 
 
 def _fix_data_limitation(data_field, axes, max_y):
@@ -287,7 +294,7 @@ def _read_case_date(nc_file):
 
 def _read_axes(nc_file, axes_type=None):
     """Returns time and height arrays."""
-    if axes_type:
+    if axes_type == 'model':
         fields = ['model_time', 'model_height']
         fields = ptools.get_correct_dimensions(nc_file, fields)
     else:
