@@ -180,36 +180,26 @@ def _generate_data_and_names(nc_file, variable_names, other_names):
         Data from BITs will be formed [data, index in list], so input will remain
         in same order
     """
+    if variable_names:
+        data_field = ptools.read_nc_fields(nc_file, variable_names)
+
     if other_names:
         categorize_bits = CategorizeBits(nc_file)
         data_bit, bit_name = _get_bit_data(categorize_bits, other_names)
-    if variable_names:
-        data_field = ptools.read_nc_fields(nc_file, variable_names)
 
     if 'data_field' in locals() and 'data_bit' in locals():
         data_fields = _connect_lists(data_field, data_bit)
         field_names = _connect_lists(variable_names, bit_name)
-    elif 'data_field' in locals() and not data_bit:
+
+    elif 'data_field' in locals() and 'data_bit' not in locals():
         data_fields = data_field
         field_names = variable_names
+
     else:
         data_fields = list(zip(*data_bit))[0]
         field_names = list(zip(*bit_name))[0]
+
     return data_fields, field_names
-
-
-def _parse_field_names(nc_file, field_names):
-    """Returns field names that actually exist in the nc-file.
-        Second list of name includes those which are not found in variables.
-    """
-    other_names = []
-    variable_names = list(field_names)
-    variables = netCDF4.Dataset(nc_file).variables
-    for i, field in enumerate(field_names):
-        if field not in variables:
-            variable_names.remove(field)
-            other_names.append([field, i])
-    return variable_names, other_names
 
 
 def _get_bit_data(categorize_bits, other_names):
@@ -230,6 +220,20 @@ def _connect_lists(data_field, data_bit):
     for bit, i in data_bit:
         data_field.insert(i, bit)
     return data_field
+
+
+def _parse_field_names(nc_file, field_names):
+    """Returns field names that actually exist in the nc-file.
+        Second list of name includes those which are not found in variables.
+    """
+    other_names = []
+    variable_names = list(field_names)
+    variables = netCDF4.Dataset(nc_file).variables
+    for i, field in enumerate(field_names):
+        if field not in variables:
+            variable_names.remove(field)
+            other_names.append([field, i])
+    return variable_names, other_names
 
 
 def _fix_data_limitation(data_field, axes, max_y):
