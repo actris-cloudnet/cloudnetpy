@@ -174,6 +174,12 @@ class Radar(ProfileDataSource):
         self.location = getattr(self.dataset, 'location', '')
         self._netcdf_to_cloudnet(('v', 'width', 'ldr'))
         self._unknown_to_cloudnet(('Zh', 'Zv', 'Ze'), 'Z', units='dBZ')
+        self._init_sigma_v()
+
+    def _init_sigma_v(self):
+        """Initializes std of the velocity field. The std will be calculated
+        later when rebinning the data."""
+        self.append_data(self.getvar('v'), 'sigma_v')
 
     def _get_sequence_indices(self):
         """Mira has only one sequence and one folding velocity. RPG has
@@ -206,11 +212,13 @@ class Radar(ProfileDataSource):
                 self.data[key].db2lin()
                 self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
-            elif key in ('v',):
-                # This has some problems with RPG data when folding is present
+            elif key == 'v':
+                # This has some problems with RPG data when folding is present.
                 self.data[key].rebin_in_polar(self.time, time_new,
                                               self.folding_velocity,
                                               self.sequence_indices)
+            elif key == 'sigma_v':
+                self.data[key].calc_sigma_v(self.time, time_new)
             else:
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new

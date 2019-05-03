@@ -55,8 +55,12 @@ def test_rebin_2d():
     xnew = np.array([2, 4, 6])
     data = np.array([range(1, 8), range(1, 8)]).T
     data_i = utils.rebin_2d(x, data, xnew)
-    assert_array_almost_equal(data_i,np.array([[2, 4.5, 6.5],
-                                               [2, 4.5, 6.5]]).T)
+    assert_array_almost_equal(data_i, np.array([[2, 4.5, 6.5],
+                                                [2, 4.5, 6.5]]).T)
+
+    data_i = utils.rebin_2d(x, data, xnew, 'std')
+    arr = np.array([np.std([1, 2, 3]), np.std([4, 5]), np.std([6, 7])])
+    assert_array_almost_equal(data_i, np.array([arr, arr]).T)
 
 
 def test_filter_isolated_pixels():
@@ -155,18 +159,6 @@ def test_n_elements():
     assert utils.n_elements(x, 30, 'time') == 30
     x = np.linspace(0, 6, (6*60+1)*2)
     assert utils.n_elements(x, 10, 'time') == 20
-
-
-@pytest.mark.parametrize("input, bases, tops", [
-    ([1, 1, 1, 0, 0, 0, 1, 1, 1], [0, 6], [2, 8]),
-    ([0, 0, 0, 1, 0, 0], [3], [3]),
-    ([0, 0, 0, 1, 1, 1], [3], [5]),
-    ([0, 0, 0, 0, 0, 0], [], []),
-    ([1, 1, 1], [0], [2]),
-])
-def test_bases_and_tops(input, bases, tops):
-    assert_array_almost_equal(utils.bases_and_tops(input)[0], bases)
-    assert_array_almost_equal(utils.bases_and_tops(input)[1], tops)
 
 
 def test_l2_norm():

@@ -76,7 +76,7 @@ def binvec(x):
     return np.linspace(edge1, edge2, len(x)+1)
 
 
-def rebin_2d(x_in, data, x_new):
+def rebin_2d(x_in, data, x_new, statistic='mean'):
     """Rebins 2-D data in one dimension using mean.
 
     Args:
@@ -84,9 +84,11 @@ def rebin_2d(x_in, data, x_new):
         data (MaskedArray): 2-D input data with shape (n, m).
         x_new (ndarray): 1-D target vector (center points)
             with shape (N,).
+        statistic (str, optional): Statistic to be calculated. Possible
+            statistics are 'mean', 'std'. Default is 'mean'.
 
     Returns:
-        MaskedArray: Rebinned (averaged) data with shape (N, m).
+        MaskedArray: Rebinned data with shape (N, m).
 
     Notes: 0-values are masked in the returned array.
 
@@ -99,7 +101,7 @@ def rebin_2d(x_in, data, x_new):
         if ma.any(values[mask]):
             datai[:, ind], _, _ = stats.binned_statistic(x_in[mask],
                                                          values[mask],
-                                                         statistic='mean',
+                                                         statistic=statistic,
                                                          bins=edges)
     datai[~np.isfinite(datai)] = 0
     return ma.masked_equal(datai, 0)
