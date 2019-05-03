@@ -69,17 +69,19 @@ _CLABEL = {
 
 _CBAR = {
     'target_classification':
-        ("#f8f8ff", "#00bfff", "#ff4500", "#0000ff", "#ffff00", "#32cd32",
+        ("#ffffff", "#00bfff", "#ff4500", "#0000ff", "#ffff00", "#32cd32",
          "#ffa500", "#66cdaa", "#d3d3d3", "#778899", "#2f4f4f"),
     'detection_status':
-        ("#f8f8ff", "#ffff00", "#2f4f4f", "#3cb371", "#778899", "#87cefa",
+        ("#ffffff", "#ffff00", "#2f4f4f", "#3cb371", "#778899", "#87cefa",
          "#d3d3d3", "#0000ff", "#ff4500", "#ffa500"),
     'iwc_retrieval_status':
-        ("#f8f8ff", "#00bfff", "#ff4500", "#0000ff", "#ffff00",
+        ("#ffffff", "#00bfff", "#ff4500", "#0000ff", "#ffff00",
          "#2f4f4f", "#778899", "#d3d3d3"),
     'lwc_retrieval_status':
-        ("#f8f8ff", "#00bfff", "#0000ff", "#2f4f4f", "#ffa500",
+        ("#ffffff", "#00bfff", "#0000ff", "#2f4f4f", "#ffa500",
          "#ff4500", "#2f4f4f"),
+    'bit':
+        ("#ffffff", "#4682b4")
 }
 
 ATTRIBUTES = {
@@ -291,4 +293,64 @@ ATTRIBUTES = {
         clabel=_CLABEL['lwc_retrieval_status'],
         plot_type='segment'
     ),
+    'droplet': PlotMeta(
+        'Droplet bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'falling': PlotMeta(
+        'Falling bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'cold': PlotMeta(
+        'Cold bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'melting': PlotMeta(
+        'Melting bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'aerosol': PlotMeta(
+        'Aerosol bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'insect': PlotMeta(
+        'Insect bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'radar': PlotMeta(
+        'Radar bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'lidar': PlotMeta(
+        'Lidar bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'clutter': PlotMeta(
+        'Clutter bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'molecular': PlotMeta(
+        'Molecular bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'attenuated': PlotMeta(
+        'Attenuated bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    ),
+    'corrected': PlotMeta(
+        'Corrected bit',
+        cbar=_CBAR['bit'],
+        plot_type='bit'
+    )
 }

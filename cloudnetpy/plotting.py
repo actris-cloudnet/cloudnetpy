@@ -9,6 +9,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import netCDF4
 import cloudnetpy.products.product_tools as ptools
 from .plot_meta import ATTRIBUTES
+from .products.product_tools import CategorizeBits
 
 
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
@@ -48,6 +49,16 @@ def _plot_bar_data(ax, data, name, time):
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
 
+def _plot_bit_data(ax, data, name, axes):
+    """Plotting select 2d bit with one color and no colorbar"""
+    variables = ATTRIBUTES[name]
+    cmap = ListedColormap(variables.cbar)
+    ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap)
+    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+    pos = ax.get_position()
+    ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
+
+
 def _plot_segment_data(ax, data, name, axes):
     """Plots categorical 2D variable.
 
@@ -61,7 +72,7 @@ def _plot_segment_data(ax, data, name, axes):
     variables = ATTRIBUTES[name]
     n_fields = len(variables.cbar)
     cmap = ListedColormap(variables.cbar)
-    pl = ax.pcolorfast(*axes, data.T, cmap=cmap, vmin=-0.5,
+    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=n_fields - 0.5)
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(n_fields+1))
@@ -108,12 +119,6 @@ def _init_colorbar(plot, axis):
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
-def _parse_field_names(nc_file, field_names):
-    """Returns field names that actually exist in the nc-file."""
-    variables = netCDF4.Dataset(nc_file).variables
-    return [field for field in field_names if field in variables]
-
-
 def generate_figure(nc_file, field_names, show=True, save_path=None,
                     max_y=12, dpi=200):
     """Generates a Cloudnet figure.
@@ -129,8 +134,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             more pixels, i.e., better image quality. Default is 200.
 
     """
-    field_names = _parse_field_names(nc_file, field_names)
-    data_fields = ptools.read_nc_fields(nc_file, field_names)
+    variable_names, other_names = _parse_field_names(nc_file, field_names)
+    data_fields, field_names = _generate_data_and_names(nc_file, variable_names, other_names)
     n_fields = len(data_fields)
     fig, axes = _initialize_figure(n_fields)
 
@@ -150,6 +155,9 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name, axes_data)
 
+        elif plot_type == 'bit':
+            _plot_bit_data(axis, field, name, axes_data)
+
         else:
             _plot_colormesh_data(axis, field, name, axes_data)
 
@@ -162,6 +170,66 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
+
+
+def _generate_data_and_names(nc_file, variable_names, other_names):
+    """ Parse and connect data and name list to the generic form.
+        Data can be read directly from categorize file or wanted data can be
+        BITs and reading is different.
+
+        Data from BITs will be formed [data, index in list], so input will remain
+        in same order
+    """
+    if other_names:
+        categorize_bits = CategorizeBits(nc_file)
+        data_bit, bit_name = _get_bit_data(categorize_bits, other_names)
+    if variable_names:
+        data_field = ptools.read_nc_fields(nc_file, variable_names)
+
+    if 'data_field' in locals() and 'data_bit' in locals():
+        data_fields = _connect_lists(data_field, data_bit)
+        field_names = _connect_lists(variable_names, bit_name)
+    elif 'data_field' in locals() and not data_bit:
+        data_fields = data_field
+        field_names = variable_names
+    else:
+        data_fields = list(zip(*data_bit))[0]
+        field_names = list(zip(*bit_name))[0]
+    return data_fields, field_names
+
+
+def _parse_field_names(nc_file, field_names):
+    """Returns field names that actually exist in the nc-file.
+        Second list of name includes those which are not found in variables.
+    """
+    other_names = []
+    variable_names = list(field_names)
+    variables = netCDF4.Dataset(nc_file).variables
+    for i, field in enumerate(field_names):
+        if field not in variables:
+            variable_names.remove(field)
+            other_names.append([field, i])
+    return variable_names, other_names
+
+
+def _get_bit_data(categorize_bits, other_names):
+    data_fields = []
+    bit_name = list(other_names)
+    for bit, i in other_names:
+        if bit in categorize_bits.category_keys:
+            data_fields.append([categorize_bits.category_bits[bit], i])
+        elif bit in categorize_bits.quality_keys:
+            data_fields.append([categorize_bits.quality_bits[bit], i])
+        else:
+            bit_name.remove([bit, i])
+    return data_fields, bit_name
+
+
+def _connect_lists(data_field, data_bit):
+    """ Connects two list with index information"""
+    for bit, i in data_bit:
+        data_field.insert(i, bit)
+    return data_field
 
 
 def _fix_data_limitation(data_field, axes, max_y):
