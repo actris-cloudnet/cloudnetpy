@@ -134,8 +134,9 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             more pixels, i.e., better image quality. Default is 200.
 
     """
-    variable_names, other_names = _parse_field_names(nc_file, field_names)
-    data_fields, field_names = _generate_data_and_names(nc_file, variable_names, other_names)
+
+    data_fields, field_names = _generate_data_and_names(nc_file, field_names)
+
     n_fields = len(data_fields)
     fig, axes = _initialize_figure(n_fields)
 
@@ -172,68 +173,25 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.show()
 
 
-def _generate_data_and_names(nc_file, variable_names, other_names):
-    """ Parse and connect data and name list to the generic form.
-        Data can be read directly from categorize file or wanted data can be
-        BITs and reading is different.
-
-        Data from BITs will be formed [data, index in list], so input will remain
-        in same order
-    """
-    if variable_names:
-        data_field = ptools.read_nc_fields(nc_file, variable_names)
-
-    if other_names:
+def _generate_data_and_names(nc_file, names):
+    data_fields, field_names = [], []
+    nc_variables = netCDF4.Dataset(nc_file).variables
+    try:
         categorize_bits = CategorizeBits(nc_file)
-        data_bit, bit_name = _get_bit_data(categorize_bits, other_names)
+    except KeyError:
+        categorize_bits = None
 
-    if 'data_field' in locals() and 'data_bit' in locals():
-        data_fields = _connect_lists(data_field, data_bit)
-        field_names = _connect_lists(variable_names, bit_name)
-
-    elif 'data_field' in locals() and 'data_bit' not in locals():
-        data_fields = data_field
-        field_names = variable_names
-
-    else:
-        data_fields = list(zip(*data_bit))[0]
-        field_names = list(zip(*bit_name))[0]
-
+    for name in names:
+        if name in nc_variables:
+            field_names.append(name)
+            data_fields.append(nc_variables[name][:])
+        elif categorize_bits and name in CategorizeBits.category_keys:
+            field_names.append(name)
+            data_fields.append(categorize_bits.category_bits[name])
+        elif categorize_bits and name in CategorizeBits.quality_keys:
+            field_names.append(name)
+            data_fields.append(categorize_bits.quality_bits[name])
     return data_fields, field_names
-
-
-def _get_bit_data(categorize_bits, other_names):
-    data_fields = []
-    bit_name = list(other_names)
-    for bit, i in other_names:
-        if bit in categorize_bits.category_keys:
-            data_fields.append([categorize_bits.category_bits[bit], i])
-        elif bit in categorize_bits.quality_keys:
-            data_fields.append([categorize_bits.quality_bits[bit], i])
-        else:
-            bit_name.remove([bit, i])
-    return data_fields, bit_name
-
-
-def _connect_lists(data_field, data_bit):
-    """ Connects two list with index information"""
-    for bit, i in data_bit:
-        data_field.insert(i, bit)
-    return data_field
-
-
-def _parse_field_names(nc_file, field_names):
-    """Returns field names that actually exist in the nc-file.
-        Second list of name includes those which are not found in variables.
-    """
-    other_names = []
-    variable_names = list(field_names)
-    variables = netCDF4.Dataset(nc_file).variables
-    for i, field in enumerate(field_names):
-        if field not in variables:
-            variable_names.remove(field)
-            other_names.append([field, i])
-    return variable_names, other_names
 
 
 def _fix_data_limitation(data_field, axes, max_y):
