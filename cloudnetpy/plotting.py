@@ -134,9 +134,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             more pixels, i.e., better image quality. Default is 200.
 
     """
-
-    data_fields, field_names = _generate_data_and_names(nc_file, field_names)
-
+    data_fields, field_names = _find_valid_fields(nc_file, field_names)
     n_fields = len(data_fields)
     fig, axes = _initialize_figure(n_fields)
 
@@ -173,25 +171,25 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.show()
 
 
-def _generate_data_and_names(nc_file, names):
-    data_fields, field_names = [], []
+def _find_valid_fields(nc_file, names):
+    """Returns valid field names and corresponding data."""
+    valid_data, valid_names = [], []
     nc_variables = netCDF4.Dataset(nc_file).variables
     try:
         categorize_bits = CategorizeBits(nc_file)
     except KeyError:
         categorize_bits = None
-
     for name in names:
         if name in nc_variables:
-            field_names.append(name)
-            data_fields.append(nc_variables[name][:])
+            valid_names.append(name)
+            valid_data.append(nc_variables[name][:])
         elif categorize_bits and name in CategorizeBits.category_keys:
-            field_names.append(name)
-            data_fields.append(categorize_bits.category_bits[name])
+            valid_names.append(name)
+            valid_data.append(categorize_bits.category_bits[name])
         elif categorize_bits and name in CategorizeBits.quality_keys:
-            field_names.append(name)
-            data_fields.append(categorize_bits.quality_bits[name])
-    return data_fields, field_names
+            valid_names.append(name)
+            valid_data.append(categorize_bits.quality_bits[name])
+    return valid_data, valid_names
 
 
 def _fix_data_limitation(data_field, axes, max_y):
