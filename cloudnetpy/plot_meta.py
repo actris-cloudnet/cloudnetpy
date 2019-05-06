@@ -185,8 +185,8 @@ ATTRIBUTES = {
         name='Spectral width',
         cbar='viridis',
         clabel=_MS1,
-        plot_range=(0, 1),
-        plot_scale=_LIN,
+        plot_range=(1e-2, 1e1),
+        plot_scale=_LOG,
         plot_type='mesh'
      ),
     'v': PlotMeta(
@@ -197,6 +197,14 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
      ),
+    'v_sigma': PlotMeta(
+        name='STD of Doppler velocity',
+        cbar='viridis',
+        clabel=_MS1,
+        plot_range=(1e-2, 1e0),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
     'insect_prob': PlotMeta(
         name='Insect probability',
         cbar='viridius',

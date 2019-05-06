@@ -61,6 +61,11 @@ COMMON_ATTRIBUTES = {
         comment=('This parameter is the radial component of the velocity, with positive\n'
                  'velocities are away from the radar.'),
         positive='up',
+        ancillary_variables='v_sigma'
+    ),
+    'v_sigma': MetaData(
+        long_name='Standard deviation of Doppler velocity',
+        units='m s-1'
     ),
     'q': MetaData(
         long_name='Specific humidity',
