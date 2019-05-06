@@ -173,16 +173,16 @@ def _find_valid_fields(nc_file, names):
     valid_names, valid_data = names[:], []
     nc_variables = netCDF4.Dataset(nc_file).variables
     try:
-        categorize_bits = CategorizeBits(nc_file)
+        bits = CategorizeBits(nc_file)
     except KeyError:
-        categorize_bits = None
+        bits = None
     for name in names:
         if name in nc_variables:
             valid_data.append(nc_variables[name])
-        elif categorize_bits and name in CategorizeBits.category_keys:
-            valid_data.append(categorize_bits.category_bits[name])
-        elif categorize_bits and name in CategorizeBits.quality_keys:
-            valid_data.append(categorize_bits.quality_bits[name])
+        elif bits and name in CategorizeBits.category_keys:
+            valid_data.append(bits.category_bits[name])
+        elif bits and name in CategorizeBits.quality_keys:
+            valid_data.append(bits.quality_bits[name])
         else:
             valid_names.remove(name)
     return valid_data, valid_names
