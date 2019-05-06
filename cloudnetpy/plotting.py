@@ -222,9 +222,8 @@ def _set_axes(axis, max_y, ylabel=None):
 
 def _get_standard_time_ticks(resolution=4):
     """Returns typical ticks / labels for a time vector between 0-24h."""
-    labels = [f"{int(i):02d}:00" if 24 > i > 0 else ''
-              for i in np.arange(0, 24.01, resolution)]
-    return labels
+    return [f"{int(i):02d}:00" if 24 > i > 0 else ''
+            for i in np.arange(0, 24.01, resolution)]
 
 
 def _create_save_name(save_path, case_date, max_y, field_names):
