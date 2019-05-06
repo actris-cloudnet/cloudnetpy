@@ -134,11 +134,11 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             more pixels, i.e., better image quality. Default is 200.
 
     """
-    data_fields, field_names = _find_valid_fields(nc_file, field_names)
-    n_fields = len(data_fields)
+    valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
+    n_fields = len(valid_fields)
     fig, axes = _initialize_figure(n_fields)
 
-    for axis, field, name in zip(axes, data_fields, field_names):
+    for axis, field, name in zip(axes, valid_fields, valid_names):
         plot_type = ATTRIBUTES[name].plot_type
         axes_data = _read_axes(nc_file, plot_type)
         field, axes_data = _fix_data_limitation(field, axes_data, max_y)
@@ -162,7 +162,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     _add_subtitle(fig, n_fields, case_date)
 
     if save_path:
-        file_name = _create_save_name(save_path, case_date, max_y, field_names)
+        file_name = _create_save_name(save_path, case_date, max_y, valid_names)
         plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
