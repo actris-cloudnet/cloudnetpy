@@ -181,7 +181,7 @@ def _find_valid_fields(nc_file, names):
         categorize_bits = None
     for name in names:
         if name in nc_variables:
-            valid_data.append(nc_variables[name][:])
+            valid_data.append(nc_variables[name])
         elif categorize_bits and name in CategorizeBits.category_keys:
             valid_data.append(categorize_bits.category_bits[name])
         elif categorize_bits and name in CategorizeBits.quality_keys:
