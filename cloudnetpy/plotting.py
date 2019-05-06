@@ -144,10 +144,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         field, axes_data = _fix_data_limitation(field, axes_data, max_y)
         _set_axes(axis, max_y)
 
-        if plot_type == 'model':
-            _plot_colormesh_data(axis, field, name, axes_data)
-
-        elif plot_type == 'bar':
+        if plot_type == 'bar':
             _plot_bar_data(axis, field, name, axes_data[0])
             _set_axes(axis, 1, ATTRIBUTES[name].ylabel)
 
