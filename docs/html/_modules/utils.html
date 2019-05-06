@@ -117,7 +117,7 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">edge1</span><span class="p">,</span> <span class="n">edge2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="rebin_2d"><a class="viewcode-back" href="../api.html#utils.rebin_2d">[docs]</a><span class="k">def</span> <span class="nf">rebin_2d</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">x_new</span><span class="p">):</span>
+<div class="viewcode-block" id="rebin_2d"><a class="viewcode-back" href="../api.html#utils.rebin_2d">[docs]</a><span class="k">def</span> <span class="nf">rebin_2d</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">x_new</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Rebins 2-D data in one dimension using mean.</span>
 
 <span class="sd">    Args:</span>
@@ -125,9 +125,11 @@
 <span class="sd">        data (MaskedArray): 2-D input data with shape (n, m).</span>
 <span class="sd">        x_new (ndarray): 1-D target vector (center points)</span>
 <span class="sd">            with shape (N,).</span>
+<span class="sd">        statistic (str, optional): Statistic to be calculated. Possible</span>
+<span class="sd">            statistics are &#39;mean&#39;, &#39;std&#39;. Default is &#39;mean&#39;.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        MaskedArray: Rebinned (averaged) data with shape (N, m).</span>
+<span class="sd">        MaskedArray: Rebinned data with shape (N, m).</span>
 
 <span class="sd">    Notes: 0-values are masked in the returned array.</span>
 
@@ -140,7 +142,7 @@
         <span class="k">if</span> <span class="n">ma</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">mask</span><span class="p">]):</span>
             <span class="n">datai</span><span class="p">[:,</span> <span class="n">ind</span><span class="p">],</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">binned_statistic</span><span class="p">(</span><span class="n">x_in</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>
                                                          <span class="n">values</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>
-                                                         <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span>
+                                                         <span class="n">statistic</span><span class="o">=</span><span class="n">statistic</span><span class="p">,</span>
                                                          <span class="n">bins</span><span class="o">=</span><span class="n">edges</span><span class="p">)</span>
     <span class="n">datai</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">datai</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_equal</span><span class="p">(</span><span class="n">datai</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
