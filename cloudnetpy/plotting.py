@@ -258,9 +258,15 @@ def _read_case_date(nc_file):
 
 def _read_axes(nc_file, axes_type=None):
     """Returns time and height arrays."""
+
+    def _get_correct_dimension(file_in, field_names):
+        """Model dimensions are different in old/new files."""
+        variables = netCDF4.Dataset(file_in).variables
+        for name in field_names:
+            yield name.split('_')[-1] if name not in variables else name
+
     if axes_type == 'model':
-        fields = ['model_time', 'model_height']
-        fields = ptools.get_correct_dimensions(nc_file, fields)
+        fields = _get_correct_dimension(nc_file, ['model_time', 'model_height'])
     else:
         fields = ['time', 'height']
     time, height = ptools.read_nc_fields(nc_file, fields)
