@@ -9,7 +9,7 @@ import scipy.constants
 from scipy.interpolate import interp1d
 from cloudnetpy import atmos, classify, config, output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from .metadata import MetaData
+from cloudnetpy.metadata import MetaData
 
 
 class DataSource:
@@ -218,7 +218,7 @@ class Radar(ProfileDataSource):
                                               self.folding_velocity,
                                               self.sequence_indices)
             elif key == 'v_sigma':
-                self.data[key].calc_sigma_v(self.time, time_new)
+                self.data[key].calc_linear_std(self.time, time_new)
             else:
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new

@@ -6,7 +6,7 @@ import numpy as np
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.categorize import DataSource
-from .metadata import MetaData
+from cloudnetpy.metadata import MetaData
 
 
 class Mira(DataSource):

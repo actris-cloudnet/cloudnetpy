@@ -6,7 +6,7 @@ import numpy as np
 import numpy.ma as ma
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy import utils, output
-from .metadata import MetaData
+from cloudnetpy.metadata import MetaData
 
 
 class RpgBin:

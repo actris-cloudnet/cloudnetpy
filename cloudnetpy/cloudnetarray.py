@@ -60,7 +60,7 @@ class CloudnetArray:
         if np.any(height) and np.any(height_new):
             self.data = utils.rebin_2d(height, self.data.T, height_new).T
 
-    def calc_sigma_v(self, time, time_new):
+    def calc_linear_std(self, time, time_new):
         """Calculates std of velocity."""
         self.data = utils.rebin_2d(time, self.data.astype(float), time_new, 'std')
 

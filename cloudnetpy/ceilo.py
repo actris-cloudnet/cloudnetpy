@@ -442,6 +442,12 @@ def ceilo2nc(input_file, output_file, location='unknown', altitude=0):
         altitude (int, optional): Altitude of the instrument above
             mean sea level (m). Default is 0.
 
+
+    Examples:
+        >>> from cloudnetpy.ceilo import ceilo2nc
+        >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc')
+        >>> ceilo2nc('jenoptik_raw.nc', 'jenoptik.nc')
+
     """
     ceilo = _initialize_ceilo(input_file)
     ceilo.read_ceilometer_file()

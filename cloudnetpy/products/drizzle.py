@@ -12,6 +12,7 @@ from cloudnetpy.plotting import plot_2d
 def generate_drizzle(categorize_file, output_file):
     drizze_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
+    width_ht = estimate_turb_sigma(categorize_file)
 
 
 class DrizzleSource(DataSource):
@@ -61,3 +62,16 @@ class DrizzleClassification(ProductClassification):
     def _find_cold_rain(self):
         return np.any(self.category_bits['melting'], axis=1)
 
+
+def estimate_turb_sigma(cat_file):
+    """Not really sure what this function returns."""
+    beamwidth = 0.5
+    width, v_sigma, height = p_tools.read_nc_fields(cat_file, ['width', 'v_sigma', 'height'])
+    uwind, vwind = p_tools.interpolate_model(cat_file, ['uwind', 'vwind'])
+    wind = utils.l2norm(uwind, vwind)
+    beam_divergence = height * np.deg2rad(beamwidth)
+    power = 2 / 3
+    a = (wind + beam_divergence) ** power
+    b = (30 * wind + beam_divergence) ** power
+    sigma_t = a * v_sigma / (b - a)
+    return width - sigma_t ** 2

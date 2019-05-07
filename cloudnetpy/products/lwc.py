@@ -27,8 +27,8 @@ class LwcSource(DataSource):
 
     @staticmethod
     def _get_atmosphere(categorize_file):
-        return (p_tools.interpolate_model_field(categorize_file, 'temperature'),
-                p_tools.interpolate_model_field(categorize_file, 'pressure'))
+        fields = ['temperature', 'pressure']
+        return p_tools.interpolate_model(categorize_file, fields)
 
 
 class Lwc:
