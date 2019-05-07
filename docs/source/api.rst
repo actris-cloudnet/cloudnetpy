@@ -22,6 +22,8 @@ the data can be combined in a single categorize file.
 
 .. autofunction:: rpg.rpg2nc
 
+.. autofunction:: ceilo.ceilo2nc
+
 .. autofunction:: categorize.generate_categorize
 
 
@@ -34,6 +36,8 @@ generated.
 .. autofunction:: products.classification.generate_class
 
 .. autofunction:: products.iwc.generate_iwc
+
+.. autofunction:: products.lwc.generate_lwc
 
 
 Cloudnetpy modules
@@ -90,6 +94,13 @@ products.iwc
 -----------------------
 
 .. automodule:: products.iwc
+   :members:
+
+
+products.lwc
+-----------------------
+
+.. automodule:: products.lwc
    :members:
 
 

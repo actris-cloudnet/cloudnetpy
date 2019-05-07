@@ -109,6 +109,14 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='model'
     ),
+    'Tw': PlotMeta(
+        name='Wet-bulb temperature',
+        cbar='RdBu_r',
+        clabel='K',
+        plot_range=(203, 303),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'specific_humidity': PlotMeta(
         name='Model specific humidity',
         cbar='viridis',
@@ -162,7 +170,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DBZ,
         plot_range=(-40, 15),
-        plot_scale=_LIN,
+        plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
     'Ze': PlotMeta(
@@ -170,7 +178,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DBZ,
         plot_range=(-40, 20),
-        plot_scale=_LIN,
+        plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
     'ldr': PlotMeta(
@@ -178,15 +186,15 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(-35, -10),
-        plot_scale=_LIN,
+        plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
     'width': PlotMeta(
         name='Spectral width',
         cbar='viridis',
         clabel=_MS1,
-        plot_range=(0, 1),
-        plot_scale=_LIN,
+        plot_range=(1e-1, 1e0),
+        plot_scale=_LOG,
         plot_type='mesh'
      ),
     'v': PlotMeta(
@@ -197,6 +205,14 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
      ),
+    'v_sigma': PlotMeta(
+        name='STD of Doppler velocity',
+        cbar='viridis',
+        clabel=_MS1,
+        plot_range=(1e-2, 1e0),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
     'insect_prob': PlotMeta(
         name='Insect probability',
         cbar='viridius',
@@ -210,7 +226,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(0, 10),
-        plot_scale=_LIN,
+        plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
     'radar_gas_atten': PlotMeta(
@@ -218,7 +234,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(0, 1),
-        plot_scale=_LIN,
+        plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
     'lwp': PlotMeta(
