@@ -230,8 +230,7 @@ class Radar(ProfileDataSource):
             attenuations (dict): 2-D attenuations due to atmospheric gases.
 
         """
-        z_corrected = self.data['Z'][:]
-        z_corrected += attenuations['radar_gas_atten']
+        z_corrected = self.data['Z'][:] + attenuations['radar_gas_atten']
         ind = ma.where(attenuations['radar_liquid_atten'])
         z_corrected[ind] += attenuations['radar_liquid_atten'][ind]
         self.append_data(z_corrected, 'Z')
