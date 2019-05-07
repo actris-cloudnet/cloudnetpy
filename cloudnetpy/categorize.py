@@ -184,7 +184,7 @@ class Radar(ProfileDataSource):
     def _get_sequence_indices(self):
         """Mira has only one sequence and one folding velocity. RPG has
         several sequences with different folding velocities."""
-        all_indices = np.arange(0, len(self.height))
+        all_indices = np.arange(len(self.height))
         if not utils.isscalar(self.folding_velocity):
             starting_indices = self.getvar('chirp_start_indices')
             return np.split(all_indices, starting_indices[1:])
