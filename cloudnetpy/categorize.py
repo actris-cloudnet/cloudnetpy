@@ -208,7 +208,7 @@ class Radar(ProfileDataSource):
 
         """
         for key in self.data:
-            if key in ('Z',):
+            if key == 'Z':
                 self.data[key].db2lin()
                 self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
