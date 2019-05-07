@@ -312,61 +312,73 @@ ATTRIBUTES = {
     'droplet': PlotMeta(
         'Droplet bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'falling': PlotMeta(
         'Falling bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'cold': PlotMeta(
         'Cold bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'melting': PlotMeta(
         'Melting bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'aerosol': PlotMeta(
         'Aerosol bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'insect': PlotMeta(
         'Insect bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'radar': PlotMeta(
         'Radar bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'lidar': PlotMeta(
         'Lidar bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'clutter': PlotMeta(
         'Clutter bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'molecular': PlotMeta(
         'Molecular bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'attenuated': PlotMeta(
         'Attenuated bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'corrected': PlotMeta(
         'Corrected bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     )
 }

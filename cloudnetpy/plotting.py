@@ -49,16 +49,6 @@ def _plot_bar_data(ax, data, name, time):
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
 
-def _plot_bit_data(ax, data, name, axes):
-    """Plotting select 2d bit with one color and no colorbar"""
-    variables = ATTRIBUTES[name]
-    cmap = ListedColormap(variables.cbar)
-    ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap)
-    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
-    pos = ax.get_position()
-    ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
-
-
 def _plot_segment_data(ax, data, name, axes):
     """Plots categorical 2D variable.
 
@@ -92,21 +82,27 @@ def _plot_colormesh_data(ax, data, name, axes):
         axes (tuple): Time and height 1D arrays.
     """
     variables = ATTRIBUTES[name]
-    cmap = plt.get_cmap(variables.cbar, 22)
+    if variables.plot_type is 'bit':
+        cmap = ListedColormap(variables.cbar)
+        pos = ax.get_position()
+        ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
+    else:
+        cmap = plt.get_cmap(variables.cbar, 22)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
 
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
-    colorbar = _init_colorbar(pl, ax)
+    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+
+    if variables.plot_type is not 'bit':
+        colorbar = _init_colorbar(pl, ax)
+        colorbar.set_label(variables.clabel, fontsize=13)
 
     if variables.plot_scale == 'logarithmic':
         tick_labels = _generate_log_cbar_ticklabel_list(vmin, vmax)
         colorbar.set_ticks(np.arange(vmin, vmax+1))
         colorbar.ax.set_yticklabels(tick_labels)
-
-    colorbar.set_label(variables.clabel, fontsize=13)
-    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
 def _lin2log(*args):
@@ -150,9 +146,6 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name, axes_data)
-
-        elif plot_type == 'bit':
-            _plot_bit_data(axis, field, name, axes_data)
 
         else:
             _plot_colormesh_data(axis, field, name, axes_data)
