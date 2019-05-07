@@ -7,7 +7,7 @@ import numpy as np
 import numpy.ma as ma
 import scipy.constants
 from scipy.interpolate import interp1d
-from cloudnetpy import atmos, classify, config, output, utils
+from cloudnetpy import atmos, classify, output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.metadata import MetaData
 
@@ -250,7 +250,7 @@ class Radar(ProfileDataSource):
         def _calc_error():
             z_precision = 4.343 * (1 / np.sqrt(_number_of_pulses())
                                    + utils.db2lin(z_power_min - z_power) / 3)
-            gas_error = attenuations['radar_gas_atten'] * config.GAS_ATTEN_PREC
+            gas_error = attenuations['radar_gas_atten'] * 0.1
             liq_error = attenuations['liquid_atten_err']
             z_error = utils.l2norm(gas_error, liq_error, z_precision)
             z_error[attenuations['liquid_uncorrected']] = ma.masked
@@ -270,7 +270,7 @@ class Radar(ProfileDataSource):
         z_power_min = np.percentile(z_power.compressed(), 0.1)
         self.append_data(_calc_error(), 'Z_error')
         self.append_data(_calc_sensitivity(), 'Z_sensitivity')
-        self.append_data(config.Z_BIAS, 'Z_bias')
+        self.append_data(1, 'Z_bias')
 
     def add_meta(self):
         """Copies misc. metadata from the input file."""
@@ -312,8 +312,8 @@ class Lidar(ProfileDataSource):
     def add_meta(self):
         """Copies misc. metadata from the input file."""
         self.append_data(self.wavelength, 'lidar_wavelength')
-        self.append_data(config.BETA_ERROR[0], 'beta_bias')
-        self.append_data(config.BETA_ERROR[1], 'beta_error')
+        self.append_data(0.5, 'beta_error')
+        self.append_data(3, 'beta_bias')
 
 
 class Mwr(DataSource):
@@ -335,7 +335,7 @@ class Mwr(DataSource):
             print(error)
 
     def _init_lwp_error(self):
-        fractional_error, linear_error = config.LWP_ERROR
+        fractional_error, linear_error = (0.25, 20)
         lwp_error = utils.l2norm(self.data['lwp'][:]*fractional_error,
                                  linear_error)
         self.append_data(lwp_error, 'lwp_error')
@@ -530,6 +530,8 @@ def _save_cat(file_name, radar, lidar, model, obs):
     rootgrp = output.init_file(file_name, dims, obs, zlib=True)
     output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
     rootgrp.title = f"Categorize file from {radar.location}"
+    # Needs to solve how to provide institution
+    # rootgrp.institution = f"Data processed at {config.INSTITUTE}"
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
     output.merge_history(rootgrp, 'categorize', radar)
     _merge_source(rootgrp, radar, lidar)

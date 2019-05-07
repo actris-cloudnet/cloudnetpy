@@ -7,6 +7,7 @@ from cloudnetpy.categorize import DataSource
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification
 from cloudnetpy.plotting import plot_2d
+from scipy.special import gamma
 
 
 def generate_drizzle(categorize_file, output_file):
@@ -75,3 +76,19 @@ def estimate_turb_sigma(cat_file):
     b = (30 * wind + beam_divergence) ** power
     sigma_t = a * v_sigma / (b - a)
     return width - sigma_t ** 2
+
+
+def calc_s(p, q, const, mu, beta, k):
+    """ Help function for gamma-calculations """
+    a = gamma(mu + p) / gamma(mu + (p - q))
+    b = 1 / ((mu + 3.67) ** q)
+    c = const * beta * k
+    return a * b * c
+
+
+def calc_dia(z, beta, mu, ray, k):
+    """ Drizzle diameter calculation """
+    p, q = 7, 3
+    const = 2 / np.pi * ray / z
+    s = calc_s(p, q, const, mu, beta, k)
+    return (1 / s) ** (1 / (p - q))
