@@ -19,22 +19,16 @@ class LwcSource(DataSource):
     """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
-        self.atmosphere = self._get_atmosphere()
+        self.atmosphere = self._get_atmosphere(categorize_file)
         self.lwp = self.getvar('lwp')
         self.dheight = utils.mdiff(self.getvar('height'))
         self.is_rain = self.getvar('is_rain')
         self.categorize_bits = CategorizeBits(categorize_file)
 
-    def _get_atmosphere(self):
-        return (self._interpolate_model_field('temperature'),
-                self._interpolate_model_field('pressure'))
-
-    def _interpolate_model_field(self, variable_name):
-        """Interpolates 2D model field into Cloudnet grid."""
-        return utils.interpolate_2d(self.getvar('model_time'),
-                                    self.getvar('model_height'),
-                                    self.getvar(variable_name),
-                                    self.time, self.getvar('height'))
+    @staticmethod
+    def _get_atmosphere(categorize_file):
+        return (p_tools.interpolate_model_field(categorize_file, 'temperature'),
+                p_tools.interpolate_model_field(categorize_file, 'pressure'))
 
 
 class Lwc:
@@ -188,7 +182,17 @@ def find_topmost_clouds(is_cloud):
 
 
 def generate_lwc(categorize_file, output_file):
-    """High level API to generate Cloudnet liquid water content file."""
+    """High level API to generate Cloudnet liquid water content product.
+
+    Args:
+        categorize_file (str): Categorize file name.
+        output_file (str): Output file name.
+
+    Examples:
+        >>> from cloudnetpy.products.lwc import generate_lwc
+        >>> generate_lwc('categorize.nc', 'lwc.nc')
+
+    """
     lwc_source = LwcSource(categorize_file)
     lwc_obj = Lwc(lwc_source)
     lwc_obj.adjust_clouds_to_match_lwp()

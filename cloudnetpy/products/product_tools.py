@@ -50,3 +50,19 @@ def read_nc_fields(nc_file, field_names):
     """Reads selected variables from a netCDF file and returns as a list."""
     nc_variables = netCDF4.Dataset(nc_file).variables
     return [nc_variables[name][:] for name in field_names]
+
+
+def interpolate_model_field(categorize_file, variable_name):
+    """Interpolates 2D model field into dense Cloudnet grid.
+
+    Args:
+        categorize_file (str): Categorize file name.
+        variable_name (str): Model variable to be interpolated, e.g. 'temperature'.
+
+    Returns:
+        ndarray: 2D model field interpolated to dense Cloudnet grid.
+
+    """
+    data = read_nc_fields(categorize_file, ['model_time', 'model_height',
+                                            variable_name, 'time', 'height'])
+    return utils.interpolate_2d(*data)
