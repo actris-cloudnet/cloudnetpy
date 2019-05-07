@@ -260,6 +260,41 @@ NetCDF file with information of classification and measurements.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="visualizing-results">
+<h2>Visualizing results<a class="headerlink" href="#visualizing-results" title="Permalink to this headline">¶</a></h2>
+<p>CloudnetPy offers easy-to-use plotting interface.</p>
+<dl class="function">
+<dt id="plotting.generate_figure">
+<code class="descclassname">plotting.</code><code class="descname">generate_figure</code><span class="sig-paren">(</span><em>nc_file</em>, <em>field_names</em>, <em>show=True</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting.html#generate_figure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.generate_figure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a Cloudnet figure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nc_file</strong> (<em>str</em>) – Input file.</li>
+<li><strong>field_names</strong> (<em>list</em>) – Variable names to be plotted.</li>
+<li><strong>show</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, shows the figure. Default is True.</li>
+<li><strong>save_path</strong> (<em>str</em><em>, </em><em>optional</em>) – Setting this path will save the figure (in the
+given path). Default is None, when the figure is not saved.</li>
+<li><strong>max_y</strong> (<em>int</em><em>, </em><em>optional</em>) – Upper limit in the plots (km). Default is 12.</li>
+<li><strong>dpi</strong> (<em>int</em><em>, </em><em>optional</em>) – Figure quality (if saved). Higher value means
+more pixels, i.e., better image quality. Default is 200.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.plotting</span> <span class="k">import</span> <span class="n">generate_figure</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;categorize_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;categorize_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;droplet&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;lwc_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;lwc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc_error&#39;</span><span class="p">],</span> <span class="n">max_y</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
 </div>
 <div class="section" id="cloudnetpy-modules">
 <h1>Cloudnetpy modules<a class="headerlink" href="#cloudnetpy-modules" title="Permalink to this headline">¶</a></h1>
@@ -1682,6 +1717,7 @@ methods for holding the results.</p>
 <li><a class="reference internal" href="#">High-level APIs</a><ul>
 <li><a class="reference internal" href="#raw-data-to-categorize">Raw data to categorize</a></li>
 <li><a class="reference internal" href="#categorize-to-products">Categorize to products</a></li>
+<li><a class="reference internal" href="#visualizing-results">Visualizing results</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#cloudnetpy-modules">Cloudnetpy modules</a><ul>

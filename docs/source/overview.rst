@@ -6,8 +6,8 @@ Cloudnet processing produces vertical profiles of cloud properties from ground-b
 Cloud radar, optical lidar, microwave radiometer and model data are combined in order to characterize
 clouds up to 15 km with high temporal and vertical resolution.
 
-.. figure:: _static/example_data.jpg
-	   :width: 400 px
+.. figure:: _static/example_data.png
+	   :width: 500 px
 	   :align: center
 
            Example measurements.

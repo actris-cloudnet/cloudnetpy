@@ -40,6 +40,14 @@ generated.
 .. autofunction:: products.lwc.generate_lwc
 
 
+Visualizing results
+-------------------
+
+CloudnetPy offers easy-to-use plotting interface.
+
+.. autofunction:: plotting.generate_figure
+
+
 Cloudnetpy modules
 ==================
 
