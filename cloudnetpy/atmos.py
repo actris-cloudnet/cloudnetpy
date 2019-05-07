@@ -3,6 +3,7 @@ various atmospheric parameters.
 """
 import numpy as np
 import numpy.ma as ma
+import scipy.constants
 from cloudnetpy import constants as con
 from cloudnetpy import utils
 
@@ -51,7 +52,7 @@ def calc_lwc_change_rate(temperature, pressure):
                                * air_density / pressure_difference))
     f3 = con.mw_ratio * svp * pressure_difference**-2
     dqs_dp = f1 * f2 * f3
-    dqs_dz = dqs_dp * air_density**2 * con.g
+    dqs_dz = dqs_dp * air_density**2 * -scipy.constants.g
     return dqs_dz * KG_TO_G
 
 
