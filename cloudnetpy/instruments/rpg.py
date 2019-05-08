@@ -4,8 +4,8 @@ from datetime import datetime
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy import utils, output
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 
@@ -275,7 +275,7 @@ def rpg2nc(path_to_l1_files, output_file, site_properties):
             'name'.
 
     Examples:
-        >>> from cloudnetpy.rpg import rpg2nc
+        >>> from cloudnetpy.instruments.rpg import rpg2nc
         >>> site_properties = {'name': 'Hyytiala', 'altitude': 174}
         >>> rpg2nc('/path/to/files/', 'test.nc', site_properties)
 

@@ -3,10 +3,10 @@ import linecache
 import numpy as np
 import numpy.ma as ma
 import scipy.ndimage
+import netCDF4
 from cloudnetpy import utils, output
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.metadata import MetaData
-import netCDF4
 
 
 M2KM = 0.001
@@ -444,7 +444,7 @@ def ceilo2nc(input_file, output_file, location='unknown', altitude=0):
 
 
     Examples:
-        >>> from cloudnetpy.ceilo import ceilo2nc
+        >>> from cloudnetpy.instruments.ceilo import ceilo2nc
         >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc')
         >>> ceilo2nc('jenoptik_raw.nc', 'jenoptik.nc')
 

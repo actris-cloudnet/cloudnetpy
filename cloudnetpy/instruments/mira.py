@@ -90,7 +90,7 @@ def mira2nc(mmclx_file, output_file, site_properties, rebin_data=False):
             Otherwise keeps the native resolution. Default is False.
 
     Examples:
-          >>> from cloudnetpy.mira import mira2nc
+          >>> from cloudnetpy.instruments.mira import mira2nc
           >>> site_properties = {'name': 'Vehmasmaki'}
           >>> mira2nc('raw_radar.mmclx', 'radar.nc', site_properties)
 
