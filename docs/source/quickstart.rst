@@ -33,14 +33,14 @@ Cloudnet netCDF file that can be used in further processing steps.
 
 .. code-block:: python
 
-    from cloudnetpy.mira import mira2nc
+    from cloudnetpy.instruments.mira import mira2nc
     mira2nc('raw_radar.mmclx', 'radar.nc', {'name': 'Mace-Head'})
 
 Next we convert a raw Vaisala ceilometer text file into netCDF.
 
 .. code-block:: python
 
-    from cloudnetpy.ceilo import ceilo2nc
+    from cloudnetpy.instruments.ceilo import ceilo2nc
     ceilo2nc('vaisala.txt', 'vaisala.nc', location='Kumpula', altitude=53)
 
 In the next example we create a categorize file from already

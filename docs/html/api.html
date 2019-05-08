@@ -56,8 +56,8 @@ from one software version to another.</p>
 be first converted into netCDF with standardized metadata. After that,
 the data can be combined in a single categorize file.</p>
 <dl class="function">
-<dt id="mira.mira2nc">
-<code class="descclassname">mira.</code><code class="descname">mira2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_properties</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mira.html#mira2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mira.mira2nc" title="Permalink to this definition">¶</a></dt>
+<dt id="instruments.mira.mira2nc">
+<code class="descclassname">instruments.mira.</code><code class="descname">mira2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_properties</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/mira.html#mira2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.mira.mira2nc" title="Permalink to this definition">¶</a></dt>
 <dd><p>High-level API to convert Mira cloud radar Level 1 file into NetCDF file.</p>
 <p>This function converts raw cloud radar file into a much smaller file that
 contains only the relevant data and can be used in further processing steps.</p>
@@ -78,7 +78,7 @@ Otherwise keeps the native resolution. Default is False.</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.mira</span> <span class="k">import</span> <span class="n">mira2nc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments.mira</span> <span class="k">import</span> <span class="n">mira2nc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">site_properties</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Vehmasmaki&#39;</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mira2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="n">site_properties</span><span class="p">)</span>
 </pre></div>
@@ -86,8 +86,8 @@ Otherwise keeps the native resolution. Default is False.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="rpg.rpg2nc">
-<code class="descclassname">rpg.</code><code class="descname">rpg2nc</code><span class="sig-paren">(</span><em>path_to_l1_files</em>, <em>output_file</em>, <em>site_properties</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rpg.html#rpg2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rpg.rpg2nc" title="Permalink to this definition">¶</a></dt>
+<dt id="instruments.rpg.rpg2nc">
+<code class="descclassname">instruments.rpg.</code><code class="descname">rpg2nc</code><span class="sig-paren">(</span><em>path_to_l1_files</em>, <em>output_file</em>, <em>site_properties</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/rpg.html#rpg2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.rpg.rpg2nc" title="Permalink to this definition">¶</a></dt>
 <dd><p>High-level API to convert RPG cloud radar binary files into NetCDF file.</p>
 <p>This function reads one day of RPG Level 1 cloud radar binary files,
 concatenates the data and writes it into NetCDF file.</p>
@@ -107,7 +107,7 @@ site. Required key value pairs are ‘altitude’ (in metres) and
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.rpg</span> <span class="k">import</span> <span class="n">rpg2nc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments.rpg</span> <span class="k">import</span> <span class="n">rpg2nc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">site_properties</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Hyytiala&#39;</span><span class="p">,</span> <span class="s1">&#39;altitude&#39;</span><span class="p">:</span> <span class="mi">174</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rpg2nc</span><span class="p">(</span><span class="s1">&#39;/path/to/files/&#39;</span><span class="p">,</span> <span class="s1">&#39;test.nc&#39;</span><span class="p">,</span> <span class="n">site_properties</span><span class="p">)</span>
 </pre></div>
@@ -115,8 +115,8 @@ site. Required key value pairs are ‘altitude’ (in metres) and
 </dd></dl>
 
 <dl class="function">
-<dt id="ceilo.ceilo2nc">
-<code class="descclassname">ceilo.</code><code class="descname">ceilo2nc</code><span class="sig-paren">(</span><em>input_file</em>, <em>output_file</em>, <em>location='unknown'</em>, <em>altitude=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ceilo.html#ceilo2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ceilo.ceilo2nc" title="Permalink to this definition">¶</a></dt>
+<dt id="instruments.ceilo.ceilo2nc">
+<code class="descclassname">instruments.ceilo.</code><code class="descname">ceilo2nc</code><span class="sig-paren">(</span><em>input_file</em>, <em>output_file</em>, <em>location='unknown'</em>, <em>altitude=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/ceilo.html#ceilo2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.ceilo.ceilo2nc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts Vaisala and Jenoptik raw files into netCDF.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -136,7 +136,7 @@ mean sea level (m). Default is 0.</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.ceilo</span> <span class="k">import</span> <span class="n">ceilo2nc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments.ceilo</span> <span class="k">import</span> <span class="n">ceilo2nc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ceilo2nc</span><span class="p">(</span><span class="s1">&#39;vaisala_raw.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;vaisala.nc&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ceilo2nc</span><span class="p">(</span><span class="s1">&#39;jenoptik_raw.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;jenoptik.nc&#39;</span><span class="p">)</span>
 </pre></div>
