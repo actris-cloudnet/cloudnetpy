@@ -297,9 +297,9 @@ ATTRIBUTES = {
     ),
     'lwc_error': PlotMeta(
         name='Liquid water content error',
-        cbar='viridis',
-        clabel=_DB,
-        plot_range=(0, 2),
+        cbar='RdYlGn_r',
+        clabel=_KGM2,
+        plot_range=(1e-5, 1e-3),
         plot_scale=_LIN,
         plot_type='mesh'
     ),

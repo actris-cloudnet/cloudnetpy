@@ -331,10 +331,9 @@ class Mwr(DataSource):
         self._unknown_to_cloudnet(('LWP_data', 'lwp'), 'lwp')
 
     def _init_lwp_error(self):
-        fractional_error, linear_error = 0.25, 20
-        lwp_error = utils.l2norm(self.data['lwp'][:]*fractional_error,
-                                 linear_error)
-        self.append_data(lwp_error, 'lwp_error', 'g m-2')
+        random_error, bias = 0.25, 5
+        lwp_error = utils.l2norm(self.data['lwp'][:]*random_error, bias)
+        self.append_data(lwp_error, 'lwp_error', units='g m-2')
 
     def rebin_to_grid(self, time_grid):
         """Rebinning of lwp and its error."""

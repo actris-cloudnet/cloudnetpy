@@ -20,6 +20,7 @@ class LwcSource(DataSource):
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.lwp = self.getvar('lwp')
+        self.lwp_error = self.getvar('lwp_error')
         self.is_rain = self.getvar('is_rain')
         self.dheight = utils.mdiff(self.getvar('height'))
         self.atmosphere = self._get_atmosphere(categorize_file)
@@ -41,6 +42,19 @@ class Lwc:
         self.lwc_adiabatic = self._init_lwc_adiabatic()
         self.lwc = self._adiabatic_lwc_to_lwc()
         self.status = self._init_status()
+        self.lwc_error = self._calc_lwc_error()
+
+    def _calc_lwc_error(self):
+        """Estimates error in liquid water content."""
+        lwc_error = np.zeros_like(self.lwc)
+        lwp_relative_error = self.lwc_source.lwp_error / self.lwc_source.lwp
+        #lwp_relative_error[(lwp_relative_error < 0) | (lwp_relative_error > 10)] = 10  # not sure about this
+        ind = np.where(self.lwc)
+        lwc_gradient = np.gradient(self.lwc[ind])
+        lwc_error[ind] = lwc_gradient ** 2
+        lwc_error = lwc_error + utils.transpose(lwp_relative_error) ** 2
+        lwc_error[self.lwc == 0] = ma.masked
+        return ma.sqrt(lwc_error)
 
     def _get_echo(self):
         quality_bits = self.lwc_source.categorize_bits.quality_bits
@@ -204,6 +218,7 @@ def generate_lwc(categorize_file, output_file):
 
 def _append_data(lwc_data, lwc_obj):
     lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc', units='kg m-3')
+    lwc_data.append_data(lwc_obj.lwc_error * G_TO_KG, 'lwc_error', units='kg m-3')
     lwc_data.append_data(lwc_obj.status, 'lwc_retrieval_status')
 
 

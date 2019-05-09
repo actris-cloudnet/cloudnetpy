@@ -65,6 +65,7 @@ class CloudnetArray:
         self.data = utils.rebin_2d(time, self.data.astype(float), time_new, 'std')
 
     def rebin_1d_data(self, time, time_new):
+        """Rebins 1D array in time."""
         self.data = utils.rebin_1d(time, self.data.astype(float), time_new)
 
     def rebin_in_polar(self, time, time_new, folding_velocity,
