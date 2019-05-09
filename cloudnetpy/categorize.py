@@ -328,24 +328,18 @@ class Mwr(DataSource):
         self._init_lwp_error()
 
     def _init_lwp_data(self):
-        try:
-            self._unknown_to_cloudnet(('LWP_data', 'lwp'), 'lwp')
-        except KeyError as error:
-            print(error)
+        self._unknown_to_cloudnet(('LWP_data', 'lwp'), 'lwp')
 
     def _init_lwp_error(self):
-        fractional_error, linear_error = (0.25, 20)
+        fractional_error, linear_error = 0.25, 20
         lwp_error = utils.l2norm(self.data['lwp'][:]*fractional_error,
                                  linear_error)
-        self.append_data(lwp_error, 'lwp_error')
+        self.append_data(lwp_error, 'lwp_error', 'g m-2')
 
-    def interpolate_in_time(self, time_grid):
-        """Interpolates liquid water path and its error to Cloudnet's dense time grid.
-        This is wrong. We need to use binning instead.
-        """
+    def rebin_to_grid(self, time_grid):
+        """Rebinning of lwp and its error."""
         for key in self.data:
-            fun = interp1d(self.time, self.data[key][:], fill_value='extrapolate')
-            self.append_data(fun(time_grid), key, units='g m-2')
+            self.data[key].rebin_1d_data(self.time, time_grid)
 
 
 class Model(DataSource):
@@ -485,7 +479,7 @@ def generate_categorize(input_files, output_file):
         """ Interpolate variables to Cloudnet's dense grid."""
         model.interpolate_to_common_height(radar.wl_band)
         model.interpolate_to_grid(time, height)
-        mwr.interpolate_in_time(time)
+        mwr.rebin_to_grid(time)
         radar.rebin_to_grid(time)
         lidar.rebin_to_grid(time, height)
 

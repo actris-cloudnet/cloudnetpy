@@ -19,10 +19,10 @@ class LwcSource(DataSource):
     """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
-        self.atmosphere = self._get_atmosphere(categorize_file)
         self.lwp = self.getvar('lwp')
-        self.dheight = utils.mdiff(self.getvar('height'))
         self.is_rain = self.getvar('is_rain')
+        self.dheight = utils.mdiff(self.getvar('height'))
+        self.atmosphere = self._get_atmosphere(categorize_file)
         self.categorize_bits = CategorizeBits(categorize_file)
 
     @staticmethod

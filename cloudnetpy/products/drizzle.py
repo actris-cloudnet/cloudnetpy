@@ -92,3 +92,60 @@ def calc_dia(z, beta, mu, ray, k):
     const = 2 / np.pi * ray / z
     s = calc_s(p, q, const, mu, beta, k)
     return (1 / s) ** (1 / (p - q))
+
+
+def drizzle_solve(mie, vrs, width_ht, is35, dind, ntime, nalt):
+
+    THRESHOLD = 1e-3
+
+    Z = 10 ** ((vrs['Z'][:] - 180) / 10)
+
+    beta = vrs['beta'][:]
+
+    dz = np.median(np.diff(vrs['height'][:]))
+
+    lu_medianD = mie['lu_medianD'][:]
+    lu_u = mie['lu_u'][:]
+    lu_k = mie['lu_k'][:]
+    if is35:
+        lu_width = mie['lu_width_35'][:]
+        lu_ray = mie['lu_mie_ray_35'][:]
+    else:
+        lu_width = mie['lu_width_94'][:]
+        lu_ray = mie['lu_mie_ray'][:]
+
+    k = np.full((ntime, nalt), np.nan)
+    mu = np.full((ntime, nalt), np.nan)
+    mie_ray = np.full((ntime, nalt), np.nan)
+    medianD = np.zeros((ntime, nalt))
+    old_medianD = np.zeros((ntime, nalt))
+    tab_mu = np.zeros((ntime, nalt))
+    tab_oor = np.zeros((ntime, nalt))
+    beta_corr = np.ones((ntime, nalt))
+    tab_mie_ray = np.ones((ntime, nalt))
+    init_k = 18.8
+    tab_k = np.full((ntime, nalt), init_k)
+    old_medianD[dind] = calc_dia(Z[dind], beta[dind] * init_k, 0.0, 1.0, 1.0)
+
+    maxite = 10
+    for i, j in zip(*dind):
+        oldD = old_medianD[i, j]
+        converged = False
+        nite = 1
+        while (not converged) and (nite < maxite):
+            indD = nearest(lu_medianD, oldD)
+            indmu = nearest(lu_width[:, indD], width_ht[i, j])
+            tab_mu[i, j] = lu_u[indmu]
+            tab_k[i, j] = lu_k[indmu, indD]
+            tab_mie_ray[i, j] = lu_ray[indmu, indD]
+            loopD = calc_dia(Z[i, j], beta[i, j], tab_mu[i, j], tab_mie_ray[i, j], tab_k[i, j])
+            if (abs(loopD - oldD) < THRESHOLD):
+                medianD[i, j] = loopD
+                converged = True
+            else:
+                oldD = loopD
+                nite = nite + 1
+
+        beta_corr[i, (j + 1):] = beta_corr[i, (j + 1)] * np.exp(2 * tab_k[i, j] * beta[i, j] * dz)
+
+    return (medianD, tab_mu, tab_k, tab_mie_ray, beta_corr)
