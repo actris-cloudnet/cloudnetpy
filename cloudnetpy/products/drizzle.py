@@ -1,7 +1,9 @@
 """Module for creating Cloudnet drizzle product.
 """
+import os
 import numpy as np
 import numpy.ma as ma
+import netCDF4
 from cloudnetpy import utils
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.products import product_tools as p_tools
@@ -11,7 +13,7 @@ from scipy.special import gamma
 
 
 def generate_drizzle(categorize_file, output_file):
-    drizze_data = DrizzleSource(categorize_file)
+    drizzle_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
     width_ht = estimate_turb_sigma(categorize_file)
 
@@ -19,8 +21,31 @@ def generate_drizzle(categorize_file, output_file):
 class DrizzleSource(DataSource):
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
-        self.radar_frequency = self.getvar('radar_frequency')
-        self.wl_band = utils.get_wl_band(self.radar_frequency)
+        self.mie = self._read_mie_data()
+        print(self.mie)
+
+    def _read_mie_data(self):
+        """Reads mie scattering look-up table."""
+        mie_file = self._get_mie_file()
+        mie = netCDF4.Dataset(mie_file).variables
+        lut = {'diameter': mie['lu_medianD'][:],
+               'u': mie['lu_u'][:],
+               'k': mie['lu_k'][:]}
+        band = self._get_wl_band()
+        lut.update({'width': mie[f"lu_width_{band}"],
+                    'ray': mie[f"lu_mie_ray_{band}"]})
+        return lut
+
+    @staticmethod
+    def _get_mie_file():
+        module_path = os.path.dirname(os.path.abspath(__file__))
+        return '/'.join((module_path, 'mie_lu_tables.nc'))
+
+    def _get_wl_band(self):
+        """Returns string corresponding the radar frequency."""
+        radar_frequency = self.getvar('radar_frequency')
+        wl_band = utils.get_wl_band(radar_frequency)
+        return '35' if wl_band == 0 else '94'
 
 
 class DrizzleClassification(ProductClassification):
@@ -94,7 +119,7 @@ def calc_dia(z, beta, mu, ray, k):
     return (1 / s) ** (1 / (p - q))
 
 
-def drizzle_solve(mie, vrs, width_ht, is35, dind, ntime, nalt):
+def drizzle_solve(mie, width_ht):
 
     THRESHOLD = 1e-3
 
