@@ -45,16 +45,16 @@ class Lwc:
         self.lwc_error = self._calc_lwc_error()
 
     def _calc_lwc_error(self):
-        """Estimates error in liquid water content."""
+        """Estimates error in liquid water content.
+        """
         lwc_error = np.zeros_like(self.lwc)
         lwp_relative_error = self.lwc_source.lwp_error / self.lwc_source.lwp
-        #lwp_relative_error[(lwp_relative_error < 0) | (lwp_relative_error > 10)] = 10  # not sure about this
-        ind = np.where(self.lwc)
-        lwc_gradient = np.gradient(self.lwc[ind])
-        lwc_error[ind] = lwc_gradient ** 2
-        lwc_error = lwc_error + utils.transpose(lwp_relative_error) ** 2
-        lwc_error[self.lwc == 0] = ma.masked
-        return ma.sqrt(lwc_error)
+        ind = ma.where(self.lwc)
+        lwc_gradient = utils.l2norm(*np.gradient(self.lwc))
+        combined_error = utils.l2norm(lwc_gradient, utils.transpose(lwp_relative_error))
+        lwc_error[ind] = combined_error[ind]
+        lwc_error[lwc_error == 0] = ma.masked
+        return lwc_error
 
     def _get_echo(self):
         quality_bits = self.lwc_source.categorize_bits.quality_bits
@@ -266,15 +266,7 @@ COMMENTS = {
     'lwc_error':
         ('This variable is an estimate of the random error in liquid water content\n'
          'due to the uncertainty in the microwave radiometer liquid water path\n'
-         'retrieval and the uncertainty in cloud base and/or cloud top height.\n'
-         'This is associated with the resolution of the grid used, 20 m,\n'
-         'which can affect both cloud base and cloud top. If the liquid layer is\n'
-         'detected by the lidar only, there is the potential for cloud top height\n'
-         'to be underestimated. Similarly, there is the possibility that the lidar\n'
-         'may not detect the second cloud base when multiple layers are present and\n'
-         'the cloud base will be overestimated. It is assumed that the error\n'
-         'contribution arising from using the model temperature and pressure at\n'
-         'cloud base is negligible.'),
+         'retrieval and the uncertainty in cloud base and/or cloud top height.'),
 
     'lwc_retrieval_status':
         ('This variable describes whether a retrieval was performed for each pixel,\n'
