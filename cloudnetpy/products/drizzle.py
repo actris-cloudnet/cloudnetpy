@@ -16,13 +16,21 @@ def generate_drizzle(categorize_file, output_file):
     drizzle_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
     width_ht = estimate_turb_sigma(categorize_file)
+    results = drizzle_solve(drizzle_data, drizzle_class, width_ht)
 
 
 class DrizzleSource(DataSource):
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.mie = self._read_mie_data()
-        print(self.mie)
+        self.dheight = utils.mdiff(self.getvar('height'))
+        self.z = self._get_z()
+        self.beta = self.getvar('beta')
+
+    def _get_z(self):
+        """Converts reflectivity factor to linear space."""
+        z = self.getvar('Z') - 180  # what's this 180 ?
+        return utils.db2lin(z)
 
     def _read_mie_data(self):
         """Reads mie scattering look-up table."""
@@ -91,11 +99,11 @@ class DrizzleClassification(ProductClassification):
 
 def estimate_turb_sigma(cat_file):
     """Not really sure what this function returns."""
-    beamwidth = 0.5
+    beam_width = 0.5
     width, v_sigma, height = p_tools.read_nc_fields(cat_file, ['width', 'v_sigma', 'height'])
-    uwind, vwind = p_tools.interpolate_model(cat_file, ['uwind', 'vwind'])
-    wind = utils.l2norm(uwind, vwind)
-    beam_divergence = height * np.deg2rad(beamwidth)
+    u_wind, v_wind = p_tools.interpolate_model(cat_file, ['uwind', 'vwind'])
+    wind = utils.l2norm(u_wind, v_wind)
+    beam_divergence = height * np.deg2rad(beam_width)
     power = 2 / 3
     a = (wind + beam_divergence) ** power
     b = (30 * wind + beam_divergence) ** power
@@ -119,58 +127,57 @@ def calc_dia(z, beta, mu, ray, k):
     return (1 / s) ** (1 / (p - q))
 
 
-def drizzle_solve(mie, width_ht):
+def drizzle_solve(data, drizzle_class, width_ht):
+    """Estimates drizzle parameters.
 
-    THRESHOLD = 1e-3
+    Args:
+        data (DrizzleSource): Input data.
+        drizzle_class (DrizzleClassification): Classification of the atmosphere
+            for drizzle calculations.
+        width_ht (ndarray): 2D array of turbulence.
 
-    Z = 10 ** ((vrs['Z'][:] - 180) / 10)
-
-    beta = vrs['beta'][:]
-
-    dz = np.median(np.diff(vrs['height'][:]))
-
-    lu_medianD = mie['lu_medianD'][:]
-    lu_u = mie['lu_u'][:]
-    lu_k = mie['lu_k'][:]
-    if is35:
-        lu_width = mie['lu_width_35'][:]
-        lu_ray = mie['lu_mie_ray_35'][:]
-    else:
-        lu_width = mie['lu_width_94'][:]
-        lu_ray = mie['lu_mie_ray'][:]
-
-    k = np.full((ntime, nalt), np.nan)
-    mu = np.full((ntime, nalt), np.nan)
-    mie_ray = np.full((ntime, nalt), np.nan)
-    medianD = np.zeros((ntime, nalt))
-    old_medianD = np.zeros((ntime, nalt))
-    tab_mu = np.zeros((ntime, nalt))
-    tab_oor = np.zeros((ntime, nalt))
-    beta_corr = np.ones((ntime, nalt))
-    tab_mie_ray = np.ones((ntime, nalt))
+    """
+    shape = data.z.shape
+    diameter, diameter_old, tab_mu = utils.init(3, shape)
+    beta_corr = np.ones(shape)
+    tab_mie_ray = np.ones(shape)
     init_k = 18.8
-    tab_k = np.full((ntime, nalt), init_k)
-    old_medianD[dind] = calc_dia(Z[dind], beta[dind] * init_k, 0.0, 1.0, 1.0)
+    tab_k = np.full(shape, init_k)
+    drizzle_ind = np.where(drizzle_class.drizzle)
+    diameter_old[drizzle_ind] = calc_dia(data.z[drizzle_ind],
+                                         data.beta[drizzle_ind]*init_k,
+                                         0, 1, 1)
+    threshold = 1e-3
+    max_ite = 10
+    for i, j in zip(*drizzle_ind):
 
-    maxite = 10
-    for i, j in zip(*dind):
-        oldD = old_medianD[i, j]
+        old_dia = diameter_old[i, j]
         converged = False
-        nite = 1
-        while (not converged) and (nite < maxite):
-            indD = nearest(lu_medianD, oldD)
-            indmu = nearest(lu_width[:, indD], width_ht[i, j])
-            tab_mu[i, j] = lu_u[indmu]
-            tab_k[i, j] = lu_k[indmu, indD]
-            tab_mie_ray[i, j] = lu_ray[indmu, indD]
-            loopD = calc_dia(Z[i, j], beta[i, j], tab_mu[i, j], tab_mie_ray[i, j], tab_k[i, j])
-            if (abs(loopD - oldD) < THRESHOLD):
-                medianD[i, j] = loopD
+        n_ite = 1
+        while not converged and n_ite < max_ite:
+
+            dia_ind = utils.nearest(data.mie['diameter'], old_dia)
+            mu_ind = utils.nearest(data.mie['width'][:, dia_ind], width_ht[i, j])
+
+            tab_mu[i, j] = data.mie['u'][mu_ind]
+            tab_k[i, j] = data.mie['k'][mu_ind, dia_ind]
+            tab_mie_ray[i, j] = data.mie['ray'][mu_ind, dia_ind]
+
+            loop_dia = calc_dia(data.z[i, j],
+                                data.beta[i, j],
+                                tab_mu[i, j],
+                                tab_mie_ray[i, j],
+                                tab_k[i, j])
+
+            if abs(loop_dia - old_dia) < threshold:
+                diameter[i, j] = loop_dia
                 converged = True
             else:
-                oldD = loopD
-                nite = nite + 1
+                old_dia = loop_dia
+                n_ite += 1
 
-        beta_corr[i, (j + 1):] = beta_corr[i, (j + 1)] * np.exp(2 * tab_k[i, j] * beta[i, j] * dz)
+        beta_factor = np.exp(2*tab_k[i, j]*data.beta[i, j]*data.dheight)
+        beta_corr[i, (j+1):] *= beta_factor
 
-    return (medianD, tab_mu, tab_k, tab_mie_ray, beta_corr)
+    return diameter, tab_mu, tab_k, tab_mie_ray, beta_corr
+

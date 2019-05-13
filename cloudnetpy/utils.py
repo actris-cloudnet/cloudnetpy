@@ -422,3 +422,8 @@ def get_wl_band(radar_frequency):
 def transpose(x):
     """Transposes numpy array of (n, ) to (n, 1)."""
     return x[:, np.newaxis]
+
+
+def nearest(array, value):
+    """ Find the nearest index of a value in an array """
+    return (np.abs(array-value)).argmin()
