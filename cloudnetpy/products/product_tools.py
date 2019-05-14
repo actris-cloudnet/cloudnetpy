@@ -46,34 +46,31 @@ def get_source(data_handler):
     return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
 
 
-def read_nc_fields(nc_file, variable_names):
-    """Reads selected variables from a netCDF file and returns as a list."""
-    if isinstance(variable_names, str):
-        variable_names = [variable_names]
+def read_nc_fields(nc_file, names):
+    """Reads selected variables from a netCDF file."""
+    names = [names] if isinstance(names, str) else names
     nc_variables = netCDF4.Dataset(nc_file).variables
-    data = [nc_variables[name][:] for name in variable_names]
-    return data[0] if len(variable_names) == 1 else data
+    data = [nc_variables[name][:] for name in names]
+    return data[0] if len(data) == 1 else data
 
 
-def interpolate_model(cat_file, variable_names):
+def interpolate_model(cat_file, names):
     """Interpolates 2D model field into dense Cloudnet grid.
 
     Args:
         cat_file (str): Categorize file name.
-        variable_names (str / list): Model variable to be interpolated, e.g.
+        names (str / list): Model variable to be interpolated, e.g.
             'temperature' or ['temperature', 'pressure'].
 
     Returns:
         ndarray: 2D model field interpolated to dense Cloudnet grid.
 
     """
-    if isinstance(variable_names, str):
-        variable_names = [variable_names]
-    data = [_interp_model_field(cat_file, name) for name in variable_names]
-    return data[0] if len(variable_names) == 1 else data
+    def _interp_field(var_name):
+        values = read_nc_fields(cat_file, ['model_time', 'model_height',
+                                           var_name, 'time', 'height'])
+        return utils.interpolate_2d(*values)
 
-
-def _interp_model_field(categorize_file, variable_name):
-    data = read_nc_fields(categorize_file, ['model_time', 'model_height',
-                                            variable_name, 'time', 'height'])
-    return utils.interpolate_2d(*data)
+    names = [names] if isinstance(names, str) else names
+    data = [_interp_field(name) for name in names]
+    return data[0] if len(data) == 1 else data
