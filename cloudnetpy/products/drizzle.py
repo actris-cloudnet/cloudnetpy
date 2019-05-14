@@ -102,6 +102,13 @@ def correct_spectral_width(cat_file):
     Removes the effect of turbulence and horizontal wind that cause
     spectral broadening of the Doppler velocity.
 
+    Args:
+        cat_file (str): Categorize file name.
+
+    Returns:
+        ndarray: Spectral width containing the correction for turbulence
+            broadening.
+
     """
     def _calc_beam_divergence():
         beam_width = 0.5
@@ -121,22 +128,21 @@ def correct_spectral_width(cat_file):
 
 
 def calc_horizontal_wind(cat_file):
-    """Calculates magnitude of horizontal wind."""
+    """Calculates magnitude of horizontal wind.
+
+    Args:
+        cat_file: Categorize file name.
+
+    Returns:
+        ndarray: Horizontal wind (m s-1).
+
+    """
     u_wind, v_wind = p_tools.interpolate_model(cat_file, ['uwind', 'vwind'])
     return utils.l2norm(u_wind, v_wind)
 
 
-def calc_s(p, q, const, mu, beta, k):
-    """ Help function for gamma-calculations """
-
-    a = gamma(mu + p) / gamma(mu + (p - q))
-    b = 1 / ((mu + 3.67) ** q)
-    c = const * beta * k
-    return a * b * c
-
-
 def calc_dia(z, beta, mu, ray, k):
-    """ Drizzle diameter calculation
+    """ Drizzle diameter calculation.
 
     Args:
         z (ndarray): Radar reflectivity factor in linear units.
@@ -145,11 +151,13 @@ def calc_dia(z, beta, mu, ray, k):
         ray (ndarray): Mie to Rayleigh ratio for z.
         k (ndarray): Unknown parameter.
 
+    References:
+        https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
+
     """
-    p, q = 7, 3
-    const = 2 / np.pi * ray / z
-    s = calc_s(p, q, const, mu, beta, k)
-    return (1 / s) ** (1 / (p - q))
+    const = 2 / np.pi * ray * k * beta / z
+    s = gamma(7 + mu) / gamma(3 + mu) / ((3.67 + mu) ** 4) * const
+    return (1/s) ** (1/4)
 
 
 def drizzle_solve(data, drizzle_class, width_ht):
