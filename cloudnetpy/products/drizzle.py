@@ -10,6 +10,8 @@ from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification
 from cloudnetpy.plotting import plot_2d
 from scipy.special import gamma
+from bisect import bisect_left, bisect_right
+import matplotlib.pyplot as plt
 
 
 def generate_drizzle(categorize_file, output_file):
@@ -141,23 +143,21 @@ def calc_horizontal_wind(cat_file):
     return utils.l2norm(u_wind, v_wind)
 
 
-def calc_dia(z, beta, mu, ray, k):
+def calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
     """ Drizzle diameter calculation.
 
     Args:
-        z (ndarray): Radar reflectivity factor in linear units.
-        beta (ndarray): Ceilometer backscatter (m-1 sr-1)
-        mu (ndarray): Shape parameter for gamma calculations.
-        ray (ndarray): Mie to Rayleigh ratio for z.
-        k (ndarray): Unknown parameter.
+        beta_z_ratio (ndarray): Ratio of beta to z multiplied by (2 / pi).
+        mu (ndarray, optional): Shape parameter for gamma calculations. Default is 0.
+        ray (ndarray, optional): Mie to Rayleigh ratio for z. Default is 1.
+        k (ndarray, optional): Unknown parameter. Default is 1.
 
     References:
         https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
 
     """
-    const = 2 / np.pi * ray * k * beta / z
-    s = gamma(7 + mu) / gamma(3 + mu) / ((3.67 + mu) ** 4) * const
-    return (1/s) ** (1/4)
+    const = ray * k * beta_z_ratio
+    return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1/4)
 
 
 def drizzle_solve(data, drizzle_class, width_ht):
@@ -167,7 +167,7 @@ def drizzle_solve(data, drizzle_class, width_ht):
         data (DrizzleSource): Input data.
         drizzle_class (DrizzleClassification): Classification of the atmosphere
             for drizzle calculations.
-        width_ht (ndarray): 2D array of turbulence.
+        width_ht (ndarray): Corrected spectral width.
 
     """
     shape = data.z.shape
@@ -177,40 +177,34 @@ def drizzle_solve(data, drizzle_class, width_ht):
     init_k = 18.8
     tab_k = np.full(shape, init_k)
     drizzle_ind = np.where(drizzle_class.drizzle)
-    diameter_old[drizzle_ind] = calc_dia(data.z[drizzle_ind],
-                                         data.beta[drizzle_ind]*init_k,
-                                         0, 1, 1)
-    threshold = 1e-3
+    beta_z_ratio = 2 / np.pi * data.beta / data.z
+    diameter_old[drizzle_ind] = calc_dia(beta_z_ratio[drizzle_ind]*init_k)
+    threshold = 1e-9
     max_ite = 10
+    n_widths = data.mie['width'].shape[0]
+    # We have use negation because width should be ascending order
+    width_lut = -data.mie['width'][:]
+    width_ht = -width_ht
     for i, j in zip(*drizzle_ind):
-
         old_dia = diameter_old[i, j]
         converged = False
         n_ite = 1
         while not converged and n_ite < max_ite:
-
-            dia_ind = utils.nearest(data.mie['diameter'], old_dia)
-            mu_ind = utils.nearest(data.mie['width'][:, dia_ind], width_ht[i, j])
-
+            dia_ind = np.searchsorted(data.mie['diameter'], old_dia)
+            mu_ind = bisect_left(width_lut[:, dia_ind], width_ht[i, j],
+                                 hi=n_widths-1)
             tab_mu[i, j] = data.mie['u'][mu_ind]
             tab_k[i, j] = data.mie['k'][mu_ind, dia_ind]
             tab_mie_ray[i, j] = data.mie['ray'][mu_ind, dia_ind]
-
-            loop_dia = calc_dia(data.z[i, j],
-                                data.beta[i, j],
-                                tab_mu[i, j],
-                                tab_mie_ray[i, j],
-                                tab_k[i, j])
-
+            loop_dia = calc_dia(beta_z_ratio[i, j], tab_mu[i, j],
+                                tab_mie_ray[i, j], tab_k[i, j])
             if abs(loop_dia - old_dia) < threshold:
                 diameter[i, j] = loop_dia
                 converged = True
             else:
                 old_dia = loop_dia
                 n_ite += 1
-
         beta_factor = np.exp(2*tab_k[i, j]*data.beta[i, j]*data.dheight)
         beta_corr[i, (j+1):] *= beta_factor
 
     return diameter, tab_mu, tab_k, tab_mie_ray, beta_corr
-
