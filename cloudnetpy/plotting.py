@@ -8,8 +8,8 @@ from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import netCDF4
 import cloudnetpy.products.product_tools as ptools
-from .plot_meta import ATTRIBUTES
-from .products.product_tools import CategorizeBits
+from cloudnetpy.plot_meta import ATTRIBUTES
+from cloudnetpy.products.product_tools import CategorizeBits
 
 
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
@@ -128,6 +128,12 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         max_y (int, optional): Upper limit in the plots (km). Default is 12.
         dpi (int, optional): Figure quality (if saved). Higher value means
             more pixels, i.e., better image quality. Default is 200.
+
+    Examples:
+        >>> from cloudnetpy.plotting import generate_figure
+        >>> generate_figure('categorize_file.nc', ['Z', 'beta', 'lwp'])
+        >>> generate_figure('categorize_file.nc', ['ldr', 'v', 'droplet'])
+        >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error'], max_y=4)
 
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)

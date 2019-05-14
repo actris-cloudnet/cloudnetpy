@@ -18,11 +18,11 @@ be first converted into netCDF with standardized metadata. After that,
 the data can be combined in a single categorize file.
 
 
-.. autofunction:: mira.mira2nc
+.. autofunction:: instruments.mira.mira2nc
 
-.. autofunction:: rpg.rpg2nc
+.. autofunction:: instruments.rpg.rpg2nc
 
-.. autofunction:: ceilo.ceilo2nc
+.. autofunction:: instruments.ceilo.ceilo2nc
 
 .. autofunction:: categorize.generate_categorize
 
@@ -38,6 +38,14 @@ generated.
 .. autofunction:: products.iwc.generate_iwc
 
 .. autofunction:: products.lwc.generate_lwc
+
+
+Visualizing results
+-------------------
+
+CloudnetPy offers easy-to-use plotting interface.
+
+.. autofunction:: plotting.generate_figure
 
 
 Cloudnetpy modules

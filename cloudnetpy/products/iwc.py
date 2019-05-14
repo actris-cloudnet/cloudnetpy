@@ -21,7 +21,7 @@ class IwcSource(DataSource):
         self.spec_liq_atten = self._get_approximate_specific_liquid_atten()
         self.coeffs = self._get_iwc_coeffs()
         self.z_factor = self._get_z_factor()
-        self.temperature = self._get_subzero_temperatures()
+        self.temperature = self._get_subzero_temperatures(categorize_file)
         self.mean_temperature = self._get_mean_temperature()
 
     def _get_z_factor(self):
@@ -52,12 +52,10 @@ class IwcSource(DataSource):
             return 1.0
         return 4.5
 
-    def _get_subzero_temperatures(self):
+    @staticmethod
+    def _get_subzero_temperatures(cat_file):
         """Returns freezing temperatures in Celsius."""
-        temperature = utils.interpolate_2d(self.getvar('model_time'),
-                                           self.getvar('model_height'),
-                                           self.getvar('temperature'),
-                                           self.time, self.getvar('height'))
+        temperature = p_tools.interpolate_model(cat_file, 'temperature')
         temperature = atmos.k2c(temperature)
         temperature[temperature > 0] = ma.masked
         return temperature

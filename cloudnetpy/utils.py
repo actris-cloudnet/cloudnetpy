@@ -107,6 +107,21 @@ def rebin_2d(x_in, data, x_new, statistic='mean'):
     return ma.masked_equal(datai, 0)
 
 
+def rebin_1d(x_in, data, x_new, statistic='mean'):
+    """Rebins 1D array."""
+    edges = binvec(x_new)
+    datai = np.zeros(len(x_new))
+    data = ma.masked_invalid(data)  # data may contain nan-values
+    mask = ~data.mask
+    if ma.any(data[mask]):
+        datai, _, _ = stats.binned_statistic(x_in[mask],
+                                             data[mask],
+                                             statistic=statistic,
+                                             bins=edges)
+    datai[~np.isfinite(datai)] = 0
+    return ma.masked_equal(datai, 0)
+
+
 def filter_isolated_pixels(array):
     """Returns array with completely isolated single cells removed.
 
@@ -407,3 +422,8 @@ def get_wl_band(radar_frequency):
 def transpose(x):
     """Transposes numpy array of (n, ) to (n, 1)."""
     return x[:, np.newaxis]
+
+
+def nearest(array, value):
+    """ Find the nearest index of a value in an array """
+    return (np.abs(array-value)).argmin()

@@ -60,9 +60,13 @@ class CloudnetArray:
         if np.any(height) and np.any(height_new):
             self.data = utils.rebin_2d(height, self.data.T, height_new).T
 
-    def calc_sigma_v(self, time, time_new):
+    def calc_linear_std(self, time, time_new):
         """Calculates std of velocity."""
         self.data = utils.rebin_2d(time, self.data.astype(float), time_new, 'std')
+
+    def rebin_1d_data(self, time, time_new):
+        """Rebins 1D array in time."""
+        self.data = utils.rebin_1d(time, self.data.astype(float), time_new)
 
     def rebin_in_polar(self, time, time_new, folding_velocity,
                        sequence_indices):

@@ -44,6 +44,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
+<span class="kn">import</span> <span class="nn">scipy.constants</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">constants</span> <span class="k">as</span> <span class="n">con</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">utils</span>
 
@@ -92,7 +93,7 @@
                                <span class="o">*</span> <span class="n">air_density</span> <span class="o">/</span> <span class="n">pressure_difference</span><span class="p">))</span>
     <span class="n">f3</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span> <span class="o">*</span> <span class="n">svp</span> <span class="o">*</span> <span class="n">pressure_difference</span><span class="o">**-</span><span class="mi">2</span>
     <span class="n">dqs_dp</span> <span class="o">=</span> <span class="n">f1</span> <span class="o">*</span> <span class="n">f2</span> <span class="o">*</span> <span class="n">f3</span>
-    <span class="n">dqs_dz</span> <span class="o">=</span> <span class="n">dqs_dp</span> <span class="o">*</span> <span class="n">air_density</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">con</span><span class="o">.</span><span class="n">g</span>
+    <span class="n">dqs_dz</span> <span class="o">=</span> <span class="n">dqs_dp</span> <span class="o">*</span> <span class="n">air_density</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="o">-</span><span class="n">scipy</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">g</span>
     <span class="k">return</span> <span class="n">dqs_dz</span> <span class="o">*</span> <span class="n">KG_TO_G</span></div>
 
 

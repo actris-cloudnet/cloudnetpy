@@ -7,9 +7,9 @@ import numpy as np
 import numpy.ma as ma
 import scipy.constants
 from scipy.interpolate import interp1d
-from cloudnetpy import atmos, classify, config, output, utils
+from cloudnetpy import atmos, classify, output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from .metadata import MetaData
+from cloudnetpy.metadata import MetaData
 
 
 class DataSource:
@@ -184,7 +184,7 @@ class Radar(ProfileDataSource):
     def _get_sequence_indices(self):
         """Mira has only one sequence and one folding velocity. RPG has
         several sequences with different folding velocities."""
-        all_indices = np.arange(0, len(self.height))
+        all_indices = np.arange(len(self.height))
         if not utils.isscalar(self.folding_velocity):
             starting_indices = self.getvar('chirp_start_indices')
             return np.split(all_indices, starting_indices[1:])
@@ -208,7 +208,7 @@ class Radar(ProfileDataSource):
 
         """
         for key in self.data:
-            if key in ('Z',):
+            if key == 'Z':
                 self.data[key].db2lin()
                 self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
@@ -218,7 +218,7 @@ class Radar(ProfileDataSource):
                                               self.folding_velocity,
                                               self.sequence_indices)
             elif key == 'v_sigma':
-                self.data[key].calc_sigma_v(self.time, time_new)
+                self.data[key].calc_linear_std(self.time, time_new)
             else:
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new
@@ -230,8 +230,7 @@ class Radar(ProfileDataSource):
             attenuations (dict): 2-D attenuations due to atmospheric gases.
 
         """
-        z_corrected = self.data['Z'][:]
-        z_corrected += attenuations['radar_gas_atten']
+        z_corrected = self.data['Z'][:] + attenuations['radar_gas_atten']
         ind = ma.where(attenuations['radar_liquid_atten'])
         z_corrected[ind] += attenuations['radar_liquid_atten'][ind]
         self.append_data(z_corrected, 'Z')
@@ -250,7 +249,7 @@ class Radar(ProfileDataSource):
         def _calc_error():
             z_precision = 4.343 * (1 / np.sqrt(_number_of_pulses())
                                    + utils.db2lin(z_power_min - z_power) / 3)
-            gas_error = attenuations['radar_gas_atten'] * config.GAS_ATTEN_PREC
+            gas_error = attenuations['radar_gas_atten'] * 0.1
             liq_error = attenuations['liquid_atten_err']
             z_error = utils.l2norm(gas_error, liq_error, z_precision)
             z_error[attenuations['liquid_uncorrected']] = ma.masked
@@ -270,7 +269,7 @@ class Radar(ProfileDataSource):
         z_power_min = np.percentile(z_power.compressed(), 0.1)
         self.append_data(_calc_error(), 'Z_error')
         self.append_data(_calc_sensitivity(), 'Z_sensitivity')
-        self.append_data(config.Z_BIAS, 'Z_bias')
+        self.append_data(1, 'Z_bias')
 
     def add_meta(self):
         """Copies misc. metadata from the input file."""
@@ -312,8 +311,8 @@ class Lidar(ProfileDataSource):
     def add_meta(self):
         """Copies misc. metadata from the input file."""
         self.append_data(self.wavelength, 'lidar_wavelength')
-        self.append_data(config.BETA_ERROR[0], 'beta_bias')
-        self.append_data(config.BETA_ERROR[1], 'beta_error')
+        self.append_data(0.5, 'beta_error')
+        self.append_data(3, 'beta_bias')
 
 
 class Mwr(DataSource):
@@ -329,24 +328,17 @@ class Mwr(DataSource):
         self._init_lwp_error()
 
     def _init_lwp_data(self):
-        try:
-            self._unknown_to_cloudnet(('LWP_data', 'lwp'), 'lwp')
-        except KeyError as error:
-            print(error)
+        self._unknown_to_cloudnet(('LWP_data', 'lwp'), 'lwp')
 
     def _init_lwp_error(self):
-        fractional_error, linear_error = config.LWP_ERROR
-        lwp_error = utils.l2norm(self.data['lwp'][:]*fractional_error,
-                                 linear_error)
-        self.append_data(lwp_error, 'lwp_error')
+        random_error, bias = 0.25, 5
+        lwp_error = utils.l2norm(self.data['lwp'][:]*random_error, bias)
+        self.append_data(lwp_error, 'lwp_error', units='g m-2')
 
-    def interpolate_in_time(self, time_grid):
-        """Interpolates liquid water path and its error to Cloudnet's dense time grid.
-        This is wrong. We need to use binning instead.
-        """
+    def rebin_to_grid(self, time_grid):
+        """Rebinning of lwp and its error."""
         for key in self.data:
-            fun = interp1d(self.time, self.data[key][:], fill_value='extrapolate')
-            self.append_data(fun(time_grid), key, units='g m-2')
+            self.data[key].rebin_1d_data(self.time, time_grid)
 
 
 class Model(DataSource):
@@ -486,7 +478,7 @@ def generate_categorize(input_files, output_file):
         """ Interpolate variables to Cloudnet's dense grid."""
         model.interpolate_to_common_height(radar.wl_band)
         model.interpolate_to_grid(time, height)
-        mwr.interpolate_in_time(time)
+        mwr.rebin_to_grid(time)
         radar.rebin_to_grid(time)
         lidar.rebin_to_grid(time, height)
 
@@ -530,6 +522,8 @@ def _save_cat(file_name, radar, lidar, model, obs):
     rootgrp = output.init_file(file_name, dims, obs, zlib=True)
     output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
     rootgrp.title = f"Categorize file from {radar.location}"
+    # Needs to solve how to provide institution
+    # rootgrp.institution = f"Data processed at {config.INSTITUTE}"
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
     output.merge_history(rootgrp, 'categorize', radar)
     _merge_source(rootgrp, radar, lidar)

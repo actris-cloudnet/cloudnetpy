@@ -19,22 +19,17 @@ class LwcSource(DataSource):
     """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
-        self.atmosphere = self._get_atmosphere()
         self.lwp = self.getvar('lwp')
-        self.dheight = utils.mdiff(self.getvar('height'))
+        self.lwp_error = self.getvar('lwp_error')
         self.is_rain = self.getvar('is_rain')
+        self.dheight = utils.mdiff(self.getvar('height'))
+        self.atmosphere = self._get_atmosphere(categorize_file)
         self.categorize_bits = CategorizeBits(categorize_file)
 
-    def _get_atmosphere(self):
-        return (self._interpolate_model_field('temperature'),
-                self._interpolate_model_field('pressure'))
-
-    def _interpolate_model_field(self, variable_name):
-        """Interpolates 2D model field into Cloudnet grid."""
-        return utils.interpolate_2d(self.getvar('model_time'),
-                                    self.getvar('model_height'),
-                                    self.getvar(variable_name),
-                                    self.time, self.getvar('height'))
+    @staticmethod
+    def _get_atmosphere(categorize_file):
+        fields = ['temperature', 'pressure']
+        return p_tools.interpolate_model(categorize_file, fields)
 
 
 class Lwc:
@@ -47,6 +42,19 @@ class Lwc:
         self.lwc_adiabatic = self._init_lwc_adiabatic()
         self.lwc = self._adiabatic_lwc_to_lwc()
         self.status = self._init_status()
+        self.lwc_error = self._calc_lwc_error()
+
+    def _calc_lwc_error(self):
+        """Estimates error in liquid water content.
+        """
+        lwc_error = np.zeros_like(self.lwc)
+        lwp_relative_error = self.lwc_source.lwp_error / self.lwc_source.lwp
+        ind = ma.where(self.lwc)
+        lwc_gradient = utils.l2norm(*np.gradient(self.lwc))
+        combined_error = utils.l2norm(lwc_gradient, utils.transpose(lwp_relative_error))
+        lwc_error[ind] = combined_error[ind]
+        lwc_error[lwc_error == 0] = ma.masked
+        return lwc_error
 
     def _get_echo(self):
         quality_bits = self.lwc_source.categorize_bits.quality_bits
@@ -188,7 +196,17 @@ def find_topmost_clouds(is_cloud):
 
 
 def generate_lwc(categorize_file, output_file):
-    """High level API to generate Cloudnet liquid water content file."""
+    """High level API to generate Cloudnet liquid water content product.
+
+    Args:
+        categorize_file (str): Categorize file name.
+        output_file (str): Output file name.
+
+    Examples:
+        >>> from cloudnetpy.products.lwc import generate_lwc
+        >>> generate_lwc('categorize.nc', 'lwc.nc')
+
+    """
     lwc_source = LwcSource(categorize_file)
     lwc_obj = Lwc(lwc_source)
     lwc_obj.adjust_clouds_to_match_lwp()
@@ -200,6 +218,7 @@ def generate_lwc(categorize_file, output_file):
 
 def _append_data(lwc_data, lwc_obj):
     lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc', units='kg m-3')
+    lwc_data.append_data(lwc_obj.lwc_error * G_TO_KG, 'lwc_error', units='kg m-3')
     lwc_data.append_data(lwc_obj.status, 'lwc_retrieval_status')
 
 
@@ -247,15 +266,7 @@ COMMENTS = {
     'lwc_error':
         ('This variable is an estimate of the random error in liquid water content\n'
          'due to the uncertainty in the microwave radiometer liquid water path\n'
-         'retrieval and the uncertainty in cloud base and/or cloud top height.\n'
-         'This is associated with the resolution of the grid used, 20 m,\n'
-         'which can affect both cloud base and cloud top. If the liquid layer is\n'
-         'detected by the lidar only, there is the potential for cloud top height\n'
-         'to be underestimated. Similarly, there is the possibility that the lidar\n'
-         'may not detect the second cloud base when multiple layers are present and\n'
-         'the cloud base will be overestimated. It is assumed that the error\n'
-         'contribution arising from using the model temperature and pressure at\n'
-         'cloud base is negligible.'),
+         'retrieval and the uncertainty in cloud base and/or cloud top height.'),
 
     'lwc_retrieval_status':
         ('This variable describes whether a retrieval was performed for each pixel,\n'
