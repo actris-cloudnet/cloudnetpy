@@ -42,8 +42,7 @@ def _plot_bar_data(ax, data, name, time):
     variables = ATTRIBUTES[name]
     width = 1/120
     ax.plot(time, data/1000, color='navy')
-    data[data < np.min(data)] = 0
-    ax.bar(time, data/1000, width, align='center', alpha=0.5, color='royalblue')
+    ax.bar(time, data.filled(0)/1000, width, align='center', alpha=0.5, color='royalblue')
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
