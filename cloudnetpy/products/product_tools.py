@@ -46,10 +46,13 @@ def get_source(data_handler):
     return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
 
 
-def read_nc_fields(nc_file, field_names):
+def read_nc_fields(nc_file, variable_names):
     """Reads selected variables from a netCDF file and returns as a list."""
+    if isinstance(variable_names, str):
+        variable_names = [variable_names]
     nc_variables = netCDF4.Dataset(nc_file).variables
-    return [nc_variables[name][:] for name in field_names]
+    data = [nc_variables[name][:] for name in variable_names]
+    return data[0] if len(variable_names) == 1 else data
 
 
 def interpolate_model(cat_file, variable_names):

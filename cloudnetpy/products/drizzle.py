@@ -15,14 +15,15 @@ from scipy.special import gamma
 def generate_drizzle(categorize_file, output_file):
     drizzle_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
-    width_ht = estimate_turb_sigma(categorize_file)
+    width_ht = correct_spectral_width(categorize_file)
     results = drizzle_solve(drizzle_data, drizzle_class, width_ht)
 
 
 class DrizzleSource(DataSource):
+    """Class holding the input data for drizzle calculations."""
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
-        self.mie = self._read_mie_data()
+        self.mie = self._read_mie_lut()
         self.dheight = utils.mdiff(self.getvar('height'))
         self.z = self._get_z()
         self.beta = self.getvar('beta')
@@ -32,33 +33,31 @@ class DrizzleSource(DataSource):
         z = self.getvar('Z') - 180  # what's this 180 ?
         return utils.db2lin(z)
 
-    def _read_mie_data(self):
+    def _read_mie_lut(self):
         """Reads mie scattering look-up table."""
-        mie_file = self._get_mie_file()
+        def _get_mie_file():
+            module_path = os.path.dirname(os.path.abspath(__file__))
+            return '/'.join((module_path, 'mie_lu_tables.nc'))
+
+        def _get_wl_band():
+            """Returns string corresponding the radar frequency."""
+            radar_frequency = self.getvar('radar_frequency')
+            wl_band = utils.get_wl_band(radar_frequency)
+            return '35' if wl_band == 0 else '94'
+
+        mie_file = _get_mie_file()
         mie = netCDF4.Dataset(mie_file).variables
         lut = {'diameter': mie['lu_medianD'][:],
                'u': mie['lu_u'][:],
                'k': mie['lu_k'][:]}
-        band = self._get_wl_band()
+        band = _get_wl_band()
         lut.update({'width': mie[f"lu_width_{band}"],
                     'ray': mie[f"lu_mie_ray_{band}"]})
         return lut
 
-    @staticmethod
-    def _get_mie_file():
-        module_path = os.path.dirname(os.path.abspath(__file__))
-        return '/'.join((module_path, 'mie_lu_tables.nc'))
-
-    def _get_wl_band(self):
-        """Returns string corresponding the radar frequency."""
-        radar_frequency = self.getvar('radar_frequency')
-        wl_band = utils.get_wl_band(radar_frequency)
-        return '35' if wl_band == 0 else '94'
-
 
 class DrizzleClassification(ProductClassification):
     """Class storing the information about different drizzle types."""
-
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.warm_liquid = self._find_warm_liquid()
@@ -97,22 +96,39 @@ class DrizzleClassification(ProductClassification):
         return np.any(self.category_bits['melting'], axis=1)
 
 
-def estimate_turb_sigma(cat_file):
-    """Not really sure what this function returns."""
-    beam_width = 0.5
-    width, v_sigma, height = p_tools.read_nc_fields(cat_file, ['width', 'v_sigma', 'height'])
+def correct_spectral_width(cat_file):
+    """Corrects spectral width.
+
+    Removes the effect of turbulence and horizontal wind that cause
+    spectral broadening of the Doppler velocity.
+
+    """
+    def _calc_beam_divergence():
+        beam_width = 0.5
+        height = p_tools.read_nc_fields(cat_file, 'height')
+        return height * np.deg2rad(beam_width)
+
+    def _calc_v_sigma_factor():
+        beam_divergence = _calc_beam_divergence()
+        wind = calc_horizontal_wind(cat_file)
+        actual_wind = (wind + beam_divergence) ** (2 / 3)
+        scaled_wind = (30 * wind + beam_divergence) ** (2 / 3)
+        return actual_wind / (scaled_wind-actual_wind)
+
+    width, v_sigma = p_tools.read_nc_fields(cat_file, ['width', 'v_sigma'])
+    sigma_factor = _calc_v_sigma_factor()
+    return width - sigma_factor * v_sigma
+
+
+def calc_horizontal_wind(cat_file):
+    """Calculates magnitude of horizontal wind."""
     u_wind, v_wind = p_tools.interpolate_model(cat_file, ['uwind', 'vwind'])
-    wind = utils.l2norm(u_wind, v_wind)
-    beam_divergence = height * np.deg2rad(beam_width)
-    power = 2 / 3
-    a = (wind + beam_divergence) ** power
-    b = (30 * wind + beam_divergence) ** power
-    sigma_t = a * v_sigma / (b - a)
-    return width - sigma_t ** 2
+    return utils.l2norm(u_wind, v_wind)
 
 
 def calc_s(p, q, const, mu, beta, k):
     """ Help function for gamma-calculations """
+
     a = gamma(mu + p) / gamma(mu + (p - q))
     b = 1 / ((mu + 3.67) ** q)
     c = const * beta * k
@@ -120,7 +136,16 @@ def calc_s(p, q, const, mu, beta, k):
 
 
 def calc_dia(z, beta, mu, ray, k):
-    """ Drizzle diameter calculation """
+    """ Drizzle diameter calculation
+
+    Args:
+        z (ndarray): Radar reflectivity factor in linear units.
+        beta (ndarray): Ceilometer backscatter (m-1 sr-1)
+        mu (ndarray): Shape parameter for gamma calculations.
+        ray (ndarray): Mie to Rayleigh ratio for z.
+        k (ndarray): Unknown parameter.
+
+    """
     p, q = 7, 3
     const = 2 / np.pi * ray / z
     s = calc_s(p, q, const, mu, beta, k)
