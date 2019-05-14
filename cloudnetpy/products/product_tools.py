@@ -47,7 +47,18 @@ def get_source(data_handler):
 
 
 def read_nc_fields(nc_file, names):
-    """Reads selected variables from a netCDF file."""
+    """Reads selected variables from a netCDF file.
+
+    Args:
+        nc_file (str): netCDF file name.
+        names (str/list): Variables to be read, e.g. 'temperature' or
+            ['ldr', 'lwp'].
+
+    Returns:
+        ndarray/list: Array in case of one variable passed as a string.
+            List of arrays otherwise.
+
+    """
     names = [names] if isinstance(names, str) else names
     nc_variables = netCDF4.Dataset(nc_file).variables
     data = [nc_variables[name][:] for name in names]
@@ -59,11 +70,12 @@ def interpolate_model(cat_file, names):
 
     Args:
         cat_file (str): Categorize file name.
-        names (str / list): Model variable to be interpolated, e.g.
+        names (str/list): Model variable to be interpolated, e.g.
             'temperature' or ['temperature', 'pressure'].
 
     Returns:
-        ndarray: 2D model field interpolated to dense Cloudnet grid.
+        ndarray/list: Array in case of one variable passed as a string.
+            List of arrays otherwise.
 
     """
     def _interp_field(var_name):
