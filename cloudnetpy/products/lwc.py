@@ -196,7 +196,7 @@ def find_topmost_clouds(is_cloud):
 
 
 def generate_lwc(categorize_file, output_file):
-    """High level API to generate Cloudnet liquid water content product.
+    """Generates Cloudnet liquid water content product.
 
     Args:
         categorize_file (str): Categorize file name.
@@ -213,30 +213,14 @@ def generate_lwc(categorize_file, output_file):
     lwc_obj.screen_rain()
     _append_data(lwc_source, lwc_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
-    _save_data_and_meta(lwc_source, output_file)
+    output.save_product_file('liquid water content', lwc_source, output_file,
+                             copy_from_cat=('lwp', 'lwp_error'))
 
 
 def _append_data(lwc_data, lwc_obj):
     lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc', units='kg m-3')
     lwc_data.append_data(lwc_obj.lwc_error * G_TO_KG, 'lwc_error', units='kg m-3')
     lwc_data.append_data(lwc_obj.status, 'lwc_retrieval_status')
-
-
-def _save_data_and_meta(lwc_data, output_file):
-    """
-    Saves wanted information to NetCDF file.
-    """
-    dims = {'time': len(lwc_data.time),
-            'height': len(lwc_data.variables['height'])}
-    rootgrp = output.init_file(output_file, dims, lwc_data.data, zlib=True)
-    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height', 'lwp', 'lwp_error')
-    output.copy_variables(lwc_data.dataset, rootgrp, vars_from_source)
-    rootgrp.title = f"Liquid water content file from {lwc_data.dataset.location}"
-    rootgrp.source = f"Categorize file: {p_tools.get_source(lwc_data)}"
-    output.copy_global(lwc_data.dataset, rootgrp, ('location', 'day',
-                                                   'month', 'year'))
-    output.merge_history(rootgrp, 'liquid water content', lwc_data)
-    rootgrp.close()
 
 
 COMMENTS = {

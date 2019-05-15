@@ -2,13 +2,12 @@
 import numpy as np
 import cloudnetpy.output as output
 from cloudnetpy.categorize import DataSource
-import cloudnetpy.products.product_tools as p_tools
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
 def generate_class(categorize_file, output_file):
-    """High level API to generate Cloudnet classification product.
+    """Generates Cloudnet classification product.
 
     Generates categorized bins to 10 types of different targets in atmosphere
     as well as instrument status classification. Classifications are saved to
@@ -31,7 +30,7 @@ def generate_class(categorize_file, output_file):
     status = get_detection_status(categorize_bits)
     data_handler.append_data(status, 'detection_status')
     output.update_attributes(data_handler.data, CLASSIFICATION_ATTRIBUTES)
-    _save_data_and_meta(data_handler, output_file)
+    output.save_product_file('classification', data_handler, output_file)
 
 
 def get_target_classification(categorize_bits):
@@ -60,23 +59,6 @@ def get_detection_status(categorize_bits):
     status[bits['clutter']] = 8
     status[bits['molecular'] & ~bits['radar']] = 9
     return status
-
-
-def _save_data_and_meta(data_handler, output_file):
-    """
-    Saves wanted information to NetCDF file.
-    """
-    dims = {'time': len(data_handler.time),
-            'height': len(data_handler.variables['height'])}
-    rootgrp = output.init_file(output_file, dims, data_handler.data, zlib=True)
-    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height')
-    output.copy_variables(data_handler.dataset, rootgrp, vars_from_source)
-    rootgrp.title = f"Classification file from {data_handler.dataset.location}"
-    rootgrp.source = f"Categorize file: {p_tools.get_source(data_handler)}"
-    output.copy_global(data_handler.dataset, rootgrp, ('location', 'day',
-                                                       'month', 'year'))
-    output.merge_history(rootgrp, 'classification', data_handler)
-    rootgrp.close()
 
 
 COMMENTS = {

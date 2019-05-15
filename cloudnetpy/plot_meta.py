@@ -85,6 +85,30 @@ _CBAR = {
 }
 
 ATTRIBUTES = {
+    'Do': PlotMeta(
+        name='Drizzle median diameter',
+        cbar='viridis',
+        clabel='m',
+        plot_range=(1e-6, 1e-3),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'mu': PlotMeta(
+        name='Drizzle DSD shape parameter',
+        cbar='viridis',
+        clabel='',
+        plot_range=(0, 10),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'S': PlotMeta(
+        name='Backscatter-to-extinction ratio',
+        cbar='viridis',
+        clabel='',
+        plot_range=(0, 20),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'uwind': PlotMeta(
         name='Model zonal wind',
         cbar='RdBu_r',

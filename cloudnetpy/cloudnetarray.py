@@ -61,7 +61,11 @@ class CloudnetArray:
             self.data = utils.rebin_2d(height, self.data.T, height_new).T
 
     def calc_linear_std(self, time, time_new):
-        """Calculates std of velocity."""
+        """Calculates std of velocity.
+
+        The result is masked if the bin contains masked values.
+
+        """
         self.data = utils.rebin_2d(time, self.data.astype(float), time_new, 'std')
 
     def rebin_1d_data(self, time, time_new):

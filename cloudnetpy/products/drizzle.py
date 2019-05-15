@@ -3,12 +3,14 @@
 import os
 from bisect import bisect_left
 import numpy as np
+import numpy.ma as ma
 from scipy.special import gamma
 import netCDF4
-from cloudnetpy import utils
+from cloudnetpy import utils, output
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification
+from cloudnetpy.metadata import MetaData
 
 
 def generate_drizzle(categorize_file, output_file):
@@ -23,6 +25,15 @@ def generate_drizzle(categorize_file, output_file):
     drizzle_class = DrizzleClassification(categorize_file)
     width_ht = correct_spectral_width(categorize_file)
     results = drizzle_solve(drizzle_data, drizzle_class, width_ht)
+    _append_data(drizzle_data, results)
+    output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
+    output.save_product_file('drizzle', drizzle_data, output_file)
+
+
+def _append_data(drizzle_data, results):
+    """Save retrieved fields to the drizzle_data object."""
+    for key, value in results.items():
+        drizzle_data.append_data(value, key)
 
 
 class DrizzleSource(DataSource):
@@ -181,6 +192,12 @@ def drizzle_solve(data, drizzle_class, width_ht):
         width_ht (ndarray): Corrected spectral width.
 
     """
+    def _init_variables():
+        shape = data.z.shape
+        d = dict.fromkeys(('Do', 'mu', 'S'), ma.masked_all(shape))
+        d.update({'beta_corr': ma.ones(shape)})
+        return d, np.zeros(shape)
+
     def _calc_beta_z_ratio():
         return 2 / np.pi * data.beta / data.z
 
@@ -190,13 +207,11 @@ def drizzle_solve(data, drizzle_class, width_ht):
         return ind_mu, ind_dia
 
     def _update_result_tables(*ind):
-        params['dia'][ind] = dia
+        params['Do'][ind] = dia
         params['mu'][ind] = data.mie['u'][lut_ind[0]]
-        params['k'][ind] = data.mie['k'][lut_ind]
+        params['S'][ind] = data.mie['k'][lut_ind]
 
-    shape = data.z.shape
-    params = dict.fromkeys(('dia', 'mu', 'k'), np.zeros(shape))
-    dia_init, beta_corr = np.zeros(shape), np.ones(shape)
+    params, dia_init = _init_variables()
     beta_z_ratio = _calc_beta_z_ratio()
     drizzle_ind = np.where(drizzle_class.drizzle == 1)
     dia_init[drizzle_ind] = calc_dia(beta_z_ratio[drizzle_ind], k=18.8)
@@ -216,6 +231,23 @@ def drizzle_solve(data, drizzle_class, width_ht):
             if abs(dia - dia_init[i, j]) < threshold:
                 break
             dia_init[i, j] = dia
-        beta_factor = np.exp(2*params['k'][i, j]*data.beta[i, j]*data.dheight)
-        beta_corr[i, (j+1):] *= beta_factor
+        # What is the meaning of the following
+        beta_factor = np.exp(2*params['S'][i, j]*data.beta[i, j]*data.dheight)
+        params['beta_corr'][i, (j+1):] *= beta_factor
     return params
+
+
+DRIZZLE_ATTRIBUTES = {
+    'Do': MetaData(
+        long_name='Drizzle median diameter',
+    ),
+    'mu': MetaData(
+        long_name='Drizzle DSD shape parameter',
+    ),
+    'S': MetaData(
+        long_name='Lidar backscatter-to-extinction ratio',
+    ),
+    'beta_corr': MetaData(
+        long_name='Lidar backscatter correction factor',
+    )
+}

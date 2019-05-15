@@ -190,7 +190,7 @@ def _append_iwc_status(iwc_data, ice_class):
 
 
 def generate_iwc(categorize_file, output_file):
-    """High level API to generate Cloudnet ice water content product.
+    """Generates Cloudnet ice water content product.
 
     Args:
         categorize_file (str): Categorize file name.
@@ -210,24 +210,7 @@ def generate_iwc(categorize_file, output_file):
     _append_iwc_sensitivity(iwc_data)
     _append_iwc_status(iwc_data, ice_class)
     output.update_attributes(iwc_data.data, IWC_ATTRIBUTES)
-    _save_data_and_meta(iwc_data, output_file)
-
-
-def _save_data_and_meta(iwc_data, output_file):
-    """
-    Saves wanted information to NetCDF file.
-    """
-    dims = {'time': len(iwc_data.time),
-            'height': len(iwc_data.variables['height'])}
-    rootgrp = output.init_file(output_file, dims, iwc_data.data, zlib=True)
-    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height')
-    output.copy_variables(iwc_data.dataset, rootgrp, vars_from_source)
-    rootgrp.title = f"Ice water content file from {iwc_data.dataset.location}"
-    rootgrp.source = f"Categorize file: {p_tools.get_source(iwc_data)}"
-    output.copy_global(iwc_data.dataset, rootgrp, ('location', 'day',
-                                                   'month', 'year'))
-    output.merge_history(rootgrp, 'ice water content', iwc_data)
-    rootgrp.close()
+    output.save_product_file('ice water content', iwc_data, output_file)
 
 
 COMMENTS = {

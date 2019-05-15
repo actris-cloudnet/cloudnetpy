@@ -2,6 +2,7 @@
 import netCDF4
 from . import utils, version
 from .metadata import COMMON_ATTRIBUTES
+from cloudnetpy.products import product_tools
 
 
 def write_vars2nc(rootgrp, cloudnet_variables, zlib):
@@ -55,7 +56,7 @@ def copy_global(source, target, attr_list):
             setattr(target, attr_name, source.getncattr(attr_name))
 
 
-def update_attributes(cloudnet_variables, ATTRIBUTES):
+def update_attributes(cloudnet_variables, attributes):
     """Overrides existing CloudnetArray-attributes.
 
     Overrides existing attributes using hard-coded values.
@@ -63,16 +64,18 @@ def update_attributes(cloudnet_variables, ATTRIBUTES):
 
     Args:
         cloudnet_variables (dict): CloudnetArray instances.
+        attributes (dict): Product-specific attributes.
 
     """
     for key in cloudnet_variables:
-        if key in ATTRIBUTES:
-            cloudnet_variables[key].set_attributes(ATTRIBUTES[key])
+        if key in attributes:
+            cloudnet_variables[key].set_attributes(attributes[key])
         if key in COMMON_ATTRIBUTES:
             cloudnet_variables[key].set_attributes(COMMON_ATTRIBUTES[key])
 
 
 def init_file(file_name, dimensions, obs, zlib):
+    """Initializes a Cloudnet file for writing."""
     root_group = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     for key, dimension in dimensions.items():
         root_group.createDimension(key, dimension)
@@ -94,3 +97,16 @@ def merge_history(root_group, file_type, *sources):
     for source in sources:
         old_history += f"\n{source.dataset.history}"
     root_group.history = f"{new_record}{old_history}"
+
+
+def save_product_file(identifier, obj, file_name, copy_from_cat=()):
+    """Saves a standard Cloudnet product file."""
+    dims = {'time': len(obj.time), 'height': len(obj.variables['height'])}
+    root_group = init_file(file_name, dims, obj.data, zlib=True)
+    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
+    copy_variables(obj.dataset, root_group, vars_from_source)
+    root_group.title = f"{identifier.capitalize()} file from {obj.dataset.location}"
+    root_group.source = f"Categorize file: {product_tools.get_source(obj)}"
+    copy_global(obj.dataset, root_group, ('location', 'day', 'month', 'year'))
+    merge_history(root_group, identifier, obj)
+    root_group.close()
