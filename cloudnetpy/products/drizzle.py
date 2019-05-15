@@ -93,7 +93,7 @@ class DrizzleClassification(ProductClassification):
                 & ~self.quality_bits['clutter']
                 & ~self.quality_bits['molecular']
                 & ~self.quality_bits['attenuated']
-                & self.is_v_sigma)
+                & self.is_v_sigma)  # requires v_sigma now
 
     def _find_would_be_drizzle(self):
         return (~utils.transpose(self.is_rain)
@@ -186,11 +186,11 @@ def drizzle_solve(data, drizzle_class, width_ht):
 
     def _find_lut_indices(*ind):
         ind_dia = np.searchsorted(data.mie['diameter'], dia_init[ind])
-        ind_mu = bisect_left(width_lut[:, ind_dia], width_ht[ind], hi=n_widths - 1)
+        ind_mu = bisect_left(width_lut[:, ind_dia], width_ht[ind], hi=n_widths-1)
         return ind_mu, ind_dia
 
     def _update_result_tables(*ind):
-        params['dia'][ind] = loop_dia
+        params['dia'][ind] = dia
         params['mu'][ind] = data.mie['u'][lut_ind[0]]
         params['k'][ind] = data.mie['k'][lut_ind]
 
@@ -200,7 +200,7 @@ def drizzle_solve(data, drizzle_class, width_ht):
     beta_z_ratio = _calc_beta_z_ratio()
     drizzle_ind = np.where(drizzle_class.drizzle == 1)
     dia_init[drizzle_ind] = calc_dia(beta_z_ratio[drizzle_ind], k=18.8)
-    # We have use negation because width should be ascending order
+    # Negation because look up table for width is descending order
     width_lut = -data.mie['width'][:]
     n_widths = width_lut.shape[0]
     width_ht = -width_ht
@@ -208,14 +208,14 @@ def drizzle_solve(data, drizzle_class, width_ht):
     for i, j in zip(*drizzle_ind):
         for _ in range(max_ite):
             lut_ind = _find_lut_indices(i, j)
-            loop_dia = calc_dia(beta_z_ratio[i, j],
-                                data.mie['u'][lut_ind[0]],
-                                data.mie['ray'][lut_ind],
-                                data.mie['k'][lut_ind])
+            dia = calc_dia(beta_z_ratio[i, j],
+                           data.mie['u'][lut_ind[0]],
+                           data.mie['ray'][lut_ind],
+                           data.mie['k'][lut_ind])
             _update_result_tables(i, j)
-            if abs(loop_dia - dia_init[i, j]) < threshold:
+            if abs(dia - dia_init[i, j]) < threshold:
                 break
-            dia_init[i, j] = loop_dia
+            dia_init[i, j] = dia
         beta_factor = np.exp(2*params['k'][i, j]*data.beta[i, j]*data.dheight)
         beta_corr[i, (j+1):] *= beta_factor
     return params
