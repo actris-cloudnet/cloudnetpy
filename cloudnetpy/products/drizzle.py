@@ -223,7 +223,7 @@ def drizzle_solve(data, drizzle_class, width_ht):
     for i, j in zip(*drizzle_ind):
         for _ in range(max_ite):
             lut_ind = _find_lut_indices(i, j)
-            dia = calc_dia(beta_z_ratio[i, j],
+            dia = calc_dia(beta_z_ratio[i, j] * params['beta_corr'][i, j],
                            data.mie['u'][lut_ind[0]],
                            data.mie['ray'][lut_ind],
                            data.mie['k'][lut_ind])
@@ -231,9 +231,10 @@ def drizzle_solve(data, drizzle_class, width_ht):
             if abs(dia - dia_init[i, j]) < threshold:
                 break
             dia_init[i, j] = dia
-        # What is the meaning of the following
         beta_factor = np.exp(2*params['S'][i, j]*data.beta[i, j]*data.dheight)
         params['beta_corr'][i, (j+1):] *= beta_factor
+    # some unit conversion is needed somewhere..
+    params['Do'] = params['Do']*1e-5
     return params
 
 
