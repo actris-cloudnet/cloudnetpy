@@ -88,8 +88,8 @@ class DrizzleSource(DataSource):
                'u': mie['lu_u'][:],
                'k': mie['lu_k'][:]}
         band = _get_wl_band()
-        lut.update({'width': mie[f"lu_width_{band}"],
-                    'ray': mie[f"lu_mie_ray_{band}"]})
+        lut.update({'width': mie[f"lu_width_{band}"][:],
+                    'ray': mie[f"lu_mie_ray_{band}"][:]})
         return lut
 
 
