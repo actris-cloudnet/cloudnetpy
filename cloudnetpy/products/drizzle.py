@@ -33,6 +33,7 @@ def generate_drizzle(categorize_file, output_file):
 def _append_data(drizzle_data, results):
     """Save retrieved fields to the drizzle_data object."""
     for key, value in results.items():
+        value = ma.masked_where(value == 0, value)
         drizzle_data.append_data(value, key)
 
 
@@ -194,32 +195,38 @@ def drizzle_solve(data, drizzle_class, width_ht):
     """
     def _init_variables():
         shape = data.z.shape
-        d = dict.fromkeys(('Do', 'mu', 'S'), ma.masked_all(shape))
-        d.update({'beta_corr': ma.ones(shape)})
-        return d, np.zeros(shape)
+        res = {'Do': np.zeros(shape),
+               'mu': np.zeros(shape),
+               'S': np.zeros(shape),
+               'beta_corr': np.ones(shape)}
+        return res, np.zeros(shape)
 
     def _calc_beta_z_ratio():
         return 2 / np.pi * data.beta / data.z
 
     def _find_lut_indices(*ind):
         ind_dia = np.searchsorted(data.mie['diameter'], dia_init[ind])
-        ind_mu = bisect_left(width_lut[:, ind_dia], width_ht[ind], hi=n_widths-1)
-        return ind_mu, ind_dia
+        ind_width = bisect_left(width_lut[:, ind_dia], width_ht[ind], hi=n_widths-1)
+        return ind_width, ind_dia
 
     def _update_result_tables(*ind):
         params['Do'][ind] = dia
         params['mu'][ind] = data.mie['u'][lut_ind[0]]
         params['S'][ind] = data.mie['k'][lut_ind]
 
+    def _is_converged(*ind):
+        threshold = 1e-3
+        return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold
+
     params, dia_init = _init_variables()
     beta_z_ratio = _calc_beta_z_ratio()
     drizzle_ind = np.where(drizzle_class.drizzle == 1)
     dia_init[drizzle_ind] = calc_dia(beta_z_ratio[drizzle_ind], k=18.8)
-    # Negation because look up table for width is descending order
+    # Negation because width look-up table is descending order
     width_lut = -data.mie['width'][:]
     n_widths = width_lut.shape[0]
     width_ht = -width_ht
-    threshold, max_ite = 1e-9, 10
+    max_ite = 10
     for i, j in zip(*drizzle_ind):
         for _ in range(max_ite):
             lut_ind = _find_lut_indices(i, j)
@@ -228,13 +235,11 @@ def drizzle_solve(data, drizzle_class, width_ht):
                            data.mie['ray'][lut_ind],
                            data.mie['k'][lut_ind])
             _update_result_tables(i, j)
-            if abs(dia - dia_init[i, j]) < threshold:
+            if _is_converged(i, j):
                 break
             dia_init[i, j] = dia
         beta_factor = np.exp(2*params['S'][i, j]*data.beta[i, j]*data.dheight)
         params['beta_corr'][i, (j+1):] *= beta_factor
-    # some unit conversion is needed somewhere..
-    params['Do'] = params['Do']*1e-5
     return params
 
 
