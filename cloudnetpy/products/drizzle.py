@@ -24,10 +24,29 @@ def generate_drizzle(categorize_file, output_file):
     drizzle_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
     width_ht = correct_spectral_width(categorize_file)
-    results = drizzle_solve(drizzle_data, drizzle_class, width_ht)
-    _append_data(drizzle_data, results)
+    drizzle_parameters = drizzle_solve(drizzle_data, drizzle_class, width_ht)
+    derived_products = _calc_derived_products(drizzle_data, drizzle_parameters)
+    products = {** drizzle_parameters, **derived_products}
+    _append_data(drizzle_data, products)
     output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
     output.save_product_file('drizzle', drizzle_data, output_file)
+
+
+def _calc_derived_products(drizzle_data, drizzle_parameters):
+    """Derives more products from the drizzle properties."""
+    def _calc_density():
+        """Calculates drizzle number density (m-3)."""
+        return drizzle_data.z * 3.67 ** 6 / drizzle_parameters['Do'] ** 6
+
+    def _calc_lwc():
+        """Calculates drizzle liquid water content (kg m-3)"""
+        rho_water = 1000
+        dia, s, mu, _ = drizzle_parameters.values()
+        gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
+        return rho_water / 3 * drizzle_data.beta * s * dia * gamma_ratio
+
+    return {'drizzle_N': _calc_density(),
+            'drizzle_lwc': _calc_lwc()}
 
 
 def _append_data(drizzle_data, results):
@@ -195,10 +214,8 @@ def drizzle_solve(data, drizzle_class, width_ht):
     """
     def _init_variables():
         shape = data.z.shape
-        res = {'Do': np.zeros(shape),
-               'mu': np.zeros(shape),
-               'S': np.zeros(shape),
-               'beta_corr': np.ones(shape)}
+        res = {'Do': np.zeros(shape), 'mu': np.zeros(shape),
+               'S': np.zeros(shape), 'beta_corr': np.ones(shape)}
         return res, np.zeros(shape)
 
     def _calc_beta_z_ratio():
@@ -244,8 +261,17 @@ def drizzle_solve(data, drizzle_class, width_ht):
 
 
 DRIZZLE_ATTRIBUTES = {
+    'drizzle_N': MetaData(
+        long_name='Drizzle number concentration',
+        units='m-3'
+    ),
+    'drizzle_lwc': MetaData(
+        long_name='Drizzle liquid water content',
+        units='kg m-3'
+    ),
     'Do': MetaData(
         long_name='Drizzle median diameter',
+        units='m',
     ),
     'mu': MetaData(
         long_name='Drizzle DSD shape parameter',

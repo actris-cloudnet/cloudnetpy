@@ -14,7 +14,8 @@ PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 _LOG = 'logarithmic'
 _LIN = 'linear'
 
-_MS1 = 'm $s^{-1}$'
+_M3 = '$m^{-3}$'
+_MS1 = 'm s$^{-1}$'
 _SR1M1 = 'sr$^{-1}$ m$^{-1}$'
 _KGM2 = 'kg m$^{-2}$'
 _KGM3 = 'kg m$^{-3}$'
@@ -105,8 +106,24 @@ ATTRIBUTES = {
         name='Backscatter-to-extinction ratio',
         cbar='viridis',
         clabel='',
-        plot_range=(0, 20),
+        plot_range=(0, 25),
         plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'drizzle_N': PlotMeta(
+        name='Drizzle number concentration',
+        cbar='viridis',
+        clabel=_M3,
+        plot_range=(1e-5, 1e10),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'drizzle_lwc': PlotMeta(
+        name='Drizzle liquid water content',
+        cbar='viridis',
+        clabel=_KGM3,
+        plot_range=(1e-7, 1e-4),
+        plot_scale=_LOG,
         plot_type='mesh'
     ),
     'uwind': PlotMeta(
