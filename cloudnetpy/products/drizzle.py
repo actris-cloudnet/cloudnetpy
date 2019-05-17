@@ -41,7 +41,7 @@ def _calc_derived_products(data, parameters):
     def _calc_lwc():
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
-        dia, mu, s, _ = parameters.values()
+        dia, mu, s = [parameters.get(key) for key in ('Do', 'mu', 'S')]
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
         return rho_water / 3 * data.beta * s * dia * gamma_ratio
 
