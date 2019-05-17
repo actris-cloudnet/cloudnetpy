@@ -143,6 +143,14 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
     ),
+    'vertical_air_velocity': PlotMeta(
+        name='Vertical air velocity',
+        cbar='RdBu_r',
+        clabel=_MS1,
+        plot_range=(-2, 2),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'uwind': PlotMeta(
         name='Model zonal wind',
         cbar='RdBu_r',

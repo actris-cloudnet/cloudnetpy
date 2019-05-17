@@ -47,7 +47,7 @@ def _calc_derived_products(data, parameters):
 
     def _calc_lwf(lwc_in):
         """Calculates drizzle liquid water flux."""
-        flux = lwc_in[:]
+        flux = np.copy(lwc_in)
         flux[ind_drizzle] *= data.mie['lwf'][ind_lut] * data.mie['termv'][ind_lut[1]]
         return flux
 
@@ -63,13 +63,21 @@ def _calc_derived_products(data, parameters):
         ind_dia = np.searchsorted(data.mie['Do'], parameters['Do'][drizzle_ind])
         return drizzle_ind, (ind_mu, ind_dia)
 
+    def _calc_v_air(droplet_velocity):
+        """Calculates vertical air velocity."""
+        velocity = -np.copy(droplet_velocity)
+        velocity[ind_drizzle] += data.v[ind_drizzle]
+        return velocity
+
     ind_drizzle, ind_lut = _find_indices()
     density = _calc_density()
     lwc = _calc_lwc()
     lwf = _calc_lwf(lwc)
     fall_velocity = _calc_fall_velocity()
+    v_air = _calc_v_air(fall_velocity)
     return {'drizzle_N': density, 'drizzle_lwc': lwc,  'drizzle_lwf': lwf,
-            'droplet_fall_velocity': fall_velocity}
+            'droplet_fall_velocity': fall_velocity,
+            'vertical_air_velocity': v_air}
 
 
 def _append_data(drizzle_data, results):
@@ -87,6 +95,7 @@ class DrizzleSource(DataSource):
         self.dheight = utils.mdiff(self.getvar('height'))
         self.z = self._convert_z_units()
         self.beta = self.getvar('beta')
+        self.v = self.getvar('v')
 
     def _convert_z_units(self):
         """Converts reflectivity factor to SI units."""
@@ -301,7 +310,11 @@ DRIZZLE_ATTRIBUTES = {
     ),
     'droplet_fall_velocity': MetaData(
         long_name='Drizzle droplet fall velocity',  # check this, should it include 'terminal' ?
-        units='kg m-2 s-1'
+        units='m s-1'
+    ),
+    'vertical_air_velocity': MetaData(
+        long_name='Vertical air velocity',
+        units='m s-1'
     ),
     'Do': MetaData(
         long_name='Drizzle median diameter',
