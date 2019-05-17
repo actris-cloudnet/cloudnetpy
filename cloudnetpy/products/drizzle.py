@@ -48,16 +48,28 @@ def _calc_derived_products(data, parameters):
     def _calc_lwf(lwc_in):
         """Calculates drizzle liquid water flux."""
         flux = lwc_in[:]
-        ind = np.where(lwc_in)
-        i = np.searchsorted(data.mie['mu'], parameters['mu'][ind])
-        j = np.searchsorted(data.mie['Do'], parameters['Do'][ind])
-        flux[ind] *= data.mie['lwf'][i, j] * data.mie['termv'][j]
+        flux[ind_drizzle] *= data.mie['lwf'][ind_lut] * data.mie['termv'][ind_lut[1]]
         return flux
 
+    def _calc_fall_velocity():
+        """Calculates drizzle droplet fall velocity (m s-1)."""
+        velocity = np.zeros_like(parameters['Do'])
+        velocity[ind_drizzle] = -data.mie['v'][ind_lut]
+        return velocity
+
+    def _find_indices():
+        drizzle_ind = np.where(parameters['Do'])
+        ind_mu = np.searchsorted(data.mie['mu'], parameters['mu'][drizzle_ind])
+        ind_dia = np.searchsorted(data.mie['Do'], parameters['Do'][drizzle_ind])
+        return drizzle_ind, (ind_mu, ind_dia)
+
+    ind_drizzle, ind_lut = _find_indices()
     density = _calc_density()
     lwc = _calc_lwc()
     lwf = _calc_lwf(lwc)
-    return {'drizzle_N': density, 'drizzle_lwc': lwc,  'drizzle_lwf': lwf}
+    fall_velocity = _calc_fall_velocity()
+    return {'drizzle_N': density, 'drizzle_lwc': lwc,  'drizzle_lwf': lwf,
+            'droplet_fall_velocity': fall_velocity}
 
 
 def _append_data(drizzle_data, results):
@@ -102,7 +114,8 @@ class DrizzleSource(DataSource):
                'termv': mie['lu_termv'][:]}
         band = _get_wl_band()
         lut.update({'width': mie[f"lu_width_{band}"][:],
-                    'ray': mie[f"lu_mie_ray_{band}"][:]})
+                    'ray': mie[f"lu_mie_ray_{band}"][:],
+                    'v': mie[f"lu_v_{band}"][:]})
         return lut
 
 
@@ -284,6 +297,10 @@ DRIZZLE_ATTRIBUTES = {
     ),
     'drizzle_lwf': MetaData(
         long_name='Drizzle liquid water flux',
+        units='kg m-2 s-1'
+    ),
+    'droplet_fall_velocity': MetaData(
+        long_name='Drizzle droplet fall velocity',  # check this, should it include 'terminal' ?
         units='kg m-2 s-1'
     ),
     'Do': MetaData(
