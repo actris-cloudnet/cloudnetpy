@@ -32,21 +32,33 @@ def generate_drizzle(categorize_file, output_file):
     output.save_product_file('drizzle', drizzle_data, output_file)
 
 
-def _calc_derived_products(drizzle_data, drizzle_parameters):
+def _calc_derived_products(data, parameters):
     """Calculates additional quantities from the drizzle properties."""
     def _calc_density():
         """Calculates drizzle number density (m-3)."""
-        return drizzle_data.z * 3.67 ** 6 / drizzle_parameters['Do'] ** 6
+        return data.z * 3.67 ** 6 / parameters['Do'] ** 6
 
     def _calc_lwc():
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
-        dia, mu, s, _ = drizzle_parameters.values()
+        dia, mu, s, _ = parameters.values()
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
-        return rho_water / 3 * drizzle_data.beta * s * dia * gamma_ratio
+        return rho_water / 3 * data.beta * s * dia * gamma_ratio
 
-    return {'drizzle_N': _calc_density(),
-            'drizzle_lwc': _calc_lwc()}
+    def _calc_lwf(lwc_in):
+        """Calculates drizzle liquid water flux."""
+        ind_drizzle = np.where(lwc_in)
+        flux = np.zeros_like(lwc_in)
+        ind_dia = np.searchsorted(data.mie['Do'], parameters['Do'][ind_drizzle])
+        ind_mu = np.searchsorted(data.mie['mu'], parameters['mu'][ind_drizzle])
+        flux[ind_drizzle] = (lwc[ind_drizzle] * data.mie['lwf'][ind_mu, ind_dia]
+                             * data.mie['termv'][ind_dia])
+        return flux
+
+    density = _calc_density()
+    lwc = _calc_lwc()
+    lwf = _calc_lwf(lwc)
+    return {'drizzle_N': density, 'drizzle_lwc': lwc,  'drizzle_lwf': lwf}
 
 
 def _append_data(drizzle_data, results):
@@ -84,9 +96,11 @@ class DrizzleSource(DataSource):
 
         mie_file = _get_mie_file()
         mie = netCDF4.Dataset(mie_file).variables
-        lut = {'diameter': mie['lu_medianD'][:],
-               'u': mie['lu_u'][:],
-               'k': mie['lu_k'][:]}
+        lut = {'Do': mie['lu_medianD'][:],
+               'mu': mie['lu_u'][:],
+               'S': mie['lu_k'][:],
+               'lwf': mie['lu_LWF'][:],
+               'termv': mie['lu_termv'][:]}
         band = _get_wl_band()
         lut.update({'width': mie[f"lu_width_{band}"][:],
                     'ray': mie[f"lu_mie_ray_{band}"][:]})
@@ -222,14 +236,14 @@ def drizzle_solve(data, drizzle_class, width_ht):
         return 2 / np.pi * data.beta / data.z
 
     def _find_lut_indices(*ind):
-        ind_dia = np.searchsorted(data.mie['diameter'], dia_init[ind])
+        ind_dia = np.searchsorted(data.mie['Do'], dia_init[ind])
         ind_width = bisect_left(width_lut[:, ind_dia], width_ht[ind], hi=n_widths-1)
         return ind_width, ind_dia
 
     def _update_result_tables(*ind):
         params['Do'][ind] = dia
-        params['mu'][ind] = data.mie['u'][lut_ind[0]]
-        params['S'][ind] = data.mie['k'][lut_ind]
+        params['mu'][ind] = data.mie['mu'][lut_ind[0]]
+        params['S'][ind] = data.mie['S'][lut_ind]
 
     def _is_converged(*ind):
         threshold = 1e-3
@@ -248,9 +262,9 @@ def drizzle_solve(data, drizzle_class, width_ht):
         for _ in range(max_ite):
             lut_ind = _find_lut_indices(i, j)
             dia = calc_dia(beta_z_ratio[i, j] * params['beta_corr'][i, j],
-                           data.mie['u'][lut_ind[0]],
+                           data.mie['mu'][lut_ind[0]],
                            data.mie['ray'][lut_ind],
-                           data.mie['k'][lut_ind])
+                           data.mie['S'][lut_ind])
             _update_result_tables(i, j)
             if _is_converged(i, j):
                 break
@@ -268,6 +282,10 @@ DRIZZLE_ATTRIBUTES = {
     'drizzle_lwc': MetaData(
         long_name='Drizzle liquid water content',
         units='kg m-3'
+    ),
+    'drizzle_lwf': MetaData(
+        long_name='Drizzle liquid water flux',
+        units='kg m-2 s-1'
     ),
     'Do': MetaData(
         long_name='Drizzle median diameter',

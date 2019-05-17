@@ -19,6 +19,7 @@ _MS1 = 'm s$^{-1}$'
 _SR1M1 = 'sr$^{-1}$ m$^{-1}$'
 _KGM2 = 'kg m$^{-2}$'
 _KGM3 = 'kg m$^{-3}$'
+_KGM2S1 = 'kg m$^{-2} s$^{-1}$'
 _DB = 'dB'
 _DBZ = 'dBZ'
 
@@ -123,6 +124,14 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_KGM3,
         plot_range=(1e-8, 1e-3),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'drizzle_lwf': PlotMeta(
+        name='Drizzle liquid water flux',
+        cbar='viridis',
+        clabel=_KGM2S1,
+        plot_range=(1e-8, 1e-5),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
