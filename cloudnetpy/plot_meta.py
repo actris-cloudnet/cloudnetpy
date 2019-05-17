@@ -135,6 +135,14 @@ ATTRIBUTES = {
         plot_scale=_LOG,
         plot_type='mesh'
     ),
+    'droplet_fall_velocity': PlotMeta(
+        name='Drizzle droplet fall velocity',
+        cbar='RdBu_r',
+        clabel=_MS1,
+        plot_range=(-2, 2),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'uwind': PlotMeta(
         name='Model zonal wind',
         cbar='RdBu_r',
