@@ -47,12 +47,11 @@ def _calc_derived_products(data, parameters):
 
     def _calc_lwf(lwc_in):
         """Calculates drizzle liquid water flux."""
-        ind_drizzle = np.where(lwc_in)
-        flux = np.zeros_like(lwc_in)
-        ind_dia = np.searchsorted(data.mie['Do'], parameters['Do'][ind_drizzle])
-        ind_mu = np.searchsorted(data.mie['mu'], parameters['mu'][ind_drizzle])
-        flux[ind_drizzle] = (lwc[ind_drizzle] * data.mie['lwf'][ind_mu, ind_dia]
-                             * data.mie['termv'][ind_dia])
+        flux = lwc_in[:]
+        ind = np.where(lwc_in)
+        i = np.searchsorted(data.mie['mu'], parameters['mu'][ind])
+        j = np.searchsorted(data.mie['Do'], parameters['Do'][ind])
+        flux[ind] *= data.mie['lwf'][i, j] * data.mie['termv'][j]
         return flux
 
     density = _calc_density()
