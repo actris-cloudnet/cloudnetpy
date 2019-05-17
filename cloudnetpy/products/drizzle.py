@@ -8,9 +8,9 @@ from scipy.special import gamma
 import netCDF4
 from cloudnetpy import utils, output
 from cloudnetpy.categorize import DataSource
+from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification
-from cloudnetpy.metadata import MetaData
 
 
 def generate_drizzle(categorize_file, output_file):
@@ -26,14 +26,14 @@ def generate_drizzle(categorize_file, output_file):
     width_ht = correct_spectral_width(categorize_file)
     drizzle_parameters = drizzle_solve(drizzle_data, drizzle_class, width_ht)
     derived_products = _calc_derived_products(drizzle_data, drizzle_parameters)
-    products = {** drizzle_parameters, **derived_products}
-    _append_data(drizzle_data, products)
+    results = {** drizzle_parameters, **derived_products}
+    _append_data(drizzle_data, results)
     output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
     output.save_product_file('drizzle', drizzle_data, output_file)
 
 
 def _calc_derived_products(drizzle_data, drizzle_parameters):
-    """Derives more products from the drizzle properties."""
+    """Calculates additional quantities from the drizzle properties."""
     def _calc_density():
         """Calculates drizzle number density (m-3)."""
         return drizzle_data.z * 3.67 ** 6 / drizzle_parameters['Do'] ** 6
@@ -41,7 +41,7 @@ def _calc_derived_products(drizzle_data, drizzle_parameters):
     def _calc_lwc():
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
-        dia, s, mu, _ = drizzle_parameters.values()
+        dia, mu, s, _ = drizzle_parameters.values()
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
         return rho_water / 3 * drizzle_data.beta * s * dia * gamma_ratio
 

@@ -114,7 +114,7 @@ ATTRIBUTES = {
         name='Drizzle number concentration',
         cbar='viridis',
         clabel=_M3,
-        plot_range=(1e-5, 1e10),
+        plot_range=(1e4, 1e9),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
@@ -122,7 +122,7 @@ ATTRIBUTES = {
         name='Drizzle liquid water content',
         cbar='viridis',
         clabel=_KGM3,
-        plot_range=(1e-7, 1e-4),
+        plot_range=(1e-8, 1e-3),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
