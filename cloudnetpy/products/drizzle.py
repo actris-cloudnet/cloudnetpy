@@ -1,22 +1,90 @@
 """Module for creating Cloudnet drizzle product.
 """
 import os
+from bisect import bisect_left
 import numpy as np
 import numpy.ma as ma
+from scipy.special import gamma
 import netCDF4
-from cloudnetpy import utils
+from cloudnetpy import utils, output
 from cloudnetpy.categorize import DataSource
+from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification
-from cloudnetpy.plotting import plot_2d
-from scipy.special import gamma
 
 
 def generate_drizzle(categorize_file, output_file):
+    """Generates Cloudnet drizzle product.
+
+    Args:
+        categorize_file (str): Categorize file name.
+        output_file (str): Output file name.
+
+    """
     drizzle_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
     width_ht = correct_spectral_width(categorize_file)
-    results = drizzle_solve(drizzle_data, drizzle_class, width_ht)
+    drizzle_parameters = drizzle_solve(drizzle_data, drizzle_class, width_ht)
+    derived_products = _calc_derived_products(drizzle_data, drizzle_parameters)
+    results = {** drizzle_parameters, **derived_products}
+    _append_data(drizzle_data, results)
+    output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
+    output.save_product_file('drizzle', drizzle_data, output_file)
+
+
+def _calc_derived_products(data, parameters):
+    """Calculates additional quantities from the drizzle properties."""
+    def _calc_density():
+        """Calculates drizzle number density (m-3)."""
+        return data.z * 3.67 ** 6 / parameters['Do'] ** 6
+
+    def _calc_lwc():
+        """Calculates drizzle liquid water content (kg m-3)"""
+        rho_water = 1000
+        dia, mu, s = [parameters.get(key) for key in ('Do', 'mu', 'S')]
+        gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
+        return rho_water / 3 * data.beta * s * dia * gamma_ratio
+
+    def _calc_lwf(lwc_in):
+        """Calculates drizzle liquid water flux."""
+        flux = np.copy(lwc_in)
+        flux[ind_drizzle] *= data.mie['lwf'][ind_lut] * data.mie['termv'][ind_lut[1]]
+        return flux
+
+    def _calc_fall_velocity():
+        """Calculates drizzle droplet fall velocity (m s-1)."""
+        velocity = np.zeros_like(parameters['Do'])
+        velocity[ind_drizzle] = -data.mie['v'][ind_lut]
+        return velocity
+
+    def _find_indices():
+        drizzle_ind = np.where(parameters['Do'])
+        ind_mu = np.searchsorted(data.mie['mu'], parameters['mu'][drizzle_ind])
+        ind_dia = np.searchsorted(data.mie['Do'], parameters['Do'][drizzle_ind])
+        return drizzle_ind, (ind_mu, ind_dia)
+
+    def _calc_v_air(droplet_velocity):
+        """Calculates vertical air velocity."""
+        velocity = -np.copy(droplet_velocity)
+        velocity[ind_drizzle] += data.v[ind_drizzle]
+        return velocity
+
+    ind_drizzle, ind_lut = _find_indices()
+    density = _calc_density()
+    lwc = _calc_lwc()
+    lwf = _calc_lwf(lwc)
+    fall_velocity = _calc_fall_velocity()
+    v_air = _calc_v_air(fall_velocity)
+    return {'drizzle_N': density, 'drizzle_lwc': lwc,  'drizzle_lwf': lwf,
+            'droplet_fall_velocity': fall_velocity,
+            'vertical_air_velocity': v_air}
+
+
+def _append_data(drizzle_data, results):
+    """Save retrieved fields to the drizzle_data object."""
+    for key, value in results.items():
+        value = ma.masked_where(value == 0, value)
+        drizzle_data.append_data(value, key)
 
 
 class DrizzleSource(DataSource):
@@ -25,12 +93,13 @@ class DrizzleSource(DataSource):
         super().__init__(categorize_file)
         self.mie = self._read_mie_lut()
         self.dheight = utils.mdiff(self.getvar('height'))
-        self.z = self._get_z()
+        self.z = self._convert_z_units()
         self.beta = self.getvar('beta')
+        self.v = self.getvar('v')
 
-    def _get_z(self):
-        """Converts reflectivity factor to linear space."""
-        z = self.getvar('Z') - 180  # what's this 180 ?
+    def _convert_z_units(self):
+        """Converts reflectivity factor to SI units."""
+        z = self.getvar('Z') - 180
         return utils.db2lin(z)
 
     def _read_mie_lut(self):
@@ -47,12 +116,15 @@ class DrizzleSource(DataSource):
 
         mie_file = _get_mie_file()
         mie = netCDF4.Dataset(mie_file).variables
-        lut = {'diameter': mie['lu_medianD'][:],
-               'u': mie['lu_u'][:],
-               'k': mie['lu_k'][:]}
+        lut = {'Do': mie['lu_medianD'][:],
+               'mu': mie['lu_u'][:],
+               'S': mie['lu_k'][:],
+               'lwf': mie['lu_LWF'][:],
+               'termv': mie['lu_termv'][:]}
         band = _get_wl_band()
-        lut.update({'width': mie[f"lu_width_{band}"],
-                    'ray': mie[f"lu_mie_ray_{band}"]})
+        lut.update({'width': mie[f"lu_width_{band}"][:],
+                    'ray': mie[f"lu_mie_ray_{band}"][:],
+                    'v': mie[f"lu_v_{band}"][:]})
         return lut
 
 
@@ -60,10 +132,16 @@ class DrizzleClassification(ProductClassification):
     """Class storing the information about different drizzle types."""
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
+        self.is_v_sigma = self._find_v_sigma(categorize_file)
         self.warm_liquid = self._find_warm_liquid()
         self.drizzle = self._find_drizzle()
         self.would_be_drizzle = self._find_would_be_drizzle()
         self.cold_rain = self._find_cold_rain()
+
+    @staticmethod
+    def _find_v_sigma(cat_file):
+        v_sigma = p_tools.read_nc_fields(cat_file, 'v_sigma')
+        return np.isfinite(v_sigma)
 
     def _find_warm_liquid(self):
         return (self.category_bits['droplet']
@@ -80,7 +158,8 @@ class DrizzleClassification(ProductClassification):
                 & self.quality_bits['lidar']
                 & ~self.quality_bits['clutter']
                 & ~self.quality_bits['molecular']
-                & ~self.quality_bits['attenuated'])
+                & ~self.quality_bits['attenuated']
+                & self.is_v_sigma)  # requires v_sigma now
 
     def _find_would_be_drizzle(self):
         return (~utils.transpose(self.is_rain)
@@ -141,23 +220,21 @@ def calc_horizontal_wind(cat_file):
     return utils.l2norm(u_wind, v_wind)
 
 
-def calc_dia(z, beta, mu, ray, k):
+def calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
     """ Drizzle diameter calculation.
 
     Args:
-        z (ndarray): Radar reflectivity factor in linear units.
-        beta (ndarray): Ceilometer backscatter (m-1 sr-1)
-        mu (ndarray): Shape parameter for gamma calculations.
-        ray (ndarray): Mie to Rayleigh ratio for z.
-        k (ndarray): Unknown parameter.
+        beta_z_ratio (ndarray): Beta to z ratio, multiplied by (2 / pi).
+        mu (ndarray, optional): Shape parameter for gamma calculations. Default is 0.
+        ray (ndarray, optional): Mie to Rayleigh ratio for z. Default is 1.
+        k (ndarray, optional): Alpha to beta ratio . Default is 1.
 
     References:
         https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
 
     """
-    const = 2 / np.pi * ray * k * beta / z
-    s = gamma(7 + mu) / gamma(3 + mu) / ((3.67 + mu) ** 4) * const
-    return (1/s) ** (1/4)
+    const = ray * k * beta_z_ratio
+    return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1/4)
 
 
 def drizzle_solve(data, drizzle_class, width_ht):
@@ -167,50 +244,89 @@ def drizzle_solve(data, drizzle_class, width_ht):
         data (DrizzleSource): Input data.
         drizzle_class (DrizzleClassification): Classification of the atmosphere
             for drizzle calculations.
-        width_ht (ndarray): 2D array of turbulence.
+        width_ht (ndarray): Corrected spectral width.
 
     """
-    shape = data.z.shape
-    diameter, diameter_old, tab_mu = utils.init(3, shape)
-    beta_corr = np.ones(shape)
-    tab_mie_ray = np.ones(shape)
-    init_k = 18.8
-    tab_k = np.full(shape, init_k)
-    drizzle_ind = np.where(drizzle_class.drizzle)
-    diameter_old[drizzle_ind] = calc_dia(data.z[drizzle_ind],
-                                         data.beta[drizzle_ind]*init_k,
-                                         0, 1, 1)
-    threshold = 1e-3
+    def _init_variables():
+        shape = data.z.shape
+        res = {'Do': np.zeros(shape), 'mu': np.zeros(shape),
+               'S': np.zeros(shape), 'beta_corr': np.ones(shape)}
+        return res, np.zeros(shape)
+
+    def _calc_beta_z_ratio():
+        return 2 / np.pi * data.beta / data.z
+
+    def _find_lut_indices(*ind):
+        ind_dia = np.searchsorted(data.mie['Do'], dia_init[ind])
+        ind_width = bisect_left(width_lut[:, ind_dia], width_ht[ind], hi=n_widths-1)
+        return ind_width, ind_dia
+
+    def _update_result_tables(*ind):
+        params['Do'][ind] = dia
+        params['mu'][ind] = data.mie['mu'][lut_ind[0]]
+        params['S'][ind] = data.mie['S'][lut_ind]
+
+    def _is_converged(*ind):
+        threshold = 1e-3
+        return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold
+
+    params, dia_init = _init_variables()
+    beta_z_ratio = _calc_beta_z_ratio()
+    drizzle_ind = np.where(drizzle_class.drizzle == 1)
+    dia_init[drizzle_ind] = calc_dia(beta_z_ratio[drizzle_ind], k=18.8)
+    # Negation because width look-up table is descending order
+    width_lut = -data.mie['width'][:]
+    n_widths = width_lut.shape[0]
+    width_ht = -width_ht
     max_ite = 10
     for i, j in zip(*drizzle_ind):
+        for _ in range(max_ite):
+            lut_ind = _find_lut_indices(i, j)
+            dia = calc_dia(beta_z_ratio[i, j] * params['beta_corr'][i, j],
+                           data.mie['mu'][lut_ind[0]],
+                           data.mie['ray'][lut_ind],
+                           data.mie['S'][lut_ind])
+            _update_result_tables(i, j)
+            if _is_converged(i, j):
+                break
+            dia_init[i, j] = dia
+        beta_factor = np.exp(2*params['S'][i, j]*data.beta[i, j]*data.dheight)
+        params['beta_corr'][i, (j+1):] *= beta_factor
+    return params
 
-        old_dia = diameter_old[i, j]
-        converged = False
-        n_ite = 1
-        while not converged and n_ite < max_ite:
 
-            dia_ind = utils.nearest(data.mie['diameter'], old_dia)
-            mu_ind = utils.nearest(data.mie['width'][:, dia_ind], width_ht[i, j])
-
-            tab_mu[i, j] = data.mie['u'][mu_ind]
-            tab_k[i, j] = data.mie['k'][mu_ind, dia_ind]
-            tab_mie_ray[i, j] = data.mie['ray'][mu_ind, dia_ind]
-
-            loop_dia = calc_dia(data.z[i, j],
-                                data.beta[i, j],
-                                tab_mu[i, j],
-                                tab_mie_ray[i, j],
-                                tab_k[i, j])
-
-            if abs(loop_dia - old_dia) < threshold:
-                diameter[i, j] = loop_dia
-                converged = True
-            else:
-                old_dia = loop_dia
-                n_ite += 1
-
-        beta_factor = np.exp(2*tab_k[i, j]*data.beta[i, j]*data.dheight)
-        beta_corr[i, (j+1):] *= beta_factor
-
-    return diameter, tab_mu, tab_k, tab_mie_ray, beta_corr
-
+DRIZZLE_ATTRIBUTES = {
+    'drizzle_N': MetaData(
+        long_name='Drizzle number concentration',
+        units='m-3'
+    ),
+    'drizzle_lwc': MetaData(
+        long_name='Drizzle liquid water content',
+        units='kg m-3'
+    ),
+    'drizzle_lwf': MetaData(
+        long_name='Drizzle liquid water flux',
+        units='kg m-2 s-1'
+    ),
+    'droplet_fall_velocity': MetaData(
+        long_name='Drizzle droplet fall velocity',  # check this, should it include 'terminal' ?
+        units='m s-1'
+    ),
+    'vertical_air_velocity': MetaData(
+        long_name='Vertical air velocity',
+        units='m s-1'
+    ),
+    'Do': MetaData(
+        long_name='Drizzle median diameter',
+        units='m',
+    ),
+    'mu': MetaData(
+        long_name='Drizzle DSD shape parameter',
+    ),
+    'S': MetaData(
+        long_name='Lidar backscatter-to-extinction ratio',
+    ),
+    'beta_corr': MetaData(
+        long_name='Lidar backscatter correction factor',
+    )
+}

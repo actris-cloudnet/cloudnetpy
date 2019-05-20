@@ -14,10 +14,12 @@ PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 _LOG = 'logarithmic'
 _LIN = 'linear'
 
-_MS1 = 'm $s^{-1}$'
+_M3 = '$m^{-3}$'
+_MS1 = 'm s$^{-1}$'
 _SR1M1 = 'sr$^{-1}$ m$^{-1}$'
 _KGM2 = 'kg m$^{-2}$'
 _KGM3 = 'kg m$^{-3}$'
+_KGM2S1 = 'kg m$^{-2} s$^{-1}$'
 _DB = 'dB'
 _DBZ = 'dBZ'
 
@@ -85,6 +87,70 @@ _CBAR = {
 }
 
 ATTRIBUTES = {
+    'Do': PlotMeta(
+        name='Drizzle median diameter',
+        cbar='viridis',
+        clabel='m',
+        plot_range=(1e-6, 1e-3),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'mu': PlotMeta(
+        name='Drizzle DSD shape parameter',
+        cbar='viridis',
+        clabel='',
+        plot_range=(0, 10),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'S': PlotMeta(
+        name='Backscatter-to-extinction ratio',
+        cbar='viridis',
+        clabel='',
+        plot_range=(0, 25),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'drizzle_N': PlotMeta(
+        name='Drizzle number concentration',
+        cbar='viridis',
+        clabel=_M3,
+        plot_range=(1e4, 1e9),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'drizzle_lwc': PlotMeta(
+        name='Drizzle liquid water content',
+        cbar='viridis',
+        clabel=_KGM3,
+        plot_range=(1e-8, 1e-3),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'drizzle_lwf': PlotMeta(
+        name='Drizzle liquid water flux',
+        cbar='viridis',
+        clabel=_KGM2S1,
+        plot_range=(1e-8, 1e-5),
+        plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'droplet_fall_velocity': PlotMeta(
+        name='Drizzle droplet fall velocity',
+        cbar='RdBu_r',
+        clabel=_MS1,
+        plot_range=(-2, 2),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'vertical_air_velocity': PlotMeta(
+        name='Vertical air velocity',
+        cbar='RdBu_r',
+        clabel=_MS1,
+        plot_range=(-2, 2),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'uwind': PlotMeta(
         name='Model zonal wind',
         cbar='RdBu_r',
