@@ -64,9 +64,9 @@ _CLABEL = {
          "Reliable retrieval",
          "Adiabatic ret.: cloud top adjusted",
          "Adiabatic ret.: new cloud pixel",
-         "Unreliable lwp: no ret.",
-         "Unreliable lwp/cloud boundaries: no ret.",
-         "Rain present: no ret.")
+         "Unreliable lwp: no retrieval",
+         "Unreliable lwp/cloud boundaries: no retrieval",
+         "Rain present: no retrieval")
 }
 
 _CBAR = {
@@ -80,7 +80,7 @@ _CBAR = {
         ("#ffffff", "#00bfff", "#ff4500", "#0000ff", "#ffff00",
          "#2f4f4f", "#778899", "#d3d3d3"),
     'lwc_retrieval_status':
-        ("#ffffff", "#00bfff", "#0000ff", "#2f4f4f", "#ffa500",
+        ("#ffffff", "#00bfff", "#0000ff", "#3cb371", "#ffa500",
          "#ff4500", "#2f4f4f"),
     'bit':
         ("#ffffff", "#4682b4")
@@ -357,7 +357,7 @@ ATTRIBUTES = {
         name='Liquid water content',
         cbar='Blues',
         clabel=_KGM3,
-        plot_range=(1e-6, 1e-2),
+        plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
@@ -365,7 +365,7 @@ ATTRIBUTES = {
         name='Liquid water content error',
         cbar='RdYlGn_r',
         clabel=_KGM2,
-        plot_range=(1e-5, 1e-3),
+        plot_range=(0, 2),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
