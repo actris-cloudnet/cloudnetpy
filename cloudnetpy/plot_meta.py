@@ -62,8 +62,8 @@ _CLABEL = {
     'lwc_retrieval_status':
         ("No liquid water",
          "Reliable retrieval",
-         "Adiabatic ret.: cloud top adjusted",
-         "Adiabatic ret.: new cloud pixel",
+         "Adiabatic retrieval: cloud top adjusted",
+         "Adiabatic retrieval: new cloud pixel",
          "Unreliable lwp: no retrieval",
          "Unreliable lwp/cloud boundaries: no retrieval",
          "Rain present: no retrieval")
@@ -81,7 +81,7 @@ _CBAR = {
          "#2f4f4f", "#778899", "#d3d3d3"),
     'lwc_retrieval_status':
         ("#ffffff", "#00bfff", "#0000ff", "#3cb371", "#ffa500",
-         "#ff4500", "#2f4f4f"),
+         "#ff4500", "#ECECEC"),
     'bit':
         ("#ffffff", "#4682b4")
 }

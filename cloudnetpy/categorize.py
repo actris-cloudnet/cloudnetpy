@@ -331,6 +331,7 @@ class Mwr(DataSource):
         self._unknown_to_cloudnet(('LWP_data', 'lwp'), 'lwp')
 
     def _init_lwp_error(self):
+        # TODO: Check these error values
         random_error, bias = 0.25, 5
         lwp_error = utils.l2norm(self.data['lwp'][:]*random_error, bias)
         self.append_data(lwp_error, 'lwp_error', units='g m-2')

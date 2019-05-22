@@ -46,6 +46,8 @@ class Lwc:
 
     def _calc_lwc_error(self):
         """Estimates error in liquid water content.
+
+        TODO: Check the error calculation.
         """
         lwc_error = np.zeros_like(self.lwc)
         lwp_relative_error = self.lwc_source.lwp_error / self.lwc_source.lwp
@@ -173,6 +175,7 @@ class Lwc:
         """Masks profiles with rain."""
         is_rain = self.lwc_source.is_rain.astype(bool)
         self.lwc[is_rain, :] = ma.masked
+        self.lwc_error[is_rain, :] = ma.masked
         self.status[is_rain, :] = 6
 
 
