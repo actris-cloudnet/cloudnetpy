@@ -158,11 +158,10 @@ def _calc_derived_products(data, parameters):
     density = _calc_density()
     lwc = _calc_lwc()
     lwf = _calc_lwf(lwc)
-    fall_velocity = _calc_fall_velocity()
-    v_air = _calc_v_air(fall_velocity)
+    v_droplet = _calc_fall_velocity()
+    v_air = _calc_v_air(v_droplet)
     return {'drizzle_N': density, 'drizzle_lwc': lwc, 'drizzle_lwf': lwf,
-            'droplet_fall_velocity': fall_velocity,
-            'vertical_air_velocity': v_air}
+            'v_droplet': v_droplet, 'v_air': v_air}
 
 
 class DrizzleSource(DataSource):
@@ -388,6 +387,14 @@ DRIZZLE_ATTRIBUTES = {
         units='kg m-3',
         ancillary_variables='drizzle_lwc_error drizzle_lwc_bias'
     ),
+    'drizzle_lwc_error': MetaData(
+        long_name='Random error in drizzle liquid water content',
+        units='dB',
+    ),
+    'drizzle_lwc_bias': MetaData(
+        long_name='Possible bias in drizzle liquid water content',
+        units='dB',
+    ),
     'drizzle_lwf': MetaData(
         long_name='Drizzle liquid water flux',
         units='kg m-2 s-1',
@@ -401,21 +408,23 @@ DRIZZLE_ATTRIBUTES = {
         long_name='Possible bias in drizzle liquid water flux',
         units='dB',
     ),
-    'droplet_fall_velocity': MetaData(
+    'v_droplet': MetaData(
         long_name='Drizzle droplet fall velocity',  # TODO: should it include 'terminal' ?
         units='m s-1',
-        ancillary_variables='Random error in drizzle droplet fall velocity',
+        ancillary_variables='v_droplet_error',
+        positive='down'
     ),
-    'droplet_fall_velocity_error': MetaData(
+    'v_droplet_error': MetaData(
         long_name='Random error in drizzle droplet fall velocity',
         units='dB'
     ),
-    'vertical_air_velocity': MetaData(
+    'v_air': MetaData(
         long_name='Vertical air velocity',
         units='m s-1',
-        ancillary_variables='vertical_air_velocity_error'
+        ancillary_variables='v_air_error',
+        positive='up',
     ),
-    'vertical_air_velocity_error': MetaData(
+    'v_air_error': MetaData(
         long_name='Random error in vertical air velocity',
         units='dB'
     ),
