@@ -64,16 +64,16 @@ def _calc_errors(categorize):
         data_keys = ('Z', 'beta')
         errors = _read_error_term(categorize, data_keys)
         biases = _read_error_term(categorize, data_keys, 'bias')
-        errors['mu'] = 0.07
-        biases['mu'] = 0
+        errors['mu'], biases['mu'] = 0.07, 0
         return errors, biases
 
     def _get_weighting_factors():
-        Weights = namedtuple('Weights', keys)
+        """Returns scale factors and weights  """
+        Weights = namedtuple('Weights', product_keys)
         return Weights((2/7, 1), (1/7, (1, 6)), (1/7, (3, 4, 1)), (1/2, 1))
 
     def _total_err(terms, keys_in, overall_scale=1.0, term_weights=1.0):
-        """Calculates total error.
+        """Calculates weighted and scaled Euclidean distance.
 
         Total error is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
         where a, b, ... are terms to be summed and a1, a2, ... are
@@ -87,19 +87,19 @@ def _calc_errors(categorize):
         values = np.multiply(values, term_weights)
         return overall_scale * utils.l2norm(*values)
 
-    def _lin2db(data):
+    def _convert_to_db(data):
         """Converts linear error values to dB."""
         return {name: utils.lin2db(value) for name, value in data.items()}
 
-    keys = ('dia', 'lwc', 'lwf', 'S')
+    product_keys = ('Do', 'drizzle_lwc', 'drizzle_lwf', 'S')
     factors = _get_weighting_factors()
     err, bias = _read_error_inputs()
     results = {}
-    for key in keys:
-        fields = ('Z', 'beta') if key in ('lwc', 'S') else ('Z', 'beta', 'mu')
+    for key in product_keys:
+        fields = ('Z', 'beta') if key in ('drizzle_lwc', 'S') else ('Z', 'beta', 'mu')
         results[f"{key}_error"] = _total_err(err, fields, *getattr(factors, key))
         results[f"{key}_bias"] = _total_err(bias, fields, *getattr(factors, key))
-    return _lin2db(results)
+    return _convert_to_db(results)
 
 
 def _screen_rain(results, classification):
@@ -376,33 +376,77 @@ def drizzle_solve(data, drizzle_class, width_ht):
 DRIZZLE_ATTRIBUTES = {
     'drizzle_N': MetaData(
         long_name='Drizzle number concentration',
-        units='m-3'
+        units='m-3',
+        ancillary_variables='drizzle_N_error'
+    ),
+    'drizzle_N_error': MetaData(
+        long_name='Random error in drizzle number concentration',
+        units='dB'
     ),
     'drizzle_lwc': MetaData(
         long_name='Drizzle liquid water content',
-        units='kg m-3'
+        units='kg m-3',
+        ancillary_variables='drizzle_lwc_error drizzle_lwc_bias'
     ),
     'drizzle_lwf': MetaData(
         long_name='Drizzle liquid water flux',
-        units='kg m-2 s-1'
+        units='kg m-2 s-1',
+        ancillary_variables='drizzle_lwf_error drizzle_lwf_bias'
+    ),
+    'drizzle_lwf_error': MetaData(
+        long_name='Random error in drizzle liquid water flux',
+        units='dB',
+    ),
+    'drizzle_lwf_bias': MetaData(
+        long_name='Possible bias in drizzle liquid water flux',
+        units='dB',
     ),
     'droplet_fall_velocity': MetaData(
-        long_name='Drizzle droplet fall velocity',  # check this, should it include 'terminal' ?
-        units='m s-1'
+        long_name='Drizzle droplet fall velocity',  # TODO: should it include 'terminal' ?
+        units='m s-1',
+        ancillary_variables='Random error in drizzle droplet fall velocity',
+    ),
+    'droplet_fall_velocity_error': MetaData(
+        long_name='Random error in drizzle droplet fall velocity',
+        units='dB'
     ),
     'vertical_air_velocity': MetaData(
         long_name='Vertical air velocity',
-        units='m s-1'
+        units='m s-1',
+        ancillary_variables='vertical_air_velocity_error'
+    ),
+    'vertical_air_velocity_error': MetaData(
+        long_name='Random error in vertical air velocity',
+        units='dB'
     ),
     'Do': MetaData(
         long_name='Drizzle median diameter',
         units='m',
+        ancillary_variables='Do_error Do_bias'
+    ),
+    'Do_error': MetaData(
+        long_name='Random error in drizzle median diameter',
+        units='dB',
+    ),
+    'Do_bias': MetaData(
+        long_name='Possible bias in drizzle median diameter',
+        units='dB',
     ),
     'mu': MetaData(
         long_name='Drizzle DSD shape parameter',
+        ancillary_variables='mu_error'
+    ),
+    'mu_error': MetaData(
+        long_name='Random error in drizzle DSD shape parameter',
+        units='dB',
     ),
     'S': MetaData(
         long_name='Lidar backscatter-to-extinction ratio',
+        ancillary_variables='S_error'
+    ),
+    'S_error': MetaData(
+        long_name='Random error in lidar backscatter-to-extinction ratio',
+        units='dB'
     ),
     'beta_corr': MetaData(
         long_name='Lidar backscatter correction factor',
