@@ -87,6 +87,10 @@ def _calc_errors(categorize):
         values = np.multiply(values, term_weights)
         return overall_scale * utils.l2norm(*values)
 
+    def _lin2db(data):
+        """Converts linear error values to dB."""
+        return {name: utils.lin2db(value) for name, value in data.items()}
+
     keys = ('dia', 'lwc', 'lwf', 'S')
     factors = _get_weighting_factors()
     err, bias = _read_error_inputs()
@@ -95,7 +99,7 @@ def _calc_errors(categorize):
         fields = ('Z', 'beta') if key in ('lwc', 'S') else ('Z', 'beta', 'mu')
         results[f"{key}_error"] = _total_err(err, fields, *getattr(factors, key))
         results[f"{key}_bias"] = _total_err(bias, fields, *getattr(factors, key))
-    return results
+    return _lin2db(results)
 
 
 def _screen_rain(results, classification):
@@ -233,7 +237,7 @@ class DrizzleClassification(ProductClassification):
                 & ~self.quality_bits['clutter']
                 & ~self.quality_bits['molecular']
                 & ~self.quality_bits['attenuated']
-                & self.is_v_sigma)  # requires v_sigma now
+                & self.is_v_sigma)
 
     def _find_would_be_drizzle(self):
         return (~utils.transpose(self.is_rain)
