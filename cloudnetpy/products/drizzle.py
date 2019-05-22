@@ -2,6 +2,7 @@
 """
 import os
 from bisect import bisect_left
+from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
 from scipy.special import gamma
@@ -26,10 +27,90 @@ def generate_drizzle(categorize_file, output_file):
     width_ht = correct_spectral_width(categorize_file)
     drizzle_parameters = drizzle_solve(drizzle_data, drizzle_class, width_ht)
     derived_products = _calc_derived_products(drizzle_data, drizzle_parameters)
-    results = {** drizzle_parameters, **derived_products}
+    errors = _calc_errors(drizzle_data)
+    results = {**drizzle_parameters, **derived_products, **errors}
+    results = _screen_rain(results, drizzle_class)
     _append_data(drizzle_data, results)
     output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
     output.save_product_file('drizzle', drizzle_data, output_file)
+
+
+def _read_error_term(categorize, fields, term='error'):
+    """Returns linear error terms for a variable.
+
+    Args:
+        categorize (DataSource): DataSource object.
+        fields (tuple): Variable names.
+        term (str, optional): Uncertainty type, e.g. 'error' or 'bias'.
+            Default is 'error'.
+
+        Returns:
+            dict: Dictionary of the error (or bias, etc) terms.
+
+    Examples:
+        >>> errors = _read_error_term(categorize, ('Z', 'beta'))
+
+    """
+    def _get_linear(full_name):
+        return utils.db2lin(categorize.getvar(full_name))
+
+    return {field: _get_linear(f"{field}_{term}") for field in fields}
+
+
+def _calc_errors(categorize):
+    """Estimates errors in the retrieved drizzle products."""
+
+    def _read_error_inputs():
+        data_keys = ('Z', 'beta')
+        errors = _read_error_term(categorize, data_keys)
+        biases = _read_error_term(categorize, data_keys, 'bias')
+        errors['mu'] = 0.07
+        biases['mu'] = 0
+        return errors, biases
+
+    def _get_weighting_factors():
+        Weights = namedtuple('Weights', keys)
+        return Weights((2/7, 1), (1/7, (1, 6)), (1/7, (3, 4, 1)), (1/2, 1))
+
+    def _total_err(terms, keys_in, overall_scale=1.0, term_weights=1.0):
+        """Calculates total error.
+
+        Total error is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
+        where a, b, ... are terms to be summed and a1, a2, ... are
+        optional weights for the terms.
+
+        Args:
+            terms (ndarray):
+
+        """
+        values = [terms.get(k) for k in keys_in]
+        values = np.multiply(values, term_weights)
+        return overall_scale * utils.l2norm(*values)
+
+    keys = ('dia', 'lwc', 'lwf', 'S')
+    factors = _get_weighting_factors()
+    err, bias = _read_error_inputs()
+    results = {}
+    for key in keys:
+        fields = ('Z', 'beta') if key in ('lwc', 'S') else ('Z', 'beta', 'mu')
+        results[f"{key}_error"] = _total_err(err, fields, *getattr(factors, key))
+        results[f"{key}_bias"] = _total_err(bias, fields, *getattr(factors, key))
+    return results
+
+
+def _screen_rain(results, classification):
+    """Removes rainy profiles from drizzle variables.."""
+    for key in results.keys():
+        if not utils.isscalar(results[key]):
+            results[key][classification.is_rain, :] = 0
+    return results
+
+
+def _append_data(drizzle_data, results):
+    """Save retrieved fields to the drizzle_data object."""
+    for key, value in results.items():
+        value = ma.masked_where(value == 0, value)
+        drizzle_data.append_data(value, key)
 
 
 def _calc_derived_products(data, parameters):
@@ -75,16 +156,9 @@ def _calc_derived_products(data, parameters):
     lwf = _calc_lwf(lwc)
     fall_velocity = _calc_fall_velocity()
     v_air = _calc_v_air(fall_velocity)
-    return {'drizzle_N': density, 'drizzle_lwc': lwc,  'drizzle_lwf': lwf,
+    return {'drizzle_N': density, 'drizzle_lwc': lwc, 'drizzle_lwf': lwf,
             'droplet_fall_velocity': fall_velocity,
             'vertical_air_velocity': v_air}
-
-
-def _append_data(drizzle_data, results):
-    """Save retrieved fields to the drizzle_data object."""
-    for key, value in results.items():
-        value = ma.masked_where(value == 0, value)
-        drizzle_data.append_data(value, key)
 
 
 class DrizzleSource(DataSource):
