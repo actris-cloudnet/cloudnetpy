@@ -72,28 +72,14 @@ def _calc_errors(categorize):
         factors = _get_weighting_factors(product_keys)
         for key in product_keys:
             fields = ('Z', 'beta') if key in ('drizzle_lwc', 'S') else ('Z', 'beta', 'mu')
-            results[f'{key}_error'] = _total_err(err, fields, *getattr(factors, key))
-            results[f'{key}_bias'] = _total_err(bias, fields, *getattr(factors, key))
+            weights = getattr(factors, key)
+            results[f'{key}_error'] = weighted_l2_norm(err, fields, *weights)
+            results[f'{key}_bias'] = weighted_l2_norm(bias, fields, *weights)
 
     def _get_weighting_factors(keys):
         """Returns scale factors and weights."""
         Weights = namedtuple('Weights', keys)
         return Weights((2/7, 1), (1/7, (1, 6)), (1/7, (3, 4, 1)), (1/2, 1))
-
-    def _total_err(terms, keys, overall_scale=1.0, term_weights=1.0):
-        """Calculates weighted and scaled Euclidean distance.
-
-        Total error is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
-        where a, b, ... are terms to be summed and a1, a2, ... are
-        optional weights for the terms.
-
-        Args:
-            terms (ndarray):
-
-        """
-        values = [terms.get(key) for key in keys]
-        weighted_values = np.multiply(values, term_weights)
-        return overall_scale * utils.l2norm(*weighted_values)
 
     def _add_supplementary_errors():
         """Calculates random error and bias in drizzle number density."""
@@ -110,6 +96,30 @@ def _calc_errors(categorize):
     _add_supplementary_errors()
     utils.del_dict_keys(results, ['S_bias'])
     return _convert_to_db(results)
+
+
+def weighted_l2_norm(terms, keys, overall_scale=1.0, term_weights=1.0):
+    """Calculates scaled and weighted Euclidean distance.
+
+    Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
+    where a, b, ... are terms to be summed and a1, a2, ... are optional weights
+    for the terms.
+
+    Args:
+        terms (dict): Dictionary of arrays.
+        keys (list/tuple): keys to be picked from **terms**.
+        overall_scale (float, optional): Scale factor for the calculated
+            Euclidean distance. Default is 1.
+        term_weights (float/list): Weights for the terms. Must be single
+            float or a list of numbers (one per term). Default is 1.
+
+    Returns:
+        float: Scaled and weighted Euclidean distance.
+
+    """
+    values = [terms.get(key) for key in keys]
+    weighted_values = np.multiply(values, term_weights)
+    return overall_scale * utils.l2norm(*weighted_values)
 
 
 def _screen_rain(results, classification):
