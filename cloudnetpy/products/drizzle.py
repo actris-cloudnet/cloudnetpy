@@ -98,12 +98,7 @@ def _calc_errors(categorize):
     def _add_supplementary_errors():
         """Calculates random error and bias in drizzle number density."""
         results['drizzle_N_error'] = utils.l2norm(err['Z'], 6*results['Do_error'])
-        results['v_droplet_error'] = results['Do_error']
-
-    def _remove_obsolete_errors(keys):
-        """Remove variables that are not needed anymore."""
-        for key in keys:
-            del results[key]
+        results['v_drizzle_error'] = results['Do_error']
 
     def _convert_to_db(data):
         """Converts linear error values to dB."""
@@ -113,7 +108,7 @@ def _calc_errors(categorize):
     results = {}
     _add_standard_errors()
     _add_supplementary_errors()
-    _remove_obsolete_errors(['S_bias'])
+    utils.del_dict_keys(results, ['S_bias'])
     return _convert_to_db(results)
 
 
@@ -173,10 +168,10 @@ def _calc_derived_products(data, parameters):
     density = _calc_density()
     lwc = _calc_lwc()
     lwf = _calc_lwf(lwc)
-    v_droplet = _calc_fall_velocity()
-    v_air = _calc_v_air(v_droplet)
+    v_drizzle = _calc_fall_velocity()
+    v_air = _calc_v_air(v_drizzle)
     return {'drizzle_N': density, 'drizzle_lwc': lwc, 'drizzle_lwf': lwf,
-            'v_droplet': v_droplet, 'v_air': v_air}
+            'v_drizzle': v_drizzle, 'v_air': v_air}
 
 
 class DrizzleSource(DataSource):
@@ -423,13 +418,13 @@ DRIZZLE_ATTRIBUTES = {
         long_name='Possible bias in drizzle liquid water flux',
         units='dB',
     ),
-    'v_droplet': MetaData(
+    'v_drizzle': MetaData(
         long_name='Drizzle droplet fall velocity',  # TODO: should it include 'terminal' ?
         units='m s-1',
-        ancillary_variables='v_droplet_error',
+        ancillary_variables='v_drizzle_error',
         positive='down'
     ),
-    'v_droplet_error': MetaData(
+    'v_drizzle_error': MetaData(
         long_name='Random error in drizzle droplet fall velocity',
         units='dB'
     ),
@@ -457,11 +452,11 @@ DRIZZLE_ATTRIBUTES = {
         units='dB',
     ),
     'mu': MetaData(
-        long_name='Drizzle DSD shape parameter',
+        long_name='Drizzle droplet size distribution shape parameter',
         ancillary_variables='mu_error'
     ),
     'mu_error': MetaData(
-        long_name='Random error in drizzle DSD shape parameter',
+        long_name='Random error in drizzle droplet size distribution shape parameter',
         units='dB',
     ),
     'S': MetaData(
