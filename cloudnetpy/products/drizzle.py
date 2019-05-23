@@ -67,12 +67,20 @@ def _calc_errors(categorize):
         errors['mu'], biases['mu'] = 0.07, 0
         return errors, biases
 
-    def _get_weighting_factors():
-        """Returns scale factors and weights  """
-        Weights = namedtuple('Weights', product_keys)
+    def _add_standard_errors():
+        product_keys = ('Do', 'drizzle_lwc', 'drizzle_lwf', 'S')
+        factors = _get_weighting_factors(product_keys)
+        for key in product_keys:
+            fields = ('Z', 'beta') if key in ('drizzle_lwc', 'S') else ('Z', 'beta', 'mu')
+            results[f'{key}_error'] = _total_err(err, fields, *getattr(factors, key))
+            results[f'{key}_bias'] = _total_err(bias, fields, *getattr(factors, key))
+
+    def _get_weighting_factors(keys):
+        """Returns scale factors and weights."""
+        Weights = namedtuple('Weights', keys)
         return Weights((2/7, 1), (1/7, (1, 6)), (1/7, (3, 4, 1)), (1/2, 1))
 
-    def _total_err(terms, keys_in, overall_scale=1.0, term_weights=1.0):
+    def _total_err(terms, keys, overall_scale=1.0, term_weights=1.0):
         """Calculates weighted and scaled Euclidean distance.
 
         Total error is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
@@ -83,22 +91,29 @@ def _calc_errors(categorize):
             terms (ndarray):
 
         """
-        values = [terms.get(k) for k in keys_in]
-        values = np.multiply(values, term_weights)
-        return overall_scale * utils.l2norm(*values)
+        values = [terms.get(key) for key in keys]
+        weighted_values = np.multiply(values, term_weights)
+        return overall_scale * utils.l2norm(*weighted_values)
+
+    def _add_supplementary_errors():
+        """Calculates random error and bias in drizzle number density."""
+        results['drizzle_N_error'] = utils.l2norm(err['Z'], 6*results['Do_error'])
+        results['v_droplet_error'] = results['Do_error']
+
+    def _remove_obsolete_errors(keys):
+        """Remove variables that are not needed anymore."""
+        for key in keys:
+            del results[key]
 
     def _convert_to_db(data):
         """Converts linear error values to dB."""
         return {name: utils.lin2db(value) for name, value in data.items()}
 
-    product_keys = ('Do', 'drizzle_lwc', 'drizzle_lwf', 'S')
-    factors = _get_weighting_factors()
     err, bias = _read_error_inputs()
     results = {}
-    for key in product_keys:
-        fields = ('Z', 'beta') if key in ('drizzle_lwc', 'S') else ('Z', 'beta', 'mu')
-        results[f"{key}_error"] = _total_err(err, fields, *getattr(factors, key))
-        results[f"{key}_bias"] = _total_err(bias, fields, *getattr(factors, key))
+    _add_standard_errors()
+    _add_supplementary_errors()
+    _remove_obsolete_errors(['S_bias'])
     return _convert_to_db(results)
 
 
