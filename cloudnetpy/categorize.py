@@ -147,6 +147,8 @@ class ProfileDataSource(DataSource):
 
     def _get_height(self):
         """Returns height array above mean sea level (m)."""
+        if 'height' in self.variables:
+            return self.km2m(self.variables['height'])
         range_instrument = self.km2m(self.variables['range'])
         return np.array(range_instrument + self.altitude)
 
@@ -526,7 +528,7 @@ def _save_cat(file_name, radar, lidar, model, obs):
     # Needs to solve how to provide institution
     # rootgrp.institution = f"Data processed at {config.INSTITUTE}"
     rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
-    output.merge_history(rootgrp, 'categorize', radar)
+    output.merge_history(rootgrp, 'categorize', radar, lidar)
     _merge_source(rootgrp, radar, lidar)
     rootgrp.close()
 

@@ -165,7 +165,7 @@ class JenoptikCeilo(Ceilometer):
         return beta_raw
 
     def _get_nn(self):
-        """Taken from the Matlab code. Not sure what this is.."""
+        """TODO: Taken from the Matlab code. Not sure what this is."""
         nn1 = self._getvar('nn1')
         nn_reference = 140
         nn_step_factor = 1.24
@@ -488,6 +488,7 @@ def _save_ceilo(ceilo, output_file, location):
     """Saves the ceilometer netcdf-file."""
     dims = {'time': len(ceilo.time), 'range': len(ceilo.range)}
     rootgrp = output.init_file(output_file, dims, ceilo.data, zlib=True)
+    output.copy_variables(ceilo.dataset, rootgrp, ('wavelength',))
     rootgrp.title = f"Ceilometer file from {location}"
     rootgrp.year, rootgrp.month, rootgrp.day = ceilo.date
     rootgrp.location = location

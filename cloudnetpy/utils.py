@@ -250,7 +250,7 @@ def l2norm(*args):
     """
     ss = 0
     for arg in args:
-        ss = ss + arg**2
+        ss = ss + arg ** 2
     return ma.sqrt(ss)
 
 
@@ -424,6 +424,9 @@ def transpose(x):
     return x[:, np.newaxis]
 
 
-def nearest(array, value):
-    """ Find the nearest index of a value in an array """
-    return (np.abs(array-value)).argmin()
+def del_dict_keys(dict_in, keys):
+    """Removes multiple keys from dictionary."""
+    for key in keys:
+        if key in dict_in:
+            del dict_in[key]
+    return dict_in
