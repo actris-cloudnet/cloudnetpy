@@ -2,6 +2,7 @@
 """
 import os
 from bisect import bisect_left
+from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
 from scipy.special import gamma
@@ -26,10 +27,114 @@ def generate_drizzle(categorize_file, output_file):
     width_ht = correct_spectral_width(categorize_file)
     drizzle_parameters = drizzle_solve(drizzle_data, drizzle_class, width_ht)
     derived_products = _calc_derived_products(drizzle_data, drizzle_parameters)
-    results = {** drizzle_parameters, **derived_products}
+    errors = _calc_errors(drizzle_data)
+    results = {**drizzle_parameters, **derived_products, **errors}
+    results = _screen_rain(results, drizzle_class)
     _append_data(drizzle_data, results)
     output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
     output.save_product_file('drizzle', drizzle_data, output_file)
+
+
+def _read_error_term(categorize, fields, term='error'):
+    """Returns linear error terms for a variable.
+
+    Args:
+        categorize (DataSource): DataSource object.
+        fields (tuple): Variable names.
+        term (str, optional): Uncertainty type, e.g. 'error' or 'bias'.
+            Default is 'error'.
+
+        Returns:
+            dict: Dictionary of the error (or bias, etc) terms.
+
+    Examples:
+        >>> errors = _read_error_term(categorize, ('Z', 'beta'))
+
+    """
+    def _get_linear(full_name):
+        return utils.db2lin(categorize.getvar(full_name))
+
+    return {field: _get_linear(f"{field}_{term}") for field in fields}
+
+
+def _calc_errors(categorize):
+    """Estimates errors in the retrieved drizzle products."""
+
+    def _read_error_inputs():
+        data_keys = ('Z', 'beta')
+        errors = _read_error_term(categorize, data_keys)
+        biases = _read_error_term(categorize, data_keys, 'bias')
+        errors['mu'], biases['mu'] = 0.07, 0
+        return errors, biases
+
+    def _add_standard_errors():
+        product_keys = ('Do', 'drizzle_lwc', 'drizzle_lwf', 'S')
+        factors = _get_weighting_factors(product_keys)
+        for key in product_keys:
+            fields = ('Z', 'beta') if key in ('drizzle_lwc', 'S') else ('Z', 'beta', 'mu')
+            weights = getattr(factors, key)
+            results[f'{key}_error'] = weighted_l2_norm(err, fields, *weights)
+            results[f'{key}_bias'] = weighted_l2_norm(bias, fields, *weights)
+
+    def _get_weighting_factors(keys):
+        """Returns scale factors and weights."""
+        Weights = namedtuple('Weights', keys)
+        return Weights((2/7, 1), (1/7, (1, 6)), (1/7, (3, 4, 1)), (1/2, 1))
+
+    def _add_supplementary_errors():
+        """Calculates random error and bias in drizzle number density."""
+        results['drizzle_N_error'] = utils.l2norm(err['Z'], 6*results['Do_error'])
+        results['v_drizzle_error'] = results['Do_error']
+
+    def _convert_to_db(data):
+        """Converts linear error values to dB."""
+        return {name: utils.lin2db(value) for name, value in data.items()}
+
+    err, bias = _read_error_inputs()
+    results = {}
+    _add_standard_errors()
+    _add_supplementary_errors()
+    utils.del_dict_keys(results, ['S_bias'])
+    return _convert_to_db(results)
+
+
+def weighted_l2_norm(terms, keys, overall_scale=1.0, term_weights=1.0):
+    """Calculates scaled and weighted Euclidean distance.
+
+    Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
+    where a, b, ... are terms to be summed and a1, a2, ... are optional weights
+    for the terms.
+
+    Args:
+        terms (dict): Dictionary of arrays.
+        keys (list/tuple): keys to be picked from **terms**.
+        overall_scale (float, optional): Scale factor for the calculated
+            Euclidean distance. Default is 1.
+        term_weights (float/list): Weights for the terms. Must be single
+            float or a list of numbers (one per term). Default is 1.
+
+    Returns:
+        float: Scaled and weighted Euclidean distance.
+
+    """
+    values = [terms.get(key) for key in keys]
+    weighted_values = np.multiply(values, term_weights)
+    return overall_scale * utils.l2norm(*weighted_values)
+
+
+def _screen_rain(results, classification):
+    """Removes rainy profiles from drizzle variables.."""
+    for key in results.keys():
+        if not utils.isscalar(results[key]):
+            results[key][classification.is_rain, :] = 0
+    return results
+
+
+def _append_data(drizzle_data, results):
+    """Save retrieved fields to the drizzle_data object."""
+    for key, value in results.items():
+        value = ma.masked_where(value == 0, value)
+        drizzle_data.append_data(value, key)
 
 
 def _calc_derived_products(data, parameters):
@@ -73,18 +178,10 @@ def _calc_derived_products(data, parameters):
     density = _calc_density()
     lwc = _calc_lwc()
     lwf = _calc_lwf(lwc)
-    fall_velocity = _calc_fall_velocity()
-    v_air = _calc_v_air(fall_velocity)
-    return {'drizzle_N': density, 'drizzle_lwc': lwc,  'drizzle_lwf': lwf,
-            'droplet_fall_velocity': fall_velocity,
-            'vertical_air_velocity': v_air}
-
-
-def _append_data(drizzle_data, results):
-    """Save retrieved fields to the drizzle_data object."""
-    for key, value in results.items():
-        value = ma.masked_where(value == 0, value)
-        drizzle_data.append_data(value, key)
+    v_drizzle = _calc_fall_velocity()
+    v_air = _calc_v_air(v_drizzle)
+    return {'drizzle_N': density, 'drizzle_lwc': lwc, 'drizzle_lwf': lwf,
+            'v_drizzle': v_drizzle, 'v_air': v_air}
 
 
 class DrizzleSource(DataSource):
@@ -159,7 +256,7 @@ class DrizzleClassification(ProductClassification):
                 & ~self.quality_bits['clutter']
                 & ~self.quality_bits['molecular']
                 & ~self.quality_bits['attenuated']
-                & self.is_v_sigma)  # requires v_sigma now
+                & self.is_v_sigma)
 
     def _find_would_be_drizzle(self):
         return (~utils.transpose(self.is_rain)
@@ -298,33 +395,87 @@ def drizzle_solve(data, drizzle_class, width_ht):
 DRIZZLE_ATTRIBUTES = {
     'drizzle_N': MetaData(
         long_name='Drizzle number concentration',
-        units='m-3'
+        units='m-3',
+        ancillary_variables='drizzle_N_error'
+    ),
+    'drizzle_N_error': MetaData(
+        long_name='Random error in drizzle number concentration',
+        units='dB'
     ),
     'drizzle_lwc': MetaData(
         long_name='Drizzle liquid water content',
-        units='kg m-3'
+        units='kg m-3',
+        ancillary_variables='drizzle_lwc_error drizzle_lwc_bias'
+    ),
+    'drizzle_lwc_error': MetaData(
+        long_name='Random error in drizzle liquid water content',
+        units='dB',
+    ),
+    'drizzle_lwc_bias': MetaData(
+        long_name='Possible bias in drizzle liquid water content',
+        units='dB',
     ),
     'drizzle_lwf': MetaData(
         long_name='Drizzle liquid water flux',
-        units='kg m-2 s-1'
+        units='kg m-2 s-1',
+        ancillary_variables='drizzle_lwf_error drizzle_lwf_bias'
     ),
-    'droplet_fall_velocity': MetaData(
-        long_name='Drizzle droplet fall velocity',  # check this, should it include 'terminal' ?
-        units='m s-1'
+    'drizzle_lwf_error': MetaData(
+        long_name='Random error in drizzle liquid water flux',
+        units='dB',
     ),
-    'vertical_air_velocity': MetaData(
+    'drizzle_lwf_bias': MetaData(
+        long_name='Possible bias in drizzle liquid water flux',
+        units='dB',
+    ),
+    'v_drizzle': MetaData(
+        long_name='Drizzle droplet fall velocity',  # TODO: should it include 'terminal' ?
+        units='m s-1',
+        ancillary_variables='v_drizzle_error',
+        positive='down'
+    ),
+    'v_drizzle_error': MetaData(
+        long_name='Random error in drizzle droplet fall velocity',
+        units='dB'
+    ),
+    'v_air': MetaData(
         long_name='Vertical air velocity',
-        units='m s-1'
+        units='m s-1',
+        ancillary_variables='v_air_error',
+        positive='up',
+    ),
+    'v_air_error': MetaData(
+        long_name='Random error in vertical air velocity',
+        units='dB'
     ),
     'Do': MetaData(
         long_name='Drizzle median diameter',
         units='m',
+        ancillary_variables='Do_error Do_bias'
+    ),
+    'Do_error': MetaData(
+        long_name='Random error in drizzle median diameter',
+        units='dB',
+    ),
+    'Do_bias': MetaData(
+        long_name='Possible bias in drizzle median diameter',
+        units='dB',
     ),
     'mu': MetaData(
-        long_name='Drizzle DSD shape parameter',
+        long_name='Drizzle droplet size distribution shape parameter',
+        ancillary_variables='mu_error'
+    ),
+    'mu_error': MetaData(
+        long_name='Random error in drizzle droplet size distribution shape parameter',
+        units='dB',
     ),
     'S': MetaData(
         long_name='Lidar backscatter-to-extinction ratio',
+        ancillary_variables='S_error'
+    ),
+    'S_error': MetaData(
+        long_name='Random error in lidar backscatter-to-extinction ratio',
+        units='dB'
     ),
     'beta_corr': MetaData(
         long_name='Lidar backscatter correction factor',
