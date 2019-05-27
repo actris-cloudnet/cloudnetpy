@@ -364,7 +364,7 @@ ATTRIBUTES = {
     'lwc_error': PlotMeta(
         name='Liquid water content error',
         cbar='RdYlGn_r',
-        clabel=_KGM2,
+        clabel=_DB,
         plot_range=(0, 2),
         plot_scale=_LIN,
         plot_type='mesh'
