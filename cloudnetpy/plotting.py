@@ -157,7 +157,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
     axes[-1].set_xlabel('Time (UTC)', fontsize=13)
     case_date, site_name = _read_case_date(nc_file)
-    _add_subtitle(fig, n_fields, case_date, site_name)
+    _add_subtitle(fig, case_date, site_name)
 
     if save_path:
         file_name = _create_save_name(save_path, case_date, max_y, valid_names)
@@ -230,11 +230,11 @@ def _create_save_name(save_path, case_date, max_y, field_names):
     return f"{save_path}{date_string}_{max_y}km_{'_'.join(field_names)}.png"
 
 
-def _add_subtitle(fig, n_fields, case_date, site_name):
+def _add_subtitle(fig, case_date, site_name):
     """Adds subtitle into figure."""
     text = f"{case_date.strftime('%-d %b %Y')}, {site_name}"
-    fig.suptitle(text, fontsize=13, y=0.9, x=0.07, horizontalalignment='left',
-                 verticalalignment='top', fontweight='bold')
+    fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
+                 verticalalignment='bottom', fontweight='bold')
 
 
 def _read_case_date(nc_file):
