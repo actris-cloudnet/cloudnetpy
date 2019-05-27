@@ -232,20 +232,9 @@ def _create_save_name(save_path, case_date, max_y, field_names):
 
 def _add_subtitle(fig, n_fields, case_date, site_name):
     """Adds subtitle into figure."""
-    y = _calc_subtitle_y(n_fields)
     text = f"{case_date.strftime('%-d %b %Y')}, {site_name}"
-    fig.suptitle(text, fontsize=13, y=y, horizontalalignment='left',
-                 x=0.06, fontweight='bold')
-
-
-def _calc_subtitle_y(n_fields):
-    """Returns the correct y-position of subtitle. """
-    pos = 0.903
-    step = 0.008
-    for _ in range(2, n_fields):
-        pos -= step
-        step /= 2
-    return 0.93 if n_fields == 1 else pos
+    fig.suptitle(text, fontsize=13, y=0.9, x=0.07, horizontalalignment='left',
+                 verticalalignment='top', fontweight='bold')
 
 
 def _read_case_date(nc_file):
