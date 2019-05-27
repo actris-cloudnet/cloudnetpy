@@ -163,8 +163,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             _plot_colormesh_data(axis, field, name, axes_data)
 
     axes[-1].set_xlabel('Time (UTC)', fontsize=13)
-    case_date = _read_case_date(nc_file)
-    _add_subtitle(fig, n_fields, case_date)
+    case_date, site_name = _read_case_date(nc_file)
+    _add_subtitle(fig, n_fields, case_date, site_name)
 
     if save_path:
         file_name = _create_save_name(save_path, case_date, max_y, valid_names)
@@ -237,11 +237,12 @@ def _create_save_name(save_path, case_date, max_y, field_names):
     return f"{save_path}{date_string}_{max_y}km_{'_'.join(field_names)}.png"
 
 
-def _add_subtitle(fig, n_fields, case_date):
+def _add_subtitle(fig, n_fields, case_date, site_name):
     """Adds subtitle into figure."""
     y = _calc_subtitle_y(n_fields)
-    fig.suptitle(case_date.strftime("%-d %b %Y"), fontsize=13, y=y, x=0.11,
-                 fontweight='bold')
+    text = f"{case_date.strftime('%-d %b %Y')}, {site_name}"
+    fig.suptitle(text, fontsize=13, y=y, horizontalalignment='left',
+                 x=0.06, fontweight='bold')
 
 
 def _calc_subtitle_y(n_fields):
@@ -257,7 +258,9 @@ def _calc_subtitle_y(n_fields):
 def _read_case_date(nc_file):
     """Returns measurement date string."""
     obj = netCDF4.Dataset(nc_file)
-    return date(int(obj.year), int(obj.month), int(obj.day))
+    case_date = date(int(obj.year), int(obj.month), int(obj.day))
+    site_name = obj.location
+    return case_date, site_name
 
 
 def _read_axes(nc_file, axes_type=None):
