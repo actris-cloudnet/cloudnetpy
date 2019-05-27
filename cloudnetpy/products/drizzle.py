@@ -12,6 +12,7 @@ from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification
+from cloudnetpy.plotting import plot_2d
 
 
 def generate_drizzle(categorize_file, output_file):
@@ -52,7 +53,7 @@ def _read_error_term(categorize, fields, term='error'):
 
     """
     def _get_linear(full_name):
-        return utils.db2lin(categorize.getvar(full_name))
+        return db2lin(categorize.getvar(full_name))
 
     return {field: _get_linear(f"{field}_{term}") for field in fields}
 
@@ -71,10 +72,11 @@ def _calc_errors(categorize):
         product_keys = ('Do', 'drizzle_lwc', 'drizzle_lwf', 'S')
         factors = _get_weighting_factors(product_keys)
         for key in product_keys:
-            fields = ('Z', 'beta') if key in ('drizzle_lwc', 'S') else ('Z', 'beta', 'mu')
+            base = ('Z', 'beta')
+            fields = base if key in ('drizzle_lwc', 'S') else base + ('mu',)
             weights = getattr(factors, key)
-            results[f'{key}_error'] = weighted_l2_norm(err, fields, *weights)
-            results[f'{key}_bias'] = weighted_l2_norm(bias, fields, *weights)
+            results[f'{key}_error'] = l2_norm_weighted(err, fields, *weights)
+            results[f'{key}_bias'] = l2_norm_weighted(bias, fields, *weights)
 
     def _get_weighting_factors(keys):
         """Returns scale factors and weights."""
@@ -88,7 +90,7 @@ def _calc_errors(categorize):
 
     def _convert_to_db(data):
         """Converts linear error values to dB."""
-        return {name: utils.lin2db(value) for name, value in data.items()}
+        return {name: lin2db(value) for name, value in data.items()}
 
     err, bias = _read_error_inputs()
     results = {}
@@ -98,7 +100,7 @@ def _calc_errors(categorize):
     return _convert_to_db(results)
 
 
-def weighted_l2_norm(terms, keys, overall_scale=1.0, term_weights=1.0):
+def l2_norm_weighted(terms, keys, overall_scale=1.0, term_weights=1.0):
     """Calculates scaled and weighted Euclidean distance.
 
     Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
@@ -118,7 +120,7 @@ def weighted_l2_norm(terms, keys, overall_scale=1.0, term_weights=1.0):
 
     """
     values = [terms.get(key) for key in keys]
-    weighted_values = np.multiply(values, term_weights)
+    weighted_values = ma.multiply(values, term_weights)
     return overall_scale * utils.l2norm(*weighted_values)
 
 
@@ -166,6 +168,9 @@ def _calc_derived_products(data, parameters):
         drizzle_ind = np.where(parameters['Do'])
         ind_mu = np.searchsorted(data.mie['mu'], parameters['mu'][drizzle_ind])
         ind_dia = np.searchsorted(data.mie['Do'], parameters['Do'][drizzle_ind])
+        n_widths, n_dia = len(data.mie['mu']), len(data.mie['Do'])
+        ind_mu[ind_mu >= n_widths] = n_widths - 1
+        ind_dia[ind_dia >= n_dia] = n_dia - 1
         return drizzle_ind, (ind_mu, ind_dia)
 
     def _calc_v_air(droplet_velocity):
@@ -354,7 +359,8 @@ def drizzle_solve(data, drizzle_class, width_ht):
         return 2 / np.pi * data.beta / data.z
 
     def _find_lut_indices(*ind):
-        ind_dia = np.searchsorted(data.mie['Do'], dia_init[ind])
+        #ind_dia = np.searchsorted(data.mie['Do'], dia_init[ind])
+        ind_dia = bisect_left(data.mie['Do'], dia_init[ind], hi=n_dia-1)
         ind_width = bisect_left(width_lut[:, ind_dia], width_ht[ind], hi=n_widths-1)
         return ind_width, ind_dia
 
@@ -373,7 +379,7 @@ def drizzle_solve(data, drizzle_class, width_ht):
     dia_init[drizzle_ind] = calc_dia(beta_z_ratio[drizzle_ind], k=18.8)
     # Negation because width look-up table is descending order
     width_lut = -data.mie['width'][:]
-    n_widths = width_lut.shape[0]
+    n_widths, n_dia = width_lut.shape[0], len(data.mie['Do'])
     width_ht = -width_ht
     max_ite = 10
     for i, j in zip(*drizzle_ind):
@@ -481,3 +487,16 @@ DRIZZLE_ATTRIBUTES = {
         long_name='Lidar backscatter correction factor',
     )
 }
+
+
+# drizzle error linear / log conversion from the Matlab code:
+
+COR = 10/np.log(10)
+
+
+def db2lin(x):
+    return ma.exp(x / COR) - 1
+
+
+def lin2db(x):
+    return ma.log(x + 1) * COR

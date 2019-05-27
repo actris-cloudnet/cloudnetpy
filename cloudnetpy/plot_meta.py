@@ -95,8 +95,16 @@ ATTRIBUTES = {
         plot_scale=_LOG,
         plot_type='mesh'
     ),
+    'Do_error': PlotMeta(
+        name='Random error in drizzle median diameter',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.1, 0.5),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'mu': PlotMeta(
-        name='Drizzle DSD shape parameter',
+        name='Drizzle droplet size distribution shape parameter',
         cbar='viridis',
         clabel='',
         plot_range=(0, 10),
@@ -127,6 +135,14 @@ ATTRIBUTES = {
         plot_scale=_LOG,
         plot_type='mesh'
     ),
+    'drizzle_lwc_error': PlotMeta(
+        name='Random error in drizzle liquid water content',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.3, 1),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'drizzle_lwf': PlotMeta(
         name='Drizzle liquid water flux',
         cbar='viridis',
@@ -135,7 +151,7 @@ ATTRIBUTES = {
         plot_scale=_LOG,
         plot_type='mesh'
     ),
-    'droplet_fall_velocity': PlotMeta(
+    'v_drizzle': PlotMeta(
         name='Drizzle droplet fall velocity',
         cbar='RdBu_r',
         clabel=_MS1,
@@ -143,7 +159,7 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
     ),
-    'vertical_air_velocity': PlotMeta(
+    'v_air': PlotMeta(
         name='Vertical air velocity',
         cbar='RdBu_r',
         clabel=_MS1,
