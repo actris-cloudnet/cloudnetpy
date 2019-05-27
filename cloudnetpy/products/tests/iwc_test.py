@@ -1,6 +1,7 @@
 import pytest
 from cloudnetpy.products.iwc import IwcSource
 import numpy as np
+import numpy.ma as ma
 import netCDF4
 from numpy import testing
 
@@ -75,7 +76,7 @@ def test_calc_error_in_uncorrected_ice(coeff, result):
 def iwc_data():
     nc_file = '/home/korpinen/Documents/ACTRIS/cloudnetpy/test_data_iwc.nc'
     data_file = netCDF4.Dataset(nc_file).variables['iwc'][:]
-    return data_file
+    return data_file[data_file == data_file.filled()] == ma.masked
 
 
 def test_iwc_quality(iwc_data):
