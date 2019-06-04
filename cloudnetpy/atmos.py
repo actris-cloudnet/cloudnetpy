@@ -8,16 +8,6 @@ from cloudnetpy import constants as con
 from cloudnetpy import utils
 
 
-def c2k(temp):
-    """Converts Celsius to Kelvins."""
-    return ma.array(temp) + 273.15
-
-
-def k2c(temp):
-    """Converts Kelvins to Celsius."""
-    return ma.array(temp) - 273.15
-
-
 HPA_TO_P = 100
 P_TO_HPA = 0.01
 M_TO_KM = 0.001
@@ -56,35 +46,6 @@ def calc_lwc_change_rate(temperature, pressure):
     return dqs_dz * KG_TO_G
 
 
-def calc_air_density(pressure, temperature, svp_mixing_ratio):
-    """Calculates air density (kg m-3).
-
-    Args:
-        pressure (ndarray): Pressure (Pa).
-        temperature (ndarray): Temperature (K).
-        svp_mixing_ratio (ndarray): Saturation vapor pressure mixing ratio (kg/kg).
-
-    Returns:
-        ndarray: Air density (kg m-3).
-
-    """
-    return pressure / (con.Rs * temperature * (0.6 * svp_mixing_ratio + 1))
-
-
-def calc_mixing_ratio(svp, pressure):
-    """Calculates mixing ratio from saturation vapor pressure and pressure.
-
-    Args:
-        svp (ndarray): Saturation vapor pressure (Pa).
-        pressure (ndarray): Atmospheric pressure (Pa).
-
-    Returns:
-        ndarray: Mixing ratio (kg kg-1).
-
-    """
-    return con.mw_ratio * svp / (pressure-svp)
-
-
 def calc_saturation_vapor_pressure(temperature):
     """Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.
 
@@ -104,23 +65,33 @@ def calc_saturation_vapor_pressure(temperature):
                    + 0.78614)) * HPA_TO_P
 
 
-def calc_dew_point_temperature(vapor_pressure):
-    """ Returns dew point temperature.
+def calc_mixing_ratio(svp, pressure):
+    """Calculates mixing ratio from saturation vapor pressure and pressure.
 
     Args:
-        vapor_pressure (ndarray): Water vapor pressure (Pa).
+        svp (ndarray): Saturation vapor pressure (Pa).
+        pressure (ndarray): Atmospheric pressure (Pa).
 
     Returns:
-        ndarray: Dew point temperature (K).
-
-    Notes:
-        Method from Vaisala's white paper: "Humidity conversion formulas".
+        ndarray: Mixing ratio (kg kg-1).
 
     """
-    vaisala_parameters_over_water = (6.116441, 7.591386, 240.7263)
-    a, m, tn = vaisala_parameters_over_water
-    dew_point_celsius = tn / ((m/np.log10(vapor_pressure*P_TO_HPA/a))-1)
-    return c2k(dew_point_celsius)
+    return con.mw_ratio * svp / (pressure-svp)
+
+
+def calc_air_density(pressure, temperature, svp_mixing_ratio):
+    """Calculates air density (kg m-3).
+
+    Args:
+        pressure (ndarray): Pressure (Pa).
+        temperature (ndarray): Temperature (K).
+        svp_mixing_ratio (ndarray): Saturation vapor pressure mixing ratio (kg/kg).
+
+    Returns:
+        ndarray: Air density (kg m-3).
+
+    """
+    return pressure / (con.Rs * temperature * (0.6 * svp_mixing_ratio + 1))
 
 
 def calc_psychrometric_constant(pressure):
@@ -184,6 +155,25 @@ def calc_wet_bulb_temperature(model_data):
          - dew_point*first_der
          + 0.5*dew_point**2*second_der)
     return (-b+np.sqrt(b*b-4*a*c))/(2*a)
+
+
+def calc_dew_point_temperature(vapor_pressure):
+    """ Returns dew point temperature.
+
+    Args:
+        vapor_pressure (ndarray): Water vapor pressure (Pa).
+
+    Returns:
+        ndarray: Dew point temperature (K).
+
+    Notes:
+        Method from Vaisala's white paper: "Humidity conversion formulas".
+
+    """
+    vaisala_parameters_over_water = (6.116441, 7.591386, 240.7263)
+    a, m, tn = vaisala_parameters_over_water
+    dew_point_celsius = tn / ((m/np.log10(vapor_pressure*P_TO_HPA/a))-1)
+    return c2k(dew_point_celsius)
 
 
 def get_attenuations(model, mwr, classification):
@@ -363,3 +353,13 @@ def distribute_lwp_to_liquid_clouds(lwc, lwp):
     """
     lwc_sum = ma.sum(lwc, axis=1)
     return (lwc.T / lwc_sum * lwp).T
+
+
+def c2k(temp):
+    """Converts Celsius to Kelvins."""
+    return ma.array(temp) + 273.15
+
+
+def k2c(temp):
+    """Converts Kelvins to Celsius."""
+    return ma.array(temp) - 273.15
