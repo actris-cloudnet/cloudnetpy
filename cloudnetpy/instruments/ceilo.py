@@ -15,6 +15,61 @@ SECONDS_IN_MINUTE = 60
 SECONDS_IN_HOUR = 3600
 
 
+def ceilo2nc(input_file, output_file, site_meta):
+    """Converts Vaisala and Jenoptik raw files into netCDF.
+
+    Args:
+        input_file (str): Ceilometer file name. For Vaisala it is a text file,
+            for Jenoptik it is a netCDF file.
+        output_file (str): Output file name, e.g. 'ceilo.nc'.
+        site_meta (dict): Dictionary containing information about the
+            site. Required key value pairs are 'name' and 'altitude'
+            (metres above mean sea level).
+
+    Examples:
+        >>> from cloudnetpy.instruments.ceilo import ceilo2nc
+        >>> site_meta = {'name': 'Mace-Head', 'altitude':5}
+        >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc', site_meta)
+        >>> ceilo2nc('jenoptik_raw.nc', 'jenoptik.nc', site_meta)
+
+    """
+    ceilo = _initialize_ceilo(input_file)
+    ceilo.read_ceilometer_file()
+    beta_variants = ceilo.calc_beta()
+    _append_data(ceilo, beta_variants)
+    _append_height(ceilo, site_meta['altitude'])
+    output.update_attributes(ceilo.data, ATTRIBUTES)
+    _save_ceilo(ceilo, output_file, site_meta['name'])
+
+
+def _initialize_ceilo(file):
+    model = _find_ceilo_model(file)
+    if model == 'cl51':
+        return Cl51(file)
+    elif model == 'cl31':
+        return Cl31(file)
+    elif model == 'ct25k':
+        return Ct25k(file)
+    elif model == 'ch15k':
+        return JenoptikCeilo(file)
+    else:
+        raise SystemExit('Error: Unknown ceilo model.')
+
+
+def _find_ceilo_model(file):
+    if file.endswith('nc'):
+        return 'ch15k'
+    first_empty_line = _find_first_empty_line(file)
+    hint = linecache.getline(file, first_empty_line + 2)[1:5]
+    if hint == 'CL01':
+        return 'cl51'
+    elif hint == 'CL02':
+        return 'cl31'
+    elif hint == 'CT02':
+        return 'ct25k'
+    return None
+
+
 class Ceilometer:
     """Base class for all types of ceilometers."""
 
@@ -430,34 +485,6 @@ class Ct25k(VaisalaCeilo):
         return _values_to_dict(keys, values)
 
 
-def ceilo2nc(input_file, output_file, location='unknown', altitude=0):
-    """Converts Vaisala and Jenoptik raw files into netCDF.
-
-    Args:
-        input_file (str): Ceilometer file name. For Vaisala it is a text file,
-            for Jenoptik it is a netCDF file.
-        output_file (str): Output file name, e.g. 'ceilo.nc'.
-        location (str, optional): Name of the measurement site, e.g. 'Kumpula'.
-            Default is 'unknown'.
-        altitude (int, optional): Altitude of the instrument above
-            mean sea level (m). Default is 0.
-
-
-    Examples:
-        >>> from cloudnetpy.instruments.ceilo import ceilo2nc
-        >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc')
-        >>> ceilo2nc('jenoptik_raw.nc', 'jenoptik.nc')
-
-    """
-    ceilo = _initialize_ceilo(input_file)
-    ceilo.read_ceilometer_file()
-    beta_variants = ceilo.calc_beta()
-    _append_data(ceilo, beta_variants)
-    _append_height(ceilo, altitude)
-    output.update_attributes(ceilo.data, ATTRIBUTES)
-    _save_ceilo(ceilo, output_file, location)
-
-
 def _append_height(ceilo, site_altitude):
     """Finds height above mean sea level."""
     tilt_angle = np.median(ceilo.metadata['tilt_angle'])
@@ -507,34 +534,6 @@ def _values_to_dict(keys, values):
 def _split_string(string, indices):
     """Split string between indices."""
     return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
-
-
-def _initialize_ceilo(file):
-    model = _find_ceilo_model(file)
-    if model == 'cl51':
-        return Cl51(file)
-    elif model == 'cl31':
-        return Cl31(file)
-    elif model == 'ct25k':
-        return Ct25k(file)
-    elif model == 'ch15k':
-        return JenoptikCeilo(file)
-    else:
-        raise SystemExit('Error: Unknown ceilo model.')
-
-
-def _find_ceilo_model(file):
-    if file.endswith('nc'):
-        return 'ch15k'
-    first_empty_line = _find_first_empty_line(file)
-    hint = linecache.getline(file, first_empty_line + 2)[1:5]
-    if hint == 'CL01':
-        return 'cl51'
-    elif hint == 'CL02':
-        return 'cl31'
-    elif hint == 'CT02':
-        return 'ct25k'
-    return None
 
 
 def _find_first_empty_line(file_name):

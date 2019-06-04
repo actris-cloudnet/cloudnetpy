@@ -9,6 +9,56 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 
+def rpg2nc(path_to_l1_files, output_file, site_meta):
+    """Converts RPG cloud radar binary files into NetCDF file.
+
+    This function reads one day of RPG Level 1 cloud radar binary files,
+    concatenates the data and writes it into NetCDF file.
+
+    Args:
+        path_to_l1_files (str): Folder containing one day of RPG LV1 files.
+        output_file (str): Output file name.
+        site_meta (dict): Dictionary containing information about the
+            site. Required key value pairs are 'altitude' (in metres) and
+            'name'.
+
+    Examples:
+        >>> from cloudnetpy.instruments.rpg import rpg2nc
+        >>> site_meta = {'name': 'Hyytiala', 'altitude': 174}
+        >>> rpg2nc('/path/to/files/', 'test.nc', site_meta)
+
+    """
+    l1_files = get_rpg_files(path_to_l1_files)
+    one_day_of_data = _create_one_day_data_record(l1_files)
+    rpg = Rpg(one_day_of_data, site_meta)
+    rpg.linear_to_db(('Ze', 'ldr', 'antenna_gain'))
+    output.update_attributes(rpg.data, RPG_ATTRIBUTES)
+    _save_rpg(rpg, output_file)
+
+
+def get_rpg_files(path_to_l1_files):
+    """Returns list of RPG Level 1 files for one day - sorted by filename."""
+    files = os.listdir(path_to_l1_files)
+    l1_files = [f"{path_to_l1_files}{file}" for file in files if file.endswith('LV1')]
+    l1_files.sort()
+    return l1_files
+
+
+def _create_one_day_data_record(l1_files):
+    """Concatenates all RPG data from one day."""
+    rpg_objects = get_rpg_objects(l1_files)
+    rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
+    rpg_header = _reduce_header(rpg_header)
+    rpg_raw_data = _mask_invalid_data(rpg_raw_data)
+    return {**rpg_header, **rpg_raw_data}
+
+
+def get_rpg_objects(rpg_files):
+    """Creates a list of Rpg() objects from the file names."""
+    for file in rpg_files:
+        yield RpgBin(file)
+
+
 class RpgBin:
     """RPG Cloud Radar Level 1 data reader."""
     def __init__(self, filename):
@@ -16,18 +66,6 @@ class RpgBin:
         self._file_position = 0
         self.header = self.read_rpg_header()
         self.data = self.read_rpg_data()
-
-    @staticmethod
-    def read_string(file_id):
-        """Read characters from binary data until whitespace."""
-        str_out = ''
-        while True:
-            c = np.fromfile(file_id, np.int8, 1)
-            if c:
-                str_out += chr(c)
-            else:
-                break
-        return str_out
 
     def read_rpg_header(self):
         """Reads the header or rpg binary file."""
@@ -84,6 +122,18 @@ class RpgBin:
         self._file_position = file.tell()
         file.close()
         return header
+
+    @staticmethod
+    def read_string(file_id):
+        """Read characters from binary data until whitespace."""
+        str_out = ''
+        while True:
+            c = np.fromfile(file_id, np.int8, 1)
+            if c:
+                str_out += chr(c)
+            else:
+                break
+        return str_out
 
     def read_rpg_data(self):
         """Reads the actual data from rpg binary file."""
@@ -204,20 +254,6 @@ class RpgBin:
         return {**aux, **block1, **block2}
 
 
-def get_rpg_files(path_to_l1_files):
-    """Returns list of RPG Level 1 files for one day - sorted by filename."""
-    files = os.listdir(path_to_l1_files)
-    l1_files = [f"{path_to_l1_files}{file}" for file in files if file.endswith('LV1')]
-    l1_files.sort()
-    return l1_files
-
-
-def get_rpg_objects(rpg_files):
-    """Creates a list of Rpg() objects from the file names."""
-    for file in rpg_files:
-        yield RpgBin(file)
-
-
 def _stack_rpg_data(rpg_objects):
     """Combines data from hourly Rpg() objects.
 
@@ -250,42 +286,6 @@ def _mask_invalid_data(rpg_data):
     for name in rpg_data:
         rpg_data[name] = ma.masked_equal(rpg_data[name], 0)
     return rpg_data
-
-
-def _create_one_day_data_record(l1_files):
-    """Concatenates all RPG data from one day."""
-    rpg_objects = get_rpg_objects(l1_files)
-    rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
-    rpg_header = _reduce_header(rpg_header)
-    rpg_raw_data = _mask_invalid_data(rpg_raw_data)
-    return {**rpg_header, **rpg_raw_data}
-
-
-def rpg2nc(path_to_l1_files, output_file, site_properties):
-    """High-level API to convert RPG cloud radar binary files into NetCDF file.
-
-    This function reads one day of RPG Level 1 cloud radar binary files,
-    concatenates the data and writes it into NetCDF file.
-
-    Args:
-        path_to_l1_files (str): Folder containing one day of RPG LV1 files.
-        output_file (str): Output file name.
-        site_properties (dict): Dictionary containing information about the
-            site. Required key value pairs are 'altitude' (in metres) and
-            'name'.
-
-    Examples:
-        >>> from cloudnetpy.instruments.rpg import rpg2nc
-        >>> site_properties = {'name': 'Hyytiala', 'altitude': 174}
-        >>> rpg2nc('/path/to/files/', 'test.nc', site_properties)
-
-    """
-    l1_files = get_rpg_files(path_to_l1_files)
-    one_day_of_data = _create_one_day_data_record(l1_files)
-    rpg = Rpg(one_day_of_data, site_properties)
-    rpg.linear_to_db(('Ze', 'ldr', 'antenna_gain'))
-    output.update_attributes(rpg.data, RPG_ATTRIBUTES)
-    _save_rpg(rpg, output_file)
 
 
 class Rpg:

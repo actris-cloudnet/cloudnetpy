@@ -1,5 +1,4 @@
 """Module for reading raw cloud radar data."""
-
 import os
 import netCDF4
 import numpy as np
@@ -9,12 +8,44 @@ from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 
 
+def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False):
+    """Converts Mira cloud radar Level 1 file into NetCDF file.
+
+    This function converts raw cloud radar file into a much smaller file that
+    contains only the relevant data and can be used in further processing steps.
+
+    Args:
+        mmclx_file (str): Raw radar file in NetCDF format.
+        output_file (str): Output file name.
+        site_meta (dict): Dictionary containing information about the
+            site. Required key value pairs are 'name'.
+        rebin_data (bool, optional): If True, rebins data to 30s resolution.
+            Otherwise keeps the native resolution. Default is False.
+
+    Examples:
+          >>> from cloudnetpy.instruments.mira import mira2nc
+          >>> site_meta = {'name': 'Vehmasmaki'}
+          >>> mira2nc('raw_radar.mmclx', 'radar.nc', site_meta)
+
+    """
+    raw_mira = Mira(mmclx_file, site_meta)
+    raw_mira.linear_to_db(('Ze', 'ldr', 'SNR'))
+    if rebin_data:
+        snr_gain = raw_mira.rebin_fields()
+    else:
+        snr_gain = 1
+    raw_mira.screen_by_snr(snr_gain)
+    raw_mira.add_meta()
+    output.update_attributes(raw_mira.data, MIRA_ATTRIBUTES)
+    _save_mira(mmclx_file, raw_mira, output_file)
+
+
 class Mira(DataSource):
     """Class for MIRA-36 raw radar data. Child of DataSource().
 
     Args:
         raw_radar_file (str): Filename of raw MIRA NetCDF file.
-        site_properties (dict): Site properties in a dictionary. Required
+        site_meta (dict): Site properties in a dictionary. Required
             keys are: 'name'.
 
     """
@@ -24,13 +55,13 @@ class Mira(DataSource):
               'LDRg': 'ldr',
               'SNRg': 'SNR'}
 
-    def __init__(self, raw_radar_file, site_properties):
+    def __init__(self, raw_radar_file, site_meta):
         super().__init__(raw_radar_file)
         self.source = 'METEK MIRA-36'
         self.radar_frequency = 35.5
         self._init_data()
         self.range = self.getvar(self, 'range')
-        self.location = site_properties['name']
+        self.location = site_meta['name']
 
     def _init_data(self):
         """Reads correct fields and fixes the names."""
@@ -73,38 +104,6 @@ class Mira(DataSource):
             value = getattr(self.dataset, key).split()[0]
             key = key.lower()
             self.data[key] = CloudnetArray(float(value), key)
-
-
-def mira2nc(mmclx_file, output_file, site_properties, rebin_data=False):
-    """High-level API to convert Mira cloud radar Level 1 file into NetCDF file.
-
-    This function converts raw cloud radar file into a much smaller file that
-    contains only the relevant data and can be used in further processing steps.
-
-    Args:
-        mmclx_file (str): Raw radar file in NetCDF format.
-        output_file (str): Output file name.
-        site_properties (dict): Dictionary containing information about the
-            site. Required key value pairs are 'name'.
-        rebin_data (bool, optional): If True, rebins data to 30s resolution.
-            Otherwise keeps the native resolution. Default is False.
-
-    Examples:
-          >>> from cloudnetpy.instruments.mira import mira2nc
-          >>> site_properties = {'name': 'Vehmasmaki'}
-          >>> mira2nc('raw_radar.mmclx', 'radar.nc', site_properties)
-
-    """
-    raw_mira = Mira(mmclx_file, site_properties)
-    raw_mira.linear_to_db(('Ze', 'ldr', 'SNR'))
-    if rebin_data:
-        snr_gain = raw_mira.rebin_fields()
-    else:
-        snr_gain = 1
-    raw_mira.screen_by_snr(snr_gain)
-    raw_mira.add_meta()
-    output.update_attributes(raw_mira.data, MIRA_ATTRIBUTES)
-    _save_mira(mmclx_file, raw_mira, output_file)
 
 
 def _save_mira(mmclx_file, raw_radar, output_file):
