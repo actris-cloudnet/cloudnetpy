@@ -367,7 +367,7 @@ ATTRIBUTES = {
         name='Ice water content error',
         cbar='RdYlGn_r',
         clabel=_DB,
-        plot_range=(0, 3),
+        plot_range=(0, 5),
         plot_scale=_LIN,
         plot_type='mesh'
     ),

@@ -6,7 +6,7 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
-def generate_class(categorize_file, output_file):
+def generate_classification(categorize_file, output_file):
     """Generates Cloudnet classification product.
 
     Generates categorized bins to 10 types of different targets in atmosphere
@@ -19,8 +19,8 @@ def generate_class(categorize_file, output_file):
         output_file (str): Output file name.
 
     Examples:
-        >>> from cloudnetpy.products.classification import generate_class
-        >>> generate_class('categorize.nc', 'classification.nc')
+        >>> from cloudnetpy.products.classification import generate_classification
+        >>> generate_classification('categorize.nc', 'classification.nc')
 
     """
     data_handler = DataSource(categorize_file)
