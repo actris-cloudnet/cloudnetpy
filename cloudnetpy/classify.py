@@ -11,67 +11,37 @@ from cloudnetpy import droplet, utils
 from cloudnetpy.constants import T0
 
 
-class _ClassData:
-    def __init__(self, radar, lidar, model):
-        self.z = radar.data['Z'][:]
-        self.ldr = radar.data['ldr'][:]
-        self.v = radar.data['v'][:]
-        self.width = radar.data['width'][:]
-        self.tw = model.data['Tw'][:]
-        self.beta = lidar.data['beta'][:]
-        self.time = radar.time
-        self.height = radar.height
-        self.model_type = model.type
-        self.is_rain = self._find_rain()
-        self.is_clutter = self._find_clutter()
+def fetch_quality(radar, lidar, classification, attenuations):
+    """Returns Cloudnet quality bits.
 
-    def _find_rain(self, time_buffer=5):
-        """Find profiles affected by rain.
+    Args:
+        radar (Radar): Radar data container.
+        lidar (Lidar): Lidar data container.
+        classification (_ClassificationResult): Container for classification
+            results.
+        attenuations (dict):
 
-        Rain is present in such profiles where the radar echo in
-        the third range gate is > 0 dB. To make sure we do not include any
-        rainy profiles, we also flag a few profiles before and after
-        detections as raining.
+    Returns:
+        ndarray: Integer array containing the following bits:
+            - bit 0: Pixel contains radar data
+            - bit 1: Pixel contains lidar data
+            - bit 2: Pixel contaminated by radar clutter
+            - bit 3: Molecular scattering present (currently not implemented!)
+            - bit 4: Pixel was affected by liquid attenuation
+            - bit 5: Liquid attenuation was corrected
 
-        Args:
-            time_buffer (int): Time in minutes.
+    See also:
+        classify.fetch_cat_bits()
 
-        """
-        is_rain = ma.array(self.z[:, 3] > 0, dtype=bool).filled(False)
-        n_profiles = len(self.time)
-        n_steps = utils.n_elements(self.time, time_buffer, 'time')
-        for ind in np.where(is_rain)[0]:
-            ind1 = max(0, ind - n_steps)
-            ind2 = min(ind + n_steps, n_profiles)
-            is_rain[ind1:ind2 + 1] = True
-        return is_rain
-
-    def _find_clutter(self, n_gates=10, v_lim=0.05):
-        """Estimates clutter from doppler velocity.
-
-        Args:
-            n_gates (int, optional): Number of range gates from the ground
-                where clutter is expected to be found. Default is 10.
-            v_lim (float, optional): Velocity threshold. Smaller values are
-                classified as clutter. Default is 0.05 (m/s).
-
-        Returns:
-            ndarray: 2-D boolean array denoting pixels contaminated by clutter.
-
-        """
-        is_clutter = np.zeros(self.v.shape, dtype=bool)
-        tiny_velocity = (np.abs(self.v[:, :n_gates]) < v_lim).filled(False)
-        is_clutter[:, :n_gates] = tiny_velocity * utils.transpose(~self.is_rain)
-        return is_clutter
-
-
-@dataclass
-class _ClassificationResult:
-    category_bits: np.ndarray
-    is_rain: np.ndarray
-    is_clutter: np.ndarray
-    insect_prob: np.ndarray
-    liquid_bases: np.ndarray
+    """
+    bits = [None]*6
+    bits[0] = ~radar.data['Z'][:].mask
+    bits[1] = ~lidar.data['beta'][:].mask
+    bits[2] = classification.is_clutter
+    bits[4] = attenuations['liquid_corrected'] | attenuations['liquid_uncorrected']
+    bits[5] = attenuations['liquid_corrected']
+    qbits = _bits_to_integer(bits)
+    return {'quality_bits': qbits}
 
 
 def classify_measurements(radar, lidar, model):
@@ -106,26 +76,6 @@ def classify_measurements(radar, lidar, model):
     cat_bits = _bits_to_integer(bits)
     return _ClassificationResult(cat_bits, obs.is_rain, obs.is_clutter,
                                  insect_prob, liquid['bases'])
-
-
-def _bits_to_integer(bits):
-    """Creates array of integers from individual boolean arrays.
-
-    Args:
-        bits (list): List of bit fields (of similar sizes)
-        to be saved in the resulting array of integers. bits[0]
-        is saved as bit 0, bits[1] as bit 1, etc.
-
-    Returns:
-        ndarray: Array of integers containing the information
-            of the individual boolean arrays.
-
-    """
-    int_array = np.zeros_like(bits[0], dtype=int)
-    for n, bit in enumerate(bits):
-        ind = np.where(bit)  # works also if bit is None
-        int_array[ind] = utils.setbit(int_array[ind].astype(int), n)
-    return int_array
 
 
 def find_melting_layer(obs, smooth=True):
@@ -429,34 +379,84 @@ def find_aerosols(beta, is_falling, is_liquid):
     return ~beta.mask & ~is_falling & ~is_liquid
 
 
-def fetch_quality(radar, lidar, classification, attenuations):
-    """Returns Cloudnet quality bits.
+def _bits_to_integer(bits):
+    """Creates array of integers from individual boolean arrays.
 
     Args:
-        radar (Radar): Radar data container.
-        lidar (Lidar): Lidar data container.
-        classification (_ClassificationResult): Container for classification
-            results.
-        attenuations (dict):
+        bits (list): List of bit fields (of similar sizes)
+        to be saved in the resulting array of integers. bits[0]
+        is saved as bit 0, bits[1] as bit 1, etc.
 
     Returns:
-        ndarray: Integer array containing the following bits:
-            - bit 0: Pixel contains radar data
-            - bit 1: Pixel contains lidar data
-            - bit 2: Pixel contaminated by radar clutter
-            - bit 3: Molecular scattering present (currently not implemented!)
-            - bit 4: Pixel was affected by liquid attenuation
-            - bit 5: Liquid attenuation was corrected
-
-    See also:
-        classify.fetch_cat_bits()
+        ndarray: Array of integers containing the information
+            of the individual boolean arrays.
 
     """
-    bits = [None]*6
-    bits[0] = ~radar.data['Z'][:].mask
-    bits[1] = ~lidar.data['beta'][:].mask
-    bits[2] = classification.is_clutter
-    bits[4] = attenuations['liquid_corrected'] | attenuations['liquid_uncorrected']
-    bits[5] = attenuations['liquid_corrected']
-    qbits = _bits_to_integer(bits)
-    return {'quality_bits': qbits}
+    int_array = np.zeros_like(bits[0], dtype=int)
+    for n, bit in enumerate(bits):
+        ind = np.where(bit)  # works also if bit is None
+        int_array[ind] = utils.setbit(int_array[ind].astype(int), n)
+    return int_array
+
+
+class _ClassData:
+    def __init__(self, radar, lidar, model):
+        self.z = radar.data['Z'][:]
+        self.ldr = radar.data['ldr'][:]
+        self.v = radar.data['v'][:]
+        self.width = radar.data['width'][:]
+        self.tw = model.data['Tw'][:]
+        self.beta = lidar.data['beta'][:]
+        self.time = radar.time
+        self.height = radar.height
+        self.model_type = model.type
+        self.is_rain = self._find_rain()
+        self.is_clutter = self._find_clutter()
+
+    def _find_rain(self, time_buffer=5):
+        """Find profiles affected by rain.
+
+        Rain is present in such profiles where the radar echo in
+        the third range gate is > 0 dB. To make sure we do not include any
+        rainy profiles, we also flag a few profiles before and after
+        detections as raining.
+
+        Args:
+            time_buffer (int): Time in minutes.
+
+        """
+        is_rain = ma.array(self.z[:, 3] > 0, dtype=bool).filled(False)
+        n_profiles = len(self.time)
+        n_steps = utils.n_elements(self.time, time_buffer, 'time')
+        for ind in np.where(is_rain)[0]:
+            ind1 = max(0, ind - n_steps)
+            ind2 = min(ind + n_steps, n_profiles)
+            is_rain[ind1:ind2 + 1] = True
+        return is_rain
+
+    def _find_clutter(self, n_gates=10, v_lim=0.05):
+        """Estimates clutter from doppler velocity.
+
+        Args:
+            n_gates (int, optional): Number of range gates from the ground
+                where clutter is expected to be found. Default is 10.
+            v_lim (float, optional): Velocity threshold. Smaller values are
+                classified as clutter. Default is 0.05 (m/s).
+
+        Returns:
+            ndarray: 2-D boolean array denoting pixels contaminated by clutter.
+
+        """
+        is_clutter = np.zeros(self.v.shape, dtype=bool)
+        tiny_velocity = (np.abs(self.v[:, :n_gates]) < v_lim).filled(False)
+        is_clutter[:, :n_gates] = tiny_velocity * utils.transpose(~self.is_rain)
+        return is_clutter
+
+
+@dataclass
+class _ClassificationResult:
+    category_bits: np.ndarray
+    is_rain: np.ndarray
+    is_clutter: np.ndarray
+    insect_prob: np.ndarray
+    liquid_bases: np.ndarray
