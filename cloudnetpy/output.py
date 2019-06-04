@@ -31,7 +31,7 @@ def save_product_file(identifier, obj, file_name, copy_from_cat=()):
     _copy_variables(obj.dataset, root_group, vars_from_source)
     root_group.title = f"{identifier.capitalize()} file from {obj.dataset.location}"
     root_group.source = f"Categorize file: {product_tools.get_source(obj)}"
-    _copy_global(obj.dataset, root_group, ('location', 'day', 'month', 'year'))
+    copy_global(obj.dataset, root_group, ('location', 'day', 'month', 'year'))
     merge_history(root_group, identifier, obj)
     root_group.close()
 
@@ -98,7 +98,7 @@ def _copy_variables(source, target, var_list):
             var_out[:] = variable[:]
 
 
-def _copy_global(source, target, attr_list):
+def copy_global(source, target, attr_list):
     """Copies global attributes from one file to another."""
     for attr_name in source.ncattrs():
         if attr_name in attr_list:
