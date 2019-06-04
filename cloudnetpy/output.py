@@ -28,7 +28,7 @@ def save_product_file(identifier, obj, file_name, copy_from_cat=()):
     dims = {'time': len(obj.time), 'height': len(obj.variables['height'])}
     root_group = init_file(file_name, dims, obj.data, zlib=True)
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
-    _copy_variables(obj.dataset, root_group, vars_from_source)
+    copy_variables(obj.dataset, root_group, vars_from_source)
     root_group.title = f"{identifier.capitalize()} file from {obj.dataset.location}"
     root_group.source = f"Categorize file: {product_tools.get_source(obj)}"
     copy_global(obj.dataset, root_group, ('location', 'day', 'month', 'year'))
@@ -87,7 +87,7 @@ def _add_standard_global_attributes(root_group):
     root_group.file_uuid = utils.get_uuid()
 
 
-def _copy_variables(source, target, var_list):
+def copy_variables(source, target, var_list):
     """Copies variables (and their attributes) from one file to another."""
     for var_name, variable in source.variables.items():
         if var_name in var_list:
