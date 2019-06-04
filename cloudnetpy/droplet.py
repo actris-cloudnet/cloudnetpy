@@ -7,6 +7,95 @@ from cloudnetpy import utils
 from cloudnetpy.constants import T0
 
 
+def find_liquid(obs, peak_amp=2e-5, max_width=300, min_points=3,
+                min_top_der=2e-7):
+    """ Estimate liquid layers from SNR-screened attenuated backscattering.
+
+    Args:
+        obs (ClassData): Observations container.
+        peak_amp (float, optional): Minimum value of peak. Default is 2e-5.
+        max_width (float, optional): Maximum width of peak. Default is 300 (m).
+        min_points (int, optional): Minimum number of valid points in peak.
+            Default is 3.
+        min_top_der (float, optional): Minimum derivative above peak,
+            defined as (beta_peak-beta_top) / (alt_top-alt_peak), which
+            is always positive. Default is 2e-7.
+
+    Returns:
+        dict: Dict containing 'presence', 'bases' and 'tops'.
+
+    """
+    def _find_strong_peaks():
+        peaks = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
+        strong_peaks = np.where(beta[peaks] > peak_amp)
+        return peaks[0][strong_peaks], peaks[1][strong_peaks]
+
+    def _is_proper_peak():
+        conditions = (npoints > min_points,
+                      peak_width < max_width,
+                      top_der > min_top_der)
+        return all(conditions)
+
+    def _save_peak_position():
+        is_liquid[n, base:top + 1] = True
+        liquid_top[n, top] = True
+        liquid_base[n, base] = True
+
+    beta = obs.beta
+    height = obs.height
+    is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,
+                                                    masked=False)
+    base_below_peak = utils.n_elements(height, 200)
+    top_above_peak = utils.n_elements(height, 150)
+    beta_diff = np.diff(beta, axis=1).filled(0)
+    beta = beta.filled(0)
+    peak_indices = _find_strong_peaks()
+    for n, peak in zip(*peak_indices):
+        lprof = beta[n, :]
+        dprof = beta_diff[n, :]
+        try:
+            base = ind_base(dprof, peak, base_below_peak, 4)
+            top = ind_top(dprof, peak, height.shape[0], top_above_peak, 4)
+        except:
+            continue
+        npoints = np.count_nonzero(lprof[base:top+1])
+        peak_width = height[top] - height[base]
+        top_der = (lprof[peak] - lprof[top]) / (height[top] - height[peak])
+        if _is_proper_peak():
+            _save_peak_position()
+    return {'presence': is_liquid,
+            'bases': liquid_base,
+            'tops': liquid_top}
+
+
+def correct_liquid_top(obs, liquid, is_freezing):
+    """Corrects lidar detected liquid cloud top using radar data.
+
+    Args:
+        obs (ClassData): Observations container.
+        liquid (dict): Dictionary for liquid clouds.
+        is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
+            derived from the model temperature and melting layer based
+            on radar data.
+
+    Returns:
+        ndarray: Corrected liquid cloud array.
+
+    See also:
+        droplet.find_liquid()
+
+    """
+    top_above = utils.n_elements(obs.height, 750)
+    for prof, top in zip(*np.where(liquid['tops'])):
+        ind = np.where(is_freezing[prof, top:])[0][0] + top_above
+        rad = obs.z[prof, top:top+ind+1]
+        if not (rad.mask.all() or ~rad.mask.any()):
+            first_masked = ma.where(rad.mask)[0][0]
+            liquid['presence'][prof, top:top+first_masked+1] = True
+    liquid['presence'][obs.tw < (T0-40)] = False
+    return liquid['presence']
+
+
 def ind_base(dprof, p, dist, lim):
     """Finds base index of a peak in profile.
 
@@ -105,82 +194,3 @@ def ind_top(dprof, p, nprof, dist, lim):
     diffs = dprof[p:end]
     mind = np.argmin(diffs)
     return p + np.where(diffs < diffs[mind]/lim)[0][-1] + 1
-
-
-def find_liquid(obs, peak_amp=2e-5, max_width=300, min_points=3,
-                min_top_der=2e-7):
-    """ Estimate liquid layers from SNR-screened attenuated backscattering.
-
-    Args:
-        obs (ClassData): Observations container.
-        peak_amp (float, optional): Minimum value of peak. Default is 2e-5.
-        max_width (float, optional): Maximum width of peak. Default is 300 (m).
-        min_points (int, optional): Minimum number of valid points in peak.
-            Default is 3.
-        min_top_der (float, optional): Minimum derivative above peak,
-            defined as (beta_peak-beta_top) / (alt_top-alt_peak), which
-            is always positive. Default is 2e-7.
-
-    Returns:
-        dict: Dict containing 'presence', 'bases' and 'tops'.
-
-    """
-
-    beta = obs.beta
-    height = obs.height
-    is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,
-                                                    masked=False)
-    base_below_peak = utils.n_elements(height, 200)
-    top_above_peak = utils.n_elements(height, 150)
-    beta_diff = np.diff(beta, axis=1).filled(0)
-    beta = beta.filled(0)
-    pind = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
-    strong_peaks = np.where(beta[pind] > peak_amp)
-    pind = (pind[0][strong_peaks], pind[1][strong_peaks])
-    for n, peak in zip(*pind):
-        lprof = beta[n, :]
-        dprof = beta_diff[n, :]
-        try:
-            base = ind_base(dprof, peak, base_below_peak, 4)
-            top = ind_top(dprof, peak, height.shape[0], top_above_peak, 4)
-        except:
-            continue
-        npoints = np.count_nonzero(lprof[base:top+1])
-        peak_width = height[top] - height[base]
-        top_der = (lprof[peak] - lprof[top]) / (height[top] - height[peak])
-        conds = (npoints > min_points,
-                 peak_width < max_width,
-                 top_der > min_top_der)
-        if all(conds):
-            is_liquid[n, base:top+1] = True
-            liquid_top[n, top] = True
-            liquid_base[n, base] = True
-    return {'presence': is_liquid, 'bases': liquid_base, 'tops': liquid_top}
-
-
-def correct_liquid_top(obs, liquid, is_freezing):
-    """Corrects lidar detected liquid cloud top using radar data.
-
-    Args:
-        obs (ClassData): Observations container.
-        liquid (dict): Dictionary for liquid clouds.
-        is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
-            derived from the model temperature and melting layer based
-            on radar data.
-
-    Returns:
-        ndarray: Corrected liquid cloud array.
-
-    See also:
-        droplet.find_liquid()
-
-    """
-    top_above = utils.n_elements(obs.height, 750)
-    for prof, top in zip(*np.where(liquid['tops'])):
-        ind = np.where(is_freezing[prof, top:])[0][0] + top_above
-        rad = obs.z[prof, top:top+ind+1]
-        if not (rad.mask.all() or ~rad.mask.any()):
-            first_masked = ma.where(rad.mask)[0][0]
-            liquid['presence'][prof, top:top+first_masked+1] = True
-    liquid['presence'][obs.tw < (T0-40)] = False
-    return liquid['presence']
