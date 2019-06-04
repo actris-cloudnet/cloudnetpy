@@ -215,16 +215,19 @@ class JenoptikCeilo(Ceilometer):
         data_std = self._getvar('stddev')
         normalised_apd = self._get_nn()
         beta_raw *= utils.transpose(data_std / normalised_apd)
-        beta_raw *= self.range**2
+        beta_raw *= self.range ** 2
         beta_raw *= self.calibration_factor
         return beta_raw
 
     def _get_nn(self):
-        """TODO: Taken from the Matlab code. Not sure what this is."""
-        nn1 = self._getvar('nn1')
+        """TODO: Taken from the Matlab code. Not sure how this should be."""
+        try:
+            nn1 = self._getvar('NN1')
+        except KeyError:
+            return 1
         nn_reference = 140
         nn_step_factor = 1.24
-        return nn_step_factor**(-(nn1-nn_reference)/5)
+        return nn_step_factor ** (-(nn1-nn_reference)/5)
 
     def _calc_range(self):
         ceilo_range = self._getvar('range')
