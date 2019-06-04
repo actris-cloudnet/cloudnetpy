@@ -13,6 +13,30 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import ProductClassification
 
 
+def generate_iwc(categorize_file, output_file):
+    """Generates Cloudnet ice water content product.
+
+    Args:
+        categorize_file (str): Categorize file name.
+        output_file (str): Output file name.
+
+    Examples:
+        >>> from cloudnetpy.products.iwc import generate_iwc
+        >>> generate_iwc('categorize.nc', 'iwc.nc')
+
+    """
+    iwc_data = IwcSource(categorize_file)
+    ice_class = _IceClassification(categorize_file)
+    _append_iwc_including_rain(iwc_data, ice_class)
+    _append_iwc(iwc_data, ice_class)
+    _append_iwc_bias(iwc_data)
+    _append_iwc_error(iwc_data, ice_class)
+    _append_iwc_sensitivity(iwc_data)
+    _append_iwc_status(iwc_data, ice_class)
+    output.update_attributes(iwc_data.data, IWC_ATTRIBUTES)
+    output.save_product_file('ice water content', iwc_data, output_file)
+
+
 class IwcSource(DataSource):
     """Class containing data needed in the ice water content Z-T method."""
     def __init__(self, categorize_file):
@@ -187,30 +211,6 @@ def _append_iwc_status(iwc_data, ice_class):
     retrieval_status[ice_class.ice_above_rain] = 5
     retrieval_status[ice_class.would_be_ice & (retrieval_status == 0)] = 7
     iwc_data.append_data(retrieval_status, 'iwc_retrieval_status')
-
-
-def generate_iwc(categorize_file, output_file):
-    """Generates Cloudnet ice water content product.
-
-    Args:
-        categorize_file (str): Categorize file name.
-        output_file (str): Output file name.
-
-    Examples:
-        >>> from cloudnetpy.products.iwc import generate_iwc
-        >>> generate_iwc('categorize.nc', 'iwc.nc')
-
-    """
-    iwc_data = IwcSource(categorize_file)
-    ice_class = _IceClassification(categorize_file)
-    _append_iwc_including_rain(iwc_data, ice_class)
-    _append_iwc(iwc_data, ice_class)
-    _append_iwc_bias(iwc_data)
-    _append_iwc_error(iwc_data, ice_class)
-    _append_iwc_sensitivity(iwc_data)
-    _append_iwc_status(iwc_data, ice_class)
-    output.update_attributes(iwc_data.data, IWC_ATTRIBUTES)
-    output.save_product_file('ice water content', iwc_data, output_file)
 
 
 COMMENTS = {
