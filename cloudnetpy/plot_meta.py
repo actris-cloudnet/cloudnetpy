@@ -255,6 +255,14 @@ ATTRIBUTES = {
         plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
+    'Z_error': PlotMeta(
+        name='Radar reflectivity factor random error',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0, 3),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
     'Ze': PlotMeta(
         name='Radar reflectivity factor',
         cbar='viridis',
@@ -359,7 +367,7 @@ ATTRIBUTES = {
         name='Ice water content error',
         cbar='RdYlGn_r',
         clabel=_DB,
-        plot_range=(0, 5),
+        plot_range=(0, 3),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
