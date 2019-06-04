@@ -48,16 +48,6 @@ def _plot_bar_data(ax, data, name, time):
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
 
-def _plot_bit_data(ax, data, name, axes):
-    """Plotting select 2d bit with one color and no colorbar"""
-    variables = ATTRIBUTES[name]
-    cmap = ListedColormap(variables.cbar)
-    ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap)
-    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
-    pos = ax.get_position()
-    ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
-
-
 def _plot_segment_data(ax, data, name, axes):
     """Plots categorical 2D variable.
 
@@ -91,21 +81,27 @@ def _plot_colormesh_data(ax, data, name, axes):
         axes (tuple): Time and height 1D arrays.
     """
     variables = ATTRIBUTES[name]
-    cmap = plt.get_cmap(variables.cbar, 22)
+    if variables.plot_type is 'bit':
+        cmap = ListedColormap(variables.cbar)
+        pos = ax.get_position()
+        ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
+    else:
+        cmap = plt.get_cmap(variables.cbar, 22)
     vmin, vmax = variables.plot_range
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
 
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
-    colorbar = _init_colorbar(pl, ax)
+    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+
+    if variables.plot_type is not 'bit':
+        colorbar = _init_colorbar(pl, ax)
+        colorbar.set_label(variables.clabel, fontsize=13)
 
     if variables.plot_scale == 'logarithmic':
         tick_labels = _generate_log_cbar_ticklabel_list(vmin, vmax)
         colorbar.set_ticks(np.arange(vmin, vmax+1))
         colorbar.ax.set_yticklabels(tick_labels)
-
-    colorbar.set_label(variables.clabel, fontsize=13)
-    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
 def _lin2log(*args):
@@ -156,15 +152,12 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name, axes_data)
 
-        elif plot_type == 'bit':
-            _plot_bit_data(axis, field, name, axes_data)
-
         else:
             _plot_colormesh_data(axis, field, name, axes_data)
 
     axes[-1].set_xlabel('Time (UTC)', fontsize=13)
     case_date, site_name = _read_case_date(nc_file)
-    _add_subtitle(fig, n_fields, case_date, site_name)
+    _add_subtitle(fig, case_date, site_name)
 
     if save_path:
         file_name = _create_save_name(save_path, case_date, max_y, valid_names)
@@ -237,22 +230,11 @@ def _create_save_name(save_path, case_date, max_y, field_names):
     return f"{save_path}{date_string}_{max_y}km_{'_'.join(field_names)}.png"
 
 
-def _add_subtitle(fig, n_fields, case_date, site_name):
+def _add_subtitle(fig, case_date, site_name):
     """Adds subtitle into figure."""
-    y = _calc_subtitle_y(n_fields)
     text = f"{case_date.strftime('%-d %b %Y')}, {site_name}"
-    fig.suptitle(text, fontsize=13, y=y, horizontalalignment='left',
-                 x=0.06, fontweight='bold')
-
-
-def _calc_subtitle_y(n_fields):
-    """Returns the correct y-position of subtitle. """
-    pos = 0.903
-    step = 0.008
-    for _ in range(2, n_fields):
-        pos -= step
-        step /= 2
-    return 0.93 if n_fields == 1 else pos
+    fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
+                 verticalalignment='bottom', fontweight='bold')
 
 
 def _read_case_date(nc_file):

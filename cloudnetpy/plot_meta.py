@@ -62,11 +62,11 @@ _CLABEL = {
     'lwc_retrieval_status':
         ("No liquid water",
          "Reliable retrieval",
-         "Adiabatic ret.: cloud top adjusted",
-         "Adiabatic ret.: new cloud pixel",
-         "Unreliable lwp: no ret.",
-         "Unreliable lwp/cloud boundaries: no ret.",
-         "Rain present: no ret.")
+         "Adiabatic retrieval: cloud top adjusted",
+         "Adiabatic retrieval: new cloud pixel",
+         "Unreliable lwp: no retrieval",
+         "Unreliable lwp/cloud boundaries: no retrieval",
+         "Rain present: no retrieval")
 }
 
 _CBAR = {
@@ -80,8 +80,8 @@ _CBAR = {
         ("#ffffff", "#00bfff", "#ff4500", "#0000ff", "#ffff00",
          "#2f4f4f", "#778899", "#d3d3d3"),
     'lwc_retrieval_status':
-        ("#ffffff", "#00bfff", "#0000ff", "#2f4f4f", "#ffa500",
-         "#ff4500", "#2f4f4f"),
+        ("#ffffff", "#00bfff", "#0000ff", "#3cb371", "#ffa500",
+         "#ff4500", "#ECECEC"),
     'bit':
         ("#ffffff", "#4682b4")
 }
@@ -255,6 +255,14 @@ ATTRIBUTES = {
         plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
+    'Z_error': PlotMeta(
+        name='Radar reflectivity factor random error',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0, 3),
+        plot_scale=_LIN,
+        plot_type='mesh'
+     ),
     'Ze': PlotMeta(
         name='Radar reflectivity factor',
         cbar='viridis',
@@ -359,7 +367,7 @@ ATTRIBUTES = {
         name='Ice water content error',
         cbar='RdYlGn_r',
         clabel=_DB,
-        plot_range=(0, 5),
+        plot_range=(0, 3),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
@@ -373,15 +381,15 @@ ATTRIBUTES = {
         name='Liquid water content',
         cbar='Blues',
         clabel=_KGM3,
-        plot_range=(1e-6, 1e-2),
+        plot_range=(1e-5, 1e-2),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
     'lwc_error': PlotMeta(
         name='Liquid water content error',
         cbar='RdYlGn_r',
-        clabel=_KGM2,
-        plot_range=(1e-5, 1e-3),
+        clabel=_DB,
+        plot_range=(0, 2),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
@@ -394,61 +402,73 @@ ATTRIBUTES = {
     'droplet': PlotMeta(
         'Droplet bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'falling': PlotMeta(
         'Falling bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'cold': PlotMeta(
         'Cold bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'melting': PlotMeta(
         'Melting bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'aerosol': PlotMeta(
         'Aerosol bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'insect': PlotMeta(
         'Insect bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'radar': PlotMeta(
         'Radar bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'lidar': PlotMeta(
         'Lidar bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'clutter': PlotMeta(
         'Clutter bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'molecular': PlotMeta(
         'Molecular bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'attenuated': PlotMeta(
         'Attenuated bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     ),
     'corrected': PlotMeta(
         'Corrected bit',
         cbar=_CBAR['bit'],
+        plot_range=(0, 1),
         plot_type='bit'
     )
 }

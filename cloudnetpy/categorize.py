@@ -343,7 +343,7 @@ class Radar(ProfileDataSource):
             z_precision = 4.343 * (1 / np.sqrt(_number_of_pulses())
                                    + utils.db2lin(z_power_min - z_power) / 3)
             gas_error = attenuations['radar_gas_atten'] * 0.1
-            liq_error = attenuations['liquid_atten_err']
+            liq_error = attenuations['liquid_atten_err'].filled(0)
             z_error = utils.l2norm(gas_error, liq_error, z_precision)
             z_error[attenuations['liquid_uncorrected']] = ma.masked
             return z_error
@@ -425,6 +425,7 @@ class Mwr(DataSource):
         self._unknown_to_cloudnet(('LWP_data', 'lwp'), 'lwp')
 
     def _init_lwp_error(self):
+        # TODO: Check these error values
         random_error, bias = 0.25, 5
         lwp_error = utils.l2norm(self.data['lwp'][:]*random_error, bias)
         self.append_data(lwp_error, 'lwp_error', units='g m-2')
