@@ -12,6 +12,28 @@ from cloudnetpy.products.product_tools import CategorizeBits
 G_TO_KG = 0.001
 
 
+def generate_lwc(categorize_file, output_file):
+    """Generates Cloudnet liquid water content product.
+
+    Args:
+        categorize_file (str): Categorize file name.
+        output_file (str): Output file name.
+
+    Examples:
+        >>> from cloudnetpy.products.lwc import generate_lwc
+        >>> generate_lwc('categorize.nc', 'lwc.nc')
+
+    """
+    lwc_source = LwcSource(categorize_file)
+    lwc_obj = Lwc(lwc_source)
+    lwc_obj.adjust_clouds_to_match_lwp()
+    lwc_obj.screen_rain()
+    _append_data(lwc_source, lwc_obj)
+    output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
+    output.save_product_file('liquid water content', lwc_source, output_file,
+                             copy_from_cat=('lwp', 'lwp_error'))
+
+
 class LwcSource(DataSource):
     """Data container for liquid water content calculations. It reads
     input data from a categorize file and provides data structures and
@@ -196,28 +218,6 @@ def find_topmost_clouds(is_cloud):
     for n, base in enumerate(topmost_bases):
         top_clouds[n, :base] = 0
     return top_clouds
-
-
-def generate_lwc(categorize_file, output_file):
-    """Generates Cloudnet liquid water content product.
-
-    Args:
-        categorize_file (str): Categorize file name.
-        output_file (str): Output file name.
-
-    Examples:
-        >>> from cloudnetpy.products.lwc import generate_lwc
-        >>> generate_lwc('categorize.nc', 'lwc.nc')
-
-    """
-    lwc_source = LwcSource(categorize_file)
-    lwc_obj = Lwc(lwc_source)
-    lwc_obj.adjust_clouds_to_match_lwp()
-    lwc_obj.screen_rain()
-    _append_data(lwc_source, lwc_obj)
-    output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
-    output.save_product_file('liquid water content', lwc_source, output_file,
-                             copy_from_cat=('lwp', 'lwp_error'))
 
 
 def _append_data(lwc_data, lwc_obj):
