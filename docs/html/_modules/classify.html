@@ -52,67 +52,37 @@
 <span class="kn">from</span> <span class="nn">cloudnetpy.constants</span> <span class="k">import</span> <span class="n">T0</span>
 
 
-<span class="k">class</span> <span class="nc">_ClassData</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">][:]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ldr</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ldr&#39;</span><span class="p">][:]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">][:]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">][:]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tw</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Tw&#39;</span><span class="p">][:]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">lidar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">][:]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">time</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">height</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">type</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">is_rain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_rain</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">is_clutter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_clutter</span><span class="p">()</span>
+<div class="viewcode-block" id="fetch_quality"><a class="viewcode-back" href="../api.html#classify.fetch_quality">[docs]</a><span class="k">def</span> <span class="nf">fetch_quality</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">classification</span><span class="p">,</span> <span class="n">attenuations</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns Cloudnet quality bits.</span>
 
-    <span class="k">def</span> <span class="nf">_find_rain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_buffer</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Find profiles affected by rain.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        radar (Radar): Radar data container.</span>
+<span class="sd">        lidar (Lidar): Lidar data container.</span>
+<span class="sd">        classification (_ClassificationResult): Container for classification</span>
+<span class="sd">            results.</span>
+<span class="sd">        attenuations (dict):</span>
 
-<span class="sd">        Rain is present in such profiles where the radar echo in</span>
-<span class="sd">        the third range gate is &gt; 0 dB. To make sure we do not include any</span>
-<span class="sd">        rainy profiles, we also flag a few profiles before and after</span>
-<span class="sd">        detections as raining.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Integer array containing the following bits:</span>
+<span class="sd">            - bit 0: Pixel contains radar data</span>
+<span class="sd">            - bit 1: Pixel contains lidar data</span>
+<span class="sd">            - bit 2: Pixel contaminated by radar clutter</span>
+<span class="sd">            - bit 3: Molecular scattering present (currently not implemented!)</span>
+<span class="sd">            - bit 4: Pixel was affected by liquid attenuation</span>
+<span class="sd">            - bit 5: Liquid attenuation was corrected</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">            time_buffer (int): Time in minutes.</span>
+<span class="sd">    See also:</span>
+<span class="sd">        classify.fetch_cat_bits()</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">is_rain</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">n_profiles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
-        <span class="n">n_steps</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">n_elements</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">time_buffer</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_rain</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
-            <span class="n">ind1</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ind</span> <span class="o">-</span> <span class="n">n_steps</span><span class="p">)</span>
-            <span class="n">ind2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">n_profiles</span><span class="p">)</span>
-            <span class="n">is_rain</span><span class="p">[</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="n">is_rain</span>
-
-    <span class="k">def</span> <span class="nf">_find_clutter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_gates</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">v_lim</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Estimates clutter from doppler velocity.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            n_gates (int, optional): Number of range gates from the ground</span>
-<span class="sd">                where clutter is expected to be found. Default is 10.</span>
-<span class="sd">            v_lim (float, optional): Velocity threshold. Smaller values are</span>
-<span class="sd">                classified as clutter. Default is 0.05 (m/s).</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            ndarray: 2-D boolean array denoting pixels contaminated by clutter.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">is_clutter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-        <span class="n">tiny_velocity</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_gates</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">v_lim</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">is_clutter</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_gates</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiny_velocity</span> <span class="o">*</span> <span class="n">utils</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">is_rain</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">is_clutter</span>
-
-
-<span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">_ClassificationResult</span><span class="p">:</span>
-    <span class="n">category_bits</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">is_rain</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">is_clutter</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">insect_prob</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-    <span class="n">liquid_bases</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="mi">6</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">~</span><span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">][:]</span><span class="o">.</span><span class="n">mask</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">~</span><span class="n">lidar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">][:]</span><span class="o">.</span><span class="n">mask</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">classification</span><span class="o">.</span><span class="n">is_clutter</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">attenuations</span><span class="p">[</span><span class="s1">&#39;liquid_corrected&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="n">attenuations</span><span class="p">[</span><span class="s1">&#39;liquid_uncorrected&#39;</span><span class="p">]</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">attenuations</span><span class="p">[</span><span class="s1">&#39;liquid_corrected&#39;</span><span class="p">]</span>
+    <span class="n">qbits</span> <span class="o">=</span> <span class="n">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;quality_bits&#39;</span><span class="p">:</span> <span class="n">qbits</span><span class="p">}</span></div>
 
 
 <div class="viewcode-block" id="classify_measurements"><a class="viewcode-back" href="../api.html#classify.classify_measurements">[docs]</a><span class="k">def</span> <span class="nf">classify_measurements</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
@@ -147,26 +117,6 @@
     <span class="n">cat_bits</span> <span class="o">=</span> <span class="n">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_ClassificationResult</span><span class="p">(</span><span class="n">cat_bits</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">is_rain</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">is_clutter</span><span class="p">,</span>
                                  <span class="n">insect_prob</span><span class="p">,</span> <span class="n">liquid</span><span class="p">[</span><span class="s1">&#39;bases&#39;</span><span class="p">])</span></div>
-
-
-<span class="k">def</span> <span class="nf">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates array of integers from individual boolean arrays.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        bits (list): List of bit fields (of similar sizes)</span>
-<span class="sd">        to be saved in the resulting array of integers. bits[0]</span>
-<span class="sd">        is saved as bit 0, bits[1] as bit 1, etc.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        ndarray: Array of integers containing the information</span>
-<span class="sd">            of the individual boolean arrays.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">int_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bits</span><span class="p">):</span>
-        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>  <span class="c1"># works also if bit is None</span>
-        <span class="n">int_array</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">setbit</span><span class="p">(</span><span class="n">int_array</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">int_array</span>
 
 
 <div class="viewcode-block" id="find_melting_layer"><a class="viewcode-back" href="../api.html#classify.find_melting_layer">[docs]</a><span class="k">def</span> <span class="nf">find_melting_layer</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">smooth</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -470,37 +420,87 @@
     <span class="k">return</span> <span class="o">~</span><span class="n">beta</span><span class="o">.</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_falling</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_liquid</span></div>
 
 
-<div class="viewcode-block" id="fetch_quality"><a class="viewcode-back" href="../api.html#classify.fetch_quality">[docs]</a><span class="k">def</span> <span class="nf">fetch_quality</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">classification</span><span class="p">,</span> <span class="n">attenuations</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns Cloudnet quality bits.</span>
+<span class="k">def</span> <span class="nf">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates array of integers from individual boolean arrays.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        radar (Radar): Radar data container.</span>
-<span class="sd">        lidar (Lidar): Lidar data container.</span>
-<span class="sd">        classification (_ClassificationResult): Container for classification</span>
-<span class="sd">            results.</span>
-<span class="sd">        attenuations (dict):</span>
+<span class="sd">        bits (list): List of bit fields (of similar sizes)</span>
+<span class="sd">        to be saved in the resulting array of integers. bits[0]</span>
+<span class="sd">        is saved as bit 0, bits[1] as bit 1, etc.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        ndarray: Integer array containing the following bits:</span>
-<span class="sd">            - bit 0: Pixel contains radar data</span>
-<span class="sd">            - bit 1: Pixel contains lidar data</span>
-<span class="sd">            - bit 2: Pixel contaminated by radar clutter</span>
-<span class="sd">            - bit 3: Molecular scattering present (currently not implemented!)</span>
-<span class="sd">            - bit 4: Pixel was affected by liquid attenuation</span>
-<span class="sd">            - bit 5: Liquid attenuation was corrected</span>
-
-<span class="sd">    See also:</span>
-<span class="sd">        classify.fetch_cat_bits()</span>
+<span class="sd">        ndarray: Array of integers containing the information</span>
+<span class="sd">            of the individual boolean arrays.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="mi">6</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="o">~</span><span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">][:]</span><span class="o">.</span><span class="n">mask</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="o">~</span><span class="n">lidar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">][:]</span><span class="o">.</span><span class="n">mask</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">classification</span><span class="o">.</span><span class="n">is_clutter</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">attenuations</span><span class="p">[</span><span class="s1">&#39;liquid_corrected&#39;</span><span class="p">]</span> <span class="o">|</span> <span class="n">attenuations</span><span class="p">[</span><span class="s1">&#39;liquid_uncorrected&#39;</span><span class="p">]</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">=</span> <span class="n">attenuations</span><span class="p">[</span><span class="s1">&#39;liquid_corrected&#39;</span><span class="p">]</span>
-    <span class="n">qbits</span> <span class="o">=</span> <span class="n">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;quality_bits&#39;</span><span class="p">:</span> <span class="n">qbits</span><span class="p">}</span></div>
+    <span class="n">int_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">bit</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bits</span><span class="p">):</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">bit</span><span class="p">)</span>  <span class="c1"># works also if bit is None</span>
+        <span class="n">int_array</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">setbit</span><span class="p">(</span><span class="n">int_array</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">int_array</span>
+
+
+<span class="k">class</span> <span class="nc">_ClassData</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ldr</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ldr&#39;</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tw</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Tw&#39;</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">lidar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">height</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_rain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_rain</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_clutter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_clutter</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_find_rain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_buffer</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find profiles affected by rain.</span>
+
+<span class="sd">        Rain is present in such profiles where the radar echo in</span>
+<span class="sd">        the third range gate is &gt; 0 dB. To make sure we do not include any</span>
+<span class="sd">        rainy profiles, we also flag a few profiles before and after</span>
+<span class="sd">        detections as raining.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            time_buffer (int): Time in minutes.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_rain</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">n_profiles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+        <span class="n">n_steps</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">n_elements</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">time_buffer</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">ind</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_rain</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">ind1</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ind</span> <span class="o">-</span> <span class="n">n_steps</span><span class="p">)</span>
+            <span class="n">ind2</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="n">n_steps</span><span class="p">,</span> <span class="n">n_profiles</span><span class="p">)</span>
+            <span class="n">is_rain</span><span class="p">[</span><span class="n">ind1</span><span class="p">:</span><span class="n">ind2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">is_rain</span>
+
+    <span class="k">def</span> <span class="nf">_find_clutter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_gates</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">v_lim</span><span class="o">=</span><span class="mf">0.05</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Estimates clutter from doppler velocity.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            n_gates (int, optional): Number of range gates from the ground</span>
+<span class="sd">                where clutter is expected to be found. Default is 10.</span>
+<span class="sd">            v_lim (float, optional): Velocity threshold. Smaller values are</span>
+<span class="sd">                classified as clutter. Default is 0.05 (m/s).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            ndarray: 2-D boolean array denoting pixels contaminated by clutter.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_clutter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">tiny_velocity</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_gates</span><span class="p">])</span> <span class="o">&lt;</span> <span class="n">v_lim</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">is_clutter</span><span class="p">[:,</span> <span class="p">:</span><span class="n">n_gates</span><span class="p">]</span> <span class="o">=</span> <span class="n">tiny_velocity</span> <span class="o">*</span> <span class="n">utils</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">is_rain</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">is_clutter</span>
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">_ClassificationResult</span><span class="p">:</span>
+    <span class="n">category_bits</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">is_rain</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">is_clutter</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">insect_prob</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">liquid_bases</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 </pre></div>
 
           </div>

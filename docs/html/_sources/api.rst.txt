@@ -33,7 +33,7 @@ Categorize to products
 Starting from the categorize file, several geophysical products can be
 generated.
 
-.. autofunction:: products.classification.generate_class
+.. autofunction:: products.classification.generate_classification
 
 .. autofunction:: products.iwc.generate_iwc
 
