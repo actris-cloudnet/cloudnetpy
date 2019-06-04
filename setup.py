@@ -16,7 +16,7 @@ setup(
     version=version['__version__'],
     description='Python package for Cloudnet processing',
     long_description=readme,
-    author='Simo Tukiainen',
+    author='Finnish Meteorological Institute',
     author_email='simo.tukiainen@fmi.fi',
     url='https://github.com/tukiains/cloudnetpy',
     license=license,
@@ -24,7 +24,7 @@ setup(
     python_requires='>=3.7',
     install_requires=['numpy>=1.16', 'scipy>=1.2', 'netCDF4>=1.4.2', 'matplotlib>=3.0.2'],
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
