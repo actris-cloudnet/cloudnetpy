@@ -12,6 +12,97 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 
+def generate_categorize(input_files, output_file):
+    """Generates Cloudnet categorize file.
+
+    The measurements are rebinned into a common height / time grid,
+    and classified as different types of scatterers such as ice, liquid,
+    insects, etc. Next, the radar signal is corrected for atmospheric
+    attenuation, and error estimates are computed. Results are saved
+    in *ouput_file* which is by default a compressed NETCDF4_CLASSIC
+    file.
+
+    Args:
+        input_files (dict): dict containing file names for calibrated
+            'radar', 'lidar' 'model' and 'mwr' files.
+        output_file (str): Full path of the output file.
+
+    Notes:
+        Separate mwr-file is not needed when using RPG cloud radar which
+        measures liquid water path. Then, the radar file can be used as
+        a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
+
+    Examples:
+        >>> from cloudnetpy.categorize import generate_categorize
+        >>> input_files = {'radar': 'radar.nc',
+                           'lidar': 'lidar.nc',
+                           'model': 'model.nc',
+                           'mwr': 'mwr.nc'}
+        >>> generate_categorize(input_files, 'output.nc')
+
+    """
+
+    def _interpolate_to_cloudnet_grid():
+        model.interpolate_to_common_height(radar.wl_band)
+        model.interpolate_to_grid(time, height)
+        mwr.rebin_to_grid(time)
+        radar.rebin_to_grid(time)
+        lidar.rebin_to_grid(time, height)
+
+    def _prepare_output():
+        radar.add_meta()
+        lidar.add_meta()
+        model.screen_sparse_fields()
+        for key in ('category_bits', 'insect_prob', 'is_rain'):
+            radar.append_data(getattr(classification, key), key)
+        for key in ('radar_liquid_atten', 'radar_gas_atten'):
+            radar.append_data(attenuations[key], key)
+        radar.append_data(quality['quality_bits'], 'quality_bits')
+        return {**radar.data, **lidar.data, **model.data, **model.data_sparse,
+                **mwr.data}
+
+    def _define_dense_grid():
+        return utils.time_grid(), radar.height
+
+    radar = Radar(input_files['radar'])
+    lidar = Lidar(input_files['lidar'])
+    model = Model(input_files['model'], radar.altitude)
+    mwr = Mwr(input_files['mwr'])
+    time, height = _define_dense_grid()
+    _interpolate_to_cloudnet_grid()
+    model.calc_wet_bulb()
+    classification = classify.classify_measurements(radar, lidar, model)
+    attenuations = atmos.get_attenuations(model, mwr, classification)
+    radar.correct_atten(attenuations)
+    radar.calc_errors(attenuations, classification)
+    quality = classify.fetch_quality(radar, lidar, classification, attenuations)
+    output_data = _prepare_output()
+    output.update_attributes(output_data, CATEGORIZE_ATTRIBUTES)
+    _save_cat(output_file, radar, lidar, model, output_data)
+
+
+def _save_cat(file_name, radar, lidar, model, obs):
+    """Creates a categorize netCDF4 file and saves all data into it."""
+
+    def _merge_source():
+        # Probably should include mwr and model source if existing
+        rootgrp.source = f"radar: {radar.source}\nlidar: {lidar.source}"
+
+    dims = {'time': len(radar.time),
+            'height': len(radar.height),
+            'model_time': len(model.time),
+            'model_height': len(model.mean_height)}
+    rootgrp = output.init_file(file_name, dims, obs, zlib=True)
+    output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
+    rootgrp.title = f"Categorize file from {radar.location}"
+    # Needs to solve how to provide institution
+    # rootgrp.institution = f"Data processed at {config.INSTITUTE}"
+    rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
+    output.merge_history(rootgrp, 'categorize', radar, lidar)
+    _merge_source()
+    rootgrp.close()
+
+
 class DataSource:
     """Base class for all Cloudnet measurements and model data.
 
@@ -286,14 +377,15 @@ class Lidar(ProfileDataSource):
 
     Args:
         lidar_file (str): File name of the calibrated lidar file.
-        fields (tuple): Tuple of strings containing fields to be extracted
-            from the *lidar_file*, e.g ('beta', 'beta_raw').
+        fields (tuple, optional): Tuple of strings containing fields to be
+            extracted from the *lidar_file*, e.g ('beta', 'beta_raw'). Default
+            is ('beta',).
 
     Attributes:
         wavelength (float): Lidar wavelength (nm).
 
     """
-    def __init__(self, lidar_file, fields):
+    def __init__(self, lidar_file, fields=('beta',)):
         super().__init__(lidar_file)
         self._netcdf_to_cloudnet(fields)
         self.wavelength = float(self.getvar('wavelength'))
@@ -443,97 +535,6 @@ class Model(DataSource):
         fields_to_keep = ('temperature', 'pressure', 'q', 'uwind', 'vwind')
         self.data_sparse = {key: self.data_sparse[key]
                             for key in fields_to_keep}
-
-
-def generate_categorize(input_files, output_file):
-    """ High-level API to generate Cloudnet categorize file.
-
-    The measurements are rebinned into a common height / time grid,
-    and classified as different types of scatterers such as ice, liquid,
-    insects, etc. Next, the radar signal is corrected for atmospheric
-    attenuation, and error estimates are computed. Results are saved
-    in *ouput_file* which is by default a compressed NETCDF4_CLASSIC
-    file.
-
-    Args:
-        input_files (dict): dict containing file names for 'radar', 'lidar'
-            'model' and optionally 'mwr' if liquid water path is not
-            included in the radar file.
-        output_file (str): Full path of the output file.
-
-    Notes:
-        Separate mwr-file is not needed when using RPG cloud radar which
-        measures liquid water path. Then, the radar file can be used as
-        a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
-
-    Examples:
-        >>> from cloudnetpy.categorize import generate_categorize
-        >>> input_files = {'radar': 'radar.nc',
-                           'lidar': 'lidar.nc',
-                           'model': 'model.nc',
-                           'mwr': 'mwr.nc'}
-        >>> generate_categorize(input_files, 'output.nc')
-
-    """
-
-    def _interpolate_to_cloudnet_grid():
-        """ Interpolate variables to Cloudnet's dense grid."""
-        model.interpolate_to_common_height(radar.wl_band)
-        model.interpolate_to_grid(time, height)
-        mwr.rebin_to_grid(time)
-        radar.rebin_to_grid(time)
-        lidar.rebin_to_grid(time, height)
-
-    def _prepare_output():
-        radar.add_meta()
-        lidar.add_meta()
-        model.screen_sparse_fields()
-        for key in ('category_bits', 'insect_prob', 'is_rain'):
-            radar.append_data(getattr(classification, key), key)
-        for key in ('radar_liquid_atten', 'radar_gas_atten'):
-            radar.append_data(attenuations[key], key)
-        radar.append_data(quality['quality_bits'], 'quality_bits')
-        return {**radar.data, **lidar.data, **model.data,
-                **model.data_sparse, **mwr.data}
-
-    radar = Radar(input_files['radar'])
-    lidar = Lidar(input_files['lidar'], ('beta', ))
-    model = Model(input_files['model'], radar.altitude)
-    mwr = Mwr(input_files['mwr'])
-    time = utils.time_grid()
-    height = radar.height
-    _interpolate_to_cloudnet_grid()
-    model.calc_wet_bulb()
-    classification = classify.classify_measurements(radar, lidar, model)
-    attenuations = atmos.get_attenuations(model, mwr, classification)
-    radar.correct_atten(attenuations)
-    radar.calc_errors(attenuations, classification)
-    quality = classify.fetch_quality(radar, lidar, classification, attenuations)
-    output_data = _prepare_output()
-    output.update_attributes(output_data, CATEGORIZE_ATTRIBUTES)
-    _save_cat(output_file, radar, lidar, model, output_data)
-
-
-def _save_cat(file_name, radar, lidar, model, obs):
-    """Creates a categorize netCDF4 file and saves all data into it."""
-    dims = {
-        'time': len(radar.time),
-        'height': len(radar.height),
-        'model_time': len(model.time),
-        'model_height': len(model.mean_height)}
-    rootgrp = output.init_file(file_name, dims, obs, zlib=True)
-    output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
-    rootgrp.title = f"Categorize file from {radar.location}"
-    # Needs to solve how to provide institution
-    # rootgrp.institution = f"Data processed at {config.INSTITUTE}"
-    rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
-    output.merge_history(rootgrp, 'categorize', radar, lidar)
-    _merge_source(rootgrp, radar, lidar)
-    rootgrp.close()
-
-
-def _merge_source(rootgrp, radar, lidar):
-    rootgrp.source = f"radar: {radar.source}\nlidar: {lidar.source}"
 
 
 COMMENTS = {
