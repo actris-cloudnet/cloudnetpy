@@ -26,57 +26,53 @@ def _get_meta(name):
 def main(site):
     """ Main function. """
 
+    def _process_raw(input_id, output_id, fun):
+        input_file = _input_file_name(input_id)
+        output_file = _output_file_name(output_id)
+        fun(input_file, output_file, site_meta)
+        return output_file
+
+    def _input_file_name(file_id):
+        return f"{FILE_PATH}{date}_{site}_{file_id}.nc"
+
+    def _output_file_name(file_id):
+        return f"{FILE_PATH}{file_id}_file.nc"
+
     date = '20181204'
 
     site_meta = _get_meta(site)
 
-    # Radar processing
-    # ----------------
-
-    input_file = f"{FILE_PATH}{date}_{site}_mira_raw.nc"
-    radar_file = f"{FILE_PATH}radar_file.nc"
-    mira.mira2nc(input_file, radar_file, site_meta)
-
-    # Ceilometer processing
-    # ---------------------
-
-    input_file = f"{FILE_PATH}{date}_{site}_chm15k.nc"
-    ceilo_file = f"{FILE_PATH}ceilo_file.nc"
-    ceilo.ceilo2nc(input_file, ceilo_file, site_meta)
+    # Raw processing
+    radar_file = _process_raw('mira_raw', 'radar', mira.mira2nc)
+    ceilo_file =_process_raw('chm15k', 'ceilo', ceilo.ceilo2nc)
 
     # Categorize file
-    # ---------------
-
     categorize_input_files = {
         'radar': radar_file,
         'lidar': ceilo_file,
-        'model': f"{FILE_PATH}{date}_{site}_ecmwf.nc",
-        'mwr': f"{FILE_PATH}{date}_{site}_hatpro.nc"
+        'model': _input_file_name('ecmwf'),
+        'mwr': _input_file_name('hatpro')
         }
-    categorize_file = f"{FILE_PATH}categorize_file.nc"
+    categorize_file = _output_file_name('categorize')
     categorize.generate_categorize(categorize_input_files, categorize_file)
 
     # Products
-    # --------
-
     for product in ('classification', 'iwc', 'lwc', 'drizzle'):
-        product_file = f"{FILE_PATH}{product}_file.nc"
+        product_file = _output_file_name(product)
         module = importlib.import_module(f"cloudnetpy.products.{product}")
         getattr(module, f"generate_{product}")(categorize_file, product_file)
 
     # Figures
-    # -------
-
     plot.generate_figure(categorize_file,
                          ['Z', 'Z_error', 'ldr', 'v', 'width'])
-    plot.generate_figure(f"{FILE_PATH}classification_file.nc",
+    plot.generate_figure(_output_file_name('classification'),
                          ['target_classification', 'detection_status'])
-    plot.generate_figure(f"{FILE_PATH}iwc_file.nc",
+    plot.generate_figure(_output_file_name('iwc'),
                          ['iwc', 'iwc_error', 'iwc_retrieval_status'])
-    plot.generate_figure(f"{FILE_PATH}lwc_file.nc",
+    plot.generate_figure(_output_file_name('lwc'),
                          ['lwc', 'lwc_error', 'lwc_retrieval_status'],
                          max_y=6)
-    plot.generate_figure(f"{FILE_PATH}drizzle_file.nc",
+    plot.generate_figure(_output_file_name('drizzle'),
                          ['Do', 'mu', 'S'],
                          max_y=3)
 
