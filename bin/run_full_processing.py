@@ -32,11 +32,18 @@ def main(site):
         fun(input_file, output_file, site_meta)
         return output_file
 
+    def _process_product(product_name):
+        output_file = _output_file_name(product_name)
+        module = importlib.import_module(f"cloudnetpy.products.{product_name}")
+        getattr(module, f"generate_{product_name}")(categorize_file, output_file)
+
+
     def _input_file_name(file_id):
         return f"{FILE_PATH}{date}_{site}_{file_id}.nc"
 
     def _output_file_name(file_id):
         return f"{FILE_PATH}{file_id}_file.nc"
+
 
     date = '20181204'
 
@@ -58,9 +65,7 @@ def main(site):
 
     # Products
     for product in ('classification', 'iwc', 'lwc', 'drizzle'):
-        product_file = _output_file_name(product)
-        module = importlib.import_module(f"cloudnetpy.products.{product}")
-        getattr(module, f"generate_{product}")(categorize_file, product_file)
+        _process_product(product)
 
     # Figures
     plot.generate_figure(categorize_file,
