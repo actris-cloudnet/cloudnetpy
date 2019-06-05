@@ -45,30 +45,8 @@ def main(site, plot_figures=True):
     def _output_file_name(file_id):
         return f"{FILE_PATH}{file_id}_file.nc"
 
-    date = '20181204'
-
-    site_meta = _get_meta(site)
-
-    radar_file = _process_raw('mira_raw', 'radar', mira.mira2nc)
-    ceilo_file = _process_raw('chm15k', 'ceilo', ceilo.ceilo2nc)
-
-    # Categorize file
-    categorize_input_files = {
-        'radar': radar_file,
-        'lidar': ceilo_file,
-        'model': _input_file_name('ecmwf'),
-        'mwr': _input_file_name('hatpro')
-        }
-    categorize_file = _output_file_name('categorize')
-    print(f"Processing categorize file...")
-    categorize.generate_categorize(categorize_input_files, categorize_file)
-
-    # Products
-    for product in ('classification', 'iwc', 'lwc', 'drizzle'):
-        _process_product(product)
-
-    # Figures
-    if plot_figures:
+    def _plot_figures():
+        print('Plotting...')
         plot.generate_figure(categorize_file,
                              ['Z', 'Z_error', 'ldr', 'v', 'width'])
         plot.generate_figure(_output_file_name('classification'),
@@ -81,6 +59,29 @@ def main(site, plot_figures=True):
         plot.generate_figure(_output_file_name('drizzle'),
                              ['Do', 'mu', 'S'],
                              max_y=3)
+
+    date = '20181204'
+    site_meta = _get_meta(site)
+
+    radar_file = _process_raw('mira_raw', 'radar', mira.mira2nc)
+    ceilo_file = _process_raw('chm15k', 'ceilo', ceilo.ceilo2nc)
+
+    categorize_input_files = {
+        'radar': radar_file,
+        'lidar': ceilo_file,
+        'model': _input_file_name('ecmwf'),
+        'mwr': _input_file_name('hatpro')
+        }
+    categorize_file = _output_file_name('categorize')
+    print(f"Processing categorize file...")
+    categorize.generate_categorize(categorize_input_files, categorize_file)
+
+    for product in ('classification', 'iwc', 'lwc', 'drizzle'):
+        _process_product(product)
+
+    if plot_figures:
+        _plot_figures()
+
     print('All done. Bye!')
 
 
