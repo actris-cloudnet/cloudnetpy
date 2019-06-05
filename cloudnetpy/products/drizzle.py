@@ -12,7 +12,6 @@ from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification
-from cloudnetpy.plotting import plot_2d
 
 
 def generate_drizzle(categorize_file, output_file):
@@ -359,7 +358,6 @@ def drizzle_solve(data, drizzle_class, width_ht):
         return 2 / np.pi * data.beta / data.z
 
     def _find_lut_indices(*ind):
-        #ind_dia = np.searchsorted(data.mie['Do'], dia_init[ind])
         ind_dia = bisect_left(data.mie['Do'], dia_init[ind], hi=n_dia-1)
         ind_width = bisect_left(width_lut[:, ind_dia], width_ht[ind], hi=n_widths-1)
         return ind_width, ind_dia
@@ -491,7 +489,7 @@ DRIZZLE_ATTRIBUTES = {
 
 # drizzle error linear / log conversion from the Matlab code:
 
-COR = 10/np.log(10)
+COR = 10 / np.log(10)
 
 
 def db2lin(x):

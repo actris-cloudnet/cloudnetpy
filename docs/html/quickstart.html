@@ -49,6 +49,8 @@
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
 <p>CloudnetPy is available from <a class="reference external" href="https://pypi.org/project/cloudnetpy/">PyPI</a>, the Python package index. It allows a pip-based
 installation. CloudnetPy requires Python 3.7 or newer.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>First, install prerequisite software (if you already haven’t):</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> sudo apt update <span class="o">&amp;&amp;</span> sudo apt upgrade
 <span class="gp">$</span> sudo apt install python3.7 python3.7-venv python3-pip
@@ -64,17 +66,39 @@ installation. CloudnetPy requires Python 3.7 or newer.</p>
 </pre></div>
 </div>
 <p>That’s it! Processing is easy using CloudnetPy’s high level APIs.</p>
+</div>
+<div class="section" id="radar-processing">
+<h2>Radar processing<a class="headerlink" href="#radar-processing" title="Permalink to this headline">¶</a></h2>
 <p>In the first example we convert a raw METEK MIRA-36 netCDF file into
 Cloudnet netCDF file that can be used in further processing steps.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments.mira</span> <span class="kn">import</span> <span class="n">mira2nc</span>
 <span class="n">mira2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Mace-Head&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Next we convert a raw Vaisala ceilometer text file into netCDF.</p>
+</div>
+<div class="section" id="lidar-processing">
+<h2>Lidar processing<a class="headerlink" href="#lidar-processing" title="Permalink to this headline">¶</a></h2>
+<p>Next we convert a raw Vaisala ceilometer text file into netCDF (and process
+the signal-to-noise screened backscatter).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments.ceilo</span> <span class="kn">import</span> <span class="n">ceilo2nc</span>
-<span class="n">ceilo2nc</span><span class="p">(</span><span class="s1">&#39;vaisala.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;vaisala.nc&#39;</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;Kumpula&#39;</span><span class="p">,</span> <span class="n">altitude</span><span class="o">=</span><span class="mi">53</span><span class="p">)</span>
+<span class="n">ceilo2nc</span><span class="p">(</span><span class="s1">&#39;vaisala.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;vaisala.nc&#39;</span><span class="p">,</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span><span class="s1">&#39;Kumpula&#39;</span><span class="p">,</span> <span class="n">altitude</span><span class="p">:</span><span class="mi">53</span><span class="p">})</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="mwr-processing">
+<h2>MWR processing<a class="headerlink" href="#mwr-processing" title="Permalink to this headline">¶</a></h2>
+<p>HATPRO microwave
+radiometer processing is not yet part of CloudnetPy. However, with the 94
+GHz RPG cloud radar, a separate MWR instrument is not required (although it
+improves the data quality).</p>
+</div>
+<div class="section" id="model-data">
+<h2>Model data<a class="headerlink" href="#model-data" title="Permalink to this headline">¶</a></h2>
+<p>Model files needed in the next processing step can be downloaded
+from Cloudnet <a class="reference external" href="devcloudnet.fmi.fi/api/models">http API</a>.</p>
+</div>
+<div class="section" id="categorize-processing">
+<h2>Categorize processing<a class="headerlink" href="#categorize-processing" title="Permalink to this headline">¶</a></h2>
 <p>In the next example we create a categorize file from already
 calibrated measurement files.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy.categorize</span> <span class="kn">import</span> <span class="n">generate_categorize</span>
@@ -87,10 +111,14 @@ calibrated measurement files.</p>
 <span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="s1">&#39;categorize.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>With 94 GHz RPG cloud radar, the radar.nc file can be used for both ‘radar’ and ‘mwr’.</p>
+</div>
+<div class="section" id="processing-products">
+<h2>Processing products<a class="headerlink" href="#processing-products" title="Permalink to this headline">¶</a></h2>
 <p>In the last example we create the smallest and simplest Cloudnet
 product, the classification product.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="kn">import</span> <span class="n">generate_class</span>
-<span class="n">generate_class</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="kn">import</span> <span class="n">generate_classification</span>
+<span class="n">generate_classification</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
@@ -100,6 +128,7 @@ version of CloudnetPy, download it directly from <a class="reference external" h
 </pre></div>
 </div>
 </div>
+</div>
 
 
           </div>
@@ -107,6 +136,20 @@ version of CloudnetPy, download it directly from <a class="reference external" h
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Quickstart</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#radar-processing">Radar processing</a></li>
+<li><a class="reference internal" href="#lidar-processing">Lidar processing</a></li>
+<li><a class="reference internal" href="#mwr-processing">MWR processing</a></li>
+<li><a class="reference internal" href="#model-data">Model data</a></li>
+<li><a class="reference internal" href="#categorize-processing">Categorize processing</a></li>
+<li><a class="reference internal" href="#processing-products">Processing products</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>Previous topic</h4>
   <p class="topless"><a href="overview.html"
                         title="previous chapter">Overview</a></p>

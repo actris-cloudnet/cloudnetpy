@@ -6,6 +6,9 @@ CloudnetPy is available from `PyPI
 <https://pypi.org/project/cloudnetpy/>`_, the Python package index. It allows a pip-based
 installation. CloudnetPy requires Python 3.7 or newer.
 
+Installation
+------------
+
 First, install prerequisite software (if you already haven't):
 
 .. code-block:: console
@@ -28,6 +31,9 @@ Install cloudnetpy into the virtual environment:
 
 That's it! Processing is easy using CloudnetPy's high level APIs.
 
+Radar processing
+----------------
+
 In the first example we convert a raw METEK MIRA-36 netCDF file into
 Cloudnet netCDF file that can be used in further processing steps.
 
@@ -36,12 +42,33 @@ Cloudnet netCDF file that can be used in further processing steps.
     from cloudnetpy.instruments.mira import mira2nc
     mira2nc('raw_radar.mmclx', 'radar.nc', {'name': 'Mace-Head'})
 
-Next we convert a raw Vaisala ceilometer text file into netCDF.
+Lidar processing
+----------------
+
+Next we convert a raw Vaisala ceilometer text file into netCDF (and process
+the signal-to-noise screened backscatter).
 
 .. code-block:: python
 
     from cloudnetpy.instruments.ceilo import ceilo2nc
-    ceilo2nc('vaisala.txt', 'vaisala.nc', location='Kumpula', altitude=53)
+    ceilo2nc('vaisala.txt', 'vaisala.nc', {name:'Kumpula', altitude:53})
+
+MWR processing
+--------------
+
+HATPRO microwave
+radiometer processing is not yet part of CloudnetPy. However, with the 94
+GHz RPG cloud radar, a separate MWR instrument is not required (although it
+improves the data quality).
+
+Model data
+----------
+
+Model files needed in the next processing step can be downloaded
+from Cloudnet `http API <devcloudnet.fmi.fi/api/models>`_.
+
+Categorize processing
+--------------------
 
 In the next example we create a categorize file from already
 calibrated measurement files.
@@ -57,13 +84,19 @@ calibrated measurement files.
        }
    generate_categorize(input_files, 'categorize.nc')
 
+With 94 GHz RPG cloud radar, the radar.nc file can be used for both 'radar' and 'mwr'.
+
+
+Processing products
+-------------------
+
 In the last example we create the smallest and simplest Cloudnet
 product, the classification product.
 
 .. code-block:: python
 
-    from cloudnetpy.products.classification import generate_class
-    generate_class('categorize.nc', 'classification.nc')
+    from cloudnetpy.products.classification import generate_classification
+    generate_classification('categorize.nc', 'classification.nc')
 
 Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
 contain all the latest features and modifications. To get an up-to-date

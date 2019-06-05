@@ -3,14 +3,13 @@
 from datetime import date
 import numpy as np
 import numpy.ma as ma
+import netCDF4
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-import netCDF4
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
-
 
 # IDENTIFIER = " from CloudnetPy"
 IDENTIFIER = ""
@@ -32,10 +31,11 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
     Examples:
         >>> from cloudnetpy.plotting import generate_figure
-        >>> generate_figure('categorize_file.nc', ['Z', 'beta', 'lwp'])
-        >>> generate_figure('categorize_file.nc', ['ldr', 'v', 'droplet'])
-        >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error'], max_y=4)
-
+        >>> generate_figure('categorize_file.nc', ['Z', 'v', 'width', 'ldr', 'beta', 'lwp'])
+        >>> generate_figure('iwc_file.nc', ['iwc', 'iwc_error', 'iwc_retrieval_status'])
+        >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error', 'lwc_retrieval_status'], max_y=4)
+        >>> generate_figure('classification_file.nc', ['target_classification', 'detection_status'])
+        >>> generate_figure('drizzle_file.nc', ['Do', 'mu', 'S'], max_y=3)
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
     n_fields = len(valid_fields)
@@ -205,20 +205,23 @@ def _plot_colormesh_data(ax, data, name, axes):
         axes (tuple): Time and height 1D arrays.
     """
     variables = ATTRIBUTES[name]
-    if variables.plot_type is 'bit':
+
+    if variables.plot_type == 'bit':
         cmap = ListedColormap(variables.cbar)
         pos = ax.get_position()
         ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
     else:
         cmap = plt.get_cmap(variables.cbar, 22)
+
     vmin, vmax = variables.plot_range
+
     if variables.plot_scale == 'logarithmic':
         data, vmin, vmax = _lin2log(data, vmin, vmax)
 
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
-    if variables.plot_type is not 'bit':
+    if variables.plot_type != 'bit':
         colorbar = _init_colorbar(pl, ax)
         colorbar.set_label(variables.clabel, fontsize=13)
 
@@ -249,7 +252,7 @@ def _read_case_date(nc_file):
 
 def _add_subtitle(fig, case_date, site_name):
     """Adds subtitle into figure."""
-    text = f"{case_date.strftime('%-d %b %Y')}, {site_name}"
+    text = f"{site_name}, {case_date.strftime('%-d %b %Y')}"
     fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
                  verticalalignment='bottom', fontweight='bold')
 
