@@ -12,21 +12,145 @@ from cloudnetpy.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
-def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
-    """Simple plot of 2d variable."""
-    if cbar:
-        cmap = plt.get_cmap(cmap, ncolors)
-        plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower', cmap=cmap)
-        plt.colorbar()
-    else:
-        plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
-    if clim:
-        plt.clim(clim)
-    plt.show()
-
-
 # IDENTIFIER = " from CloudnetPy"
 IDENTIFIER = ""
+
+
+def generate_figure(nc_file, field_names, show=True, save_path=None,
+                    max_y=12, dpi=200):
+    """Generates a Cloudnet figure.
+
+    Args:
+        nc_file (str): Input file.
+        field_names (list): Variable names to be plotted.
+        show (bool, optional): If True, shows the figure. Default is True.
+        save_path (str, optional): Setting this path will save the figure (in the
+            given path). Default is None, when the figure is not saved.
+        max_y (int, optional): Upper limit in the plots (km). Default is 12.
+        dpi (int, optional): Figure quality (if saved). Higher value means
+            more pixels, i.e., better image quality. Default is 200.
+
+    Examples:
+        >>> from cloudnetpy.plotting import generate_figure
+        >>> generate_figure('categorize_file.nc', ['Z', 'beta', 'lwp'])
+        >>> generate_figure('categorize_file.nc', ['ldr', 'v', 'droplet'])
+        >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error'], max_y=4)
+
+    """
+    valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
+    n_fields = len(valid_fields)
+    fig, axes = _initialize_figure(n_fields)
+
+    for axis, field, name in zip(axes, valid_fields, valid_names):
+        plot_type = ATTRIBUTES[name].plot_type
+        axes_data = _read_axes(nc_file, plot_type)
+        field, axes_data = _fix_data_limitation(field, axes_data, max_y)
+        _set_axes(axis, max_y)
+
+        if plot_type == 'bar':
+            _plot_bar_data(axis, field, name, axes_data[0])
+            _set_axes(axis, 1, ATTRIBUTES[name].ylabel)
+
+        elif plot_type == 'segment':
+            _plot_segment_data(axis, field, name, axes_data)
+
+        else:
+            _plot_colormesh_data(axis, field, name, axes_data)
+
+    axes[-1].set_xlabel('Time (UTC)', fontsize=13)
+    case_date, site_name = _read_case_date(nc_file)
+    _add_subtitle(fig, case_date, site_name)
+
+    if save_path:
+        file_name = _create_save_name(save_path, case_date, max_y, valid_names)
+        plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
+    if show:
+        plt.show()
+
+
+def _find_valid_fields(nc_file, names):
+    """Returns valid field names and corresponding data."""
+    valid_names, valid_data = names[:], []
+    nc_variables = netCDF4.Dataset(nc_file).variables
+    try:
+        bits = CategorizeBits(nc_file)
+    except KeyError:
+        bits = None
+    for name in names:
+        if name in nc_variables:
+            valid_data.append(nc_variables[name][:])
+        elif bits and name in CategorizeBits.category_keys:
+            valid_data.append(bits.category_bits[name])
+        elif bits and name in CategorizeBits.quality_keys:
+            valid_data.append(bits.quality_bits[name])
+        else:
+            valid_names.remove(name)
+    return valid_data, valid_names
+
+
+def _initialize_figure(n_subplots):
+    """Creates an empty figure according to the number of subplots."""
+    fig, ax = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8))
+    fig.subplots_adjust(left=0.06, right=0.73)
+    if n_subplots == 1:
+        ax = [ax]
+    return fig, ax
+
+
+def _read_axes(nc_file, axes_type=None):
+    """Returns time and height arrays."""
+
+    def _get_correct_dimension(field_names):
+        """Model dimensions are different in old/new files."""
+        variables = netCDF4.Dataset(nc_file).variables
+        for name in field_names:
+            yield name.split('_')[-1] if name not in variables else name
+
+    if axes_type == 'model':
+        fields = _get_correct_dimension(['model_time', 'model_height'])
+    else:
+        fields = ['time', 'height']
+    time, height = ptools.read_nc_fields(nc_file, fields)
+    height_km = height / 1000
+    return time, height_km
+
+
+def _fix_data_limitation(data_field, axes, max_y):
+    """Removes altitudes from 2D data that are not visible in the figure.
+
+    Bug in pcolorfast causing effect to axis not noticing limitation while
+    saving fig. This fixes that bug till pcolorfast does fixing themselves.
+
+    Args:
+        data_field (ndarray): 2D data array.
+        axes (tuple): Time and height 1D arrays.
+        max_y (int): Upper limit in the plots (km).
+
+    """
+    alt = axes[-1]
+    if data_field.ndim > 1:
+        ind = (np.argmax(alt > max_y) or len(alt)) + 1
+        data_field = data_field[:, :ind]
+        alt = alt[:ind]
+    return data_field, (axes[0], alt)
+
+
+def _set_axes(axis, max_y, ylabel=None):
+    """Sets ticks and tick labels for plt.imshow()."""
+    ticks_x_labels = _get_standard_time_ticks()
+    axis.set_ylim(0, max_y)
+    axis.set_xticks(np.arange(0, 25, 4, dtype=int))
+    axis.set_xticklabels(ticks_x_labels, fontsize=12)
+    axis.set_ylabel('Height (km)', fontsize=13)
+    axis.set_xlim(0, 24)
+    if ylabel:
+        axis.set_ylabel(ylabel, fontsize=13)
+
+
+def _get_standard_time_ticks(resolution=4):
+    """Returns typical ticks / labels for a time vector between 0-24h."""
+    return [f"{int(i):02d}:00" if 24 > i > 0 else ''
+            for i in np.arange(0, 24.01, resolution)]
 
 
 def _plot_bar_data(ax, data, name, time):
@@ -104,137 +228,15 @@ def _plot_colormesh_data(ax, data, name, axes):
         colorbar.ax.set_yticklabels(tick_labels)
 
 
-def _lin2log(*args):
-    return [ma.log10(x) for x in args]
-
-
 def _init_colorbar(plot, axis):
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="1%", pad=0.25)
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
-def generate_figure(nc_file, field_names, show=True, save_path=None,
-                    max_y=12, dpi=200):
-    """Generates a Cloudnet figure.
-
-    Args:
-        nc_file (str): Input file.
-        field_names (list): Variable names to be plotted.
-        show (bool, optional): If True, shows the figure. Default is True.
-        save_path (str, optional): Setting this path will save the figure (in the
-            given path). Default is None, when the figure is not saved.
-        max_y (int, optional): Upper limit in the plots (km). Default is 12.
-        dpi (int, optional): Figure quality (if saved). Higher value means
-            more pixels, i.e., better image quality. Default is 200.
-
-    Examples:
-        >>> from cloudnetpy.plotting import generate_figure
-        >>> generate_figure('categorize_file.nc', ['Z', 'beta', 'lwp'])
-        >>> generate_figure('categorize_file.nc', ['ldr', 'v', 'droplet'])
-        >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error'], max_y=4)
-
-    """
-    valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
-    n_fields = len(valid_fields)
-    fig, axes = _initialize_figure(n_fields)
-
-    for axis, field, name in zip(axes, valid_fields, valid_names):
-        plot_type = ATTRIBUTES[name].plot_type
-        axes_data = _read_axes(nc_file, plot_type)
-        field, axes_data = _fix_data_limitation(field, axes_data, max_y)
-        _set_axes(axis, max_y)
-
-        if plot_type == 'bar':
-            _plot_bar_data(axis, field, name, axes_data[0])
-            _set_axes(axis, 1, ATTRIBUTES[name].ylabel)
-
-        elif plot_type == 'segment':
-            _plot_segment_data(axis, field, name, axes_data)
-
-        else:
-            _plot_colormesh_data(axis, field, name, axes_data)
-
-    axes[-1].set_xlabel('Time (UTC)', fontsize=13)
-    case_date, site_name = _read_case_date(nc_file)
-    _add_subtitle(fig, case_date, site_name)
-
-    if save_path:
-        file_name = _create_save_name(save_path, case_date, max_y, valid_names)
-        plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
-    if show:
-        plt.show()
-
-
-def _find_valid_fields(nc_file, names):
-    """Returns valid field names and corresponding data."""
-    valid_names, valid_data = names[:], []
-    nc_variables = netCDF4.Dataset(nc_file).variables
-    try:
-        bits = CategorizeBits(nc_file)
-    except KeyError:
-        bits = None
-    for name in names:
-        if name in nc_variables:
-            valid_data.append(nc_variables[name][:])
-        elif bits and name in CategorizeBits.category_keys:
-            valid_data.append(bits.category_bits[name])
-        elif bits and name in CategorizeBits.quality_keys:
-            valid_data.append(bits.quality_bits[name])
-        else:
-            valid_names.remove(name)
-    return valid_data, valid_names
-
-
-def _fix_data_limitation(data_field, axes, max_y):
-    """Removes altitudes from 2D data that are not visible in the figure.
-
-    Bug in pcolorfast causing effect to axis not noticing limitation while
-    saving fig. This fixes that bug till pcolorfast does fixing themselves.
-
-    Args:
-        data_field (ndarray): 2D data array.
-        axes (tuple): Time and height 1D arrays.
-        max_y (int): Upper limit in the plots (km).
-
-    """
-    alt = axes[-1]
-    if data_field.ndim > 1:
-        ind = (np.argmax(alt > max_y) or len(alt)) + 1
-        data_field = data_field[:, :ind]
-        alt = alt[:ind]
-    return data_field, (axes[0], alt)
-
-
-def _set_axes(axis, max_y, ylabel=None):
-    """Sets ticks and tick labels for plt.imshow()."""
-    ticks_x_labels = _get_standard_time_ticks()
-    axis.set_ylim(0, max_y)
-    axis.set_xticks(np.arange(0, 25, 4, dtype=int))
-    axis.set_xticklabels(ticks_x_labels, fontsize=12)
-    axis.set_ylabel('Height (km)', fontsize=13)
-    axis.set_xlim(0, 24)
-    if ylabel:
-        axis.set_ylabel(ylabel, fontsize=13)
-
-
-def _get_standard_time_ticks(resolution=4):
-    """Returns typical ticks / labels for a time vector between 0-24h."""
-    return [f"{int(i):02d}:00" if 24 > i > 0 else ''
-            for i in np.arange(0, 24.01, resolution)]
-
-
-def _create_save_name(save_path, case_date, max_y, field_names):
-    """Creates file name for saved images."""
-    date_string = case_date.strftime("%Y%m%d")
-    return f"{save_path}{date_string}_{max_y}km_{'_'.join(field_names)}.png"
-
-
-def _add_subtitle(fig, case_date, site_name):
-    """Adds subtitle into figure."""
-    text = f"{case_date.strftime('%-d %b %Y')}, {site_name}"
-    fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
-                 verticalalignment='bottom', fontweight='bold')
+def _generate_log_cbar_ticklabel_list(vmin, vmax):
+    """Create list of log format colorbar label ticks as string"""
+    return ['10$^{%s}$' % int(i) for i in np.arange(vmin, vmax+1)]
 
 
 def _read_case_date(nc_file):
@@ -245,33 +247,31 @@ def _read_case_date(nc_file):
     return case_date, site_name
 
 
-def _read_axes(nc_file, axes_type=None):
-    """Returns time and height arrays."""
+def _add_subtitle(fig, case_date, site_name):
+    """Adds subtitle into figure."""
+    text = f"{case_date.strftime('%-d %b %Y')}, {site_name}"
+    fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
+                 verticalalignment='bottom', fontweight='bold')
 
-    def _get_correct_dimension(field_names):
-        """Model dimensions are different in old/new files."""
-        variables = netCDF4.Dataset(nc_file).variables
-        for name in field_names:
-            yield name.split('_')[-1] if name not in variables else name
 
-    if axes_type == 'model':
-        fields = _get_correct_dimension(['model_time', 'model_height'])
+def _create_save_name(save_path, case_date, max_y, field_names):
+    """Creates file name for saved images."""
+    date_string = case_date.strftime("%Y%m%d")
+    return f"{save_path}{date_string}_{max_y}km_{'_'.join(field_names)}.png"
+
+
+def _lin2log(*args):
+    return [ma.log10(x) for x in args]
+
+
+def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
+    """Simple plot of 2d variable."""
+    if cbar:
+        cmap = plt.get_cmap(cmap, ncolors)
+        plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower', cmap=cmap)
+        plt.colorbar()
     else:
-        fields = ['time', 'height']
-    time, height = ptools.read_nc_fields(nc_file, fields)
-    height_km = height / 1000
-    return time, height_km
-
-
-def _generate_log_cbar_ticklabel_list(vmin, vmax):
-    """Create list of log format colorbar label ticks as string"""
-    return ['10$^{%s}$' % int(i) for i in np.arange(vmin, vmax+1)]
-
-
-def _initialize_figure(n_subplots):
-    """Creates an empty figure according to the number of subplots."""
-    fig, ax = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8))
-    fig.subplots_adjust(left=0.06, right=0.73)
-    if n_subplots == 1:
-        ax = [ax]
-    return fig, ax
+        plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
+    if clim:
+        plt.clim(clim)
+    plt.show()
