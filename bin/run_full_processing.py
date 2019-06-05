@@ -33,11 +33,24 @@ def main(site, plot_figures=True):
         fun(input_file, output_file, site_meta)
         return output_file
 
+    def _process_categorize():
+        print(f"Processing categorize file...")
+        input_files = _get_categorize_input_files()
+        output_file = _output_file_name('categorize')
+        categorize.generate_categorize(input_files, output_file)
+        return output_file
+
     def _process_product(product_name):
         print(f"Processing {product_name} file...")
         output_file = _output_file_name(product_name)
         module = importlib.import_module(f"cloudnetpy.products.{product_name}")
         getattr(module, f"generate_{product_name}")(categorize_file, output_file)
+
+    def _get_categorize_input_files():
+        return {'radar': radar_file,
+                'lidar': ceilo_file,
+                'model': _input_file_name('ecmwf'),
+                'mwr': _input_file_name('hatpro')}
 
     def _input_file_name(file_id):
         return f"{FILE_PATH}{date}_{site}_{file_id}.nc"
@@ -66,15 +79,7 @@ def main(site, plot_figures=True):
     radar_file = _process_raw('mira_raw', 'radar', mira.mira2nc)
     ceilo_file = _process_raw('chm15k', 'ceilo', ceilo.ceilo2nc)
 
-    categorize_input_files = {
-        'radar': radar_file,
-        'lidar': ceilo_file,
-        'model': _input_file_name('ecmwf'),
-        'mwr': _input_file_name('hatpro')
-        }
-    categorize_file = _output_file_name('categorize')
-    print(f"Processing categorize file...")
-    categorize.generate_categorize(categorize_input_files, categorize_file)
+    categorize_file = _process_categorize()
 
     for product in ('classification', 'iwc', 'lwc', 'drizzle'):
         _process_product(product)
