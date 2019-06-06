@@ -25,8 +25,7 @@ _DBZ = 'dBZ'
 
 _CLABEL = {
     'target_classification':
-        ("Clear sky",
-         "Cloud droplets only",
+        ("Cloud droplets only",
          "Drizzle or rain",
          "Drizzle/rain or cloud droplets",
          "Ice",
@@ -38,8 +37,7 @@ _CLABEL = {
          "Aerosols & insects"),
 
     'detection_status':
-        ("Clear sky",
-         "Lidar echo only",
+        ("Lidar echo only",
          "Radar echo but uncorrected atten.",
          "Good radar & lidar echos",
          "No radar but unknown atten.",
@@ -50,8 +48,7 @@ _CLABEL = {
          "Lidar molecular scattering"),
 
     'iwc_retrieval_status':
-        ("No ice",
-         "Reliable retrieval",
+        ("Reliable retrieval",
          "Unreliable: uncorrected attenuation",
          "Retrieval with correction for liquid atten.",
          "Ice detected only by the lidar",
@@ -60,8 +57,7 @@ _CLABEL = {
          "Would be identified as ice if below freezing"),
 
     'lwc_retrieval_status':
-        ("No liquid water",
-         "Reliable retrieval",
+        ("Reliable retrieval",
          "Adiabatic retrieval: cloud top adjusted",
          "Adiabatic retrieval: new cloud pixel",
          "Unreliable lwp: no retrieval",
@@ -71,16 +67,16 @@ _CLABEL = {
 
 _CBAR = {
     'target_classification':
-        ("#ffffff", "#00bfff", "#ff4500", "#0000ff", "#ffff00", "#32cd32",
+        ("#00bfff", "#ff4500", "#0000ff", "#ffff00", "#32cd32",
          "#ffa500", "#66cdaa", "#d3d3d3", "#778899", "#2f4f4f"),
     'detection_status':
-        ("#ffffff", "#ffff00", "#2f4f4f", "#3cb371", "#778899", "#87cefa",
+        ("#ffff00", "#2f4f4f", "#3cb371", "#778899", "#87cefa",
          "#d3d3d3", "#0000ff", "#ff4500", "#ffa500"),
     'iwc_retrieval_status':
-        ("#ffffff", "#00bfff", "#ff4500", "#0000ff", "#ffff00",
+        ("#00bfff", "#ff4500", "#0000ff", "#ffff00",
          "#2f4f4f", "#778899", "#d3d3d3"),
     'lwc_retrieval_status':
-        ("#ffffff", "#00bfff", "#0000ff", "#3cb371", "#ffa500",
+        ("#00bfff", "#0000ff", "#3cb371", "#ffa500",
          "#ff4500", "#ECECEC"),
     'bit':
         ("#ffffff", "#4682b4")
@@ -111,11 +107,27 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
     ),
+    'mu_error': PlotMeta(
+        name='Random error in drizzle droplet size distribution shape parameter',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.1, 0.5),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'S': PlotMeta(
         name='Backscatter-to-extinction ratio',
         cbar='viridis',
         clabel='',
         plot_range=(0, 25),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'S_error': PlotMeta(
+        name='Random error in backscatter-to-extinction ratio',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.1, 0.5),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
@@ -125,6 +137,14 @@ ATTRIBUTES = {
         clabel=_M3,
         plot_range=(1e4, 1e9),
         plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'drizzle_N_error': PlotMeta(
+        name='Random error in drizzle number concentration',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.1, 0.5),
+        plot_scale=_LIN,
         plot_type='mesh'
     ),
     'drizzle_lwc': PlotMeta(
@@ -151,11 +171,27 @@ ATTRIBUTES = {
         plot_scale=_LOG,
         plot_type='mesh'
     ),
+    'drizzle_lwf_error': PlotMeta(
+        name='Random error in drizzle liquid water flux',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.3, 1),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'v_drizzle': PlotMeta(
         name='Drizzle droplet fall velocity',
         cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-2, 2),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'v_drizzle_error': PlotMeta(
+        name='Random error in drizzle droplet fall velocity',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.3, 1),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
