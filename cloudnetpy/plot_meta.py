@@ -25,7 +25,8 @@ _DBZ = 'dBZ'
 
 _CLABEL = {
     'target_classification':
-        ("Cloud droplets only",
+        ("Clear sky",
+         "Cloud droplets only",
          "Drizzle or rain",
          "Drizzle/rain or cloud droplets",
          "Ice",
@@ -37,7 +38,8 @@ _CLABEL = {
          "Aerosols & insects"),
 
     'detection_status':
-        ("Lidar echo only",
+        ("Clear sky",
+         "Lidar echo only",
          "Radar echo but uncorrected atten.",
          "Good radar & lidar echos",
          "No radar but unknown atten.",
@@ -48,7 +50,8 @@ _CLABEL = {
          "Lidar molecular scattering"),
 
     'iwc_retrieval_status':
-        ("Reliable retrieval",
+        ("No ice",
+         "Reliable retrieval",
          "Unreliable: uncorrected attenuation",
          "Retrieval with correction for liquid atten.",
          "Ice detected only by the lidar",
@@ -57,7 +60,8 @@ _CLABEL = {
          "Would be identified as ice if below freezing"),
 
     'lwc_retrieval_status':
-        ("Reliable retrieval",
+        ("No liquid water",
+         "Reliable retrieval",
          "Adiabatic retrieval: cloud top adjusted",
          "Adiabatic retrieval: new cloud pixel",
          "Unreliable lwp: no retrieval",
