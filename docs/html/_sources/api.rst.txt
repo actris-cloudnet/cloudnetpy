@@ -39,6 +39,8 @@ generated.
 
 .. autofunction:: products.lwc.generate_lwc
 
+.. autofunction:: products.drizzle.generate_drizzle
+
 
 Visualizing results
 -------------------
@@ -109,6 +111,13 @@ products.lwc
 -----------------------
 
 .. automodule:: products.lwc
+   :members:
+
+
+products.drizzle
+-----------------------
+
+.. automodule:: products.drizzle
    :members:
 
 

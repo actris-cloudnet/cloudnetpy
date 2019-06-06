@@ -258,6 +258,24 @@ NetCDF file with information of classification and measurements.</p>
 </div>
 </dd></dl>
 
+<dl class="function">
+<dt id="products.drizzle.generate_drizzle">
+<code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.generate_drizzle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates Cloudnet drizzle product.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 <div class="section" id="visualizing-results">
 <h2>Visualizing results<a class="headerlink" href="#visualizing-results" title="Permalink to this headline">¶</a></h2>
@@ -286,9 +304,11 @@ more pixels, i.e., better image quality. Default is 200.</li>
 </table>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.plotting</span> <span class="k">import</span> <span class="n">generate_figure</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;categorize_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;categorize_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;droplet&#39;</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;lwc_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;lwc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc_error&#39;</span><span class="p">],</span> <span class="n">max_y</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;categorize_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;iwc_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;iwc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc_error&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc_retrieval_status&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;lwc_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;lwc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc_error&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc_retrieval_status&#39;</span><span class="p">],</span> <span class="n">max_y</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;classification_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;target_classification&#39;</span><span class="p">,</span> <span class="s1">&#39;detection_status&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;drizzle_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Do&#39;</span><span class="p">,</span> <span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">],</span> <span class="n">max_y</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -304,43 +324,6 @@ purposes.</p>
 <span id="cloudnetpy-classify"></span><h2>cloudnetpy.classify<a class="headerlink" href="#module-classify" title="Permalink to this headline">¶</a></h2>
 <p>Module containing low-level functions to classify gridded
 radar / lidar measurements.</p>
-<dl class="function">
-<dt id="classify.classify_measurements">
-<code class="descclassname">classify.</code><code class="descname">classify_measurements</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#classify_measurements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.classify_measurements" title="Permalink to this definition">¶</a></dt>
-<dd><p>Classifies radar/lidar observations.</p>
-<p>This function classifies atmospheric scatterer from the input data.
-The input data needs to be averaged or interpolated to the common
-time / height grid before calling this function.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>radar</strong> (<em>Radar</em>) – A Radar object.</li>
-<li><strong>lidar</strong> (<em>Lidar</em>) – A Lidar object.</li>
-<li><strong>model</strong> (<em>Model</em>) – A Model object.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt>Object containing the result</dt>
-<dd><p class="first last">of classification.</p>
-</dd>
-</dl>
-</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">_ClassificationResult</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">classify.fetch_qual_bits()</p>
-</div>
-</dd></dl>
-
 <dl class="function">
 <dt id="classify.fetch_quality">
 <code class="descclassname">classify.</code><code class="descname">fetch_quality</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>classification</em>, <em>attenuations</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#fetch_quality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.fetch_quality" title="Permalink to this definition">¶</a></dt>
@@ -385,51 +368,77 @@ results.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="classify.find_aerosols">
-<code class="descclassname">classify.</code><code class="descname">find_aerosols</code><span class="sig-paren">(</span><em>beta</em>, <em>is_falling</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_aerosols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_aerosols" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimates aerosols from lidar backscattering.</p>
-<p>Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.</p>
+<dt id="classify.classify_measurements">
+<code class="descclassname">classify.</code><code class="descname">classify_measurements</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#classify_measurements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.classify_measurements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classifies radar/lidar observations.</p>
+<p>This function classifies atmospheric scatterer from the input data.
+The input data needs to be averaged or interpolated to the common
+time / height grid before calling this function.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>beta</strong> (<em>MaskedArray</em>) – 2-D attenuated backscattering coefficient.</li>
-<li><strong>is_falling</strong> (<em>ndarray</em>) – 2-D boolean array of falling hydrometeors.</li>
-<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
+<li><strong>radar</strong> (<em>Radar</em>) – A Radar object.</li>
+<li><strong>lidar</strong> (<em>Lidar</em>) – A Lidar object.</li>
+<li><strong>model</strong> (<em>Model</em>) – A Model object.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing aerosols.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>Object containing the result</dt>
+<dd><p class="first last">of classification.</p>
+</dd>
+</dl>
+</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">_ClassificationResult</p>
 </td>
 </tr>
 </tbody>
 </table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">classify.fetch_qual_bits()</p>
+</div>
 </dd></dl>
 
 <dl class="function">
-<dt id="classify.find_falling_hydrometeors">
-<code class="descclassname">classify.</code><code class="descname">find_falling_hydrometeors</code><span class="sig-paren">(</span><em>obs</em>, <em>is_liquid</em>, <em>is_insects</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_falling_hydrometeors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_falling_hydrometeors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds falling hydrometeors.</p>
-<p>Falling hydrometeors are radar signals that are
-a) not insects b) not clutter. Furthermore, falling hydrometeors
-are strong lidar pixels excluding liquid layers (thus these pixels
-are ice or rain).</p>
+<dt id="classify.find_melting_layer">
+<code class="descclassname">classify.</code><code class="descname">find_melting_layer</code><span class="sig-paren">(</span><em>obs</em>, <em>smooth=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_melting_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_melting_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds melting layer from model temperature, ldr, and velocity.</p>
+<p>Melting layer is detected using linear depolarization ratio, <em>ldr</em>,
+Doppler velocity, <em>v</em>, and wet-bulb temperature, <em>Tw</em>.</p>
+<p>The algorithm is based on <em>ldr</em> having a clear Gaussian peak around
+the melting layer. This signature is caused by the growth of ice
+crystals into snowflakes that are much larger. In addition, when snow and
+ice melt, emerging heavy water droplets start to drop rapidly towards
+ground. Thus, there is also a similar positive peak in the
+first difference of <em>v</em>.</p>
+<p>The peak in <em>ldr</em> is the primary parameter we analyze. If
+<em>ldr</em> has a proper peak, and <em>v</em> &lt; -1 m/s in the base, melting layer
+has been found. If <em>ldr</em> is missing we only analyze the behaviour
+of <em>v</em>, which is always present, to detect the melting layer.</p>
+<p>Model temperature is used to limit the melting layer search to a certain
+temperature range around 0 C. For ECMWF the range is -4..+3, and for
+the rest -8..+6.</p>
+<p class="rubric">Notes</p>
+<p>There might be some detection problems with strong updrafts of air.
+In these cases the absolute values for speed do not make sense (rain
+drops can even move upwards instead of down).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
-<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
-<li><strong>is_insects</strong> (<em>ndarray</em>) – 2-D boolean array of insects.</li>
+<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
+<li><strong>smooth</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, apply a small
+Gaussian smoother to the melting layer. Default is True.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing falling hydrometeors.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the melting layer.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
@@ -469,6 +478,31 @@ interpolated for all profiles.</p>
 <p class="rubric">Notes</p>
 <p>It is not clear how model temperature and melting layer should be
 ideally combined to determine the sub-zero region.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="classify.find_t0_alt">
+<code class="descclassname">classify.</code><code class="descname">find_t0_alt</code><span class="sig-paren">(</span><em>temperature</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_t0_alt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_t0_alt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates altitudes where temperature goes below freezing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>temperature</strong> (<em>ndarray</em>) – 2-D temperature (K).</li>
+<li><strong>height</strong> (<em>ndarray</em>) – 1-D altitude grid (m).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">1-D array denoting altitudes where the
+temperature drops below 0 deg C.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -517,40 +551,25 @@ this will lead to positive detection. Default is 0.8.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="classify.find_melting_layer">
-<code class="descclassname">classify.</code><code class="descname">find_melting_layer</code><span class="sig-paren">(</span><em>obs</em>, <em>smooth=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_melting_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_melting_layer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds melting layer from model temperature, ldr, and velocity.</p>
-<p>Melting layer is detected using linear depolarization ratio, <em>ldr</em>,
-Doppler velocity, <em>v</em>, and wet-bulb temperature, <em>Tw</em>.</p>
-<p>The algorithm is based on <em>ldr</em> having a clear Gaussian peak around
-the melting layer. This signature is caused by the growth of ice
-crystals into snowflakes that are much larger. In addition, when snow and
-ice melt, emerging heavy water droplets start to drop rapidly towards
-ground. Thus, there is also a similar positive peak in the
-first difference of <em>v</em>.</p>
-<p>The peak in <em>ldr</em> is the primary parameter we analyze. If
-<em>ldr</em> has a proper peak, and <em>v</em> &lt; -1 m/s in the base, melting layer
-has been found. If <em>ldr</em> is missing we only analyze the behaviour
-of <em>v</em>, which is always present, to detect the melting layer.</p>
-<p>Model temperature is used to limit the melting layer search to a certain
-temperature range around 0 C. For ECMWF the range is -4..+3, and for
-the rest -8..+6.</p>
-<p class="rubric">Notes</p>
-<p>There might be some detection problems with strong updrafts of air.
-In these cases the absolute values for speed do not make sense (rain
-drops can even move upwards instead of down).</p>
+<dt id="classify.find_falling_hydrometeors">
+<code class="descclassname">classify.</code><code class="descname">find_falling_hydrometeors</code><span class="sig-paren">(</span><em>obs</em>, <em>is_liquid</em>, <em>is_insects</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_falling_hydrometeors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_falling_hydrometeors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds falling hydrometeors.</p>
+<p>Falling hydrometeors are radar signals that are
+a) not insects b) not clutter. Furthermore, falling hydrometeors
+are strong lidar pixels excluding liquid layers (thus these pixels
+are ice or rain).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
-<li><strong>smooth</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, apply a small
-Gaussian smoother to the melting layer. Default is True.</li>
+<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
+<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
+<li><strong>is_insects</strong> (<em>ndarray</em>) – 2-D boolean array of insects.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the melting layer.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing falling hydrometeors.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
@@ -561,21 +580,22 @@ Gaussian smoother to the melting layer. Default is True.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="classify.find_t0_alt">
-<code class="descclassname">classify.</code><code class="descname">find_t0_alt</code><span class="sig-paren">(</span><em>temperature</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_t0_alt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_t0_alt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interpolates altitudes where temperature goes below freezing.</p>
+<dt id="classify.find_aerosols">
+<code class="descclassname">classify.</code><code class="descname">find_aerosols</code><span class="sig-paren">(</span><em>beta</em>, <em>is_falling</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_aerosols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_aerosols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates aerosols from lidar backscattering.</p>
+<p>Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>temperature</strong> (<em>ndarray</em>) – 2-D temperature (K).</li>
-<li><strong>height</strong> (<em>ndarray</em>) – 1-D altitude grid (m).</li>
+<li><strong>beta</strong> (<em>MaskedArray</em>) – 2-D attenuated backscattering coefficient.</li>
+<li><strong>is_falling</strong> (<em>ndarray</em>) – 2-D boolean array of falling hydrometeors.</li>
+<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">1-D array denoting altitudes where the
-temperature drops below 0 deg C.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing aerosols.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
@@ -590,46 +610,70 @@ temperature drops below 0 deg C.</p>
 <span id="cloudnetpy-atmos"></span><h2>cloudnetpy.atmos<a class="headerlink" href="#module-atmos" title="Permalink to this headline">¶</a></h2>
 <p>This module contains functions to calculate
 various atmospheric parameters.</p>
-<dl class="class">
-<dt id="atmos.Attenuation">
-<em class="property">class </em><code class="descclassname">atmos.</code><code class="descname">Attenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#Attenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.Attenuation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for gas and liquid attenuations.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="atmos.GasAttenuation">
-<em class="property">class </em><code class="descclassname">atmos.</code><code class="descname">GasAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#GasAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.GasAttenuation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Radar gas attenuation class.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="atmos.LiquidAttenuation">
-<em class="property">class </em><code class="descclassname">atmos.</code><code class="descname">LiquidAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#LiquidAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.LiquidAttenuation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Radar liquid attenuation class.</p>
-</dd></dl>
-
 <dl class="function">
-<dt id="atmos.c2k">
-<code class="descclassname">atmos.</code><code class="descname">c2k</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#c2k"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.c2k" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts Celsius to Kelvins.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.calc_adiabatic_lwc">
-<code class="descclassname">atmos.</code><code class="descname">calc_adiabatic_lwc</code><span class="sig-paren">(</span><em>lwc_change_rate</em>, <em>dheight</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_adiabatic_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_adiabatic_lwc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates adiabatic liquid water content (g/m3).</p>
+<dt id="atmos.calc_lwc_change_rate">
+<code class="descclassname">atmos.</code><code class="descname">calc_lwc_change_rate</code><span class="sig-paren">(</span><em>temperature</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_lwc_change_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_lwc_change_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns rate of change of condensable water (LWC).</p>
+<p>Calculates the theoretical adiabatic rate of increase of LWC
+with height, given the cloud base temperature and pressure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>lwc_change_rate</strong> (<em>ndarray</em>) – Liquid water content change rate (g/m3/m)
-calculated at the base of each cloud and filled to that cloud.</li>
-<li><strong>dheight</strong> – Median difference of the height vector (m).</li>
+<li><strong>temperature</strong> (<em>ndarray</em>) – Temperature of cloud base (K).</li>
+<li><strong>pressure</strong> (<em>ndarray</em>) – Pressure of cloud base (Pa).</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Liquid water content (g/m3).</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dlwc/dz (g m-3 m-1)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>Brenguier, 1991, <a class="reference external" href="https://bit.ly/2QCSJtb">https://bit.ly/2QCSJtb</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.calc_saturation_vapor_pressure">
+<code class="descclassname">atmos.</code><code class="descname">calc_saturation_vapor_pressure</code><span class="sig-paren">(</span><em>temperature</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_saturation_vapor_pressure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_saturation_vapor_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>temperature</strong> (<em>ndarray</em>) – Temperature (K).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Saturation vapor pressure (Pa).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.calc_mixing_ratio">
+<code class="descclassname">atmos.</code><code class="descname">calc_mixing_ratio</code><span class="sig-paren">(</span><em>svp</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_mixing_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_mixing_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates mixing ratio from saturation vapor pressure and pressure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>svp</strong> (<em>ndarray</em>) – Saturation vapor pressure (Pa).</li>
+<li><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Mixing ratio (kg kg-1).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>
@@ -662,78 +706,6 @@ calculated at the base of each cloud and filled to that cloud.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="atmos.calc_dew_point_temperature">
-<code class="descclassname">atmos.</code><code class="descname">calc_dew_point_temperature</code><span class="sig-paren">(</span><em>vapor_pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_dew_point_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_dew_point_temperature" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns dew point temperature.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vapor_pressure</strong> (<em>ndarray</em>) – Water vapor pressure (Pa).</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dew point temperature (K).</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Method from Vaisala’s white paper: “Humidity conversion formulas”.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.calc_lwc_change_rate">
-<code class="descclassname">atmos.</code><code class="descname">calc_lwc_change_rate</code><span class="sig-paren">(</span><em>temperature</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_lwc_change_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_lwc_change_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns rate of change of condensable water (LWC).</p>
-<p>Calculates the theoretical adiabatic rate of increase of LWC
-with height, given the cloud base temperature and pressure.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>temperature</strong> (<em>ndarray</em>) – Temperature of cloud base (K).</li>
-<li><strong>pressure</strong> (<em>ndarray</em>) – Pressure of cloud base (Pa).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dlwc/dz (g m-3 m-1)</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">References</p>
-<p>Brenguier, 1991, <a class="reference external" href="https://bit.ly/2QCSJtb">https://bit.ly/2QCSJtb</a></p>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.calc_mixing_ratio">
-<code class="descclassname">atmos.</code><code class="descname">calc_mixing_ratio</code><span class="sig-paren">(</span><em>svp</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_mixing_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_mixing_ratio" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates mixing ratio from saturation vapor pressure and pressure.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>svp</strong> (<em>ndarray</em>) – Saturation vapor pressure (Pa).</li>
-<li><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Mixing ratio (kg kg-1).</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="atmos.calc_psychrometric_constant">
 <code class="descclassname">atmos.</code><code class="descname">calc_psychrometric_constant</code><span class="sig-paren">(</span><em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_psychrometric_constant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_psychrometric_constant" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns psychrometric constant.</p>
@@ -746,24 +718,6 @@ of water in air to the air temperature.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Psychrometric constant value (Pa K-1)</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.calc_saturation_vapor_pressure">
-<code class="descclassname">atmos.</code><code class="descname">calc_saturation_vapor_pressure</code><span class="sig-paren">(</span><em>temperature</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_saturation_vapor_pressure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_saturation_vapor_pressure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>temperature</strong> (<em>ndarray</em>) – Temperature (K).</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Saturation vapor pressure (Pa).</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
@@ -796,30 +750,47 @@ temperatures by modifying the psychrometric formula.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="atmos.distribute_lwp_to_liquid_clouds">
-<code class="descclassname">atmos.</code><code class="descname">distribute_lwp_to_liquid_clouds</code><span class="sig-paren">(</span><em>lwc</em>, <em>lwp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#distribute_lwp_to_liquid_clouds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.distribute_lwp_to_liquid_clouds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds LWC that would produce measured LWP.</p>
-<p>Calculates LWP-weighted, normalized LWC. This is the measured
-LWP distributed to liquid cloud pixels according to their
-theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</p>
+<dt id="atmos.calc_dew_point_temperature">
+<code class="descclassname">atmos.</code><code class="descname">calc_dew_point_temperature</code><span class="sig-paren">(</span><em>vapor_pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_dew_point_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_dew_point_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns dew point temperature.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>lwc</strong> (<em>ndarray</em>) – 2D liquid water content (g/m3).</li>
-<li><strong>lwp</strong> (<em>ndarray</em>) – 1D liquid water path (g/m2).</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vapor_pressure</strong> (<em>ndarray</em>) – Water vapor pressure (Pa).</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2D LWP-weighted, normalized LWC (g/m2).</p>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dew point temperature (K).</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
 </tbody>
 </table>
+<p class="rubric">Notes</p>
+<p>Method from Vaisala’s white paper: “Humidity conversion formulas”.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.get_attenuations">
+<code class="descclassname">atmos.</code><code class="descname">get_attenuations</code><span class="sig-paren">(</span><em>model</em>, <em>mwr</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#get_attenuations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.get_attenuations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper for attenuations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="atmos.Attenuation">
+<em class="property">class </em><code class="descclassname">atmos.</code><code class="descname">Attenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#Attenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.Attenuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for gas and liquid attenuations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="atmos.GasAttenuation">
+<em class="property">class </em><code class="descclassname">atmos.</code><code class="descname">GasAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#GasAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.GasAttenuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Radar gas attenuation class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="atmos.LiquidAttenuation">
+<em class="property">class </em><code class="descclassname">atmos.</code><code class="descname">LiquidAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#LiquidAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.LiquidAttenuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Radar liquid attenuation class.</p>
 </dd></dl>
 
 <dl class="function">
@@ -849,31 +820,6 @@ theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="atmos.find_cloud_bases">
-<code class="descclassname">atmos.</code><code class="descname">find_cloud_bases</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#find_cloud_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.find_cloud_bases" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds bases of clouds.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2D boolean array denoting clouds or some other
-similar field.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Boolean array indicating bases of the individual clouds.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="atmos.get_attenuations">
-<code class="descclassname">atmos.</code><code class="descname">get_attenuations</code><span class="sig-paren">(</span><em>model</em>, <em>mwr</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#get_attenuations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.get_attenuations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for attenuations.</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="atmos.get_lwc_change_rate_at_bases">
 <code class="descclassname">atmos.</code><code class="descname">get_lwc_change_rate_at_bases</code><span class="sig-paren">(</span><em>atmosphere</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#get_lwc_change_rate_at_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.get_lwc_change_rate_at_bases" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds LWC change rate in liquid cloud bases.</p>
@@ -896,6 +842,80 @@ pressure (Pa).</li>
 </dd></dl>
 
 <dl class="function">
+<dt id="atmos.find_cloud_bases">
+<code class="descclassname">atmos.</code><code class="descname">find_cloud_bases</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#find_cloud_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.find_cloud_bases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds bases of clouds.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2D boolean array denoting clouds or some other
+similar field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Boolean array indicating bases of the individual clouds.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.calc_adiabatic_lwc">
+<code class="descclassname">atmos.</code><code class="descname">calc_adiabatic_lwc</code><span class="sig-paren">(</span><em>lwc_change_rate</em>, <em>dheight</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#calc_adiabatic_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.calc_adiabatic_lwc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates adiabatic liquid water content (g/m3).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lwc_change_rate</strong> (<em>ndarray</em>) – Liquid water content change rate (g/m3/m)
+calculated at the base of each cloud and filled to that cloud.</li>
+<li><strong>dheight</strong> – Median difference of the height vector (m).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Liquid water content (g/m3).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.distribute_lwp_to_liquid_clouds">
+<code class="descclassname">atmos.</code><code class="descname">distribute_lwp_to_liquid_clouds</code><span class="sig-paren">(</span><em>lwc</em>, <em>lwp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#distribute_lwp_to_liquid_clouds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.distribute_lwp_to_liquid_clouds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds LWC that would produce measured LWP.</p>
+<p>Calculates LWP-weighted, normalized LWC. This is the measured
+LWP distributed to liquid cloud pixels according to their
+theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lwc</strong> (<em>ndarray</em>) – 2D liquid water content (g/m3).</li>
+<li><strong>lwp</strong> (<em>ndarray</em>) – 1D liquid water path (g/m2).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2D LWP-weighted, normalized LWC (g/m2).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="atmos.c2k">
+<code class="descclassname">atmos.</code><code class="descname">c2k</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#c2k"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.c2k" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts Celsius to Kelvins.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="atmos.k2c">
 <code class="descclassname">atmos.</code><code class="descname">k2c</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#k2c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.k2c" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts Kelvins to Celsius.</p>
@@ -905,6 +925,36 @@ pressure (Pa).</li>
 <div class="section" id="module-droplet">
 <span id="cloudnetpy-droplet"></span><h2>cloudnetpy.droplet<a class="headerlink" href="#module-droplet" title="Permalink to this headline">¶</a></h2>
 <p>This module has functions for liquid layer detection.</p>
+<dl class="function">
+<dt id="droplet.find_liquid">
+<code class="descclassname">droplet.</code><code class="descname">find_liquid</code><span class="sig-paren">(</span><em>obs</em>, <em>peak_amp=2e-05</em>, <em>max_width=300</em>, <em>min_points=3</em>, <em>min_top_der=2e-07</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/droplet.html#find_liquid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#droplet.find_liquid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate liquid layers from SNR-screened attenuated backscattering.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
+<li><strong>peak_amp</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value of peak. Default is 2e-5.</li>
+<li><strong>max_width</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum width of peak. Default is 300 (m).</li>
+<li><strong>min_points</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimum number of valid points in peak.
+Default is 3.</li>
+<li><strong>min_top_der</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum derivative above peak,
+defined as (beta_peak-beta_top) / (alt_top-alt_peak), which
+is always positive. Default is 2e-7.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dict containing ‘presence’, ‘bases’ and ‘tops’.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="function">
 <dt id="droplet.correct_liquid_top">
 <code class="descclassname">droplet.</code><code class="descname">correct_liquid_top</code><span class="sig-paren">(</span><em>obs</em>, <em>liquid</em>, <em>is_freezing</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/droplet.html#correct_liquid_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#droplet.correct_liquid_top" title="Permalink to this definition">¶</a></dt>
@@ -934,36 +984,6 @@ on radar data.</li>
 <p class="first admonition-title">See also</p>
 <p class="last">droplet.find_liquid()</p>
 </div>
-</dd></dl>
-
-<dl class="function">
-<dt id="droplet.find_liquid">
-<code class="descclassname">droplet.</code><code class="descname">find_liquid</code><span class="sig-paren">(</span><em>obs</em>, <em>peak_amp=2e-05</em>, <em>max_width=300</em>, <em>min_points=3</em>, <em>min_top_der=2e-07</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/droplet.html#find_liquid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#droplet.find_liquid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimate liquid layers from SNR-screened attenuated backscattering.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
-<li><strong>peak_amp</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value of peak. Default is 2e-5.</li>
-<li><strong>max_width</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum width of peak. Default is 300 (m).</li>
-<li><strong>min_points</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimum number of valid points in peak.
-Default is 3.</li>
-<li><strong>min_top_der</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum derivative above peak,
-defined as (beta_peak-beta_top) / (alt_top-alt_peak), which
-is always positive. Default is 2e-7.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dict containing ‘presence’, ‘bases’ and ‘tops’.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">
@@ -1086,6 +1106,50 @@ accept some other point, higher in the profile.</li>
 <p>This module contains general
 helper functions.</p>
 <dl class="function">
+<dt id="utils.seconds2hours">
+<code class="descclassname">utils.</code><code class="descname">seconds2hours</code><span class="sig-paren">(</span><em>time_in_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hours"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hours" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts seconds since some epoch to fraction hour.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_in_seconds</strong> (<em>ndarray</em>) – 1-D array of seconds since some epoch
+that starts on midnight.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time as fraction hour.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Excludes leap seconds.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.time_grid">
+<code class="descclassname">utils.</code><code class="descname">time_grid</code><span class="sig-paren">(</span><em>time_step=30</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#time_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.time_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns decimal hour array between 0 and 24.</p>
+<p>Computes fraction hour time vector 0-24 with user-given
+resolution (in seconds) where 60 is the maximum allowed value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time resolution in seconds between
+1 and 60. Default is 30.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time vector between 0 and 24.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Bad resolution as input.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="utils.binvec">
 <code class="descclassname">utils.</code><code class="descname">binvec</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#binvec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.binvec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts 1-D center points to bins with even spacing.</p>
@@ -1109,78 +1173,38 @@ helper functions.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.cumsumr">
-<code class="descclassname">utils.</code><code class="descname">cumsumr</code><span class="sig-paren">(</span><em>x</em>, <em>axis=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#cumsumr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.cumsumr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds cumulative sum that resets on 0.</p>
+<dt id="utils.rebin_2d">
+<code class="descclassname">utils.</code><code class="descname">rebin_2d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rebins 2-D data in one dimension using mean.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>ndarray</em>) – Input array.</li>
-<li><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – Axis where the sum is calculated.
-Default is 0.</li>
+<li><strong>x_in</strong> (<em>ndarray</em>) – 1-D array with shape (n,).</li>
+<li><strong>data</strong> (<em>MaskedArray</em>) – 2-D input data with shape (n, m).</li>
+<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D target vector (center points)
+with shape (N,).</li>
+<li><strong>statistic</strong> (<em>str</em><em>, </em><em>optional</em>) – Statistic to be calculated. Possible
+statistics are ‘mean’, ‘std’. Default is ‘mean’.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Cumulative sum, restarted at 0.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned data with shape (N, m).</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">MaskedArray</p>
 </td>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cumsumr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="go">    [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]</span>
-</pre></div>
-</div>
+<p>Notes: 0-values are masked in the returned array.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.db2lin">
-<code class="descclassname">utils.</code><code class="descname">db2lin</code><span class="sig-paren">(</span><em>x</em>, <em>scale=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#db2lin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.db2lin" title="Permalink to this definition">¶</a></dt>
-<dd><p>dB to linear conversion.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.del_dict_keys">
-<code class="descclassname">utils.</code><code class="descname">del_dict_keys</code><span class="sig-paren">(</span><em>dict_in</em>, <em>keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#del_dict_keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.del_dict_keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes multiple keys from dictionary.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.ffill">
-<code class="descclassname">utils.</code><code class="descname">ffill</code><span class="sig-paren">(</span><em>arr</em>, <em>value=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#ffill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.ffill" title="Permalink to this definition">¶</a></dt>
-<dd><p>Forward fills a numpy array.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arr</strong> (<em>ndarray</em>) – 1-D or 2-D array.</li>
-<li><strong>value</strong> (<em>int</em>) – Value to be filled. Default is 0.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Forward-filled array.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ffill</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="go">    [0, 5, 5, 5, 2, 2]</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>Works only in axis=1 direction.</p>
+<dt id="utils.rebin_1d">
+<code class="descclassname">utils.</code><code class="descname">rebin_1d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rebins 1D array.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1199,101 +1223,6 @@ Default is 0.</li>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.get_time">
-<code class="descclassname">utils.</code><code class="descname">get_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns current UTC-time.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.get_uuid">
-<code class="descclassname">utils.</code><code class="descname">get_uuid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_uuid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_uuid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns unique identifier.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.get_wl_band">
-<code class="descclassname">utils.</code><code class="descname">get_wl_band</code><span class="sig-paren">(</span><em>radar_frequency</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_wl_band"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_wl_band" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns integer corresponding to radar frequency.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radar_frequency</strong> (<em>float</em>) – Radar frequency (GHz).</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0=35GHz radar, 1=94Ghz radar.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.init">
-<code class="descclassname">utils.</code><code class="descname">init</code><span class="sig-paren">(</span><em>nvars</em>, <em>shape</em>, <em>dtype=&lt;class 'float'&gt;</em>, <em>masked=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes several numpy arrays.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>nvars</strong> (<em>int</em>) – Number of arrays to be generated.</li>
-<li><strong>shape</strong> (<em>tuple</em>) – Shape of the arrays, e.g. (2, 3).</li>
-<li><strong>dtype</strong> (<em>data-type</em><em>, </em><em>optional</em>) – The desired data-type
-for the arrays, e.g., int. Default is float.</li>
-<li><strong>masked</strong> (<em>bool</em>) – If True, generated arrays are masked
-arrays, else ordinary numpy arrays. Default is True.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last">Iterator containing the empty arrays.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
-<span class="go">    masked_array(</span>
-<span class="go">      data=[[0., 0., 0.],</span>
-<span class="go">            [0., 0., 0.]],</span>
-<span class="go">      mask=False,</span>
-<span class="go">      fill_value=1e+20)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.interpolate_2d">
-<code class="descclassname">utils.</code><code class="descname">interpolate_2d</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>x_new</em>, <em>y_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#interpolate_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.interpolate_2d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Linear interpolation of gridded 2d data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>ndarray</em>) – 1-D array.</li>
-<li><strong>y</strong> (<em>ndarray</em>) – 1-D array.</li>
-<li><strong>z</strong> (<em>ndarray</em>) – 2-D array at points (x, y).</li>
-<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D array.</li>
-<li><strong>y_new</strong> (<em>ndarray</em>) – 1-D array.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated data.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Does not work with nans. Ignores mask of masked data.
-Does not extrapolate.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1335,21 +1264,89 @@ Does not extrapolate.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.isscalar">
-<code class="descclassname">utils.</code><code class="descname">isscalar</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#isscalar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.isscalar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests if input is scalar.</p>
-<p>By “scalar” we mean that array has a single value.</p>
+<dt id="utils.setbit">
+<code class="descclassname">utils.</code><code class="descname">setbit</code><span class="sig-paren">(</span><em>integer</em>, <em>nth_bit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#setbit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.setbit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets nth bit (0, 1, 2..) on input number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>integer</strong> (<em>int</em>) – A number.</li>
+<li><strong>nth_bit</strong> (<em>int</em>) – Bit to be set.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Integer where nth bit is set.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">int</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – negative bit as input.</p>
+</td>
+</tr>
+</tbody>
+</table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]))</span>
-<span class="go">True</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">setbit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">    3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">setbit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">    4</span>
 </pre></div>
 </div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">utils.isbit()</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.interpolate_2d">
+<code class="descclassname">utils.</code><code class="descname">interpolate_2d</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>x_new</em>, <em>y_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#interpolate_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.interpolate_2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear interpolation of gridded 2d data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>y</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>z</strong> (<em>ndarray</em>) – 2-D array at points (x, y).</li>
+<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>y_new</strong> (<em>ndarray</em>) – 1-D array.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated data.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Does not work with nans. Ignores mask of masked data.
+Does not extrapolate.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.db2lin">
+<code class="descclassname">utils.</code><code class="descname">db2lin</code><span class="sig-paren">(</span><em>x</em>, <em>scale=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#db2lin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.db2lin" title="Permalink to this definition">¶</a></dt>
+<dd><p>dB to linear conversion.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.lin2db">
+<code class="descclassname">utils.</code><code class="descname">lin2db</code><span class="sig-paren">(</span><em>x</em>, <em>scale=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#lin2db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.lin2db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear to dB conversion.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.mdiff">
+<code class="descclassname">utils.</code><code class="descname">mdiff</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#mdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.mdiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns median difference of 1-D array.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1372,15 +1369,101 @@ with the same shape.</td>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.lin2db">
-<code class="descclassname">utils.</code><code class="descname">lin2db</code><span class="sig-paren">(</span><em>x</em>, <em>scale=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#lin2db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.lin2db" title="Permalink to this definition">¶</a></dt>
-<dd><p>Linear to dB conversion.</p>
+<dt id="utils.cumsumr">
+<code class="descclassname">utils.</code><code class="descname">cumsumr</code><span class="sig-paren">(</span><em>x</em>, <em>axis=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#cumsumr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.cumsumr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds cumulative sum that resets on 0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>ndarray</em>) – Input array.</li>
+<li><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – Axis where the sum is calculated.
+Default is 0.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Cumulative sum, restarted at 0.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cumsumr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">    [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.mdiff">
-<code class="descclassname">utils.</code><code class="descname">mdiff</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#mdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.mdiff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns median difference of 1-D array.</p>
+<dt id="utils.ffill">
+<code class="descclassname">utils.</code><code class="descname">ffill</code><span class="sig-paren">(</span><em>arr</em>, <em>value=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#ffill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.ffill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forward fills a numpy array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arr</strong> (<em>ndarray</em>) – 1-D or 2-D array.</li>
+<li><strong>value</strong> (<em>int</em>) – Value to be filled. Default is 0.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Forward-filled array.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ffill</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">    [0, 5, 5, 5, 2, 2]</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>Works only in axis=1 direction.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.init">
+<code class="descclassname">utils.</code><code class="descname">init</code><span class="sig-paren">(</span><em>nvars</em>, <em>shape</em>, <em>dtype=&lt;class 'float'&gt;</em>, <em>masked=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes several numpy arrays.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>nvars</strong> (<em>int</em>) – Number of arrays to be generated.</li>
+<li><strong>shape</strong> (<em>tuple</em>) – Shape of the arrays, e.g. (2, 3).</li>
+<li><strong>dtype</strong> (<em>data-type</em><em>, </em><em>optional</em>) – The desired data-type
+for the arrays, e.g., int. Default is float.</li>
+<li><strong>masked</strong> (<em>bool</em>) – If True, generated arrays are masked
+arrays, else ordinary numpy arrays. Default is True.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last">Iterator containing the empty arrays.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">    masked_array(</span>
+<span class="go">      data=[[0., 0., 0.],</span>
+<span class="go">            [0., 0., 0.]],</span>
+<span class="go">      mask=False,</span>
+<span class="go">      fill_value=1e+20)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -1434,117 +1517,48 @@ and distance in minutes. Default is None.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.rebin_1d">
-<code class="descclassname">utils.</code><code class="descname">rebin_1d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_1d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins 1D array.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.rebin_2d">
-<code class="descclassname">utils.</code><code class="descname">rebin_2d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_2d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins 2-D data in one dimension using mean.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x_in</strong> (<em>ndarray</em>) – 1-D array with shape (n,).</li>
-<li><strong>data</strong> (<em>MaskedArray</em>) – 2-D input data with shape (n, m).</li>
-<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D target vector (center points)
-with shape (N,).</li>
-<li><strong>statistic</strong> (<em>str</em><em>, </em><em>optional</em>) – Statistic to be calculated. Possible
-statistics are ‘mean’, ‘std’. Default is ‘mean’.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned data with shape (N, m).</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">MaskedArray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Notes: 0-values are masked in the returned array.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.seconds2hours">
-<code class="descclassname">utils.</code><code class="descname">seconds2hours</code><span class="sig-paren">(</span><em>time_in_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hours"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hours" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts seconds since some epoch to fraction hour.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_in_seconds</strong> (<em>ndarray</em>) – 1-D array of seconds since some epoch
-that starts on midnight.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time as fraction hour.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Excludes leap seconds.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.setbit">
-<code class="descclassname">utils.</code><code class="descname">setbit</code><span class="sig-paren">(</span><em>integer</em>, <em>nth_bit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#setbit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.setbit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets nth bit (0, 1, 2..) on input number.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>integer</strong> (<em>int</em>) – A number.</li>
-<li><strong>nth_bit</strong> (<em>int</em>) – Bit to be set.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Integer where nth bit is set.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">int</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – negative bit as input.</p>
-</td>
-</tr>
-</tbody>
-</table>
+<dt id="utils.isscalar">
+<code class="descclassname">utils.</code><code class="descname">isscalar</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#isscalar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.isscalar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if input is scalar.</p>
+<p>By “scalar” we mean that array has a single value.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">setbit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="go">    3</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">setbit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="go">    4</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]))</span>
+<span class="go">True</span>
 </pre></div>
 </div>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">utils.isbit()</p>
-</div>
 </dd></dl>
 
 <dl class="function">
-<dt id="utils.time_grid">
-<code class="descclassname">utils.</code><code class="descname">time_grid</code><span class="sig-paren">(</span><em>time_step=30</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#time_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.time_grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns decimal hour array between 0 and 24.</p>
-<p>Computes fraction hour time vector 0-24 with user-given
-resolution (in seconds) where 60 is the maximum allowed value.</p>
+<dt id="utils.get_time">
+<code class="descclassname">utils.</code><code class="descname">get_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns current UTC-time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.get_uuid">
+<code class="descclassname">utils.</code><code class="descname">get_uuid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_uuid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_uuid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns unique identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.get_wl_band">
+<code class="descclassname">utils.</code><code class="descname">get_wl_band</code><span class="sig-paren">(</span><em>radar_frequency</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_wl_band"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_wl_band" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns integer corresponding to radar frequency.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time resolution in seconds between
-1 and 60. Default is 30.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radar_frequency</strong> (<em>float</em>) – Radar frequency (GHz).</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time vector between 0 and 24.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0=35GHz radar, 1=94Ghz radar.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Bad resolution as input.</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
 </tr>
 </tbody>
 </table>
@@ -1554,6 +1568,12 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
 <dt id="utils.transpose">
 <code class="descclassname">utils.</code><code class="descname">transpose</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.transpose" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transposes numpy array of (n, ) to (n, 1).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.del_dict_keys">
+<code class="descclassname">utils.</code><code class="descname">del_dict_keys</code><span class="sig-paren">(</span><em>dict_in</em>, <em>keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#del_dict_keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.del_dict_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes multiple keys from dictionary.</p>
 </dd></dl>
 
 </div>
@@ -1593,15 +1613,15 @@ NetCDF file with information of classification and measurements.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="products.classification.get_detection_status">
-<code class="descclassname">products.classification.</code><code class="descname">get_detection_status</code><span class="sig-paren">(</span><em>categorize_bits</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#get_detection_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.get_detection_status" title="Permalink to this definition">¶</a></dt>
-<dd><p>Classifies detection status by combining active bits.</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="products.classification.get_target_classification">
 <code class="descclassname">products.classification.</code><code class="descname">get_target_classification</code><span class="sig-paren">(</span><em>categorize_bits</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#get_target_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.get_target_classification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Classifies atmospheric targets by combining active bits.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.classification.get_detection_status">
+<code class="descclassname">products.classification.</code><code class="descname">get_detection_status</code><span class="sig-paren">(</span><em>categorize_bits</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#get_detection_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.get_detection_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classifies detection status by combining active bits.</p>
 </dd></dl>
 
 </div>
@@ -1609,12 +1629,6 @@ NetCDF file with information of classification and measurements.</p>
 <span id="products-iwc"></span><h2>products.iwc<a class="headerlink" href="#module-products.iwc" title="Permalink to this headline">¶</a></h2>
 <p>Module for creating Cloudnet ice water content file
 using Z-T method.</p>
-<dl class="class">
-<dt id="products.iwc.IwcSource">
-<em class="property">class </em><code class="descclassname">products.iwc.</code><code class="descname">IwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#IwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.IwcSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class containing data needed in the ice water content Z-T method.</p>
-</dd></dl>
-
 <dl class="function">
 <dt>
 <code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a></dt>
@@ -1638,11 +1652,48 @@ using Z-T method.</p>
 </div>
 </dd></dl>
 
+<dl class="class">
+<dt id="products.iwc.IwcSource">
+<em class="property">class </em><code class="descclassname">products.iwc.</code><code class="descname">IwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#IwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.IwcSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class containing data needed in the ice water content Z-T method.</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-products.lwc">
 <span id="products-lwc"></span><h2>products.lwc<a class="headerlink" href="#module-products.lwc" title="Permalink to this headline">¶</a></h2>
 <p>Module for creating Cloudnet liquid water content file
 using scaled-adiabatic method.</p>
+<dl class="function">
+<dt>
+<code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet liquid water content product.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.lwc</span> <span class="k">import</span> <span class="n">generate_lwc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.lwc.LwcSource">
+<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">LwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#LwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.LwcSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data container for liquid water content calculations. It reads
+input data from a categorize file and provides data structures and
+methods for holding the results.</p>
+</dd></dl>
+
 <dl class="class">
 <dt id="products.lwc.Lwc">
 <em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">Lwc</code><span class="sig-paren">(</span><em>lwc_source</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc" title="Permalink to this definition">¶</a></dt>
@@ -1659,14 +1710,6 @@ using scaled-adiabatic method.</p>
 <dd><p>Masks profiles with rain.</p>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="class">
-<dt id="products.lwc.LwcSource">
-<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">LwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#LwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.LwcSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Data container for liquid water content calculations. It reads
-input data from a categorize file and provides data structures and
-methods for holding the results.</p>
 </dd></dl>
 
 <dl class="function">
@@ -1691,10 +1734,14 @@ methods for holding the results.</p>
 </table>
 </dd></dl>
 
+</div>
+<div class="section" id="module-products.drizzle">
+<span id="products-drizzle"></span><h2>products.drizzle<a class="headerlink" href="#module-products.drizzle" title="Permalink to this headline">¶</a></h2>
+<p>Module for creating Cloudnet drizzle product.</p>
 <dl class="function">
 <dt>
-<code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Generates Cloudnet liquid water content product.</p>
+<code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet drizzle product.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1707,11 +1754,133 @@ methods for holding the results.</p>
 </tr>
 </tbody>
 </table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.lwc</span> <span class="k">import</span> <span class="n">generate_lwc</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.l2_norm_weighted">
+<code class="descclassname">products.drizzle.</code><code class="descname">l2_norm_weighted</code><span class="sig-paren">(</span><em>terms</em>, <em>keys</em>, <em>overall_scale=1.0</em>, <em>term_weights=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#l2_norm_weighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.l2_norm_weighted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates scaled and weighted Euclidean distance.</p>
+<p>Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + …)
+where a, b, … are terms to be summed and a1, a2, … are optional weights
+for the terms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>terms</strong> (<em>dict</em>) – Dictionary of arrays.</li>
+<li><strong>keys</strong> (<em>list/tuple</em>) – keys to be picked from <strong>terms</strong>.</li>
+<li><strong>overall_scale</strong> (<em>float</em><em>, </em><em>optional</em>) – Scale factor for the calculated
+Euclidean distance. Default is 1.</li>
+<li><strong>term_weights</strong> (<em>float/list</em>) – Weights for the terms. Must be single
+float or a list of numbers (one per term). Default is 1.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Scaled and weighted Euclidean distance.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.drizzle.DrizzleSource">
+<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class holding the input data for drizzle calculations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.drizzle.DrizzleClassification">
+<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleClassification</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class storing the information about different drizzle types.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.correct_spectral_width">
+<code class="descclassname">products.drizzle.</code><code class="descname">correct_spectral_width</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#correct_spectral_width"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.correct_spectral_width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corrects spectral width.</p>
+<p>Removes the effect of turbulence and horizontal wind that cause
+spectral broadening of the Doppler velocity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> (<em>str</em>) – Categorize file name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>Spectral width containing the correction for turbulence</dt>
+<dd>broadening.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.calc_horizontal_wind">
+<code class="descclassname">products.drizzle.</code><code class="descname">calc_horizontal_wind</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_horizontal_wind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_horizontal_wind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates magnitude of horizontal wind.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> – Categorize file name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Horizontal wind (m s-1).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.calc_dia">
+<code class="descclassname">products.drizzle.</code><code class="descname">calc_dia</code><span class="sig-paren">(</span><em>beta_z_ratio</em>, <em>mu=0</em>, <em>ray=1</em>, <em>k=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_dia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_dia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drizzle diameter calculation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>beta_z_ratio</strong> (<em>ndarray</em>) – Beta to z ratio, multiplied by (2 / pi).</li>
+<li><strong>mu</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Shape parameter for gamma calculations. Default is 0.</li>
+<li><strong>ray</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Mie to Rayleigh ratio for z. Default is 1.</li>
+<li><strong>k</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Alpha to beta ratio . Default is 1.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1">https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.drizzle_solve">
+<code class="descclassname">products.drizzle.</code><code class="descname">drizzle_solve</code><span class="sig-paren">(</span><em>data</em>, <em>drizzle_class</em>, <em>width_ht</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#drizzle_solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.drizzle_solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates drizzle parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<a class="reference internal" href="#products.drizzle.DrizzleSource" title="products.drizzle.DrizzleSource"><em>DrizzleSource</em></a>) – Input data.</li>
+<li><strong>drizzle_class</strong> (<a class="reference internal" href="#products.drizzle.DrizzleClassification" title="products.drizzle.DrizzleClassification"><em>DrizzleClassification</em></a>) – Classification of the atmosphere
+for drizzle calculations.</li>
+<li><strong>width_ht</strong> (<em>ndarray</em>) – Corrected spectral width.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -1742,6 +1911,7 @@ methods for holding the results.</p>
 <li><a class="reference internal" href="#module-products.classification">products.classification</a></li>
 <li><a class="reference internal" href="#module-products.iwc">products.iwc</a></li>
 <li><a class="reference internal" href="#module-products.lwc">products.lwc</a></li>
+<li><a class="reference internal" href="#module-products.drizzle">products.drizzle</a></li>
 </ul>
 </li>
 </ul>
