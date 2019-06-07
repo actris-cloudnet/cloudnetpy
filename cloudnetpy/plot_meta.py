@@ -111,14 +111,6 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
     ),
-    'mu_error': PlotMeta(
-        name='Random error in drizzle droplet size distribution shape parameter',
-        cbar='RdYlGn_r',
-        clabel=_DB,
-        plot_range=(0.1, 0.5),
-        plot_scale=_LIN,
-        plot_type='mesh'
-    ),
     'S': PlotMeta(
         name='Backscatter-to-extinction ratio',
         cbar='viridis',
