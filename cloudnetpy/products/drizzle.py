@@ -27,7 +27,7 @@ def generate_drizzle(categorize_file, output_file):
     width_ht = correct_spectral_width(categorize_file)
     drizzle_parameters = drizzle_solve(drizzle_data, drizzle_class, width_ht)
     derived_products = _calc_derived_products(drizzle_data, drizzle_parameters)
-    errors = _calc_errors(drizzle_data)
+    errors = _calc_errors(drizzle_data, drizzle_parameters)
     results = {**drizzle_parameters, **derived_products, **errors}
     results = _screen_rain(results, drizzle_class)
     _append_data(drizzle_data, results)
@@ -57,7 +57,7 @@ def _read_error_term(categorize, fields, term='error'):
     return {field: _get_linear(f"{field}_{term}") for field in fields}
 
 
-def _calc_errors(categorize):
+def _calc_errors(categorize, parameters):
     """Estimates errors in the retrieved drizzle products."""
 
     def _read_error_inputs():
@@ -75,6 +75,7 @@ def _calc_errors(categorize):
             fields = base if key in ('drizzle_lwc', 'S') else base + ('mu',)
             weights = getattr(factors, key)
             results[f'{key}_error'] = l2_norm_weighted(err, fields, *weights)
+            results[f'{key}_error'][no_drizzle] = ma.masked
             results[f'{key}_bias'] = l2_norm_weighted(bias, fields, *weights)
 
     def _get_weighting_factors(keys):
@@ -91,6 +92,7 @@ def _calc_errors(categorize):
         """Converts linear error values to dB."""
         return {name: lin2db(value) for name, value in data.items()}
 
+    no_drizzle = ~(parameters['Do']>0)
     err, bias = _read_error_inputs()
     results = {}
     _add_standard_errors()
@@ -153,7 +155,7 @@ def _calc_derived_products(data, parameters):
 
     def _calc_lwf(lwc_in):
         """Calculates drizzle liquid water flux."""
-        flux = np.copy(lwc_in)
+        flux = ma.copy(lwc_in)
         flux[ind_drizzle] *= data.mie['lwf'][ind_lut] * data.mie['termv'][ind_lut[1]]
         return flux
 
