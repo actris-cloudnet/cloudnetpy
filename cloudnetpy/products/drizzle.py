@@ -35,159 +35,6 @@ def generate_drizzle(categorize_file, output_file):
     output.save_product_file('drizzle', drizzle_data, output_file)
 
 
-def _read_error_term(categorize, fields, term='error'):
-    """Returns linear error terms for a variable.
-
-    Args:
-        categorize (DataSource): DataSource object.
-        fields (tuple): Variable names.
-        term (str, optional): Uncertainty type, e.g. 'error' or 'bias'.
-            Default is 'error'.
-
-        Returns:
-            dict: Dictionary of the error (or bias, etc) terms.
-
-    Examples:
-        >>> errors = _read_error_term(categorize, ('Z', 'beta'))
-
-    """
-    def _get_linear(full_name):
-        return db2lin(categorize.getvar(full_name))
-
-    return {field: _get_linear(f"{field}_{term}") for field in fields}
-
-
-def _calc_errors(categorize):
-    """Estimates errors in the retrieved drizzle products."""
-
-    def _read_error_inputs():
-        data_keys = ('Z', 'beta')
-        errors = _read_error_term(categorize, data_keys)
-        biases = _read_error_term(categorize, data_keys, 'bias')
-        errors['mu'], biases['mu'] = 0.07, 0
-        return errors, biases
-
-    def _add_standard_errors():
-        product_keys = ('Do', 'drizzle_lwc', 'drizzle_lwf', 'S')
-        factors = _get_weighting_factors(product_keys)
-        for key in product_keys:
-            base = ('Z', 'beta')
-            fields = base if key in ('drizzle_lwc', 'S') else base + ('mu',)
-            weights = getattr(factors, key)
-            results[f'{key}_error'] = l2_norm_weighted(err, fields, *weights)
-            results[f'{key}_bias'] = l2_norm_weighted(bias, fields, *weights)
-
-    def _get_weighting_factors(keys):
-        """Returns scale factors and weights."""
-        Weights = namedtuple('Weights', keys)
-        return Weights((2/7, 1), (1/7, (1, 6)), (1/7, (3, 4, 1)), (1/2, 1))
-
-    def _add_supplementary_errors():
-        """Calculates random error and bias in drizzle number density."""
-        results['drizzle_N_error'] = utils.l2norm(err['Z'], 6*results['Do_error'])
-        results['v_drizzle_error'] = results['Do_error']
-
-    def _convert_to_db(data):
-        """Converts linear error values to dB."""
-        return {name: lin2db(value) for name, value in data.items()}
-
-    err, bias = _read_error_inputs()
-    results = {}
-    _add_standard_errors()
-    _add_supplementary_errors()
-    utils.del_dict_keys(results, ['S_bias'])
-    return _convert_to_db(results)
-
-
-def l2_norm_weighted(terms, keys, overall_scale=1.0, term_weights=1.0):
-    """Calculates scaled and weighted Euclidean distance.
-
-    Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
-    where a, b, ... are terms to be summed and a1, a2, ... are optional weights
-    for the terms.
-
-    Args:
-        terms (dict): Dictionary of arrays.
-        keys (list/tuple): keys to be picked from **terms**.
-        overall_scale (float, optional): Scale factor for the calculated
-            Euclidean distance. Default is 1.
-        term_weights (float/list): Weights for the terms. Must be single
-            float or a list of numbers (one per term). Default is 1.
-
-    Returns:
-        float: Scaled and weighted Euclidean distance.
-
-    """
-    values = [terms.get(key) for key in keys]
-    weighted_values = ma.multiply(values, term_weights)
-    return overall_scale * utils.l2norm(*weighted_values)
-
-
-def _screen_rain(results, classification):
-    """Removes rainy profiles from drizzle variables.."""
-    for key in results.keys():
-        if not utils.isscalar(results[key]):
-            results[key][classification.is_rain, :] = 0
-    return results
-
-
-def _append_data(drizzle_data, results):
-    """Save retrieved fields to the drizzle_data object."""
-    for key, value in results.items():
-        value = ma.masked_where(value == 0, value)
-        drizzle_data.append_data(value, key)
-
-
-def _calc_derived_products(data, parameters):
-    """Calculates additional quantities from the drizzle properties."""
-    def _calc_density():
-        """Calculates drizzle number density (m-3)."""
-        return data.z * 3.67 ** 6 / parameters['Do'] ** 6
-
-    def _calc_lwc():
-        """Calculates drizzle liquid water content (kg m-3)"""
-        rho_water = 1000
-        dia, mu, s = [parameters.get(key) for key in ('Do', 'mu', 'S')]
-        gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
-        return rho_water / 3 * data.beta * s * dia * gamma_ratio
-
-    def _calc_lwf(lwc_in):
-        """Calculates drizzle liquid water flux."""
-        flux = np.copy(lwc_in)
-        flux[ind_drizzle] *= data.mie['lwf'][ind_lut] * data.mie['termv'][ind_lut[1]]
-        return flux
-
-    def _calc_fall_velocity():
-        """Calculates drizzle droplet fall velocity (m s-1)."""
-        velocity = np.zeros_like(parameters['Do'])
-        velocity[ind_drizzle] = -data.mie['v'][ind_lut]
-        return velocity
-
-    def _find_indices():
-        drizzle_ind = np.where(parameters['Do'])
-        ind_mu = np.searchsorted(data.mie['mu'], parameters['mu'][drizzle_ind])
-        ind_dia = np.searchsorted(data.mie['Do'], parameters['Do'][drizzle_ind])
-        n_widths, n_dia = len(data.mie['mu']), len(data.mie['Do'])
-        ind_mu[ind_mu >= n_widths] = n_widths - 1
-        ind_dia[ind_dia >= n_dia] = n_dia - 1
-        return drizzle_ind, (ind_mu, ind_dia)
-
-    def _calc_v_air(droplet_velocity):
-        """Calculates vertical air velocity."""
-        velocity = -np.copy(droplet_velocity)
-        velocity[ind_drizzle] += data.v[ind_drizzle]
-        return velocity
-
-    ind_drizzle, ind_lut = _find_indices()
-    density = _calc_density()
-    lwc = _calc_lwc()
-    lwf = _calc_lwf(lwc)
-    v_drizzle = _calc_fall_velocity()
-    v_air = _calc_v_air(v_drizzle)
-    return {'drizzle_N': density, 'drizzle_lwc': lwc, 'drizzle_lwf': lwf,
-            'v_drizzle': v_drizzle, 'v_air': v_air}
-
-
 class DrizzleSource(DataSource):
     """Class holding the input data for drizzle calculations."""
     def __init__(self, categorize_file):
@@ -298,9 +145,9 @@ def correct_spectral_width(cat_file):
     def _calc_v_sigma_factor():
         beam_divergence = _calc_beam_divergence()
         wind = calc_horizontal_wind(cat_file)
-        actual_wind = (wind + beam_divergence) ** (2 / 3)
-        scaled_wind = (30 * wind + beam_divergence) ** (2 / 3)
-        return actual_wind / (scaled_wind-actual_wind)
+        actual_wind = (wind + beam_divergence) ** (2/3)
+        scaled_wind = (30*wind + beam_divergence) ** (2/3)
+        return actual_wind / (scaled_wind - actual_wind)
 
     width, v_sigma = p_tools.read_nc_fields(cat_file, ['width', 'v_sigma'])
     sigma_factor = _calc_v_sigma_factor()
@@ -319,23 +166,6 @@ def calc_horizontal_wind(cat_file):
     """
     u_wind, v_wind = p_tools.interpolate_model(cat_file, ['uwind', 'vwind'])
     return utils.l2norm(u_wind, v_wind)
-
-
-def calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
-    """ Drizzle diameter calculation.
-
-    Args:
-        beta_z_ratio (ndarray): Beta to z ratio, multiplied by (2 / pi).
-        mu (ndarray, optional): Shape parameter for gamma calculations. Default is 0.
-        ray (ndarray, optional): Mie to Rayleigh ratio for z. Default is 1.
-        k (ndarray, optional): Alpha to beta ratio . Default is 1.
-
-    References:
-        https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
-
-    """
-    const = ray * k * beta_z_ratio
-    return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1/4)
 
 
 def drizzle_solve(data, drizzle_class, width_ht):
@@ -394,6 +224,176 @@ def drizzle_solve(data, drizzle_class, width_ht):
         beta_factor = np.exp(2*params['S'][i, j]*data.beta[i, j]*data.dheight)
         params['beta_corr'][i, (j+1):] *= beta_factor
     return params
+
+
+def calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
+    """ Drizzle diameter calculation.
+
+    Args:
+        beta_z_ratio (ndarray): Beta to z ratio, multiplied by (2 / pi).
+        mu (ndarray, optional): Shape parameter for gamma calculations. Default is 0.
+        ray (ndarray, optional): Mie to Rayleigh ratio for z. Default is 1.
+        k (ndarray, optional): Alpha to beta ratio . Default is 1.
+
+    References:
+        https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
+
+    """
+    const = ray * k * beta_z_ratio
+    return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1/4)
+
+
+def _calc_derived_products(data, parameters):
+    """Calculates additional quantities from the drizzle properties."""
+    def _calc_density():
+        """Calculates drizzle number density (m-3)."""
+        return data.z * 3.67 ** 6 / parameters['Do'] ** 6
+
+    def _calc_lwc():
+        """Calculates drizzle liquid water content (kg m-3)"""
+        rho_water = 1000
+        dia, mu, s = [parameters.get(key) for key in ('Do', 'mu', 'S')]
+        gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
+        return rho_water / 3 * data.beta * s * dia * gamma_ratio
+
+    def _calc_lwf(lwc_in):
+        """Calculates drizzle liquid water flux."""
+        flux = ma.copy(lwc_in)
+        flux[ind_drizzle] *= data.mie['lwf'][ind_lut] * data.mie['termv'][ind_lut[1]]
+        return flux
+
+    def _calc_fall_velocity():
+        """Calculates drizzle droplet fall velocity (m s-1)."""
+        velocity = np.zeros_like(parameters['Do'])
+        velocity[ind_drizzle] = -data.mie['v'][ind_lut]
+        return velocity
+
+    def _find_indices():
+        drizzle_ind = np.where(parameters['Do'])
+        ind_mu = np.searchsorted(data.mie['mu'], parameters['mu'][drizzle_ind])
+        ind_dia = np.searchsorted(data.mie['Do'], parameters['Do'][drizzle_ind])
+        n_widths, n_dia = len(data.mie['mu']), len(data.mie['Do'])
+        ind_mu[ind_mu >= n_widths] = n_widths - 1
+        ind_dia[ind_dia >= n_dia] = n_dia - 1
+        return drizzle_ind, (ind_mu, ind_dia)
+
+    def _calc_v_air(droplet_velocity):
+        """Calculates vertical air velocity."""
+        velocity = -np.copy(droplet_velocity)
+        velocity[ind_drizzle] += data.v[ind_drizzle]
+        return velocity
+
+    ind_drizzle, ind_lut = _find_indices()
+    density = _calc_density()
+    lwc = _calc_lwc()
+    lwf = _calc_lwf(lwc)
+    v_drizzle = _calc_fall_velocity()
+    v_air = _calc_v_air(v_drizzle)
+    return {'drizzle_N': density, 'drizzle_lwc': lwc, 'drizzle_lwf': lwf,
+            'v_drizzle': v_drizzle, 'v_air': v_air}
+
+
+def _calc_errors(categorize):
+    """Estimates errors in the retrieved drizzle products."""
+
+    def _read_error_inputs():
+        data_keys = ('Z', 'beta')
+        errors = _read_error_term(categorize, data_keys)
+        biases = _read_error_term(categorize, data_keys, 'bias')
+        errors['mu'], biases['mu'] = 0.07, 0
+        return errors, biases
+
+    def _add_standard_errors():
+        product_keys = ('Do', 'drizzle_lwc', 'drizzle_lwf', 'S')
+        factors = _get_weighting_factors(product_keys)
+        for key in product_keys:
+            base = ('Z', 'beta')
+            fields = base if key in ('drizzle_lwc', 'S') else base + ('mu',)
+            weights = getattr(factors, key)
+            results[f'{key}_error'] = l2_norm_weighted(err, fields, *weights)
+            results[f'{key}_bias'] = l2_norm_weighted(bias, fields, *weights)
+
+    def _get_weighting_factors(keys):
+        """Returns scale factors and weights."""
+        Weights = namedtuple('Weights', keys)
+        return Weights((2/7, 1), (1/7, (1, 6)), (1/7, (3, 4, 1)), (1/2, 1))
+
+    def _add_supplementary_errors():
+        """Calculates random error and bias in drizzle number density."""
+        results['drizzle_N_error'] = utils.l2norm(err['Z'], 6*results['Do_error'])
+        results['v_drizzle_error'] = results['Do_error']
+
+    def _convert_to_db(data):
+        """Converts linear error values to dB."""
+        return {name: lin2db(value) for name, value in data.items()}
+
+    err, bias = _read_error_inputs()
+    results = {}
+    _add_standard_errors()
+    _add_supplementary_errors()
+    utils.del_dict_keys(results, ['S_bias'])
+    return _convert_to_db(results)
+
+
+def _read_error_term(categorize, fields, term='error'):
+    """Returns linear error terms for a variable.
+
+    Args:
+        categorize (DataSource): DataSource object.
+        fields (tuple): Variable names.
+        term (str, optional): Uncertainty type, e.g. 'error' or 'bias'.
+            Default is 'error'.
+
+        Returns:
+            dict: Dictionary of the error (or bias, etc) terms.
+
+    Examples:
+        >>> errors = _read_error_term(categorize, ('Z', 'beta'))
+
+    """
+    def _get_linear(full_name):
+        return db2lin(categorize.getvar(full_name))
+
+    return {field: _get_linear(f"{field}_{term}") for field in fields}
+
+
+def l2_norm_weighted(terms, keys, overall_scale=1.0, term_weights=1.0):
+    """Calculates scaled and weighted Euclidean distance.
+
+    Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
+    where a, b, ... are terms to be summed and a1, a2, ... are optional weights
+    for the terms.
+
+    Args:
+        terms (dict): Dictionary of arrays.
+        keys (list/tuple): keys to be picked from **terms**.
+        overall_scale (float, optional): Scale factor for the calculated
+            Euclidean distance. Default is 1.
+        term_weights (float/list): Weights for the terms. Must be single
+            float or a list of numbers (one per term). Default is 1.
+
+    Returns:
+        float: Scaled and weighted Euclidean distance.
+
+    """
+    values = [terms.get(key) for key in keys]
+    weighted_values = ma.multiply(values, term_weights)
+    return overall_scale * utils.l2norm(*weighted_values)
+
+
+def _screen_rain(results, classification):
+    """Removes rainy profiles from drizzle variables.."""
+    for key in results.keys():
+        if not utils.isscalar(results[key]):
+            results[key][classification.is_rain, :] = 0
+    return results
+
+
+def _append_data(drizzle_data, results):
+    """Save retrieved fields to the drizzle_data object."""
+    for key, value in results.items():
+        value = ma.masked_where(value == 0, value)
+        drizzle_data.append_data(value, key)
 
 
 DRIZZLE_ATTRIBUTES = {
