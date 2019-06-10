@@ -338,12 +338,11 @@ def _calc_errors(categorize, parameters):
             error[ind] = source[ind]
 
         error = ma.zeros(error_in.shape)
-        indices = _get_drizzle_indices(parameters['Do'])
-        add_error_component(error_in, indices['drizzle'])
+        add_error_component(error_in, drizzle_indices['drizzle'])
         if error_small is not None:
-            add_error_component(error_small, indices['small'])
+            add_error_component(error_small, drizzle_indices['small'])
         if error_tiny is not None:
-            add_error_component(error_tiny, indices['tiny'])
+            add_error_component(error_tiny, drizzle_indices['tiny'])
         return error
 
     def _calc_parameter_biases():
@@ -364,8 +363,13 @@ def _calc_errors(categorize, parameters):
             n_error = utils.l2norm(z_error, 6*dia_error)
             return _stack_errors(n_error)
 
+        def _calc_v_error():
+            error = results['Do_error']
+            error[drizzle_indices['tiny']] *= error[drizzle_indices['tiny']]
+            return error
+
         results['drizzle_N_error'] = _calc_n_error()
-        results['v_drizzle_error'] = results['Do_error']
+        results['v_drizzle_error'] = _calc_v_error()
 
     def _add_supplementary_biases():
         def _calc_n_bias():
@@ -380,6 +384,7 @@ def _calc_errors(categorize, parameters):
         """Converts linear error values to dB."""
         return {name: lin2db(value) for name, value in data.items()}
 
+    drizzle_indices = _get_drizzle_indices(parameters['Do'])
     error_input = _read_input_uncertainty('error')
     bias_input = _read_input_uncertainty('bias')
     errors = _calc_parameter_errors()
