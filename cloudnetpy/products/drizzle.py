@@ -326,18 +326,12 @@ def _calc_errors(categorize, parameters):
                 'S_error': _calc_s_error()}
 
     def _calc_parameter_biases():
-        def _calc_dia_bias():
-            return _calc_bias(2/7, (1, 1))
-
-        def _calc_lwc_bias():
-            return _calc_bias(1/7, (1, 6))
-
-        def _calc_lwf_bias():
-            return _calc_bias(1/7, (3, 4))
-
-        return {'Do_bias': _calc_dia_bias(),
-                'drizzle_lwc_bias': _calc_lwc_bias(),
-                'drizzle_lwf_bias': _calc_lwf_bias()}
+        dia_bias = _calc_bias(2/7, (1, 1))
+        lwc_bias = _calc_bias(1/7, (1, 6))
+        lwf_bias = _calc_bias(1/7, (3, 4))
+        return {'Do_bias': dia_bias,
+                'drizzle_lwc_bias': lwc_bias,
+                'drizzle_lwf_bias': lwf_bias}
 
     def _calc_error(scale, weights, add_mu=False, add_mu_small=False):
         error = l2norm_weighted(error_input, scale, weights)
