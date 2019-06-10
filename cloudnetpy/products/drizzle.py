@@ -2,7 +2,6 @@
 """
 import os
 from bisect import bisect_left
-from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
 from scipy.special import gamma
@@ -296,70 +295,114 @@ def _calc_derived_products(data, parameters):
 def _calc_errors(categorize, parameters):
     """Estimates errors in the retrieved drizzle products."""
 
-    def _read_error_inputs():
-        data_keys = ('Z', 'beta')
-        errors = _read_error_term(categorize, data_keys)
-        biases = _read_error_term(categorize, data_keys, 'bias')
-        errors['mu'], biases['mu'] = 0.07, 0
-        return errors, biases
+    def _read_input_uncertainty(uncertainty_type):
+        return tuple(db2lin(categorize.getvar(f'{key}_{uncertainty_type}'))
+                     for key in ('Z', 'beta'))
 
-    def _add_standard_errors():
-        no_drizzle = ~(parameters['Do'] > 0)
-        product_keys = ('Do', 'drizzle_lwc', 'drizzle_lwf', 'S')
-        factors = _get_weighting_factors(product_keys)
-        for key in product_keys:
-            base = ('Z', 'beta')
-            fields = base if key in ('drizzle_lwc', 'S') else base + ('mu',)
-            weights = getattr(factors, key)
-            results[f'{key}_error'] = l2_norm_weighted(err, fields, *weights)
-            results[f'{key}_error'][no_drizzle] = ma.masked
-            results[f'{key}_bias'] = l2_norm_weighted(bias, fields, *weights)
+    def _calc_parameter_errors():
+        def _calc_dia_error():
+            error = _calc_error(2/7, (1, 1), add_mu=True)
+            error_small = _calc_error(1/7, (1, 1), add_mu=True)
+            return _stack_errors(error, error_small)
 
-    def _get_weighting_factors(keys):
-        """Returns scale factors and weights."""
-        Weights = namedtuple('Weights', keys)
-        return Weights((2/7, 1), (1/7, (1, 6)), (1/7, (3, 4, 1)), (1/2, 1))
+        def _calc_lwc_error():
+            error = _calc_error(1/7, (1, 6))
+            error_small = _calc_error(1/4, (1, 3))
+            return _stack_errors(error, error_small)
+
+        def _calc_lwf_error():
+            error = _calc_error(1/7, (3, 4), add_mu=True)
+            error_small = _calc_error(1/2, (1, 1), add_mu_small=True)
+            error_tiny = _calc_error(1/4, (3, 1), add_mu_small=True)
+            return _stack_errors(error, error_small, error_tiny)
+
+        def _calc_s_error():
+            error = _calc_error(1/2, (1, 1))
+            return _stack_errors(error)
+
+        return {'Do_error': _calc_dia_error(),
+                'drizzle_lwc_error': _calc_lwc_error(),
+                'drizzle_lwf_error': _calc_lwf_error(),
+                'S_error': _calc_s_error()}
+
+    def _calc_parameter_biases():
+        def _calc_dia_bias():
+            return _calc_bias(2/7, (1, 1))
+
+        def _calc_lwc_bias():
+            return _calc_bias(1/7, (1, 6))
+
+        def _calc_lwf_bias():
+            return _calc_bias(1/7, (3, 4))
+
+        return {'Do_bias': _calc_dia_bias(),
+                'drizzle_lwc_bias': _calc_lwc_bias(),
+                'drizzle_lwf_bias': _calc_lwf_bias()}
+
+    def _calc_error(scale, weights, add_mu=False, add_mu_small=False):
+        error = l2norm_weighted(error_input, scale, weights)
+        if add_mu:
+            error = utils.l2norm(error, 0.07)
+        if add_mu_small:
+            error = utils.l2norm(error, 0.25)
+        return error
+
+    def _stack_errors(error_in, error_small=None, error_tiny=None):
+        def add_error_component(source, ind):
+            error[ind] = source[ind]
+
+        error = ma.zeros(error_in.shape)
+        indices = _get_drizzle_indices(parameters['Do'])
+        add_error_component(error_in, indices['drizzle'])
+        if error_small is not None:
+            add_error_component(error_small, indices['small'])
+        if error_tiny is not None:
+            add_error_component(error_tiny, indices['tiny'])
+        return error
+
+    def _calc_bias(scale, weights):
+        return l2norm_weighted(bias_input, scale, weights)
 
     def _add_supplementary_errors():
-        """Calculates random error and bias in drizzle number density."""
-        results['drizzle_N_error'] = utils.l2norm(err['Z'], 6*results['Do_error'])
+        def _calc_n_error():
+            z_error = error_input[0]
+            dia_error = db2lin(results['Do_error'])
+            n_error = utils.l2norm(z_error, 6*dia_error)
+            return _stack_errors(n_error)
+
+        results['drizzle_N_error'] = _calc_n_error()
         results['v_drizzle_error'] = results['Do_error']
+
+    def _add_supplementary_biases():
+        def _calc_n_bias():
+            z_bias = bias_input[0]
+            dia_bias = db2lin(results['Do_bias'])
+            return l2norm_weighted((z_bias, dia_bias), 1, (1, 6))
+
+        results['drizzle_N_bias'] = _calc_n_bias()
+        results['v_drizzle_bias'] = results['Do_bias']
 
     def _convert_to_db(data):
         """Converts linear error values to dB."""
         return {name: lin2db(value) for name, value in data.items()}
 
-    err, bias = _read_error_inputs()
-    results = {}
-    _add_standard_errors()
+    error_input = _read_input_uncertainty('error')
+    bias_input = _read_input_uncertainty('bias')
+    errors = _calc_parameter_errors()
+    biases = _calc_parameter_biases()
+    results = {**errors, **biases}
     _add_supplementary_errors()
-    utils.del_dict_keys(results, ['S_bias'])
+    _add_supplementary_biases()
     return _convert_to_db(results)
 
 
-def _read_error_term(categorize, fields, term='error'):
-    """Returns linear error terms for a variable.
-
-    Args:
-        categorize (DataSource): DataSource object.
-        fields (tuple): Variable names.
-        term (str, optional): Uncertainty type, e.g. 'error' or 'bias'.
-            Default is 'error'.
-
-        Returns:
-            dict: Dictionary of the error (or bias, etc) terms.
-
-    Examples:
-        >>> errors = _read_error_term(categorize, ('Z', 'beta'))
-
-    """
-    def _get_linear(full_name):
-        return db2lin(categorize.getvar(full_name))
-
-    return {field: _get_linear(f"{field}_{term}") for field in fields}
+def _get_drizzle_indices(diameter):
+    return {'drizzle': diameter > 0,
+            'small': np.logical_and(diameter <= 1e-4, diameter > 1e-5),
+            'tiny': np.logical_and(diameter <= 1e-5, diameter > 0)}
 
 
-def l2_norm_weighted(terms, keys, overall_scale=1.0, term_weights=1.0):
+def l2norm_weighted(values, overall_scale, term_weights):
     """Calculates scaled and weighted Euclidean distance.
 
     Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
@@ -367,18 +410,16 @@ def l2_norm_weighted(terms, keys, overall_scale=1.0, term_weights=1.0):
     for the terms.
 
     Args:
-        terms (dict): Dictionary of arrays.
-        keys (list/tuple): keys to be picked from **terms**.
-        overall_scale (float, optional): Scale factor for the calculated
-            Euclidean distance. Default is 1.
-        term_weights (float/list): Weights for the terms. Must be single
-            float or a list of numbers (one per term). Default is 1.
+        values (tuple): Arrays to be added.
+        overall_scale (float): Scale factor for the calculated
+            Euclidean distance.
+        term_weights (tuple): Weights for the terms. Must be single
+            float or a list of numbers (one per term).
 
     Returns:
         float: Scaled and weighted Euclidean distance.
 
     """
-    values = [terms.get(key) for key in keys]
     weighted_values = ma.multiply(values, term_weights)
     return overall_scale * utils.l2norm(*weighted_values)
 
