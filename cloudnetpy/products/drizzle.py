@@ -27,7 +27,7 @@ def generate_drizzle(categorize_file, output_file):
     width_ht = correct_spectral_width(categorize_file)
     drizzle_parameters = drizzle_solve(drizzle_data, drizzle_class, width_ht)
     derived_products = _calc_derived_products(drizzle_data, drizzle_parameters)
-    errors = _calc_errors(drizzle_data)
+    errors = _calc_errors(drizzle_data, drizzle_parameters)
     results = {**drizzle_parameters, **derived_products, **errors}
     results = _screen_rain(results, drizzle_class)
     _append_data(drizzle_data, results)
@@ -293,7 +293,7 @@ def _calc_derived_products(data, parameters):
             'v_drizzle': v_drizzle, 'v_air': v_air}
 
 
-def _calc_errors(categorize):
+def _calc_errors(categorize, parameters):
     """Estimates errors in the retrieved drizzle products."""
 
     def _read_error_inputs():
@@ -304,6 +304,7 @@ def _calc_errors(categorize):
         return errors, biases
 
     def _add_standard_errors():
+        no_drizzle = ~(parameters['Do'] > 0)
         product_keys = ('Do', 'drizzle_lwc', 'drizzle_lwf', 'S')
         factors = _get_weighting_factors(product_keys)
         for key in product_keys:
@@ -311,6 +312,7 @@ def _calc_errors(categorize):
             fields = base if key in ('drizzle_lwc', 'S') else base + ('mu',)
             weights = getattr(factors, key)
             results[f'{key}_error'] = l2_norm_weighted(err, fields, *weights)
+            results[f'{key}_error'][no_drizzle] = ma.masked
             results[f'{key}_bias'] = l2_norm_weighted(bias, fields, *weights)
 
     def _get_weighting_factors(keys):

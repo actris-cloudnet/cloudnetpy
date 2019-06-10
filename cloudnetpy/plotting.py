@@ -185,10 +185,12 @@ def _plot_segment_data(ax, data, name, axes):
     variables = ATTRIBUTES[name]
     n_fields = len(variables.cbar)
     cmap = ListedColormap(variables.cbar)
+    data[data == 0] = ma.masked
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=n_fields - 0.5)
+    pl.set_clim(vmin=0.5, vmax=n_fields + 0.5)
     colorbar = _init_colorbar(pl, ax)
-    colorbar.set_ticks(np.arange(n_fields+1))
+    colorbar.set_ticks(np.arange(n_fields + 1))
     colorbar.ax.set_yticklabels(variables.clabel, fontsize=13)
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 

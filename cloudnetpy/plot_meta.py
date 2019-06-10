@@ -19,7 +19,7 @@ _MS1 = 'm s$^{-1}$'
 _SR1M1 = 'sr$^{-1}$ m$^{-1}$'
 _KGM2 = 'kg m$^{-2}$'
 _KGM3 = 'kg m$^{-3}$'
-_KGM2S1 = 'kg m$^{-2} s$^{-1}$'
+_KGM2S1 = 'kg m$^{-2}$ s$^{-1}$'
 _DB = 'dB'
 _DBZ = 'dBZ'
 
@@ -71,16 +71,16 @@ _CLABEL = {
 
 _CBAR = {
     'target_classification':
-        ("#ffffff", "#00bfff", "#ff4500", "#0000ff", "#ffff00", "#32cd32",
+        ("#00bfff", "#ff4500", "#0000ff", "#ffff00", "#32cd32",
          "#ffa500", "#66cdaa", "#d3d3d3", "#778899", "#2f4f4f"),
     'detection_status':
-        ("#ffffff", "#ffff00", "#2f4f4f", "#3cb371", "#778899", "#87cefa",
+        ("#ffff00", "#2f4f4f", "#3cb371", "#778899", "#87cefa",
          "#d3d3d3", "#0000ff", "#ff4500", "#ffa500"),
     'iwc_retrieval_status':
-        ("#ffffff", "#00bfff", "#ff4500", "#0000ff", "#ffff00",
+        ("#00bfff", "#ff4500", "#0000ff", "#ffff00",
          "#2f4f4f", "#778899", "#d3d3d3"),
     'lwc_retrieval_status':
-        ("#ffffff", "#00bfff", "#0000ff", "#3cb371", "#ffa500",
+        ("#00bfff", "#0000ff", "#3cb371", "#ffa500",
          "#ff4500", "#ECECEC"),
     'bit':
         ("#ffffff", "#4682b4")
@@ -119,12 +119,28 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
     ),
+    'S_error': PlotMeta(
+        name='Random error in backscatter-to-extinction ratio',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.1, 0.5),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'drizzle_N': PlotMeta(
         name='Drizzle number concentration',
         cbar='viridis',
         clabel=_M3,
         plot_range=(1e4, 1e9),
         plot_scale=_LOG,
+        plot_type='mesh'
+    ),
+    'drizzle_N_error': PlotMeta(
+        name='Random error in drizzle number concentration',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.1, 0.5),
+        plot_scale=_LIN,
         plot_type='mesh'
     ),
     'drizzle_lwc': PlotMeta(
@@ -151,11 +167,27 @@ ATTRIBUTES = {
         plot_scale=_LOG,
         plot_type='mesh'
     ),
+    'drizzle_lwf_error': PlotMeta(
+        name='Random error in drizzle liquid water flux',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.3, 1),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'v_drizzle': PlotMeta(
         name='Drizzle droplet fall velocity',
         cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-2, 2),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'v_drizzle_error': PlotMeta(
+        name='Random error in drizzle droplet fall velocity',
+        cbar='RdYlGn_r',
+        clabel=_DB,
+        plot_range=(0.3, 1),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
