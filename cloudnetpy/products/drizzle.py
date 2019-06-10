@@ -302,7 +302,7 @@ def _calc_errors(categorize, parameters):
     def _calc_parameter_errors():
         def _calc_dia_error():
             error = _calc_error(2/7, (1, 1), add_mu=True)
-            error_small = _calc_error(1/7, (1, 1), add_mu=True)
+            error_small = _calc_error(1/4, (1, 1), add_mu_small=True)
             return _stack_errors(error, error_small)
 
         def _calc_lwc_error():
@@ -325,14 +325,6 @@ def _calc_errors(categorize, parameters):
                 'drizzle_lwf_error': _calc_lwf_error(),
                 'S_error': _calc_s_error()}
 
-    def _calc_parameter_biases():
-        dia_bias = _calc_bias(2/7, (1, 1))
-        lwc_bias = _calc_bias(1/7, (1, 6))
-        lwf_bias = _calc_bias(1/7, (3, 4))
-        return {'Do_bias': dia_bias,
-                'drizzle_lwc_bias': lwc_bias,
-                'drizzle_lwf_bias': lwf_bias}
-
     def _calc_error(scale, weights, add_mu=False, add_mu_small=False):
         error = l2norm_weighted(error_input, scale, weights)
         if add_mu:
@@ -353,6 +345,14 @@ def _calc_errors(categorize, parameters):
         if error_tiny is not None:
             add_error_component(error_tiny, indices['tiny'])
         return error
+
+    def _calc_parameter_biases():
+        dia_bias = _calc_bias(2/7, (1, 1))
+        lwc_bias = _calc_bias(1/7, (1, 6))
+        lwf_bias = _calc_bias(1/7, (3, 4))
+        return {'Do_bias': dia_bias,
+                'drizzle_lwc_bias': lwc_bias,
+                'drizzle_lwf_bias': lwf_bias}
 
     def _calc_bias(scale, weights):
         return l2norm_weighted(bias_input, scale, weights)
