@@ -29,6 +29,7 @@ def generate_drizzle(categorize_file, output_file):
     errors = _calc_errors(drizzle_data, drizzle_parameters)
     results = {**drizzle_parameters, **derived_products, **errors}
     results = _screen_rain(results, drizzle_class)
+    results['drizzle_retrieval_status'] = _get_retrieval_status(drizzle_class)
     _append_data(drizzle_data, results)
     output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
     output.save_product_file('drizzle', drizzle_data, output_file)
@@ -302,7 +303,7 @@ def _calc_errors(categorize, parameters):
     def _calc_parameter_errors():
         def _calc_dia_error():
             error = _calc_error(2/7, (1, 1), add_mu=True)
-            error_small = _calc_error(1/7, (1, 1), add_mu=True)
+            error_small = _calc_error(1/4, (1, 1), add_mu_small=True)
             return _stack_errors(error, error_small)
 
         def _calc_lwc_error():
@@ -325,20 +326,6 @@ def _calc_errors(categorize, parameters):
                 'drizzle_lwf_error': _calc_lwf_error(),
                 'S_error': _calc_s_error()}
 
-    def _calc_parameter_biases():
-        def _calc_dia_bias():
-            return _calc_bias(2/7, (1, 1))
-
-        def _calc_lwc_bias():
-            return _calc_bias(1/7, (1, 6))
-
-        def _calc_lwf_bias():
-            return _calc_bias(1/7, (3, 4))
-
-        return {'Do_bias': _calc_dia_bias(),
-                'drizzle_lwc_bias': _calc_lwc_bias(),
-                'drizzle_lwf_bias': _calc_lwf_bias()}
-
     def _calc_error(scale, weights, add_mu=False, add_mu_small=False):
         error = l2norm_weighted(error_input, scale, weights)
         if add_mu:
@@ -352,13 +339,20 @@ def _calc_errors(categorize, parameters):
             error[ind] = source[ind]
 
         error = ma.zeros(error_in.shape)
-        indices = _get_drizzle_indices(parameters['Do'])
-        add_error_component(error_in, indices['drizzle'])
+        add_error_component(error_in, drizzle_indices['drizzle'])
         if error_small is not None:
-            add_error_component(error_small, indices['small'])
+            add_error_component(error_small, drizzle_indices['small'])
         if error_tiny is not None:
-            add_error_component(error_tiny, indices['tiny'])
+            add_error_component(error_tiny, drizzle_indices['tiny'])
         return error
+
+    def _calc_parameter_biases():
+        dia_bias = _calc_bias(2/7, (1, 1))
+        lwc_bias = _calc_bias(1/7, (1, 6))
+        lwf_bias = _calc_bias(1/7, (3, 4))
+        return {'Do_bias': dia_bias,
+                'drizzle_lwc_bias': lwc_bias,
+                'drizzle_lwf_bias': lwf_bias}
 
     def _calc_bias(scale, weights):
         return l2norm_weighted(bias_input, scale, weights)
@@ -370,8 +364,13 @@ def _calc_errors(categorize, parameters):
             n_error = utils.l2norm(z_error, 6*dia_error)
             return _stack_errors(n_error)
 
+        def _calc_v_error():
+            error = results['Do_error']
+            error[drizzle_indices['tiny']] *= error[drizzle_indices['tiny']]
+            return error
+
         results['drizzle_N_error'] = _calc_n_error()
-        results['v_drizzle_error'] = results['Do_error']
+        results['v_drizzle_error'] = _calc_v_error()
 
     def _add_supplementary_biases():
         def _calc_n_bias():
@@ -386,6 +385,7 @@ def _calc_errors(categorize, parameters):
         """Converts linear error values to dB."""
         return {name: lin2db(value) for name, value in data.items()}
 
+    drizzle_indices = _get_drizzle_indices(parameters['Do'])
     error_input = _read_input_uncertainty('error')
     bias_input = _read_input_uncertainty('bias')
     errors = _calc_parameter_errors()
@@ -430,6 +430,24 @@ def _screen_rain(results, classification):
         if not utils.isscalar(results[key]):
             results[key][classification.is_rain, :] = 0
     return results
+
+
+def _get_retrieval_status(classification):
+    def _find_retrieval_below_melting():
+        cold_rain = utils.transpose(classification.cold_rain)
+        below_melting = cold_rain * classification.drizzle
+        status[below_melting == 1] = 2
+
+    def _find_retrieval_in_warm_liquid():
+        in_warm_liquid = classification.drizzle * classification.warm_liquid
+        status[in_warm_liquid == 1] = 4
+
+    status = np.copy(classification.drizzle).astype(int)
+    _find_retrieval_below_melting()
+    status[classification.would_be_drizzle] = 3
+    _find_retrieval_in_warm_liquid()
+    status[classification.is_rain == 1, :] = 5
+    return status
 
 
 def _append_data(drizzle_data, results):
@@ -526,6 +544,9 @@ DRIZZLE_ATTRIBUTES = {
     ),
     'beta_corr': MetaData(
         long_name='Lidar backscatter correction factor',
+    ),
+    'drizzle_retrieval_status': MetaData(
+        long_name='Drizzle parameter retrieval status',
     )
 }
 
