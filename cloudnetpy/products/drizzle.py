@@ -29,6 +29,7 @@ def generate_drizzle(categorize_file, output_file):
     errors = _calc_errors(drizzle_data, drizzle_parameters)
     results = {**drizzle_parameters, **derived_products, **errors}
     results = _screen_rain(results, drizzle_class)
+    results['drizzle_retrieval_status'] = _get_retrieval_status(drizzle_class)
     _append_data(drizzle_data, results)
     output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
     output.save_product_file('drizzle', drizzle_data, output_file)
@@ -431,6 +432,24 @@ def _screen_rain(results, classification):
     return results
 
 
+def _get_retrieval_status(classification):
+    def _find_retrieval_below_melting():
+        cold_rain = utils.transpose(classification.cold_rain)
+        below_melting = cold_rain * classification.drizzle
+        status[below_melting == 1] = 2
+
+    def _find_retrieval_in_warm_liquid():
+        in_warm_liquid = classification.drizzle * classification.warm_liquid
+        status[in_warm_liquid == 1] = 4
+
+    status = np.copy(classification.drizzle).astype(int)
+    _find_retrieval_below_melting()
+    status[classification.would_be_drizzle] = 3
+    _find_retrieval_in_warm_liquid()
+    status[classification.is_rain == 1, :] = 5
+    return status
+
+
 def _append_data(drizzle_data, results):
     """Save retrieved fields to the drizzle_data object."""
     for key, value in results.items():
@@ -525,6 +544,9 @@ DRIZZLE_ATTRIBUTES = {
     ),
     'beta_corr': MetaData(
         long_name='Lidar backscatter correction factor',
+    ),
+    'drizzle_retrieval_status': MetaData(
+        long_name='Drizzle parameter retrieval status',
     )
 }
 
