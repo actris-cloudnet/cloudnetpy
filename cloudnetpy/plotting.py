@@ -163,6 +163,7 @@ def _plot_bar_data(ax, data, name, time):
         time (ndarray): 1D time array.
 
     """
+    # TODO: unit change somewhere else
     variables = ATTRIBUTES[name]
     width = 1/120
     ax.plot(time, data/1000, color='navy')

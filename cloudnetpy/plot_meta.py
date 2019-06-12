@@ -66,22 +66,33 @@ _CLABEL = {
          "Adiabatic retrieval: new cloud pixel",
          "Unreliable lwp: no retrieval",
          "Unreliable lwp/cloud boundaries: no retrieval",
+         "Rain present: no retrieval"),
+
+    'drizzle_retrieval_status':
+        ("No drizzle",
+         "Reliable retrieval",
+         "Retrieval below melting layer",
+         "Drizzle present but no retrieval possible",
+         "Warm drizzle-free liquid water cloud",
          "Rain present: no retrieval")
 }
 
 _CBAR = {
     'target_classification':
-        ("#00bfff", "#ff4500", "#0000ff", "#ffff00", "#32cd32",
-         "#ffa500", "#66cdaa", "#d3d3d3", "#778899", "#2f4f4f"),
+        ("#6CFFEC", "#209FF3", "#BF9AFF", "#E5E3EB", "#464AB9",
+         "#F9B644", "#DCF53F", "#CB9F81", "#FA6028", "#2f4f4f"),
     'detection_status':
-        ("#ffff00", "#2f4f4f", "#3cb371", "#778899", "#87cefa",
-         "#d3d3d3", "#0000ff", "#ff4500", "#ffa500"),
+        ("#ffff00", "#ff4500", "#3cb371", "#778899", "#70EB5D",
+         "#d3d3d3", "#0582E1", "#B04112", "#ffa500"),
     'iwc_retrieval_status':
-        ("#00bfff", "#ff4500", "#0000ff", "#ffff00",
-         "#2f4f4f", "#778899", "#d3d3d3"),
+        ("#3cb371", "#ff4500", "#70EB5D", "#ffff00",
+         "#76A9AB", "#CDF5F6", "#d3d3d3"),
     'lwc_retrieval_status':
-        ("#00bfff", "#0000ff", "#3cb371", "#ffa500",
+        ("#3cb371", "#70EB5D", "#E9E21A", "#ffa500",
          "#ff4500", "#ECECEC"),
+    'drizzle_retrieval_status':
+        ("#3cb371", "#70EB5D", "#ff4500", "#ffa500",
+         "#ECECEC"),
     'bit':
         ("#ffffff", "#4682b4")
 }
@@ -190,6 +201,12 @@ ATTRIBUTES = {
         plot_range=(0.3, 1),
         plot_scale=_LIN,
         plot_type='mesh'
+    ),
+    'drizzle_retrieval_status': PlotMeta(
+        'Drizzle parameter retrieval status',
+        cbar=_CBAR['drizzle_retrieval_status'],
+        clabel=_CLABEL['drizzle_retrieval_status'],
+        plot_type='segment'
     ),
     'v_air': PlotMeta(
         name='Vertical air velocity',
