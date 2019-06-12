@@ -71,7 +71,7 @@ may be available depending on the site and date, see for example
 Any model file can be used in the processing, but the recommended order is
 
 #. ecmwf
-#. icon-iglo
+#. icon-iglo-12-23
 #. gdas1
 
 Categorize processing

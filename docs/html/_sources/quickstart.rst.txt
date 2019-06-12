@@ -71,7 +71,7 @@ may be available depending on the site and date, see for example
 Any model file can be used in the processing, but the recommended order is
 
 #. ecmwf
-#. icon-iglo
+#. icon-iglo-12-23
 #. gdas1
 
 Categorize processing
@@ -91,7 +91,7 @@ calibrated measurement files.
        }
    generate_categorize(input_files, 'categorize.nc')
 
-With 94 GHz RPG cloud radar, the radar.nc file can be used for both 'radar' and 'mwr'.
+With a 94 GHz RPG cloud radar, the radar.nc file can be used for both 'radar' and 'mwr'.
 
 
 Processing products
