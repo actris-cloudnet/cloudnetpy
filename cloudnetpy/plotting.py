@@ -185,6 +185,7 @@ def _plot_segment_data(ax, data, name, axes):
     """
     variables = ATTRIBUTES[name]
     n_fields = len(variables.cbar)
+    print(np.unique(data))
     cmap = ListedColormap(variables.cbar)
     data[data == 0] = ma.masked
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,

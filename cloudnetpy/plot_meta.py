@@ -364,7 +364,7 @@ ATTRIBUTES = {
         name='Approximate two-way radar attenuation due to liquid water',
         cbar='viridis',
         clabel=_DB,
-        plot_range=(0, 10),
+        plot_range=(0, 5),
         plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
