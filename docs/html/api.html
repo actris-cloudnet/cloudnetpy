@@ -1853,8 +1853,8 @@ for drizzle calculations.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="products.drizzle.l2_norm_weighted">
-<code class="descclassname">products.drizzle.</code><code class="descname">l2_norm_weighted</code><span class="sig-paren">(</span><em>terms</em>, <em>keys</em>, <em>overall_scale=1.0</em>, <em>term_weights=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#l2_norm_weighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.l2_norm_weighted" title="Permalink to this definition">¶</a></dt>
+<dt id="products.drizzle.l2norm_weighted">
+<code class="descclassname">products.drizzle.</code><code class="descname">l2norm_weighted</code><span class="sig-paren">(</span><em>values</em>, <em>overall_scale</em>, <em>term_weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#l2norm_weighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.l2norm_weighted" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates scaled and weighted Euclidean distance.</p>
 <p>Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + …)
 where a, b, … are terms to be summed and a1, a2, … are optional weights
@@ -1864,12 +1864,11 @@ for the terms.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>terms</strong> (<em>dict</em>) – Dictionary of arrays.</li>
-<li><strong>keys</strong> (<em>list/tuple</em>) – keys to be picked from <strong>terms</strong>.</li>
-<li><strong>overall_scale</strong> (<em>float</em><em>, </em><em>optional</em>) – Scale factor for the calculated
-Euclidean distance. Default is 1.</li>
-<li><strong>term_weights</strong> (<em>float/list</em>) – Weights for the terms. Must be single
-float or a list of numbers (one per term). Default is 1.</li>
+<li><strong>values</strong> (<em>tuple</em>) – Arrays to be added.</li>
+<li><strong>overall_scale</strong> (<em>float</em>) – Scale factor for the calculated
+Euclidean distance.</li>
+<li><strong>term_weights</strong> (<em>tuple</em>) – Weights for the terms. Must be single
+float or a list of numbers (one per term).</li>
 </ul>
 </td>
 </tr>
