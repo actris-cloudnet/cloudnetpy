@@ -3,8 +3,8 @@ Quickstart
 ==========
 
 CloudnetPy is available from `PyPI
-<https://pypi.org/project/cloudnetpy/>`_, the Python package index. It allows a pip-based
-installation. CloudnetPy requires Python 3.7 or newer.
+<https://pypi.org/project/cloudnetpy/>`_, the Python package index.
+CloudnetPy requires Python 3.7 or newer.
 
 Installation
 ------------
@@ -57,7 +57,7 @@ MWR processing
 --------------
 
 HATPRO microwave
-radiometer processing is not yet part of CloudnetPy. However, with the 94
+radiometer processing is not yet part of CloudnetPy. However, with a 94
 GHz RPG cloud radar, a separate MWR instrument is not required (although it
 improves the data quality).
 
@@ -65,10 +65,17 @@ Model data
 ----------
 
 Model files needed in the next processing step can be downloaded
-from Cloudnet `http API <devcloudnet.fmi.fi/api/models>`_.
+from Cloudnet `http API <http://devcloudnet.fmi.fi/api/>`_. Several models
+may be available depending on the site and date, see for example
+`this day <http://devcloudnet.fmi.fi/api/models/?site_code=mace-head&date=20190303>`_.
+Any model file can be used in the processing, but the recommended order is
+
+#. ecmwf
+#. icon-iglo
+#. gdas1
 
 Categorize processing
---------------------
+---------------------
 
 In the next example we create a categorize file from already
 calibrated measurement files.
@@ -84,7 +91,7 @@ calibrated measurement files.
        }
    generate_categorize(input_files, 'categorize.nc')
 
-With 94 GHz RPG cloud radar, the radar.nc file can be used for both 'radar' and 'mwr'.
+With a 94 GHz RPG cloud radar, the radar.nc file can be used for both 'radar' and 'mwr'.
 
 
 Processing products

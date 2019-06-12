@@ -48,20 +48,20 @@
   <div class="section" id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
 <p>Cloudnet processing produces vertical profiles of cloud properties from ground-based remote sensing measurements.
-Cloud radar, optical lidar, microwave radiometer and model data are combined in order to characterize
-clouds up to 15 km with high temporal and vertical resolution.</p>
+Cloud radar, optical lidar, microwave radiometer and thermodynamical (model or radiosonde) data are combined to accurately
+characterize clouds up to 15 km with high temporal and vertical resolution.</p>
 <div class="figure align-center" id="id1">
 <a class="reference internal image-reference" href="_images/example_data.png"><img alt="_images/example_data.png" src="_images/example_data.png" style="width: 500px;" /></a>
 <p class="caption"><span class="caption-text">Example measurements.</span></p>
 </div>
-<p>The measurements and model data are brought into common grid and classified as ice, liquid, aerosol, insects, and so on.
+<p>The measurement and model data are brought into common grid and classified as ice, liquid, aerosol, insects, and so on.
 Then, geophysical products such as ice water content can be retrieved in further processing steps.</p>
 <p>CloudnetPy is a refactored fork of the currently operational (Matlab) processing code. It features
-several revised methods, open source code base, netCDF4 file format and extensive documentation.</p>
-<p>The Cloudnet processing scheme is eventually going to be part of the ACTRIS
+several revised methods, open source codebase, netCDF4 file format and extensive documentation.</p>
+<p>Cloudnet processing scheme is eventually going to be part of the ACTRIS
 reseach infrastructure which is moving into implementation phase in 2019. Operational
-Cloudnet processing will include more comprehensive calibration and fully implemented
-quality control / assurance procedures:</p>
+Cloudnet processing will have CloudnetPy in its core but additionally include a
+calibration database and comprehensive quality control / assurance procedures:</p>
 <div class="figure align-center" id="id2">
 <a class="reference internal image-reference" href="_images/CLU_workflow.png"><img alt="_images/CLU_workflow.png" src="_images/CLU_workflow.png" style="width: 650px;" /></a>
 <p class="caption"><span class="caption-text">Workflow of operational Cloudnet processing in ACTRIS.</span></p>
