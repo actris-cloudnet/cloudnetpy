@@ -439,12 +439,12 @@ def _get_retrieval_status(classification):
         status[below_melting == 1] = 2
 
     def _find_retrieval_in_warm_liquid():
-        in_warm_liquid = classification.drizzle * classification.warm_liquid
+        in_warm_liquid = (status == 0) * classification.warm_liquid
         status[in_warm_liquid == 1] = 4
 
     status = np.copy(classification.drizzle).astype(int)
     _find_retrieval_below_melting()
-    status[classification.would_be_drizzle] = 3
+    status[classification.would_be_drizzle == 1] = 3
     _find_retrieval_in_warm_liquid()
     status[classification.is_rain == 1, :] = 5
     return status
