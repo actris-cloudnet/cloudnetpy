@@ -177,7 +177,20 @@ def calc_dew_point_temperature(vapor_pressure):
 
 
 def get_attenuations(model, mwr, classification):
-    """Wrapper for attenuations."""
+    """Calculates attenuations due to atmospheric gases and liquid water.
+
+    Args:
+        model (Model): Model data.
+        mwr (Mwr): Mwr data.
+        classification (ClassificationResult): Classified atmospheric
+            scatterers.
+
+    Returns:
+        dict: Dict containing 'radar_gas_atten', 'radar_liquid_atten',
+            'liquid_atten_err', 'liquid_corrected' and 'liquid_uncorrected'
+            fields.
+
+    """
     gas = GasAttenuation(model, classification)
     liquid = LiquidAttenuation(model, classification, mwr)
     return {'radar_gas_atten': gas.atten,
