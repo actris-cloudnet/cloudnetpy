@@ -47,8 +47,8 @@
             
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
-<p>CloudnetPy is available from <a class="reference external" href="https://pypi.org/project/cloudnetpy/">PyPI</a>, the Python package index. It allows a pip-based
-installation. CloudnetPy requires Python 3.7 or newer.</p>
+<p>CloudnetPy is available from <a class="reference external" href="https://pypi.org/project/cloudnetpy/">PyPI</a>, the Python package index.
+CloudnetPy requires Python 3.7 or newer.</p>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>First, install prerequisite software (if you already haven’t):</p>
@@ -88,14 +88,22 @@ the signal-to-noise screened backscatter).</p>
 <div class="section" id="mwr-processing">
 <h2>MWR processing<a class="headerlink" href="#mwr-processing" title="Permalink to this headline">¶</a></h2>
 <p>HATPRO microwave
-radiometer processing is not yet part of CloudnetPy. However, with the 94
+radiometer processing is not yet part of CloudnetPy. However, with a 94
 GHz RPG cloud radar, a separate MWR instrument is not required (although it
 improves the data quality).</p>
 </div>
 <div class="section" id="model-data">
 <h2>Model data<a class="headerlink" href="#model-data" title="Permalink to this headline">¶</a></h2>
 <p>Model files needed in the next processing step can be downloaded
-from Cloudnet <a class="reference external" href="devcloudnet.fmi.fi/api/models">http API</a>.</p>
+from Cloudnet <a class="reference external" href="http://devcloudnet.fmi.fi/api/">http API</a>. Several models
+may be available depending on the site and date, see for example
+<a class="reference external" href="http://devcloudnet.fmi.fi/api/models/?site_code=mace-head&amp;date=20190303">this day</a>.
+Any model file can be used in the processing, but the recommended order is</p>
+<ol class="arabic simple">
+<li>ecmwf</li>
+<li>icon-iglo-12-23</li>
+<li>gdas1</li>
+</ol>
 </div>
 <div class="section" id="categorize-processing">
 <h2>Categorize processing<a class="headerlink" href="#categorize-processing" title="Permalink to this headline">¶</a></h2>
@@ -111,7 +119,7 @@ calibrated measurement files.</p>
 <span class="n">generate_categorize</span><span class="p">(</span><span class="n">input_files</span><span class="p">,</span> <span class="s1">&#39;categorize.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>With 94 GHz RPG cloud radar, the radar.nc file can be used for both ‘radar’ and ‘mwr’.</p>
+<p>With a 94 GHz RPG cloud radar, the radar.nc file can be used for both ‘radar’ and ‘mwr’.</p>
 </div>
 <div class="section" id="processing-products">
 <h2>Processing products<a class="headerlink" href="#processing-products" title="Permalink to this headline">¶</a></h2>
