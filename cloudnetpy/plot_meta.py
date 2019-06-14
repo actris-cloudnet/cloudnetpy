@@ -7,7 +7,8 @@ FIELDS = ('name',
           'ylabel',
           'plot_range',
           'plot_scale',
-          'plot_type')
+          'plot_type',
+          'remove')
 
 PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 
@@ -25,7 +26,7 @@ _DBZ = 'dBZ'
 
 _CLABEL = {
     'target_classification':
-        ("Clear sky",
+        ("Empty",
          "Cloud droplets only",
          "Drizzle or rain",
          "Drizzle/rain or cloud droplets",
@@ -41,10 +42,8 @@ _CLABEL = {
         ("Clear sky",
          "Lidar echo only",
          "Radar echo but uncorrected atten.",
-         "Good radar & lidar echos",
-         "No radar but unknown atten.",
-         "Good radar echo only",
-         "No radar but known atten.",
+         "Radar & lidar echos",
+         "Radar echo only",
          "Radar corrected for liquid atten.",
          "Radar ground clutter",
          "Lidar molecular scattering"),
@@ -77,24 +76,38 @@ _CLABEL = {
          "Rain present: no retrieval")
 }
 
+_COLORS = {
+    'green': "#3cb371", 'lightgreen': "#70EB5D", 'yellowgreen': "#C7FA3A",
+    'yellow': "#FFE744",
+    'orange': "#ffa500",
+    'red': "#F56845", 'shockred': "#E64A23",
+    'white': "#ffffff",
+    'lightblue': "#6CFFEC", 'blue': "#209FF3", 'skyblue': "#CDF5F6", 'darksky': "#76A9AB",
+    'darkpurple': "#464AB9", 'lightpurple': 0, 'purple': "#BF9AFF",
+    'darkgray': "#2f4f4f", 'lightgray': "#ECECEC", 'gray': "#d3d3d3",
+    'lightbrown': "#E8B492",
+    'lightsteel': "#E5E3EB", 'steelblue': "#4682b4"
+}
+
 _CBAR = {
     'target_classification':
-        ("#6CFFEC", "#209FF3", "#BF9AFF", "#E5E3EB", "#464AB9",
-         "#F9B644", "#DCF53F", "#CB9F81", "#FA6028", "#2f4f4f"),
+        (_COLORS['lightblue'], _COLORS['blue'], _COLORS['purple'], _COLORS['lightsteel'],
+         _COLORS['darkpurple'], _COLORS['orange'], _COLORS['yellowgreen'],
+         _COLORS['lightbrown'], _COLORS['shockred'], _COLORS['darkgray']),
     'detection_status':
-        ("#ffff00", "#ff4500", "#3cb371", "#778899", "#70EB5D",
-         "#d3d3d3", "#0582E1", "#B04112", "#ffa500"),
+        (_COLORS['yellow'], _COLORS['red'], _COLORS['green'],
+         _COLORS['lightgreen'], _COLORS['yellowgreen'], "#B04112", "#ffa500"),
     'iwc_retrieval_status':
-        ("#3cb371", "#ff4500", "#70EB5D", "#ffff00",
-         "#76A9AB", "#CDF5F6", "#d3d3d3"),
+        (_COLORS['green'], _COLORS['orange'], _COLORS['lightgreen'], _COLORS['yellow'],
+         _COLORS['darksky'], _COLORS['skyblue'], _COLORS['gray']),
     'lwc_retrieval_status':
-        ("#3cb371", "#70EB5D", "#E9E21A", "#ffa500",
-         "#ff4500", "#ECECEC"),
+        (_COLORS['green'], _COLORS['lightgreen'], _COLORS['yellow'], _COLORS['orange'],
+         _COLORS['red'], _COLORS['lightgray']),
     'drizzle_retrieval_status':
-        ("#3cb371", "#70EB5D", "#ff4500", "#ffa500",
-         "#ECECEC"),
+        (_COLORS['green'], _COLORS['lightgreen'], _COLORS['red'], _COLORS['orange'],
+         _COLORS['lightgray']),
     'bit':
-        ("#ffffff", "#4682b4")
+        (_COLORS['white'], _COLORS['steelblue'])
 }
 
 ATTRIBUTES = {
@@ -394,7 +407,8 @@ ATTRIBUTES = {
         name='Radar and lidar detection status',
         cbar=_CBAR['detection_status'],
         clabel=_CLABEL['detection_status'],
-        plot_type='segment'
+        plot_type='segment',
+        remove=[4, 6]
     ),
     'iwc': PlotMeta(
         name='Ice water content',

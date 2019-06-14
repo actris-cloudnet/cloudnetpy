@@ -183,11 +183,19 @@ def _plot_segment_data(ax, data, name, axes):
         axes (tuple): Time and height 1D arrays.
 
     """
+    def remove_segments(arr, values):
+        values.sort(reverse=True)
+        for v in values:
+            arr[arr == v] = ma.masked
+            arr[arr > v] = arr[arr > v] - 1
+        return arr
     variables = ATTRIBUTES[name]
     n_fields = len(variables.cbar)
-    print(np.unique(data))
     cmap = ListedColormap(variables.cbar)
+    if variables.remove:
+        data = remove_segments(data, variables.remove)
     data[data == 0] = ma.masked
+
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=n_fields - 0.5)
     pl.set_clim(vmin=0.5, vmax=n_fields + 0.5)
