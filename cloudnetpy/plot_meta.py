@@ -80,10 +80,11 @@ _COLORS = {
     'green': "#3cb371", 'lightgreen': "#70EB5D", 'yellowgreen': "#C7FA3A",
     'yellow': "#FFE744",
     'orange': "#ffa500",
+    'pink': "#FF00FF",
     'red': "#F56845", 'shockred': "#E64A23",
     'white': "#ffffff",
     'lightblue': "#6CFFEC", 'blue': "#209FF3", 'skyblue': "#CDF5F6", 'darksky': "#76A9AB",
-    'darkpurple': "#464AB9", 'lightpurple': 0, 'purple': "#BF9AFF",
+    'darkpurple': "#464AB9", 'lightpurple': "#6A5ACD", 'purple': "#BF9AFF",
     'darkgray': "#2f4f4f", 'lightgray': "#ECECEC", 'gray': "#d3d3d3",
     'lightbrown': "#E8B492",
     'lightsteel': "#E5E3EB", 'steelblue': "#4682b4"
@@ -96,7 +97,8 @@ _CBAR = {
          _COLORS['lightbrown'], _COLORS['shockred'], _COLORS['darkgray']),
     'detection_status':
         (_COLORS['yellow'], _COLORS['red'], _COLORS['green'],
-         _COLORS['lightgreen'], _COLORS['yellowgreen'], "#B04112", "#ffa500"),
+         _COLORS['lightgreen'], _COLORS['yellowgreen'],
+         _COLORS['lightpurple'], _COLORS['pink']),
     'iwc_retrieval_status':
         (_COLORS['green'], _COLORS['orange'], _COLORS['lightgreen'], _COLORS['yellow'],
          _COLORS['darksky'], _COLORS['skyblue'], _COLORS['gray']),
