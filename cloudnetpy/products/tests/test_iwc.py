@@ -4,11 +4,15 @@ import numpy as np
 import numpy.ma as ma
 import netCDF4
 from numpy import testing
+from tests.test import initialize_test_data
+
+test_data_path = initialize_test_data()
+
 
 # Test iwcSource class
 @pytest.fixture
 def iwcS():
-    fname = '/home/korpinen/Documents/ACTRIS/cloudnet_data/categorize_test_file_new.nc'
+    fname = test_data_path + '/test_data_categorize.nc'
     return IwcSource(fname)
 
 
@@ -74,7 +78,7 @@ def test_calc_error_in_uncorrected_ice(coeff, result):
 
 @pytest.fixture
 def iwc_data():
-    nc_file = '/home/korpinen/Documents/ACTRIS/cloudnetpy/test_data_iwc.nc'
+    nc_file = test_data_path + 'test_data_iwc.nc'
     data_file = netCDF4.Dataset(nc_file).variables['iwc'][:]
     return data_file[data_file == data_file.filled()] == ma.masked
 
