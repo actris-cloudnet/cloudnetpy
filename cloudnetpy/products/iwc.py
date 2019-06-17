@@ -45,7 +45,7 @@ class IwcSource(DataSource):
         self.spec_liq_atten = self._get_approximate_specific_liquid_atten()
         self.coeffs = self._get_iwc_coeffs()
         self.z_factor = self._get_z_factor()
-        self.temperature = self._get_subzero_temperatures(categorize_file)
+        self.temperature = self._get_temperature_field(categorize_file)
         self.mean_temperature = self._get_mean_temperature()
 
     def _get_z_factor(self):
@@ -77,15 +77,13 @@ class IwcSource(DataSource):
         return 4.5
 
     @staticmethod
-    def _get_subzero_temperatures(cat_file):
-        """Returns freezing temperatures in Celsius."""
+    def _get_temperature_field(cat_file):
+        """Returns interpolated temperatures in Celsius."""
         temperature = p_tools.interpolate_model(cat_file, 'temperature')
-        temperature = atmos.k2c(temperature)
-        temperature[temperature > 0] = ma.masked
-        return temperature
+        return atmos.k2c(temperature)
 
     def _get_mean_temperature(self):
-        """Returns mean subzero temperatures."""
+        """Returns mean temperature for each altitude."""
         return ma.mean(self.temperature, axis=0)
 
 
@@ -109,9 +107,10 @@ class _IceClassification(ProductClassification):
                 & ~self.category_bits['insect'])
 
     def _find_would_be_ice(self):
-        return (self.category_bits['falling']
-                & ~self.category_bits['cold']
-                & ~self.category_bits['insect'])
+        warm_falling = (self.category_bits['falling']
+                        & ~self.category_bits['cold']
+                        & ~self.category_bits['insect'])
+        return warm_falling | self.category_bits['melting']
 
     def _find_corrected_ice(self):
         return (self.is_ice
@@ -130,7 +129,8 @@ class _IceClassification(ProductClassification):
     def _find_cold_above_rain(self):
         is_cold = self.category_bits['cold']
         is_rain = utils.transpose(self.is_rain)
-        return (is_cold * is_rain) > 0
+        return (((is_cold * is_rain) > 0)
+                & ~self.category_bits['melting'])
 
 
 def _z_to_iwc(iwc_data, z_variable):
@@ -143,14 +143,15 @@ def _z_to_iwc(iwc_data, z_variable):
     temperature = _get_correct_temperature()
     z_scaled = iwc_data.getvar(z_variable) + iwc_data.z_factor
     coeffs = iwc_data.coeffs
-    return 10 ** (coeffs.ZT*z_scaled*temperature
-                  + coeffs.T*temperature
-                  + coeffs.Z*z_scaled
+    return 10 ** (coeffs.ZT * z_scaled * temperature
+                  + coeffs.T * temperature
+                  + coeffs.Z * z_scaled
                   + coeffs.c) * 0.001
 
 
 def _append_iwc_including_rain(iwc_data, ice_class):
     """Calculates ice water content (including ice above rain)."""
+
     iwc_including_rain = _z_to_iwc(iwc_data, 'Z')
     iwc_including_rain[~ice_class.is_ice] = ma.masked
     iwc_data.append_data(iwc_including_rain, 'iwc_inc_rain')

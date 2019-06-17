@@ -51,12 +51,12 @@ _CLABEL = {
     'iwc_retrieval_status':
         ("No ice",
          "Reliable retrieval",
-         "Unreliable: uncorrected attenuation",
-         "Retrieval with correction for liquid atten.",
-         "Ice detected only by the lidar",
-         "Ice above rain: no retrieval",
+         "Uncorrected liquid attenuation",
+         "Corrected liquid attenuation",
+         "Ice detected only by lidar",
+         "Ice above rain",
          "Clear sky above rain",
-         "Would be identified as ice if below freezing"),
+         "Temperature above freezing"),
 
     'lwc_retrieval_status':
         ("No liquid water",
@@ -77,17 +77,28 @@ _CLABEL = {
 }
 
 _COLORS = {
-    'green': "#3cb371", 'lightgreen': "#70EB5D", 'yellowgreen': "#C7FA3A",
+    'green': "#3cb371",
+    'lightgreen': "#70EB5D",
+    'yellowgreen': "#C7FA3A",
     'yellow': "#FFE744",
     'orange': "#ffa500",
     'pink': "#FF00FF",
-    'red': "#F56845", 'shockred': "#E64A23",
+    'red': "#F56845",
+    'shockred': "#E64A23",
     'white': "#ffffff",
-    'lightblue': "#6CFFEC", 'blue': "#209FF3", 'skyblue': "#CDF5F6", 'darksky': "#76A9AB",
-    'darkpurple': "#464AB9", 'lightpurple': "#6A5ACD", 'purple': "#BF9AFF",
-    'darkgray': "#2f4f4f", 'lightgray': "#ECECEC", 'gray': "#d3d3d3",
+    'lightblue': "#6CFFEC",
+    'blue': "#209FF3",
+    'skyblue': "#CDF5F6",
+    'darksky': "#76A9AB",
+    'darkpurple': "#464AB9",
+    'lightpurple': "#6A5ACD",
+    'purple': "#BF9AFF",
+    'darkgray': "#2f4f4f",
+    'lightgray': "#ECECEC",
+    'gray': "#d3d3d3",
     'lightbrown': "#E8B492",
-    'lightsteel': "#E5E3EB", 'steelblue': "#4682b4"
+    'lightsteel': "#E5E3EB",
+    'steelblue': "#4682b4"
 }
 
 _CBAR = {
