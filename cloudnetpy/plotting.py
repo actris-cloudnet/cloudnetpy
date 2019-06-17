@@ -183,38 +183,46 @@ def _plot_segment_data(ax, data, name, axes):
         axes (tuple): Time and height 1D arrays.
 
     """
-    def remove_segments(arr, values):
+    def _remove_segments(arr, values):
         values.sort(reverse=True)
         for v in values:
             arr[arr == v] = ma.masked
             arr[arr > v] = arr[arr > v] - 1
         return arr
 
-    def change_places_of_segments(arr, values):
+    def _change_places_of_segments(arr):
+        def _switch_elements_in_list(lst, v, add=-1):
+            new_lst = list(lst)
+            new_lst[v[0] + add], new_lst[v[1] + add] = \
+                new_lst[v[1] + add], new_lst[v[0] + add]
+            return new_lst
+
         storage = np.zeros(shape=arr.shape)
-        for v in values:
+        for v in variables.change:
             storage[arr == v[1]] = v[1]
             arr[arr == v[0]] = v[1]
             arr[storage == v[1]] = v[0]
-        return arr
+            clabel = _switch_elements_in_list(variables.clabel, v, add=0)
+            cbar = _switch_elements_in_list(variables.cbar, v)
+        return arr, cbar, clabel
 
     variables = ATTRIBUTES[name]
+    cbar = variables.cbar
+    clabel = variables.clabel
     if variables.remove:
-        data = remove_segments(data, variables.remove)
+        data = _remove_segments(data, variables.remove)
     if variables.change:
-        # Muokaa colorbar elementtien järjestys
-        # Muokkaa clabel elementtien järjestys
-        data = change_places_of_segments(data, variables.change)
+        data, cbar, clabel = _change_places_of_segments(data)
 
     n_fields = len(variables.cbar)
-    cmap = ListedColormap(variables.cbar)
+    cmap = ListedColormap(cbar)
     data[data == 0] = ma.masked
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=n_fields - 0.5)
     pl.set_clim(vmin=0.5, vmax=n_fields + 0.5)
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(n_fields + 1))
-    colorbar.ax.set_yticklabels(variables.clabel, fontsize=13)
+    colorbar.ax.set_yticklabels(clabel, fontsize=13)
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
