@@ -124,12 +124,12 @@ class _IceClassification(ProductClassification):
 
     def _find_ice_above_rain(self):
         is_rain = utils.transpose(self.is_rain)
-        return (self.is_ice * is_rain) > 0
+        return (self.is_ice * is_rain) == 1
 
     def _find_cold_above_rain(self):
         is_cold = self.category_bits['cold']
         is_rain = utils.transpose(self.is_rain)
-        return (((is_cold * is_rain) > 0)
+        return (((is_cold * is_rain) == 1)
                 & ~self.category_bits['melting'])
 
 
@@ -151,7 +151,6 @@ def _z_to_iwc(iwc_data, z_variable):
 
 def _append_iwc_including_rain(iwc_data, ice_class):
     """Calculates ice water content (including ice above rain)."""
-
     iwc_including_rain = _z_to_iwc(iwc_data, 'Z')
     iwc_including_rain[~ice_class.is_ice] = ma.masked
     iwc_data.append_data(iwc_including_rain, 'iwc_inc_rain')
@@ -188,13 +187,11 @@ def _append_iwc_error(iwc_data, ice_class):
 
 
 def _append_iwc_sensitivity(iwc_data):
-    """Calculates sensitivity of ice water content."""
     iwc_sensitivity = _z_to_iwc(iwc_data, 'Z_sensitivity')
     iwc_data.append_data(iwc_sensitivity, 'iwc_sensitivity')
 
 
 def _append_iwc_bias(iwc_data):
-    """Calculates bias of ice water content."""
     iwc_bias = iwc_data.getvar('Z_bias') * iwc_data.coeffs.Z * 10
     iwc_data.append_data(iwc_bias, 'iwc_bias')
 
