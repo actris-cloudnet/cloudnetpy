@@ -772,7 +772,33 @@ temperatures by modifying the psychrometric formula.</p>
 <dl class="function">
 <dt id="atmos.get_attenuations">
 <code class="descclassname">atmos.</code><code class="descname">get_attenuations</code><span class="sig-paren">(</span><em>model</em>, <em>mwr</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/atmos.html#get_attenuations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#atmos.get_attenuations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wrapper for attenuations.</p>
+<dd><p>Calculates attenuations due to atmospheric gases and liquid water.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model</strong> (<em>Model</em>) – Model data.</li>
+<li><strong>mwr</strong> (<em>Mwr</em>) – Mwr data.</li>
+<li><strong>classification</strong> (<em>ClassificationResult</em>) – Classified atmospheric
+scatterers.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>Dict containing ‘radar_gas_atten’, ‘radar_liquid_atten’,</dt>
+<dd><p class="first last">’liquid_atten_err’, ‘liquid_corrected’ and ‘liquid_uncorrected’
+fields.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="class">

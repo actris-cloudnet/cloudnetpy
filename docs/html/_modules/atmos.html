@@ -218,7 +218,20 @@
 
 
 <div class="viewcode-block" id="get_attenuations"><a class="viewcode-back" href="../api.html#atmos.get_attenuations">[docs]</a><span class="k">def</span> <span class="nf">get_attenuations</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mwr</span><span class="p">,</span> <span class="n">classification</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Wrapper for attenuations.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Calculates attenuations due to atmospheric gases and liquid water.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (Model): Model data.</span>
+<span class="sd">        mwr (Mwr): Mwr data.</span>
+<span class="sd">        classification (ClassificationResult): Classified atmospheric</span>
+<span class="sd">            scatterers.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Dict containing &#39;radar_gas_atten&#39;, &#39;radar_liquid_atten&#39;,</span>
+<span class="sd">            &#39;liquid_atten_err&#39;, &#39;liquid_corrected&#39; and &#39;liquid_uncorrected&#39;</span>
+<span class="sd">            fields.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">gas</span> <span class="o">=</span> <span class="n">GasAttenuation</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">)</span>
     <span class="n">liquid</span> <span class="o">=</span> <span class="n">LiquidAttenuation</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">,</span> <span class="n">mwr</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;radar_gas_atten&#39;</span><span class="p">:</span> <span class="n">gas</span><span class="o">.</span><span class="n">atten</span><span class="p">,</span>

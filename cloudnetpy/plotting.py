@@ -277,6 +277,7 @@ def _read_case_date(nc_file):
 
 def _add_subtitle(fig, case_date, site_name):
     """Adds subtitle into figure."""
+    site_name = site_name.replace('-', ' ')
     text = f"{site_name}, {case_date.strftime('%-d %b %Y')}"
     fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
                  verticalalignment='bottom', fontweight='bold')
