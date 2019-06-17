@@ -30,14 +30,14 @@ def main(site, plot_figures=True):
         print(f"Processing raw {output_id} file...")
         input_file = _input_file_name(input_id)
         output_file = _output_file_name(output_id)
-        fun(input_file, output_file, site_meta)
+        # fun(input_file, output_file, site_meta)
         return output_file
 
     def _process_categorize():
         print(f"Processing categorize file...")
         input_files = _get_categorize_input_files()
         output_file = _output_file_name('categorize')
-        categorize.generate_categorize(input_files, output_file)
+        # categorize.generate_categorize(input_files, output_file)
         return output_file
 
     def _process_product(product_name):
@@ -61,17 +61,17 @@ def main(site, plot_figures=True):
     def _plot_figures():
         print('Plotting...')
         plot.generate_figure(categorize_file,
-                             ['Z', 'Z_error', 'ldr', 'v', 'width'])
+                             ['Z', 'beta'])
         plot.generate_figure(_output_file_name('classification'),
                              ['target_classification', 'detection_status'])
         plot.generate_figure(_output_file_name('iwc'),
-                             ['iwc', 'iwc_error', 'iwc_retrieval_status'])
+                             ['iwc', 'iwc_retrieval_status'])
         plot.generate_figure(_output_file_name('lwc'),
-                             ['lwc', 'lwc_error', 'lwc_retrieval_status'],
+                             ['lwc', 'lwc_retrieval_status'],
                              max_y=6)
         plot.generate_figure(_output_file_name('drizzle'),
-                             ['Do', 'mu', 'S'],
-                             max_y=3)
+                             ['Do', 'Do_error'],
+                             max_y=2)
 
     date = '20181204'
     site_meta = _get_meta(site)

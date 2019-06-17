@@ -19,7 +19,7 @@ CloudnetPy is a refactored fork of the currently operational (Matlab) processing
 several revised methods, open source codebase, netCDF4 file format and extensive documentation.
 
 Cloudnet processing scheme is eventually going to be part of the ACTRIS
-reseach infrastructure which is moving into implementation phase in 2019. Operational
+research infrastructure which is moving into implementation phase in 2019. Operational
 Cloudnet processing will have CloudnetPy in its core but additionally include a
 calibration database and comprehensive quality control / assurance procedures:
 
