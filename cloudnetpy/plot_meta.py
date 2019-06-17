@@ -8,7 +8,8 @@ FIELDS = ('name',
           'plot_range',
           'plot_scale',
           'plot_type',
-          'remove')
+          'remove',
+          'change')
 
 PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 
@@ -419,6 +420,7 @@ ATTRIBUTES = {
         plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
+
     ),
     'iwc_inc_rain': PlotMeta(
         name='Ice water content (including rain)',
@@ -440,7 +442,8 @@ ATTRIBUTES = {
         name='Ice water content retrieval status',
         cbar=_CBAR['iwc_retrieval_status'],
         clabel=_CLABEL['iwc_retrieval_status'],
-        plot_type='segment'
+        plot_type='segment',
+        change=[(2, 3)]
     ),
     'lwc': PlotMeta(
         name='Liquid water content',

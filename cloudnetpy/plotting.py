@@ -189,13 +189,26 @@ def _plot_segment_data(ax, data, name, axes):
             arr[arr == v] = ma.masked
             arr[arr > v] = arr[arr > v] - 1
         return arr
+
+    def change_places_of_segments(arr, values):
+        storage = np.zeros(shape=arr.shape)
+        for v in values:
+            storage[arr == v[1]] = v[1]
+            arr[arr == v[0]] = v[1]
+            arr[storage == v[1]] = v[0]
+        return arr
+
     variables = ATTRIBUTES[name]
-    n_fields = len(variables.cbar)
-    cmap = ListedColormap(variables.cbar)
     if variables.remove:
         data = remove_segments(data, variables.remove)
-    data[data == 0] = ma.masked
+    if variables.change:
+        # Muokaa colorbar elementtien järjestys
+        # Muokkaa clabel elementtien järjestys
+        data = change_places_of_segments(data, variables.change)
 
+    n_fields = len(variables.cbar)
+    cmap = ListedColormap(variables.cbar)
+    data[data == 0] = ma.masked
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=n_fields - 0.5)
     pl.set_clim(vmin=0.5, vmax=n_fields + 0.5)
