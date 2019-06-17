@@ -56,10 +56,15 @@ the signal-to-noise screened backscatter).
 MWR processing
 --------------
 
-HATPRO microwave
-radiometer processing is not yet part of CloudnetPy. However, with a 94
-GHz RPG cloud radar, a separate MWR instrument is not required (although it
-improves the data quality).
+Processing of multi-channel HATPRO microwave radiometer data is not yet part of CloudnetPy.
+Thus, site operators need to run custom processing software to retrieve integrated liquid
+water path (LWP) from raw HATPRO measurements.
+
+However, with a 94 GHz RPG cloud radar, a separate MWR instrument is not necessarely
+required. RPG radars contain single MWR channel providing a rough estimate
+of LWP, which can be used in CloudnetPy. Nevertheless, it is always
+recommended to equip measurement site with a dedicated multi-channel
+radiometer if possible.
 
 Model data
 ----------
