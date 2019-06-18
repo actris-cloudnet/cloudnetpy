@@ -110,7 +110,7 @@ def _save_mira(mmclx_file, raw_radar, output_file):
     """Saves the MIRA radar file."""
     dims = {'time': len(raw_radar.time),
             'range': len(raw_radar.range)}
-    rootgrp = output.init_file(output_file, dims, raw_radar.data, zlib=True)
+    rootgrp = output.init_file(output_file, dims, raw_radar.data)
     fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg',
                        'NyquistVelocity')
     output.copy_variables(netCDF4.Dataset(mmclx_file), rootgrp, fields_from_raw)

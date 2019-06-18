@@ -516,8 +516,9 @@ def _append_data(ceilo, beta_variants):
 
 def _save_ceilo(ceilo, output_file, location):
     """Saves the ceilometer netcdf-file."""
-    dims = {'time': len(ceilo.time), 'range': len(ceilo.range)}
-    rootgrp = output.init_file(output_file, dims, ceilo.data, zlib=True)
+    dims = {'time': len(ceilo.time),
+            'range': len(ceilo.range)}
+    rootgrp = output.init_file(output_file, dims, ceilo.data)
     output.copy_variables(ceilo.dataset, rootgrp, ('wavelength',))
     rootgrp.title = f"Ceilometer file from {location}"
     rootgrp.year, rootgrp.month, rootgrp.day = ceilo.date

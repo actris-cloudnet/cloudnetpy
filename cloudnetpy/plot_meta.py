@@ -42,8 +42,8 @@ _CLABEL = {
         ("Clear sky",
          "Lidar echo only",
          "Radar echo but uncorrected atten.",
-         "Radar & lidar echos",
-         "Radar echo only",
+         "Good Radar & lidar echos",
+         "Good Radar echo only",
          "Radar corrected for liquid atten.",
          "Radar ground clutter",
          "Lidar molecular scattering"),
@@ -59,12 +59,10 @@ _CLABEL = {
          "Temperature above freezing"),
 
     'lwc_retrieval_status':
-        ("No liquid water",
+        ("Not used",
          "Reliable retrieval",
-         "Adiabatic retrieval: cloud top adjusted",
-         "Adiabatic retrieval: new cloud pixel",
-         "Unreliable lwp: no retrieval",
-         "Unreliable lwp/cloud boundaries: no retrieval",
+         "Base of top-adjusted cloud",
+         "New cloud pixel",
          "Rain present: no retrieval"),
 
     'drizzle_retrieval_status':
@@ -107,15 +105,14 @@ _CBAR = {
          _COLORS['darkpurple'], _COLORS['orange'], _COLORS['yellowgreen'],
          _COLORS['lightbrown'], _COLORS['shockred'], _COLORS['darkgray']),
     'detection_status':
-        (_COLORS['yellow'], _COLORS['red'], _COLORS['green'],
+        (_COLORS['yellow'], _COLORS['darkgray'], _COLORS['green'],
          _COLORS['lightgreen'], _COLORS['yellowgreen'],
          _COLORS['lightpurple'], _COLORS['pink']),
     'iwc_retrieval_status':
         (_COLORS['green'], _COLORS['orange'], _COLORS['lightgreen'], _COLORS['yellow'],
          _COLORS['darksky'], _COLORS['skyblue'], _COLORS['gray']),
     'lwc_retrieval_status':
-        (_COLORS['green'], _COLORS['lightgreen'], _COLORS['yellow'], _COLORS['orange'],
-         _COLORS['red'], _COLORS['lightgray']),
+        (_COLORS['green'], _COLORS['yellowgreen'], _COLORS['orange'], _COLORS['lightgray']),
     'drizzle_retrieval_status':
         (_COLORS['green'], _COLORS['lightgreen'], _COLORS['red'], _COLORS['orange'],
          _COLORS['lightgray']),
@@ -473,7 +470,7 @@ ATTRIBUTES = {
         'Liquid water content retrieval status',
         cbar=_CBAR['lwc_retrieval_status'],
         clabel=_CLABEL['lwc_retrieval_status'],
-        plot_type='segment'
+        plot_type='segment',
     ),
     'droplet': PlotMeta(
         'Droplet bit',
