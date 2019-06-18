@@ -183,45 +183,48 @@ def _plot_segment_data(ax, data, name, axes):
         axes (tuple): Time and height 1D arrays.
 
     """
-    def _remove_segments(arr, values):
+    def _remove_segments(arr, values, cbar, clabel):
+        def _remove_elements_from_list(lst, v):
+            del lst[v]
+            return lst
+
         values.sort(reverse=True)
         for v in values:
             arr[arr == v] = ma.masked
             arr[arr > v] = arr[arr > v] - 1
-        return arr
+            clabel = _remove_elements_from_list(clabel, v)
+            cbar = _remove_elements_from_list(cbar, v)
+        return arr, cbar, clabel
 
-    def _change_places_of_segments(arr):
-        def _switch_elements_in_list(lst, v, add=-1):
-            new_lst = list(lst)
-            new_lst[v[0] + add], new_lst[v[1] + add] = \
-                new_lst[v[1] + add], new_lst[v[0] + add]
-            return new_lst
+    def _change_places_of_segments(arr, cbar, clabel):
+        def _switch_elements_in_list(lst, v):
+            lst[v[0]], lst[v[1]] = \
+                lst[v[1]], lst[v[0]]
+            return lst
 
         storage = np.zeros(shape=arr.shape)
         for v in variables.change:
             storage[arr == v[1]] = v[1]
             arr[arr == v[0]] = v[1]
             arr[storage == v[1]] = v[0]
-            clabel = _switch_elements_in_list(variables.clabel, v, add=0)
-            cbar = _switch_elements_in_list(variables.cbar, v)
+            clabel = _switch_elements_in_list(clabel, v)
+            cbar = _switch_elements_in_list(cbar, v)
         return arr, cbar, clabel
 
     variables = ATTRIBUTES[name]
-    cbar = variables.cbar
-    clabel = variables.clabel
+    cbar = list(variables.cbar)
+    clabel = list(variables.clabel)
+    data, cbar, clabel = _remove_segments(data, [0], cbar, clabel)
     if variables.remove:
-        data = _remove_segments(data, variables.remove)
+        data, cbar, clabel = _remove_segments(data, variables.remove, cbar, clabel)
     if variables.change:
-        data, cbar, clabel = _change_places_of_segments(data)
+        data, cbar, clabel = _change_places_of_segments(data, cbar, clabel)
 
-    n_fields = len(variables.cbar)
     cmap = ListedColormap(cbar)
-    data[data == 0] = ma.masked
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
-                       vmax=n_fields - 0.5)
-    pl.set_clim(vmin=0.5, vmax=n_fields + 0.5)
+                       vmax=len(cbar) - 0.5)
     colorbar = _init_colorbar(pl, ax)
-    colorbar.set_ticks(np.arange(n_fields + 1))
+    colorbar.set_ticks(np.arange(len(clabel) + 1))
     colorbar.ax.set_yticklabels(clabel, fontsize=13)
     ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
