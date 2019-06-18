@@ -198,8 +198,7 @@ def _plot_segment_data(ax, data, name, axes):
 
     def _change_places_of_segments(arr, cbar, clabel):
         def _switch_elements_in_list(lst, v):
-            lst[v[0]], lst[v[1]] = \
-                lst[v[1]], lst[v[0]]
+            lst[v[0]], lst[v[1]] = lst[v[1]], lst[v[0]]
             return lst
 
         storage = np.zeros(shape=arr.shape)
