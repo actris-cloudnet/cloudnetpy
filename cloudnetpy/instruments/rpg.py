@@ -320,10 +320,13 @@ def _save_rpg(rpg, output_file):
     Notes:
 
     """
+
     dims = {'time': len(rpg.data['time'][:]),
             'range': len(rpg.data['range'][:]),
             'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}
-    rootgrp = output.init_file(output_file, dims, rpg.data, zlib=True)
+
+    rootgrp = output.init_file(output_file, dims, rpg.data)
+
     rootgrp.title = f"Radar file from {rpg.location}"
     rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
     rootgrp.location = rpg.location

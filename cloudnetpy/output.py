@@ -25,8 +25,9 @@ def update_attributes(cloudnet_variables, attributes):
 
 def save_product_file(identifier, obj, file_name, copy_from_cat=()):
     """Saves a standard Cloudnet product file."""
-    dims = {'time': len(obj.time), 'height': len(obj.variables['height'])}
-    root_group = init_file(file_name, dims, obj.data, zlib=True)
+    dimensions = {'time': len(obj.time),
+                  'height': len(obj.variables['height'])}
+    root_group = init_file(file_name, dimensions, obj.data)
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
     copy_variables(obj.dataset, root_group, vars_from_source)
     root_group.title = f"{identifier.capitalize()} file from {obj.dataset.location}"
@@ -45,17 +46,17 @@ def merge_history(root_group, file_type, *sources):
     root_group.history = f"{new_record}{old_history}"
 
 
-def init_file(file_name, dimensions, obs, zlib):
+def init_file(file_name, dimensions, obs):
     """Initializes a Cloudnet file for writing."""
     root_group = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     for key, dimension in dimensions.items():
         root_group.createDimension(key, dimension)
-    _write_vars2nc(root_group, obs, zlib)
+    _write_vars2nc(root_group, obs)
     _add_standard_global_attributes(root_group)
     return root_group
 
 
-def _write_vars2nc(rootgrp, cloudnet_variables, zlib):
+def _write_vars2nc(rootgrp, cloudnet_variables):
     """Iterates over Cloudnet instances and write to given rootgrp."""
 
     def _get_dimensions(array):
@@ -75,7 +76,7 @@ def _write_vars2nc(rootgrp, cloudnet_variables, zlib):
         obj = cloudnet_variables[key]
         size = _get_dimensions(obj.data)
         nc_variable = rootgrp.createVariable(obj.name, obj.data_type, size,
-                                             zlib=zlib)
+                                             zlib=True)
         nc_variable[:] = obj.data
         for attr in obj.fetch_attributes():
             setattr(nc_variable, attr, getattr(obj, attr))
