@@ -8,7 +8,8 @@ FIELDS = ('name',
           'plot_range',
           'plot_scale',
           'plot_type',
-          'remove')
+          'remove',
+          'change')
 
 PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 
@@ -26,7 +27,7 @@ _DBZ = 'dBZ'
 
 _CLABEL = {
     'target_classification':
-        ("Empty",
+        ("Clear sky",
          "Cloud droplets only",
          "Drizzle or rain",
          "Drizzle/rain or cloud droplets",
@@ -42,8 +43,10 @@ _CLABEL = {
         ("Clear sky",
          "Lidar echo only",
          "Radar echo but uncorrected atten.",
-         "Good Radar & lidar echos",
-         "Good Radar echo only",
+         "Good radar & lidar echos",
+         "No radar but unknown attenuation",
+         "Good radar echo only",
+         "No radar but known attenuation",
          "Radar corrected for liquid atten.",
          "Radar ground clutter",
          "Lidar molecular scattering"),
@@ -59,10 +62,12 @@ _CLABEL = {
          "Temperature above freezing"),
 
     'lwc_retrieval_status':
-        ("Not used",
+        ("No liquid water",
          "Reliable retrieval",
-         "Base of top-adjusted cloud",
-         "New cloud pixel",
+         "Adiabatic retrieval: cloud top adjusted",
+         "Adiabatic retrieval: new cloud pixel",
+         "Unreliable lwp: no retrieval",
+         "Unreliable lwp/cloud boundaries: no retrieval",
          "Rain present: no retrieval"),
 
     'drizzle_retrieval_status':
@@ -76,12 +81,13 @@ _CLABEL = {
 
 _COLORS = {
     'green': "#3cb371",
+    'darkgreen': '#253A24',
     'lightgreen': "#70EB5D",
     'yellowgreen': "#C7FA3A",
     'yellow': "#FFE744",
     'orange': "#ffa500",
     'pink': "#FF00FF",
-    'red': "#F56845",
+    'red': "#F57150", #F56845
     'shockred': "#E64A23",
     'white': "#ffffff",
     'lightblue': "#6CFFEC",
@@ -94,27 +100,28 @@ _COLORS = {
     'darkgray': "#2f4f4f",
     'lightgray': "#ECECEC",
     'gray': "#d3d3d3",
-    'lightbrown': "#E8B492",
+    'lightbrown': "#CEBC89",
     'lightsteel': "#E5E3EB",
     'steelblue': "#4682b4"
 }
 
 _CBAR = {
     'target_classification':
-        (_COLORS['lightblue'], _COLORS['blue'], _COLORS['purple'], _COLORS['lightsteel'],
+        (_COLORS['white'], _COLORS['lightblue'], _COLORS['blue'], _COLORS['purple'], _COLORS['lightsteel'],
          _COLORS['darkpurple'], _COLORS['orange'], _COLORS['yellowgreen'],
          _COLORS['lightbrown'], _COLORS['shockred'], _COLORS['darkgray']),
     'detection_status':
-        (_COLORS['yellow'], _COLORS['darkgray'], _COLORS['green'],
-         _COLORS['lightgreen'], _COLORS['yellowgreen'],
+        (_COLORS['white'], _COLORS['yellow'], _COLORS['darkgreen'], _COLORS['green'], _COLORS['darkgray'],
+         _COLORS['lightgreen'], _COLORS['gray'], _COLORS['yellowgreen'],
          _COLORS['lightpurple'], _COLORS['pink']),
     'iwc_retrieval_status':
-        (_COLORS['green'], _COLORS['orange'], _COLORS['lightgreen'], _COLORS['yellow'],
+        (_COLORS['white'], _COLORS['green'], _COLORS['orange'], _COLORS['lightgreen'], _COLORS['yellow'],
          _COLORS['darksky'], _COLORS['skyblue'], _COLORS['gray']),
     'lwc_retrieval_status':
-        (_COLORS['green'], _COLORS['yellowgreen'], _COLORS['orange'], _COLORS['lightgray']),
+        (_COLORS['white'], _COLORS['green'], _COLORS['lightgreen'], _COLORS['yellow'], _COLORS['orange'],
+         _COLORS['red'], _COLORS['lightgray']),
     'drizzle_retrieval_status':
-        (_COLORS['green'], _COLORS['lightgreen'], _COLORS['red'], _COLORS['orange'],
+        (_COLORS['white'], _COLORS['green'], _COLORS['lightgreen'], _COLORS['red'], _COLORS['orange'],
          _COLORS['lightgray']),
     'bit':
         (_COLORS['white'], _COLORS['steelblue'])
@@ -418,7 +425,8 @@ ATTRIBUTES = {
         cbar=_CBAR['detection_status'],
         clabel=_CLABEL['detection_status'],
         plot_type='segment',
-        remove=[4, 6]
+        remove=[3, 5],
+        change=[(1, 2), (2, 3), (3, 4)]
     ),
     'iwc': PlotMeta(
         name='Ice water content',
@@ -427,6 +435,7 @@ ATTRIBUTES = {
         plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
+
     ),
     'iwc_inc_rain': PlotMeta(
         name='Ice water content (including rain)',
@@ -448,7 +457,8 @@ ATTRIBUTES = {
         name='Ice water content retrieval status',
         cbar=_CBAR['iwc_retrieval_status'],
         clabel=_CLABEL['iwc_retrieval_status'],
-        plot_type='segment'
+        plot_type='segment',
+        change=[(1, 2), (2, 3)]
     ),
     'lwc': PlotMeta(
         name='Liquid water content',
@@ -470,7 +480,7 @@ ATTRIBUTES = {
         'Liquid water content retrieval status',
         cbar=_CBAR['lwc_retrieval_status'],
         clabel=_CLABEL['lwc_retrieval_status'],
-        plot_type='segment',
+        plot_type='segment'
     ),
     'droplet': PlotMeta(
         'Droplet bit',
