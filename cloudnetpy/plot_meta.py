@@ -24,6 +24,8 @@ _KGM2S1 = 'kg m$^{-2}$ s$^{-1}$'
 _DB = 'dB'
 _DBZ = 'dBZ'
 
+# Labels (and corresponding data) starting with an underscore are NOT shown:
+
 _CLABEL = {
     'target_classification':
         ("_Clear sky",
@@ -51,7 +53,7 @@ _CLABEL = {
          "_Lidar molecular scattering"),
 
     'iwc_retrieval_status':
-        ("No ice",
+        ("_No ice",
          "Reliable retrieval",
          "Uncorrected liquid attenuation",
          "Corrected liquid attenuation",
@@ -61,7 +63,7 @@ _CLABEL = {
          "Temperature above freezing"),
 
     'lwc_retrieval_status':
-        ("No liquid water",
+        ("_No liquid water",
          "Reliable retrieval",
          "Adiabatic retrieval: cloud top adjusted",
          "Adiabatic retrieval: new cloud pixel",
@@ -70,7 +72,7 @@ _CLABEL = {
          "Rain present: no retrieval"),
 
     'drizzle_retrieval_status':
-        ("No drizzle",
+        ("_No drizzle",
          "Reliable retrieval",
          "Retrieval below melting layer",
          "Drizzle present but no retrieval possible",
@@ -86,7 +88,7 @@ _COLORS = {
     'yellow': "#FFE744",
     'orange': "#ffa500",
     'pink': "#FF00FF",
-    'red': "#F57150", #F56845
+    'red': "#F57150",
     'shockred': "#E64A23",
     'white': "#ffffff",
     'lightblue': "#6CFFEC",
