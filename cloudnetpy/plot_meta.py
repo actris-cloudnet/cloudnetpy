@@ -24,62 +24,6 @@ _KGM2S1 = 'kg m$^{-2}$ s$^{-1}$'
 _DB = 'dB'
 _DBZ = 'dBZ'
 
-# Labels (and corresponding data) starting with an underscore are NOT shown:
-
-_CLABEL = {
-    'target_classification':
-        ("_Clear sky",
-         "Cloud droplets only",
-         "Drizzle or rain",
-         "Drizzle/rain or cloud droplets",
-         "Ice",
-         "Ice & supercooled droplets",
-         "Melting ice",
-         "Melting ice & cloud droplets",
-         "Aerosols",
-         "Insects",
-         "_Aerosols & Insects"),
-
-    'detection_status':
-        ("_Clear sky",
-         "Lidar echo only",
-         "Radar echo but uncorrected atten.",
-         "Good radar & lidar echos",
-         "_No radar but unknown attenuation",
-         "Good radar echo only",
-         "_No radar but known attenuation",
-         "Radar corrected for liquid atten.",
-         "Radar ground clutter",
-         "_Lidar molecular scattering"),
-
-    'iwc_retrieval_status':
-        ("_No ice",
-         "Reliable retrieval",
-         "Uncorrected liquid attenuation",
-         "Corrected liquid attenuation",
-         "Ice detected only by lidar",
-         "Ice above rain",
-         "Clear sky above rain",
-         "Temperature above freezing"),
-
-    'lwc_retrieval_status':
-        ("_No liquid water",
-         "Reliable retrieval",
-         "Adiabatic retrieval: cloud top adjusted",
-         "Adiabatic retrieval: new cloud pixel",
-         "Unreliable lwp: no retrieval",
-         "Unreliable lwp/cloud boundaries: no retrieval",
-         "Rain present: no retrieval"),
-
-    'drizzle_retrieval_status':
-        ("_No drizzle",
-         "Reliable retrieval",
-         "Retrieval below melting layer",
-         "Drizzle present but no retrieval possible",
-         "Warm drizzle-free liquid water cloud",
-         "Rain present: no retrieval")
-}
-
 _COLORS = {
     'green': "#3cb371",
     'darkgreen': '#253A24',
@@ -106,26 +50,67 @@ _COLORS = {
     'steelblue': "#4682b4"
 }
 
-_CBAR = {
+# Labels (and corresponding data) starting with an underscore are NOT shown:
+
+_CLABEL = {
+
     'target_classification':
-        (_COLORS['white'], _COLORS['lightblue'], _COLORS['blue'], _COLORS['purple'], _COLORS['lightsteel'],
-         _COLORS['darkpurple'], _COLORS['orange'], _COLORS['yellowgreen'],
-         _COLORS['lightbrown'], _COLORS['shockred'], _COLORS['pink']),
+        (("_Clear sky", _COLORS['white']),
+         ("Cloud droplets only", _COLORS['lightblue']),
+         ("Drizzle or rain", _COLORS['blue']),
+         ("Drizzle/rain or cloud droplets", _COLORS['purple']),
+         ("Ice", _COLORS['lightsteel']),
+         ("Ice & supercooled droplets",  _COLORS['darkpurple']),
+         ("Melting ice", _COLORS['orange']),
+         ("Melting ice & cloud droplets", _COLORS['yellowgreen']),
+         ("Aerosols", _COLORS['lightbrown']),
+         ("Insects", _COLORS['shockred']),
+         ("_Aerosols & Insects", _COLORS['pink'])),
+
     'detection_status':
-        (_COLORS['white'], _COLORS['yellow'], _COLORS['darkgreen'], _COLORS['green'], _COLORS['darkgray'],
-         _COLORS['lightgreen'], _COLORS['gray'], _COLORS['yellowgreen'],
-         _COLORS['lightpurple'], _COLORS['pink']),
+        (("_Clear sky", _COLORS['white']),
+         ("Lidar echo only", _COLORS['yellow']),
+         ("Radar echo but uncorrected atten.", _COLORS['darkgreen']),
+         ("Good radar & lidar echos", _COLORS['green']),
+         ("_No radar but unknown attenuation", _COLORS['darkgray']),
+         ("Good radar echo only", _COLORS['lightgreen']),
+         ("_No radar but known attenuation", _COLORS['gray']),
+         ("Radar corrected for liquid atten.", _COLORS['yellowgreen']),
+         ("Radar ground clutter", _COLORS['lightpurple']),
+         ("_Lidar molecular scattering", _COLORS['pink'])),
+
     'iwc_retrieval_status':
-        (_COLORS['white'], _COLORS['green'], _COLORS['orange'], _COLORS['lightgreen'], _COLORS['yellow'],
-         _COLORS['darksky'], _COLORS['skyblue'], _COLORS['gray']),
+        (("_No ice", _COLORS['white']),
+         ("Reliable retrieval", _COLORS['green']),
+         ("Uncorrected liquid attenuation", _COLORS['orange']),
+         ("Corrected liquid attenuation", _COLORS['lightgreen']),
+         ("Ice detected only by lidar", _COLORS['yellow']),
+         ("Ice above rain", _COLORS['darksky']),
+         ("Clear sky above rain", _COLORS['skyblue']),
+         ("Temperature above freezing", _COLORS['gray'])),
+
     'lwc_retrieval_status':
-        (_COLORS['white'], _COLORS['green'], _COLORS['lightgreen'], _COLORS['yellow'], _COLORS['orange'],
-         _COLORS['red'], _COLORS['lightgray']),
+        (("_No liquid water", _COLORS['white']),
+         ("Reliable retrieval", _COLORS['green']),
+         ("Adiabatic retrieval: cloud top adjusted", _COLORS['lightgreen']),
+         ("Adiabatic retrieval: new cloud pixel", _COLORS['yellow']),
+         ("Unreliable lwp: no retrieval", _COLORS['orange']),
+         ("Unreliable lwp/cloud boundaries: no retrieval", _COLORS['red']),
+         ("Rain present: no retrieval", _COLORS['lightgray'])),
+
     'drizzle_retrieval_status':
-        (_COLORS['white'], _COLORS['green'], _COLORS['lightgreen'], _COLORS['red'], _COLORS['orange'],
-         _COLORS['lightgray']),
+        (("_No drizzle", _COLORS['white']),
+         ("Reliable retrieval", _COLORS['green']),
+         ("Retrieval below melting layer", _COLORS['lightgreen']),
+         ("Drizzle present but no retrieval possible", _COLORS['red']),
+         ("Warm drizzle-free liquid water cloud", _COLORS['orange']),
+         ("Rain present: no retrieval", _COLORS['lightgray']))
+}
+
+_CBAR = {
     'bit':
-        (_COLORS['white'], _COLORS['steelblue'])
+        (_COLORS['white'],
+         _COLORS['steelblue'])
 }
 
 ATTRIBUTES = {
@@ -235,7 +220,6 @@ ATTRIBUTES = {
     ),
     'drizzle_retrieval_status': PlotMeta(
         'Drizzle parameter retrieval status',
-        cbar=_CBAR['drizzle_retrieval_status'],
         clabel=_CLABEL['drizzle_retrieval_status'],
         plot_type='segment'
     ),
@@ -417,13 +401,11 @@ ATTRIBUTES = {
     ),
     'target_classification': PlotMeta(
         name='Target classification',
-        cbar=_CBAR['target_classification'],
         clabel=_CLABEL['target_classification'],
         plot_type='segment'
     ),
     'detection_status': PlotMeta(
         name='Radar and lidar detection status',
-        cbar=_CBAR['detection_status'],
         clabel=_CLABEL['detection_status'],
         plot_type='segment',
         swap_labels=[(1, 2), (2, 3), (3, 4)]
@@ -454,7 +436,6 @@ ATTRIBUTES = {
     ),
     'iwc_retrieval_status': PlotMeta(
         name='Ice water content retrieval status',
-        cbar=_CBAR['iwc_retrieval_status'],
         clabel=_CLABEL['iwc_retrieval_status'],
         plot_type='segment',
         swap_labels=[(1, 2), (2, 3)]
@@ -477,7 +458,6 @@ ATTRIBUTES = {
     ),
     'lwc_retrieval_status': PlotMeta(
         'Liquid water content retrieval status',
-        cbar=_CBAR['lwc_retrieval_status'],
         clabel=_CLABEL['lwc_retrieval_status'],
         plot_type='segment'
     ),

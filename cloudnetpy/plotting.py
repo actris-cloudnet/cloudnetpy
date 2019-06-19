@@ -186,8 +186,8 @@ def _plot_segment_data(ax, data, name, axes):
 
     """
     def _hide_segments(data_in):
-        labels = list(variables.clabel)
-        colors = list(variables.cbar)
+        labels = [x[0] for x in variables.clabel]
+        colors = [x[1] for x in variables.clabel]
         segments_to_hide = np.char.startswith(labels, '_')
         indices = np.where(segments_to_hide)[0]
         for ind in np.flip(indices):
