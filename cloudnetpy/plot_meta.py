@@ -8,7 +8,7 @@ FIELDS = ('name',
           'plot_range',
           'plot_scale',
           'plot_type',
-          'change')
+          'swap_labels')
 
 PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 
@@ -424,7 +424,7 @@ ATTRIBUTES = {
         cbar=_CBAR['detection_status'],
         clabel=_CLABEL['detection_status'],
         plot_type='segment',
-        change=[(1, 2), (2, 3), (3, 4)]
+        swap_labels=[(1, 2), (2, 3), (3, 4)]
     ),
     'iwc': PlotMeta(
         name='Ice water content',
@@ -455,7 +455,7 @@ ATTRIBUTES = {
         cbar=_CBAR['iwc_retrieval_status'],
         clabel=_CLABEL['iwc_retrieval_status'],
         plot_type='segment',
-        change=[(1, 2), (2, 3)]
+        swap_labels=[(1, 2), (2, 3)]
     ),
     'lwc': PlotMeta(
         name='Liquid water content',

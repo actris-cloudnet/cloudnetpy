@@ -196,25 +196,25 @@ def _plot_segment_data(ax, data, name, axes):
             data_in[data_in > ind] -= 1
         return data_in, colors, labels
 
-    def _switch_segments():
-        def _switch_data(arr):
+    def _swap_segments():
+        def _swap_data(arr):
             ind_a = np.where(data == a)
             ind_b = np.where(data == b)
             arr[ind_a], arr[ind_b] = b, a
 
-        def _switch_elements(lst):
+        def _swap_elements(lst):
             lst[a], lst[b] = lst[b], lst[a]
 
-        for a, b in variables.change:
-            _switch_data(data)
-            _switch_elements(cbar)
-            _switch_elements(clabel)
+        for a, b in variables.swap_labels:
+            _swap_data(data)
+            _swap_elements(cbar)
+            _swap_elements(clabel)
         return data, cbar, clabel
 
     variables = ATTRIBUTES[name]
     data, cbar, clabel = _hide_segments(data)
-    if variables.change:
-        data, cbar, clabel = _switch_segments()
+    if variables.swap_labels:
+        data, cbar, clabel = _swap_segments()
     cmap = ListedColormap(cbar)
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=len(cbar) - 0.5)
