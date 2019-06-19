@@ -8,7 +8,6 @@ FIELDS = ('name',
           'plot_range',
           'plot_scale',
           'plot_type',
-          'remove',
           'change')
 
 PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
@@ -27,7 +26,7 @@ _DBZ = 'dBZ'
 
 _CLABEL = {
     'target_classification':
-        ("Clear sky",
+        ("_Clear sky",
          "Cloud droplets only",
          "Drizzle or rain",
          "Drizzle/rain or cloud droplets",
@@ -37,19 +36,19 @@ _CLABEL = {
          "Melting ice & cloud droplets",
          "Aerosols",
          "Insects",
-         "Aerosols & insects"),
+         "_Aerosols & Insects"),
 
     'detection_status':
-        ("Clear sky",
+        ("_Clear sky",
          "Lidar echo only",
          "Radar echo but uncorrected atten.",
          "Good radar & lidar echos",
-         "No radar but unknown attenuation",
+         "_No radar but unknown attenuation",
          "Good radar echo only",
-         "No radar but known attenuation",
+         "_No radar but known attenuation",
          "Radar corrected for liquid atten.",
          "Radar ground clutter",
-         "Lidar molecular scattering"),
+         "_Lidar molecular scattering"),
 
     'iwc_retrieval_status':
         ("No ice",
@@ -109,7 +108,7 @@ _CBAR = {
     'target_classification':
         (_COLORS['white'], _COLORS['lightblue'], _COLORS['blue'], _COLORS['purple'], _COLORS['lightsteel'],
          _COLORS['darkpurple'], _COLORS['orange'], _COLORS['yellowgreen'],
-         _COLORS['lightbrown'], _COLORS['shockred'], _COLORS['darkgray']),
+         _COLORS['lightbrown'], _COLORS['shockred'], _COLORS['pink']),
     'detection_status':
         (_COLORS['white'], _COLORS['yellow'], _COLORS['darkgreen'], _COLORS['green'], _COLORS['darkgray'],
          _COLORS['lightgreen'], _COLORS['gray'], _COLORS['yellowgreen'],
@@ -425,7 +424,6 @@ ATTRIBUTES = {
         cbar=_CBAR['detection_status'],
         clabel=_CLABEL['detection_status'],
         plot_type='segment',
-        remove=[3, 5],
         change=[(1, 2), (2, 3), (3, 4)]
     ),
     'iwc': PlotMeta(
@@ -435,7 +433,6 @@ ATTRIBUTES = {
         plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
-
     ),
     'iwc_inc_rain': PlotMeta(
         name='Ice water content (including rain)',

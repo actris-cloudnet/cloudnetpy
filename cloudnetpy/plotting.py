@@ -67,6 +67,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     if show:
         plt.show()
 
+    plt.close()
+
 
 def _find_valid_fields(nc_file, names):
     """Returns valid field names and corresponding data."""
@@ -183,42 +185,36 @@ def _plot_segment_data(ax, data, name, axes):
         axes (tuple): Time and height 1D arrays.
 
     """
-    def _remove_segments(arr, values, cbar, clabel):
-        def _remove_elements_from_list(lst, v):
-            del lst[v]
-            return lst
+    def _hide_segments(data_in):
+        labels = list(variables.clabel)
+        colors = list(variables.cbar)
+        segments_to_hide = np.char.startswith(labels, '_')
+        indices = np.where(segments_to_hide)[0]
+        for ind in np.flip(indices):
+            del labels[ind], colors[ind]
+            data_in[data_in == ind] = ma.masked
+            data_in[data_in > ind] -= 1
+        return data_in, colors, labels
 
-        values.sort(reverse=True)
-        for v in values:
-            arr[arr == v] = ma.masked
-            arr[arr > v] = arr[arr > v] - 1
-            clabel = _remove_elements_from_list(clabel, v)
-            cbar = _remove_elements_from_list(cbar, v)
-        return arr, cbar, clabel
+    def _switch_segments():
+        def _switch_data(arr):
+            ind_a = np.where(data == a)
+            ind_b = np.where(data == b)
+            arr[ind_a], arr[ind_b] = b, a
 
-    def _change_places_of_segments(arr, cbar, clabel):
-        def _switch_elements_in_list(lst, v):
-            lst[v[0]], lst[v[1]] = lst[v[1]], lst[v[0]]
-            return lst
+        def _switch_elements(lst):
+            lst[a], lst[b] = lst[b], lst[a]
 
-        storage = np.zeros(shape=arr.shape)
-        for v in variables.change:
-            storage[arr == v[1]] = v[1]
-            arr[arr == v[0]] = v[1]
-            arr[storage == v[1]] = v[0]
-            clabel = _switch_elements_in_list(clabel, v)
-            cbar = _switch_elements_in_list(cbar, v)
-        return arr, cbar, clabel
+        for a, b in variables.change:
+            _switch_data(data)
+            _switch_elements(cbar)
+            _switch_elements(clabel)
+        return data, cbar, clabel
 
     variables = ATTRIBUTES[name]
-    cbar = list(variables.cbar)
-    clabel = list(variables.clabel)
-    data, cbar, clabel = _remove_segments(data, [0], cbar, clabel)
-    if variables.remove:
-        data, cbar, clabel = _remove_segments(data, variables.remove, cbar, clabel)
+    data, cbar, clabel = _hide_segments(data)
     if variables.change:
-        data, cbar, clabel = _change_places_of_segments(data, cbar, clabel)
-
+        data, cbar, clabel = _switch_segments()
     cmap = ListedColormap(cbar)
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=len(cbar) - 0.5)
