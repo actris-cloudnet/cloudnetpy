@@ -66,7 +66,44 @@ def main(year, months=(1, 12), days=(1, 31)):
         print('Date: ', dvec)
         for processing_type in ('radar', 'lidar', 'categorize'):
             _run_processing(processing_type, dvec)
+        for product in ('classification', 'iwc-Z-T-method',
+                        'lwc-scaled-adiabatic', 'drizzle'):
+            _process_product(product, dvec)
+
     print('')
+
+
+def _process_product(product, dvec):
+    print(f"Processing {product}..")
+    categorize_file = _find_categorize_file(dvec)
+    if not categorize_file:
+        raise RuntimeError(f"Failed to process {product}. Categorize file is missing.")
+    output_file = _build_product_name(product, dvec)
+    product_prefix = product.split('-')[0]
+    module = importlib.import_module(f"cloudnetpy.products.{product_prefix}")
+    if _is_good_to_process('products', output_file):
+        getattr(module, f"generate_{product_prefix}")(categorize_file, output_file)
+    image_name = _make_image_name(output_file)
+    if _is_good_to_plot('products', image_name):
+        fields, max_y = _get_product_fields_in_plot(product_prefix)
+        plotting.generate_figure(output_file, fields, image_name=image_name,
+                                 show=False, max_y=max_y)
+
+
+def _get_product_fields_in_plot(product, max_y=12):
+    if product == 'classification':
+        fields = ['target_classification', 'detection_status']
+    elif product == 'iwc':
+        fields = ['iwc', 'iwc_error', 'iwc_retrieval_status']
+    elif product == 'lwc':
+        fields = ['lwc', 'lwc_error', 'lwc_retrieval_status']
+        max_y = 8
+    elif product == 'drizzle':
+        fields = ['Do', 'mu', 'S']
+        max_y = 4
+    else:
+        fields = []
+    return fields, max_y
 
 
 def _run_processing(process_type, dvec):
@@ -97,7 +134,7 @@ def _process_radar(dvec):
         if _is_good_to_process(instrument, output_file):
             mira.mira2nc(input_file, output_file, SITE)
         image_name = _make_image_name(output_file)
-        if _plot_quicklooks(instrument, image_name):
+        if _is_good_to_plot(instrument, image_name):
             try:
                 plotting.generate_figure(output_file, ['Z'], image_name=image_name)
             except KeyError:
@@ -114,38 +151,43 @@ def _process_lidar(dvec):
     if _is_good_to_process(instrument, output_file):
         ceilo.ceilo2nc(input_file, output_file, SITE)
     image_name = _make_image_name(output_file)
-    if _plot_quicklooks(instrument, image_name):
+    if _is_good_to_plot(instrument, image_name):
         try:
             plotting.generate_figure(output_file, ['beta'], image_name=image_name)
         except KeyError:
             print('Lidar plots not yet supported.')
 
 
-def _build_calibrated_file_name(instrument, dvec):
-    output_path = _find_calibrated_path(instrument, dvec)
-    return _get_nc_name(output_path, dvec, INSTRUMENTS[instrument])
-
-
 def _process_categorize(dvec):
     output_file = _build_categorize_file_name(dvec)
     if _is_good_to_process('categorize', output_file):
         input_files = {
-            'radar': _find_calibrated_file(dvec, 'radar'),
-            'lidar': _find_calibrated_file(dvec, 'lidar'),
+            'radar': _find_calibrated_file('radar', dvec),
+            'lidar': _find_calibrated_file('lidar', dvec),
             'mwr': _find_mwr_file(dvec),
-            'model': _find_calibrated_file(dvec, 'model')}
+            'model': _find_calibrated_file('model', dvec)}
         if not all(input_files.values()):
             raise RuntimeError('Input files missing. Cannot process categorize file.')
         cat.generate_categorize(input_files, output_file)
         image_name = _make_image_name(output_file)
-        if _plot_quicklooks('categorize', image_name):
+        if _is_good_to_plot('categorize', image_name):
             plotting.generate_figure(output_file, ['Z', 'v', 'ldr', 'width', 'beta', 'lwp'],
                                      image_name=image_name, show=False)
 
 
+def _build_calibrated_file_name(instrument, dvec):
+    output_path = _find_calibrated_path(instrument, dvec)
+    return _get_nc_name(output_path, INSTRUMENTS[instrument], dvec)
+
+
 def _build_categorize_file_name(dvec):
     output_path = _find_categorize_path(dvec)
-    return _get_nc_name(output_path, dvec, 'categorize')
+    return _get_nc_name(output_path, 'categorize', dvec)
+
+
+def _build_product_name(product, dvec):
+    output_path = _find_product_path(product, dvec)
+    return _get_nc_name(output_path, product, dvec)
 
 
 def _is_good_to_process(process_type, output_file):
@@ -155,7 +197,7 @@ def _is_good_to_process(process_type, output_file):
     return process_always or process_if_missing
 
 
-def _plot_quicklooks(process_type, image_name):
+def _is_good_to_plot(process_type, image_name):
     is_file = os.path.isfile(image_name)
     plot_always = QUICKLOOK_LEVEL[process_type] == 2
     process_if_missing = QUICKLOOK_LEVEL[process_type] == 1 and not is_file
@@ -169,14 +211,31 @@ def _find_mwr_file(dvec):
     return _find_file(file_path, f"*{dvec[2:]}*LWP*")
 
 
-def _find_calibrated_file(dvec, instrument):
-    file_path = _find_calibrated_path(instrument, dvec)
-    return _find_file(file_path, f"*{dvec}*")
-
-
-def _find_uncalibrated_file(dvec, instrument):
+def _find_uncalibrated_file(instrument, dvec):
     file_path = _find_uncalibrated_path(instrument, dvec)
     return _find_file(file_path, f"*{dvec}*")
+
+
+def _find_calibrated_file(instrument, dvec):
+    file_path = _find_calibrated_path(instrument, dvec)
+    return _find_file(file_path, f"*{dvec}*.nc")
+
+
+def _find_categorize_file(dvec):
+    file_path = _find_categorize_path(dvec)
+    return _find_file(file_path, f"*{dvec}*.nc")
+
+
+def _find_product_file(product, dvec):
+    file_path = _find_product_path(product, dvec)
+    return _find_file(file_path, f"*{dvec}*.nc")
+
+
+def _find_uncalibrated_path(instrument, dvec):
+    year = _get_year(dvec)
+    path_all = _get_uncalibrated_paths(INSTRUMENTS)
+    path_instrument = getattr(path_all, instrument)
+    return f"{path_instrument}{year}/"
 
 
 def _find_calibrated_path(instrument, dvec):
@@ -189,19 +248,20 @@ def _find_calibrated_path(instrument, dvec):
     return output_path
 
 
-def _find_uncalibrated_path(instrument, dvec):
-    year = _get_year(dvec)
-    path_all = _get_uncalibrated_paths(INSTRUMENTS)
-    path_instrument = getattr(path_all, instrument)
-    return f"{path_instrument}{year}/"
-
-
 def _find_categorize_path(dvec):
     year = _get_year(dvec)
     categorize_path = f"{SITE_ROOT}/processed/categorize/{year}/"
     if not os.path.exists(categorize_path):
         os.makedirs(categorize_path)
     return categorize_path
+
+
+def _find_product_path(product, dvec):
+    year = _get_year(dvec)
+    product_path = f"{SITE_ROOT}/products/{product}/{year}/"
+    if not os.path.exists(product_path):
+        os.makedirs(product_path)
+    return product_path
 
 
 def gz_to_nc(gz_file):
@@ -229,7 +289,7 @@ def _get_calibrated_paths(instruments):
                  model=f"{prefix}{instruments['model']}/")
 
 
-def _get_nc_name(file_path, dvec, prefix):
+def _get_nc_name(file_path, prefix, dvec):
     return f"{file_path}{dvec}_{SITE['dir_name']}_{prefix}.nc"
 
 
