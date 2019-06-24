@@ -438,7 +438,7 @@ ATTRIBUTES = {
         name='Ice water content retrieval status',
         clabel=_CLABEL['iwc_retrieval_status'],
         plot_type='segment',
-        swap_labels=[(1, 2), (2, 3)]
+        swap_labels=[(1, 2)]
     ),
     'lwc': PlotMeta(
         name='Liquid water content',
