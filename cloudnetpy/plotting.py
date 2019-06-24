@@ -16,7 +16,7 @@ IDENTIFIER = ""
 
 
 def generate_figure(nc_file, field_names, show=True, save_path=None,
-                    max_y=12, dpi=200):
+                    max_y=12, dpi=200, image_name=None):
     """Generates a Cloudnet figure.
 
     Args:
@@ -28,6 +28,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         max_y (int, optional): Upper limit in the plots (km). Default is 12.
         dpi (int, optional): Figure quality (if saved). Higher value means
             more pixels, i.e., better image quality. Default is 200.
+        image_name (str, optional): Name (and full path) of the output image.
+            Overrides the *save_path* option. Default is None.
 
     Examples:
         >>> from cloudnetpy.plotting import generate_figure
@@ -61,7 +63,9 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     case_date, site_name = _read_case_date(nc_file)
     _add_subtitle(fig, case_date, site_name)
 
-    if save_path:
+    if image_name:
+        plt.savefig(image_name, bbox_inches='tight', dpi=dpi)
+    elif save_path:
         file_name = _create_save_name(save_path, case_date, max_y, valid_names)
         plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:

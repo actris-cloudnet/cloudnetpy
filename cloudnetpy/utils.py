@@ -7,6 +7,7 @@ import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
+import requests
 
 
 SECONDS_PER_HOUR = 3600
@@ -430,3 +431,28 @@ def del_dict_keys(dict_in, keys):
         if key in dict_in:
             del dict_in[key]
     return dict_in
+
+
+def get_site_information(site, *args):
+    """Reads site information from Cloudnet http API.
+
+    Args:
+        site (str): Site identifier, e.g. 'mace-head' or 'lindenberg'.
+        args: Variable number of field names to be queried.
+            Possible field names are 'latitude', 'longitude', 'altitude'
+            and 'site_name'.
+
+    Returns:
+        tuple: Tuple of return values.
+
+    Examples:
+        >>> get_site_information('mace-head', 'latitude', 'longitude')
+
+    """
+    fields = ','.join(args)
+    query = f"http://devcloudnet.fmi.fi/api/sites/?site={site}&fields={fields}"
+    try:
+        result = requests.get(query).json().values()
+    except:
+        result = tuple([0]*len(args))
+    return result

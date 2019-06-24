@@ -1,0 +1,273 @@
+"""Testing script for Cloudnet processing.
+
+Creates similar directory structure and file names as the
+Matlab processing environment.
+
+"""
+import os
+import fnmatch
+import gzip
+import shutil
+import importlib
+from collections import namedtuple
+from datetime import timedelta, date
+from cloudnetpy import categorize as cat
+from cloudnetpy.instruments import mira
+from cloudnetpy.instruments import ceilo
+from cloudnetpy import plotting
+import cloudnetpy.products as products
+
+SITE = {
+    'name': 'Mace Head',
+    'dir_name': 'mace-head',
+    'altitude': 16
+}
+
+INSTRUMENTS = {
+    'radar': 'mira',
+    'lidar': 'chm15k',
+    'mwr': 'hatpro',
+    'model': 'ecmwf'
+}
+
+PERIOD = {
+    'year': 2018,
+    'months': (1, 12),
+    'days': (1, 31)
+}
+
+# 0=no, 1=if missing, 2=yes
+PROCESS_LEVEL = {
+    'radar': 2,
+    'lidar': 2,
+    'categorize': 2,
+    'products': 2
+}
+
+# 0=no, 1=if missing, 2=yes
+QUICKLOOK_LEVEL = {
+    'radar': 0,
+    'lidar': 0,
+    'categorize': 2,
+    'products': 2
+}
+
+ROOT_PATH = '/media/tukiains/3b48ca75-37ff-42ba-ab71-b78f39cd9a79/cloudnetPy_test_data/data/'
+
+SITE_ROOT = f"{ROOT_PATH}{SITE['dir_name']}/"
+
+
+def main(year, months=(1, 12), days=(1, 31)):
+    """ Main Cloudnet processing function."""
+    start_date = date(year, months[0], days[0])
+    end_date = date(year, months[-1], days[-1])
+    for single_date in _date_range(start_date, end_date):
+        dvec = single_date.strftime("%Y%m%d")
+        print('Date: ', dvec)
+        for processing_type in ('radar', 'lidar', 'categorize'):
+            _run_processing(processing_type, dvec)
+    print('')
+
+
+def _run_processing(process_type, dvec):
+    print(f"Processing {process_type}")
+    module = importlib.import_module(__name__)
+    try:
+        getattr(module, f"_process_{process_type}")(dvec)
+    except RuntimeError as error:
+        print(error)
+
+
+def _process_radar(dvec):
+    def _find_uncalibrated_mira_file():
+        input_path = _find_uncalibrated_path(instrument, dvec)
+        file = _find_file(input_path, f"*{dvec}*nc")
+        if not file:
+            file = _find_file(input_path, f"*{dvec}*.gz")
+            if file:
+                file = gz_to_nc(file)
+        return file
+
+    instrument = 'radar'
+    if INSTRUMENTS[instrument] == 'mira':
+        input_file = _find_uncalibrated_mira_file()
+        if not input_file:
+            raise RuntimeError('Abort: Missing uncalibrated mira file.')
+        output_file = _build_calibrated_file_name(instrument, dvec)
+        if _is_good_to_process(instrument, output_file):
+            mira.mira2nc(input_file, output_file, SITE)
+        image_name = _make_image_name(output_file)
+        if _plot_quicklooks(instrument, image_name):
+            try:
+                plotting.generate_figure(output_file, ['Z'], image_name=image_name)
+            except KeyError:
+                print('Radar plots not yet supported.')
+
+
+def _process_lidar(dvec):
+    instrument = 'lidar'
+    input_path = _find_uncalibrated_path(instrument, dvec)
+    input_file = _find_file(input_path, f"*{dvec}*")
+    if not input_file:
+        raise RuntimeError('Abort: Missing uncalibrated lidar file.')
+    output_file = _build_calibrated_file_name(instrument, dvec)
+    if _is_good_to_process(instrument, output_file):
+        ceilo.ceilo2nc(input_file, output_file, SITE)
+    image_name = _make_image_name(output_file)
+    if _plot_quicklooks(instrument, image_name):
+        try:
+            plotting.generate_figure(output_file, ['beta'], image_name=image_name)
+        except KeyError:
+            print('Lidar plots not yet supported.')
+
+
+def _build_calibrated_file_name(instrument, dvec):
+    output_path = _find_calibrated_path(instrument, dvec)
+    return _get_nc_name(output_path, dvec, INSTRUMENTS[instrument])
+
+
+def _process_categorize(dvec):
+    output_file = _build_categorize_file_name(dvec)
+    if _is_good_to_process('categorize', output_file):
+        input_files = {
+            'radar': _find_calibrated_file(dvec, 'radar'),
+            'lidar': _find_calibrated_file(dvec, 'lidar'),
+            'mwr': _find_mwr_file(dvec),
+            'model': _find_calibrated_file(dvec, 'model')}
+        if not all(input_files.values()):
+            raise RuntimeError('Input files missing. Cannot process categorize file.')
+        cat.generate_categorize(input_files, output_file)
+        image_name = _make_image_name(output_file)
+        if _plot_quicklooks('categorize', image_name):
+            plotting.generate_figure(output_file, ['Z', 'v', 'ldr', 'width', 'beta', 'lwp'],
+                                     image_name=image_name, show=False)
+
+
+def _build_categorize_file_name(dvec):
+    output_path = _find_categorize_path(dvec)
+    return _get_nc_name(output_path, dvec, 'categorize')
+
+
+def _is_good_to_process(process_type, output_file):
+    is_file = os.path.isfile(output_file)
+    process_always = PROCESS_LEVEL[process_type] == 2
+    process_if_missing = PROCESS_LEVEL[process_type] == 1 and not is_file
+    return process_always or process_if_missing
+
+
+def _plot_quicklooks(process_type, image_name):
+    is_file = os.path.isfile(image_name)
+    plot_always = QUICKLOOK_LEVEL[process_type] == 2
+    process_if_missing = QUICKLOOK_LEVEL[process_type] == 1 and not is_file
+    return plot_always or process_if_missing
+
+
+def _find_mwr_file(dvec):
+    _, month, day = _split_date(dvec)
+    prefix = _find_uncalibrated_path('mwr', dvec)
+    file_path = f"{prefix}{month}/{day}/"
+    return _find_file(file_path, f"*{dvec[2:]}*LWP*")
+
+
+def _find_calibrated_file(dvec, instrument):
+    file_path = _find_calibrated_path(instrument, dvec)
+    return _find_file(file_path, f"*{dvec}*")
+
+
+def _find_uncalibrated_file(dvec, instrument):
+    file_path = _find_uncalibrated_path(instrument, dvec)
+    return _find_file(file_path, f"*{dvec}*")
+
+
+def _find_calibrated_path(instrument, dvec):
+    year = _get_year(dvec)
+    path_all = _get_calibrated_paths(INSTRUMENTS)
+    path_instrument = getattr(path_all, instrument)
+    output_path = f"{path_instrument}{year}/"
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    return output_path
+
+
+def _find_uncalibrated_path(instrument, dvec):
+    year = _get_year(dvec)
+    path_all = _get_uncalibrated_paths(INSTRUMENTS)
+    path_instrument = getattr(path_all, instrument)
+    return f"{path_instrument}{year}/"
+
+
+def _find_categorize_path(dvec):
+    year = _get_year(dvec)
+    categorize_path = f"{SITE_ROOT}/processed/categorize/{year}/"
+    if not os.path.exists(categorize_path):
+        os.makedirs(categorize_path)
+    return categorize_path
+
+
+def gz_to_nc(gz_file):
+    """Unzips *.gz file to *.nc file."""
+    nc_file = gz_file.replace('gz', 'nc')
+    with gzip.open(gz_file, 'rb') as file_in:
+        with open(nc_file, 'wb') as file_out:
+            shutil.copyfileobj(file_in, file_out)
+    return nc_file
+
+
+def _get_uncalibrated_paths(instruments):
+    Paths = namedtuple('Paths', ['radar', 'lidar', 'mwr'])
+    prefix = f"{SITE_ROOT}uncalibrated/"
+    return Paths(radar=f"{prefix}{instruments['radar']}/",
+                 lidar=f"{prefix}{instruments['lidar']}/",
+                 mwr=f"{prefix}{instruments['mwr']}/")
+
+
+def _get_calibrated_paths(instruments):
+    Paths = namedtuple('Paths', ['radar', 'lidar', 'model'])
+    prefix = f"{SITE_ROOT}calibrated/"
+    return Paths(radar=f"{prefix}{instruments['radar']}/",
+                 lidar=f"{prefix}{instruments['lidar']}/",
+                 model=f"{prefix}{instruments['model']}/")
+
+
+def _get_nc_name(file_path, dvec, prefix):
+    return f"{file_path}{dvec}_{SITE['dir_name']}_{prefix}.nc"
+
+
+def _make_image_name(output_file):
+    return output_file.replace('.nc', '.png')
+
+
+def _find_file(file_path, wildcard):
+    files = os.listdir(file_path)
+    for file in files:
+        if fnmatch.fnmatch(file, wildcard):
+            return file_path + file
+    return None
+
+
+def _date_range(start_date, end_date):
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(n)
+
+
+def _split_date(dvec):
+    year = _get_year(dvec)
+    month = _get_month(dvec)
+    day = _get_day(dvec)
+    return year, month, day
+
+
+def _get_year(dvec):
+    return str(dvec[:4])
+
+
+def _get_month(dvec):
+    return str(dvec[4:6])
+
+
+def _get_day(dvec):
+    return str(dvec[6:8])
+
+
+if __name__ == "__main__":
+    main(PERIOD['year'])

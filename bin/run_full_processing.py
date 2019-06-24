@@ -30,14 +30,14 @@ def main(site, plot_figures=True):
         print(f"Processing raw {output_id} file...")
         input_file = _input_file_name(input_id)
         output_file = _output_file_name(output_id)
-        # fun(input_file, output_file, site_meta)
+        fun(input_file, output_file, site_meta)
         return output_file
 
     def _process_categorize():
         print(f"Processing categorize file...")
         input_files = _get_categorize_input_files()
         output_file = _output_file_name('categorize')
-        # categorize.generate_categorize(input_files, output_file)
+        categorize.generate_categorize(input_files, output_file)
         return output_file
 
     def _process_product(product_name):
@@ -63,7 +63,8 @@ def main(site, plot_figures=True):
         plot.generate_figure(categorize_file,
                              ['Z', 'beta'])
         plot.generate_figure(_output_file_name('classification'),
-                             ['target_classification', 'detection_status'])
+                             ['target_classification', 'detection_status'],
+                             max_y=8, save_path=FILE_PATH)
         plot.generate_figure(_output_file_name('iwc'),
                              ['iwc', 'iwc_retrieval_status'])
         plot.generate_figure(_output_file_name('lwc'),
@@ -73,7 +74,8 @@ def main(site, plot_figures=True):
                              ['Do', 'Do_error'],
                              max_y=2)
 
-    date = '20181204'
+    # date = '20181204'
+    date = '20190616'
     site_meta = _get_meta(site)
 
     radar_file = _process_raw('mira_raw', 'radar', mira.mira2nc)

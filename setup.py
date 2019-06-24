@@ -22,7 +22,8 @@ setup(
     license=license,
     packages=find_packages(exclude=('tests', 'docs', 'bin')),
     python_requires='>=3.7',
-    install_requires=['numpy>=1.16', 'scipy>=1.2', 'netCDF4>=1.4.2', 'matplotlib>=3.0.2'],
+    install_requires=['numpy>=1.16', 'scipy>=1.2', 'netCDF4>=1.4.2',
+                      'matplotlib>=3.0.2', 'requests>=2.21'],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3.7",
