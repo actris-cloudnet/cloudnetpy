@@ -63,16 +63,12 @@ def get_detection_status(categorize_bits):
 
 COMMENTS = {
     'target_classification':
-        ('This variable is a simplification of the bitfield "category_bits" in the\n'
-         'target categorization and data quality dataset. It provides the 9 main\n'
-         'atmospheric target classifications that can be distinguished by radar and\n'
-         'lidar. The classes are defined in the definition attributes.'),
+        ('This variable provides the main atmospheric target classifications\n'
+         'that can be distinguished by radar and lidar.'),
 
     'detection_status':
-        ('This variable is a simplification of the bitfield "quality_bits" in the\n'
-         'target categorization and data quality dataset. It reports on the\n'
-         'reliability of the radar and lidar data used to perform the classification.\n'
-         'The classes are defined in the definition attributes.'),
+        ('This variable reports on the reliability of the radar and lidar data\n'
+         'used to perform the classification.')
 }
 
 DEFINITIONS = {
