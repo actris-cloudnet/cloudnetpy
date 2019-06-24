@@ -228,51 +228,41 @@ COMMENTS = {
          'being uncorrected for.'),
 
     'iwc_bias':
-        ('This variable was calculated from the instance of cloud in the cloud mask\n'
-         'variable and provides cloud base top for a maximum of 1 cloud layers.'),
+        ('This variable is an estimate of the possible systematic error in \n'
+         'ice water content due to the calibration error of the radar \n'
+         'reflectivity factor from which it was calculated.'),
 
     'iwc_sensitivity':
-        ('This variable is an estimate of the minimum detectable ice water content\n'
-         'as a function of height.'),
+        ('This variable is an estimate of the minimum detectable ice water\n'
+         'content as a function of height.'),
 
     'iwc_retrieval_status':
-        ('This variable describes whether a retrieval was performed for each pixel,\n'
-         'and its associated quality, in the form of 8 different classes.\n'
-         'The classes are defined in the definition and long_definition attributes.\n'
-         'The most reliable retrieval is that without any rain or liquid\n'
-         'cloud beneath, indicated by the value 1, then the next most reliable is\n'
-         'when liquid water attenuation has been corrected using a microwave\n'
-         'radiometer, indicated by the value 3, while a value 2 indicates that\n'
-         'liquid water cloud was present but microwave radiometer data were not\n'
-         'available so no correction was performed. No attempt is made to retrieve\n'
-         'ice water content when rain is present below the ice; this is indicated\n'
-         'by the value 5.'),
+        ('This variable describes whether a retrieval was performed\n'
+         'for each pixel, and its associated quality.'),
 
     'iwc_inc_rain':
-        ('This variable is the same as iwc, \n'
-         'except that values of iwc in ice above rain have been included. \n'
-         'This variable contains values \n'
-         'which have been severely affected by attenuation \n'
-         'and should only be used when the effect of attenuation is being studied.'),
+        ('This variable is the same as iwc but it also contains iwc values\n'
+         'above rain. The iwc values above rain have been severely affected\n'
+         'by attenuation and should be used when the effect of attenuation\n'
+         'is being studied.'),
 }
 
 DEFINITIONS = {
     'iwc_retrieval_status':
     ('\n'
-     'Value 0: No ice present\n'
-     'Value 1: Reliable retrieval\n'
-     'Value 2: Unreliable retrieval due to uncorrected attenuation from liquid\n'
-     '         water below the ice (no liquid water path measurement available).\n'
-     'Value 3: Retrieval performed but radar corrected for liquid attenuation\n'
-     '         using radiometer liquid water path which is not always accurate.\n'
-     'Value 4: Ice detected only by the lidar.\n'
-     'Value 5: Ice detected by radar but rain below so no retrieval performed\n'
-     '         due to very uncertain attenuation.\n'
-     'Value 6: Clear sky above rain, wet-bulb temperature less than 0degC: if rain\n'
-     '         attenuation were strong then ice could be present but undetected.\n'
+     'Value 0: No ice present.\n'
+     'Value 1: Reliable retrieval.\n'
+     'Value 2: Unreliable retrieval: Uncorrected liquid attenuation due to\n'
+     '         missing liquid water path data.'
+     'Value 3: Unreliable retrieval: Radar corrected using liquid water path\n'
+     '         data which can be inaccurate.'
+     'Value 4: No retrieval: Ice detected only by the lidar.\n'
+     'Value 5: No retrieval: Rain below the detected ice leads to large\n'
+     '         uncertainties.\n'
+     'Value 6: Clear sky above rain and wet-bulb temperature less than 0degC: '
+     '         if rain attenuation is strong, ice could be present but undetected.\n'
      'Value 7: Drizzle or rain that would have been classified as ice if the\n'
-     '         wet-bulb temperature were less than 0degC: may be ice if\n'
-     '         temperature is in error.')
+     '         wet-bulb temperature were less than 0degC.')
 }
 
 IWC_ATTRIBUTES = {
