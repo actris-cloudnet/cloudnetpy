@@ -15,7 +15,6 @@ from cloudnetpy import categorize as cat
 from cloudnetpy.instruments import mira
 from cloudnetpy.instruments import ceilo
 from cloudnetpy import plotting
-import cloudnetpy.products as products
 
 SITE = {
     'name': 'Mace Head',
@@ -33,23 +32,21 @@ INSTRUMENTS = {
 PERIOD = {
     'year': 2018,
     'months': (1, 12),
-    'days': (1, 31)
+    'days': (1, 30)
 }
 
 # 0=no, 1=if missing, 2=yes
 PROCESS_LEVEL = {
-    'radar': 2,
-    'lidar': 2,
-    'categorize': 2,
-    'products': 2
+    'radar': 1,
+    'lidar': 1,
+    'categorize': 1,
+    'products': 1
 }
 
 # 0=no, 1=if missing, 2=yes
 QUICKLOOK_LEVEL = {
-    'radar': 0,
-    'lidar': 0,
-    'categorize': 2,
-    'products': 2
+    'categorize': 1,
+    'products': 1
 }
 
 ROOT_PATH = '/media/tukiains/3b48ca75-37ff-42ba-ab71-b78f39cd9a79/cloudnetPy_test_data/data/'
@@ -59,8 +56,18 @@ SITE_ROOT = f"{ROOT_PATH}{SITE['dir_name']}/"
 
 def main(year, months=(1, 12), days=(1, 31)):
     """ Main Cloudnet processing function."""
-    start_date = date(year, months[0], days[0])
-    end_date = date(year, months[-1], days[-1])
+
+    def _get_range(arr):
+        if isinstance(arr, int):
+            return arr, arr
+        return arr
+
+    month_start, month_end = _get_range(months)
+    day_start, day_end = _get_range(days)
+
+    start_date = date(year, month_start, day_start)
+    end_date = date(year, month_end, day_end + 1)
+
     for single_date in _date_range(start_date, end_date):
         dvec = single_date.strftime("%Y%m%d")
         print('Date: ', dvec)
@@ -68,15 +75,84 @@ def main(year, months=(1, 12), days=(1, 31)):
             _run_processing(processing_type, dvec)
         for product in ('classification', 'iwc-Z-T-method',
                         'lwc-scaled-adiabatic', 'drizzle'):
-            _process_product(product, dvec)
-
+            try:
+                _process_product(product, dvec)
+            except RuntimeError as error:
+                print(error)
     print('')
+
+
+def _run_processing(process_type, dvec):
+    print(f"Processing {process_type}")
+    module = importlib.import_module(__name__)
+    try:
+        getattr(module, f"_process_{process_type}")(dvec)
+    except RuntimeError as error:
+        print(error)
+
+
+def _process_radar(dvec):
+    def _find_uncalibrated_mira_file():
+        input_path = _find_uncalibrated_path(instrument, dvec)
+        try:
+            file = _find_file(input_path, f"*{dvec}*nc")
+        except FileNotFoundError:
+            try:
+                file = _find_file(input_path, f"*{dvec}*.gz")
+            except FileNotFoundError as error:
+                raise error
+            file = gz_to_nc(file)
+        return file
+
+    instrument = 'radar'
+    if INSTRUMENTS[instrument] == 'mira':
+        try:
+            input_file = _find_uncalibrated_mira_file()
+        except FileNotFoundError:
+            raise RuntimeError('Abort: Missing uncalibrated radar file.')
+        output_file = _build_calibrated_file_name(instrument, dvec)
+        if _is_good_to_process(instrument, output_file):
+            mira.mira2nc(input_file, output_file, SITE)
+
+
+def _process_lidar(dvec):
+    instrument = 'lidar'
+    input_path = _find_uncalibrated_path(instrument, dvec)
+    try:
+        input_file = _find_file(input_path, f"*{dvec}*")
+    except FileNotFoundError:
+        raise RuntimeError('Abort: Missing uncalibrated lidar file.')
+    output_file = _build_calibrated_file_name(instrument, dvec)
+    if _is_good_to_process(instrument, output_file):
+        ceilo.ceilo2nc(input_file, output_file, SITE)
+
+
+def _process_categorize(dvec):
+    output_file = _build_categorize_file_name(dvec)
+    if _is_good_to_process('categorize', output_file):
+        try:
+            input_files = {
+                'radar': _find_calibrated_file('radar', dvec),
+                'lidar': _find_calibrated_file('lidar', dvec),
+                'mwr': _find_mwr_file(dvec),
+                'model': _find_calibrated_file('model', dvec)}
+        except FileNotFoundError:
+            raise RuntimeError('Input files missing. Cannot process categorize file.')
+        try:
+            cat.generate_categorize(input_files, output_file)
+        except RuntimeError as error:
+            raise error
+        image_name = _make_image_name(output_file)
+        if _is_good_to_plot('categorize', image_name):
+            plotting.generate_figure(output_file, ['Z', 'v', 'ldr', 'width', 'beta', 'lwp'],
+                                     image_name=image_name, show=False)
 
 
 def _process_product(product, dvec):
     print(f"Processing {product}..")
-    categorize_file = _find_categorize_file(dvec)
-    if not categorize_file:
+    try:
+        categorize_file = _find_categorize_file(dvec)
+    except FileNotFoundError:
         raise RuntimeError(f"Failed to process {product}. Categorize file is missing.")
     output_file = _build_product_name(product, dvec)
     product_prefix = product.split('-')[0]
@@ -104,75 +180,6 @@ def _get_product_fields_in_plot(product, max_y=12):
     else:
         fields = []
     return fields, max_y
-
-
-def _run_processing(process_type, dvec):
-    print(f"Processing {process_type}")
-    module = importlib.import_module(__name__)
-    try:
-        getattr(module, f"_process_{process_type}")(dvec)
-    except RuntimeError as error:
-        print(error)
-
-
-def _process_radar(dvec):
-    def _find_uncalibrated_mira_file():
-        input_path = _find_uncalibrated_path(instrument, dvec)
-        file = _find_file(input_path, f"*{dvec}*nc")
-        if not file:
-            file = _find_file(input_path, f"*{dvec}*.gz")
-            if file:
-                file = gz_to_nc(file)
-        return file
-
-    instrument = 'radar'
-    if INSTRUMENTS[instrument] == 'mira':
-        input_file = _find_uncalibrated_mira_file()
-        if not input_file:
-            raise RuntimeError('Abort: Missing uncalibrated mira file.')
-        output_file = _build_calibrated_file_name(instrument, dvec)
-        if _is_good_to_process(instrument, output_file):
-            mira.mira2nc(input_file, output_file, SITE)
-        image_name = _make_image_name(output_file)
-        if _is_good_to_plot(instrument, image_name):
-            try:
-                plotting.generate_figure(output_file, ['Z'], image_name=image_name)
-            except KeyError:
-                print('Radar plots not yet supported.')
-
-
-def _process_lidar(dvec):
-    instrument = 'lidar'
-    input_path = _find_uncalibrated_path(instrument, dvec)
-    input_file = _find_file(input_path, f"*{dvec}*")
-    if not input_file:
-        raise RuntimeError('Abort: Missing uncalibrated lidar file.')
-    output_file = _build_calibrated_file_name(instrument, dvec)
-    if _is_good_to_process(instrument, output_file):
-        ceilo.ceilo2nc(input_file, output_file, SITE)
-    image_name = _make_image_name(output_file)
-    if _is_good_to_plot(instrument, image_name):
-        try:
-            plotting.generate_figure(output_file, ['beta'], image_name=image_name)
-        except KeyError:
-            print('Lidar plots not yet supported.')
-
-
-def _process_categorize(dvec):
-    output_file = _build_categorize_file_name(dvec)
-    if _is_good_to_process('categorize', output_file):
-        input_files = {
-            'radar': _find_calibrated_file('radar', dvec),
-            'lidar': _find_calibrated_file('lidar', dvec),
-            'mwr': _find_mwr_file(dvec),
-            'model': _find_calibrated_file('model', dvec)}
-        if not all(input_files.values()):
-            raise RuntimeError('Input files missing. Cannot process categorize file.')
-        cat.generate_categorize(input_files, output_file)
-        image_name = _make_image_name(output_file)
-        if _is_good_to_plot('categorize', image_name):
-            plotting.generate_figure(output_file, ['Z', 'v', 'ldr', 'width', 'beta', 'lwp'],
-                                     image_name=image_name, show=False)
 
 
 def _build_calibrated_file_name(instrument, dvec):
@@ -302,7 +309,7 @@ def _find_file(file_path, wildcard):
     for file in files:
         if fnmatch.fnmatch(file, wildcard):
             return file_path + file
-    return None
+    raise FileNotFoundError
 
 
 def _date_range(start_date, end_date):
@@ -330,4 +337,4 @@ def _get_day(dvec):
 
 
 if __name__ == "__main__":
-    main(PERIOD['year'])
+    main(*PERIOD.values())

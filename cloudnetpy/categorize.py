@@ -483,7 +483,10 @@ class Model(DataSource):
 
     def _get_model_heights(self, alt_site):
         """Returns model heights for each time step."""
-        return self.km2m(self.variables['height']) + alt_site
+        model_heights = self.variables['height']
+        if ma.count_masked(model_heights[:] > 0):
+            raise RuntimeError('Masked values in the data file! Aborting..')
+        return self.km2m(model_heights) + alt_site
 
     def _get_mean_height(self):
         return np.mean(np.array(self.model_heights), axis=0)
