@@ -27,6 +27,7 @@ def generate_lwc(categorize_file, output_file):
     lwc_source = LwcSource(categorize_file)
     lwc_obj = Lwc(lwc_source)
     lwc_obj.adjust_clouds_to_match_lwp()
+    lwc_obj.calc_lwc_error()
     lwc_obj.screen_rain()
     _append_data(lwc_source, lwc_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
@@ -64,21 +65,20 @@ class Lwc:
         self.lwc_adiabatic = self._init_lwc_adiabatic()
         self.lwc = self._adiabatic_lwc_to_lwc()
         self.status = self._init_status()
-        self.lwc_error = self._calc_lwc_error()
+        self.lwc_error = None
 
-    def _calc_lwc_error(self):
+    def calc_lwc_error(self):
         """Estimates error in liquid water content.
 
         TODO: Check the error calculation.
         """
-        lwc_error = np.zeros_like(self.lwc)
+        self.lwc_error = np.zeros_like(self.lwc)
         lwp_relative_error = self.lwc_source.lwp_error / self.lwc_source.lwp
         ind = ma.where(self.lwc)
         lwc_gradient = utils.l2norm(*np.gradient(self.lwc))
         combined_error = utils.l2norm(lwc_gradient, utils.transpose(lwp_relative_error))
-        lwc_error[ind] = combined_error[ind]
-        lwc_error[lwc_error == 0] = ma.masked
-        return lwc_error
+        self.lwc_error[ind] = combined_error[ind]
+        self.lwc_error[self.lwc_error == 0] = ma.masked
 
     def _get_echo(self):
         quality_bits = self.lwc_source.categorize_bits.quality_bits
