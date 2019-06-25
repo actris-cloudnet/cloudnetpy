@@ -79,26 +79,26 @@ class CloudnetArray:
         Velocity needs to be averaged in polar coordinates due to folding.
 
         """
-        def _scale(source, target, fun):
-            for i, ind in enumerate(sequence_indices):
-                target[:, ind] = fun(source[:, ind], folding_velocity_scaled[i])
-
         def _get_scaled_vfold():
             vfold_scaled = math.pi / folding_velocity
             if isinstance(vfold_scaled, float):
                 vfold_scaled = [vfold_scaled]
             return vfold_scaled
 
+        def _scale_by_vfold(data_in, fun):
+            data_out = ma.copy(data_in)
+            for i, ind in enumerate(sequence_indices):
+                data_out[:, ind] = fun(data_in[:, ind], folding_velocity_scaled[i])
+            return data_out
+
         folding_velocity_scaled = _get_scaled_vfold()
-        data_scaled = ma.copy(self.data)
-        _scale(self.data, data_scaled, np.multiply)
+        data_scaled = _scale_by_vfold(self.data, np.multiply)
         vel_x = np.cos(data_scaled)
         vel_y = np.sin(data_scaled)
         vel_x_mean = utils.rebin_2d(time, vel_x, time_new)
         vel_y_mean = utils.rebin_2d(time, vel_y, time_new)
         mean_vel_scaled = np.arctan2(vel_y_mean, vel_x_mean)
-        self.data = self.data[:len(time_new), :]
-        _scale(mean_vel_scaled, self.data, np.divide)
+        self.data = _scale_by_vfold(mean_vel_scaled, np.divide)
 
     def mask_indices(self, ind):
         """Masks data from given indices."""
