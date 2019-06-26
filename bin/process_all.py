@@ -4,6 +4,8 @@ Creates similar directory structure and file names as the
 Matlab processing environment.
 
 """
+import sys
+sys.path.append('/home/tukiains/Documents/PYTHON/cloudnetpy/')
 import os
 import fnmatch
 import gzip
@@ -32,7 +34,7 @@ INSTRUMENTS = {
 PERIOD = {
     'year': 2018,
     'months': (1, 12),
-    'days': (1, 30)
+    'days': (1, 31),
 }
 
 # 0=no, 1=if missing, 2=yes
@@ -40,13 +42,19 @@ PROCESS_LEVEL = {
     'radar': 1,
     'lidar': 1,
     'categorize': 1,
-    'products': 1
+    'classification': 2,
+    'iwc-Z-T-method': 1,
+    'lwc-scaled-adiabatic': 1,
+    'drizzle': 1,
 }
 
 # 0=no, 1=if missing, 2=yes
 QUICKLOOK_LEVEL = {
     'categorize': 1,
-    'products': 1
+    'classification': 2,
+    'iwc-Z-T-method': 1,
+    'lwc-scaled-adiabatic': 1,
+    'drizzle': 1,
 }
 
 ROOT_PATH = '/media/tukiains/3b48ca75-37ff-42ba-ab71-b78f39cd9a79/cloudnetPy_test_data/data/'
@@ -66,7 +74,7 @@ def main(year, months=(1, 12), days=(1, 31)):
     day_start, day_end = _get_range(days)
 
     start_date = date(year, month_start, day_start)
-    end_date = date(year, month_end, day_end + 1)
+    end_date = date(year, month_end, min(day_end+1, 31))
 
     for single_date in _date_range(start_date, end_date):
         dvec = single_date.strftime("%Y%m%d")
@@ -79,11 +87,10 @@ def main(year, months=(1, 12), days=(1, 31)):
                 _process_product(product, dvec)
             except RuntimeError as error:
                 print(error)
-    print('')
+        print(' ')
 
 
 def _run_processing(process_type, dvec):
-    print(f"Processing {process_type}")
     module = importlib.import_module(__name__)
     try:
         getattr(module, f"_process_{process_type}")(dvec)
@@ -109,9 +116,10 @@ def _process_radar(dvec):
         try:
             input_file = _find_uncalibrated_mira_file()
         except FileNotFoundError:
-            raise RuntimeError('Abort: Missing uncalibrated radar file.')
+            raise RuntimeError('Abort: Missing uncalibrated mira file.')
         output_file = _build_calibrated_file_name(instrument, dvec)
         if _is_good_to_process(instrument, output_file):
+            print(f"Calibrating mira cloud radar..")
             mira.mira2nc(input_file, output_file, SITE)
 
 
@@ -124,6 +132,7 @@ def _process_lidar(dvec):
         raise RuntimeError('Abort: Missing uncalibrated lidar file.')
     output_file = _build_calibrated_file_name(instrument, dvec)
     if _is_good_to_process(instrument, output_file):
+        print(f"Calibrating {INSTRUMENTS[instrument]} lidar..")
         ceilo.ceilo2nc(input_file, output_file, SITE)
 
 
@@ -139,17 +148,18 @@ def _process_categorize(dvec):
         except FileNotFoundError:
             raise RuntimeError('Input files missing. Cannot process categorize file.')
         try:
+            print(f"Processing categorize file..")
             cat.generate_categorize(input_files, output_file)
         except RuntimeError as error:
             raise error
         image_name = _make_image_name(output_file)
         if _is_good_to_plot('categorize', image_name):
+            print(f"Generating categorize quicklook..")
             plotting.generate_figure(output_file, ['Z', 'v', 'ldr', 'width', 'beta', 'lwp'],
                                      image_name=image_name, show=False)
 
 
 def _process_product(product, dvec):
-    print(f"Processing {product}..")
     try:
         categorize_file = _find_categorize_file(dvec)
     except FileNotFoundError:
@@ -157,10 +167,12 @@ def _process_product(product, dvec):
     output_file = _build_product_name(product, dvec)
     product_prefix = product.split('-')[0]
     module = importlib.import_module(f"cloudnetpy.products.{product_prefix}")
-    if _is_good_to_process('products', output_file):
+    if _is_good_to_process(product, output_file):
+        print(f"Processing {product} product..")
         getattr(module, f"generate_{product_prefix}")(categorize_file, output_file)
     image_name = _make_image_name(output_file)
-    if _is_good_to_plot('products', image_name):
+    if _is_good_to_plot(product, image_name):
+        print(f"Generating {product} quicklook..")
         fields, max_y = _get_product_fields_in_plot(product_prefix)
         plotting.generate_figure(output_file, fields, image_name=image_name,
                                  show=False, max_y=max_y)
