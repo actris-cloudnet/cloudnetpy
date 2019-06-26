@@ -371,7 +371,7 @@ def find_aerosols(obs, is_falling, is_liquid):
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are lidar signals that are: a) not falling, b) not liquid droplets,
-    and are present in warmer than -20 temperatures.
+    and are present in warmer than some threshold temperature.
 
     Args:
         obs (_ClassData): Container for observations.
@@ -382,7 +382,7 @@ def find_aerosols(obs, is_falling, is_liquid):
         ndarray: 2-D boolean array containing aerosols.
 
     """
-    temperature_limit = 273 - 15
+    temperature_limit = T0 - 15
     is_beta = ~obs.beta.mask
     potential_aerosols = is_beta & ~is_falling & ~is_liquid
     aerosols = np.logical_and(potential_aerosols, obs.tw > temperature_limit)
