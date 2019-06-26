@@ -51,7 +51,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
         if plot_type == 'bar':
             _plot_bar_data(axis, field, name, axes_data[0])
-            _set_axes(axis, 1, ATTRIBUTES[name].ylabel)
+            _set_axes(axis, 2, ATTRIBUTES[name].ylabel)
 
         elif plot_type == 'segment':
             _plot_segment_data(axis, field, name, axes_data)

@@ -31,9 +31,11 @@ _COLORS = {
     'yellowgreen': "#C7FA3A",
     'yellow': "#FFE744",
     'orange': "#ffa500",
-    'pink': "#FF00FF",
+    'pink': "#B43757",
     'red': "#F57150",
     'shockred': "#E64A23",
+    'seaweed': "#646F5E",
+    'seaweed_roll': "#748269",
     'white': "#ffffff",
     'lightblue': "#6CFFEC",
     'blue': "#209FF3",
@@ -65,17 +67,15 @@ _CLABEL = {
          ("Melting ice & cloud droplets", _COLORS['yellowgreen']),
          ("Aerosols", _COLORS['lightbrown']),
          ("Insects", _COLORS['shockred']),
-         ("_Aerosols & Insects", _COLORS['pink'])),
+         ("Aerosols & Insects", _COLORS['pink'])),
 
     'detection_status':
         (("_Clear sky", _COLORS['white']),
-         ("Lidar echo only", _COLORS['yellow']),
-         ("Radar echo but uncorrected atten.", _COLORS['darkgreen']),
          ("Good radar & lidar echos", _COLORS['green']),
-         ("_No radar but unknown attenuation", _COLORS['darkgray']),
          ("Good radar echo only", _COLORS['lightgreen']),
-         ("_No radar but known attenuation", _COLORS['gray']),
          ("Radar corrected for liquid atten.", _COLORS['yellowgreen']),
+         ("Lidar echo only", _COLORS['yellow']),
+         ("Radar uncorrected for liquid atten.", _COLORS['seaweed_roll']),
          ("Radar ground clutter", _COLORS['lightpurple']),
          ("_Lidar molecular scattering", _COLORS['pink'])),
 
@@ -408,7 +408,6 @@ ATTRIBUTES = {
         name='Radar and lidar detection status',
         clabel=_CLABEL['detection_status'],
         plot_type='segment',
-        swap_labels=[(1, 2), (2, 3), (3, 4)]
     ),
     'iwc': PlotMeta(
         name='Ice water content',
