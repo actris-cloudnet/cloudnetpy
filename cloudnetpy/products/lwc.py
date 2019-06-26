@@ -67,34 +67,6 @@ class Lwc:
         self.status = self._init_status()
         self.lwc_error = None
 
-    def calc_lwc_error(self):
-        """Calculates liquid water content error.
-
-        LWC error is estimated as a sum of lwc gradient and lwp relative error.
-
-        """
-        def _calc_lwp_relative_error():
-            return self.lwc_source.lwp_error / self.lwc_source.lwp
-
-        def _calc_lwc_gradient():
-            gradient_elements = np.gradient(self.lwc.filled(0))
-            return utils.l2norm(*gradient_elements)
-
-        def _calc_combined_error(error_2d, error_1d):
-            error_1d_transposed = utils.transpose(error_1d)
-            return utils.l2norm(error_2d, error_1d_transposed)
-
-        def _fill_error_array(error_in):
-            lwc_error = ma.masked_all(self.lwc.shape)
-            ind = ma.where(self.lwc)
-            lwc_error[ind] = error_in[ind]
-            return lwc_error
-
-        lwc_gradient = _calc_lwc_gradient()
-        lwp_relative_error = _calc_lwp_relative_error()
-        combined_error = _calc_combined_error(lwc_gradient, lwp_relative_error)
-        self.lwc_error = _fill_error_array(combined_error)
-
     def _get_echo(self):
         quality_bits = self.lwc_source.categorize_bits.quality_bits
         return {'radar': quality_bits['radar'], 'lidar': quality_bits['lidar']}
@@ -207,6 +179,34 @@ class Lwc:
             base_index = np.where(adjustable_clouds[time_index, :])[0][0]
             _update_status(time_index)
             _adjust_lwc(time_index, base_index)
+
+    def calc_lwc_error(self):
+        """Calculates liquid water content error.
+
+        LWC error is estimated as a sum of lwc gradient and lwp relative error.
+
+        """
+        def _calc_lwp_relative_error():
+            return self.lwc_source.lwp_error / self.lwc_source.lwp
+
+        def _calc_lwc_gradient():
+            gradient_elements = np.gradient(self.lwc.filled(0))
+            return utils.l2norm(*gradient_elements)
+
+        def _calc_combined_error(error_2d, error_1d):
+            error_1d_transposed = utils.transpose(error_1d)
+            return utils.l2norm(error_2d, error_1d_transposed)
+
+        def _fill_error_array(error_in):
+            lwc_error = ma.masked_all(self.lwc.shape)
+            ind = ma.where(self.lwc)
+            lwc_error[ind] = error_in[ind]
+            return lwc_error
+
+        lwc_gradient = _calc_lwc_gradient()
+        lwp_relative_error = _calc_lwp_relative_error()
+        combined_error = _calc_combined_error(lwc_gradient, lwp_relative_error)
+        self.lwc_error = _fill_error_array(combined_error)
 
     def screen_rain(self):
         """Masks profiles with rain."""
