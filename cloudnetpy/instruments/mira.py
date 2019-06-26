@@ -2,6 +2,7 @@
 import os
 import netCDF4
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.categorize import DataSource
@@ -67,7 +68,9 @@ class Mira(DataSource):
         """Reads correct fields and fixes the names."""
         for raw_key in self.keymap:
             name = self.keymap[raw_key]
-            self.data[name] = CloudnetArray(self.getvar(raw_key), name)
+            array = self.getvar(raw_key)
+            array[~np.isfinite(array)] = ma.masked
+            self.data[name] = CloudnetArray(array, name)
 
     @staticmethod
     def _estimate_snr_gain(time_sparse, time_dense):
