@@ -68,34 +68,6 @@ def find_liquid(obs, peak_amp=2e-5, max_width=300, min_points=3,
             'tops': liquid_top}
 
 
-def correct_liquid_top(obs, liquid, is_freezing):
-    """Corrects lidar detected liquid cloud top using radar data.
-
-    Args:
-        obs (ClassData): Observations container.
-        liquid (dict): Dictionary for liquid clouds.
-        is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
-            derived from the model temperature and melting layer based
-            on radar data.
-
-    Returns:
-        ndarray: Corrected liquid cloud array.
-
-    See also:
-        droplet.find_liquid()
-
-    """
-    top_above = utils.n_elements(obs.height, 750)
-    for prof, top in zip(*np.where(liquid['tops'])):
-        ind = np.where(is_freezing[prof, top:])[0][0] + top_above
-        rad = obs.z[prof, top:top+ind+1]
-        if not (rad.mask.all() or ~rad.mask.any()):
-            first_masked = ma.where(rad.mask)[0][0]
-            liquid['presence'][prof, top:top+first_masked+1] = True
-    liquid['presence'][obs.tw < (T0-40)] = False
-    return liquid['presence']
-
-
 def ind_base(dprof, p, dist, lim):
     """Finds base index of a peak in profile.
 

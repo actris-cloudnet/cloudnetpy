@@ -67,9 +67,9 @@ def classify_measurements(radar, lidar, model):
     obs = _ClassData(radar, lidar, model)
     bits = [None] * 6
     liquid = droplet.find_liquid(obs)
+    bits[0] = liquid['presence']
     bits[3] = find_melting_layer(obs)
     bits[2] = find_freezing_region(obs, bits[3])
-    bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2])
     bits[5], insect_prob = find_insects(obs, bits[3], bits[0])
     bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4] = find_aerosols(obs.beta, bits[1], bits[0])
@@ -354,10 +354,14 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
         ndarray: 2-D boolean array containing falling hydrometeors.
 
     """
+    def _find_falling_from_lidar():
+        is_beta = ~obs.beta.mask
+        return is_beta & ~is_liquid & (obs.beta.data > 2e-6)
+
     is_z = ~obs.z.mask
     no_clutter = ~obs.is_clutter
     no_insects = ~is_insects
-    falling_from_lidar = ~obs.beta.mask & (obs.beta.data > 1e-6) & ~is_liquid
+    falling_from_lidar = _find_falling_from_lidar()
     is_falling = (is_z & no_clutter & no_insects) | falling_from_lidar
     return is_falling
 

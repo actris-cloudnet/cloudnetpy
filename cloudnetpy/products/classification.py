@@ -35,8 +35,12 @@ def generate_classification(categorize_file, output_file):
 
 def get_target_classification(categorize_bits):
     bits = categorize_bits.category_bits
-    classification = bits['droplet'] + 2*bits['falling']  # 0, 1, 2, 3
-    classification[bits['falling'] & bits['cold']] += 2  # 4, 5
+    classification = np.zeros(bits['cold'].shape, dtype=int)
+    classification[bits['droplet'] & ~bits['falling']] = 1
+    classification[~bits['droplet'] & bits['falling']] = 2
+    classification[bits['droplet'] & bits['falling']] = 3
+    classification[~bits['droplet'] & bits['falling'] & bits['cold']] = 4
+    classification[bits['droplet'] & bits['cold']] = 5
     classification[bits['melting']] = 6
     classification[bits['melting'] & bits['droplet']] = 7
     classification[bits['aerosol']] = 8
