@@ -463,7 +463,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_init_lwp_error</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_init_lwp_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_unknown_to_cloudnet</span><span class="p">((</span><span class="s1">&#39;LWP_data&#39;</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">),</span> <span class="s1">&#39;lwp&#39;</span><span class="p">)</span>
+        <span class="c1"># TODO: How to deal with negative LWP values?</span>
+        <span class="n">lwp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getvar</span><span class="p">(</span><span class="s1">&#39;LWP_data&#39;</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">)</span>
+        <span class="n">lwp</span><span class="p">[</span><span class="n">lwp</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">append_data</span><span class="p">(</span><span class="n">lwp</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_init_lwp_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># TODO: Check these error values</span>
@@ -524,7 +527,10 @@
 
     <span class="k">def</span> <span class="nf">_get_model_heights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">alt_site</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns model heights for each time step.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">alt_site</span>
+        <span class="n">model_heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variables</span><span class="p">[</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">ma</span><span class="o">.</span><span class="n">count_masked</span><span class="p">(</span><span class="n">model_heights</span><span class="p">[:]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Masked values in the data file! Aborting..&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">km2m</span><span class="p">(</span><span class="n">model_heights</span><span class="p">)</span> <span class="o">+</span> <span class="n">alt_site</span>
 
     <span class="k">def</span> <span class="nf">_get_mean_height</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_heights</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>

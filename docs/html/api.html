@@ -282,7 +282,7 @@ NetCDF file with information of classification and measurements.</p>
 <p>CloudnetPy offers easy-to-use plotting interface.</p>
 <dl class="function">
 <dt id="plotting.generate_figure">
-<code class="descclassname">plotting.</code><code class="descname">generate_figure</code><span class="sig-paren">(</span><em>nc_file</em>, <em>field_names</em>, <em>show=True</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting.html#generate_figure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.generate_figure" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">plotting.</code><code class="descname">generate_figure</code><span class="sig-paren">(</span><em>nc_file</em>, <em>field_names</em>, <em>show=True</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting.html#generate_figure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.generate_figure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a Cloudnet figure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -297,6 +297,8 @@ given path). Default is None, when the figure is not saved.</li>
 <li><strong>max_y</strong> (<em>int</em><em>, </em><em>optional</em>) – Upper limit in the plots (km). Default is 12.</li>
 <li><strong>dpi</strong> (<em>int</em><em>, </em><em>optional</em>) – Figure quality (if saved). Higher value means
 more pixels, i.e., better image quality. Default is 200.</li>
+<li><strong>image_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name (and full path) of the output image.
+Overrides the <em>save_path</em> option. Default is None.</li>
 </ul>
 </td>
 </tr>
@@ -1602,6 +1604,36 @@ and distance in minutes. Default is None.</li>
 <dd><p>Removes multiple keys from dictionary.</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="utils.get_site_information">
+<code class="descclassname">utils.</code><code class="descname">get_site_information</code><span class="sig-paren">(</span><em>site</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_site_information"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_site_information" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads site information from Cloudnet http API.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>site</strong> (<em>str</em>) – Site identifier, e.g. ‘mace-head’ or ‘lindenberg’.</li>
+<li><strong>args</strong> – Variable number of field names to be queried.
+Possible field names are ‘latitude’, ‘longitude’, ‘altitude’
+and ‘site_name’.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Tuple of return values.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_site_information</span><span class="p">(</span><span class="s1">&#39;mace-head&#39;</span><span class="p">,</span> <span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="products-modules">
@@ -1728,6 +1760,13 @@ methods for holding the results.</p>
 <dt id="products.lwc.Lwc.adjust_clouds_to_match_lwp">
 <code class="descname">adjust_clouds_to_match_lwp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.adjust_clouds_to_match_lwp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.adjust_clouds_to_match_lwp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adjust clouds (where possible) so that theoretical and measured LWP agree.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="products.lwc.Lwc.calc_lwc_error">
+<code class="descname">calc_lwc_error</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.calc_lwc_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.calc_lwc_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates liquid water content error.</p>
+<p>LWC error is estimated as a sum of lwc gradient and lwp relative error.</p>
 </dd></dl>
 
 <dl class="method">
