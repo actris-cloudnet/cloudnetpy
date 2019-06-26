@@ -422,7 +422,10 @@ class Mwr(DataSource):
         self._init_lwp_error()
 
     def _init_lwp_data(self):
-        self._unknown_to_cloudnet(('LWP_data', 'lwp'), 'lwp')
+        # TODO: How to deal with negative LWP values?
+        lwp = self.getvar('LWP_data', 'lwp')
+        lwp[lwp < 0] = 0
+        self.append_data(lwp, 'lwp')
 
     def _init_lwp_error(self):
         # TODO: Check these error values
