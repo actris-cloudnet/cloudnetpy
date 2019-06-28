@@ -214,10 +214,16 @@ class JenoptikCeilo(Ceilometer):
         beta_raw = self._getvar('beta_raw')
         data_std = self._getvar('stddev')
         normalised_apd = self._get_nn()
+        overlap_function = self._get_overlap()
         beta_raw *= utils.transpose(data_std / normalised_apd)
         beta_raw *= self.range ** 2
+        beta_raw /= overlap_function
         beta_raw *= self.calibration_factor
         return beta_raw
+
+    def _get_overlap(self):
+        """Approximative overlap function for Jenoptik."""
+        return utils.array_to_probability(self.range, 500, 200)
 
     def _get_nn(self):
         """TODO: Taken from the Matlab code. Not sure how this should be."""
