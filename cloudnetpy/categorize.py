@@ -71,7 +71,7 @@ def generate_categorize(input_files, output_file):
     time, height = _define_dense_grid()
     _interpolate_to_cloudnet_grid()
     model.calc_wet_bulb()
-    classification = classify.classify_measurements(radar, lidar, model)
+    classification = classify.classify_measurements(radar, lidar, model, mwr)
     attenuations = atmos.get_attenuations(model, mwr, classification)
     radar.correct_atten(attenuations)
     radar.calc_errors(attenuations, classification)

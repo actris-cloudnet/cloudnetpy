@@ -456,3 +456,27 @@ def get_site_information(site, *args):
     except:
         result = tuple([0]*len(args))
     return result
+
+
+def array_to_probability(arr_in, loc, scale, invert=False):
+    """Converts continuous variable into 0-1 probability.
+
+    Args:
+        arr_in (MaskedArray): Masked numpy array.
+        loc (float): Center of the distribution. Values smaller than this
+            will have small probability. Values greater than this will have
+            large probability.
+        scale (float): Width of the distribution, i.e., how fast the probability
+            drops or increases from the peak.
+        invert (bool, optional): If True, large values have small
+            probability and vice versa. Default is False.
+
+    """
+    arr = ma.copy(arr_in)
+    prob = np.zeros(arr.shape)
+    ind = ~arr.mask
+    if invert:
+        arr *= -1
+        loc *= -1
+    prob[ind] = stats.norm.cdf(arr[ind], loc=loc, scale=scale)
+    return prob

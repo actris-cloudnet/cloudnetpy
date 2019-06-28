@@ -305,6 +305,7 @@ def _lin2log(*args):
 
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     """Simple plot of 2d variable."""
+    plt.close()
     if cbar:
         cmap = plt.get_cmap(cmap, ncolors)
         plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower', cmap=cmap)

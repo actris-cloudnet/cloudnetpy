@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import numpy as np
 import numpy.ma as ma
 from scipy.ndimage.filters import gaussian_filter
-from scipy import stats
 from scipy.interpolate import interp1d
 from cloudnetpy import droplet, utils
 from cloudnetpy.constants import T0
@@ -44,7 +43,7 @@ def fetch_quality(radar, lidar, classification, attenuations):
     return {'quality_bits': qbits}
 
 
-def classify_measurements(radar, lidar, model):
+def classify_measurements(radar, lidar, model, mwr):
     """Classifies radar/lidar observations.
 
     This function classifies atmospheric scatterer from the input data.
@@ -64,7 +63,7 @@ def classify_measurements(radar, lidar, model):
         classify.fetch_qual_bits()
 
     """
-    obs = _ClassData(radar, lidar, model)
+    obs = _ClassData(radar, lidar, model, mwr)
     bits = [None] * 6
     liquid = droplet.find_liquid(obs)
     bits[0] = liquid['presence']
@@ -270,13 +269,13 @@ def find_insects(obs, *args, prob_lim=0.8):
         - ndarray: 2-D boolean flag of insects presense.
 
     """
-    i_prob = _insect_probability(obs.z, obs.ldr, obs.width)
-    i_prob = _screen_insects(i_prob, obs.tw, *args)
+    i_prob = _insect_probability(obs)
+    i_prob = _screen_insects(i_prob, *args)
     is_insects = i_prob > prob_lim
     return is_insects, ma.masked_where(i_prob == 0, i_prob)
 
 
-def _insect_probability(z, ldr, width):
+def _insect_probability(obs):
     """Estimates insect probability from radar parameters.
 
     Args:
@@ -288,28 +287,43 @@ def _insect_probability(z, ldr, width):
         ndarray: 2-D insect probability between 0-1.
 
     """
-    def _insect_prob_ldr(z_loc=15, ldr_loc=-20):
-        """Finds probability of insects, based on echo and ldr."""
-        z_prob, ldr_prob = np.zeros(z.shape), np.zeros(z.shape)
-        ind = ~z.mask
-        z_prob[ind] = stats.norm.cdf(z[ind]*-1, loc=z_loc, scale=8)
-        ind = ~ldr.mask
-        ldr_prob[ind] = stats.norm.cdf(ldr[ind], loc=ldr_loc, scale=5)
-        return z_prob * ldr_prob
 
-    def _insect_prob_width(w_limit=0.06):
-        """Finds (0, 1) probability of insects, based on spectral width."""
-        temp_w = np.ones(z.shape)
-        ind = ldr.mask & ~z.mask
-        temp_w[ind] = width[ind]
-        return (temp_w < w_limit).astype(int)
+    def _interpolate_lwp():
+        ind = ma.where(obs.lwp)
+        return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
 
-    probability_from_ldr = _insect_prob_ldr()
-    probability_from_width = _insect_prob_width()
-    return probability_from_ldr + probability_from_width
+    def _get_smoothed_v():
+        smoothed_v = gaussian_filter(obs.v, (20, 10))
+        smoothed_v = ma.array(smoothed_v)
+        smoothed_v[obs.v.mask] = ma.masked
+        return smoothed_v
+
+    def _get_probabilities():
+        smooth_v = _get_smoothed_v()
+        lwp_interp = _interpolate_lwp()
+        fun = utils.array_to_probability
+        return {
+            'width': fun(obs.width, 1, 0.3, True),
+            'z': fun(obs.z, -15, 8, True),
+            'ldr': fun(obs.ldr, -20, 5),
+            'temp': fun(obs.tw, 273, 1),
+            'v': fun(smooth_v, -2, 1),
+            'lwp': utils.transpose(fun(lwp_interp, 100, 50, invert=True))
+        }
+
+    prob = _get_probabilities()
+    prob_z_t = prob['z'] * prob['temp']
+
+    prob_combined = prob_z_t * prob['ldr']
+    prob_no_ldr = prob_z_t * prob['width'] * prob['v'] * prob['lwp']
+
+    no_ldr = np.where(prob_combined == 0)
+    prob_combined[no_ldr] = prob_no_ldr[no_ldr]
+
+    return prob_combined
 
 
-def _screen_insects(insect_prob, temperature, *args):
+def _screen_insects(insect_prob, *args):
     """Screens insects by temperature and other misc. conditions.
 
     Args:
@@ -327,14 +341,11 @@ def _screen_insects(insect_prob, temperature, *args):
             if arg.size == prob.shape[0]:
                 prob[arg, :] = 0
             else:
-                prob[arg] = 0
-
-    def _screen_insects_temp(t_lim=-5):
-        prob[temperature < (T0 + t_lim)] = 0
+                x = utils.ffill(arg.astype(int))
+                prob[x == 1] = 0
 
     prob = np.copy(insect_prob)
     _screen_insects_misc()
-    _screen_insects_temp()
     return prob
 
 
@@ -411,13 +422,14 @@ def _bits_to_integer(bits):
 
 
 class _ClassData:
-    def __init__(self, radar, lidar, model):
+    def __init__(self, radar, lidar, model, mwr):
         self.z = radar.data['Z'][:]
         self.ldr = radar.data['ldr'][:]
         self.v = radar.data['v'][:]
         self.width = radar.data['width'][:]
         self.tw = model.data['Tw'][:]
         self.beta = lidar.data['beta'][:]
+        self.lwp = mwr.data['lwp'][:]
         self.time = radar.time
         self.height = radar.height
         self.model_type = model.type
