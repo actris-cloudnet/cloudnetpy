@@ -11,6 +11,7 @@ import fnmatch
 import gzip
 import shutil
 import importlib
+import configparser
 from collections import namedtuple
 from datetime import timedelta, date
 from cloudnetpy import categorize as cat
@@ -18,63 +19,21 @@ from cloudnetpy.instruments import mira
 from cloudnetpy.instruments import ceilo
 from cloudnetpy import plotting
 
-SITE = {
-    'name': 'Mace Head',
-    'dir_name': 'mace-head',
-    'altitude': 16
-}
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-INSTRUMENTS = {
-    'radar': 'mira',
-    'lidar': 'chm15k',
-    'mwr': 'hatpro',
-    'model': 'ecmwf'
-}
-
-PERIOD = {
-    'year': 2018,
-    'months': (1, 12),
-    'days': (1, 31),
-}
-
-# 0=no, 1=if missing, 2=yes
-PROCESS_LEVEL = {
-    'radar': 1,
-    'lidar': 1,
-    'categorize': 1,
-    'classification': 2,
-    'iwc-Z-T-method': 1,
-    'lwc-scaled-adiabatic': 1,
-    'drizzle': 1,
-}
-
-# 0=no, 1=if missing, 2=yes
-QUICKLOOK_LEVEL = {
-    'categorize': 1,
-    'classification': 2,
-    'iwc-Z-T-method': 1,
-    'lwc-scaled-adiabatic': 1,
-    'drizzle': 1,
-}
-
-ROOT_PATH = '/media/tukiains/3b48ca75-37ff-42ba-ab71-b78f39cd9a79/cloudnetPy_test_data/data/'
-
-SITE_ROOT = f"{ROOT_PATH}{SITE['dir_name']}/"
+SITE_ROOT = f"{config['PATH']['root']}{config['SITE']['dir_name']}/"
 
 
-def main(year, months=(1, 12), days=(1, 31)):
+def main(period):
     """ Main Cloudnet processing function."""
 
-    def _get_range(arr):
-        if isinstance(arr, int):
-            return arr, arr
-        return arr
+    def get_ints(*args):
+        for arg in args:
+            yield period.getint(arg)
 
-    month_start, month_end = _get_range(months)
-    day_start, day_end = _get_range(days)
-
-    start_date = date(year, month_start, day_start)
-    end_date = date(year, month_end, min(day_end+1, 31))
+    start_date = date(*get_ints('year', 'month_start', 'day_start'))
+    end_date = date(*get_ints('year', 'month_end', 'day_end'))
 
     for single_date in _date_range(start_date, end_date):
         dvec = single_date.strftime("%Y%m%d")
@@ -112,7 +71,7 @@ def _process_radar(dvec):
         return file
 
     instrument = 'radar'
-    if INSTRUMENTS[instrument] == 'mira':
+    if config['INSTRUMENTS'][instrument] == 'mira':
         try:
             input_file = _find_uncalibrated_mira_file()
         except FileNotFoundError:
@@ -120,7 +79,7 @@ def _process_radar(dvec):
         output_file = _build_calibrated_file_name(instrument, dvec)
         if _is_good_to_process(instrument, output_file):
             print(f"Calibrating mira cloud radar..")
-            mira.mira2nc(input_file, output_file, SITE)
+            mira.mira2nc(input_file, output_file, config['SITE'])
 
 
 def _process_lidar(dvec):
@@ -132,8 +91,8 @@ def _process_lidar(dvec):
         raise RuntimeError('Abort: Missing uncalibrated lidar file.')
     output_file = _build_calibrated_file_name(instrument, dvec)
     if _is_good_to_process(instrument, output_file):
-        print(f"Calibrating {INSTRUMENTS[instrument]} lidar..")
-        ceilo.ceilo2nc(input_file, output_file, SITE)
+        print(f"Calibrating {config['INSTRUMENTS'][instrument]} lidar..")
+        ceilo.ceilo2nc(input_file, output_file, dict(config.items('SITE')))
 
 
 def _process_categorize(dvec):
@@ -175,7 +134,8 @@ def _process_product(product, dvec):
         print(f"Generating {product} quicklook..")
         fields, max_y = _get_product_fields_in_plot(product_prefix)
         plotting.generate_figure(output_file, fields, image_name=image_name,
-                                 show=False, max_y=max_y)
+                                 show=config.getboolean('QUICKLOOK_LEVEL', 'show_plot'),
+                                 max_y=max_y)
 
 
 def _get_product_fields_in_plot(product, max_y=12):
@@ -196,7 +156,7 @@ def _get_product_fields_in_plot(product, max_y=12):
 
 def _build_calibrated_file_name(instrument, dvec):
     output_path = _find_calibrated_path(instrument, dvec)
-    return _get_nc_name(output_path, INSTRUMENTS[instrument], dvec)
+    return _get_nc_name(output_path, config['INSTRUMENTS'][instrument], dvec)
 
 
 def _build_categorize_file_name(dvec):
@@ -211,15 +171,17 @@ def _build_product_name(product, dvec):
 
 def _is_good_to_process(process_type, output_file):
     is_file = os.path.isfile(output_file)
-    process_always = PROCESS_LEVEL[process_type] == 2
-    process_if_missing = PROCESS_LEVEL[process_type] == 1 and not is_file
+    process_level = config.getint('PROCESS_LEVEL', process_type)
+    process_always = process_level == 2
+    process_if_missing = process_level == 1 and not is_file
     return process_always or process_if_missing
 
 
 def _is_good_to_plot(process_type, image_name):
     is_file = os.path.isfile(image_name)
-    plot_always = QUICKLOOK_LEVEL[process_type] == 2
-    process_if_missing = QUICKLOOK_LEVEL[process_type] == 1 and not is_file
+    quicklook_level = config.getint('QUICKLOOK_LEVEL', process_type)
+    plot_always = quicklook_level == 2
+    process_if_missing = quicklook_level == 1 and not is_file
     return plot_always or process_if_missing
 
 
@@ -252,14 +214,14 @@ def _find_product_file(product, dvec):
 
 def _find_uncalibrated_path(instrument, dvec):
     year = _get_year(dvec)
-    path_all = _get_uncalibrated_paths(INSTRUMENTS)
+    path_all = _get_uncalibrated_paths(config['INSTRUMENTS'])
     path_instrument = getattr(path_all, instrument)
     return f"{path_instrument}{year}/"
 
 
 def _find_calibrated_path(instrument, dvec):
     year = _get_year(dvec)
-    path_all = _get_calibrated_paths(INSTRUMENTS)
+    path_all = _get_calibrated_paths(config['INSTRUMENTS'])
     path_instrument = getattr(path_all, instrument)
     output_path = f"{path_instrument}{year}/"
     if not os.path.exists(output_path):
@@ -309,7 +271,7 @@ def _get_calibrated_paths(instruments):
 
 
 def _get_nc_name(file_path, prefix, dvec):
-    return f"{file_path}{dvec}_{SITE['dir_name']}_{prefix}.nc"
+    return f"{file_path}{dvec}_{config['SITE']['dir_name']}_{prefix}.nc"
 
 
 def _make_image_name(output_file):
@@ -349,4 +311,4 @@ def _get_day(dvec):
 
 
 if __name__ == "__main__":
-    main(*PERIOD.values())
+    main(config['PERIOD'])
