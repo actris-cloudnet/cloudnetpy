@@ -152,11 +152,14 @@ class Lwc:
         """Adjusts cloud top index so that measured lwc corresponds to
         theoretical value.
         """
-        def _has_converged(time_ind):
-            lwc_sum = ma.sum(self.lwc_adiabatic[time_ind, :])
-            if lwc_sum * self.dheight > self.lwc_source.lwp[time_ind]:
+        def _has_converged(ind):
+            lwc_sum = ma.sum(self.lwc_adiabatic[ind, :])
+            if lwc_sum * self.dheight > self.lwc_source.lwp[ind]:
                 return True
             return False
+
+        def _out_of_bound(ind):
+            return ind >= self.lwc.shape[1] - 1
 
         def _adjust_lwc(time_ind, base_ind):
             lwc_base = self.lwc_adiabatic[time_ind, base_ind]
@@ -167,7 +170,7 @@ class Lwc:
                 self.lwc_adiabatic[time_ind, top_ind] = lwc_top
                 if not self.status[time_ind, top_ind]:
                     self.status[time_ind, top_ind] = 3
-                if _has_converged(time_ind):
+                if _has_converged(time_ind) or _out_of_bound(top_ind):
                     break
                 distance_from_base += 1
 

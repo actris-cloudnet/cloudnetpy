@@ -188,14 +188,13 @@ def ind_top(dprof, p, nprof, dist, lim):
 def correct_liquid_top(obs, liquid, is_freezing, limit=200):
     """Corrects lidar detected liquid cloud top using radar data.
 
-    TODO: This function needs work. It is not in use at the moment.
-
     Args:
         obs (ClassData): Observations container.
         liquid (dict): Dictionary for liquid clouds.
         is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
             derived from the model temperature and melting layer based
             on radar data.
+        limit (float): The maximum correction distance (m) above liquid cloud top.
     Returns:
         ndarray: Corrected liquid cloud array.
     See also:

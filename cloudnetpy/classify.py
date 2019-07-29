@@ -67,7 +67,6 @@ def classify_measurements(radar, lidar, model, mwr):
     obs = _ClassData(radar, lidar, model, mwr)
     bits = [None] * 6
     liquid = droplet.find_liquid(obs)
-    bits[0] = liquid['presence']
     bits[3] = find_melting_layer(obs)
     bits[2] = find_freezing_region(obs, bits[3])
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
