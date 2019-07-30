@@ -37,7 +37,7 @@ def ceilo2nc(input_file, output_file, site_meta):
     ceilo.read_ceilometer_file()
     beta_variants = ceilo.calc_beta()
     _append_data(ceilo, beta_variants)
-    _append_height(ceilo, site_meta['altitude'])
+    _append_height(ceilo, float(site_meta['altitude']))
     output.update_attributes(ceilo.data, ATTRIBUTES)
     _save_ceilo(ceilo, output_file, site_meta['name'])
 

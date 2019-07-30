@@ -54,6 +54,7 @@ def classify_measurements(radar, lidar, model, mwr):
         radar (Radar): A Radar object.
         lidar (Lidar): A Lidar object.
         model (Model): A Model object.
+        mwr (Mwr): A Mwr object.
 
     Returns:
         _ClassificationResult: Object containing the result
@@ -66,9 +67,9 @@ def classify_measurements(radar, lidar, model, mwr):
     obs = _ClassData(radar, lidar, model, mwr)
     bits = [None] * 6
     liquid = droplet.find_liquid(obs)
-    bits[0] = liquid['presence']
     bits[3] = find_melting_layer(obs)
     bits[2] = find_freezing_region(obs, bits[3])
+    bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
     bits[5], insect_prob = find_insects(obs, bits[3], bits[0])
     bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4], extra_ice = find_aerosols(obs, bits[1], bits[0])
@@ -279,9 +280,7 @@ def _insect_probability(obs):
     """Estimates insect probability from radar parameters.
 
     Args:
-        z (MaskedArray): 2-D radar echo.
-        ldr (MaskedArray): 2-D radar linear depolarization ratio.
-        width (MaskedArray): 2-D radar spectral width.
+        obs (_ClassData): Input data container.
 
     Returns:
         ndarray: 2-D insect probability between 0-1.
@@ -293,7 +292,7 @@ def _insect_probability(obs):
         return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
 
     def _get_smoothed_v():
-        smoothed_v = gaussian_filter(obs.v, (20, 10))
+        smoothed_v = gaussian_filter(obs.v, (5, 5))
         smoothed_v = ma.array(smoothed_v)
         smoothed_v[obs.v.mask] = ma.masked
         return smoothed_v
@@ -315,7 +314,7 @@ def _insect_probability(obs):
     prob_z_t = prob['z'] * prob['temp']
 
     prob_combined = prob_z_t * prob['ldr']
-    prob_no_ldr = prob_z_t * prob['width'] * prob['v'] * prob['lwp']
+    prob_no_ldr = prob_z_t * prob['v'] * prob['lwp'] * prob['width']  # TODO: not sure if width is good here
 
     no_ldr = np.where(prob_combined == 0)
     prob_combined[no_ldr] = prob_no_ldr[no_ldr]
@@ -427,6 +426,7 @@ class _ClassData:
         self.ldr = radar.data['ldr'][:]
         self.v = radar.data['v'][:]
         self.width = radar.data['width'][:]
+        self.v_sigma = radar.data['v_sigma'][:]
         self.tw = model.data['Tw'][:]
         self.beta = lidar.data['beta'][:]
         self.lwp = mwr.data['lwp'][:]
