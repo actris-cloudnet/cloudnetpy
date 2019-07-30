@@ -25,15 +25,15 @@ config.read('config.ini')
 SITE_ROOT = f"{config['PATH']['root']}{config['SITE']['dir_name']}/"
 
 
-def main(period):
+def main():
     """ Main Cloudnet processing function."""
 
-    def get_ints(*args):
+    def get_ints(key, *args):
         for arg in args:
-            yield period.getint(arg)
+            yield config.getint(key, arg)
 
-    start_date = date(*get_ints('year', 'month_start', 'day_start'))
-    end_date = date(*get_ints('year', 'month_end', 'day_end'))
+    start_date = date(*get_ints('PERIOD_START', 'year', 'month', 'day'))
+    end_date = date(*get_ints('PERIOD_END', 'year', 'month', 'day'))
 
     for single_date in _date_range(start_date, end_date):
         dvec = single_date.strftime("%Y%m%d")
@@ -134,7 +134,7 @@ def _process_product(product, dvec):
         print(f"Generating {product} quicklook..")
         fields, max_y = _get_product_fields_in_plot(product_prefix)
         plotting.generate_figure(output_file, fields, image_name=image_name,
-                                 show=config.getboolean('QUICKLOOK_LEVEL', 'show_plot'),
+                                 show=config.getboolean('MISC', 'show_plot'),
                                  max_y=max_y)
 
 
@@ -311,4 +311,4 @@ def _get_day(dvec):
 
 
 if __name__ == "__main__":
-    main(config['PERIOD'])
+    main()
