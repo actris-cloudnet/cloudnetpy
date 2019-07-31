@@ -309,7 +309,7 @@ def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layer
 
     def _screen_above_liquid():
         above_liquid = utils.ffill(liquid_layers)
-        prob[np.logical_and(above_liquid == 1, insect_prob_no_ldr > 0)] = 0
+        prob[(above_liquid == 1) & (insect_prob_no_ldr > 0)] = 0
 
     prob = np.copy(insect_prob)
     _screen_liquid_layers()
@@ -361,11 +361,14 @@ def find_aerosols(obs, is_falling, is_liquid):
         ndarray: 2-D boolean array containing aerosols.
 
     """
+    def _find_potential_aerosols():
+        is_beta = ~obs.beta.mask
+        return is_beta & ~is_falling & ~is_liquid
+
     temperature_limit = T0 - 15
-    is_beta = ~obs.beta.mask
-    potential_aerosols = is_beta & ~is_falling & ~is_liquid
-    aerosols = np.logical_and(potential_aerosols, obs.tw > temperature_limit)
-    ice = np.logical_and(potential_aerosols, obs.tw < temperature_limit)
+    potential_aerosols = _find_potential_aerosols()
+    aerosols = potential_aerosols & (obs.tw > temperature_limit)
+    ice = potential_aerosols & (obs.tw < temperature_limit)
     return aerosols, ice
 
 
