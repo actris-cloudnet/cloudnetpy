@@ -336,15 +336,14 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
 
     """
     def _find_falling_from_lidar():
-        is_beta = ~obs.beta.mask
-        return is_beta & ~is_liquid & (obs.beta.data > 2e-6)
+        strong_beta_limit = 2e-6
+        return (obs.beta.data > strong_beta_limit) & ~is_liquid
 
     is_z = ~obs.z.mask
     no_clutter = ~obs.is_clutter
     no_insects = ~is_insects
     falling_from_lidar = _find_falling_from_lidar()
-    is_falling = (is_z & no_clutter & no_insects) | falling_from_lidar
-    return is_falling
+    return (is_z & no_clutter & no_insects) | falling_from_lidar
 
 
 def find_aerosols(obs, is_falling, is_liquid):
