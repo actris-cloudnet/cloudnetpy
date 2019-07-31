@@ -4,16 +4,14 @@ Creates similar directory structure and file names as the
 Matlab processing environment.
 
 """
-import sys
-sys.path.append('/home/tukiains/Documents/PYTHON/cloudnetpy/')
 import os
 import fnmatch
 import gzip
 import shutil
 import importlib
 import configparser
+import datetime
 from collections import namedtuple
-from datetime import timedelta, date
 from cloudnetpy import categorize as cat
 from cloudnetpy.instruments import mira
 from cloudnetpy.instruments import ceilo
@@ -28,15 +26,11 @@ SITE_ROOT = f"{config['PATH']['root']}{config['SITE']['dir_name']}/"
 def main():
     """ Main Cloudnet processing function."""
 
-    def _period_to_date(period):
-        date_parts = [period.getint(key) for key in ('year', 'month', 'day')]
-        return date(*date_parts)
+    start_date = _period_to_date('PERIOD_START')
+    end_date = _period_to_date('PERIOD_END')
 
-    start_date = _period_to_date(config['PERIOD_START'])
-    end_date = _period_to_date(config['PERIOD_END'])
-
-    for single_date in _date_range(start_date, end_date):
-        dvec = single_date.strftime("%Y%m%d")
+    for date in _date_range(start_date, end_date):
+        dvec = date.strftime("%Y%m%d")
         print('Date: ', dvec)
         for processing_type in ('radar', 'lidar', 'categorize'):
             _run_processing(processing_type, dvec)
@@ -47,6 +41,11 @@ def main():
             except RuntimeError as error:
                 print(error)
         print(' ')
+
+
+def _period_to_date(section_name):
+    date = [config.getint(section_name, key) for key in ('year', 'month', 'day')]
+    return datetime.date(*date)
 
 
 def _run_processing(process_type, dvec):
@@ -288,7 +287,7 @@ def _find_file(file_path, wildcard):
 
 def _date_range(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
-        yield start_date + timedelta(n)
+        yield start_date + datetime.timedelta(n)
 
 
 def _split_date(dvec):
