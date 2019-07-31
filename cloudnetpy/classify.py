@@ -261,10 +261,10 @@ def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
         - ndarray: 2-D boolean flag of insects presence.
 
     """
-    i_prob, i_prob_no_ldr = _insect_probability(obs)
-    i_prob = _screen_insects(i_prob, i_prob_no_ldr, melting_layer, liquid_layers)
-    is_insects = i_prob > prob_lim
-    return is_insects, ma.masked_where(i_prob == 0, i_prob)
+    probabilities = _insect_probability(obs)
+    insect_prob = _screen_insects(*probabilities, melting_layer, liquid_layers)
+    is_insects = insect_prob > prob_lim
+    return is_insects, ma.masked_where(insect_prob == 0, insect_prob)
 
 
 def _insect_probability(obs):
