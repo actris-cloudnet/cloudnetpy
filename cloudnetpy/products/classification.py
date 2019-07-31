@@ -40,7 +40,7 @@ def get_target_classification(categorize_bits):
     classification[~bits['droplet'] & bits['falling']] = 2
     classification[bits['droplet'] & bits['falling']] = 3
     classification[~bits['droplet'] & bits['falling'] & bits['cold']] = 4
-    classification[bits['droplet'] & bits['cold']] = 5
+    classification[bits['droplet'] & bits['falling'] & bits['cold']] = 5
     classification[bits['melting']] = 6
     classification[bits['melting'] & bits['droplet']] = 7
     classification[bits['aerosol']] = 8

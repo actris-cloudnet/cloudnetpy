@@ -232,34 +232,25 @@ def find_t0_alt(temperature, height):
     return alt
 
 
-def find_insects(obs, *args, prob_lim=0.8):
+def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
     """Returns insect probability and boolean array of insect presence.
 
-    Insects are detected by calculating heuristic probability of insects using
-    radar echo, *Zh*, linear depolarization ratio, *ldr* and Doppler
-    width, *w*. Generally insects have small *Zh*, high *ldr* and small *w*.
+    Insects are classified by estimating heuristic probability
+    of insects from various individual radar parameters and combining
+    these probabilities. Insects typically yield small echo and spectral width
+    but high linear depolarization ratio (ldr), and they are present in warm
+    temperatures.
 
-    If a small echo from temperatures above zero has high *ldr*,
-    it most probably contains insects. A probability value between 0 and 1
-    is assigned using a 2-D probability distribution in *ldr*-*Zh* space.
+    The combination of echo, ldr and temperature is generally the best proxy
+    for insects. If ldr is not available, we use other radar parameters.
 
-    If *ldr* is not available, we must use *w* which is not as
-    good indicator but still usable. Here a fixed value, 0.06, is used
-    (smaller *w* values than this are insects).
-
-    The approach above generally does not give many false positives but instead
-    misses a few insect cases. If hordes of insects are present, they can
-    yield a relatively strong radar signal. Because this is not a typical
-    insect signature, a too low probability will appear.
-
-    Finally, positive insect detections are canceled from profiles with rain,
-    liquid droplets pixels, melting layer pixels and too cold temperatures.
+    Insects are finally screened from liquid layers and melting layer - and
+    above melting layer.
 
     Args:
         obs (_ClassData): Input data container.
-        *args: Binary fields that are used to screen the
-            insect probability. E.g. rain, clutter,
-            melting_layer, etc.
+        melting_layer (ndarray): 2D array denoting melting layer.
+        liquid_layers (ndarray): 2D array denoting liquid layers.
         prob_lim (float, optional): Probability higher than
             this will lead to positive detection. Default is 0.8.
 
@@ -267,26 +258,16 @@ def find_insects(obs, *args, prob_lim=0.8):
         2-element tuple containing
 
         - ndarray: 2-D probability of pixel containing insects.
-        - ndarray: 2-D boolean flag of insects presense.
+        - ndarray: 2-D boolean flag of insects presence.
 
     """
-    i_prob = _insect_probability(obs)
-    i_prob = _screen_insects(i_prob, *args)
+    i_prob, i_prob_no_ldr = _insect_probability(obs)
+    i_prob = _screen_insects(i_prob, i_prob_no_ldr, melting_layer, liquid_layers)
     is_insects = i_prob > prob_lim
     return is_insects, ma.masked_where(i_prob == 0, i_prob)
 
 
 def _insect_probability(obs):
-    """Estimates insect probability from radar parameters.
-
-    Args:
-        obs (_ClassData): Input data container.
-
-    Returns:
-        ndarray: 2-D insect probability between 0-1.
-
-    """
-
     def _interpolate_lwp():
         ind = ma.where(obs.lwp)
         return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
@@ -305,46 +286,35 @@ def _insect_probability(obs):
             'width': fun(obs.width, 1, 0.3, True),
             'z': fun(obs.z, -15, 8, True),
             'ldr': fun(obs.ldr, -20, 5),
-            'temp': fun(obs.tw, 273, 1),
+            'temp_loose': fun(obs.tw, 268, 2),
+            'temp_strict': fun(obs.tw, 274, 1),
             'v': fun(smooth_v, -2, 1),
             'lwp': utils.transpose(fun(lwp_interp, 100, 50, invert=True))
         }
-
     prob = _get_probabilities()
-    prob_z_t = prob['z'] * prob['temp']
-
-    prob_combined = prob_z_t * prob['ldr']
-    prob_no_ldr = prob_z_t * prob['v'] * prob['lwp'] * prob['width']  # TODO: not sure if width is good here
-
+    prob_combined = prob['z'] * prob['temp_loose'] * prob['ldr']
+    prob_no_ldr = prob['z'] * prob['temp_strict'] * prob['v'] * prob['lwp'] * prob['width']
     no_ldr = np.where(prob_combined == 0)
     prob_combined[no_ldr] = prob_no_ldr[no_ldr]
+    return prob_combined, prob_no_ldr
 
-    return prob_combined
 
+def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers):
+    def _screen_liquid_layers():
+        prob[liquid_layers == 1] = 0
 
-def _screen_insects(insect_prob, *args):
-    """Screens insects by temperature and other misc. conditions.
+    def _screen_above_melting():
+        above_melting = utils.ffill(melting_layer)
+        prob[above_melting == 1] = 0
 
-    Args:
-        insect_prob (ndarray): Insect probability with the shape (m, n).
-        temperature (ndarray): Wet bulb temperature with the shape (m, n).
-        *args (ndrray): Variable number of boolean arrays where True
-            means that insect probablity should be 0. Shape of these
-            fields can be (m, n), or (m,) when the whole profile
-            is flagged.
-
-    """
-    def _screen_insects_misc():
-        """Sets insect probability to 0, indicated by *args."""
-        for arg in args:
-            if arg.size == prob.shape[0]:
-                prob[arg, :] = 0
-            else:
-                x = utils.ffill(arg.astype(int))
-                prob[x == 1] = 0
+    def _screen_above_liquid():
+        above_liquid = utils.ffill(liquid_layers)
+        prob[np.logical_and(above_liquid == 1, insect_prob_no_ldr > 0)] = 0
 
     prob = np.copy(insect_prob)
-    _screen_insects_misc()
+    _screen_liquid_layers()
+    _screen_above_melting()
+    _screen_above_liquid()
     return prob
 
 
