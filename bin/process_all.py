@@ -28,12 +28,12 @@ SITE_ROOT = f"{config['PATH']['root']}{config['SITE']['dir_name']}/"
 def main():
     """ Main Cloudnet processing function."""
 
-    def get_ints(key, *args):
-        for arg in args:
-            yield config.getint(key, arg)
+    def _period_to_date(period):
+        date_parts = [period.getint(key) for key in ('year', 'month', 'day')]
+        return date(*date_parts)
 
-    start_date = date(*get_ints('PERIOD_START', 'year', 'month', 'day'))
-    end_date = date(*get_ints('PERIOD_END', 'year', 'month', 'day'))
+    start_date = _period_to_date(config['PERIOD_START'])
+    end_date = _period_to_date(config['PERIOD_END'])
 
     for single_date in _date_range(start_date, end_date):
         dvec = single_date.strftime("%Y%m%d")
