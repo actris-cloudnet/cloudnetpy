@@ -45,11 +45,13 @@
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 <span class="kn">import</span> <span class="nn">scipy.signal</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">utils</span>
-<span class="kn">from</span> <span class="nn">cloudnetpy.constants</span> <span class="k">import</span> <span class="n">T0</span>
 
 
-<div class="viewcode-block" id="find_liquid"><a class="viewcode-back" href="../api.html#droplet.find_liquid">[docs]</a><span class="k">def</span> <span class="nf">find_liquid</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">peak_amp</span><span class="o">=</span><span class="mf">2e-5</span><span class="p">,</span> <span class="n">max_width</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">min_points</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-                <span class="n">min_top_der</span><span class="o">=</span><span class="mf">2e-7</span><span class="p">):</span>
+<div class="viewcode-block" id="find_liquid"><a class="viewcode-back" href="../api.html#droplet.find_liquid">[docs]</a><span class="k">def</span> <span class="nf">find_liquid</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">peak_amp</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+                <span class="n">max_width</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+                <span class="n">min_points</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+                <span class="n">min_top_der</span><span class="o">=</span><span class="mf">1e-7</span><span class="p">,</span>
+                <span class="n">min_lwp</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Estimate liquid layers from SNR-screened attenuated backscattering.</span>
 
 <span class="sd">    Args:</span>
@@ -61,6 +63,8 @@
 <span class="sd">        min_top_der (float, optional): Minimum derivative above peak,</span>
 <span class="sd">            defined as (beta_peak-beta_top) / (alt_top-alt_peak), which</span>
 <span class="sd">            is always positive. Default is 2e-7.</span>
+<span class="sd">        min_lwp (float, optional): Minimum value from linearly interpolated lwp</span>
+<span class="sd">            measured by the mwr. Default is 0.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        dict: Dict containing &#39;presence&#39;, &#39;bases&#39; and &#39;tops&#39;.</span>
@@ -74,7 +78,8 @@
     <span class="k">def</span> <span class="nf">_is_proper_peak</span><span class="p">():</span>
         <span class="n">conditions</span> <span class="o">=</span> <span class="p">(</span><span class="n">npoints</span> <span class="o">&gt;</span> <span class="n">min_points</span><span class="p">,</span>
                       <span class="n">peak_width</span> <span class="o">&lt;</span> <span class="n">max_width</span><span class="p">,</span>
-                      <span class="n">top_der</span> <span class="o">&gt;</span> <span class="n">min_top_der</span><span class="p">)</span>
+                      <span class="n">top_der</span> <span class="o">&gt;</span> <span class="n">min_top_der</span><span class="p">,</span>
+                      <span class="n">is_positive_lwp</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">conditions</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_save_peak_position</span><span class="p">():</span>
@@ -82,8 +87,18 @@
         <span class="n">liquid_top</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">top</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">liquid_base</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="n">base</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
+    <span class="k">def</span> <span class="nf">_interpolate_lwp</span><span class="p">():</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">lwp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">obs</span><span class="o">.</span><span class="n">lwp</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+
+    <span class="n">lwp_int</span> <span class="o">=</span> <span class="n">_interpolate_lwp</span><span class="p">()</span>
     <span class="n">beta</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">beta</span>
+
+    <span class="c1"># TODO: append zero-row into data instead of setting first values to zero.</span>
+    <span class="c1"># This fix is because the peak can be the very first value (thus there is no proper base in data)</span>
+    <span class="n">beta</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">height</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">height</span>
+
     <span class="n">is_liquid</span><span class="p">,</span> <span class="n">liquid_top</span><span class="p">,</span> <span class="n">liquid_base</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">beta</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
                                                     <span class="n">masked</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">base_below_peak</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">n_elements</span><span class="p">(</span><span class="n">height</span><span class="p">,</span> <span class="mi">200</span><span class="p">)</span>
@@ -91,6 +106,7 @@
     <span class="n">beta_diff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">peak_indices</span> <span class="o">=</span> <span class="n">_find_strong_peaks</span><span class="p">()</span>
+
     <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">peak</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">peak_indices</span><span class="p">):</span>
         <span class="n">lprof</span> <span class="o">=</span> <span class="n">beta</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:]</span>
         <span class="n">dprof</span> <span class="o">=</span> <span class="n">beta_diff</span><span class="p">[</span><span class="n">n</span><span class="p">,</span> <span class="p">:]</span>
@@ -102,39 +118,12 @@
         <span class="n">npoints</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">lprof</span><span class="p">[</span><span class="n">base</span><span class="p">:</span><span class="n">top</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">peak_width</span> <span class="o">=</span> <span class="n">height</span><span class="p">[</span><span class="n">top</span><span class="p">]</span> <span class="o">-</span> <span class="n">height</span><span class="p">[</span><span class="n">base</span><span class="p">]</span>
         <span class="n">top_der</span> <span class="o">=</span> <span class="p">(</span><span class="n">lprof</span><span class="p">[</span><span class="n">peak</span><span class="p">]</span> <span class="o">-</span> <span class="n">lprof</span><span class="p">[</span><span class="n">top</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">height</span><span class="p">[</span><span class="n">top</span><span class="p">]</span> <span class="o">-</span> <span class="n">height</span><span class="p">[</span><span class="n">peak</span><span class="p">])</span>
+        <span class="n">is_positive_lwp</span> <span class="o">=</span> <span class="n">lwp_int</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">min_lwp</span>
         <span class="k">if</span> <span class="n">_is_proper_peak</span><span class="p">():</span>
             <span class="n">_save_peak_position</span><span class="p">()</span>
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;presence&#39;</span><span class="p">:</span> <span class="n">is_liquid</span><span class="p">,</span>
             <span class="s1">&#39;bases&#39;</span><span class="p">:</span> <span class="n">liquid_base</span><span class="p">,</span>
             <span class="s1">&#39;tops&#39;</span><span class="p">:</span> <span class="n">liquid_top</span><span class="p">}</span></div>
-
-
-<div class="viewcode-block" id="correct_liquid_top"><a class="viewcode-back" href="../api.html#droplet.correct_liquid_top">[docs]</a><span class="k">def</span> <span class="nf">correct_liquid_top</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">liquid</span><span class="p">,</span> <span class="n">is_freezing</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Corrects lidar detected liquid cloud top using radar data.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        obs (ClassData): Observations container.</span>
-<span class="sd">        liquid (dict): Dictionary for liquid clouds.</span>
-<span class="sd">        is_freezing (ndarray): 2-D boolean array of sub-zero temperature,</span>
-<span class="sd">            derived from the model temperature and melting layer based</span>
-<span class="sd">            on radar data.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        ndarray: Corrected liquid cloud array.</span>
-
-<span class="sd">    See also:</span>
-<span class="sd">        droplet.find_liquid()</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">top_above</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">n_elements</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="mi">750</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">prof</span><span class="p">,</span> <span class="n">top</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">liquid</span><span class="p">[</span><span class="s1">&#39;tops&#39;</span><span class="p">])):</span>
-        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_freezing</span><span class="p">[</span><span class="n">prof</span><span class="p">,</span> <span class="n">top</span><span class="p">:])[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">top_above</span>
-        <span class="n">rad</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">prof</span><span class="p">,</span> <span class="n">top</span><span class="p">:</span><span class="n">top</span><span class="o">+</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rad</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">or</span> <span class="o">~</span><span class="n">rad</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
-            <span class="n">first_masked</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rad</span><span class="o">.</span><span class="n">mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">liquid</span><span class="p">[</span><span class="s1">&#39;presence&#39;</span><span class="p">][</span><span class="n">prof</span><span class="p">,</span> <span class="n">top</span><span class="p">:</span><span class="n">top</span><span class="o">+</span><span class="n">first_masked</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">liquid</span><span class="p">[</span><span class="s1">&#39;presence&#39;</span><span class="p">][</span><span class="n">obs</span><span class="o">.</span><span class="n">tw</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">T0</span><span class="o">-</span><span class="mi">40</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">return</span> <span class="n">liquid</span><span class="p">[</span><span class="s1">&#39;presence&#39;</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="ind_base"><a class="viewcode-back" href="../api.html#droplet.ind_base">[docs]</a><span class="k">def</span> <span class="nf">ind_base</span><span class="p">(</span><span class="n">dprof</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">lim</span><span class="p">):</span>
@@ -235,6 +224,31 @@
     <span class="n">diffs</span> <span class="o">=</span> <span class="n">dprof</span><span class="p">[</span><span class="n">p</span><span class="p">:</span><span class="n">end</span><span class="p">]</span>
     <span class="n">mind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">diffs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">p</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diffs</span> <span class="o">&lt;</span> <span class="n">diffs</span><span class="p">[</span><span class="n">mind</span><span class="p">]</span><span class="o">/</span><span class="n">lim</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="correct_liquid_top"><a class="viewcode-back" href="../api.html#droplet.correct_liquid_top">[docs]</a><span class="k">def</span> <span class="nf">correct_liquid_top</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">liquid</span><span class="p">,</span> <span class="n">is_freezing</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Corrects lidar detected liquid cloud top using radar data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obs (ClassData): Observations container.</span>
+<span class="sd">        liquid (dict): Dictionary for liquid clouds.</span>
+<span class="sd">        is_freezing (ndarray): 2-D boolean array of sub-zero temperature,</span>
+<span class="sd">            derived from the model temperature and melting layer based</span>
+<span class="sd">            on radar data.</span>
+<span class="sd">        limit (float): The maximum correction distance (m) above liquid cloud top.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Corrected liquid cloud array.</span>
+<span class="sd">    See also:</span>
+<span class="sd">        droplet.find_liquid()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">top_above</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">n_elements</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">prof</span><span class="p">,</span> <span class="n">top</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">liquid</span><span class="p">[</span><span class="s1">&#39;tops&#39;</span><span class="p">])):</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_freezing</span><span class="p">[</span><span class="n">prof</span><span class="p">,</span> <span class="n">top</span><span class="p">:])[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">top_above</span>
+        <span class="n">rad</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">z</span><span class="p">[</span><span class="n">prof</span><span class="p">,</span> <span class="n">top</span><span class="p">:</span><span class="n">top</span><span class="o">+</span><span class="n">ind</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rad</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">or</span> <span class="o">~</span><span class="n">rad</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
+            <span class="n">first_masked</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">rad</span><span class="o">.</span><span class="n">mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">liquid</span><span class="p">[</span><span class="s1">&#39;presence&#39;</span><span class="p">][</span><span class="n">prof</span><span class="p">,</span> <span class="n">top</span><span class="p">:</span><span class="n">top</span><span class="o">+</span><span class="n">first_masked</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">liquid</span><span class="p">[</span><span class="s1">&#39;presence&#39;</span><span class="p">]</span></div>
 </pre></div>
 
           </div>
