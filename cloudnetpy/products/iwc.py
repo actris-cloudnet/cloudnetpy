@@ -202,8 +202,8 @@ def _append_iwc_status(iwc_data, ice_class):
     retrieval_status = np.zeros(iwc.shape, dtype=int)
     is_iwc = ~iwc.mask
     retrieval_status[is_iwc] = 1
-    retrieval_status[is_iwc & ice_class.uncorrected_ice] = 2
-    retrieval_status[is_iwc & ice_class.corrected_ice] = 3
+    retrieval_status[is_iwc & ice_class.corrected_ice] = 2
+    retrieval_status[is_iwc & ice_class.uncorrected_ice] = 3
     retrieval_status[~is_iwc & ice_class.is_ice] = 4
     retrieval_status[ice_class.cold_above_rain] = 6
     retrieval_status[ice_class.ice_above_rain] = 5
@@ -252,10 +252,10 @@ DEFINITIONS = {
     ('\n'
      'Value 0: No ice present.\n'
      'Value 1: Reliable retrieval.\n'
-     'Value 2: Unreliable retrieval: Uncorrected liquid attenuation due to\n'
-     '         missing liquid water path data.'
-     'Value 3: Unreliable retrieval: Radar corrected using liquid water path\n'
+     'Value 2: Unreliable retrieval: Radar corrected using liquid water path\n'
      '         data which can be inaccurate.'
+     'Value 3: Unreliable retrieval: Uncorrected liquid attenuation due to\n'
+     '         missing liquid water path data.'
      'Value 4: No retrieval: Ice detected only by the lidar.\n'
      'Value 5: No retrieval: Rain below the detected ice leads to large\n'
      '         uncertainties.\n'
