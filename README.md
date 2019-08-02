@@ -6,6 +6,7 @@ CloudnetPy is a refactored fork of the currently operational (Matlab) processing
 - Cloudnet website: http://devcloudnet.fmi.fi
 - CloudnetPy documentation: https://tukiains.github.io/cloudnetpy/
 
+<img src="docs/source/_static/20190423_mace-head_classification.png">
 
 ```diff
 - CloudnetPy is currently under active development and testing.
