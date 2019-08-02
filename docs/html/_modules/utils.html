@@ -497,6 +497,30 @@
     <span class="k">except</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="array_to_probability"><a class="viewcode-back" href="../api.html#utils.array_to_probability">[docs]</a><span class="k">def</span> <span class="nf">array_to_probability</span><span class="p">(</span><span class="n">arr_in</span><span class="p">,</span> <span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts continuous variable into 0-1 probability.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        arr_in (MaskedArray): Masked numpy array.</span>
+<span class="sd">        loc (float): Center of the distribution. Values smaller than this</span>
+<span class="sd">            will have small probability. Values greater than this will have</span>
+<span class="sd">            large probability.</span>
+<span class="sd">        scale (float): Width of the distribution, i.e., how fast the probability</span>
+<span class="sd">            drops or increases from the peak.</span>
+<span class="sd">        invert (bool, optional): If True, large values have small</span>
+<span class="sd">            probability and vice versa. Default is False.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">arr_in</span><span class="p">)</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">arr</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">ind</span> <span class="o">=</span> <span class="o">~</span><span class="n">arr</span><span class="o">.</span><span class="n">mask</span>
+    <span class="k">if</span> <span class="n">invert</span><span class="p">:</span>
+        <span class="n">arr</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">loc</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">prob</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">prob</span></div>
 </pre></div>
 
           </div>

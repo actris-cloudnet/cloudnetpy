@@ -371,7 +371,7 @@ results.</li>
 
 <dl class="function">
 <dt id="classify.classify_measurements">
-<code class="descclassname">classify.</code><code class="descname">classify_measurements</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>model</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#classify_measurements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.classify_measurements" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">classify.</code><code class="descname">classify_measurements</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>model</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#classify_measurements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.classify_measurements" title="Permalink to this definition">¶</a></dt>
 <dd><p>Classifies radar/lidar observations.</p>
 <p>This function classifies atmospheric scatterer from the input data.
 The input data needs to be averaged or interpolated to the common
@@ -384,6 +384,7 @@ time / height grid before calling this function.</p>
 <li><strong>radar</strong> (<em>Radar</em>) – A Radar object.</li>
 <li><strong>lidar</strong> (<em>Lidar</em>) – A Lidar object.</li>
 <li><strong>model</strong> (<em>Model</em>) – A Model object.</li>
+<li><strong>mwr</strong> (<em>Mwr</em>) – A Mwr object.</li>
 </ul>
 </td>
 </tr>
@@ -509,32 +510,25 @@ temperature drops below 0 deg C.</p>
 
 <dl class="function">
 <dt id="classify.find_insects">
-<code class="descclassname">classify.</code><code class="descname">find_insects</code><span class="sig-paren">(</span><em>obs</em>, <em>*args</em>, <em>prob_lim=0.8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_insects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_insects" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">classify.</code><code class="descname">find_insects</code><span class="sig-paren">(</span><em>obs</em>, <em>melting_layer</em>, <em>liquid_layers</em>, <em>prob_lim=0.8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_insects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_insects" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns insect probability and boolean array of insect presence.</p>
-<p>Insects are detected by calculating heuristic probability of insects using
-radar echo, <em>Zh</em>, linear depolarization ratio, <em>ldr</em> and Doppler
-width, <em>w</em>. Generally insects have small <em>Zh</em>, high <em>ldr</em> and small <em>w</em>.</p>
-<p>If a small echo from temperatures above zero has high <em>ldr</em>,
-it most probably contains insects. A probability value between 0 and 1
-is assigned using a 2-D probability distribution in <em>ldr</em>-<em>Zh</em> space.</p>
-<p>If <em>ldr</em> is not available, we must use <em>w</em> which is not as
-good indicator but still usable. Here a fixed value, 0.06, is used
-(smaller <em>w</em> values than this are insects).</p>
-<p>The approach above generally does not give many false positives but instead
-misses a few insect cases. If hordes of insects are present, they can
-yield a relatively strong radar signal. Because this is not a typical
-insect signature, a too low probability will appear.</p>
-<p>Finally, positive insect detections are canceled from profiles with rain,
-liquid droplets pixels, melting layer pixels and too cold temperatures.</p>
+<p>Insects are classified by estimating heuristic probability
+of insects from various individual radar parameters and combining
+these probabilities. Insects typically yield small echo and spectral width
+but high linear depolarization ratio (ldr), and they are present in warm
+temperatures.</p>
+<p>The combination of echo, ldr and temperature is generally the best proxy
+for insects. If ldr is not available, we use other radar parameters.</p>
+<p>Insects are finally screened from liquid layers and melting layer - and
+above melting layer.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
-<li><strong>*args</strong> – Binary fields that are used to screen the
-insect probability. E.g. rain, clutter,
-melting_layer, etc.</li>
+<li><strong>melting_layer</strong> (<em>ndarray</em>) – 2D array denoting melting layer.</li>
+<li><strong>liquid_layers</strong> (<em>ndarray</em>) – 2D array denoting liquid layers.</li>
 <li><strong>prob_lim</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability higher than
 this will lead to positive detection. Default is 0.8.</li>
 </ul>
@@ -543,7 +537,7 @@ this will lead to positive detection. Default is 0.8.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>2-element tuple containing</p>
 <ul class="simple">
 <li>ndarray: 2-D probability of pixel containing insects.</li>
-<li>ndarray: 2-D boolean flag of insects presense.</li>
+<li>ndarray: 2-D boolean flag of insects presence.</li>
 </ul>
 </p>
 </td>
@@ -583,15 +577,16 @@ are ice or rain).</p>
 
 <dl class="function">
 <dt id="classify.find_aerosols">
-<code class="descclassname">classify.</code><code class="descname">find_aerosols</code><span class="sig-paren">(</span><em>beta</em>, <em>is_falling</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_aerosols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_aerosols" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">classify.</code><code class="descname">find_aerosols</code><span class="sig-paren">(</span><em>obs</em>, <em>is_falling</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/classify.html#find_aerosols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#classify.find_aerosols" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimates aerosols from lidar backscattering.</p>
-<p>Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.</p>
+<p>Aerosols are lidar signals that are: a) not falling, b) not liquid droplets,
+and are present in warmer than some threshold temperature.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>beta</strong> (<em>MaskedArray</em>) – 2-D attenuated backscattering coefficient.</li>
+<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
 <li><strong>is_falling</strong> (<em>ndarray</em>) – 2-D boolean array of falling hydrometeors.</li>
 <li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
 </ul>
@@ -955,7 +950,7 @@ theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</p>
 <p>This module has functions for liquid layer detection.</p>
 <dl class="function">
 <dt id="droplet.find_liquid">
-<code class="descclassname">droplet.</code><code class="descname">find_liquid</code><span class="sig-paren">(</span><em>obs</em>, <em>peak_amp=2e-05</em>, <em>max_width=300</em>, <em>min_points=3</em>, <em>min_top_der=2e-07</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/droplet.html#find_liquid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#droplet.find_liquid" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">droplet.</code><code class="descname">find_liquid</code><span class="sig-paren">(</span><em>obs</em>, <em>peak_amp=1e-06</em>, <em>max_width=300</em>, <em>min_points=3</em>, <em>min_top_der=1e-07</em>, <em>min_lwp=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/droplet.html#find_liquid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#droplet.find_liquid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate liquid layers from SNR-screened attenuated backscattering.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -970,6 +965,8 @@ Default is 3.</li>
 <li><strong>min_top_der</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum derivative above peak,
 defined as (beta_peak-beta_top) / (alt_top-alt_peak), which
 is always positive. Default is 2e-7.</li>
+<li><strong>min_lwp</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value from linearly interpolated lwp
+measured by the mwr. Default is 0.</li>
 </ul>
 </td>
 </tr>
@@ -981,37 +978,6 @@ is always positive. Default is 2e-7.</li>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="function">
-<dt id="droplet.correct_liquid_top">
-<code class="descclassname">droplet.</code><code class="descname">correct_liquid_top</code><span class="sig-paren">(</span><em>obs</em>, <em>liquid</em>, <em>is_freezing</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/droplet.html#correct_liquid_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#droplet.correct_liquid_top" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrects lidar detected liquid cloud top using radar data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
-<li><strong>liquid</strong> (<em>dict</em>) – Dictionary for liquid clouds.</li>
-<li><strong>is_freezing</strong> (<em>ndarray</em>) – 2-D boolean array of sub-zero temperature,
-derived from the model temperature and melting layer based
-on radar data.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Corrected liquid cloud array.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">droplet.find_liquid()</p>
-</div>
 </dd></dl>
 
 <dl class="function">
@@ -1125,6 +1091,38 @@ accept some other point, higher in the profile.</li>
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <p class="last">droplet.ind_base()</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="droplet.correct_liquid_top">
+<code class="descclassname">droplet.</code><code class="descname">correct_liquid_top</code><span class="sig-paren">(</span><em>obs</em>, <em>liquid</em>, <em>is_freezing</em>, <em>limit=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/droplet.html#correct_liquid_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#droplet.correct_liquid_top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corrects lidar detected liquid cloud top using radar data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
+<li><strong>liquid</strong> (<em>dict</em>) – Dictionary for liquid clouds.</li>
+<li><strong>is_freezing</strong> (<em>ndarray</em>) – 2-D boolean array of sub-zero temperature,
+derived from the model temperature and melting layer based
+on radar data.</li>
+<li><strong>limit</strong> (<em>float</em>) – The maximum correction distance (m) above liquid cloud top.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Corrected liquid cloud array.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">droplet.find_liquid()</p>
 </div>
 </dd></dl>
 
@@ -1634,6 +1632,30 @@ and ‘site_name’.</li>
 </div>
 </dd></dl>
 
+<dl class="function">
+<dt id="utils.array_to_probability">
+<code class="descclassname">utils.</code><code class="descname">array_to_probability</code><span class="sig-paren">(</span><em>arr_in</em>, <em>loc</em>, <em>scale</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#array_to_probability"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.array_to_probability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts continuous variable into 0-1 probability.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>arr_in</strong> (<em>MaskedArray</em>) – Masked numpy array.</li>
+<li><strong>loc</strong> (<em>float</em>) – Center of the distribution. Values smaller than this
+will have small probability. Values greater than this will have
+large probability.</li>
+<li><strong>scale</strong> (<em>float</em>) – Width of the distribution, i.e., how fast the probability
+drops or increases from the peak.</li>
+<li><strong>invert</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, large values have small
+probability and vice versa. Default is False.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </div>
 </div>
 <div class="section" id="products-modules">
@@ -1668,18 +1690,6 @@ NetCDF file with information of classification and measurements.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_classification</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.classification.get_target_classification">
-<code class="descclassname">products.classification.</code><code class="descname">get_target_classification</code><span class="sig-paren">(</span><em>categorize_bits</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#get_target_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.get_target_classification" title="Permalink to this definition">¶</a></dt>
-<dd><p>Classifies atmospheric targets by combining active bits.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.classification.get_detection_status">
-<code class="descclassname">products.classification.</code><code class="descname">get_detection_status</code><span class="sig-paren">(</span><em>categorize_bits</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#get_detection_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.get_detection_status" title="Permalink to this definition">¶</a></dt>
-<dd><p>Classifies detection status by combining active bits.</p>
 </dd></dl>
 
 </div>

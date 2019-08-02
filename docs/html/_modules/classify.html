@@ -46,7 +46,6 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
 <span class="kn">from</span> <span class="nn">scipy.ndimage.filters</span> <span class="k">import</span> <span class="n">gaussian_filter</span>
-<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">stats</span>
 <span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="k">import</span> <span class="n">interp1d</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">droplet</span><span class="p">,</span> <span class="n">utils</span>
 <span class="kn">from</span> <span class="nn">cloudnetpy.constants</span> <span class="k">import</span> <span class="n">T0</span>
@@ -85,7 +84,7 @@
     <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;quality_bits&#39;</span><span class="p">:</span> <span class="n">qbits</span><span class="p">}</span></div>
 
 
-<div class="viewcode-block" id="classify_measurements"><a class="viewcode-back" href="../api.html#classify.classify_measurements">[docs]</a><span class="k">def</span> <span class="nf">classify_measurements</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+<div class="viewcode-block" id="classify_measurements"><a class="viewcode-back" href="../api.html#classify.classify_measurements">[docs]</a><span class="k">def</span> <span class="nf">classify_measurements</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">mwr</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Classifies radar/lidar observations.</span>
 
 <span class="sd">    This function classifies atmospheric scatterer from the input data.</span>
@@ -96,6 +95,7 @@
 <span class="sd">        radar (Radar): A Radar object.</span>
 <span class="sd">        lidar (Lidar): A Lidar object.</span>
 <span class="sd">        model (Model): A Model object.</span>
+<span class="sd">        mwr (Mwr): A Mwr object.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        _ClassificationResult: Object containing the result</span>
@@ -105,15 +105,16 @@
 <span class="sd">        classify.fetch_qual_bits()</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">obs</span> <span class="o">=</span> <span class="n">_ClassData</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">_ClassData</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">mwr</span><span class="p">)</span>
     <span class="n">bits</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="mi">6</span>
     <span class="n">liquid</span> <span class="o">=</span> <span class="n">droplet</span><span class="o">.</span><span class="n">find_liquid</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
     <span class="n">bits</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_melting_layer</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
     <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_freezing_region</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">droplet</span><span class="o">.</span><span class="n">correct_liquid_top</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">liquid</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">droplet</span><span class="o">.</span><span class="n">correct_liquid_top</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">liquid</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">limit</span><span class="o">=</span><span class="mi">500</span><span class="p">)</span>
     <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">insect_prob</span> <span class="o">=</span> <span class="n">find_insects</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_falling_hydrometeors</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bits</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
-    <span class="n">bits</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_aerosols</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">extra_ice</span> <span class="o">=</span> <span class="n">find_aerosols</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">bits</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">bits</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">extra_ice</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">cat_bits</span> <span class="o">=</span> <span class="n">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_ClassificationResult</span><span class="p">(</span><span class="n">cat_bits</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">is_rain</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">is_clutter</span><span class="p">,</span>
                                  <span class="n">insect_prob</span><span class="p">,</span> <span class="n">liquid</span><span class="p">[</span><span class="s1">&#39;bases&#39;</span><span class="p">])</span></div>
@@ -272,34 +273,25 @@
     <span class="k">return</span> <span class="n">alt</span></div>
 
 
-<div class="viewcode-block" id="find_insects"><a class="viewcode-back" href="../api.html#classify.find_insects">[docs]</a><span class="k">def</span> <span class="nf">find_insects</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">prob_lim</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
+<div class="viewcode-block" id="find_insects"><a class="viewcode-back" href="../api.html#classify.find_insects">[docs]</a><span class="k">def</span> <span class="nf">find_insects</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">melting_layer</span><span class="p">,</span> <span class="n">liquid_layers</span><span class="p">,</span> <span class="n">prob_lim</span><span class="o">=</span><span class="mf">0.8</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Returns insect probability and boolean array of insect presence.</span>
 
-<span class="sd">    Insects are detected by calculating heuristic probability of insects using</span>
-<span class="sd">    radar echo, *Zh*, linear depolarization ratio, *ldr* and Doppler</span>
-<span class="sd">    width, *w*. Generally insects have small *Zh*, high *ldr* and small *w*.</span>
+<span class="sd">    Insects are classified by estimating heuristic probability</span>
+<span class="sd">    of insects from various individual radar parameters and combining</span>
+<span class="sd">    these probabilities. Insects typically yield small echo and spectral width</span>
+<span class="sd">    but high linear depolarization ratio (ldr), and they are present in warm</span>
+<span class="sd">    temperatures.</span>
 
-<span class="sd">    If a small echo from temperatures above zero has high *ldr*,</span>
-<span class="sd">    it most probably contains insects. A probability value between 0 and 1</span>
-<span class="sd">    is assigned using a 2-D probability distribution in *ldr*-*Zh* space.</span>
+<span class="sd">    The combination of echo, ldr and temperature is generally the best proxy</span>
+<span class="sd">    for insects. If ldr is not available, we use other radar parameters.</span>
 
-<span class="sd">    If *ldr* is not available, we must use *w* which is not as</span>
-<span class="sd">    good indicator but still usable. Here a fixed value, 0.06, is used</span>
-<span class="sd">    (smaller *w* values than this are insects).</span>
-
-<span class="sd">    The approach above generally does not give many false positives but instead</span>
-<span class="sd">    misses a few insect cases. If hordes of insects are present, they can</span>
-<span class="sd">    yield a relatively strong radar signal. Because this is not a typical</span>
-<span class="sd">    insect signature, a too low probability will appear.</span>
-
-<span class="sd">    Finally, positive insect detections are canceled from profiles with rain,</span>
-<span class="sd">    liquid droplets pixels, melting layer pixels and too cold temperatures.</span>
+<span class="sd">    Insects are finally screened from liquid layers and melting layer - and</span>
+<span class="sd">    above melting layer.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        obs (_ClassData): Input data container.</span>
-<span class="sd">        *args: Binary fields that are used to screen the</span>
-<span class="sd">            insect probability. E.g. rain, clutter,</span>
-<span class="sd">            melting_layer, etc.</span>
+<span class="sd">        melting_layer (ndarray): 2D array denoting melting layer.</span>
+<span class="sd">        liquid_layers (ndarray): 2D array denoting liquid layers.</span>
 <span class="sd">        prob_lim (float, optional): Probability higher than</span>
 <span class="sd">            this will lead to positive detection. Default is 0.8.</span>
 
@@ -307,74 +299,63 @@
 <span class="sd">        2-element tuple containing</span>
 
 <span class="sd">        - ndarray: 2-D probability of pixel containing insects.</span>
-<span class="sd">        - ndarray: 2-D boolean flag of insects presense.</span>
+<span class="sd">        - ndarray: 2-D boolean flag of insects presence.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">i_prob</span> <span class="o">=</span> <span class="n">_insect_probability</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">ldr</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
-    <span class="n">i_prob</span> <span class="o">=</span> <span class="n">_screen_insects</span><span class="p">(</span><span class="n">i_prob</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">tw</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
-    <span class="n">is_insects</span> <span class="o">=</span> <span class="n">i_prob</span> <span class="o">&gt;</span> <span class="n">prob_lim</span>
-    <span class="k">return</span> <span class="n">is_insects</span><span class="p">,</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">i_prob</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">i_prob</span><span class="p">)</span></div>
+    <span class="n">probabilities</span> <span class="o">=</span> <span class="n">_insect_probability</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+    <span class="n">insect_prob</span> <span class="o">=</span> <span class="n">_screen_insects</span><span class="p">(</span><span class="o">*</span><span class="n">probabilities</span><span class="p">,</span> <span class="n">melting_layer</span><span class="p">,</span> <span class="n">liquid_layers</span><span class="p">)</span>
+    <span class="n">is_insects</span> <span class="o">=</span> <span class="n">insect_prob</span> <span class="o">&gt;</span> <span class="n">prob_lim</span>
+    <span class="k">return</span> <span class="n">is_insects</span><span class="p">,</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_where</span><span class="p">(</span><span class="n">insect_prob</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">insect_prob</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">_insect_probability</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">ldr</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Estimates insect probability from radar parameters.</span>
+<span class="k">def</span> <span class="nf">_insect_probability</span><span class="p">(</span><span class="n">obs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_interpolate_lwp</span><span class="p">():</span>
+        <span class="n">ind</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">lwp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">time</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">time</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">obs</span><span class="o">.</span><span class="n">lwp</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        z (MaskedArray): 2-D radar echo.</span>
-<span class="sd">        ldr (MaskedArray): 2-D radar linear depolarization ratio.</span>
-<span class="sd">        width (MaskedArray): 2-D radar spectral width.</span>
+    <span class="k">def</span> <span class="nf">_get_smoothed_v</span><span class="p">():</span>
+        <span class="n">smoothed_v</span> <span class="o">=</span> <span class="n">gaussian_filter</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+        <span class="n">smoothed_v</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">smoothed_v</span><span class="p">)</span>
+        <span class="n">smoothed_v</span><span class="p">[</span><span class="n">obs</span><span class="o">.</span><span class="n">v</span><span class="o">.</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="k">return</span> <span class="n">smoothed_v</span>
 
-<span class="sd">    Returns:</span>
-<span class="sd">        ndarray: 2-D insect probability between 0-1.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">_insect_prob_ldr</span><span class="p">(</span><span class="n">z_loc</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ldr_loc</span><span class="o">=-</span><span class="mi">20</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Finds probability of insects, based on echo and ldr.&quot;&quot;&quot;</span>
-        <span class="n">z_prob</span><span class="p">,</span> <span class="n">ldr_prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">ind</span> <span class="o">=</span> <span class="o">~</span><span class="n">z</span><span class="o">.</span><span class="n">mask</span>
-        <span class="n">z_prob</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">z</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span><span class="o">*-</span><span class="mi">1</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">z_loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-        <span class="n">ind</span> <span class="o">=</span> <span class="o">~</span><span class="n">ldr</span><span class="o">.</span><span class="n">mask</span>
-        <span class="n">ldr_prob</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">ldr</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="n">ldr_loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">z_prob</span> <span class="o">*</span> <span class="n">ldr_prob</span>
-
-    <span class="k">def</span> <span class="nf">_insect_prob_width</span><span class="p">(</span><span class="n">w_limit</span><span class="o">=</span><span class="mf">0.06</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Finds (0, 1) probability of insects, based on spectral width.&quot;&quot;&quot;</span>
-        <span class="n">temp_w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">ind</span> <span class="o">=</span> <span class="n">ldr</span><span class="o">.</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">z</span><span class="o">.</span><span class="n">mask</span>
-        <span class="n">temp_w</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">width</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span>
-        <span class="k">return</span> <span class="p">(</span><span class="n">temp_w</span> <span class="o">&lt;</span> <span class="n">w_limit</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
-
-    <span class="n">probability_from_ldr</span> <span class="o">=</span> <span class="n">_insect_prob_ldr</span><span class="p">()</span>
-    <span class="n">probability_from_width</span> <span class="o">=</span> <span class="n">_insect_prob_width</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">probability_from_ldr</span> <span class="o">+</span> <span class="n">probability_from_width</span>
+    <span class="k">def</span> <span class="nf">_get_probabilities</span><span class="p">():</span>
+        <span class="n">smooth_v</span> <span class="o">=</span> <span class="n">_get_smoothed_v</span><span class="p">()</span>
+        <span class="n">lwp_interp</span> <span class="o">=</span> <span class="n">_interpolate_lwp</span><span class="p">()</span>
+        <span class="n">fun</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">array_to_probability</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="n">fun</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="s1">&#39;z&#39;</span><span class="p">:</span> <span class="n">fun</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="o">-</span><span class="mi">15</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+            <span class="s1">&#39;ldr&#39;</span><span class="p">:</span> <span class="n">fun</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">ldr</span><span class="p">,</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+            <span class="s1">&#39;temp_loose&#39;</span><span class="p">:</span> <span class="n">fun</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">tw</span><span class="p">,</span> <span class="mi">268</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="s1">&#39;temp_strict&#39;</span><span class="p">:</span> <span class="n">fun</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">tw</span><span class="p">,</span> <span class="mi">274</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s1">&#39;v&#39;</span><span class="p">:</span> <span class="n">fun</span><span class="p">(</span><span class="n">smooth_v</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="s1">&#39;lwp&#39;</span><span class="p">:</span> <span class="n">utils</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">fun</span><span class="p">(</span><span class="n">lwp_interp</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="n">invert</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="p">}</span>
+    <span class="n">prob</span> <span class="o">=</span> <span class="n">_get_probabilities</span><span class="p">()</span>
+    <span class="n">prob_combined</span> <span class="o">=</span> <span class="n">prob</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">prob</span><span class="p">[</span><span class="s1">&#39;temp_loose&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">prob</span><span class="p">[</span><span class="s1">&#39;ldr&#39;</span><span class="p">]</span>
+    <span class="n">prob_no_ldr</span> <span class="o">=</span> <span class="n">prob</span><span class="p">[</span><span class="s1">&#39;z&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">prob</span><span class="p">[</span><span class="s1">&#39;temp_strict&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">prob</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">prob</span><span class="p">[</span><span class="s1">&#39;lwp&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">prob</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">]</span>
+    <span class="n">no_ldr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">prob_combined</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">prob_combined</span><span class="p">[</span><span class="n">no_ldr</span><span class="p">]</span> <span class="o">=</span> <span class="n">prob_no_ldr</span><span class="p">[</span><span class="n">no_ldr</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">prob_combined</span><span class="p">,</span> <span class="n">prob_no_ldr</span>
 
 
-<span class="k">def</span> <span class="nf">_screen_insects</span><span class="p">(</span><span class="n">insect_prob</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Screens insects by temperature and other misc. conditions.</span>
+<span class="k">def</span> <span class="nf">_screen_insects</span><span class="p">(</span><span class="n">insect_prob</span><span class="p">,</span> <span class="n">insect_prob_no_ldr</span><span class="p">,</span> <span class="n">melting_layer</span><span class="p">,</span> <span class="n">liquid_layers</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_screen_liquid_layers</span><span class="p">():</span>
+        <span class="n">prob</span><span class="p">[</span><span class="n">liquid_layers</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">        insect_prob (ndarray): Insect probability with the shape (m, n).</span>
-<span class="sd">        temperature (ndarray): Wet bulb temperature with the shape (m, n).</span>
-<span class="sd">        *args (ndrray): Variable number of boolean arrays where True</span>
-<span class="sd">            means that insect probablity should be 0. Shape of these</span>
-<span class="sd">            fields can be (m, n), or (m,) when the whole profile</span>
-<span class="sd">            is flagged.</span>
+    <span class="k">def</span> <span class="nf">_screen_above_melting</span><span class="p">():</span>
+        <span class="n">above_melting</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">ffill</span><span class="p">(</span><span class="n">melting_layer</span><span class="p">)</span>
+        <span class="n">prob</span><span class="p">[</span><span class="n">above_melting</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">_screen_insects_misc</span><span class="p">():</span>
-        <span class="sd">&quot;&quot;&quot;Sets insect probability to 0, indicated by *args.&quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="n">prob</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-                <span class="n">prob</span><span class="p">[</span><span class="n">arg</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">prob</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-
-    <span class="k">def</span> <span class="nf">_screen_insects_temp</span><span class="p">(</span><span class="n">t_lim</span><span class="o">=-</span><span class="mi">5</span><span class="p">):</span>
-        <span class="n">prob</span><span class="p">[</span><span class="n">temperature</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">T0</span> <span class="o">+</span> <span class="n">t_lim</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">def</span> <span class="nf">_screen_above_liquid</span><span class="p">():</span>
+        <span class="n">above_liquid</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">ffill</span><span class="p">(</span><span class="n">liquid_layers</span><span class="p">)</span>
+        <span class="n">prob</span><span class="p">[(</span><span class="n">above_liquid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">insect_prob_no_ldr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="n">prob</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">insect_prob</span><span class="p">)</span>
-    <span class="n">_screen_insects_misc</span><span class="p">()</span>
-    <span class="n">_screen_insects_temp</span><span class="p">()</span>
+    <span class="n">_screen_liquid_layers</span><span class="p">()</span>
+    <span class="n">_screen_above_melting</span><span class="p">()</span>
+    <span class="n">_screen_above_liquid</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">prob</span>
 
 
@@ -395,21 +376,25 @@
 <span class="sd">        ndarray: 2-D boolean array containing falling hydrometeors.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_find_falling_from_lidar</span><span class="p">():</span>
+        <span class="n">strong_beta_limit</span> <span class="o">=</span> <span class="mf">2e-6</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">data</span> <span class="o">&gt;</span> <span class="n">strong_beta_limit</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_liquid</span>
+
     <span class="n">is_z</span> <span class="o">=</span> <span class="o">~</span><span class="n">obs</span><span class="o">.</span><span class="n">z</span><span class="o">.</span><span class="n">mask</span>
     <span class="n">no_clutter</span> <span class="o">=</span> <span class="o">~</span><span class="n">obs</span><span class="o">.</span><span class="n">is_clutter</span>
     <span class="n">no_insects</span> <span class="o">=</span> <span class="o">~</span><span class="n">is_insects</span>
-    <span class="n">falling_from_lidar</span> <span class="o">=</span> <span class="o">~</span><span class="n">obs</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">data</span> <span class="o">&gt;</span> <span class="mf">1e-6</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_liquid</span>
-    <span class="n">is_falling</span> <span class="o">=</span> <span class="p">(</span><span class="n">is_z</span> <span class="o">&amp;</span> <span class="n">no_clutter</span> <span class="o">&amp;</span> <span class="n">no_insects</span><span class="p">)</span> <span class="o">|</span> <span class="n">falling_from_lidar</span>
-    <span class="k">return</span> <span class="n">is_falling</span></div>
+    <span class="n">falling_from_lidar</span> <span class="o">=</span> <span class="n">_find_falling_from_lidar</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">is_z</span> <span class="o">&amp;</span> <span class="n">no_clutter</span> <span class="o">&amp;</span> <span class="n">no_insects</span><span class="p">)</span> <span class="o">|</span> <span class="n">falling_from_lidar</span></div>
 
 
-<div class="viewcode-block" id="find_aerosols"><a class="viewcode-back" href="../api.html#classify.find_aerosols">[docs]</a><span class="k">def</span> <span class="nf">find_aerosols</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="n">is_falling</span><span class="p">,</span> <span class="n">is_liquid</span><span class="p">):</span>
+<div class="viewcode-block" id="find_aerosols"><a class="viewcode-back" href="../api.html#classify.find_aerosols">[docs]</a><span class="k">def</span> <span class="nf">find_aerosols</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">is_falling</span><span class="p">,</span> <span class="n">is_liquid</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Estimates aerosols from lidar backscattering.</span>
 
-<span class="sd">    Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.</span>
+<span class="sd">    Aerosols are lidar signals that are: a) not falling, b) not liquid droplets,</span>
+<span class="sd">    and are present in warmer than some threshold temperature.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        beta (MaskedArray): 2-D attenuated backscattering coefficient.</span>
+<span class="sd">        obs (_ClassData): Container for observations.</span>
 <span class="sd">        is_falling (ndarray): 2-D boolean array of falling hydrometeors.</span>
 <span class="sd">        is_liquid (ndarray): 2-D boolean array of liquid droplets.</span>
 
@@ -417,7 +402,15 @@
 <span class="sd">        ndarray: 2-D boolean array containing aerosols.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="o">~</span><span class="n">beta</span><span class="o">.</span><span class="n">mask</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_falling</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_liquid</span></div>
+    <span class="k">def</span> <span class="nf">_find_potential_aerosols</span><span class="p">():</span>
+        <span class="n">is_beta</span> <span class="o">=</span> <span class="o">~</span><span class="n">obs</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">mask</span>
+        <span class="k">return</span> <span class="n">is_beta</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_falling</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">is_liquid</span>
+
+    <span class="n">temperature_limit</span> <span class="o">=</span> <span class="n">T0</span> <span class="o">-</span> <span class="mi">15</span>
+    <span class="n">potential_aerosols</span> <span class="o">=</span> <span class="n">_find_potential_aerosols</span><span class="p">()</span>
+    <span class="n">aerosols</span> <span class="o">=</span> <span class="n">potential_aerosols</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">tw</span> <span class="o">&gt;</span> <span class="n">temperature_limit</span><span class="p">)</span>
+    <span class="n">ice</span> <span class="o">=</span> <span class="n">potential_aerosols</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">tw</span> <span class="o">&lt;</span> <span class="n">temperature_limit</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">aerosols</span><span class="p">,</span> <span class="n">ice</span></div>
 
 
 <span class="k">def</span> <span class="nf">_bits_to_integer</span><span class="p">(</span><span class="n">bits</span><span class="p">):</span>
@@ -441,13 +434,15 @@
 
 
 <span class="k">class</span> <span class="nc">_ClassData</span><span class="p">:</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radar</span><span class="p">,</span> <span class="n">lidar</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">mwr</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">][:]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ldr</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ldr&#39;</span><span class="p">][:]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">v</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;v&#39;</span><span class="p">][:]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;width&#39;</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">v_sigma</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;v_sigma&#39;</span><span class="p">][:]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tw</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Tw&#39;</span><span class="p">][:]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">lidar</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;beta&#39;</span><span class="p">][:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lwp</span> <span class="o">=</span> <span class="n">mwr</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;lwp&#39;</span><span class="p">][:]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">time</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">radar</span><span class="o">.</span><span class="n">height</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">type</span>

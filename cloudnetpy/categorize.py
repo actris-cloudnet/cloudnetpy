@@ -355,11 +355,16 @@ class Radar(ProfileDataSource):
             return (dwell_time * self.radar_frequency * 1e9 * 4
                     * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
 
+        def _calc_z_power_min():
+            if ma.all(z_power.mask):
+                return 0
+            return np.percentile(z_power.compressed(), 0.1)
+
         z = self.data['Z'][:]
         radar_range = self.km2m(self.variables['range'])
         log_range = utils.lin2db(radar_range, scale=20)
         z_power = z - log_range
-        z_power_min = np.percentile(z_power.compressed(), 0.1)
+        z_power_min = _calc_z_power_min()
         self.append_data(_calc_error(), 'Z_error')
         self.append_data(_calc_sensitivity(), 'Z_sensitivity')
         self.append_data(1, 'Z_bias')

@@ -57,7 +57,7 @@ _CLABEL = {
 
     'target_classification':
         (("_Clear sky", _COLORS['white']),
-         ("Cloud droplets only", _COLORS['lightblue']),
+         ("Cloud droplets", _COLORS['lightblue']),
          ("Drizzle or rain", _COLORS['blue']),
          ("Drizzle/rain or cloud droplets", _COLORS['purple']),
          ("Ice", _COLORS['lightsteel']),
