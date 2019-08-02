@@ -274,43 +274,20 @@ COMMENTS = {
          'retrieval and the uncertainty in cloud base and/or cloud top height.'),
 
     'lwc_retrieval_status':
-        ('This variable describes whether a retrieval was performed for each pixel,\n'
-         'and its associated quality, in the form of 6 different classes. The classes\n'
-         'are defined in the definition and long_definition attributes.\n'
-         'The most reliable retrieval is that when both radar and lidar detect the\n'
-         'liquid layer, and microwave radiometer data is present, indicated by the\n'
-         'value 1. The next most reliable is when microwave radiometer data is used\n'
-         'to adjust the cloud depth when the radar does not detect the liquid layer,\n'
-         'indicated by the value 2, with a value of 3 indicating the cloud pixels\n'
-         'that have been added at cloud top to avoid the profile becoming\n'
-         'superadiabatic. A value of 4 indicates that microwave radiometer data\n'
-         'were not available or not reliable (melting level present or unphysical\n'
-         'values) but the liquid layers were well defined.  If cloud top was not\n'
-         'well defined then this is indicated by a value of 5. The full retrieval of\n'
-         'liquid water content, which requires reliable liquid water path from the\n'
-         'microwave radiometer, was only performed for classes 1-3. No attempt is\n'
-         'made to retrieve liquid water content when rain is present; this is\n'
-         'indicated by the value 6.'),
+        ('This variable describes whether a retrieval was performed for each\n'
+         'pixel, and its associated quality.')
 }
 
 DEFINITIONS = {
     'lwc_retrieval_status':
         ('\n'
-         'Value 0: No liquid water detected\n'
-         'Value 1: Reliable retrieval\n'
-         'Value 2: Adiabatic retrieval where cloud top has been adjusted to match\n'
-         '         liquid water path from microwave radiometer because layer is not\n'
-         '         detected by radar.\n'
-         'Value 3: Adiabatic retrieval: new cloud pixels where cloud top has been\n'
-         '         adjusted to match liquid water path from microwave radiometer\n'
-         '         because layer is not detected by radar.\n'
-         'Value 4: No retrieval: either no liquid water path is available or liquid\n'
-         '         water path is uncertain.\n'
-         'Value 5: No retrieval: liquid water layer detected only by the lidar and\n'
-         '         liquid water path is unavailable or uncertain:\n'
-         '         cloud top may be higher than diagnosed cloud top since lidar\n'
-         '         signal has been attenuated.\n'
-         'Value 6: Rain present: cloud extent is difficult to ascertain and liquid\n'
+         'Value 0: No liquid water detected.\n'
+         'Value 1: Reliable retrieval.\n'
+         'Value 2: Cloud pixel whose top has been adjusted so that theoretical\n'
+         '         liquid water path would match observation.\n'
+         'Value 3: New cloud pixels introduced so that theoretical liquid\n' 
+         '         water path would match observation.\n'
+         'Value 4: Rain present: cloud extent is difficult to ascertain and liquid\n'
          '         water path also uncertain.'),
 }
 

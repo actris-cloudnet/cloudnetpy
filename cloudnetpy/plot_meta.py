@@ -93,8 +93,6 @@ _CLABEL = {
          ("Reliable retrieval", _COLORS['green']),
          ("Adiabatic retrieval: cloud top adjusted", _COLORS['lightgreen']),
          ("Adiabatic retrieval: new cloud pixel", _COLORS['yellow']),
-         ("Unreliable lwp: no retrieval", _COLORS['orange']),
-         ("Unreliable lwp/cloud boundaries: no retrieval", _COLORS['red']),
          ("Rain present: no retrieval", _COLORS['lightgray'])),
 
     'drizzle_retrieval_status':
