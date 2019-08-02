@@ -200,25 +200,8 @@ def _plot_segment_data(ax, data, name, axes):
             data_in[data_in > ind] -= 1
         return data_in, colors, labels
 
-    def _swap_segments():
-        def _swap_data(arr):
-            ind_a = np.where(data == a)
-            ind_b = np.where(data == b)
-            arr[ind_a], arr[ind_b] = b, a
-
-        def _swap_elements(lst):
-            lst[a], lst[b] = lst[b], lst[a]
-
-        for a, b in variables.swap_labels:
-            _swap_data(data)
-            _swap_elements(cbar)
-            _swap_elements(clabel)
-        return data, cbar, clabel
-
     variables = ATTRIBUTES[name]
     data, cbar, clabel = _hide_segments(data)
-    if variables.swap_labels:
-        data, cbar, clabel = _swap_segments()
     cmap = ListedColormap(cbar)
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=len(cbar) - 0.5)
@@ -315,3 +298,21 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     if clim:
         plt.clim(clim)
     plt.show()
+
+
+"""
+def _swap_segments(data):
+    def _swap_data(arr):
+            ind_a = np.where(data == a)
+            ind_b = np.where(data == b)
+            arr[ind_a], arr[ind_b] = b, a
+
+        def _swap_elements(lst):
+            lst[a], lst[b] = lst[b], lst[a]
+
+        for a, b in variables.swap_labels:
+            _swap_data(data)
+            _swap_elements(cbar)
+            _swap_elements(clabel)
+        return data, cbar, clabel
+"""

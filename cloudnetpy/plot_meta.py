@@ -7,8 +7,7 @@ FIELDS = ('name',
           'ylabel',
           'plot_range',
           'plot_scale',
-          'plot_type',
-          'swap_labels')
+          'plot_type')
 
 PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
 
@@ -82,8 +81,8 @@ _CLABEL = {
     'iwc_retrieval_status':
         (("_No ice", _COLORS['white']),
          ("Reliable retrieval", _COLORS['green']),
-         ("Uncorrected liquid attenuation", _COLORS['orange']),
          ("Corrected liquid attenuation", _COLORS['lightgreen']),
+         ("Uncorrected liquid attenuation", _COLORS['orange']),
          ("Ice detected only by lidar", _COLORS['yellow']),
          ("Ice above rain", _COLORS['darksky']),
          ("Clear sky above rain", _COLORS['skyblue']),
@@ -436,8 +435,7 @@ ATTRIBUTES = {
     'iwc_retrieval_status': PlotMeta(
         name='Ice water content retrieval status',
         clabel=_CLABEL['iwc_retrieval_status'],
-        plot_type='segment',
-        swap_labels=[(1, 2)]
+        plot_type='segment'
     ),
     'lwc': PlotMeta(
         name='Liquid water content',
