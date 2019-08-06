@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import cloudnetpy.products.product_tools as ptools
+from cloudnetpy.meta_for_old_files import fix_old_data
 from cloudnetpy.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
 
@@ -15,13 +16,14 @@ from cloudnetpy.products.product_tools import CategorizeBits
 IDENTIFIER = ""
 
 
-def generate_figure(nc_file, field_names, show=True, save_path=None,
+def generate_figure(nc_file, field_names, old_file=False, show=True, save_path=None,
                     max_y=12, dpi=200, image_name=None):
     """Generates a Cloudnet figure.
 
     Args:
         nc_file (str): Input file.
         field_names (list): Variable names to be plotted.
+        old_file (bool, optional): True is data from old Cloudnet file
         show (bool, optional): If True, shows the figure. Default is True.
         save_path (str, optional): Setting this path will save the figure (in the
             given path). Default is None, when the figure is not saved.
@@ -54,6 +56,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             _set_axes(axis, 2, ATTRIBUTES[name].ylabel)
 
         elif plot_type == 'segment':
+            if old_file:
+                field = fix_old_data(field, name)
             _plot_segment_data(axis, field, name, axes_data)
 
         else:
@@ -202,6 +206,7 @@ def _plot_segment_data(ax, data, name, axes):
 
     variables = ATTRIBUTES[name]
     data, cbar, clabel = _hide_segments(data)
+    print(np.unique(data))
     cmap = ListedColormap(cbar)
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=len(cbar) - 0.5)
@@ -300,19 +305,3 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     plt.show()
 
 
-"""
-def _swap_segments(data):
-    def _swap_data(arr):
-            ind_a = np.where(data == a)
-            ind_b = np.where(data == b)
-            arr[ind_a], arr[ind_b] = b, a
-
-        def _swap_elements(lst):
-            lst[a], lst[b] = lst[b], lst[a]
-
-        for a, b in variables.swap_labels:
-            _swap_data(data)
-            _swap_elements(cbar)
-            _swap_elements(clabel)
-        return data, cbar, clabel
-"""

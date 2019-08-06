@@ -22,6 +22,7 @@ import os
 import glob
 from zipfile import ZipFile
 import requests
+#from bin.process_all import main as CNP_run
 
 
 def initialize_test_data(instrument):
@@ -63,13 +64,16 @@ def main():
     output_path = '/home/korpinen/Documents/ACTRIS/cloudnet_data/'
     url = '/home/korpinen/Documents/ACTRIS/cloudnet_data/test_data_raw.zip'
     load_test_data()
-    #initialize_test_data(['mira_raw', 'CHM070045', 'hatpro'])
 
     # Test what inside of raw files
-    pytest.main(['-x', c_path + '/cloudnetpy/instruments/tests'])
+    print('\nCheck all needed variables in raw files')
+    pytest.main([c_path + '/cloudnetpy/instruments/tests'])
 
+    #TODO: Fall down the run if any test fails
 
     # processing the CloudnetPy from raw
+    print("\nProcessing CloudnetPy from raw files")
+    #CNP_run()
 
 if __name__ == "__main__":
     main()
