@@ -219,8 +219,36 @@ def interpolate_2d(x, y, z, x_new, y_new):
         Does not extrapolate.
 
     """
-    fun = RectBivariateSpline(x, y, z, kx=1, ky=1)  # linear interpolation
+    fun = RectBivariateSpline(x, y, z, kx=1, ky=1)
     return fun(x_new, y_new)
+
+
+def interpolate_2d_masked(array, axis, axis_new):
+    """Interpolates 2D array preserving the mask.
+
+    Args:
+        array (ndarray): 2D masked array.
+        axis (tuple): 2-element tuple containing x and y values of the input array.
+        axis_new (tuple): 2-element tuple containing new x and y values.
+
+    Returns:
+        ndarray: Interpolated 2d masked array.
+
+    Notes:
+        Uses linear interpolation.
+
+    """
+    def _mask_invalid_values(data_in):
+        data_range = (np.min(array), np.max(array))
+        return ma.masked_outside(data_in, *data_range)
+
+    data_interp = interpolate_2d(*axis, array, *axis_new)
+    return _mask_invalid_values(data_interp)
+
+
+def calc_relative_error(reference, array):
+    """Calculates relative error (%)."""
+    return ((array - reference) / reference) * 100
 
 
 def db2lin(x, scale=10):
@@ -480,3 +508,4 @@ def array_to_probability(arr_in, loc, scale, invert=False):
         loc *= -1
     prob[ind] = stats.norm.cdf(arr[ind], loc=loc, scale=scale)
     return prob
+
