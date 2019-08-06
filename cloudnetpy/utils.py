@@ -223,13 +223,13 @@ def interpolate_2d(x, y, z, x_new, y_new):
     return fun(x_new, y_new)
 
 
-def interpolate_2d_masked(array, axis, axis_new):
+def interpolate_2d_masked(array, ax_values, ax_values_new):
     """Interpolates 2D array preserving the mask.
 
     Args:
         array (ndarray): 2D masked array.
-        axis (tuple): 2-element tuple containing x and y values of the input array.
-        axis_new (tuple): 2-element tuple containing new x and y values.
+        ax_values (tuple): 2-element tuple containing x and y values of the input array.
+        ax_values_new (tuple): 2-element tuple containing new x and y values.
 
     Returns:
         ndarray: Interpolated 2d masked array.
@@ -242,7 +242,7 @@ def interpolate_2d_masked(array, axis, axis_new):
         data_range = (np.min(array), np.max(array))
         return ma.masked_outside(data_in, *data_range)
 
-    data_interp = interpolate_2d(*axis, array, *axis_new)
+    data_interp = interpolate_2d(*ax_values, array, *ax_values_new)
     return _mask_invalid_values(data_interp)
 
 

@@ -7,12 +7,10 @@ import netCDF4
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from cloudnetpy import utils, meta_for_old_files
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
-
-# IDENTIFIER = " from CloudnetPy"
-IDENTIFIER = ""
 
 
 def generate_figure(nc_file, field_names, show=True, save_path=None,
@@ -40,28 +38,26 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         >>> generate_figure('drizzle_file.nc', ['Do', 'mu', 'S'], max_y=3)
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
-    n_fields = len(valid_fields)
-    fig, axes = _initialize_figure(n_fields)
+    fig, axes = _initialize_figure(len(valid_fields))
 
-    for axis, field, name in zip(axes, valid_fields, valid_names):
+    for ax, field, name in zip(axes, valid_fields, valid_names):
         plot_type = ATTRIBUTES[name].plot_type
-        axes_data = _read_axes(nc_file, plot_type)
-        field, axes_data = _fix_data_limitation(field, axes_data, max_y)
-        _set_axes(axis, max_y)
+        ax_value = _read_ax_values(nc_file, plot_type)
+        field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
+        _set_ax(ax, max_y)
+        _set_title(ax, name)
 
         if plot_type == 'bar':
-            _plot_bar_data(axis, field, name, axes_data[0])
-            _set_axes(axis, 2, ATTRIBUTES[name].ylabel)
+            _plot_bar_data(ax, field, ax_value[0])
+            _set_ax(ax, 2, ATTRIBUTES[name].ylabel)
 
         elif plot_type == 'segment':
-            _plot_segment_data(axis, field, name, axes_data)
+            _plot_segment_data(ax, field, name, ax_value)
 
         else:
-            _plot_colormesh_data(axis, field, name, axes_data)
+            _plot_colormesh_data(ax, field, name, ax_value)
 
-    axes[-1].set_xlabel('Time (UTC)', fontsize=13)
-    case_date, site_name = _read_case_date(nc_file)
-    _add_subtitle(fig, case_date, site_name)
+    case_date = _set_labels(fig, axes[-1], nc_file)
 
     if image_name:
         plt.savefig(image_name, bbox_inches='tight', dpi=dpi)
@@ -70,8 +66,86 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
-
     plt.close()
+
+
+def compare_files(nc_files, field_name, show=True, relative_err=False,
+                  save_path=None, max_y=12, dpi=200):
+    """ Plots one particular field from old and new cloudnet files.
+
+    Args:
+        nc_files (tuple): Tuple of strings of the two files to compare
+                         [0] = old Cloudnet file
+                         [1] = new CloudnetPy file
+        field_name (str): Name of variable to be plotted.
+        show (bool, optional): If True, shows the plot.
+        relative_err (bool, optional): If True, plots also relative error. Makes
+            sense only for continuous variables. Default is False.
+        save_path (str, optional): If defined, saves the image to this path.
+            Default is None.
+        max_y (int, optional): Upper limit of images (km). Default is 12.
+        dpi (int, optional): Quality of plots. Default is 200.
+
+    """
+
+    def _init_figure():
+        n_subs = 3 if relative_err else 2
+        return _initialize_figure(n_subs)
+
+    plot_type = ATTRIBUTES[field_name].plot_type
+    fields = [_find_valid_fields(file, [field_name])[0][0] for file in nc_files]
+    ax_values = [_read_ax_values(nc_file) for nc_file in nc_files]
+    subtitle = (" from CloudnetPy", " from Cloudnet")
+    fig, axes = _init_figure()
+
+    for ii, ax in enumerate(axes[:2]):
+        field, ax_value = _screen_high_altitudes(fields[ii], ax_values[ii],
+                                                 max_y)
+        _set_ax(ax, max_y)
+        _set_title(ax, field_name, subtitle[ii])
+
+        if plot_type == 'model':
+            _plot_colormesh_data(ax, field, field_name, ax_value)
+        elif plot_type == 'bar':
+            if field_name == 'lwp' and ii == 1:
+                field *= 1000
+            _plot_bar_data(ax, field, ax_value[0])
+            _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
+        elif plot_type == 'segment':
+            if ii == 1:
+                field, field_name = meta_for_old_files.fix_old_data(field, field_name)
+            _plot_segment_data(ax, field, field_name, ax_value)
+        else:
+            _plot_colormesh_data(ax, field, field_name, ax_value)
+            if relative_err and ii == 1:
+                _set_ax(axes[-1], max_y)
+                error, ax_value = _get_relative_error(fields, ax_values, max_y)
+                _plot_relative_error(axes[-1], error, ax_value, field_name)
+
+    case_date = _set_labels(fig, axes[-1], nc_files[0])
+    if save_path:
+        file_name = _create_image_name(save_path, case_date, max_y, [field_name], "_compare")
+        plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
+    if show:
+        plt.show()
+    plt.close()
+
+
+def _get_relative_error(fields, ax_values, max_y):
+    old_data_interp = utils.interpolate_2d_masked(fields[0], *ax_values)
+    error = utils.calc_relative_error(old_data_interp, fields[1])
+    return _screen_high_altitudes(error, ax_values[1], max_y)
+
+
+def _set_labels(fig, ax, nc_file):
+    ax.set_xlabel('Time (UTC)', fontsize=13)
+    case_date, site_name = _read_case_date(nc_file)
+    _add_subtitle(fig, case_date, site_name)
+    return case_date
+
+
+def _set_title(ax, field_name, identifier=" from CloudnetPy"):
+    ax.set_title(f"{ATTRIBUTES[field_name].name}{identifier}", fontsize=14)
 
 
 def _find_valid_fields(nc_file, names):
@@ -96,14 +170,14 @@ def _find_valid_fields(nc_file, names):
 
 def _initialize_figure(n_subplots):
     """Creates an empty figure according to the number of subplots."""
-    fig, ax = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8))
+    fig, axes = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8))
     fig.subplots_adjust(left=0.06, right=0.73)
     if n_subplots == 1:
-        ax = [ax]
-    return fig, ax
+        axes = [axes]
+    return fig, axes
 
 
-def _read_axes(nc_file, axes_type=None):
+def _read_ax_values(nc_file, ax_type=None):
     """Returns time and height arrays."""
 
     def _get_correct_dimension(field_names):
@@ -112,7 +186,7 @@ def _read_axes(nc_file, axes_type=None):
         for name in field_names:
             yield name.split('_')[-1] if name not in variables else name
 
-    if axes_type == 'model':
+    if ax_type == 'model':
         fields = _get_correct_dimension(['model_time', 'model_height'])
     else:
         fields = ['time', 'height']
@@ -121,7 +195,7 @@ def _read_axes(nc_file, axes_type=None):
     return time, height_km
 
 
-def _fix_data_limitation(data_field, axes, max_y):
+def _screen_high_altitudes(data_field, ax_values, max_y):
     """Removes altitudes from 2D data that are not visible in the figure.
 
     Bug in pcolorfast causing effect to axis not noticing limitation while
@@ -129,28 +203,28 @@ def _fix_data_limitation(data_field, axes, max_y):
 
     Args:
         data_field (ndarray): 2D data array.
-        axes (tuple): Time and height 1D arrays.
+        ax_values (tuple): Time and height 1D arrays.
         max_y (int): Upper limit in the plots (km).
 
     """
-    alt = axes[-1]
+    alt = ax_values[-1]
     if data_field.ndim > 1:
         ind = (np.argmax(alt > max_y) or len(alt)) + 1
         data_field = data_field[:, :ind]
         alt = alt[:ind]
-    return data_field, (axes[0], alt)
+    return data_field, (ax_values[0], alt)
 
 
-def _set_axes(axis, max_y, ylabel=None):
+def _set_ax(ax, max_y, ylabel=None):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
-    axis.set_ylim(0, max_y)
-    axis.set_xticks(np.arange(0, 25, 4, dtype=int))
-    axis.set_xticklabels(ticks_x_labels, fontsize=12)
-    axis.set_ylabel('Height (km)', fontsize=13)
-    axis.set_xlim(0, 24)
+    ax.set_ylim(0, max_y)
+    ax.set_xticks(np.arange(0, 25, 4, dtype=int))
+    ax.set_xticklabels(ticks_x_labels, fontsize=12)
+    ax.set_ylabel('Height (km)', fontsize=13)
+    ax.set_xlim(0, 24)
     if ylabel:
-        axis.set_ylabel(ylabel, fontsize=13)
+        ax.set_ylabel(ylabel, fontsize=13)
 
 
 def _get_standard_time_ticks(resolution=4):
@@ -159,22 +233,20 @@ def _get_standard_time_ticks(resolution=4):
             for i in np.arange(0, 24.01, resolution)]
 
 
-def _plot_bar_data(ax, data, name, time):
+def _plot_bar_data(ax, data, time):
     """Plots 1D variable as bar plot.
 
     Args:
         ax (obj): Axes object.
         data (ndarray): 1D data array.
-        name (string): Name of plotted data.
         time (ndarray): 1D time array.
 
     """
     # TODO: unit change somewhere else
-    variables = ATTRIBUTES[name]
     width = 1/120
     ax.plot(time, data/1000, color='navy')
-    ax.bar(time, data.filled(0)/1000, width, align='center', alpha=0.5, color='royalblue')
-    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
+    ax.bar(time, data.filled(0)/1000, width, align='center', alpha=0.5,
+           color='royalblue')
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
@@ -208,7 +280,6 @@ def _plot_segment_data(ax, data, name, axes):
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(len(clabel) + 1))
     colorbar.ax.set_yticklabels(clabel, fontsize=13)
-    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
 
 def _plot_colormesh_data(ax, data, name, axes):
@@ -237,7 +308,6 @@ def _plot_colormesh_data(ax, data, name, axes):
         data, vmin, vmax = _lin2log(data, vmin, vmax)
 
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
-    ax.set_title(variables.name + IDENTIFIER, fontsize=14)
 
     if variables.plot_type != 'bit':
         colorbar = _init_colorbar(pl, ax)
@@ -282,10 +352,6 @@ def _create_save_name(save_path, case_date, max_y, field_names):
     return f"{save_path}{date_string}_{max_y}km_{'_'.join(field_names)}.png"
 
 
-def _lin2log(*args):
-    return [ma.log10(x) for x in args]
-
-
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     """Simple plot of 2d variable."""
     plt.close()
@@ -300,19 +366,18 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     plt.show()
 
 
-"""
-def _swap_segments(data):
-    def _swap_data(arr):
-            ind_a = np.where(data == a)
-            ind_b = np.where(data == b)
-            arr[ind_a], arr[ind_b] = b, a
+def _plot_relative_error(ax, error, ax_values, name):
+    pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap='RdBu', vmin=-30,
+                       vmax=30)
+    colorbar = _init_colorbar(pl, ax)
+    colorbar.set_label("%", fontsize=13)
+    ax.set_title("Relative error of " + name, fontsize=14)
 
-        def _swap_elements(lst):
-            lst[a], lst[b] = lst[b], lst[a]
 
-        for a, b in variables.swap_labels:
-            _swap_data(data)
-            _swap_elements(cbar)
-            _swap_elements(clabel)
-        return data, cbar, clabel
-"""
+def _create_image_name(save_path, case_date, max_y, field_names, ending):
+    file_name = _create_save_name(save_path, case_date, max_y, field_names)
+    return file_name.replace('.nc', f"{ending}.png")
+
+
+def _lin2log(*args):
+    return [ma.log10(x) for x in args]
