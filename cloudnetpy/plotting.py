@@ -58,19 +58,11 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             _plot_colormesh_data(ax, field, name, ax_value)
 
     case_date = _set_labels(fig, axes[-1], nc_file)
-
-    if image_name:
-        plt.savefig(image_name, bbox_inches='tight', dpi=dpi)
-    elif save_path:
-        file_name = _create_save_name(save_path, case_date, max_y, valid_names)
-        plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
-    if show:
-        plt.show()
-    plt.close()
+    _handle_saving(image_name, save_path, show, dpi, case_date, valid_names)
 
 
 def compare_files(nc_files, field_name, show=True, relative_err=False,
-                  save_path=None, max_y=12, dpi=200):
+                  save_path=None, max_y=12, dpi=200, image_name=None):
     """ Plots one particular field from old and new cloudnet files.
 
     Args:
@@ -85,6 +77,8 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
             Default is None.
         max_y (int, optional): Upper limit of images (km). Default is 12.
         dpi (int, optional): Quality of plots. Default is 200.
+        image_name (str, optional): Name (and full path) of the output image.
+            Overrides the *save_path* option. Default is None.
 
     """
 
@@ -123,8 +117,16 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
                 _plot_relative_error(axes[-1], error, ax_value, field_name)
 
     case_date = _set_labels(fig, axes[-1], nc_files[0])
-    if save_path:
-        file_name = _create_image_name(save_path, case_date, max_y, [field_name], "_compare")
+    _handle_saving(image_name, save_path, show, dpi, case_date, [field_name],
+                   '_comparison')
+
+
+def _handle_saving(image_name, save_path, show, dpi, case_date, field_names,
+                   fix=""):
+    if image_name:
+        plt.savefig(image_name, bbox_inches='tight', dpi=dpi)
+    elif save_path:
+        file_name = _create_save_name(save_path, case_date, field_names, fix)
         plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
     if show:
         plt.show()
@@ -346,10 +348,10 @@ def _add_subtitle(fig, case_date, site_name):
                  verticalalignment='bottom', fontweight='bold')
 
 
-def _create_save_name(save_path, case_date, max_y, field_names):
+def _create_save_name(save_path, case_date, field_names, fix=''):
     """Creates file name for saved images."""
     date_string = case_date.strftime("%Y%m%d")
-    return f"{save_path}{date_string}_{max_y}km_{'_'.join(field_names)}.png"
+    return f"{save_path}{date_string}_{'_'.join(field_names)}{fix}.png"
 
 
 def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
@@ -372,11 +374,6 @@ def _plot_relative_error(ax, error, ax_values, name):
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
     ax.set_title("Relative error of " + name, fontsize=14)
-
-
-def _create_image_name(save_path, case_date, max_y, field_names, ending):
-    file_name = _create_save_name(save_path, case_date, max_y, field_names)
-    return file_name.replace('.nc', f"{ending}.png")
 
 
 def _lin2log(*args):
