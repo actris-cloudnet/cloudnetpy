@@ -13,7 +13,7 @@ import configparser
 import datetime
 from collections import namedtuple
 from cloudnetpy import categorize as cat
-from cloudnetpy.instruments import mira
+from cloudnetpy.instruments import mira, rpg
 from cloudnetpy.instruments import ceilo
 from cloudnetpy import plotting
 
@@ -70,15 +70,30 @@ def _process_radar(dvec):
         return file
 
     instrument = 'radar'
+    output_file = _build_calibrated_file_name(instrument, dvec)
     if config['INSTRUMENTS'][instrument] == 'mira':
         try:
             input_file = _find_uncalibrated_mira_file()
         except FileNotFoundError:
             raise RuntimeError('Abort: Missing uncalibrated mira file.')
-        output_file = _build_calibrated_file_name(instrument, dvec)
         if _is_good_to_process(instrument, output_file):
             print(f"Calibrating mira cloud radar..")
             mira.mira2nc(input_file, output_file, config['SITE'])
+    elif config['INSTRUMENTS'][instrument] == 'rpg-fmcw-94':
+        rpg_path = _build_uncalibrated_rpg_path(dvec)
+        try:
+            _ = _find_file(rpg_path, '*.LV1')
+        except FileNotFoundError:
+            raise RuntimeError('Abort: Missing uncalibrated rpg .LV1 files.')
+        if _is_good_to_process(instrument, output_file):
+            print(f"Calibrating rpg-fmcw-94 cloud radar..")
+            rpg.rpg2nc(rpg_path, output_file, dict(config.items('SITE')))
+
+
+def _build_uncalibrated_rpg_path(dvec):
+    year, month, day = _split_date(dvec)
+    rpg_model = config['INSTRUMENTS']['radar']
+    return f"{SITE_ROOT}uncalibrated/{rpg_model}/Y{year}/M{month}/D{day}/"
 
 
 def _process_lidar(dvec):
@@ -187,8 +202,12 @@ def _is_good_to_plot(process_type, image_name):
 def _find_mwr_file(dvec):
     _, month, day = _split_date(dvec)
     prefix = _find_uncalibrated_path('mwr', dvec)
-    file_path = f"{prefix}{month}/{day}/"
-    return _find_file(file_path, f"*{dvec[2:]}*LWP*")
+    hatpro_path = f"{prefix}{month}/{day}/"
+    try:
+        return _find_file(hatpro_path, f"*{dvec[2:]}*LWP*")
+    except FileNotFoundError:
+        if config['INSTRUMENTS']['radar'] == 'rpg-fmcw-94':
+            return _find_calibrated_file('radar', dvec)
 
 
 def _find_uncalibrated_file(instrument, dvec):

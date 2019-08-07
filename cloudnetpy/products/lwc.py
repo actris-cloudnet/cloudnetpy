@@ -285,7 +285,7 @@ DEFINITIONS = {
          'Value 1: Reliable retrieval.\n'
          'Value 2: Cloud pixel whose top has been adjusted so that theoretical\n'
          '         liquid water path would match observation.\n'
-         'Value 3: New cloud pixels introduced so that theoretical liquid\n' 
+         'Value 3: New cloud pixel introduced so that theoretical liquid\n' 
          '         water path would match observation.\n'
          'Value 4: Rain present: cloud extent is difficult to ascertain and liquid\n'
          '         water path also uncertain.'),

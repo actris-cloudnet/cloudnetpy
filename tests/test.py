@@ -22,14 +22,15 @@ import os
 import glob
 from zipfile import ZipFile
 import requests
-#from bin.process_all import main as CNP_run
+from tests.run_testcase_processing import process_cloudnetpy
 
 
 def initialize_test_data(instrument):
     """
     Finds all file paths and parses wanted files to list
     """
-    test_data = glob.glob(os.getcwd() + '/*.nc')
+    test_data = glob.glob(os.getcwd() + '/source_data/*.nc')
+    print(test_data)
     paths = []
     # TODO: Write this to run faster!
     for inst in instrument:
@@ -42,38 +43,48 @@ def initialize_test_data(instrument):
 def main():
 
     def load_test_data():
-        """
-        Read test data, if test data doesn't exist in dir
-        Unpack the raw data file and save data to dir
-        return path to files / list of file paths
-        Maybe better to return dict of file paths
-        ... Lets write this and think what to do at the same time.
-        """
-        save_name = 'test_data_raw.zip'
-        is_file = os.path.isfile(input_path + '/' + save_name)
-        if not is_file:
-            #r = requests.get(url)
-            #open(save_name, 'wb').write(r.content)
+        def extract_zip(extract_path):
+            # r = requests.get(url)
+            # open(save_name, 'wb').write(r.content)
             fl = ZipFile(output_path + save_name, 'r')
-            fl.extractall(input_path)
+            fl.extractall(extract_path)
             fl.close()
+
+        save_name = 'test_data_raw.zip'
+        is_dir = os.path.isdir(input_path)
+        if not is_dir:
+            os.mkdir(input_path )
+            extract_zip(input_path)
+        is_file = os.path.isfile(input_path + save_name)
+        if not is_file:
+            extract_zip(input_path)
 
     # Call functions to load and storage test data
     c_path = os.path.split(os.getcwd())[0]
-    input_path = os.getcwd()
+    input_path = os.path.join(os.getcwd() + '/source_data/')
     output_path = '/home/korpinen/Documents/ACTRIS/cloudnet_data/'
     url = '/home/korpinen/Documents/ACTRIS/cloudnet_data/test_data_raw.zip'
     load_test_data()
 
     # Test what inside of raw files
     print('\nCheck all needed variables in raw files')
-    pytest.main([c_path + '/cloudnetpy/instruments/tests'])
+    pytest.main([c_path + '/cloudnetpy/instruments/tests/raw_files_test.py'])
+    #TODO: Break the run if any test fails
 
-    #TODO: Fall down the run if any test fails
+    #TODO: jos filut jo olemassa, koko prosessointi tehty ja voidaan ohittaa tämä
+    if not os.path.isfile(input_path + 'categorize_file.nc'):
+        # processing the CloudnetPy from raw
+        print("\nProcessing CloudnetPy from raw files")
+        process_cloudnetpy('mace-head', input_path)
+        print("\n Done processing test case")
+    else:
+        print("\nCloudnetPy processing files already exist in directory")
 
-    # processing the CloudnetPy from raw
-    print("\nProcessing CloudnetPy from raw files")
-    #CNP_run()
+    #TODO: tässä välissä tsekataan kaikki loput filut
+    print('\nCheck all needed variables in category file')
+    pytest.main([c_path + '/cloudnetpy/tests/categorize_file_test.py'])
+    print('\nCheck all needed variables in product files')
+    pytest.main([c_path + '/cloudnetpy/products/tests/product_files_test.py'])
 
 if __name__ == "__main__":
     main()

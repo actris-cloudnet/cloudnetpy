@@ -31,7 +31,7 @@ def rpg2nc(path_to_l1_files, output_file, site_meta):
     l1_files = get_rpg_files(path_to_l1_files)
     one_day_of_data = _create_one_day_data_record(l1_files)
     rpg = Rpg(one_day_of_data, site_meta)
-    rpg.linear_to_db(('Ze', 'ldr', 'antenna_gain'))
+    rpg.linear_to_db(('Ze', 'antenna_gain'))
     output.update_attributes(rpg.data, RPG_ATTRIBUTES)
     _save_rpg(rpg, output_file)
 
@@ -294,6 +294,7 @@ class Rpg:
         self.date = self._get_date()
         self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
         self.raw_data['altitude'] = site_properties['altitude']
+        self._mask_invalid_ldr()
         self.data = {}
         self._init_data()
         self.source = 'RPG-FMCW'
@@ -302,6 +303,9 @@ class Rpg:
     def _init_data(self):
         for key in self.raw_data:
             self.data[key] = CloudnetArray(self.raw_data[key], key)
+
+    def _mask_invalid_ldr(self):
+        self.raw_data['ldr'] = ma.masked_less_equal(self.raw_data['ldr'], -50)
 
     def linear_to_db(self, variables_to_log):
         """Changes some linear units to logarithmic."""
