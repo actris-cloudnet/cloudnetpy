@@ -193,11 +193,13 @@ def get_attenuations(model, mwr, classification):
     """
     gas = GasAttenuation(model, classification)
     liquid = LiquidAttenuation(model, classification, mwr)
-    return {'radar_gas_atten': gas.atten,
-            'radar_liquid_atten': liquid.atten,
-            'liquid_atten_err': liquid.atten_err,
-            'liquid_corrected': liquid.corrected,
-            'liquid_uncorrected': liquid.uncorrected}
+    return {
+        'radar_gas_atten': gas.atten,
+        'radar_liquid_atten': liquid.atten,
+        'liquid_atten_err': liquid.atten_err,
+        'liquid_corrected': liquid.corrected,
+        'liquid_uncorrected': liquid.uncorrected
+        }
 
 
 class Attenuation:
@@ -244,7 +246,9 @@ class LiquidAttenuation(Attenuation):
         self._lwc_dz_err = self._get_lwc_change_rate_error()
         self.atten = self._get_liquid_atten()
         self.atten_err = self._get_liquid_atten_err()
-        self.corrected, self.uncorrected = self._screen_attenuations()
+        self.uncorrected = self._find_pixels_hard_to_correct()
+        self.corrected = self._find_corrected_pixels()
+        self._mask_uncorrected_attenuation()
 
     def _get_lwc_change_rate_error(self):
         atmosphere = (self._model['temperature'], self._model['pressure'])
@@ -263,20 +267,29 @@ class LiquidAttenuation(Attenuation):
         return self._calc_attenuation(lwc_err_scaled)
 
     def _calc_attenuation(self, lwc_scaled):
-        """Finds liquid attenuation (dB)."""
+        """Calculates liquid attenuation (dB)."""
         liquid_attenuation = ma.zeros(lwc_scaled.shape)
         spec_liq = self._model['specific_liquid_atten']
         lwp_cumsum = ma.cumsum(lwc_scaled[:, :-1] * spec_liq[:, :-1], axis=1)
         liquid_attenuation[:, 1:] = TWO_WAY * lwp_cumsum * M_TO_KM
         return liquid_attenuation
 
-    def _screen_attenuations(self):
+    def _find_pixels_hard_to_correct(self):
         melting_layer = utils.isbit(self.classification.category_bits, 3)
-        uncorrected = np.cumsum(melting_layer, axis=1) >= 1
-        uncorrected[self.classification.is_rain, :] = True
-        corrected = (self.atten > 0).filled(False) & ~uncorrected
-        self.atten[uncorrected] = ma.masked
-        return corrected, uncorrected
+        hard_to_correct = np.cumsum(melting_layer, axis=1) >= 1
+        hard_to_correct[self.classification.is_rain, :] = True
+        attenuated = self._find_attenuated_part_of_atmosphere()
+        hard_to_correct[attenuated & self.atten.mask] = True
+        return hard_to_correct
+
+    def _find_corrected_pixels(self):
+        return (self.atten > 0).filled(False) & ~self.uncorrected
+
+    def _mask_uncorrected_attenuation(self):
+        self.atten[self.uncorrected] = ma.masked
+
+    def _find_attenuated_part_of_atmosphere(self):
+        return np.cumsum(self._lwc_dz_err, axis=1) > 0
 
 
 def fill_clouds_with_lwc_dz(atmosphere, is_liquid):
