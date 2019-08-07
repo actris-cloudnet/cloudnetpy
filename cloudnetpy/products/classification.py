@@ -51,9 +51,9 @@ def get_target_classification(categorize_bits):
 
 def get_detection_status(categorize_bits):
     bits = categorize_bits.quality_bits
-    status = np.copy(bits['lidar'].astype(int))
-    status[bits['lidar'] & bits['radar']] = 1
-    status[bits['radar'] & ~bits['lidar']] = 2
+    status = np.zeros(bits['radar'].shape, dtype=int)
+    status[bits['radar'] & bits['lidar']] = 1
+    status[bits['radar'] & ~bits['lidar'] & ~bits['attenuated']] = 2
     status[bits['radar'] & bits['corrected']] = 3
     status[bits['lidar'] & ~bits['radar']] = 4
     status[bits['radar'] & bits['attenuated'] & ~bits['corrected']] = 5
