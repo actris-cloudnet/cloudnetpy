@@ -16,6 +16,7 @@ from cloudnetpy import categorize as cat
 from cloudnetpy.instruments import mira, rpg
 from cloudnetpy.instruments import ceilo
 from cloudnetpy import plotting
+from cloudnetpy import utils
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -26,10 +27,12 @@ SITE_ROOT = f"{config['PATH']['root']}{config['SITE']['dir_name']}/"
 def main():
     """ Main Cloudnet processing function."""
 
+    _read_site_altitude()
+
     start_date = _period_to_date('PERIOD_START')
     end_date = _period_to_date('PERIOD_END')
 
-    for date in _date_range(start_date, end_date):
+    for date in utils.date_range(start_date, end_date):
         dvec = date.strftime("%Y%m%d")
         print('Date: ', dvec)
         for processing_type in ('radar', 'lidar', 'categorize'):
@@ -208,6 +211,7 @@ def _find_mwr_file(dvec):
     except FileNotFoundError:
         if config['INSTRUMENTS']['radar'] == 'rpg-fmcw-94':
             return _find_calibrated_file('radar', dvec)
+        raise FileNotFoundError
 
 
 def _find_uncalibrated_file(instrument, dvec):
@@ -304,11 +308,6 @@ def _find_file(file_path, wildcard):
     raise FileNotFoundError
 
 
-def _date_range(start_date, end_date):
-    for n in range(int((end_date - start_date).days)):
-        yield start_date + datetime.timedelta(n)
-
-
 def _split_date(dvec):
     year = _get_year(dvec)
     month = _get_month(dvec)
@@ -326,6 +325,12 @@ def _get_month(dvec):
 
 def _get_day(dvec):
     return str(dvec[6:8])
+
+
+def _read_site_altitude():
+    site = config['SITE']
+    altitude = utils.get_site_information(site['dir_name'], 'altitude')
+    site['altitude'] = str(altitude)
 
 
 if __name__ == "__main__":
