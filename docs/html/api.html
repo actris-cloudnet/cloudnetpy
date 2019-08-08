@@ -281,8 +281,8 @@ NetCDF file with information of classification and measurements.</p>
 <h2>Visualizing results<a class="headerlink" href="#visualizing-results" title="Permalink to this headline">¶</a></h2>
 <p>CloudnetPy offers easy-to-use plotting interface.</p>
 <dl class="function">
-<dt id="plotting.generate_figure">
-<code class="descclassname">plotting.</code><code class="descname">generate_figure</code><span class="sig-paren">(</span><em>nc_file</em>, <em>field_names</em>, <em>show=True</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting.html#generate_figure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.generate_figure" title="Permalink to this definition">¶</a></dt>
+<dt id="plotting.plotting.generate_figure">
+<code class="descclassname">plotting.plotting.</code><code class="descname">generate_figure</code><span class="sig-paren">(</span><em>nc_file</em>, <em>field_names</em>, <em>show=True</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting/plotting.html#generate_figure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.plotting.generate_figure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a Cloudnet figure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -305,7 +305,7 @@ Overrides the <em>save_path</em> option. Default is None.</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.plotting</span> <span class="k">import</span> <span class="n">generate_figure</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.plotting.plotting</span> <span class="k">import</span> <span class="n">generate_figure</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;categorize_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Z&#39;</span><span class="p">,</span> <span class="s1">&#39;v&#39;</span><span class="p">,</span> <span class="s1">&#39;width&#39;</span><span class="p">,</span> <span class="s1">&#39;ldr&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;lwp&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;iwc_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;iwc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc_error&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc_retrieval_status&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;lwc_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;lwc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc_error&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc_retrieval_status&#39;</span><span class="p">],</span> <span class="n">max_y</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
@@ -313,6 +313,37 @@ Overrides the <em>save_path</em> option. Default is None.</li>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_figure</span><span class="p">(</span><span class="s1">&#39;drizzle_file.nc&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;Do&#39;</span><span class="p">,</span> <span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="s1">&#39;S&#39;</span><span class="p">],</span> <span class="n">max_y</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
+</dd></dl>
+
+<p>There is also possibility to compare old Cloudnet files with the new
+CloudnetPy files.</p>
+<dl class="function">
+<dt id="plotting.plotting.compare_files">
+<code class="descclassname">plotting.plotting.</code><code class="descname">compare_files</code><span class="sig-paren">(</span><em>nc_files</em>, <em>field_name</em>, <em>show=True</em>, <em>relative_err=False</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting/plotting.html#compare_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.plotting.compare_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots one particular field from old and new cloudnet files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>nc_files</strong> (<em>tuple</em>) – Tuple of strings of the two files to compare
+[0] = old Cloudnet file
+[1] = new CloudnetPy file</li>
+<li><strong>field_name</strong> (<em>str</em>) – Name of variable to be plotted.</li>
+<li><strong>show</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, shows the plot.</li>
+<li><strong>relative_err</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, plots also relative error. Makes
+sense only for continuous variables. Default is False.</li>
+<li><strong>save_path</strong> (<em>str</em><em>, </em><em>optional</em>) – If defined, saves the image to this path.
+Default is None.</li>
+<li><strong>max_y</strong> (<em>int</em><em>, </em><em>optional</em>) – Upper limit of images (km). Default is 12.</li>
+<li><strong>dpi</strong> (<em>int</em><em>, </em><em>optional</em>) – Quality of plots. Default is 200.</li>
+<li><strong>image_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name (and full path) of the output image.
+Overrides the <em>save_path</em> option. Default is None.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

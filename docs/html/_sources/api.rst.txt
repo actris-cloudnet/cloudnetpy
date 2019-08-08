@@ -47,7 +47,12 @@ Visualizing results
 
 CloudnetPy offers easy-to-use plotting interface.
 
-.. autofunction:: plotting.generate_figure
+.. autofunction:: plotting.plotting.generate_figure
+
+There is also possibility to compare old Cloudnet files with the new
+CloudnetPy files.
+
+.. autofunction:: plotting.plotting.compare_files
 
 
 Cloudnetpy modules

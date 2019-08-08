@@ -15,7 +15,7 @@ from collections import namedtuple
 from cloudnetpy.categorize import categorize as cat
 from cloudnetpy.instruments import mira, rpg
 from cloudnetpy.instruments import ceilo
-from cloudnetpy import plotting
+from cloudnetpy.plotting import plotting
 from cloudnetpy import utils
 
 config = configparser.ConfigParser()
