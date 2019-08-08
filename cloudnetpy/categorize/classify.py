@@ -73,8 +73,7 @@ def classify_measurements(radar, lidar, model, mwr):
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
     bits[5], insect_prob = find_insects(obs, bits[3], bits[0])
     bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
-    bits[4], extra_ice = find_aerosols(obs, bits[1], bits[0])
-    bits[1][extra_ice] = True
+    bits[4] = find_aerosols(obs, bits[1], bits[0])
     cat_bits = _bits_to_integer(bits)
     return _ClassificationResult(cat_bits, obs.is_rain, obs.is_clutter,
                                  insect_prob, liquid['bases'])
@@ -290,11 +289,11 @@ def _insect_probability(obs):
             'temp_loose': fun(obs.tw, 268, 2),
             'temp_strict': fun(obs.tw, 274, 1),
             'v': fun(smooth_v, -2, 1),
-            'lwp': utils.transpose(fun(lwp_interp, 100, 50, invert=True))
+            'lwp': utils.transpose(fun(lwp_interp, 150, 50, invert=True))
         }
     prob = _get_probabilities()
     prob_combined = prob['z'] * prob['temp_loose'] * prob['ldr']
-    prob_no_ldr = prob['z'] * prob['temp_strict'] * prob['v'] * prob['width']
+    prob_no_ldr = prob['z'] * prob['temp_strict'] * prob['v'] * prob['width'] * prob['lwp']
     no_ldr = np.where(prob_combined == 0)
     prob_combined[no_ldr] = prob_no_ldr[no_ldr]
     return prob_combined, prob_no_ldr
@@ -325,7 +324,8 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
     Falling hydrometeors are radar signals that are
     a) not insects b) not clutter. Furthermore, falling hydrometeors
     are strong lidar pixels excluding liquid layers (thus these pixels
-    are ice or rain).
+    are ice or rain). They are also weak radar signals in very cold
+    temperatures.
 
     Args:
         obs (_ClassData): Container for observations.
@@ -336,22 +336,31 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
         ndarray: 2-D boolean array containing falling hydrometeors.
 
     """
+    def _find_falling_from_radar():
+        is_z = ~obs.z.mask
+        no_clutter = ~obs.is_clutter
+        no_insects = ~is_insects
+        return is_z & no_clutter & no_insects
+
     def _find_falling_from_lidar():
         strong_beta_limit = 2e-6
         return (obs.beta.data > strong_beta_limit) & ~is_liquid
 
-    is_z = ~obs.z.mask
-    no_clutter = ~obs.is_clutter
-    no_insects = ~is_insects
+    def _find_cold_aerosols():
+        temperature_limit = T0 - 15
+        is_beta = ~obs.beta.mask
+        return is_beta & (obs.tw < temperature_limit) & ~is_liquid
+
+    falling_from_radar = _find_falling_from_radar()
     falling_from_lidar = _find_falling_from_lidar()
-    return (is_z & no_clutter & no_insects) | falling_from_lidar
+    cold_aerosols = _find_cold_aerosols()
+    return falling_from_radar | falling_from_lidar | cold_aerosols
 
 
 def find_aerosols(obs, is_falling, is_liquid):
     """Estimates aerosols from lidar backscattering.
 
-    Aerosols are lidar signals that are: a) not falling, b) not liquid droplets,
-    and are present in warmer than some threshold temperature.
+    Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
 
     Args:
         obs (_ClassData): Container for observations.
@@ -362,15 +371,8 @@ def find_aerosols(obs, is_falling, is_liquid):
         ndarray: 2-D boolean array containing aerosols.
 
     """
-    def _find_potential_aerosols():
-        is_beta = ~obs.beta.mask
-        return is_beta & ~is_falling & ~is_liquid
-
-    temperature_limit = T0 - 15
-    potential_aerosols = _find_potential_aerosols()
-    aerosols = potential_aerosols & (obs.tw > temperature_limit)
-    ice = potential_aerosols & (obs.tw < temperature_limit)
-    return aerosols, ice
+    is_beta = ~obs.beta.mask
+    return is_beta & ~is_falling & ~is_liquid
 
 
 def _bits_to_integer(bits):
