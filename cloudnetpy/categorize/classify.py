@@ -6,7 +6,8 @@ import numpy as np
 import numpy.ma as ma
 from scipy.ndimage.filters import gaussian_filter
 from scipy.interpolate import interp1d
-from cloudnetpy import droplet, utils
+from cloudnetpy import utils
+from cloudnetpy.categorize import droplet
 from cloudnetpy.constants import T0
 
 

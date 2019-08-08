@@ -2,7 +2,7 @@
 helper functions. """
 
 import uuid
-from datetime import datetime
+import datetime
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
@@ -427,7 +427,13 @@ def isscalar(array):
 
 def get_time():
     """Returns current UTC-time."""
-    return datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+
+
+def date_range(start_date, end_date):
+    """Return range between two dates (datetimes)."""
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + datetime.timedelta(n)
 
 
 def get_uuid():
@@ -478,9 +484,11 @@ def get_site_information(site, *args):
 
     """
     fields = ','.join(args)
-    query = f"http://devcloudnet.fmi.fi/api/sites/?site={site}&fields={fields}"
+    query = f"http://devcloudnet.fmi.fi/api/sites/?site_code={site}&fields={fields}"
     try:
-        result = requests.get(query).json().values()
+        result = [*requests.get(query).json()[0]['fields'].values()]
+        if len(result) == 1:
+            result = result[0]
     except:
         result = tuple([0]*len(args))
     return result

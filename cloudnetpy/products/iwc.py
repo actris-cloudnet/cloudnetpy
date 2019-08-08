@@ -6,9 +6,9 @@ import numpy as np
 import numpy.ma as ma
 import cloudnetpy.utils as utils
 import cloudnetpy.output as output
-from cloudnetpy.categorize import DataSource
+from cloudnetpy.categorize.categorize import DataSource
 import cloudnetpy.products.product_tools as p_tools
-import cloudnetpy.atmos as atmos
+import cloudnetpy.categorize.atmos as atmos
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import ProductClassification
 

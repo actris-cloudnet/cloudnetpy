@@ -7,9 +7,10 @@ import netCDF4
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from cloudnetpy import utils, meta_for_old_files
+from cloudnetpy import utils
+from cloudnetpy.plotting import meta_for_old_files
 import cloudnetpy.products.product_tools as ptools
-from cloudnetpy.plot_meta import ATTRIBUTES
+from cloudnetpy.plotting.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
@@ -30,7 +31,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             Overrides the *save_path* option. Default is None.
 
     Examples:
-        >>> from cloudnetpy.plotting import generate_figure
+        >>> from cloudnetpy.plotting.plotting import generate_figure
         >>> generate_figure('categorize_file.nc', ['Z', 'v', 'width', 'ldr', 'beta', 'lwp'])
         >>> generate_figure('iwc_file.nc', ['iwc', 'iwc_error', 'iwc_retrieval_status'])
         >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error', 'lwc_retrieval_status'], max_y=4)

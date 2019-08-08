@@ -24,7 +24,7 @@ the data can be combined in a single categorize file.
 
 .. autofunction:: instruments.ceilo.ceilo2nc
 
-.. autofunction:: categorize.generate_categorize
+.. autofunction:: categorize.categorize.generate_categorize
 
 
 Categorize to products
@@ -47,7 +47,12 @@ Visualizing results
 
 CloudnetPy offers easy-to-use plotting interface.
 
-.. autofunction:: plotting.generate_figure
+.. autofunction:: plotting.plotting.generate_figure
+
+There is also possibility to compare old Cloudnet files with the new
+CloudnetPy files.
+
+.. autofunction:: plotting.plotting.compare_files
 
 
 Cloudnetpy modules
@@ -58,24 +63,24 @@ functions that are useful for development, testing and research
 purposes.
 
 
-cloudnetpy.classify
--------------------
+cloudnetpy.categorize.classify
+------------------------------
 
-.. automodule:: classify
+.. automodule:: categorize.classify
    :members:
 
 
-cloudnetpy.atmos
-----------------
+cloudnetpy.categorize.atmos
+---------------------------
 
-.. automodule:: atmos
+.. automodule:: categorize.atmos
    :members:
 
 
-cloudnetpy.droplet
-------------------
+cloudnetpy.categorize.droplet
+-----------------------------
 
-.. automodule:: droplet
+.. automodule:: categorize.droplet
    :members:
 
 

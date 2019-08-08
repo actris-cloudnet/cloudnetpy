@@ -3,8 +3,9 @@ using scaled-adiabatic method.
 """
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import utils, atmos, output
-from cloudnetpy.categorize import DataSource
+from cloudnetpy import utils, output
+from cloudnetpy.categorize import atmos
+from cloudnetpy.categorize.categorize import DataSource
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
