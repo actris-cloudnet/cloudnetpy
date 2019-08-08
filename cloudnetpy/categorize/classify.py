@@ -7,7 +7,7 @@ import numpy.ma as ma
 from scipy.ndimage.filters import gaussian_filter
 from scipy.interpolate import interp1d
 from cloudnetpy import utils
-from cloudnetpy.categorize import droplet
+from cloudnetpy.categorize import droplet, atmos
 from cloudnetpy.constants import T0
 
 
@@ -337,7 +337,6 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
 
     """
     def _find_falling_from_radar():
-        is_z = ~obs.z.mask
         no_clutter = ~obs.is_clutter
         no_insects = ~is_insects
         return is_z & no_clutter & no_insects
@@ -351,7 +350,22 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
         is_beta = ~obs.beta.mask
         return is_beta & (obs.tw < temperature_limit) & ~is_liquid
 
+    def _fix_liquid_dominated_radar():
+        """Radar signals inside liquid clouds are not ice if Z in cloud is
+        increasing by height."""
+        liquid_bases = atmos.find_cloud_bases(is_liquid)
+        liquid_tops = atmos.find_cloud_tops(is_liquid)
+        base_inds = np.where(liquid_bases)
+        top_inds = np.where(liquid_tops)
+        for n, base, _, top in zip(*base_inds, *top_inds):
+            z_above_cloud = is_z[n, top+1]
+            z_increasing = ma.median(ma.diff(obs.z[n, base:top+1])) > 0
+            if not z_above_cloud and z_increasing:
+                falling_from_radar[n, base:top+1] = False
+
+    is_z = ~obs.z.mask
     falling_from_radar = _find_falling_from_radar()
+    _fix_liquid_dominated_radar()
     falling_from_lidar = _find_falling_from_lidar()
     cold_aerosols = _find_cold_aerosols()
     return falling_from_radar | falling_from_lidar | cold_aerosols

@@ -59,14 +59,14 @@ _CLABEL = {
         (("_Clear sky", _COLORS['white']),
          ("Cloud droplets", _COLORS['lightblue']),
          ("Drizzle or rain", _COLORS['blue']),
-         ("Drizzle/rain or cloud droplets", _COLORS['purple']),
+         ("Drizzle/rain & cloud droplets", _COLORS['purple']),
          ("Ice", _COLORS['lightsteel']),
          ("Ice & supercooled droplets",  _COLORS['darkpurple']),
          ("Melting ice", _COLORS['orange']),
          ("Melting ice & cloud droplets", _COLORS['yellowgreen']),
          ("Aerosols", _COLORS['lightbrown']),
          ("Insects", _COLORS['shockred']),
-         ("Aerosols & Insects", _COLORS['pink'])),
+         ("Aerosols & insects", _COLORS['pink'])),
 
     'detection_status':
         (("_Clear sky", _COLORS['white']),
