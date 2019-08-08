@@ -484,9 +484,11 @@ def get_site_information(site, *args):
 
     """
     fields = ','.join(args)
-    query = f"http://devcloudnet.fmi.fi/api/sites/?site={site}&fields={fields}"
+    query = f"http://devcloudnet.fmi.fi/api/sites/?site_code={site}&fields={fields}"
     try:
-        result = requests.get(query).json().values()
+        result = [*requests.get(query).json()[0]['fields'].values()]
+        if len(result) == 1:
+            result = result[0]
     except:
         result = tuple([0]*len(args))
     return result

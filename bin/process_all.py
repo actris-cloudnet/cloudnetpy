@@ -12,7 +12,7 @@ import importlib
 import configparser
 import datetime
 from collections import namedtuple
-from cloudnetpy import categorize as cat
+from cloudnetpy.categorize import categorize as cat
 from cloudnetpy.instruments import mira, rpg
 from cloudnetpy.instruments import ceilo
 from cloudnetpy import plotting

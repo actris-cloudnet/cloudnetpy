@@ -24,7 +24,7 @@ the data can be combined in a single categorize file.
 
 .. autofunction:: instruments.ceilo.ceilo2nc
 
-.. autofunction:: categorize.generate_categorize
+.. autofunction:: categorize.categorize.generate_categorize
 
 
 Categorize to products
@@ -58,24 +58,24 @@ functions that are useful for development, testing and research
 purposes.
 
 
-cloudnetpy.classify
--------------------
+cloudnetpy.categorize.classify
+------------------------------
 
-.. automodule:: classify
+.. automodule:: categorize.classify
    :members:
 
 
-cloudnetpy.atmos
-----------------
+cloudnetpy.categorize.atmos
+---------------------------
 
-.. automodule:: atmos
+.. automodule:: categorize.atmos
    :members:
 
 
-cloudnetpy.droplet
-------------------
+cloudnetpy.categorize.droplet
+-----------------------------
 
-.. automodule:: droplet
+.. automodule:: categorize.droplet
    :members:
 
 
