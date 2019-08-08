@@ -8,9 +8,9 @@ https://drive.google.com/open?id=1iJVvgDrQo8JvGSOcxroIZc6x8fSUs4EU
 
 """
 import importlib
-from cloudnetpy import categorize
+from cloudnetpy.categorize import categorize
 from cloudnetpy.instruments import mira, ceilo
-from cloudnetpy import plotting as plot
+from cloudnetpy.plotting import plotting as plot
 
 
 def process_cloudnetpy_raw_files(site, file_path):
