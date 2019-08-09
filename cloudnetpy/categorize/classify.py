@@ -296,7 +296,9 @@ def _insect_probability(obs):
         }
     prob = _get_probabilities()
     prob_combined = prob['z'] * prob['temp_loose'] * prob['ldr']
-    prob_no_ldr = prob['z'] * prob['temp_strict'] * prob['v'] * prob['width'] * prob['lwp']
+    prob_no_ldr = prob['z'] * prob['temp_strict'] * prob['v'] * prob['width']
+    if 'mira' in obs.radar_type.lower():
+        prob_no_ldr *= prob['lwp']
     no_ldr = np.where(prob_combined == 0)
     prob_combined[no_ldr] = prob_no_ldr[no_ldr]
     return prob_combined, prob_no_ldr
@@ -447,6 +449,7 @@ class _ClassData:
         self.time = radar.time
         self.height = radar.height
         self.model_type = model.type
+        self.radar_type = radar.type
         self.is_rain = self._find_rain()
         self.is_clutter = self._find_clutter()
 
