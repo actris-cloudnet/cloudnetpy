@@ -9,7 +9,6 @@ from scipy.interpolate import interp1d
 from cloudnetpy import utils
 from cloudnetpy.categorize import droplet, atmos
 from cloudnetpy.constants import T0
-from scipy import stats
 
 
 def fetch_quality(radar, lidar, classification, attenuations):
@@ -71,13 +70,16 @@ def classify_measurements(radar, lidar, model, mwr):
     liquid = droplet.find_liquid(obs)
     bits[3] = find_melting_layer(obs)
     bits[2] = find_freezing_region(obs, bits[3])
-    bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
+    bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=750)
     bits[5], insect_prob = find_insects(obs, bits[3], bits[0])
     bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4] = find_aerosols(obs, bits[1], bits[0])
-    cat_bits = _bits_to_integer(bits)
-    return _ClassificationResult(cat_bits, obs.is_rain, obs.is_clutter,
-                                 insect_prob, liquid['bases'])
+    return _ClassificationResult(_bits_to_integer(bits),
+                                 obs.is_rain,
+                                 obs.is_clutter,
+                                 insect_prob,
+                                 liquid['bases'],
+                                 find_profiles_with_undetected_melting(bits))
 
 
 def find_melting_layer(obs, smooth=True):
@@ -399,6 +401,19 @@ def find_aerosols(obs, is_falling, is_liquid):
     return is_beta & ~is_falling & ~is_liquid
 
 
+def find_profiles_with_undetected_melting(bits):
+    is_falling = bits[1] & ~bits[0]
+    is_drizzle = is_falling & ~bits[2]
+    drizzle_and_falling = is_falling.astype(int) + is_drizzle.astype(int)
+    drizzle_and_falling[drizzle_and_falling == 0] = ma.masked
+    transition = ma.diff(drizzle_and_falling, axis=1)
+    is_transition = ma.any(transition, axis=1)
+    is_melting_layer = ma.any(bits[3], axis=1)
+    is_undetected_melting = is_transition & ~is_melting_layer
+    is_undetected_melting[is_undetected_melting == 0] = ma.masked
+    return is_undetected_melting.astype(int)
+
+
 def _bits_to_integer(bits):
     """Creates array of integers from individual boolean arrays.
 
@@ -482,3 +497,4 @@ class _ClassificationResult:
     is_clutter: np.ndarray
     insect_prob: np.ndarray
     liquid_bases: np.ndarray
+    is_undetected_melting: np.ndarray
