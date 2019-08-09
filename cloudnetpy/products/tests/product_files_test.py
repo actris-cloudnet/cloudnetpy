@@ -1,6 +1,9 @@
 import pytest
 import netCDF4
 from tests.test import initialize_test_data
+import warnings
+
+warnings.filterwarnings("ignore")
 
 instrument_list = ['classification', 'iwc', 'lwc', 'drizzle']
 test_data_path = initialize_test_data(instrument_list)

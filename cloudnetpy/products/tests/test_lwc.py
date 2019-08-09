@@ -4,6 +4,9 @@ import numpy as np
 import numpy.ma as ma
 import numpy.testing as testing
 from tests.test import initialize_test_data
+import warnings
+
+warnings.filterwarnings("ignore")
 
 test_data_path = initialize_test_data()
 
