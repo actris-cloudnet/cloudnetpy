@@ -54,7 +54,7 @@ def generate_categorize(input_files, output_file):
         radar.add_meta()
         lidar.add_meta()
         model.screen_sparse_fields()
-        for key in ('category_bits', 'insect_prob', 'is_rain'):
+        for key in ('category_bits', 'insect_prob', 'is_rain', 'is_undetected_melting'):
             radar.append_data(getattr(classification, key), key)
         for key in ('radar_liquid_atten', 'radar_gas_atten'):
             radar.append_data(attenuations[key], key)
@@ -708,6 +708,11 @@ CATEGORIZE_ATTRIBUTES = {
     'is_rain': MetaData(
         long_name='Presence of rain',
         comment='Integer denoting the rain (1) or no rain (0).'
+    ),
+    'is_undetected_melting': MetaData(
+        long_name='Presence of undetected melting layer',
+        comment=('This variable denotes profiles where ice turns into drizzle/rain\n'
+                 'but no proper melting layer can be found from the data.')
     ),
     'beta': MetaData(
         long_name='Attenuated backscatter coefficient',

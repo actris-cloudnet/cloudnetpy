@@ -345,6 +345,12 @@ def find_cloud_bases(array):
     return np.diff(array_padded, axis=1) == 1
 
 
+def find_cloud_tops(array):
+    array_flipped = np.fliplr(array)
+    bases_of_flipped = find_cloud_bases(array_flipped)
+    return np.fliplr(bases_of_flipped)
+
+
 def calc_adiabatic_lwc(lwc_change_rate, dheight):
     """Calculates adiabatic liquid water content (g/m3).
 
