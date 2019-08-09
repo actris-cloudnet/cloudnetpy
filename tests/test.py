@@ -1,22 +1,3 @@
-# Tällä tiedostolla ajetaan kaikki tarpeelliset unit testit halutussa järjestyksessä
-# Tämä tiedosto on tarkoitettu lähinnä niille, jotka haluavat kehittää uutta menetelmää jollekin tuotteelle.
-# Tähän koodiin voi lisätä muitakin käyttötarkoituksia halutessaan, pitää keskustella
-
-"""
-Tällä koodilla ajetaan koko testi ja prosessointiketju. Erilliset yksittäiset testit ajetaan muualla alustavasti
-
-- Ladataan testi casen raw-data zipinä jostain hakemistosta (lopullinen sijainti päätetään myöhemmin)
-- puretaan data valittuun sijaintiin
-- Testataan ensiksi raw filut, onko kaikki tarpeellinen sisällä
-
-- Prosessoidaan koko CloudnetPy prosessi
-
-- Testaan instrumentti menetelmät -> testataan tuotettu filu
-- Testataan cat menetelmät -> cat filun testaus
-- Testataan product menetelmät -> product filujen testaus
-- Testataan mahdollisesti vielä plottaus menetelmät, jos tarpeellista
-"""
-
 import pytest
 import os
 import glob
