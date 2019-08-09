@@ -27,6 +27,9 @@ def rpg2nc(path_to_l1_files, output_file, site_meta):
         >>> site_meta = {'name': 'Hyytiala', 'altitude': 174}
         >>> rpg2nc('/path/to/files/', 'test.nc', site_meta)
 
+    Raises:
+        RuntimeError: Failed to process the data.
+
     """
     l1_files = get_rpg_files(path_to_l1_files)
     one_day_of_data = _create_one_day_data_record(l1_files)
@@ -48,7 +51,10 @@ def _create_one_day_data_record(l1_files):
     """Concatenates all RPG data from one day."""
     rpg_objects = get_rpg_objects(l1_files)
     rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
-    rpg_header = _reduce_header(rpg_header)
+    try:
+        rpg_header = _reduce_header(rpg_header)
+    except AssertionError as error:
+        raise RuntimeError(error)
     rpg_raw_data = _mask_invalid_data(rpg_raw_data)
     return {**rpg_header, **rpg_raw_data}
 
@@ -305,7 +311,7 @@ class Rpg:
             self.data[key] = CloudnetArray(self.raw_data[key], key)
 
     def _mask_invalid_ldr(self):
-        self.raw_data['ldr'] = ma.masked_less_equal(self.raw_data['ldr'], -50)
+        self.raw_data['ldr'] = ma.masked_less_equal(self.raw_data['ldr'], -35)
 
     def linear_to_db(self, variables_to_log):
         """Changes some linear units to logarithmic."""
