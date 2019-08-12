@@ -39,6 +39,7 @@ class ProductClassification(CategorizeBits):
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.is_rain = self.variables['is_rain'][:]
+        self.is_undetected_melting = self.variables['is_undetected_melting'][:]
 
 
 def get_source(data_handler):

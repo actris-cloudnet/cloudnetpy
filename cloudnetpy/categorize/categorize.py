@@ -266,6 +266,7 @@ class Radar(ProfileDataSource):
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, 'location', '')
+        self.type = getattr(self.dataset, 'source', '')
         self._netcdf_to_cloudnet(('v', 'width', 'ldr'))
         self._unknown_to_cloudnet(('Zh', 'Zv', 'Ze'), 'Z', units='dBZ')
         self._init_sigma_v()
