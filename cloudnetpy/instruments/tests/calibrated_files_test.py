@@ -17,7 +17,7 @@ def test_data():
         key_dict[instrument] = keys
     return key_dict
 
-
+@pytest.mark.filterwarnings("ignore:test_radar_file")
 def test_radar_file(test_data):
     must_keys = ['Ze', 'v', 'width', 'ldr', 'SNR', 'radar_frequency', 'nfft', 'prf',
                  'NyquistVelocity', 'nave', 'zrg', 'rg0', 'drg']
@@ -26,9 +26,9 @@ def test_radar_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in Radar file")
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in Radar file")
 
-
+@pytest.mark.filterwarnings("ignore:test_ceilo_file")
 def test_ceilo_file(test_data):
     must_keys = ['beta_raw', 'beta', 'beta_smooth', 'tilt_angle', 'height', 'wavelength']
     compared_list = list(set(must_keys).intersection(test_data['ceilo']))
@@ -36,5 +36,5 @@ def test_ceilo_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in Lidar file")
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in Lidar file")
 

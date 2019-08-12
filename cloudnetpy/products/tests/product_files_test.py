@@ -25,7 +25,7 @@ def test_classification_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in classification file")
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in classification file")
 
 
 def test_iwc_file(test_data):
@@ -36,7 +36,7 @@ def test_iwc_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in iwc file")
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in iwc file")
 
 
 def test_lwc_file(test_data):
@@ -46,7 +46,7 @@ def test_lwc_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in lwc file")
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in lwc file")
 
 
 def test_drizzle_file(test_data):
@@ -60,4 +60,4 @@ def test_drizzle_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in drizzle file")
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in drizzle file")

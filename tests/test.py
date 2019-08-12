@@ -1,5 +1,5 @@
+import os, sys
 import pytest
-import os
 import glob
 from zipfile import ZipFile
 import requests
@@ -7,75 +7,96 @@ from tests.run_testcase_processing import *
 import warnings
 
 warnings.filterwarnings("ignore")
+pytest_modules = ["pytest_remotedata", "pytest_openfiles", "pytest_doctestplus",
+                  "pytest_arraydiff"]
 
 
 def main():
 
-    def load_test_data():
-        def extract_zip(extract_path):
-            # r = requests.get(url)
-            # open(save_name, 'wb').write(r.content)
-            fl = ZipFile(output_path + save_name, 'r')
+    def _load_test_data():
+        def _extract_zip(extract_path):
+            sys.stdout.write("\nLoad test data...")
+            r = requests.get(url)
+            open(input_path + save_name, 'wb').write(r.content)
+            fl = ZipFile(input_path + save_name, 'r')
             fl.extractall(extract_path)
             fl.close()
+            sys.stdout.write("    Done.\n")
 
-        save_name = 'test_data_raw.zip'
+        save_name = os.path.split(url)[-1]
         is_dir = os.path.isdir(input_path)
         if not is_dir:
             os.mkdir(input_path )
-            extract_zip(input_path)
+            _extract_zip(input_path)
         else:
             is_file = os.path.isfile(input_path + save_name)
             if not is_file:
-                extract_zip(input_path)
+                _extract_zip(input_path)
 
-    # Call functions to load and storage test data
+    print("###################### Start testing CloudnetPy test case #######################")
+
     c_path = os.path.split(os.getcwd())[0]
     input_path = os.path.join(os.getcwd() + '/source_data/')
-    output_path = '/home/korpinen/Documents/ACTRIS/cloudnet_data/'
-    url = '/home/korpinen/Documents/ACTRIS/cloudnet_data/test_data_raw.zip'
-    load_test_data()
+    url = 'http://devcloudnet.fmi.fi/files/cloudnetpy_test_input_files.zip'
+    _load_test_data()
 
-    print('\nCheck all needed variables in raw files')
-    pytest.main(["-p no:warnings", c_path + '/cloudnetpy/instruments/tests/raw_files_test.py'])
-    #TODO: Break the run if any test fails
+    print('\nTest raw files\n')
+    test = pytest.main(["--tb=line", c_path + '/cloudnetpy/instruments/tests/raw_files_test.py'])
+    _check_failures(test, "raw")
+    _remove_import_modules(pytest_modules)
+
     print("\nProcessing CloudnetPy calibrated files from raw files")
     process_cloudnetpy_raw_files('mace-head', input_path)
-    print("\n   Done processing test raw files")
 
-    print('\nCheck all needed variables in calibrated files')
-    pytest.main(["-p no:warnings", c_path + '/cloudnetpy/instruments/tests/calibrated_files_test.py'])
+    print('\nTest calibrated files\n')
+    test = pytest.main(["--tb=line", c_path + '/cloudnetpy/instruments/tests/calibrated_files_test.py'])
+    _check_failures(test, "calibrated")
+
     print("\nProcessing CloudnetPy categorize file from calibrated files")
     process_cloudnetpy_categorize('mace-head', input_path)
-    print("\n   Done processing test categorize file")
 
-    print('\nCheck all needed variables in category file')
-    pytest.main(["-p no:warnings", c_path + '/cloudnetpy/tests/categorize_file_test.py'])
-    print("\nProcessing CloudnetPy product filea from categorize file")
+    print('\nTest category file\n')
+    test = pytest.main(["--tb=line", c_path + '/cloudnetpy/categorize/tests/categorize_file_test.py'])
+    _check_failures(test, "category")
+
+    print("\nProcessing CloudnetPy product files from categorize file")
     process_cloudnetpy_products('mace-head', input_path)
-    print("\n   Done processing test product files")
 
-    print('\nCheck all needed variables in product files')
-    pytest.main(["-p no:warnings", c_path + '/cloudnetpy/products/tests/product_files_test.py'])
+    print('\nTest product files\n')
+    test = pytest.main(["--tb=line", c_path + '/cloudnetpy/products/tests/product_files_test.py'])
+    _check_failures(test, "product")
 
-    print("\n###########################################################"
-          "\n# All tests passed and processing cloudnetPy done correct #"
-          "\n###########################################################")
+    print("\n########## All tests passed and processing cloudnetPy done correctly ###########")
 
 
-def initialize_test_data(instrument):
+def initialize_test_data(instrument, source_path=None):
     """
     Finds all file paths and parses wanted files to list
     """
-    test_data = glob.glob(os.getcwd() + '/source_data/*.nc')
-    print(test_data)
+    if not source_path:
+        source_path = os.getcwd() + '/source_data/'
+    test_data = glob.glob(source_path + '*.nc')
     paths = []
-    # TODO: Write this to run faster!
     for inst in instrument:
         for file in test_data:
             if inst in file:
               paths.append(file)
     return paths
+
+
+def _remove_import_modules(pytest_modules):
+    for module in pytest_modules:
+        if module in sys.modules:
+            del sys.modules[module]
+
+
+def _check_failures(tests, var):
+    if tests == 1 or tests == 3:
+        print("\n"
+              "####################"
+              f"# Failures in processing {var} files #"
+              "####################")
+        sys.exit()
 
 
 if __name__ == "__main__":

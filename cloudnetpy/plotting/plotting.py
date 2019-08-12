@@ -246,9 +246,8 @@ def _plot_bar_data(ax, data, time):
 
     """
     # TODO: unit change somewhere else
-    width = 1/120
     ax.plot(time, data/1000, color='navy')
-    ax.bar(time, data.filled(0)/1000, width, align='center', alpha=0.5,
+    ax.bar(time, data.filled(0)/1000, width=1/120, align='center', alpha=0.5,
            color='royalblue')
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])

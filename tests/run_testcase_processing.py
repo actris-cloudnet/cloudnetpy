@@ -7,6 +7,7 @@ https://drive.google.com/open?id=1iJVvgDrQo8JvGSOcxroIZc6x8fSUs4EU
 
 
 """
+import sys
 import importlib
 from cloudnetpy.categorize import categorize
 from cloudnetpy.instruments import mira, ceilo
@@ -15,10 +16,11 @@ from cloudnetpy.instruments import mira, ceilo
 def process_cloudnetpy_raw_files(site, file_path):
 
     def _process_raw(input_id, output_id, fun):
-        print(f"Processing raw {output_id} file...")
+        sys.stdout.write(f"    Processing raw {output_id} file...")
         input_file = _input_raw_file_name(file_path, date, site, input_id)
         output_file = _output_file_name(file_path, output_id)
         fun(input_file, output_file, site_meta)
+        sys.stdout.write("    Done.\n")
         return output_file
 
     date = '20181204'
@@ -31,10 +33,11 @@ def process_cloudnetpy_raw_files(site, file_path):
 def process_cloudnetpy_categorize(site, file_path):
 
     def _process_categorize():
-        print(f"Processing categorize file...")
+        sys.stdout.write(f"    Processing categorize file...")
         input_files = _get_categorize_input_files()
         output_file = _output_file_name(file_path, 'categorize')
         categorize.generate_categorize(input_files, output_file)
+        sys.stdout.write("    Done.\n")
         return output_file
 
     def _get_categorize_input_files():
@@ -53,10 +56,11 @@ def process_cloudnetpy_categorize(site, file_path):
 def process_cloudnetpy_products(site, file_path):
 
     def _process_product(product_name):
-        print(f"Processing {product_name} file...")
+        sys.stdout.write(f"    Processing {product_name} file...")
         output_file = _output_file_name(file_path, product_name)
         module = importlib.import_module(f"cloudnetpy.products.{product_name}")
         getattr(module, f"generate_{product_name}")(categorize_file, output_file)
+        sys.stdout.write("    Done.\n")
 
     categorize_file = _input_file_name(file_path, 'categorize')
     for product in ('classification', 'iwc', 'lwc', 'drizzle'):
@@ -71,6 +75,9 @@ def _get_meta(name):
 
 def _input_raw_file_name(file_path, date, site, file_id):
     return f"{file_path}{date}_{site}_{file_id}.nc"
+
+
+#def _get_date():
 
 
 def _input_file_name(file_path, file_id):

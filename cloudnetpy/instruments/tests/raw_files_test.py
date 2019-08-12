@@ -1,3 +1,4 @@
+import sys
 import pytest
 import netCDF4
 from tests.test import initialize_test_data
@@ -26,8 +27,7 @@ def test_mira_raw_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in raw Radar file")
-
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in raw Radar file")
 
 def test_ceilo_raw_file(test_data):
     must_keys = ['latitude', 'longitude', 'azimuth', 'zenith', 'time', 'range',
@@ -37,7 +37,7 @@ def test_ceilo_raw_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in raw Lidar file")
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in raw Lidar file")
 
 
 def test_model_file(test_data):
@@ -49,7 +49,7 @@ def test_model_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in Model file")
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in Model file")
 
 
 def test_mwr_file(test_data):
@@ -60,5 +60,5 @@ def test_mwr_file(test_data):
         assert set(must_keys) == set(compared_list)
     except AssertionError:
         missing_variables = list(set(must_keys).difference(compared_list))
-        raise Exception(f"Missing '{', '.join(missing_variables)}' variables in Microwave radiometer file")
+        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in Microwave radiometer file")
 
