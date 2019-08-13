@@ -44,6 +44,5 @@ def test_model_file(test_data):
 def test_mwr_file(test_data):
     must_keys = {'time_reference', 'minimum', 'maximum', 'time', 'rain_flag',
                  'elevation_angle', 'azimuth_angle', 'retrieval', 'LWP_data'}
-
     missing_keys = must_keys - test_data['hatpro']
     assert not missing_keys, _error_msg(missing_keys, 'hatpro')
