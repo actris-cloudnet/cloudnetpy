@@ -9,9 +9,8 @@ TEST_DATA_PATH = initialize_test_data(INSTRUMENT_LIST)
 @pytest.fixture
 def test_data():
     key_dict = {}
-    for i, instrument in enumerate(INSTRUMENT_LIST):
-        keys = list(netCDF4.Dataset(TEST_DATA_PATH[i]).variables.keys())
-        key_dict[instrument] = set(keys)
+    for path, instrument in zip(TEST_DATA_PATH, INSTRUMENT_LIST):
+        key_dict[instrument] = set(netCDF4.Dataset(path).variables.keys())
     return key_dict
 
 

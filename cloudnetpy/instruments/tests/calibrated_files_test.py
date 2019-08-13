@@ -2,16 +2,15 @@ import pytest
 import netCDF4
 from tests.test import initialize_test_data, missing_var_msg
 
-instrument_list = ['radar', 'ceilo']
-test_data_path = initialize_test_data(instrument_list)
+INSTRUMENT_LIST = ['radar', 'ceilo']
+TEST_DATA_PATH = initialize_test_data(INSTRUMENT_LIST)
 
 
 @pytest.fixture
 def test_data():
     key_dict = {}
-    for i, instrument in enumerate(instrument_list):
-        keys = list(netCDF4.Dataset(test_data_path[i]).variables.keys())
-        key_dict[instrument] = set(keys)
+    for path, instrument in zip(TEST_DATA_PATH, INSTRUMENT_LIST):
+        key_dict[instrument] = set(netCDF4.Dataset(path).variables.keys())
     return key_dict
 
 
