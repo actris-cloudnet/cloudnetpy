@@ -7,6 +7,9 @@ import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal
 import pytest
 from cloudnetpy import utils
+import warnings
+
+warnings.filterwarnings("ignore")
 
 
 def test_binvec():

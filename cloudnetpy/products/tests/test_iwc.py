@@ -5,6 +5,9 @@ import numpy.ma as ma
 import netCDF4
 from numpy import testing
 from tests.test import initialize_test_data
+import warnings
+
+warnings.filterwarnings("ignore")
 
 test_data_path = initialize_test_data()
 
