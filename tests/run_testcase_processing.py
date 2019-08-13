@@ -53,7 +53,7 @@ def process_cloudnetpy_categorize(site, file_path):
     _process_categorize()
 
 
-def process_cloudnetpy_products(site, file_path):
+def process_cloudnetpy_products(file_path):
 
     def _process_product(product_name):
         sys.stdout.write(f"    Processing {product_name} file...")
@@ -77,7 +77,7 @@ def _input_raw_file_name(file_path, date, site, file_id):
     return f"{file_path}{date}_{site}_{file_id}.nc"
 
 
-#def _get_date():
+#def _get_meta_from_file():
 
 
 def _input_file_name(file_path, file_id):
@@ -86,4 +86,5 @@ def _input_file_name(file_path, file_id):
 
 def _output_file_name(file_path, file_id):
     return f"{file_path}{file_id}_file.nc"
+
 

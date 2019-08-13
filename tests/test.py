@@ -1,14 +1,14 @@
-import os, sys
+import sys, os
+sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
 import pytest
 import glob
 from zipfile import ZipFile
 import requests
 from tests.run_testcase_processing import *
+from tests.test_tools import remove_import_modules
 import warnings
 
 warnings.filterwarnings("ignore")
-pytest_modules = ["pytest_remotedata", "pytest_openfiles", "pytest_doctestplus",
-                  "pytest_arraydiff"]
 
 
 def main():
@@ -35,15 +35,15 @@ def main():
 
     print("###################### Start testing CloudnetPy test case #######################")
 
-    c_path = os.path.split(os.getcwd())[0]
-    input_path = os.path.join(os.getcwd() + '/source_data/')
+    c_path = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
+    input_path = os.path.join(os.path.dirname(os.path.abspath(__file__)) + '/source_data/')
     url = 'http://devcloudnet.fmi.fi/files/cloudnetpy_test_input_files.zip'
     _load_test_data()
 
     print('\nTest raw files\n')
     test = pytest.main(["--tb=line", c_path + '/cloudnetpy/instruments/tests/raw_files_test.py'])
     _check_failures(test, "raw")
-    _remove_import_modules(pytest_modules)
+    remove_import_modules()
 
     print("\nProcessing CloudnetPy calibrated files from raw files")
     process_cloudnetpy_raw_files('mace-head', input_path)
@@ -60,7 +60,7 @@ def main():
     _check_failures(test, "category")
 
     print("\nProcessing CloudnetPy product files from categorize file")
-    process_cloudnetpy_products('mace-head', input_path)
+    process_cloudnetpy_products(input_path)
 
     print('\nTest product files\n')
     test = pytest.main(["--tb=line", c_path + '/cloudnetpy/products/tests/product_files_test.py'])
@@ -82,12 +82,6 @@ def initialize_test_data(instrument, source_path=None):
             if inst in file:
               paths.append(file)
     return paths
-
-
-def _remove_import_modules(pytest_modules):
-    for module in pytest_modules:
-        if module in sys.modules:
-            del sys.modules[module]
 
 
 def _check_failures(tests, var):
