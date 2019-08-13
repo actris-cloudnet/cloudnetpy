@@ -1,4 +1,3 @@
-import sys
 import pytest
 import netCDF4
 from tests.test import initialize_test_data
@@ -20,45 +19,29 @@ def test_data():
 
 
 def test_mira_raw_file(test_data):
-    must_keys = ['nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg', 'NyquistVelocity',
-                 'time', 'range', 'Zg', 'VELg', 'RMSg', 'LDRg', 'SNRg']
-    compared_list = list(set(must_keys).intersection(test_data['mira_raw']))
-    try:
-        assert set(must_keys) == set(compared_list)
-    except AssertionError:
-        missing_variables = list(set(must_keys).difference(compared_list))
-        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in raw Radar file")
+    must_keys = {'nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg', 'NyquistVelocity',
+                 'time', 'range', 'Zg', 'VELg', 'RMSg', 'LDRg', 'SNRg'}
+    diffu = must_keys - set(test_data['mira_raw'])
+    assert not diffu, f"{', '.join(diffu)} missing!"
+
 
 def test_ceilo_raw_file(test_data):
-    must_keys = ['latitude', 'longitude', 'azimuth', 'zenith', 'time', 'range',
-                 'layer', 'altitude', 'wavelength', 'laser_pulses', 'beta_raw']
-    compared_list = list(set(must_keys).intersection(test_data['chm15k_raw']))
-    try:
-        assert set(must_keys) == set(compared_list)
-    except AssertionError:
-        missing_variables = list(set(must_keys).difference(compared_list))
-        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in raw Lidar file")
+    must_keys = {'latitude', 'longitude', 'azimuth', 'zenith', 'time', 'range',
+                 'layer', 'altitude', 'wavelength', 'laser_pulses', 'beta_raw'}
+    diffu = must_keys - set(test_data['chm15k_raw'])
+    assert not diffu, f"{', '.join(diffu)} missing!"
 
 
 def test_model_file(test_data):
-    must_keys = ['latitude', 'longitude', 'horizontal_resolution', 'time', 'forecast_time',
+    must_keys = {'latitude', 'longitude', 'horizontal_resolution', 'time', 'forecast_time',
                  'level', 'pressure', 'uwind', 'vwind', 'omega', 'temperature',
-                 'q', 'rh']
-    compared_list = list(set(must_keys).intersection(test_data['ecmwf']))
-    try:
-        assert set(must_keys) == set(compared_list)
-    except AssertionError:
-        missing_variables = list(set(must_keys).difference(compared_list))
-        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in Model file")
+                 'q', 'rh'}
+    diffu = must_keys - set(test_data['ecmwf'])
+    assert not diffu, f"{', '.join(diffu)} missing!"
 
 
 def test_mwr_file(test_data):
-    must_keys = ['time_reference', 'minimum', 'maximum', 'time', 'rain_flag',
-                 'elevation_angle','azimuth_angle', 'retrieval', 'LWP_data']
-    compared_list = list(set(must_keys).intersection(test_data['hatpro']))
-    try:
-        assert set(must_keys) == set(compared_list)
-    except AssertionError:
-        missing_variables = list(set(must_keys).difference(compared_list))
-        raise AssertionError(f"Missing '{', '.join(missing_variables)}' variables in Microwave radiometer file")
-
+    must_keys = {'time_reference', 'minimum', 'maximum', 'time', 'rain_flag',
+                 'elevation_angle','azimuth_angle', 'retrieval', 'LWP_data'}
+    diffu = must_keys - set(test_data['hatpro'])
+    assert not diffu, f"{', '.join(diffu)} missing!"
