@@ -1,6 +1,6 @@
 import os
 import sys
-sys.path.append(os.path.split(os.getcwd())[0])
+sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
 import warnings
 import glob
 from zipfile import ZipFile
@@ -8,12 +8,13 @@ import pytest
 import requests
 import netCDF4
 from tests import run_testcase_processing as process
+from tests.test_tools import remove_import_modules
 
 warnings.filterwarnings("ignore")
 
 
 def _get_default_path():
-    return f"{os.getcwd()}/source_data/"
+    return f"{os.path.dirname(os.path.abspath(__file__))}/source_data/"
 
 
 def main():
@@ -42,7 +43,7 @@ def main():
 
     print(f"\n{22*'#'} Running all CloudnetPy tests {22*'#'}")
 
-    c_path = f"{os.path.split(os.getcwd())[0]}/cloudnetpy/"
+    c_path = f"{os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]}/cloudnetpy/"
     input_path = _get_default_path()
     _load_test_data()
 
