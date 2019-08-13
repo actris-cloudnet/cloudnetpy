@@ -52,7 +52,6 @@ def main():
     print("\nTesting raw files:\n")
     test = pytest.main([options, f"{c_path}instruments/tests/raw_files_test.py"])
     _check_failures(test, "raw")
-    remove_import_modules()
 
     print("\nProcessing CloudnetPy calibrated files from raw files:\n")
     process.process_cloudnetpy_raw_files(site, input_path)
