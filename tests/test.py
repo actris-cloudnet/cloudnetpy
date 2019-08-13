@@ -1,13 +1,13 @@
 import os
 import sys
-sys.path.append(os.path.split(os.getcwd())[0])
-import pytest
+import warnings
 import glob
 from zipfile import ZipFile
-from tests import run_testcase_processing as process
-import warnings
+import pytest
 import requests
+from tests import run_testcase_processing as process
 
+sys.path.append(os.path.split(os.getcwd())[0])
 warnings.filterwarnings("ignore")
 
 
