@@ -97,5 +97,9 @@ def _check_failures(tests, var):
         sys.exit()
 
 
+def missing_var_msg(missing_keys, name):
+    return f"Variable(s) {missing_keys} missing in {name} file!"
+
+
 if __name__ == "__main__":
     main()
