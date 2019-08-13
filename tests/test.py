@@ -6,6 +6,7 @@ import glob
 from zipfile import ZipFile
 import pytest
 import requests
+import netCDF4
 from tests import run_testcase_processing as process
 
 warnings.filterwarnings("ignore")
@@ -99,6 +100,14 @@ def _check_failures(tests, var):
 
 def missing_var_msg(missing_keys, name):
     return f"Variable(s) {missing_keys} missing in {name} file!"
+
+
+def collect_variables(instrument_list):
+    test_data_path = initialize_test_data(instrument_list)
+    key_dict = {}
+    for path, instrument in zip(test_data_path, instrument_list):
+        key_dict[instrument] = set(netCDF4.Dataset(path).variables.keys())
+    return key_dict
 
 
 if __name__ == "__main__":
