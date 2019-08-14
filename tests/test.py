@@ -50,6 +50,12 @@ def main():
     options = "--tb=line"
     site = 'mace-head'
 
+    print("\nTesting misc CloudnetPy routines:\n")
+    test = pytest.main([options, f"{c_path}tests/test_utils.py"])
+    _check_failures(test, "utils.py")
+    test = pytest.main([options, f"{c_path}categorize/tests/test_atmos.py"])
+    _check_failures(test, "atmos.py")
+
     print("\nTesting raw files:\n")
     test = pytest.main([options, f"{c_path}instruments/tests/raw_files_test.py"])
     _check_failures(test, "raw")
