@@ -12,7 +12,7 @@ from tests import run_testcase_processing as process
 warnings.filterwarnings("ignore")
 
 
-def _get_default_path():
+def get_default_path():
     return f"{os.path.dirname(os.path.abspath(__file__))}/source_data/"
 
 
@@ -44,7 +44,7 @@ def main():
     print(f"\n{22*'#'} Running all CloudnetPy tests {22*'#'}")
 
     c_path = f"{os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]}/cloudnetpy/"
-    input_path = _get_default_path()
+    input_path = get_default_path()
     _load_test_data(input_path)
 
     options = "--tb=line"
@@ -78,13 +78,23 @@ def main():
     print(f"\n{10*'#'} All tests passed and processing works correctly! {10*'#'}")
 
 
-def read_variable_names(identifier):
-    path = _get_default_path()
+def get_test_file_name(identifier):
+    path = get_default_path()
     files = glob.glob(f"{path}*.nc")
     for file in files:
         if identifier in file:
-            return set(netCDF4.Dataset(file).variables.keys())
+            return file
     raise FileNotFoundError
+
+
+def read_variable_names(identifier):
+    file = get_test_file_name(identifier)
+    return set(netCDF4.Dataset(file).variables.keys())
+
+
+def read_attribute_names(identifier):
+    file = get_test_file_name(identifier)
+    return set(netCDF4.Dataset(file).ncattrs())
 
 
 def _check_failures(tests, var):
@@ -95,6 +105,10 @@ def _check_failures(tests, var):
 
 def missing_var_msg(missing_keys, name):
     return f"Variable(s) {missing_keys} missing in {name} file!"
+
+
+def missing_attr_msg(missing_keys, name):
+    return f"Attribute(s) {missing_keys} missing in {name} file!"
 
 
 if __name__ == "__main__":
