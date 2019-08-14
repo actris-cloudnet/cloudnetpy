@@ -4,6 +4,9 @@ Creates similar directory structure and file names as the
 Matlab processing environment.
 
 """
+import sys, os
+sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
+
 import os
 import fnmatch
 import gzip
