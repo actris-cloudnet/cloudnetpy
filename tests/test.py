@@ -16,35 +16,36 @@ def _get_default_path():
     return f"{os.path.dirname(os.path.abspath(__file__))}/source_data/"
 
 
-def main():
+def _load_test_data(input_path):
+    def _extract_zip():
+        sys.stdout.write("\nLoading input files...")
+        r = requests.get(url)
+        open(full_zip_name, 'wb').write(r.content)
+        fl = ZipFile(full_zip_name, 'r')
+        fl.extractall(input_path)
+        fl.close()
+        sys.stdout.write("    Done.\n")
 
-    def _load_test_data():
-        def _extract_zip():
-            sys.stdout.write("\nLoading input files...")
-            r = requests.get(url)
-            open(full_zip_name, 'wb').write(r.content)
-            fl = ZipFile(full_zip_name, 'r')
-            fl.extractall(input_path)
-            fl.close()
-            sys.stdout.write("    Done.\n")
-
-        url = 'http://devcloudnet.fmi.fi/files/cloudnetpy_test_input_files.zip'
-        zip_name = os.path.split(url)[-1]
-        full_zip_name = f"{input_path}{zip_name}"
-        is_dir = os.path.isdir(input_path)
-        if not is_dir:
-            os.mkdir(input_path)
+    url = 'http://devcloudnet.fmi.fi/files/cloudnetpy_test_input_files.zip'
+    zip_name = os.path.split(url)[-1]
+    full_zip_name = f"{input_path}{zip_name}"
+    is_dir = os.path.isdir(input_path)
+    if not is_dir:
+        os.mkdir(input_path)
+        _extract_zip()
+    else:
+        is_file = os.path.isfile(full_zip_name)
+        if not is_file:
             _extract_zip()
-        else:
-            is_file = os.path.isfile(full_zip_name)
-            if not is_file:
-                _extract_zip()
+
+
+def main():
 
     print(f"\n{22*'#'} Running all CloudnetPy tests {22*'#'}")
 
     c_path = f"{os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]}/cloudnetpy/"
     input_path = _get_default_path()
-    _load_test_data()
+    _load_test_data(input_path)
 
     options = "--tb=line"
     site = 'mace-head'
@@ -65,7 +66,7 @@ def main():
 
     print("\nTesting categorize file:\n")
     test = pytest.main([options, f"{c_path}categorize/tests/categorize_file_test.py"])
-    _check_failures(test, "category")
+    _check_failures(test, "categorize")
 
     print("\nProcessing CloudnetPy product files:\n")
     process.process_cloudnetpy_products(input_path)
@@ -75,27 +76,6 @@ def main():
     _check_failures(test, "product")
 
     print(f"\n{10*'#'} All tests passed and processing works correctly! {10*'#'}")
-
-
-def initialize_test_data(instrument, source_path=None):
-    """Finds all file paths and parses wanted files to list."""
-    if not source_path:
-        source_path = _get_default_path()
-    test_data = glob.glob(f"{source_path}*.nc")
-    paths = []
-    for inst in instrument:
-        for file in test_data:
-            if inst in file:
-                paths.append(file)
-    return paths
-
-
-def collect_variables(instrument_list):
-    test_data_path = initialize_test_data(instrument_list)
-    key_dict = {}
-    for path, instrument in zip(test_data_path, instrument_list):
-        key_dict[instrument] = set(netCDF4.Dataset(path).variables.keys())
-    return key_dict
 
 
 def read_variable_names(identifier):
