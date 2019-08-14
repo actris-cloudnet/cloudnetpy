@@ -1,14 +1,8 @@
 """ This module contains unit tests for atmos-module. """
-import sys
-sys.path.append('../cloudnetpy')
 import numpy as np
-import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal
 import pytest
 from cloudnetpy.categorize import atmos
-import warnings
-
-warnings.filterwarnings("ignore")
 
 
 @pytest.mark.parametrize("t, p, res", [
@@ -16,17 +10,17 @@ warnings.filterwarnings("ignore")
 ])
 def test_calc_lwc_change_rate(t, p, res):
     myres = atmos.calc_lwc_change_rate(t, p)
-    assert_array_almost_equal(res, myres, decimal=6)
+    assert_array_almost_equal(res, myres, decimal=4)
 
 
 @pytest.mark.parametrize("t, res", [
-    (300, 3546.1),
-    (280, 995.02),
+    (300, 3533),
+    (280, 991),
 ])
 def test_saturation_vapor_pressure(t, res):
     """ Unit tests for atmos.saturation_vapor_pressure(). """
     cnet = atmos.calc_saturation_vapor_pressure(t)
-    assert_array_almost_equal(cnet, res, decimal=1)
+    assert_array_almost_equal(cnet, res, decimal=0)
 
 
 @pytest.mark.parametrize("vapor_pressure, res", [
@@ -51,5 +45,3 @@ def test_wet_bulb(t, p, rh, res):
              'rh': np.array(rh)}
     cnet = atmos.calc_wet_bulb_temperature(model)
     assert_array_almost_equal(cnet/10, res/10, decimal=1)
-
-
