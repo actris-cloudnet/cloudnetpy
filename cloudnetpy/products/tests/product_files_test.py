@@ -1,6 +1,7 @@
+"""Tests for CloudnetPy product files."""
 from tests.test import read_variable_names, missing_var_msg
 
-REQUIRED_KEYS = {
+REQUIRED_VARIABLES = {
     'classification':
         {'target_classification', 'detection_status'},
     'iwc':
@@ -14,11 +15,11 @@ REQUIRED_KEYS = {
          'drizzle_lwf_error', 'S_error', 'Do_bias', 'drizzle_lwc_bias',
          'drizzle_lwf_bias', 'drizzle_N_error', 'v_drizzle_error',
          'drizzle_N_bias', 'v_drizzle_bias', 'drizzle_retrieval_status'}
-    }
+}
 
 
-def test_all():
-    for key in REQUIRED_KEYS:
-        keys_in_test_file = read_variable_names(key)
-        missing_keys = REQUIRED_KEYS[key] - keys_in_test_file
-        assert not missing_keys, missing_var_msg(missing_keys, key)
+def test_required_variables():
+    for key in REQUIRED_VARIABLES:
+        test_file_variables = read_variable_names(key)
+        missing_variables = REQUIRED_VARIABLES[key] - test_file_variables
+        assert not missing_variables, missing_var_msg(missing_variables, key)
