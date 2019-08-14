@@ -1,6 +1,4 @@
-from tests.test import collect_variables, missing_var_msg
-
-TEST_DATA = collect_variables(['categorize'])
+from tests.test import read_variable_names, missing_var_msg
 
 
 def test_categorize_file():
@@ -9,5 +7,7 @@ def test_categorize_file():
         'Z_bias', 'latitude', 'longitude', 'altitude', 'time', 'height',
         'radar_frequency', 'category_bits', 'insect_prob', 'is_rain',
         'quality_bits', 'beta', 'model_time', 'temperature', 'q'}
-    missing_keys = required_keys - TEST_DATA['categorize']
-    assert not missing_keys, missing_var_msg(missing_keys, 'categorize')
+    identifier = 'categorize'
+    keys_in_test_file = read_variable_names(identifier)
+    missing_keys = required_keys - keys_in_test_file
+    assert not missing_keys, missing_var_msg(missing_keys, identifier)

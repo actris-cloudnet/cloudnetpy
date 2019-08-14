@@ -1,4 +1,4 @@
-from tests.test import collect_variables, missing_var_msg
+from tests.test import read_variable_names, missing_var_msg
 
 REQUIRED_KEYS = {
     'classification':
@@ -18,7 +18,7 @@ REQUIRED_KEYS = {
 
 
 def test_all():
-    test_data = collect_variables(REQUIRED_KEYS.keys())
     for key in REQUIRED_KEYS:
-        missing_keys = REQUIRED_KEYS[key] - test_data[key]
+        keys_in_test_file = read_variable_names(key)
+        missing_keys = REQUIRED_KEYS[key] - keys_in_test_file
         assert not missing_keys, missing_var_msg(missing_keys, key)
