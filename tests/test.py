@@ -78,9 +78,7 @@ def main():
 
 
 def initialize_test_data(instrument, source_path=None):
-    """
-    Finds all file paths and parses wanted files to list
-    """
+    """Finds all file paths and parses wanted files to list."""
     if not source_path:
         source_path = _get_default_path()
     test_data = glob.glob(f"{source_path}*.nc")
@@ -92,6 +90,23 @@ def initialize_test_data(instrument, source_path=None):
     return paths
 
 
+def collect_variables(instrument_list):
+    test_data_path = initialize_test_data(instrument_list)
+    key_dict = {}
+    for path, instrument in zip(test_data_path, instrument_list):
+        key_dict[instrument] = set(netCDF4.Dataset(path).variables.keys())
+    return key_dict
+
+
+def read_variable_names(identifier):
+    path = _get_default_path()
+    files = glob.glob(f"{path}*.nc")
+    for file in files:
+        if identifier in file:
+            return set(netCDF4.Dataset(file).variables.keys())
+    raise FileNotFoundError
+
+
 def _check_failures(tests, var):
     if tests in (1, 3):
         print(f"\n{20*'#'} Error in {var} file testing! {20*'#'}")
@@ -100,14 +115,6 @@ def _check_failures(tests, var):
 
 def missing_var_msg(missing_keys, name):
     return f"Variable(s) {missing_keys} missing in {name} file!"
-
-
-def collect_variables(instrument_list):
-    test_data_path = initialize_test_data(instrument_list)
-    key_dict = {}
-    for path, instrument in zip(test_data_path, instrument_list):
-        key_dict[instrument] = set(netCDF4.Dataset(path).variables.keys())
-    return key_dict
 
 
 if __name__ == "__main__":
