@@ -55,6 +55,8 @@ def main():
     _check_failures(test, "utils.py")
     test = pytest.main([options, f"{c_path}categorize/tests/test_atmos.py"])
     _check_failures(test, "atmos.py")
+    test = pytest.main([options, f"{c_path}categorize/tests/test_classify.py"])
+    _check_failures(test, "classify.py")
 
     print("\nTesting raw files:\n")
     test = pytest.main([options, f"{c_path}instruments/tests/raw_files_test.py"])
