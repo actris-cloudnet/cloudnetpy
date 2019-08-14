@@ -1,6 +1,6 @@
 from tests.test import collect_variables, missing_var_msg
 
-MUST_BE_KEYS = {
+REQUIRED_KEYS = {
     'mira_raw':
         {'nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg', 'NyquistVelocity',
          'time', 'range', 'Zg', 'VELg', 'RMSg', 'LDRg', 'SNRg'},
@@ -18,7 +18,7 @@ MUST_BE_KEYS = {
 
 
 def test_all():
-    test_data = collect_variables(MUST_BE_KEYS.keys())
-    for key in MUST_BE_KEYS:
-        missing_keys = MUST_BE_KEYS[key] - test_data[key]
+    test_data = collect_variables(REQUIRED_KEYS.keys())
+    for key in REQUIRED_KEYS:
+        missing_keys = REQUIRED_KEYS[key] - test_data[key]
         assert not missing_keys, missing_var_msg(missing_keys, key)
