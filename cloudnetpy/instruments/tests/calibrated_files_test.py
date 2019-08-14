@@ -11,7 +11,7 @@ REQUIRED_VARIABLES = {
     }
 
 
-def test_required_keys():
+def test_required_variables():
     for key in REQUIRED_VARIABLES:
         test_file_variables = read_variable_names(key)
         missing_variables = REQUIRED_VARIABLES[key] - test_file_variables
