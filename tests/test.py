@@ -8,7 +8,6 @@ import pytest
 import requests
 import netCDF4
 from tests import run_testcase_processing as process
-from tests.test_tools import remove_import_modules
 
 warnings.filterwarnings("ignore")
 
