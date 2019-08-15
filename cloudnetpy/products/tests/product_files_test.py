@@ -19,11 +19,14 @@ REQUIRED_VARIABLES = {
     'lwc':
         {'lwc', 'lwc_error', 'lwc_retrieval_status', 'lwp', 'lwp_error'},
     'drizzle':
-        {'Do', 'mu', 'S', 'beta_corr', 'drizzle_N', 'drizzle_lwc', 'drizzle_lwf',
-         'v_drizzle', 'v_air', 'Do_error', 'drizzle_lwc_error',
-         'drizzle_lwf_error', 'S_error', 'Do_bias', 'drizzle_lwc_bias',
-         'drizzle_lwf_bias', 'drizzle_N_error', 'v_drizzle_error',
-         'drizzle_N_bias', 'v_drizzle_bias', 'drizzle_retrieval_status'}
+        {'Do', 'Do_error', 'Do_bias',
+         'mu', 'mu_error',
+         'S', 'S_error',
+         'drizzle_N', 'drizzle_N_error', 'drizzle_N_bias',
+         'drizzle_lwc', 'drizzle_lwc_error', 'drizzle_lwc_bias',
+         'drizzle_lwf', 'drizzle_lwf_error', 'drizzle_lwf_bias',
+         'v_drizzle', 'v_drizzle_error', 'v_drizzle_bias',
+         'beta_corr', 'v_air', 'drizzle_retrieval_status'}
 }
 
 
