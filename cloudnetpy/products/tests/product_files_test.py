@@ -1,5 +1,14 @@
 """Tests for CloudnetPy product files."""
-from tests.test import read_variable_names, missing_var_msg
+from tests.test import read_variable_names, missing_key_msg, read_attribute_names
+
+REQUIRED_COMMON_ATTRIBUTES = {
+    'Conventions', 'cloudnetpy_version', 'file_uuid', 'title', 'source', 'year',
+    'month', 'day', 'location', 'history'
+}
+
+REQUIRED_COMMON_VARIABLES = {
+    'latitude', 'longitude', 'altitude', 'time', 'height'
+}
 
 REQUIRED_VARIABLES = {
     'classification':
@@ -18,8 +27,15 @@ REQUIRED_VARIABLES = {
 }
 
 
-def test_required_variables():
+def test_required_keys():
+
+    def _is_missing(required, observed, is_attr=False):
+        missing = required - observed
+        assert not missing, missing_key_msg(missing, key, is_attr)
+
     for key in REQUIRED_VARIABLES:
+        test_file_attributes = read_attribute_names(key)
         test_file_variables = read_variable_names(key)
-        missing_variables = REQUIRED_VARIABLES[key] - test_file_variables
-        assert not missing_variables, missing_var_msg(missing_variables, key)
+        _is_missing(REQUIRED_COMMON_ATTRIBUTES, test_file_attributes, True)
+        _is_missing(REQUIRED_COMMON_VARIABLES, test_file_variables)
+        _is_missing(REQUIRED_VARIABLES[key], test_file_variables)
