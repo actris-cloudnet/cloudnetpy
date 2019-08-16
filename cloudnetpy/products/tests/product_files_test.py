@@ -1,6 +1,6 @@
 """Tests for CloudnetPy product files."""
 from collections import namedtuple
-from tests.test import read_attribute_names, read_variable_names, read_attribute, read_variable
+from tests.test import read_attribute_names, read_variable_names, read_attribute, read_variable, bad_value_msg
 from cloudnetpy import utils
 import numpy as np
 
@@ -100,6 +100,32 @@ PRODUCT_VARIABLES = {
             min=0,
             max=7,
         ),
+    },
+    'lwc': {
+        'lwc': Specs(
+            min=0,
+            max=1,
+            units='kg m-3',
+        ),
+        'lwc_error': Specs(
+            min=0,
+            max=12,
+            units='dB',
+        ),
+        'lwc_retrieval_status': Specs(
+            min=0,
+            max=4,
+        ),
+        'lwp': Specs(
+            min=0,
+            max=50000,
+            units='g m-2'
+        ),
+        'lwp_error': Specs(
+            min=0,
+            max=5000,
+            units='g m-2'
+        ),
     }
 
 }
@@ -112,8 +138,8 @@ def test_common_attributes():
     for identifier in PRODUCTS:
         for attr_name in COMMON_ATTRIBUTES:
             attr_value = _check_attribute_existence(identifier, attr_name)
-            _check_min(COMMON_ATTRIBUTES[attr_name].min, attr_value)
-            _check_max(COMMON_ATTRIBUTES[attr_name].max, attr_value)
+            _check_min(COMMON_ATTRIBUTES[attr_name].min, attr_value, attr_name)
+            _check_max(COMMON_ATTRIBUTES[attr_name].max, attr_value, attr_name)
 
 
 def test_common_variables():
@@ -131,7 +157,7 @@ def test_product_variables():
 def _test_variables(var_dict, identifier):
     for var_name in var_dict:
         var_value = _check_variable_existence(identifier, var_name)
-        _check_variable_fields(var_dict[var_name], var_value)
+        _check_variable_fields(var_dict[var_name], var_value, var_name)
 
 
 def _check_variable_existence(identifier, var_name):
@@ -150,22 +176,22 @@ def _check_existence(names_in_file, name):
     assert name in names_in_file
 
 
-def _check_variable_fields(spec, var_value):
-    _check_min(spec.min, var_value[:])
-    _check_max(spec.max, var_value[:])
+def _check_variable_fields(spec, var_value, var_name):
+    _check_min(spec.min, var_value[:], var_name)
+    _check_max(spec.max, var_value[:], var_name)
     _check_unit(spec.units, var_value)
 
 
-def _check_min(spec_value, value):
+def _check_min(spec_value, value, name):
     if spec_value:
         scalar_float = _get_scalar_float(value, np.min)
-        assert scalar_float >= spec_value
+        assert scalar_float >= spec_value, bad_value_msg(name, scalar_float)
 
 
-def _check_max(spec_value, value):
+def _check_max(spec_value, value, name):
     if spec_value:
         scalar_float = _get_scalar_float(value, np.max)
-        assert scalar_float <= spec_value
+        assert scalar_float <= spec_value, bad_value_msg(name, scalar_float)
 
 
 def _check_unit(spec_value, variable):
