@@ -64,14 +64,44 @@ PRODUCT_VARIABLES = {
         'target_classification': Specs(
             min=0,
             max=10,
-            units='',
         ),
         'detection_status': Specs(
             min=0,
             max=7,
-            units=''
+        ),
+    },
+    'iwc': {
+        'iwc': Specs(
+            min=0,
+            max=1,
+            units='kg m-3',
+        ),
+        'iwc_error': Specs(
+            min=0,
+            max=10,
+            units='dB',
+        ),
+        'iwc_bias': Specs(
+            min=0,
+            max=1,
+            units='dB',
+        ),
+        'iwc_sensitivity': Specs(
+            min=0,
+            max=1,
+            units='kg m-3'
+        ),
+        'iwc_inc_rain': Specs(
+            min=0,
+            max=1,
+            units='kg m-3',
+        ),
+        'iwc_retrieval_status': Specs(
+            min=0,
+            max=7,
         ),
     }
+
 }
 
 PRODUCTS = ['classification', 'drizzle', 'iwc', 'lwc']
