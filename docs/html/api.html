@@ -112,6 +112,14 @@ site. Required key value pairs are ‘altitude’ (in metres) and
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rpg2nc</span><span class="p">(</span><span class="s1">&#39;/path/to/files/&#39;</span><span class="p">,</span> <span class="s1">&#39;test.nc&#39;</span><span class="p">,</span> <span class="n">site_meta</span><span class="p">)</span>
 </pre></div>
 </div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code> – Failed to process the data.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -584,7 +592,8 @@ this will lead to positive detection. Default is 0.8.</li>
 <p>Falling hydrometeors are radar signals that are
 a) not insects b) not clutter. Furthermore, falling hydrometeors
 are strong lidar pixels excluding liquid layers (thus these pixels
-are ice or rain).</p>
+are ice or rain). They are also weak radar signals in very cold
+temperatures.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -610,8 +619,7 @@ are ice or rain).</p>
 <dt id="categorize.classify.find_aerosols">
 <code class="descclassname">categorize.classify.</code><code class="descname">find_aerosols</code><span class="sig-paren">(</span><em>obs</em>, <em>is_falling</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_aerosols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_aerosols" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimates aerosols from lidar backscattering.</p>
-<p>Aerosols are lidar signals that are: a) not falling, b) not liquid droplets,
-and are present in warmer than some threshold temperature.</p>
+<p>Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1846,7 +1854,6 @@ methods for holding the results.</p>
 <dt id="products.lwc.Lwc.calc_lwc_error">
 <code class="descname">calc_lwc_error</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.calc_lwc_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.calc_lwc_error" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates liquid water content error.</p>
-<p>LWC error is estimated as a sum of lwc gradient and lwp relative error.</p>
 </dd></dl>
 
 <dl class="method">
