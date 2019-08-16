@@ -105,6 +105,16 @@ def read_attribute_names(identifier):
     return set(netCDF4.Dataset(file).ncattrs())
 
 
+def read_attribute(identifier, name):
+    file = get_test_file_name(identifier)
+    return getattr(netCDF4.Dataset(file), name)
+
+
+def read_variable(identifier, name):
+    file = get_test_file_name(identifier)
+    return netCDF4.Dataset(file).variables[name]
+
+
 def _check_failures(tests, var):
     if tests in (1, 3):
         print(f"\n{20*'#'} Error in {var} file testing! {20*'#'}")
