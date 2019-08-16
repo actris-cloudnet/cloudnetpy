@@ -126,5 +126,9 @@ def missing_key_msg(missing_keys, name, is_attr=False):
     return f"{key_type} {missing_keys} missing in {name} file!"
 
 
+def bad_value_msg(name, value):
+    return f"Error in value of {name}: {value}"
+
+
 if __name__ == "__main__":
     main()
