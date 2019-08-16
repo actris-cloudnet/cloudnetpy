@@ -432,7 +432,7 @@ class Mwr(DataSource):
         # TODO: How to deal with negative LWP values?
         lwp = self.getvar('LWP_data', 'lwp')
         lwp[lwp < 0] = 0
-        self.append_data(lwp, 'lwp')
+        self.append_data(lwp, 'lwp', units='g m-2')
 
     def _init_lwp_error(self):
         # TODO: Check these error values
