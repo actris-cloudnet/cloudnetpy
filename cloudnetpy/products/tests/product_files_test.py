@@ -1,44 +1,150 @@
 """Tests for CloudnetPy product files."""
-from tests.test import read_variable_names, missing_key_msg, read_attribute_names
+from collections import namedtuple
+from tests.test import read_attribute_names, read_variable_names, read_attribute, read_variable
+from cloudnetpy import utils
+import numpy as np
 
-REQUIRED_COMMON_ATTRIBUTES = {
-    'Conventions', 'cloudnetpy_version', 'file_uuid', 'title', 'source', 'year',
-    'month', 'day', 'location', 'history'
+CURRENT_YEAR = int(utils.get_time()[:4])
+
+FIELDS = ('min', 'max', 'units', 'attributes',)
+Specs = namedtuple('Specs', FIELDS, defaults=(None,)*len(FIELDS))
+
+COMMON_ATTRIBUTES = {
+    'year': Specs(
+        min=2000,
+        max=CURRENT_YEAR,
+    ),
+    'month': Specs(
+        min=1,
+        max=12,
+    ),
+    'day': Specs(
+        min=1,
+        max=31,
+    ),
+    'file_uuid': Specs(),
+    'cloudnetpy_version': Specs(),
+    'Conventions': Specs(),
+    'location': Specs(),
+    'history': Specs(),
+    'title': Specs(),
+    'source': Specs(),
 }
 
-REQUIRED_COMMON_VARIABLES = {
-    'latitude', 'longitude', 'altitude', 'time', 'height'
+COMMON_VARIABLES = {
+    'height': Specs(
+        min=0,
+        max=20000,
+        units='m',
+    ),
+    'time': Specs(
+        min=0,
+        max=24,
+        units='decimal hours since midnight',
+    ),
+    'altitude': Specs(
+        min=0,
+        max=8000,
+        units='m',
+    ),
+    'latitude': Specs(
+        min=-90,
+        max=90,
+        units='degrees_north',
+    ),
+    'longitude': Specs(
+        min=-180,
+        max=180,
+        units='degrees_east',
+    ),
 }
 
-REQUIRED_VARIABLES = {
-    'classification':
-        {'target_classification', 'detection_status'},
-    'iwc':
-        {'iwc', 'iwc_inc_rain', 'iwc_bias', 'iwc_error', 'iwc_sensitivity',
-         'iwc_retrieval_status'},
-    'lwc':
-        {'lwc', 'lwc_error', 'lwc_retrieval_status', 'lwp', 'lwp_error'},
-    'drizzle':
-        {'Do', 'Do_error', 'Do_bias',
-         'mu', 'mu_error',
-         'S', 'S_error',
-         'drizzle_N', 'drizzle_N_error', 'drizzle_N_bias',
-         'drizzle_lwc', 'drizzle_lwc_error', 'drizzle_lwc_bias',
-         'drizzle_lwf', 'drizzle_lwf_error', 'drizzle_lwf_bias',
-         'v_drizzle', 'v_drizzle_error', 'v_drizzle_bias',
-         'beta_corr', 'v_air', 'drizzle_retrieval_status'}
+PRODUCT_VARIABLES = {
+    'classification': {
+        'target_classification': Specs(
+            min=0,
+            max=10,
+            units='',
+        ),
+        'detection_status': Specs(
+            min=0,
+            max=7,
+            units=''
+        ),
+    }
 }
 
+PRODUCTS = ['classification', 'drizzle', 'iwc', 'lwc']
 
-def test_required_keys():
 
-    def _is_missing(required, observed, is_attr=False):
-        missing = required - observed
-        assert not missing, missing_key_msg(missing, key, is_attr)
+def test_common_attributes():
+    """Tests that each product file has correct global attributes."""
+    for identifier in PRODUCTS:
+        for attr_name in COMMON_ATTRIBUTES:
+            attr_value = _check_attribute_existence(identifier, attr_name)
+            _check_min(COMMON_ATTRIBUTES[attr_name].min, attr_value)
+            _check_max(COMMON_ATTRIBUTES[attr_name].max, attr_value)
 
-    for key in REQUIRED_VARIABLES:
-        test_file_attributes = read_attribute_names(key)
-        test_file_variables = read_variable_names(key)
-        _is_missing(REQUIRED_COMMON_ATTRIBUTES, test_file_attributes, True)
-        _is_missing(REQUIRED_COMMON_VARIABLES, test_file_variables)
-        _is_missing(REQUIRED_VARIABLES[key], test_file_variables)
+
+def test_common_variables():
+    """Tests that each product file has correct common variables."""
+    for identifier in PRODUCTS:
+        _test_variables(COMMON_VARIABLES, identifier)
+
+
+def test_product_variables():
+    """Tests that each product file has correct product-dependent variables."""
+    for identifier in PRODUCT_VARIABLES:
+        _test_variables(PRODUCT_VARIABLES[identifier], identifier)
+
+
+def _test_variables(var_dict, identifier):
+    for var_name in var_dict:
+        var_value = _check_variable_existence(identifier, var_name)
+        _check_variable_fields(var_dict[var_name], var_value)
+
+
+def _check_variable_existence(identifier, var_name):
+    test_file_variables = read_variable_names(identifier)
+    _check_existence(test_file_variables, var_name)
+    return read_variable(identifier, var_name)
+
+
+def _check_attribute_existence(identifier, attr_name):
+    test_file_attributes = read_attribute_names(identifier)
+    _check_existence(test_file_attributes, attr_name)
+    return read_attribute(identifier, attr_name)
+
+
+def _check_existence(names_in_file, name):
+    assert name in names_in_file
+
+
+def _check_variable_fields(spec, var_value):
+    _check_min(spec.min, var_value[:])
+    _check_max(spec.max, var_value[:])
+    _check_unit(spec.units, var_value)
+
+
+def _check_min(spec_value, value):
+    if spec_value:
+        scalar_float = _get_scalar_float(value, np.min)
+        assert scalar_float >= spec_value
+
+
+def _check_max(spec_value, value):
+    if spec_value:
+        scalar_float = _get_scalar_float(value, np.max)
+        assert scalar_float <= spec_value
+
+
+def _check_unit(spec_value, variable):
+    if spec_value:
+        assert getattr(variable, 'units') == spec_value
+
+
+def _get_scalar_float(value, fun=None):
+    if isinstance(value, np.ndarray):
+        return fun(value)
+    else:
+        return float(value)
