@@ -112,12 +112,9 @@ def _check_failures(tests, var):
         sys.exit()
 
 
-def missing_var_msg(missing_keys, name):
-    return f"Variable(s) {missing_keys} missing in {name} file!"
-
-
-def missing_attr_msg(missing_keys, name):
-    return f"Attribute(s) {missing_keys} missing in {name} file!"
+def missing_key_msg(missing_keys, name, is_attr=False):
+    key_type = 'Attribute(s)' if is_attr else 'Variable(s)'
+    return f"{key_type} {missing_keys} missing in {name} file!"
 
 
 if __name__ == "__main__":

@@ -43,7 +43,7 @@ COMMON_ATTRIBUTES = {
     ),
     'longitude': MetaData(
         long_name='Longitude of site',
-        units='degrees_north'
+        units='degrees_east'
     ),
     'altitude': MetaData(
         long_name='Altitude of site',

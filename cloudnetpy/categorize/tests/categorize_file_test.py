@@ -1,5 +1,5 @@
 """Tests for CloudnetPy categorize file."""
-from tests.test import read_variable_names, missing_var_msg
+from tests.test import read_variable_names, missing_key_msg
 
 
 def test_required_variables():
@@ -11,7 +11,7 @@ def test_required_variables():
     identifier = 'categorize'
     test_file_variables = read_variable_names(identifier)
     missing_variables = required_variables - test_file_variables
-    assert not missing_variables, missing_var_msg(missing_variables, identifier)
+    assert not missing_variables, missing_key_msg(missing_variables, identifier)
 
 
 def test_values():

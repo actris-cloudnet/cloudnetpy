@@ -296,6 +296,9 @@ def _calc_derived_products(data, parameters):
 def _calc_errors(categorize, parameters):
     """Estimates errors in the retrieved drizzle products."""
 
+    mu_error = 0.07
+    mu_error_small = 0.25
+
     def _read_input_uncertainty(uncertainty_type):
         return tuple(db2lin(categorize.getvar(f'{key}_{uncertainty_type}'))
                      for key in ('Z', 'beta'))
@@ -329,9 +332,9 @@ def _calc_errors(categorize, parameters):
     def _calc_error(scale, weights, add_mu=False, add_mu_small=False):
         error = l2norm_weighted(error_input, scale, weights)
         if add_mu:
-            error = utils.l2norm(error, 0.07)
+            error = utils.l2norm(error, mu_error)
         if add_mu_small:
-            error = utils.l2norm(error, 0.25)
+            error = utils.l2norm(error, mu_error_small)
         return error
 
     def _stack_errors(error_in, error_small=None, error_tiny=None):
@@ -371,6 +374,7 @@ def _calc_errors(categorize, parameters):
 
         results['drizzle_N_error'] = _calc_n_error()
         results['v_drizzle_error'] = _calc_v_error()
+        results['mu_error'] = mu_error
 
     def _add_supplementary_biases():
         def _calc_n_bias():
