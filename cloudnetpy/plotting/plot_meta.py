@@ -288,7 +288,7 @@ ATTRIBUTES = {
         name='Attenuated backscatter coefficient',
         cbar='viridis',
         clabel=_SR1M1,
-        plot_range=(1e-7, 1e-2),
+        plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
      ),
@@ -296,7 +296,7 @@ ATTRIBUTES = {
         name='Raw attenuated backscatter coefficient',
         cbar='viridis',
         clabel=_SR1M1,
-        plot_range=(1e-7, 1e-3),
+        plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
      ),

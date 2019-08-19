@@ -46,7 +46,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         ax_value = _read_ax_values(nc_file, plot_type)
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
         _set_ax(ax, max_y)
-        _set_title(ax, name)
+        _set_title(ax, name, '')
 
         if plot_type == 'bar':
             _plot_bar_data(ax, field, ax_value[0])
