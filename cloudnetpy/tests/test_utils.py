@@ -170,6 +170,14 @@ def test_l2_norm():
     assert_array_almost_equal(utils.l2norm(x1, x2m), [np.sqrt(13), 3])
 
 
+def test_l2_norm_weighted():
+    """Unit tests for utils.l2_norm_weighted()"""
+    x = (2, 3)
+    weights = (1, 2)
+    scale = 10
+    assert_array_almost_equal(utils.l2norm_weighted(x, scale, weights), 10*np.sqrt([40]))
+
+
 def test_interp_2d():
     """Unit tests for utils.interp_2d()"""
     x = np.array([1, 2, 3])

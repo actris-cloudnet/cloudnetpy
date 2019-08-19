@@ -133,8 +133,8 @@ PRODUCT_VARIABLES = {
             max=1,
         ),
         'mu': Specs(
-            min=0,
-            max=1,
+            min=-1,
+            max=10,
         )
     }
 

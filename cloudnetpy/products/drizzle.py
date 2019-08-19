@@ -205,7 +205,7 @@ def drizzle_solve(data, drizzle_class, width_ht):
     beta_z_ratio = _calc_beta_z_ratio()
     drizzle_ind = np.where(drizzle_class.drizzle == 1)
     dia_init[drizzle_ind] = calc_dia(beta_z_ratio[drizzle_ind], k=18.8)
-    # Negation because width look-up table is descending order
+    # Negation because width look-up table is descending order:
     width_lut = -data.mie['width'][:]
     n_widths, n_dia = width_lut.shape[0], len(data.mie['Do'])
     width_ht = -width_ht
@@ -330,7 +330,7 @@ def _calc_errors(categorize, parameters):
                 'S_error': _calc_s_error()}
 
     def _calc_error(scale, weights, add_mu=False, add_mu_small=False):
-        error = l2norm_weighted(error_input, scale, weights)
+        error = utils.l2norm_weighted(error_input, scale, weights)
         if add_mu:
             error = utils.l2norm(error, mu_error)
         if add_mu_small:
@@ -358,7 +358,7 @@ def _calc_errors(categorize, parameters):
                 'drizzle_lwf_bias': lwf_bias}
 
     def _calc_bias(scale, weights):
-        return l2norm_weighted(bias_input, scale, weights)
+        return utils.l2norm_weighted(bias_input, scale, weights)
 
     def _add_supplementary_errors():
         def _calc_n_error():
@@ -380,7 +380,7 @@ def _calc_errors(categorize, parameters):
         def _calc_n_bias():
             z_bias = bias_input[0]
             dia_bias = db2lin(results['Do_bias'])
-            return l2norm_weighted((z_bias, dia_bias), 1, (1, 6))
+            return utils.l2norm_weighted((z_bias, dia_bias), 1, (1, 6))
 
         results['drizzle_N_bias'] = _calc_n_bias()
         results['v_drizzle_bias'] = results['Do_bias']
@@ -404,28 +404,6 @@ def _get_drizzle_indices(diameter):
     return {'drizzle': diameter > 0,
             'small': np.logical_and(diameter <= 1e-4, diameter > 1e-5),
             'tiny': np.logical_and(diameter <= 1e-5, diameter > 0)}
-
-
-def l2norm_weighted(values, overall_scale, term_weights):
-    """Calculates scaled and weighted Euclidean distance.
-
-    Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
-    where a, b, ... are terms to be summed and a1, a2, ... are optional weights
-    for the terms.
-
-    Args:
-        values (tuple): Arrays to be added.
-        overall_scale (float): Scale factor for the calculated
-            Euclidean distance.
-        term_weights (tuple): Weights for the terms. Must be single
-            float or a list of numbers (one per term).
-
-    Returns:
-        float: Scaled and weighted Euclidean distance.
-
-    """
-    weighted_values = ma.multiply(values, term_weights)
-    return overall_scale * utils.l2norm(*weighted_values)
 
 
 def _screen_rain(results, classification):

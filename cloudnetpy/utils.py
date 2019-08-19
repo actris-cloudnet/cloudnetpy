@@ -283,6 +283,30 @@ def l2norm(*args):
     return ma.sqrt(ss)
 
 
+def l2norm_weighted(values, overall_scale, term_weights):
+    """Calculates scaled and weighted Euclidean distance.
+
+    Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
+    where a, b, ... are terms to be summed and a1, a2, ... are optional weights
+    for the terms.
+
+    Args:
+        values (tuple): Tuple containing the values.
+        overall_scale (float): Scale factor for the calculated
+            Euclidean distance.
+        term_weights (tuple): Weights for the terms. Must be single
+            float or a list of numbers (one per term).
+
+    Returns:
+        float: Scaled and weighted Euclidean distance.
+
+    TODO: Probably better use masked arrays instead of tuples.
+
+    """
+    weighted_values = ma.multiply(values, term_weights)
+    return overall_scale * l2norm(*weighted_values)
+
+
 def cumsumr(x, axis=0):
     """Finds cumulative sum that resets on 0.
 
