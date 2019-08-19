@@ -126,6 +126,16 @@ PRODUCT_VARIABLES = {
             max=5000,
             units='g m-2'
         ),
+    },
+    'drizzle': {
+        'Do': Specs(
+            min=0,
+            max=1,
+        ),
+        'mu': Specs(
+            min=0,
+            max=1,
+        )
     }
 
 }

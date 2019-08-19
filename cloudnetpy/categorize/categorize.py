@@ -392,9 +392,9 @@ class Lidar(ProfileDataSource):
         wavelength (float): Lidar wavelength (nm).
 
     """
-    def __init__(self, lidar_file, fields=('beta',)):
+    def __init__(self, lidar_file):
         super().__init__(lidar_file)
-        self._netcdf_to_cloudnet(fields)
+        self._unknown_to_cloudnet(('beta_smooth', 'beta'), 'beta')
         self.wavelength = float(self.getvar('wavelength'))
 
     def rebin_to_grid(self, time_new, height_new):
