@@ -241,6 +241,10 @@ class JenoptikCeilo(Ceilometer):
 
     def _convert_time(self):
         time = self.variables['time']
+        try:
+            assert all(np.diff(time) > 0)
+        except AssertionError:
+            raise RuntimeError('Inconsistent ceilometer time stamps.')
         return utils.seconds2hours(time)
 
     def _getvar(self, name):
