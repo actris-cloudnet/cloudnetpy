@@ -66,6 +66,8 @@ def generate_categorize(input_files, output_file):
         return utils.time_grid(), radar.height
 
     radar = Radar(input_files['radar'])
+    if 'rpg' in radar.type.lower():
+        radar.filter_speckle()
     lidar = Lidar(input_files['lidar'])
     model = Model(input_files['model'], radar.altitude)
     mwr = Mwr(input_files['mwr'])
@@ -317,6 +319,11 @@ class Radar(ProfileDataSource):
             else:
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new
+
+    def filter_speckle(self):
+        for key in ('Z', 'v', 'width', 'ldr'):
+            if key in self.data.keys():
+                self.data[key].filter()
 
     def correct_atten(self, attenuations):
         """Corrects radar echo for liquid and gas attenuation.

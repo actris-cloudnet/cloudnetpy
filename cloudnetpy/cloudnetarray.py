@@ -2,6 +2,7 @@
 import math
 import numpy as np
 import numpy.ma as ma
+import scipy.signal
 from . import utils
 
 
@@ -116,3 +117,9 @@ class CloudnetArray:
             data = getattr(attributes, key)
             if data:
                 setattr(self, key, data)
+
+    def filter(self):
+        filtered_array = scipy.signal.medfilt(self.data.filled(-999))
+        self.data = ma.masked_where(filtered_array == -999, filtered_array)
+
+
