@@ -1,5 +1,6 @@
 """Module for reading and processing Vaisala ceilometers."""
 import linecache
+import re
 import numpy as np
 import numpy.ma as ma
 import scipy.ndimage
@@ -265,7 +266,7 @@ class VaisalaCeilo(Ceilometer):
         """Finds data lines (header + backscatter) from ceilometer file."""
         with open(self.file_name) as file:
             all_lines = file.readlines()
-        return self._screen_empty_lines(all_lines)
+        return self._screen_invalid_lines(all_lines)
 
     def _read_header_line_1(self, lines):
         """Reads all first header lines from CT25k and CL ceilometers."""
@@ -304,19 +305,24 @@ class VaisalaCeilo(Ceilometer):
         return profiles.astype(float) / self._backscatter_scale_factor
 
     @staticmethod
-    def _screen_empty_lines(data):
-        """Removes empty lines from the list of data."""
+    def _screen_invalid_lines(data):
+        """Removes empty (and other weird) lines from the list of data."""
 
-        def _parse_empty_lines():
-            return [n for n, _ in enumerate(data) if is_empty_line(data[n])]
+        def _find_timestamp_lines():
+            return [n for n, _ in enumerate(data) if is_timestamp(data[n])]
 
-        def _parse_data_lines(empty_indices):
-            number_of_data_lines = empty_indices[1] - empty_indices[0] - 1
-            return [[data[n + line_number + 1] for n in empty_indices]
+        def _find_number_of_data_lines(timestamp_line):
+            for i, line in enumerate(data[timestamp_line:]):
+                if is_empty_line(line):
+                    return i
+
+        def _parse_data_lines(starting_indices):
+            return [[data[n + line_number] for n in starting_indices]
                     for line_number in range(number_of_data_lines)]
 
-        empty_lines = _parse_empty_lines()
-        return _parse_data_lines(empty_lines)
+        timestamp_lines = _find_timestamp_lines()
+        number_of_data_lines = _find_number_of_data_lines(timestamp_lines[0])
+        return _parse_data_lines(timestamp_lines)
 
     @staticmethod
     def _read_header_line_2(lines):
@@ -398,7 +404,7 @@ class VaisalaCeilo(Ceilometer):
         header.append(self._read_header_line_1(data_lines[1]))
         self._message_number = self._get_message_number(header[0])
         header.append(self._read_header_line_2(data_lines[2]))
-        header.append(self._read_header_line_3(data_lines[3]))
+        #header.append(self._read_header_line_3(data_lines[3]))
         return header, data_lines
 
     def _range_correct_upper_part(self):
@@ -446,6 +452,7 @@ class Cl51(ClCeilo):
     def __init__(self, input_file):
         super().__init__(input_file)
         self.model = 'cl51'
+        self.wavelength = 915
 
 
 class Cl31(ClCeilo):
@@ -453,6 +460,7 @@ class Cl31(ClCeilo):
     def __init__(self, input_file):
         super().__init__(input_file)
         self.model = 'cl31'
+        self.wavelength = 910
 
 
 class Ct25k(VaisalaCeilo):
@@ -468,6 +476,7 @@ class Ct25k(VaisalaCeilo):
         self._hex_conversion_params = (4, 32768, 65536)
         self._backscatter_scale_factor = 1e7
         self.noise_params = (40, 2e-14, 0.3e-6, (3e-10, 1.5e-9))
+        self.wavelength = 905
 
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
@@ -522,6 +531,8 @@ def _append_data(ceilo, beta_variants):
         if not isinstance(first_element, str):  # String array writing not yet supported
             ceilo.data[field] = CloudnetArray(np.array(ceilo.metadata[field],
                                                        dtype=float), field)
+    if hasattr(ceilo, 'wavelength'):
+        ceilo.data['wavelength'] = CloudnetArray(ceilo.wavelength, 'wavelength', 'nm')
 
 
 def _save_ceilo(ceilo, output_file, location):
@@ -529,7 +540,8 @@ def _save_ceilo(ceilo, output_file, location):
     dims = {'time': len(ceilo.time),
             'range': len(ceilo.range)}
     rootgrp = output.init_file(output_file, dims, ceilo.data)
-    output.copy_variables(ceilo.dataset, rootgrp, ('wavelength',))
+    if hasattr(ceilo, 'dataset'):
+        output.copy_variables(ceilo.dataset, rootgrp, ('wavelength',))
     rootgrp.title = f"Ceilometer file from {location}"
     rootgrp.year, rootgrp.month, rootgrp.day = ceilo.date
     rootgrp.location = location
@@ -571,6 +583,13 @@ def time_to_fraction_hour(time):
     """ Time (hh:mm:ss) as fraction hour """
     h, m, s = time.split(':')
     return int(h) + (int(m) * SECONDS_IN_MINUTE + int(s)) / SECONDS_IN_HOUR
+
+
+def is_timestamp(string):
+    r = re.compile('-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+    if r.match(string) is not None:
+        return True
+    return False
 
 
 ATTRIBUTES = {
