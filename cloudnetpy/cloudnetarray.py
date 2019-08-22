@@ -59,7 +59,9 @@ class CloudnetArray:
         """Rebins data in time and optionally in height."""
         self.data = utils.rebin_2d(time, self.data, time_new)
         if np.any(height) and np.any(height_new):
-            self.data = utils.rebin_2d(height, self.data.T, height_new).T
+            self.data = utils.interpolate_2d_masked(self.data,
+                                                    (time_new, height),
+                                                    (time_new, height_new))
 
     def calc_linear_std(self, time, time_new):
         """Calculates std of velocity.
