@@ -1,6 +1,6 @@
 """This module contains RPG Cloud Radar related functions."""
 import os
-from datetime import datetime
+import datetime
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
@@ -319,9 +319,10 @@ class Rpg:
             self.data[name].lin2db()
 
     def _get_date(self):
+        epoch = datetime.datetime(2001, 1, 1).timestamp()
         time_median = float(ma.median(self.raw_data['time']))
-        year, month, day = datetime.utcfromtimestamp(time_median).strftime('%Y %m %d').split()
-        return str(int(year)+31), month, day  # rpg time is seconds since 2001.01.01
+        time_median += epoch
+        return datetime.datetime.utcfromtimestamp(time_median).strftime('%Y %m %d').split()
 
 
 def _save_rpg(rpg, output_file):
