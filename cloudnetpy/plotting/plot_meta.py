@@ -357,7 +357,7 @@ ATTRIBUTES = {
         plot_type='mesh'
      ),
     'v_sigma': PlotMeta(
-        name='STD of Doppler velocity',
+        name='Standard deviation of mean velocity',
         cbar='viridis',
         clabel=_MS1,
         plot_range=(1e-2, 1e0),
