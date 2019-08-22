@@ -321,7 +321,7 @@ class Radar(ProfileDataSource):
         self.time = time_new
 
     def filter_speckle(self):
-        for key in ('Z', 'v', 'width', 'ldr'):
+        for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
             if key in self.data.keys():
                 self.data[key].filter()
 
