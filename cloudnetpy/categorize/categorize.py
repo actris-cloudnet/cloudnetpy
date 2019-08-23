@@ -66,13 +66,13 @@ def generate_categorize(input_files, output_file):
         return utils.time_grid(), radar.height
 
     radar = Radar(input_files['radar'])
-    if 'rpg' in radar.type.lower():
-        radar.filter_speckle()
     lidar = Lidar(input_files['lidar'])
     model = Model(input_files['model'], radar.altitude)
     mwr = Mwr(input_files['mwr'])
     time, height = _define_dense_grid()
     _interpolate_to_cloudnet_grid()
+    if 'rpg' in radar.type.lower():
+        radar.filter_speckle()
     model.calc_wet_bulb()
     classification = classify.classify_measurements(radar, lidar, model, mwr)
     attenuations = atmos.get_attenuations(model, mwr, classification)
@@ -305,7 +305,7 @@ class Radar(ProfileDataSource):
 
         """
         for key in self.data:
-            if key == 'Z':
+            if key in ('Z', 'ldr'):
                 self.data[key].db2lin()
                 self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
