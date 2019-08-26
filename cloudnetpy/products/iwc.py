@@ -12,6 +12,7 @@ import cloudnetpy.categorize.atmos as atmos
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import ProductClassification
 
+G_TO_KG = 0.001
 
 def generate_iwc(categorize_file, output_file):
     """Generates Cloudnet ice water content product.
@@ -134,7 +135,7 @@ class _IceClassification(ProductClassification):
 
 
 def _z_to_iwc(iwc_data, z_variable):
-    """Calculates temperature weighted z, i.e. ice water content."""
+    """Calculates temperature weighted z, i.e. ice water content (kg m-3)."""
     def _get_correct_temperature():
         if z_variable == 'Z':
             return iwc_data.temperature
@@ -146,7 +147,7 @@ def _z_to_iwc(iwc_data, z_variable):
     return 10 ** (coeffs.ZT * z_scaled * temperature
                   + coeffs.T * temperature
                   + coeffs.Z * z_scaled
-                  + coeffs.c) * 0.001
+                  + coeffs.c) * G_TO_KG
 
 
 def _append_iwc_including_rain(iwc_data, ice_class):
@@ -268,7 +269,7 @@ DEFINITIONS = {
 IWC_ATTRIBUTES = {
     'iwc': MetaData(
         long_name='Ice water content',
-        units='',
+        units='kg m-3',
         comment=COMMENTS['iwc'],
         ancillary_variables='iwc_sensitivity iwc_bias'
     ),
@@ -284,7 +285,7 @@ IWC_ATTRIBUTES = {
     ),
     'iwc_sensitivity': MetaData(
         long_name='Minimum detectable ice water content',
-        units='',
+        units='kg m-3',
         comment=COMMENTS['iwc_sensitivity']
     ),
     'iwc_retrieval_status': MetaData(
@@ -294,6 +295,7 @@ IWC_ATTRIBUTES = {
     ),
     'iwc_inc_rain': MetaData(
         long_name='Ice water content including rain',
+        units='kg m-3',
         comment=COMMENTS['iwc_inc_rain'],
         ancillary_variables='iwc_sensitivity iwc_bias'
     )

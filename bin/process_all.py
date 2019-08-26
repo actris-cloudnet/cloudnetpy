@@ -106,13 +106,16 @@ def _process_lidar(dvec):
     instrument = 'lidar'
     input_path = _find_uncalibrated_path(instrument, dvec)
     try:
-        input_file = _find_file(input_path, f"*{dvec}*")
+        input_file = _find_file(input_path, f"*{dvec[3:]}*")
     except FileNotFoundError:
         raise RuntimeError('Abort: Missing uncalibrated lidar file.')
     output_file = _build_calibrated_file_name(instrument, dvec)
     if _is_good_to_process(instrument, output_file):
         print(f"Calibrating {config['INSTRUMENTS'][instrument]} lidar..")
-        ceilo.ceilo2nc(input_file, output_file, dict(config.items('SITE')))
+        try:
+            ceilo.ceilo2nc(input_file, output_file, dict(config.items('SITE')))
+        except RuntimeError as error:
+            raise RuntimeError(f"Problem in ceilometer processing: {error}")
 
 
 def _process_categorize(dvec):
@@ -124,18 +127,18 @@ def _process_categorize(dvec):
                 'lidar': _find_calibrated_file('lidar', dvec),
                 'mwr': _find_mwr_file(dvec),
                 'model': _find_calibrated_file('model', dvec)}
-        except FileNotFoundError:
-            raise RuntimeError('Input files missing. Cannot process categorize file.')
+        except FileNotFoundError as error:
+            raise RuntimeError(f"{error}. Cannot process categorize file (missing input files).")
         try:
             print(f"Processing categorize file..")
             cat.generate_categorize(input_files, output_file)
         except RuntimeError as error:
             raise error
-        image_name = _make_image_name(output_file)
-        if _is_good_to_plot('categorize', image_name):
-            print(f"Generating categorize quicklook..")
-            plotting.generate_figure(output_file, ['Z', 'v', 'ldr', 'width', 'beta', 'lwp'],
-                                     image_name=image_name, show=False)
+    image_name = _make_image_name(output_file)
+    if _is_good_to_plot('categorize', image_name):
+        print(f"Generating categorize quicklook..")
+        plotting.generate_figure(output_file, ['Z', 'v', 'ldr', 'width', 'v_sigma', 'beta', 'lwp'],
+                                 image_name=image_name, show=False, max_y=10)
 
 
 def _process_product(product, dvec):
@@ -158,7 +161,7 @@ def _process_product(product, dvec):
                                  max_y=max_y)
 
 
-def _get_product_fields_in_plot(product, max_y=12):
+def _get_product_fields_in_plot(product, max_y=10):
     if product == 'classification':
         fields = ['target_classification', 'detection_status']
     elif product == 'iwc':
@@ -214,7 +217,7 @@ def _find_mwr_file(dvec):
     except FileNotFoundError:
         if config['INSTRUMENTS']['radar'] == 'rpg-fmcw-94':
             return _find_calibrated_file('radar', dvec)
-        raise FileNotFoundError
+        raise FileNotFoundError('Missing MWR file')
 
 
 def _find_uncalibrated_file(instrument, dvec):

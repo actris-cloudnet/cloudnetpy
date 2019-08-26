@@ -128,6 +128,11 @@ def find_melting_layer(obs, smooth=True):
         base1 = droplet.ind_base(dprof, pind, 10, 2)
         return top1, base1
 
+    def _get_temp_indices():
+        bottom_point = np.where(t_prof < (T0 - t_range[0]))[0][0]
+        top_point = np.where(t_prof > (T0 + t_range[0]))[0][-1]
+        return np.arange(bottom_point, top_point + 1)
+
     if 'ecmwf' in obs.model_type.lower():
         t_range = (-4, 3)
     else:
@@ -138,14 +143,14 @@ def find_melting_layer(obs, smooth=True):
     v_diff = np.diff(obs.v, axis=1).filled(0)
 
     for ind, t_prof in enumerate(obs.tw):
-        temp_indices = np.where((t_prof > T0+t_range[0]) &
-                                (t_prof < T0+t_range[1]))[0]
+        temp_indices = _get_temp_indices()
         ldr_prof, ldr_dprof, nldr = _slice(obs.ldr, ldr_diff)
         v_prof, v_dprof, nv = _slice(obs.v, v_diff)
 
         if nldr > 3 or nv > 3:
             ldr_p = np.argmax(ldr_prof)
             v_p = np.argmax(v_dprof)
+
             try:
                 top, base = _basetop(ldr_dprof, ldr_p)
                 conds = (ldr_prof[ldr_p] - ldr_prof[top] > 4,

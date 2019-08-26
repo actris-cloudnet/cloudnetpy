@@ -64,7 +64,7 @@ COMMON_ATTRIBUTES = {
         ancillary_variables='v_sigma'
     ),
     'v_sigma': MetaData(
-        long_name='Standard deviation of Doppler velocity',
+        long_name='Standard deviation of mean Doppler velocity',
         units='m s-1'
     ),
     'q': MetaData(

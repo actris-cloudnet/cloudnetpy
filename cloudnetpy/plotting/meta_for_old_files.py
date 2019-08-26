@@ -41,7 +41,7 @@ ATTRIBUTES = {
     ),
     'detection_status': PlotMeta(
         hidden=_HIDDEN['detection_status'],
-        swapped=[(1, 4), (2, 5), (1, 3), (2, 3)]
+        swapped=[(1, 4), (2, 5), (1, 3), (2, 3), (3, 4)]
     ),
     'iwc_retrieval_status': PlotMeta(
         swapped=[(2, 3)]

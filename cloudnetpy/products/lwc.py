@@ -185,13 +185,20 @@ class Lwc:
             _adjust_lwc(time_index, base_index)
 
     def calc_lwc_error(self):
-        """Calculates liquid water content error.
+        """Calculates liquid water content error. """
 
-        LWC error is estimated as a sum of lwc gradient and lwp relative error.
+        def _limit_error(error, max_value):
+            error[error > max_value] = max_value
+            return error
 
-        """
+        def _calc_lwc_relative_error():
+            lwc_gradient = _calc_lwc_gradient()
+            error = lwc_gradient / self.lwc / 2
+            return _limit_error(error, 5)
+
         def _calc_lwp_relative_error():
-            return self.lwc_source.lwp_error / self.lwc_source.lwp
+            error = self.lwc_source.lwp_error / self.lwc_source.lwp
+            return _limit_error(error, 10)
 
         def _calc_lwc_gradient():
             gradient_elements = np.gradient(self.lwc.filled(0))
@@ -207,9 +214,9 @@ class Lwc:
             lwc_error[ind] = error_in[ind]
             return lwc_error
 
-        lwc_gradient = _calc_lwc_gradient()
+        lwc_relative_error = _calc_lwc_relative_error()
         lwp_relative_error = _calc_lwp_relative_error()
-        combined_error = _calc_combined_error(lwc_gradient, lwp_relative_error)
+        combined_error = _calc_combined_error(lwc_relative_error, lwp_relative_error)
         self.lwc_error = _fill_error_array(combined_error)
 
     def screen_rain(self):
@@ -217,7 +224,7 @@ class Lwc:
         is_rain = self.lwc_source.is_rain.astype(bool)
         self.lwc[is_rain, :] = ma.masked
         self.lwc_error[is_rain, :] = ma.masked
-        self.status[is_rain, :] = 6
+        self.status[is_rain, :] = 4
 
 
 def find_topmost_clouds(is_cloud):
@@ -241,7 +248,7 @@ def find_topmost_clouds(is_cloud):
 
 def _append_data(lwc_data, lwc_obj):
     lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc', units='kg m-3')
-    lwc_data.append_data(lwc_obj.lwc_error * G_TO_KG, 'lwc_error', units='kg m-3')
+    lwc_data.append_data(lwc_obj.lwc_error, 'lwc_error', units='dB')
     lwc_data.append_data(lwc_obj.status, 'lwc_retrieval_status')
 
 
@@ -284,9 +291,9 @@ DEFINITIONS = {
         ('\n'
          'Value 0: No liquid water detected.\n'
          'Value 1: Reliable retrieval.\n'
-         'Value 2: Cloud pixel whose top has been adjusted so that theoretical\n'
+         'Value 2: Cloud pixel whose top has been adjusted so that the theoretical\n'
          '         liquid water path would match observation.\n'
-         'Value 3: New cloud pixel introduced so that theoretical liquid\n' 
+         'Value 3: New cloud pixel introduced so that the theoretical liquid\n' 
          '         water path would match observation.\n'
          'Value 4: Rain present: cloud extent is difficult to ascertain and liquid\n'
          '         water path also uncertain.'),
@@ -301,6 +308,7 @@ LWC_ATTRIBUTES = {
     'lwc_error': MetaData(
         long_name='Random error in liquid water content, one standard deviation',
         comment=COMMENTS['lwc_error'],
+        units='dB'
     ),
     'lwc_retrieval_status': MetaData(
         long_name='Liquid water content retrieval status',

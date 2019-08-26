@@ -72,10 +72,10 @@ _CLABEL = {
         (("_Clear sky", _COLORS['white']),
          ("Good radar & lidar echos", _COLORS['green']),
          ("Good radar echo only", _COLORS['lightgreen']),
-         ("Radar corrected for liquid atten.", _COLORS['yellowgreen']),
          ("Lidar echo only", _COLORS['yellow']),
+         ("Radar corrected for liquid atten.", _COLORS['skyblue']),
          ("Radar uncorrected for liquid atten.", _COLORS['seaweed_roll']),
-         ("Radar ground clutter", _COLORS['lightpurple']),
+         ("Radar ground clutter", _COLORS['shockred']),
          ("_Lidar molecular scattering", _COLORS['pink'])),
 
     'iwc_retrieval_status':
@@ -288,7 +288,7 @@ ATTRIBUTES = {
         name='Attenuated backscatter coefficient',
         cbar='viridis',
         clabel=_SR1M1,
-        plot_range=(1e-7, 1e-2),
+        plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
      ),
@@ -296,7 +296,7 @@ ATTRIBUTES = {
         name='Raw attenuated backscatter coefficient',
         cbar='viridis',
         clabel=_SR1M1,
-        plot_range=(1e-7, 1e-3),
+        plot_range=(1e-7, 1e-4),
         plot_scale=_LOG,
         plot_type='mesh'
      ),
@@ -357,7 +357,7 @@ ATTRIBUTES = {
         plot_type='mesh'
      ),
     'v_sigma': PlotMeta(
-        name='STD of Doppler velocity',
+        name='Standard deviation of mean velocity',
         cbar='viridis',
         clabel=_MS1,
         plot_range=(1e-2, 1e0),

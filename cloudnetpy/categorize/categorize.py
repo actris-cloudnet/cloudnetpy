@@ -66,6 +66,8 @@ def generate_categorize(input_files, output_file):
         return utils.time_grid(), radar.height
 
     radar = Radar(input_files['radar'])
+    if 'rpg' in radar.type.lower():
+        radar.filter_speckle()
     lidar = Lidar(input_files['lidar'])
     model = Model(input_files['model'], radar.altitude)
     mwr = Mwr(input_files['mwr'])
@@ -318,6 +320,11 @@ class Radar(ProfileDataSource):
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new
 
+    def filter_speckle(self):
+        for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
+            if key in self.data.keys():
+                self.data[key].filter()
+
     def correct_atten(self, attenuations):
         """Corrects radar echo for liquid and gas attenuation.
 
@@ -392,9 +399,9 @@ class Lidar(ProfileDataSource):
         wavelength (float): Lidar wavelength (nm).
 
     """
-    def __init__(self, lidar_file, fields=('beta',)):
+    def __init__(self, lidar_file):
         super().__init__(lidar_file)
-        self._netcdf_to_cloudnet(fields)
+        self._unknown_to_cloudnet(('beta_smooth', 'beta'), 'beta')
         self.wavelength = float(self.getvar('wavelength'))
 
     def rebin_to_grid(self, time_new, height_new):
@@ -432,7 +439,7 @@ class Mwr(DataSource):
         # TODO: How to deal with negative LWP values?
         lwp = self.getvar('LWP_data', 'lwp')
         lwp[lwp < 0] = 0
-        self.append_data(lwp, 'lwp')
+        self.append_data(lwp, 'lwp', units='g m-2')
 
     def _init_lwp_error(self):
         # TODO: Check these error values

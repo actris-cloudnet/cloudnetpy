@@ -51,7 +51,7 @@ def find_liquid(obs, peak_amp=1e-6,
         return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
 
     lwp_int = _interpolate_lwp()
-    beta = obs.beta
+    beta = ma.copy(obs.beta)
 
     # TODO: append zero-row into data instead of setting first values to zero.
     # This fix is because the peak can be the very first value (thus there is no proper base in data)
