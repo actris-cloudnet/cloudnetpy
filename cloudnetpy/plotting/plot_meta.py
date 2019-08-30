@@ -344,7 +344,7 @@ ATTRIBUTES = {
         name='Spectral width',
         cbar='viridis',
         clabel=_MS1,
-        plot_range=(1e-1, 1e0),
+        plot_range=(1e-2, 1e0),
         plot_scale=_LOG,
         plot_type='mesh'
      ),
