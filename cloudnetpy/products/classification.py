@@ -35,6 +35,7 @@ def generate_classification(categorize_file, output_file):
 
 def get_target_classification(categorize_bits):
     bits = categorize_bits.category_bits
+    clutter = categorize_bits.quality_bits['clutter']
     classification = np.zeros(bits['cold'].shape, dtype=int)
     classification[bits['droplet'] & ~bits['falling']] = 1
     classification[~bits['droplet'] & bits['falling']] = 2
@@ -46,6 +47,7 @@ def get_target_classification(categorize_bits):
     classification[bits['aerosol']] = 8
     classification[bits['insect']] = 9
     classification[bits['aerosol'] & bits['insect']] = 10
+    classification[clutter & ~bits['aerosol']] = 0
     return classification
 
 
@@ -54,8 +56,8 @@ def get_detection_status(categorize_bits):
     status = np.zeros(bits['radar'].shape, dtype=int)
     status[bits['radar'] & bits['lidar']] = 1
     status[bits['radar'] & ~bits['lidar'] & ~bits['attenuated']] = 2
-    status[bits['radar'] & bits['corrected']] = 3
-    status[bits['lidar'] & ~bits['radar']] = 4
+    status[bits['radar'] & bits['corrected']] = 4
+    status[bits['lidar'] & ~bits['radar']] = 3
     status[bits['radar'] & bits['attenuated'] & ~bits['corrected']] = 5
     status[bits['clutter']] = 6
     status[bits['molecular'] & ~bits['radar']] = 7

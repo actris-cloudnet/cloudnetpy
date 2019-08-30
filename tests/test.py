@@ -9,7 +9,7 @@ import requests
 import netCDF4
 from tests import run_testcase_processing as process
 
-warnings.filterwarnings("ignore")
+#warnings.filterwarnings("ignore")
 
 
 def get_default_path():

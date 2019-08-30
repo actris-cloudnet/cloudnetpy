@@ -55,9 +55,9 @@ class CloudnetArray:
             self.data = utils.db2lin(self.data)
             self.units = ''
 
-    def rebin_data(self, time, time_new, height=None, height_new=None):
+    def rebin_data(self, time, time_new, height=None, height_new=None, n_min=1):
         """Rebins data in time and optionally in height."""
-        self.data = utils.rebin_2d(time, self.data, time_new)
+        self.data = utils.rebin_2d(time, self.data, time_new, n_min=n_min)
         if np.any(height) and np.any(height_new):
             self.data = utils.interpolate_2d_masked(self.data,
                                                     (time_new, height),
@@ -120,8 +120,11 @@ class CloudnetArray:
             if data:
                 setattr(self, key, data)
 
-    def filter(self):
-        filtered_array = scipy.signal.medfilt(self.data.filled(-999))
-        self.data = ma.masked_where(filtered_array == -999, filtered_array)
+    def filter_isolated_pixels(self):
+        is_data = (~self.data.mask).astype(int)
+        is_data_filtered = utils.filter_x_pixels(is_data)
+        self.data[is_data_filtered == 0] = ma.masked
+
+
 
 

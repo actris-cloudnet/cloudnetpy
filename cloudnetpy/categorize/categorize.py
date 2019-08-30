@@ -72,7 +72,8 @@ def generate_categorize(input_files, output_file):
     time, height = _define_dense_grid()
     _interpolate_to_cloudnet_grid()
     if 'rpg' in radar.type.lower():
-        radar.filter_speckle()
+        radar.filter_speckle_noise()
+    radar.remove_incomplete_pixels()
     model.calc_wet_bulb()
     classification = classify.classify_measurements(radar, lidar, model, mwr)
     attenuations = atmos.get_attenuations(model, mwr, classification)
@@ -320,10 +321,17 @@ class Radar(ProfileDataSource):
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new
 
-    def filter_speckle(self):
+    def remove_incomplete_pixels(self):
+        good_ind = (~self.data['Z'][:].mask
+                    & ~self.data['width'][:].mask
+                    & ~self.data['v'][:].mask)
+        for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
+            self.data[key][:][~good_ind] = ma.masked
+
+    def filter_speckle_noise(self):
         for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
             if key in self.data.keys():
-                self.data[key].filter()
+                self.data[key].filter_isolated_pixels()
 
     def correct_atten(self, attenuations):
         """Corrects radar echo for liquid and gas attenuation.

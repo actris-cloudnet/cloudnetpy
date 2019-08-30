@@ -336,7 +336,7 @@ ATTRIBUTES = {
         name='Linear depolarisation ratio',
         cbar='viridis',
         clabel=_DB,
-        plot_range=(-35, -10),
+        plot_range=(-30, -5),
         plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
