@@ -74,6 +74,19 @@ def test_filter_isolated_pixels():
     assert_array_almost_equal(utils.filter_isolated_pixels(x), x2)
 
 
+def test_filter_x_pixels():
+    """ Unit tests for units.filter_x_pixels(). """
+    x = np.array([[0, 0, 1, 0, 1],
+                  [0, 1, 0, 0, 0],
+                  [1, 0, 0, 0, 1],
+                  [1, 0, 1, 1, 1]])
+    x2 = np.array([[0, 0, 0, 0, 0],
+                   [0, 0, 0, 0, 0],
+                   [1, 0, 0, 0, 1],
+                   [1, 0, 0, 0, 1]])
+    assert_array_almost_equal(utils.filter_x_pixels(x), x2)
+
+
 def test_ffill():
     """Units tests for utils.ffill()."""
     x = np.array([0, 5, 0, 0, 2, 0])
