@@ -1239,7 +1239,7 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
 
 <dl class="function">
 <dt id="utils.rebin_2d">
-<code class="descclassname">utils.</code><code class="descname">rebin_2d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_2d" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">utils.</code><code class="descname">rebin_2d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em>, <em>n_min=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_2d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rebins 2-D data in one dimension using mean.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1252,6 +1252,8 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
 with shape (N,).</li>
 <li><strong>statistic</strong> (<em>str</em><em>, </em><em>optional</em>) – Statistic to be calculated. Possible
 statistics are ‘mean’, ‘std’. Default is ‘mean’.</li>
+<li><strong>n_min</strong> (<em>int</em>) – Minimum number of points to have good statistics in a bin.
+Default is 1.</li>
 </ul>
 </td>
 </tr>
@@ -1280,11 +1282,18 @@ statistics are ‘mean’, ‘std’. Default is ‘mean’.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2-D input data with shape.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>ndarray</em>) – 2-D input data containing isolated pixels.</li>
+<li><strong>n</strong> (<em>int</em>) – number of connected pixels in 3x3 region. Default is 1 when
+only isolated pixels will be removed.</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Cleaned data.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Cleaned data.</p>
+</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1464,6 +1473,37 @@ with the same shape.</td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.l2norm_weighted">
+<code class="descclassname">utils.</code><code class="descname">l2norm_weighted</code><span class="sig-paren">(</span><em>values</em>, <em>overall_scale</em>, <em>term_weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#l2norm_weighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.l2norm_weighted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates scaled and weighted Euclidean distance.</p>
+<p>Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + …)
+where a, b, … are terms to be summed and a1, a2, … are optional weights
+for the terms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>values</strong> (<em>tuple</em>) – Tuple containing the values.</li>
+<li><strong>overall_scale</strong> (<em>float</em>) – Scale factor for the calculated
+Euclidean distance.</li>
+<li><strong>term_weights</strong> (<em>tuple</em>) – Weights for the terms. Must be single
+float or a list of numbers (one per term).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Scaled and weighted Euclidean distance.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>TODO: Probably better use masked arrays instead of tuples.</p>
 </dd></dl>
 
 <dl class="function">
@@ -2002,36 +2042,6 @@ for drizzle calculations.</li>
 </table>
 <p class="rubric">References</p>
 <p><a class="reference external" href="https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1">https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1</a></p>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.drizzle.l2norm_weighted">
-<code class="descclassname">products.drizzle.</code><code class="descname">l2norm_weighted</code><span class="sig-paren">(</span><em>values</em>, <em>overall_scale</em>, <em>term_weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#l2norm_weighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.l2norm_weighted" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates scaled and weighted Euclidean distance.</p>
-<p>Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + …)
-where a, b, … are terms to be summed and a1, a2, … are optional weights
-for the terms.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>values</strong> (<em>tuple</em>) – Arrays to be added.</li>
-<li><strong>overall_scale</strong> (<em>float</em>) – Scale factor for the calculated
-Euclidean distance.</li>
-<li><strong>term_weights</strong> (<em>tuple</em>) – Weights for the terms. Must be single
-float or a list of numbers (one per term).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Scaled and weighted Euclidean distance.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
-</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </div>
