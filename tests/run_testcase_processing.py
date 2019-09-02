@@ -3,7 +3,7 @@ import importlib
 from cloudnetpy.categorize import categorize
 from cloudnetpy.instruments import mira, ceilo
 
-DATE = '20181204'
+DATE = '20190517'
 
 
 def process_cloudnetpy_raw_files(site, file_path):
