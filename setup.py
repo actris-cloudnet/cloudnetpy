@@ -25,7 +25,7 @@ setup(
     install_requires=['numpy>=1.16', 'scipy>=1.2', 'netCDF4>=1.4.2',
                       'matplotlib>=3.0.2', 'requests>=2.21'],
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
