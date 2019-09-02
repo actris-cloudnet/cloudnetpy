@@ -51,7 +51,7 @@ def _initialize_ceilo(file):
         return Cl31(file)
     elif model == 'ct25k':
         return Ct25k(file)
-    elif model == 'ch15k':
+    elif model == 'chm15k':
         return JenoptikCeilo(file)
     else:
         raise SystemExit('Error: Unknown ceilo model.')
@@ -59,7 +59,7 @@ def _initialize_ceilo(file):
 
 def _find_ceilo_model(file):
     if file.endswith('nc'):
-        return 'ch15k'
+        return 'chm15k'
     first_empty_line = _find_first_empty_line(file)
     hint = linecache.getline(file, first_empty_line + 2)[1:5]
     if hint == 'CL01':
@@ -186,10 +186,10 @@ class Ceilometer:
 
 
 class JenoptikCeilo(Ceilometer):
-    """Class for Jenoptik ch15k ceilometer."""
+    """Class for Jenoptik chm15k ceilometer."""
     def __init__(self, file_name):
         super().__init__(file_name)
-        self.model = 'ch15k'
+        self.model = 'chm15k'
         self.dataset = netCDF4.Dataset(self.file_name)
         self.variables = self.dataset.variables
         self.noise_params = (70, 2e-14, 0.3e-6, (1e-9, 4e-9))
