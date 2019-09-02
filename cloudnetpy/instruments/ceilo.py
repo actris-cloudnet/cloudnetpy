@@ -54,13 +54,13 @@ def _initialize_ceilo(file):
     elif model == 'chm15k':
         return JenoptikCeilo(file)
     else:
-        raise SystemExit('Error: Unknown ceilo model.')
+        raise RuntimeError('Error: Unknown ceilo model.')
 
 
 def _find_ceilo_model(file):
     if file.endswith('nc'):
         return 'chm15k'
-    first_empty_line = _find_first_empty_line(file)
+    first_empty_line = find_first_empty_line(file)
     hint = linecache.getline(file, first_empty_line + 2)[1:5]
     if hint == 'CL01':
         return 'cl51'
@@ -149,12 +149,10 @@ class Ceilometer:
         return beta
 
     def _get_range_squared(self):
-        """Returns range squared (km2)."""
         return (self.range*M2KM)**2
 
     @staticmethod
     def _remove_noise(beta, noise):
-        """Removes points where snr < 5."""
         snr_limit = 5
         snr = (beta.T / noise)
         beta[snr.T < snr_limit] = ma.masked
@@ -203,7 +201,6 @@ class JenoptikCeilo(Ceilometer):
         self.metadata = self._read_metadata()
 
     def _read_date(self):
-        """Read year, month, day from global attributes."""
         return [self.dataset.year, self.dataset.month, self.dataset.day]
 
     def _read_metadata(self):
@@ -334,7 +331,6 @@ class VaisalaCeilo(Ceilometer):
 
     @staticmethod
     def _get_message_number(header_line_1):
-        """Returns the message number."""
         msg_no = header_line_1['message_number']
         assert len(np.unique(msg_no)) == 1, 'Error: inconsistent message numbers.'
         return int(msg_no[0])
@@ -408,7 +404,6 @@ class VaisalaCeilo(Ceilometer):
         return header, data_lines
 
     def _range_correct_upper_part(self):
-        """Range corrects the upper part of profile."""
         altitude_limit = 2400
         ind = np.where(self.range > altitude_limit)
         self.backscatter[:, ind] *= (self.range[ind]*M2KM)**2
@@ -516,7 +511,6 @@ def _append_height(ceilo, site_altitude):
 
 
 def _calc_height(ceilo_range, tilt_angle):
-    """Calculates height from range and tilt angle."""
     return ceilo_range * np.cos(np.deg2rad(tilt_angle))
 
 
@@ -558,11 +552,11 @@ def _values_to_dict(keys, values):
 
 
 def _split_string(string, indices):
-    """Split string between indices."""
+    """Splits string between indices."""
     return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
 
 
-def _find_first_empty_line(file_name):
+def find_first_empty_line(file_name):
     line_number = 1
     with open(file_name) as file:
         for line in file:
@@ -573,19 +567,20 @@ def _find_first_empty_line(file_name):
 
 
 def is_empty_line(line):
-    """Tests if line in text file is empty."""
+    """Tests if a line (of a text file) is empty."""
     if line in ('\n', '\r\n'):
         return True
     return False
 
 
 def time_to_fraction_hour(time):
-    """ Time (hh:mm:ss) as fraction hour """
+    """Returns time (hh:mm:ss) as fraction hour """
     h, m, s = time.split(':')
     return int(h) + (int(m) * SECONDS_IN_MINUTE + int(s)) / SECONDS_IN_HOUR
 
 
 def is_timestamp(string):
+    """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss"""
     r = re.compile('-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
     if r.match(string) is not None:
         return True
