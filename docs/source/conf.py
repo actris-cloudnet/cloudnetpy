@@ -25,9 +25,9 @@ copyright = '2019, Finnish Meteorological Institute'
 author = 'Finnish Meteorological Institute'
 
 # The short X.Y version
-version = ''
+version = '1.0.1'
 # The full version, including alpha/beta/rc tags
-release = ''
+release = '1.0.1'
 
 
 # -- General configuration ---------------------------------------------------
