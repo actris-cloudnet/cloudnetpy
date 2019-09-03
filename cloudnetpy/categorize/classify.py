@@ -70,7 +70,7 @@ def classify_measurements(radar, lidar, model, mwr):
     liquid = droplet.find_liquid(obs)
     bits[3] = find_melting_layer(obs)
     bits[2] = find_freezing_region(obs, bits[3])
-    bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=750)
+    bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
     bits[5], insect_prob = find_insects(obs, bits[3], bits[0])
     bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4] = find_aerosols(obs, bits[1], bits[0])
@@ -270,7 +270,7 @@ def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
 
     """
     probabilities = _insect_probability(obs)
-    insect_prob = _screen_insects(*probabilities, melting_layer, liquid_layers)
+    insect_prob = _screen_insects(*probabilities, melting_layer, liquid_layers, obs)
     is_insects = insect_prob > prob_lim
     return is_insects, ma.masked_where(insect_prob == 0, insect_prob)
 
@@ -282,8 +282,7 @@ def _insect_probability(obs):
 
     def _get_smoothed_v():
         smoothed_v = gaussian_filter(obs.v, (5, 5))
-        smoothed_v = ma.array(smoothed_v)
-        smoothed_v[obs.v.mask] = ma.masked
+        smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
         return smoothed_v
 
     def _get_probabilities():
@@ -296,8 +295,9 @@ def _insect_probability(obs):
             'ldr': fun(obs.ldr, -20, 5),
             'temp_loose': fun(obs.tw, 268, 2),
             'temp_strict': fun(obs.tw, 274, 1),
-            'v': fun(smooth_v, -2, 1),
-            'lwp': utils.transpose(fun(lwp_interp, 150, 50, invert=True))
+            'v': fun(smooth_v, -2.5, 2),
+            'lwp': utils.transpose(fun(lwp_interp, 150, 50, invert=True)),
+            'v_sigma': fun(obs.v_sigma, 0.01, 0.1)
         }
     prob = _get_probabilities()
     prob_combined = prob['z'] * prob['temp_loose'] * prob['ldr']
@@ -309,7 +309,7 @@ def _insect_probability(obs):
     return prob_combined, prob_no_ldr
 
 
-def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers):
+def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers, obs):
     def _screen_liquid_layers():
         prob[liquid_layers == 1] = 0
 
@@ -321,10 +321,14 @@ def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layer
         above_liquid = utils.ffill(liquid_layers)
         prob[(above_liquid == 1) & (insect_prob_no_ldr > 0)] = 0
 
+    def _screen_rainy_profiles():
+        prob[obs.is_rain == 1, :] = 0
+
     prob = np.copy(insect_prob)
     _screen_liquid_layers()
     _screen_above_melting()
     _screen_above_liquid()
+    _screen_rainy_profiles()
     return prob
 
 

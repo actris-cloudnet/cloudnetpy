@@ -77,7 +77,7 @@ def binvec(x):
     return np.linspace(edge1, edge2, len(x)+1)
 
 
-def rebin_2d(x_in, data, x_new, statistic='mean'):
+def rebin_2d(x_in, data, x_new, statistic='mean', n_min=1):
     """Rebins 2-D data in one dimension using mean.
 
     Args:
@@ -87,6 +87,8 @@ def rebin_2d(x_in, data, x_new, statistic='mean'):
             with shape (N,).
         statistic (str, optional): Statistic to be calculated. Possible
             statistics are 'mean', 'std'. Default is 'mean'.
+        n_min (int): Minimum number of points to have good statistics in a bin.
+            Default is 1.
 
     Returns:
         MaskedArray: Rebinned data with shape (N, m).
@@ -100,10 +102,15 @@ def rebin_2d(x_in, data, x_new, statistic='mean'):
     for ind, values in enumerate(data.T):
         mask = ~values.mask
         if ma.any(values[mask]):
-            datai[:, ind], _, _ = stats.binned_statistic(x_in[mask],
-                                                         values[mask],
-                                                         statistic=statistic,
-                                                         bins=edges)
+            datai[:, ind], _, bin_no = stats.binned_statistic(x_in[mask],
+                                                              values[mask],
+                                                              statistic=statistic,
+                                                              bins=edges)
+
+            # ignore bins with only one data points
+            unique, counts = np.unique(bin_no, return_counts=True)
+            datai[unique[counts < n_min]-1, ind] = 0
+
     datai[~np.isfinite(datai)] = 0
     return ma.masked_equal(datai, 0)
 
@@ -127,7 +134,9 @@ def filter_isolated_pixels(array):
     """Returns array with completely isolated single cells removed.
 
     Args:
-        array (ndarray): 2-D input data with shape.
+        array (ndarray): 2-D input data containing isolated pixels.
+        n (int): number of connected pixels in 3x3 region. Default is 1 when
+            only isolated pixels will be removed.
 
     Returns:
         ndarray: Cleaned data.
@@ -136,10 +145,23 @@ def filter_isolated_pixels(array):
     filtered_array = np.copy(array)
     id_regions, num_ids = ndimage.label(filtered_array,
                                         structure=np.ones((3, 3)))
-    id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids+1)))
-    area_mask = (id_sizes == 1)
+    id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids + 1))).astype(int)
+    area_mask = id_sizes == 1
     filtered_array[area_mask[id_regions]] = 0
     return filtered_array
+
+
+def filter_x_pixels(array):
+    filtered_array = np.copy(array)
+    id_regions, num_ids = ndimage.label(filtered_array,
+                                        structure=np.array([[0, 1, 0],
+                                                            [0, 1, 0],
+                                                            [0, 1, 0]]))
+    id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids+1))).astype(int)
+    area_mask = id_sizes == 1
+    filtered_array[area_mask[id_regions]] = 0
+    return filtered_array
+
 
 
 def isbit(integer, nth_bit):

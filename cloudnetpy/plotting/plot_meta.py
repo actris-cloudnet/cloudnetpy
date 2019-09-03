@@ -336,7 +336,7 @@ ATTRIBUTES = {
         name='Linear depolarisation ratio',
         cbar='viridis',
         clabel=_DB,
-        plot_range=(-35, -10),
+        plot_range=(-30, -5),
         plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
@@ -344,7 +344,7 @@ ATTRIBUTES = {
         name='Spectral width',
         cbar='viridis',
         clabel=_MS1,
-        plot_range=(1e-1, 1e0),
+        plot_range=(1e-2, 1e0),
         plot_scale=_LOG,
         plot_type='mesh'
      ),

@@ -373,7 +373,9 @@ def _plot_relative_error(ax, error, ax_values, name):
                        vmax=30)
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
-    ax.set_title("Relative error of " + name, fontsize=14)
+    median_error = ma.median(error.compressed())
+    median_error = "%.3f" % median_error
+    ax.set_title(f"Median relative error: {median_error} %", fontsize=14)
 
 
 def _lin2log(*args):

@@ -51,7 +51,14 @@ the signal-to-noise screened backscatter).
 .. code-block:: python
 
     from cloudnetpy.instruments.ceilo import ceilo2nc
-    ceilo2nc('vaisala.txt', 'vaisala.nc', {name:'Kumpula', altitude:53})
+    ceilo2nc('vaisala.txt', 'vaisala.nc', {'name':'Kumpula', 'altitude':53})
+
+The same function can handle also Jenoptik CHM15k files.
+
+.. code-block:: python
+
+    ceilo2nc('jenoptik_chm15k.nc', 'jenoptik.nc', {'name':'Mace Head', 'altitude':16})
+
 
 MWR processing
 --------------
@@ -87,7 +94,7 @@ calibrated measurement files.
 
 .. code-block:: python
 
-   from cloudnetpy.categorize import generate_categorize
+   from cloudnetpy.categorize.categorize import generate_categorize
    input_files = {
        'radar': 'radar.nc',
        'lidar': 'lidar.nc',
@@ -109,6 +116,10 @@ product, the classification product.
 
     from cloudnetpy.products.classification import generate_classification
     generate_classification('categorize.nc', 'classification.nc')
+
+
+Final notes
+-----------
 
 Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
 contain all the latest features and modifications. To get an up-to-date
