@@ -55,12 +55,19 @@ CloudnetPy files.
 .. autofunction:: plotting.plotting.compare_files
 
 
-Cloudnetpy modules
-==================
+cloudnetpy.utils
+----------------
 
-The various modules of CloudnetPy provide additional lower-level
-functions that are useful for development, testing and research
-purposes.
+.. automodule:: utils
+   :members:
+
+
+Categorize subpackage
+=====================
+
+Categorize is a CloudnetPy's sub-package. It contains
+several modules that are used when creating the Cloudnet
+categorize file.
 
 
 cloudnetpy.categorize.classify
@@ -84,43 +91,36 @@ cloudnetpy.categorize.droplet
    :members:
 
 
-cloudnetpy.utils
-----------------
-
-.. automodule:: utils
-   :members:
-
-
-Products modules
-================
+Products sub-package
+====================
 
 Products is a CloudnetPy's sub-package. It contains
 several modules that correspond to different Cloudnet
 products.
 
-products.classification
------------------------
+cloudnetpy.products.classification
+----------------------------------
 
 .. automodule:: products.classification
    :members:
 
 
-products.iwc
+cloudnetpy.products.iwc
 -----------------------
 
 .. automodule:: products.iwc
    :members:
 
 
-products.lwc
+cloudnetpy.products.lwc
 -----------------------
 
 .. automodule:: products.lwc
    :members:
 
 
-products.drizzle
------------------------
+cloudnetpy.products.drizzle
+---------------------------
 
 .. automodule:: products.drizzle
    :members:

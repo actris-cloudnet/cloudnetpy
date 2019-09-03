@@ -1,45 +1,170 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>High-level APIs &#8212; CloudnetPy  documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>High-level APIs &mdash; CloudnetPy  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
     
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Quickstart" href="quickstart.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="quickstart.html" title="Quickstart"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
-      </ul>
-    </div>  
+</head>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> CloudnetPy
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">High-level APIs</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#raw-data-to-categorize">Raw data to categorize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#categorize-to-products">Categorize to products</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#visualizing-results">Visualizing results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#categorize-subpackage">Categorize subpackage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-categorize.classify">cloudnetpy.categorize.classify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-categorize.atmos">cloudnetpy.categorize.atmos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-categorize.droplet">cloudnetpy.categorize.droplet</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#products-sub-package">Products sub-package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-products.classification">cloudnetpy.products.classification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-products.iwc">cloudnetpy.products.iwc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-products.lwc">cloudnetpy.products.lwc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-products.drizzle">cloudnetpy.products.drizzle</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CloudnetPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>High-level APIs</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="high-level-apis">
 <h1>High-level APIs<a class="headerlink" href="#high-level-apis" title="Permalink to this headline">¶</a></h1>
@@ -58,7 +183,7 @@ the data can be combined in a single categorize file.</p>
 <dl class="function">
 <dt id="instruments.mira.mira2nc">
 <code class="descclassname">instruments.mira.</code><code class="descname">mira2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_meta</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/mira.html#mira2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.mira.mira2nc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts Mira cloud radar Level 1 file into NetCDF file.</p>
+<dd><p>Converts METEK MIRA-35 cloud radar Level 1 file into netCDF file.</p>
 <p>This function converts raw cloud radar file into a much smaller file that
 contains only the relevant data and can be used in further processing steps.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -66,7 +191,7 @@ contains only the relevant data and can be used in further processing steps.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>mmclx_file</strong> (<em>str</em>) – Raw radar file in NetCDF format.</li>
+<li><strong>mmclx_file</strong> (<em>str</em>) – Raw radar file in netCDF format.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 <li><strong>site_meta</strong> (<em>dict</em>) – Dictionary containing information about the
 site. Required key value pairs are ‘name’.</li>
@@ -88,9 +213,9 @@ Otherwise keeps the native resolution. Default is False.</li>
 <dl class="function">
 <dt id="instruments.rpg.rpg2nc">
 <code class="descclassname">instruments.rpg.</code><code class="descname">rpg2nc</code><span class="sig-paren">(</span><em>path_to_l1_files</em>, <em>output_file</em>, <em>site_meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/rpg.html#rpg2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.rpg.rpg2nc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts RPG cloud radar binary files into NetCDF file.</p>
+<dd><p>Converts RPG cloud radar binary files into netCDF file.</p>
 <p>This function reads one day of RPG Level 1 cloud radar binary files,
-concatenates the data and writes it into NetCDF file.</p>
+concatenates the data and writes it into netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -125,7 +250,17 @@ site. Required key value pairs are ‘altitude’ (in metres) and
 <dl class="function">
 <dt id="instruments.ceilo.ceilo2nc">
 <code class="descclassname">instruments.ceilo.</code><code class="descname">ceilo2nc</code><span class="sig-paren">(</span><em>input_file</em>, <em>output_file</em>, <em>site_meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/ceilo.html#ceilo2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.ceilo.ceilo2nc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts Vaisala and Jenoptik raw files into netCDF.</p>
+<dd><p>Converts Vaisala and Jenoptik raw files into netCDF file.</p>
+<p>This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
+ceilometer files and writes the data into a netCDF file. Three variants
+of the attenuated backscatter are saved in the file:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Raw backscatter (‘beta_raw’)</li>
+<li>Signal-to-noise screened backscatter (‘beta’)</li>
+<li>SNR-screened backscatter with smoothed weak background (‘beta_smooth’).</li>
+</ol>
+</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -198,9 +333,10 @@ generated.</p>
 <dt id="products.classification.generate_classification">
 <code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.generate_classification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet classification product.</p>
-<p>Generates categorized bins to 10 types of different targets in atmosphere
-as well as instrument status classification. Classifications are saved to
-NetCDF file with information of classification and measurements.</p>
+<p>This function reads the initial classification masks from a
+categorize file and creates a more comprehensive classification
+for different atmospheric targets. The results are written in a
+netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -224,6 +360,10 @@ NetCDF file with information of classification and measurements.</p>
 <dt id="products.iwc.generate_iwc">
 <code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.generate_iwc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet ice water content product.</p>
+<p>This function calculates ice water content using the so-called Z-T method.
+In this method, ice water content is calculated from attenuated-corrected
+radar reflectivity and model temperature. The results are written in a
+netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -241,12 +381,21 @@ NetCDF file with information of classification and measurements.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p class="rubric">References</p>
+<p>Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
+The Retrieval of Ice Water Content from Radar Reflectivity Factor and
+Temperature and Its Use in Evaluating a Mesoscale Model.
+J. Appl. Meteor. Climatol., 45, 301–317, <a class="reference external" href="https://doi.org/10.1175/JAM2340.1">https://doi.org/10.1175/JAM2340.1</a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="products.lwc.generate_lwc">
 <code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.generate_lwc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet liquid water content product.</p>
+<p>This function calculates cloud liquid water content using the so-called
+adiabatic-scaled method. In this method, liquid water content measured by
+microwave radiameter is used to constrain the theoretical liquid water
+content of observed liquid clouds. The results are written in a netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -264,12 +413,21 @@ NetCDF file with information of classification and measurements.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p class="rubric">References</p>
+<p>Illingworth, A.J., R.J. Hogan, E. O’Connor, D. Bouniol, M.E. Brooks,
+J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
+M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
+H.W. Russchenberg, A. Seifert, A.M. Tompkins, G. van Zadelhoff, F. Vinit,
+U. Willén, D.R. Wilson, and C.L. Wrench, 2007: Cloudnet.
+Bull. Amer. Meteor. Soc., 88, 883–898, <a class="reference external" href="https://doi.org/10.1175/BAMS-88-6-883">https://doi.org/10.1175/BAMS-88-6-883</a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="products.drizzle.generate_drizzle">
 <code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.generate_drizzle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet drizzle product.</p>
+<p>This function calculates different drizzle properties from
+cloud radar and lidar measurements. The results are written in a netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -282,6 +440,10 @@ NetCDF file with information of classification and measurements.</p>
 </tr>
 </tbody>
 </table>
+<p class="rubric">References</p>
+<p>O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
+Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
+J. Appl. Meteor., 44, 14–27, <a class="reference external" href="https://doi.org/10.1175/JAM-2181.1">https://doi.org/10.1175/JAM-2181.1</a></p>
 </dd></dl>
 
 </div>
@@ -355,12 +517,621 @@ Overrides the <em>save_path</em> option. Default is None.</li>
 </dd></dl>
 
 </div>
+<div class="section" id="module-utils">
+<span id="cloudnetpy-utils"></span><h2>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h2>
+<p>This module contains general
+helper functions.</p>
+<dl class="function">
+<dt id="utils.seconds2hours">
+<code class="descclassname">utils.</code><code class="descname">seconds2hours</code><span class="sig-paren">(</span><em>time_in_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hours"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hours" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts seconds since some epoch to fraction hour.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_in_seconds</strong> (<em>ndarray</em>) – 1-D array of seconds since some epoch
+that starts on midnight.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time as fraction hour.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Excludes leap seconds.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.time_grid">
+<code class="descclassname">utils.</code><code class="descname">time_grid</code><span class="sig-paren">(</span><em>time_step=30</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#time_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.time_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns decimal hour array between 0 and 24.</p>
+<p>Computes fraction hour time vector 0-24 with user-given
+resolution (in seconds) where 60 is the maximum allowed value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time resolution in seconds between
+1 and 60. Default is 30.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time vector between 0 and 24.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Bad resolution as input.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.binvec">
+<code class="descclassname">utils.</code><code class="descname">binvec</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#binvec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.binvec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts 1-D center points to bins with even spacing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> (<em>array_like</em>) – 1-D array of N real values.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">N + 1 edge values.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">binvec</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+<span class="go">    [0.5, 1.5, 2.5, 3.5]</span>
+</pre></div>
 </div>
-<div class="section" id="cloudnetpy-modules">
-<h1>Cloudnetpy modules<a class="headerlink" href="#cloudnetpy-modules" title="Permalink to this headline">¶</a></h1>
-<p>The various modules of CloudnetPy provide additional lower-level
-functions that are useful for development, testing and research
-purposes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.rebin_2d">
+<code class="descclassname">utils.</code><code class="descname">rebin_2d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em>, <em>n_min=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rebins 2-D data in one dimension using mean.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x_in</strong> (<em>ndarray</em>) – 1-D array with shape (n,).</li>
+<li><strong>data</strong> (<em>MaskedArray</em>) – 2-D input data with shape (n, m).</li>
+<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D target vector (center points)
+with shape (N,).</li>
+<li><strong>statistic</strong> (<em>str</em><em>, </em><em>optional</em>) – Statistic to be calculated. Possible
+statistics are ‘mean’, ‘std’. Default is ‘mean’.</li>
+<li><strong>n_min</strong> (<em>int</em>) – Minimum number of points to have good statistics in a bin.
+Default is 1.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned data with shape (N, m).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">MaskedArray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Notes: 0-values are masked in the returned array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.rebin_1d">
+<code class="descclassname">utils.</code><code class="descname">rebin_1d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_1d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rebins 1D array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.filter_isolated_pixels">
+<code class="descclassname">utils.</code><code class="descname">filter_isolated_pixels</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#filter_isolated_pixels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.filter_isolated_pixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns array with completely isolated single cells removed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>ndarray</em>) – 2-D input data containing isolated pixels.</li>
+<li><strong>n</strong> (<em>int</em>) – number of connected pixels in 3x3 region. Default is 1 when
+only isolated pixels will be removed.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Cleaned data.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.isbit">
+<code class="descclassname">utils.</code><code class="descname">isbit</code><span class="sig-paren">(</span><em>integer</em>, <em>nth_bit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#isbit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.isbit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if nth bit (0,1,2..) is on for the input number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>integer</strong> (<em>int</em>) – A number.</li>
+<li><strong>nth_bit</strong> (<em>int</em>) – Investigated bit.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if set, otherwise False.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">bool</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – negative bit as input.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">isbit</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">    False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isbit</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">    True</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">utils.setbit()</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.setbit">
+<code class="descclassname">utils.</code><code class="descname">setbit</code><span class="sig-paren">(</span><em>integer</em>, <em>nth_bit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#setbit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.setbit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets nth bit (0, 1, 2..) on input number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>integer</strong> (<em>int</em>) – A number.</li>
+<li><strong>nth_bit</strong> (<em>int</em>) – Bit to be set.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Integer where nth bit is set.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">int</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – negative bit as input.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">setbit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">    3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">setbit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">    4</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">utils.isbit()</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.interpolate_2d">
+<code class="descclassname">utils.</code><code class="descname">interpolate_2d</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>x_new</em>, <em>y_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#interpolate_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.interpolate_2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear interpolation of gridded 2d data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>y</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>z</strong> (<em>ndarray</em>) – 2-D array at points (x, y).</li>
+<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D array.</li>
+<li><strong>y_new</strong> (<em>ndarray</em>) – 1-D array.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated data.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Does not work with nans. Ignores mask of masked data.
+Does not extrapolate.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.interpolate_2d_masked">
+<code class="descclassname">utils.</code><code class="descname">interpolate_2d_masked</code><span class="sig-paren">(</span><em>array</em>, <em>ax_values</em>, <em>ax_values_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#interpolate_2d_masked"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.interpolate_2d_masked" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates 2D array preserving the mask.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> (<em>ndarray</em>) – 2D masked array.</li>
+<li><strong>ax_values</strong> (<em>tuple</em>) – 2-element tuple containing x and y values of the input array.</li>
+<li><strong>ax_values_new</strong> (<em>tuple</em>) – 2-element tuple containing new x and y values.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated 2d masked array.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Uses linear interpolation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.calc_relative_error">
+<code class="descclassname">utils.</code><code class="descname">calc_relative_error</code><span class="sig-paren">(</span><em>reference</em>, <em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#calc_relative_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.calc_relative_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates relative error (%).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.db2lin">
+<code class="descclassname">utils.</code><code class="descname">db2lin</code><span class="sig-paren">(</span><em>x</em>, <em>scale=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#db2lin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.db2lin" title="Permalink to this definition">¶</a></dt>
+<dd><p>dB to linear conversion.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.lin2db">
+<code class="descclassname">utils.</code><code class="descname">lin2db</code><span class="sig-paren">(</span><em>x</em>, <em>scale=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#lin2db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.lin2db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear to dB conversion.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.mdiff">
+<code class="descclassname">utils.</code><code class="descname">mdiff</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#mdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.mdiff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns median difference of 1-D array.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.l2norm">
+<code class="descclassname">utils.</code><code class="descname">l2norm</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#l2norm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.l2norm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns l2 norm.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*args</strong> – Variable number of data (<em>array_like</em>)
+with the same shape.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The l2 norm.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">MaskedArray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.l2norm_weighted">
+<code class="descclassname">utils.</code><code class="descname">l2norm_weighted</code><span class="sig-paren">(</span><em>values</em>, <em>overall_scale</em>, <em>term_weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#l2norm_weighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.l2norm_weighted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates scaled and weighted Euclidean distance.</p>
+<p>Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + …)
+where a, b, … are terms to be summed and a1, a2, … are optional weights
+for the terms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>values</strong> (<em>tuple</em>) – Tuple containing the values.</li>
+<li><strong>overall_scale</strong> (<em>float</em>) – Scale factor for the calculated
+Euclidean distance.</li>
+<li><strong>term_weights</strong> (<em>tuple</em>) – Weights for the terms. Must be single
+float or a list of numbers (one per term).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Scaled and weighted Euclidean distance.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>TODO: Probably better use masked arrays instead of tuples.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.cumsumr">
+<code class="descclassname">utils.</code><code class="descname">cumsumr</code><span class="sig-paren">(</span><em>x</em>, <em>axis=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#cumsumr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.cumsumr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds cumulative sum that resets on 0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>ndarray</em>) – Input array.</li>
+<li><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – Axis where the sum is calculated.
+Default is 0.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Cumulative sum, restarted at 0.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cumsumr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">    [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.ffill">
+<code class="descclassname">utils.</code><code class="descname">ffill</code><span class="sig-paren">(</span><em>arr</em>, <em>value=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#ffill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.ffill" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forward fills a numpy array.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>arr</strong> (<em>ndarray</em>) – 1-D or 2-D array.</li>
+<li><strong>value</strong> (<em>int</em>) – Value to be filled. Default is 0.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Forward-filled array.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ffill</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="go">    [0, 5, 5, 5, 2, 2]</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>Works only in axis=1 direction.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.init">
+<code class="descclassname">utils.</code><code class="descname">init</code><span class="sig-paren">(</span><em>nvars</em>, <em>shape</em>, <em>dtype=&lt;class 'float'&gt;</em>, <em>masked=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes several numpy arrays.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>nvars</strong> (<em>int</em>) – Number of arrays to be generated.</li>
+<li><strong>shape</strong> (<em>tuple</em>) – Shape of the arrays, e.g. (2, 3).</li>
+<li><strong>dtype</strong> (<em>data-type</em><em>, </em><em>optional</em>) – The desired data-type
+for the arrays, e.g., int. Default is float.</li>
+<li><strong>masked</strong> (<em>bool</em>) – If True, generated arrays are masked
+arrays, else ordinary numpy arrays. Default is True.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last">Iterator containing the empty arrays.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
+<span class="go">    masked_array(</span>
+<span class="go">      data=[[0., 0., 0.],</span>
+<span class="go">            [0., 0., 0.]],</span>
+<span class="go">      mask=False,</span>
+<span class="go">      fill_value=1e+20)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.n_elements">
+<code class="descclassname">utils.</code><code class="descname">n_elements</code><span class="sig-paren">(</span><em>x</em>, <em>dist</em>, <em>var=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#n_elements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.n_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of elements that cover certain distance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>x</strong> (<em>ndarray</em>) – Input array with arbitrary units
+or time in fraction hour. <em>x</em> should be
+evenly spaced or at least close to.</li>
+<li><strong>dist</strong> (<em>float</em>) – Distance to be covered. If x is fraction time,
+<em>dist</em> is in minutes. Otherwise <em>x</em> and <em>dist</em> should have
+the same units.</li>
+<li><strong>var</strong> (<em>str</em><em>, </em><em>optional</em>) – ‘time’ or None. If None, inputs
+have the same units. If ‘time’, input is fraction hour
+and distance in minutes. Default is None.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Number of elements in the input array that cover <em>dist</em>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_elements</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+<span class="go">    3</span>
+</pre></div>
+</div>
+<p>The result is rounded to the closest integer, so:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n_elements</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">6.9</span><span class="p">)</span>
+<span class="go">    3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_elements</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+<span class="go">    4</span>
+</pre></div>
+</div>
+<p>With fraction hour time vector:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">61</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">n_elements</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">)</span>
+<span class="go">    10</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.isscalar">
+<code class="descclassname">utils.</code><code class="descname">isscalar</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#isscalar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.isscalar" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if input is scalar.</p>
+<p>By “scalar” we mean that array has a single value.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]))</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.get_time">
+<code class="descclassname">utils.</code><code class="descname">get_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns current UTC-time.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.date_range">
+<code class="descclassname">utils.</code><code class="descname">date_range</code><span class="sig-paren">(</span><em>start_date</em>, <em>end_date</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#date_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.date_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return range between two dates (datetimes).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.get_uuid">
+<code class="descclassname">utils.</code><code class="descname">get_uuid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_uuid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_uuid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns unique identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.get_wl_band">
+<code class="descclassname">utils.</code><code class="descname">get_wl_band</code><span class="sig-paren">(</span><em>radar_frequency</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_wl_band"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_wl_band" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns integer corresponding to radar frequency.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radar_frequency</strong> (<em>float</em>) – Radar frequency (GHz).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0=35GHz radar, 1=94Ghz radar.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.transpose">
+<code class="descclassname">utils.</code><code class="descname">transpose</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.transpose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transposes numpy array of (n, ) to (n, 1).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.del_dict_keys">
+<code class="descclassname">utils.</code><code class="descname">del_dict_keys</code><span class="sig-paren">(</span><em>dict_in</em>, <em>keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#del_dict_keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.del_dict_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes multiple keys from dictionary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.get_site_information">
+<code class="descclassname">utils.</code><code class="descname">get_site_information</code><span class="sig-paren">(</span><em>site</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_site_information"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_site_information" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads site information from Cloudnet http API.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>site</strong> (<em>str</em>) – Site identifier, e.g. ‘mace-head’ or ‘lindenberg’.</li>
+<li><strong>args</strong> – Variable number of field names to be queried.
+Possible field names are ‘latitude’, ‘longitude’, ‘altitude’
+and ‘site_name’.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Tuple of return values.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_site_information</span><span class="p">(</span><span class="s1">&#39;mace-head&#39;</span><span class="p">,</span> <span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.array_to_probability">
+<code class="descclassname">utils.</code><code class="descname">array_to_probability</code><span class="sig-paren">(</span><em>arr_in</em>, <em>loc</em>, <em>scale</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#array_to_probability"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.array_to_probability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts continuous variable into 0-1 probability.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>arr_in</strong> (<em>MaskedArray</em>) – Masked numpy array.</li>
+<li><strong>loc</strong> (<em>float</em>) – Center of the distribution. Values smaller than this
+will have small probability. Values greater than this will have
+large probability.</li>
+<li><strong>scale</strong> (<em>float</em>) – Width of the distribution, i.e., how fast the probability
+drops or increases from the peak.</li>
+<li><strong>invert</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, large values have small
+probability and vice versa. Default is False.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="categorize-subpackage">
+<h1>Categorize subpackage<a class="headerlink" href="#categorize-subpackage" title="Permalink to this headline">¶</a></h1>
+<p>Categorize is a CloudnetPy’s sub-package. It contains
+several modules that are used when creating the Cloudnet
+categorize file.</p>
 <div class="section" id="module-categorize.classify">
 <span id="cloudnetpy-categorize-classify"></span><h2>cloudnetpy.categorize.classify<a class="headerlink" href="#module-categorize.classify" title="Permalink to this headline">¶</a></h2>
 <p>Module containing low-level functions to classify gridded
@@ -1166,631 +1937,23 @@ on radar data.</li>
 </dd></dl>
 
 </div>
-<div class="section" id="module-utils">
-<span id="cloudnetpy-utils"></span><h2>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h2>
-<p>This module contains general
-helper functions.</p>
-<dl class="function">
-<dt id="utils.seconds2hours">
-<code class="descclassname">utils.</code><code class="descname">seconds2hours</code><span class="sig-paren">(</span><em>time_in_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hours"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hours" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts seconds since some epoch to fraction hour.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_in_seconds</strong> (<em>ndarray</em>) – 1-D array of seconds since some epoch
-that starts on midnight.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time as fraction hour.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Excludes leap seconds.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.time_grid">
-<code class="descclassname">utils.</code><code class="descname">time_grid</code><span class="sig-paren">(</span><em>time_step=30</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#time_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.time_grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns decimal hour array between 0 and 24.</p>
-<p>Computes fraction hour time vector 0-24 with user-given
-resolution (in seconds) where 60 is the maximum allowed value.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time resolution in seconds between
-1 and 60. Default is 30.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time vector between 0 and 24.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – Bad resolution as input.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.binvec">
-<code class="descclassname">utils.</code><code class="descname">binvec</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#binvec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.binvec" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts 1-D center points to bins with even spacing.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>x</strong> (<em>array_like</em>) – 1-D array of N real values.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">N + 1 edge values.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">binvec</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-<span class="go">    [0.5, 1.5, 2.5, 3.5]</span>
-</pre></div>
 </div>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.rebin_2d">
-<code class="descclassname">utils.</code><code class="descname">rebin_2d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em>, <em>n_min=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_2d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins 2-D data in one dimension using mean.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x_in</strong> (<em>ndarray</em>) – 1-D array with shape (n,).</li>
-<li><strong>data</strong> (<em>MaskedArray</em>) – 2-D input data with shape (n, m).</li>
-<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D target vector (center points)
-with shape (N,).</li>
-<li><strong>statistic</strong> (<em>str</em><em>, </em><em>optional</em>) – Statistic to be calculated. Possible
-statistics are ‘mean’, ‘std’. Default is ‘mean’.</li>
-<li><strong>n_min</strong> (<em>int</em>) – Minimum number of points to have good statistics in a bin.
-Default is 1.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned data with shape (N, m).</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">MaskedArray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Notes: 0-values are masked in the returned array.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.rebin_1d">
-<code class="descclassname">utils.</code><code class="descname">rebin_1d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_1d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins 1D array.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.filter_isolated_pixels">
-<code class="descclassname">utils.</code><code class="descname">filter_isolated_pixels</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#filter_isolated_pixels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.filter_isolated_pixels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns array with completely isolated single cells removed.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>array</strong> (<em>ndarray</em>) – 2-D input data containing isolated pixels.</li>
-<li><strong>n</strong> (<em>int</em>) – number of connected pixels in 3x3 region. Default is 1 when
-only isolated pixels will be removed.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Cleaned data.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.isbit">
-<code class="descclassname">utils.</code><code class="descname">isbit</code><span class="sig-paren">(</span><em>integer</em>, <em>nth_bit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#isbit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.isbit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests if nth bit (0,1,2..) is on for the input number.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>integer</strong> (<em>int</em>) – A number.</li>
-<li><strong>nth_bit</strong> (<em>int</em>) – Investigated bit.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">True if set, otherwise False.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">bool</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – negative bit as input.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">isbit</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="go">    False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">isbit</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="go">    True</span>
-</pre></div>
-</div>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">utils.setbit()</p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.setbit">
-<code class="descclassname">utils.</code><code class="descname">setbit</code><span class="sig-paren">(</span><em>integer</em>, <em>nth_bit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#setbit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.setbit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets nth bit (0, 1, 2..) on input number.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>integer</strong> (<em>int</em>) – A number.</li>
-<li><strong>nth_bit</strong> (<em>int</em>) – Bit to be set.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Integer where nth bit is set.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">int</p>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – negative bit as input.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">setbit</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-<span class="go">    3</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">setbit</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="go">    4</span>
-</pre></div>
-</div>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">utils.isbit()</p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.interpolate_2d">
-<code class="descclassname">utils.</code><code class="descname">interpolate_2d</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>z</em>, <em>x_new</em>, <em>y_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#interpolate_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.interpolate_2d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Linear interpolation of gridded 2d data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>ndarray</em>) – 1-D array.</li>
-<li><strong>y</strong> (<em>ndarray</em>) – 1-D array.</li>
-<li><strong>z</strong> (<em>ndarray</em>) – 2-D array at points (x, y).</li>
-<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D array.</li>
-<li><strong>y_new</strong> (<em>ndarray</em>) – 1-D array.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated data.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Does not work with nans. Ignores mask of masked data.
-Does not extrapolate.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.interpolate_2d_masked">
-<code class="descclassname">utils.</code><code class="descname">interpolate_2d_masked</code><span class="sig-paren">(</span><em>array</em>, <em>ax_values</em>, <em>ax_values_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#interpolate_2d_masked"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.interpolate_2d_masked" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interpolates 2D array preserving the mask.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>array</strong> (<em>ndarray</em>) – 2D masked array.</li>
-<li><strong>ax_values</strong> (<em>tuple</em>) – 2-element tuple containing x and y values of the input array.</li>
-<li><strong>ax_values_new</strong> (<em>tuple</em>) – 2-element tuple containing new x and y values.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated 2d masked array.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Uses linear interpolation.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.calc_relative_error">
-<code class="descclassname">utils.</code><code class="descname">calc_relative_error</code><span class="sig-paren">(</span><em>reference</em>, <em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#calc_relative_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.calc_relative_error" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates relative error (%).</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.db2lin">
-<code class="descclassname">utils.</code><code class="descname">db2lin</code><span class="sig-paren">(</span><em>x</em>, <em>scale=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#db2lin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.db2lin" title="Permalink to this definition">¶</a></dt>
-<dd><p>dB to linear conversion.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.lin2db">
-<code class="descclassname">utils.</code><code class="descname">lin2db</code><span class="sig-paren">(</span><em>x</em>, <em>scale=10</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#lin2db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.lin2db" title="Permalink to this definition">¶</a></dt>
-<dd><p>Linear to dB conversion.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.mdiff">
-<code class="descclassname">utils.</code><code class="descname">mdiff</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#mdiff"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.mdiff" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns median difference of 1-D array.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.l2norm">
-<code class="descclassname">utils.</code><code class="descname">l2norm</code><span class="sig-paren">(</span><em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#l2norm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.l2norm" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns l2 norm.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>*args</strong> – Variable number of data (<em>array_like</em>)
-with the same shape.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The l2 norm.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">MaskedArray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.l2norm_weighted">
-<code class="descclassname">utils.</code><code class="descname">l2norm_weighted</code><span class="sig-paren">(</span><em>values</em>, <em>overall_scale</em>, <em>term_weights</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#l2norm_weighted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.l2norm_weighted" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates scaled and weighted Euclidean distance.</p>
-<p>Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + …)
-where a, b, … are terms to be summed and a1, a2, … are optional weights
-for the terms.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>values</strong> (<em>tuple</em>) – Tuple containing the values.</li>
-<li><strong>overall_scale</strong> (<em>float</em>) – Scale factor for the calculated
-Euclidean distance.</li>
-<li><strong>term_weights</strong> (<em>tuple</em>) – Weights for the terms. Must be single
-float or a list of numbers (one per term).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Scaled and weighted Euclidean distance.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">float</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p>TODO: Probably better use masked arrays instead of tuples.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.cumsumr">
-<code class="descclassname">utils.</code><code class="descname">cumsumr</code><span class="sig-paren">(</span><em>x</em>, <em>axis=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#cumsumr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.cumsumr" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds cumulative sum that resets on 0.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>ndarray</em>) – Input array.</li>
-<li><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – Axis where the sum is calculated.
-Default is 0.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Cumulative sum, restarted at 0.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cumsumr</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="go">    [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.ffill">
-<code class="descclassname">utils.</code><code class="descname">ffill</code><span class="sig-paren">(</span><em>arr</em>, <em>value=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#ffill"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.ffill" title="Permalink to this definition">¶</a></dt>
-<dd><p>Forward fills a numpy array.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>arr</strong> (<em>ndarray</em>) – 1-D or 2-D array.</li>
-<li><strong>value</strong> (<em>int</em>) – Value to be filled. Default is 0.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Forward-filled array.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">ffill</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-<span class="go">    [0, 5, 5, 5, 2, 2]</span>
-</pre></div>
-</div>
-<p class="rubric">Notes</p>
-<p>Works only in axis=1 direction.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.init">
-<code class="descclassname">utils.</code><code class="descname">init</code><span class="sig-paren">(</span><em>nvars</em>, <em>shape</em>, <em>dtype=&lt;class 'float'&gt;</em>, <em>masked=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#init"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.init" title="Permalink to this definition">¶</a></dt>
-<dd><p>Initializes several numpy arrays.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>nvars</strong> (<em>int</em>) – Number of arrays to be generated.</li>
-<li><strong>shape</strong> (<em>tuple</em>) – Shape of the arrays, e.g. (2, 3).</li>
-<li><strong>dtype</strong> (<em>data-type</em><em>, </em><em>optional</em>) – The desired data-type
-for the arrays, e.g., int. Default is float.</li>
-<li><strong>masked</strong> (<em>bool</em>) – If True, generated arrays are masked
-arrays, else ordinary numpy arrays. Default is True.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Yields:</th><td class="field-body"><p class="first last">Iterator containing the empty arrays.</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">init</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">a</span>
-<span class="go">    masked_array(</span>
-<span class="go">      data=[[0., 0., 0.],</span>
-<span class="go">            [0., 0., 0.]],</span>
-<span class="go">      mask=False,</span>
-<span class="go">      fill_value=1e+20)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.n_elements">
-<code class="descclassname">utils.</code><code class="descname">n_elements</code><span class="sig-paren">(</span><em>x</em>, <em>dist</em>, <em>var=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#n_elements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.n_elements" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the number of elements that cover certain distance.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>x</strong> (<em>ndarray</em>) – Input array with arbitrary units
-or time in fraction hour. <em>x</em> should be
-evenly spaced or at least close to.</li>
-<li><strong>dist</strong> (<em>float</em>) – Distance to be covered. If x is fraction time,
-<em>dist</em> is in minutes. Otherwise <em>x</em> and <em>dist</em> should have
-the same units.</li>
-<li><strong>var</strong> (<em>str</em><em>, </em><em>optional</em>) – ‘time’ or None. If None, inputs
-have the same units. If ‘time’, input is fraction hour
-and distance in minutes. Default is None.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Number of elements in the input array that cover <em>dist</em>.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">n_elements</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
-<span class="go">    3</span>
-</pre></div>
-</div>
-<p>The result is rounded to the closest integer, so:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">n_elements</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">6.9</span><span class="p">)</span>
-<span class="go">    3</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">n_elements</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
-<span class="go">    4</span>
-</pre></div>
-</div>
-<p>With fraction hour time vector:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">61</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">n_elements</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;time&#39;</span><span class="p">)</span>
-<span class="go">    10</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.isscalar">
-<code class="descclassname">utils.</code><code class="descname">isscalar</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#isscalar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.isscalar" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests if input is scalar.</p>
-<p>By “scalar” we mean that array has a single value.</p>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]))</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.get_time">
-<code class="descclassname">utils.</code><code class="descname">get_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns current UTC-time.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.date_range">
-<code class="descclassname">utils.</code><code class="descname">date_range</code><span class="sig-paren">(</span><em>start_date</em>, <em>end_date</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#date_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.date_range" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return range between two dates (datetimes).</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.get_uuid">
-<code class="descclassname">utils.</code><code class="descname">get_uuid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_uuid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_uuid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns unique identifier.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.get_wl_band">
-<code class="descclassname">utils.</code><code class="descname">get_wl_band</code><span class="sig-paren">(</span><em>radar_frequency</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_wl_band"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_wl_band" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns integer corresponding to radar frequency.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>radar_frequency</strong> (<em>float</em>) – Radar frequency (GHz).</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">0=35GHz radar, 1=94Ghz radar.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.transpose">
-<code class="descclassname">utils.</code><code class="descname">transpose</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.transpose" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transposes numpy array of (n, ) to (n, 1).</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.del_dict_keys">
-<code class="descclassname">utils.</code><code class="descname">del_dict_keys</code><span class="sig-paren">(</span><em>dict_in</em>, <em>keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#del_dict_keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.del_dict_keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>Removes multiple keys from dictionary.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.get_site_information">
-<code class="descclassname">utils.</code><code class="descname">get_site_information</code><span class="sig-paren">(</span><em>site</em>, <em>*args</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#get_site_information"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.get_site_information" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reads site information from Cloudnet http API.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>site</strong> (<em>str</em>) – Site identifier, e.g. ‘mace-head’ or ‘lindenberg’.</li>
-<li><strong>args</strong> – Variable number of field names to be queried.
-Possible field names are ‘latitude’, ‘longitude’, ‘altitude’
-and ‘site_name’.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Tuple of return values.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_site_information</span><span class="p">(</span><span class="s1">&#39;mace-head&#39;</span><span class="p">,</span> <span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="s1">&#39;longitude&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.array_to_probability">
-<code class="descclassname">utils.</code><code class="descname">array_to_probability</code><span class="sig-paren">(</span><em>arr_in</em>, <em>loc</em>, <em>scale</em>, <em>invert=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#array_to_probability"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.array_to_probability" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts continuous variable into 0-1 probability.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>arr_in</strong> (<em>MaskedArray</em>) – Masked numpy array.</li>
-<li><strong>loc</strong> (<em>float</em>) – Center of the distribution. Values smaller than this
-will have small probability. Values greater than this will have
-large probability.</li>
-<li><strong>scale</strong> (<em>float</em>) – Width of the distribution, i.e., how fast the probability
-drops or increases from the peak.</li>
-<li><strong>invert</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, large values have small
-probability and vice versa. Default is False.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="products-modules">
-<h1>Products modules<a class="headerlink" href="#products-modules" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="products-sub-package">
+<h1>Products sub-package<a class="headerlink" href="#products-sub-package" title="Permalink to this headline">¶</a></h1>
 <p>Products is a CloudnetPy’s sub-package. It contains
 several modules that correspond to different Cloudnet
 products.</p>
 <div class="section" id="module-products.classification">
-<span id="products-classification"></span><h2>products.classification<a class="headerlink" href="#module-products.classification" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-products-classification"></span><h2>cloudnetpy.products.classification<a class="headerlink" href="#module-products.classification" title="Permalink to this headline">¶</a></h2>
 <p>Module for creating classification file.</p>
 <dl class="function">
 <dt>
 <code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Generates Cloudnet classification product.</p>
-<p>Generates categorized bins to 10 types of different targets in atmosphere
-as well as instrument status classification. Classifications are saved to
-NetCDF file with information of classification and measurements.</p>
+<p>This function reads the initial classification masks from a
+categorize file and creates a more comprehensive classification
+for different atmospheric targets. The results are written in a
+netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1812,13 +1975,17 @@ NetCDF file with information of classification and measurements.</p>
 
 </div>
 <div class="section" id="module-products.iwc">
-<span id="products-iwc"></span><h2>products.iwc<a class="headerlink" href="#module-products.iwc" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-products-iwc"></span><h2>cloudnetpy.products.iwc<a class="headerlink" href="#module-products.iwc" title="Permalink to this headline">¶</a></h2>
 <p>Module for creating Cloudnet ice water content file
 using Z-T method.</p>
 <dl class="function">
 <dt>
 <code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Generates Cloudnet ice water content product.</p>
+<p>This function calculates ice water content using the so-called Z-T method.
+In this method, ice water content is calculated from attenuated-corrected
+radar reflectivity and model temperature. The results are written in a
+netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1836,6 +2003,11 @@ using Z-T method.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p class="rubric">References</p>
+<p>Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
+The Retrieval of Ice Water Content from Radar Reflectivity Factor and
+Temperature and Its Use in Evaluating a Mesoscale Model.
+J. Appl. Meteor. Climatol., 45, 301–317, <a class="reference external" href="https://doi.org/10.1175/JAM2340.1">https://doi.org/10.1175/JAM2340.1</a></p>
 </dd></dl>
 
 <dl class="class">
@@ -1846,13 +2018,17 @@ using Z-T method.</p>
 
 </div>
 <div class="section" id="module-products.lwc">
-<span id="products-lwc"></span><h2>products.lwc<a class="headerlink" href="#module-products.lwc" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-products-lwc"></span><h2>cloudnetpy.products.lwc<a class="headerlink" href="#module-products.lwc" title="Permalink to this headline">¶</a></h2>
 <p>Module for creating Cloudnet liquid water content file
 using scaled-adiabatic method.</p>
 <dl class="function">
 <dt>
 <code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Generates Cloudnet liquid water content product.</p>
+<p>This function calculates cloud liquid water content using the so-called
+adiabatic-scaled method. In this method, liquid water content measured by
+microwave radiameter is used to constrain the theoretical liquid water
+content of observed liquid clouds. The results are written in a netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1870,6 +2046,13 @@ using scaled-adiabatic method.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p class="rubric">References</p>
+<p>Illingworth, A.J., R.J. Hogan, E. O’Connor, D. Bouniol, M.E. Brooks,
+J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
+M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
+H.W. Russchenberg, A. Seifert, A.M. Tompkins, G. van Zadelhoff, F. Vinit,
+U. Willén, D.R. Wilson, and C.L. Wrench, 2007: Cloudnet.
+Bull. Amer. Meteor. Soc., 88, 883–898, <a class="reference external" href="https://doi.org/10.1175/BAMS-88-6-883">https://doi.org/10.1175/BAMS-88-6-883</a></p>
 </dd></dl>
 
 <dl class="class">
@@ -1928,12 +2111,14 @@ methods for holding the results.</p>
 
 </div>
 <div class="section" id="module-products.drizzle">
-<span id="products-drizzle"></span><h2>products.drizzle<a class="headerlink" href="#module-products.drizzle" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-products-drizzle"></span><h2>cloudnetpy.products.drizzle<a class="headerlink" href="#module-products.drizzle" title="Permalink to this headline">¶</a></h2>
 <p>Module for creating Cloudnet drizzle product.</p>
 <dl class="function">
 <dt>
 <code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>Generates Cloudnet drizzle product.</p>
+<p>This function calculates different drizzle properties from
+cloud radar and lidar measurements. The results are written in a netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1946,6 +2131,10 @@ methods for holding the results.</p>
 </tr>
 </tbody>
 </table>
+<p class="rubric">References</p>
+<p>O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
+Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
+J. Appl. Meteor., 44, 14–27, <a class="reference external" href="https://doi.org/10.1175/JAM-2181.1">https://doi.org/10.1175/JAM-2181.1</a></p>
 </dd></dl>
 
 <dl class="class">
@@ -2048,79 +2237,50 @@ for drizzle calculations.</li>
 </div>
 
 
+           </div>
+           
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">High-level APIs</a><ul>
-<li><a class="reference internal" href="#raw-data-to-categorize">Raw data to categorize</a></li>
-<li><a class="reference internal" href="#categorize-to-products">Categorize to products</a></li>
-<li><a class="reference internal" href="#visualizing-results">Visualizing results</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#cloudnetpy-modules">Cloudnetpy modules</a><ul>
-<li><a class="reference internal" href="#module-categorize.classify">cloudnetpy.categorize.classify</a></li>
-<li><a class="reference internal" href="#module-categorize.atmos">cloudnetpy.categorize.atmos</a></li>
-<li><a class="reference internal" href="#module-categorize.droplet">cloudnetpy.categorize.droplet</a></li>
-<li><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#products-modules">Products modules</a><ul>
-<li><a class="reference internal" href="#module-products.classification">products.classification</a></li>
-<li><a class="reference internal" href="#module-products.iwc">products.iwc</a></li>
-<li><a class="reference internal" href="#module-products.lwc">products.lwc</a></li>
-<li><a class="reference internal" href="#module-products.drizzle">products.drizzle</a></li>
-</ul>
-</li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="quickstart.html"
-                        title="previous chapter">Quickstart</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/api.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Finnish Meteorological Institute
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="quickstart.html" title="Quickstart"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2019, Finnish Meteorological Institute.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
 </html>
