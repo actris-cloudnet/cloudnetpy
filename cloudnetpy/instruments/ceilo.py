@@ -17,7 +17,15 @@ SECONDS_IN_HOUR = 3600
 
 
 def ceilo2nc(input_file, output_file, site_meta):
-    """Converts Vaisala and Jenoptik raw files into netCDF.
+    """Converts Vaisala and Jenoptik raw files into netCDF file.
+
+    This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
+    ceilometer files and writes the data into netCDF file. Three variants
+    of the attenuated backscatter are saved in the file:
+
+        1. Raw backscatter ('beta_raw')
+        2. Signal-to-noise screened backscatter ('beta')
+        3. SNR-screened backscatter with smoothed weak background ('beta_smooth').
 
     Args:
         input_file (str): Ceilometer file name. For Vaisala it is a text file,
@@ -26,6 +34,9 @@ def ceilo2nc(input_file, output_file, site_meta):
         site_meta (dict): Dictionary containing information about the
             site. Required key value pairs are 'name' and 'altitude'
             (metres above mean sea level).
+
+    Raises:
+        RuntimeError: Failed to read or process raw ceilometer data.
 
     Examples:
         >>> from cloudnetpy.instruments.ceilo import ceilo2nc

@@ -9,9 +9,10 @@ from cloudnetpy.products.product_tools import CategorizeBits
 def generate_classification(categorize_file, output_file):
     """Generates Cloudnet classification product.
 
-    Generates categorized bins to 10 types of different targets in atmosphere
-    as well as instrument status classification. Classifications are saved to
-    NetCDF file with information of classification and measurements.
+    This function reads the initial classification masks from a
+    categorize file and creates a more comprehensive classification
+    for different atmospheric targets. The results are written in a
+    netCDF file.
 
     Args:
         categorize_file (str): Categorize file name.

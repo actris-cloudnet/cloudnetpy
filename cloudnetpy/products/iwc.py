@@ -14,8 +14,14 @@ from cloudnetpy.products.product_tools import ProductClassification
 
 G_TO_KG = 0.001
 
+
 def generate_iwc(categorize_file, output_file):
     """Generates Cloudnet ice water content product.
+
+    This function calculates ice water content using the so-called Z-T method.
+    In this method, ice water content is calculated from attenuated-corrected
+    radar reflectivity and model temperature. The results are written in a
+    netCDF file.
 
     Args:
         categorize_file (str): Categorize file name.
@@ -24,6 +30,12 @@ def generate_iwc(categorize_file, output_file):
     Examples:
         >>> from cloudnetpy.products.iwc import generate_iwc
         >>> generate_iwc('categorize.nc', 'iwc.nc')
+
+    References:
+        Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
+        The Retrieval of Ice Water Content from Radar Reflectivity Factor and
+        Temperature and Its Use in Evaluating a Mesoscale Model.
+        J. Appl. Meteor. Climatol., 45, 301–317, https://doi.org/10.1175/JAM2340.1
 
     """
     iwc_data = IwcSource(categorize_file)
@@ -69,8 +81,7 @@ class IwcSource(DataSource):
 
         Returns estimate of the liquid water attenuation for
         pixels that are affected by it but not corrected
-        for some reason. The amount of attenuation depends on
-        the radar wavelength.
+        for some reason.
 
         """
         if self.wl_band == 0:
@@ -158,7 +169,6 @@ def _append_iwc_including_rain(iwc_data, ice_class):
 
 
 def _append_iwc(iwc_data, ice_class):
-    """Masks ice clouds above rain from ice water content."""
     iwc = ma.copy(iwc_data.data['iwc_inc_rain'][:])
     iwc[ice_class.ice_above_rain] = ma.masked
     iwc_data.append_data(iwc, 'iwc')

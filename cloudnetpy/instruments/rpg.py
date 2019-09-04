@@ -10,10 +10,10 @@ from cloudnetpy.metadata import MetaData
 
 
 def rpg2nc(path_to_l1_files, output_file, site_meta):
-    """Converts RPG cloud radar binary files into NetCDF file.
+    """Converts RPG cloud radar binary files into netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
-    concatenates the data and writes it into NetCDF file.
+    concatenates the data and writes it into netCDF file.
 
     Args:
         path_to_l1_files (str): Folder containing one day of RPG LV1 files.
@@ -22,13 +22,13 @@ def rpg2nc(path_to_l1_files, output_file, site_meta):
             site. Required key value pairs are 'altitude' (in metres) and
             'name'.
 
+    Raises:
+        RuntimeError: Failed to read the binary data.
+
     Examples:
         >>> from cloudnetpy.instruments.rpg import rpg2nc
         >>> site_meta = {'name': 'Hyytiala', 'altitude': 174}
         >>> rpg2nc('/path/to/files/', 'test.nc', site_meta)
-
-    Raises:
-        RuntimeError: Failed to process the data.
 
     """
     l1_files = get_rpg_files(path_to_l1_files)

@@ -16,9 +16,17 @@ from cloudnetpy.products.product_tools import ProductClassification
 def generate_drizzle(categorize_file, output_file):
     """Generates Cloudnet drizzle product.
 
+    This function calculates different drizzle properties from
+    cloud radar and lidar measurements. The results are written in a netCDF file.
+
     Args:
         categorize_file (str): Categorize file name.
         output_file (str): Output file name.
+
+    References:
+        O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
+        Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
+        J. Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
 
     """
     drizzle_data = DrizzleSource(categorize_file)

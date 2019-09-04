@@ -16,6 +16,11 @@ G_TO_KG = 0.001
 def generate_lwc(categorize_file, output_file):
     """Generates Cloudnet liquid water content product.
 
+    This function calculates cloud liquid water content using the so-called
+    adiabatic-scaled method. In this method, liquid water content measured by
+    microwave radiameter is used to constrain the theoretical liquid water
+    content of observed liquid clouds. The results are written in a netCDF file.
+
     Args:
         categorize_file (str): Categorize file name.
         output_file (str): Output file name.
@@ -23,6 +28,14 @@ def generate_lwc(categorize_file, output_file):
     Examples:
         >>> from cloudnetpy.products.lwc import generate_lwc
         >>> generate_lwc('categorize.nc', 'lwc.nc')
+
+    References:
+        Illingworth, A.J., R.J. Hogan, E. O'Connor, D. Bouniol, M.E. Brooks,
+        J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
+        M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
+        H.W. Russchenberg, A. Seifert, A.M. Tompkins, G. van Zadelhoff, F. Vinit,
+        U. Willén, D.R. Wilson, and C.L. Wrench, 2007: Cloudnet.
+        Bull. Amer. Meteor. Soc., 88, 883–898, https://doi.org/10.1175/BAMS-88-6-883
 
     """
     lwc_source = LwcSource(categorize_file)

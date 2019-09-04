@@ -10,13 +10,14 @@ from cloudnetpy.metadata import MetaData
 
 
 def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False):
-    """Converts Mira cloud radar Level 1 file into NetCDF file.
+    """Converts METEK MIRA-35 cloud radar Level 1 file into netCDF file.
 
     This function converts raw cloud radar file into a much smaller file that
-    contains only the relevant data and can be used in further processing steps.
+    contains only the relevant data and can be used in further processing
+    steps.
 
     Args:
-        mmclx_file (str): Raw radar file in NetCDF format.
+        mmclx_file (str): Raw radar file in netCDF format.
         output_file (str): Output file name.
         site_meta (dict): Dictionary containing information about the
             site. Required key value pairs are 'name'.
@@ -42,7 +43,7 @@ def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False):
 
 
 class Mira(DataSource):
-    """Class for MIRA-36 raw radar data. Child of DataSource().
+    """Class for MIRA-35 raw radar data. Child of DataSource().
 
     Args:
         raw_radar_file (str): Filename of raw MIRA NetCDF file.
@@ -58,7 +59,7 @@ class Mira(DataSource):
 
     def __init__(self, raw_radar_file, site_meta):
         super().__init__(raw_radar_file)
-        self.source = 'METEK MIRA-36'
+        self.source = 'METEK MIRA-35'
         self.radar_frequency = 35.5
         self._init_data()
         self.range = self.getvar(self, 'range')
@@ -72,32 +73,19 @@ class Mira(DataSource):
             array[~np.isfinite(array)] = ma.masked
             self.data[name] = CloudnetArray(array, name)
 
-    @staticmethod
-    def _estimate_snr_gain(time_sparse, time_dense):
-        """Returns factor for SNR (dB) increase when data is binned."""
-        binning_ratio = utils.mdiff(time_sparse) / utils.mdiff(time_dense)
-        return np.sqrt(binning_ratio)
-
     def linear_to_db(self, variables_to_log):
-        """Changes some linear units to logarithmic."""
+        """Changes linear units to logarithmic."""
         for name in variables_to_log:
             self.data[name].lin2db()
 
-    def rebin_fields(self):
-        time_grid = utils.time_grid()
-        for field in self.data:
-            self.data[field].rebin_data(self.time, time_grid)
-        snr_gain = self._estimate_snr_gain(time_grid, self.time)
-        self.time = time_grid
-        return snr_gain
-
     def screen_by_snr(self, snr_gain=1, snr_limit=-17):
-        """ Screens by SNR."""
+        """Screens by SNR."""
         ind = np.where(self.data['SNR'][:] * snr_gain < snr_limit)
         for field in self.data:
             self.data[field].mask_indices(ind)
 
     def add_meta(self):
+        """Adds some meta-data."""
         self._add_geolocation()
         for key in ('time', 'range', 'radar_frequency'):
             self.data[key] = CloudnetArray(getattr(self, key), key)
@@ -107,6 +95,21 @@ class Mira(DataSource):
             value = getattr(self.dataset, key).split()[0]
             key = key.lower()
             self.data[key] = CloudnetArray(float(value), key)
+
+    def rebin_fields(self):
+        """Rebins fields."""
+        time_grid = utils.time_grid()
+        for field in self.data:
+            self.data[field].rebin_data(self.time, time_grid)
+        snr_gain = self._estimate_snr_gain(time_grid, self.time)
+        self.time = time_grid
+        return snr_gain
+
+    @staticmethod
+    def _estimate_snr_gain(time_sparse, time_dense):
+        """Returns factor for SNR (dB) increase when data is binned."""
+        binning_ratio = utils.mdiff(time_sparse) / utils.mdiff(time_dense)
+        return np.sqrt(binning_ratio)
 
 
 def _save_mira(mmclx_file, raw_radar, output_file):
