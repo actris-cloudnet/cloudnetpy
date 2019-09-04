@@ -118,15 +118,11 @@ product, the classification product.
     generate_classification('categorize.nc', 'classification.nc')
 
 
-Notes
------
+.. note::
 
-Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
-contain all the latest features and modifications. To get an up-to-date
-version of CloudnetPy, download it directly from `GitHub
-<https://github.com/tukiains/cloudnetpy>`_:
+   CloudnetPy codebase is rapidly developing and the PyPI package does not
+   contain all the latest features and modifications. To get an up-to-date
+   version of CloudnetPy, download it directly from `GitHub
+   <https://github.com/tukiains/cloudnetpy>`_.
 
-.. code-block:: console
-
-	$ git clone https://github.com/tukiains/cloudnetpy
 
