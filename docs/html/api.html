@@ -225,13 +225,16 @@ concatenates the data and writes it into netCDF file.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>path_to_l1_files</strong> (<em>str</em>) – Folder containing one day of RPG LV1 files.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 <li><strong>site_meta</strong> (<em>dict</em>) – Dictionary containing information about the
 site. Required key value pairs are ‘altitude’ (in metres) and
 ‘name’.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code> – Failed to read the binary data.</p>
 </td>
 </tr>
 </tbody>
@@ -242,14 +245,6 @@ site. Required key value pairs are ‘altitude’ (in metres) and
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rpg2nc</span><span class="p">(</span><span class="s1">&#39;/path/to/files/&#39;</span><span class="p">,</span> <span class="s1">&#39;test.nc&#39;</span><span class="p">,</span> <span class="n">site_meta</span><span class="p">)</span>
 </pre></div>
 </div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code> – Failed to process the data.</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">
@@ -257,7 +252,7 @@ site. Required key value pairs are ‘altitude’ (in metres) and
 <code class="descclassname">instruments.ceilo.</code><code class="descname">ceilo2nc</code><span class="sig-paren">(</span><em>input_file</em>, <em>output_file</em>, <em>site_meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/ceilo.html#ceilo2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.ceilo.ceilo2nc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts Vaisala and Jenoptik raw files into netCDF file.</p>
 <p>This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
-ceilometer files and writes the data into a netCDF file. Three variants
+ceilometer files and writes the data into netCDF file. Three variants
 of the attenuated backscatter are saved in the file:</p>
 <blockquote>
 <div><ol class="arabic simple">
@@ -270,7 +265,7 @@ of the attenuated backscatter are saved in the file:</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>input_file</strong> (<em>str</em>) – Ceilometer file name. For Vaisala it is a text file,
 for Jenoptik it is a netCDF file.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name, e.g. ‘ceilo.nc’.</li>
@@ -278,6 +273,9 @@ for Jenoptik it is a netCDF file.</li>
 site. Required key value pairs are ‘name’ and ‘altitude’
 (metres above mean sea level).</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code> – Failed to read or process raw ceilometer data.</p>
 </td>
 </tr>
 </tbody>
@@ -299,17 +297,19 @@ site. Required key value pairs are ‘name’ and ‘altitude’
 and classified as different types of scatterers such as ice, liquid,
 insects, etc. Next, the radar signal is corrected for atmospheric
 attenuation, and error estimates are computed. Results are saved
-in <em>ouput_file</em> which is by default a compressed NETCDF4_CLASSIC
-file.</p>
+in <em>ouput_file</em> which is a compressed netCDF4 file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>input_files</strong> (<em>dict</em>) – dict containing file names for calibrated
 ‘radar’, ‘lidar’ ‘model’ and ‘mwr’ files.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Full path of the output file.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code> – Failed to create the categorize file.</p>
 </td>
 </tr>
 </tbody>

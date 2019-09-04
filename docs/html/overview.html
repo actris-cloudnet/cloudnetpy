@@ -161,10 +161,13 @@ Cloud radar, optical lidar, microwave radiometer and thermodynamical (model or r
 characterize clouds up to 15 km with high temporal and vertical resolution.</p>
 <div class="figure align-center" id="id1">
 <a class="reference internal image-reference" href="_images/example_data.png"><img alt="_images/example_data.png" src="_images/example_data.png" style="width: 500px;" /></a>
-<p class="caption"><span class="caption-text">Example measurements.</span></p>
+<p class="caption"><span class="caption-text">Example input data, part of it, used in Cloudnet processing: Radar reflectivity factor (top), mean
+doppler velocity (2nd), lidar backscatter coefficient (3rd),
+and liquid water path from microwave radiometer (bottom).</span></p>
 </div>
 <p>The measurement and model data are brought into common grid and classified as ice, liquid, aerosol, insects, and so on.
-Then, geophysical products such as ice water content can be retrieved in further processing steps.</p>
+Then, geophysical products such as ice water content can be retrieved in further processing steps.
+A more detailed description can be found in <a class="reference external" href="https://journals.ametsoc.org/doi/abs/10.1175/BAMS-88-6-883">Illingworth 2007</a> and references in it.</p>
 <p>CloudnetPy is a refactored fork of the currently operational (Matlab) processing code. It features
 several revised methods, open source codebase, netCDF4 file format and extensive documentation.</p>
 <p>Cloudnet processing scheme is eventually going to be part of the ACTRIS

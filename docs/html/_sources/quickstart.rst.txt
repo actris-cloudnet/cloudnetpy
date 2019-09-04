@@ -63,7 +63,7 @@ The same function can handle also Jenoptik CHM15k files.
 MWR processing
 --------------
 
-Processing of multi-channel HATPRO microwave radiometer data is not yet part of CloudnetPy.
+Processing of multi-channel HATPRO microwave radiometer (MWR) data is not yet part of CloudnetPy.
 Thus, site operators need to run custom processing software to retrieve integrated liquid
 water path (LWP) from raw HATPRO measurements.
 
@@ -77,10 +77,10 @@ Model data
 ----------
 
 Model files needed in the next processing step can be downloaded
-from Cloudnet `http API <http://devcloudnet.fmi.fi/api/>`_. Several models
+from `Cloudnet http API <http://devcloudnet.fmi.fi/api/>`_. Several models
 may be available depending on the site and date, see for example
 `this day <http://devcloudnet.fmi.fi/api/models/?site_code=mace-head&date=20190303>`_.
-Any model file can be used in the processing, but the recommended order is
+Any model file can be used in the processing but the recommended order is
 
 #. ecmwf
 #. icon-iglo-12-23
