@@ -118,8 +118,8 @@ product, the classification product.
     generate_classification('categorize.nc', 'classification.nc')
 
 
-Final notes
------------
+Notes
+-----
 
 Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
 contain all the latest features and modifications. To get an up-to-date

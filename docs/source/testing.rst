@@ -32,7 +32,7 @@ Go to the tests folder and try to run all the tests:
     (venv) $ cd tests
     (venv) $ python3.7 test.py
 
-You should see the program loading some input files and starting
+You should see the testing script loading some input files and starting
 to run the tests:
 
 .. code-block:: console
