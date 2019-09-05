@@ -20,9 +20,10 @@ A more detailed description can be found in `Illingworth 2007`_ and references i
 
 .. _Illingworth 2007: https://journals.ametsoc.org/doi/abs/10.1175/BAMS-88-6-883
 
+.. important::
 
-CloudnetPy is a refactored fork of the currently operational (Matlab) processing code. It features
-several revised methods, open source codebase, netCDF4 file format and extensive documentation.
+   CloudnetPy is a refactored fork of the currently operational (Matlab) processing code. CloudnetPy features
+   several revised methods and bug fixes, open source codebase, netCDF4 file format and extensive documentation.
 
 Cloudnet processing scheme is eventually going to be part of the ACTRIS
 research infrastructure which is moving into implementation phase in 2019. Operational

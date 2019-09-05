@@ -4,8 +4,8 @@ Installation Instructions
 
 CloudnetPy can be installed on any computer supporting Python.
 The actual installation procedure depends on the operating system. The
-instructions below are for Ubuntu (although they work with
-many other Linux systems as well).
+instructions below are for Ubuntu, although they work with
+many other Linux systems as well.
 
 Python Installation
 -------------------
