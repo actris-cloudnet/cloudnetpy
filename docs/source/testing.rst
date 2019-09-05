@@ -22,10 +22,6 @@ needed by Cloudnetpy:
     $ source venv/bin/activate
     (venv) $ pip3 install numpy scipy netCDF4 matplotlib requests pytest
 
-.. note::
-   While hard to recommend, it is possible to install Python
-   packages system-wide and use these instead of the virtual environment.
-
 Running all tests
 -----------------
 

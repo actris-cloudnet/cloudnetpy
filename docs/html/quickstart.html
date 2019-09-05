@@ -36,7 +36,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="High-level APIs" href="api.html" />
-    <link rel="prev" title="Overview" href="overview.html" /> 
+    <link rel="prev" title="Installation Instructions" href="installation.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -86,8 +86,8 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Instructions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#radar-processing">Radar processing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#lidar-processing">Lidar processing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#mwr-processing">MWR processing</a></li>
@@ -167,26 +167,7 @@
             
   <div class="section" id="quickstart">
 <h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline">¶</a></h1>
-<p>CloudnetPy is available from <a class="reference external" href="https://pypi.org/project/cloudnetpy/">PyPI</a>, the Python package index.
-CloudnetPy requires Python 3.7 or newer.</p>
-<div class="section" id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
-<p>First, install prerequisite software (if you already haven’t):</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> sudo apt update <span class="o">&amp;&amp;</span> sudo apt upgrade
-<span class="gp">$</span> sudo apt install python3.7 python3.7-venv python3-pip
-</pre></div>
-</div>
-<p>Then, create a new virtual environment and activate it:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> python3.7 -m venv venv
-<span class="gp">$</span> <span class="nb">source</span> venv/bin/activate
-</pre></div>
-</div>
-<p>Install cloudnetpy into the virtual environment:</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">(venv)$</span> pip3 install cloudnetpy
-</pre></div>
-</div>
-<p>That’s it! Processing is easy using CloudnetPy’s high level APIs.</p>
-</div>
+<p>Processing is easy using CloudnetPy’s high level APIs.</p>
 <div class="section" id="radar-processing">
 <h2>Radar processing<a class="headerlink" href="#radar-processing" title="Permalink to this headline">¶</a></h2>
 <p>In the first example we convert a raw METEK MIRA-36 netCDF file into
@@ -257,12 +238,6 @@ product, the classification product.</p>
 <span class="n">generate_classification</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">CloudnetPy codebase is rapidly developing and the PyPI package does not
-contain all the latest features and modifications. To get an up-to-date
-version of CloudnetPy, download it directly from <a class="reference external" href="https://github.com/tukiains/cloudnetpy">GitHub</a>.</p>
-</div>
 </div>
 </div>
 
@@ -277,7 +252,7 @@ version of CloudnetPy, download it directly from <a class="reference external" h
         <a href="api.html" class="btn btn-neutral float-right" title="High-level APIs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="overview.html" class="btn btn-neutral float-left" title="Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation Instructions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

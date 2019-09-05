@@ -10,15 +10,19 @@ tests and finding bugs.
 How to contribute
 -----------------
 
-If you find a bug, or experience obviously incorrect behaviour, the right way
-to report is to open an issue on `CloudnetPy's Github page <https://github.com/tukiains/cloudnetpy/issues>`_.
+The right way to report a bug or obviously incorrect behaviour is
+to open an issue on `CloudnetPy's Github page <https://github.com/tukiains/cloudnetpy/issues>`_.
 Describe the problem and show the steps to reproduce it. Suggest a solution if you can but
-this is not necessary.
+this is not necessary. We will implement fixes as soon as possible into the
+source code and releases.
 
 However, any suggestion that affects the *methodology*, and thus the outcome of the
 processing, needs to be carefully reviewed by experts of the ACTRIS cloud
 remote sensing community. The bigger the modification, the bigger the validation
-work needed before the actual implementation can happen.
+work needed before the actual implementation can happen. Nevertheless, don't be
+afraid to present your development ideas! There is no such thing as perfect code,
+and the same applies to scientific methods.
+
 
 Coding guidelines
 -----------------

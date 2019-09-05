@@ -2,34 +2,7 @@
 Quickstart
 ==========
 
-CloudnetPy is available from `PyPI
-<https://pypi.org/project/cloudnetpy/>`_, the Python package index.
-CloudnetPy requires Python 3.7 or newer.
-
-Installation
-------------
-
-First, install prerequisite software (if you already haven't):
-
-.. code-block:: console
-		
-   $ sudo apt update && sudo apt upgrade
-   $ sudo apt install python3.7 python3.7-venv python3-pip
-
-Then, create a new virtual environment and activate it:
-
-.. code-block:: console
-		
-   $ python3.7 -m venv venv
-   $ source venv/bin/activate
-
-Install cloudnetpy into the virtual environment:
-
-.. code-block:: console
-		
-   (venv)$ pip3 install cloudnetpy
-
-That's it! Processing is easy using CloudnetPy's high level APIs.
+Processing is easy using CloudnetPy's high level APIs.
 
 Radar processing
 ----------------
@@ -116,13 +89,4 @@ product, the classification product.
 
     from cloudnetpy.products.classification import generate_classification
     generate_classification('categorize.nc', 'classification.nc')
-
-
-.. note::
-
-   CloudnetPy codebase is rapidly developing and the PyPI package does not
-   contain all the latest features and modifications. To get an up-to-date
-   version of CloudnetPy, download it directly from `GitHub
-   <https://github.com/tukiains/cloudnetpy>`_.
-
 
