@@ -45,12 +45,14 @@ generated.
 Visualizing results
 ...................
 
-CloudnetPy offers easy-to-use plotting interface.
+CloudnetPy offers easy-to-use plotting interface:
 
 .. autofunction:: plotting.plotting.generate_figure
 
-There is also possibility to compare old Cloudnet files with the new
-CloudnetPy files.
+There is also possibility to compare CloundetPy files with the
+Matlab-processed old files which are available from `devcloudnet.fmi.fi
+<http://devcloudnet.fmi.fi>`_:
+
 
 .. autofunction:: plotting.plotting.compare_files
 
