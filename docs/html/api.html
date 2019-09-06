@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>High-level APIs &mdash; CloudnetPy 1.0.0 documentation</title>
+  <title>API reference &mdash; CloudnetPy 1.0.0 documentation</title>
   
 
   
@@ -88,24 +88,30 @@
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Instructions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">High-level APIs</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#raw-data-to-categorize">Raw data to categorize</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#categorize-to-products">Categorize to products</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#visualizing-results">Visualizing results</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#high-level-functions">High-level functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#raw-data-to-categorize">Raw data to categorize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#categorize-to-products">Categorize to products</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visualizing-results">Visualizing results</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#categorize-subpackage">Categorize subpackage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-categorize.classify">cloudnetpy.categorize.classify</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-categorize.atmos">cloudnetpy.categorize.atmos</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-categorize.droplet">cloudnetpy.categorize.droplet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#categorize-subpackage">Categorize subpackage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-categorize.classify">cloudnetpy.categorize.classify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-categorize.atmos">cloudnetpy.categorize.atmos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-categorize.droplet">cloudnetpy.categorize.droplet</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#products-sub-package">Products sub-package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-products.classification">cloudnetpy.products.classification</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-products.iwc">cloudnetpy.products.iwc</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-products.lwc">cloudnetpy.products.lwc</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-products.drizzle">cloudnetpy.products.drizzle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#products-subpackage">Products subpackage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-products.classification">cloudnetpy.products.classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-products.iwc">cloudnetpy.products.iwc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-products.lwc">cloudnetpy.products.lwc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-products.drizzle">cloudnetpy.products.drizzle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#misc">Misc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
@@ -155,7 +161,7 @@
     
       <li><a href="index.html">Docs</a> &raquo;</li>
         
-      <li>High-level APIs</li>
+      <li>API reference</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -174,17 +180,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="high-level-apis">
-<h1>High-level APIs<a class="headerlink" href="#high-level-apis" title="Permalink to this headline">¶</a></h1>
-<p>CloudnetPy’s high-level APIs provide a simple way to process
-cloud remote sensing measurements into Cloudnet products, without
-needing to worry about implementation details.</p>
-<p>The APIs enable users to set up an operational processing
-system that doesn’t require major modifications
-if the underlying methods and their implementations change
-from one software version to another.</p>
+  <div class="section" id="api-reference">
+<h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="high-level-functions">
+<h2>High-level functions<a class="headerlink" href="#high-level-functions" title="Permalink to this headline">¶</a></h2>
+<p>CloudnetPy’s high-level functions provide a simple mechanism to process
+cloud remote sensing measurements into Cloudnet products. A full processing
+goes in steps. Each step produces a file which used as an input for the
+next step.</p>
 <div class="section" id="raw-data-to-categorize">
-<h2>Raw data to categorize<a class="headerlink" href="#raw-data-to-categorize" title="Permalink to this headline">¶</a></h2>
+<h3>Raw data to categorize<a class="headerlink" href="#raw-data-to-categorize" title="Permalink to this headline">¶</a></h3>
 <p>Cloudnet instruments provide raw data in various formats that need to
 be first converted into netCDF with standardized metadata. After that,
 the data can be combined in a single categorize file.</p>
@@ -335,7 +340,7 @@ a mwr-file as well, i.e. {‘mwr’: ‘radar.nc’}.</p>
 
 </div>
 <div class="section" id="categorize-to-products">
-<h2>Categorize to products<a class="headerlink" href="#categorize-to-products" title="Permalink to this headline">¶</a></h2>
+<h3>Categorize to products<a class="headerlink" href="#categorize-to-products" title="Permalink to this headline">¶</a></h3>
 <p>Starting from the categorize file, several geophysical products can be
 generated.</p>
 <dl class="function">
@@ -457,7 +462,7 @@ J. Appl. Meteor., 44, 14–27, <a class="reference external" href="https://doi.o
 
 </div>
 <div class="section" id="visualizing-results">
-<h2>Visualizing results<a class="headerlink" href="#visualizing-results" title="Permalink to this headline">¶</a></h2>
+<h3>Visualizing results<a class="headerlink" href="#visualizing-results" title="Permalink to this headline">¶</a></h3>
 <p>CloudnetPy offers easy-to-use plotting interface.</p>
 <dl class="function">
 <dt id="plotting.plotting.generate_figure">
@@ -526,8 +531,1121 @@ Overrides the <em>save_path</em> option. Default is None.</li>
 </dd></dl>
 
 </div>
+</div>
+<div class="section" id="categorize-subpackage">
+<h2>Categorize subpackage<a class="headerlink" href="#categorize-subpackage" title="Permalink to this headline">¶</a></h2>
+<p>Categorize is a CloudnetPy’s subpackage. It contains
+several modules that are used when creating the Cloudnet
+categorize file.</p>
+<div class="section" id="module-categorize.classify">
+<span id="cloudnetpy-categorize-classify"></span><h3>cloudnetpy.categorize.classify<a class="headerlink" href="#module-categorize.classify" title="Permalink to this headline">¶</a></h3>
+<p>Module containing low-level functions to classify gridded
+radar / lidar measurements.</p>
+<dl class="function">
+<dt id="categorize.classify.fetch_quality">
+<code class="descclassname">categorize.classify.</code><code class="descname">fetch_quality</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>classification</em>, <em>attenuations</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#fetch_quality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.fetch_quality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns Cloudnet quality bits.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>radar</strong> (<em>Radar</em>) – Radar data container.</li>
+<li><strong>lidar</strong> (<em>Lidar</em>) – Lidar data container.</li>
+<li><strong>classification</strong> (<em>_ClassificationResult</em>) – Container for classification
+results.</li>
+<li><strong>attenuations</strong> (<em>dict</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>Integer array containing the following bits:</dt>
+<dd><ul class="first last simple">
+<li>bit 0: Pixel contains radar data</li>
+<li>bit 1: Pixel contains lidar data</li>
+<li>bit 2: Pixel contaminated by radar clutter</li>
+<li>bit 3: Molecular scattering present (currently not implemented!)</li>
+<li>bit 4: Pixel was affected by liquid attenuation</li>
+<li>bit 5: Liquid attenuation was corrected</li>
+</ul>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">classify.fetch_cat_bits()</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.classify.classify_measurements">
+<code class="descclassname">categorize.classify.</code><code class="descname">classify_measurements</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>model</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#classify_measurements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.classify_measurements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classifies radar/lidar observations.</p>
+<p>This function classifies atmospheric scatterer from the input data.
+The input data needs to be averaged or interpolated to the common
+time / height grid before calling this function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>radar</strong> (<em>Radar</em>) – A Radar object.</li>
+<li><strong>lidar</strong> (<em>Lidar</em>) – A Lidar object.</li>
+<li><strong>model</strong> (<em>Model</em>) – A Model object.</li>
+<li><strong>mwr</strong> (<em>Mwr</em>) – A Mwr object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>Object containing the result</dt>
+<dd><p class="first last">of classification.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">_ClassificationResult</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">classify.fetch_qual_bits()</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.classify.find_melting_layer">
+<code class="descclassname">categorize.classify.</code><code class="descname">find_melting_layer</code><span class="sig-paren">(</span><em>obs</em>, <em>smooth=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_melting_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_melting_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds melting layer from model temperature, ldr, and velocity.</p>
+<p>Melting layer is detected using linear depolarization ratio, <em>ldr</em>,
+Doppler velocity, <em>v</em>, and wet-bulb temperature, <em>Tw</em>.</p>
+<p>The algorithm is based on <em>ldr</em> having a clear Gaussian peak around
+the melting layer. This signature is caused by the growth of ice
+crystals into snowflakes that are much larger. In addition, when snow and
+ice melt, emerging heavy water droplets start to drop rapidly towards
+ground. Thus, there is also a similar positive peak in the
+first difference of <em>v</em>.</p>
+<p>The peak in <em>ldr</em> is the primary parameter we analyze. If
+<em>ldr</em> has a proper peak, and <em>v</em> &lt; -1 m/s in the base, melting layer
+has been found. If <em>ldr</em> is missing we only analyze the behaviour
+of <em>v</em>, which is always present, to detect the melting layer.</p>
+<p>Model temperature is used to limit the melting layer search to a certain
+temperature range around 0 C. For ECMWF the range is -4..+3, and for
+the rest -8..+6.</p>
+<p class="rubric">Notes</p>
+<p>There might be some detection problems with strong updrafts of air.
+In these cases the absolute values for speed do not make sense (rain
+drops can even move upwards instead of down).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
+<li><strong>smooth</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, apply a small
+Gaussian smoother to the melting layer. Default is True.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the melting layer.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.classify.find_freezing_region">
+<code class="descclassname">categorize.classify.</code><code class="descname">find_freezing_region</code><span class="sig-paren">(</span><em>obs</em>, <em>melting_layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_freezing_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_freezing_region" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds freezing region using the model temperature and melting layer.</p>
+<p>Every profile that contains melting layer, subzero region starts from
+the mean melting layer height. If there are (long) time windows where
+no melting layer is present, model temperature is used in the
+middle of the time window. Finally, the subzero altitudes are linearly
+interpolated for all profiles.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
+<li><strong>melting_layer</strong> (<em>ndarray</em>) – 2-D boolean array denoting melting layer.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the sub-zero region.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>It is not clear how model temperature and melting layer should be
+ideally combined to determine the sub-zero region.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.classify.find_t0_alt">
+<code class="descclassname">categorize.classify.</code><code class="descname">find_t0_alt</code><span class="sig-paren">(</span><em>temperature</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_t0_alt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_t0_alt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates altitudes where temperature goes below freezing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>temperature</strong> (<em>ndarray</em>) – 2-D temperature (K).</li>
+<li><strong>height</strong> (<em>ndarray</em>) – 1-D altitude grid (m).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">1-D array denoting altitudes where the
+temperature drops below 0 deg C.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.classify.find_insects">
+<code class="descclassname">categorize.classify.</code><code class="descname">find_insects</code><span class="sig-paren">(</span><em>obs</em>, <em>melting_layer</em>, <em>liquid_layers</em>, <em>prob_lim=0.8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_insects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_insects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns insect probability and boolean array of insect presence.</p>
+<p>Insects are classified by estimating heuristic probability
+of insects from various individual radar parameters and combining
+these probabilities. Insects typically yield small echo and spectral width
+but high linear depolarization ratio (ldr), and they are present in warm
+temperatures.</p>
+<p>The combination of echo, ldr and temperature is generally the best proxy
+for insects. If ldr is not available, we use other radar parameters.</p>
+<p>Insects are finally screened from liquid layers and melting layer - and
+above melting layer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
+<li><strong>melting_layer</strong> (<em>ndarray</em>) – 2D array denoting melting layer.</li>
+<li><strong>liquid_layers</strong> (<em>ndarray</em>) – 2D array denoting liquid layers.</li>
+<li><strong>prob_lim</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability higher than
+this will lead to positive detection. Default is 0.8.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>2-element tuple containing</p>
+<ul class="simple">
+<li>ndarray: 2-D probability of pixel containing insects.</li>
+<li>ndarray: 2-D boolean flag of insects presence.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.classify.find_falling_hydrometeors">
+<code class="descclassname">categorize.classify.</code><code class="descname">find_falling_hydrometeors</code><span class="sig-paren">(</span><em>obs</em>, <em>is_liquid</em>, <em>is_insects</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_falling_hydrometeors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_falling_hydrometeors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds falling hydrometeors.</p>
+<p>Falling hydrometeors are radar signals that are
+a) not insects b) not clutter. Furthermore, falling hydrometeors
+are strong lidar pixels excluding liquid layers (thus these pixels
+are ice or rain). They are also weak radar signals in very cold
+temperatures.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
+<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
+<li><strong>is_insects</strong> (<em>ndarray</em>) – 2-D boolean array of insects.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing falling hydrometeors.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.classify.find_aerosols">
+<code class="descclassname">categorize.classify.</code><code class="descname">find_aerosols</code><span class="sig-paren">(</span><em>obs</em>, <em>is_falling</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_aerosols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_aerosols" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates aerosols from lidar backscattering.</p>
+<p>Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
+<li><strong>is_falling</strong> (<em>ndarray</em>) – 2-D boolean array of falling hydrometeors.</li>
+<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing aerosols.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-categorize.atmos">
+<span id="cloudnetpy-categorize-atmos"></span><h3>cloudnetpy.categorize.atmos<a class="headerlink" href="#module-categorize.atmos" title="Permalink to this headline">¶</a></h3>
+<p>This module contains functions to calculate
+various atmospheric parameters.</p>
+<dl class="function">
+<dt id="categorize.atmos.calc_lwc_change_rate">
+<code class="descclassname">categorize.atmos.</code><code class="descname">calc_lwc_change_rate</code><span class="sig-paren">(</span><em>temperature</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_lwc_change_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_lwc_change_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns rate of change of condensable water (LWC).</p>
+<p>Calculates the theoretical adiabatic rate of increase of LWC
+with height, given the cloud base temperature and pressure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>temperature</strong> (<em>ndarray</em>) – Temperature of cloud base (K).</li>
+<li><strong>pressure</strong> (<em>ndarray</em>) – Pressure of cloud base (Pa).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dlwc/dz (g m-3 m-1)</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>Brenguier, 1991, <a class="reference external" href="https://bit.ly/2QCSJtb">https://bit.ly/2QCSJtb</a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.calc_saturation_vapor_pressure">
+<code class="descclassname">categorize.atmos.</code><code class="descname">calc_saturation_vapor_pressure</code><span class="sig-paren">(</span><em>temperature</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_saturation_vapor_pressure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_saturation_vapor_pressure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>temperature</strong> (<em>ndarray</em>) – Temperature (K).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Saturation vapor pressure (Pa).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.calc_mixing_ratio">
+<code class="descclassname">categorize.atmos.</code><code class="descname">calc_mixing_ratio</code><span class="sig-paren">(</span><em>svp</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_mixing_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_mixing_ratio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates mixing ratio from saturation vapor pressure and pressure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>svp</strong> (<em>ndarray</em>) – Saturation vapor pressure (Pa).</li>
+<li><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Mixing ratio (kg kg-1).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.calc_air_density">
+<code class="descclassname">categorize.atmos.</code><code class="descname">calc_air_density</code><span class="sig-paren">(</span><em>pressure</em>, <em>temperature</em>, <em>svp_mixing_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_air_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_air_density" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates air density (kg m-3).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>pressure</strong> (<em>ndarray</em>) – Pressure (Pa).</li>
+<li><strong>temperature</strong> (<em>ndarray</em>) – Temperature (K).</li>
+<li><strong>svp_mixing_ratio</strong> (<em>ndarray</em>) – Saturation vapor pressure mixing ratio (kg/kg).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Air density (kg m-3).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.calc_psychrometric_constant">
+<code class="descclassname">categorize.atmos.</code><code class="descname">calc_psychrometric_constant</code><span class="sig-paren">(</span><em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_psychrometric_constant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_psychrometric_constant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns psychrometric constant.</p>
+<p>Psychrometric constant relates the partial pressure
+of water in air to the air temperature.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Psychrometric constant value (Pa K-1)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.calc_wet_bulb_temperature">
+<code class="descclassname">categorize.atmos.</code><code class="descname">calc_wet_bulb_temperature</code><span class="sig-paren">(</span><em>model_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_wet_bulb_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_wet_bulb_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns wet bulb temperature.</p>
+<p>Returns wet bulb temperature for given temperature,
+pressure and relative humidity. Algorithm is based on a Taylor
+expansion of a simple expression for the saturated vapour pressure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model_data</strong> (<em>dict</em>) – Model variables ‘temperature’, ‘pressure’, ‘rh’.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Wet bulb temperature (K).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>J. Sullivan and L. D. Sanders: Method for obtaining wet-bulb
+temperatures by modifying the psychrometric formula.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.calc_dew_point_temperature">
+<code class="descclassname">categorize.atmos.</code><code class="descname">calc_dew_point_temperature</code><span class="sig-paren">(</span><em>vapor_pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_dew_point_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_dew_point_temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns dew point temperature.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vapor_pressure</strong> (<em>ndarray</em>) – Water vapor pressure (Pa).</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dew point temperature (K).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>Method from Vaisala’s white paper: “Humidity conversion formulas”.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.get_attenuations">
+<code class="descclassname">categorize.atmos.</code><code class="descname">get_attenuations</code><span class="sig-paren">(</span><em>model</em>, <em>mwr</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#get_attenuations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.get_attenuations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates attenuations due to atmospheric gases and liquid water.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model</strong> (<em>Model</em>) – Model data.</li>
+<li><strong>mwr</strong> (<em>Mwr</em>) – Mwr data.</li>
+<li><strong>classification</strong> (<em>ClassificationResult</em>) – Classified atmospheric
+scatterers.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
+<dt>Dict containing ‘radar_gas_atten’, ‘radar_liquid_atten’,</dt>
+<dd><p class="first last">’liquid_atten_err’, ‘liquid_corrected’ and ‘liquid_uncorrected’
+fields.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="categorize.atmos.Attenuation">
+<em class="property">class </em><code class="descclassname">categorize.atmos.</code><code class="descname">Attenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#Attenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.Attenuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for gas and liquid attenuations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="categorize.atmos.GasAttenuation">
+<em class="property">class </em><code class="descclassname">categorize.atmos.</code><code class="descname">GasAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#GasAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.GasAttenuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Radar gas attenuation class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="categorize.atmos.LiquidAttenuation">
+<em class="property">class </em><code class="descclassname">categorize.atmos.</code><code class="descname">LiquidAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#LiquidAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.LiquidAttenuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Radar liquid attenuation class.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.fill_clouds_with_lwc_dz">
+<code class="descclassname">categorize.atmos.</code><code class="descname">fill_clouds_with_lwc_dz</code><span class="sig-paren">(</span><em>atmosphere</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#fill_clouds_with_lwc_dz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.fill_clouds_with_lwc_dz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills liquid clouds with lwc change rate at the cloud bases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>atmosphere</strong> (<em>tuple</em>) – 2-element tuple containing temperature (K) and pressure (Pa).</li>
+<li><strong>is_liquid</strong> (<em>ndarray</em>) – Boolean array indicating presence of liquid clouds.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><dl class="docutils">
+<dt>liquid water content change rate (g/m3/m), so that for each cloud</dt>
+<dd><p class="first last">the base value is filled for the whole cloud.</p>
+</dd>
+</dl>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.get_lwc_change_rate_at_bases">
+<code class="descclassname">categorize.atmos.</code><code class="descname">get_lwc_change_rate_at_bases</code><span class="sig-paren">(</span><em>atmosphere</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#get_lwc_change_rate_at_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.get_lwc_change_rate_at_bases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds LWC change rate in liquid cloud bases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>atmosphere</strong> (<em>tuple</em>) – 2-element tuple containing temperature (K) and
+pressure (Pa).</li>
+<li><strong>is_liquid</strong> (<em>ndarray</em>) – Boolean array indicating presence of liquid clouds.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">liquid water content change rate at cloud bases (kg/m3/m).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.find_cloud_bases">
+<code class="descclassname">categorize.atmos.</code><code class="descname">find_cloud_bases</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#find_cloud_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.find_cloud_bases" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds bases of clouds.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2D boolean array denoting clouds or some other
+similar field.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Boolean array indicating bases of the individual clouds.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.calc_adiabatic_lwc">
+<code class="descclassname">categorize.atmos.</code><code class="descname">calc_adiabatic_lwc</code><span class="sig-paren">(</span><em>lwc_change_rate</em>, <em>dheight</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_adiabatic_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_adiabatic_lwc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates adiabatic liquid water content (g/m3).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lwc_change_rate</strong> (<em>ndarray</em>) – Liquid water content change rate (g/m3/m)
+calculated at the base of each cloud and filled to that cloud.</li>
+<li><strong>dheight</strong> – Median difference of the height vector (m).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Liquid water content (g/m3).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.distribute_lwp_to_liquid_clouds">
+<code class="descclassname">categorize.atmos.</code><code class="descname">distribute_lwp_to_liquid_clouds</code><span class="sig-paren">(</span><em>lwc</em>, <em>lwp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#distribute_lwp_to_liquid_clouds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.distribute_lwp_to_liquid_clouds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds LWC that would produce measured LWP.</p>
+<p>Calculates LWP-weighted, normalized LWC. This is the measured
+LWP distributed to liquid cloud pixels according to their
+theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>lwc</strong> (<em>ndarray</em>) – 2D liquid water content (g/m3).</li>
+<li><strong>lwp</strong> (<em>ndarray</em>) – 1D liquid water path (g/m2).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2D LWP-weighted, normalized LWC (g/m2).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.c2k">
+<code class="descclassname">categorize.atmos.</code><code class="descname">c2k</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#c2k"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.c2k" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts Celsius to Kelvins.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.atmos.k2c">
+<code class="descclassname">categorize.atmos.</code><code class="descname">k2c</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#k2c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.k2c" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts Kelvins to Celsius.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-categorize.droplet">
+<span id="cloudnetpy-categorize-droplet"></span><h3>cloudnetpy.categorize.droplet<a class="headerlink" href="#module-categorize.droplet" title="Permalink to this headline">¶</a></h3>
+<p>This module has functions for liquid layer detection.</p>
+<dl class="function">
+<dt id="categorize.droplet.find_liquid">
+<code class="descclassname">categorize.droplet.</code><code class="descname">find_liquid</code><span class="sig-paren">(</span><em>obs</em>, <em>peak_amp=1e-06</em>, <em>max_width=300</em>, <em>min_points=3</em>, <em>min_top_der=1e-07</em>, <em>min_lwp=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#find_liquid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.find_liquid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimate liquid layers from SNR-screened attenuated backscattering.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
+<li><strong>peak_amp</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value of peak. Default is 2e-5.</li>
+<li><strong>max_width</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum width of peak. Default is 300 (m).</li>
+<li><strong>min_points</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimum number of valid points in peak.
+Default is 3.</li>
+<li><strong>min_top_der</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum derivative above peak,
+defined as (beta_peak-beta_top) / (alt_top-alt_peak), which
+is always positive. Default is 2e-7.</li>
+<li><strong>min_lwp</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value from linearly interpolated lwp
+measured by the mwr. Default is 0.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dict containing ‘presence’, ‘bases’ and ‘tops’.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.droplet.ind_base">
+<code class="descclassname">categorize.droplet.</code><code class="descname">ind_base</code><span class="sig-paren">(</span><em>dprof</em>, <em>p</em>, <em>dist</em>, <em>lim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#ind_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.ind_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds base index of a peak in profile.</p>
+<p>Return the lowermost index of profile where 1st order differences
+below the peak exceed a threshold value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dprof</strong> (<em>ndarray</em>) – 1-D array of 1st discrete difference.
+Masked values should be 0, e.g. dprof =
+np.diff(masked_prof).filled(0)</li>
+<li><strong>p</strong> (<em>int</em>) – Index of (possibly local) peak in the original profile.
+Note that the peak must be found with some other method prior
+calling this function.</li>
+<li><strong>dist</strong> (<em>int</em>) – Number of elements investigated below <em>p</em>.
+If ( <em>p</em> - <em>dist</em>)&lt;0, search starts from index 0.</li>
+<li><strong>lim</strong> (<em>float</em>) – Parameter for base index. Values greater than 1.0
+are valid. Values close to 1 most likely return the
+point right below the maximum 1st order difference
+(within <em>dist</em> points below <em>p</em>).
+Values larger than 1 more likely
+accept some other point, lower in the profile.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Base index of the peak.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Consider a profile</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">99</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>that contains one bad, masked value</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mx</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="go">    [0 0.5, 1.0, --, 4.0, 8.0, 5.0]</span>
+</pre></div>
+</div>
+<p>The 1st order difference is now</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mx</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="go">    [0.5 0.5,  0. ,  0. ,  4. , -3. ]</span>
+</pre></div>
+</div>
+<p>From the original profile we see that the peak index is 5.
+Let’s assume our base can’t be more than 4 elements below
+peak and the threshold value is 2. Thus we call</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ind_base</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="go">    4</span>
+</pre></div>
+</div>
+<p>When x[4] is the lowermost point that satisfies the condition.
+Changing the threshold value would alter the result</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ind_base</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="go">    1</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">droplet.ind_top()</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.droplet.ind_top">
+<code class="descclassname">categorize.droplet.</code><code class="descname">ind_top</code><span class="sig-paren">(</span><em>dprof</em>, <em>p</em>, <em>nprof</em>, <em>dist</em>, <em>lim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#ind_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.ind_top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds top index of a peak in profile.</p>
+<p>Return the uppermost index of profile where 1st order differences
+above the peak exceed a threshold value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dprof</strong> (<em>ndarray</em>) – 1-D array of 1st discrete difference.
+Masked values should be 0, e.g. dprof =
+np.diff(masked_prof).filled(0)</li>
+<li><strong>nprof</strong> (<em>int</em>) – Length of the profile. Top index can’t be higher
+than this.</li>
+<li><strong>p</strong> (<em>int</em>) – Index of (possibly local) peak in the profile.
+Note that the peak must be found with some other method prior
+calling this function.</li>
+<li><strong>dist</strong> (<em>int</em>) – Number of elements investigated above <em>p</em>.
+If (<em>p</em> + <em>dist</em>) &gt; <em>nprof</em>, search ends to <em>nprof</em>.</li>
+<li><strong>lim</strong> (<em>float</em>) – Parameter for top index. Values greater than 1.0
+are valid. Values close to 1 most likely return the
+point right above the maximum 1st order difference
+(within <em>dist</em> points above <em>p</em>).
+Values larger than 1 more likely
+accept some other point, higher in the profile.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Top index of the peak.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">droplet.ind_base()</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="categorize.droplet.correct_liquid_top">
+<code class="descclassname">categorize.droplet.</code><code class="descname">correct_liquid_top</code><span class="sig-paren">(</span><em>obs</em>, <em>liquid</em>, <em>is_freezing</em>, <em>limit=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#correct_liquid_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.correct_liquid_top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corrects lidar detected liquid cloud top using radar data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
+<li><strong>liquid</strong> (<em>dict</em>) – Dictionary for liquid clouds.</li>
+<li><strong>is_freezing</strong> (<em>ndarray</em>) – 2-D boolean array of sub-zero temperature,
+derived from the model temperature and melting layer based
+on radar data.</li>
+<li><strong>limit</strong> (<em>float</em>) – The maximum correction distance (m) above liquid cloud top.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Corrected liquid cloud array.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">droplet.find_liquid()</p>
+</div>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="products-subpackage">
+<h2>Products subpackage<a class="headerlink" href="#products-subpackage" title="Permalink to this headline">¶</a></h2>
+<p>Products is a CloudnetPy’s subpackage. It contains
+several modules that correspond to different Cloudnet
+products.</p>
+<div class="section" id="module-products.classification">
+<span id="cloudnetpy-products-classification"></span><h3>cloudnetpy.products.classification<a class="headerlink" href="#module-products.classification" title="Permalink to this headline">¶</a></h3>
+<p>Module for creating classification file.</p>
+<dl class="function">
+<dt>
+<code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet classification product.</p>
+<p>This function reads the initial classification masks from a
+categorize file and creates a more comprehensive classification
+for different atmospheric targets. The results are written in a
+netCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_classification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_classification</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-products.iwc">
+<span id="cloudnetpy-products-iwc"></span><h3>cloudnetpy.products.iwc<a class="headerlink" href="#module-products.iwc" title="Permalink to this headline">¶</a></h3>
+<p>Module for creating Cloudnet ice water content file
+using Z-T method.</p>
+<dl class="function">
+<dt>
+<code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet ice water content product.</p>
+<p>This function calculates ice water content using the so-called Z-T method.
+In this method, ice water content is calculated from attenuated-corrected
+radar reflectivity and model temperature. The results are written in a
+netCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.iwc</span> <span class="k">import</span> <span class="n">generate_iwc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<p>Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
+The Retrieval of Ice Water Content from Radar Reflectivity Factor and
+Temperature and Its Use in Evaluating a Mesoscale Model.
+J. Appl. Meteor. Climatol., 45, 301–317, <a class="reference external" href="https://doi.org/10.1175/JAM2340.1">https://doi.org/10.1175/JAM2340.1</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.iwc.IwcSource">
+<em class="property">class </em><code class="descclassname">products.iwc.</code><code class="descname">IwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#IwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.IwcSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class containing data needed in the ice water content Z-T method.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-products.lwc">
+<span id="cloudnetpy-products-lwc"></span><h3>cloudnetpy.products.lwc<a class="headerlink" href="#module-products.lwc" title="Permalink to this headline">¶</a></h3>
+<p>Module for creating Cloudnet liquid water content file
+using scaled-adiabatic method.</p>
+<dl class="function">
+<dt>
+<code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet liquid water content product.</p>
+<p>This function calculates cloud liquid water content using the so-called
+adiabatic-scaled method. In this method, liquid water content measured by
+microwave radiameter is used to constrain the theoretical liquid water
+content of observed liquid clouds. The results are written in a netCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.lwc</span> <span class="k">import</span> <span class="n">generate_lwc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<p>Illingworth, A.J., R.J. Hogan, E. O’Connor, D. Bouniol, M.E. Brooks,
+J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
+M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
+H.W. Russchenberg, A. Seifert, A.M. Tompkins, G. van Zadelhoff, F. Vinit,
+U. Willén, D.R. Wilson, and C.L. Wrench, 2007: Cloudnet.
+Bull. Amer. Meteor. Soc., 88, 883–898, <a class="reference external" href="https://doi.org/10.1175/BAMS-88-6-883">https://doi.org/10.1175/BAMS-88-6-883</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.lwc.LwcSource">
+<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">LwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#LwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.LwcSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data container for liquid water content calculations. It reads
+input data from a categorize file and provides data structures and
+methods for holding the results.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.lwc.Lwc">
+<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">Lwc</code><span class="sig-paren">(</span><em>lwc_source</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class handling the actual LWC calculations.</p>
+<dl class="method">
+<dt id="products.lwc.Lwc.adjust_clouds_to_match_lwp">
+<code class="descname">adjust_clouds_to_match_lwp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.adjust_clouds_to_match_lwp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.adjust_clouds_to_match_lwp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adjust clouds (where possible) so that theoretical and measured LWP agree.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="products.lwc.Lwc.calc_lwc_error">
+<code class="descname">calc_lwc_error</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.calc_lwc_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.calc_lwc_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates liquid water content error.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="products.lwc.Lwc.screen_rain">
+<code class="descname">screen_rain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.screen_rain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.screen_rain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Masks profiles with rain.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="products.lwc.find_topmost_clouds">
+<code class="descclassname">products.lwc.</code><code class="descname">find_topmost_clouds</code><span class="sig-paren">(</span><em>is_cloud</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#find_topmost_clouds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.find_topmost_clouds" title="Permalink to this definition">¶</a></dt>
+<dd><p>From 2d binary cloud field, return the uppermost cloud layer only.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>is_cloud</strong> (<em>ndarray</em>) – Boolean array denoting presence of clouds.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>Copy of input array containing only the uppermost cloud</dt>
+<dd>layer in each profile.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-products.drizzle">
+<span id="cloudnetpy-products-drizzle"></span><h3>cloudnetpy.products.drizzle<a class="headerlink" href="#module-products.drizzle" title="Permalink to this headline">¶</a></h3>
+<p>Module for creating Cloudnet drizzle product.</p>
+<dl class="function">
+<dt>
+<code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet drizzle product.</p>
+<p>This function calculates different drizzle properties from
+cloud radar and lidar measurements. The results are written in a netCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
+Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
+J. Appl. Meteor., 44, 14–27, <a class="reference external" href="https://doi.org/10.1175/JAM-2181.1">https://doi.org/10.1175/JAM-2181.1</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.drizzle.DrizzleSource">
+<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class holding the input data for drizzle calculations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.drizzle.DrizzleClassification">
+<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleClassification</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class storing the information about different drizzle types.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.correct_spectral_width">
+<code class="descclassname">products.drizzle.</code><code class="descname">correct_spectral_width</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#correct_spectral_width"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.correct_spectral_width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corrects spectral width.</p>
+<p>Removes the effect of turbulence and horizontal wind that cause
+spectral broadening of the Doppler velocity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> (<em>str</em>) – Categorize file name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>Spectral width containing the correction for turbulence</dt>
+<dd>broadening.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.calc_horizontal_wind">
+<code class="descclassname">products.drizzle.</code><code class="descname">calc_horizontal_wind</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_horizontal_wind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_horizontal_wind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates magnitude of horizontal wind.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> – Categorize file name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Horizontal wind (m s-1).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.drizzle_solve">
+<code class="descclassname">products.drizzle.</code><code class="descname">drizzle_solve</code><span class="sig-paren">(</span><em>data</em>, <em>drizzle_class</em>, <em>width_ht</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#drizzle_solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.drizzle_solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates drizzle parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<a class="reference internal" href="#products.drizzle.DrizzleSource" title="products.drizzle.DrizzleSource"><em>DrizzleSource</em></a>) – Input data.</li>
+<li><strong>drizzle_class</strong> (<a class="reference internal" href="#products.drizzle.DrizzleClassification" title="products.drizzle.DrizzleClassification"><em>DrizzleClassification</em></a>) – Classification of the atmosphere
+for drizzle calculations.</li>
+<li><strong>width_ht</strong> (<em>ndarray</em>) – Corrected spectral width.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.calc_dia">
+<code class="descclassname">products.drizzle.</code><code class="descname">calc_dia</code><span class="sig-paren">(</span><em>beta_z_ratio</em>, <em>mu=0</em>, <em>ray=1</em>, <em>k=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_dia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_dia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drizzle diameter calculation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>beta_z_ratio</strong> (<em>ndarray</em>) – Beta to z ratio, multiplied by (2 / pi).</li>
+<li><strong>mu</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Shape parameter for gamma calculations. Default is 0.</li>
+<li><strong>ray</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Mie to Rayleigh ratio for z. Default is 1.</li>
+<li><strong>k</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Alpha to beta ratio . Default is 1.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1">https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1</a></p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="misc">
+<h2>Misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h2>
+<p>Documentation for various modules with low-level
+functionality.</p>
 <div class="section" id="module-utils">
-<span id="cloudnetpy-utils"></span><h2>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-utils"></span><h3>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h3>
 <p>This module contains general
 helper functions.</p>
 <dl class="function">
@@ -1135,1113 +2253,6 @@ probability and vice versa. Default is False.</li>
 </dd></dl>
 
 </div>
-</div>
-<div class="section" id="categorize-subpackage">
-<h1>Categorize subpackage<a class="headerlink" href="#categorize-subpackage" title="Permalink to this headline">¶</a></h1>
-<p>Categorize is a CloudnetPy’s sub-package. It contains
-several modules that are used when creating the Cloudnet
-categorize file.</p>
-<div class="section" id="module-categorize.classify">
-<span id="cloudnetpy-categorize-classify"></span><h2>cloudnetpy.categorize.classify<a class="headerlink" href="#module-categorize.classify" title="Permalink to this headline">¶</a></h2>
-<p>Module containing low-level functions to classify gridded
-radar / lidar measurements.</p>
-<dl class="function">
-<dt id="categorize.classify.fetch_quality">
-<code class="descclassname">categorize.classify.</code><code class="descname">fetch_quality</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>classification</em>, <em>attenuations</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#fetch_quality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.fetch_quality" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns Cloudnet quality bits.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>radar</strong> (<em>Radar</em>) – Radar data container.</li>
-<li><strong>lidar</strong> (<em>Lidar</em>) – Lidar data container.</li>
-<li><strong>classification</strong> (<em>_ClassificationResult</em>) – Container for classification
-results.</li>
-<li><strong>attenuations</strong> (<em>dict</em>) – </li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt>Integer array containing the following bits:</dt>
-<dd><ul class="first last simple">
-<li>bit 0: Pixel contains radar data</li>
-<li>bit 1: Pixel contains lidar data</li>
-<li>bit 2: Pixel contaminated by radar clutter</li>
-<li>bit 3: Molecular scattering present (currently not implemented!)</li>
-<li>bit 4: Pixel was affected by liquid attenuation</li>
-<li>bit 5: Liquid attenuation was corrected</li>
-</ul>
-</dd>
-</dl>
-</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">classify.fetch_cat_bits()</p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.classify_measurements">
-<code class="descclassname">categorize.classify.</code><code class="descname">classify_measurements</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>model</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#classify_measurements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.classify_measurements" title="Permalink to this definition">¶</a></dt>
-<dd><p>Classifies radar/lidar observations.</p>
-<p>This function classifies atmospheric scatterer from the input data.
-The input data needs to be averaged or interpolated to the common
-time / height grid before calling this function.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>radar</strong> (<em>Radar</em>) – A Radar object.</li>
-<li><strong>lidar</strong> (<em>Lidar</em>) – A Lidar object.</li>
-<li><strong>model</strong> (<em>Model</em>) – A Model object.</li>
-<li><strong>mwr</strong> (<em>Mwr</em>) – A Mwr object.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt>Object containing the result</dt>
-<dd><p class="first last">of classification.</p>
-</dd>
-</dl>
-</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">_ClassificationResult</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">classify.fetch_qual_bits()</p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_melting_layer">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_melting_layer</code><span class="sig-paren">(</span><em>obs</em>, <em>smooth=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_melting_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_melting_layer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds melting layer from model temperature, ldr, and velocity.</p>
-<p>Melting layer is detected using linear depolarization ratio, <em>ldr</em>,
-Doppler velocity, <em>v</em>, and wet-bulb temperature, <em>Tw</em>.</p>
-<p>The algorithm is based on <em>ldr</em> having a clear Gaussian peak around
-the melting layer. This signature is caused by the growth of ice
-crystals into snowflakes that are much larger. In addition, when snow and
-ice melt, emerging heavy water droplets start to drop rapidly towards
-ground. Thus, there is also a similar positive peak in the
-first difference of <em>v</em>.</p>
-<p>The peak in <em>ldr</em> is the primary parameter we analyze. If
-<em>ldr</em> has a proper peak, and <em>v</em> &lt; -1 m/s in the base, melting layer
-has been found. If <em>ldr</em> is missing we only analyze the behaviour
-of <em>v</em>, which is always present, to detect the melting layer.</p>
-<p>Model temperature is used to limit the melting layer search to a certain
-temperature range around 0 C. For ECMWF the range is -4..+3, and for
-the rest -8..+6.</p>
-<p class="rubric">Notes</p>
-<p>There might be some detection problems with strong updrafts of air.
-In these cases the absolute values for speed do not make sense (rain
-drops can even move upwards instead of down).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
-<li><strong>smooth</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, apply a small
-Gaussian smoother to the melting layer. Default is True.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the melting layer.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_freezing_region">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_freezing_region</code><span class="sig-paren">(</span><em>obs</em>, <em>melting_layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_freezing_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_freezing_region" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds freezing region using the model temperature and melting layer.</p>
-<p>Every profile that contains melting layer, subzero region starts from
-the mean melting layer height. If there are (long) time windows where
-no melting layer is present, model temperature is used in the
-middle of the time window. Finally, the subzero altitudes are linearly
-interpolated for all profiles.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
-<li><strong>melting_layer</strong> (<em>ndarray</em>) – 2-D boolean array denoting melting layer.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the sub-zero region.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>It is not clear how model temperature and melting layer should be
-ideally combined to determine the sub-zero region.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_t0_alt">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_t0_alt</code><span class="sig-paren">(</span><em>temperature</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_t0_alt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_t0_alt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interpolates altitudes where temperature goes below freezing.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>temperature</strong> (<em>ndarray</em>) – 2-D temperature (K).</li>
-<li><strong>height</strong> (<em>ndarray</em>) – 1-D altitude grid (m).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">1-D array denoting altitudes where the
-temperature drops below 0 deg C.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_insects">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_insects</code><span class="sig-paren">(</span><em>obs</em>, <em>melting_layer</em>, <em>liquid_layers</em>, <em>prob_lim=0.8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_insects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_insects" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns insect probability and boolean array of insect presence.</p>
-<p>Insects are classified by estimating heuristic probability
-of insects from various individual radar parameters and combining
-these probabilities. Insects typically yield small echo and spectral width
-but high linear depolarization ratio (ldr), and they are present in warm
-temperatures.</p>
-<p>The combination of echo, ldr and temperature is generally the best proxy
-for insects. If ldr is not available, we use other radar parameters.</p>
-<p>Insects are finally screened from liquid layers and melting layer - and
-above melting layer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
-<li><strong>melting_layer</strong> (<em>ndarray</em>) – 2D array denoting melting layer.</li>
-<li><strong>liquid_layers</strong> (<em>ndarray</em>) – 2D array denoting liquid layers.</li>
-<li><strong>prob_lim</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability higher than
-this will lead to positive detection. Default is 0.8.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>2-element tuple containing</p>
-<ul class="simple">
-<li>ndarray: 2-D probability of pixel containing insects.</li>
-<li>ndarray: 2-D boolean flag of insects presence.</li>
-</ul>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_falling_hydrometeors">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_falling_hydrometeors</code><span class="sig-paren">(</span><em>obs</em>, <em>is_liquid</em>, <em>is_insects</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_falling_hydrometeors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_falling_hydrometeors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds falling hydrometeors.</p>
-<p>Falling hydrometeors are radar signals that are
-a) not insects b) not clutter. Furthermore, falling hydrometeors
-are strong lidar pixels excluding liquid layers (thus these pixels
-are ice or rain). They are also weak radar signals in very cold
-temperatures.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
-<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
-<li><strong>is_insects</strong> (<em>ndarray</em>) – 2-D boolean array of insects.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing falling hydrometeors.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_aerosols">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_aerosols</code><span class="sig-paren">(</span><em>obs</em>, <em>is_falling</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_aerosols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_aerosols" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimates aerosols from lidar backscattering.</p>
-<p>Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
-<li><strong>is_falling</strong> (<em>ndarray</em>) – 2-D boolean array of falling hydrometeors.</li>
-<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing aerosols.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-categorize.atmos">
-<span id="cloudnetpy-categorize-atmos"></span><h2>cloudnetpy.categorize.atmos<a class="headerlink" href="#module-categorize.atmos" title="Permalink to this headline">¶</a></h2>
-<p>This module contains functions to calculate
-various atmospheric parameters.</p>
-<dl class="function">
-<dt id="categorize.atmos.calc_lwc_change_rate">
-<code class="descclassname">categorize.atmos.</code><code class="descname">calc_lwc_change_rate</code><span class="sig-paren">(</span><em>temperature</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_lwc_change_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_lwc_change_rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns rate of change of condensable water (LWC).</p>
-<p>Calculates the theoretical adiabatic rate of increase of LWC
-with height, given the cloud base temperature and pressure.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>temperature</strong> (<em>ndarray</em>) – Temperature of cloud base (K).</li>
-<li><strong>pressure</strong> (<em>ndarray</em>) – Pressure of cloud base (Pa).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dlwc/dz (g m-3 m-1)</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">References</p>
-<p>Brenguier, 1991, <a class="reference external" href="https://bit.ly/2QCSJtb">https://bit.ly/2QCSJtb</a></p>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.calc_saturation_vapor_pressure">
-<code class="descclassname">categorize.atmos.</code><code class="descname">calc_saturation_vapor_pressure</code><span class="sig-paren">(</span><em>temperature</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_saturation_vapor_pressure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_saturation_vapor_pressure" title="Permalink to this definition">¶</a></dt>
-<dd><p>Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>temperature</strong> (<em>ndarray</em>) – Temperature (K).</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Saturation vapor pressure (Pa).</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.calc_mixing_ratio">
-<code class="descclassname">categorize.atmos.</code><code class="descname">calc_mixing_ratio</code><span class="sig-paren">(</span><em>svp</em>, <em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_mixing_ratio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_mixing_ratio" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates mixing ratio from saturation vapor pressure and pressure.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>svp</strong> (<em>ndarray</em>) – Saturation vapor pressure (Pa).</li>
-<li><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Mixing ratio (kg kg-1).</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.calc_air_density">
-<code class="descclassname">categorize.atmos.</code><code class="descname">calc_air_density</code><span class="sig-paren">(</span><em>pressure</em>, <em>temperature</em>, <em>svp_mixing_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_air_density"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_air_density" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates air density (kg m-3).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pressure</strong> (<em>ndarray</em>) – Pressure (Pa).</li>
-<li><strong>temperature</strong> (<em>ndarray</em>) – Temperature (K).</li>
-<li><strong>svp_mixing_ratio</strong> (<em>ndarray</em>) – Saturation vapor pressure mixing ratio (kg/kg).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Air density (kg m-3).</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.calc_psychrometric_constant">
-<code class="descclassname">categorize.atmos.</code><code class="descname">calc_psychrometric_constant</code><span class="sig-paren">(</span><em>pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_psychrometric_constant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_psychrometric_constant" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns psychrometric constant.</p>
-<p>Psychrometric constant relates the partial pressure
-of water in air to the air temperature.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pressure</strong> (<em>ndarray</em>) – Atmospheric pressure (Pa).</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Psychrometric constant value (Pa K-1)</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.calc_wet_bulb_temperature">
-<code class="descclassname">categorize.atmos.</code><code class="descname">calc_wet_bulb_temperature</code><span class="sig-paren">(</span><em>model_data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_wet_bulb_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_wet_bulb_temperature" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns wet bulb temperature.</p>
-<p>Returns wet bulb temperature for given temperature,
-pressure and relative humidity. Algorithm is based on a Taylor
-expansion of a simple expression for the saturated vapour pressure.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model_data</strong> (<em>dict</em>) – Model variables ‘temperature’, ‘pressure’, ‘rh’.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Wet bulb temperature (K).</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">References</p>
-<p>J. Sullivan and L. D. Sanders: Method for obtaining wet-bulb
-temperatures by modifying the psychrometric formula.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.calc_dew_point_temperature">
-<code class="descclassname">categorize.atmos.</code><code class="descname">calc_dew_point_temperature</code><span class="sig-paren">(</span><em>vapor_pressure</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_dew_point_temperature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_dew_point_temperature" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns dew point temperature.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vapor_pressure</strong> (<em>ndarray</em>) – Water vapor pressure (Pa).</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Dew point temperature (K).</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>Method from Vaisala’s white paper: “Humidity conversion formulas”.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.get_attenuations">
-<code class="descclassname">categorize.atmos.</code><code class="descname">get_attenuations</code><span class="sig-paren">(</span><em>model</em>, <em>mwr</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#get_attenuations"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.get_attenuations" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates attenuations due to atmospheric gases and liquid water.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>model</strong> (<em>Model</em>) – Model data.</li>
-<li><strong>mwr</strong> (<em>Mwr</em>) – Mwr data.</li>
-<li><strong>classification</strong> (<em>ClassificationResult</em>) – Classified atmospheric
-scatterers.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt>Dict containing ‘radar_gas_atten’, ‘radar_liquid_atten’,</dt>
-<dd><p class="first last">’liquid_atten_err’, ‘liquid_corrected’ and ‘liquid_uncorrected’
-fields.</p>
-</dd>
-</dl>
-</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="class">
-<dt id="categorize.atmos.Attenuation">
-<em class="property">class </em><code class="descclassname">categorize.atmos.</code><code class="descname">Attenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#Attenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.Attenuation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Base class for gas and liquid attenuations.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="categorize.atmos.GasAttenuation">
-<em class="property">class </em><code class="descclassname">categorize.atmos.</code><code class="descname">GasAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#GasAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.GasAttenuation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Radar gas attenuation class.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="categorize.atmos.LiquidAttenuation">
-<em class="property">class </em><code class="descclassname">categorize.atmos.</code><code class="descname">LiquidAttenuation</code><span class="sig-paren">(</span><em>model</em>, <em>classification</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#LiquidAttenuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.LiquidAttenuation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Radar liquid attenuation class.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.fill_clouds_with_lwc_dz">
-<code class="descclassname">categorize.atmos.</code><code class="descname">fill_clouds_with_lwc_dz</code><span class="sig-paren">(</span><em>atmosphere</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#fill_clouds_with_lwc_dz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.fill_clouds_with_lwc_dz" title="Permalink to this definition">¶</a></dt>
-<dd><p>Fills liquid clouds with lwc change rate at the cloud bases.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>atmosphere</strong> (<em>tuple</em>) – 2-element tuple containing temperature (K) and pressure (Pa).</li>
-<li><strong>is_liquid</strong> (<em>ndarray</em>) – Boolean array indicating presence of liquid clouds.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><dl class="docutils">
-<dt>liquid water content change rate (g/m3/m), so that for each cloud</dt>
-<dd><p class="first last">the base value is filled for the whole cloud.</p>
-</dd>
-</dl>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.get_lwc_change_rate_at_bases">
-<code class="descclassname">categorize.atmos.</code><code class="descname">get_lwc_change_rate_at_bases</code><span class="sig-paren">(</span><em>atmosphere</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#get_lwc_change_rate_at_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.get_lwc_change_rate_at_bases" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds LWC change rate in liquid cloud bases.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>atmosphere</strong> (<em>tuple</em>) – 2-element tuple containing temperature (K) and
-pressure (Pa).</li>
-<li><strong>is_liquid</strong> (<em>ndarray</em>) – Boolean array indicating presence of liquid clouds.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">liquid water content change rate at cloud bases (kg/m3/m).</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.find_cloud_bases">
-<code class="descclassname">categorize.atmos.</code><code class="descname">find_cloud_bases</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#find_cloud_bases"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.find_cloud_bases" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds bases of clouds.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2D boolean array denoting clouds or some other
-similar field.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Boolean array indicating bases of the individual clouds.</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.calc_adiabatic_lwc">
-<code class="descclassname">categorize.atmos.</code><code class="descname">calc_adiabatic_lwc</code><span class="sig-paren">(</span><em>lwc_change_rate</em>, <em>dheight</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#calc_adiabatic_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.calc_adiabatic_lwc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates adiabatic liquid water content (g/m3).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>lwc_change_rate</strong> (<em>ndarray</em>) – Liquid water content change rate (g/m3/m)
-calculated at the base of each cloud and filled to that cloud.</li>
-<li><strong>dheight</strong> – Median difference of the height vector (m).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Liquid water content (g/m3).</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.distribute_lwp_to_liquid_clouds">
-<code class="descclassname">categorize.atmos.</code><code class="descname">distribute_lwp_to_liquid_clouds</code><span class="sig-paren">(</span><em>lwc</em>, <em>lwp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#distribute_lwp_to_liquid_clouds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.distribute_lwp_to_liquid_clouds" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds LWC that would produce measured LWP.</p>
-<p>Calculates LWP-weighted, normalized LWC. This is the measured
-LWP distributed to liquid cloud pixels according to their
-theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>lwc</strong> (<em>ndarray</em>) – 2D liquid water content (g/m3).</li>
-<li><strong>lwp</strong> (<em>ndarray</em>) – 1D liquid water path (g/m2).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2D LWP-weighted, normalized LWC (g/m2).</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.c2k">
-<code class="descclassname">categorize.atmos.</code><code class="descname">c2k</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#c2k"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.c2k" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts Celsius to Kelvins.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.atmos.k2c">
-<code class="descclassname">categorize.atmos.</code><code class="descname">k2c</code><span class="sig-paren">(</span><em>temp</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/atmos.html#k2c"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.atmos.k2c" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts Kelvins to Celsius.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-categorize.droplet">
-<span id="cloudnetpy-categorize-droplet"></span><h2>cloudnetpy.categorize.droplet<a class="headerlink" href="#module-categorize.droplet" title="Permalink to this headline">¶</a></h2>
-<p>This module has functions for liquid layer detection.</p>
-<dl class="function">
-<dt id="categorize.droplet.find_liquid">
-<code class="descclassname">categorize.droplet.</code><code class="descname">find_liquid</code><span class="sig-paren">(</span><em>obs</em>, <em>peak_amp=1e-06</em>, <em>max_width=300</em>, <em>min_points=3</em>, <em>min_top_der=1e-07</em>, <em>min_lwp=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#find_liquid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.find_liquid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimate liquid layers from SNR-screened attenuated backscattering.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
-<li><strong>peak_amp</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value of peak. Default is 2e-5.</li>
-<li><strong>max_width</strong> (<em>float</em><em>, </em><em>optional</em>) – Maximum width of peak. Default is 300 (m).</li>
-<li><strong>min_points</strong> (<em>int</em><em>, </em><em>optional</em>) – Minimum number of valid points in peak.
-Default is 3.</li>
-<li><strong>min_top_der</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum derivative above peak,
-defined as (beta_peak-beta_top) / (alt_top-alt_peak), which
-is always positive. Default is 2e-7.</li>
-<li><strong>min_lwp</strong> (<em>float</em><em>, </em><em>optional</em>) – Minimum value from linearly interpolated lwp
-measured by the mwr. Default is 0.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dict containing ‘presence’, ‘bases’ and ‘tops’.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.droplet.ind_base">
-<code class="descclassname">categorize.droplet.</code><code class="descname">ind_base</code><span class="sig-paren">(</span><em>dprof</em>, <em>p</em>, <em>dist</em>, <em>lim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#ind_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.ind_base" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds base index of a peak in profile.</p>
-<p>Return the lowermost index of profile where 1st order differences
-below the peak exceed a threshold value.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>dprof</strong> (<em>ndarray</em>) – 1-D array of 1st discrete difference.
-Masked values should be 0, e.g. dprof =
-np.diff(masked_prof).filled(0)</li>
-<li><strong>p</strong> (<em>int</em>) – Index of (possibly local) peak in the original profile.
-Note that the peak must be found with some other method prior
-calling this function.</li>
-<li><strong>dist</strong> (<em>int</em>) – Number of elements investigated below <em>p</em>.
-If ( <em>p</em> - <em>dist</em>)&lt;0, search starts from index 0.</li>
-<li><strong>lim</strong> (<em>float</em>) – Parameter for base index. Values greater than 1.0
-are valid. Values close to 1 most likely return the
-point right below the maximum 1st order difference
-(within <em>dist</em> points below <em>p</em>).
-Values larger than 1 more likely
-accept some other point, lower in the profile.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Base index of the peak.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<p>Consider a profile</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">99</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>that contains one bad, masked value</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mx</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="go">    [0 0.5, 1.0, --, 4.0, 8.0, 5.0]</span>
-</pre></div>
-</div>
-<p>The 1st order difference is now</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mx</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="go">    [0.5 0.5,  0. ,  0. ,  4. , -3. ]</span>
-</pre></div>
-</div>
-<p>From the original profile we see that the peak index is 5.
-Let’s assume our base can’t be more than 4 elements below
-peak and the threshold value is 2. Thus we call</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ind_base</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="go">    4</span>
-</pre></div>
-</div>
-<p>When x[4] is the lowermost point that satisfies the condition.
-Changing the threshold value would alter the result</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ind_base</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="go">    1</span>
-</pre></div>
-</div>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">droplet.ind_top()</p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.droplet.ind_top">
-<code class="descclassname">categorize.droplet.</code><code class="descname">ind_top</code><span class="sig-paren">(</span><em>dprof</em>, <em>p</em>, <em>nprof</em>, <em>dist</em>, <em>lim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#ind_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.ind_top" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds top index of a peak in profile.</p>
-<p>Return the uppermost index of profile where 1st order differences
-above the peak exceed a threshold value.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>dprof</strong> (<em>ndarray</em>) – 1-D array of 1st discrete difference.
-Masked values should be 0, e.g. dprof =
-np.diff(masked_prof).filled(0)</li>
-<li><strong>nprof</strong> (<em>int</em>) – Length of the profile. Top index can’t be higher
-than this.</li>
-<li><strong>p</strong> (<em>int</em>) – Index of (possibly local) peak in the profile.
-Note that the peak must be found with some other method prior
-calling this function.</li>
-<li><strong>dist</strong> (<em>int</em>) – Number of elements investigated above <em>p</em>.
-If (<em>p</em> + <em>dist</em>) &gt; <em>nprof</em>, search ends to <em>nprof</em>.</li>
-<li><strong>lim</strong> (<em>float</em>) – Parameter for top index. Values greater than 1.0
-are valid. Values close to 1 most likely return the
-point right above the maximum 1st order difference
-(within <em>dist</em> points above <em>p</em>).
-Values larger than 1 more likely
-accept some other point, higher in the profile.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Top index of the peak.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">droplet.ind_base()</p>
-</div>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.droplet.correct_liquid_top">
-<code class="descclassname">categorize.droplet.</code><code class="descname">correct_liquid_top</code><span class="sig-paren">(</span><em>obs</em>, <em>liquid</em>, <em>is_freezing</em>, <em>limit=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#correct_liquid_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.correct_liquid_top" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrects lidar detected liquid cloud top using radar data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
-<li><strong>liquid</strong> (<em>dict</em>) – Dictionary for liquid clouds.</li>
-<li><strong>is_freezing</strong> (<em>ndarray</em>) – 2-D boolean array of sub-zero temperature,
-derived from the model temperature and melting layer based
-on radar data.</li>
-<li><strong>limit</strong> (<em>float</em>) – The maximum correction distance (m) above liquid cloud top.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Corrected liquid cloud array.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">droplet.find_liquid()</p>
-</div>
-</dd></dl>
-
-</div>
-</div>
-<div class="section" id="products-sub-package">
-<h1>Products sub-package<a class="headerlink" href="#products-sub-package" title="Permalink to this headline">¶</a></h1>
-<p>Products is a CloudnetPy’s sub-package. It contains
-several modules that correspond to different Cloudnet
-products.</p>
-<div class="section" id="module-products.classification">
-<span id="cloudnetpy-products-classification"></span><h2>cloudnetpy.products.classification<a class="headerlink" href="#module-products.classification" title="Permalink to this headline">¶</a></h2>
-<p>Module for creating classification file.</p>
-<dl class="function">
-<dt>
-<code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Generates Cloudnet classification product.</p>
-<p>This function reads the initial classification masks from a
-categorize file and creates a more comprehensive classification
-for different atmospheric targets. The results are written in a
-netCDF file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
-<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_classification</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_classification</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div>
-<div class="section" id="module-products.iwc">
-<span id="cloudnetpy-products-iwc"></span><h2>cloudnetpy.products.iwc<a class="headerlink" href="#module-products.iwc" title="Permalink to this headline">¶</a></h2>
-<p>Module for creating Cloudnet ice water content file
-using Z-T method.</p>
-<dl class="function">
-<dt>
-<code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Generates Cloudnet ice water content product.</p>
-<p>This function calculates ice water content using the so-called Z-T method.
-In this method, ice water content is calculated from attenuated-corrected
-radar reflectivity and model temperature. The results are written in a
-netCDF file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
-<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.iwc</span> <span class="k">import</span> <span class="n">generate_iwc</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p class="rubric">References</p>
-<p>Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
-The Retrieval of Ice Water Content from Radar Reflectivity Factor and
-Temperature and Its Use in Evaluating a Mesoscale Model.
-J. Appl. Meteor. Climatol., 45, 301–317, <a class="reference external" href="https://doi.org/10.1175/JAM2340.1">https://doi.org/10.1175/JAM2340.1</a></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.iwc.IwcSource">
-<em class="property">class </em><code class="descclassname">products.iwc.</code><code class="descname">IwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#IwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.IwcSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class containing data needed in the ice water content Z-T method.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-products.lwc">
-<span id="cloudnetpy-products-lwc"></span><h2>cloudnetpy.products.lwc<a class="headerlink" href="#module-products.lwc" title="Permalink to this headline">¶</a></h2>
-<p>Module for creating Cloudnet liquid water content file
-using scaled-adiabatic method.</p>
-<dl class="function">
-<dt>
-<code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Generates Cloudnet liquid water content product.</p>
-<p>This function calculates cloud liquid water content using the so-called
-adiabatic-scaled method. In this method, liquid water content measured by
-microwave radiameter is used to constrain the theoretical liquid water
-content of observed liquid clouds. The results are written in a netCDF file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
-<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.lwc</span> <span class="k">import</span> <span class="n">generate_lwc</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p class="rubric">References</p>
-<p>Illingworth, A.J., R.J. Hogan, E. O’Connor, D. Bouniol, M.E. Brooks,
-J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
-M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
-H.W. Russchenberg, A. Seifert, A.M. Tompkins, G. van Zadelhoff, F. Vinit,
-U. Willén, D.R. Wilson, and C.L. Wrench, 2007: Cloudnet.
-Bull. Amer. Meteor. Soc., 88, 883–898, <a class="reference external" href="https://doi.org/10.1175/BAMS-88-6-883">https://doi.org/10.1175/BAMS-88-6-883</a></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.lwc.LwcSource">
-<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">LwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#LwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.LwcSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Data container for liquid water content calculations. It reads
-input data from a categorize file and provides data structures and
-methods for holding the results.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.lwc.Lwc">
-<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">Lwc</code><span class="sig-paren">(</span><em>lwc_source</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class handling the actual LWC calculations.</p>
-<dl class="method">
-<dt id="products.lwc.Lwc.adjust_clouds_to_match_lwp">
-<code class="descname">adjust_clouds_to_match_lwp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.adjust_clouds_to_match_lwp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.adjust_clouds_to_match_lwp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adjust clouds (where possible) so that theoretical and measured LWP agree.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="products.lwc.Lwc.calc_lwc_error">
-<code class="descname">calc_lwc_error</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.calc_lwc_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.calc_lwc_error" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates liquid water content error.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="products.lwc.Lwc.screen_rain">
-<code class="descname">screen_rain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.screen_rain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.screen_rain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Masks profiles with rain.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="products.lwc.find_topmost_clouds">
-<code class="descclassname">products.lwc.</code><code class="descname">find_topmost_clouds</code><span class="sig-paren">(</span><em>is_cloud</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#find_topmost_clouds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.find_topmost_clouds" title="Permalink to this definition">¶</a></dt>
-<dd><p>From 2d binary cloud field, return the uppermost cloud layer only.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>is_cloud</strong> (<em>ndarray</em>) – Boolean array denoting presence of clouds.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>Copy of input array containing only the uppermost cloud</dt>
-<dd>layer in each profile.</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-products.drizzle">
-<span id="cloudnetpy-products-drizzle"></span><h2>cloudnetpy.products.drizzle<a class="headerlink" href="#module-products.drizzle" title="Permalink to this headline">¶</a></h2>
-<p>Module for creating Cloudnet drizzle product.</p>
-<dl class="function">
-<dt>
-<code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Generates Cloudnet drizzle product.</p>
-<p>This function calculates different drizzle properties from
-cloud radar and lidar measurements. The results are written in a netCDF file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
-<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">References</p>
-<p>O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
-Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
-J. Appl. Meteor., 44, 14–27, <a class="reference external" href="https://doi.org/10.1175/JAM-2181.1">https://doi.org/10.1175/JAM-2181.1</a></p>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.drizzle.DrizzleSource">
-<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class holding the input data for drizzle calculations.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.drizzle.DrizzleClassification">
-<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleClassification</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleClassification" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class storing the information about different drizzle types.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.drizzle.correct_spectral_width">
-<code class="descclassname">products.drizzle.</code><code class="descname">correct_spectral_width</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#correct_spectral_width"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.correct_spectral_width" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrects spectral width.</p>
-<p>Removes the effect of turbulence and horizontal wind that cause
-spectral broadening of the Doppler velocity.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> (<em>str</em>) – Categorize file name.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>Spectral width containing the correction for turbulence</dt>
-<dd>broadening.</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.drizzle.calc_horizontal_wind">
-<code class="descclassname">products.drizzle.</code><code class="descname">calc_horizontal_wind</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_horizontal_wind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_horizontal_wind" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates magnitude of horizontal wind.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> – Categorize file name.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Horizontal wind (m s-1).</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.drizzle.drizzle_solve">
-<code class="descclassname">products.drizzle.</code><code class="descname">drizzle_solve</code><span class="sig-paren">(</span><em>data</em>, <em>drizzle_class</em>, <em>width_ht</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#drizzle_solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.drizzle_solve" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimates drizzle parameters.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<a class="reference internal" href="#products.drizzle.DrizzleSource" title="products.drizzle.DrizzleSource"><em>DrizzleSource</em></a>) – Input data.</li>
-<li><strong>drizzle_class</strong> (<a class="reference internal" href="#products.drizzle.DrizzleClassification" title="products.drizzle.DrizzleClassification"><em>DrizzleClassification</em></a>) – Classification of the atmosphere
-for drizzle calculations.</li>
-<li><strong>width_ht</strong> (<em>ndarray</em>) – Corrected spectral width.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.drizzle.calc_dia">
-<code class="descclassname">products.drizzle.</code><code class="descname">calc_dia</code><span class="sig-paren">(</span><em>beta_z_ratio</em>, <em>mu=0</em>, <em>ray=1</em>, <em>k=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_dia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_dia" title="Permalink to this definition">¶</a></dt>
-<dd><p>Drizzle diameter calculation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>beta_z_ratio</strong> (<em>ndarray</em>) – Beta to z ratio, multiplied by (2 / pi).</li>
-<li><strong>mu</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Shape parameter for gamma calculations. Default is 0.</li>
-<li><strong>ray</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Mie to Rayleigh ratio for z. Default is 1.</li>
-<li><strong>k</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Alpha to beta ratio . Default is 1.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">References</p>
-<p><a class="reference external" href="https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1">https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1</a></p>
-</dd></dl>
-
 </div>
 </div>
 
