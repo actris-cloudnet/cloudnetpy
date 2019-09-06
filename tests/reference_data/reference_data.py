@@ -29,16 +29,42 @@ PROCESS_PATH = f"{ROOT_PATH}tests/source_data/"
 LIMIT = 20
 
 
-def generate_data_testing(quantity, reference=False, reprocess=False):
+def _manage_logger_file():
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    return logger
+
+
+def _create_logger_file(path, name):
+    fh = logging.FileHandler(os.path.join(path, f"{name}.log"), mode='w')
+    fh.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+
+
+def fill_log(reason, instru):
+    logger.warning(f"Data quality test didn't pass in {instru} file")
+    logger.warning(reason)
+
+
+def _logger_information(site, date):
+    logger.info(f"Operative processing from {site} at {date}")
+
+
+logger = _manage_logger_file()
+
+
+def generate_data_testing(quantity, site, date, operative_path, reference=False, reprocess=False):
+
+    logger.name = site
+    _create_logger_file(PROCESS_PATH, site)
+    _logger_information(site, date)
+
     test_path = config[quantity]["path"]
     options = "--tb=line"
     if not reference:
-        test = pytest.main([options, f"{ROOT_PATH}{test_path}", '-k', 'test_operative'])
-        if test in (1, 3):
-            result = get_process_data_and_boundaries(quantity)
-            logger = _manage_logger_file(PROCESS_PATH, 'Mace-Head')
-            logger.info(f"Some tests didn't pass in {quantity} file")
-            logger.warning(false_variables_msg(result, quantity))
+        pytest.main([options, f"{ROOT_PATH}{test_path}", '-k', 'test_operative'])
 
     if reference:
         ref_test = pytest.main([options, f"{ROOT_PATH}{test_path}", '-k', 'test_reference'])
@@ -57,7 +83,7 @@ def get_process_data_and_boundaries(quantity):
     for var in variables:
         process_data = netCDF4.Dataset(process_file_path)[var][:]
         minimum, maximum = min_max_values[var]
-        results[var] = bool(minimum <= np.min(process_data) and maximum >= np.max(process_data))
+        results[var] = bool(minimum <= np.min(process_data*1000) and maximum >= np.max(process_data))
     return results
 
 
@@ -135,18 +161,7 @@ def _parse_config_to_dict(variables):
     return dict
 
 
-def _manage_logger_file(path, name):
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(os.path.join(path, f"{name}.log"), mode='a')
-    fh.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    return logger
-
-
-def false_variables_msg(results, name):
+def false_variables_msg(results):
     key_type = 'Variable(s)'
     false_variables = []
     for var, val in results.items():
@@ -156,7 +171,7 @@ def false_variables_msg(results, name):
 
 
 if __name__ == "__main__":
-    generate_data_testing('radar')
+    generate_data_testing('radar', 'Mace-head', '20190703')
 
 
 

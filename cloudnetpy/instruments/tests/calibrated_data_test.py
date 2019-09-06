@@ -3,8 +3,8 @@ from tests.reference_data import reference_data
 
 def test_operative_data():
     result = reference_data.get_process_data_and_boundaries('radar')
-    assert all(r is True for r in result.values()),\
-        reference_data.false_variables_msg(result, 'radar')
+    assert all(r for r in result.values()),\
+        reference_data.fill_log(reference_data.false_variables_msg(result), 'radar')
 
 
 def test_operative_peaks():
