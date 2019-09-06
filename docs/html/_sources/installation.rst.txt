@@ -29,12 +29,17 @@ Create a new virtual environment and activate it:
 
 .. note::
    While hard to recommend, it is possible to install Python
-   packages system-wide and use these instead of the virtual environment.
+   packages system-wide and use these instead the local virtual environment.
+   A `conda <https://docs.conda.io/en/latest/>`_ -based installation is also
+   possible but not covered here.
 
 Pip-based Installation
 ----------------------
 
-Use pip to install CloudnetPy into the virtual environment:
+CloudnetPy is available from Python Package Index, `PyPI
+<https://pypi.org/project/cloudnetpy/>`_.
+Use Python's package manager, `pip <https://pypi.org/project/pip/>`_,
+to install CloudnetPy package into the virtual environment:
 
 .. code-block:: console
 		
