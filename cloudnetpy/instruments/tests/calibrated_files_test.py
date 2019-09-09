@@ -1,5 +1,5 @@
 """Tests for calibrated CloudnetPy files."""
-from tests.test import read_variable_names, missing_key_msg
+from tests.test import read_variable_names, missing_key_msg, fill_log
 
 REQUIRED_VARIABLES = {
     'radar':
@@ -15,4 +15,4 @@ def test_required_variables():
     for key in REQUIRED_VARIABLES:
         test_file_variables = read_variable_names(key)
         missing_variables = REQUIRED_VARIABLES[key] - test_file_variables
-        assert not missing_variables, missing_key_msg(missing_variables, key)
+        assert not missing_variables, fill_log(missing_key_msg(missing_variables, key), key)

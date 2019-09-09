@@ -1,10 +1,15 @@
-from tests.reference_data import reference_data
+from tests.data_quality import data_quality_test
+from tests.test import Logging_handler
+
+
+FILE_TYPES = ['radar', 'ceilo']
 
 
 def test_operative_data():
-    result = reference_data.get_process_data_and_boundaries('radar')
-    assert all(r for r in result.values()),\
-        reference_data.fill_log(reference_data.false_variables_msg(result), 'radar')
+    for type in FILE_TYPES:
+        result = data_quality_test.get_process_data_and_boundaries(type)
+        assert all(r for r in result.values()),\
+            Logging_handler.fill_log(data_quality_test.false_variables_msg(result), type)
 
 
 def test_operative_peaks():

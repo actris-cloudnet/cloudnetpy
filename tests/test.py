@@ -2,6 +2,7 @@ import os
 import sys
 sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
 import warnings
+import logging
 import glob
 from zipfile import ZipFile
 import pytest
@@ -11,10 +12,41 @@ from tests import run_testcase_processing as process
 from tests.test_tools import remove_import_modules
 
 warnings.filterwarnings("ignore")
+OPERATIVE_RUN = True
+
+
+class Logging_handler:
+    def _manage_logger_file(self):
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+        return logger
+
+    def _create_logger_file(self, path, name):
+        fh = logging.FileHandler(os.path.join(path, f"{name}.log"), mode='w')
+        fh.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+
+    def fill_log(self, reason, instru):
+        if OPERATIVE_RUN:
+            logger.warning(f"Data quality test didn't pass in {instru} file")
+            logger.warning(reason)
+
+    def _logger_information(self, site, date):
+        logger.info(f"Operative processing from {site} at {date}")
+
+LOG = Logging_handler()
+logger = LOG._manage_logger_file()
 
 
 def get_default_path():
-    return f"{os.path.dirname(os.path.abspath(__file__))}/source_data/"
+    # TODO: Change path type to be operative or reference
+    if OPERATIVE_RUN:
+        # Operative process file path here
+        return f"{os.path.dirname(os.path.abspath(__file__))}/source_data/"
+    else:
+        return f"{os.path.dirname(os.path.abspath(__file__))}/source_data/"
 
 
 def _load_test_data(input_path):
@@ -40,52 +72,76 @@ def _load_test_data(input_path):
             _extract_zip()
 
 
-def main():
-
-    print(f"\n{22*'#'} Running all CloudnetPy tests {22*'#'}")
-
+def main(site, date, reference_run=False):
     c_path = f"{os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]}/cloudnetpy/"
-    input_path = get_default_path()
-    _load_test_data(input_path)
-
     options = "--tb=line"
-    site = 'mace-head'
 
-    print("\nTesting misc CloudnetPy routines:\n")
-    test = pytest.main([options, f"{c_path}tests/test_utils.py"])
-    _check_failures(test, "utils.py")
-    test = pytest.main([options, f"{c_path}categorize/tests/test_atmos.py"])
-    _check_failures(test, "atmos.py")
-    test = pytest.main([options, f"{c_path}categorize/tests/test_classify.py"])
-    _check_failures(test, "classify.py")
+    if not reference_run:
+        path = get_default_path()
+        logger.name = site
+        Logging_handler._create_logger_file(path, site)
+        Logging_handler._logger_information(site, date)
 
-    print("\nTesting raw files:\n")
-    test = pytest.main([options, f"{c_path}instruments/tests/raw_files_test.py"])
-    _check_failures(test, "raw")
-    remove_import_modules()
+        print(f"\n{22 * '#'} Running operative CloudnetPy tests {22 * '#'}")
+        print("\nTesting raw files:\n")
+        pytest.main([options, f"{c_path}instruments/tests/raw_files_test.py"])
+        remove_import_modules()
+        # Here calling for data
 
-    print("\nProcessing CloudnetPy calibrated files from raw files:\n")
-    process.process_cloudnetpy_raw_files(site, input_path)
+        print("\nTesting calibrated files:\n")
+        pytest.main([options, f"{c_path}instruments/tests/calibrated_files_test.py"])
 
-    print("\nTesting calibrated files:\n")
-    test = pytest.main([options, f"{c_path}instruments/tests/calibrated_files_test.py"])
-    _check_failures(test, "calibrated")
+        print("\nTesting categorize file:\n")
+        pytest.main([options, f"{c_path}categorize/tests/categorize_file_test.py"])
 
-    print("\nProcessing CloudnetPy categorize file:\n")
-    process.process_cloudnetpy_categorize(site, input_path)
+        print("\nTesting product files:\n")
+        pytest.main([options, f"{c_path}products/tests/product_files_test.py"])
 
-    print("\nTesting categorize file:\n")
-    test = pytest.main([options, f"{c_path}categorize/tests/categorize_file_test.py"])
-    _check_failures(test, "categorize")
+    else:
+        global OPERATIVE_RUN
+        OPERATIVE_RUN = False
 
-    print("\nProcessing CloudnetPy product files:\n")
-    process.process_cloudnetpy_products(input_path)
+        print(f"\n{22*'#'} Running all CloudnetPy tests {22*'#'}")
+        input_path = get_default_path()
+        _load_test_data(input_path)
 
-    print("\nTesting product files:\n")
-    test = pytest.main([options, f"{c_path}products/tests/product_files_test.py"])
-    _check_failures(test, "product")
+        site = 'mace-head'
 
-    print(f"\n{10*'#'} All tests passed and processing works correctly! {10*'#'}")
+        print("\nTesting misc CloudnetPy routines:\n")
+        test = pytest.main([options, f"{c_path}tests/test_utils.py"])
+        _check_failures(test, "utils.py")
+        test = pytest.main([options, f"{c_path}categorize/tests/test_atmos.py"])
+        _check_failures(test, "atmos.py")
+        test = pytest.main([options, f"{c_path}categorize/tests/test_classify.py"])
+        _check_failures(test, "classify.py")
+
+        print("\nTesting raw files:\n")
+        test = pytest.main([options, f"{c_path}instruments/tests/raw_files_test.py"])
+        _check_failures(test, "raw")
+        remove_import_modules()
+
+        print("\nProcessing CloudnetPy calibrated files from raw files:\n")
+        process.process_cloudnetpy_raw_files(site, input_path)
+
+        print("\nTesting calibrated files:\n")
+        test = pytest.main([options, f"{c_path}instruments/tests/calibrated_files_test.py"])
+        _check_failures(test, "calibrated")
+
+        print("\nProcessing CloudnetPy categorize file:\n")
+        process.process_cloudnetpy_categorize(site, input_path)
+
+        print("\nTesting categorize file:\n")
+        test = pytest.main([options, f"{c_path}categorize/tests/categorize_file_test.py"])
+        _check_failures(test, "categorize")
+
+        print("\nProcessing CloudnetPy product files:\n")
+        process.process_cloudnetpy_products(input_path)
+
+        print("\nTesting product files:\n")
+        test = pytest.main([options, f"{c_path}products/tests/product_files_test.py"])
+        _check_failures(test, "product")
+
+        print(f"\n{10*'#'} All tests passed and processing works correctly! {10*'#'}")
 
 
 def get_test_file_name(identifier):

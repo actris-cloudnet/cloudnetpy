@@ -12,6 +12,7 @@ import numpy.ma as ma
 import netCDF4
 import configparser
 from cloudnetpy.utils import calc_relative_error
+from tests.test import Logging_handler
 
 
 def _get_root_path():
@@ -28,7 +29,7 @@ REFERENCE_PATH = f"{ROOT_PATH}tests/reference_data/"
 PROCESS_PATH = f"{ROOT_PATH}tests/source_data/"
 LIMIT = 20
 
-
+"""
 def _manage_logger_file():
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -50,16 +51,17 @@ def fill_log(reason, instru):
 
 def _logger_information(site, date):
     logger.info(f"Operative processing from {site} at {date}")
+"""
 
-
-logger = _manage_logger_file()
+LOG = Logging_handler()
+logger = LOG._manage_logger_file()
 
 
 def generate_data_testing(quantity, site, date, operative_path, reference=False, reprocess=False):
 
     logger.name = site
-    _create_logger_file(PROCESS_PATH, site)
-    _logger_information(site, date)
+    Logging_handler._create_logger_file(PROCESS_PATH, site)
+    Logging_handler._logger_information(site, date)
 
     test_path = config[quantity]["path"]
     options = "--tb=line"
@@ -171,7 +173,7 @@ def false_variables_msg(results):
 
 
 if __name__ == "__main__":
-    generate_data_testing('radar', 'Mace-head', '20190703')
+    generate_data_testing('radar', 'Mace-head' '20190703', PROCESS_PATH)
 
 
 
