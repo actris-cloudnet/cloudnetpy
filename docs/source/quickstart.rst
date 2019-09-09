@@ -2,34 +2,9 @@
 Quickstart
 ==========
 
-CloudnetPy is available from `PyPI
-<https://pypi.org/project/cloudnetpy/>`_, the Python package index.
-CloudnetPy requires Python 3.7 or newer.
-
-Installation
-------------
-
-First, install prerequisite software (if you already haven't):
-
-.. code-block:: console
-		
-   $ sudo apt update && sudo apt upgrade
-   $ sudo apt install python3.7 python3.7-venv python3-pip
-
-Then, create a new virtual environment and activate it:
-
-.. code-block:: console
-		
-   $ python3.7 -m venv venv
-   $ source venv/bin/activate
-
-Install cloudnetpy into the virtual environment:
-
-.. code-block:: console
-		
-   (venv)$ pip3 install cloudnetpy
-
-That's it! Processing is easy using CloudnetPy's high level APIs.
+Processing is easy using CloudnetPy's high level APIs. You only need some
+measurement data from your instruments. And if you don't have it, you can
+always try `these example files <http://devcloudnet.fmi.fi/files/cloudnetpy_test_input_files.zip>`_.
 
 Radar processing
 ----------------
@@ -63,7 +38,7 @@ The same function can handle also Jenoptik CHM15k files.
 MWR processing
 --------------
 
-Processing of multi-channel HATPRO microwave radiometer data is not yet part of CloudnetPy.
+Processing of multi-channel HATPRO microwave radiometer (MWR) data is not yet part of CloudnetPy.
 Thus, site operators need to run custom processing software to retrieve integrated liquid
 water path (LWP) from raw HATPRO measurements.
 
@@ -77,10 +52,10 @@ Model data
 ----------
 
 Model files needed in the next processing step can be downloaded
-from Cloudnet `http API <http://devcloudnet.fmi.fi/api/>`_. Several models
+from `Cloudnet http API <http://devcloudnet.fmi.fi/api/>`_. Several models
 may be available depending on the site and date, see for example
 `this day <http://devcloudnet.fmi.fi/api/models/?site_code=mace-head&date=20190303>`_.
-Any model file can be used in the processing, but the recommended order is
+Any model file can be used in the processing but the recommended order is
 
 #. ecmwf
 #. icon-iglo-12-23
@@ -116,17 +91,4 @@ product, the classification product.
 
     from cloudnetpy.products.classification import generate_classification
     generate_classification('categorize.nc', 'classification.nc')
-
-
-Final notes
------------
-
-Note that the CloudnetPy codebase is rapidly developing and the PyPI package does not
-contain all the latest features and modifications. To get an up-to-date
-version of CloudnetPy, download it directly from `GitHub
-<https://github.com/tukiains/cloudnetpy>`_:
-
-.. code-block:: console
-
-	$ git clone https://github.com/tukiains/cloudnetpy
 

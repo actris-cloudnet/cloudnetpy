@@ -1,72 +1,211 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>High-level APIs &#8212; CloudnetPy  documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>API reference &mdash; CloudnetPy 1.0.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
     
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script type="text/javascript" src="_static/jquery.js"></script>
-    <script type="text/javascript" src="_static/underscore.js"></script>
-    <script type="text/javascript" src="_static/doctools.js"></script>
-    <script type="text/javascript" src="_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
     
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Testing" href="testing.html" />
     <link rel="prev" title="Quickstart" href="quickstart.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="quickstart.html" title="Quickstart"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
-      </ul>
-    </div>  
+</head>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> CloudnetPy
+          
+
+          
+          </a>
+
+          
             
-  <div class="section" id="high-level-apis">
-<h1>High-level APIs<a class="headerlink" href="#high-level-apis" title="Permalink to this headline">¶</a></h1>
-<p>CloudnetPy’s high-level APIs provide a simple way to process
-cloud remote sensing measurements into Cloudnet products, without
-needing to worry about implementation details.</p>
-<p>The APIs enable users to set up an operational processing
-system that doesn’t require major modifications
-if the underlying methods and their implementations change
-from one software version to another.</p>
+            
+              <div class="version">
+                1.0
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#high-level-functions">High-level functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#raw-data-to-categorize">Raw data to categorize</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#categorize-to-products">Categorize to products</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visualizing-results">Visualizing results</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#categorize-subpackage">Categorize subpackage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-categorize.classify">cloudnetpy.categorize.classify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-categorize.atmos">cloudnetpy.categorize.atmos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-categorize.droplet">cloudnetpy.categorize.droplet</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#products-subpackage">Products subpackage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-products.classification">cloudnetpy.products.classification</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-products.iwc">cloudnetpy.products.iwc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-products.lwc">cloudnetpy.products.lwc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-products.drizzle">cloudnetpy.products.drizzle</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#misc">Misc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="guide.html">Developer’s Guide</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">CloudnetPy</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>API reference</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/api.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="api-reference">
+<h1>API reference<a class="headerlink" href="#api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="high-level-functions">
+<h2>High-level functions<a class="headerlink" href="#high-level-functions" title="Permalink to this headline">¶</a></h2>
+<p>CloudnetPy’s high-level functions provide a simple mechanism to process
+cloud remote sensing measurements into Cloudnet products. A full processing
+goes in steps. Each step produces a file which used as an input for the
+next step.</p>
 <div class="section" id="raw-data-to-categorize">
-<h2>Raw data to categorize<a class="headerlink" href="#raw-data-to-categorize" title="Permalink to this headline">¶</a></h2>
+<h3>Raw data to categorize<a class="headerlink" href="#raw-data-to-categorize" title="Permalink to this headline">¶</a></h3>
 <p>Cloudnet instruments provide raw data in various formats that need to
 be first converted into netCDF with standardized metadata. After that,
 the data can be combined in a single categorize file.</p>
 <dl class="function">
 <dt id="instruments.mira.mira2nc">
 <code class="descclassname">instruments.mira.</code><code class="descname">mira2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_meta</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/mira.html#mira2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.mira.mira2nc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts Mira cloud radar Level 1 file into NetCDF file.</p>
+<dd><p>Converts METEK MIRA-35 cloud radar Level 1 file into netCDF file.</p>
 <p>This function converts raw cloud radar file into a much smaller file that
-contains only the relevant data and can be used in further processing steps.</p>
+contains only the relevant data and can be used in further processing
+steps.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>mmclx_file</strong> (<em>str</em>) – Raw radar file in NetCDF format.</li>
+<li><strong>mmclx_file</strong> (<em>str</em>) – Raw radar file in netCDF format.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 <li><strong>site_meta</strong> (<em>dict</em>) – Dictionary containing information about the
 site. Required key value pairs are ‘name’.</li>
@@ -88,20 +227,23 @@ Otherwise keeps the native resolution. Default is False.</li>
 <dl class="function">
 <dt id="instruments.rpg.rpg2nc">
 <code class="descclassname">instruments.rpg.</code><code class="descname">rpg2nc</code><span class="sig-paren">(</span><em>path_to_l1_files</em>, <em>output_file</em>, <em>site_meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/rpg.html#rpg2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.rpg.rpg2nc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts RPG cloud radar binary files into NetCDF file.</p>
+<dd><p>Converts RPG cloud radar binary files into netCDF file.</p>
 <p>This function reads one day of RPG Level 1 cloud radar binary files,
-concatenates the data and writes it into NetCDF file.</p>
+concatenates the data and writes it into netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>path_to_l1_files</strong> (<em>str</em>) – Folder containing one day of RPG LV1 files.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 <li><strong>site_meta</strong> (<em>dict</em>) – Dictionary containing information about the
 site. Required key value pairs are ‘altitude’ (in metres) and
 ‘name’.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code> – Failed to read the binary data.</p>
 </td>
 </tr>
 </tbody>
@@ -112,25 +254,27 @@ site. Required key value pairs are ‘altitude’ (in metres) and
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rpg2nc</span><span class="p">(</span><span class="s1">&#39;/path/to/files/&#39;</span><span class="p">,</span> <span class="s1">&#39;test.nc&#39;</span><span class="p">,</span> <span class="n">site_meta</span><span class="p">)</span>
 </pre></div>
 </div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code> – Failed to process the data.</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="instruments.ceilo.ceilo2nc">
 <code class="descclassname">instruments.ceilo.</code><code class="descname">ceilo2nc</code><span class="sig-paren">(</span><em>input_file</em>, <em>output_file</em>, <em>site_meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/ceilo.html#ceilo2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.ceilo.ceilo2nc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Converts Vaisala and Jenoptik raw files into netCDF.</p>
+<dd><p>Converts Vaisala and Jenoptik raw files into netCDF file.</p>
+<p>This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
+ceilometer files and writes the data into netCDF file. Three variants
+of the attenuated backscatter are saved in the file:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li>Raw backscatter (‘beta_raw’)</li>
+<li>Signal-to-noise screened backscatter (‘beta’)</li>
+<li>SNR-screened backscatter with smoothed weak background (‘beta_smooth’).</li>
+</ol>
+</div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>input_file</strong> (<em>str</em>) – Ceilometer file name. For Vaisala it is a text file,
 for Jenoptik it is a netCDF file.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name, e.g. ‘ceilo.nc’.</li>
@@ -138,6 +282,9 @@ for Jenoptik it is a netCDF file.</li>
 site. Required key value pairs are ‘name’ and ‘altitude’
 (metres above mean sea level).</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code> – Failed to read or process raw ceilometer data.</p>
 </td>
 </tr>
 </tbody>
@@ -159,17 +306,19 @@ site. Required key value pairs are ‘name’ and ‘altitude’
 and classified as different types of scatterers such as ice, liquid,
 insects, etc. Next, the radar signal is corrected for atmospheric
 attenuation, and error estimates are computed. Results are saved
-in <em>ouput_file</em> which is by default a compressed NETCDF4_CLASSIC
-file.</p>
+in <em>ouput_file</em> which is a compressed netCDF4 file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>input_files</strong> (<em>dict</em>) – dict containing file names for calibrated
 ‘radar’, ‘lidar’ ‘model’ and ‘mwr’ files.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Full path of the output file.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code> – Failed to create the categorize file.</p>
 </td>
 </tr>
 </tbody>
@@ -191,16 +340,17 @@ a mwr-file as well, i.e. {‘mwr’: ‘radar.nc’}.</p>
 
 </div>
 <div class="section" id="categorize-to-products">
-<h2>Categorize to products<a class="headerlink" href="#categorize-to-products" title="Permalink to this headline">¶</a></h2>
+<h3>Categorize to products<a class="headerlink" href="#categorize-to-products" title="Permalink to this headline">¶</a></h3>
 <p>Starting from the categorize file, several geophysical products can be
 generated.</p>
 <dl class="function">
 <dt id="products.classification.generate_classification">
 <code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.generate_classification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet classification product.</p>
-<p>Generates categorized bins to 10 types of different targets in atmosphere
-as well as instrument status classification. Classifications are saved to
-NetCDF file with information of classification and measurements.</p>
+<p>This function reads the initial classification masks from a
+categorize file and creates a more comprehensive classification
+for different atmospheric targets. The results are written in a
+netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -224,6 +374,10 @@ NetCDF file with information of classification and measurements.</p>
 <dt id="products.iwc.generate_iwc">
 <code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.generate_iwc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet ice water content product.</p>
+<p>This function calculates ice water content using the so-called Z-T method.
+In this method, ice water content is calculated from attenuated-corrected
+radar reflectivity and model temperature. The results are written in a
+netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -241,12 +395,21 @@ NetCDF file with information of classification and measurements.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p class="rubric">References</p>
+<p>Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
+The Retrieval of Ice Water Content from Radar Reflectivity Factor and
+Temperature and Its Use in Evaluating a Mesoscale Model.
+J. Appl. Meteor. Climatol., 45, 301–317, <a class="reference external" href="https://doi.org/10.1175/JAM2340.1">https://doi.org/10.1175/JAM2340.1</a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="products.lwc.generate_lwc">
 <code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.generate_lwc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet liquid water content product.</p>
+<p>This function calculates cloud liquid water content using the so-called
+adiabatic-scaled method. In this method, liquid water content measured by
+microwave radiameter is used to constrain the theoretical liquid water
+content of observed liquid clouds. The results are written in a netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -264,12 +427,21 @@ NetCDF file with information of classification and measurements.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p class="rubric">References</p>
+<p>Illingworth, A.J., R.J. Hogan, E. O’Connor, D. Bouniol, M.E. Brooks,
+J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
+M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
+H.W. Russchenberg, A. Seifert, A.M. Tompkins, G. van Zadelhoff, F. Vinit,
+U. Willén, D.R. Wilson, and C.L. Wrench, 2007: Cloudnet.
+Bull. Amer. Meteor. Soc., 88, 883–898, <a class="reference external" href="https://doi.org/10.1175/BAMS-88-6-883">https://doi.org/10.1175/BAMS-88-6-883</a></p>
 </dd></dl>
 
 <dl class="function">
 <dt id="products.drizzle.generate_drizzle">
 <code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.generate_drizzle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet drizzle product.</p>
+<p>This function calculates different drizzle properties from
+cloud radar and lidar measurements. The results are written in a netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -282,12 +454,16 @@ NetCDF file with information of classification and measurements.</p>
 </tr>
 </tbody>
 </table>
+<p class="rubric">References</p>
+<p>O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
+Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
+J. Appl. Meteor., 44, 14–27, <a class="reference external" href="https://doi.org/10.1175/JAM-2181.1">https://doi.org/10.1175/JAM-2181.1</a></p>
 </dd></dl>
 
 </div>
 <div class="section" id="visualizing-results">
-<h2>Visualizing results<a class="headerlink" href="#visualizing-results" title="Permalink to this headline">¶</a></h2>
-<p>CloudnetPy offers easy-to-use plotting interface.</p>
+<h3>Visualizing results<a class="headerlink" href="#visualizing-results" title="Permalink to this headline">¶</a></h3>
+<p>CloudnetPy offers easy-to-use plotting interface:</p>
 <dl class="function">
 <dt id="plotting.plotting.generate_figure">
 <code class="descclassname">plotting.plotting.</code><code class="descname">generate_figure</code><span class="sig-paren">(</span><em>nc_file</em>, <em>field_names</em>, <em>show=True</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting/plotting.html#generate_figure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.plotting.generate_figure" title="Permalink to this definition">¶</a></dt>
@@ -323,8 +499,8 @@ Overrides the <em>save_path</em> option. Default is None.</li>
 </div>
 </dd></dl>
 
-<p>There is also possibility to compare old Cloudnet files with the new
-CloudnetPy files.</p>
+<p>There is also possibility to compare CloundetPy files with the
+Matlab-processed old files which are available from <a class="reference external" href="http://devcloudnet.fmi.fi">devcloudnet.fmi.fi</a>:</p>
 <dl class="function">
 <dt id="plotting.plotting.compare_files">
 <code class="descclassname">plotting.plotting.</code><code class="descname">compare_files</code><span class="sig-paren">(</span><em>nc_files</em>, <em>field_name</em>, <em>show=True</em>, <em>relative_err=False</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting/plotting.html#compare_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.plotting.compare_files" title="Permalink to this definition">¶</a></dt>
@@ -356,13 +532,13 @@ Overrides the <em>save_path</em> option. Default is None.</li>
 
 </div>
 </div>
-<div class="section" id="cloudnetpy-modules">
-<h1>Cloudnetpy modules<a class="headerlink" href="#cloudnetpy-modules" title="Permalink to this headline">¶</a></h1>
-<p>The various modules of CloudnetPy provide additional lower-level
-functions that are useful for development, testing and research
-purposes.</p>
+<div class="section" id="categorize-subpackage">
+<h2>Categorize subpackage<a class="headerlink" href="#categorize-subpackage" title="Permalink to this headline">¶</a></h2>
+<p>Categorize is a CloudnetPy’s subpackage. It contains
+several modules that are used when creating the Cloudnet
+categorize file.</p>
 <div class="section" id="module-categorize.classify">
-<span id="cloudnetpy-categorize-classify"></span><h2>cloudnetpy.categorize.classify<a class="headerlink" href="#module-categorize.classify" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-categorize-classify"></span><h3>cloudnetpy.categorize.classify<a class="headerlink" href="#module-categorize.classify" title="Permalink to this headline">¶</a></h3>
 <p>Module containing low-level functions to classify gridded
 radar / lidar measurements.</p>
 <dl class="function">
@@ -643,7 +819,7 @@ temperatures.</p>
 
 </div>
 <div class="section" id="module-categorize.atmos">
-<span id="cloudnetpy-categorize-atmos"></span><h2>cloudnetpy.categorize.atmos<a class="headerlink" href="#module-categorize.atmos" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-categorize-atmos"></span><h3>cloudnetpy.categorize.atmos<a class="headerlink" href="#module-categorize.atmos" title="Permalink to this headline">¶</a></h3>
 <p>This module contains functions to calculate
 various atmospheric parameters.</p>
 <dl class="function">
@@ -985,7 +1161,7 @@ theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</p>
 
 </div>
 <div class="section" id="module-categorize.droplet">
-<span id="cloudnetpy-categorize-droplet"></span><h2>cloudnetpy.categorize.droplet<a class="headerlink" href="#module-categorize.droplet" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-categorize-droplet"></span><h3>cloudnetpy.categorize.droplet<a class="headerlink" href="#module-categorize.droplet" title="Permalink to this headline">¶</a></h3>
 <p>This module has functions for liquid layer detection.</p>
 <dl class="function">
 <dt id="categorize.droplet.find_liquid">
@@ -1166,8 +1342,310 @@ on radar data.</li>
 </dd></dl>
 
 </div>
+</div>
+<div class="section" id="products-subpackage">
+<h2>Products subpackage<a class="headerlink" href="#products-subpackage" title="Permalink to this headline">¶</a></h2>
+<p>Products is a CloudnetPy’s subpackage. It contains
+several modules that correspond to different Cloudnet
+products.</p>
+<div class="section" id="module-products.classification">
+<span id="cloudnetpy-products-classification"></span><h3>cloudnetpy.products.classification<a class="headerlink" href="#module-products.classification" title="Permalink to this headline">¶</a></h3>
+<p>Module for creating classification file.</p>
+<dl class="function">
+<dt>
+<code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet classification product.</p>
+<p>This function reads the initial classification masks from a
+categorize file and creates a more comprehensive classification
+for different atmospheric targets. The results are written in a
+netCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_classification</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_classification</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="module-products.iwc">
+<span id="cloudnetpy-products-iwc"></span><h3>cloudnetpy.products.iwc<a class="headerlink" href="#module-products.iwc" title="Permalink to this headline">¶</a></h3>
+<p>Module for creating Cloudnet ice water content file
+using Z-T method.</p>
+<dl class="function">
+<dt>
+<code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet ice water content product.</p>
+<p>This function calculates ice water content using the so-called Z-T method.
+In this method, ice water content is calculated from attenuated-corrected
+radar reflectivity and model temperature. The results are written in a
+netCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.iwc</span> <span class="k">import</span> <span class="n">generate_iwc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<p>Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
+The Retrieval of Ice Water Content from Radar Reflectivity Factor and
+Temperature and Its Use in Evaluating a Mesoscale Model.
+J. Appl. Meteor. Climatol., 45, 301–317, <a class="reference external" href="https://doi.org/10.1175/JAM2340.1">https://doi.org/10.1175/JAM2340.1</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.iwc.IwcSource">
+<em class="property">class </em><code class="descclassname">products.iwc.</code><code class="descname">IwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#IwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.IwcSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class containing data needed in the ice water content Z-T method.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-products.lwc">
+<span id="cloudnetpy-products-lwc"></span><h3>cloudnetpy.products.lwc<a class="headerlink" href="#module-products.lwc" title="Permalink to this headline">¶</a></h3>
+<p>Module for creating Cloudnet liquid water content file
+using scaled-adiabatic method.</p>
+<dl class="function">
+<dt>
+<code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet liquid water content product.</p>
+<p>This function calculates cloud liquid water content using the so-called
+adiabatic-scaled method. In this method, liquid water content measured by
+microwave radiameter is used to constrain the theoretical liquid water
+content of observed liquid clouds. The results are written in a netCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.lwc</span> <span class="k">import</span> <span class="n">generate_lwc</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<p>Illingworth, A.J., R.J. Hogan, E. O’Connor, D. Bouniol, M.E. Brooks,
+J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
+M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
+H.W. Russchenberg, A. Seifert, A.M. Tompkins, G. van Zadelhoff, F. Vinit,
+U. Willén, D.R. Wilson, and C.L. Wrench, 2007: Cloudnet.
+Bull. Amer. Meteor. Soc., 88, 883–898, <a class="reference external" href="https://doi.org/10.1175/BAMS-88-6-883">https://doi.org/10.1175/BAMS-88-6-883</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.lwc.LwcSource">
+<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">LwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#LwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.LwcSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data container for liquid water content calculations. It reads
+input data from a categorize file and provides data structures and
+methods for holding the results.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.lwc.Lwc">
+<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">Lwc</code><span class="sig-paren">(</span><em>lwc_source</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class handling the actual LWC calculations.</p>
+<dl class="method">
+<dt id="products.lwc.Lwc.adjust_clouds_to_match_lwp">
+<code class="descname">adjust_clouds_to_match_lwp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.adjust_clouds_to_match_lwp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.adjust_clouds_to_match_lwp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adjust clouds (where possible) so that theoretical and measured LWP agree.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="products.lwc.Lwc.calc_lwc_error">
+<code class="descname">calc_lwc_error</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.calc_lwc_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.calc_lwc_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates liquid water content error.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="products.lwc.Lwc.screen_rain">
+<code class="descname">screen_rain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.screen_rain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.screen_rain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Masks profiles with rain.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="products.lwc.find_topmost_clouds">
+<code class="descclassname">products.lwc.</code><code class="descname">find_topmost_clouds</code><span class="sig-paren">(</span><em>is_cloud</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#find_topmost_clouds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.find_topmost_clouds" title="Permalink to this definition">¶</a></dt>
+<dd><p>From 2d binary cloud field, return the uppermost cloud layer only.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>is_cloud</strong> (<em>ndarray</em>) – Boolean array denoting presence of clouds.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>Copy of input array containing only the uppermost cloud</dt>
+<dd>layer in each profile.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-products.drizzle">
+<span id="cloudnetpy-products-drizzle"></span><h3>cloudnetpy.products.drizzle<a class="headerlink" href="#module-products.drizzle" title="Permalink to this headline">¶</a></h3>
+<p>Module for creating Cloudnet drizzle product.</p>
+<dl class="function">
+<dt>
+<code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>Generates Cloudnet drizzle product.</p>
+<p>This function calculates different drizzle properties from
+cloud radar and lidar measurements. The results are written in a netCDF file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
+<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p>O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
+Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
+J. Appl. Meteor., 44, 14–27, <a class="reference external" href="https://doi.org/10.1175/JAM-2181.1">https://doi.org/10.1175/JAM-2181.1</a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.drizzle.DrizzleSource">
+<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class holding the input data for drizzle calculations.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="products.drizzle.DrizzleClassification">
+<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleClassification</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class storing the information about different drizzle types.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.correct_spectral_width">
+<code class="descclassname">products.drizzle.</code><code class="descname">correct_spectral_width</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#correct_spectral_width"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.correct_spectral_width" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corrects spectral width.</p>
+<p>Removes the effect of turbulence and horizontal wind that cause
+spectral broadening of the Doppler velocity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> (<em>str</em>) – Categorize file name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
+<dt>Spectral width containing the correction for turbulence</dt>
+<dd>broadening.</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.calc_horizontal_wind">
+<code class="descclassname">products.drizzle.</code><code class="descname">calc_horizontal_wind</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_horizontal_wind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_horizontal_wind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates magnitude of horizontal wind.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> – Categorize file name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Horizontal wind (m s-1).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.drizzle_solve">
+<code class="descclassname">products.drizzle.</code><code class="descname">drizzle_solve</code><span class="sig-paren">(</span><em>data</em>, <em>drizzle_class</em>, <em>width_ht</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#drizzle_solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.drizzle_solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Estimates drizzle parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>data</strong> (<a class="reference internal" href="#products.drizzle.DrizzleSource" title="products.drizzle.DrizzleSource"><em>DrizzleSource</em></a>) – Input data.</li>
+<li><strong>drizzle_class</strong> (<a class="reference internal" href="#products.drizzle.DrizzleClassification" title="products.drizzle.DrizzleClassification"><em>DrizzleClassification</em></a>) – Classification of the atmosphere
+for drizzle calculations.</li>
+<li><strong>width_ht</strong> (<em>ndarray</em>) – Corrected spectral width.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="products.drizzle.calc_dia">
+<code class="descclassname">products.drizzle.</code><code class="descname">calc_dia</code><span class="sig-paren">(</span><em>beta_z_ratio</em>, <em>mu=0</em>, <em>ray=1</em>, <em>k=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_dia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_dia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drizzle diameter calculation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>beta_z_ratio</strong> (<em>ndarray</em>) – Beta to z ratio, multiplied by (2 / pi).</li>
+<li><strong>mu</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Shape parameter for gamma calculations. Default is 0.</li>
+<li><strong>ray</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Mie to Rayleigh ratio for z. Default is 1.</li>
+<li><strong>k</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Alpha to beta ratio . Default is 1.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1">https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1</a></p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="misc">
+<h2>Misc<a class="headerlink" href="#misc" title="Permalink to this headline">¶</a></h2>
+<p>Documentation for various modules with low-level
+functionality.</p>
 <div class="section" id="module-utils">
-<span id="cloudnetpy-utils"></span><h2>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h2>
+<span id="cloudnetpy-utils"></span><h3>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h3>
 <p>This module contains general
 helper functions.</p>
 <dl class="function">
@@ -1776,351 +2254,55 @@ probability and vice versa. Default is False.</li>
 
 </div>
 </div>
-<div class="section" id="products-modules">
-<h1>Products modules<a class="headerlink" href="#products-modules" title="Permalink to this headline">¶</a></h1>
-<p>Products is a CloudnetPy’s sub-package. It contains
-several modules that correspond to different Cloudnet
-products.</p>
-<div class="section" id="module-products.classification">
-<span id="products-classification"></span><h2>products.classification<a class="headerlink" href="#module-products.classification" title="Permalink to this headline">¶</a></h2>
-<p>Module for creating classification file.</p>
-<dl class="function">
-<dt>
-<code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Generates Cloudnet classification product.</p>
-<p>Generates categorized bins to 10 types of different targets in atmosphere
-as well as instrument status classification. Classifications are saved to
-NetCDF file with information of classification and measurements.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
-<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_classification</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_classification</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-</div>
-<div class="section" id="module-products.iwc">
-<span id="products-iwc"></span><h2>products.iwc<a class="headerlink" href="#module-products.iwc" title="Permalink to this headline">¶</a></h2>
-<p>Module for creating Cloudnet ice water content file
-using Z-T method.</p>
-<dl class="function">
-<dt>
-<code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Generates Cloudnet ice water content product.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
-<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.iwc</span> <span class="k">import</span> <span class="n">generate_iwc</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.iwc.IwcSource">
-<em class="property">class </em><code class="descclassname">products.iwc.</code><code class="descname">IwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#IwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.IwcSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class containing data needed in the ice water content Z-T method.</p>
-</dd></dl>
-
-</div>
-<div class="section" id="module-products.lwc">
-<span id="products-lwc"></span><h2>products.lwc<a class="headerlink" href="#module-products.lwc" title="Permalink to this headline">¶</a></h2>
-<p>Module for creating Cloudnet liquid water content file
-using scaled-adiabatic method.</p>
-<dl class="function">
-<dt>
-<code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Generates Cloudnet liquid water content product.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
-<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.lwc</span> <span class="k">import</span> <span class="n">generate_lwc</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.lwc.LwcSource">
-<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">LwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#LwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.LwcSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Data container for liquid water content calculations. It reads
-input data from a categorize file and provides data structures and
-methods for holding the results.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.lwc.Lwc">
-<em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">Lwc</code><span class="sig-paren">(</span><em>lwc_source</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class handling the actual LWC calculations.</p>
-<dl class="method">
-<dt id="products.lwc.Lwc.adjust_clouds_to_match_lwp">
-<code class="descname">adjust_clouds_to_match_lwp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.adjust_clouds_to_match_lwp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.adjust_clouds_to_match_lwp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adjust clouds (where possible) so that theoretical and measured LWP agree.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="products.lwc.Lwc.calc_lwc_error">
-<code class="descname">calc_lwc_error</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.calc_lwc_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.calc_lwc_error" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates liquid water content error.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="products.lwc.Lwc.screen_rain">
-<code class="descname">screen_rain</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.screen_rain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.screen_rain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Masks profiles with rain.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="products.lwc.find_topmost_clouds">
-<code class="descclassname">products.lwc.</code><code class="descname">find_topmost_clouds</code><span class="sig-paren">(</span><em>is_cloud</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#find_topmost_clouds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.find_topmost_clouds" title="Permalink to this definition">¶</a></dt>
-<dd><p>From 2d binary cloud field, return the uppermost cloud layer only.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>is_cloud</strong> (<em>ndarray</em>) – Boolean array denoting presence of clouds.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>Copy of input array containing only the uppermost cloud</dt>
-<dd>layer in each profile.</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
-<div class="section" id="module-products.drizzle">
-<span id="products-drizzle"></span><h2>products.drizzle<a class="headerlink" href="#module-products.drizzle" title="Permalink to this headline">¶</a></h2>
-<p>Module for creating Cloudnet drizzle product.</p>
-<dl class="function">
-<dt>
-<code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Generates Cloudnet drizzle product.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</li>
-<li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.drizzle.DrizzleSource">
-<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class holding the input data for drizzle calculations.</p>
-</dd></dl>
-
-<dl class="class">
-<dt id="products.drizzle.DrizzleClassification">
-<em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleClassification</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleClassification" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class storing the information about different drizzle types.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.drizzle.correct_spectral_width">
-<code class="descclassname">products.drizzle.</code><code class="descname">correct_spectral_width</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#correct_spectral_width"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.correct_spectral_width" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrects spectral width.</p>
-<p>Removes the effect of turbulence and horizontal wind that cause
-spectral broadening of the Doppler velocity.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> (<em>str</em>) – Categorize file name.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>Spectral width containing the correction for turbulence</dt>
-<dd>broadening.</dd>
-</dl>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.drizzle.calc_horizontal_wind">
-<code class="descclassname">products.drizzle.</code><code class="descname">calc_horizontal_wind</code><span class="sig-paren">(</span><em>cat_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_horizontal_wind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_horizontal_wind" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates magnitude of horizontal wind.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> – Categorize file name.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Horizontal wind (m s-1).</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.drizzle.drizzle_solve">
-<code class="descclassname">products.drizzle.</code><code class="descname">drizzle_solve</code><span class="sig-paren">(</span><em>data</em>, <em>drizzle_class</em>, <em>width_ht</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#drizzle_solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.drizzle_solve" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimates drizzle parameters.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<a class="reference internal" href="#products.drizzle.DrizzleSource" title="products.drizzle.DrizzleSource"><em>DrizzleSource</em></a>) – Input data.</li>
-<li><strong>drizzle_class</strong> (<a class="reference internal" href="#products.drizzle.DrizzleClassification" title="products.drizzle.DrizzleClassification"><em>DrizzleClassification</em></a>) – Classification of the atmosphere
-for drizzle calculations.</li>
-<li><strong>width_ht</strong> (<em>ndarray</em>) – Corrected spectral width.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="products.drizzle.calc_dia">
-<code class="descclassname">products.drizzle.</code><code class="descname">calc_dia</code><span class="sig-paren">(</span><em>beta_z_ratio</em>, <em>mu=0</em>, <em>ray=1</em>, <em>k=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#calc_dia"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.calc_dia" title="Permalink to this definition">¶</a></dt>
-<dd><p>Drizzle diameter calculation.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>beta_z_ratio</strong> (<em>ndarray</em>) – Beta to z ratio, multiplied by (2 / pi).</li>
-<li><strong>mu</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Shape parameter for gamma calculations. Default is 0.</li>
-<li><strong>ray</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Mie to Rayleigh ratio for z. Default is 1.</li>
-<li><strong>k</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Alpha to beta ratio . Default is 1.</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">References</p>
-<p><a class="reference external" href="https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1">https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1</a></p>
-</dd></dl>
-
-</div>
 </div>
 
 
+           </div>
+           
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">High-level APIs</a><ul>
-<li><a class="reference internal" href="#raw-data-to-categorize">Raw data to categorize</a></li>
-<li><a class="reference internal" href="#categorize-to-products">Categorize to products</a></li>
-<li><a class="reference internal" href="#visualizing-results">Visualizing results</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#cloudnetpy-modules">Cloudnetpy modules</a><ul>
-<li><a class="reference internal" href="#module-categorize.classify">cloudnetpy.categorize.classify</a></li>
-<li><a class="reference internal" href="#module-categorize.atmos">cloudnetpy.categorize.atmos</a></li>
-<li><a class="reference internal" href="#module-categorize.droplet">cloudnetpy.categorize.droplet</a></li>
-<li><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#products-modules">Products modules</a><ul>
-<li><a class="reference internal" href="#module-products.classification">products.classification</a></li>
-<li><a class="reference internal" href="#module-products.iwc">products.iwc</a></li>
-<li><a class="reference internal" href="#module-products.lwc">products.lwc</a></li>
-<li><a class="reference internal" href="#module-products.drizzle">products.drizzle</a></li>
-</ul>
-</li>
-</ul>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="testing.html" class="btn btn-neutral float-right" title="Testing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="quickstart.html"
-                        title="previous chapter">Quickstart</a></p>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/api.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    </div>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2019, Finnish Meteorological Institute
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="quickstart.html" title="Quickstart"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">CloudnetPy  documentation</a> &#187;</li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2019, Finnish Meteorological Institute.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
 </html>

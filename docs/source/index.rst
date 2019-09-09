@@ -15,8 +15,11 @@ implementation of the Cloudnet processing scheme.
    :maxdepth: 4
 
    overview
+   installation
    quickstart
    api
+   testing
+   guide
    
 	    
 

@@ -1,17 +1,17 @@
-High-level APIs
-===============
+API reference
+=============
 
-CloudnetPy's high-level APIs provide a simple way to process
-cloud remote sensing measurements into Cloudnet products, without
-needing to worry about implementation details.
 
-The APIs enable users to set up an operational processing
-system that doesn't require major modifications
-if the underlying methods and their implementations change
-from one software version to another.
+High-level functions
+--------------------
+
+CloudnetPy's high-level functions provide a simple mechanism to process
+cloud remote sensing measurements into Cloudnet products. A full processing
+goes in steps. Each step produces a file which used as an input for the
+next step.
 
 Raw data to categorize
-----------------------
+......................
 
 Cloudnet instruments provide raw data in various formats that need to
 be first converted into netCDF with standardized metadata. After that,
@@ -28,7 +28,7 @@ the data can be combined in a single categorize file.
 
 
 Categorize to products
-----------------------
+......................
 
 Starting from the categorize file, several geophysical products can be
 generated.
@@ -43,86 +43,94 @@ generated.
 
 
 Visualizing results
--------------------
+...................
 
-CloudnetPy offers easy-to-use plotting interface.
+CloudnetPy offers easy-to-use plotting interface:
 
 .. autofunction:: plotting.plotting.generate_figure
 
-There is also possibility to compare old Cloudnet files with the new
-CloudnetPy files.
+There is also possibility to compare CloundetPy files with the
+Matlab-processed old files which are available from `devcloudnet.fmi.fi
+<http://devcloudnet.fmi.fi>`_:
+
 
 .. autofunction:: plotting.plotting.compare_files
 
 
-Cloudnetpy modules
-==================
+Categorize subpackage
+---------------------
 
-The various modules of CloudnetPy provide additional lower-level
-functions that are useful for development, testing and research
-purposes.
+Categorize is a CloudnetPy's subpackage. It contains
+several modules that are used when creating the Cloudnet
+categorize file.
 
 
 cloudnetpy.categorize.classify
-------------------------------
+..............................
 
 .. automodule:: categorize.classify
    :members:
 
 
 cloudnetpy.categorize.atmos
----------------------------
+...........................
 
 .. automodule:: categorize.atmos
    :members:
 
 
 cloudnetpy.categorize.droplet
------------------------------
+.............................
 
 .. automodule:: categorize.droplet
    :members:
 
 
-cloudnetpy.utils
-----------------
+Products subpackage
+-------------------
 
-.. automodule:: utils
-   :members:
-
-
-Products modules
-================
-
-Products is a CloudnetPy's sub-package. It contains
+Products is a CloudnetPy's subpackage. It contains
 several modules that correspond to different Cloudnet
 products.
 
-products.classification
------------------------
+cloudnetpy.products.classification
+..................................
 
 .. automodule:: products.classification
    :members:
 
 
-products.iwc
------------------------
+cloudnetpy.products.iwc
+.......................
 
 .. automodule:: products.iwc
    :members:
 
 
-products.lwc
------------------------
+cloudnetpy.products.lwc
+.......................
 
 .. automodule:: products.lwc
    :members:
 
 
-products.drizzle
------------------------
+cloudnetpy.products.drizzle
+...........................
 
 .. automodule:: products.drizzle
+   :members:
+
+
+Misc
+----
+
+Documentation for various modules with low-level
+functionality.
+
+cloudnetpy.utils
+................
+
+.. automodule:: utils
    :members:
 
 

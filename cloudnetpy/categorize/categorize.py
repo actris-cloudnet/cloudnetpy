@@ -20,13 +20,15 @@ def generate_categorize(input_files, output_file):
     and classified as different types of scatterers such as ice, liquid,
     insects, etc. Next, the radar signal is corrected for atmospheric
     attenuation, and error estimates are computed. Results are saved
-    in *ouput_file* which is by default a compressed NETCDF4_CLASSIC
-    file.
+    in *ouput_file* which is a compressed netCDF4 file.
 
     Args:
         input_files (dict): dict containing file names for calibrated
             'radar', 'lidar' 'model' and 'mwr' files.
         output_file (str): Full path of the output file.
+
+    Raises:
+        RuntimeError: Failed to create the categorize file.
 
     Notes:
         Separate mwr-file is not needed when using RPG cloud radar which
@@ -158,13 +160,13 @@ class DataSource:
             MaskedArray: The actual data.
 
         Raises:
-             KeyError: The variable is not found.
+             RuntimeError: The variable is not found.
 
         """
         for arg in args:
             if arg in self.variables:
                 return self.variables[arg][:]
-        raise KeyError('Missing variable in the input file.')
+        raise RuntimeError('Missing variable in the input file.')
 
     def _netcdf_to_cloudnet(self, fields):
         """Transforms netCDF4-variables into CloudnetArrays.
@@ -295,7 +297,7 @@ class Radar(ProfileDataSource):
         if 'prf' in self.variables:
             return float(self.getvar('prf') * scipy.constants.c
                          / (4 * self.radar_frequency * 1e9))
-        raise KeyError('Unable to determine folding velocity')
+        raise RuntimeError('Unable to determine folding velocity')
 
     def rebin_to_grid(self, time_new):
         """Rebins radar data in time using mean.

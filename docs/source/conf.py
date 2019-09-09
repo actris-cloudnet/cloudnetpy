@@ -12,10 +12,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+import os
 import sys
-sys.path.insert(0, '/home/tukiains/Documents/PYTHON/cloudnetpy/')
-sys.path.insert(0, '/home/tukiains/Documents/PYTHON/cloudnetpy/cloudnetpy/')
-sys.path.insert(0, '/home/tukiains/Documents/PYTHON/cloudnetpy/cloudnetpy/products')
+sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('../../cloudnetpy/'))
 
 
 # -- Project information -----------------------------------------------------
@@ -25,9 +25,9 @@ copyright = '2019, Finnish Meteorological Institute'
 author = 'Finnish Meteorological Institute'
 
 # The short X.Y version
-version = ''
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = ''
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -86,7 +86,9 @@ pygments_style = None
 # a list of builtin themes.
 #
 #html_theme = 'alabaster'
-html_theme = 'classic'
+#html_theme = 'classic'
+html_theme = 'sphinx_rtd_theme'
+
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
