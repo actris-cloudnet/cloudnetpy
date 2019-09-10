@@ -1,15 +1,12 @@
 import os
 import sys
 sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
-import warnings
 import glob
 from zipfile import ZipFile
 import pytest
 import requests
 import netCDF4
 from tests import run_testcase_processing as process
-
-#warnings.filterwarnings("ignore")
 
 
 def get_default_path():
