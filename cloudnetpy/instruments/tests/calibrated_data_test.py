@@ -1,5 +1,5 @@
 from tests.data_quality import data_quality_test
-from tests.test import Logging_handler
+from tests.test import LoggingHandler
 
 
 FILE_TYPES = ['radar', 'ceilo']
@@ -9,7 +9,7 @@ def test_operative_data():
     for type in FILE_TYPES:
         result = data_quality_test.get_process_data_and_boundaries(type)
         assert all(r for r in result.values()),\
-            Logging_handler.fill_log(data_quality_test.false_variables_msg(result), type)
+            LoggingHandler.fill_log(data_quality_test.false_variables_msg(result), type)
 
 
 def test_operative_peaks():

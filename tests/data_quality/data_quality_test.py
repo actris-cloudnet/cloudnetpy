@@ -12,7 +12,7 @@ import numpy.ma as ma
 import netCDF4
 import configparser
 from cloudnetpy.utils import calc_relative_error
-from tests.test import Logging_handler
+from tests.test import LoggingHandler
 
 
 def _get_root_path():
@@ -29,39 +29,15 @@ REFERENCE_PATH = f"{ROOT_PATH}tests/reference_data/"
 PROCESS_PATH = f"{ROOT_PATH}tests/source_data/"
 LIMIT = 20
 
-"""
-def _manage_logger_file():
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    return logger
-
-
-def _create_logger_file(path, name):
-    fh = logging.FileHandler(os.path.join(path, f"{name}.log"), mode='w')
-    fh.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-
-
-def fill_log(reason, instru):
-    logger.warning(f"Data quality test didn't pass in {instru} file")
-    logger.warning(reason)
-
-
-def _logger_information(site, date):
-    logger.info(f"Operative processing from {site} at {date}")
-"""
-
-LOG = Logging_handler()
-logger = LOG._manage_logger_file()
+LOG = LoggingHandler()
+logger = LOG.manage_logger_file()
 
 
 def generate_data_testing(quantity, site, date, operative_path, reference=False, reprocess=False):
-
     logger.name = site
-    Logging_handler._create_logger_file(PROCESS_PATH, site)
-    Logging_handler._logger_information(site, date)
+    #LoggingHandler.create_logger_file(PROCESS_PATH, site)
+    LoggingHandler.logger_file_no_handler(PROCESS_PATH, site)
+    LoggingHandler.logger_information(site, date)
 
     test_path = config[quantity]["path"]
     options = "--tb=line"
@@ -173,7 +149,8 @@ def false_variables_msg(results):
 
 
 if __name__ == "__main__":
-    generate_data_testing('radar', 'Mace-head' '20190703', PROCESS_PATH)
+    operative_path = '/home/korpinen/ACTRIS/cloudnetpy/tests/source_data/'
+    generate_data_testing('radar', 'Mace-Head', '20190703', operative_path)
 
 
 

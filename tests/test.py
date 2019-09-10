@@ -15,29 +15,42 @@ warnings.filterwarnings("ignore")
 OPERATIVE_RUN = True
 
 
-class Logging_handler:
-    def _manage_logger_file(self):
+class LoggingHandler:
+    @staticmethod
+    def manage_logger_file():
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
         return logger
 
-    def _create_logger_file(self, path, name):
+    @staticmethod
+    def create_logger_file(path, name):
         fh = logging.FileHandler(os.path.join(path, f"{name}.log"), mode='w')
         fh.setLevel(logging.DEBUG)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
-    def fill_log(self, reason, instru):
+    @staticmethod
+    def logger_file_no_handler(path, site):
+        logging.basicConfig(filename=f'{path}{site}.log',
+                            filemode='w',
+                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                            datefmt='%Y-%m-%d %H:%M:%S',
+                            level=logging.DEBUG)
+
+    @staticmethod
+    def fill_log(reason, instru):
         if OPERATIVE_RUN:
             logger.warning(f"Data quality test didn't pass in {instru} file")
             logger.warning(reason)
 
-    def _logger_information(self, site, date):
+    @staticmethod
+    def logger_information(site, date):
         logger.info(f"Operative processing from {site} at {date}")
 
-LOG = Logging_handler()
-logger = LOG._manage_logger_file()
+
+LOG = LoggingHandler()
+logger = LOG.manage_logger_file()
 
 
 def get_default_path():
@@ -79,8 +92,8 @@ def main(site, date, reference_run=False):
     if not reference_run:
         path = get_default_path()
         logger.name = site
-        Logging_handler._create_logger_file(path, site)
-        Logging_handler._logger_information(site, date)
+        LoggingHandler.create_logger_file(path, site)
+        LoggingHandler.logger_information(site, date)
 
         print(f"\n{22 * '#'} Running operative CloudnetPy tests {22 * '#'}")
         print("\nTesting raw files:\n")
