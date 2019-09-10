@@ -47,7 +47,7 @@ def generate_iwc(categorize_file, output_file):
     _append_iwc_sensitivity(iwc_data)
     _append_iwc_status(iwc_data, ice_class)
     output.update_attributes(iwc_data.data, IWC_ATTRIBUTES)
-    output.save_product_file('ice water content', iwc_data, output_file)
+    output.save_product_file('iwc', iwc_data, output_file)
 
 
 class IwcSource(DataSource):

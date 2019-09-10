@@ -23,11 +23,13 @@ def update_attributes(cloudnet_variables, attributes):
             cloudnet_variables[key].set_attributes(COMMON_ATTRIBUTES[key])
 
 
-def save_product_file(identifier, obj, file_name, copy_from_cat=()):
+def save_product_file(short_id, obj, file_name, copy_from_cat=()):
     """Saves a standard Cloudnet product file."""
+    identifier = _get_identifier(short_id)
     dimensions = {'time': len(obj.time),
                   'height': len(obj.variables['height'])}
     root_group = init_file(file_name, dimensions, obj.data)
+    add_file_type(root_group, short_id)
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
     copy_variables(obj.dataset, root_group, vars_from_source)
     root_group.title = f"{identifier.capitalize()} file from {obj.dataset.location}"
@@ -35,6 +37,15 @@ def save_product_file(identifier, obj, file_name, copy_from_cat=()):
     copy_global(obj.dataset, root_group, ('location', 'day', 'month', 'year'))
     merge_history(root_group, identifier, obj)
     root_group.close()
+
+
+def _get_identifier(short_id):
+    if short_id == 'iwc':
+        return 'ice water content'
+    elif short_id == 'lwc':
+        return 'liquid water content'
+    else:
+        return short_id
 
 
 def merge_history(root_group, file_type, *sources):
@@ -104,3 +115,8 @@ def copy_global(source, target, attr_list):
     for attr_name in source.ncattrs():
         if attr_name in attr_list:
             setattr(target, attr_name, source.getncattr(attr_name))
+
+
+def add_file_type(root_group, file_type):
+    """Adds cloudnet_file_type global attribute."""
+    root_group.cloudnet_file_type = file_type
