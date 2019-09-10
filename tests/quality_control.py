@@ -1,9 +1,9 @@
 #!../venv/bin/python3.7
 import os
 import sys
-import pytest
 import configparser
 import logging
+import pytest
 
 
 CONFIG_FILE_NAME = 'data_quality_config.ini'
@@ -47,6 +47,7 @@ def get_file_type(file_name):
     for file_type in ('categorize', 'iwc', 'lwc', 'radar', 'ceilo'):
         if file_type in os.path.basename(file_name):
             return file_type
+    return None
 
 
 def _get_test_path():
