@@ -1,4 +1,4 @@
-"""Module for reading and processing Vaisala ceilometers."""
+"""Module for reading and processing Vaisala / Jenoptik ceilometers."""
 import linecache
 import re
 import numpy as np
@@ -545,6 +545,7 @@ def _save_ceilo(ceilo, output_file, location):
     dims = {'time': len(ceilo.time),
             'range': len(ceilo.range)}
     rootgrp = output.init_file(output_file, dims, ceilo.data)
+    output.add_file_type(rootgrp, 'lidar')
     if hasattr(ceilo, 'dataset'):
         output.copy_variables(ceilo.dataset, rootgrp, ('wavelength',))
     rootgrp.title = f"Ceilometer file from {location}"

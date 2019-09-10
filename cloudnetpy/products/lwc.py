@@ -45,7 +45,7 @@ def generate_lwc(categorize_file, output_file):
     lwc_obj.screen_rain()
     _append_data(lwc_source, lwc_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
-    output.save_product_file('liquid water content', lwc_source, output_file,
+    output.save_product_file('lwc', lwc_source, output_file,
                              copy_from_cat=('lwp', 'lwp_error'))
 
 

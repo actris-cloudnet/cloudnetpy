@@ -337,7 +337,7 @@ def _save_rpg(rpg, output_file):
             'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}
 
     rootgrp = output.init_file(output_file, dims, rpg.data)
-
+    output.add_file_type(rootgrp, 'radar')
     rootgrp.title = f"Radar file from {rpg.location}"
     rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
     rootgrp.location = rpg.location

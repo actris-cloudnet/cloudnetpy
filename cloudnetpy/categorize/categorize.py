@@ -99,6 +99,7 @@ def _save_cat(file_name, radar, lidar, model, obs):
             'model_time': len(model.time),
             'model_height': len(model.mean_height)}
     rootgrp = output.init_file(file_name, dims, obs)
+    output.add_file_type(rootgrp, 'categorize')
     output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
     rootgrp.title = f"Categorize file from {radar.location}"
     # Needs to solve how to provide institution

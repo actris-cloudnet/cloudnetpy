@@ -120,6 +120,7 @@ def _save_mira(mmclx_file, raw_radar, output_file):
     fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg',
                        'NyquistVelocity')
     output.copy_variables(netCDF4.Dataset(mmclx_file), rootgrp, fields_from_raw)
+    output.add_file_type(rootgrp, 'radar')
     rootgrp.title = f"Radar file from {raw_radar.location}"
     rootgrp.year, rootgrp.month, rootgrp.day = _date_from_filename(raw_radar.filename)
     rootgrp.location = raw_radar.location
