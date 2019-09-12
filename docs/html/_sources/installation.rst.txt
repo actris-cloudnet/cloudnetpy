@@ -2,7 +2,7 @@
 Installation Instructions
 =========================
 
-CloudnetPy can be installed on any computer supporting Python.
+CloudnetPy can be installed on any computer supporting Python3.6 (or higher).
 The actual installation procedure depends on the operating system. The
 instructions below are for Ubuntu, although they work with
 many other Linux systems as well.
@@ -10,7 +10,7 @@ many other Linux systems as well.
 Python Installation
 -------------------
 
-CloudnetPy requires Python3.7 or higher:
+These instructions are for the current stable Python release, Python3.7:
 
 .. code-block:: console
 		
