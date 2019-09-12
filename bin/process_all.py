@@ -100,7 +100,7 @@ def _process_radar(dvec):
 def _build_uncalibrated_rpg_path(dvec):
     year, month, day = _split_date(dvec)
     rpg_model = config['INSTRUMENTS']['radar']
-    return f"{SITE_ROOT}uncalibrated/{rpg_model}/Y{year}/M{month}/D{day}/"
+    return f"{INPUT_ROOT}uncalibrated/{rpg_model}/Y{year}/M{month}/D{day}/"
 
 
 def _process_lidar(dvec):
@@ -128,8 +128,8 @@ def _process_categorize(dvec):
                 'lidar': _find_calibrated_file('lidar', dvec),
                 'mwr': _find_mwr_file(dvec),
                 'model': _find_calibrated_file('model', dvec)}
-        except FileNotFoundError as error:
-            raise RuntimeError(f"{error}. Cannot process categorize file (missing input files).")
+        except FileNotFoundError:
+            raise RuntimeError(f"Cannot process categorize file (missing input files).")
         try:
             print(f"Processing categorize file..")
             cat.generate_categorize(input_files, output_file)
@@ -139,9 +139,8 @@ def _process_categorize(dvec):
     if _is_good_to_plot('categorize', image_name):
         print(f"Generating categorize quicklook..")
         fields = ['Z', 'v', 'ldr', 'width', 'v_sigma', 'beta', 'lwp']
-        fields = ['beta']
         plotting.generate_figure(output_file, fields, image_name=image_name,
-                                 show=False, max_y=10, dpi=500)
+                                 show=False, max_y=10)
 
 
 def _process_product(product, dvec):
@@ -161,13 +160,12 @@ def _process_product(product, dvec):
         fields, max_y = _get_product_fields_in_plot(product_prefix)
         plotting.generate_figure(output_file, fields, image_name=image_name,
                                  show=config.getboolean('MISC', 'show_plot'),
-                                 max_y=max_y, dpi=500)
+                                 max_y=max_y)
 
 
 def _get_product_fields_in_plot(product, max_y=10):
     if product == 'classification':
         fields = ['target_classification', 'detection_status']
-        fields = ['target_classification']
     elif product == 'iwc':
         fields = ['iwc', 'iwc_error', 'iwc_retrieval_status']
     elif product == 'lwc':
