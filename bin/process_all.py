@@ -24,7 +24,8 @@ from cloudnetpy import utils
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-SITE_ROOT = f"{config['PATH']['root']}{config['SITE']['dir_name']}/"
+INPUT_ROOT = f"{config['PATH']['input_root_path']}{config['SITE']['dir_name']}/"
+OUTPUT_ROOT = f"{config['PATH']['output_root_path']}{config['SITE']['dir_name']}/"
 
 
 def main():
@@ -137,8 +138,10 @@ def _process_categorize(dvec):
     image_name = _make_image_name(output_file)
     if _is_good_to_plot('categorize', image_name):
         print(f"Generating categorize quicklook..")
-        plotting.generate_figure(output_file, ['Z', 'v', 'ldr', 'width', 'v_sigma', 'beta', 'lwp'],
-                                 image_name=image_name, show=False, max_y=10)
+        fields = ['Z', 'v', 'ldr', 'width', 'v_sigma', 'beta', 'lwp']
+        fields = ['beta']
+        plotting.generate_figure(output_file, fields, image_name=image_name,
+                                 show=False, max_y=10, dpi=500)
 
 
 def _process_product(product, dvec):
@@ -158,12 +161,13 @@ def _process_product(product, dvec):
         fields, max_y = _get_product_fields_in_plot(product_prefix)
         plotting.generate_figure(output_file, fields, image_name=image_name,
                                  show=config.getboolean('MISC', 'show_plot'),
-                                 max_y=max_y)
+                                 max_y=max_y, dpi=500)
 
 
 def _get_product_fields_in_plot(product, max_y=10):
     if product == 'classification':
         fields = ['target_classification', 'detection_status']
+        fields = ['target_classification']
     elif product == 'iwc':
         fields = ['iwc', 'iwc_error', 'iwc_retrieval_status']
     elif product == 'lwc':
@@ -259,7 +263,7 @@ def _find_calibrated_path(instrument, dvec):
 
 def _find_categorize_path(dvec):
     year = _get_year(dvec)
-    categorize_path = f"{SITE_ROOT}/processed/categorize/{year}/"
+    categorize_path = f"{OUTPUT_ROOT}/processed/categorize/{year}/"
     if not os.path.exists(categorize_path):
         os.makedirs(categorize_path)
     return categorize_path
@@ -267,7 +271,7 @@ def _find_categorize_path(dvec):
 
 def _find_product_path(product, dvec):
     year = _get_year(dvec)
-    product_path = f"{SITE_ROOT}/products/{product}/{year}/"
+    product_path = f"{OUTPUT_ROOT}/products/{product}/{year}/"
     if not os.path.exists(product_path):
         os.makedirs(product_path)
     return product_path
@@ -284,7 +288,7 @@ def gz_to_nc(gz_file):
 
 def _get_uncalibrated_paths(instruments):
     Paths = namedtuple('Paths', ['radar', 'lidar', 'mwr'])
-    prefix = f"{SITE_ROOT}uncalibrated/"
+    prefix = f"{INPUT_ROOT}uncalibrated/"
     return Paths(radar=f"{prefix}{instruments['radar']}/",
                  lidar=f"{prefix}{instruments['lidar']}/",
                  mwr=f"{prefix}{instruments['mwr']}/")
@@ -292,7 +296,7 @@ def _get_uncalibrated_paths(instruments):
 
 def _get_calibrated_paths(instruments):
     Paths = namedtuple('Paths', ['radar', 'lidar', 'model'])
-    prefix = f"{SITE_ROOT}calibrated/"
+    prefix = f"{OUTPUT_ROOT}calibrated/"
     return Paths(radar=f"{prefix}{instruments['radar']}/",
                  lidar=f"{prefix}{instruments['lidar']}/",
                  model=f"{prefix}{instruments['model']}/")
