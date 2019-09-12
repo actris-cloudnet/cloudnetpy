@@ -12,7 +12,9 @@ FIELDS = (
     'ancillary_variables',
     'positive')
 
-MetaData = namedtuple('MetaData', FIELDS, defaults=(None,)*len(FIELDS))
+MetaData = namedtuple('MetaData', FIELDS)
+MetaData.__new__.__defaults__ = (None,) * len(MetaData._fields)
+
 
 COMMON_ATTRIBUTES = {
     'time': MetaData(

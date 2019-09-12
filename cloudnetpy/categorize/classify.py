@@ -1,7 +1,7 @@
 """Module containing low-level functions to classify gridded
 radar / lidar measurements.
 """
-from dataclasses import dataclass
+from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
 from scipy.ndimage.filters import gaussian_filter
@@ -74,12 +74,12 @@ def classify_measurements(radar, lidar, model, mwr):
     bits[5], insect_prob = find_insects(obs, bits[3], bits[0])
     bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4] = find_aerosols(obs, bits[1], bits[0])
-    return _ClassificationResult(_bits_to_integer(bits),
-                                 obs.is_rain,
-                                 obs.is_clutter,
-                                 insect_prob,
-                                 liquid['bases'],
-                                 find_profiles_with_undetected_melting(bits))
+    return ClassificationResult(_bits_to_integer(bits),
+                                obs.is_rain,
+                                obs.is_clutter,
+                                insect_prob,
+                                liquid['bases'],
+                                find_profiles_with_undetected_melting(bits))
 
 
 def find_melting_layer(obs, smooth=True):
@@ -502,11 +502,9 @@ class _ClassData:
         return is_clutter
 
 
-@dataclass
-class _ClassificationResult:
-    category_bits: np.ndarray
-    is_rain: np.ndarray
-    is_clutter: np.ndarray
-    insect_prob: np.ndarray
-    liquid_bases: np.ndarray
-    is_undetected_melting: np.ndarray
+ClassificationResult = namedtuple('ClassificationResult', ['category_bits',
+                                                           'is_rain',
+                                                           'is_clutter',
+                                                           'insect_prob',
+                                                           'liquid_bases',
+                                                           'is_undetected_melting'])

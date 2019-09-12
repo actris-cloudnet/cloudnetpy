@@ -7,7 +7,9 @@ import numpy as np
 CURRENT_YEAR = int(utils.get_time()[:4])
 
 FIELDS = ('min', 'max', 'units', 'attributes',)
-Specs = namedtuple('Specs', FIELDS, defaults=(None,)*len(FIELDS))
+Specs = namedtuple('Specs', FIELDS)
+Specs.__new__.__defaults__ = (None,) * len(Specs._fields)
+
 
 COMMON_ATTRIBUTES = {
     'year': Specs(

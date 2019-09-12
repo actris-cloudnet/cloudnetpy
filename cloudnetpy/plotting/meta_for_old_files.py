@@ -10,7 +10,8 @@ FIELDS = ('hidden',
           'swapped',
           'rename')
 
-PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
+PlotMeta = namedtuple('PlotMeta', FIELDS)
+PlotMeta.__new__.__defaults__ = (None,) * len(FIELDS)
 
 _HIDDEN = {
     'detection_status':
