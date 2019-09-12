@@ -77,6 +77,8 @@ def _process_radar(dvec):
         return file
 
     instrument = 'radar'
+    if not _should_we_process(instrument):
+        return
     output_file = _build_calibrated_file_name(instrument, dvec)
     if config['INSTRUMENTS'][instrument] == 'mira':
         try:
@@ -105,6 +107,8 @@ def _build_uncalibrated_rpg_path(dvec):
 
 def _process_lidar(dvec):
     instrument = 'lidar'
+    if not _should_we_process(instrument):
+        return
     input_path = _find_uncalibrated_path(instrument, dvec)
     try:
         input_file = _find_file(input_path, f"*{dvec[3:]}*")
@@ -200,6 +204,11 @@ def _is_good_to_process(process_type, output_file):
     process_always = process_level == 2
     process_if_missing = process_level == 1 and not is_file
     return process_always or process_if_missing
+
+
+def _should_we_process(process_type):
+    process_level = config.getint('PROCESS_LEVEL', process_type)
+    return process_level > 0
 
 
 def _is_good_to_plot(process_type, image_name):
