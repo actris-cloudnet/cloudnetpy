@@ -21,7 +21,8 @@ setup(
     url='https://github.com/tukiains/cloudnetpy',
     license=license,
     packages=find_packages(exclude=('tests', 'docs', 'bin')),
-    python_requires='>=3.7',
+    include_package_data=True,
+    python_requires='>=3.6',
     install_requires=['numpy>=1.16', 'scipy>=1.2', 'netCDF4>=1.4.2',
                       'matplotlib>=3.0.2', 'requests>=2.21'],
     classifiers=[
