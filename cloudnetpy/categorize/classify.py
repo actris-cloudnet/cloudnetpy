@@ -130,7 +130,8 @@ def find_melting_layer(obs, smooth=True):
 
     def _get_temp_indices():
         bottom_point = np.where(t_prof < (T0 - t_range[0]))[0][0]
-        top_point = np.where(t_prof > (T0 + t_range[0]))[0][-1]
+        top_point = np.where(t_prof > (T0 + t_range[0]))[0]
+        top_point = top_point[-1] if len(top_point) > 0 else 0
         return np.arange(bottom_point, top_point + 1)
 
     if 'ecmwf' in obs.model_type.lower():
@@ -361,9 +362,13 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
         return (obs.beta.data > strong_beta_limit) & ~is_liquid
 
     def _find_cold_aerosols():
+        """Lidar signals which are in colder than the
+        threshold temperature and have gap below in the profile
+        are probably ice."""
         temperature_limit = T0 - 15
         is_beta = ~obs.beta.mask
-        return is_beta & (obs.tw < temperature_limit) & ~is_liquid
+        region = utils.ffill(is_beta, 1) == 0
+        return is_beta & (obs.tw < temperature_limit) & ~is_liquid & region
 
     def _fix_liquid_dominated_radar():
         """Radar signals inside liquid clouds are NOT ice if Z in cloud is
