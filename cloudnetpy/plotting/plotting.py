@@ -154,20 +154,21 @@ def _set_title(ax, field_name, identifier=" from CloudnetPy"):
 def _find_valid_fields(nc_file, names):
     """Returns valid field names and corresponding data."""
     valid_names, valid_data = names[:], []
-    nc_variables = netCDF4.Dataset(nc_file).variables
+    nc = netCDF4.Dataset(nc_file)
     try:
         bits = CategorizeBits(nc_file)
     except KeyError:
         bits = None
     for name in names:
-        if name in nc_variables:
-            valid_data.append(nc_variables[name][:])
+        if name in nc.variables:
+            valid_data.append(nc.variables[name][:])
         elif bits and name in CategorizeBits.category_keys:
             valid_data.append(bits.category_bits[name])
         elif bits and name in CategorizeBits.quality_keys:
             valid_data.append(bits.quality_bits[name])
         else:
             valid_names.remove(name)
+    nc.close()
     return valid_data, valid_names
 
 
@@ -185,9 +186,10 @@ def _read_ax_values(nc_file, ax_type=None):
 
     def _get_correct_dimension(field_names):
         """Model dimensions are different in old/new files."""
-        variables = netCDF4.Dataset(nc_file).variables
+        nc = netCDF4.Dataset(nc_file)
         for name in field_names:
-            yield name.split('_')[-1] if name not in variables else name
+            yield name.split('_')[-1] if name not in nc.variables else name
+        nc.close()
 
     if ax_type == 'model':
         fields = _get_correct_dimension(['model_time', 'model_height'])
@@ -334,9 +336,10 @@ def _generate_log_cbar_ticklabel_list(vmin, vmax):
 
 def _read_case_date(nc_file):
     """Returns measurement date string."""
-    obj = netCDF4.Dataset(nc_file)
-    case_date = date(int(obj.year), int(obj.month), int(obj.day))
-    site_name = obj.location
+    nc = netCDF4.Dataset(nc_file)
+    case_date = date(int(nc.year), int(nc.month), int(nc.day))
+    site_name = nc.location
+    nc.close()
     return case_date, site_name
 
 

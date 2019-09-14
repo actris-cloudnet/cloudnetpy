@@ -61,8 +61,10 @@ def read_nc_fields(nc_file, names):
 
     """
     names = [names] if isinstance(names, str) else names
-    nc_variables = netCDF4.Dataset(nc_file).variables
+    nc = netCDF4.Dataset(nc_file)
+    nc_variables = nc.variables
     data = [nc_variables[name][:] for name in names]
+    nc.close()
     return data[0] if len(data) == 1 else data
 
 
