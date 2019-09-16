@@ -375,6 +375,8 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
         increasing in height."""
 
         def _is_z_missing_above_liquid():
+            if top == obs.z.shape[1] - 1:
+                return False
             return obs.z.mask[n, top+1]
 
         def _is_z_increasing():
