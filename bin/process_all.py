@@ -88,6 +88,7 @@ def _process_radar(dvec):
         if _is_good_to_process(instrument, output_file):
             print(f"Calibrating mira cloud radar..")
             mira.mira2nc(input_file, output_file, config['SITE'])
+            _discard_uncompressed_radar_file(input_file)
     elif config['INSTRUMENTS'][instrument] == 'rpg-fmcw-94':
         rpg_path = _build_uncalibrated_rpg_path(dvec)
         try:
@@ -97,6 +98,16 @@ def _process_radar(dvec):
         if _is_good_to_process(instrument, output_file):
             print(f"Calibrating rpg-fmcw-94 cloud radar..")
             rpg.rpg2nc(rpg_path, output_file, dict(config.items('SITE')))
+
+
+def _discard_uncompressed_radar_file(nc_file):
+    if not config.getboolean('MISC', 'save_compressed_mira_raw_only'):
+        return
+    gz_file = nc_file.replace('.nc', '.gz')
+    if not os.path.isfile(gz_file):
+        nc_to_gz(nc_file)
+    print('Deleting uncompressed file.')
+    os.remove(nc_file)
 
 
 def _build_uncalibrated_rpg_path(dvec):
@@ -148,6 +159,8 @@ def _process_categorize(dvec):
 
 
 def _process_product(product, dvec):
+    if not _should_we_process(product):
+        return
     try:
         categorize_file = _find_categorize_file(dvec)
     except FileNotFoundError:
@@ -286,11 +299,17 @@ def _find_product_path(product, dvec):
 
 def gz_to_nc(gz_file):
     """Unzips *.gz file to *.nc file."""
-    nc_file = gz_file.replace('gz', 'nc')
+    nc_file = gz_file.replace('.gz', '.nc')
     with gzip.open(gz_file, 'rb') as file_in:
         with open(nc_file, 'wb') as file_out:
             shutil.copyfileobj(file_in, file_out)
     return nc_file
+
+
+def nc_to_gz(nc_file):
+    gz_file = nc_file.replace('.nc', '.gz')
+    with open(nc_file, 'rb') as f_in, gzip.open(gz_file, 'wb') as f_out:
+        f_out.writelines(f_in)
 
 
 def _get_uncalibrated_paths(instruments):
