@@ -106,7 +106,6 @@ def _discard_uncompressed_radar_file(nc_file):
     gz_file = nc_file.replace('.nc', '.gz')
     if not os.path.isfile(gz_file):
         nc_to_gz(nc_file)
-    print('Deleting uncompressed file.')
     os.remove(nc_file)
 
 
@@ -143,8 +142,8 @@ def _process_categorize(dvec):
                 'lidar': _find_calibrated_file('lidar', dvec),
                 'mwr': _find_mwr_file(dvec),
                 'model': _find_calibrated_file('model', dvec)}
-        except FileNotFoundError:
-            raise RuntimeError(f"Cannot process categorize file (missing input files).")
+        except FileNotFoundError as error:
+            raise RuntimeError(f"Cannot process categorize file, missing input files: {error}")
         try:
             print(f"Processing categorize file..")
             cat.generate_categorize(input_files, output_file)
@@ -341,7 +340,7 @@ def _find_file(file_path, wildcard):
     for file in files:
         if fnmatch.fnmatch(file, wildcard):
             return file_path + file
-    raise FileNotFoundError
+    raise FileNotFoundError(f"No {wildcard} in {file_path}")
 
 
 def _split_date(dvec):
