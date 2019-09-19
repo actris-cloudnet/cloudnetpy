@@ -92,3 +92,4 @@ product, the classification product.
     from cloudnetpy.products.classification import generate_classification
     generate_classification('categorize.nc', 'classification.nc')
 
+Corresponding functions are available for other products (see :ref:`API reference`).

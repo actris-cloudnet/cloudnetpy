@@ -1,5 +1,4 @@
 """ This module contains unit tests for utils-module. """
-from dataclasses import dataclass
 import numpy as np
 import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal
@@ -148,15 +147,6 @@ def test_cumsumr():
 def test_isscalar(input, output):
     """Unit tests for utils.isscalar()."""
     assert output == utils.isscalar(input)
-
-
-@dataclass
-class Data:
-    alt: np.array
-    units: str
-
-    def __getitem__(self, item):
-        return self.alt
 
 
 def test_n_elements():

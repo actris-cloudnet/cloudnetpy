@@ -9,7 +9,8 @@ FIELDS = ('name',
           'plot_scale',
           'plot_type')
 
-PlotMeta = namedtuple('PlotMeta', FIELDS, defaults=(None,)*len(FIELDS))
+PlotMeta = namedtuple('PlotMeta', FIELDS)
+PlotMeta.__new__.__defaults__ = (None,) * len(FIELDS)
 
 _LOG = 'logarithmic'
 _LIN = 'linear'

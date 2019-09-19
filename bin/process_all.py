@@ -24,7 +24,8 @@ from cloudnetpy import utils
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-SITE_ROOT = f"{config['PATH']['root']}{config['SITE']['dir_name']}/"
+INPUT_ROOT = f"{config['PATH']['input_root_path']}{config['SITE']['dir_name']}/"
+OUTPUT_ROOT = f"{config['PATH']['output_root_path']}{config['SITE']['dir_name']}/"
 
 
 def main():
@@ -76,6 +77,8 @@ def _process_radar(dvec):
         return file
 
     instrument = 'radar'
+    if not _should_we_process(instrument):
+        return
     output_file = _build_calibrated_file_name(instrument, dvec)
     if config['INSTRUMENTS'][instrument] == 'mira':
         try:
@@ -85,6 +88,7 @@ def _process_radar(dvec):
         if _is_good_to_process(instrument, output_file):
             print(f"Calibrating mira cloud radar..")
             mira.mira2nc(input_file, output_file, config['SITE'])
+            _discard_uncompressed_radar_file(input_file)
     elif config['INSTRUMENTS'][instrument] == 'rpg-fmcw-94':
         rpg_path = _build_uncalibrated_rpg_path(dvec)
         try:
@@ -96,14 +100,25 @@ def _process_radar(dvec):
             rpg.rpg2nc(rpg_path, output_file, dict(config.items('SITE')))
 
 
+def _discard_uncompressed_radar_file(nc_file):
+    if not config.getboolean('MISC', 'save_compressed_mira_raw_only'):
+        return
+    gz_file = nc_file.replace('.nc', '.gz')
+    if not os.path.isfile(gz_file):
+        nc_to_gz(nc_file)
+    os.remove(nc_file)
+
+
 def _build_uncalibrated_rpg_path(dvec):
     year, month, day = _split_date(dvec)
     rpg_model = config['INSTRUMENTS']['radar']
-    return f"{SITE_ROOT}uncalibrated/{rpg_model}/Y{year}/M{month}/D{day}/"
+    return f"{INPUT_ROOT}uncalibrated/{rpg_model}/Y{year}/M{month}/D{day}/"
 
 
 def _process_lidar(dvec):
     instrument = 'lidar'
+    if not _should_we_process(instrument):
+        return
     input_path = _find_uncalibrated_path(instrument, dvec)
     try:
         input_file = _find_file(input_path, f"*{dvec[3:]}*")
@@ -128,7 +143,7 @@ def _process_categorize(dvec):
                 'mwr': _find_mwr_file(dvec),
                 'model': _find_calibrated_file('model', dvec)}
         except FileNotFoundError as error:
-            raise RuntimeError(f"{error}. Cannot process categorize file (missing input files).")
+            raise RuntimeError(f"Cannot process categorize file, missing input files: {error}")
         try:
             print(f"Processing categorize file..")
             cat.generate_categorize(input_files, output_file)
@@ -137,11 +152,14 @@ def _process_categorize(dvec):
     image_name = _make_image_name(output_file)
     if _is_good_to_plot('categorize', image_name):
         print(f"Generating categorize quicklook..")
-        plotting.generate_figure(output_file, ['Z', 'v', 'ldr', 'width', 'v_sigma', 'beta', 'lwp'],
-                                 image_name=image_name, show=False, max_y=10)
+        fields = ['Z', 'v', 'ldr', 'width', 'v_sigma', 'beta', 'lwp']
+        plotting.generate_figure(output_file, fields, image_name=image_name,
+                                 show=False, max_y=10)
 
 
 def _process_product(product, dvec):
+    if not _should_we_process(product):
+        return
     try:
         categorize_file = _find_categorize_file(dvec)
     except FileNotFoundError:
@@ -198,6 +216,11 @@ def _is_good_to_process(process_type, output_file):
     process_always = process_level == 2
     process_if_missing = process_level == 1 and not is_file
     return process_always or process_if_missing
+
+
+def _should_we_process(process_type):
+    process_level = config.getint('PROCESS_LEVEL', process_type)
+    return process_level > 0
 
 
 def _is_good_to_plot(process_type, image_name):
@@ -259,7 +282,7 @@ def _find_calibrated_path(instrument, dvec):
 
 def _find_categorize_path(dvec):
     year = _get_year(dvec)
-    categorize_path = f"{SITE_ROOT}/processed/categorize/{year}/"
+    categorize_path = f"{OUTPUT_ROOT}/processed/categorize/{year}/"
     if not os.path.exists(categorize_path):
         os.makedirs(categorize_path)
     return categorize_path
@@ -267,7 +290,7 @@ def _find_categorize_path(dvec):
 
 def _find_product_path(product, dvec):
     year = _get_year(dvec)
-    product_path = f"{SITE_ROOT}/products/{product}/{year}/"
+    product_path = f"{OUTPUT_ROOT}/products/{product}/{year}/"
     if not os.path.exists(product_path):
         os.makedirs(product_path)
     return product_path
@@ -275,16 +298,22 @@ def _find_product_path(product, dvec):
 
 def gz_to_nc(gz_file):
     """Unzips *.gz file to *.nc file."""
-    nc_file = gz_file.replace('gz', 'nc')
+    nc_file = gz_file.replace('.gz', '.nc')
     with gzip.open(gz_file, 'rb') as file_in:
         with open(nc_file, 'wb') as file_out:
             shutil.copyfileobj(file_in, file_out)
     return nc_file
 
 
+def nc_to_gz(nc_file):
+    gz_file = nc_file.replace('.nc', '.gz')
+    with open(nc_file, 'rb') as f_in, gzip.open(gz_file, 'wb') as f_out:
+        f_out.writelines(f_in)
+
+
 def _get_uncalibrated_paths(instruments):
     Paths = namedtuple('Paths', ['radar', 'lidar', 'mwr'])
-    prefix = f"{SITE_ROOT}uncalibrated/"
+    prefix = f"{INPUT_ROOT}uncalibrated/"
     return Paths(radar=f"{prefix}{instruments['radar']}/",
                  lidar=f"{prefix}{instruments['lidar']}/",
                  mwr=f"{prefix}{instruments['mwr']}/")
@@ -292,7 +321,7 @@ def _get_uncalibrated_paths(instruments):
 
 def _get_calibrated_paths(instruments):
     Paths = namedtuple('Paths', ['radar', 'lidar', 'model'])
-    prefix = f"{SITE_ROOT}calibrated/"
+    prefix = f"{OUTPUT_ROOT}calibrated/"
     return Paths(radar=f"{prefix}{instruments['radar']}/",
                  lidar=f"{prefix}{instruments['lidar']}/",
                  model=f"{prefix}{instruments['model']}/")
@@ -311,7 +340,7 @@ def _find_file(file_path, wildcard):
     for file in files:
         if fnmatch.fnmatch(file, wildcard):
             return file_path + file
-    raise FileNotFoundError
+    raise FileNotFoundError(f"No {wildcard} in {file_path}")
 
 
 def _split_date(dvec):

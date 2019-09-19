@@ -1,7 +1,7 @@
 """Module containing low-level functions to classify gridded
 radar / lidar measurements.
 """
-from dataclasses import dataclass
+from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
 from scipy.ndimage.filters import gaussian_filter
@@ -74,12 +74,12 @@ def classify_measurements(radar, lidar, model, mwr):
     bits[5], insect_prob = find_insects(obs, bits[3], bits[0])
     bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4] = find_aerosols(obs, bits[1], bits[0])
-    return _ClassificationResult(_bits_to_integer(bits),
-                                 obs.is_rain,
-                                 obs.is_clutter,
-                                 insect_prob,
-                                 liquid['bases'],
-                                 find_profiles_with_undetected_melting(bits))
+    return ClassificationResult(_bits_to_integer(bits),
+                                obs.is_rain,
+                                obs.is_clutter,
+                                insect_prob,
+                                liquid['bases'],
+                                find_profiles_with_undetected_melting(bits))
 
 
 def find_melting_layer(obs, smooth=True):
@@ -130,7 +130,8 @@ def find_melting_layer(obs, smooth=True):
 
     def _get_temp_indices():
         bottom_point = np.where(t_prof < (T0 - t_range[0]))[0][0]
-        top_point = np.where(t_prof > (T0 + t_range[0]))[0][-1]
+        top_point = np.where(t_prof > (T0 + t_range[0]))[0]
+        top_point = top_point[-1] if len(top_point) > 0 else 0
         return np.arange(bottom_point, top_point + 1)
 
     if 'ecmwf' in obs.model_type.lower():
@@ -361,15 +362,21 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
         return (obs.beta.data > strong_beta_limit) & ~is_liquid
 
     def _find_cold_aerosols():
+        """Lidar signals which are in colder than the
+        threshold temperature and have gap below in the profile
+        are probably ice."""
         temperature_limit = T0 - 15
         is_beta = ~obs.beta.mask
-        return is_beta & (obs.tw < temperature_limit) & ~is_liquid
+        region = utils.ffill(is_beta, 1) == 0
+        return is_beta & (obs.tw < temperature_limit) & ~is_liquid & region
 
     def _fix_liquid_dominated_radar():
         """Radar signals inside liquid clouds are NOT ice if Z in cloud is
         increasing in height."""
 
         def _is_z_missing_above_liquid():
+            if top == obs.z.shape[1] - 1:
+                return False
             return obs.z.mask[n, top+1]
 
         def _is_z_increasing():
@@ -502,11 +509,9 @@ class _ClassData:
         return is_clutter
 
 
-@dataclass
-class _ClassificationResult:
-    category_bits: np.ndarray
-    is_rain: np.ndarray
-    is_clutter: np.ndarray
-    insect_prob: np.ndarray
-    liquid_bases: np.ndarray
-    is_undetected_melting: np.ndarray
+ClassificationResult = namedtuple('ClassificationResult', ['category_bits',
+                                                           'is_rain',
+                                                           'is_clutter',
+                                                           'insect_prob',
+                                                           'liquid_bases',
+                                                           'is_undetected_melting'])

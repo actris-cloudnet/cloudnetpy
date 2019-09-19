@@ -71,7 +71,8 @@ class DrizzleSource(DataSource):
             return '35' if wl_band == 0 else '94'
 
         mie_file = _get_mie_file()
-        mie = netCDF4.Dataset(mie_file).variables
+        nc = netCDF4.Dataset(mie_file)
+        mie = nc.variables
         lut = {'Do': mie['lu_medianD'][:],
                'mu': mie['lu_u'][:],
                'S': mie['lu_k'][:],
@@ -81,6 +82,7 @@ class DrizzleSource(DataSource):
         lut.update({'width': mie[f"lu_width_{band}"][:],
                     'ray': mie[f"lu_mie_ray_{band}"][:],
                     'v': mie[f"lu_v_{band}"][:]})
+        nc.close()
         return lut
 
 
