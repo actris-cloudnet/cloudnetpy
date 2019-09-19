@@ -11,3 +11,4 @@ def check_quality(file, log_file):
     test_path = get_test_path()
     script = f"{test_path}/quality_control.py"
     subprocess.call([script, file, log_file])
+
