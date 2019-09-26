@@ -1,28 +1,67 @@
 import pytest
 import netCDF4
-from tests.quality_control import read_config, get_test_file_name
-
-config = read_config()
-file_name = get_test_file_name(config)
 
 
 @pytest.fixture
-def data(request):
-    return InputData(request.param, file_name)
+def variable_names(pytestconfig):
+    file = pytestconfig.option.test_file
+    nc = netCDF4.Dataset(file)
+    keys = set(nc.variables.keys())
+    nc.close()
+    return keys
 
 
-class InputData:
-    def __init__(self, keys_in, file):
-        self.config = config
-        self.vrs = netCDF4.Dataset(file).variables
-        self.variables = [self.vrs[key][:] for key in keys_in]
-        self.keys = keys_in
-        self.min = self._read_limits('min')
-        self.max = self._read_limits('max')
+@pytest.fixture
+def global_attribute_names(pytestconfig):
+    file = pytestconfig.option.test_file
+    nc = netCDF4.Dataset(file)
+    keys = set(nc.ncattrs())
+    nc.close()
+    return keys
 
-    def _read_limits(self, limit):
-        def _read_min_max():
-            for key in self.keys:
-                yield float(config['min_max'][key.lower()].split(',')[ind])
-        ind = 0 if limit == 'min' else 1
-        return _read_min_max()
+
+@pytest.fixture
+def global_attribute(request, pytestconfig):
+    file = pytestconfig.option.test_file
+    return GlobalAttribute(file, request.param)
+
+
+@pytest.fixture
+def variable(request, pytestconfig):
+    file = pytestconfig.option.test_file
+    return Variable(file, request.param)
+
+
+class GlobalAttribute:
+    def __init__(self, file_name, attr_name):
+        self.name = attr_name
+        self.is_attribute = False
+        self.value = None
+        self._read_attr(file_name)
+
+    def _read_attr(self, file):
+        nc = netCDF4.Dataset(file)
+        self.is_attribute = hasattr(nc, self.name)
+        self.value = getattr(nc, self.name, None)
+        nc.close()
+
+
+class Variable:
+    def __init__(self, file_name, var_name):
+        self.name = var_name
+        self.is_variable = False
+        self.value = None
+        self.units = None
+        self._read_var(file_name)
+
+    def _read_var(self, file):
+        nc = netCDF4.Dataset(file)
+        if self.name in nc.variables:
+            self.is_variable = True
+            self.value = nc.variables[self.name][:]
+            self.units = getattr(nc.variables[self.name], 'units', None)
+        nc.close()
+
+
+def pytest_addoption(parser):
+    parser.addoption('--test_file', action='store', help='Input file name')
