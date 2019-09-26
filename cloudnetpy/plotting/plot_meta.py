@@ -409,9 +409,9 @@ ATTRIBUTES = {
     ),
     'iwc': PlotMeta(
         name='Ice water content',
-        cbar='Blues',
+        cbar='viridis',
         clabel=_KGM3,
-        plot_range=(1e-7, 1e-4),
+        plot_range=(1e-7, 1e-3),
         plot_scale=_LOG,
         plot_type='mesh'
     ),
