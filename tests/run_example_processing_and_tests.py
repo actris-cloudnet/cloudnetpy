@@ -15,7 +15,6 @@ def _load_test_data(input_path):
     def _load_zip():
         sys.stdout.write("\nLoading input files...")
         r = requests.get(url)
-        print('jee')
         open(full_zip_name, 'wb').write(r.content)
         fl = ZipFile(full_zip_name, 'r')
         fl.extractall(input_path)
