@@ -56,41 +56,46 @@ Go to the tests folder and try to run all the tests:
 .. code-block:: console
 
     (venv) $ cd tests
-    (venv) $ python3.7 test.py
+    (venv) $ python3.7 run_example_processing_and_tests.py
 
 You should see the testing script loading some input files and starting
-to run the tests:
+to run the processing and tests:
 
 .. code-block:: console
 
 
-    ###################### Running all CloudnetPy tests ######################
+    Loading input files...
+      Done.
+    ============================================================================================ test session starts =============================================================================================
+    platform linux -- Python 3.6.8, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
+    rootdir: /home/tukiains/Documents/PYTHON/cloudnetpy, inifile:
+    collected 96 items
 
-    Loading input files...    Done.
+    meta/test_raw.py ..                                                                                                                                                                                    [100%]
 
-    Testing misc CloudnetPy routines:
+    ============================================================================================ 94 tests deselected =============================================================================================
+    ================================================================================== 2 passed, 94 deselected in 0.27 seconds ===================================================================================
+    ============================================================================================ test session starts =============================================================================================
+    platform linux -- Python 3.6.8, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
+    rootdir: /home/tukiains/Documents/PYTHON/cloudnetpy, inifile:
+    collected 96 items
 
-    ========================== test session starts ========================
-    platform linux -- Python 3.7.3, pytest-5.1.2, py-1.8.0, pluggy-0.12.0
-    rootdir: /home/tukiains/Temp/cloudnetpy
-    collected 29 items
+    meta/test_raw.py ..                                                                                                                                                                                    [100%]
 
-    ../cloudnetpy/tests/test_utils.py .............................                 [100%]
+    ============================================================================================ 94 tests deselected =============================================================================================
+    ================================================================================== 2 passed, 94 deselected in 0.26 seconds ===================================================================================
+    /home/tukiains/Documents/PYTHON/cloudnetpy/venv/lib/python3.7/site-packages/numpy/core/fromnumeric.py:734: UserWarning: Warning: 'partition' will ignore the 'mask' of the MaskedArray.
+    a.partition(kth, axis=axis, kind=kind, order=order)
+    ============================================================================================ test session starts =============================================================================================
+    platform linux -- Python 3.6.8, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
+    rootdir: /home/tukiains/Documents/PYTHON/cloudnetpy, inifile:
+    collected 96 items
 
-    ========================== 29 passed in 0.06s ==========================
-    ========================== test session starts =========================
-    platform linux -- Python 3.7.3, pytest-5.1.2, py-1.8.0, pluggy-0.12.0
-    rootdir: /home/tukiains/Temp/cloudnetpy
-    collected 9 items
-
-    ../cloudnetpy/categorize/tests/test_atmos.py .........                          [100%]
+    meta/test_calibrated.py ..........                                                                                                                                                                     [ 22%]
+    meta/test_products.py ..................................                                                                                                                                               [100%]
 
 
-And so on. If the tests complete succesfully, you should see in the end:
-
-.. code-block:: console
-
-    ############ All tests passed and processing works correctly! ############
+And so on.
 
 
 .. note::
