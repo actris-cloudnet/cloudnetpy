@@ -10,9 +10,11 @@ from tests import api
 
 
 def _load_test_data(input_path):
+
     def _load_zip():
         sys.stdout.write("\nLoading input files...")
         r = requests.get(url)
+        print('jee')
         open(full_zip_name, 'wb').write(r.content)
         fl = ZipFile(full_zip_name, 'r')
         fl.extractall(input_path)
@@ -21,7 +23,7 @@ def _load_test_data(input_path):
 
     url = 'http://devcloudnet.fmi.fi/files/cloudnetpy_test_input_files.zip'
     zip_name = os.path.split(url)[-1]
-    full_zip_name = f"{input_path}/{zip_name}"
+    full_zip_name = f"{input_path}{zip_name}"
     is_dir = os.path.isdir(input_path)
     if not is_dir:
         os.mkdir(input_path)
@@ -36,7 +38,7 @@ def _process_product_file(product_type, path, categorize_file):
     output_file = f"{path}{product_type}.nc"
     module = importlib.import_module(f"cloudnetpy.products.{product_type}")
     getattr(module, f"generate_{product_type}")(categorize_file, output_file)
-    api.check_metadata(output_file)
+    return output_file
 
 
 def main():
@@ -44,10 +46,11 @@ def main():
     test_path = get_test_path()
     source_path = f"{test_path}/source_data/"
     _load_test_data(source_path)
+    prefix = '20190517_mace-head_'
 
     raw_files = {
-        'radar': f"{source_path}20190517_mace-head_mira_raw.nc",
-        'lidar': f"{source_path}20190517_mace-head_chm15k_raw.nc",
+        'radar': f"{source_path}{prefix}mira_raw.nc",
+        'lidar': f"{source_path}{prefix}chm15k_raw.nc",
     }
     for name, file in raw_files.items():
         api.check_metadata(file)
@@ -65,16 +68,17 @@ def main():
     input_files = {
         'radar': calibrated_files['radar'],
         'lidar': calibrated_files['lidar'],
-        'mwr': f"{source_path}20190517_mace-head_hatpro.nc",
-        'model': f"{source_path}20190517_mace-head_ecmwf.nc",
+        'mwr': f"{source_path}{prefix}hatpro.nc",
+        'model': f"{source_path}{prefix}ecmwf.nc",
     }
     categorize_file = f"{source_path}categorize.nc"
     categorize.generate_categorize(input_files, categorize_file)
     api.check_metadata(categorize_file)
 
-    product_files = ['iwc', 'lwc', 'drizzle', 'classification']
-    for file in product_files:
-        _process_product_file(file, source_path, categorize_file)
+    product_file_types = ['iwc', 'lwc', 'drizzle', 'classification']
+    for file in product_file_types:
+        product_file = _process_product_file(file, source_path, categorize_file)
+        api.check_metadata(product_file)
 
 
 if __name__ == "__main__":
