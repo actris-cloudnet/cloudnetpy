@@ -4,8 +4,7 @@ import netCDF4
 
 @pytest.fixture
 def variable_names(pytestconfig):
-    file = pytestconfig.option.test_file
-    nc = netCDF4.Dataset(file)
+    nc = netCDF4.Dataset(pytestconfig.option.test_file)
     keys = set(nc.variables.keys())
     nc.close()
     return keys
@@ -13,8 +12,7 @@ def variable_names(pytestconfig):
 
 @pytest.fixture
 def global_attribute_names(pytestconfig):
-    file = pytestconfig.option.test_file
-    nc = netCDF4.Dataset(file)
+    nc = netCDF4.Dataset(pytestconfig.option.test_file)
     keys = set(nc.ncattrs())
     nc.close()
     return keys
