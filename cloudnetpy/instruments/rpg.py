@@ -517,4 +517,8 @@ RPG_ATTRIBUTES = {
         long_name='Differential reflectivity',
         units='dB'
     ),
+    'Ze': MetaData(
+        long_name='Radar reflectivity factor.',
+        units='dBZ',
+    )
 }

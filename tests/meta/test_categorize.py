@@ -1,18 +1,14 @@
 """Tests for CloudnetPy categorize file."""
-from tests.test import read_variable_names, missing_key_msg
+import pytest
 
 
-def test_required_variables():
+@pytest.mark.categorize
+def test_required_variables(variable_names):
     required_variables = {
         'v', 'width', 'ldr', 'Z', 'v_sigma', 'Z_error', 'Z_sensitivity',
         'Z_bias', 'latitude', 'longitude', 'altitude', 'time', 'height',
         'radar_frequency', 'category_bits', 'insect_prob', 'is_rain',
         'quality_bits', 'beta', 'model_time', 'temperature', 'q'}
-    identifier = 'categorize'
-    test_file_variables = read_variable_names(identifier)
-    missing_variables = required_variables - test_file_variables
-    assert not missing_variables, missing_key_msg(missing_variables, identifier)
+    missing_variables = required_variables - variable_names
+    assert not missing_variables
 
-
-def test_values():
-    pass
