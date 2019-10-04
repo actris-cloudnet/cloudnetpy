@@ -131,15 +131,21 @@ def rebin_1d(x_in, data, x_new, statistic='mean'):
 
 
 def filter_isolated_pixels(array):
-    """Returns array with completely isolated single cells removed.
+    """From a 2D boolean array, remove completely isolated single cells.
 
     Args:
-        array (ndarray): 2-D input data containing isolated pixels.
-        n (int): number of connected pixels in 3x3 region. Default is 1 when
-            only isolated pixels will be removed.
+        array (ndarray): 2-D boolean array (numpy array or list) containing
+             isolated values.
 
     Returns:
-        ndarray: Cleaned data.
+        ndarray: Cleaned array.
+
+    Examples:
+        >>> filter_isolated_pixels([[0, 0, 0], [0, 1, 0], [0, 0, 0]])
+            array([[0, 0, 0],
+                   [0, 0, 0],
+                   [0, 0, 0]])
+
 
     """
     filtered_array = np.copy(array)
@@ -152,6 +158,22 @@ def filter_isolated_pixels(array):
 
 
 def filter_x_pixels(array):
+    """From a 2D boolean array, remove cells isolated in x-direction.
+
+    Args:
+        array (ndarray): 2-D boolean array containing isolated pixels in x-direction.
+
+    Returns:
+        ndarray: Cleaned array.
+
+    Examples:
+        >>> filter_x_pixels([[1, 0, 0], [0, 1, 0], [0, 1, 1]])
+            array([[0, 0, 0],
+                   [0, 1, 0],
+                   [0, 1, 0]])
+
+
+    """
     filtered_array = np.copy(array)
     id_regions, num_ids = ndimage.label(filtered_array,
                                         structure=np.array([[0, 1, 0],
@@ -161,7 +183,6 @@ def filter_x_pixels(array):
     area_mask = id_sizes == 1
     filtered_array[area_mask[id_regions]] = 0
     return filtered_array
-
 
 
 def isbit(integer, nth_bit):
