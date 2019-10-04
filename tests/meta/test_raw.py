@@ -37,6 +37,12 @@ class TestMiraRaw:
     def test_attributes(self, global_attribute_names):
         assert not global_attribute_names
 
+    def test_attributes_units(self, global_attribute):
+        assert not global_attribute.unit
+
+    def test_attributes_values(self, global_attribute):
+        assert not global_attribute.value
+
 
 @pytest.mark.chm15k_raw
 class TestChm15kRaw:
@@ -47,6 +53,13 @@ class TestChm15kRaw:
 
     def test_attributes(self, global_attribute_names):
         assert not global_attribute_names
+
+    def test_attributes_units(self, global_attribute):
+        #print(global_attribute.unit)
+        assert not global_attribute.unit
+
+    def test_attributes_values(self, global_attribute):
+        assert not global_attribute.value
 
 
 @pytest.mark.hatpro

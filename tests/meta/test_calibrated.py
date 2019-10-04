@@ -33,7 +33,6 @@ class TestRadar:
     def test_variables(self, variable_names):
         assert not self.keys - variable_names
 
-    @pytest.mark.parametrize(fixture, keys, indirect=True)
     def test_unit_values(self, variable):
         spec = RADAR_VARIABLES[variable.name].units
         if spec is not None:
