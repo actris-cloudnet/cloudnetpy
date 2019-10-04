@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/home/korpinen/anaconda3/bin/python3
 import sys
 import os
 sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
@@ -7,7 +7,6 @@ from tests import utils
 
 
 def main(test_file):
-
     marker = utils.get_file_type(test_file)
 
     if marker in ('iwc', 'lwc', 'drizzle', 'classification'):

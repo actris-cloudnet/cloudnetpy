@@ -32,10 +32,10 @@ class TestMiraRaw:
     name = 'mira_raw'
 
     def test_variables(self, variable_names):
-        assert not REQUIRED_VARIABLES[self.name] - variable_names
+        assert not variable_names
 
     def test_attributes(self, global_attribute_names):
-        assert not REQUIRED_ATTRIBUTES[self.name] - global_attribute_names
+        assert not global_attribute_names
 
 
 @pytest.mark.chm15k_raw
@@ -43,10 +43,10 @@ class TestChm15kRaw:
     name = 'chm15k_raw'
 
     def test_variables(self, variable_names):
-        assert not REQUIRED_VARIABLES[self.name] - variable_names
+        assert not variable_names
 
     def test_attributes(self, global_attribute_names):
-        assert not REQUIRED_ATTRIBUTES[self.name] - global_attribute_names
+        assert not global_attribute_names
 
 
 @pytest.mark.hatpro
@@ -54,10 +54,10 @@ class TestHatpro:
     name = 'hatpro'
 
     def test_variables(self, variable_names):
-        assert not REQUIRED_VARIABLES[self.name] - variable_names
+        assert not variable_names
 
     def test_attributes(self, global_attribute_names):
-        assert not REQUIRED_ATTRIBUTES[self.name] - global_attribute_names
+        assert not global_attribute_names
 
 
 @pytest.mark.ecmwf
@@ -65,8 +65,7 @@ class TestEcmwf:
     name = 'ecmwf'
 
     def test_variables(self, variable_names):
-        assert not REQUIRED_VARIABLES[self.name] - variable_names
+        assert not variable_names
 
     def test_attributes(self, global_attribute_names):
-        assert not REQUIRED_ATTRIBUTES[self.name] - global_attribute_names
-
+        assert not global_attribute_names

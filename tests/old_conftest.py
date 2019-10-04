@@ -41,7 +41,7 @@ def metadata(request):
 class CollectMetadata:
     def __init__(self, keys_in, file):
         self.config = meta_config
-        self.vrs = netCDF4.Dataset(file).variables.kesy()
+        self.vrs = netCDF4.Dataset(file).variables.keys()
         self.attr = netCDF4.Dataset(file).ncattrs()
         self.variables = [self.vrs[key][:] for key in keys_in]
         self.keys = keys_in
