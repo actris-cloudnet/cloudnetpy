@@ -219,3 +219,23 @@ def test_interp_2d(x_new, y_new, result):
     z = np.array([5*[1], 5*[2], 5*[3]]).T
     assert_array_almost_equal(utils.interpolate_2d(x, y, z, x_new, y_new),
                               result)
+
+
+class TestArrayToProbability:
+    x = np.arange(11)
+    loc = 5
+    scale = 1
+    prob = utils.array_to_probability(x, loc, scale)
+    prob_inv = utils.array_to_probability(x, loc, scale, invert=True)
+
+    def test_min(self):
+        assert_array_almost_equal(self.prob[0], 0)
+
+    def test_max(self):
+        assert_array_almost_equal(self.prob[-1], 1)
+
+    def test_min_inv(self):
+        assert_array_almost_equal(self.prob_inv[-1], 0)
+
+    def test_max_inv(self):
+        assert_array_almost_equal(self.prob_inv[0], 1)
