@@ -78,7 +78,7 @@ def binvec(x):
 
 
 def rebin_2d(x_in, data, x_new, statistic='mean', n_min=1):
-    """Rebins 2-D data in one dimension using mean.
+    """Rebins 2-D data in one dimension.
 
     Args:
         x_in (ndarray): 1-D array with shape (n,).
@@ -116,7 +116,19 @@ def rebin_2d(x_in, data, x_new, statistic='mean', n_min=1):
 
 
 def rebin_1d(x_in, data, x_new, statistic='mean'):
-    """Rebins 1D array."""
+    """Rebins 1D array.
+
+    Args:
+        x_in (ndarray): 1-D array with shape (n,).
+        data (MaskedArray): 1-D input data with shape (m,).
+        x_new (ndarray): 1-D target vector (center points) with shape (N,).
+        statistic (str, optional): Statistic to be calculated. Possible
+            statistics are 'mean', 'std'. Default is 'mean'.
+
+    Returns:
+        MaskedArray: Rebinned data with shape (N,).
+
+    """
     edges = binvec(x_new)
     datai = np.zeros(len(x_new))
     data = ma.masked_invalid(data)  # data may contain nan-values
@@ -275,7 +287,7 @@ def interpolate_2d_masked(array, ax_values, ax_values_new):
         ax_values_new (tuple): 2-element tuple containing new x and y values.
 
     Returns:
-        ndarray: Interpolated 2d masked array.
+        ndarray: Interpolated 2D masked array.
 
     Notes:
         Uses linear interpolation.
@@ -477,13 +489,13 @@ def isscalar(array):
 
     Examples:
         >>> isscalar(1)
-        True
+            True
         >>> isscalar([1])
-        True
+            True
         >>> isscalar(np.array(1))
-        True
+            True
         >>> isscalar(np.array([1]))
-        True
+            True
 
     """
     arr = ma.array(array)
@@ -573,6 +585,9 @@ def array_to_probability(arr_in, loc, scale, invert=False):
             drops or increases from the peak.
         invert (bool, optional): If True, large values have small
             probability and vice versa. Default is False.
+
+    Returns:
+        ndarray: Probability.
 
     """
     arr = ma.copy(arr_in)
