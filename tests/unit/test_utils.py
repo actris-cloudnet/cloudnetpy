@@ -91,16 +91,18 @@ def test_filter_isolated_pixels():
     assert_array_almost_equal(utils.filter_isolated_pixels(x), x2)
 
 
-def test_filter_x_pixels():
-    x = np.array([[0, 0, 1, 0, 1],
-                  [0, 1, 0, 0, 0],
-                  [1, 0, 0, 0, 1],
-                  [1, 0, 1, 1, 1]])
-    x2 = np.array([[0, 0, 0, 0, 0],
-                   [0, 0, 0, 0, 0],
-                   [1, 0, 0, 0, 1],
-                   [1, 0, 0, 0, 1]])
-    assert_array_almost_equal(utils.filter_x_pixels(x), x2)
+@pytest.mark.parametrize("input, result", [
+    ([[0, 1, 1, 1, 1],
+      [0, 0, 0, 1, 0],
+      [1, 1, 1, 0, 0],
+      [0, 1, 0, 1, 1]],
+     [[0, 0, 0, 1, 0],
+      [0, 0, 0, 1, 0],
+      [0, 1, 0, 0, 0],
+      [0, 1, 0, 0, 0]]),
+])
+def test_filter_x_pixels(input, result):
+    assert_array_almost_equal(utils.filter_x_pixels(input), result)
 
 
 @pytest.mark.parametrize("input, result", [
