@@ -539,11 +539,21 @@ def transpose(x):
 
 
 def del_dict_keys(dict_in, keys):
-    """Removes multiple keys from dictionary."""
+    """Removes multiple keys from dictionary.
+
+    Args:
+        dict_in (dict): A dictionary.
+        keys (list / tuple): list of keys to be deleted.
+
+    Returns:
+        dict: Dictionary without the deleted keys.
+
+    """
+    temp_dict = dict_in.copy()
     for key in keys:
         if key in dict_in:
-            del dict_in[key]
-    return dict_in
+            del temp_dict[key]
+    return temp_dict
 
 
 def get_site_information(site, *args):
