@@ -2,7 +2,6 @@
 
 
 def test_variables_keys(variable_names):
-    m = variable_names.missing
     assert not variable_names
 
 
@@ -15,8 +14,7 @@ def test_variables_values(variable):
 
 
 def test_attributes_keys(global_attribute_names):
-    m = global_attribute_names.missing
-    assert not global_attribute_names.missing, print(m)
+    assert not global_attribute_names
 
 
 def test_attributes_units(global_attribute):
