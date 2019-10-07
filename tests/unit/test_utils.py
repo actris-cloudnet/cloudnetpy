@@ -252,3 +252,28 @@ class TestDelDictKeys:
         assert self.y == {'c': 3, 'd': 4}
 
 
+@pytest.mark.parametrize("frequency, band", [
+    (35.5, 0),
+    (94, 1),
+])
+def test_get_wl_band(frequency, band):
+    assert utils.get_wl_band(frequency) == band
+
+
+@pytest.mark.parametrize("reference, array, error", [
+    (100, 110, 10),
+    (1, -2, -300),
+])
+def test_calc_relative_error(reference, array, error):
+    assert utils.calc_relative_error(reference, array) == error
+
+
+@pytest.mark.parametrize("site, args, result", [
+    ('lindenberg', ['latitude'], 52.2081),
+    ('lindenberg', ['latitude', 'longitude', 'altitude'], [52.2081, 14.1175, 104]),
+    ('dummmysite', ['latitude'], [0]),
+])
+def test_get_site_information(site, args, result):
+    assert utils.get_site_information(site, *args) == result
+
+
