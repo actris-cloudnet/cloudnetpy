@@ -566,7 +566,7 @@ def get_site_information(site, *args):
             and 'site_name'.
 
     Returns:
-        tuple: Tuple of return values.
+        list: List of return values as floats.
 
     Examples:
         >>> get_site_information('mace-head', 'latitude', 'longitude')
@@ -576,10 +576,11 @@ def get_site_information(site, *args):
     query = f"http://devcloudnet.fmi.fi/api/sites/?site_code={site}&fields={fields}"
     try:
         result = [*requests.get(query).json()[0]['fields'].values()]
+        result = [float(x) for x in result]
         if len(result) == 1:
             result = result[0]
     except:
-        result = tuple([0]*len(args))
+        result = [0]*len(args)
     return result
 
 
