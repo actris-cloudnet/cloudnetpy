@@ -239,3 +239,16 @@ class TestArrayToProbability:
 
     def test_max_inv(self):
         assert_array_almost_equal(self.prob_inv[0], 1)
+
+
+class TestDelDictKeys:
+    x = {'a': 2, 'b': 2, 'c': 3, 'd': 4}
+    y = utils.del_dict_keys(x, ('a', 'b'))
+
+    def test_del_dict_keys(self):
+        assert self.x == {'a': 2, 'b': 2, 'c': 3, 'd': 4}
+
+    def test_del_dict_keys_2(self):
+        assert self.y == {'c': 3, 'd': 4}
+
+
