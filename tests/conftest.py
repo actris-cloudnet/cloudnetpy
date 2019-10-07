@@ -25,7 +25,6 @@ def global_attribute_names(pytestconfig):
     file_type = get_file_type(pytestconfig.option.test_file)
     keys = set(nc.ncattrs())
     nc.close()
-    print(keys)
     try:
         missing = set(META_CONFIG['required_attributes'][file_type].split(', ')) - keys
     except:
@@ -58,14 +57,12 @@ class GlobalAttribute:
     def _read_attr_units(self):
         config = dict(META_CONFIG.items('attributes_units'))
         nc = netCDF4.Dataset(self.file_name)
-        keys = list(map(lambda x: x.lower(), nc.ncattrs()))
-        print(self.file_name)
+        keys = nc.ncattrs()
         for attr, c_unit in config.items():
             if attr in keys:
-                print(attr)
-                if not c_unit is getattr(nc.variables[attr], 'units', None):
+                if c_unit is not nc.getncattr(attr):
                     self.unit = True
-                    self.wrong_unit[attr] = getattr(nc.variables[attr], 'units', None)
+                    self.wrong_unit[attr] = nc.getncattr(attr)
         nc.close()
 
     def _read_attr_limits(self):
@@ -75,29 +72,29 @@ class GlobalAttribute:
         for attr, c_val in config.items():
             c_val = tuple(map(float, c_val.split(', ')))
             if attr in keys:
-                if c_val[0] < min(nc.variables[attr][:]) or c_val[1] > max(nc.variables[attr][:]):
+                if c_val[0] > int(nc.getncattr(attr)) or c_val[1] < int(nc.getncattr(attr)):
                     self.value = True
-                    self.wrong_value[attr] = nc.variables[attr][:]
+                    self.wrong_value[attr] = nc.getncattr(attr)
         nc.close()
 
 
 class Variable:
-    def __init__(self, pytestconfig):
-        self.file_name = pytestconfig.option.test_file
+    def __init__(self, file):
+        self.file_name = file
         self.wrong_unit = {}
         self.wrong_value = {}
         self.value = False
         self.unit = False
+        self._read_var_units()
+        self._read_var_limits()
 
     def _read_var_units(self):
         config = dict(META_CONFIG.items('variables_units'))
         nc = netCDF4.Dataset(self.file_name)
-        keys = list(map(lambda x: x.lower(), nc.ncattrs()))
-        print(self.file_name)
+        keys = nc.ncattrs()
         for attr, c_unit in config.items():
             if attr in keys:
-                print(attr)
-                if not c_unit is getattr(nc.variables[attr], 'units', None):
+                if c_unit is not getattr(nc.variables[attr], 'units', None):
                     self.unit = True
                     self.wrong_unit[attr] = getattr(nc.variables[attr], 'units', None)
         nc.close()
@@ -109,7 +106,7 @@ class Variable:
         for attr, c_val in config.items():
             c_val = tuple(map(float, c_val.split(', ')))
             if attr in keys:
-                if c_val[0] < min(nc.variables[attr][:]) or c_val[1] > max(nc.variables[attr][:]):
+                if c_val[0] > min(nc.variables[attr][:]) or c_val[1] > max(nc.variables[attr][:]):
                     self.value = True
                     self.wrong_value[attr] = nc.variables[attr][:]
         nc.close()
