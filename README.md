@@ -1,4 +1,4 @@
-https://api.travis-ci.org/tukiains/cloudnetpy.svg?branch=master
+[![Unit tests](https://travis-ci.org/tukiains/cloudnetpy.svg?branch=master)](https://travis-ci.org/tukiains/cloudnetpy)
 
 # CloudnetPy
 CloudnetPy is a Python software for producing vertical profiles of cloud properties from ground-based remote sensing measurements. The Cloudnet processing combines cloud radar, optical lidar, microwave radiometer and model data. The measurements and model data are brought into common grid and classified as ice, liquid, aerosol, insects, and so on. Then, geophysical products such as ice water content can be retrieved in further processing steps.
