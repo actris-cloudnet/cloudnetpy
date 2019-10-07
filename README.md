@@ -8,7 +8,19 @@ CloudnetPy is a Python software for producing vertical profiles of cloud propert
 
 CloudnetPy is a refactored fork of the currently operational (Matlab) processing code. The Python version will eventually feature several revised methods, extensive documentation, and more.
 
+The documentation for CloudnetPy can be found at: https://cloudnetpy.readthedocs.io/en/latest/
+
 <img src="docs/source/_static/20190423_mace-head_classification.png">
 
+Installation
+------------
+
+CloudnetPy can be installed from the Python Package Index, PyPI, using pip:
+```
+pip3 install cloudnetpy
+```
+
+Links
+-----
+
 - Cloudnet website: http://devcloudnet.fmi.fi
-- CloudnetPy documentation: https://cloudnetpy.readthedocs.io/en/latest/
