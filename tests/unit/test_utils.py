@@ -244,12 +244,8 @@ class TestArrayToProbability:
 class TestDelDictKeys:
     x = {'a': 2, 'b': 2, 'c': 3, 'd': 4}
     y = utils.del_dict_keys(x, ('a', 'b'))
-
-    def test_del_dict_keys(self):
-        assert self.x == {'a': 2, 'b': 2, 'c': 3, 'd': 4}
-
-    def test_del_dict_keys_2(self):
-        assert self.y == {'c': 3, 'd': 4}
+    assert x == {'a': 2, 'b': 2, 'c': 3, 'd': 4}
+    assert y == {'c': 3, 'd': 4}
 
 
 @pytest.mark.parametrize("frequency, band", [
@@ -277,3 +273,16 @@ def test_get_site_information(site, args, result):
     assert utils.get_site_information(site, *args) == result
 
 
+def test_transpose():
+    x = np.arange(10)
+    x_transposed = utils.transpose(x)
+    assert x.shape == (10, )
+    assert x_transposed.shape == (10, 1)
+
+
+@pytest.mark.parametrize("x, index, result", [
+    (np.arange(5), (0, 0), 0),
+    (np.arange(5), (4, 0), 4),
+])
+def test_transpose_2(x, index, result):
+    assert utils.transpose(x)[index] == result
