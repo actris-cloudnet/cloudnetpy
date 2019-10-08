@@ -4,6 +4,7 @@ import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal
 import pytest
 from cloudnetpy import utils
+import re
 
 
 @pytest.mark.parametrize("input, output", [
@@ -280,9 +281,22 @@ def test_transpose():
     assert x_transposed.shape == (10, 1)
 
 
-@pytest.mark.parametrize("x, index, result", [
-    (np.arange(5), (0, 0), 0),
-    (np.arange(5), (4, 0), 4),
+@pytest.mark.parametrize("index, result", [
+    ((0, 0), 0),
+    ((4, 0), 4),
 ])
-def test_transpose_2(x, index, result):
+def test_transpose_2(index, result):
+    x = np.arange(5)
     assert utils.transpose(x)[index] == result
+
+
+def test_get_uuid():
+    x = utils.get_uuid()
+    assert isinstance(x, str)
+    assert len(x) == 32
+
+
+def test_get_time():
+    x = utils.get_time()
+    r = re.compile('.{4}-.{2}-.{2} .{2}:.{2}:.{2}')
+    assert r.match(x)
