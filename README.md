@@ -1,6 +1,7 @@
 # CloudnetPy
 
 [![Build Status](https://travis-ci.org/tukiains/cloudnetpy.svg?branch=master)](https://travis-ci.org/tukiains/cloudnetpy)
+[![Documentation Status](https://readthedocs.org/projects/cloudnetpy/badge/?version=latest)](https://cloudnetpy.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/cloudnetpy.svg)](https://badge.fury.io/py/cloudnetpy)
 
 
