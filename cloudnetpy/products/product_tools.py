@@ -17,15 +17,18 @@ class CategorizeBits:
                     'corrected')
 
     def __init__(self, categorize_file):
-        self.variables = netCDF4.Dataset(categorize_file).variables
+        self._categorize_file = categorize_file
         self.category_bits = self._read_bits('category')
         self.quality_bits = self._read_bits('quality')
 
     def _read_bits(self, bit_type):
         """ Converts bitfield into dictionary."""
-        bitfield = self.variables[f"{bit_type}_bits"][:]
+        nc = netCDF4.Dataset(self._categorize_file)
+        bitfield = nc.variables[f"{bit_type}_bits"][:]
         keys = getattr(CategorizeBits, f"{bit_type}_keys")
-        return {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
+        bits = {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
+        nc.close()
+        return bits
 
 
 class ProductClassification(CategorizeBits):
@@ -38,8 +41,9 @@ class ProductClassification(CategorizeBits):
     """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
-        self.is_rain = self.variables['is_rain'][:]
-        self.is_undetected_melting = self.variables['is_undetected_melting'][:]
+        self.is_rain = read_nc_fields(categorize_file, 'is_rain')
+        self.is_undetected_melting = read_nc_fields(categorize_file,
+                                                    'is_undetected_melting')
 
 
 def get_source(data_handler):
@@ -62,8 +66,7 @@ def read_nc_fields(nc_file, names):
     """
     names = [names] if isinstance(names, str) else names
     nc = netCDF4.Dataset(nc_file)
-    nc_variables = nc.variables
-    data = [nc_variables[name][:] for name in names]
+    data = [nc.variables[name][:] for name in names]
     nc.close()
     return data[0] if len(data) == 1 else data
 
