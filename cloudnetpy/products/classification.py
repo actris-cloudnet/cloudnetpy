@@ -32,6 +32,7 @@ def generate_classification(categorize_file, output_file):
     data_handler.append_data(status, 'detection_status')
     output.update_attributes(data_handler.data, CLASSIFICATION_ATTRIBUTES)
     output.save_product_file('classification', data_handler, output_file)
+    data_handler.close()
 
 
 def get_target_classification(categorize_bits):

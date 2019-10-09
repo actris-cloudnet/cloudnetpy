@@ -67,6 +67,10 @@ def generate_categorize(input_files, output_file):
     def _define_dense_grid():
         return utils.time_grid(), radar.height
 
+    def _close_all():
+        for obj in (radar, lidar, model, mwr):
+            obj.close()
+
     radar = Radar(input_files['radar'])
     lidar = Lidar(input_files['lidar'])
     model = Model(input_files['model'], radar.altitude)
@@ -85,6 +89,7 @@ def generate_categorize(input_files, output_file):
     output_data = _prepare_output()
     output.update_attributes(output_data, CATEGORIZE_ATTRIBUTES)
     _save_cat(output_file, radar, lidar, model, output_data)
+    _close_all()
 
 
 def _save_cat(file_name, radar, lidar, model, obs):
@@ -227,6 +232,9 @@ class DataSource:
 
         """
         self.data[key] = CloudnetArray(data, name or key, units)
+
+    def close(self):
+        self.dataset.close()
 
 
 class ProfileDataSource(DataSource):

@@ -41,6 +41,7 @@ def generate_drizzle(categorize_file, output_file):
     _append_data(drizzle_data, results)
     output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
     output.save_product_file('drizzle', drizzle_data, output_file)
+    drizzle_data.close()
 
 
 class DrizzleSource(DataSource):
