@@ -9,7 +9,7 @@ def main(test_file):
 
     pytest.main(['-s',
                  '--tb=line',
-                 'meta/test_metadata.py',
+                 'data_quality/test_data.py',
                  '--test_file', test_file])
 
 

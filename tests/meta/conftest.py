@@ -1,7 +1,7 @@
+import numpy as np
 import pytest
 import netCDF4
-from tests.metadata_control import read_meta_config
-from tests.utils import get_file_type
+from tests.utils import get_file_type, read_meta_config
 
 META_CONFIG = read_meta_config()
 
@@ -60,7 +60,7 @@ class GlobalAttribute:
         keys = nc.ncattrs()
         for attr, c_unit in config.items():
             if attr in keys:
-                if c_unit is not nc.getncattr(attr):
+                if c_unit != nc.getncattr(attr):
                     self.unit = True
                     self.wrong_unit[attr] = nc.getncattr(attr)
         nc.close()
@@ -91,24 +91,24 @@ class Variable:
     def _read_var_units(self):
         config = dict(META_CONFIG.items('variables_units'))
         nc = netCDF4.Dataset(self.file_name)
-        keys = nc.ncattrs()
-        for attr, c_unit in config.items():
-            if attr in keys:
-                if c_unit is not getattr(nc.variables[attr], 'units', None):
+        keys = nc.variables.keys()
+        for var, c_unit in config.items():
+            if var in keys:
+                if c_unit != nc.variables[var].units:
                     self.unit = True
-                    self.wrong_unit[attr] = getattr(nc.variables[attr], 'units', None)
+                    self.wrong_unit[var] = nc.variables[var].units
         nc.close()
 
     def _read_var_limits(self):
         config = dict(META_CONFIG.items('variables_limits'))
         nc = netCDF4.Dataset(self.file_name)
-        keys = nc.ncattrs()
-        for attr, c_val in config.items():
+        keys = nc.variables.keys()
+        for var, c_val in config.items():
             c_val = tuple(map(float, c_val.split(', ')))
-            if attr in keys:
-                if c_val[0] > min(nc.variables[attr][:]) or c_val[1] > max(nc.variables[attr][:]):
+            if var in keys:
+                if c_val[0] > np.min(nc.variables[var][:]) or c_val[1] < np.max(nc.variables[var][:]):
                     self.value = True
-                    self.wrong_value[attr] = nc.variables[attr][:]
+                    self.wrong_value[var] = [np.min(nc.variables[var][:]), np.max(nc.variables[var][:])]
         nc.close()
 
 

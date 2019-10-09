@@ -64,6 +64,7 @@ def main():
     ceilo.ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
     for name, file in calibrated_files.items():
         api.check_metadata(file)
+        api.check_data_quality(file)
 
     input_files = {
         'radar': calibrated_files['radar'],
@@ -74,11 +75,13 @@ def main():
     categorize_file = f"{source_path}categorize.nc"
     categorize.generate_categorize(input_files, categorize_file)
     api.check_metadata(categorize_file)
+    api.check_data_quality(categorize_file)
 
     product_file_types = ['iwc', 'lwc', 'drizzle', 'classification']
     for file in product_file_types:
         product_file = _process_product_file(file, source_path, categorize_file)
         api.check_metadata(product_file)
+        api.check_data_quality(product_file)
 
 
 if __name__ == "__main__":

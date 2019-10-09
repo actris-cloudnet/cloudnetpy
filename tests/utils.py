@@ -1,11 +1,28 @@
 import os
 from collections import namedtuple
 import netCDF4
+import configparser
 
 
+CONFIG_FILE_META = 'meta/metadata_config.ini'
+CONFIG_FILE_DATA = 'data_quality/data_quality_config.ini'
 FIELDS = ('min', 'max', 'units')
 Specs = namedtuple('Specs', FIELDS)
 Specs.__new__.__defaults__ = (None,) * len(Specs._fields)
+
+
+def read_meta_config():
+    conf = configparser.ConfigParser()
+    conf.optionxform = str
+    conf.read(CONFIG_FILE_META)
+    return conf
+
+
+def read_data_config():
+    conf = configparser.ConfigParser()
+    conf.optionxform = str
+    conf.read(CONFIG_FILE_DATA)
+    return conf
 
 
 def get_test_path():
