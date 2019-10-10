@@ -21,6 +21,11 @@ CloudnetPy can be installed from the Python Package Index, PyPI, using pip:
 $ pip3 install cloudnetpy
 ```
 
+Contributing
+------------
+
+We encourage you to contribute to CloudnetPy! Please check out the [contribution guidelines](CONTRIBUTING.md) about how to proceed.
+
 Links
 -----
 
