@@ -153,8 +153,9 @@ def _process_categorize(dvec):
     if _is_good_to_plot('categorize', image_name):
         print(f"Generating categorize quicklook..")
         fields = ['Z', 'v', 'ldr', 'width', 'v_sigma', 'beta', 'lwp']
+        fields = ['Z', 'beta', 'lwp']
         plotting.generate_figure(output_file, fields, image_name=image_name,
-                                 show=False, max_y=10)
+                                 show=False, max_y=7)
 
 
 def _process_product(product, dvec):
@@ -182,8 +183,10 @@ def _process_product(product, dvec):
 def _get_product_fields_in_plot(product, max_y=10):
     if product == 'classification':
         fields = ['target_classification', 'detection_status']
+        fields = ['target_classification']
     elif product == 'iwc':
         fields = ['iwc', 'iwc_error', 'iwc_retrieval_status']
+        fields = ['iwc']
     elif product == 'lwc':
         fields = ['lwc', 'lwc_error', 'lwc_retrieval_status']
         max_y = 8
