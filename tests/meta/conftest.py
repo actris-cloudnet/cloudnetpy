@@ -1,0 +1,117 @@
+import numpy as np
+import pytest
+import netCDF4
+import logging
+from tests.utils import get_file_type, read_meta_config
+
+META_CONFIG = read_meta_config()
+
+
+@pytest.fixture
+def variable_names(pytestconfig):
+    nc = netCDF4.Dataset(pytestconfig.option.test_file)
+    file_type = get_file_type(pytestconfig.option.test_file)
+    keys = set(nc.variables.keys())
+    nc.close()
+    try:
+        missing = set(META_CONFIG['required_variables'][file_type].split(', ')) - keys
+    except:
+        missing = False
+    return missing
+
+
+@pytest.fixture
+def global_attribute_names(pytestconfig, caplog):
+    nc = netCDF4.Dataset(pytestconfig.option.test_file)
+    file_type = get_file_type(pytestconfig.option.test_file)
+    keys = set(nc.ncattrs())
+    nc.close()
+    try:
+        missing = set(META_CONFIG['required_attributes'][file_type].split(', ')) - keys
+    except:
+        missing = False
+    return missing
+
+
+@pytest.fixture
+def global_attribute(pytestconfig):
+    file = pytestconfig.option.test_file
+    return GlobalAttribute(file)
+
+
+@pytest.fixture
+def variable(pytestconfig):
+    file = pytestconfig.option.test_file
+    return Variable(file)
+
+
+class GlobalAttribute:
+    def __init__(self, file):
+        self.file_name = file
+        self.wrong_unit = {}
+        self.wrong_value = {}
+        self.value = False
+        self.unit = False
+        self._read_attr_units()
+        self._read_attr_limits()
+
+    def _read_attr_units(self):
+        config = dict(META_CONFIG.items('attributes_units'))
+        nc = netCDF4.Dataset(self.file_name)
+        keys = nc.ncattrs()
+        for attr, c_unit in config.items():
+            if attr in keys:
+                if c_unit != nc.getncattr(attr):
+                    self.unit = True
+                    self.wrong_unit[attr] = nc.getncattr(attr)
+        nc.close()
+
+    def _read_attr_limits(self):
+        config = dict(META_CONFIG.items('attributes_limits'))
+        nc = netCDF4.Dataset(self.file_name)
+        keys = nc.ncattrs()
+        for attr, c_val in config.items():
+            c_val = tuple(map(float, c_val.split(', ')))
+            if attr in keys:
+                if c_val[0] > int(nc.getncattr(attr)) or c_val[1] < int(nc.getncattr(attr)):
+                    self.value = True
+                    self.wrong_value[attr] = nc.getncattr(attr)
+        nc.close()
+
+
+class Variable:
+    def __init__(self, file):
+        self.file_name = file
+        self.wrong_unit = {}
+        self.wrong_value = {}
+        self.value = False
+        self.unit = False
+        self._read_var_units()
+        self._read_var_limits()
+
+    def _read_var_units(self):
+        config = dict(META_CONFIG.items('variables_units'))
+        nc = netCDF4.Dataset(self.file_name)
+        keys = nc.variables.keys()
+        for var, c_unit in config.items():
+            if var in keys:
+                if c_unit != nc.variables[var].units:
+                    self.unit = True
+                    self.wrong_unit[var] = nc.variables[var].units
+        nc.close()
+
+    def _read_var_limits(self):
+        config = dict(META_CONFIG.items('variables_limits'))
+        nc = netCDF4.Dataset(self.file_name)
+        keys = nc.variables.keys()
+        for var, c_val in config.items():
+            c_val = tuple(map(float, c_val.split(', ')))
+            if var in keys:
+                if c_val[0] > np.min(nc.variables[var][:]) or c_val[1] < np.max(nc.variables[var][:]):
+                    self.value = True
+                    self.wrong_value[var] = [np.min(nc.variables[var][:]), np.max(nc.variables[var][:])]
+        nc.close()
+
+
+def pytest_addoption(parser):
+    parser.addoption('--test_file', action='store', help='Input file name')

@@ -1,22 +1,17 @@
-#!/usr/bin/env python3
+#!/home/korpinen/anaconda3/bin/python3
 import sys
 import os
 sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
 import pytest
-from tests import utils
 
 
-def main(test_file):
-
-    marker = utils.get_file_type(test_file)
-
-    if marker in ('iwc', 'lwc', 'drizzle', 'classification'):
-        marker = f"{marker} or product"
+def main(test_file, log_file):
 
     pytest.main(['-s',
-                 'meta/',
-                 '--test_file', test_file,
-                 '-m', marker])
+                 '-v',
+                 '--tb=line',
+                 'meta/test_metadata.py',
+                 '--test_file', test_file])
 
 
 if __name__ == "__main__":
