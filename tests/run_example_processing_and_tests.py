@@ -4,7 +4,6 @@ sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
 from zipfile import ZipFile
 import requests
 import importlib
-import logging
 from tests.utils import get_test_path
 from cloudnetpy.instruments import mira, ceilo
 from cloudnetpy.categorize import categorize

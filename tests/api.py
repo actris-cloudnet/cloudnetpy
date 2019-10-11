@@ -3,11 +3,12 @@ import subprocess
 import pytest
 
 
-def check_metadata(file):
+def check_metadata(file, log_file=None):
     """Runs metadata checks for the given file.
 
     Args:
         file (str): Name of the file to be tested.
+        log_file (str): Name of the log file.
 
     """
     test_path = utils.get_test_path()
@@ -15,11 +16,12 @@ def check_metadata(file):
     subprocess.call([script, file])
 
 
-def check_data_quality(file):
+def check_data_quality(file, log_file=None):
     """Runs data quality checks for the given file.
 
     Args:
         file (str): Name of the file to be tested.
+        log_file (str): Name of the log file.
 
     """
     test_path = utils.get_test_path()
