@@ -11,6 +11,16 @@ FIELDS = ('min', 'max', 'units')
 Specs = namedtuple('Specs', FIELDS)
 Specs.__new__.__defaults__ = (None,) * len(Specs._fields)
 
+"""                     
+    def fill_log(reason, instru):
+        if OPERATIVE_RUN:
+            logger.warning(f"Data quality test didn't pass in {instru} file")
+            logger.warning(reason)
+
+    def logger_information(site, date):
+        logger.info(f"Operative processing from {site} at {date}")
+"""
+
 
 def init_logger(path, fname):
     logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
