@@ -1758,7 +1758,7 @@ resolution (in seconds) where 60 is the maximum allowed value.</p>
 <dl class="function">
 <dt id="utils.rebin_2d">
 <code class="descclassname">utils.</code><code class="descname">rebin_2d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em>, <em>n_min=1</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_2d" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rebins 2-D data in one dimension using mean.</p>
+<dd><p>Rebins 2-D data in one dimension.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1790,31 +1790,78 @@ Default is 1.</li>
 <dt id="utils.rebin_1d">
 <code class="descclassname">utils.</code><code class="descname">rebin_1d</code><span class="sig-paren">(</span><em>x_in</em>, <em>data</em>, <em>x_new</em>, <em>statistic='mean'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#rebin_1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.rebin_1d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rebins 1D array.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="utils.filter_isolated_pixels">
-<code class="descclassname">utils.</code><code class="descname">filter_isolated_pixels</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#filter_isolated_pixels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.filter_isolated_pixels" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns array with completely isolated single cells removed.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>array</strong> (<em>ndarray</em>) – 2-D input data containing isolated pixels.</li>
-<li><strong>n</strong> (<em>int</em>) – number of connected pixels in 3x3 region. Default is 1 when
-only isolated pixels will be removed.</li>
+<li><strong>x_in</strong> (<em>ndarray</em>) – 1-D array with shape (n,).</li>
+<li><strong>data</strong> (<em>MaskedArray</em>) – 1-D input data with shape (m,).</li>
+<li><strong>x_new</strong> (<em>ndarray</em>) – 1-D target vector (center points) with shape (N,).</li>
+<li><strong>statistic</strong> (<em>str</em><em>, </em><em>optional</em>) – Statistic to be calculated. Possible
+statistics are ‘mean’, ‘std’. Default is ‘mean’.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Cleaned data.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Rebinned data with shape (N,).</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">MaskedArray</p>
 </td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.filter_isolated_pixels">
+<code class="descclassname">utils.</code><code class="descname">filter_isolated_pixels</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#filter_isolated_pixels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.filter_isolated_pixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>From a 2D boolean array, remove completely isolated single cells.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2-D boolean array (numpy array or list) containing
+isolated values.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Cleaned array.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">filter_isolated_pixels</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]])</span>
+<span class="go">    array([[0, 0, 0],</span>
+<span class="go">           [0, 0, 0],</span>
+<span class="go">           [0, 0, 0]])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.filter_x_pixels">
+<code class="descclassname">utils.</code><code class="descname">filter_x_pixels</code><span class="sig-paren">(</span><em>array</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#filter_x_pixels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.filter_x_pixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>From a 2D boolean array, remove cells isolated in x-direction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>array</strong> (<em>ndarray</em>) – 2-D boolean array containing isolated pixels in x-direction.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Cleaned array.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">filter_x_pixels</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="go">    array([[0, 0, 0],</span>
+<span class="go">           [0, 1, 0],</span>
+<span class="go">           [0, 1, 0]])</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
@@ -1938,7 +1985,7 @@ Does not extrapolate.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated 2d masked array.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Interpolated 2D masked array.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
@@ -2179,13 +2226,13 @@ and distance in minutes. Default is None.</li>
 <p>By “scalar” we mean that array has a single value.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="go">True</span>
+<span class="go">    True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
-<span class="go">True</span>
+<span class="go">    True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-<span class="go">True</span>
+<span class="go">    True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">isscalar</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">]))</span>
-<span class="go">True</span>
+<span class="go">    True</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -2236,6 +2283,24 @@ and distance in minutes. Default is None.</li>
 <dt id="utils.del_dict_keys">
 <code class="descclassname">utils.</code><code class="descname">del_dict_keys</code><span class="sig-paren">(</span><em>dict_in</em>, <em>keys</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#del_dict_keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.del_dict_keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Removes multiple keys from dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dict_in</strong> (<em>dict</em>) – A dictionary.</li>
+<li><strong>keys</strong> (<em>list / tuple</em>) – list of keys to be deleted.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dictionary without the deleted keys.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -2254,10 +2319,10 @@ and ‘site_name’.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Tuple of return values.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of return values as floats.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
 </td>
 </tr>
 </tbody>
@@ -2276,7 +2341,7 @@ and ‘site_name’.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>arr_in</strong> (<em>MaskedArray</em>) – Masked numpy array.</li>
 <li><strong>loc</strong> (<em>float</em>) – Center of the distribution. Values smaller than this
 will have small probability. Values greater than this will have
@@ -2286,6 +2351,12 @@ drops or increases from the peak.</li>
 <li><strong>invert</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, large values have small
 probability and vice versa. Default is False.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Probability.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>

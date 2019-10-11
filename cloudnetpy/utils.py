@@ -78,7 +78,7 @@ def binvec(x):
 
 
 def rebin_2d(x_in, data, x_new, statistic='mean', n_min=1):
-    """Rebins 2-D data in one dimension using mean.
+    """Rebins 2-D data in one dimension.
 
     Args:
         x_in (ndarray): 1-D array with shape (n,).
@@ -116,7 +116,19 @@ def rebin_2d(x_in, data, x_new, statistic='mean', n_min=1):
 
 
 def rebin_1d(x_in, data, x_new, statistic='mean'):
-    """Rebins 1D array."""
+    """Rebins 1D array.
+
+    Args:
+        x_in (ndarray): 1-D array with shape (n,).
+        data (MaskedArray): 1-D input data with shape (m,).
+        x_new (ndarray): 1-D target vector (center points) with shape (N,).
+        statistic (str, optional): Statistic to be calculated. Possible
+            statistics are 'mean', 'std'. Default is 'mean'.
+
+    Returns:
+        MaskedArray: Rebinned data with shape (N,).
+
+    """
     edges = binvec(x_new)
     datai = np.zeros(len(x_new))
     data = ma.masked_invalid(data)  # data may contain nan-values
@@ -131,15 +143,21 @@ def rebin_1d(x_in, data, x_new, statistic='mean'):
 
 
 def filter_isolated_pixels(array):
-    """Returns array with completely isolated single cells removed.
+    """From a 2D boolean array, remove completely isolated single cells.
 
     Args:
-        array (ndarray): 2-D input data containing isolated pixels.
-        n (int): number of connected pixels in 3x3 region. Default is 1 when
-            only isolated pixels will be removed.
+        array (ndarray): 2-D boolean array (numpy array or list) containing
+             isolated values.
 
     Returns:
-        ndarray: Cleaned data.
+        ndarray: Cleaned array.
+
+    Examples:
+        >>> filter_isolated_pixels([[0, 0, 0], [0, 1, 0], [0, 0, 0]])
+            array([[0, 0, 0],
+                   [0, 0, 0],
+                   [0, 0, 0]])
+
 
     """
     filtered_array = np.copy(array)
@@ -152,6 +170,22 @@ def filter_isolated_pixels(array):
 
 
 def filter_x_pixels(array):
+    """From a 2D boolean array, remove cells isolated in x-direction.
+
+    Args:
+        array (ndarray): 2-D boolean array containing isolated pixels in x-direction.
+
+    Returns:
+        ndarray: Cleaned array.
+
+    Examples:
+        >>> filter_x_pixels([[1, 0, 0], [0, 1, 0], [0, 1, 1]])
+            array([[0, 0, 0],
+                   [0, 1, 0],
+                   [0, 1, 0]])
+
+
+    """
     filtered_array = np.copy(array)
     id_regions, num_ids = ndimage.label(filtered_array,
                                         structure=np.array([[0, 1, 0],
@@ -161,7 +195,6 @@ def filter_x_pixels(array):
     area_mask = id_sizes == 1
     filtered_array[area_mask[id_regions]] = 0
     return filtered_array
-
 
 
 def isbit(integer, nth_bit):
@@ -254,7 +287,7 @@ def interpolate_2d_masked(array, ax_values, ax_values_new):
         ax_values_new (tuple): 2-element tuple containing new x and y values.
 
     Returns:
-        ndarray: Interpolated 2d masked array.
+        ndarray: Interpolated 2D masked array.
 
     Notes:
         Uses linear interpolation.
@@ -456,13 +489,13 @@ def isscalar(array):
 
     Examples:
         >>> isscalar(1)
-        True
+            True
         >>> isscalar([1])
-        True
+            True
         >>> isscalar(np.array(1))
-        True
+            True
         >>> isscalar(np.array([1]))
-        True
+            True
 
     """
     arr = ma.array(array)
@@ -506,11 +539,21 @@ def transpose(x):
 
 
 def del_dict_keys(dict_in, keys):
-    """Removes multiple keys from dictionary."""
+    """Removes multiple keys from dictionary.
+
+    Args:
+        dict_in (dict): A dictionary.
+        keys (list / tuple): list of keys to be deleted.
+
+    Returns:
+        dict: Dictionary without the deleted keys.
+
+    """
+    temp_dict = dict_in.copy()
     for key in keys:
         if key in dict_in:
-            del dict_in[key]
-    return dict_in
+            del temp_dict[key]
+    return temp_dict
 
 
 def get_site_information(site, *args):
@@ -523,7 +566,7 @@ def get_site_information(site, *args):
             and 'site_name'.
 
     Returns:
-        tuple: Tuple of return values.
+        list: List of return values as floats.
 
     Examples:
         >>> get_site_information('mace-head', 'latitude', 'longitude')
@@ -533,10 +576,11 @@ def get_site_information(site, *args):
     query = f"http://devcloudnet.fmi.fi/api/sites/?site_code={site}&fields={fields}"
     try:
         result = [*requests.get(query).json()[0]['fields'].values()]
+        result = [float(x) for x in result]
         if len(result) == 1:
             result = result[0]
     except:
-        result = tuple([0]*len(args))
+        result = [0]*len(args)
     return result
 
 
@@ -552,6 +596,9 @@ def array_to_probability(arr_in, loc, scale, invert=False):
             drops or increases from the peak.
         invert (bool, optional): If True, large values have small
             probability and vice versa. Default is False.
+
+    Returns:
+        ndarray: Probability.
 
     """
     arr = ma.copy(arr_in)

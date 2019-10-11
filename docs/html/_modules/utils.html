@@ -231,7 +231,7 @@
 
 
 <div class="viewcode-block" id="rebin_2d"><a class="viewcode-back" href="../api.html#utils.rebin_2d">[docs]</a><span class="k">def</span> <span class="nf">rebin_2d</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">x_new</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="n">n_min</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Rebins 2-D data in one dimension using mean.</span>
+    <span class="sd">&quot;&quot;&quot;Rebins 2-D data in one dimension.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        x_in (ndarray): 1-D array with shape (n,).</span>
@@ -269,7 +269,19 @@
 
 
 <div class="viewcode-block" id="rebin_1d"><a class="viewcode-back" href="../api.html#utils.rebin_1d">[docs]</a><span class="k">def</span> <span class="nf">rebin_1d</span><span class="p">(</span><span class="n">x_in</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">x_new</span><span class="p">,</span> <span class="n">statistic</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Rebins 1D array.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Rebins 1D array.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x_in (ndarray): 1-D array with shape (n,).</span>
+<span class="sd">        data (MaskedArray): 1-D input data with shape (m,).</span>
+<span class="sd">        x_new (ndarray): 1-D target vector (center points) with shape (N,).</span>
+<span class="sd">        statistic (str, optional): Statistic to be calculated. Possible</span>
+<span class="sd">            statistics are &#39;mean&#39;, &#39;std&#39;. Default is &#39;mean&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        MaskedArray: Rebinned data with shape (N,).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">edges</span> <span class="o">=</span> <span class="n">binvec</span><span class="p">(</span><span class="n">x_new</span><span class="p">)</span>
     <span class="n">datai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_new</span><span class="p">))</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># data may contain nan-values</span>
@@ -284,15 +296,21 @@
 
 
 <div class="viewcode-block" id="filter_isolated_pixels"><a class="viewcode-back" href="../api.html#utils.filter_isolated_pixels">[docs]</a><span class="k">def</span> <span class="nf">filter_isolated_pixels</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Returns array with completely isolated single cells removed.</span>
+    <span class="sd">&quot;&quot;&quot;From a 2D boolean array, remove completely isolated single cells.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        array (ndarray): 2-D input data containing isolated pixels.</span>
-<span class="sd">        n (int): number of connected pixels in 3x3 region. Default is 1 when</span>
-<span class="sd">            only isolated pixels will be removed.</span>
+<span class="sd">        array (ndarray): 2-D boolean array (numpy array or list) containing</span>
+<span class="sd">             isolated values.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        ndarray: Cleaned data.</span>
+<span class="sd">        ndarray: Cleaned array.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; filter_isolated_pixels([[0, 0, 0], [0, 1, 0], [0, 0, 0]])</span>
+<span class="sd">            array([[0, 0, 0],</span>
+<span class="sd">                   [0, 0, 0],</span>
+<span class="sd">                   [0, 0, 0]])</span>
+
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">filtered_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
@@ -304,7 +322,23 @@
     <span class="k">return</span> <span class="n">filtered_array</span></div>
 
 
-<span class="k">def</span> <span class="nf">filter_x_pixels</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+<div class="viewcode-block" id="filter_x_pixels"><a class="viewcode-back" href="../api.html#utils.filter_x_pixels">[docs]</a><span class="k">def</span> <span class="nf">filter_x_pixels</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;From a 2D boolean array, remove cells isolated in x-direction.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (ndarray): 2-D boolean array containing isolated pixels in x-direction.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Cleaned array.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; filter_x_pixels([[1, 0, 0], [0, 1, 0], [0, 1, 1]])</span>
+<span class="sd">            array([[0, 0, 0],</span>
+<span class="sd">                   [0, 1, 0],</span>
+<span class="sd">                   [0, 1, 0]])</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">filtered_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
     <span class="n">id_regions</span><span class="p">,</span> <span class="n">num_ids</span> <span class="o">=</span> <span class="n">ndimage</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="n">filtered_array</span><span class="p">,</span>
                                         <span class="n">structure</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
@@ -313,8 +347,7 @@
     <span class="n">id_sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ndimage</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">id_regions</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_ids</span><span class="o">+</span><span class="mi">1</span><span class="p">)))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
     <span class="n">area_mask</span> <span class="o">=</span> <span class="n">id_sizes</span> <span class="o">==</span> <span class="mi">1</span>
     <span class="n">filtered_array</span><span class="p">[</span><span class="n">area_mask</span><span class="p">[</span><span class="n">id_regions</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">return</span> <span class="n">filtered_array</span>
-
+    <span class="k">return</span> <span class="n">filtered_array</span></div>
 
 
 <div class="viewcode-block" id="isbit"><a class="viewcode-back" href="../api.html#utils.isbit">[docs]</a><span class="k">def</span> <span class="nf">isbit</span><span class="p">(</span><span class="n">integer</span><span class="p">,</span> <span class="n">nth_bit</span><span class="p">):</span>
@@ -407,7 +440,7 @@
 <span class="sd">        ax_values_new (tuple): 2-element tuple containing new x and y values.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        ndarray: Interpolated 2d masked array.</span>
+<span class="sd">        ndarray: Interpolated 2D masked array.</span>
 
 <span class="sd">    Notes:</span>
 <span class="sd">        Uses linear interpolation.</span>
@@ -609,13 +642,13 @@
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; isscalar(1)</span>
-<span class="sd">        True</span>
+<span class="sd">            True</span>
 <span class="sd">        &gt;&gt;&gt; isscalar([1])</span>
-<span class="sd">        True</span>
+<span class="sd">            True</span>
 <span class="sd">        &gt;&gt;&gt; isscalar(np.array(1))</span>
-<span class="sd">        True</span>
+<span class="sd">            True</span>
 <span class="sd">        &gt;&gt;&gt; isscalar(np.array([1]))</span>
-<span class="sd">        True</span>
+<span class="sd">            True</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">arr</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
@@ -659,11 +692,21 @@
 
 
 <div class="viewcode-block" id="del_dict_keys"><a class="viewcode-back" href="../api.html#utils.del_dict_keys">[docs]</a><span class="k">def</span> <span class="nf">del_dict_keys</span><span class="p">(</span><span class="n">dict_in</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Removes multiple keys from dictionary.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Removes multiple keys from dictionary.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dict_in (dict): A dictionary.</span>
+<span class="sd">        keys (list / tuple): list of keys to be deleted.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Dictionary without the deleted keys.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">temp_dict</span> <span class="o">=</span> <span class="n">dict_in</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">dict_in</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">dict_in</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">dict_in</span></div>
+            <span class="k">del</span> <span class="n">temp_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">temp_dict</span></div>
 
 
 <div class="viewcode-block" id="get_site_information"><a class="viewcode-back" href="../api.html#utils.get_site_information">[docs]</a><span class="k">def</span> <span class="nf">get_site_information</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
@@ -676,7 +719,7 @@
 <span class="sd">            and &#39;site_name&#39;.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        tuple: Tuple of return values.</span>
+<span class="sd">        list: List of return values as floats.</span>
 
 <span class="sd">    Examples:</span>
 <span class="sd">        &gt;&gt;&gt; get_site_information(&#39;mace-head&#39;, &#39;latitude&#39;, &#39;longitude&#39;)</span>
@@ -686,10 +729,11 @@
     <span class="n">query</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;http://devcloudnet.fmi.fi/api/sites/?site_code=</span><span class="si">{site}</span><span class="s2">&amp;fields=</span><span class="si">{fields}</span><span class="s2">&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">query</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;fields&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">result</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">except</span><span class="p">:</span>
-        <span class="n">result</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span></div>
 
 
@@ -705,6 +749,9 @@
 <span class="sd">            drops or increases from the peak.</span>
 <span class="sd">        invert (bool, optional): If True, large values have small</span>
 <span class="sd">            probability and vice versa. Default is False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Probability.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">arr</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">arr_in</span><span class="p">)</span>

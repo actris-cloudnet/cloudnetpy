@@ -593,7 +593,7 @@ def time_to_fraction_hour(time):
 
 def is_timestamp(string):
     """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss"""
-    r = re.compile('-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+    r = re.compile(r'-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
     if r.match(string) is not None:
         return True
     return False

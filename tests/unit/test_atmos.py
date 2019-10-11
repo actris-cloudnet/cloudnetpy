@@ -45,3 +45,31 @@ def test_wet_bulb(t, p, rh, res):
              'rh': np.array(rh)}
     cnet = atmos.calc_wet_bulb_temperature(model)
     assert_array_almost_equal(cnet/10, res/10, decimal=1)
+
+
+def test_find_cloud_bases():
+    x = np.array([[0, 1, 1, 1],
+                  [0, 0, 1, 0],
+                  [1, 0, 1, 0],
+                  [1, 1, 0, 0],
+                  [0, 0, 0, 1]])
+    b = np.array([[0, 1, 0, 0],
+                  [0, 0, 1, 0],
+                  [1, 0, 1, 0],
+                  [1, 0, 0, 0],
+                  [0, 0, 0, 1]])
+    assert_array_almost_equal(atmos.find_cloud_bases(x), b)
+
+
+def test_find_cloud_tops():
+    x = np.array([[0, 1, 1, 1],
+                  [0, 0, 1, 0],
+                  [1, 0, 1, 0],
+                  [1, 1, 0, 0],
+                  [1, 1, 0, 1]])
+    b = np.array([[0, 0, 0, 1],
+                  [0, 0, 1, 0],
+                  [1, 0, 1, 0],
+                  [0, 1, 0, 0],
+                  [0, 1, 0, 1]])
+    assert_array_almost_equal(atmos.find_cloud_tops(x), b)
