@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import netCDF4
+import logging
 from tests.utils import get_file_type, read_meta_config
 
 META_CONFIG = read_meta_config()
@@ -20,7 +21,7 @@ def variable_names(pytestconfig):
 
 
 @pytest.fixture
-def global_attribute_names(pytestconfig):
+def global_attribute_names(pytestconfig, caplog):
     nc = netCDF4.Dataset(pytestconfig.option.test_file)
     file_type = get_file_type(pytestconfig.option.test_file)
     keys = set(nc.ncattrs())

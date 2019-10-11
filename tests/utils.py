@@ -2,6 +2,7 @@ import os
 from collections import namedtuple
 import netCDF4
 import configparser
+import logging
 
 
 CONFIG_FILE_META = 'meta/metadata_config.ini'
@@ -9,6 +10,14 @@ CONFIG_FILE_DATA = 'data_quality/data_quality_config.ini'
 FIELDS = ('min', 'max', 'units')
 Specs = namedtuple('Specs', FIELDS)
 Specs.__new__.__defaults__ = (None,) * len(Specs._fields)
+
+
+def init_logger(path, fname):
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        filename=f'{path}{fname}.log',
+                        level=logging.DEBUG,
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        filemode='w')
 
 
 def read_meta_config():

@@ -26,6 +26,7 @@ def check_data_quality(file):
     script = f"{test_path}/data_qc.py"
     subprocess.call([script, file])
 
+
 def run_unit_tests():
     """Runs all CloudnetPy unit tests."""
     pytest.main(["-s", "unit/"])

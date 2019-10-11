@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import netCDF4
+import logging
 from tests.utils import get_file_type, read_data_config
 
 DATA_CONFIG = read_data_config()
