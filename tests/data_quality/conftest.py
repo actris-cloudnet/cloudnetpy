@@ -29,20 +29,22 @@ def data(pytestconfig):
 class InputData:
     def __init__(self, file):
         self.file_name = file
-        self.wrong_value = {}
+        self.bad_values = {}
         self.value = False
         self._read_var_limits()
 
     def _read_var_limits(self):
-        config = dict(DATA_CONFIG.items('limits'))
         nc = netCDF4.Dataset(self.file_name)
         keys = nc.variables.keys()
-        for var, c_val in config.items():
-            c_val = tuple(map(float, c_val.split(', ')))
+        config = DATA_CONFIG.items('limits')
+        for var, limits in config:
             if var in keys:
-                if c_val[0] > np.min(nc.variables[var][:]) or c_val[1] < np.max(nc.variables[var][:]):
+                limits = tuple(map(float, limits.split(',')))
+                min_value = np.min(nc.variables[var][:])
+                max_value = np.max(nc.variables[var][:])
+                if limits[0] > min_value or limits[1] < max_value:
                     self.value = True
-                    self.wrong_value[var] = [np.min(nc.variables[var][:]), np.max(nc.variables[var][:])]
+                    self.bad_values[var] = [min_value, max_value]
         nc.close()
 
 
