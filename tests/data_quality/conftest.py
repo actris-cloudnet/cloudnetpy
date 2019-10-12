@@ -38,7 +38,3 @@ class InputData:
                     self.value = True
                     self.bad_values[var] = [min_value, max_value]
         nc.close()
-
-
-def pytest_addoption(parser):
-    parser.addoption('--test_file', action='store', help='Input file name')
