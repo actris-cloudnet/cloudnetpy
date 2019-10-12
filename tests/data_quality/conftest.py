@@ -1,23 +1,15 @@
 import numpy as np
 import pytest
 import netCDF4
-import logging
-from tests.utils import get_file_type, read_data_config
+from tests.utils import read_config, find_missing_keys
 
-DATA_CONFIG = read_data_config()
+CONFIG = read_config('data_quality/data_quality_config.ini')
 
 
 @pytest.fixture
-def variable_names(pytestconfig):
-    nc = netCDF4.Dataset(pytestconfig.option.test_file)
-    file_type = get_file_type(pytestconfig.option.test_file)
-    keys = set(nc.variables.keys())
-    nc.close()
-    try:
-        missing = set(DATA_CONFIG[file_type]['quantities'].split(', ')) - keys
-    except:
-        missing = False
-    return missing
+def missing_variables(pytestconfig):
+    file_name = pytestconfig.option.test_file
+    return find_missing_keys(CONFIG, 'quantities', file_name)
 
 
 @pytest.fixture
@@ -31,18 +23,18 @@ class InputData:
         self.file_name = file
         self.bad_values = {}
         self.value = False
-        self._read_var_limits()
+        self._check_min_max_values()
 
-    def _read_var_limits(self):
+    def _check_min_max_values(self):
         nc = netCDF4.Dataset(self.file_name)
         keys = nc.variables.keys()
-        config = DATA_CONFIG.items('limits')
+        config = CONFIG.items('limits')
         for var, limits in config:
             if var in keys:
                 limits = tuple(map(float, limits.split(',')))
                 min_value = np.min(nc.variables[var][:])
                 max_value = np.max(nc.variables[var][:])
-                if limits[0] > min_value or limits[1] < max_value:
+                if min_value < limits[0] or max_value > limits[1]:
                     self.value = True
                     self.bad_values[var] = [min_value, max_value]
         nc.close()

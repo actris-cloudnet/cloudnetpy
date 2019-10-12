@@ -1,25 +1,8 @@
 import os
-from collections import namedtuple
 import netCDF4
 import configparser
 import logging
-
-
-CONFIG_FILE_META = 'meta/metadata_config.ini'
-CONFIG_FILE_DATA = 'data_quality/data_quality_config.ini'
-FIELDS = ('min', 'max', 'units')
-Specs = namedtuple('Specs', FIELDS)
-Specs.__new__.__defaults__ = (None,) * len(Specs._fields)
-
-"""                     
-    def fill_log(reason, instru):
-        if OPERATIVE_RUN:
-            logger.warning(f"Data quality test didn't pass in {instru} file")
-            logger.warning(reason)
-
-    def logger_information(site, date):
-        logger.info(f"Operative processing from {site} at {date}")
-"""
+import numpy as np
 
 
 def init_logger(path, fname):
@@ -30,18 +13,29 @@ def init_logger(path, fname):
                         filemode='w')
 
 
-def read_meta_config():
+def read_config(config_file):
     conf = configparser.ConfigParser()
     conf.optionxform = str
-    conf.read(CONFIG_FILE_META)
+    conf.read(config_file)
     return conf
 
 
-def read_data_config():
-    conf = configparser.ConfigParser()
-    conf.optionxform = str
-    conf.read(CONFIG_FILE_DATA)
-    return conf
+def find_missing_keys(config, config_field, file_name):
+    nc = netCDF4.Dataset(file_name)
+    file_type = get_file_type(file_name)
+    keys = nc.ncattrs() if 'attributes' in config_field else nc.variables.keys()
+    nc.close()
+    try:
+        config_keys = read_config_keys(config, config_field, file_type)
+        missing = set(config_keys) - set(keys)
+    except:
+        missing = False
+    return missing
+
+
+def read_config_keys(config, field, file_type):
+    keys = config[field][file_type].split(',')
+    return np.char.strip(keys)
 
 
 def get_test_path():

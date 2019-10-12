@@ -1,6 +1,6 @@
 
-def test_variables_keys(variable_names):
-    assert not variable_names
+def test_variables_keys(missing_variables):
+    assert not missing_variables
 
 
 def test_variables_values(data):

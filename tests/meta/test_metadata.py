@@ -1,8 +1,8 @@
 # Test functions for metadata testing
 
 
-def test_variables_keys(variable_names):
-    assert not variable_names
+def test_variables_keys(missing_variables):
+    assert not missing_variables
 
 
 def test_variables_units(variable):
@@ -13,8 +13,8 @@ def test_variables_values(variable):
     assert not variable.value
 
 
-def test_attributes_keys(global_attribute_names):
-    assert not global_attribute_names
+def test_attributes_keys(missing_global_attributes):
+    assert not missing_global_attributes
 
 
 def test_attributes_units(global_attribute):
