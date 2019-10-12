@@ -1,7 +1,6 @@
-import numpy as np
 import pytest
 import netCDF4
-from tests.utils import read_config, find_missing_keys
+from tests.utils import read_config, find_missing_keys, check_var_limits
 
 CONFIG = read_config('meta/metadata_config.ini')
 
@@ -30,72 +29,46 @@ def variable(pytestconfig):
 
 class GlobalAttribute:
     def __init__(self, file):
-        self.file_name = file
-        self.wrong_units = {}
-        self.wrong_values = {}
-        self.value = False
-        self.unit = False
-        self._read_attr_units()
-        self._read_attr_limits()
+        self._nc = netCDF4.Dataset(file)
+        self._keys = self._nc.ncattrs()
+        self.bad_units = self._check_attr_units()
+        self.bad_values = self._check_attr_limits()
+        self._nc.close()
 
-    def _read_attr_units(self):
-        nc = netCDF4.Dataset(self.file_name)
-        keys = nc.ncattrs()
-        config = CONFIG.items('attributes_units')
-        for attr, reference in config:
-            if attr in keys:
-                value = nc.getncattr(attr)
+    def _check_attr_units(self):
+        bad = {}
+        for attr, reference in CONFIG.items('attributes_units'):
+            if attr in self._keys:
+                value = self._nc.getncattr(attr)
                 if reference != value:
-                    self.unit = True
-                    self.wrong_units[attr] = value
-        nc.close()
+                    bad[attr] = value
+        return bad
 
-    def _read_attr_limits(self):
-        nc = netCDF4.Dataset(self.file_name)
-        keys = nc.ncattrs()
-        config = CONFIG.items('attributes_limits')
-        for attr, limits in config:
-            limits = tuple(map(float, limits.split(',')))
-            if attr in keys:
-                value = int(nc.getncattr(attr))
+    def _check_attr_limits(self):
+        bad = {}
+        for attr, limits in CONFIG.items('attributes_limits'):
+            if attr in self._keys:
+                limits = tuple(map(float, limits.split(',')))
+                value = int(self._nc.getncattr(attr))
                 if value < limits[0] or value > limits[1]:
-                    self.value = True
-                    self.wrong_values[attr] = value
-        nc.close()
+                    bad[attr] = value
+        return bad
 
 
 class Variable:
     def __init__(self, file):
         self.file_name = file
-        self.wrong_units = {}
-        self.wrong_values = {}
-        self.value = False
-        self.unit = False
-        self._read_var_units()
-        self._read_var_limits()
+        self.bad_values = check_var_limits(CONFIG, 'variables_limits', file)
+        self.bad_units = self._check_units()
 
-    def _read_var_units(self):
+    def _check_units(self):
+        bad = {}
         nc = netCDF4.Dataset(self.file_name)
         keys = nc.variables.keys()
-        config = CONFIG.items('variables_units')
-        for var, reference in config:
+        for var, reference in CONFIG.items('variables_units'):
             if var in keys:
                 value = nc.variables[var].units
                 if reference != value:
-                    self.unit = True
-                    self.wrong_units[var] = value
+                    bad[var] = value
         nc.close()
-
-    def _read_var_limits(self):
-        nc = netCDF4.Dataset(self.file_name)
-        keys = nc.variables.keys()
-        config = CONFIG.items('variables_limits')
-        for var, limits in config:
-            limits = tuple(map(float, limits.split(',')))
-            if var in keys:
-                min_value = np.min(nc.variables[var][:])
-                max_value = np.max(nc.variables[var][:])
-                if min_value < limits[0] or max_value > limits[1]:
-                    self.value = True
-                    self.wrong_values[var] = [min_value, max_value]
-        nc.close()
+        return bad

@@ -33,6 +33,21 @@ def find_missing_keys(config, config_field, file_name):
     return missing
 
 
+def check_var_limits(config, config_field, file_name):
+    bad = {}
+    nc = netCDF4.Dataset(file_name)
+    keys = nc.variables.keys()
+    for var, limits in config.items(config_field):
+        if var in keys:
+            limits = tuple(map(float, limits.split(',')))
+            min_value = np.min(nc.variables[var][:])
+            max_value = np.max(nc.variables[var][:])
+            if min_value < limits[0] or max_value > limits[1]:
+                bad[var] = [min_value, max_value]
+    nc.close()
+    return bad
+
+
 def read_config_keys(config, field, file_type):
     keys = config[field][file_type].split(',')
     return np.char.strip(keys)
