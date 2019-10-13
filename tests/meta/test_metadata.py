@@ -17,10 +17,6 @@ def test_attribute_keys(missing_global_attributes):
     assert not missing_global_attributes
 
 
-def test_attribute_units(global_attribute):
-    assert not global_attribute.bad_units
-
-
 def test_attribute_values(global_attribute):
     assert not global_attribute.bad_values
 

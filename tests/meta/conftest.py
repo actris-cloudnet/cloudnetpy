@@ -14,7 +14,7 @@ def missing_variables(pytestconfig):
 @pytest.fixture
 def missing_global_attributes(pytestconfig):
     file_name = pytestconfig.option.test_file
-    return utils.find_missing_keys(CONFIG, 'required_attributes', file_name)
+    return utils.find_missing_keys(CONFIG, 'required_global_attributes', file_name)
 
 
 @pytest.fixture
@@ -31,13 +31,12 @@ class GlobalAttribute:
     def __init__(self, file):
         self.file_name = file
         self.bad_values = self._check_values()
-        self.bad_units = _check_units('attributes_units', file)
 
     def _check_values(self):
         bad = {}
         nc = netCDF4.Dataset(self.file_name)
         nc_keys = nc.ncattrs()
-        for attr, limits in CONFIG.items('attributes_limits'):
+        for attr, limits in CONFIG.items('attribute_limits'):
             if attr in nc_keys:
                 limits = tuple(map(float, limits.split(',')))
                 value = int(nc.getncattr(attr))
@@ -50,18 +49,17 @@ class GlobalAttribute:
 class Variable:
     def __init__(self, file):
         self.file_name = file
-        self.bad_values = utils.check_var_limits(CONFIG, 'variables_limits', file)
-        self.bad_units = _check_units('variables_units', file)
+        self.bad_values = utils.check_var_limits(CONFIG, 'variable_limits', file)
+        self.bad_units = self._check_units()
 
-
-def _check_units(config_field, file_name):
-    bad = {}
-    nc = netCDF4.Dataset(file_name)
-    nc_keys = utils.read_nc_keys(nc, config_field)
-    for var, reference in CONFIG.items(config_field):
-        if var in nc_keys:
-            value = nc.variables[var].units
-            if reference != value:
-                bad[var] = value
-    nc.close()
-    return bad
+    def _check_units(self):
+        bad = {}
+        nc = netCDF4.Dataset(self.file_name)
+        nc_keys = nc.variables.keys()
+        for var, reference in CONFIG.items('variable_units'):
+            if var in nc_keys:
+                value = nc.variables[var].units
+                if reference != value:
+                    bad[var] = value
+        nc.close()
+        return bad
