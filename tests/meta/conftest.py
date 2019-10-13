@@ -36,9 +36,9 @@ class GlobalAttribute:
     def _check_values(self):
         bad = {}
         nc = netCDF4.Dataset(self.file_name)
-        keys = nc.ncattrs()
+        nc_keys = nc.ncattrs()
         for attr, limits in CONFIG.items('attributes_limits'):
-            if attr in keys:
+            if attr in nc_keys:
                 limits = tuple(map(float, limits.split(',')))
                 value = int(nc.getncattr(attr))
                 if not limits[0] <= value <= limits[1]:
@@ -57,9 +57,9 @@ class Variable:
 def _check_units(config_field, file_name):
     bad = {}
     nc = netCDF4.Dataset(file_name)
-    keys = nc.ncattrs() if 'attributes' in config_field else nc.variables.keys()
+    nc_keys = utils.read_nc_keys(nc, config_field)
     for var, reference in CONFIG.items(config_field):
-        if var in keys:
+        if var in nc_keys:
             value = nc.variables[var].units
             if reference != value:
                 bad[var] = value
