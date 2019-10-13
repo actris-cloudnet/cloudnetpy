@@ -9,6 +9,8 @@ from cloudnetpy.instruments import mira, ceilo
 from cloudnetpy.categorize import categorize
 from tests import api
 
+PROCESS = True
+
 
 def _load_test_data(input_path):
 
@@ -37,7 +39,8 @@ def _load_test_data(input_path):
 def _process_product_file(product_type, path, categorize_file):
     output_file = f"{path}{product_type}.nc"
     module = importlib.import_module(f"cloudnetpy.products.{product_type}")
-    getattr(module, f"generate_{product_type}")(categorize_file, output_file)
+    if PROCESS:
+        getattr(module, f"generate_{product_type}")(categorize_file, output_file)
     return output_file
 
 
@@ -61,8 +64,9 @@ def main():
         'lidar': f"{source_path}lidar.nc",
     }
     site_meta = {'name': 'Mace Head', 'altitude': 13}
-    mira.mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta)
-    ceilo.ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
+    if PROCESS:
+        mira.mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta)
+        ceilo.ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
     for name, file in calibrated_files.items():
         api.check_metadata(file, log_file)
         api.check_data_quality(file, log_file)
@@ -74,7 +78,8 @@ def main():
         'model': f"{source_path}{prefix}ecmwf.nc",
     }
     categorize_file = f"{source_path}categorize.nc"
-    categorize.generate_categorize(input_files, categorize_file)
+    if PROCESS:
+        categorize.generate_categorize(input_files, categorize_file)
     api.check_metadata(categorize_file, log_file)
     api.check_data_quality(categorize_file, log_file)
 
