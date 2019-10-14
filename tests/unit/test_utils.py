@@ -64,13 +64,25 @@ def test_l2_norm(a, b, result):
 
 
 class TestRebin2D:
-    x = np.array([1, 2, 2.99, 4, 4.99, 6, 7])
+    x = np.array([1.01, 2, 2.99, 4.01, 4.99, 6.01, 7])
     xnew = np.array([2, 4, 6])
     data = np.array([range(1, 8), range(1, 8)]).T
 
     def test_rebin_2d(self):
         data_i = utils.rebin_2d(self.x, self.data, self.xnew)
         result = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
+        assert_array_almost_equal(data_i, result)
+
+    def test_rebin_2d_n_min(self):
+        data_i = utils.rebin_2d(self.x, self.data, self.xnew, n_min=2)
+        result = np.array([2, 4.5, 6.5])
+        result = np.array([result, result]).T
+        assert_array_almost_equal(data_i, result)
+
+    def test_rebin_2d_n_min_2(self):
+        data_i = utils.rebin_2d(self.x, self.data, self.xnew, n_min=3)
+        result = np.array([2, 0, 0])
+        result = np.array([result, result]).T
         assert_array_almost_equal(data_i, result)
 
     def test_rebin_2d_std(self):
