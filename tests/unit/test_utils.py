@@ -81,9 +81,9 @@ class TestRebin2D:
 
     def test_rebin_2d_n_min_2(self):
         data_i = utils.rebin_2d(self.x, self.data, self.xnew, n_min=3)
-        result = np.array([2, 0, 0])
+        result = np.array([False, True, True])
         result = np.array([result, result]).T
-        assert_array_almost_equal(data_i, result)
+        assert_array_almost_equal(data_i.mask, result)
 
     def test_rebin_2d_std(self):
         data_i = utils.rebin_2d(self.x, self.data, self.xnew, 'std')
