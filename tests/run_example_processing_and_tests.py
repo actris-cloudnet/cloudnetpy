@@ -9,7 +9,7 @@ from cloudnetpy.instruments import mira, ceilo
 from cloudnetpy.categorize import categorize
 from tests import api
 
-PROCESS = False
+PROCESS = True
 
 
 def _load_test_data(input_path):
