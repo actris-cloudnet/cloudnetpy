@@ -44,14 +44,15 @@ needed by Cloudnetpy:
 .. code-block:: console
 
     $ cd cloudnetpy
-    $ python3.7 -m venv venv
+    $ python3 -m venv venv
     $ source venv/bin/activate
     (venv) $ pip3 install numpy scipy netCDF4 matplotlib requests pytest
 
 Running all tests
 .................
 
-Go to the tests folder and try to run all the tests:
+Go to the tests folder and execute the script that runs a full Cloudnet
+processing for example files and all tests:
 
 .. code-block:: console
 
