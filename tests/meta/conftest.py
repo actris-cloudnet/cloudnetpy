@@ -10,9 +10,8 @@ CONFIG = utils.read_config('meta/metadata_config.ini')
 def invalid_global_attribute_values(pytestconfig):
     bad = {}
     nc = netCDF4.Dataset(pytestconfig.option.test_file)
-    nc_keys = nc.ncattrs()
     for attr, limits in CONFIG.items('attribute_limits'):
-        if attr in nc_keys:
+        if hasattr(nc, attr):
             limits = tuple(map(float, limits.split(',')))
             value = int(nc.getncattr(attr))
             if not limits[0] <= value <= limits[1]:
@@ -25,9 +24,8 @@ def invalid_global_attribute_values(pytestconfig):
 def invalid_variable_units(pytestconfig):
     bad = {}
     nc = netCDF4.Dataset(pytestconfig.option.test_file)
-    nc_keys = nc.variables.keys()
     for var, reference in CONFIG.items('variable_units'):
-        if var in nc_keys:
+        if var in nc.variables:
             value = nc.variables[var].units
             if reference != value:
                 bad[var] = value

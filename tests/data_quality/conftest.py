@@ -11,7 +11,7 @@ def out_of_limits_values(pytestconfig):
     bad = {}
     nc = netCDF4.Dataset(pytestconfig.option.test_file)
     for var, limits in CONFIG.items('limits'):
-        if var in nc.variables.keys():
+        if var in nc.variables:
             limits = tuple(map(float, limits.split(',')))
             if np.min(nc.variables[var][:]) < limits[0]:
                 bad[var] = 'min value out of limits'
@@ -25,7 +25,7 @@ def out_of_limits_values(pytestconfig):
 def invalid_values(pytestconfig):
     bad = {}
     nc = netCDF4.Dataset(pytestconfig.option.test_file)
-    for key in nc.variables.keys():
+    for key in nc.variables:
         if np.isnan(nc.variables[key][:]).any():
             bad[key] = 'contains invalid values'
     nc.close()
