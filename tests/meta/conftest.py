@@ -49,7 +49,6 @@ class GlobalAttribute:
 class Variable:
     def __init__(self, file):
         self.file_name = file
-        self.bad_values = utils.check_var_limits(CONFIG, 'variable_limits', file)
         self.bad_units = self._check_units()
 
     def _check_units(self):
