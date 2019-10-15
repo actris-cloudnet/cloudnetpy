@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
 import pytest
 
 
-def main(test_file):
+def main(test_file, log_file):
 
     pytest.main(['-s',
                  '-v',

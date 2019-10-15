@@ -58,7 +58,7 @@ def main():
     }
     for name, file in raw_files.items():
         api.check_metadata(file, log_file)
-
+    lol
     calibrated_files = {
         'radar': f"{source_path}radar.nc",
         'lidar': f"{source_path}lidar.nc",

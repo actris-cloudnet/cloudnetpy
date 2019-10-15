@@ -13,7 +13,7 @@ def check_metadata(file, log_file=None):
     """
     test_path = utils.get_test_path()
     script = f"{test_path}/meta_qc.py"
-    subprocess.call([script, file])
+    subprocess.call([script, file, log_file])
 
 
 def check_data_quality(file, log_file=None):
@@ -26,7 +26,7 @@ def check_data_quality(file, log_file=None):
     """
     test_path = utils.get_test_path()
     script = f"{test_path}/data_qc.py"
-    subprocess.call([script, file])
+    subprocess.call([script, file, log_file])
 
 
 def run_unit_tests():

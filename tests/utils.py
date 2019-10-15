@@ -5,12 +5,24 @@ import logging
 import numpy as np
 
 
-def init_logger(path, fname):
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        filename=f'{path}{fname}.log',
+def init_logger(file_name, fname):
+    logging.basicConfig(format='[%(asctime)s] - [%(name)s] - [%(levelname)s] - %(message)s',
+                        filename=f'{fname}',
                         level=logging.DEBUG,
-                        datefmt='%Y-%m-%d %H:%M:%S',
-                        filemode='w')
+                        datefmt='%Y-%m-%d %H:%M',
+                        filemode='a')
+
+    file_type = get_file_type(file_name)
+
+
+
+    logging.root.name = 'Mace Head'
+
+
+def fill_log(message, reason):
+    logging.LoggerAdapter(logging.getLogger(__file__), {"name": 'Mace Head', "date": '2019-05-17'})
+    logging.warning(message)
+    logging.warning(reason)
 
 
 def read_config(config_file):
@@ -78,3 +90,6 @@ def get_file_type(file_name):
         raise ValueError('Unknown file.')
     nc.close()
     return file_type
+
+
+def get_site_name_and_date(file_name):
