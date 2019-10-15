@@ -1,5 +1,6 @@
 import pytest
 import netCDF4
+import numpy as np
 from tests import utils
 
 CONFIG = utils.read_config('meta/metadata_config.ini')
@@ -8,13 +9,13 @@ CONFIG = utils.read_config('meta/metadata_config.ini')
 @pytest.fixture
 def missing_variables(pytestconfig):
     file_name = pytestconfig.option.test_file
-    return utils.find_missing_keys(CONFIG, 'required_variables', file_name)
+    return _find_missing_keys('required_variables', file_name)
 
 
 @pytest.fixture
 def missing_global_attributes(pytestconfig):
     file_name = pytestconfig.option.test_file
-    return utils.find_missing_keys(CONFIG, 'required_global_attributes', file_name)
+    return _find_missing_keys('required_global_attributes', file_name)
 
 
 @pytest.fixture
@@ -62,3 +63,24 @@ class Variable:
                     bad[var] = value
         nc.close()
         return bad
+
+
+def _find_missing_keys(config_field, file_name):
+    nc = netCDF4.Dataset(file_name)
+    nc_keys = _read_nc_keys(nc, config_field)
+    nc.close()
+    try:
+        config_keys = _read_config_keys(config_field, file_name)
+    except KeyError:
+        return False
+    return set(config_keys) - set(nc_keys)
+
+
+def _read_nc_keys(nc, config_field):
+    return nc.ncattrs() if 'attributes' in config_field else nc.variables.keys()
+
+
+def _read_config_keys(config_field, file_name):
+    file_type = utils.get_file_type(file_name)
+    keys = CONFIG[config_field][file_type].split(',')
+    return np.char.strip(keys)
