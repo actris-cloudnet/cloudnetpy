@@ -7,7 +7,8 @@ from tests.utils import init_logger
 
 
 def main(test_file, log_file):
-    init_logger(log_file)
+    init_logger(test_file, log_file)
+
     pytest.main(['-s',
                  '-v',
                  '--tb=line',

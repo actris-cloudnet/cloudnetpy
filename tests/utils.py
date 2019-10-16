@@ -13,10 +13,9 @@ def init_logger(file_name, fname):
                         filemode='a')
 
     file_type = get_file_type(file_name)
+    site, date = get_site_info(file_name)
 
-
-
-    logging.root.name = 'Mace Head'
+    logging.root.name = f"{site} - {date} - {file_type}"
 
 
 def fill_log(message, reason):
@@ -92,4 +91,20 @@ def get_file_type(file_name):
     return file_type
 
 
-def get_site_name_and_date(file_name):
+def get_site_info(file_name):
+    def _generate_site_name():
+        try:
+            return netCDF4.Dataset(file_name).getncattr('location')
+        except AttributeError:
+            return "None"
+
+    def _generate_date():
+        try:
+            year = netCDF4.Dataset(file_name).getncattr('year')
+            month = netCDF4.Dataset(file_name).getncattr('month')
+            day = netCDF4.Dataset(file_name).getncattr('day')
+            return f"{year}-{month}-{day}"
+        except AttributeError:
+            return "None"
+    return _generate_site_name(), _generate_date()
+
