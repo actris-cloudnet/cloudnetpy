@@ -106,10 +106,9 @@ def rebin_2d(x_in, data, x_new, statistic='mean', n_min=1):
                                                               values[mask],
                                                               statistic=statistic,
                                                               bins=edges)
-
-            # ignore bins with only one data points
-            unique, counts = np.unique(bin_no, return_counts=True)
-            datai[unique[counts < n_min]-1, ind] = 0
+            if n_min > 1:
+                unique, counts = np.unique(bin_no, return_counts=True)
+                datai[unique[counts < n_min]-1, ind] = 0
 
     datai[~np.isfinite(datai)] = 0
     return ma.masked_equal(datai, 0)

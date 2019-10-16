@@ -2,7 +2,6 @@ import os
 import netCDF4
 import configparser
 import logging
-import numpy as np
 
 
 def init_logger(file_name, fname):
@@ -29,42 +28,6 @@ def read_config(config_file):
     conf.optionxform = str
     conf.read(config_file)
     return conf
-
-
-def find_missing_keys(config, config_field, file_name):
-    nc = netCDF4.Dataset(file_name)
-    nc_keys = read_nc_keys(nc, config_field)
-    nc.close()
-    try:
-        config_keys = read_config_keys(config, config_field, file_name)
-    except KeyError:
-        return False
-    return set(config_keys) - set(nc_keys)
-
-
-def read_nc_keys(nc, config_field):
-    return nc.ncattrs() if 'attributes' in config_field else nc.variables.keys()
-
-
-def read_config_keys(config, config_field, file_name):
-    file_type = get_file_type(file_name)
-    keys = config[config_field][file_type].split(',')
-    return np.char.strip(keys)
-
-
-def check_var_limits(config, config_field, file_name):
-    bad = {}
-    nc = netCDF4.Dataset(file_name)
-    nc_keys = nc.variables.keys()
-    for var, limits in config.items(config_field):
-        if var in nc_keys:
-            limits = tuple(map(float, limits.split(',')))
-            min_value = np.min(nc.variables[var][:])
-            max_value = np.max(nc.variables[var][:])
-            if min_value < limits[0] or max_value > limits[1]:
-                bad[var] = [min_value, max_value]
-    nc.close()
-    return bad
 
 
 def get_test_path():

@@ -140,19 +140,6 @@ class DataSource:
         self.altitude = self._init_altitude()
         self.data = {}
 
-    def _init_time(self):
-        time = self.getvar('time')
-        if max(time) > 24:
-            time = utils.seconds2hours(time)
-        return time
-
-    def _init_altitude(self):
-        """Returns altitude of the instrument (m)."""
-        if 'altitude' in self.variables:
-            altitude_above_sea = self.km2m(self.variables['altitude'])
-            return float(altitude_above_sea)
-        return None
-
     def getvar(self, *args):
         """Returns data array from the source file variables.
 
@@ -173,6 +160,51 @@ class DataSource:
             if arg in self.variables:
                 return self.variables[arg][:]
         raise RuntimeError('Missing variable in the input file.')
+
+    def append_data(self, data, key, name=None, units=None):
+        """Adds new CloudnetVariable into self.data dictionary.
+
+        Args:
+            data (ndarray): Data to be added.
+            key (str): Key for self.data dict.
+            name (str, optional): CloudnetArray.name attribute. Default value
+                is *key*.
+            units (str, optional): CloudnetArray.units attribute.
+
+        """
+        self.data[key] = CloudnetArray(data, name or key, units)
+
+    def close(self):
+        self.dataset.close()
+
+    @staticmethod
+    def km2m(var):
+        """Converts km to m."""
+        alt = var[:]
+        if var.units == 'km':
+            alt *= 1000
+        return alt
+
+    @staticmethod
+    def m2km(var):
+        """Converts m to km."""
+        alt = var[:]
+        if var.units == 'm':
+            alt /= 1000
+        return alt
+
+    def _init_time(self):
+        time = self.getvar('time')
+        if max(time) > 24:
+            time = utils.seconds2hours(time)
+        return time
+
+    def _init_altitude(self):
+        """Returns altitude of the instrument (m)."""
+        if 'altitude' in self.variables:
+            altitude_above_sea = self.km2m(self.variables['altitude'])
+            return float(altitude_above_sea)
+        return None
 
     def _netcdf_to_cloudnet(self, fields):
         """Transforms netCDF4-variables into CloudnetArrays.
@@ -203,38 +235,6 @@ class DataSource:
         """
         array = self.getvar(*possible_names)
         self.append_data(array, key, units=units)
-
-    @staticmethod
-    def km2m(var):
-        """Converts km to m."""
-        alt = var[:]
-        if var.units == 'km':
-            alt *= 1000
-        return alt
-
-    @staticmethod
-    def m2km(var):
-        """Converts m to km."""
-        alt = var[:]
-        if var.units == 'm':
-            alt /= 1000
-        return alt
-
-    def append_data(self, data, key, name=None, units=None):
-        """Adds new CloudnetVariable into self.data dictionary.
-
-        Args:
-            data (ndarray): Data to be added.
-            key (str): Key for self.data dict.
-            name (str, optional): CloudnetArray.name attribute. Default value
-                is *key*.
-            units (str, optional): CloudnetArray.units attribute.
-
-        """
-        self.data[key] = CloudnetArray(data, name or key, units)
-
-    def close(self):
-        self.dataset.close()
 
 
 class ProfileDataSource(DataSource):
@@ -284,29 +284,6 @@ class Radar(ProfileDataSource):
         self._netcdf_to_cloudnet(('v', 'width', 'ldr'))
         self._unknown_to_cloudnet(('Zh', 'Zv', 'Ze'), 'Z', units='dBZ')
         self._init_sigma_v()
-
-    def _init_sigma_v(self):
-        """Initializes std of the velocity field. The std will be calculated
-        later when rebinning the data."""
-        self.append_data(self.getvar('v'), 'v_sigma')
-
-    def _get_sequence_indices(self):
-        """Mira has only one sequence and one folding velocity. RPG has
-        several sequences with different folding velocities."""
-        all_indices = np.arange(len(self.height))
-        if not utils.isscalar(self.folding_velocity):
-            starting_indices = self.getvar('chirp_start_indices')
-            return np.split(all_indices, starting_indices[1:])
-        return [all_indices]
-
-    def _get_folding_velocity(self):
-        for key in ('nyquist_velocity', 'NyquistVelocity'):
-            if key in self.variables:
-                return self.getvar(key)
-        if 'prf' in self.variables:
-            return float(self.getvar('prf') * scipy.constants.c
-                         / (4 * self.radar_frequency * 1e9))
-        raise RuntimeError('Unable to determine folding velocity')
 
     def rebin_to_grid(self, time_new):
         """Rebins radar data in time using mean.
@@ -404,6 +381,29 @@ class Radar(ProfileDataSource):
         for key in ('time', 'height', 'radar_frequency'):
             self.append_data(getattr(self, key), key)
 
+    def _init_sigma_v(self):
+        """Initializes std of the velocity field. The std will be calculated
+        later when rebinning the data."""
+        self.append_data(self.getvar('v'), 'v_sigma')
+
+    def _get_sequence_indices(self):
+        """Mira has only one sequence and one folding velocity. RPG has
+        several sequences with different folding velocities."""
+        all_indices = np.arange(len(self.height))
+        if not utils.isscalar(self.folding_velocity):
+            starting_indices = self.getvar('chirp_start_indices')
+            return np.split(all_indices, starting_indices[1:])
+        return [all_indices]
+
+    def _get_folding_velocity(self):
+        for key in ('nyquist_velocity', 'NyquistVelocity'):
+            if key in self.variables:
+                return self.getvar(key)
+        if 'prf' in self.variables:
+            return float(self.getvar('prf') * scipy.constants.c
+                         / (4 * self.radar_frequency * 1e9))
+        raise RuntimeError('Unable to determine folding velocity')
+
 
 class Lidar(ProfileDataSource):
     """Lidar class, child of ProfileDataSource.
@@ -454,6 +454,11 @@ class Mwr(DataSource):
         self._init_lwp_data()
         self._init_lwp_error()
 
+    def rebin_to_grid(self, time_grid):
+        """Rebinning of lwp and its error."""
+        for key in self.data:
+            self.data[key].rebin_1d_data(self.time, time_grid)
+
     def _init_lwp_data(self):
         # TODO: How to deal with negative LWP values?
         lwp = self.getvar('LWP_data', 'lwp')
@@ -465,11 +470,6 @@ class Mwr(DataSource):
         random_error, bias = 0.25, 50
         lwp_error = utils.l2norm(self.data['lwp'][:]*random_error, bias)
         self.append_data(lwp_error, 'lwp_error', units='g m-2')
-
-    def rebin_to_grid(self, time_grid):
-        """Rebinning of lwp and its error."""
-        for key in self.data:
-            self.data[key].rebin_1d_data(self.time, time_grid)
 
 
 class Model(DataSource):
@@ -505,27 +505,6 @@ class Model(DataSource):
         self.data_sparse = {}
         self.data_dense = {}
         self._append_grid()
-
-    def _append_grid(self):
-        self.append_data(self.time, 'model_time')
-        self.append_data(self.mean_height, 'model_height')
-
-    def _get_model_type(self):
-        possible_keys = ('ecmwf', 'gdas')
-        for key in possible_keys:
-            if key in self.filename:
-                return key
-        return ''
-
-    def _get_model_heights(self, alt_site):
-        """Returns model heights for each time step."""
-        model_heights = self.variables['height']
-        if ma.count_masked(model_heights[:] > 0):
-            raise RuntimeError('Masked values in the data file! Aborting..')
-        return self.km2m(model_heights) + alt_site
-
-    def _get_mean_height(self):
-        return np.mean(np.array(self.model_heights), axis=0)
 
     def interpolate_to_common_height(self, wl_band):
         """Interpolates model variables to common height grid.
@@ -575,6 +554,27 @@ class Model(DataSource):
         fields_to_keep = ('temperature', 'pressure', 'q', 'uwind', 'vwind')
         self.data_sparse = {key: self.data_sparse[key]
                             for key in fields_to_keep}
+
+    def _append_grid(self):
+        self.append_data(self.time, 'model_time')
+        self.append_data(self.mean_height, 'model_height')
+
+    def _get_model_type(self):
+        possible_keys = ('ecmwf', 'gdas')
+        for key in possible_keys:
+            if key in self.filename:
+                return key
+        return ''
+
+    def _get_model_heights(self, alt_site):
+        """Returns model heights for each time step."""
+        model_heights = self.variables['height']
+        if ma.count_masked(model_heights[:] > 0):
+            raise RuntimeError('Masked values in the data file! Aborting..')
+        return self.km2m(model_heights) + alt_site
+
+    def _get_mean_height(self):
+        return np.mean(np.array(self.model_heights), axis=0)
 
 
 COMMENTS = {
