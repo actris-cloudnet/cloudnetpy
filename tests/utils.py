@@ -4,12 +4,21 @@ import configparser
 import logging
 
 
-def init_logger(path, fname):
-    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        filename=f'{path}{fname}.log',
+def init_logger(file_name, fname):
+    logging.basicConfig(filename=f'{fname}',
+                        format= '%(levelname)s (%(asctime)s) - [%(name)s]: %(message)s',
                         level=logging.DEBUG,
-                        datefmt='%Y-%m-%d %H:%M:%S',
-                        filemode='w')
+                        datefmt='%Y-%m-%d %H:%M',
+                        filemode='a')
+
+    file_type = get_file_type(file_name)
+    site, date = get_site_info(file_name)
+
+    logging.root.name = f"{site} - {date} - {file_type}"
+
+
+def fill_log(message, reason):
+    logging.warning(f"{message}\n\t{reason}")
 
 
 def read_config(config_file):
@@ -41,3 +50,22 @@ def get_file_type(file_name):
         raise ValueError('Unknown file.')
     nc.close()
     return file_type
+
+
+def get_site_info(file_name):
+    def _generate_site_name():
+        try:
+            return netCDF4.Dataset(file_name).getncattr('location')
+        except AttributeError:
+            return None
+
+    def _generate_date():
+        try:
+            year = netCDF4.Dataset(file_name).getncattr('year')
+            month = netCDF4.Dataset(file_name).getncattr('month')
+            day = netCDF4.Dataset(file_name).getncattr('day')
+            return f"{year}-{month}-{day}"
+        except AttributeError:
+            return None
+    return _generate_site_name(), _generate_date()
+
