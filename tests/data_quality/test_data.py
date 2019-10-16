@@ -4,10 +4,12 @@ from tests.utils import fill_log
 
 def test_min_max(out_of_limits_values):
     assert not out_of_limits_values,\
-        fill_log("Data not within limits", out_of_limits_values)
+        fill_log(f"{test_min_max.__name__} ¦ Data not within limits",
+                 out_of_limits_values)
 
 
 def test_invalid(invalid_values):
     assert not invalid_values, \
-        fill_log("Eather NaNs or Inf in data", invalid_values)
+        fill_log(f"{test_invalid.__name__} ¦ Either NaNs or Infs in data",
+                 invalid_values)
 

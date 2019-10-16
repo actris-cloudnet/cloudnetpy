@@ -5,8 +5,8 @@ import logging
 
 
 def init_logger(file_name, fname):
-    logging.basicConfig(format='[%(asctime)s] - [%(name)s] - [%(levelname)s] - %(message)s',
-                        filename=f'{fname}',
+    logging.basicConfig(filename=f'{fname}',
+                        format= '%(levelname)s (%(asctime)s) - [%(name)s]: %(message)s',
                         level=logging.DEBUG,
                         datefmt='%Y-%m-%d %H:%M',
                         filemode='a')
@@ -18,9 +18,7 @@ def init_logger(file_name, fname):
 
 
 def fill_log(message, reason):
-    logging.LoggerAdapter(logging.getLogger(__file__), {"name": 'Mace Head', "date": '2019-05-17'})
-    logging.warning(message)
-    logging.warning(reason)
+    logging.warning(f"{message}\n\t{reason}")
 
 
 def read_config(config_file):
@@ -59,7 +57,7 @@ def get_site_info(file_name):
         try:
             return netCDF4.Dataset(file_name).getncattr('location')
         except AttributeError:
-            return "None"
+            return None
 
     def _generate_date():
         try:
@@ -68,6 +66,6 @@ def get_site_info(file_name):
             day = netCDF4.Dataset(file_name).getncattr('day')
             return f"{year}-{month}-{day}"
         except AttributeError:
-            return "None"
+            return None
     return _generate_site_name(), _generate_date()
 
