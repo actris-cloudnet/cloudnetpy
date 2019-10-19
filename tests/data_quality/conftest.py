@@ -32,10 +32,10 @@ def _test_limit(file_name, limit):
 
 @pytest.fixture
 def invalid_values(pytestconfig):
-    bad = {}
+    bad = []
     nc = netCDF4.Dataset(pytestconfig.option.test_file)
     for key in nc.variables:
         if np.isnan(nc.variables[key][:]).any():
-            bad[key] = 'contains invalid values'
+            bad.append(key)
     nc.close()
     return bad
