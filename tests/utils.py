@@ -2,23 +2,35 @@ import os
 import netCDF4
 import configparser
 import logging
+import functools
 
 
-def init_logger(file_name, fname):
-    logging.basicConfig(filename=f'{fname}',
-                        format= '%(levelname)s (%(asctime)s) - [%(name)s]: %(message)s',
+def log_errors(func):
+    """Decorator function to help log-writing in tests."""
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            func(*args, **kwargs)
+        except AssertionError as error:
+            fill_log(func.__name__, str(error).rpartition('assert not ')[-1])
+            raise
+    return wrapper
+
+
+def init_logger(test_file_name, log_file_name):
+    logging.basicConfig(filename=f'{log_file_name}',
+                        format='%(asctime)s - %(name)s - %(message)s',
                         level=logging.DEBUG,
-                        datefmt='%Y-%m-%d %H:%M',
                         filemode='a')
 
-    file_type = get_file_type(file_name)
-    site, date = get_site_info(file_name)
+    file_type = get_file_type(test_file_name)
+    #site, date = get_site_info(test_file_name)
 
-    logging.root.name = f"{site} - {date} - {file_type}"
+    logging.root.name = f"{test_file_name} - {file_type}"
 
 
-def fill_log(message, reason):
-    logging.warning(f"{message}\n\t{reason}")
+def fill_log(info, problem_variables):
+    logging.warning(f"{info} - {problem_variables}")
 
 
 def read_config(config_file):

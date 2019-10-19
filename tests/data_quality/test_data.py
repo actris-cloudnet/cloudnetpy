@@ -1,15 +1,18 @@
-from tests.utils import fill_log
-# Test functions for data quality testing
+from tests.utils import log_errors
 
 
-def test_min_max(out_of_limits_values):
-    assert not out_of_limits_values,\
-        fill_log(f"{test_min_max.__name__} ¦ Data not within limits",
-                 out_of_limits_values)
+@log_errors
+def test_min(too_small_values):
+    assert not too_small_values
 
 
+@log_errors
+def test_max(too_large_values):
+    assert not too_large_values
+
+
+@log_errors
 def test_invalid(invalid_values):
-    assert not invalid_values, \
-        fill_log(f"{test_invalid.__name__} ¦ Either NaNs or Infs in data",
-                 invalid_values)
+    assert not invalid_values
+
 
