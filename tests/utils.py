@@ -29,8 +29,8 @@ def init_logger(test_file_name, log_file_name):
     logging.root.name = f"{test_file_name} - {file_type}"
 
 
-def fill_log(info, problem_variables):
-    logging.warning(f"{info} - {problem_variables}")
+def fill_log(test_function, problem_variables):
+    logging.warning(f"{test_function} - {problem_variables}")
 
 
 def read_config(config_file):
