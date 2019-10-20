@@ -1,8 +1,8 @@
-import os
 import netCDF4
 import configparser
 import logging
 import functools
+from pathlib import Path
 
 
 def log_errors(func):
@@ -40,7 +40,7 @@ def read_config(config_file):
 
 
 def get_test_path():
-    return os.path.dirname(os.path.abspath(__file__))
+    return Path(__file__).parent
 
 
 def get_file_type(file_name):

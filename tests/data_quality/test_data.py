@@ -14,5 +14,3 @@ def test_max(too_large_values):
 @log_errors
 def test_invalid(invalid_values):
     assert not invalid_values
-
-
