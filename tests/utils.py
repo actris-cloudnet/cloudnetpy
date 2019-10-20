@@ -6,15 +6,20 @@ import functools
 
 
 def log_errors(func):
-    """Decorator function to help log-writing in tests."""
+    """Decorator to generalize log-writing in tests."""
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
             func(*args, **kwargs)
         except AssertionError as error:
-            fill_log(func.__name__, str(error).rpartition('assert not ')[-1])
+            problem_variables = str(error).rpartition('assert not ')[-1]
+            fill_log(func.__name__, problem_variables)
             raise
     return wrapper
+
+
+def fill_log(test_function, problem_variables):
+    logging.warning(f"{test_function} - {problem_variables}")
 
 
 def init_logger(test_file_name, log_file_name):
@@ -22,15 +27,9 @@ def init_logger(test_file_name, log_file_name):
                         format='%(asctime)s - %(name)s - %(message)s',
                         level=logging.DEBUG,
                         filemode='a')
-
     file_type = get_file_type(test_file_name)
     #site, date = get_site_info(test_file_name)
-
     logging.root.name = f"{test_file_name} - {file_type}"
-
-
-def fill_log(test_function, problem_variables):
-    logging.warning(f"{test_function} - {problem_variables}")
 
 
 def read_config(config_file):
@@ -80,4 +79,3 @@ def get_site_info(file_name):
         except AttributeError:
             return None
     return _generate_site_name(), _generate_date()
-
