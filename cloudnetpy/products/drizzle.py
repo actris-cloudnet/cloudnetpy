@@ -23,6 +23,10 @@ def generate_drizzle(categorize_file, output_file):
         categorize_file (str): Categorize file name.
         output_file (str): Output file name.
 
+    Examples:
+        >>> from cloudnetpy.products import generate_drizzle
+        >>> generate_drizzle('categorize.nc', 'drizzle.nc')
+
     References:
         O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
         Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.

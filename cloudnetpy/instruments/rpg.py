@@ -26,7 +26,7 @@ def rpg2nc(path_to_l1_files, output_file, site_meta):
         RuntimeError: Failed to read the binary data.
 
     Examples:
-        >>> from cloudnetpy.instruments.rpg import rpg2nc
+        >>> from cloudnetpy.instruments import rpg2nc
         >>> site_meta = {'name': 'Hyytiala', 'altitude': 174}
         >>> rpg2nc('/path/to/files/', 'test.nc', site_meta)
 

@@ -39,7 +39,7 @@ def ceilo2nc(input_file, output_file, site_meta):
         RuntimeError: Failed to read or process raw ceilometer data.
 
     Examples:
-        >>> from cloudnetpy.instruments.ceilo import ceilo2nc
+        >>> from cloudnetpy.instruments import ceilo2nc
         >>> site_meta = {'name': 'Mace-Head', 'altitude':5}
         >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc', site_meta)
         >>> ceilo2nc('jenoptik_raw.nc', 'jenoptik.nc', site_meta)

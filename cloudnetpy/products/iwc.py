@@ -4,12 +4,11 @@ using Z-T method.
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
-import cloudnetpy.utils as utils
-import cloudnetpy.output as output
-from cloudnetpy.categorize.categorize import DataSource
-import cloudnetpy.products.product_tools as p_tools
-import cloudnetpy.categorize.atmos as atmos
+from cloudnetpy import output, utils
+from cloudnetpy.categorize import atmos
 from cloudnetpy.metadata import MetaData
+from cloudnetpy.products import product_tools as p_tools
+from cloudnetpy.categorize.categorize import DataSource
 from cloudnetpy.products.product_tools import ProductClassification
 
 G_TO_KG = 0.001
@@ -28,7 +27,7 @@ def generate_iwc(categorize_file, output_file):
         output_file (str): Output file name.
 
     Examples:
-        >>> from cloudnetpy.products.iwc import generate_iwc
+        >>> from cloudnetpy.products import generate_iwc
         >>> generate_iwc('categorize.nc', 'iwc.nc')
 
     References:

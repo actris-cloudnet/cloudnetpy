@@ -26,7 +26,7 @@ def generate_lwc(categorize_file, output_file):
         output_file (str): Output file name.
 
     Examples:
-        >>> from cloudnetpy.products.lwc import generate_lwc
+        >>> from cloudnetpy.products import generate_lwc
         >>> generate_lwc('categorize.nc', 'lwc.nc')
 
     References:

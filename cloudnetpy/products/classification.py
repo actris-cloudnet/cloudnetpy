@@ -1,6 +1,6 @@
 """Module for creating classification file."""
 import numpy as np
-import cloudnetpy.output as output
+from cloudnetpy import output
 from cloudnetpy.categorize.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
@@ -20,7 +20,7 @@ def generate_classification(categorize_file, output_file):
         output_file (str): Output file name.
 
     Examples:
-        >>> from cloudnetpy.products.classification import generate_classification
+        >>> from cloudnetpy.products import generate_classification
         >>> generate_classification('categorize.nc', 'classification.nc')
 
     """
