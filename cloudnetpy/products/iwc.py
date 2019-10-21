@@ -8,7 +8,7 @@ from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
-from cloudnetpy.categorize.categorize import DataSource
+from cloudnetpy.categorize import DataSource
 from cloudnetpy.products.product_tools import ProductClassification
 
 G_TO_KG = 0.001

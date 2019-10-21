@@ -9,7 +9,7 @@ from cloudnetpy.instruments import mira2nc, ceilo2nc
 from cloudnetpy.categorize import generate_categorize
 from tests import check_data_quality, check_metadata, run_unit_tests, utils
 
-PROCESS = False
+PROCESS = True
 
 
 def _load_test_data(input_path):
