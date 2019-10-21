@@ -23,6 +23,8 @@ def fill_log(test_function, problem_variables):
 
 
 def init_logger(test_file_name, log_file_name):
+    if not log_file_name:
+        return
     logging.basicConfig(filename=f'{log_file_name}',
                         format='%(asctime)s - %(name)s - %(message)s',
                         level=logging.DEBUG,

@@ -1,6 +1,6 @@
-from tests import utils
 import subprocess
 import pytest
+from tests import utils
 
 
 def check_metadata(file, log_file=None):
@@ -8,12 +8,13 @@ def check_metadata(file, log_file=None):
 
     Args:
         file (str): Name of the file to be tested.
-        log_file (str): Name of the log file.
+        log_file (str, optional): Name of the log file where warning
+            messages are stored.
 
     """
     test_path = utils.get_test_path()
     script = f"{test_path}/meta_qc.py"
-    subprocess.call([script, file, log_file])
+    subprocess.call([script, file, _validate_log_file(log_file)])
 
 
 def check_data_quality(file, log_file=None):
@@ -21,12 +22,17 @@ def check_data_quality(file, log_file=None):
 
     Args:
         file (str): Name of the file to be tested.
-        log_file (str): Name of the log file.
+        log_file (str, optional): Name of the log file where warning
+            messages are stored.
 
     """
     test_path = utils.get_test_path()
     script = f"{test_path}/data_qc.py"
-    subprocess.call([script, file, log_file])
+    subprocess.call([script, file, _validate_log_file(log_file)])
+
+
+def _validate_log_file(log_file):
+    return log_file if log_file else ''
 
 
 def run_unit_tests():

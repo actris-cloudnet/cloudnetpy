@@ -5,10 +5,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from zipfile import ZipFile
 import requests
 import importlib
-from tests.utils import get_test_path
 from cloudnetpy.instruments import mira, ceilo
 from cloudnetpy.categorize import categorize
-from tests import api
+from tests import api, utils
 
 PROCESS = False
 
@@ -47,7 +46,7 @@ def _process_product_file(product_type, path, categorize_file):
 
 def main():
 
-    test_path = get_test_path()
+    test_path = utils.get_test_path()
     source_path = f"{test_path}/source_data/"
     _load_test_data(source_path)
     prefix = '20190517_mace-head_'
