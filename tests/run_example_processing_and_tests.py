@@ -7,7 +7,7 @@ import requests
 import importlib
 from cloudnetpy.instruments import mira, ceilo
 from cloudnetpy.categorize import categorize
-from tests import api, utils
+from tests import check_data_quality, check_metadata, run_unit_tests, utils
 
 PROCESS = False
 
@@ -46,6 +46,8 @@ def _process_product_file(product_type, path, categorize_file):
 
 def main():
 
+    run_unit_tests()
+
     test_path = utils.get_test_path()
     source_path = f"{test_path}/source_data/"
     _load_test_data(source_path)
@@ -57,7 +59,7 @@ def main():
         'lidar': f"{source_path}{prefix}chm15k_raw.nc",
     }
     for name, file in raw_files.items():
-        api.check_metadata(file, log_file)
+        check_metadata(file, log_file)
 
     calibrated_files = {
         'radar': f"{source_path}radar.nc",
@@ -68,8 +70,8 @@ def main():
         mira.mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta)
         ceilo.ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
     for name, file in calibrated_files.items():
-        api.check_metadata(file, log_file)
-        api.check_data_quality(file, log_file)
+        check_metadata(file, log_file)
+        check_data_quality(file, log_file)
 
     input_files = {
         'radar': calibrated_files['radar'],
@@ -80,14 +82,14 @@ def main():
     categorize_file = f"{source_path}categorize.nc"
     if PROCESS:
         categorize.generate_categorize(input_files, categorize_file)
-    api.check_metadata(categorize_file, log_file)
-    api.check_data_quality(categorize_file, log_file)
+    check_metadata(categorize_file, log_file)
+    check_data_quality(categorize_file, log_file)
 
     product_file_types = ['iwc', 'lwc', 'drizzle', 'classification']
     for file in product_file_types:
         product_file = _process_product_file(file, source_path, categorize_file)
-        api.check_metadata(product_file, log_file)
-        api.check_data_quality(product_file, log_file)
+        check_metadata(product_file, log_file)
+        check_data_quality(product_file, log_file)
 
 
 if __name__ == "__main__":
