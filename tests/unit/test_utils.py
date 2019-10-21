@@ -277,15 +277,6 @@ def test_calc_relative_error(reference, array, error):
     assert utils.calc_relative_error(reference, array) == error
 
 
-@pytest.mark.parametrize("site, args, result", [
-    ('lindenberg', ['latitude'], 52.2081),
-    ('lindenberg', ['latitude', 'longitude', 'altitude'], [52.2081, 14.1175, 104]),
-    ('dummmysite', ['latitude'], [0]),
-])
-def test_get_site_information(site, args, result):
-    assert utils.get_site_information(site, *args) == result
-
-
 def test_transpose():
     x = np.arange(10)
     x_transposed = utils.transpose(x)
@@ -312,3 +303,14 @@ def test_get_time():
     x = utils.get_time()
     r = re.compile('.{4}-.{2}-.{2} .{2}:.{2}:.{2}')
     assert r.match(x)
+
+
+""""
+@pytest.mark.parametrize("site, args, result", [
+    ('lindenberg', ['latitude'], 52.2081),
+    ('lindenberg', ['latitude', 'longitude', 'altitude'], [52.2081, 14.1175, 104]),
+    ('dummmysite', ['latitude'], [0]),
+])
+def test_get_site_information(site, args, result):
+    assert utils.get_site_information(site, *args) == result
+"""

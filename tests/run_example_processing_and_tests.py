@@ -39,7 +39,7 @@ def _load_test_data(input_path):
 
 def _process_product_file(product_type, path, categorize_file):
     output_file = f"{path}{product_type}.nc"
-    module = importlib.import_module(f"cloudnetpy.products.{product_type}")
+    module = importlib.import_module(f"cloudnetpy.products")
     if PROCESS:
         getattr(module, f"generate_{product_type}")(categorize_file, output_file)
     return output_file
