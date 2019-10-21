@@ -7,7 +7,7 @@ import numpy.ma as ma
 from scipy.special import gamma
 import netCDF4
 from cloudnetpy import utils, output
-from cloudnetpy.categorize import DataSource
+from cloudnetpy.categorize.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification

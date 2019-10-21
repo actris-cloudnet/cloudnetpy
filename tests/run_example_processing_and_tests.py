@@ -5,9 +5,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from zipfile import ZipFile
 import requests
 import importlib
-from cloudnetpy.instruments import mira2nc, ceilo2nc
-from cloudnetpy.categorize import generate_categorize
-from tests import check_data_quality, check_metadata, run_unit_tests, utils
+from cloudnetpy.instruments.mira import mira2nc
+from cloudnetpy.instruments.ceilo import ceilo2nc
+from cloudnetpy.categorize.categorize import generate_categorize
+from tests.api import check_data_quality, check_metadata, run_unit_tests, utils
 
 PROCESS = True
 
@@ -38,7 +39,7 @@ def _load_test_data(input_path):
 
 def _process_product_file(product_type, path, categorize_file):
     output_file = f"{path}{product_type}.nc"
-    module = importlib.import_module(f"cloudnetpy.products")
+    module = importlib.import_module(f"cloudnetpy.products.{product_type}")
     if PROCESS:
         getattr(module, f"generate_{product_type}")(categorize_file, output_file)
     return output_file
