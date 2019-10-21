@@ -7,9 +7,8 @@ import numpy as np
 import numpy.ma as ma
 import scipy.constants
 from scipy.interpolate import interp1d
-from cloudnetpy import output, utils
+from cloudnetpy import output, utils, CloudnetArray
 from cloudnetpy.categorize import atmos, classify
-from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 

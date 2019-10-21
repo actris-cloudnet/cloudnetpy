@@ -1,5 +1,4 @@
-"""Initial Metadata of Cloudnet variables for NetCDF file writing.
-"""
+"""Initial Metadata of Cloudnet variables for NetCDF file writing."""
 
 from collections import namedtuple
 

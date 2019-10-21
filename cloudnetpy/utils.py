@@ -1,5 +1,4 @@
-""" This module contains general
-helper functions. """
+""" This module contains general helper functions. """
 
 import uuid
 import datetime
