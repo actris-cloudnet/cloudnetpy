@@ -8,7 +8,7 @@ import importlib
 from cloudnetpy.instruments.mira import mira2nc
 from cloudnetpy.instruments.ceilo import ceilo2nc
 from cloudnetpy.categorize.categorize import generate_categorize
-from tests.api import check_data_quality, check_metadata, run_unit_tests, utils
+from tests import check_data_quality, check_metadata, run_unit_tests, utils
 
 PROCESS = True
 
