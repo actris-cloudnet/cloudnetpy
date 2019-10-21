@@ -4,10 +4,10 @@ Creates similar directory structure and file names as the
 Matlab processing environment.
 
 """
-import sys, os
-sys.path.insert(0, os.path.split(os.path.dirname(os.path.abspath(__file__)))[0])
-
 import os
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import fnmatch
 import gzip
 import shutil

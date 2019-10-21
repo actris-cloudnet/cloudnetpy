@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import pytest
-from tests.utils import init_logger
+from tests import utils
 
 
 def main(test_file, log_file):
-    init_logger(test_file, log_file)
+    utils.init_logger(test_file, log_file)
 
     pytest.main(['-s',
                  '-v',
