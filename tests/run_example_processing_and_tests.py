@@ -5,8 +5,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from zipfile import ZipFile
 import requests
 import importlib
-from cloudnetpy.instruments.mira import mira2nc
-from cloudnetpy.instruments.ceilo import ceilo2nc
+from cloudnetpy.instruments import mira2nc
+from cloudnetpy.instruments import ceilo2nc
 from cloudnetpy.categorize.categorize import generate_categorize
 from tests import check_data_quality, check_metadata, run_unit_tests, utils
 

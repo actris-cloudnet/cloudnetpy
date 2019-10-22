@@ -16,8 +16,7 @@ import configparser
 import datetime
 from collections import namedtuple
 from cloudnetpy.categorize import categorize as cat
-from cloudnetpy.instruments import mira, rpg
-from cloudnetpy.instruments import ceilo
+from cloudnetpy.instruments import mira2nc, rp2nc, ceilo2nc
 from cloudnetpy.plotting import plotting
 from cloudnetpy import utils
 
@@ -87,7 +86,7 @@ def _process_radar(dvec):
             raise RuntimeError('Abort: Missing uncalibrated mira file.')
         if _is_good_to_process(instrument, output_file):
             print(f"Calibrating mira cloud radar..")
-            mira.mira2nc(input_file, output_file, config['SITE'])
+            mira2nc(input_file, output_file, config['SITE'])
             _discard_uncompressed_radar_file(input_file)
     elif config['INSTRUMENTS'][instrument] == 'rpg-fmcw-94':
         rpg_path = _build_uncalibrated_rpg_path(dvec)
@@ -97,7 +96,7 @@ def _process_radar(dvec):
             raise RuntimeError('Abort: Missing uncalibrated rpg .LV1 files.')
         if _is_good_to_process(instrument, output_file):
             print(f"Calibrating rpg-fmcw-94 cloud radar..")
-            rpg.rpg2nc(rpg_path, output_file, dict(config.items('SITE')))
+            rpg2nc(rpg_path, output_file, dict(config.items('SITE')))
 
 
 def _discard_uncompressed_radar_file(nc_file):
@@ -128,7 +127,7 @@ def _process_lidar(dvec):
     if _is_good_to_process(instrument, output_file):
         print(f"Calibrating {config['INSTRUMENTS'][instrument]} lidar..")
         try:
-            ceilo.ceilo2nc(input_file, output_file, dict(config.items('SITE')))
+            ceilo2nc(input_file, output_file, dict(config.items('SITE')))
         except RuntimeError as error:
             raise RuntimeError(f"Problem in ceilometer processing: {error}")
 
