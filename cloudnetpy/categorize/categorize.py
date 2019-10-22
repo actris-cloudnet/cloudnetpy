@@ -1,6 +1,5 @@
 """ Functions for rebinning input data."""
 import math
-import netCDF4
 import numpy as np
 import numpy.ma as ma
 import scipy.constants
@@ -34,7 +33,7 @@ def generate_categorize(input_files, output_file):
         a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
 
     Examples:
-        >>> from cloudnetpy.categorize.categorize import generate_categorize
+        >>> from cloudnetpy.categorize import generate_categorize
         >>> input_files = {'radar': 'radar.nc',
                            'lidar': 'lidar.nc',
                            'model': 'model.nc',

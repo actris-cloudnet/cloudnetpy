@@ -4,8 +4,7 @@ import datetime
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import utils, output
-from cloudnetpy import CloudnetArray
+from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 

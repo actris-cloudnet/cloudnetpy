@@ -3,8 +3,7 @@ import os
 import netCDF4
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import output, utils
-from cloudnetpy import CloudnetArray
+from cloudnetpy import output, utils, CloudnetArray
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 

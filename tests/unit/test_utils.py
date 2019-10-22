@@ -3,8 +3,8 @@ import numpy as np
 import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal
 import pytest
-from cloudnetpy import utils
 import re
+from cloudnetpy import utils
 
 
 @pytest.mark.parametrize("input, output", [
