@@ -1,7 +1,7 @@
 """Module for creating classification file."""
 import numpy as np
 from cloudnetpy import output
-from cloudnetpy.categorize.categorize import DataSource
+from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
 

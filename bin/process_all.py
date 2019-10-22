@@ -15,7 +15,7 @@ import importlib
 import configparser
 import datetime
 from collections import namedtuple
-from cloudnetpy.categorize import categorize as cat
+from cloudnetpy.categorize import generate_categorize
 from cloudnetpy.instruments import mira2nc, rp2nc, ceilo2nc
 from cloudnetpy.plotting import plotting
 from cloudnetpy import utils
@@ -145,7 +145,7 @@ def _process_categorize(dvec):
             raise RuntimeError(f"Cannot process categorize file, missing input files: {error}")
         try:
             print(f"Processing categorize file..")
-            cat.generate_categorize(input_files, output_file)
+            generate_categorize(input_files, output_file)
         except RuntimeError as error:
             raise error
     image_name = _make_image_name(output_file)
