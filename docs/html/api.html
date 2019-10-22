@@ -193,8 +193,8 @@ next step.</p>
 be first converted into netCDF with standardized metadata. After that,
 the data can be combined in a single categorize file.</p>
 <dl class="function">
-<dt id="instruments.mira.mira2nc">
-<code class="descclassname">instruments.mira.</code><code class="descname">mira2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_meta</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/mira.html#mira2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.mira.mira2nc" title="Permalink to this definition">¶</a></dt>
+<dt id="instruments.mira2nc">
+<code class="descclassname">instruments.</code><code class="descname">mira2nc</code><span class="sig-paren">(</span><em>mmclx_file</em>, <em>output_file</em>, <em>site_meta</em>, <em>rebin_data=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/mira.html#mira2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.mira2nc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts METEK MIRA-35 cloud radar Level 1 file into netCDF file.</p>
 <p>This function converts raw cloud radar file into a much smaller file that
 contains only the relevant data and can be used in further processing
@@ -216,7 +216,7 @@ Otherwise keeps the native resolution. Default is False.</li>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments.mira</span> <span class="k">import</span> <span class="n">mira2nc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments</span> <span class="k">import</span> <span class="n">mira2nc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">site_meta</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Vehmasmaki&#39;</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mira2nc</span><span class="p">(</span><span class="s1">&#39;raw_radar.mmclx&#39;</span><span class="p">,</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span> <span class="n">site_meta</span><span class="p">)</span>
 </pre></div>
@@ -224,8 +224,8 @@ Otherwise keeps the native resolution. Default is False.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="instruments.rpg.rpg2nc">
-<code class="descclassname">instruments.rpg.</code><code class="descname">rpg2nc</code><span class="sig-paren">(</span><em>path_to_l1_files</em>, <em>output_file</em>, <em>site_meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/rpg.html#rpg2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.rpg.rpg2nc" title="Permalink to this definition">¶</a></dt>
+<dt id="instruments.rpg2nc">
+<code class="descclassname">instruments.</code><code class="descname">rpg2nc</code><span class="sig-paren">(</span><em>path_to_l1_files</em>, <em>output_file</em>, <em>site_meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/rpg.html#rpg2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.rpg2nc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts RPG cloud radar binary files into netCDF file.</p>
 <p>This function reads one day of RPG Level 1 cloud radar binary files,
 concatenates the data and writes it into netCDF file.</p>
@@ -248,7 +248,7 @@ site. Required key value pairs are ‘altitude’ (in metres) and
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments.rpg</span> <span class="k">import</span> <span class="n">rpg2nc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments</span> <span class="k">import</span> <span class="n">rpg2nc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">site_meta</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Hyytiala&#39;</span><span class="p">,</span> <span class="s1">&#39;altitude&#39;</span><span class="p">:</span> <span class="mi">174</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">rpg2nc</span><span class="p">(</span><span class="s1">&#39;/path/to/files/&#39;</span><span class="p">,</span> <span class="s1">&#39;test.nc&#39;</span><span class="p">,</span> <span class="n">site_meta</span><span class="p">)</span>
 </pre></div>
@@ -256,8 +256,8 @@ site. Required key value pairs are ‘altitude’ (in metres) and
 </dd></dl>
 
 <dl class="function">
-<dt id="instruments.ceilo.ceilo2nc">
-<code class="descclassname">instruments.ceilo.</code><code class="descname">ceilo2nc</code><span class="sig-paren">(</span><em>input_file</em>, <em>output_file</em>, <em>site_meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/ceilo.html#ceilo2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.ceilo.ceilo2nc" title="Permalink to this definition">¶</a></dt>
+<dt id="instruments.ceilo2nc">
+<code class="descclassname">instruments.</code><code class="descname">ceilo2nc</code><span class="sig-paren">(</span><em>input_file</em>, <em>output_file</em>, <em>site_meta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/instruments/ceilo.html#ceilo2nc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#instruments.ceilo2nc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Converts Vaisala and Jenoptik raw files into netCDF file.</p>
 <p>This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
 ceilometer files and writes the data into netCDF file. Three variants
@@ -289,7 +289,7 @@ site. Required key value pairs are ‘name’ and ‘altitude’
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments.ceilo</span> <span class="k">import</span> <span class="n">ceilo2nc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.instruments</span> <span class="k">import</span> <span class="n">ceilo2nc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">site_meta</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;Mace-Head&#39;</span><span class="p">,</span> <span class="s1">&#39;altitude&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ceilo2nc</span><span class="p">(</span><span class="s1">&#39;vaisala_raw.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;vaisala.nc&#39;</span><span class="p">,</span> <span class="n">site_meta</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ceilo2nc</span><span class="p">(</span><span class="s1">&#39;jenoptik_raw.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;jenoptik.nc&#39;</span><span class="p">,</span> <span class="n">site_meta</span><span class="p">)</span>
@@ -298,8 +298,8 @@ site. Required key value pairs are ‘name’ and ‘altitude’
 </dd></dl>
 
 <dl class="function">
-<dt id="categorize.categorize.generate_categorize">
-<code class="descclassname">categorize.categorize.</code><code class="descname">generate_categorize</code><span class="sig-paren">(</span><em>input_files</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/categorize.html#generate_categorize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.categorize.generate_categorize" title="Permalink to this definition">¶</a></dt>
+<dt id="categorize.generate_categorize">
+<code class="descclassname">categorize.</code><code class="descname">generate_categorize</code><span class="sig-paren">(</span><em>input_files</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/categorize.html#generate_categorize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.generate_categorize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet categorize file.</p>
 <p>The measurements are rebinned into a common height / time grid,
 and classified as different types of scatterers such as ice, liquid,
@@ -327,7 +327,7 @@ in <em>ouput_file</em> which is a compressed netCDF4 file.</p>
 measures liquid water path. Then, the radar file can be used as
 a mwr-file as well, i.e. {‘mwr’: ‘radar.nc’}.</p>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.categorize.categorize</span> <span class="k">import</span> <span class="n">generate_categorize</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.categorize</span> <span class="k">import</span> <span class="n">generate_categorize</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">input_files</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;radar&#39;</span><span class="p">:</span> <span class="s1">&#39;radar.nc&#39;</span><span class="p">,</span>
 <span class="go">                   &#39;lidar&#39;: &#39;lidar.nc&#39;,</span>
 <span class="go">                   &#39;model&#39;: &#39;model.nc&#39;,</span>
@@ -343,8 +343,8 @@ a mwr-file as well, i.e. {‘mwr’: ‘radar.nc’}.</p>
 <p>Starting from the categorize file, several geophysical products can be
 generated.</p>
 <dl class="function">
-<dt id="products.classification.generate_classification">
-<code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.generate_classification" title="Permalink to this definition">¶</a></dt>
+<dt id="products.generate_classification">
+<code class="descclassname">products.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.generate_classification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet classification product.</p>
 <p>This function reads the initial classification masks from a
 categorize file and creates a more comprehensive classification
@@ -363,15 +363,15 @@ netCDF file.</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_classification</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products</span> <span class="k">import</span> <span class="n">generate_classification</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_classification</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="function">
-<dt id="products.iwc.generate_iwc">
-<code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.generate_iwc" title="Permalink to this definition">¶</a></dt>
+<dt id="products.generate_iwc">
+<code class="descclassname">products.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.generate_iwc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet ice water content product.</p>
 <p>This function calculates ice water content using the so-called Z-T method.
 In this method, ice water content is calculated from attenuated-corrected
@@ -390,7 +390,7 @@ netCDF file.</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.iwc</span> <span class="k">import</span> <span class="n">generate_iwc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products</span> <span class="k">import</span> <span class="n">generate_iwc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -402,8 +402,8 @@ J. Appl. Meteor. Climatol., 45, 301–317, <a class="reference external" href="h
 </dd></dl>
 
 <dl class="function">
-<dt id="products.lwc.generate_lwc">
-<code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.generate_lwc" title="Permalink to this definition">¶</a></dt>
+<dt id="products.generate_lwc">
+<code class="descclassname">products.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.generate_lwc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet liquid water content product.</p>
 <p>This function calculates cloud liquid water content using the so-called
 adiabatic-scaled method. In this method, liquid water content measured by
@@ -422,7 +422,7 @@ content of observed liquid clouds. The results are written in a netCDF file.</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.lwc</span> <span class="k">import</span> <span class="n">generate_lwc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products</span> <span class="k">import</span> <span class="n">generate_lwc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -436,8 +436,8 @@ Bull. Amer. Meteor. Soc., 88, 883–898, <a class="reference external" href="htt
 </dd></dl>
 
 <dl class="function">
-<dt id="products.drizzle.generate_drizzle">
-<code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.generate_drizzle" title="Permalink to this definition">¶</a></dt>
+<dt id="products.generate_drizzle">
+<code class="descclassname">products.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.generate_drizzle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet drizzle product.</p>
 <p>This function calculates different drizzle properties from
 cloud radar and lidar measurements. The results are written in a netCDF file.</p>
@@ -453,6 +453,11 @@ cloud radar and lidar measurements. The results are written in a netCDF file.</p
 </tr>
 </tbody>
 </table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products</span> <span class="k">import</span> <span class="n">generate_drizzle</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_drizzle</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;drizzle.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p class="rubric">References</p>
 <p>O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
 Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
@@ -1392,8 +1397,8 @@ products.</p>
 <span id="cloudnetpy-products-classification"></span><h3>cloudnetpy.products.classification<a class="headerlink" href="#module-products.classification" title="Permalink to this headline">¶</a></h3>
 <p>Module for creating classification file.</p>
 <dl class="function">
-<dt>
-<code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a></dt>
+<dt id="products.classification.generate_classification">
+<code class="descclassname">products.classification.</code><code class="descname">generate_classification</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/classification.html#generate_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.classification.generate_classification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet classification product.</p>
 <p>This function reads the initial classification masks from a
 categorize file and creates a more comprehensive classification
@@ -1412,7 +1417,7 @@ netCDF file.</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.classification</span> <span class="k">import</span> <span class="n">generate_classification</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products</span> <span class="k">import</span> <span class="n">generate_classification</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_classification</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;classification.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1424,8 +1429,8 @@ netCDF file.</p>
 <p>Module for creating Cloudnet ice water content file
 using Z-T method.</p>
 <dl class="function">
-<dt>
-<code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a></dt>
+<dt id="products.iwc.generate_iwc">
+<code class="descclassname">products.iwc.</code><code class="descname">generate_iwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/iwc.html#generate_iwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.iwc.generate_iwc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet ice water content product.</p>
 <p>This function calculates ice water content using the so-called Z-T method.
 In this method, ice water content is calculated from attenuated-corrected
@@ -1444,7 +1449,7 @@ netCDF file.</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.iwc</span> <span class="k">import</span> <span class="n">generate_iwc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products</span> <span class="k">import</span> <span class="n">generate_iwc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_iwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;iwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1467,8 +1472,8 @@ J. Appl. Meteor. Climatol., 45, 301–317, <a class="reference external" href="h
 <p>Module for creating Cloudnet liquid water content file
 using scaled-adiabatic method.</p>
 <dl class="function">
-<dt>
-<code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a></dt>
+<dt id="products.lwc.generate_lwc">
+<code class="descclassname">products.lwc.</code><code class="descname">generate_lwc</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#generate_lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.generate_lwc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet liquid water content product.</p>
 <p>This function calculates cloud liquid water content using the so-called
 adiabatic-scaled method. In this method, liquid water content measured by
@@ -1487,7 +1492,7 @@ content of observed liquid clouds. The results are written in a netCDF file.</p>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products.lwc</span> <span class="k">import</span> <span class="n">generate_lwc</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products</span> <span class="k">import</span> <span class="n">generate_lwc</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">generate_lwc</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;lwc.nc&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1559,8 +1564,8 @@ methods for holding the results.</p>
 <span id="cloudnetpy-products-drizzle"></span><h3>cloudnetpy.products.drizzle<a class="headerlink" href="#module-products.drizzle" title="Permalink to this headline">¶</a></h3>
 <p>Module for creating Cloudnet drizzle product.</p>
 <dl class="function">
-<dt>
-<code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a></dt>
+<dt id="products.drizzle.generate_drizzle">
+<code class="descclassname">products.drizzle.</code><code class="descname">generate_drizzle</code><span class="sig-paren">(</span><em>categorize_file</em>, <em>output_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#generate_drizzle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.generate_drizzle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates Cloudnet drizzle product.</p>
 <p>This function calculates different drizzle properties from
 cloud radar and lidar measurements. The results are written in a netCDF file.</p>
@@ -1576,6 +1581,11 @@ cloud radar and lidar measurements. The results are written in a netCDF file.</p
 </tr>
 </tbody>
 </table>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">cloudnetpy.products</span> <span class="k">import</span> <span class="n">generate_drizzle</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">generate_drizzle</span><span class="p">(</span><span class="s1">&#39;categorize.nc&#39;</span><span class="p">,</span> <span class="s1">&#39;drizzle.nc&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p class="rubric">References</p>
 <p>O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
 Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
@@ -1686,8 +1696,7 @@ for drizzle calculations.</li>
 functionality.</p>
 <div class="section" id="module-utils">
 <span id="cloudnetpy-utils"></span><h3>cloudnetpy.utils<a class="headerlink" href="#module-utils" title="Permalink to this headline">¶</a></h3>
-<p>This module contains general
-helper functions.</p>
+<p>This module contains general helper functions.</p>
 <dl class="function">
 <dt id="utils.seconds2hours">
 <code class="descclassname">utils.</code><code class="descname">seconds2hours</code><span class="sig-paren">(</span><em>time_in_seconds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#seconds2hours"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.seconds2hours" title="Permalink to this definition">¶</a></dt>

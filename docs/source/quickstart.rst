@@ -14,7 +14,7 @@ Cloudnet netCDF file that can be used in further processing steps.
 
 .. code-block:: python
 
-    from cloudnetpy.instruments.mira import mira2nc
+    from cloudnetpy.instruments import mira2nc
     mira2nc('raw_radar.mmclx', 'radar.nc', {'name': 'Mace-Head'})
 
 Lidar processing
@@ -25,7 +25,7 @@ the signal-to-noise screened backscatter).
 
 .. code-block:: python
 
-    from cloudnetpy.instruments.ceilo import ceilo2nc
+    from cloudnetpy.instruments import ceilo2nc
     ceilo2nc('vaisala.txt', 'vaisala.nc', {'name':'Kumpula', 'altitude':53})
 
 The same function can handle also Jenoptik CHM15k files.
@@ -69,7 +69,7 @@ calibrated measurement files.
 
 .. code-block:: python
 
-   from cloudnetpy.categorize.categorize import generate_categorize
+   from cloudnetpy.categorize import generate_categorize
    input_files = {
        'radar': 'radar.nc',
        'lidar': 'lidar.nc',
@@ -89,7 +89,7 @@ product, the classification product.
 
 .. code-block:: python
 
-    from cloudnetpy.products.classification import generate_classification
+    from cloudnetpy.products import generate_classification
     generate_classification('categorize.nc', 'classification.nc')
 
 Corresponding functions are available for other products (see :ref:`API reference`).

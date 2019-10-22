@@ -18,13 +18,13 @@ be first converted into netCDF with standardized metadata. After that,
 the data can be combined in a single categorize file.
 
 
-.. autofunction:: instruments.mira.mira2nc
+.. autofunction:: instruments.mira2nc
 
-.. autofunction:: instruments.rpg.rpg2nc
+.. autofunction:: instruments.rpg2nc
 
-.. autofunction:: instruments.ceilo.ceilo2nc
+.. autofunction:: instruments.ceilo2nc
 
-.. autofunction:: categorize.categorize.generate_categorize
+.. autofunction:: categorize.generate_categorize
 
 
 Categorize to products
@@ -33,13 +33,13 @@ Categorize to products
 Starting from the categorize file, several geophysical products can be
 generated.
 
-.. autofunction:: products.classification.generate_classification
+.. autofunction:: products.generate_classification
 
-.. autofunction:: products.iwc.generate_iwc
+.. autofunction:: products.generate_iwc
 
-.. autofunction:: products.lwc.generate_lwc
+.. autofunction:: products.generate_lwc
 
-.. autofunction:: products.drizzle.generate_drizzle
+.. autofunction:: products.generate_drizzle
 
 
 Visualizing results

@@ -151,8 +151,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for utils</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot; This module contains general</span>
-<span class="sd">helper functions. &quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot; This module contains general helper functions. &quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">uuid</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
@@ -259,10 +258,9 @@
                                                               <span class="n">values</span><span class="p">[</span><span class="n">mask</span><span class="p">],</span>
                                                               <span class="n">statistic</span><span class="o">=</span><span class="n">statistic</span><span class="p">,</span>
                                                               <span class="n">bins</span><span class="o">=</span><span class="n">edges</span><span class="p">)</span>
-
-            <span class="c1"># ignore bins with only one data points</span>
-            <span class="n">unique</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">bin_no</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">datai</span><span class="p">[</span><span class="n">unique</span><span class="p">[</span><span class="n">counts</span> <span class="o">&lt;</span> <span class="n">n_min</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">if</span> <span class="n">n_min</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">unique</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">bin_no</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">datai</span><span class="p">[</span><span class="n">unique</span><span class="p">[</span><span class="n">counts</span> <span class="o">&lt;</span> <span class="n">n_min</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="n">datai</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">datai</span><span class="p">)]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_equal</span><span class="p">(</span><span class="n">datai</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
