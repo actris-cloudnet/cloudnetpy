@@ -93,6 +93,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#raw-data-to-categorize">Raw data to categorize</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#categorize-to-products">Categorize to products</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#visualizing-results">Visualizing results</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quality-control">Quality control</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#categorize-subpackage">Categorize subpackage</a><ul>
@@ -467,10 +468,10 @@ J. Appl. Meteor., 44, 14–27, <a class="reference external" href="https://doi.o
 </div>
 <div class="section" id="visualizing-results">
 <h3>Visualizing results<a class="headerlink" href="#visualizing-results" title="Permalink to this headline">¶</a></h3>
-<p>CloudnetPy offers easy-to-use plotting interface:</p>
+<p>CloudnetPy offers an easy-to-use plotting interface:</p>
 <dl class="function">
-<dt id="plotting.plotting.generate_figure">
-<code class="descclassname">plotting.plotting.</code><code class="descname">generate_figure</code><span class="sig-paren">(</span><em>nc_file</em>, <em>field_names</em>, <em>show=True</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting/plotting.html#generate_figure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.plotting.generate_figure" title="Permalink to this definition">¶</a></dt>
+<dt id="plotting.generate_figure">
+<code class="descclassname">plotting.</code><code class="descname">generate_figure</code><span class="sig-paren">(</span><em>nc_file</em>, <em>field_names</em>, <em>show=True</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting/plotting.html#generate_figure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.generate_figure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates a Cloudnet figure.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -506,8 +507,8 @@ Overrides the <em>save_path</em> option. Default is None.</li>
 <p>There is also possibility to compare CloundetPy files with the
 Matlab-processed old files which are available from <a class="reference external" href="http://devcloudnet.fmi.fi">devcloudnet.fmi.fi</a>:</p>
 <dl class="function">
-<dt id="plotting.plotting.compare_files">
-<code class="descclassname">plotting.plotting.</code><code class="descname">compare_files</code><span class="sig-paren">(</span><em>nc_files</em>, <em>field_name</em>, <em>show=True</em>, <em>relative_err=False</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting/plotting.html#compare_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.plotting.compare_files" title="Permalink to this definition">¶</a></dt>
+<dt id="plotting.compare_files">
+<code class="descclassname">plotting.</code><code class="descname">compare_files</code><span class="sig-paren">(</span><em>nc_files</em>, <em>field_name</em>, <em>show=True</em>, <em>relative_err=False</em>, <em>save_path=None</em>, <em>max_y=12</em>, <em>dpi=200</em>, <em>image_name=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/plotting/plotting.html#compare_files"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#plotting.compare_files" title="Permalink to this definition">¶</a></dt>
 <dd><p>Plots one particular field from old and new cloudnet files.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -534,6 +535,61 @@ Overrides the <em>save_path</em> option. Default is None.</li>
 </table>
 </dd></dl>
 
+</div>
+<div class="section" id="quality-control">
+<h3>Quality control<a class="headerlink" href="#quality-control" title="Permalink to this headline">¶</a></h3>
+<p>CloudnetPy Github source contains functions to check the quality of the
+processed files. These can be used to validate the metadata of the files
+and perform various checks for the data.</p>
+<dl class="function">
+<dt id="tests.check_metadata">
+<code class="descclassname">tests.</code><code class="descname">check_metadata</code><span class="sig-paren">(</span><em>file</em>, <em>log_file=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tests/api.html#check_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.check_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs metadata checks for the given file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file</strong> (<em>str</em>) – Name of the file to be tested.</li>
+<li><strong>log_file</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the log file where warning
+messages are stored.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tests.check_data_quality">
+<code class="descclassname">tests.</code><code class="descname">check_data_quality</code><span class="sig-paren">(</span><em>file</em>, <em>log_file=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/tests/api.html#check_data_quality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.check_data_quality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs data quality checks for the given file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file</strong> (<em>str</em>) – Name of the file to be tested.</li>
+<li><strong>log_file</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the log file where warning
+messages are stored.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="tests.run_unit_tests">
+<code class="descclassname">tests.</code><code class="descname">run_unit_tests</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/tests/api.html#run_unit_tests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#tests.run_unit_tests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs all CloudnetPy unit tests.</p>
+</dd></dl>
+
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Quality control routines are not included in the CloudnetPy PyPI
+package.</p>
+</div>
 </div>
 </div>
 <div class="section" id="categorize-subpackage">
