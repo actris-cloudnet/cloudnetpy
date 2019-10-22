@@ -16,8 +16,8 @@ import configparser
 import datetime
 from collections import namedtuple
 from cloudnetpy.categorize import generate_categorize
-from cloudnetpy.instruments import mira2nc, rp2nc, ceilo2nc
-from cloudnetpy.plotting import plotting
+from cloudnetpy.instruments import mira2nc, rpg2nc, ceilo2nc
+from cloudnetpy.plotting import generate_figure
 from cloudnetpy import utils
 
 config = configparser.ConfigParser()
@@ -153,8 +153,8 @@ def _process_categorize(dvec):
         print(f"Generating categorize quicklook..")
         fields = ['Z', 'v', 'ldr', 'width', 'v_sigma', 'beta', 'lwp']
         fields = ['Z', 'beta', 'lwp']
-        plotting.generate_figure(output_file, fields, image_name=image_name,
-                                 show=False, max_y=7)
+        generate_figure(output_file, fields, image_name=image_name,
+                        show=False, max_y=7)
 
 
 def _process_product(product, dvec):
@@ -174,9 +174,9 @@ def _process_product(product, dvec):
     if _is_good_to_plot(product, image_name):
         print(f"Generating {product} quicklook..")
         fields, max_y = _get_product_fields_in_plot(product_prefix)
-        plotting.generate_figure(output_file, fields, image_name=image_name,
-                                 show=config.getboolean('MISC', 'show_plot'),
-                                 max_y=max_y)
+        generate_figure(output_file, fields, image_name=image_name,
+                        show=config.getboolean('MISC', 'show_plot'),
+                        max_y=max_y)
 
 
 def _get_product_fields_in_plot(product, max_y=10):

@@ -20,7 +20,7 @@ setup(
     author_email='simo.tukiainen@fmi.fi',
     url='https://github.com/tukiains/cloudnetpy',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs', 'bin')),
+    packages=find_packages(),
     include_package_data=True,
     python_requires='>=3.6',
     install_requires=['numpy>=1.16', 'scipy>=1.2', 'netCDF4>=1.4.2',
