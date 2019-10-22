@@ -5,7 +5,7 @@ from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils, output
-from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy import CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 

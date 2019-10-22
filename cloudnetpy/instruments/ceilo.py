@@ -6,7 +6,7 @@ import numpy.ma as ma
 import scipy.ndimage
 import netCDF4
 from cloudnetpy import utils, output
-from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy import CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 
