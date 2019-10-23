@@ -31,7 +31,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             Overrides the *save_path* option. Default is None.
 
     Examples:
-        >>> from cloudnetpy.plotting.plotting import generate_figure
+        >>> from cloudnetpy.plotting import generate_figure
         >>> generate_figure('categorize_file.nc', ['Z', 'v', 'width', 'ldr', 'beta', 'lwp'])
         >>> generate_figure('iwc_file.nc', ['iwc', 'iwc_error', 'iwc_retrieval_status'])
         >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error', 'lwc_retrieval_status'], max_y=4)
