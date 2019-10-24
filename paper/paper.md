@@ -57,6 +57,7 @@ and develop new products.
  
 # Acknowledgements
 
-We thank..
+The authors would like to thank the Academy of Finland for supporting
+the development of ACTRIS activities in Finland.
 
 # References
