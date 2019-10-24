@@ -47,13 +47,18 @@ fully operational in 2025 [@ACTRIS_handbook].
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers the full Cloudnet processing chain starting from the raw 
-measurements and providing the same functionality as the original 
+measurements and providing roughly the same functionality as the original 
 software written in Matlab and C. The outputs of the two programs 
-are similar but not identical, because several methods were revised and 
-bugs fixed. The CloudnetPy API is designed to serve the operational
-processing, but it should be straightforward for site operators 
-and scientific community to run the software, improve existing 
-methods and develop new products.
+are similar but not identical because several methods were revised. 
+For instance, because most modern cloud 
+radars are polarimetric, CloudnetPy uses linear depolarization ratio 
+to improve the detection of melting layer and insects. Also the 
+liquid layer detection is now based on the shape of lidar backscatter 
+profile instead of a simple threshold value [@TuononenEtAl19].
+
+The CloudnetPy API is designed to serve the operational processing, but 
+it should be straightforward for site operators and scientific community 
+to run the software, improve existing methods and develop new products.
  
 # Acknowledgements
 
