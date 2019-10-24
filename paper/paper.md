@@ -41,18 +41,19 @@ of around 15 stations around Europe has been established to collect and
 process Cloudnet data in a semi-operational manner. In the forthcoming years, 
 Cloudnet will be an essential part of the research infrastructure ACTRIS 
 (Aerosol, Clouds and Trace Gases Research Infrastructure), as the Cloudnet 
-framework will be implemented in the cloud remote sensing component of ACTRIS.
+framework is implemented in the cloud remote sensing component of ACTRIS.
 ACTRIS is moving into implementation phase in 2020 and is supposed to be 
 fully operational in 2025.
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers full Cloudnet processing chain starting from the raw 
-measurements and providing the same higher level products as the original 
-prototype software. The outputs of these two software are similar but not 
-identical, because many of the methods are revised and bugs fixed.
-The API is designed to serve the operational processing, but also 
-keeping in mind the scientific community which develops new methods 
-and products.
+measurements and providing the same functionality as the original 
+software written in Matlab and C. The outputs of the two programs 
+are similar but not identical, because several methods were revised 
+and bugs fixed. The API is designed to serve the operational
+processing, but it should be straightforward for site operators 
+and scientific community to run the software, improve existing methods
+and develop new products.
  
 # Acknowledgements
 
