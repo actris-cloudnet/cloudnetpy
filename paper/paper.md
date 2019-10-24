@@ -31,8 +31,8 @@ on the other hand, are more sensitive to liquid clouds, rain and drizzle.
 Combining these two instruments with a passive microwave radiometer, which 
 gives an estimate of the integrated liquid water, and model data, makes it 
 possible to classify atmospheric targets and to retrieve geophysical 
-products such as ice water content, liquid water content and drizzle 
-properties.
+products such as ice water content [@HoganEtAl06], liquid water content 
+and drizzle properties [@OConnorEtAl05].
 
 Methodology and prototype software to combine these different data sources, 
 and to retrieve target classification and other products, were developed within 
@@ -43,17 +43,17 @@ Cloudnet will be an essential part of the research infrastructure ACTRIS
 (Aerosol, Clouds and Trace Gases Research Infrastructure), as the Cloudnet 
 framework is implemented in the cloud remote sensing component of ACTRIS.
 ACTRIS is moving into implementation phase in 2020 and is supposed to be 
-fully operational in 2025.
+fully operational in 2025 [@ACTRIS_handbook].
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
-CloudnetPy covers full Cloudnet processing chain starting from the raw 
+CloudnetPy covers the full Cloudnet processing chain starting from the raw 
 measurements and providing the same functionality as the original 
 software written in Matlab and C. The outputs of the two programs 
-are similar but not identical, because several methods were revised 
-and bugs fixed. The API is designed to serve the operational
+are similar but not identical, because several methods were revised and 
+bugs fixed. The CloudnetPy API is designed to serve the operational
 processing, but it should be straightforward for site operators 
-and scientific community to run the software, improve existing methods
-and develop new products.
+and scientific community to run the software, improve existing 
+methods and develop new products.
  
 # Acknowledgements
 
