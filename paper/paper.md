@@ -38,7 +38,7 @@ Methodology and prototype software to combine these different data sources,
 and to retrieve target classification and other products, were developed within 
 the so-called Cloudnet project [@IllingworthEtAl07]. Since the project started 
 in 2002, a network of around 15 stations around Europe has been established 
-to regularly collect, process and distribute Cloudnet data (www.cloudnet.fmi.fi). 
+to regularly collect, process and distribute Cloudnet data (http://www.cloudnet.fmi.fi). 
 While the concept is solid proven, more robust and operational system is called
 for in the future. In the forthcoming years, Cloudnet will be one of 
 the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
