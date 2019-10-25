@@ -608,3 +608,16 @@ def array_to_probability(arr_in, loc, scale, invert=False):
     prob[ind] = stats.norm.cdf(arr[ind], loc=loc, scale=scale)
     return prob
 
+
+def range_to_height(range_los, tilt_angle):
+    """Converts distances from a tilted instrument to height above the ground.
+
+    Args:
+        range_los (array_like): Distances towards the line of sign from the
+            instrument.
+        tilt_angle (float): Angle in degrees from the zenith.
+
+    Returns:
+        array_like: Altitudes of the LOS points.
+    """
+    return range_los * np.cos(np.deg2rad(tilt_angle))

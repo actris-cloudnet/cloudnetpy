@@ -513,13 +513,9 @@ class Ct25k(VaisalaCeilo):
 def _append_height(ceilo, site_altitude):
     """Finds height above mean sea level."""
     tilt_angle = np.median(ceilo.metadata['tilt_angle'])
-    height = _calc_height(ceilo.range, tilt_angle)
+    height = utils.range_to_height(ceilo.range, tilt_angle)
     height += site_altitude
     ceilo.data['height'] = CloudnetArray(height, 'height')
-
-
-def _calc_height(ceilo_range, tilt_angle):
-    return ceilo_range * np.cos(np.deg2rad(tilt_angle))
 
 
 def _append_data(ceilo, beta_variants):
