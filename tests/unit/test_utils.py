@@ -305,7 +305,6 @@ def test_get_time():
     assert r.match(x)
 
 
-""""
 @pytest.mark.parametrize("site, args, result", [
     ('lindenberg', ['latitude'], 52.2081),
     ('lindenberg', ['latitude', 'longitude', 'altitude'], [52.2081, 14.1175, 104]),
@@ -313,4 +312,3 @@ def test_get_time():
 ])
 def test_get_site_information(site, args, result):
     assert utils.get_site_information(site, *args) == result
-"""

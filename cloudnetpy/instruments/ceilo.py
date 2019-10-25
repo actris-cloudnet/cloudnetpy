@@ -400,7 +400,7 @@ class VaisalaCeilo(Ceilometer):
         else:
             indices = [1, 3, 4, 6, 7, 8]
         values = [_split_string(line, indices) for line in lines]
-        return _values_to_dict(fields, values)
+        return values_to_dict(fields, values)
 
     @staticmethod
     def _read_header_line_2(lines):
@@ -408,7 +408,7 @@ class VaisalaCeilo(Ceilometer):
         fields = ('detection_status', 'warning', 'cloud_base_data',
                   'warning_flags')
         values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
-        return _values_to_dict(fields, values)
+        return values_to_dict(fields, values)
 
     def _range_correct_upper_part(self):
         altitude_limit = 2400
@@ -438,7 +438,7 @@ class ClCeilo(VaisalaCeilo):
             return None
         keys = ('cloud_detection_status', 'cloud_amount_data')
         values = [[line[0:3], line[3:].strip()] for line in lines]
-        return _values_to_dict(keys, values)
+        return values_to_dict(keys, values)
 
     @staticmethod
     def _read_header_line_4(lines):
@@ -446,7 +446,7 @@ class ClCeilo(VaisalaCeilo):
                 'laser_temperature', 'window_transmission', 'tilt_angle',
                 'background_light', 'measurement_parameters', 'backscatter_sum')
         values = [line.split() for line in lines]
-        return _values_to_dict(keys, values)
+        return values_to_dict(keys, values)
 
 
 class Cl51(ClCeilo):
@@ -507,7 +507,7 @@ class Ct25k(VaisalaCeilo):
                 'window_contamination', 'tilt_angle', 'background_light',
                 'measurement_parameters', 'backscatter_sum')
         values = [line.split() for line in lines]
-        return _values_to_dict(keys, values)
+        return values_to_dict(keys, values)
 
 
 def _append_height(ceilo, site_altitude):
@@ -553,16 +553,25 @@ def _save_ceilo(ceilo, output_file, location):
     rootgrp.close()
 
 
-def _values_to_dict(keys, values):
+def _split_string(string, indices):
+    """Splits string between indices."""
+    return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
+
+
+def values_to_dict(keys, values):
+    """Converts list elements to dictionary.
+
+    Examples:
+        >>> keys = ('a', 'b')
+        >>> values = ([1, 2], [1, 2], [1, 2], [1, 2])
+        >>> values_to_dict(keys, values)
+        {'a': array([1, 1, 1, 1]), 'b': array([2, 2, 2, 2])}
+
+    """
     out = {}
     for i, key in enumerate(keys):
         out[key] = np.array([x[i] for x in values])
     return out
-
-
-def _split_string(string, indices):
-    """Splits string between indices."""
-    return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
 
 
 def find_first_empty_line(file_name):
