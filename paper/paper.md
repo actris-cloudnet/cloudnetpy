@@ -42,8 +42,8 @@ to regularly collect, process and distribute Cloudnet data (http://cloudnet.fmi.
 While the concept is solid proven, more robust and operational system is called
 for. In the forthcoming years, Cloudnet will be one of the key components 
 in ACTRIS (Aerosol, Clouds and Trace Gases Research 
-Infrastructure) [@ACTRIS_handbook], where the Cloudnet framework is used to 
-process gigabytes of data per day in near real time. 
+Infrastructure) [@ACTRIS_handbook], where Cloudnet framework 
+is used to process gigabytes of data per day in near real time. 
 ACTRIS is moving into implementation phase in 2020 and is supposed 
 to be fully operational in 2025.
 
@@ -58,12 +58,11 @@ to improve the detection of melting layer and insects. Also the
 liquid layer detection is now based on the shape of lidar backscatter 
 profile instead of threshold values [@TuononenEtAl19]. Detailed
 verification of the updated methods is a subject of future studies.
-
 The CloudnetPy API is designed to serve the operational processing, but 
 it should be straightforward for site operators and scientific community 
 to run the software, improve existing methods and develop new products.
 
- 
+
 # Acknowledgements
 
 The authors would like to thank the Academy of Finland for supporting
