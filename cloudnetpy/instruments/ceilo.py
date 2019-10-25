@@ -399,7 +399,7 @@ class VaisalaCeilo(Ceilometer):
             indices = [1, 3, 4, 7, 8, 9]
         else:
             indices = [1, 3, 4, 6, 7, 8]
-        values = [_split_string(line, indices) for line in lines]
+        values = [split_string(line, indices) for line in lines]
         return values_to_dict(fields, values)
 
     @staticmethod
@@ -553,8 +553,20 @@ def _save_ceilo(ceilo, output_file, location):
     rootgrp.close()
 
 
-def _split_string(string, indices):
-    """Splits string between indices."""
+def split_string(string, indices):
+    """Splits string between indices.
+
+    Notes:
+        It is possible to skip characters from the beginning and end of the
+        string but not from the middle.
+
+    Examples:
+        >>> s = 'abcde'
+        >>> indices = [1, 2, 4]
+        >>> split_string(s, indices)
+        ['b', 'cd']
+
+    """
     return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
 
 
