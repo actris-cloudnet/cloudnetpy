@@ -28,7 +28,7 @@ cloud properties with high vertical and temporal resolution. Cloud radars
 typically operate in the sub-millimeter wavelength region around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds, rain and drizzle. 
-Combining these two instruments with a passive microwave radiometer, which 
+Supplementing these two instruments with a passive microwave radiometer, which 
 measures integrated liquid water path, and model data, makes it 
 possible to classify atmospheric targets and to retrieve geophysical 
 products such as ice water content, liquid water content 
@@ -42,9 +42,10 @@ to regularly collect, process and distribute Cloudnet data (http://cloudnet.fmi.
 While the concept is solid proven, more robust and operational system is called
 for. In the forthcoming years, Cloudnet will be one of the key components 
 in ACTRIS (Aerosol, Clouds and Trace Gases Research 
-Infrastructure) [@ACTRIS_handbook]. The Cloudnet framework will be used to 
-process ACTRIS cloud cloud remote sensing data. ACTRIS is moving into 
-implementation phase in 2020 and is supposed to be fully operational in 2025.
+Infrastructure) [@ACTRIS_handbook], where the Cloudnet framework is used to 
+process gigabytes of cloud cloud remote sensing data per day in near real time. 
+ACTRIS is moving into implementation phase in 2020 and is supposed 
+to be fully operational in 2025.
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers the full Cloudnet processing chain starting from the raw 
