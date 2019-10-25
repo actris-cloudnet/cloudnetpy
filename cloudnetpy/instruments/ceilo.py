@@ -86,13 +86,13 @@ class Ceilometer:
 
     def __init__(self, file_name):
         self.file_name = file_name
-        self.model = None
-        self.backscatter = None
-        self.metadata = None
-        self.range = None
-        self.time = None
-        self.date = None
-        self.noise_params = (None, None, None, (None, None))
+        self.model = ''
+        self.backscatter = np.array([])
+        self.metadata = {}
+        self.range = np.array([])
+        self.time = []
+        self.date = []
+        self.noise_params = (1, 1, 1, (1, 1))
         self.data = {}
 
     def calc_beta(self):
@@ -188,9 +188,9 @@ class Ceilometer:
         sigma_metres = 5
         time_step = utils.mdiff(self.time) * MINUTES_IN_HOUR
         alt_step = utils.mdiff(self.range)
-        x = sigma_minutes / time_step
-        y = sigma_metres / alt_step
-        return x, y
+        x_std = sigma_minutes / time_step
+        y_std = sigma_metres / alt_step
+        return x_std, y_std
 
 
 class JenoptikCeilo(Ceilometer):
@@ -266,8 +266,8 @@ class VaisalaCeilo(Ceilometer):
     """Base class for Vaisala ceilometers."""
     def __init__(self, file_name):
         super().__init__(file_name)
-        self._backscatter_scale_factor = None
-        self._hex_conversion_params = None
+        self._backscatter_scale_factor = 1
+        self._hex_conversion_params = (1, 1, 1)
         self._message_number = None
 
     def _fetch_data_lines(self):
