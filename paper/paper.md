@@ -40,12 +40,11 @@ the so-called Cloudnet project [@IllingworthEtAl07]. Since the project started
 in 2002, a network of around 15 stations around Europe has been established 
 to regularly collect, process and distribute Cloudnet data (http://cloudnet.fmi.fi). 
 While the concept is solid proven, more robust and operational system is called
-for in the future. In the forthcoming years, Cloudnet will be one of 
-the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
-Infrastructure) [@ACTRIS_handbook]. The Cloudnet framework will be used 
-to process the cloud cloud remote sensing data in ACTRIS which is 
-moving into implementation phase in 2020 and is supposed to be 
-fully operational in 2025.
+for. In the forthcoming years, Cloudnet will be one of the key components 
+in ACTRIS (Aerosol, Clouds and Trace Gases Research 
+Infrastructure) [@ACTRIS_handbook]. The Cloudnet framework will be used to 
+process ACTRIS cloud cloud remote sensing data. ACTRIS is moving into 
+implementation phase in 2020 and is supposed to be fully operational in 2025.
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers the full Cloudnet processing chain starting from the raw 
@@ -62,6 +61,7 @@ verification of the updated methods is a subject of future studies.
 The CloudnetPy API is designed to serve the operational processing, but 
 it should be straightforward for site operators and scientific community 
 to run the software, improve existing methods and develop new products.
+
  
 # Acknowledgements
 
