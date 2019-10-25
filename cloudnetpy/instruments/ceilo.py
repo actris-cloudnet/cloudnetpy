@@ -92,7 +92,7 @@ class Ceilometer:
         self.range = None
         self.time = None
         self.date = None
-        self.noise_params = None
+        self.noise_params = (None, None, None, (None, None))
         self.data = {}
 
     def calc_beta(self):
@@ -204,6 +204,7 @@ class JenoptikCeilo(Ceilometer):
         self.calibration_factor = 4.5e-11  # mace-head value
 
     def read_ceilometer_file(self):
+        """Reads data and metadata from Jenoptik netCDF file."""
         self.range = self._calc_range()
         self.time = self._convert_time()
         self.date = self._read_date()
@@ -275,17 +276,6 @@ class VaisalaCeilo(Ceilometer):
             all_lines = file.readlines()
         return self._screen_invalid_lines(all_lines)
 
-    def _read_header_line_1(self, lines):
-        """Reads all first header lines from CT25k and CL ceilometers."""
-        fields = ('model_id', 'unit_id', 'software_level', 'message_number',
-                  'message_subclass')
-        if 'cl' in self.model:
-            indices = [1, 3, 4, 7, 8, 9]
-        else:
-            indices = [1, 3, 4, 6, 7, 8]
-        values = [_split_string(line, indices) for line in lines]
-        return _values_to_dict(fields, values)
-
     def _calc_range(self):
         """Calculates range vector from the resolution and number of gates."""
         if self.model == 'ct25k':
@@ -330,14 +320,6 @@ class VaisalaCeilo(Ceilometer):
         timestamp_lines = _find_timestamp_lines()
         number_of_data_lines = _find_number_of_data_lines(timestamp_lines[0])
         return _parse_data_lines(timestamp_lines)
-
-    @staticmethod
-    def _read_header_line_2(lines):
-        """Reads the second header line."""
-        fields = ('detection_status', 'warning', 'cloud_base_data',
-                  'warning_flags')
-        values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
-        return _values_to_dict(fields, values)
 
     @staticmethod
     def _get_message_number(header_line_1):
@@ -399,9 +381,6 @@ class VaisalaCeilo(Ceilometer):
                 meta[field] = np.array(meta[field])
         return meta
 
-    def _read_header_line_3(self, data):
-        raise NotImplementedError
-
     def _read_common_header_part(self):
         header = []
         data_lines = self._fetch_data_lines()
@@ -410,8 +389,26 @@ class VaisalaCeilo(Ceilometer):
         header.append(self._read_header_line_1(data_lines[1]))
         self._message_number = self._get_message_number(header[0])
         header.append(self._read_header_line_2(data_lines[2]))
-        #header.append(self._read_header_line_3(data_lines[3]))
         return header, data_lines
+
+    def _read_header_line_1(self, lines):
+        """Reads all first header lines from CT25k and CL ceilometers."""
+        fields = ('model_id', 'unit_id', 'software_level', 'message_number',
+                  'message_subclass')
+        if 'cl' in self.model:
+            indices = [1, 3, 4, 7, 8, 9]
+        else:
+            indices = [1, 3, 4, 6, 7, 8]
+        values = [_split_string(line, indices) for line in lines]
+        return _values_to_dict(fields, values)
+
+    @staticmethod
+    def _read_header_line_2(lines):
+        """Reads the second header line."""
+        fields = ('detection_status', 'warning', 'cloud_base_data',
+                  'warning_flags')
+        values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
+        return _values_to_dict(fields, values)
 
     def _range_correct_upper_part(self):
         altitude_limit = 2400
@@ -486,6 +483,7 @@ class Ct25k(VaisalaCeilo):
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
         header, data_lines = self._read_common_header_part()
+        header.append(self._read_header_line_3(data_lines[3]))
         self.metadata = self._handle_metadata(header)
         self.range = self._calc_range()
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
@@ -568,6 +566,7 @@ def _split_string(string, indices):
 
 
 def find_first_empty_line(file_name):
+    """Finds first text file line that is empty."""
     line_number = 1
     with open(file_name) as file:
         for line in file:
@@ -586,14 +585,14 @@ def is_empty_line(line):
 
 def time_to_fraction_hour(time):
     """Returns time (hh:mm:ss) as fraction hour """
-    h, m, s = time.split(':')
-    return int(h) + (int(m) * SECONDS_IN_MINUTE + int(s)) / SECONDS_IN_HOUR
+    hour, minute, sec = time.split(':')
+    return int(hour) + (int(minute) * SECONDS_IN_MINUTE + int(sec)) / SECONDS_IN_HOUR
 
 
 def is_timestamp(string):
     """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss"""
-    r = re.compile(r'-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
-    if r.match(string) is not None:
+    reg_exp = re.compile(r'-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+    if reg_exp.match(string) is not None:
         return True
     return False
 
