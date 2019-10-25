@@ -23,38 +23,41 @@ bibliography: paper.bib
 
 # Summary
 
-Ground-based remote sensing measurements can provide vertically resolved 
+Ground-based remote sensing instruments can provide vertically resolved 
 cloud properties with high vertical and temporal resolution. Cloud radars 
 typically operate in the sub-millimeter wavelength region around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds, rain and drizzle. 
 Combining these two instruments with a passive microwave radiometer, which 
-gives an estimate of the integrated liquid water, and model data, makes it 
+measures integrated liquid water path, and model data, makes it 
 possible to classify atmospheric targets and to retrieve geophysical 
-products such as ice water content [@HoganEtAl06], liquid water content 
-and drizzle properties [@OConnorEtAl05].
+products such as ice water content, liquid water content 
+and drizzle properties [@OConnorEtAl05, @HoganEtAl06].
 
 Methodology and prototype software to combine these different data sources, 
 and to retrieve target classification and other products, were developed within 
-the so-called Cloudnet project [@IllingworthEtAl07]. Since 2002, a network 
-of around 15 stations around Europe has been established to collect and 
-process Cloudnet data in a semi-operational manner. In the forthcoming years, 
-Cloudnet will be an essential part of the research infrastructure ACTRIS 
-(Aerosol, Clouds and Trace Gases Research Infrastructure), as the Cloudnet 
-framework is implemented in the cloud remote sensing component of ACTRIS.
-ACTRIS is moving into implementation phase in 2020 and is supposed to be 
-fully operational in 2025 [@ACTRIS_handbook].
+the so-called Cloudnet project [@IllingworthEtAl07]. Since the project started 
+in 2002, a network of around 15 stations around Europe has been established 
+to regularly collect, process and distribute Cloudnet data (www.cloudnet.fmi.fi). 
+While the concept is solid proven, more robust and operational system is called
+for in the future. In the forthcoming years, Cloudnet will be one of 
+the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
+Infrastructure) [@ACTRIS_handbook]. The Cloudnet framework will be used 
+to process the cloud cloud remote sensing data in ACTRIS which is 
+moving into implementation phase in 2020 and is supposed to be 
+fully operational in 2025.
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers the full Cloudnet processing chain starting from the raw 
 measurements and providing roughly the same functionality as the original 
-software written in Matlab and C. The outputs of the two programs 
-are similar but not identical because several methods were revised. 
-For instance, because most modern cloud 
+Cloudnet software written in Matlab and C. The outputs of the two programs 
+are similar but not identical because several methods were revised 
+during the refactoring process. For example, because most modern cloud 
 radars are polarimetric, CloudnetPy uses linear depolarization ratio 
 to improve the detection of melting layer and insects. Also the 
 liquid layer detection is now based on the shape of lidar backscatter 
-profile instead of a simple threshold value [@TuononenEtAl19].
+profile instead of threshold values [@TuononenEtAl19]. Detailed
+verification of the updated methods is a subject of future studies.
 
 The CloudnetPy API is designed to serve the operational processing, but 
 it should be straightforward for site operators and scientific community 
