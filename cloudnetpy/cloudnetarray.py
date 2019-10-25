@@ -43,7 +43,7 @@ class CloudnetArray:
         return 'i4'
 
     def lin2db(self):
-        """Converts linear units do log."""
+        """Converts linear units to log."""
         if 'db' not in self.units.lower():
             self.data = utils.lin2db(self.data)
             self.units = 'dB'
@@ -54,9 +54,9 @@ class CloudnetArray:
             self.data = utils.db2lin(self.data)
             self.units = ''
 
-    def rebin_data(self, time, time_new, height=None, height_new=None, n_min=1):
+    def rebin_data(self, time, time_new, height=None, height_new=None):
         """Rebins data in time and optionally in height."""
-        self.data = utils.rebin_2d(time, self.data, time_new, n_min=n_min)
+        self.data = utils.rebin_2d(time, self.data, time_new)
         if np.any(height) and np.any(height_new):
             self.data = utils.interpolate_2d_masked(self.data,
                                                     (time_new, height),
@@ -120,10 +120,7 @@ class CloudnetArray:
                 setattr(self, key, data)
 
     def filter_isolated_pixels(self):
+        """Filter vertical artifacts in cloud radar data."""
         is_data = (~self.data.mask).astype(int)
         is_data_filtered = utils.filter_x_pixels(is_data)
         self.data[is_data_filtered == 0] = ma.masked
-
-
-
-
