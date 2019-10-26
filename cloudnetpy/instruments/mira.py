@@ -121,18 +121,18 @@ def _save_mira(mmclx_file, raw_radar, output_file):
     output.copy_variables(netCDF4.Dataset(mmclx_file), rootgrp, fields_from_raw)
     output.add_file_type(rootgrp, 'radar')
     rootgrp.title = f"Radar file from {raw_radar.location}"
-    rootgrp.year, rootgrp.month, rootgrp.day = _date_from_filename(raw_radar.filename)
+    rootgrp.year, rootgrp.month, rootgrp.day = _find_measurement_date(raw_radar)
     rootgrp.location = raw_radar.location
     rootgrp.history = f"{utils.get_time()} - radar file created"
     rootgrp.source = raw_radar.source
     rootgrp.close()
 
 
-def _date_from_filename(full_path):
-    """Returns date from the beginning of file name."""
-    plain_file = os.path.basename(full_path)
-    date = plain_file[:8]
-    return date[:4], date[4:6], date[6:8]
+def _find_measurement_date(raw_radar):
+    """Finds measurement date from the netCDF global attribute 'source'"""
+    source = raw_radar.dataset.source
+    date = source.split('_')[0]
+    return f"20{date[:2]}", date[2:4], date[4:6]
 
 
 MIRA_ATTRIBUTES = {
