@@ -48,7 +48,7 @@ def ceilo2nc(input_file, output_file, site_meta):
     ceilo.read_ceilometer_file()
     beta_variants = ceilo.calc_beta()
     _append_data(ceilo, beta_variants)
-    _append_height(ceilo, float(site_meta['altitude']))
+    _append_height(ceilo, site_meta['altitude'])
     output.update_attributes(ceilo.data, ATTRIBUTES)
     _save_ceilo(ceilo, output_file, site_meta['name'])
 
@@ -63,8 +63,7 @@ def _initialize_ceilo(file):
         return Ct25k(file)
     elif model == 'chm15k':
         return JenoptikCeilo(file)
-    else:
-        raise RuntimeError('Error: Unknown ceilo model.')
+    raise RuntimeError('Error: Unknown ceilo model.')
 
 
 def _find_ceilo_model(file):
@@ -88,12 +87,12 @@ class Ceilometer:
         self.file_name = file_name
         self.model = ''
         self.backscatter = np.array([])
+        self.data = {}
         self.metadata = {}
         self.range = np.array([])
         self.time = []
         self.date = []
         self.noise_params = (1, 1, 1, (1, 1))
-        self.data = {}
 
     def calc_beta(self):
         """Converts range-corrected raw beta to noise-screened beta."""
@@ -211,12 +210,20 @@ class JenoptikCeilo(Ceilometer):
         self.backscatter = self._convert_backscatter()
         self.metadata = self._read_metadata()
 
+    def _calc_range(self):
+        ceilo_range = self._getvar('range')
+        return ceilo_range + utils.mdiff(ceilo_range)/2
+
+    def _convert_time(self):
+        time = self.variables['time']
+        try:
+            assert all(np.diff(time) > 0)
+        except AssertionError:
+            raise RuntimeError('Inconsistent ceilometer time stamps.')
+        return utils.seconds2hours(time)
+
     def _read_date(self):
         return [self.dataset.year, self.dataset.month, self.dataset.day]
-
-    def _read_metadata(self):
-        meta = {'tilt_angle': self._getvar('zenith')}
-        return meta
 
     def _convert_backscatter(self):
         """Steps to convert (at least Mace Head) Jenoptik SNR to raw beta."""
@@ -242,24 +249,16 @@ class JenoptikCeilo(Ceilometer):
             return 1
         nn_reference = 140
         nn_step_factor = 1.24
-        return nn_step_factor ** (-(nn1-nn_reference)/5)
-
-    def _calc_range(self):
-        ceilo_range = self._getvar('range')
-        return ceilo_range + utils.mdiff(ceilo_range)/2
-
-    def _convert_time(self):
-        time = self.variables['time']
-        try:
-            assert all(np.diff(time) > 0)
-        except AssertionError:
-            raise RuntimeError('Inconsistent ceilometer time stamps.')
-        return utils.seconds2hours(time)
+        return nn_step_factor ** (-(nn1-nn_reference) / 5)
 
     def _getvar(self, name):
         """Reads data of variable (array or scalar) from netcdf-file."""
         var = self.variables[name]
         return var[0] if utils.isscalar(var) else var[:]
+
+    def _read_metadata(self):
+        meta = {'tilt_angle': self._getvar('zenith')}
+        return meta
 
 
 class VaisalaCeilo(Ceilometer):
@@ -295,8 +294,8 @@ class VaisalaCeilo(Ceilometer):
         for ind, line in enumerate(lines):
             try:
                 profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
-            except ValueError as error:
-                print(error)
+            except ValueError:
+                print('Warning: bad value in raw ceilometer data')
         ind = np.where(profiles & self._hex_conversion_params[1] != 0)
         profiles[ind] -= self._hex_conversion_params[2]
         return profiles.astype(float) / self._backscatter_scale_factor
@@ -435,7 +434,7 @@ class ClCeilo(VaisalaCeilo):
 
     def _read_header_line_3(self, lines):
         if self._message_number != 2:
-            return None
+            raise RuntimeError('Unsupported message number.')
         keys = ('cloud_detection_status', 'cloud_amount_data')
         values = [[line[0:3], line[3:].strip()] for line in lines]
         return values_to_dict(keys, values)
@@ -488,7 +487,7 @@ class Ct25k(VaisalaCeilo):
         self.range = self._calc_range()
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.backscatter = self._read_backscatter(hex_profiles)
-        # should study the background noise to determine if the
+        # TODO: should study the background noise to determine if the
         # next call is needed. It can be the case with cl31/51 also.
         self._range_correct_upper_part()
 
@@ -501,7 +500,7 @@ class Ct25k(VaisalaCeilo):
 
     def _read_header_line_3(self, lines):
         if self._message_number in (1, 3, 6):
-            return None
+            raise RuntimeError('Unsupported message number.')
         keys = ('scale', 'measurement_mode', 'laser_energy',
                 'laser_temperature', 'receiver_sensitivity',
                 'window_contamination', 'tilt_angle', 'background_light',
@@ -514,7 +513,7 @@ def _append_height(ceilo, site_altitude):
     """Finds height above mean sea level."""
     tilt_angle = np.median(ceilo.metadata['tilt_angle'])
     height = utils.range_to_height(ceilo.range, tilt_angle)
-    height += site_altitude
+    height += float(site_altitude)
     ceilo.data['height'] = CloudnetArray(height, 'height')
 
 
