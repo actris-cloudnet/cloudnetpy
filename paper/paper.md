@@ -29,7 +29,7 @@ typically operate in the sub-millimeter wavelength region, around 35 or 94 GHz,
 mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds and aerosols. 
 Combining these two supplementary data sources with temperature and humidity 
-from a numerical weather prediction model makes it possible to classify 
+from a numerical weather prediction model, it is possible to classify 
 the various scattering objects of the atmosphere.
 Furthermore, adding a passive microwave radiometer, an instrument measuring 
 liquid water path, quantitative retrievals of geophysical 
