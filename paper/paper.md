@@ -27,7 +27,7 @@ Active ground-based remote sensing instruments provide vertical profiles of
 cloud properties with high vertical and temporal resolution. Cloud radars 
 typically operate in the sub-millimeter wavelength region around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
-on the other hand, are more sensitive to liquid clouds, rain and drizzle. 
+on the other hand, are more sensitive to liquid clouds, rain and aerosols. 
 Supplementing cloud radar and lidar with a few fields of model data and a 
 passive microwave radiometer, an instrument measuring liquid water path, 
 makes it possible to classify atmospheric targets and retrieve geophysical 
