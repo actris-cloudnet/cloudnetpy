@@ -44,7 +44,7 @@ While the methodology is validated, more robust and operational processing
 software is called for. In the forthcoming years, Cloudnet will be one of 
 the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
 Infrastructure) [@ACTRIS_handbook], where Cloudnet framework 
-is used to process gigabytes of data per day in near real time. 
+is used to process gigabytes of cloud remote sensing data per day in near real time. 
 ACTRIS is moving into implementation phase in 2020 and is supposed 
 to be fully operational in 2025.
 
