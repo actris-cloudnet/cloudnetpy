@@ -28,19 +28,20 @@ clouds and aerosols with high vertical and temporal resolution. Cloud radars
 typically operate in the sub-millimeter wavelength region, around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds and aerosols. 
-Combining the two supplementary instruments with model temperature makes 
-it possible to classify the various scattering objects in the atmosphere.
+Combining these two supplementary data sources with temperature and humidity 
+from a numerical weather prediction model makes it possible to classify 
+the various scattering objects of the atmosphere.
 Furthermore, adding a passive microwave radiometer, an instrument measuring 
-liquid water path, allows quantitative retrievals of geophysical 
+liquid water path, quantitative retrievals of geophysical 
 products such as ice water content, liquid water content 
-and drizzle properties [@OConnorEtAl05, @HoganEtAl06].
+and drizzle properties become feasible [@OConnorEtAl05, @HoganEtAl06].
 
 Methodology and prototype software to combine these different data sources, 
 and to retrieve target classification and other products, were developed within 
 the so-called Cloudnet project [@IllingworthEtAl07]. Since the project started 
 in 2002, a network of around 15 stations around Europe has been established 
 to regularly collect, process and distribute Cloudnet data (http://cloudnet.fmi.fi). 
-While the methodology is validated, more robust and operational processing 
+While the methodology is valid, more robust and operational processing 
 software is called for. In the forthcoming years, Cloudnet will be one of 
 the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
 Infrastructure) [@ACTRIS_handbook], where Cloudnet framework 
