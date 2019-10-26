@@ -1,6 +1,6 @@
 """ This module contains unit tests for atmos-module. """
 import numpy as np
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 import pytest
 from cloudnetpy.categorize import atmos
 
@@ -73,3 +73,12 @@ def test_find_cloud_tops():
                   [0, 1, 0, 0],
                   [0, 1, 0, 1]])
     assert_array_almost_equal(atmos.find_cloud_tops(x), b)
+
+
+def test_distribute_lwp_to_liquid_clouds():
+    lwc = np.array([[1, 1, 1],
+                    [2, 2, 2]])
+    lwp = np.array([2, 8])
+    result = atmos.distribute_lwp_to_liquid_clouds(lwc, lwp)
+    correct = [[2/3, 2/3, 2/3], [16/6, 16/6, 16/6]]
+    assert_array_equal(result, correct)
