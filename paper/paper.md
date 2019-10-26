@@ -23,7 +23,7 @@ bibliography: paper.bib
 
 # Summary
 
-Ground-based remote sensing instruments can provide vertically resolved 
+Active ground-based remote sensing instruments can provide vertically resolved 
 cloud properties with high vertical and temporal resolution. Cloud radars 
 typically operate in the sub-millimeter wavelength region around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
