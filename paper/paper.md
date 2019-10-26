@@ -23,16 +23,16 @@ bibliography: paper.bib
 
 # Summary
 
-Active ground-based remote sensing instruments can provide vertically resolved 
+Active ground-based remote sensing instruments provide vertical profiles of 
 cloud properties with high vertical and temporal resolution. Cloud radars 
 typically operate in the sub-millimeter wavelength region around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds, rain and drizzle. 
-Supplementing these two instruments with a passive microwave radiometer, which 
-measures integrated liquid water path, and model data, makes it 
-possible to classify atmospheric targets and to retrieve geophysical 
-products such as ice water content, liquid water content 
-and drizzle properties [@OConnorEtAl05, @HoganEtAl06].
+Supplementing cloud radar and lidar with a few fields of model data and a 
+passive microwave radiometer, an instrument measuring liquid water path, 
+makes it possible to classify atmospheric targets and retrieve geophysical 
+products such as ice water content, liquid water content and drizzle 
+properties [@OConnorEtAl05, @HoganEtAl06].
 
 Methodology and prototype software to combine these different data sources, 
 and to retrieve target classification and other products, were developed within 
