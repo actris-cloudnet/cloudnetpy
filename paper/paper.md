@@ -59,8 +59,9 @@ liquid layer detection is now based on the shape of lidar backscatter
 profile instead of threshold values [@TuononenEtAl19]. Detailed
 verification of the updated methods is a subject of future studies.
 The CloudnetPy API is designed to serve the operational processing, but 
-it should be straightforward for site operators and scientific community 
-to run the software, improve existing methods and develop new products.
+it should be straightforward for site operators and scientific community
+with access to raw data to run the software, improve existing 
+methods and develop new products.
 
 
 # Acknowledgements
