@@ -28,10 +28,10 @@ clouds and aerosols with high vertical and temporal resolution. Cloud radars
 typically operate in the sub-millimeter wavelength region, around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds and aerosols. 
-Combining these two supplementary instruments with model temperature makes 
+Combining the two supplementary instruments with model temperature makes 
 it possible to classify the various scattering objects in the atmosphere.
 Furthermore, adding a passive microwave radiometer, an instrument measuring 
-liquid water path, allows qualitative retrievals of geophysical 
+liquid water path, allows quantitative retrievals of geophysical 
 products such as ice water content, liquid water content 
 and drizzle properties [@OConnorEtAl05, @HoganEtAl06].
 
