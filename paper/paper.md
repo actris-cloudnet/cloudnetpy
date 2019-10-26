@@ -24,24 +24,25 @@ bibliography: paper.bib
 # Summary
 
 Active ground-based remote sensing instruments provide vertical profiles of 
-cloud properties with high vertical and temporal resolution. Cloud radars 
-typically operate in the sub-millimeter wavelength region around 35 or 94 GHz, 
+clouds and aerosols with high vertical and temporal resolution. Cloud radars 
+typically operate in the sub-millimeter wavelength region, around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
-on the other hand, are more sensitive to liquid clouds, rain and aerosols. 
-Supplementing cloud radar and lidar with a few fields of model data and a 
-passive microwave radiometer, an instrument measuring liquid water path, 
-makes it possible to classify atmospheric targets and retrieve geophysical 
-products such as ice water content, liquid water content and drizzle 
-properties [@OConnorEtAl05, @HoganEtAl06].
+on the other hand, are more sensitive to liquid clouds and aerosols. 
+Combining these two supplementary instruments with model temperature makes 
+it possible to classify the various scattering objects in the atmosphere.
+Furthermore, adding a passive microwave radiometer, an instrument measuring 
+liquid water path, allows qualitative retrievals of geophysical 
+products such as ice water content, liquid water content 
+and drizzle properties [@OConnorEtAl05, @HoganEtAl06].
 
 Methodology and prototype software to combine these different data sources, 
 and to retrieve target classification and other products, were developed within 
 the so-called Cloudnet project [@IllingworthEtAl07]. Since the project started 
 in 2002, a network of around 15 stations around Europe has been established 
 to regularly collect, process and distribute Cloudnet data (http://cloudnet.fmi.fi). 
-While the concept is solid proven, more robust and operational system is called
-for. In the forthcoming years, Cloudnet will be one of the key components 
-in ACTRIS (Aerosol, Clouds and Trace Gases Research 
+While the concept is solid proven, more robust and operational processing 
+software is called for. In the forthcoming years, Cloudnet will be one of 
+the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
 Infrastructure) [@ACTRIS_handbook], where Cloudnet framework 
 is used to process gigabytes of data per day in near real time. 
 ACTRIS is moving into implementation phase in 2020 and is supposed 
