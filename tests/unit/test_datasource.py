@@ -18,6 +18,13 @@ class Variable:
         return self.value[ind]
 
 
-def test_height():
+def test_get_height_m():
     obj = FakeProfileDataSource(np.array([1, 2, 3]), 'km')
     assert_array_equal(obj.height, [1000, 2000, 3000])
+
+
+def test_get_height_km():
+    obj = FakeProfileDataSource(np.array([1000, 2000, 3000]), 'm')
+    assert_array_equal(obj.height, [1000, 2000, 3000])
+
+
