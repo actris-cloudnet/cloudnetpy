@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.ma as ma
 import pytest
+from numpy.testing import assert_array_equal
 from cloudnetpy.categorize import droplet
 
 
@@ -75,3 +76,22 @@ class TestIndTop:
         with pytest.raises(IndexError):
             droplet.ind_top(dx, self.peak_position, self.n_prof,
                             self.search_range, self.threshold)
+
+
+def test_find_strong_peaks():
+    data = np.array([[0, 0, 100, 1e6, 100, 0, 0],
+                     [0, 100, 1e6, 100, 0, 0, 0]])
+    threshold = 1e3
+    peaks = droplet._find_strong_peaks(data, threshold)
+    assert_array_equal(peaks, ([0, 1], [3, 2]))
+
+
+def test_intepolate_lwp():
+    class Obs:
+        def __init__(self):
+            self.time = np.arange(11)
+            self.lwp_orig = np.linspace(1, 11, 11)
+            self.lwp = ma.masked_where(self.lwp_orig % 2 == 0, self.lwp_orig)
+    obs = Obs()
+    lwp_intepolated = droplet._interpolate_lwp(obs)
+    assert_array_equal(obs.lwp_orig, lwp_intepolated)
