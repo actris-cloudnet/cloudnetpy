@@ -72,7 +72,7 @@ def find_liquid(obs, peak_amp=1e-6,
         try:
             base = ind_base(dprof, peak, base_below_peak, 4)
             top = ind_top(dprof, peak, height.shape[0], top_above_peak, 4)
-        except:
+        except IndexError:
             continue
         npoints = np.count_nonzero(lprof[base:top+1])
         peak_width = height[top] - height[base]
@@ -110,6 +110,10 @@ def ind_base(dprof, p, dist, lim):
     Returns:
         int: Base index of the peak.
 
+    Raises:
+        IndexError: Can't find proper base index (probably too many masked
+            values in the profile).
+
     Examples:
         Consider a profile
 
@@ -118,12 +122,12 @@ def ind_base(dprof, p, dist, lim):
         that contains one bad, masked value
 
         >>> mx = ma.masked_array(x, mask=[0, 0, 0, 1, 0, 0, 0])
-            [0 0.5, 1.0, --, 4.0, 8.0, 5.0]
+            [0, 0.5, 1.0, --, 4.0, 8.0, 5.0]
 
         The 1st order difference is now
 
         >>> dx = np.diff(mx).filled(0)
-            [0.5 0.5,  0. ,  0. ,  4. , -3. ]
+            [0.5, 0.5, 0, 0, 4, -3]
 
         From the original profile we see that the peak index is 5.
         Let's assume our base can't be more than 4 elements below
@@ -174,6 +178,10 @@ def ind_top(dprof, p, nprof, dist, lim):
 
     Returns:
         int: Top index of the peak.
+
+    Raises:
+        IndexError: Can not find proper top index (probably too many masked
+            values in the profile).
 
     See also:
         droplet.ind_base()
