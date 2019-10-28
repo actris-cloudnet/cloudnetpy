@@ -1,5 +1,6 @@
 import pytest
 from cloudnetpy.plotting import plotting
+from datetime import date
 
 
 @pytest.mark.parametrize("numbers, result", [
@@ -24,3 +25,9 @@ def test_get_standard_time_ticks(reso, result):
     ])
 def test__generate_log_cbar_ticklabel_list(vmin, vmax, result):
     assert plotting._generate_log_cbar_ticklabel_list(vmin, vmax) == result
+
+
+def test_get_subtitle_text():
+    case_date = date(2019, 5, 7)
+    site_name = 'Mace-Head'
+    assert plotting._get_subtitle_text(case_date, site_name) == 'Mace Head, 7 May 2019'

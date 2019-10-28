@@ -345,10 +345,14 @@ def _read_case_date(nc_file):
 
 def _add_subtitle(fig, case_date, site_name):
     """Adds subtitle into figure."""
-    site_name = site_name.replace('-', ' ')
-    text = f"{site_name}, {case_date.strftime('%-d %b %Y')}"
+    text = _get_subtitle_text(case_date, site_name)
     fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
                  verticalalignment='bottom', fontweight='bold')
+
+
+def _get_subtitle_text(case_date, site_name):
+    site_name = site_name.replace('-', ' ')
+    return f"{site_name}, {case_date.strftime('%-d %b %Y')}"
 
 
 def _create_save_name(save_path, case_date, field_names, fix=''):
