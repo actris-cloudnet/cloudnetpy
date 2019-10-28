@@ -70,7 +70,8 @@ def find_liquid(obs, peak_amp=1e-6,
     beta = ma.copy(obs.beta)
 
     # TODO: append zero-row into data instead of setting first values to zero.
-    # This fix is because the peak can be the very first value (thus there is no proper base in data)
+    # This fix is because the peak can be the very first value
+    # (thus there is no proper base in data)
     beta[:, 0] = 0
     height = obs.height
 
@@ -96,12 +97,13 @@ def find_liquid(obs, peak_amp=1e-6,
         is_positive_lwp = lwp_int[n] > min_lwp
         if _is_proper_peak():
             _save_peak_position()
+
     return {'presence': is_liquid,
             'bases': liquid_base,
             'tops': liquid_top}
 
 
-def ind_base(dprof, p, dist, lim):
+def ind_base(dprof, ind_peak, dist, lim):
     """Finds base index of a peak in profile.
 
     Return the lowermost index of profile where 1st order differences
@@ -111,8 +113,8 @@ def ind_base(dprof, p, dist, lim):
         dprof (ndarray): 1-D array of 1st discrete difference.
             Masked values should be 0, e.g. dprof =
             np.diff(masked_prof).filled(0)
-        p (int): Index of (possibly local) peak in the original profile.
-            Note that the peak must be found with some other method prior
+        ind_peak (int): Index of (possibly local) peak in the original profile.
+            Note that the peak must be found with some other method before
             calling this function.
         dist (int): Number of elements investigated below *p*.
                     If ( *p* - *dist*)<0, search starts from index 0.
@@ -162,13 +164,13 @@ def ind_base(dprof, p, dist, lim):
         droplet.ind_top()
 
     """
-    start = max(p-dist, 0)  # should not be negative
-    diffs = dprof[start:p]
+    start = max(ind_peak - dist, 0)  # should not be negative
+    diffs = dprof[start:ind_peak]
     mind = np.argmax(diffs)
     return start + np.where(diffs > diffs[mind]/lim)[0][0]
 
 
-def ind_top(dprof, p, nprof, dist, lim):
+def ind_top(dprof, ind_peak, nprof, dist, lim):
     """Finds top index of a peak in profile.
 
     Return the uppermost index of profile where 1st order differences
@@ -180,8 +182,8 @@ def ind_top(dprof, p, nprof, dist, lim):
             np.diff(masked_prof).filled(0)
         nprof (int): Length of the profile. Top index can't be higher
             than this.
-        p (int): Index of (possibly local) peak in the profile.
-            Note that the peak must be found with some other method prior
+        ind_peak (int): Index of (possibly local) peak in the profile.
+            Note that the peak must be found with some other method before
             calling this function.
         dist (int): Number of elements investigated above *p*.
                     If (*p* + *dist*) > *nprof*, search ends to *nprof*.
@@ -203,10 +205,10 @@ def ind_top(dprof, p, nprof, dist, lim):
         droplet.ind_base()
 
     """
-    end = min(p+dist, nprof)  # should not be greater than len(profile)
-    diffs = dprof[p:end]
+    end = min(ind_peak + dist, nprof)  # should not be greater than len(profile)
+    diffs = dprof[ind_peak:end]
     mind = np.argmin(diffs)
-    return p + np.where(diffs < diffs[mind]/lim)[0][-1] + 1
+    return ind_peak + np.where(diffs < diffs[mind] / lim)[0][-1] + 1
 
 
 def _find_strong_peaks(data, threshold):
