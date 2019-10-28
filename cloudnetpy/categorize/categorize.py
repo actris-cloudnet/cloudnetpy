@@ -138,6 +138,7 @@ class Radar(ProfileDataSource):
         self._unknown_to_cloudnet(('Zh', 'Zv', 'Ze'), 'Z', units='dBZ')
         self._init_sigma_v()
 
+    # TODO: Reference unit-test, others in utils
     def rebin_to_grid(self, time_new):
         """Rebins radar data in time using mean.
 
@@ -189,6 +190,7 @@ class Radar(ProfileDataSource):
     def calc_errors(self, attenuations, classification):
         """Calculates error and sensitivity of radar echo."""
 
+        # TODO: Reference unit-test
         def _calc_sensitivity():
             """Returns sensitivity of radar as function of altitude."""
             mean_gas_atten = ma.mean(attenuations['radar_gas_atten'], axis=0)
@@ -197,6 +199,7 @@ class Radar(ProfileDataSource):
             z_sensitivity[~zc.mask] = zc[~zc.mask]
             return z_sensitivity
 
+        # TODO: Reference unit-test
         def _calc_error():
             z_precision = 4.343 * (1 / np.sqrt(_number_of_pulses())
                                    + utils.db2lin(z_power_min - z_power) / 3)
@@ -206,6 +209,7 @@ class Radar(ProfileDataSource):
             z_error[attenuations['liquid_uncorrected']] = ma.masked
             return z_error
 
+        # TODO: Reference unit-test
         def _number_of_pulses():
             """Returns number of independent pulses."""
             seconds_in_hour = 3600
@@ -248,6 +252,7 @@ class Radar(ProfileDataSource):
             return np.split(all_indices, starting_indices[1:])
         return [all_indices]
 
+    # TODO: Reference unit-test
     def _get_folding_velocity(self):
         for key in ('nyquist_velocity', 'NyquistVelocity'):
             if key in self.variables:

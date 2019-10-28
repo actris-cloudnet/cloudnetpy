@@ -6,6 +6,7 @@ import scipy.signal
 from cloudnetpy import utils
 
 
+# TODO: Too complicated function for been tested. Maybe reference one
 def find_liquid(obs, peak_amp=1e-6,
                 max_width=300,
                 min_points=3,
@@ -29,6 +30,7 @@ def find_liquid(obs, peak_amp=1e-6,
         dict: Dict containing 'presence', 'bases' and 'tops'.
 
     """
+    # TODO: Maybe would be good idea to test all, but inner function concept makes it quite hard
     def _find_strong_peaks():
         peaks = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
         strong_peaks = np.where(beta[peaks] > peak_amp)
@@ -84,7 +86,7 @@ def find_liquid(obs, peak_amp=1e-6,
             'bases': liquid_base,
             'tops': liquid_top}
 
-
+    # TODO: Unit test
 def ind_base(dprof, p, dist, lim):
     """Finds base index of a peak in profile.
 
@@ -147,7 +149,7 @@ def ind_base(dprof, p, dist, lim):
     mind = np.argmax(diffs)
     return start + np.where(diffs > diffs[mind]/lim)[0][0]
 
-
+    # TODO: Unit test
 def ind_top(dprof, p, nprof, dist, lim):
     """Finds top index of a peak in profile.
 
@@ -184,7 +186,7 @@ def ind_top(dprof, p, nprof, dist, lim):
     mind = np.argmin(diffs)
     return p + np.where(diffs < diffs[mind]/lim)[0][-1] + 1
 
-
+    # TODO: Too complicated
 def correct_liquid_top(obs, liquid, is_freezing, limit=200):
     """Corrects lidar detected liquid cloud top using radar data.
 

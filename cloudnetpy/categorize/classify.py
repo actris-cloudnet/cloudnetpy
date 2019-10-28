@@ -11,6 +11,7 @@ from cloudnetpy.categorize import droplet, atmos
 from cloudnetpy.constants import T0
 
 
+    # TODO: test output, maybe inner also
 def fetch_quality(radar, lidar, classification, attenuations):
     """Returns Cloudnet quality bits.
 
@@ -43,7 +44,7 @@ def fetch_quality(radar, lidar, classification, attenuations):
     qbits = _bits_to_integer(bits)
     return {'quality_bits': qbits}
 
-
+    # TODO: test output, maybe inner also
 def classify_measurements(radar, lidar, model, mwr):
     """Classifies radar/lidar observations.
 
@@ -81,7 +82,7 @@ def classify_measurements(radar, lidar, model, mwr):
                                 liquid['bases'],
                                 find_profiles_with_undetected_melting(bits))
 
-
+    # TODO: Too complicated, maybe reference one?
 def find_melting_layer(obs, smooth=True):
     """Finds melting layer from model temperature, ldr, and velocity.
 
@@ -128,6 +129,7 @@ def find_melting_layer(obs, smooth=True):
         base1 = droplet.ind_base(dprof, pind, 10, 2)
         return top1, base1
 
+    # TODO: Could be Unit test
     def _get_temp_indices():
         bottom_point = np.where(t_prof < (T0 - t_range[0]))[0][0]
         top_point = np.where(t_prof > (T0 + t_range[0]))[0]
@@ -173,7 +175,7 @@ def find_melting_layer(obs, smooth=True):
         melting_layer = (smoothed_layer > 0.2).astype(bool)
     return melting_layer
 
-
+    # TODO: Too complicated for unit testing
 def find_freezing_region(obs, melting_layer):
     """Finds freezing region using the model temperature and melting layer.
 
@@ -216,6 +218,7 @@ def find_freezing_region(obs, melting_layer):
     return is_freezing
 
 
+# TODO: Reference unit-test, already unit test
 def find_t0_alt(temperature, height):
     """ Interpolates altitudes where temperature goes below freezing.
 
@@ -275,7 +278,7 @@ def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
     is_insects = insect_prob > prob_lim
     return is_insects, ma.masked_where(insect_prob == 0, insect_prob)
 
-
+    # TODO: Too complicated for unit testing
 def _insect_probability(obs):
     def _interpolate_lwp():
         ind = ma.where(obs.lwp)
@@ -309,7 +312,7 @@ def _insect_probability(obs):
     prob_combined[no_ldr] = prob_no_ldr[no_ldr]
     return prob_combined, prob_no_ldr
 
-
+    # TODO: Seems too hard to Unit test, only smaller pieces maybe
 def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers, obs):
     def _screen_liquid_layers():
         prob[liquid_layers == 1] = 0
@@ -333,6 +336,7 @@ def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layer
     return prob
 
 
+    # TODO: Too complicated to be tested
 def find_falling_hydrometeors(obs, is_liquid, is_insects):
     """Finds falling hydrometeors.
 
