@@ -25,6 +25,5 @@ def test_m2km():
     var = FakeData(np.asarray([10000, 20000, 30000, 40000], dtype=float))
     res = np.array([10, 20, 30, 40])
     cnet = ds.DataSource.m2km(var)
-    print("")
     assert_array_equal(res, cnet)
 
