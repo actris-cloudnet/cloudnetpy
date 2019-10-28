@@ -11,24 +11,32 @@ def correct_liquid_top(obs, liquid, is_freezing, limit=200):
 
     Args:
         obs (ClassData): Observations container.
-        liquid (dict): Dictionary for liquid clouds.
+        liquid (dict): Dictionary about liquid clouds including 'tops' and
+            'presence'.
         is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
             derived from the model temperature and melting layer based
             on radar data.
         limit (float): The maximum correction distance (m) above liquid cloud top.
+
     Returns:
         ndarray: Corrected liquid cloud array.
-    See also:
-        droplet.find_liquid()
+
     """
+    is_liquid_corrected = np.copy(liquid['presence'])
     top_above = utils.n_elements(obs.height, limit)
     for prof, top in zip(*np.where(liquid['tops'])):
-        ind = np.where(is_freezing[prof, top:])[0][0] + top_above
+        ind = _find_ind_above_top(is_freezing[prof, top:], top_above)
         rad = obs.z[prof, top:top+ind+1]
         if not (rad.mask.all() or ~rad.mask.any()):
             first_masked = ma.where(rad.mask)[0][0]
-            liquid['presence'][prof, top:top+first_masked] = True
-    return liquid['presence']
+            is_liquid_corrected[prof, top:top+first_masked] = True
+    return is_liquid_corrected
+
+
+def _find_ind_above_top(is_freezing_from_peak, top_above):
+    first_point_below_zero = np.where(is_freezing_from_peak)[0][0]
+    ind = first_point_below_zero + top_above
+    return min(len(is_freezing_from_peak)-1, ind)
 
 
 def find_liquid(obs, peak_amp=1e-6,
