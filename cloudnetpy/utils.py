@@ -38,11 +38,11 @@ def time_grid(time_step=30):
     """Returns decimal hour array between 0 and 24.
 
     Computes fraction hour time vector 0-24 with user-given
-    resolution (in seconds) where 60 is the maximum allowed value.
+    resolution (in seconds).
 
     Args:
-        time_step (int, optional): Time resolution in seconds between
-            1 and 60. Default is 30.
+        time_step (int, optional): Time resolution in seconds, greater
+            than 1. Default is 30.
 
     Returns:
         ndarray: Time vector between 0 and 24.
@@ -51,8 +51,8 @@ def time_grid(time_step=30):
         ValueError: Bad resolution as input.
 
     """
-    if time_step < 1 or time_step > 60:
-        raise ValueError('Time resolution should be between 0 and 60 [s]')
+    if time_step < 1:
+        raise ValueError('Time resolution should be >= 1 seconds')
     half_step = time_step/SECONDS_PER_HOUR/2
     return np.arange(half_step, 24+half_step, half_step*2)
 
