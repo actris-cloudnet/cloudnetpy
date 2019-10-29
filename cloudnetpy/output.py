@@ -44,8 +44,7 @@ def _get_identifier(short_id):
         return 'ice water content'
     elif short_id == 'lwc':
         return 'liquid water content'
-    else:
-        return short_id
+    return short_id
 
 
 def merge_history(root_group, file_type, *sources):

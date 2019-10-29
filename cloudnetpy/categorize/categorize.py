@@ -164,6 +164,7 @@ class Radar(ProfileDataSource):
         self.time = time_new
 
     def remove_incomplete_pixels(self):
+        """Removes pixels where some of the (required) variables are existing."""
         good_ind = (~self.data['Z'][:].mask
                     & ~self.data['width'][:].mask
                     & ~self.data['v'][:].mask)
@@ -171,6 +172,7 @@ class Radar(ProfileDataSource):
             self.data[key][:][~good_ind] = ma.masked
 
     def filter_speckle_noise(self):
+        """Removes speckle noise from radar data."""
         for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
             if key in self.data.keys():
                 self.data[key].filter_isolated_pixels()

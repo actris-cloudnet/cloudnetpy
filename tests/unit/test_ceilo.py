@@ -1,6 +1,8 @@
 """ This module contains unit tests for ceilo-module. """
 from cloudnetpy.instruments import ceilo
 import pytest
+import numpy as np
+from numpy.testing import assert_equal
 
 
 @pytest.mark.parametrize("input, result", [
@@ -29,3 +31,20 @@ def test_time_to_fraction_hour(input, result):
 ])
 def test_is_timestamp(input, result):
     assert ceilo.is_timestamp(input) == result
+
+
+@pytest.mark.parametrize("keys, values, result", [
+    (('a', 'b'), [[1, 2], [1, 2], [1, 2]],
+     {'a': np.array([1, 1, 1]), 'b': np.array([2, 2, 2])}),
+])
+def test_values_to_dict(keys, values, result):
+    assert_equal(ceilo.values_to_dict(keys, values), result)
+
+
+@pytest.mark.parametrize("string, indices, result", [
+    ('abcd', [3, 4], ['d']),
+    ('abcd', [0, 4], ['abcd']),
+    ('abcdedfg', [1, 2, 4, 5], ['b', 'cd', 'e']),
+])
+def test_split_string(string, indices, result):
+    assert_equal(ceilo.split_string(string, indices), result)

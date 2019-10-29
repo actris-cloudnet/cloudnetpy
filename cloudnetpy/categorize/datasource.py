@@ -1,8 +1,8 @@
 import os
 import numpy as np
-import numpy.ma as ma
 import netCDF4
 from cloudnetpy import utils, CloudnetArray
+
 
 class DataSource:
     """Base class for all Cloudnet measurements and model data.

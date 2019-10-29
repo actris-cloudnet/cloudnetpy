@@ -228,7 +228,7 @@ def find_t0_alt(temperature, height):
 
     Returns:
         ndarray: 1-D array denoting altitudes where the
-        temperature drops below 0 deg C.
+            temperature drops below 0 deg C.
 
     """
     alt = np.array([])

@@ -6,7 +6,39 @@ import scipy.signal
 from cloudnetpy import utils
 
 
-# TODO: Too complicated function for been tested. Maybe reference one
+def correct_liquid_top(obs, liquid, is_freezing, limit=200):
+    """Corrects lidar detected liquid cloud top using radar data.
+
+    Args:
+        obs (ClassData): Observations container.
+        liquid (dict): Dictionary about liquid clouds including 'tops' and
+            'presence'.
+        is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
+            derived from the model temperature and melting layer based
+            on radar data.
+        limit (float): The maximum correction distance (m) above liquid cloud top.
+
+    Returns:
+        ndarray: Corrected liquid cloud array.
+
+    """
+    is_liquid_corrected = np.copy(liquid['presence'])
+    top_above = utils.n_elements(obs.height, limit)
+    for prof, top in zip(*np.where(liquid['tops'])):
+        ind = _find_ind_above_top(is_freezing[prof, top:], top_above)
+        rad = obs.z[prof, top:top+ind+1]
+        if not (rad.mask.all() or ~rad.mask.any()):
+            first_masked = ma.where(rad.mask)[0][0]
+            is_liquid_corrected[prof, top:top+first_masked] = True
+    return is_liquid_corrected
+
+
+def _find_ind_above_top(is_freezing_from_peak, top_above):
+    first_point_below_zero = np.where(is_freezing_from_peak)[0][0]
+    ind = first_point_below_zero + top_above
+    return min(len(is_freezing_from_peak)-1, ind)
+
+
 def find_liquid(obs, peak_amp=1e-6,
                 max_width=300,
                 min_points=3,
@@ -30,12 +62,6 @@ def find_liquid(obs, peak_amp=1e-6,
         dict: Dict containing 'presence', 'bases' and 'tops'.
 
     """
-    # TODO: Maybe would be good idea to test all, but inner function concept makes it quite hard
-    def _find_strong_peaks():
-        peaks = scipy.signal.argrelextrema(beta, np.greater, order=4, axis=1)
-        strong_peaks = np.where(beta[peaks] > peak_amp)
-        return peaks[0][strong_peaks], peaks[1][strong_peaks]
-
     def _is_proper_peak():
         conditions = (npoints > min_points,
                       peak_width < max_width,
@@ -48,15 +74,12 @@ def find_liquid(obs, peak_amp=1e-6,
         liquid_top[n, top] = True
         liquid_base[n, base] = True
 
-    def _interpolate_lwp():
-        ind = ma.where(obs.lwp)
-        return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
-
-    lwp_int = _interpolate_lwp()
+    lwp_int = _interpolate_lwp(obs)
     beta = ma.copy(obs.beta)
 
     # TODO: append zero-row into data instead of setting first values to zero.
-    # This fix is because the peak can be the very first value (thus there is no proper base in data)
+    # This fix is because the peak can be the very first value
+    # (thus there is no proper base in data)
     beta[:, 0] = 0
     height = obs.height
 
@@ -66,7 +89,7 @@ def find_liquid(obs, peak_amp=1e-6,
     top_above_peak = utils.n_elements(height, 150)
     beta_diff = np.diff(beta, axis=1).filled(0)
     beta = beta.filled(0)
-    peak_indices = _find_strong_peaks()
+    peak_indices = _find_strong_peaks(beta, peak_amp)
 
     for n, peak in zip(*peak_indices):
         lprof = beta[n, :]
@@ -74,7 +97,7 @@ def find_liquid(obs, peak_amp=1e-6,
         try:
             base = ind_base(dprof, peak, base_below_peak, 4)
             top = ind_top(dprof, peak, height.shape[0], top_above_peak, 4)
-        except:
+        except IndexError:
             continue
         npoints = np.count_nonzero(lprof[base:top+1])
         peak_width = height[top] - height[base]
@@ -82,12 +105,13 @@ def find_liquid(obs, peak_amp=1e-6,
         is_positive_lwp = lwp_int[n] > min_lwp
         if _is_proper_peak():
             _save_peak_position()
+
     return {'presence': is_liquid,
             'bases': liquid_base,
             'tops': liquid_top}
 
-    # TODO: Unit test
-def ind_base(dprof, p, dist, lim):
+
+def ind_base(dprof, ind_peak, dist, lim):
     """Finds base index of a peak in profile.
 
     Return the lowermost index of profile where 1st order differences
@@ -97,8 +121,8 @@ def ind_base(dprof, p, dist, lim):
         dprof (ndarray): 1-D array of 1st discrete difference.
             Masked values should be 0, e.g. dprof =
             np.diff(masked_prof).filled(0)
-        p (int): Index of (possibly local) peak in the original profile.
-            Note that the peak must be found with some other method prior
+        ind_peak (int): Index of (possibly local) peak in the original profile.
+            Note that the peak must be found with some other method before
             calling this function.
         dist (int): Number of elements investigated below *p*.
                     If ( *p* - *dist*)<0, search starts from index 0.
@@ -112,6 +136,10 @@ def ind_base(dprof, p, dist, lim):
     Returns:
         int: Base index of the peak.
 
+    Raises:
+        IndexError: Can't find proper base index (probably too many masked
+            values in the profile).
+
     Examples:
         Consider a profile
 
@@ -120,12 +148,12 @@ def ind_base(dprof, p, dist, lim):
         that contains one bad, masked value
 
         >>> mx = ma.masked_array(x, mask=[0, 0, 0, 1, 0, 0, 0])
-            [0 0.5, 1.0, --, 4.0, 8.0, 5.0]
+            [0, 0.5, 1.0, --, 4.0, 8.0, 5.0]
 
         The 1st order difference is now
 
         >>> dx = np.diff(mx).filled(0)
-            [0.5 0.5,  0. ,  0. ,  4. , -3. ]
+            [0.5, 0.5, 0, 0, 4, -3]
 
         From the original profile we see that the peak index is 5.
         Let's assume our base can't be more than 4 elements below
@@ -144,13 +172,13 @@ def ind_base(dprof, p, dist, lim):
         droplet.ind_top()
 
     """
-    start = max(p-dist, 0)  # should not be negative
-    diffs = dprof[start:p]
+    start = max(ind_peak - dist, 0)  # should not be negative
+    diffs = dprof[start:ind_peak]
     mind = np.argmax(diffs)
     return start + np.where(diffs > diffs[mind]/lim)[0][0]
 
-    # TODO: Unit test
-def ind_top(dprof, p, nprof, dist, lim):
+
+def ind_top(dprof, ind_peak, nprof, dist, lim):
     """Finds top index of a peak in profile.
 
     Return the uppermost index of profile where 1st order differences
@@ -162,8 +190,8 @@ def ind_top(dprof, p, nprof, dist, lim):
             np.diff(masked_prof).filled(0)
         nprof (int): Length of the profile. Top index can't be higher
             than this.
-        p (int): Index of (possibly local) peak in the profile.
-            Note that the peak must be found with some other method prior
+        ind_peak (int): Index of (possibly local) peak in the profile.
+            Note that the peak must be found with some other method before
             calling this function.
         dist (int): Number of elements investigated above *p*.
                     If (*p* + *dist*) > *nprof*, search ends to *nprof*.
@@ -177,36 +205,28 @@ def ind_top(dprof, p, nprof, dist, lim):
     Returns:
         int: Top index of the peak.
 
+    Raises:
+        IndexError: Can not find proper top index (probably too many masked
+            values in the profile).
+
     See also:
         droplet.ind_base()
 
     """
-    end = min(p+dist, nprof)  # should not be greater than len(profile)
-    diffs = dprof[p:end]
+    end = min(ind_peak + dist, nprof)  # should not be greater than len(profile)
+    diffs = dprof[ind_peak:end]
     mind = np.argmin(diffs)
-    return p + np.where(diffs < diffs[mind]/lim)[0][-1] + 1
+    return ind_peak + np.where(diffs < diffs[mind] / lim)[0][-1] + 1
 
-    # TODO: Too complicated
-def correct_liquid_top(obs, liquid, is_freezing, limit=200):
-    """Corrects lidar detected liquid cloud top using radar data.
 
-    Args:
-        obs (ClassData): Observations container.
-        liquid (dict): Dictionary for liquid clouds.
-        is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
-            derived from the model temperature and melting layer based
-            on radar data.
-        limit (float): The maximum correction distance (m) above liquid cloud top.
-    Returns:
-        ndarray: Corrected liquid cloud array.
-    See also:
-        droplet.find_liquid()
-    """
-    top_above = utils.n_elements(obs.height, limit)
-    for prof, top in zip(*np.where(liquid['tops'])):
-        ind = np.where(is_freezing[prof, top:])[0][0] + top_above
-        rad = obs.z[prof, top:top+ind+1]
-        if not (rad.mask.all() or ~rad.mask.any()):
-            first_masked = ma.where(rad.mask)[0][0]
-            liquid['presence'][prof, top:top+first_masked] = True
-    return liquid['presence']
+def _find_strong_peaks(data, threshold):
+    """Finds local maximums from data (greater than *threshold*)."""
+    peaks = scipy.signal.argrelextrema(data, np.greater, order=4, axis=1)
+    strong_peaks = np.where(data[peaks] > threshold)
+    return peaks[0][strong_peaks], peaks[1][strong_peaks]
+
+
+def _interpolate_lwp(obs):
+    """Linear interpolation of liquid water path to fill masked values."""
+    ind = ma.where(obs.lwp)
+    return np.interp(obs.time, obs.time[ind], obs.lwp[ind])

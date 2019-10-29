@@ -31,7 +31,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             Overrides the *save_path* option. Default is None.
 
     Examples:
-        >>> from cloudnetpy.plotting.plotting import generate_figure
+        >>> from cloudnetpy.plotting import generate_figure
         >>> generate_figure('categorize_file.nc', ['Z', 'v', 'width', 'ldr', 'beta', 'lwp'])
         >>> generate_figure('iwc_file.nc', ['iwc', 'iwc_error', 'iwc_retrieval_status'])
         >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error', 'lwc_retrieval_status'], max_y=4)
@@ -142,7 +142,8 @@ def _get_relative_error(fields, ax_values, max_y):
 
 def _set_labels(fig, ax, nc_file):
     ax.set_xlabel('Time (UTC)', fontsize=13)
-    case_date, site_name = _read_case_date(nc_file)
+    case_date = _read_date(nc_file)
+    site_name = _read_location(nc_file)
     _add_subtitle(fig, case_date, site_name)
     return case_date
 
@@ -334,21 +335,32 @@ def _generate_log_cbar_ticklabel_list(vmin, vmax):
     return ['10$^{%s}$' % int(i) for i in np.arange(vmin, vmax+1)]
 
 
-def _read_case_date(nc_file):
+def _read_location(nc_file):
+    """Returns measurement date string."""
+    nc = netCDF4.Dataset(nc_file)
+    site_name = nc.location
+    nc.close()
+    return site_name
+
+
+def _read_date(nc_file):
     """Returns measurement date string."""
     nc = netCDF4.Dataset(nc_file)
     case_date = date(int(nc.year), int(nc.month), int(nc.day))
-    site_name = nc.location
     nc.close()
-    return case_date, site_name
+    return case_date
 
 
 def _add_subtitle(fig, case_date, site_name):
     """Adds subtitle into figure."""
-    site_name = site_name.replace('-', ' ')
-    text = f"{site_name}, {case_date.strftime('%-d %b %Y')}"
+    text = _get_subtitle_text(case_date, site_name)
     fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
                  verticalalignment='bottom', fontweight='bold')
+
+
+def _get_subtitle_text(case_date, site_name):
+    site_name = site_name.replace('-', ' ')
+    return f"{site_name}, {case_date.strftime('%-d %b %Y')}"
 
 
 def _create_save_name(save_path, case_date, field_names, fix=''):

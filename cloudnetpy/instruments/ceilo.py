@@ -48,7 +48,7 @@ def ceilo2nc(input_file, output_file, site_meta):
     ceilo.read_ceilometer_file()
     beta_variants = ceilo.calc_beta()
     _append_data(ceilo, beta_variants)
-    _append_height(ceilo, float(site_meta['altitude']))
+    _append_height(ceilo, site_meta['altitude'])
     output.update_attributes(ceilo.data, ATTRIBUTES)
     _save_ceilo(ceilo, output_file, site_meta['name'])
 
@@ -63,8 +63,7 @@ def _initialize_ceilo(file):
         return Ct25k(file)
     elif model == 'chm15k':
         return JenoptikCeilo(file)
-    else:
-        raise RuntimeError('Error: Unknown ceilo model.')
+    raise RuntimeError('Error: Unknown ceilo model.')
 
 
 def _find_ceilo_model(file):
@@ -86,14 +85,14 @@ class Ceilometer:
 
     def __init__(self, file_name):
         self.file_name = file_name
-        self.model = None
-        self.backscatter = None
-        self.metadata = None
-        self.range = None
-        self.time = None
-        self.date = None
-        self.noise_params = None
+        self.model = ''
+        self.backscatter = np.array([])
         self.data = {}
+        self.metadata = {}
+        self.range = np.array([])
+        self.time = []
+        self.date = []
+        self.noise_params = (1, 1, 1, (1, 1))
 
     def calc_beta(self):
         """Converts range-corrected raw beta to noise-screened beta."""
@@ -188,9 +187,9 @@ class Ceilometer:
         sigma_metres = 5
         time_step = utils.mdiff(self.time) * MINUTES_IN_HOUR
         alt_step = utils.mdiff(self.range)
-        x = sigma_minutes / time_step
-        y = sigma_metres / alt_step
-        return x, y
+        x_std = sigma_minutes / time_step
+        y_std = sigma_metres / alt_step
+        return x_std, y_std
 
 
 class JenoptikCeilo(Ceilometer):
@@ -204,18 +203,27 @@ class JenoptikCeilo(Ceilometer):
         self.calibration_factor = 4.5e-11  # mace-head value
 
     def read_ceilometer_file(self):
+        """Reads data and metadata from Jenoptik netCDF file."""
         self.range = self._calc_range()
         self.time = self._convert_time()
         self.date = self._read_date()
         self.backscatter = self._convert_backscatter()
         self.metadata = self._read_metadata()
 
+    def _calc_range(self):
+        ceilo_range = self._getvar('range')
+        return ceilo_range + utils.mdiff(ceilo_range)/2
+
+    def _convert_time(self):
+        time = self.variables['time']
+        try:
+            assert all(np.diff(time) > 0)
+        except AssertionError:
+            raise RuntimeError('Inconsistent ceilometer time stamps.')
+        return utils.seconds2hours(time)
+
     def _read_date(self):
         return [self.dataset.year, self.dataset.month, self.dataset.day]
-
-    def _read_metadata(self):
-        meta = {'tilt_angle': self._getvar('zenith')}
-        return meta
 
     def _convert_backscatter(self):
         """Steps to convert (at least Mace Head) Jenoptik SNR to raw beta."""
@@ -241,32 +249,24 @@ class JenoptikCeilo(Ceilometer):
             return 1
         nn_reference = 140
         nn_step_factor = 1.24
-        return nn_step_factor ** (-(nn1-nn_reference)/5)
-
-    def _calc_range(self):
-        ceilo_range = self._getvar('range')
-        return ceilo_range + utils.mdiff(ceilo_range)/2
-
-    def _convert_time(self):
-        time = self.variables['time']
-        try:
-            assert all(np.diff(time) > 0)
-        except AssertionError:
-            raise RuntimeError('Inconsistent ceilometer time stamps.')
-        return utils.seconds2hours(time)
+        return nn_step_factor ** (-(nn1-nn_reference) / 5)
 
     def _getvar(self, name):
         """Reads data of variable (array or scalar) from netcdf-file."""
         var = self.variables[name]
         return var[0] if utils.isscalar(var) else var[:]
 
+    def _read_metadata(self):
+        meta = {'tilt_angle': self._getvar('zenith')}
+        return meta
+
 
 class VaisalaCeilo(Ceilometer):
     """Base class for Vaisala ceilometers."""
     def __init__(self, file_name):
         super().__init__(file_name)
-        self._backscatter_scale_factor = None
-        self._hex_conversion_params = None
+        self._backscatter_scale_factor = 1
+        self._hex_conversion_params = (1, 1, 1)
         self._message_number = None
 
     def _fetch_data_lines(self):
@@ -274,17 +274,6 @@ class VaisalaCeilo(Ceilometer):
         with open(self.file_name) as file:
             all_lines = file.readlines()
         return self._screen_invalid_lines(all_lines)
-
-    def _read_header_line_1(self, lines):
-        """Reads all first header lines from CT25k and CL ceilometers."""
-        fields = ('model_id', 'unit_id', 'software_level', 'message_number',
-                  'message_subclass')
-        if 'cl' in self.model:
-            indices = [1, 3, 4, 7, 8, 9]
-        else:
-            indices = [1, 3, 4, 6, 7, 8]
-        values = [_split_string(line, indices) for line in lines]
-        return _values_to_dict(fields, values)
 
     def _calc_range(self):
         """Calculates range vector from the resolution and number of gates."""
@@ -305,8 +294,8 @@ class VaisalaCeilo(Ceilometer):
         for ind, line in enumerate(lines):
             try:
                 profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
-            except ValueError as error:
-                print(error)
+            except ValueError:
+                print('Warning: bad value in raw ceilometer data')
         ind = np.where(profiles & self._hex_conversion_params[1] != 0)
         profiles[ind] -= self._hex_conversion_params[2]
         return profiles.astype(float) / self._backscatter_scale_factor
@@ -330,14 +319,6 @@ class VaisalaCeilo(Ceilometer):
         timestamp_lines = _find_timestamp_lines()
         number_of_data_lines = _find_number_of_data_lines(timestamp_lines[0])
         return _parse_data_lines(timestamp_lines)
-
-    @staticmethod
-    def _read_header_line_2(lines):
-        """Reads the second header line."""
-        fields = ('detection_status', 'warning', 'cloud_base_data',
-                  'warning_flags')
-        values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
-        return _values_to_dict(fields, values)
 
     @staticmethod
     def _get_message_number(header_line_1):
@@ -399,9 +380,6 @@ class VaisalaCeilo(Ceilometer):
                 meta[field] = np.array(meta[field])
         return meta
 
-    def _read_header_line_3(self, data):
-        raise NotImplementedError
-
     def _read_common_header_part(self):
         header = []
         data_lines = self._fetch_data_lines()
@@ -410,8 +388,26 @@ class VaisalaCeilo(Ceilometer):
         header.append(self._read_header_line_1(data_lines[1]))
         self._message_number = self._get_message_number(header[0])
         header.append(self._read_header_line_2(data_lines[2]))
-        #header.append(self._read_header_line_3(data_lines[3]))
         return header, data_lines
+
+    def _read_header_line_1(self, lines):
+        """Reads all first header lines from CT25k and CL ceilometers."""
+        fields = ('model_id', 'unit_id', 'software_level', 'message_number',
+                  'message_subclass')
+        if 'cl' in self.model:
+            indices = [1, 3, 4, 7, 8, 9]
+        else:
+            indices = [1, 3, 4, 6, 7, 8]
+        values = [split_string(line, indices) for line in lines]
+        return values_to_dict(fields, values)
+
+    @staticmethod
+    def _read_header_line_2(lines):
+        """Reads the second header line."""
+        fields = ('detection_status', 'warning', 'cloud_base_data',
+                  'warning_flags')
+        values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
+        return values_to_dict(fields, values)
 
     def _range_correct_upper_part(self):
         altitude_limit = 2400
@@ -438,10 +434,10 @@ class ClCeilo(VaisalaCeilo):
 
     def _read_header_line_3(self, lines):
         if self._message_number != 2:
-            return None
+            raise RuntimeError('Unsupported message number.')
         keys = ('cloud_detection_status', 'cloud_amount_data')
         values = [[line[0:3], line[3:].strip()] for line in lines]
-        return _values_to_dict(keys, values)
+        return values_to_dict(keys, values)
 
     @staticmethod
     def _read_header_line_4(lines):
@@ -449,7 +445,7 @@ class ClCeilo(VaisalaCeilo):
                 'laser_temperature', 'window_transmission', 'tilt_angle',
                 'background_light', 'measurement_parameters', 'backscatter_sum')
         values = [line.split() for line in lines]
-        return _values_to_dict(keys, values)
+        return values_to_dict(keys, values)
 
 
 class Cl51(ClCeilo):
@@ -486,11 +482,12 @@ class Ct25k(VaisalaCeilo):
     def read_ceilometer_file(self):
         """Read all lines of data from the file."""
         header, data_lines = self._read_common_header_part()
+        header.append(self._read_header_line_3(data_lines[3]))
         self.metadata = self._handle_metadata(header)
         self.range = self._calc_range()
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.backscatter = self._read_backscatter(hex_profiles)
-        # should study the background noise to determine if the
+        # TODO: should study the background noise to determine if the
         # next call is needed. It can be the case with cl31/51 also.
         self._range_correct_upper_part()
 
@@ -503,25 +500,21 @@ class Ct25k(VaisalaCeilo):
 
     def _read_header_line_3(self, lines):
         if self._message_number in (1, 3, 6):
-            return None
+            raise RuntimeError('Unsupported message number.')
         keys = ('scale', 'measurement_mode', 'laser_energy',
                 'laser_temperature', 'receiver_sensitivity',
                 'window_contamination', 'tilt_angle', 'background_light',
                 'measurement_parameters', 'backscatter_sum')
         values = [line.split() for line in lines]
-        return _values_to_dict(keys, values)
+        return values_to_dict(keys, values)
 
 
 def _append_height(ceilo, site_altitude):
     """Finds height above mean sea level."""
     tilt_angle = np.median(ceilo.metadata['tilt_angle'])
-    height = _calc_height(ceilo.range, tilt_angle)
-    height += site_altitude
+    height = utils.range_to_height(ceilo.range, tilt_angle)
+    height += float(site_altitude)
     ceilo.data['height'] = CloudnetArray(height, 'height')
-
-
-def _calc_height(ceilo_range, tilt_angle):
-    return ceilo_range * np.cos(np.deg2rad(tilt_angle))
 
 
 def _append_data(ceilo, beta_variants):
@@ -555,19 +548,41 @@ def _save_ceilo(ceilo, output_file, location):
     rootgrp.close()
 
 
-def _values_to_dict(keys, values):
+def split_string(string, indices):
+    """Splits string between indices.
+
+    Notes:
+        It is possible to skip characters from the beginning and end of the
+        string but not from the middle.
+
+    Examples:
+        >>> s = 'abcde'
+        >>> indices = [1, 2, 4]
+        >>> split_string(s, indices)
+        ['b', 'cd']
+
+    """
+    return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
+
+
+def values_to_dict(keys, values):
+    """Converts list elements to dictionary.
+
+    Examples:
+        >>> keys = ('a', 'b')
+        >>> values = ([1, 2], [1, 2], [1, 2], [1, 2])
+        >>> values_to_dict(keys, values)
+        {'a': array([1, 1, 1, 1]), 'b': array([2, 2, 2, 2])}
+
+    """
     out = {}
     for i, key in enumerate(keys):
         out[key] = np.array([x[i] for x in values])
     return out
 
 
-def _split_string(string, indices):
-    """Splits string between indices."""
-    return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
-
-
 def find_first_empty_line(file_name):
+    """Finds first text file line that is empty."""
     line_number = 1
     with open(file_name) as file:
         for line in file:
@@ -586,14 +601,14 @@ def is_empty_line(line):
 
 def time_to_fraction_hour(time):
     """Returns time (hh:mm:ss) as fraction hour """
-    h, m, s = time.split(':')
-    return int(h) + (int(m) * SECONDS_IN_MINUTE + int(s)) / SECONDS_IN_HOUR
+    hour, minute, sec = time.split(':')
+    return int(hour) + (int(minute) * SECONDS_IN_MINUTE + int(sec)) / SECONDS_IN_HOUR
 
 
 def is_timestamp(string):
     """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss"""
-    r = re.compile(r'-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
-    if r.match(string) is not None:
+    reg_exp = re.compile(r'-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+    if reg_exp.match(string) is not None:
         return True
     return False
 

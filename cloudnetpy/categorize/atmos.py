@@ -38,9 +38,9 @@ def calc_lwc_change_rate(temperature, pressure):
     kelvin_per_kg = calc_psychrometric_constant(temperature)
     pressure_difference = pressure - svp
     f1 = kelvin_per_kg - 1
-    f2 = 1 / (kelvin_per_kg + (con.latent_heat * svp_mixing_ratio
+    f2 = 1 / (kelvin_per_kg + (con.LATENT_HEAT * svp_mixing_ratio
                                * air_density / pressure_difference))
-    f3 = con.mw_ratio * svp * pressure_difference**-2
+    f3 = con.MW_RATIO * svp * pressure_difference ** -2
     dqs_dp = f1 * f2 * f3
     dqs_dz = dqs_dp * air_density**2 * -scipy.constants.g
     return dqs_dz * KG_TO_G
@@ -76,7 +76,7 @@ def calc_mixing_ratio(svp, pressure):
         ndarray: Mixing ratio (kg kg-1).
 
     """
-    return con.mw_ratio * svp / (pressure-svp)
+    return con.MW_RATIO * svp / (pressure - svp)
 
 
 def calc_air_density(pressure, temperature, svp_mixing_ratio):
@@ -91,7 +91,7 @@ def calc_air_density(pressure, temperature, svp_mixing_ratio):
         ndarray: Air density (kg m-3).
 
     """
-    return pressure / (con.Rs * temperature * (0.6 * svp_mixing_ratio + 1))
+    return pressure / (con.RS * temperature * (0.6 * svp_mixing_ratio + 1))
 
 
 def calc_psychrometric_constant(pressure):
@@ -107,7 +107,7 @@ def calc_psychrometric_constant(pressure):
         ndarray: Psychrometric constant value (Pa K-1)
 
     """
-    return pressure*con.specific_heat / (con.latent_heat*con.mw_ratio)
+    return pressure * con.SPECIFIC_HEAT / (con.LATENT_HEAT * con.MW_RATIO)
 
 
 def calc_wet_bulb_temperature(model_data):
