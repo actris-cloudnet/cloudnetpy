@@ -51,10 +51,8 @@ def _create_dimension_variables(root_grp):
 
 
 def _create_global_attributes(root_grp, meta):
-    root_grp.year = meta['year']
-    root_grp.month = meta['month']
-    root_grp.day = meta['day']
-    root_grp.location = meta['location']
+    for key in ('year', 'month', 'day', 'location'):
+        setattr(root_grp, key, meta[key])
 
 
 def _create_variable(root_grp, name, value, units, dtype='f8', dim=('time',)):
