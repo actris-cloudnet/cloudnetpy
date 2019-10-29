@@ -66,7 +66,6 @@ class DataSource:
     def close(self):
         self.dataset.close()
 
-    # TODO: Unit test
     @staticmethod
     def km2m(var):
         """Converts km to m."""
@@ -75,7 +74,6 @@ class DataSource:
             alt *= 1000
         return alt
 
-    # TODO: Unit test
     @staticmethod
     def m2km(var):
         """Converts m to km."""
