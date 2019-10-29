@@ -15,12 +15,13 @@ def test_array():
 
 @pytest.fixture(scope='session')
 def file_metadata():
-    """Some example global variables to test file."""
+    """Some example global metadata to test file."""
     year, month, day = '2019', '05', '23'
     return {
         'year': year, 'month': month, 'day': day,
         'location': 'Kumpula',
-        'case_date': date(int(year), int(month), int(day))
+        'case_date': date(int(year), int(month), int(day)),
+        'altitude_km': 0.5,
     }
 
 
@@ -32,8 +33,9 @@ def nc_file(tmpdir_factory, file_metadata):
     _create_dimensions(root_grp)
     _create_dimension_variables(root_grp)
     _create_global_attributes(root_grp, file_metadata)
-    _create_variable(root_grp, 'altitude', 0.5, 'km', dim=[])
+    _create_variable(root_grp, 'altitude', file_metadata['altitude_km'], 'km', dim=[])
     _create_variable(root_grp, 'test_array', TEST_ARRAY, 'm s-1')
+    _create_variable(root_grp, 'range', TEST_ARRAY, 'km')
     root_grp.close()
     return file_name
 
@@ -48,6 +50,8 @@ def _create_dimension_variables(root_grp):
     for dim_name in DIMENSIONS:
         x = root_grp.createVariable(dim_name, 'f8', (dim_name,))
         x[:] = TEST_ARRAY
+        if dim_name == 'height':
+            x.units = 'm'
 
 
 def _create_global_attributes(root_grp, meta):

@@ -23,7 +23,6 @@ class DataSource:
     def __init__(self, filename):
         self.filename = os.path.basename(filename)
         self.dataset = netCDF4.Dataset(filename)
-        self.variables = self.dataset.variables
         self.source = getattr(self.dataset, 'source', '')
         self.time = self._init_time()
         self.altitude = self._init_altitude()
@@ -46,8 +45,8 @@ class DataSource:
 
         """
         for arg in args:
-            if arg in self.variables:
-                return self.variables[arg][:]
+            if arg in self.dataset.variables:
+                return self.dataset.variables[arg][:]
         raise RuntimeError('Missing variable in the input file.')
 
     def append_data(self, data, key, name=None, units=None):
@@ -90,8 +89,8 @@ class DataSource:
 
     def _init_altitude(self):
         """Returns altitude of the instrument (m)."""
-        if 'altitude' in self.variables:
-            altitude_above_sea = self.km2m(self.variables['altitude'])
+        if 'altitude' in self.dataset.variables:
+            altitude_above_sea = self.km2m(self.dataset.variables['altitude'])
             return float(altitude_above_sea)
         return None
 
@@ -107,7 +106,7 @@ class DataSource:
 
         """
         for key in fields:
-            self.append_data(self.variables[key], key)
+            self.append_data(self.dataset.variables[key], key)
 
     def _unknown_to_cloudnet(self, possible_names, key, units=None):
         """Transforms single netCDF4 variable into CloudnetArray.
@@ -142,7 +141,7 @@ class ProfileDataSource(DataSource):
 
     def _get_height(self):
         """Returns height array above mean sea level (m)."""
-        if 'height' in self.variables:
-            return self.km2m(self.variables['height'])
-        range_instrument = self.km2m(self.variables['range'])
+        if 'height' in self.dataset.variables:
+            return self.km2m(self.dataset.variables['height'])
+        range_instrument = self.km2m(self.dataset.variables['range'])
         return np.array(range_instrument + self.altitude)
