@@ -1,5 +1,4 @@
 import pytest
-import numpy as np
 from numpy.testing import assert_array_equal
 from cloudnetpy.plotting import plotting
 from datetime import date
@@ -53,16 +52,14 @@ def test_create_save_name(file_metadata):
 
 class TestReadAxValues:
 
-    result = np.arange(5)
+    def test_1(self, nc_file, test_array):
+        assert_array_equal(plotting._read_ax_values(nc_file)[0], test_array)
 
-    def test_1(self, nc_file):
-        assert_array_equal(plotting._read_ax_values(nc_file)[0], self.result)
+    def test_2(self, nc_file, test_array):
+        assert_array_equal(plotting._read_ax_values(nc_file)[1], test_array/1000)
 
-    def test_2(self, nc_file):
-        assert_array_equal(plotting._read_ax_values(nc_file)[1], self.result/1000)
+    def test_3(self, nc_file, test_array):
+        assert_array_equal(plotting._read_ax_values(nc_file, 'model')[0], test_array)
 
-    def test_3(self, nc_file):
-        assert_array_equal(plotting._read_ax_values(nc_file, 'model')[0], self.result)
-
-    def test_4(self, nc_file):
-        assert_array_equal(plotting._read_ax_values(nc_file, 'model')[1], self.result/1000)
+    def test_4(self, nc_file, test_array):
+        assert_array_equal(plotting._read_ax_values(nc_file, 'model')[1], test_array/1000)

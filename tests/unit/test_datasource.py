@@ -9,9 +9,9 @@ def test_init_altitude(nc_file):
     assert obj.altitude == 500
 
 
-def test_getvar(nc_file):
+def test_getvar(nc_file, test_array):
     obj = datasource.DataSource(nc_file)
-    assert_array_equal(obj.getvar('model_height'), np.arange(5))
+    assert_array_equal(obj.getvar('model_height'), test_array)
 
 
 def test_getvar_missing(nc_file):
@@ -20,9 +20,9 @@ def test_getvar_missing(nc_file):
         obj.getvar('not_existing_variable')
 
 
-def test_init_time(nc_file):
+def test_init_time(nc_file, test_array):
     obj = datasource.DataSource(nc_file)
-    assert_array_equal(obj.time, np.arange(5))
+    assert_array_equal(obj.time, test_array)
 
 
 class FakeProfileDataSource(datasource.ProfileDataSource):
