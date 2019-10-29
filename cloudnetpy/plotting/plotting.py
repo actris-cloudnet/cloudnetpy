@@ -142,7 +142,8 @@ def _get_relative_error(fields, ax_values, max_y):
 
 def _set_labels(fig, ax, nc_file):
     ax.set_xlabel('Time (UTC)', fontsize=13)
-    case_date, site_name = _read_case_date(nc_file)
+    case_date = _read_date(nc_file)
+    site_name = _read_location(nc_file)
     _add_subtitle(fig, case_date, site_name)
     return case_date
 
@@ -334,13 +335,20 @@ def _generate_log_cbar_ticklabel_list(vmin, vmax):
     return ['10$^{%s}$' % int(i) for i in np.arange(vmin, vmax+1)]
 
 
-def _read_case_date(nc_file):
+def _read_location(nc_file):
+    """Returns measurement date string."""
+    nc = netCDF4.Dataset(nc_file)
+    site_name = nc.location
+    nc.close()
+    return site_name
+
+
+def _read_date(nc_file):
     """Returns measurement date string."""
     nc = netCDF4.Dataset(nc_file)
     case_date = date(int(nc.year), int(nc.month), int(nc.day))
-    site_name = nc.location
     nc.close()
-    return case_date, site_name
+    return case_date
 
 
 def _add_subtitle(fig, case_date, site_name):
