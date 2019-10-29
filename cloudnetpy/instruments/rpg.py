@@ -278,8 +278,9 @@ def _stack_rpg_data(rpg_objects):
     return data, header
 
 
-def _reduce_header(header):
+def _reduce_header(header_in):
     """Removes duplicate header data."""
+    header = header_in.copy()
     for name in header:
         first_row = header[name][0]
         assert np.isclose(header[name], first_row).all(), f"Inconsistent header: {name}"
