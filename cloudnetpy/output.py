@@ -27,7 +27,7 @@ def save_product_file(short_id, obj, file_name, copy_from_cat=()):
     """Saves a standard Cloudnet product file."""
     identifier = _get_identifier(short_id)
     dimensions = {'time': len(obj.time),
-                  'height': len(obj.variables['height'])}
+                  'height': len(obj.dataset.variables['height'])}
     root_group = init_file(file_name, dimensions, obj.data)
     add_file_type(root_group, short_id)
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat

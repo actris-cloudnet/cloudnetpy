@@ -225,7 +225,7 @@ class Radar(ProfileDataSource):
             return np.percentile(z_power.compressed(), 0.1)
 
         z = self.data['Z'][:]
-        radar_range = self.km2m(self.variables['range'])
+        radar_range = self.km2m(self.dataset.variables['range'])
         log_range = utils.lin2db(radar_range, scale=20)
         z_power = z - log_range
         z_power_min = _calc_z_power_min()
@@ -257,9 +257,9 @@ class Radar(ProfileDataSource):
     # TODO: Reference unit-test
     def _get_folding_velocity(self):
         for key in ('nyquist_velocity', 'NyquistVelocity'):
-            if key in self.variables:
+            if key in self.dataset.variables:
                 return self.getvar(key)
-        if 'prf' in self.variables:
+        if 'prf' in self.dataset.variables:
             return float(self.getvar('prf') * scipy.constants.c
                          / (4 * self.radar_frequency * 1e9))
         raise RuntimeError('Unable to determine folding velocity')
@@ -382,7 +382,7 @@ class Model(DataSource):
             return CloudnetArray(datai, key, units)
 
         for key in self.fields_sparse:
-            variable = self.variables[key]
+            variable = self.dataset.variables[key]
             data = np.array(variable[:])
             units = variable.units
             if 'atten' in key:
@@ -428,7 +428,7 @@ class Model(DataSource):
 
     def _get_model_heights(self, alt_site):
         """Returns model heights for each time step."""
-        model_heights = self.variables['height']
+        model_heights = self.dataset.variables['height']
         if ma.count_masked(model_heights[:] > 0):
             raise RuntimeError('Masked values in the data file! Aborting..')
         return self.km2m(model_heights) + alt_site

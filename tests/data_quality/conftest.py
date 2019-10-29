@@ -17,15 +17,19 @@ def too_large_values(pytestconfig):
 
 
 def _test_limit(file_name, limit):
-    bad = []
+    bad = {}
     nc = netCDF4.Dataset(file_name)
     for var, limits in CONFIG.items('limits'):
         if var in nc.variables:
             limits = tuple(map(float, limits.split(',')))
-            if limit == 'upper' and np.max(nc.variables[var][:]) > limits[1]:
-                bad.append(var)
-            elif limit == 'lower' and np.min(nc.variables[var][:]) < limits[0]:
-                bad.append(var)
+            if limit == 'upper':
+                value = np.max(nc.variables[var][:])
+                if value > limits[1]:
+                    bad[var] = (np.max(nc.variables[var][:]), limits[1])
+            elif limit == 'lower':
+                value = np.min(nc.variables[var][:])
+                if value < limits[0]:
+                    bad[var] = (np.min(nc.variables[var][:]), limits[0])
     nc.close()
     return bad
 
@@ -35,7 +39,8 @@ def invalid_values(pytestconfig):
     bad = []
     nc = netCDF4.Dataset(pytestconfig.option.test_file)
     for key in nc.variables:
-        if np.isnan(nc.variables[key][:]).any():
+        var = nc.variables[key][:]
+        if np.isnan(var).any() or np.isnan(var).any():
             bad.append(key)
     nc.close()
     return bad
