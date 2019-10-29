@@ -1,6 +1,28 @@
 import numpy as np
 from numpy.testing import assert_array_equal
 from cloudnetpy.categorize import datasource
+import pytest
+
+
+def test_init_altitude(nc_file):
+    obj = datasource.DataSource(nc_file)
+    assert obj.altitude == 500
+
+
+def test_getvar(nc_file):
+    obj = datasource.DataSource(nc_file)
+    assert_array_equal(obj.getvar('model_height'), np.arange(5))
+
+
+def test_getvar_missing(nc_file):
+    obj = datasource.DataSource(nc_file)
+    with pytest.raises(RuntimeError):
+        obj.getvar('not_existing_variable')
+
+
+def test_init_time(nc_file):
+    obj = datasource.DataSource(nc_file)
+    assert_array_equal(obj.time, np.arange(5))
 
 
 class FakeProfileDataSource(datasource.ProfileDataSource):
@@ -26,5 +48,3 @@ def test_get_height_m():
 def test_get_height_km():
     obj = FakeProfileDataSource(np.array([1000, 2000, 3000]), 'm')
     assert_array_equal(obj.height, [1000, 2000, 3000])
-
-
