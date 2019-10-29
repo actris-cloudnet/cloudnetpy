@@ -31,3 +31,13 @@ def test_lin2db(x, result):
 def test_lin2db_raise():
     with pytest.raises(ValueError):
         drizzle.lin2db(-1)
+
+
+def test_get_drizzle_indices():
+    dia = np.array([-1, 2*1e-5, 1, 1e-6])
+    d = drizzle._get_drizzle_indices(dia)
+    correct = {'drizzle': [False, True, True, True],
+               'small': [False, True, False, False],
+               'tiny': [False, False, False, True]}
+    for key in d.keys():
+        assert_array_equal(d[key], correct[key])
