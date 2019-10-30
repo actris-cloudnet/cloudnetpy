@@ -63,7 +63,7 @@ def find_melting_layer(obs, smooth=True):
             try:
                 top, base = _basetop(ldr_dprof, ldr_peak)
                 if _is_good_ldr_peak(ldr_prof, v_prof, (base, ldr_peak, top)):
-                    melting_layer[ind, temp_indices[ldr_peak]:temp_indices[top]+1] = True
+                    melting_layer[ind, temp_indices[ldr_peak-1]:temp_indices[top]+1] = True
             except:
                 try:
                     top, base = _basetop(v_dprof, v_peak)
