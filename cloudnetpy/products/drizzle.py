@@ -554,8 +554,12 @@ COR = 10 / np.log(10)
 
 
 def db2lin(x):
+    if ma.max(x) > 100:
+        raise ValueError('Too large values in drizzle.db2lin()')
     return ma.exp(x / COR) - 1
 
 
 def lin2db(x):
+    if ma.min(x) < -0.9:
+        raise ValueError('Too small values in drizzle.lin2db()')
     return ma.log(x + 1) * COR

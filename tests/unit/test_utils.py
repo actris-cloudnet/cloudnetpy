@@ -1,9 +1,10 @@
 """ This module contains unit tests for utils-module. """
 import numpy as np
 import numpy.ma as ma
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 import pytest
 import re
+import datetime
 from cloudnetpy import utils
 
 
@@ -321,3 +322,59 @@ def test_get_site_information(site, args, result):
 def test_range_to_height(los_range, tilt_angle, result):
     height = utils.range_to_height(los_range, tilt_angle)
     assert_array_almost_equal(height, result)
+
+
+@pytest.mark.parametrize("input, result", [
+    ((1e-10,), -100),
+    ((1e-10, 1), -10),
+])
+def test_lin2db(input, result):
+    assert utils.lin2db(*input) == result
+
+
+@pytest.mark.parametrize("input, result", [
+    ((-100,), 1e-10),
+    ((-10, 1), 1e-10),
+])
+def test_db2lin(input, result):
+    assert utils.db2lin(*input) == result
+
+
+def test_time_grid():
+    assert_array_equal(utils.time_grid(3600), np.linspace(0.5, 23.5, 24))
+
+
+class TestRebin1D:
+    x = np.array([1.01, 2, 2.99, 4.01, 4.99, 6.01, 7])
+    xnew = np.array([2, 4, 6])
+    data = np.arange(1, 8)
+
+    def test_rebin_1d(self):
+        data_i = utils.rebin_1d(self.x, self.data, self.xnew)
+        result = np.array([2, 4.5, 6.5])
+        assert_array_almost_equal(data_i, result)
+
+    def test_rebin_1d_std(self):
+        data_i = utils.rebin_1d(self.x, self.data, self.xnew, 'std')
+        result = np.array([np.std([1, 2, 3]), np.std([4, 5]), np.std([6, 7])])
+        assert_array_almost_equal(data_i, result)
+
+
+@pytest.mark.parametrize("dtype", [
+    float, int, bool,
+])
+def test_init(dtype):
+    shape = (2, 3)
+    arrays = utils.init(3, shape, dtype=dtype)
+    for array in arrays:
+        assert array.shape == shape
+        assert array.dtype == dtype
+
+
+def test_date_range():
+    start_date = datetime.date(2019, 2, 27)
+    end_date = datetime.date(2019, 3, 3)
+    result = ['2019-02-27', '2019-02-28', '2019-03-01', '2019-03-02']
+    date_range = utils.date_range(start_date, end_date)
+    for d, res in zip(date_range, result):
+        assert str(d) == res
