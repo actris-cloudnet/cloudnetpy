@@ -4,12 +4,11 @@ radar / lidar measurements.
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
-from scipy.ndimage.filters import gaussian_filter
 from scipy.interpolate import interp1d
 from cloudnetpy import utils
-from cloudnetpy.categorize import droplet, atmos
+from cloudnetpy.categorize import droplet
 from cloudnetpy.constants import T0
-from cloudnetpy.categorize import melting
+from cloudnetpy.categorize import melting, insects, falling
 
 
 def fetch_quality(radar, lidar, classification, attenuations):
@@ -72,8 +71,8 @@ def classify_measurements(radar, lidar, model, mwr):
     bits[3] = melting.find_melting_layer(obs)
     bits[2] = find_freezing_region(obs, bits[3])
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
-    bits[5], insect_prob = find_insects(obs, bits[3], bits[0])
-    bits[1] = find_falling_hydrometeors(obs, bits[0], bits[5])
+    bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
+    bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4] = find_aerosols(obs, bits[1], bits[0])
     return ClassificationResult(_bits_to_integer(bits),
                                 obs.is_rain,
@@ -148,166 +147,6 @@ def find_t0_alt(temperature, height):
             x, y = zip(*sorted(zip(x, y)))
             alt = np.append(alt, np.interp(T0, x, y))
     return alt
-
-
-def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
-    """Returns insect probability and boolean array of insect presence.
-
-    Insects are classified by estimating heuristic probability
-    of insects from various individual radar parameters and combining
-    these probabilities. Insects typically yield small echo and spectral width
-    but high linear depolarization ratio (ldr), and they are present in warm
-    temperatures.
-
-    The combination of echo, ldr and temperature is generally the best proxy
-    for insects. If ldr is not available, we use other radar parameters.
-
-    Insects are finally screened from liquid layers and melting layer - and
-    above melting layer.
-
-    Args:
-        obs (_ClassData): Input data container.
-        melting_layer (ndarray): 2D array denoting melting layer.
-        liquid_layers (ndarray): 2D array denoting liquid layers.
-        prob_lim (float, optional): Probability higher than
-            this will lead to positive detection. Default is 0.8.
-
-    Returns:
-        2-element tuple containing
-
-        - ndarray: 2-D probability of pixel containing insects.
-        - ndarray: 2-D boolean flag of insects presence.
-
-    """
-    probabilities = _insect_probability(obs)
-    insect_prob = _screen_insects(*probabilities, melting_layer, liquid_layers, obs)
-    is_insects = insect_prob > prob_lim
-    return is_insects, ma.masked_where(insect_prob == 0, insect_prob)
-
-
-def _insect_probability(obs):
-    def _interpolate_lwp():
-        ind = ma.where(obs.lwp)
-        return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
-
-    def _get_smoothed_v():
-        smoothed_v = gaussian_filter(obs.v, (5, 5))
-        smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
-        return smoothed_v
-
-    def _get_probabilities():
-        smooth_v = _get_smoothed_v()
-        lwp_interp = _interpolate_lwp()
-        fun = utils.array_to_probability
-        return {
-            'width': fun(obs.width, 1, 0.3, True),
-            'z': fun(obs.z, -15, 8, True),
-            'ldr': fun(obs.ldr, -20, 5),
-            'temp_loose': fun(obs.tw, 268, 2),
-            'temp_strict': fun(obs.tw, 274, 1),
-            'v': fun(smooth_v, -2.5, 2),
-            'lwp': utils.transpose(fun(lwp_interp, 150, 50, invert=True)),
-            'v_sigma': fun(obs.v_sigma, 0.01, 0.1)
-        }
-    prob = _get_probabilities()
-    prob_combined = prob['z'] * prob['temp_loose'] * prob['ldr']
-    prob_no_ldr = prob['z'] * prob['temp_strict'] * prob['v'] * prob['width']
-    if 'mira' in obs.radar_type.lower():
-        prob_no_ldr *= prob['lwp']
-    no_ldr = np.where(prob_combined == 0)
-    prob_combined[no_ldr] = prob_no_ldr[no_ldr]
-    return prob_combined, prob_no_ldr
-
-
-def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers, obs):
-    def _screen_liquid_layers():
-        prob[liquid_layers == 1] = 0
-
-    def _screen_above_melting():
-        above_melting = utils.ffill(melting_layer)
-        prob[above_melting == 1] = 0
-
-    def _screen_above_liquid():
-        above_liquid = utils.ffill(liquid_layers)
-        prob[(above_liquid == 1) & (insect_prob_no_ldr > 0)] = 0
-
-    def _screen_rainy_profiles():
-        prob[obs.is_rain == 1, :] = 0
-
-    prob = np.copy(insect_prob)
-    _screen_liquid_layers()
-    _screen_above_melting()
-    _screen_above_liquid()
-    _screen_rainy_profiles()
-    return prob
-
-
-def find_falling_hydrometeors(obs, is_liquid, is_insects):
-    """Finds falling hydrometeors.
-
-    Falling hydrometeors are radar signals that are
-    a) not insects b) not clutter. Furthermore, falling hydrometeors
-    are strong lidar pixels excluding liquid layers (thus these pixels
-    are ice or rain). They are also weak radar signals in very cold
-    temperatures.
-
-    Args:
-        obs (_ClassData): Container for observations.
-        is_liquid (ndarray): 2-D boolean array of liquid droplets.
-        is_insects (ndarray): 2-D boolean array of insects.
-
-    Returns:
-        ndarray: 2-D boolean array containing falling hydrometeors.
-
-    """
-    def _find_falling_from_radar():
-        is_z = ~obs.z.mask
-        no_clutter = ~obs.is_clutter
-        no_insects = ~is_insects
-        return is_z & no_clutter & no_insects
-
-    def _find_falling_from_lidar():
-        strong_beta_limit = 2e-6
-        return (obs.beta.data > strong_beta_limit) & ~is_liquid
-
-    def _find_cold_aerosols():
-        """Lidar signals which are in colder than the
-        threshold temperature and have gap below in the profile
-        are probably ice."""
-        temperature_limit = T0 - 15
-        is_beta = ~obs.beta.mask
-        region = utils.ffill(is_beta, 1) == 0
-        return is_beta & (obs.tw < temperature_limit) & ~is_liquid & region
-
-    def _fix_liquid_dominated_radar():
-        """Radar signals inside liquid clouds are NOT ice if Z in cloud is
-        increasing in height."""
-
-        def _is_z_missing_above_liquid():
-            if top == obs.z.shape[1] - 1:
-                return False
-            return obs.z.mask[n, top+1]
-
-        def _is_z_increasing():
-            z = obs.z[n, base+1:top].compressed()
-            if len(z) > 1:
-                return z[-1] > z[0]
-            return False
-
-        liquid_bases = atmos.find_cloud_bases(is_liquid)
-        liquid_tops = atmos.find_cloud_tops(is_liquid)
-        base_indices = np.where(liquid_bases)
-        top_indices = np.where(liquid_tops)
-
-        for n, base, _, top in zip(*base_indices, *top_indices):
-            if _is_z_missing_above_liquid() and _is_z_increasing():
-                falling_from_radar[n, base:top+1] = False
-
-    falling_from_radar = _find_falling_from_radar()
-    _fix_liquid_dominated_radar()
-    falling_from_lidar = _find_falling_from_lidar()
-    cold_aerosols = _find_cold_aerosols()
-    return falling_from_radar | falling_from_lidar | cold_aerosols
 
 
 def find_aerosols(obs, is_falling, is_liquid):

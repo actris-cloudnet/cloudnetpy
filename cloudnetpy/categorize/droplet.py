@@ -74,7 +74,7 @@ def find_liquid(obs, peak_amp=1e-6,
         liquid_top[n, top] = True
         liquid_base[n, base] = True
 
-    lwp_int = _interpolate_lwp(obs)
+    lwp_int = interpolate_lwp(obs)
     beta = ma.copy(obs.beta)
 
     # TODO: append zero-row into data instead of setting first values to zero.
@@ -226,7 +226,7 @@ def _find_strong_peaks(data, threshold):
     return peaks[0][strong_peaks], peaks[1][strong_peaks]
 
 
-def _interpolate_lwp(obs):
+def interpolate_lwp(obs):
     """Linear interpolation of liquid water path to fill masked values."""
     ind = ma.where(obs.lwp)
     return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
