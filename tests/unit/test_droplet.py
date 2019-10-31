@@ -93,7 +93,7 @@ def test_intepolate_lwp():
             self.lwp_orig = np.linspace(1, 11, 11)
             self.lwp = ma.masked_where(self.lwp_orig % 2 == 0, self.lwp_orig)
     obs = Obs()
-    lwp_interpolated = droplet._interpolate_lwp(obs)
+    lwp_interpolated = droplet.interpolate_lwp(obs)
     assert_array_equal(obs.lwp_orig, lwp_interpolated)
 
 
