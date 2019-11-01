@@ -1,15 +1,35 @@
 """ This module contains unit tests for classify-module. """
 import numpy as np
-from numpy.testing import assert_array_almost_equal
+import numpy.ma as ma
+from numpy.testing import assert_array_equal
 from cloudnetpy.categorize import classify
-from cloudnetpy.constants import T0
 
 
-def test_find_t0_alt():
-    temperature = np.array([[290, 280, T0, 260],
-                           [320, T0+10, T0-10, 220],
-                           [240, 230, 220, 210]])
-    height = np.array([10, 20, 30, 40])
-    res = [30, 25, 10]
-    cnet = classify.find_t0_alt(temperature, height)
-    assert_array_almost_equal(cnet, res)
+class Obs:
+    def __init__(self):
+        self.beta = ma.array([[1, 1], [1, 1], [1, 1], [1, 1]],
+                             mask=[[0, 0], [0, 0], [1, 1], [1, 1]])
+
+
+def test_find_aerosols():
+    obs = Obs()
+    is_falling = np.array([[1, 0], [1, 0], [1, 0], [1, 0]])
+    is_liquid = np.array([[1, 0], [0, 1], [1, 0], [0, 1]])
+    result = np.array([[0, 1], [0, 0], [0, 0], [0, 0]])
+    assert_array_equal(classify._find_aerosols(obs, is_falling, is_liquid), result)
+
+
+def test_bits_to_integer():
+    b0 = [[1, 0, 0, 0, 1, 1, 1, 1, 0, 1],
+          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+    b1 = [[0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
+          [1, 0, 1, 0, 0, 0, 0, 0, 0, 0]]
+    b2 = [[0, 0, 1, 0, 0, 1, 1, 1, 0, 0],
+          [1, 1, 1, 0, 0, 0, 0, 0, 0, 0]]
+    b3 = [[0, 0, 0, 1, 0, 0, 1, 0, 1, 1],
+          [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]]
+    bits = [b0, b1, b2, b3]
+    re = [[1, 2, 4, 8, 3, 7, 15, 5, 10, 9],
+          [6, 12, 14, 0, 0, 0, 0, 0, 0, 0]]
+    assert_array_equal(classify._bits_to_integer(bits), re)
+

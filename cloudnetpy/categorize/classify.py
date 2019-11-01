@@ -4,11 +4,9 @@ radar / lidar measurements.
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
-from scipy.interpolate import interp1d
 from cloudnetpy import utils
 from cloudnetpy.categorize import droplet
-from cloudnetpy.constants import T0
-from cloudnetpy.categorize import melting, insects, falling
+from cloudnetpy.categorize import melting, insects, falling, freezing
 
 
 def fetch_quality(radar, lidar, classification, attenuations):
@@ -69,11 +67,11 @@ def classify_measurements(radar, lidar, model, mwr):
     bits = [None] * 6
     liquid = droplet.find_liquid(obs)
     bits[3] = melting.find_melting_layer(obs)
-    bits[2] = find_freezing_region(obs, bits[3])
+    bits[2] = freezing.find_freezing_region(obs, bits[3])
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
     bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
-    bits[4] = find_aerosols(obs, bits[1], bits[0])
+    bits[4] = _find_aerosols(obs, bits[1], bits[0])
     return ClassificationResult(_bits_to_integer(bits),
                                 obs.is_rain,
                                 obs.is_clutter,
@@ -82,74 +80,7 @@ def classify_measurements(radar, lidar, model, mwr):
                                 find_profiles_with_undetected_melting(bits))
 
 
-def find_freezing_region(obs, melting_layer):
-    """Finds freezing region using the model temperature and melting layer.
-
-    Every profile that contains melting layer, subzero region starts from
-    the mean melting layer height. If there are (long) time windows where
-    no melting layer is present, model temperature is used in the
-    middle of the time window. Finally, the subzero altitudes are linearly
-    interpolated for all profiles.
-
-    Args:
-        obs (_ClassData): Input data container.
-        melting_layer (ndarray): 2-D boolean array denoting melting layer.
-
-    Returns:
-        ndarray: 2-D boolean array denoting the sub-zero region.
-
-    Notes:
-        It is not clear how model temperature and melting layer should be
-        ideally combined to determine the sub-zero region.
-
-    """
-    is_freezing = np.zeros(obs.tw.shape, dtype=bool)
-    n_time = obs.time.shape[0]
-    t0_alt = find_t0_alt(obs.tw, obs.height)
-    alt_array = np.tile(obs.height, (n_time, 1))
-    melting_alts = ma.array(alt_array, mask=~melting_layer)
-    mean_melting_alt = ma.median(melting_alts, axis=1)
-    freezing_alt = ma.copy(mean_melting_alt)
-    for ind in (0, -1):
-        freezing_alt[ind] = mean_melting_alt[ind] or t0_alt[ind]
-    win = utils.n_elements(obs.time, 240, 'time')  # 4h window
-    mid_win = int(win/2)
-    for n in range(n_time-win):
-        if mean_melting_alt[n:n+win].mask.all():
-            freezing_alt[n+mid_win] = t0_alt[n+mid_win]
-    ind = ~freezing_alt.mask
-    f = interp1d(obs.time[ind], freezing_alt[ind])
-    for ii, alt in enumerate(f(obs.time)):
-        is_freezing[ii, obs.height > alt] = True
-    return is_freezing
-
-
-def find_t0_alt(temperature, height):
-    """ Interpolates altitudes where temperature goes below freezing.
-
-    Args:
-        temperature (ndarray): 2-D temperature (K).
-        height (ndarray): 1-D altitude grid (m).
-
-    Returns:
-        ndarray: 1-D array denoting altitudes where the
-            temperature drops below 0 deg C.
-
-    """
-    alt = np.array([])
-    for prof in temperature:
-        ind = np.where(prof < T0)[0][0]
-        if ind == 0:
-            alt = np.append(alt, height[0])
-        else:
-            x = prof[ind-1:ind+1]
-            y = height[ind-1:ind+1]
-            x, y = zip(*sorted(zip(x, y)))
-            alt = np.append(alt, np.interp(T0, x, y))
-    return alt
-
-
-def find_aerosols(obs, is_falling, is_liquid):
+def _find_aerosols(obs, is_falling, is_liquid):
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
