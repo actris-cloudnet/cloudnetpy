@@ -40,7 +40,7 @@ def _find_falling_from_radar(obs, is_insects):
 def _find_falling_from_lidar(obs, is_liquid):
     is_beta = ~obs.beta.mask
     strong_beta_limit = 2e-6
-    return is_beta & (obs.beta > strong_beta_limit) & ~is_liquid
+    return is_beta & (obs.beta.data > strong_beta_limit) & ~is_liquid
 
 
 def _find_cold_aerosols(obs, is_liquid):
@@ -50,7 +50,7 @@ def _find_cold_aerosols(obs, is_liquid):
     temperature_limit = T0 - 15
     is_beta = ~obs.beta.mask
     region = utils.ffill(is_beta, 1) == 0
-    return is_beta & (obs.tw < temperature_limit) & ~is_liquid & region
+    return is_beta & (obs.tw.data < temperature_limit) & ~is_liquid & region
 
 
 def _fix_liquid_dominated_radar(obs, falling_from_radar, is_liquid):

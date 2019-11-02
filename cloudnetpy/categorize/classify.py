@@ -77,7 +77,7 @@ def classify_measurements(radar, lidar, model, mwr):
                                 obs.is_clutter,
                                 insect_prob,
                                 liquid['bases'],
-                                find_profiles_with_undetected_melting(bits))
+                                _find_profiles_with_undetected_melting(bits))
 
 
 def _find_aerosols(obs, is_falling, is_liquid):
@@ -98,17 +98,35 @@ def _find_aerosols(obs, is_falling, is_liquid):
     return is_beta & ~is_falling & ~is_liquid
 
 
-def find_profiles_with_undetected_melting(bits):
-    is_falling = bits[1] & ~bits[0]
-    is_drizzle = is_falling & ~bits[2]
-    drizzle_and_falling = is_falling.astype(int) + is_drizzle.astype(int)
-    drizzle_and_falling[drizzle_and_falling == 0] = ma.masked
+def _find_profiles_with_undetected_melting(bits):
+    drizzle_and_falling = _find_drizzle_and_falling(*bits[:3])
     transition = ma.diff(drizzle_and_falling, axis=1)
     is_transition = ma.any(transition, axis=1)
     is_melting_layer = ma.any(bits[3], axis=1)
     is_undetected_melting = is_transition & ~is_melting_layer
     is_undetected_melting[is_undetected_melting == 0] = ma.masked
     return is_undetected_melting.astype(int)
+
+
+def _find_drizzle_and_falling(is_liquid, is_falling, is_freezing):
+    """Classifies pixels as falling, drizzle and others.
+
+    Args:
+        is_liquid (ndarray): 2D boolean array denoting liquid layers.
+        is_falling (ndarray): 2D boolean array denoting falling pixels.
+        is_freezing (ndarray): 2D boolean array denoting subzero temperatures.
+
+    Returns:
+        MaskedArray: 2D array where values are 1 (falling), 2 (drizzle), and
+            masked (all others).
+
+    """
+    falling_dry = is_falling & ~is_liquid
+    drizzle = falling_dry & ~is_freezing
+    drizzle_and_falling = falling_dry.astype(int) + drizzle.astype(int)
+    drizzle_and_falling = ma.copy(drizzle_and_falling)
+    drizzle_and_falling[drizzle_and_falling == 0] = ma.masked
+    return drizzle_and_falling
 
 
 def _bits_to_integer(bits):

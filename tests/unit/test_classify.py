@@ -69,3 +69,50 @@ def test_find_clutter():
     result = np.zeros(v.shape)
     result[:3, 5] = 1
     assert_array_equal(classify._find_clutter(v, is_rain), result)
+
+
+def test_find_drizzle_and_falling():
+    is_liquid = np.array([[0, 0, 1, 1, 0, 0],
+                          [0, 0, 1, 0, 0, 0]])
+
+    is_falling = np.array([[0, 1, 1, 1, 1, 0],
+                           [0, 0, 1, 1, 1, 1]])
+
+    is_freezing = np.array([[0, 0, 0, 1, 1, 1],
+                            [0, 0, 0, 0, 1, 1]])
+
+    result = ma.array([[0, 2, 0, 0, 1, 0],
+                       [0, 0, 0, 2, 1, 1]],
+                      mask=[[1, 0, 1, 1, 0, 1],
+                            [1, 1, 1, 0, 0, 0]])
+
+    assert_array_equal(classify._find_drizzle_and_falling(is_liquid, is_falling,
+                                                          is_freezing), result)
+
+
+def test_find_profiles_with_undetected_melting():
+    is_liquid = np.array([[0, 0, 1, 1, 0, 0],
+                          [0, 0, 1, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 0]])
+
+    is_falling = np.array([[0, 1, 1, 1, 1, 0],
+                           [0, 0, 1, 1, 1, 1],
+                           [1, 1, 1, 1, 1, 1],
+                           [1, 1, 1, 1, 1, 1]])
+
+    is_freezing = np.array([[0, 0, 0, 1, 1, 1],
+                            [0, 0, 0, 0, 1, 1],
+                            [0, 0, 0, 1, 1, 1],
+                            [0, 0, 0, 0, 0, 0]])
+
+    is_melting = np.array([[0, 0, 0, 1, 0, 0],
+                           [0, 0, 0, 0, 0, 0],
+                           [0, 0, 0, 0, 0, 0],
+                           [0, 0, 0, 0, 0, 0]])
+
+    result = np.array([0, 1, 1, 0])
+    bits = [is_liquid, is_falling, is_freezing, is_melting]
+    undetected = classify._find_profiles_with_undetected_melting(bits)
+    assert_array_equal(undetected.data, result)
+
