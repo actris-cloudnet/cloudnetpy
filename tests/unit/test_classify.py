@@ -33,3 +33,24 @@ def test_bits_to_integer():
           [6, 12, 14, 0, 0, 0, 0, 0, 0, 0]]
     assert_array_equal(classify._bits_to_integer(bits), re)
 
+
+class TestFindRain:
+    time = np.linspace(0, 24, 2880)  # 30 s resolution
+    z = np.zeros((len(time), 10))
+
+    def test_1(self):
+        result = np.zeros(len(self.time))
+        assert_array_equal(classify._find_rain(self.z, self.time), result)
+
+    def test_2(self):
+        self.z[:, 3] = 0.1
+        result = np.ones(len(self.time))
+        assert_array_equal(classify._find_rain(self.z, self.time), result)
+
+    def test_3(self):
+        self.z[5, 3] = 0.1
+        result = np.ones(len(self.time))
+        result[3:7] = 1
+        assert_array_equal(classify._find_rain(self.z, self.time,
+                                               time_buffer=1), result)
+

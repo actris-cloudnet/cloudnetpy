@@ -145,29 +145,8 @@ class _ClassData:
         self.height = radar.height
         self.model_type = model.type
         self.radar_type = radar.type
-        self.is_rain = self._find_rain()
         self.is_clutter = self._find_clutter()
-
-    def _find_rain(self, time_buffer=5):
-        """Find profiles affected by rain.
-
-        Rain is present in such profiles where the radar echo in
-        the third range gate is > 0 dB. To make sure we do not include any
-        rainy profiles, we also flag a few profiles before and after
-        detections as raining.
-
-        Args:
-            time_buffer (int): Time in minutes.
-
-        """
-        is_rain = ma.array(self.z[:, 3] > 0, dtype=bool).filled(False)
-        n_profiles = len(self.time)
-        n_steps = utils.n_elements(self.time, time_buffer, 'time')
-        for ind in np.where(is_rain)[0]:
-            ind1 = max(0, ind - n_steps)
-            ind2 = min(ind + n_steps, n_profiles)
-            is_rain[ind1:ind2 + 1] = True
-        return is_rain
+        self.is_rain = _find_rain(self.z, self.time)
 
     def _find_clutter(self, n_gates=10, v_lim=0.05):
         """Estimates clutter from doppler velocity.
@@ -186,6 +165,30 @@ class _ClassData:
         tiny_velocity = (np.abs(self.v[:, :n_gates]) < v_lim).filled(False)
         is_clutter[:, :n_gates] = tiny_velocity * utils.transpose(~self.is_rain)
         return is_clutter
+
+
+def _find_rain(z, time, time_buffer=5):
+    """Find profiles affected by rain.
+
+    Rain is present in such profiles where the radar echo in
+    the third range gate is > 0 dB. To make sure we do not include any
+    rainy profiles, we also flag a few profiles before and after
+    detections as raining.
+
+    Args:
+        z (ndarray): Radar echo.
+        time (ndarray): Time vector.
+        time_buffer (int): Time in minutes.
+
+    """
+    is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(False)
+    n_profiles = len(time)
+    n_steps = utils.n_elements(time, time_buffer, 'time')
+    for ind in np.where(is_rain)[0]:
+        ind1 = max(0, ind - n_steps)
+        ind2 = min(ind + n_steps, n_profiles)
+        is_rain[ind1:ind2 + 1] = True
+    return is_rain
 
 
 ClassificationResult = namedtuple('ClassificationResult', ['category_bits',
