@@ -63,7 +63,7 @@ def find_liquid(obs, peak_amp=1e-6,
 
     """
     def _is_proper_peak():
-        conditions = (npoints > min_points,
+        conditions = (npoints >= min_points,
                       peak_width < max_width,
                       top_der > min_top_der,
                       is_positive_lwp)
