@@ -103,7 +103,7 @@ def _get_temp_indices(t_prof, t_range):
     """Finds indices of temperature profile covering the given range."""
     bottom_point = np.where(t_prof < (T0 - t_range[0]))[0][0]
     top_point = np.where(t_prof > (T0 + t_range[0]))[0]
-    top_point = top_point[-1] if len(top_point) > 0 else 0
+    top_point = top_point[-1] if top_point.size > 0 else 0
     return np.arange(bottom_point, top_point + 1)
 
 
