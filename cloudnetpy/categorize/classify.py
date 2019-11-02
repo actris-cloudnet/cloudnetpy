@@ -145,26 +145,8 @@ class _ClassData:
         self.height = radar.height
         self.model_type = model.type
         self.radar_type = radar.type
-        self.is_clutter = self._find_clutter()
         self.is_rain = _find_rain(self.z, self.time)
-
-    def _find_clutter(self, n_gates=10, v_lim=0.05):
-        """Estimates clutter from doppler velocity.
-
-        Args:
-            n_gates (int, optional): Number of range gates from the ground
-                where clutter is expected to be found. Default is 10.
-            v_lim (float, optional): Velocity threshold. Smaller values are
-                classified as clutter. Default is 0.05 (m/s).
-
-        Returns:
-            ndarray: 2-D boolean array denoting pixels contaminated by clutter.
-
-        """
-        is_clutter = np.zeros(self.v.shape, dtype=bool)
-        tiny_velocity = (np.abs(self.v[:, :n_gates]) < v_lim).filled(False)
-        is_clutter[:, :n_gates] = tiny_velocity * utils.transpose(~self.is_rain)
-        return is_clutter
+        self.is_clutter = _find_clutter(self.v, self.is_rain)
 
 
 def _find_rain(z, time, time_buffer=5):
@@ -189,6 +171,25 @@ def _find_rain(z, time, time_buffer=5):
         ind2 = min(ind + n_steps, n_profiles)
         is_rain[ind1:ind2 + 1] = True
     return is_rain
+
+
+def _find_clutter(v, is_rain, n_gates=10, v_lim=0.05):
+    """Estimates clutter from doppler velocity.
+
+        Args:
+            n_gates (int, optional): Number of range gates from the ground
+                where clutter is expected to be found. Default is 10.
+            v_lim (float, optional): Velocity threshold. Smaller values are
+                classified as clutter. Default is 0.05 (m/s).
+
+        Returns:
+            ndarray: 2-D boolean array denoting pixels contaminated by clutter.
+
+        """
+    is_clutter = np.zeros(v.shape, dtype=bool)
+    tiny_velocity = (np.abs(v[:, :n_gates]) < v_lim).filled(False)
+    is_clutter[:, :n_gates] = tiny_velocity * utils.transpose(~is_rain)
+    return is_clutter
 
 
 ClassificationResult = namedtuple('ClassificationResult', ['category_bits',

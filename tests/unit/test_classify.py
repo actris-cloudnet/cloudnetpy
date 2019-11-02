@@ -54,3 +54,18 @@ class TestFindRain:
         assert_array_equal(classify._find_rain(self.z, self.time,
                                                time_buffer=1), result)
 
+    def test_4(self):
+        self.z[1440, 3] = 0.1
+        result = np.ones(len(self.time))
+        assert_array_equal(classify._find_rain(self.z, self.time,
+                                               time_buffer=1500), result)
+
+
+def test_find_clutter():
+    is_rain = np.array([0, 0, 0, 1, 1], dtype=bool)
+    v = np.ones((5, 12)) * 0.1
+    v = ma.array(v)
+    v[:, 5] = 0.04
+    result = np.zeros(v.shape)
+    result[:3, 5] = 1
+    assert_array_equal(classify._find_clutter(v, is_rain), result)
