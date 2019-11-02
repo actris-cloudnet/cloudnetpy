@@ -132,3 +132,34 @@ def test_correct_liquid_top():
     liquid['presence'][2, :] = [0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
     assert_array_equal(corrected, liquid['presence'])
 
+
+def test_find_liquid():
+    class Obs:
+        def __init__(self):
+            self.height = np.arange(6)*100
+            self.time = np.arange(3)
+            self.lwp = ma.array(range(3))
+            self.beta = ma.array([[1e-8, 1e-8, 2e-6, 1e-3, 5e-6, 1e-8],
+                                  [1e-8, 1e-8, 1e-5, 1e-3, 1e-5, 1e-8],
+                                  [1e-8, 1e-8, 1e-5, 1e-3, 1e-5, 1e-8]],
+                                 mask=[[0, 0, 0, 0, 0, 0],
+                                       [0, 0, 0, 0, 0, 0],
+                                       [0, 0, 0, 0, 0, 0]])
+
+    bases = np.array([[0, 0, 1, 0, 0, 0],
+                      [0, 0, 1, 0, 0, 0],
+                      [0, 0, 1, 0, 0, 0]])
+
+    tops = np.array([[0, 0, 0, 0, 1, 0],
+                     [0, 0, 0, 0, 1, 0],
+                     [0, 0, 0, 0, 1, 0]])
+
+    is_liquid = np.array([[0, 0, 1, 1, 1, 0],
+                          [0, 0, 1, 1, 1, 0],
+                          [0, 0, 1, 1, 1, 0]])
+
+    obs = Obs()
+    result = droplet.find_liquid(obs)
+    assert_array_equal(bases, result['bases'])
+    assert_array_equal(tops, result['tops'])
+    assert_array_equal(is_liquid, result['presence'])
