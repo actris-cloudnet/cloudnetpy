@@ -65,5 +65,3 @@ def test_copy_variables(tmpdir_factory, fake_nc_file):
     output.copy_variables(source, root_grp, var_list)
     for var in var_list:
         assert source.variables[var][:] == root_grp.variables[var][:]
-
-
