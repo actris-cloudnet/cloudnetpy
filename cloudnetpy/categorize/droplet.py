@@ -219,14 +219,14 @@ def ind_top(dprof, ind_peak, nprof, dist, lim):
     return ind_peak + np.where(diffs < diffs[mind] / lim)[0][-1] + 1
 
 
+def interpolate_lwp(obs):
+    """Linear interpolation of liquid water path to fill masked values."""
+    ind = ma.where(obs.lwp)
+    return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
+
+
 def _find_strong_peaks(data, threshold):
     """Finds local maximums from data (greater than *threshold*)."""
     peaks = scipy.signal.argrelextrema(data, np.greater, order=4, axis=1)
     strong_peaks = np.where(data[peaks] > threshold)
     return peaks[0][strong_peaks], peaks[1][strong_peaks]
-
-
-def interpolate_lwp(obs):
-    """Linear interpolation of liquid water path to fill masked values."""
-    ind = ma.where(obs.lwp)
-    return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
