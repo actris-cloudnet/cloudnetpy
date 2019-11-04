@@ -13,7 +13,7 @@ def fake_nc_file(tmpdir_factory):
     """Creates a simple categorize for testing."""
     file_name = tmpdir_factory.mktemp("data").join("nc_file.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    n_time, n_height = 5, 3
+    n_time, n_height = 5, 4
     root_grp.createDimension('time', n_time)
     root_grp.createDimension('height', n_height)
     var = root_grp.createVariable('time', 'f8', 'time')
@@ -23,11 +23,11 @@ def fake_nc_file(tmpdir_factory):
     var = root_grp.createVariable('var_float_scalar', 'f8')
     var[:] = 1.0
     var = root_grp.createVariable('2d_array', 'f8', ('time', 'height'))
-    var[:] = np.array([[1, 1, 1],
-                       [2, 2, 2],
-                       [3, 3, 3],
-                       [4, 4, 4],
-                       [5, 5, 5]])
+    var[:] = np.array([[1, 1, 1, 1],
+                       [2, 2, 2, 1],
+                       [3, 3, 3, 1],
+                       [4, 4, 4, 1],
+                       [5, 5, 5, 1]])
     root_grp.close()
     return file_name
 
@@ -103,6 +103,20 @@ def test_rebin_data(fake_nc_file):
     time = np.array([1, 2, 3, 4, 5])
     time_new = np.array([2.1, 4.1])
     obj.rebin_data(time, time_new)
-    result = np.array([[2.5, 2.5, 2.5],
-                       [4.5, 4.5, 4.5]])
+    result = np.array([[2.5, 2.5, 2.5, 1],
+                       [4.5, 4.5, 4.5, 1]])
+    assert_array_equal(obj.data, result)
+
+
+def test_rebin_data_2d(fake_nc_file):
+    nc = netCDF4.Dataset(fake_nc_file)
+    test_var = nc.variables['2d_array']
+    obj = CloudnetArray(test_var, 'test_name')
+    time = np.array([1, 2, 3, 4, 5])
+    time_new = np.array([2.1, 4.1])
+    height = np.array([1, 2, 3, 4])
+    height_new = np.array([2.1, 4.1])
+    obj.rebin_data(time, time_new, height, height_new)
+    result = np.array([[2.5, 1],
+                       [4.5, 1]])
     assert_array_equal(obj.data, result)
