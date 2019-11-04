@@ -90,5 +90,18 @@ def test_interpolate_to_common_height(fake_model_file):
     obj = model.Model(str(fake_model_file), ALT_SITE)
     radar_wl_band = 0
     obj.interpolate_to_common_height(radar_wl_band)
-    for key in ('uwind', 'vwind', 'q'):
+    for key in ('uwind', 'vwind', 'q', 'temperature', 'pressure', 'rh',
+                'gas_atten', 'specific_gas_atten', 'specific_saturated_gas_atten',
+                'specific_liquid_atten'):
         assert key in obj.data_sparse
+
+
+def test_interpolate_to_grid(fake_model_file):
+    obj = model.Model(str(fake_model_file), ALT_SITE)
+    radar_wl_band = 0
+    obj.interpolate_to_common_height(radar_wl_band)
+    time_grid = np.array([1,3])
+    height_grid = np.array([1, 3])
+    obj.interpolate_to_grid(time_grid, height_grid)
+    assert_array_equal(obj.height, height_grid)
+    assert hasattr(obj, 'data_dense')
