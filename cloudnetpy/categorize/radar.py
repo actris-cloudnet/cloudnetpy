@@ -2,7 +2,7 @@
 import math
 import numpy as np
 import numpy.ma as ma
-import scipy.constants
+from scipy import constants
 from cloudnetpy.categorize import ProfileDataSource
 from cloudnetpy import utils
 
@@ -62,11 +62,11 @@ class Radar(ProfileDataSource):
 
     def remove_incomplete_pixels(self):
         """Removes pixels where some of the (required) variables are existing."""
-        good_ind = (~self.data['Z'][:].mask
-                    & ~self.data['width'][:].mask
-                    & ~self.data['v'][:].mask)
+        good_ind = (~ma.getmaskarray(self.data['Z'][:])
+                    & ~ma.getmaskarray(self.data['width'][:])
+                    & ~ma.getmaskarray(self.data['v'][:]))
         for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
-            self.data[key][:][~good_ind] = ma.masked
+            self.data[key].mask_indices(~good_ind)
 
     def filter_speckle_noise(self):
         """Removes speckle noise from radar data."""
@@ -153,6 +153,11 @@ class Radar(ProfileDataSource):
             if key in self.dataset.variables:
                 return self.getvar(key)
         if 'prf' in self.dataset.variables:
-            return float(self.getvar('prf') * scipy.constants.c
-                         / (4 * self.radar_frequency * 1e9))
+            prf = self.getvar('prf')
+            return _prf_to_folding_velocity(prf, self.radar_frequency)
         raise RuntimeError('Unable to determine folding velocity')
+
+
+def _prf_to_folding_velocity(prf, radar_frequency):
+    ghz_to_hz = 1e9
+    return float(prf * constants.c / (4*radar_frequency*ghz_to_hz))
