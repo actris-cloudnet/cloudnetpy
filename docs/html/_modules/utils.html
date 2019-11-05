@@ -191,11 +191,11 @@
     <span class="sd">&quot;&quot;&quot;Returns decimal hour array between 0 and 24.</span>
 
 <span class="sd">    Computes fraction hour time vector 0-24 with user-given</span>
-<span class="sd">    resolution (in seconds) where 60 is the maximum allowed value.</span>
+<span class="sd">    resolution (in seconds).</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        time_step (int, optional): Time resolution in seconds between</span>
-<span class="sd">            1 and 60. Default is 30.</span>
+<span class="sd">        time_step (int, optional): Time resolution in seconds, greater</span>
+<span class="sd">            than 1. Default is 30.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        ndarray: Time vector between 0 and 24.</span>
@@ -204,8 +204,8 @@
 <span class="sd">        ValueError: Bad resolution as input.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">time_step</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">time_step</span> <span class="o">&gt;</span> <span class="mi">60</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Time resolution should be between 0 and 60 [s]&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">time_step</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Time resolution should be &gt;= 1 seconds&#39;</span><span class="p">)</span>
     <span class="n">half_step</span> <span class="o">=</span> <span class="n">time_step</span><span class="o">/</span><span class="n">SECONDS_PER_HOUR</span><span class="o">/</span><span class="mi">2</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">half_step</span><span class="p">,</span> <span class="mi">24</span><span class="o">+</span><span class="n">half_step</span><span class="p">,</span> <span class="n">half_step</span><span class="o">*</span><span class="mi">2</span><span class="p">)</span></div>
 
@@ -761,6 +761,19 @@
     <span class="n">prob</span><span class="p">[</span><span class="n">ind</span><span class="p">]</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="n">ind</span><span class="p">],</span> <span class="n">loc</span><span class="o">=</span><span class="n">loc</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">prob</span></div>
 
+
+<div class="viewcode-block" id="range_to_height"><a class="viewcode-back" href="../api.html#utils.range_to_height">[docs]</a><span class="k">def</span> <span class="nf">range_to_height</span><span class="p">(</span><span class="n">range_los</span><span class="p">,</span> <span class="n">tilt_angle</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts distances from a tilted instrument to height above the ground.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        range_los (ndarray): Distances towards the line of sign from the</span>
+<span class="sd">            instrument.</span>
+<span class="sd">        tilt_angle (float): Angle in degrees from the zenith.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Altitudes of the LOS points.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">range_los</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">tilt_angle</span><span class="p">))</span></div>
 </pre></div>
 
            </div>

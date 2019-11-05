@@ -682,201 +682,6 @@ time / height grid before calling this function.</p>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="categorize.classify.find_melting_layer">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_melting_layer</code><span class="sig-paren">(</span><em>obs</em>, <em>smooth=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_melting_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_melting_layer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds melting layer from model temperature, ldr, and velocity.</p>
-<p>Melting layer is detected using linear depolarization ratio, <em>ldr</em>,
-Doppler velocity, <em>v</em>, and wet-bulb temperature, <em>Tw</em>.</p>
-<p>The algorithm is based on <em>ldr</em> having a clear Gaussian peak around
-the melting layer. This signature is caused by the growth of ice
-crystals into snowflakes that are much larger. In addition, when snow and
-ice melt, emerging heavy water droplets start to drop rapidly towards
-ground. Thus, there is also a similar positive peak in the
-first difference of <em>v</em>.</p>
-<p>The peak in <em>ldr</em> is the primary parameter we analyze. If
-<em>ldr</em> has a proper peak, and <em>v</em> &lt; -1 m/s in the base, melting layer
-has been found. If <em>ldr</em> is missing we only analyze the behaviour
-of <em>v</em>, which is always present, to detect the melting layer.</p>
-<p>Model temperature is used to limit the melting layer search to a certain
-temperature range around 0 C. For ECMWF the range is -4..+3, and for
-the rest -8..+6.</p>
-<p class="rubric">Notes</p>
-<p>There might be some detection problems with strong updrafts of air.
-In these cases the absolute values for speed do not make sense (rain
-drops can even move upwards instead of down).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
-<li><strong>smooth</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, apply a small
-Gaussian smoother to the melting layer. Default is True.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the melting layer.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_freezing_region">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_freezing_region</code><span class="sig-paren">(</span><em>obs</em>, <em>melting_layer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_freezing_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_freezing_region" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds freezing region using the model temperature and melting layer.</p>
-<p>Every profile that contains melting layer, subzero region starts from
-the mean melting layer height. If there are (long) time windows where
-no melting layer is present, model temperature is used in the
-middle of the time window. Finally, the subzero altitudes are linearly
-interpolated for all profiles.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
-<li><strong>melting_layer</strong> (<em>ndarray</em>) – 2-D boolean array denoting melting layer.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array denoting the sub-zero region.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Notes</p>
-<p>It is not clear how model temperature and melting layer should be
-ideally combined to determine the sub-zero region.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_t0_alt">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_t0_alt</code><span class="sig-paren">(</span><em>temperature</em>, <em>height</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_t0_alt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_t0_alt" title="Permalink to this definition">¶</a></dt>
-<dd><p>Interpolates altitudes where temperature goes below freezing.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>temperature</strong> (<em>ndarray</em>) – 2-D temperature (K).</li>
-<li><strong>height</strong> (<em>ndarray</em>) – 1-D altitude grid (m).</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">1-D array denoting altitudes where the
-temperature drops below 0 deg C.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_insects">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_insects</code><span class="sig-paren">(</span><em>obs</em>, <em>melting_layer</em>, <em>liquid_layers</em>, <em>prob_lim=0.8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_insects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_insects" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns insect probability and boolean array of insect presence.</p>
-<p>Insects are classified by estimating heuristic probability
-of insects from various individual radar parameters and combining
-these probabilities. Insects typically yield small echo and spectral width
-but high linear depolarization ratio (ldr), and they are present in warm
-temperatures.</p>
-<p>The combination of echo, ldr and temperature is generally the best proxy
-for insects. If ldr is not available, we use other radar parameters.</p>
-<p>Insects are finally screened from liquid layers and melting layer - and
-above melting layer.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Input data container.</li>
-<li><strong>melting_layer</strong> (<em>ndarray</em>) – 2D array denoting melting layer.</li>
-<li><strong>liquid_layers</strong> (<em>ndarray</em>) – 2D array denoting liquid layers.</li>
-<li><strong>prob_lim</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability higher than
-this will lead to positive detection. Default is 0.8.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><p>2-element tuple containing</p>
-<ul class="simple">
-<li>ndarray: 2-D probability of pixel containing insects.</li>
-<li>ndarray: 2-D boolean flag of insects presence.</li>
-</ul>
-</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_falling_hydrometeors">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_falling_hydrometeors</code><span class="sig-paren">(</span><em>obs</em>, <em>is_liquid</em>, <em>is_insects</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_falling_hydrometeors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_falling_hydrometeors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds falling hydrometeors.</p>
-<p>Falling hydrometeors are radar signals that are
-a) not insects b) not clutter. Furthermore, falling hydrometeors
-are strong lidar pixels excluding liquid layers (thus these pixels
-are ice or rain). They are also weak radar signals in very cold
-temperatures.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
-<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
-<li><strong>is_insects</strong> (<em>ndarray</em>) – 2-D boolean array of insects.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing falling hydrometeors.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="categorize.classify.find_aerosols">
-<code class="descclassname">categorize.classify.</code><code class="descname">find_aerosols</code><span class="sig-paren">(</span><em>obs</em>, <em>is_falling</em>, <em>is_liquid</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#find_aerosols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.find_aerosols" title="Permalink to this definition">¶</a></dt>
-<dd><p>Estimates aerosols from lidar backscattering.</p>
-<p>Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>_ClassData</em>) – Container for observations.</li>
-<li><strong>is_falling</strong> (<em>ndarray</em>) – 2-D boolean array of falling hydrometeors.</li>
-<li><strong>is_liquid</strong> (<em>ndarray</em>) – 2-D boolean array of liquid droplets.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">2-D boolean array containing aerosols.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="class">
 <dt id="categorize.classify.ClassificationResult">
 <em class="property">class </em><code class="descclassname">categorize.classify.</code><code class="descname">ClassificationResult</code><span class="sig-paren">(</span><em>category_bits</em>, <em>is_rain</em>, <em>is_clutter</em>, <em>insect_prob</em>, <em>liquid_bases</em>, <em>is_undetected_melting</em><span class="sig-paren">)</span><a class="headerlink" href="#categorize.classify.ClassificationResult" title="Permalink to this definition">¶</a></dt>
@@ -1265,6 +1070,35 @@ theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</p>
 <span id="cloudnetpy-categorize-droplet"></span><h3>cloudnetpy.categorize.droplet<a class="headerlink" href="#module-categorize.droplet" title="Permalink to this headline">¶</a></h3>
 <p>This module has functions for liquid layer detection.</p>
 <dl class="function">
+<dt id="categorize.droplet.correct_liquid_top">
+<code class="descclassname">categorize.droplet.</code><code class="descname">correct_liquid_top</code><span class="sig-paren">(</span><em>obs</em>, <em>liquid</em>, <em>is_freezing</em>, <em>limit=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#correct_liquid_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.correct_liquid_top" title="Permalink to this definition">¶</a></dt>
+<dd><p>Corrects lidar detected liquid cloud top using radar data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
+<li><strong>liquid</strong> (<em>dict</em>) – Dictionary about liquid clouds including ‘tops’ and
+‘presence’.</li>
+<li><strong>is_freezing</strong> (<em>ndarray</em>) – 2-D boolean array of sub-zero temperature,
+derived from the model temperature and melting layer based
+on radar data.</li>
+<li><strong>limit</strong> (<em>float</em>) – The maximum correction distance (m) above liquid cloud top.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Corrected liquid cloud array.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="categorize.droplet.find_liquid">
 <code class="descclassname">categorize.droplet.</code><code class="descname">find_liquid</code><span class="sig-paren">(</span><em>obs</em>, <em>peak_amp=1e-06</em>, <em>max_width=300</em>, <em>min_points=3</em>, <em>min_top_der=1e-07</em>, <em>min_lwp=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#find_liquid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.find_liquid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Estimate liquid layers from SNR-screened attenuated backscattering.</p>
@@ -1298,7 +1132,7 @@ measured by the mwr. Default is 0.</li>
 
 <dl class="function">
 <dt id="categorize.droplet.ind_base">
-<code class="descclassname">categorize.droplet.</code><code class="descname">ind_base</code><span class="sig-paren">(</span><em>dprof</em>, <em>p</em>, <em>dist</em>, <em>lim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#ind_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.ind_base" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">categorize.droplet.</code><code class="descname">ind_base</code><span class="sig-paren">(</span><em>dprof</em>, <em>ind_peak</em>, <em>dist</em>, <em>lim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#ind_base"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.ind_base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds base index of a peak in profile.</p>
 <p>Return the lowermost index of profile where 1st order differences
 below the peak exceed a threshold value.</p>
@@ -1310,8 +1144,8 @@ below the peak exceed a threshold value.</p>
 <li><strong>dprof</strong> (<em>ndarray</em>) – 1-D array of 1st discrete difference.
 Masked values should be 0, e.g. dprof =
 np.diff(masked_prof).filled(0)</li>
-<li><strong>p</strong> (<em>int</em>) – Index of (possibly local) peak in the original profile.
-Note that the peak must be found with some other method prior
+<li><strong>ind_peak</strong> (<em>int</em>) – Index of (possibly local) peak in the original profile.
+Note that the peak must be found with some other method before
 calling this function.</li>
 <li><strong>dist</strong> (<em>int</em>) – Number of elements investigated below <em>p</em>.
 If ( <em>p</em> - <em>dist</em>)&lt;0, search starts from index 0.</li>
@@ -1327,7 +1161,11 @@ accept some other point, lower in the profile.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Base index of the peak.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">int</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">IndexError</span></code> – Can’t find proper base index (probably too many masked
+values in the profile).</p>
 </td>
 </tr>
 </tbody>
@@ -1339,12 +1177,12 @@ accept some other point, lower in the profile.</li>
 </div>
 <p>that contains one bad, masked value</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mx</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked_array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-<span class="go">    [0 0.5, 1.0, --, 4.0, 8.0, 5.0]</span>
+<span class="go">    [0, 0.5, 1.0, --, 4.0, 8.0, 5.0]</span>
 </pre></div>
 </div>
 <p>The 1st order difference is now</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">dx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">mx</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-<span class="go">    [0.5 0.5,  0. ,  0. ,  4. , -3. ]</span>
+<span class="go">    [0.5, 0.5, 0, 0, 4, -3]</span>
 </pre></div>
 </div>
 <p>From the original profile we see that the peak index is 5.
@@ -1368,7 +1206,7 @@ Changing the threshold value would alter the result</p>
 
 <dl class="function">
 <dt id="categorize.droplet.ind_top">
-<code class="descclassname">categorize.droplet.</code><code class="descname">ind_top</code><span class="sig-paren">(</span><em>dprof</em>, <em>p</em>, <em>nprof</em>, <em>dist</em>, <em>lim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#ind_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.ind_top" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">categorize.droplet.</code><code class="descname">ind_top</code><span class="sig-paren">(</span><em>dprof</em>, <em>ind_peak</em>, <em>nprof</em>, <em>dist</em>, <em>lim</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#ind_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.ind_top" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds top index of a peak in profile.</p>
 <p>Return the uppermost index of profile where 1st order differences
 above the peak exceed a threshold value.</p>
@@ -1382,8 +1220,8 @@ Masked values should be 0, e.g. dprof =
 np.diff(masked_prof).filled(0)</li>
 <li><strong>nprof</strong> (<em>int</em>) – Length of the profile. Top index can’t be higher
 than this.</li>
-<li><strong>p</strong> (<em>int</em>) – Index of (possibly local) peak in the profile.
-Note that the peak must be found with some other method prior
+<li><strong>ind_peak</strong> (<em>int</em>) – Index of (possibly local) peak in the profile.
+Note that the peak must be found with some other method before
 calling this function.</li>
 <li><strong>dist</strong> (<em>int</em>) – Number of elements investigated above <em>p</em>.
 If (<em>p</em> + <em>dist</em>) &gt; <em>nprof</em>, search ends to <em>nprof</em>.</li>
@@ -1399,7 +1237,11 @@ accept some other point, higher in the profile.</li>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Top index of the peak.</p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">int</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal notranslate"><span class="pre">IndexError</span></code> – Can not find proper top index (probably too many masked
+values in the profile).</p>
 </td>
 </tr>
 </tbody>
@@ -1411,35 +1253,9 @@ accept some other point, higher in the profile.</li>
 </dd></dl>
 
 <dl class="function">
-<dt id="categorize.droplet.correct_liquid_top">
-<code class="descclassname">categorize.droplet.</code><code class="descname">correct_liquid_top</code><span class="sig-paren">(</span><em>obs</em>, <em>liquid</em>, <em>is_freezing</em>, <em>limit=200</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#correct_liquid_top"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.correct_liquid_top" title="Permalink to this definition">¶</a></dt>
-<dd><p>Corrects lidar detected liquid cloud top using radar data.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obs</strong> (<em>ClassData</em>) – Observations container.</li>
-<li><strong>liquid</strong> (<em>dict</em>) – Dictionary for liquid clouds.</li>
-<li><strong>is_freezing</strong> (<em>ndarray</em>) – 2-D boolean array of sub-zero temperature,
-derived from the model temperature and melting layer based
-on radar data.</li>
-<li><strong>limit</strong> (<em>float</em>) – The maximum correction distance (m) above liquid cloud top.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Corrected liquid cloud array.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">droplet.find_liquid()</p>
-</div>
+<dt id="categorize.droplet.interpolate_lwp">
+<code class="descclassname">categorize.droplet.</code><code class="descname">interpolate_lwp</code><span class="sig-paren">(</span><em>obs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/droplet.html#interpolate_lwp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.droplet.interpolate_lwp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear interpolation of liquid water path to fill masked values.</p>
 </dd></dl>
 
 </div>
@@ -1779,13 +1595,13 @@ that starts on midnight.</td>
 <code class="descclassname">utils.</code><code class="descname">time_grid</code><span class="sig-paren">(</span><em>time_step=30</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#time_grid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.time_grid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns decimal hour array between 0 and 24.</p>
 <p>Computes fraction hour time vector 0-24 with user-given
-resolution (in seconds) where 60 is the maximum allowed value.</p>
+resolution (in seconds).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time resolution in seconds between
-1 and 60. Default is 30.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_step</strong> (<em>int</em><em>, </em><em>optional</em>) – Time resolution in seconds, greater
+than 1. Default is 30.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Time vector between 0 and 24.</td>
 </tr>
@@ -2419,6 +2235,31 @@ probability and vice versa. Default is False.</li>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Probability.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="utils.range_to_height">
+<code class="descclassname">utils.</code><code class="descname">range_to_height</code><span class="sig-paren">(</span><em>range_los</em>, <em>tilt_angle</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#range_to_height"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.range_to_height" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts distances from a tilted instrument to height above the ground.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>range_los</strong> (<em>ndarray</em>) – Distances towards the line of sign from the
+instrument.</li>
+<li><strong>tilt_angle</strong> (<em>float</em>) – Angle in degrees from the zenith.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Altitudes of the LOS points.</p>
 </td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
