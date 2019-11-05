@@ -1,6 +1,7 @@
 from cloudnetpy import output
 import pytest
 import netCDF4
+from cloudnetpy.instruments import ceilo
 
 
 @pytest.mark.parametrize("short_id, result", [
@@ -21,6 +22,13 @@ def test_get_identifier_raise():
 class RootGrp:
     def __init__(self):
         self.cloudnet_file_type = None
+        self.history = None
+        self.dataset = History()
+
+
+class History:
+    def __init__(self):
+        self.history = None
 
 
 def test_add_file_type():
@@ -65,3 +73,15 @@ def test_copy_variables(tmpdir_factory, fake_nc_file):
     output.copy_variables(source, root_grp, var_list)
     for var in var_list:
         assert source.variables[var][:] == root_grp.variables[var][:]
+
+
+def test_merge_history():
+    root = RootGrp()
+    file_type = 'dummy'
+    source1 = RootGrp()
+    source1.dataset.history = 'some history x'
+    source2 = RootGrp()
+    source2.dataset.history = 'some history y'
+    output.merge_history(root, file_type, source1, source2)
+    assert ceilo.is_timestamp(f"-{root.history[:19]}") is True
+    assert root.history[19:] == ' - dummy file created\nsome history x\nsome history y'
