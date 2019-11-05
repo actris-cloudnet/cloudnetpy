@@ -124,7 +124,7 @@ class DataSource:
         array = self.getvar(*possible_names)
         self.append_data(array, key, units=units)
 
-# TODO: kokeillaan tälle uuden fake datasourcen luomista
+
 class ProfileDataSource(DataSource):
     """ProfileDataSource class, child of DataSource.
 

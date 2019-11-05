@@ -40,21 +40,6 @@ def nc_file(tmpdir_factory, file_metadata):
     return file_name
 
 
-@pytest.fixture(scope='session')
-def cat_file(tmpdir_factory, file_metadata):
-    """Creates a simple netCDF file for testing."""
-    file_name = tmpdir_factory.mktemp("data").join("file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    _create_dimensions(root_grp)
-    _create_dimension_variables(root_grp)
-    _create_global_attributes(root_grp, file_metadata)
-    _create_variable(root_grp, 'altitude', file_metadata['altitude_km'], 'km', dim=[])
-    _create_variable(root_grp, 'test_array', TEST_ARRAY, 'm s-1')
-    _create_variable(root_grp, 'range', TEST_ARRAY, 'km')
-    root_grp.close()
-    return file_name
-
-
 def _create_dimensions(root_grp):
     n_dim = len(TEST_ARRAY)
     for dim_name in DIMENSIONS:
