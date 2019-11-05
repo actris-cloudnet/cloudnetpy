@@ -1,13 +1,11 @@
 """ Functions for rebinning input data."""
-import numpy as np
-import numpy.ma as ma
-from scipy.interpolate import interp1d
-from cloudnetpy import output, utils, CloudnetArray
+from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos, classify
 from cloudnetpy.metadata import MetaData
-from cloudnetpy.categorize import DataSource, ProfileDataSource
+from cloudnetpy.categorize import ProfileDataSource
 from cloudnetpy.categorize.radar import Radar
 from cloudnetpy.categorize.model import Model
+from cloudnetpy.categorize.mwr import Mwr
 
 
 def generate_categorize(input_files, output_file):
@@ -147,36 +145,6 @@ class Lidar(ProfileDataSource):
         self.append_data(self.wavelength, 'lidar_wavelength')
         self.append_data(0.5, 'beta_error')
         self.append_data(3, 'beta_bias')
-
-
-class Mwr(DataSource):
-    """Microwave radiometer class, child of DataSource.
-
-    Args:
-         mwr_file (str): File name of the calibrated mwr file.
-
-    """
-    def __init__(self, mwr_file):
-        super().__init__(mwr_file)
-        self._init_lwp_data()
-        self._init_lwp_error()
-
-    def rebin_to_grid(self, time_grid):
-        """Rebinning of lwp and its error."""
-        for key in self.data:
-            self.data[key].rebin_1d_data(self.time, time_grid)
-
-    def _init_lwp_data(self):
-        # TODO: How to deal with negative LWP values?
-        lwp = self.getvar('LWP_data', 'lwp')
-        lwp[lwp < 0] = 0
-        self.append_data(lwp, 'lwp', units='g m-2')
-
-    def _init_lwp_error(self):
-        # TODO: Check these error values
-        random_error, bias = 0.25, 50
-        lwp_error = utils.l2norm(self.data['lwp'][:]*random_error, bias)
-        self.append_data(lwp_error, 'lwp_error', units='g m-2')
 
 
 COMMENTS = {
