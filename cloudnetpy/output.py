@@ -40,6 +40,9 @@ def save_product_file(short_id, obj, file_name, copy_from_cat=()):
 
 
 def _get_identifier(short_id):
+    valid_ids = ('lwc', 'iwc', 'drizzle', 'classification')
+    if short_id not in valid_ids:
+        raise ValueError('Invalid product id.')
     if short_id == 'iwc':
         return 'ice water content'
     elif short_id == 'lwc':

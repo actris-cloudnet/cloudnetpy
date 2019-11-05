@@ -19,6 +19,7 @@ def test_find_model_temperature_range(model, result):
     (np.array([290, 280, 270, 275, 260, 250, 240]), (-10, 10), [1, 2, 3]),
     (np.array([270, 275, 260, 250, 240]), (-10, 10), [0, 1]),
     (np.array([220, 210, 200]), (-10, 10), [0]),
+    (np.array([280, 270, 260]), (-5, 2), [1]),
     (np.linspace(275, 270, 10), (-4, -3), range(10))
 ])
 def test_get_temp_indices(t_prof, t_range, result):

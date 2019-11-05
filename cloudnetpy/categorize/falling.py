@@ -40,41 +40,46 @@ def _find_falling_from_radar(obs, is_insects):
 def _find_falling_from_lidar(obs, is_liquid):
     is_beta = ~obs.beta.mask
     strong_beta_limit = 2e-6
-    return is_beta & (obs.beta > strong_beta_limit) & ~is_liquid
+    return is_beta & (obs.beta.data > strong_beta_limit) & ~is_liquid
 
 
 def _find_cold_aerosols(obs, is_liquid):
-    """Lidar signals which are in colder than the
-    threshold temperature and have gap below in the profile
-    are probably ice."""
+    """Lidar signals which are in colder than the threshold temperature and
+    have gap below in the profile are probably ice.
+    """
     temperature_limit = T0 - 15
     is_beta = ~obs.beta.mask
     region = utils.ffill(is_beta, 1) == 0
-    return is_beta & (obs.tw < temperature_limit) & ~is_liquid & region
+    return is_beta & (obs.tw.data < temperature_limit) & ~is_liquid & region
 
 
 def _fix_liquid_dominated_radar(obs, falling_from_radar, is_liquid):
-    """Radar signals inside liquid clouds are NOT ice if Z in cloud is
-    increasing in height."""
-
-    def _is_z_missing_above_liquid():
-        if top == obs.z.shape[1] - 1:
-            return False
-        return obs.z.mask[n, top+1]
-
-    def _is_z_increasing():
-        z = obs.z[n, base+1:top].compressed()
-        if len(z) > 1:
-            return z[-1] > z[0]
-        return False
-
+    """Radar signals inside liquid clouds are NOT ice if Z is
+    increasing in height inside the cloud.
+    """
     liquid_bases = atmos.find_cloud_bases(is_liquid)
     liquid_tops = atmos.find_cloud_tops(is_liquid)
     base_indices = np.where(liquid_bases)
     top_indices = np.where(liquid_tops)
 
     for n, base, _, top in zip(*base_indices, *top_indices):
-        if _is_z_missing_above_liquid() and _is_z_increasing():
+        z_prof = obs.z[n, :]
+        if _is_z_missing_above_liquid(z_prof, top) and _is_z_increasing(z_prof, base, top):
             falling_from_radar[n, base:top+1] = False
 
     return falling_from_radar
+
+
+def _is_z_missing_above_liquid(z, ind_top):
+    """Checks is z is masked right above the liquid layer top."""
+    if ind_top == len(z) - 1:
+        return False
+    return z.mask[ind_top+1]
+
+
+def _is_z_increasing(z, ind_base, ind_top):
+    """Checks is z is increasing inside the liquid cloud."""
+    z = z[ind_base:ind_top+1].compressed()
+    if len(z) > 1:
+        return z[-1] > z[0]
+    return False
