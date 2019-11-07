@@ -1,15 +1,16 @@
 import numpy as np
+from numpy import testing
 import pytest
 import netCDF4
 from cloudnetpy.products.iwc import IwcSource
 
 
 DIMENSIONS = ('time', 'height', 'model_time', 'model_height')
-TEST_ARRAY = np.arange(5)  # Simple array for all dimension and variables
+TEST_ARRAY = np.arange(3)
 
 
 @pytest.fixture(scope='session')
-def iwcsource_file(tmpdir_factory, file_metadata):
+def iwc_source_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     _create_dimensions(root_grp)
@@ -19,13 +20,11 @@ def iwcsource_file(tmpdir_factory, file_metadata):
     var.units = 'km'
 
     var = root_grp.createVariable('radar_frequency', 'f8')
-    var[:] = 35.5 # Miten testata useampi vaihtoehto, 30-40 tai suurempaa
+    var[:] = 35.5  # TODO: How to check with multiple options
     var = root_grp.createVariable('temperature', 'f8', ('time', 'height'))
-    var[:] = np.array([[280, 290, 278, 293, 276],
-                       [280, 290, 278, 293, 276],
-                      [280, 290, 278, 293, 276],
-                       [280, 290, 278, 293, 276],
-                       [280, 290, 278, 293, 276]])
+    var[:] = np.array([[282, 280, 278],
+                       [286, 284, 282],
+                      [284, 282, 280]])
     root_grp.close()
     return file_name
 
@@ -44,33 +43,42 @@ def _create_dimension_variables(root_grp):
             x.units = 'm'
 
 
-def test_iwc_wl_band(iwcsource_file):
-    obj = IwcSource(iwcsource_file)
+def test_iwc_wl_band(iwc_source_file):
+    obj = IwcSource(iwc_source_file)
     compare = 0
     assert compare == obj.wl_band
 
 
-def test_iwc_z_factor(iwcsource_file):
-    obj = IwcSource(iwcsource_file)
-    assert True
-
-
-def test_iwc_spec_liq_atten(iwcsource_file):
-    obj = IwcSource(iwcsource_file)
+def test_iwc_spec_liq_atten(iwc_source_file):
+    obj = IwcSource(iwc_source_file)
     compare = 1
     assert compare == obj.spec_liq_atten
 
 
-def test_iwc_coeffs(iwcsource_file):
-    obj = IwcSource(iwcsource_file)
+"""
+# How to test these?
+def test_iwc_z_factor(iwc_source_file):
+    obj = IwcSource(iwc_source_file)
     assert True
 
 
-def test_iwc_temperature(iwcsource_file):
-    obj = IwcSource(iwcsource_file)
+def test_iwc_coeffs(iwc_source_file):
+    obj = IwcSource(iwc_source_file)
     assert True
+"""
 
 
-def test_iwc_mean_temperature(iwcsource_file):
-    obj = IwcSource(iwcsource_file)
-    assert True
+def test_iwc_temperature(iwc_source_file):
+    # TODO: test with different model grid
+    obj = IwcSource(iwc_source_file)
+    compare = np.array([[8.85, 6.85, 4.85],
+                       [12.85, 10.85, 8.85],
+                      [10.85, 8.85, 6.85]])
+    testing.assert_almost_equal(compare, obj.temperature)
+
+
+def test_iwc_mean_temperature(iwc_source_file):
+    # TODO: test with different model grid
+    obj = IwcSource(iwc_source_file)
+    compare = np.array([10.85, 8.85, 6.85])
+    testing.assert_almost_equal(compare, obj.mean_temperature)
