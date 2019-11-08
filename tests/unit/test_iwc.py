@@ -82,3 +82,46 @@ def test_iwc_mean_temperature(iwc_source_file):
     obj = IwcSource(iwc_source_file)
     compare = np.array([10.85, 8.85, 6.85])
     testing.assert_almost_equal(compare, obj.mean_temperature)
+
+
+@pytest.fixture(scope='session')
+def iwc_cat_file(tmpdir_factory, file_metadata):
+    file_name = tmpdir_factory.mktemp("data").join("file.nc")
+    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
+    n_points = 7
+    root_grp.createDimension('time', n_points)
+    var = root_grp.createVariable('time', 'f8', 'time')
+    var[:] = np.arange(n_points)
+    var = root_grp.createVariable('category_bits', 'i4', 'time')
+    var[:] = [0, 1, 2, 4, 8, 16, 32]
+    var = root_grp.createVariable('quality_bits', 'i4', 'time')
+    var[:] = [0, 1, 2, 4, 8, 16, 32]
+    root_grp.close()
+    return file_name
+
+
+def test_find_ice(iwc_cat_file):
+    assert True
+
+
+def test_find_would_be_ice(iwc_cat_file):
+    assert True
+
+
+def test_find_corrected_ice(iwc_cat_file):
+    assert True
+
+
+def test_find_uncorrected_ice(iwc_cat_file):
+    assert True
+
+
+def test_find_ice_above_rain(iwc_cat_file):
+    assert True
+
+
+def test_find_cold_above_rain(iwc_cat_file):
+    assert True
+
+
+
