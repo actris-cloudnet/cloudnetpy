@@ -23,14 +23,15 @@ bibliography: paper.bib
 
 # Summary
 
-Active ground-based remote sensing instruments provide vertical profiles of 
-clouds and aerosols with high vertical and temporal resolution. Cloud radars 
-typically operate in the sub-millimeter wavelength region, around 35 or 94 GHz, 
+Active ground-based remote sensing instruments such as cloud radars and lidars
+provide vertical profiles of clouds and aerosols with high vertical and 
+temporal resolution. Cloud radars typically operate in the sub-millimeter 
+wavelength region, around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds and aerosols. 
 Combining these two supplementary data sources with temperature and humidity 
-from a numerical weather prediction model, it is possible to classify 
-the various scattering objects of the atmosphere.
+from a numerical weather prediction model makes it is possible to classify 
+various scattering objects of the atmosphere.
 Furthermore, adding a passive microwave radiometer, an instrument measuring 
 liquid water path, quantitative retrievals of geophysical 
 products such as ice water content, liquid water content 
