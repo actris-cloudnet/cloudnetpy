@@ -45,10 +45,10 @@ to regularly collect, process and distribute Cloudnet data (http://cloudnet.fmi.
 While the methodology is valid, more robust and operational processing 
 software is called for. In the forthcoming years, Cloudnet will be one of 
 the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
-Infrastructure) [@ACTRIS_handbook], where Cloudnet framework 
-is used to process gigabytes of cloud remote sensing data per day in near real time. 
-ACTRIS is moving into implementation phase in 2020 and is supposed 
-to be fully operational in 2025.
+Infrastructure) [@ACTRIS_handbook], where the Cloudnet framework 
+is utilized to process gigabytes of cloud remote sensing data per day 
+in near real time. ACTRIS is moving into implementation phase in 2020 
+and is supposed to be fully operational in 2025.
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers the full Cloudnet processing chain starting from the raw 
