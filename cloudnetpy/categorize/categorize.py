@@ -1,11 +1,11 @@
-""" Functions for rebinning input data."""
+"""Module that generates Cloudnet categorize file."""
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos, classify
 from cloudnetpy.metadata import MetaData
-from cloudnetpy.categorize import ProfileDataSource
 from cloudnetpy.categorize.radar import Radar
 from cloudnetpy.categorize.model import Model
 from cloudnetpy.categorize.mwr import Mwr
+from cloudnetpy.categorize.lidar import Lidar
 
 
 def generate_categorize(input_files, output_file):
@@ -49,7 +49,6 @@ def generate_categorize(input_files, output_file):
 
     def _prepare_output():
         radar.add_meta()
-        lidar.add_meta()
         model.screen_sparse_fields()
         for key in ('category_bits', 'insect_prob', 'is_rain', 'is_undetected_melting'):
             radar.append_data(getattr(classification, key), key)
@@ -108,43 +107,6 @@ def _save_cat(file_name, radar, lidar, model, obs):
     output.merge_history(rootgrp, 'categorize', radar, lidar)
     _merge_source()
     rootgrp.close()
-
-
-class Lidar(ProfileDataSource):
-    """Lidar class, child of ProfileDataSource.
-
-    Args:
-        lidar_file (str): File name of the calibrated lidar file.
-        fields (tuple, optional): Tuple of strings containing fields to be
-            extracted from the *lidar_file*, e.g ('beta', 'beta_raw'). Default
-            is ('beta',).
-
-    Attributes:
-        wavelength (float): Lidar wavelength (nm).
-
-    """
-    def __init__(self, lidar_file):
-        super().__init__(lidar_file)
-        self._unknown_to_cloudnet(('beta_smooth', 'beta'), 'beta')
-        self.wavelength = float(self.getvar('wavelength'))
-
-    def rebin_to_grid(self, time_new, height_new):
-        """Rebins lidar data in time and height using mean.
-
-        Args:
-            time_new (ndarray): 1-D target time array (fraction hour).
-            height_new (ndarray): 1-D target height array (m).
-
-        """
-        for key in self.data:
-            self.data[key].rebin_data(self.time, time_new, self.height,
-                                      height_new)
-
-    def add_meta(self):
-        """Copies misc. metadata from the input file."""
-        self.append_data(self.wavelength, 'lidar_wavelength')
-        self.append_data(0.5, 'beta_error')
-        self.append_data(3, 'beta_bias')
 
 
 COMMENTS = {
