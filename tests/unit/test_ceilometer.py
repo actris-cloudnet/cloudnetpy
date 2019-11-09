@@ -93,4 +93,11 @@ def test_reset_low_values_above_saturation():
     assert_array_equal(call.mask, result.mask)
 
 
-
+def test_find_saturated_profiles():
+    obj = ceilometer.Ceilometer('ceilo.txt')
+    obj.noise_params = (2, 0.25, 1, (1, 1))
+    obj.backscatter = np.array([[0, 10, 1, 1.99],
+                                [0, 10, 2.1, 1],
+                                [0, 10, 1, 1]])
+    result = [1, 0, 1]
+    assert_array_equal(obj._find_saturated_profiles(), result)
