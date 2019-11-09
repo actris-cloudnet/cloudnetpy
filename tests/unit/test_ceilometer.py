@@ -1,7 +1,50 @@
 import numpy as np
 import numpy.ma as ma
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 from cloudnetpy.instruments import ceilometer
+
+
+def test_remove_noise():
+    noise = 2
+    beta = ma.array([[1, 2, 3],
+                     [1, 2, 3]], mask=False)
+    result = ma.array([[1, 2, 3],
+                       [1, 2, 3]],
+                      mask=[[1, 0, 0],
+                            [1, 0, 0]])
+    assert_array_equal(ceilometer._remove_noise(beta.mask, noise), result.mask)
+
+
+def test_calc_sigma_units():
+    time = np.linspace(0, 24, 721)  # 2 min resolution
+    range_instru = np.arange(0, 1000, 5)  # 5 m resolution
+    std_time, std_range = ceilometer._calc_sigma_units(time, range_instru)
+    assert_array_almost_equal(std_time, 1)
+    assert_array_almost_equal(std_range, 1)
+
+
+def test_get_range_squared():
+    range_instru = np.array([1000, 2000, 3000])
+    result = np.array([1, 4, 9])
+    assert_array_equal(ceilometer._get_range_squared(range_instru), result)
+
+
+def test_calc_range_uncorrected_beta():
+    beta = np.array([[1, 2, 3],
+                     [1, 2, 3]])
+    range_squared = np.array([1, 2, 3])
+    result = np.ones((2, 3))
+    assert_array_equal(ceilometer._calc_range_uncorrected_beta(beta, range_squared),
+                       result)
+
+
+def test_calc_range_corrected_beta():
+    result = np.array([[1, 2, 3],
+                       [1, 2, 3]])
+    range_squared = np.array([1, 2, 3])
+    beta = np.ones((2, 3))
+    assert_array_equal(ceilometer._calc_range_corrected_beta(beta, range_squared),
+                       result)
 
 
 def test_estimate_clouds_from_beta():
@@ -36,10 +79,7 @@ def test_estimate_noise_from_top_gates():
 def test_reset_low_values_above_saturation():
     beta = ma.array([[0, 10, 1e-6, 3],
                      [0, 0, 0, 0.1],
-                     [0, 0.6, 1.2, 1e-8]],
-                    mask=[[0, 0, 0, 0],
-                          [0, 0, 0, 0],
-                          [0, 0, 0, 0]])
+                     [0, 0.6, 1.2, 1e-8]])
     noise = 1e-3
     saturated = [1, 0, 1]
     result = ma.array([[0, 10, 1e-6, 3],
