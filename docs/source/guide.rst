@@ -90,14 +90,12 @@ And so on.
 
 .. note::
 
-   Cloudnetpy performs high-level, sophisticated scientific processing. Most of the
-   Cloudnetpy's low-level functions are unit tested, but it is notoriously
-   difficult to write unambiguous tests for all high-level API calls (yet we
-   *have* included at least rough tests for these). How well
-   our classification scheme works with all
-   possible instrument combinations? Or how accurate is our retrieved ice water
-   content compared to the reality? These kind of questions can be finally
-   answered only through rigorous scientific validation.
+   Cloudnetpy performs relatively complicated scientific processing, converting
+   noisy measurement data into higher level products. Most of the
+   Cloudnetpy's low-level functions are unit tested, but it is
+   difficult to write unambiguous tests for the high-level API calls.
+   However, the quality of the processed files can be at least roughly
+   checked using CloudnetPy's quality control functions.
 
 
 Coding guidelines
