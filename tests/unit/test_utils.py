@@ -378,3 +378,34 @@ def test_date_range():
     date_range = utils.date_range(start_date, end_date)
     for d, res in zip(date_range, result):
         assert str(d) == res
+
+
+@pytest.mark.parametrize("input, result", [
+    ('A line', False),
+    ('', False),
+    ('\n', True),
+    ('\r\n', True),
+])
+def test_is_empty_line(input, result):
+    assert utils.is_empty_line(input) == result
+
+
+def test_find_first_empty_line(tmpdir):
+    file_name = '/'.join((str(tmpdir), 'file.txt'))
+    f = open(file_name, 'w')
+    f.write('row\n')
+    f.write('row\n')
+    f.write('row\n')
+    f.write('\n')
+    f.write('row\n')
+    f.close()
+    assert utils.find_first_empty_line(file_name) == 4
+
+
+@pytest.mark.parametrize("input, result", [
+    ('-2019-02-13 23:04:50', True),
+    ('2019-02-13 23:04:50', False),
+    ('2019-02-13', False),
+])
+def test_is_timestamp(input, result):
+    assert utils.is_timestamp(input) == result
