@@ -24,6 +24,7 @@ class JenoptikCeilo(Ceilometer):
         self.metadata = self._read_metadata()
 
     def _calc_range(self):
+        """TODO: Should be checked if this is correct."""
         ceilo_range = self._getvar('range')
         return ceilo_range + utils.mdiff(ceilo_range)/2
 
@@ -55,19 +56,23 @@ class JenoptikCeilo(Ceilometer):
         return utils.array_to_probability(self.range, 500, 200)
 
     def _get_nn(self):
-        """TODO: Taken from the Matlab code. Not sure how this should be."""
-        try:
-            nn1 = self._getvar('NN1')
-        except KeyError:
+        """TODO: Should be checked."""
+        nn1 = self._getvar('nn1', 'NN1')
+        median_nn1 = np.median(nn1)
+        if 120 < median_nn1 < 160:
+            step_factor, reference, scale = 1.24, 140, 5
+        elif 3200 < median_nn1 < 4000:
+            step_factor, reference, scale = 1.035, 3685, 1
+        else:
             return 1
-        nn_reference = 140
-        nn_step_factor = 1.24
-        return nn_step_factor ** (-(nn1-nn_reference) / 5)
+        return step_factor ** (-(nn1-reference) / scale)
 
-    def _getvar(self, name):
+    def _getvar(self, *args):
         """Reads data of variable (array or scalar) from netcdf-file."""
-        var = self.variables[name]
-        return var[0] if utils.isscalar(var) else var[:]
+        for arg in args:
+            if arg in self.variables:
+                var = self.variables[arg]
+                return var[0] if utils.isscalar(var) else var[:]
 
     def _read_metadata(self):
         meta = {'tilt_angle': self._getvar('zenith')}
