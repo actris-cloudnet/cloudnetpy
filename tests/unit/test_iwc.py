@@ -1,4 +1,5 @@
 import numpy as np
+from collections import namedtuple
 from numpy import testing
 import pytest
 import netCDF4
@@ -17,7 +18,8 @@ def iwc_source_file(tmpdir_factory, file_metadata):
     var = root_grp.createVariable('altitude', 'f8')
     var[:] = 1
     var.units = 'km'
-
+    var = root_grp.createVariable('Z', 'f8', 'time')
+    var[:] = [5, 10, 15]
     var = root_grp.createVariable('radar_frequency', 'f8')
     var[:] = 35.5  # TODO: How to check with multiple options
     var = root_grp.createVariable('temperature', 'f8', ('time', 'height'))
@@ -172,4 +174,27 @@ def test_find_cold_above_rain(cold, is_rain, melting, result, iwc_cat_file):
     testing.assert_almost_equal(obj._find_cold_above_rain(), result)
 
 
+def test_z_to_iwc(iwc_source_file):
+    from cloudnetpy.products.iwc import _z_to_iwc
+    data = IwcSource(iwc_source_file)
+    data.temperature = np.array([1, 2, 2])
+    data.mean_temperature = np.array([1.5])
+    data.z_factor = np.array([1, 2, 3])
+    Coefficients = namedtuple('Coefficients', 'K2liquid0 ZT T Z c')
+    data.coeffs = Coefficients(0.1, 0.1, 0.2, 0.05, 0)
+    obj = _z_to_iwc(data, 'Z')
+    print(obj)
+    # Jatketaan tätä paremmilla inspiraatioilla myöhemmin
+    # TODO: Write better and finish
+    assert True
 
+
+def test_append_iwc_including_rain(iwc_source_file, iwc_cat_file):
+    from cloudnetpy.products.iwc import _append_iwc_including_rain
+    ice_class = _IceClassification(iwc_cat_file)
+    ice_class.is_ice = np.array([0, 0, 1])
+    ice_data = IwcSource(iwc_source_file)
+    _append_iwc_including_rain(ice_data, ice_class)
+    print(ice_data)
+    print(ice_data['iwc_inc_rain'])
+    assert ice_data['iwc_inc_rain'] is True
