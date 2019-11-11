@@ -161,6 +161,7 @@
  | <a href="#D"><strong>D</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#K"><strong>K</strong></a>
  | <a href="#L"><strong>L</strong></a>
@@ -171,6 +172,9 @@
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ | <a href="#Z"><strong>Z</strong></a>
  
 </div>
 <h2 id="A">A</h2>
@@ -178,9 +182,17 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#products.lwc.Lwc.adjust_clouds_to_match_lwp">adjust_clouds_to_match_lwp() (products.lwc.Lwc method)</a>
 </li>
+      <li><a href="api.html#utils.array_to_probability">array_to_probability() (in module utils)</a>
+</li>
+      <li><a href="api.html#categorize.atmos.GasAttenuation.atten">atten (categorize.atmos.GasAttenuation attribute)</a>
+
+      <ul>
+        <li><a href="api.html#categorize.atmos.LiquidAttenuation.atten">(categorize.atmos.LiquidAttenuation attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#utils.array_to_probability">array_to_probability() (in module utils)</a>
+      <li><a href="api.html#categorize.atmos.LiquidAttenuation.atten_err">atten_err (categorize.atmos.LiquidAttenuation attribute)</a>
 </li>
       <li><a href="api.html#categorize.atmos.Attenuation">Attenuation (class in categorize.atmos)</a>
 </li>
@@ -189,6 +201,10 @@
 
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.classify.ClassData.beta">beta (categorize.classify.ClassData attribute)</a>
+</li>
+  </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.binvec">binvec() (in module utils)</a>
 </li>
@@ -224,10 +240,10 @@
 </li>
       <li><a href="api.html#categorize.atmos.calc_wet_bulb_temperature">calc_wet_bulb_temperature() (in module categorize.atmos)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#module-categorize.atmos">categorize.atmos (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#module-categorize.classify">categorize.classify (module)</a>
 </li>
       <li><a href="api.html#module-categorize.droplet">categorize.droplet (module)</a>
@@ -240,6 +256,10 @@
 </li>
       <li><a href="api.html#tests.check_metadata">check_metadata() (in module tests)</a>
 </li>
+      <li><a href="api.html#categorize.classify.ClassData">ClassData (class in categorize.classify)</a>
+</li>
+      <li><a href="api.html#categorize.atmos.Attenuation.classification">classification (categorize.atmos.Attenuation attribute)</a>
+</li>
       <li><a href="api.html#categorize.classify.ClassificationResult">ClassificationResult (class in categorize.classify)</a>
 </li>
       <li><a href="api.html#categorize.classify.classify_measurements">classify_measurements() (in module categorize.classify)</a>
@@ -249,6 +269,8 @@
       <li><a href="api.html#categorize.droplet.correct_liquid_top">correct_liquid_top() (in module categorize.droplet)</a>
 </li>
       <li><a href="api.html#products.drizzle.correct_spectral_width">correct_spectral_width() (in module products.drizzle)</a>
+</li>
+      <li><a href="api.html#categorize.atmos.LiquidAttenuation.corrected">corrected (categorize.atmos.LiquidAttenuation attribute)</a>
 </li>
       <li><a href="api.html#utils.cumsumr">cumsumr() (in module utils)</a>
 </li>
@@ -288,11 +310,13 @@
 </li>
       <li><a href="api.html#utils.filter_isolated_pixels">filter_isolated_pixels() (in module utils)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.filter_x_pixels">filter_x_pixels() (in module utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#categorize.atmos.find_cloud_bases">find_cloud_bases() (in module categorize.atmos)</a>
+</li>
+      <li><a href="api.html#categorize.atmos.find_cloud_tops">find_cloud_tops() (in module categorize.atmos)</a>
 </li>
       <li><a href="api.html#utils.find_first_empty_line">find_first_empty_line() (in module utils)</a>
 </li>
@@ -353,6 +377,14 @@
   </ul></td>
 </tr></table>
 
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.classify.ClassData.height">height (categorize.classify.ClassData attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="I">I</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -370,14 +402,22 @@
 </li>
       <li><a href="api.html#categorize.droplet.interpolate_lwp">interpolate_lwp() (in module categorize.droplet)</a>
 </li>
+      <li><a href="api.html#categorize.classify.ClassData.is_clutter">is_clutter (categorize.classify.ClassData attribute)</a>
+
+      <ul>
+        <li><a href="api.html#categorize.classify.ClassificationResult.is_clutter">(categorize.classify.ClassificationResult attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#categorize.classify.ClassificationResult.is_clutter">is_clutter (categorize.classify.ClassificationResult attribute)</a>
-</li>
       <li><a href="api.html#utils.is_empty_line">is_empty_line() (in module utils)</a>
 </li>
-      <li><a href="api.html#categorize.classify.ClassificationResult.is_rain">is_rain (categorize.classify.ClassificationResult attribute)</a>
+      <li><a href="api.html#categorize.classify.ClassData.is_rain">is_rain (categorize.classify.ClassData attribute)</a>
+
+      <ul>
+        <li><a href="api.html#categorize.classify.ClassificationResult.is_rain">(categorize.classify.ClassificationResult attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api.html#utils.is_timestamp">is_timestamp() (in module utils)</a>
 </li>
       <li><a href="api.html#categorize.classify.ClassificationResult.is_undetected_melting">is_undetected_melting (categorize.classify.ClassificationResult attribute)</a>
@@ -406,6 +446,8 @@
 </li>
       <li><a href="api.html#utils.l2norm_weighted">l2norm_weighted() (in module utils)</a>
 </li>
+      <li><a href="api.html#categorize.classify.ClassData.ldr">ldr (categorize.classify.ClassData attribute)</a>
+</li>
       <li><a href="api.html#utils.lin2db">lin2db() (in module utils)</a>
 </li>
   </ul></td>
@@ -418,6 +460,8 @@
 </li>
       <li><a href="api.html#products.lwc.LwcSource">LwcSource (class in products.lwc)</a>
 </li>
+      <li><a href="api.html#categorize.classify.ClassData.lwp">lwp (categorize.classify.ClassData attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -429,6 +473,8 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#instruments.mira2nc">mira2nc() (in module instruments)</a>
+</li>
+      <li><a href="api.html#categorize.classify.ClassData.model_type">model_type (categorize.classify.ClassData attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -460,6 +506,8 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.classify.ClassData.radar_type">radar_type (categorize.classify.ClassData attribute)</a>
+</li>
       <li><a href="api.html#utils.range_to_height">range_to_height() (in module utils)</a>
 </li>
       <li><a href="api.html#utils.rebin_1d">rebin_1d() (in module utils)</a>
@@ -492,11 +540,15 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.classify.ClassData.time">time (categorize.classify.ClassData attribute)</a>
+</li>
       <li><a href="api.html#utils.time_grid">time_grid() (in module utils)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.transpose">transpose() (in module utils)</a>
+</li>
+      <li><a href="api.html#categorize.classify.ClassData.tw">tw (categorize.classify.ClassData attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -504,7 +556,39 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.atmos.LiquidAttenuation.uncorrected">uncorrected (categorize.atmos.LiquidAttenuation attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#module-utils">utils (module)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.classify.ClassData.v">v (categorize.classify.ClassData attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.classify.ClassData.v_sigma">v_sigma (categorize.classify.ClassData attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.classify.ClassData.width">width (categorize.classify.ClassData attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Z">Z</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.classify.ClassData.z">z (categorize.classify.ClassData attribute)</a>
 </li>
   </ul></td>
 </tr></table>
