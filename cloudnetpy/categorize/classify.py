@@ -26,9 +26,6 @@ def classify_measurements(radar, lidar, model, mwr):
         ClassificationResult:
             The :class:`ClassificationResult` instance.
 
-    See also:
-        classify.fetch_qual_bits()
-
     """
     obs = _ClassData(radar, lidar, model, mwr)
     bits = [None] * 6
@@ -66,9 +63,6 @@ def fetch_quality(radar, lidar, classification, attenuations):
             - bit 3: Molecular scattering present (currently not implemented!)
             - bit 4: Pixel was affected by liquid attenuation
             - bit 5: Liquid attenuation was corrected
-
-    See also:
-        classify.fetch_cat_bits()
 
     """
     bits = [None]*6
