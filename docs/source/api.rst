@@ -85,10 +85,66 @@ several modules that are used when creating the Cloudnet
 categorize file.
 
 
+cloudnetpy.categorize.datasource
+................................
+
+.. automodule:: categorize.datasource
+   :members:
+
+cloudnetpy.categorize.radar
+...........................
+
+.. automodule:: categorize.radar
+   :members:
+
+cloudnetpy.categorize.lidar
+...........................
+
+.. automodule:: categorize.lidar
+   :members:
+
+cloudnetpy.categorize.mwr
+.........................
+
+.. automodule:: categorize.mwr
+   :members:
+
+cloudnetpy.categorize.model
+...........................
+
+.. automodule:: categorize.model
+   :members:
+
 cloudnetpy.categorize.classify
 ..............................
 
 .. automodule:: categorize.classify
+   :members:
+
+cloudnetpy.categorize.melting
+.............................
+
+.. automodule:: categorize.melting
+   :members:
+
+cloudnetpy.categorize.freezing
+..............................
+
+.. automodule:: categorize.freezing
+   :members:
+
+
+cloudnetpy.categorize.falling
+.............................
+
+.. automodule:: categorize.falling
+   :members:
+
+
+cloudnetpy.categorize.insects
+.............................
+
+.. automodule:: categorize.insects
    :members:
 
 
