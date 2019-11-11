@@ -15,7 +15,12 @@ class Mwr(DataSource):
         self._init_lwp_error()
 
     def rebin_to_grid(self, time_grid):
-        """Rebinning of lwp and its error."""
+        """Rebinning of lwp and its error.
+
+        Args:
+            time_grid (ndarray): 1D target time grid.
+
+        """
         for key in self.data:
             self.data[key].rebin_1d_data(self.time, time_grid)
 

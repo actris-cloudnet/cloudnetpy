@@ -87,8 +87,14 @@ class Radar(ProfileDataSource):
         self.append_data(z_corrected, 'Z')
 
     def calc_errors(self, attenuations, classification):
-        """Calculates error and sensitivity of radar echo."""
+        """Calculates error and sensitivity of radar echo.
 
+        Args:
+            attenuations (dict): 2-D attenuations due to atmospheric gases.
+            classification (ClassificationResult): The
+                :class:`ClassificationResult` instance.
+
+        """
         def _calc_sensitivity():
             """Returns sensitivity of radar as function of altitude."""
             mean_gas_atten = ma.mean(attenuations['radar_gas_atten'], axis=0)

@@ -13,11 +13,10 @@ class DataSource:
     Attributes:
         filename (str): Filename of the input file.
         dataset (Dataset): A netCDF4 Dataset instance.
-        variables (dict): Variables of the Dataset instance.
         source (str): Global attribute 'source' from *input_file*.
         time (MaskedArray): Time array of the instrument.
         altitude (float): Altitude of instrument above mean sea level (m).
-        data (dict): Dictionary containing CloudnetArray instances.
+        data (dict): Dictionary containing :class:`CloudnetArray` instances.
 
     """
     def __init__(self, filename):
@@ -63,6 +62,7 @@ class DataSource:
         self.data[key] = CloudnetArray(data, name or key, units)
 
     def close(self):
+        """Closes the open file."""
         self.dataset.close()
 
     @staticmethod
