@@ -2,7 +2,7 @@ import numpy as np
 from numpy import testing
 import pytest
 import netCDF4
-from cloudnetpy.products.iwc import IwcSource,_IceClassification
+from cloudnetpy.products.iwc import IwcSource, _IceClassification
 
 DIMENSIONS = ('time', 'height', 'model_time', 'model_height')
 TEST_ARRAY = np.arange(3)
