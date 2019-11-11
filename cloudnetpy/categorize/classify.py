@@ -27,7 +27,7 @@ def classify_measurements(radar, lidar, model, mwr):
             The :class:`ClassificationResult` instance.
 
     """
-    obs = _ClassData(radar, lidar, model, mwr)
+    obs = ClassData(radar, lidar, model, mwr)
     bits = [None] * 6
     liquid = droplet.find_liquid(obs)
     bits[3] = melting.find_melting_layer(obs)
@@ -57,6 +57,7 @@ def fetch_quality(radar, lidar, classification, attenuations):
 
     Returns:
         dict: Dictionary containing `quality_bits`, an integer array with the bits:
+
             - bit 0: Pixel contains radar data
             - bit 1: Pixel contains lidar data
             - bit 2: Pixel contaminated by radar clutter
@@ -81,7 +82,7 @@ def _find_aerosols(obs, is_falling, is_liquid):
     Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
 
     Args:
-        obs (_ClassData): Container for observations.
+        obs (ClassData): The :class:`ClassData` instance.
         is_falling (ndarray): 2-D boolean array of falling hydrometeors.
         is_liquid (ndarray): 2-D boolean array of liquid droplets.
 
@@ -144,7 +145,32 @@ def _bits_to_integer(bits):
     return int_array
 
 
-class _ClassData:
+class ClassData:
+    """ Container for observations that are used in the classification.
+
+    Args:
+        radar (Radar): The :class:`Radar` instance.
+        lidar (Lidar): The :class:`Lidar` instance.
+        model (Model): The :class:`Model` instance.
+        mwr (Mwr): The :class:`Mwr` instance.
+
+    Attributes:
+        z (ndarray): 2D radar echo.
+        ldr (ndarray): 2D linear depolarization ratio.
+        v (ndarray): 2D radar velocity.
+        width (ndarray): 2D radar width.
+        v_sigma (ndarray): 2D standard deviation of the velocity.
+        tw (ndarray): 2D wet bulb temperature.
+        beta (ndarray): 2D lidar backscatter.
+        lwp (ndarray): 1D liquid water path.
+        time (ndarray): 1D fraction hour.
+        height (ndarray): 1D height vector (m).
+        model_type (str): Model identifier.
+        radar_type (str): Radar identifier.
+        is_rain (ndarray): 2D boolean array denoting rain.
+        is_clutter (ndarray): 2D boolean array denoting clutter.
+
+    """
     def __init__(self, radar, lidar, model, mwr):
         self.z = radar.data['Z'][:]
         self.ldr = radar.data['ldr'][:]
@@ -212,31 +238,16 @@ class ClassificationResult(namedtuple('ClassificationResult',
                                        'insect_prob',
                                        'liquid_bases',
                                        'is_undetected_melting'])):
-    """ Result of classification, containing attributes:
+    """ Result of classification
 
-    .. py:attribute:: category_bits
-
-        Array of integers concatenating all the individual boolean bit arrays.
-
-    .. py:attribute:: is_rain
-
-        1D array denoting presence of rain.
-
-    .. py:attribute:: is_clutter
-
-        2D array denoting presence of clutter.
-
-    .. py:attribute:: insect_prob
-
-        2D array denoting 0-1 probability of insects.
-
-    .. py:attribute:: liquid_bases
-
-        2D array denoting bases of liquid clouds.
-
-    .. py:attribute:: is_undetected_melting
-
-        1D array denoting profiles that should containg melting layer abut was
-        not detected from the data.
+    Attributes:
+        category_bits (ndarray): Array of integers concatenating all the
+            individual boolean bit arrays.
+        is_rain (ndarray): 1D array denoting presence of rain.
+        is_clutter (ndarray): 2D array denoting presence of clutter.
+        insect_prob (ndarray): 2D array denoting 0-1 probability of insects.
+        liquid_bases (ndarray): 2D array denoting bases of liquid clouds.
+        is_undetected_melting (ndarray): 1D array denoting profiles that should
+            contain melting layer but was not detected from the data.
 
     """
