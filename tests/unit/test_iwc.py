@@ -2,8 +2,7 @@ import numpy as np
 from numpy import testing
 import pytest
 import netCDF4
-from cloudnetpy.products.iwc import IwcSource
-
+from cloudnetpy.products.iwc import IwcSource,_IceClassification
 
 DIMENSIONS = ('time', 'height', 'model_time', 'model_height')
 TEST_ARRAY = np.arange(3)
@@ -96,32 +95,81 @@ def iwc_cat_file(tmpdir_factory, file_metadata):
     var[:] = [0, 1, 2, 4, 8, 16, 32]
     var = root_grp.createVariable('quality_bits', 'i4', 'time')
     var[:] = [0, 1, 2, 4, 8, 16, 32]
+    var = root_grp.createVariable('is_rain', 'i4', 'time')
+    var[:] = [0, 1, 1, 1, 0, 0, 0]
+    var = root_grp.createVariable('is_undetected_melting', 'i4', 'time')
+    var[:] = [0, 1, 0, 1, 0, 0, 1]
     root_grp.close()
     return file_name
 
 
-def test_find_ice(iwc_cat_file):
-    assert True
+@pytest.mark.parametrize("falling, cold, melting, insect, result", [
+    (np.array([1, 1, 1, 1, 1, 1, 1]), np.array([0, 1, 0, 1, 0, 1, 0]),
+     np.array([1, 1, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 0, 0, 0, 0]),
+     np.array([0, 0, 0, 1, 0, 1, 0]))])
+def test_find_ice(falling, cold, melting,  insect, result, iwc_cat_file):
+    obj = _IceClassification(iwc_cat_file)
+    obj.category_bits['falling'] = falling
+    obj.category_bits['cold'] = cold
+    obj.category_bits['melting'] = melting
+    obj.category_bits['insect'] = insect
+    testing.assert_almost_equal(obj._find_ice(), result)
 
 
-def test_find_would_be_ice(iwc_cat_file):
-    assert True
+@pytest.mark.parametrize("falling, cold, melting, insect, result", [
+    (np.array([1, 1, 1, 1, 1, 1, 1]), np.array([0, 1, 0, 1, 0, 1, 0]),
+     np.array([1, 1, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 0, 0, 0, 0]),
+     np.array([1, 1, 1, 0, 1, 0, 1]))])
+def test_find_would_be_ice(falling, cold, melting,  insect, result, iwc_cat_file):
+    obj = _IceClassification(iwc_cat_file)
+    obj.category_bits['falling'] = falling
+    obj.category_bits['cold'] = cold
+    obj.category_bits['melting'] = melting
+    obj.category_bits['insect'] = insect
+    testing.assert_almost_equal(obj._find_would_be_ice(), result)
 
 
-def test_find_corrected_ice(iwc_cat_file):
-    assert True
+@pytest.mark.parametrize("is_ice, attenuated, corrected, result", [
+    (np.array([0, 0, 0, 1, 0, 1, 0]), np.array([1, 1, 0, 1, 0, 0, 1]),
+     np.array([0, 0, 1, 1, 0, 1, 1]), np.array([0, 0, 0, 1, 0, 0, 0]))])
+def test_find_corrected_ice(is_ice, attenuated, corrected, result, iwc_cat_file):
+    obj = _IceClassification(iwc_cat_file)
+    obj.quality_bits['attenuated'] = attenuated
+    obj.quality_bits['corrected'] = corrected
+    obj.is_ice = is_ice
+    testing.assert_almost_equal(obj._find_corrected_ice(), result)
 
 
-def test_find_uncorrected_ice(iwc_cat_file):
-    assert True
+@pytest.mark.parametrize("is_ice, attenuated, corrected, result", [
+    (np.array([0, 0, 0, 1, 0, 1, 0]), np.array([1, 1, 0, 1, 0, 1, 1]),
+     np.array([0, 0, 1, 0, 0, 0, 1]), np.array([0, 0, 0, 1, 0, 1, 0]))])
+def test_find_uncorrected_ice(is_ice, attenuated, corrected, result, iwc_cat_file):
+    obj = _IceClassification(iwc_cat_file)
+    obj.quality_bits['attenuated'] = attenuated
+    obj.quality_bits['corrected'] = corrected
+    obj.is_ice = is_ice
+    testing.assert_almost_equal(obj._find_uncorrected_ice(), result)
 
 
-def test_find_ice_above_rain(iwc_cat_file):
-    assert True
+@pytest.mark.parametrize("is_ice, is_rain, result", [
+    (np.array([1, 0, 1]), np.array([0, 0, 1]),
+     np.array([[0, 0, 0], [0, 0, 0], [1, 0, 1]]))])
+def test_find_ice_above_rain(is_ice, is_rain, result, iwc_cat_file):
+    obj = _IceClassification(iwc_cat_file)
+    obj.is_ice = is_ice
+    obj.is_rain = is_rain
+    testing.assert_almost_equal(obj._find_ice_above_rain(), result)
 
 
-def test_find_cold_above_rain(iwc_cat_file):
-    assert True
+@pytest.mark.parametrize("cold, is_rain, melting, result", [
+    (np.array([1, 0, 1]), np.array([0, 0, 1]), np.array([1, 1, 0]),
+     np.array([[0, 0, 0], [0, 0, 0], [0, 0, 1]]))])
+def test_find_cold_above_rain(cold, is_rain, melting, result, iwc_cat_file):
+    obj = _IceClassification(iwc_cat_file)
+    obj.category_bits['cold'] = cold
+    obj.category_bits['melting'] = melting
+    obj.is_rain = is_rain
+    testing.assert_almost_equal(obj._find_cold_above_rain(), result)
 
 
 
