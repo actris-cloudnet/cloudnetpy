@@ -9,55 +9,22 @@ from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize import melting, insects, falling, freezing
 
 
-def fetch_quality(radar, lidar, classification, attenuations):
-    """Returns Cloudnet quality bits.
-
-    Args:
-        radar (Radar): Radar data container.
-        lidar (Lidar): Lidar data container.
-        classification (_ClassificationResult): Container for classification
-            results.
-        attenuations (dict):
-
-    Returns:
-        ndarray: Integer array containing the following bits:
-            - bit 0: Pixel contains radar data
-            - bit 1: Pixel contains lidar data
-            - bit 2: Pixel contaminated by radar clutter
-            - bit 3: Molecular scattering present (currently not implemented!)
-            - bit 4: Pixel was affected by liquid attenuation
-            - bit 5: Liquid attenuation was corrected
-
-    See also:
-        classify.fetch_cat_bits()
-
-    """
-    bits = [None]*6
-    bits[0] = ~radar.data['Z'][:].mask
-    bits[1] = ~lidar.data['beta'][:].mask
-    bits[2] = classification.is_clutter
-    bits[4] = attenuations['liquid_corrected'] | attenuations['liquid_uncorrected']
-    bits[5] = attenuations['liquid_corrected']
-    qbits = _bits_to_integer(bits)
-    return {'quality_bits': qbits}
-
-
 def classify_measurements(radar, lidar, model, mwr):
     """Classifies radar/lidar observations.
 
-    This function classifies atmospheric scatterer from the input data.
+    This function classifies atmospheric scatterers from the input data.
     The input data needs to be averaged or interpolated to the common
     time / height grid before calling this function.
 
     Args:
-        radar (Radar): A Radar object.
-        lidar (Lidar): A Lidar object.
-        model (Model): A Model object.
-        mwr (Mwr): A Mwr object.
+        radar (Radar): The :class:`Radar` instance.
+        lidar (Lidar): The :class:`Lidar` instance.
+        model (Model): The :class:`Model` instance.
+        mwr (Mwr): The :class:`Mwr` instance.
 
     Returns:
-        _ClassificationResult: Object containing the result
-            of classification.
+        ClassificationResult:
+            The :class:`ClassificationResult` instance.
 
     See also:
         classify.fetch_qual_bits()
@@ -78,6 +45,40 @@ def classify_measurements(radar, lidar, model, mwr):
                                 insect_prob,
                                 liquid['bases'],
                                 _find_profiles_with_undetected_melting(bits))
+
+
+def fetch_quality(radar, lidar, classification, attenuations):
+    """Returns Cloudnet quality bits.
+
+    Args:
+        radar (Radar): The :class:`Radar` instance.
+        lidar (Lidar): The :class:`Lidar` instance.
+        classification (ClassificationResult): The
+            :class:`ClassificationResult` instance.
+        attenuations (dict): Dictionary containing keys `liquid_corrected`,
+            `liquid_uncorrected`.
+
+    Returns:
+        dict: Dictionary containing `quality_bits`, an integer array with the bits:
+            - bit 0: Pixel contains radar data
+            - bit 1: Pixel contains lidar data
+            - bit 2: Pixel contaminated by radar clutter
+            - bit 3: Molecular scattering present (currently not implemented!)
+            - bit 4: Pixel was affected by liquid attenuation
+            - bit 5: Liquid attenuation was corrected
+
+    See also:
+        classify.fetch_cat_bits()
+
+    """
+    bits = [None]*6
+    bits[0] = ~radar.data['Z'][:].mask
+    bits[1] = ~lidar.data['beta'][:].mask
+    bits[2] = classification.is_clutter
+    bits[4] = attenuations['liquid_corrected'] | attenuations['liquid_uncorrected']
+    bits[5] = attenuations['liquid_corrected']
+    qbits = _bits_to_integer(bits)
+    return {'quality_bits': qbits}
 
 
 def _find_aerosols(obs, is_falling, is_liquid):
@@ -210,9 +211,38 @@ def _find_clutter(v, is_rain, n_gates=10, v_lim=0.05):
     return is_clutter
 
 
-ClassificationResult = namedtuple('ClassificationResult', ['category_bits',
-                                                           'is_rain',
-                                                           'is_clutter',
-                                                           'insect_prob',
-                                                           'liquid_bases',
-                                                           'is_undetected_melting'])
+class ClassificationResult(namedtuple('ClassificationResult',
+                                      ['category_bits',
+                                       'is_rain',
+                                       'is_clutter',
+                                       'insect_prob',
+                                       'liquid_bases',
+                                       'is_undetected_melting'])):
+    """ Result of classification, containing attributes:
+
+    .. py:attribute:: category_bits
+
+        Array of integers concatenating all the individual boolean bit arrays.
+
+    .. py:attribute:: is_rain
+
+        1D array denoting presence of rain.
+
+    .. py:attribute:: is_clutter
+
+        2D array denoting presence of clutter.
+
+    .. py:attribute:: insect_prob
+
+        2D array denoting 0-1 probability of insects.
+
+    .. py:attribute:: liquid_bases
+
+        2D array denoting bases of liquid clouds.
+
+    .. py:attribute:: is_undetected_melting
+
+        1D array denoting profiles that should containg melting layer abut was
+        not detected from the data.
+
+    """
