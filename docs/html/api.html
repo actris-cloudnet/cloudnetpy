@@ -602,6 +602,39 @@ categorize file.</p>
 <p>Module containing low-level functions to classify gridded
 radar / lidar measurements.</p>
 <dl class="function">
+<dt id="categorize.classify.classify_measurements">
+<code class="descclassname">categorize.classify.</code><code class="descname">classify_measurements</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>model</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#classify_measurements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.classify_measurements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classifies radar/lidar observations.</p>
+<p>This function classifies atmospheric scatterers from the input data.
+The input data needs to be averaged or interpolated to the common
+time / height grid before calling this function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>radar</strong> (<em>Radar</em>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Radar</span></code> instance.</li>
+<li><strong>lidar</strong> (<em>Lidar</em>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Lidar</span></code> instance.</li>
+<li><strong>model</strong> (<em>Model</em>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code> instance.</li>
+<li><strong>mwr</strong> (<em>Mwr</em>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Mwr</span></code> instance.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The <a class="reference internal" href="#categorize.classify.ClassificationResult" title="categorize.classify.ClassificationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationResult</span></code></a> instance.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#categorize.classify.ClassificationResult" title="categorize.classify.ClassificationResult">ClassificationResult</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">classify.fetch_qual_bits()</p>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="categorize.classify.fetch_quality">
 <code class="descclassname">categorize.classify.</code><code class="descname">fetch_quality</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>classification</em>, <em>attenuations</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#fetch_quality"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.fetch_quality" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns Cloudnet quality bits.</p>
@@ -610,16 +643,17 @@ radar / lidar measurements.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>radar</strong> (<em>Radar</em>) – Radar data container.</li>
-<li><strong>lidar</strong> (<em>Lidar</em>) – Lidar data container.</li>
-<li><strong>classification</strong> (<em>_ClassificationResult</em>) – Container for classification
-results.</li>
-<li><strong>attenuations</strong> (<em>dict</em>) – </li>
+<li><strong>radar</strong> (<em>Radar</em>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Radar</span></code> instance.</li>
+<li><strong>lidar</strong> (<em>Lidar</em>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">Lidar</span></code> instance.</li>
+<li><strong>classification</strong> (<a class="reference internal" href="#categorize.classify.ClassificationResult" title="categorize.classify.ClassificationResult"><em>ClassificationResult</em></a>) – The
+<a class="reference internal" href="#categorize.classify.ClassificationResult" title="categorize.classify.ClassificationResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClassificationResult</span></code></a> instance.</li>
+<li><strong>attenuations</strong> (<em>dict</em>) – Dictionary containing keys <cite>liquid_corrected</cite>,
+<cite>liquid_uncorrected</cite>.</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt>Integer array containing the following bits:</dt>
+<dt>Dictionary containing <cite>quality_bits</cite>, an integer array with the bits:</dt>
 <dd><ul class="first last simple">
 <li>bit 0: Pixel contains radar data</li>
 <li>bit 1: Pixel contains lidar data</li>
@@ -633,7 +667,7 @@ results.</li>
 </p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
 </td>
 </tr>
 </tbody>
@@ -644,81 +678,45 @@ results.</li>
 </div>
 </dd></dl>
 
-<dl class="function">
-<dt id="categorize.classify.classify_measurements">
-<code class="descclassname">categorize.classify.</code><code class="descname">classify_measurements</code><span class="sig-paren">(</span><em>radar</em>, <em>lidar</em>, <em>model</em>, <em>mwr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/classify.html#classify_measurements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.classify_measurements" title="Permalink to this definition">¶</a></dt>
-<dd><p>Classifies radar/lidar observations.</p>
-<p>This function classifies atmospheric scatterer from the input data.
-The input data needs to be averaged or interpolated to the common
-time / height grid before calling this function.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>radar</strong> (<em>Radar</em>) – A Radar object.</li>
-<li><strong>lidar</strong> (<em>Lidar</em>) – A Lidar object.</li>
-<li><strong>model</strong> (<em>Model</em>) – A Model object.</li>
-<li><strong>mwr</strong> (<em>Mwr</em>) – A Mwr object.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><dl class="docutils">
-<dt>Object containing the result</dt>
-<dd><p class="first last">of classification.</p>
-</dd>
-</dl>
-</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">_ClassificationResult</p>
-</td>
-</tr>
-</tbody>
-</table>
-<div class="admonition seealso">
-<p class="first admonition-title">See also</p>
-<p class="last">classify.fetch_qual_bits()</p>
-</div>
-</dd></dl>
-
 <dl class="class">
 <dt id="categorize.classify.ClassificationResult">
-<em class="property">class </em><code class="descclassname">categorize.classify.</code><code class="descname">ClassificationResult</code><span class="sig-paren">(</span><em>category_bits</em>, <em>is_rain</em>, <em>is_clutter</em>, <em>insect_prob</em>, <em>liquid_bases</em>, <em>is_undetected_melting</em><span class="sig-paren">)</span><a class="headerlink" href="#categorize.classify.ClassificationResult" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
+<em class="property">class </em><code class="descclassname">categorize.classify.</code><code class="descname">ClassificationResult</code><a class="reference internal" href="_modules/categorize/classify.html#ClassificationResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.classify.ClassificationResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Result of classification, containing attributes:</p>
+<dl class="attribute">
 <dt id="categorize.classify.ClassificationResult.category_bits">
 <code class="descname">category_bits</code><a class="headerlink" href="#categorize.classify.ClassificationResult.category_bits" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 0</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.classify.ClassificationResult.insect_prob">
-<code class="descname">insect_prob</code><a class="headerlink" href="#categorize.classify.ClassificationResult.insect_prob" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 3</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="categorize.classify.ClassificationResult.is_clutter">
-<code class="descname">is_clutter</code><a class="headerlink" href="#categorize.classify.ClassificationResult.is_clutter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 2</p>
+<dd><p>Array of integers concatenating all the individual boolean bit arrays.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="categorize.classify.ClassificationResult.is_rain">
 <code class="descname">is_rain</code><a class="headerlink" href="#categorize.classify.ClassificationResult.is_rain" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 1</p>
+<dd><p>1D array denoting presence of rain.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="categorize.classify.ClassificationResult.is_undetected_melting">
-<code class="descname">is_undetected_melting</code><a class="headerlink" href="#categorize.classify.ClassificationResult.is_undetected_melting" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 5</p>
+<dt id="categorize.classify.ClassificationResult.is_clutter">
+<code class="descname">is_clutter</code><a class="headerlink" href="#categorize.classify.ClassificationResult.is_clutter" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array denoting presence of clutter.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="categorize.classify.ClassificationResult.insect_prob">
+<code class="descname">insect_prob</code><a class="headerlink" href="#categorize.classify.ClassificationResult.insect_prob" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array denoting 0-1 probability of insects.</p>
 </dd></dl>
 
 <dl class="attribute">
 <dt id="categorize.classify.ClassificationResult.liquid_bases">
 <code class="descname">liquid_bases</code><a class="headerlink" href="#categorize.classify.ClassificationResult.liquid_bases" title="Permalink to this definition">¶</a></dt>
-<dd><p>Alias for field number 4</p>
+<dd><p>2D array denoting bases of liquid clouds.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="categorize.classify.ClassificationResult.is_undetected_melting">
+<code class="descname">is_undetected_melting</code><a class="headerlink" href="#categorize.classify.ClassificationResult.is_undetected_melting" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D array denoting profiles that should containg melting layer abut was
+not detected from the data.</p>
 </dd></dl>
 
 </dd></dl>
