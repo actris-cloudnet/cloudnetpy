@@ -187,6 +187,7 @@ def _append_iwc_error(iwc_data, ice_class):
         liq_atten_scaled = iwc_data.spec_liq_atten * iwc_data.coeffs.Z
         return lwp_prior * liq_atten_scaled * 2 * 1e-3 * 10
 
+    # TODO: Writing unit test is quite hard
     retrieval_uncertainty = 1.7  # dB
     random_error = _calc_random_error()
     error_uncorrected = _calc_error_in_uncorrected_ice()

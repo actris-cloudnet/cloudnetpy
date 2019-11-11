@@ -20,6 +20,10 @@ def iwc_source_file(tmpdir_factory, file_metadata):
     var.units = 'km'
     var = root_grp.createVariable('Z', 'f8', 'time')
     var[:] = [5, 10, 15]
+    var = root_grp.createVariable('Z_sensitivity', 'f8', 'time')
+    var[:] = [5, 10, 15]
+    var = root_grp.createVariable('Z_bias', 'f8', 'time')
+    var[:] = [5, 10, 15]
     var = root_grp.createVariable('radar_frequency', 'f8')
     var[:] = 35.5  # TODO: How to check with multiple options
     var = root_grp.createVariable('temperature', 'f8', ('time', 'height'))
@@ -174,6 +178,9 @@ def test_find_cold_above_rain(cold, is_rain, melting, result, iwc_cat_file):
     testing.assert_almost_equal(obj._find_cold_above_rain(), result)
 
 
+# TODO: Think also values as some point for test below
+
+
 def test_z_to_iwc(iwc_source_file):
     from cloudnetpy.products.iwc import _z_to_iwc
     data = IwcSource(iwc_source_file)
@@ -195,6 +202,38 @@ def test_append_iwc_including_rain(iwc_source_file, iwc_cat_file):
     ice_class.is_ice = np.array([0, 0, 1])
     ice_data = IwcSource(iwc_source_file)
     _append_iwc_including_rain(ice_data, ice_class)
-    print(ice_data)
-    print(ice_data['iwc_inc_rain'])
-    assert ice_data['iwc_inc_rain'] is True
+    assert 'iwc_inc_rain' in ice_data.data.keys()
+
+
+def test_append_iwc(iwc_source_file, iwc_cat_file):
+    from cloudnetpy.products.iwc import _append_iwc
+    ice_class = _IceClassification(iwc_cat_file)
+    ice_class.ice_above_rain = np.array([0, 0, 1])
+    ice_data = IwcSource(iwc_source_file)
+    ice_data.data['iwc_inc_rain'] = [1, 1, 1]
+    _append_iwc(ice_data, ice_class)
+    assert 'iwc' in ice_data.data.keys()
+
+
+def test_append_sensitivity(iwc_source_file):
+    from cloudnetpy.products.iwc import _append_iwc_sensitivity
+    ice_data = IwcSource(iwc_source_file)
+    ice_data.mean_temperature = np.array([1.5])
+    _append_iwc_sensitivity(ice_data)
+    assert 'iwc_sensitivity' in ice_data.data.keys()
+
+
+def test_append_bias(iwc_source_file):
+    from cloudnetpy.products.iwc import _append_iwc_bias
+    ice_data = IwcSource(iwc_source_file)
+    _append_iwc_bias(ice_data)
+    assert 'iwc_bias' in ice_data.data.keys()
+
+
+def test_append_iwc_status(iwc_source_file, iwc_cat_file):
+    from cloudnetpy.products.iwc import _append_iwc_status
+    ice_class = _IceClassification(iwc_cat_file)
+    ice_data = IwcSource(iwc_source_file)
+    ice_data.data['iwc'] = [1, 1, 1]
+    # TODO: Finish this
+    assert True
