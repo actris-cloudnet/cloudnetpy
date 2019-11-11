@@ -1,7 +1,7 @@
 from cloudnetpy import output
 import pytest
 import netCDF4
-from cloudnetpy.instruments import ceilo
+from cloudnetpy import utils
 
 
 @pytest.mark.parametrize("short_id, result", [
@@ -83,5 +83,5 @@ def test_merge_history():
     source2 = RootGrp()
     source2.dataset.history = 'some history y'
     output.merge_history(root, file_type, source1, source2)
-    assert ceilo.is_timestamp(f"-{root.history[:19]}") is True
+    assert utils.is_timestamp(f"-{root.history[:19]}") is True
     assert root.history[19:] == ' - dummy file created\nsome history x\nsome history y'

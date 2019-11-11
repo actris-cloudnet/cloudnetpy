@@ -7,6 +7,7 @@ import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
 import requests
+import re
 
 
 SECONDS_PER_HOUR = 3600
@@ -621,3 +622,29 @@ def range_to_height(range_los, tilt_angle):
         ndarray: Altitudes of the LOS points.
     """
     return range_los * np.cos(np.deg2rad(tilt_angle))
+
+
+def find_first_empty_line(file_name):
+    """Finds first text file line that is empty."""
+    line_number = 1
+    with open(file_name) as file:
+        for line in file:
+            if is_empty_line(line):
+                break
+            line_number += 1
+    return line_number
+
+
+def is_empty_line(line):
+    """Tests if a line (of a text file) is empty."""
+    if line in ('\n', '\r\n'):
+        return True
+    return False
+
+
+def is_timestamp(string):
+    """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss"""
+    reg_exp = re.compile(r'-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+    if reg_exp.match(string) is not None:
+        return True
+    return False

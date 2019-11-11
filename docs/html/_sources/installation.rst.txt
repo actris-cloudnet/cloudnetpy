@@ -27,11 +27,6 @@ Create a new virtual environment and activate it:
    $ python3.7 -m venv venv
    $ source venv/bin/activate
 
-.. note::
-   While hard to recommend, it is possible to install Python
-   packages system-wide and use these instead the local virtual environment.
-   A `conda <https://docs.conda.io/en/latest/>`_ -based installation is also
-   possible but not covered here.
 
 Pip-based Installation
 ----------------------

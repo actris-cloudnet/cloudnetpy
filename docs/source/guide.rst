@@ -2,10 +2,10 @@ Developer's Guide
 =================
 
 CloudnetPy is hosted by Finnish Meteorological Institute (FMI) and
-used to process cloud remote sensing data within ACTRIS research
-infrastructure. We are happy to welcome the cloud remote sensing community
+will be eventually used to process cloud remote sensing data in the
+ACTRIS research infrastructure. We are happy to welcome the cloud remote sensing community
 to provide improvements in the methods and their implementations, writing
-tests and finding bugs.
+tests and fixing bugs.
 
 How to contribute
 -----------------
@@ -16,7 +16,7 @@ Instructions can be found from `CloudnetPy's Github page <https://github.com/tuk
 Testing
 -------
 
-To run Cloudnetpy tests, you first need to
+To run CloudnetPy tests, you first need to
 clone the whole repository from `GitHub
 <https://github.com/tukiains/cloudnetpy>`_:
 
@@ -46,43 +46,56 @@ processing for example files and all tests:
 .. code-block:: console
 
     (venv) $ cd tests
-    (venv) $ python3.7 run_example_processing_and_tests.py
+    (venv) $ python3 run_example_processing_and_tests.py
 
 You should see the testing script loading some input files and starting
 to run the processing and tests:
 
 .. code-block:: console
 
+ ============================= test session starts ==============================
+ platform linux -- Python 3.7.1, pytest-4.1.1, py-1.7.0, pluggy-0.8.1
+ rootdir: /home/tukiains/Documents/PYTHON/cloudnetpy, inifile:
+ plugins: cov-2.8.1
+ collected 265 items
 
-    Loading input files...
-      Done.
-    ============================================================================================ test session starts =============================================================================================
-    platform linux -- Python 3.6.8, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
-    rootdir: /home/tukiains/Documents/PYTHON/cloudnetpy, inifile:
-    collected 96 items
+ unit/test_atmos.py ............
+ unit/test_ceilo.py ....
+ unit/test_ceilometer.py ........
+ unit/test_classify.py .........
+ unit/test_cloudnetarray.py ........
+ unit/test_datasource.py ........
+ unit/test_drizzle.py ..........
+ unit/test_droplet.py .................
+ unit/test_falling.py ..............
+ unit/test_freezing.py ...
+ unit/test_insects.py ......
+ unit/test_lidar.py ..
+ unit/test_melting.py ............
+ unit/test_meta_for_old_files.py ..
+ unit/test_mira.py .
+ unit/test_model.py ........
+ unit/test_mwr.py ...
+ unit/test_output.py .........
+ unit/test_plotting.py .............
+ unit/test_product_tools.py ...
+ unit/test_radar.py .........
+ unit/test_rpg.py ...
+ unit/test_utils.py ..............................................................................................
+ unit/test_vaisala.py .......
 
-    meta/test_raw.py ..                                                                                                                                                                                    [100%]
+ ========================== 265 passed in 0.87 seconds ==========================
+ ============================= test session starts ==============================
+ platform linux -- Python 3.7.1, pytest-4.1.1, py-1.7.0, pluggy-0.8.1 -- /home/tukiains/Documents/PYTHON/cloudnetpy/venv/bin/python3
+ cachedir: .pytest_cache
+ rootdir: /home/tukiains/Documents/PYTHON/cloudnetpy, inifile:
+ plugins: cov-2.8.1
+ collecting ... collected 4 items
 
-    ============================================================================================ 94 tests deselected =============================================================================================
-    ================================================================================== 2 passed, 94 deselected in 0.27 seconds ===================================================================================
-    ============================================================================================ test session starts =============================================================================================
-    platform linux -- Python 3.6.8, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
-    rootdir: /home/tukiains/Documents/PYTHON/cloudnetpy, inifile:
-    collected 96 items
-
-    meta/test_raw.py ..                                                                                                                                                                                    [100%]
-
-    ============================================================================================ 94 tests deselected =============================================================================================
-    ================================================================================== 2 passed, 94 deselected in 0.26 seconds ===================================================================================
-    /home/tukiains/Documents/PYTHON/cloudnetpy/venv/lib/python3.7/site-packages/numpy/core/fromnumeric.py:734: UserWarning: Warning: 'partition' will ignore the 'mask' of the MaskedArray.
-    a.partition(kth, axis=axis, kind=kind, order=order)
-    ============================================================================================ test session starts =============================================================================================
-    platform linux -- Python 3.6.8, pytest-3.3.2, py-1.5.2, pluggy-0.6.0
-    rootdir: /home/tukiains/Documents/PYTHON/cloudnetpy, inifile:
-    collected 96 items
-
-    meta/test_calibrated.py ..........                                                                                                                                                                     [ 22%]
-    meta/test_products.py ..................................                                                                                                                                               [100%]
+ meta/test_metadata.py::test_variables PASSED
+ meta/test_metadata.py::test_global_attributes PASSED
+ meta/test_metadata.py::test_variable_units FAILED
+ meta/test_metadata.py::test_attribute_values PASSED
 
 
 And so on.
@@ -90,14 +103,12 @@ And so on.
 
 .. note::
 
-   Cloudnetpy performs high-level, sophisticated scientific processing. Most of the
-   Cloudnetpy's low-level functions are unit tested, but it is notoriously
-   difficult to write unambiguous tests for all high-level API calls (yet we
-   *have* included at least rough tests for these). How well
-   our classification scheme works with all
-   possible instrument combinations? Or how accurate is our retrieved ice water
-   content compared to the reality? These kind of questions can be finally
-   answered only through rigorous scientific validation.
+   Cloudnetpy performs relatively complicated scientific processing, converting
+   noisy measurement data into higher level products. Most of the
+   Cloudnetpy's low-level functions are unit tested, but it is
+   difficult to write unambiguous tests for the high-level API calls.
+   However, the quality of the processed files can be at least roughly
+   checked using CloudnetPy's quality control functions.
 
 
 Coding guidelines
@@ -124,8 +135,3 @@ Further reading:
 - `Clean Code <https://www.oreilly.com/library/view/clean-code/9780136083238/>`_
 - `Clean Code in Python <https://www.packtpub.com/eu/application-development/clean-code-python>`_
 - `The Pragmatic Programmer <https://pragprog.com/book/tpp20/the-pragmatic-programmer-20th-anniversary-edition>`_
-
-
-
-
-

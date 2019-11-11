@@ -55,7 +55,7 @@ class CloudnetArray:
             self.units = ''
 
     def rebin_data(self, time, time_new, height=None, height_new=None):
-        """Rebins data in time and optionally in height."""
+        """Rebins data in time and optionally interpolates in height."""
         self.data = utils.rebin_2d(time, self.data, time_new)
         if np.any(height) and np.any(height_new):
             self.data = utils.interpolate_2d_masked(self.data,

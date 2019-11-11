@@ -23,14 +23,15 @@ bibliography: paper.bib
 
 # Summary
 
-Active ground-based remote sensing instruments provide vertical profiles of 
-clouds and aerosols with high vertical and temporal resolution. Cloud radars 
-typically operate in the sub-millimeter wavelength region, around 35 or 94 GHz, 
+Active ground-based remote sensing instruments such as cloud radars and lidars
+provide vertical profiles of clouds and aerosols with high vertical and 
+temporal resolution. Cloud radars typically operate in the sub-millimeter 
+wavelength region, around 35 or 94 GHz, 
 mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds and aerosols. 
 Combining these two supplementary data sources with temperature and humidity 
-from a numerical weather prediction model, it is possible to classify 
-the various scattering objects of the atmosphere.
+from a numerical weather prediction model makes it is possible to classify 
+various scattering objects of the atmosphere.
 Furthermore, adding a passive microwave radiometer, an instrument measuring 
 liquid water path, quantitative retrievals of geophysical 
 products such as ice water content, liquid water content 
@@ -44,10 +45,10 @@ to regularly collect, process and distribute Cloudnet data (http://cloudnet.fmi.
 While the methodology is valid, more robust and operational processing 
 software is called for. In the forthcoming years, Cloudnet will be one of 
 the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
-Infrastructure) [@ACTRIS_handbook], where Cloudnet framework 
-is used to process gigabytes of cloud remote sensing data per day in near real time. 
-ACTRIS is moving into implementation phase in 2020 and is supposed 
-to be fully operational in 2025.
+Infrastructure) [@ACTRIS_handbook], where the Cloudnet framework 
+is utilized to process gigabytes of cloud remote sensing data per day 
+in near real time. ACTRIS is moving into implementation phase in 2020 
+and is supposed to be fully operational in 2025.
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers the full Cloudnet processing chain starting from the raw 
