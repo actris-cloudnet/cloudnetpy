@@ -19,7 +19,7 @@ def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False):
         mmclx_file (str): Raw radar file in netCDF format.
         output_file (str): Output file name.
         site_meta (dict): Dictionary containing information about the
-            site. Required key value pairs are 'name'.
+            site. Required key value pair is `name`.
         rebin_data (bool, optional): If True, rebins data to 30s resolution.
             Otherwise keeps the native resolution. Default is False.
 
@@ -47,7 +47,7 @@ class Mira(DataSource):
     Args:
         raw_radar_file (str): Filename of raw MIRA NetCDF file.
         site_meta (dict): Site properties in a dictionary. Required
-            keys are: 'name'.
+            keys are: `name`.
 
     """
     keymap = {'Zg': 'Ze',

@@ -18,8 +18,8 @@ def rpg2nc(path_to_l1_files, output_file, site_meta):
         path_to_l1_files (str): Folder containing one day of RPG LV1 files.
         output_file (str): Output file name.
         site_meta (dict): Dictionary containing information about the
-            site. Required key value pairs are 'altitude' (in metres) and
-            'name'.
+            site. Required key value pairs are `altitude` (metres above mean
+            sea level) and `name`.
 
     Raises:
         RuntimeError: Failed to read the binary data.
