@@ -8,5 +8,5 @@ before_install:
 install:
   - pip install -r requirements.txt
 script:
-  - pylint3 cloudnetpy/categorize/*.py
+  - pylint cloudnetpy/categorize/*.py
   - pytest --cov=cloudnetpy tests/unit/
