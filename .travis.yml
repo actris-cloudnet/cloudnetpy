@@ -4,7 +4,9 @@ python:
 before_install:
   - pip install pytest
   - pip install pytest-cov
+  - pip install pylint
 install:
   - pip install -r requirements.txt
 script:
+  - pylint3 cloudnetpy/categorize/*.py
   - pytest --cov=cloudnetpy tests/unit/
