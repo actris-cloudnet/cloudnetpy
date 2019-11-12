@@ -1,3 +1,4 @@
+"""Module to find insects from data."""
 import numpy as np
 import numpy.ma as ma
 from scipy.ndimage.filters import gaussian_filter
@@ -21,14 +22,14 @@ def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
     above melting layer.
 
     Args:
-        obs (_ClassData): Input data container.
+        obs (ClassData): The :class:`ClassData` instance.
         melting_layer (ndarray): 2D array denoting melting layer.
         liquid_layers (ndarray): 2D array denoting liquid layers.
         prob_lim (float, optional): Probability higher than
             this will lead to positive detection. Default is 0.8.
 
     Returns:
-        2-element tuple containing
+        tuple: 2-element tuple containing
 
         - ndarray: 2-D probability of pixel containing insects.
         - ndarray: 2-D boolean flag of insects presence.

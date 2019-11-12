@@ -76,66 +76,121 @@ and perform various checks for the data.
     package.
 
 
+Categorize modules
+------------------
 
-Categorize subpackage
----------------------
-
-Categorize is a CloudnetPy's subpackage. It contains
+Categorize is CloudnetPy's subpackage. It contains
 several modules that are used when creating the Cloudnet
 categorize file.
 
 
-cloudnetpy.categorize.classify
-..............................
+datasource
+..........
+
+.. automodule:: categorize.datasource
+   :members:
+
+radar
+.....
+
+.. automodule:: categorize.radar
+   :members:
+
+lidar
+.....
+
+.. automodule:: categorize.lidar
+   :members:
+
+mwr
+...
+
+.. automodule:: categorize.mwr
+   :members:
+
+model
+.....
+
+.. automodule:: categorize.model
+   :members:
+
+classify
+........
 
 .. automodule:: categorize.classify
    :members:
 
+melting
+.......
 
-cloudnetpy.categorize.atmos
-...........................
+.. automodule:: categorize.melting
+   :members:
+
+freezing
+........
+
+.. automodule:: categorize.freezing
+   :members:
+
+
+falling
+.......
+
+.. automodule:: categorize.falling
+   :members:
+
+
+insects
+.......
+
+.. automodule:: categorize.insects
+   :members:
+
+
+atmos
+.....
 
 .. automodule:: categorize.atmos
    :members:
 
 
-cloudnetpy.categorize.droplet
-.............................
+droplet
+.......
 
 .. automodule:: categorize.droplet
    :members:
 
 
-Products subpackage
--------------------
+Products modules
+----------------
 
-Products is a CloudnetPy's subpackage. It contains
+Products is CloudnetPy's subpackage. It contains
 several modules that correspond to different Cloudnet
 products.
 
-cloudnetpy.products.classification
-..................................
+classification
+..............
 
 .. automodule:: products.classification
    :members:
 
 
-cloudnetpy.products.iwc
-.......................
+iwc
+...
 
 .. automodule:: products.iwc
    :members:
 
 
-cloudnetpy.products.lwc
-.......................
+lwc
+...
 
 .. automodule:: products.lwc
    :members:
 
 
-cloudnetpy.products.drizzle
-...........................
+drizzle
+.......
 
 .. automodule:: products.drizzle
    :members:

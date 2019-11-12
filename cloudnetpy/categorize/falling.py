@@ -1,3 +1,4 @@
+"""Module to find falling hydrometeors from data."""
 import numpy as np
 from cloudnetpy import utils
 from cloudnetpy.categorize import atmos
@@ -14,7 +15,7 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
     temperatures.
 
     Args:
-        obs (_ClassData): Container for observations.
+        obs (ClassData): The :class:`ClassData` instance.
         is_liquid (ndarray): 2-D boolean array of liquid droplets.
         is_insects (ndarray): 2-D boolean array of insects.
 

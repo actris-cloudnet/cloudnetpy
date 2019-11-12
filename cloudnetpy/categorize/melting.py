@@ -35,7 +35,7 @@ def find_melting_layer(obs, smooth=True):
         drops can even move upwards instead of down).
 
     Args:
-        obs (_ClassData): Input data container.
+        obs (ClassData): The :class:`ClassData` instance.
         smooth (bool, optional): If True, apply a small
             Gaussian smoother to the melting layer. Default is True.
 

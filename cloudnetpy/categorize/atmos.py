@@ -118,7 +118,7 @@ def calc_wet_bulb_temperature(model_data):
     expansion of a simple expression for the saturated vapour pressure.
 
     Args:
-        model_data (dict): Model variables 'temperature', 'pressure', 'rh'.
+        model_data (dict): Model variables `temperature`, `pressure`, `rh`.
 
     Returns:
         ndarray: Wet bulb temperature (K).
@@ -180,15 +180,14 @@ def get_attenuations(model, mwr, classification):
     """Calculates attenuations due to atmospheric gases and liquid water.
 
     Args:
-        model (Model): Model data.
-        mwr (Mwr): Mwr data.
-        classification (ClassificationResult): Classified atmospheric
-            scatterers.
+        model (Model): The :class:`Model` instance.
+        mwr (Mwr): The :class:`Mwr` instance.
+        classification (ClassificationResult): The
+            :class:`ClassificationResult` instance.
 
     Returns:
-        dict: Dict containing 'radar_gas_atten', 'radar_liquid_atten',
-            'liquid_atten_err', 'liquid_corrected' and 'liquid_uncorrected'
-            fields.
+        dict: Dictionary containing `radar_gas_atten`, `radar_liquid_atten`,
+        `liquid_atten_err`, `liquid_corrected` and `liquid_uncorrected` fields.
 
     """
     gas = GasAttenuation(model, classification)
@@ -203,7 +202,16 @@ def get_attenuations(model, mwr, classification):
 
 
 class Attenuation:
-    """Base class for gas and liquid attenuations."""
+    """Base class for gas and liquid attenuations.
+
+    Args:
+        model (Model): The :class:`Model` instance.
+        classification (ClassificationResult): The :class:`ClassificationResult` instance.
+
+    Attributes:
+        classification (ClassificationResult): The :class:`ClassificationResult` instance.
+
+    """
     def __init__(self, model, classification):
         self._dheight = utils.mdiff(model.height)
         self._model = model.data_dense
@@ -212,18 +220,24 @@ class Attenuation:
 
 
 class GasAttenuation(Attenuation):
-    """Radar gas attenuation class."""
+    """Radar gas attenuation class. Child of Attenuation.
+
+    Args:
+        model (Model): The :class:`Model` instance.
+        classification (ClassificationResult): The :class:`ClassificationResult` instance.
+
+    Attributes:
+        atten (ndarray): Gas attenuation (dB).
+
+    """
     def __init__(self, model, classification):
         super().__init__(model, classification)
         self.atten = self._calc_gas_atten()
 
     def _calc_gas_atten(self):
-        atten = self._init_gas_atten()
+        atten = np.copy(self._model['specific_gas_atten'])
         self._fix_atten_in_liquid(atten)
         return self._specific_to_gas_atten(atten)
-
-    def _init_gas_atten(self):
-        return np.copy(self._model['specific_gas_atten'])
 
     def _fix_atten_in_liquid(self, atten):
         saturated_atten = self._model['specific_saturated_gas_atten']
@@ -239,7 +253,20 @@ class GasAttenuation(Attenuation):
 
 
 class LiquidAttenuation(Attenuation):
-    """Radar liquid attenuation class."""
+    """Radar liquid attenuation class. Child of Attenuation.
+
+    Args:
+        model (Model): The :class:`Model` instance.
+        classification (ClassificationResult): The :class:`ClassificationResult` instance.
+        mwr (Mwr): The :class:`Mwr` instance.
+
+    Attributes:
+        atten (ndarray): Radar liquid attenuation (dB).
+        atten_err (ndarray): Error of radar liquid attenuation (dB).
+        uncorrected (ndarray): Boolean array denoting uncorrected pixels.
+        corrected (ndarray): Boolean array denoting corrected pixels.
+
+    """
     def __init__(self, model, classification, mwr):
         super().__init__(model, classification)
         self._mwr = mwr.data
@@ -300,8 +327,8 @@ def fill_clouds_with_lwc_dz(atmosphere, is_liquid):
         is_liquid (ndarray): Boolean array indicating presence of liquid clouds.
 
     Returns:
-        liquid water content change rate (g/m3/m), so that for each cloud
-            the base value is filled for the whole cloud.
+        ndarray: liquid water content change rate (g/m3/m), so that for each
+        cloud the base value is filled for the whole cloud.
 
     """
     lwc_dz = get_lwc_change_rate_at_bases(atmosphere, is_liquid)
@@ -319,7 +346,7 @@ def get_lwc_change_rate_at_bases(atmosphere, is_liquid):
         is_liquid (ndarray): Boolean array indicating presence of liquid clouds.
 
     Returns:
-        liquid water content change rate at cloud bases (kg/m3/m).
+        ndarray: liquid water content change rate at cloud bases (kg/m3/m).
 
     """
     liquid_bases = find_cloud_bases(is_liquid)
@@ -346,6 +373,16 @@ def find_cloud_bases(array):
 
 
 def find_cloud_tops(array):
+    """Finds tops of clouds.
+
+    Args:
+        array (ndarray): 2D boolean array denoting clouds or some other
+            similar field.
+
+    Returns:
+        ndarray: Boolean array indicating tops of the individual clouds.
+
+    """
     array_flipped = np.fliplr(array)
     bases_of_flipped = find_cloud_bases(array_flipped)
     return np.fliplr(bases_of_flipped)
@@ -357,7 +394,7 @@ def calc_adiabatic_lwc(lwc_change_rate, dheight):
     Args:
         lwc_change_rate (ndarray): Liquid water content change rate (g/m3/m)
             calculated at the base of each cloud and filled to that cloud.
-        dheight: Median difference of the height vector (m).
+        dheight (float): Median difference of the height vector (m).
 
     Returns:
         Liquid water content (g/m3).

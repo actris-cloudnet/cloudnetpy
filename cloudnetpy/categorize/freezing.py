@@ -1,3 +1,4 @@
+"""Module to find freezing region from data."""
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import interp1d
@@ -15,7 +16,7 @@ def find_freezing_region(obs, melting_layer):
     interpolated for all profiles.
 
     Args:
-        obs (_ClassData): Input data container.
+        obs (ClassData): The :class:`ClassData` instance.
         melting_layer (ndarray): 2-D boolean array denoting melting layer.
 
     Returns:

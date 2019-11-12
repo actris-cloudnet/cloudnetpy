@@ -10,9 +10,9 @@ def correct_liquid_top(obs, liquid, is_freezing, limit=200):
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
-        obs (ClassData): Observations container.
-        liquid (dict): Dictionary about liquid clouds including 'tops' and
-            'presence'.
+        obs (ClassData): The :class:`ClassData` instance.
+        liquid (dict): Dictionary about liquid clouds including `tops` and
+            `presence`.
         is_freezing (ndarray): 2-D boolean array of sub-zero temperature,
             derived from the model temperature and melting layer based
             on radar data.
@@ -44,10 +44,10 @@ def find_liquid(obs, peak_amp=1e-6,
                 min_points=3,
                 min_top_der=1e-7,
                 min_lwp=0):
-    """ Estimate liquid layers from SNR-screened attenuated backscattering.
+    """ Estimate liquid layers from SNR-screened attenuated backscatter.
 
     Args:
-        obs (ClassData): Observations container.
+        obs (ClassData): The :class:`ClassData` instance.
         peak_amp (float, optional): Minimum value of peak. Default is 2e-5.
         max_width (float, optional): Maximum width of peak. Default is 300 (m).
         min_points (int, optional): Minimum number of valid points in peak.
@@ -59,7 +59,7 @@ def find_liquid(obs, peak_amp=1e-6,
             measured by the mwr. Default is 0.
 
     Returns:
-        dict: Dict containing 'presence', 'bases' and 'tops'.
+        dict: Dict containing `presence`, `bases` and `tops`.
 
     """
     def _is_proper_peak():
@@ -220,7 +220,15 @@ def ind_top(dprof, ind_peak, nprof, dist, lim):
 
 
 def interpolate_lwp(obs):
-    """Linear interpolation of liquid water path to fill masked values."""
+    """Linear interpolation of liquid water path to fill masked values.
+
+    Args:
+        obs (ClassData): The :class:`ClassData` instance.
+
+    Returns:
+        ndarray: Liquid water path where the masked values are filled by interpolation.
+
+    """
     ind = ma.where(obs.lwp)
     return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
 
