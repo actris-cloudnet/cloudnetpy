@@ -18,7 +18,7 @@ class Radar(ProfileDataSource):
         wl_band (int): Int corresponding to frequency 0 = 35.5 GHz, 1 = 94 GHz.
         folding_velocity (float): Radar's folding velocity (m/s).
         location (str): Location of the radar, copied from the global attribute
-            'location' of the *radar_file*.
+            `location` of the *radar_file*.
         sequence_indices (list): Indices denoting the different altitude
             regimes of the radar.
         type (str): Type of the radar, e.g. 'RPG-FMCW', 'METEK MIRA-36'

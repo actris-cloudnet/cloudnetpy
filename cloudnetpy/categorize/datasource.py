@@ -13,7 +13,7 @@ class DataSource:
     Attributes:
         filename (str): Filename of the input file.
         dataset (Dataset): A netCDF4 Dataset instance.
-        source (str): Global attribute 'source' from *input_file*.
+        source (str): Global attribute `source` from *input_file*.
         time (MaskedArray): Time array of the instrument.
         altitude (float): Altitude of instrument above mean sea level (m).
         data (dict): Dictionary containing :class:`CloudnetArray` instances.

@@ -19,7 +19,7 @@ def generate_categorize(input_files, output_file):
 
     Args:
         input_files (dict): dict containing file names for calibrated
-            'radar', 'lidar' 'model' and 'mwr' files.
+            `radar`, `lidar`, `model` and `mwr` files.
         output_file (str): Full path of the output file.
 
     Raises:
