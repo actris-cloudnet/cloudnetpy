@@ -76,122 +76,121 @@ and perform various checks for the data.
     package.
 
 
-
-Categorize subpackage
----------------------
+Categorize modules
+------------------
 
 Categorize is a CloudnetPy's subpackage. It contains
 several modules that are used when creating the Cloudnet
 categorize file.
 
 
-cloudnetpy.categorize.datasource
-................................
+datasource
+..........
 
 .. automodule:: categorize.datasource
    :members:
 
-cloudnetpy.categorize.radar
-...........................
+radar
+.....
 
 .. automodule:: categorize.radar
    :members:
 
-cloudnetpy.categorize.lidar
-...........................
+lidar
+.....
 
 .. automodule:: categorize.lidar
    :members:
 
-cloudnetpy.categorize.mwr
-.........................
+mwr
+...
 
 .. automodule:: categorize.mwr
    :members:
 
-cloudnetpy.categorize.model
-...........................
+model
+.....
 
 .. automodule:: categorize.model
    :members:
 
-cloudnetpy.categorize.classify
-..............................
+classify
+........
 
 .. automodule:: categorize.classify
    :members:
 
-cloudnetpy.categorize.melting
-.............................
+melting
+.......
 
 .. automodule:: categorize.melting
    :members:
 
-cloudnetpy.categorize.freezing
-..............................
+freezing
+........
 
 .. automodule:: categorize.freezing
    :members:
 
 
-cloudnetpy.categorize.falling
-.............................
+falling
+.......
 
 .. automodule:: categorize.falling
    :members:
 
 
-cloudnetpy.categorize.insects
-.............................
+insects
+.......
 
 .. automodule:: categorize.insects
    :members:
 
 
-cloudnetpy.categorize.atmos
-...........................
+atmos
+.....
 
 .. automodule:: categorize.atmos
    :members:
 
 
-cloudnetpy.categorize.droplet
-.............................
+droplet
+.......
 
 .. automodule:: categorize.droplet
    :members:
 
 
-Products subpackage
--------------------
+Products modules
+----------------
 
 Products is a CloudnetPy's subpackage. It contains
 several modules that correspond to different Cloudnet
 products.
 
-cloudnetpy.products.classification
-..................................
+classification
+..............
 
 .. automodule:: products.classification
    :members:
 
 
-cloudnetpy.products.iwc
-.......................
+iwc
+...
 
 .. automodule:: products.iwc
    :members:
 
 
-cloudnetpy.products.lwc
-.......................
+lwc
+...
 
 .. automodule:: products.lwc
    :members:
 
 
-cloudnetpy.products.drizzle
-...........................
+drizzle
+.......
 
 .. automodule:: products.drizzle
    :members:
