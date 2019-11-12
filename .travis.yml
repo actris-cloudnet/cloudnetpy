@@ -8,5 +8,5 @@ before_install:
 install:
   - pip install -r requirements.txt
 script:
-  - pylint --errors-only cloudnetpy
+  - pylint --errors-only --ignored-modules=netCDF4 cloudnetpy
   - pytest --cov=cloudnetpy tests/unit/
