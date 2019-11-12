@@ -1,4 +1,4 @@
-"""Module for Lidar class."""
+"""Lidar module, containing the :class:`Lidar` class."""
 from cloudnetpy.categorize import ProfileDataSource
 
 

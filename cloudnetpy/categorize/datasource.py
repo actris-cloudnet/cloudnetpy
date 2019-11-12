@@ -1,3 +1,6 @@
+"""Datasource module, containing the :class:`DataSource`
+and :class:`ProfileDataSource` classes.
+"""
 import os
 import numpy as np
 import netCDF4

@@ -92,7 +92,19 @@ class DrizzleSource(DataSource):
 
 
 class DrizzleClassification(ProductClassification):
-    """Class storing the information about different drizzle types."""
+    """Class storing the information about different drizzle types, child of  :class:`ProductClassification`.
+
+    Args:
+        categorize_file (str): Categorize file name.
+
+    Attributes:
+        is_v_sigma (ndarray): 2D array denoting finite v_sigma.
+        warm_liquid (ndarray): 2D array denoting warm liquid.
+        drizzle (ndarray): 2D array denoting drizzle presence.
+        would_be_drizzle (ndarray): 2D array denoting possible drizzle pixels.
+        cold_rain (ndarray): 1D array denoting profiles with melting layer.
+
+    """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.is_v_sigma = self._find_v_sigma(categorize_file)
@@ -149,7 +161,7 @@ def correct_spectral_width(cat_file):
 
     Returns:
         ndarray: Spectral width containing the correction for turbulence
-            broadening.
+        broadening.
 
     """
     def _calc_beam_divergence():
@@ -187,10 +199,12 @@ def drizzle_solve(data, drizzle_class, width_ht):
     """Estimates drizzle parameters.
 
     Args:
-        data (DrizzleSource): Input data.
-        drizzle_class (DrizzleClassification): Classification of the atmosphere
-            for drizzle calculations.
-        width_ht (ndarray): Corrected spectral width.
+        data (DrizzleSource): The :class:`DrizzleSource` instance.
+        drizzle_class (DrizzleClassification): The :class:`DrizzleClassification` instance.
+        width_ht (ndarray): 2D corrected spectral width.
+
+    Returns:
+        dict: Dictionary of retrieved drizzle parameters, `Do`, `mu`, `S`, `beta_corr`.
 
     """
     def _init_variables():
@@ -249,6 +263,9 @@ def calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
         mu (ndarray, optional): Shape parameter for gamma calculations. Default is 0.
         ray (ndarray, optional): Mie to Rayleigh ratio for z. Default is 1.
         k (ndarray, optional): Alpha to beta ratio . Default is 1.
+
+    Returns:
+        ndarray: Drizzle diameter.
 
     References:
         https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1

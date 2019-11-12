@@ -1,3 +1,4 @@
+"""Mwr module, containing the :class:`Mwr` class."""
 from cloudnetpy.categorize import DataSource
 from cloudnetpy import utils
 

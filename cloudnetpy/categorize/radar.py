@@ -1,4 +1,4 @@
-"""Radar module, offering Radar(ProfileDataSource) class."""
+"""Radar module, containing the :class:`Radar` class."""
 import math
 import numpy as np
 import numpy.ma as ma
