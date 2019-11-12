@@ -60,17 +60,20 @@ def test_iwc_spec_liq_atten(iwc_source_file):
     assert compare == obj.spec_liq_atten
 
 
-"""
-# How to test these?
 def test_iwc_z_factor(iwc_source_file):
     obj = IwcSource(iwc_source_file)
-    assert True
+    Coefficients = namedtuple('Coefficients', 'K2liquid0')
+    obj.coeffs = Coefficients(10)
+    compare = -0.25
+    assert compare == round(obj.z_factor, 3)
 
 
-def test_iwc_coeffs(iwc_source_file):
+# TODO: Might not be the best test for this
+@pytest.mark.parametrize("result", [
+    'K2liquid0', 'ZT', 'T', 'Z', 'c'])
+def test_iwc_coeffs(result, iwc_source_file):
     obj = IwcSource(iwc_source_file)
-    assert True
-"""
+    assert result in obj.coeffs._fields
 
 
 def test_iwc_temperature(iwc_source_file):
@@ -180,7 +183,7 @@ def test_find_cold_above_rain(cold, is_rain, melting, result, iwc_cat_file):
 
 # TODO: Think also values as some point for test below
 
-
+"""
 def test_z_to_iwc(iwc_source_file):
     from cloudnetpy.products.iwc import _z_to_iwc
     data = IwcSource(iwc_source_file)
@@ -190,10 +193,9 @@ def test_z_to_iwc(iwc_source_file):
     Coefficients = namedtuple('Coefficients', 'K2liquid0 ZT T Z c')
     data.coeffs = Coefficients(0.1, 0.1, 0.2, 0.05, 0)
     obj = _z_to_iwc(data, 'Z')
-    print(obj)
-    # Jatketaan tätä paremmilla inspiraatioilla myöhemmin
-    # TODO: Write better and finish
+    # TODO: Also a bit complicated, continue later
     assert True
+"""
 
 
 def test_append_iwc_including_rain(iwc_source_file, iwc_cat_file):
@@ -230,10 +232,12 @@ def test_append_bias(iwc_source_file):
     assert 'iwc_bias' in ice_data.data.keys()
 
 
+"""
 def test_append_iwc_status(iwc_source_file, iwc_cat_file):
     from cloudnetpy.products.iwc import _append_iwc_status
     ice_class = _IceClassification(iwc_cat_file)
     ice_data = IwcSource(iwc_source_file)
     ice_data.data['iwc'] = [1, 1, 1]
-    # TODO: Finish this
+    # TODO: This is a bit more complicated then other. How to test?
     assert True
+"""
