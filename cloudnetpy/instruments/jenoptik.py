@@ -1,6 +1,7 @@
 """Module with a class for Jenoptik ceilometer."""
 import netCDF4
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy import utils
 
@@ -58,7 +59,7 @@ class JenoptikCeilo(Ceilometer):
     def _get_nn(self):
         """TODO: Should be checked."""
         nn1 = self._getvar('nn1', 'NN1')
-        median_nn1 = np.median(nn1)
+        median_nn1 = ma.median(nn1)
         if 120 < median_nn1 < 160:
             step_factor, reference, scale = 1.24, 140, 5
         elif 3200 < median_nn1 < 4000:
