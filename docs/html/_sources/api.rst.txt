@@ -79,7 +79,7 @@ and perform various checks for the data.
 Categorize modules
 ------------------
 
-Categorize is a CloudnetPy's subpackage. It contains
+Categorize is CloudnetPy's subpackage. It contains
 several modules that are used when creating the Cloudnet
 categorize file.
 
@@ -164,7 +164,7 @@ droplet
 Products modules
 ----------------
 
-Products is a CloudnetPy's subpackage. It contains
+Products is CloudnetPy's subpackage. It contains
 several modules that correspond to different Cloudnet
 products.
 

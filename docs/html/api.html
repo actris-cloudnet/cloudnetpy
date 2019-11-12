@@ -217,7 +217,7 @@ steps.</p>
 <li><strong>mmclx_file</strong> (<em>str</em>) – Raw radar file in netCDF format.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 <li><strong>site_meta</strong> (<em>dict</em>) – Dictionary containing information about the
-site. Required key value pairs are ‘name’.</li>
+site. Required key value pair is <cite>name</cite>.</li>
 <li><strong>rebin_data</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, rebins data to 30s resolution.
 Otherwise keeps the native resolution. Default is False.</li>
 </ul>
@@ -247,8 +247,8 @@ concatenates the data and writes it into netCDF file.</p>
 <li><strong>path_to_l1_files</strong> (<em>str</em>) – Folder containing one day of RPG LV1 files.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name.</li>
 <li><strong>site_meta</strong> (<em>dict</em>) – Dictionary containing information about the
-site. Required key value pairs are ‘altitude’ (in metres) and
-‘name’.</li>
+site. Required key value pairs are <cite>altitude</cite> (metres above mean
+sea level) and <cite>name</cite>.</li>
 </ul>
 </td>
 </tr>
@@ -274,9 +274,9 @@ ceilometer files and writes the data into netCDF file. Three variants
 of the attenuated backscatter are saved in the file:</p>
 <blockquote>
 <div><ol class="arabic simple">
-<li>Raw backscatter (‘beta_raw’)</li>
-<li>Signal-to-noise screened backscatter (‘beta’)</li>
-<li>SNR-screened backscatter with smoothed weak background (‘beta_smooth’).</li>
+<li>Raw backscatter, <cite>beta_raw</cite></li>
+<li>Signal-to-noise screened backscatter, <cite>beta</cite></li>
+<li>SNR-screened backscatter with smoothed weak background, <cite>beta_smooth</cite></li>
 </ol>
 </div></blockquote>
 <table class="docutils field-list" frame="void" rules="none">
@@ -288,7 +288,7 @@ of the attenuated backscatter are saved in the file:</p>
 for Jenoptik it is a netCDF file.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Output file name, e.g. ‘ceilo.nc’.</li>
 <li><strong>site_meta</strong> (<em>dict</em>) – Dictionary containing information about the
-site. Required key value pairs are ‘name’ and ‘altitude’
+site. Required key value pairs are <cite>name</cite> and <cite>altitude</cite>
 (metres above mean sea level).</li>
 </ul>
 </td>
@@ -322,7 +322,7 @@ in <em>ouput_file</em> which is a compressed netCDF4 file.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>input_files</strong> (<em>dict</em>) – dict containing file names for calibrated
-‘radar’, ‘lidar’ ‘model’ and ‘mwr’ files.</li>
+<cite>radar</cite>, <cite>lidar</cite>, <cite>model</cite> and <cite>mwr</cite> files.</li>
 <li><strong>output_file</strong> (<em>str</em>) – Full path of the output file.</li>
 </ul>
 </td>
@@ -603,7 +603,7 @@ package.</p>
 </div>
 <div class="section" id="categorize-modules">
 <h2>Categorize modules<a class="headerlink" href="#categorize-modules" title="Permalink to this headline">¶</a></h2>
-<p>Categorize is a CloudnetPy’s subpackage. It contains
+<p>Categorize is CloudnetPy’s subpackage. It contains
 several modules that are used when creating the Cloudnet
 categorize file.</p>
 <div class="section" id="module-categorize.datasource">
@@ -2403,7 +2403,7 @@ values in the profile).</p>
 </div>
 <div class="section" id="products-modules">
 <h2>Products modules<a class="headerlink" href="#products-modules" title="Permalink to this headline">¶</a></h2>
-<p>Products is a CloudnetPy’s subpackage. It contains
+<p>Products is CloudnetPy’s subpackage. It contains
 several modules that correspond to different Cloudnet
 products.</p>
 <div class="section" id="module-products.classification">
