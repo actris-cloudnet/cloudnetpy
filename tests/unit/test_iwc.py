@@ -122,7 +122,7 @@ def test_find_ice(falling, cold, melting,  insect, result, iwc_cat_file):
     obj.category_bits['cold'] = cold
     obj.category_bits['melting'] = melting
     obj.category_bits['insect'] = insect
-    testing.assert_almost_equal(obj._find_ice(), result)
+    testing.assert_array_equal(obj._find_ice().data, result)
 
 
 @pytest.mark.parametrize("falling, cold, melting, insect, result", [
@@ -135,7 +135,7 @@ def test_find_would_be_ice(falling, cold, melting,  insect, result, iwc_cat_file
     obj.category_bits['cold'] = cold
     obj.category_bits['melting'] = melting
     obj.category_bits['insect'] = insect
-    testing.assert_almost_equal(obj._find_would_be_ice(), result)
+    testing.assert_array_equal(obj._find_would_be_ice().data, result)
 
 
 @pytest.mark.parametrize("is_ice, attenuated, corrected, result", [
@@ -146,7 +146,7 @@ def test_find_corrected_ice(is_ice, attenuated, corrected, result, iwc_cat_file)
     obj.quality_bits['attenuated'] = attenuated
     obj.quality_bits['corrected'] = corrected
     obj.is_ice = is_ice
-    testing.assert_almost_equal(obj._find_corrected_ice(), result)
+    testing.assert_array_equal(obj._find_corrected_ice().data, result)
 
 
 @pytest.mark.parametrize("is_ice, attenuated, corrected, result", [
@@ -157,7 +157,7 @@ def test_find_uncorrected_ice(is_ice, attenuated, corrected, result, iwc_cat_fil
     obj.quality_bits['attenuated'] = attenuated
     obj.quality_bits['corrected'] = corrected
     obj.is_ice = is_ice
-    testing.assert_almost_equal(obj._find_uncorrected_ice(), result)
+    testing.assert_array_equal(obj._find_uncorrected_ice().data, result)
 
 
 @pytest.mark.parametrize("is_ice, is_rain, result", [
@@ -167,7 +167,7 @@ def test_find_ice_above_rain(is_ice, is_rain, result, iwc_cat_file):
     obj = _IceClassification(iwc_cat_file)
     obj.is_ice = is_ice
     obj.is_rain = is_rain
-    testing.assert_almost_equal(obj._find_ice_above_rain(), result)
+    testing.assert_array_equal(obj._find_ice_above_rain().data, result)
 
 
 @pytest.mark.parametrize("cold, is_rain, melting, result", [
@@ -178,7 +178,7 @@ def test_find_cold_above_rain(cold, is_rain, melting, result, iwc_cat_file):
     obj.category_bits['cold'] = cold
     obj.category_bits['melting'] = melting
     obj.is_rain = is_rain
-    testing.assert_almost_equal(obj._find_cold_above_rain(), result)
+    testing.assert_array_equal(obj._find_cold_above_rain().data, result)
 
 
 # TODO: Think also values as some point for test below

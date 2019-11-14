@@ -19,6 +19,16 @@ def lwc_source_file(tmpdir_factory, file_metadata):
     var = root_grp.createVariable('altitude', 'f8')
     var[:] = 1
     var.units = 'km'
+    var = root_grp.createVariable('lwp', 'f8', 'time')
+    var[:] = [1, 1, 0.5]
+    var = root_grp.createVariable('lwp_error', 'f8', 'time')
+    var[:] = [0.2, 0.2, 0.1]
+    var = root_grp.createVariable('is_rain', 'i4', 'time')
+    var[:] = [0, 1, 1]
+    var = root_grp.createVariable('category_bits', 'i4', 'time')
+    var[:] = [0, 1, 2]
+    var = root_grp.createVariable('quality_bits', 'i4', 'time')
+    var[:] = [8, 16, 32]
     var = root_grp.createVariable('temperature', 'f8', ('time', 'height'))
     var[:] = np.array([[282, 280, 278],
                        [286, 284, 282],
@@ -45,8 +55,24 @@ def _create_dimension_variables(root_grp):
             x.units = 'm'
 
 
-def test_get_atmosphere():
-    assert True
+def test_get_atmosphere_T(lwc_source_file):
+    obj = LwcSource(lwc_source_file)
+    compare = np.array([[282, 280, 278],
+                        [286, 284, 282],
+                        [284, 282, 280]])
+    testing.assert_array_equal(compare, obj.atmosphere[0])
+
+
+def test_get_atmosphere_p(lwc_source_file):
+    obj = LwcSource(lwc_source_file)
+    compare = np.array([[1010, 1000, 990],
+               [1020, 1010, 1000],
+               [1030, 1020, 1010]])
+    testing.assert_array_equal(compare, obj.atmosphere[-1])
+
+
+
+
 
 
 def test_get_echo():
