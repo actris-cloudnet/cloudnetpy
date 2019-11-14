@@ -4,7 +4,9 @@ python:
 before_install:
   - pip install pytest
   - pip install pytest-cov
+  - pip install pylint
 install:
   - pip install -r requirements.txt
 script:
+  - pylint --errors-only --ignored-modules=netCDF4 cloudnetpy
   - pytest --cov=cloudnetpy tests/unit/

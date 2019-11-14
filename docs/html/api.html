@@ -417,7 +417,7 @@ J. Appl. Meteor. Climatol., 45, 301–317, <a class="reference external" href="h
 <dd><p>Generates Cloudnet liquid water content product.</p>
 <p>This function calculates cloud liquid water content using the so-called
 adiabatic-scaled method. In this method, liquid water content measured by
-microwave radiameter is used to constrain the theoretical liquid water
+microwave radiometer is used to constrain the theoretical liquid water
 content of observed liquid clouds. The results are written in a netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -608,6 +608,8 @@ several modules that are used when creating the Cloudnet
 categorize file.</p>
 <div class="section" id="module-categorize.datasource">
 <span id="datasource"></span><h3>datasource<a class="headerlink" href="#module-categorize.datasource" title="Permalink to this headline">¶</a></h3>
+<p>Datasource module, containing the <a class="reference internal" href="#categorize.datasource.DataSource" title="categorize.datasource.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSource</span></code></a>
+and <a class="reference internal" href="#categorize.datasource.ProfileDataSource" title="categorize.datasource.ProfileDataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProfileDataSource</span></code></a> classes.</p>
 <dl class="class">
 <dt id="categorize.datasource.DataSource">
 <em class="property">class </em><code class="descclassname">categorize.datasource.</code><code class="descname">DataSource</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/datasource.html#DataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.datasource.DataSource" title="Permalink to this definition">¶</a></dt>
@@ -651,7 +653,7 @@ categorize file.</p>
 <dl class="attribute">
 <dt id="categorize.datasource.DataSource.source">
 <code class="descname">source</code><a class="headerlink" href="#categorize.datasource.DataSource.source" title="Permalink to this definition">¶</a></dt>
-<dd><p>Global attribute ‘source’ from <em>input_file</em>.</p>
+<dd><p>Global attribute <cite>source</cite> from <em>input_file</em>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -798,7 +800,7 @@ is <em>key</em>.</li>
 </div>
 <div class="section" id="module-categorize.radar">
 <span id="radar"></span><h3>radar<a class="headerlink" href="#module-categorize.radar" title="Permalink to this headline">¶</a></h3>
-<p>Radar module, offering Radar(ProfileDataSource) class.</p>
+<p>Radar module, containing the <a class="reference internal" href="#categorize.radar.Radar" title="categorize.radar.Radar"><code class="xref py py-class docutils literal notranslate"><span class="pre">Radar</span></code></a> class.</p>
 <dl class="class">
 <dt id="categorize.radar.Radar">
 <em class="property">class </em><code class="descclassname">categorize.radar.</code><code class="descname">Radar</code><span class="sig-paren">(</span><em>radar_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/radar.html#Radar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.radar.Radar" title="Permalink to this definition">¶</a></dt>
@@ -857,7 +859,7 @@ is <em>key</em>.</li>
 <dt id="categorize.radar.Radar.location">
 <code class="descname">location</code><a class="headerlink" href="#categorize.radar.Radar.location" title="Permalink to this definition">¶</a></dt>
 <dd><p>Location of the radar, copied from the global attribute
-‘location’ of the <em>radar_file</em>.</p>
+<cite>location</cite> of the <em>radar_file</em>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -968,7 +970,7 @@ regimes of the radar.</p>
 </div>
 <div class="section" id="module-categorize.lidar">
 <span id="lidar"></span><h3>lidar<a class="headerlink" href="#module-categorize.lidar" title="Permalink to this headline">¶</a></h3>
-<p>Module for Lidar class.</p>
+<p>Lidar module, containing the <a class="reference internal" href="#categorize.lidar.Lidar" title="categorize.lidar.Lidar"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lidar</span></code></a> class.</p>
 <dl class="class">
 <dt id="categorize.lidar.Lidar">
 <em class="property">class </em><code class="descclassname">categorize.lidar.</code><code class="descname">Lidar</code><span class="sig-paren">(</span><em>lidar_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/lidar.html#Lidar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.lidar.Lidar" title="Permalink to this definition">¶</a></dt>
@@ -1004,6 +1006,7 @@ regimes of the radar.</p>
 </div>
 <div class="section" id="module-categorize.mwr">
 <span id="mwr"></span><h3>mwr<a class="headerlink" href="#module-categorize.mwr" title="Permalink to this headline">¶</a></h3>
+<p>Mwr module, containing the <a class="reference internal" href="#categorize.mwr.Mwr" title="categorize.mwr.Mwr"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mwr</span></code></a> class.</p>
 <dl class="class">
 <dt id="categorize.mwr.Mwr">
 <em class="property">class </em><code class="descclassname">categorize.mwr.</code><code class="descname">Mwr</code><span class="sig-paren">(</span><em>mwr_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/mwr.html#Mwr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.mwr.Mwr" title="Permalink to this definition">¶</a></dt>
@@ -1035,6 +1038,7 @@ regimes of the radar.</p>
 </div>
 <div class="section" id="module-categorize.model">
 <span id="model"></span><h3>model<a class="headerlink" href="#module-categorize.model" title="Permalink to this headline">¶</a></h3>
+<p>Model module, containing the <a class="reference internal" href="#categorize.model.Model" title="categorize.model.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> class.</p>
 <dl class="class">
 <dt id="categorize.model.Model">
 <em class="property">class </em><code class="descclassname">categorize.model.</code><code class="descname">Model</code><span class="sig-paren">(</span><em>model_file</em>, <em>alt_site</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/model.html#Model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.model.Model" title="Permalink to this definition">¶</a></dt>
@@ -2490,7 +2494,7 @@ using scaled-adiabatic method.</p>
 <dd><p>Generates Cloudnet liquid water content product.</p>
 <p>This function calculates cloud liquid water content using the so-called
 adiabatic-scaled method. In this method, liquid water content measured by
-microwave radiameter is used to constrain the theoretical liquid water
+microwave radiometer is used to constrain the theoretical liquid water
 content of observed liquid clouds. The results are written in a netCDF file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -2521,15 +2525,229 @@ Bull. Amer. Meteor. Soc., 88, 883–898, <a class="reference external" href="htt
 <dl class="class">
 <dt id="products.lwc.LwcSource">
 <em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">LwcSource</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#LwcSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.LwcSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>Data container for liquid water content calculations. It reads
-input data from a categorize file and provides data structures and
-methods for holding the results.</p>
+<dd><p>Data container for liquid water content calculations. Child of DataSource.</p>
+<p>This class reads input data from a categorize file and provides data
+structures and methods for holding the results.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="products.lwc.LwcSource.lwp">
+<code class="descname">lwp</code><a class="headerlink" href="#products.lwc.LwcSource.lwp" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D liquid water path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.LwcSource.lwp_error">
+<code class="descname">lwp_error</code><a class="headerlink" href="#products.lwc.LwcSource.lwp_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D error of liquid water path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.LwcSource.is_rain">
+<code class="descname">is_rain</code><a class="headerlink" href="#products.lwc.LwcSource.is_rain" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D array denoting presence of rain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.LwcSource.dheight">
+<code class="descname">dheight</code><a class="headerlink" href="#products.lwc.LwcSource.dheight" title="Permalink to this definition">¶</a></dt>
+<dd><p>Median difference in height vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.LwcSource.atmosphere">
+<code class="descname">atmosphere</code><a class="headerlink" href="#products.lwc.LwcSource.atmosphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary containing interpolated fields <cite>temperature</cite>
+and <cite>pressure</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.LwcSource.categorize_bits">
+<code class="descname">categorize_bits</code><a class="headerlink" href="#products.lwc.LwcSource.categorize_bits" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">CategorizeBits</span></code> instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">CategorizeBits</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="products.lwc.Lwc">
 <em class="property">class </em><code class="descclassname">products.lwc.</code><code class="descname">Lwc</code><span class="sig-paren">(</span><em>lwc_source</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class handling the actual LWC calculations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lwc_source</strong> (<a class="reference internal" href="#products.lwc.LwcSource" title="products.lwc.LwcSource"><em>LwcSource</em></a>) – The <a class="reference internal" href="#products.lwc.LwcSource" title="products.lwc.LwcSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">LwcSource</span></code></a> instance.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="products.lwc.Lwc.lwc_source">
+<code class="descname">lwc_source</code><a class="headerlink" href="#products.lwc.Lwc.lwc_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#products.lwc.LwcSource" title="products.lwc.LwcSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">LwcSource</span></code></a> instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="#products.lwc.LwcSource" title="products.lwc.LwcSource">LwcSource</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.Lwc.dheight">
+<code class="descname">dheight</code><a class="headerlink" href="#products.lwc.Lwc.dheight" title="Permalink to this definition">¶</a></dt>
+<dd><p>Median difference in height vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">float</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.Lwc.echo">
+<code class="descname">echo</code><a class="headerlink" href="#products.lwc.Lwc.echo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary containing <cite>radar</cite> and <cite>lidar</cite> that are
+2D arrays denoting which instrument detected the pixel.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.Lwc.is_liquid">
+<code class="descname">is_liquid</code><a class="headerlink" href="#products.lwc.Lwc.is_liquid" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array denoting liquid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.Lwc.lwc_adiabatic">
+<code class="descname">lwc_adiabatic</code><a class="headerlink" href="#products.lwc.Lwc.lwc_adiabatic" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array storing adiabatic lwc.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.Lwc.lwc">
+<code class="descname">lwc</code><a class="headerlink" href="#products.lwc.Lwc.lwc" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array of liquid water content (scaled with lwp).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.Lwc.status">
+<code class="descname">status</code><a class="headerlink" href="#products.lwc.Lwc.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates where is liquid, and where it was adjusted.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.lwc.Lwc.lwc_error">
+<code class="descname">lwc_error</code><a class="headerlink" href="#products.lwc.Lwc.lwc_error" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D lwc error estimate.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="products.lwc.Lwc.adjust_clouds_to_match_lwp">
 <code class="descname">adjust_clouds_to_match_lwp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/lwc.html#Lwc.adjust_clouds_to_match_lwp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.lwc.Lwc.adjust_clouds_to_match_lwp" title="Permalink to this definition">¶</a></dt>
@@ -2560,11 +2778,8 @@ methods for holding the results.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>is_cloud</strong> (<em>ndarray</em>) – Boolean array denoting presence of clouds.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>Copy of input array containing only the uppermost cloud</dt>
-<dd>layer in each profile.</dd>
-</dl>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Copy of input array containing only the uppermost cloud
+layer in each profile.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
@@ -2614,7 +2829,85 @@ J. Appl. Meteor., 44, 14–27, <a class="reference external" href="https://doi.o
 <dl class="class">
 <dt id="products.drizzle.DrizzleClassification">
 <em class="property">class </em><code class="descclassname">products.drizzle.</code><code class="descname">DrizzleClassification</code><span class="sig-paren">(</span><em>categorize_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/products/drizzle.html#DrizzleClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#products.drizzle.DrizzleClassification" title="Permalink to this definition">¶</a></dt>
-<dd><p>Class storing the information about different drizzle types.</p>
+<dd><p>Class storing the information about different drizzle types, child of  <code class="xref py py-class docutils literal notranslate"><span class="pre">ProductClassification</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>categorize_file</strong> (<em>str</em>) – Categorize file name.</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="products.drizzle.DrizzleClassification.is_v_sigma">
+<code class="descname">is_v_sigma</code><a class="headerlink" href="#products.drizzle.DrizzleClassification.is_v_sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array denoting finite v_sigma.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.drizzle.DrizzleClassification.warm_liquid">
+<code class="descname">warm_liquid</code><a class="headerlink" href="#products.drizzle.DrizzleClassification.warm_liquid" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array denoting warm liquid.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.drizzle.DrizzleClassification.drizzle">
+<code class="descname">drizzle</code><a class="headerlink" href="#products.drizzle.DrizzleClassification.drizzle" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array denoting drizzle presence.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.drizzle.DrizzleClassification.would_be_drizzle">
+<code class="descname">would_be_drizzle</code><a class="headerlink" href="#products.drizzle.DrizzleClassification.would_be_drizzle" title="Permalink to this definition">¶</a></dt>
+<dd><p>2D array denoting possible drizzle pixels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="products.drizzle.DrizzleClassification.cold_rain">
+<code class="descname">cold_rain</code><a class="headerlink" href="#products.drizzle.DrizzleClassification.cold_rain" title="Permalink to this definition">¶</a></dt>
+<dd><p>1D array denoting profiles with melting layer.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -2629,11 +2922,8 @@ spectral broadening of the Doppler velocity.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>cat_file</strong> (<em>str</em>) – Categorize file name.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="docutils">
-<dt>Spectral width containing the correction for turbulence</dt>
-<dd>broadening.</dd>
-</dl>
-</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Spectral width containing the correction for turbulence
+broadening.</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
 </tr>
@@ -2667,12 +2957,17 @@ spectral broadening of the Doppler velocity.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<a class="reference internal" href="#products.drizzle.DrizzleSource" title="products.drizzle.DrizzleSource"><em>DrizzleSource</em></a>) – Input data.</li>
-<li><strong>drizzle_class</strong> (<a class="reference internal" href="#products.drizzle.DrizzleClassification" title="products.drizzle.DrizzleClassification"><em>DrizzleClassification</em></a>) – Classification of the atmosphere
-for drizzle calculations.</li>
-<li><strong>width_ht</strong> (<em>ndarray</em>) – Corrected spectral width.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference internal" href="#products.drizzle.DrizzleSource" title="products.drizzle.DrizzleSource"><em>DrizzleSource</em></a>) – The <a class="reference internal" href="#products.drizzle.DrizzleSource" title="products.drizzle.DrizzleSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">DrizzleSource</span></code></a> instance.</li>
+<li><strong>drizzle_class</strong> (<a class="reference internal" href="#products.drizzle.DrizzleClassification" title="products.drizzle.DrizzleClassification"><em>DrizzleClassification</em></a>) – The <a class="reference internal" href="#products.drizzle.DrizzleClassification" title="products.drizzle.DrizzleClassification"><code class="xref py py-class docutils literal notranslate"><span class="pre">DrizzleClassification</span></code></a> instance.</li>
+<li><strong>width_ht</strong> (<em>ndarray</em>) – 2D corrected spectral width.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Dictionary of retrieved drizzle parameters, <cite>Do</cite>, <cite>mu</cite>, <cite>S</cite>, <cite>beta_corr</cite>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
 </td>
 </tr>
 </tbody>
@@ -2687,12 +2982,18 @@ for drizzle calculations.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>beta_z_ratio</strong> (<em>ndarray</em>) – Beta to z ratio, multiplied by (2 / pi).</li>
 <li><strong>mu</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Shape parameter for gamma calculations. Default is 0.</li>
 <li><strong>ray</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Mie to Rayleigh ratio for z. Default is 1.</li>
 <li><strong>k</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – Alpha to beta ratio . Default is 1.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Drizzle diameter.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">ndarray</p>
 </td>
 </tr>
 </tbody>

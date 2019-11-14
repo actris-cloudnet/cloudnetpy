@@ -8,9 +8,6 @@ with open("cloudnetpy/version.py") as f:
 with open('README.md') as f:
     readme = f.read()
 
-with open('LICENSE') as f:
-    license = f.read()
-
 setup(
     name='cloudnetpy',
     version=version['__version__'],
@@ -28,7 +25,7 @@ setup(
                       'matplotlib>=3.0.2', 'requests>=2.21'],
     classifiers=[
         "Development Status :: 4 - Beta",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Intended Audience :: Science/Research",

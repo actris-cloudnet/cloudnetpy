@@ -14,16 +14,16 @@ def ceilo2nc(input_file, output_file, site_meta):
     ceilometer files and writes the data into netCDF file. Three variants
     of the attenuated backscatter are saved in the file:
 
-        1. Raw backscatter ('beta_raw')
-        2. Signal-to-noise screened backscatter ('beta')
-        3. SNR-screened backscatter with smoothed weak background ('beta_smooth').
+        1. Raw backscatter, `beta_raw`
+        2. Signal-to-noise screened backscatter, `beta`
+        3. SNR-screened backscatter with smoothed weak background, `beta_smooth`
 
     Args:
         input_file (str): Ceilometer file name. For Vaisala it is a text file,
             for Jenoptik it is a netCDF file.
         output_file (str): Output file name, e.g. 'ceilo.nc'.
         site_meta (dict): Dictionary containing information about the
-            site. Required key value pairs are 'name' and 'altitude'
+            site. Required key value pairs are `name` and `altitude`
             (metres above mean sea level).
 
     Raises:

@@ -17,7 +17,7 @@ def generate_lwc(categorize_file, output_file):
 
     This function calculates cloud liquid water content using the so-called
     adiabatic-scaled method. In this method, liquid water content measured by
-    microwave radiameter is used to constrain the theoretical liquid water
+    microwave radiometer is used to constrain the theoretical liquid water
     content of observed liquid clouds. The results are written in a netCDF file.
 
     Args:
@@ -50,9 +50,23 @@ def generate_lwc(categorize_file, output_file):
 
 
 class LwcSource(DataSource):
-    """Data container for liquid water content calculations. It reads
-    input data from a categorize file and provides data structures and
-    methods for holding the results.
+    """Data container for liquid water content calculations. Child of DataSource.
+
+    This class reads input data from a categorize file and provides data
+    structures and methods for holding the results.
+
+    Args:
+        categorize_file (str): Categorize file name.
+
+    Attributes:
+        lwp (ndarray): 1D liquid water path.
+        lwp_error (ndarray): 1D error of liquid water path.
+        is_rain (ndarray): 1D array denoting presence of rain.
+        dheight (float): Median difference in height vector.
+        atmosphere (dict): Dictionary containing interpolated fields `temperature`
+            and `pressure`.
+        categorize_bits (CategorizeBits): The :class:`CategorizeBits` instance.
+
     """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
@@ -70,7 +84,23 @@ class LwcSource(DataSource):
 
 
 class Lwc:
-    """Class handling the actual LWC calculations."""
+    """Class handling the actual LWC calculations.
+
+    Args:
+        lwc_source (LwcSource): The :class:`LwcSource` instance.
+
+    Attributes:
+        lwc_source (LwcSource): The :class:`LwcSource` instance.
+        dheight (float): Median difference in height vector.
+        echo (dict): Dictionary containing `radar` and `lidar` that are
+            2D arrays denoting which instrument detected the pixel.
+        is_liquid (ndarray): 2D array denoting liquid.
+        lwc_adiabatic (ndarray): 2D array storing adiabatic lwc.
+        lwc (ndarray): 2D array of liquid water content (scaled with lwp).
+        status (ndarray): Indicates where is liquid, and where it was adjusted.
+        lwc_error (ndarray): 2D lwc error estimate.
+
+    """
     def __init__(self, lwc_source):
         self.lwc_source = lwc_source
         self.dheight = self.lwc_source.dheight
@@ -248,7 +278,7 @@ def find_topmost_clouds(is_cloud):
 
     Returns:
         ndarray: Copy of input array containing only the uppermost cloud
-             layer in each profile.
+        layer in each profile.
 
     """
     top_clouds = np.copy(is_cloud)

@@ -131,7 +131,7 @@ def rebin_1d(x_in, data, x_new, statistic='mean'):
     edges = binvec(x_new)
     datai = np.zeros(len(x_new))
     data = ma.masked_invalid(data)  # data may contain nan-values
-    mask = ~data.mask
+    mask = ~data.mask  # pylint: disable=E1101
     if ma.any(data[mask]):
         datai, _, _ = stats.binned_statistic(x_in[mask],
                                              data[mask],
@@ -379,7 +379,7 @@ def cumsumr(x, axis=0):
 
     """
     cums = x.cumsum(axis=axis)
-    return cums - np.maximum.accumulate(cums*(x == 0), axis=axis)
+    return cums - np.maximum.accumulate(cums*(x == 0), axis=axis)  # pylint: disable=E1101
 
 
 def ffill(arr, value=0):
@@ -404,7 +404,7 @@ def ffill(arr, value=0):
     ndims = len(arr.shape)
     ran = np.arange(arr.shape[ndims-1])
     idx = np.where((arr != value), ran, 0)
-    idx = np.maximum.accumulate(idx, axis=ndims-1)
+    idx = np.maximum.accumulate(idx, axis=ndims-1)  # pylint: disable=E1101
     if ndims == 2:
         return arr[np.arange(idx.shape[0])[:, None], idx]
     return arr[idx]
