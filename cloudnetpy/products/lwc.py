@@ -158,8 +158,8 @@ class AdjustCloudsLwp:
         self.lwc_source = lwc_source
         self.dheight = lwc_source.dheight
         self.adjustable_clouds = self._find_adjustable_clouds()
+
         self._adjust_cloud_tops(self.adjustable_clouds)
-        self.lwc = self._adiabatic_lwc_to_lwc()
 
     def _find_adjustable_clouds(self):
         top_clouds = find_topmost_clouds(self.is_liquid)
@@ -169,6 +169,7 @@ class AdjustCloudsLwp:
         top_clouds[~lidar_only_clouds, :] = 0
         top_clouds = self._remove_good_profiles(top_clouds)
         return top_clouds
+
 
     def _find_lwp_difference(self):
         """Returns difference of theoretical LWP and measured LWP (g/m2).
@@ -207,6 +208,9 @@ class AdjustCloudsLwp:
         dubious_profiles = (lwp_difference < 0) & no_rain
         top_clouds[~dubious_profiles, :] = 0
         return top_clouds
+
+
+
 
     def _adjust_cloud_tops(self, adjustable_clouds):
         """Adjusts cloud top index so that measured lwc corresponds to
@@ -256,8 +260,7 @@ class CalculateError:
         lwc_relative_error = self._calc_lwc_relative_error()
         lwp_relative_error = self._calc_lwp_relative_error()
         combined_error = self._calc_combined_error(lwc_relative_error, lwp_relative_error)
-        lwc_error = self._fill_error_array(combined_error)
-        return lwc_error
+        return self._fill_error_array(combined_error)
 
     def _limit_error(self, error, max_value):
         error[error > max_value] = max_value
