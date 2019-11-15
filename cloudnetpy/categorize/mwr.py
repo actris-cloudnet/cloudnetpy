@@ -23,7 +23,7 @@ class Mwr(DataSource):
 
         """
         for key in self.data:
-            self.data[key].rebin_1d_data(self.time, time_grid)
+            self.data[key].rebin_data(self.time, time_grid)
 
     def _init_lwp_data(self):
         # TODO: How to deal with negative LWP values?

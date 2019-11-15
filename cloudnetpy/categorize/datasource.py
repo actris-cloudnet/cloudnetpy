@@ -4,7 +4,7 @@ and :class:`ProfileDataSource` classes.
 import os
 import numpy as np
 import netCDF4
-from cloudnetpy import utils, CloudnetArray
+from cloudnetpy import RadarArray, CloudnetArray, utils
 
 
 class DataSource:
@@ -12,6 +12,8 @@ class DataSource:
 
     Args:
         filename (str): Calibrated instrument / model NetCDF file.
+        radar (bool, optional): Indicates if data is from cloud radar.
+            Default is False.
 
     Attributes:
         filename (str): Filename of the input file.
@@ -22,13 +24,14 @@ class DataSource:
         data (dict): Dictionary containing :class:`CloudnetArray` instances.
 
     """
-    def __init__(self, filename):
+    def __init__(self, filename, radar=False):
         self.filename = os.path.basename(filename)
         self.dataset = netCDF4.Dataset(filename)
         self.source = getattr(self.dataset, 'source', '')
         self.time = self._init_time()
         self.altitude = self._init_altitude()
         self.data = {}
+        self._array_type = RadarArray if radar else CloudnetArray
 
     def getvar(self, *args):
         """Returns data array from the source file variables.
@@ -62,7 +65,7 @@ class DataSource:
             units (str, optional): CloudnetArray.units attribute.
 
         """
-        self.data[key] = CloudnetArray(data, name or key, units)
+        self.data[key] = self._array_type(data, name or key, units)
 
     def close(self):
         """Closes the open file."""
@@ -129,17 +132,19 @@ class DataSource:
 
 
 class ProfileDataSource(DataSource):
-    """ProfileDataSource class, child of DataSource.
+    """The :class:`ProfileDataSource` class, child of :class:`DataSource`.
 
     Args:
         filename (str): Raw lidar or radar file.
+        radar (bool, optional): Indicates if data is from cloud radar.
+            Default is False.
 
     Attributes:
         height (ndarray): Measurement height grid above mean sea level (m).
 
     """
-    def __init__(self, filename):
-        super().__init__(filename)
+    def __init__(self, filename, radar=False):
+        super().__init__(filename, radar)
         self.height = self._get_height()
 
     def _get_height(self):

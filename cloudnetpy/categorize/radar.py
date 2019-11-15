@@ -25,7 +25,7 @@ class Radar(ProfileDataSource):
 
     """
     def __init__(self, radar_file):
-        super().__init__(radar_file)
+        super().__init__(radar_file, radar=True)
         self.radar_frequency = float(self.getvar('radar_frequency', 'frequency'))
         self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.folding_velocity = self._get_folding_velocity()
@@ -51,7 +51,7 @@ class Radar(ProfileDataSource):
                 self.data[key].lin2db()
             elif key == 'v':
                 # This has some problems with RPG data when folding is present.
-                self.data[key].rebin_in_polar(self.time, time_new,
+                self.data[key].rebin_velocity(self.time, time_new,
                                               self.folding_velocity,
                                               self.sequence_indices)
             elif key == 'v_sigma':

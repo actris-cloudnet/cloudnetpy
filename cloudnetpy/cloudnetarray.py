@@ -6,14 +6,19 @@ from cloudnetpy import utils
 
 
 class CloudnetArray:
-    """Stores NetCDF variables as CloudnetArrays.
+    """Stores netCDF4 variables as CloudnetArrays.
+
+    Args:
+        netcdf4_variable (netCDF4 Variable): The netCDF4 :class:`Variable` instance.
+        name (str): Name of the variable.
+        units_from_user (str, optional): Units of the variable.
 
     Attributes:
         name (str): Name of the variable.
         data (array_like): The actual data.
         data_type (str): 'i4' for integers, 'f4' for floats.
-        units (str): Copied from the original netcdf4
-            variable (if existing).
+        units (str): The `units_from_user` argument if it is given. Otherwise
+            copied from the original netcdf4 variable.
 
     """
 
@@ -54,31 +59,108 @@ class CloudnetArray:
             self.data = utils.db2lin(self.data)
             self.units = ''
 
+    def mask_indices(self, ind):
+        """Masks data from given indices.
+
+        Args:
+            ind (tuple): Indices to be masked.
+
+        """
+        self.data[ind] = ma.masked
+
     def rebin_data(self, time, time_new, height=None, height_new=None):
-        """Rebins data in time and optionally interpolates in height."""
-        self.data = utils.rebin_2d(time, self.data, time_new)
-        if np.any(height) and np.any(height_new):
-            self.data = utils.interpolate_2d_masked(self.data,
-                                                    (time_new, height),
-                                                    (time_new, height_new))
+        """Rebins `data` in time and optionally interpolates in height.
+
+        Args:
+            time (ndarray): 1D time array.
+            time_new (ndarray): 1D new time array.
+            height (ndarray, optional): 1D height array.
+            height_new (ndarray, optional): 1D new height array. Should be
+                given if also `height` is given.
+
+        """
+        if self.data.ndim == 1:
+            self._rebin_1d_data(time, time_new)
+        else:
+            self.data = utils.rebin_2d(time, self.data, time_new)
+            if np.any(height) and np.any(height_new):
+                self.data = utils.interpolate_2d_masked(self.data,
+                                                        (time_new, height),
+                                                        (time_new, height_new))
+
+    def _rebin_1d_data(self, time, time_new):
+        """Rebins 1D array in time."""
+        self.data = utils.rebin_1d(time, self.data.astype(float), time_new)
+
+    def fetch_attributes(self):
+        """Returns list of user-defined attributes."""
+        for attr in self.__dict__:
+            if attr not in ('name', 'data', 'data_type'):
+                yield attr
+
+    def set_attributes(self, attributes):
+        """Set some attributes if they exist.
+
+        Args:
+            attributes (MetaData): The :class:`MetaData` instance, containing
+                name / value pairs to be added as instance attributes.
+
+        """
+        for key in attributes._fields:  # To iterate namedtuple fields.
+            data = getattr(attributes, key)
+            if data:
+                setattr(self, key, data)
+
+
+class RadarArray(CloudnetArray):
+    """The :class:`RadarArray` class, child of :class:`CloudnetArray`.
+
+    This class contains additional, cloud radar -specific methods.
+
+    Args:
+        netcdf4_variable (netCDF4 Variable): The netCDF4 :class:`Variable` instance.
+        name (str): Name of the variable.
+        units_from_user (str, optional): Units of the variable.
+
+    """
+    def __init__(self, netcdf4_variable, name, units_from_user=None):
+        super().__init__(netcdf4_variable, name, units_from_user)
+
+    def filter_isolated_pixels(self):
+        """Filter vertical artifacts in radar data.
+
+        Notes:
+            These kind of artifacts are seen in RPG data.
+
+        """
+        is_data = (~self.mask).astype(int)
+        is_data_filtered = utils.filter_x_pixels(is_data)
+        self.data[is_data_filtered == 0] = ma.masked
 
     def calc_linear_std(self, time, time_new):
-        """Calculates std of velocity.
+        """Calculates std of radar velocity.
 
-        The result is masked if the bin contains masked values.
+        Args:
+            time (ndarray): 1D time array.
+            time_new (ndarray): 1D new time array.
+
+        Notes:
+            The result is masked if the bin contains masked values.
 
         """
         self.data = utils.rebin_2d(time, self.data.astype(float), time_new, 'std')
 
-    def rebin_1d_data(self, time, time_new):
-        """Rebins 1D array in time."""
-        self.data = utils.rebin_1d(time, self.data.astype(float), time_new)
+    def rebin_velocity(self, time, time_new, folding_velocity, sequence_indices):
+        """Rebins radar velocity in polar coordinates.
 
-    def rebin_in_polar(self, time, time_new, folding_velocity,
-                       sequence_indices):
-        """Rebins velocity in polar coordinates.
-
-        Velocity needs to be averaged in polar coordinates due to folding.
+        Args:
+            time (ndarray): 1D time array.
+            time_new (ndarray): 1D new time array.
+            folding_velocity (float / list): Folding velocity (m/s). Can be float
+                when it's the same for all altitudes, or list when it matches
+                difference altitude regions (defined in `sequence_indices`).
+            sequence_indices (list): List containing indices of different folding
+                regions, e.g. [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10]].
 
         """
         def _get_scaled_vfold():
@@ -101,26 +183,3 @@ class CloudnetArray:
         vel_y_mean = utils.rebin_2d(time, vel_y, time_new)
         mean_vel_scaled = np.arctan2(vel_y_mean, vel_x_mean)
         self.data = _scale_by_vfold(mean_vel_scaled, np.divide)
-
-    def mask_indices(self, ind):
-        """Masks data from given indices."""
-        self.data[ind] = ma.masked
-
-    def fetch_attributes(self):
-        """Returns list of user-defined attributes."""
-        for attr in self.__dict__:
-            if attr not in ('name', 'data', 'data_type'):
-                yield attr
-
-    def set_attributes(self, attributes):
-        """Set some attributes if they exist."""
-        for key in attributes._fields:
-            data = getattr(attributes, key)
-            if data:
-                setattr(self, key, data)
-
-    def filter_isolated_pixels(self):
-        """Filter vertical artifacts in cloud radar data."""
-        is_data = (~self.data.mask).astype(int)
-        is_data_filtered = utils.filter_x_pixels(is_data)
-        self.data[is_data_filtered == 0] = ma.masked
