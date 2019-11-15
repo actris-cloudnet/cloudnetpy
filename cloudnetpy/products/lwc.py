@@ -139,11 +139,27 @@ class Lwc:
         status[self.is_liquid] = 1
         return status
 
+
+
+
+
+
     def adjust_clouds_to_match_lwp(self):
         """Adjust clouds (where possible) so that theoretical and measured LWP agree."""
         adjustable_clouds = self._find_adjustable_clouds()
         self._adjust_cloud_tops(adjustable_clouds)
         self.lwc = self._adiabatic_lwc_to_lwc()
+
+
+
+    def _find_adjustable_clouds(self):
+        top_clouds = find_topmost_clouds(self.is_liquid)
+        detection_type = self._find_echo_combinations_in_liquid()
+        detection_type[~top_clouds] = 0
+        lidar_only_clouds = self._find_lidar_only_clouds(detection_type)
+        top_clouds[~lidar_only_clouds, :] = 0
+        top_clouds = self._remove_good_profiles(top_clouds)
+        return top_clouds
 
     def _find_lwp_difference(self):
         """Returns difference of theoretical LWP and measured LWP (g/m2).
@@ -154,43 +170,35 @@ class Lwc:
         lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.dheight
         return lwc_sum - self.lwc_source.lwp
 
-    def _find_adjustable_clouds(self):
+    def _find_echo_combinations_in_liquid(self):
+        """Classifies liquid clouds by detection type: 1=lidar, 2=radar, 3=both."""
+        lidar_detected = (self.is_liquid & self.echo['lidar']).astype(int)
+        radar_detected = (self.is_liquid & self.echo['radar']).astype(int) * 2
+        return lidar_detected + radar_detected
 
-        def _find_echo_combinations_in_liquid():
-            """Classifies liquid clouds by detection type: 1=lidar, 2=radar, 3=both."""
-            lidar_detected = (self.is_liquid & self.echo['lidar']).astype(int)
-            radar_detected = (self.is_liquid & self.echo['radar']).astype(int) * 2
-            return lidar_detected + radar_detected
+    def _find_lidar_only_clouds(self, detection):
+        """Finds top clouds that contain only lidar-detected pixels.
 
-        def _find_lidar_only_clouds(detection):
-            """Finds top clouds that contain only lidar-detected pixels.
+        Args:
+            detection_type (ndarray): Array of integers where 1=lidar, 2=radar,
+            3=both.
 
-            Args:
-                detection_type (ndarray): Array of integers where 1=lidar, 2=radar,
-                3=both.
+        Returns:
+            ndarray: Boolean array containing top-clouds that are detected only
+            by lidar.
 
-            Returns:
-                ndarray: Boolean array containing top-clouds that are detected only
-                by lidar.
+        """
+        sum_of_cloud_pixels = ma.sum(detection > 0, axis=1)
+        sum_of_detection_type = ma.sum(detection, axis=1)
+        return sum_of_cloud_pixels / sum_of_detection_type == 1
 
-            """
-            sum_of_cloud_pixels = ma.sum(detection > 0, axis=1)
-            sum_of_detection_type = ma.sum(detection, axis=1)
-            return sum_of_cloud_pixels / sum_of_detection_type == 1
-
-        def _remove_good_profiles():
-            no_rain = ~self.lwc_source.is_rain.astype(bool)
-            lwp_difference = self._find_lwp_difference()
-            dubious_profiles = (lwp_difference < 0) & no_rain
-            top_clouds[~dubious_profiles, :] = 0
-
-        top_clouds = find_topmost_clouds(self.is_liquid)
-        detection_type = _find_echo_combinations_in_liquid()
-        detection_type[~top_clouds] = 0
-        lidar_only_clouds = _find_lidar_only_clouds(detection_type)
-        top_clouds[~lidar_only_clouds, :] = 0
-        _remove_good_profiles()
+    def _remove_good_profiles(self, top_clouds):
+        no_rain = ~self.lwc_source.is_rain.astype(bool)
+        lwp_difference = self._find_lwp_difference()
+        dubious_profiles = (lwp_difference < 0) & no_rain
+        top_clouds[~dubious_profiles, :] = 0
         return top_clouds
+
 
     def _adjust_cloud_tops(self, adjustable_clouds):
         """Adjusts cloud top index so that measured lwc corresponds to
@@ -227,6 +235,9 @@ class Lwc:
             _update_status(time_index)
             _adjust_lwc(time_index, base_index)
 
+
+
+
     def calc_lwc_error(self):
         """Calculates liquid water content error. """
 
@@ -262,12 +273,20 @@ class Lwc:
         combined_error = _calc_combined_error(lwc_relative_error, lwp_relative_error)
         self.lwc_error = _fill_error_array(combined_error)
 
+
+
+
+
     def screen_rain(self):
         """Masks profiles with rain."""
         is_rain = self.lwc_source.is_rain.astype(bool)
         self.lwc[is_rain, :] = ma.masked
         self.lwc_error[is_rain, :] = ma.masked
         self.status[is_rain, :] = 4
+
+
+
+
 
 
 def find_topmost_clouds(is_cloud):

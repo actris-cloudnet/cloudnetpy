@@ -2,6 +2,7 @@
 import netCDF4
 import cloudnetpy.utils as utils
 import numpy.ma as ma
+from cloudnetpy.products.lwc import LwcSource, Lwc
 
 
 class CategorizeBits:
@@ -94,22 +95,3 @@ def interpolate_model(cat_file, names):
     data = [_interp_field(name) for name in names]
     return data[0] if len(data) == 1 else data
 
-
-class LwpTools:
-
-    @staticmethod
-    def _find_lidar_only_clouds(detection):
-        """Finds top clouds that contain only lidar-detected pixels.
-
-        Args:
-            detection_type (ndarray): Array of integers where 1=lidar, 2=radar,
-            3=both.
-
-        Returns:
-            ndarray: Boolean array containing top-clouds that are detected only
-            by lidar.
-
-        """
-        sum_of_cloud_pixels = ma.sum(detection > 0, axis=1)
-        sum_of_detection_type = ma.sum(detection, axis=1)
-        return sum_of_cloud_pixels / sum_of_detection_type == 1
