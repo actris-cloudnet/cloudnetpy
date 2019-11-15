@@ -133,7 +133,7 @@ class RadarArray(CloudnetArray):
             These kind of artifacts are seen in RPG data.
 
         """
-        is_data = (~self.mask).astype(int)
+        is_data = (~self.data.mask).astype(int)
         is_data_filtered = utils.filter_x_pixels(is_data)
         self.data[is_data_filtered == 0] = ma.masked
 
