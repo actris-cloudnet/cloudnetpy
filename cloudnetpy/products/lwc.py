@@ -139,18 +139,27 @@ class Lwc:
         status[self.is_liquid] = 1
         return status
 
+    def screen_rain(self):
+        """Masks profiles with rain."""
+        is_rain = self.lwc_source.is_rain.astype(bool)
+        self.lwc[is_rain, :] = ma.masked
+        self.lwc_error[is_rain, :] = ma.masked
+        self.status[is_rain, :] = 4
 
 
-
-
-
-    def adjust_clouds_to_match_lwp(self):
-        """Adjust clouds (where possible) so that theoretical and measured LWP agree."""
-        adjustable_clouds = self._find_adjustable_clouds()
-        self._adjust_cloud_tops(adjustable_clouds)
+class AdjustCloudsLwp:
+    """Adjust clouds (where possible) so that theoretical and measured LWP agree."""
+    def __init__(self, lwc_source):
+        lwc_obj = Lwc(lwc_source)
+        self.lwc = lwc_obj.lwc
+        self.lwc_adiabatic = lwc_obj.lwc_adiabatic
+        self.status = lwc_obj.status
+        self.is_liquid = lwc_obj.is_liquid
+        self.lwc_source = lwc_source
+        self.dheight = lwc_source.dheight
+        self.adjustable_clouds = self._find_adjustable_clouds()
+        self._adjust_cloud_tops(self.adjustable_clouds)
         self.lwc = self._adiabatic_lwc_to_lwc()
-
-
 
     def _find_adjustable_clouds(self):
         top_clouds = find_topmost_clouds(self.is_liquid)
@@ -199,94 +208,83 @@ class Lwc:
         top_clouds[~dubious_profiles, :] = 0
         return top_clouds
 
-
     def _adjust_cloud_tops(self, adjustable_clouds):
         """Adjusts cloud top index so that measured lwc corresponds to
         theoretical value.
         """
-        def _has_converged(ind):
-            lwc_sum = ma.sum(self.lwc_adiabatic[ind, :])
-            if lwc_sum * self.dheight > self.lwc_source.lwp[ind]:
-                return True
-            return False
-
-        def _out_of_bound(ind):
-            return ind >= self.lwc.shape[1] - 1
-
-        def _adjust_lwc(time_ind, base_ind):
-            lwc_base = self.lwc_adiabatic[time_ind, base_ind]
-            distance_from_base = 1
-            while True:
-                top_ind = base_ind + distance_from_base
-                lwc_top = lwc_base * (distance_from_base + 1)
-                self.lwc_adiabatic[time_ind, top_ind] = lwc_top
-                if not self.status[time_ind, top_ind]:
-                    self.status[time_ind, top_ind] = 3
-                if _has_converged(time_ind) or _out_of_bound(top_ind):
-                    break
-                distance_from_base += 1
-
-        def _update_status(time_ind):
-            alt_indices = np.where(self.is_liquid[time_ind, :])[0]
-            self.status[time_ind, alt_indices] = 2
-
         for time_index in np.unique(np.where(adjustable_clouds)[0]):
             base_index = np.where(adjustable_clouds[time_index, :])[0][0]
-            _update_status(time_index)
-            _adjust_lwc(time_index, base_index)
+            self._update_status(time_index)
+            self._adjust_lwc(time_index, base_index)
+
+    def _has_converged(self, ind):
+        lwc_sum = ma.sum(self.lwc_adiabatic[ind, :])
+        if lwc_sum * self.dheight > self.lwc_source.lwp[ind]:
+            return True
+        return False
+
+    def _out_of_bound(self, ind):
+        return ind >= self.lwc.shape[1] - 1
+
+    def _adjust_lwc(self, time_ind, base_ind):
+        lwc_base = self.lwc_adiabatic[time_ind, base_ind]
+        distance_from_base = 1
+        while True:
+            top_ind = base_ind + distance_from_base
+            lwc_top = lwc_base * (distance_from_base + 1)
+            self.lwc_adiabatic[time_ind, top_ind] = lwc_top
+            if not self.status[time_ind, top_ind]:
+                self.status[time_ind, top_ind] = 3
+            if self._has_converged(time_ind) or self._out_of_bound(top_ind):
+                break
+            distance_from_base += 1
+
+    def _update_status(self, time_ind):
+        alt_indices = np.where(self.is_liquid[time_ind, :])[0]
+        self.status[time_ind, alt_indices] = 2
 
 
+class CalculateError:
+    """Calculates liquid water content error. """
+    def __init__(self, lwc_source):
+        lwc_obj = Lwc(lwc_source)
+        self.lwc = lwc_obj.lwc
+        self.lwc_source = lwc_source
+        self.lwc_error = self.calculate_lwc_error()
 
+    def calculate_lwc_error(self):
+        lwc_relative_error = self._calc_lwc_relative_error()
+        lwp_relative_error = self._calc_lwp_relative_error()
+        combined_error = self._calc_combined_error(lwc_relative_error, lwp_relative_error)
+        lwc_error = self._fill_error_array(combined_error)
+        return lwc_error
 
-    def calc_lwc_error(self):
-        """Calculates liquid water content error. """
+    def _limit_error(self, error, max_value):
+        error[error > max_value] = max_value
+        return error
 
-        def _limit_error(error, max_value):
-            error[error > max_value] = max_value
-            return error
+    def _calc_lwc_gradient(self):
+        gradient_elements = np.gradient(self.lwc.filled(0))
+        return utils.l2norm(*gradient_elements)
 
-        def _calc_lwc_relative_error():
-            lwc_gradient = _calc_lwc_gradient()
-            error = lwc_gradient / self.lwc / 2
-            return _limit_error(error, 5)
+    def _calc_lwc_relative_error(self):
+        lwc_gradient = self._calc_lwc_gradient()
+        error = lwc_gradient / self.lwc / 2
+        return self._limit_error(error, 5)
 
-        def _calc_lwp_relative_error():
-            error = self.lwc_source.lwp_error / self.lwc_source.lwp
-            return _limit_error(error, 10)
+    def _calc_lwp_relative_error(self):
+        error = self.lwc_source.lwp_error / self.lwc_source.lwp
+        return self._limit_error(error, 10)
 
-        def _calc_lwc_gradient():
-            gradient_elements = np.gradient(self.lwc.filled(0))
-            return utils.l2norm(*gradient_elements)
+    def _calc_combined_error(self, error_2d, error_1d):
+        error_1d_transposed = utils.transpose(error_1d)
+        return utils.l2norm(error_2d, error_1d_transposed)
 
-        def _calc_combined_error(error_2d, error_1d):
-            error_1d_transposed = utils.transpose(error_1d)
-            return utils.l2norm(error_2d, error_1d_transposed)
-
-        def _fill_error_array(error_in):
-            lwc_error = ma.masked_all(self.lwc.shape)
-            ind = ma.where(self.lwc)
-            lwc_error[ind] = error_in[ind]
-            return lwc_error
-
-        lwc_relative_error = _calc_lwc_relative_error()
-        lwp_relative_error = _calc_lwp_relative_error()
-        combined_error = _calc_combined_error(lwc_relative_error, lwp_relative_error)
-        self.lwc_error = _fill_error_array(combined_error)
-
-
-
-
-
-    def screen_rain(self):
-        """Masks profiles with rain."""
-        is_rain = self.lwc_source.is_rain.astype(bool)
-        self.lwc[is_rain, :] = ma.masked
-        self.lwc_error[is_rain, :] = ma.masked
-        self.status[is_rain, :] = 4
-
-
-
-
+    def _fill_error_array(self, error_in):
+        lwc_error = ma.masked_all(self.lwc.shape)
+        ind = ma.where(self.lwc)
+        lwc_error[ind] = error_in[ind]
+        return lwc_error
 
 
 def find_topmost_clouds(is_cloud):
