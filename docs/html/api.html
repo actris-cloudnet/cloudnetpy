@@ -120,6 +120,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#misc">Misc</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#module-utils">cloudnetpy.utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-cloudnetarray">cloudnetpy.cloudnetarray</a></li>
 </ul>
 </li>
 </ul>
@@ -612,13 +613,18 @@ categorize file.</p>
 and <a class="reference internal" href="#categorize.datasource.ProfileDataSource" title="categorize.datasource.ProfileDataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProfileDataSource</span></code></a> classes.</p>
 <dl class="class">
 <dt id="categorize.datasource.DataSource">
-<em class="property">class </em><code class="descclassname">categorize.datasource.</code><code class="descname">DataSource</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/datasource.html#DataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.datasource.DataSource" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">categorize.datasource.</code><code class="descname">DataSource</code><span class="sig-paren">(</span><em>filename</em>, <em>radar=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/datasource.html#DataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.datasource.DataSource" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for all Cloudnet measurements and model data.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – Calibrated instrument / model NetCDF file.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – Calibrated instrument / model NetCDF file.</li>
+<li><strong>radar</strong> (<em>bool</em><em>, </em><em>optional</em>) – Indicates if data is from cloud radar.
+Default is False.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -771,13 +777,18 @@ is <em>key</em>.</li>
 
 <dl class="class">
 <dt id="categorize.datasource.ProfileDataSource">
-<em class="property">class </em><code class="descclassname">categorize.datasource.</code><code class="descname">ProfileDataSource</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/datasource.html#ProfileDataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.datasource.ProfileDataSource" title="Permalink to this definition">¶</a></dt>
-<dd><p>ProfileDataSource class, child of DataSource.</p>
+<em class="property">class </em><code class="descclassname">categorize.datasource.</code><code class="descname">ProfileDataSource</code><span class="sig-paren">(</span><em>filename</em>, <em>radar=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/datasource.html#ProfileDataSource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.datasource.ProfileDataSource" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#categorize.datasource.ProfileDataSource" title="categorize.datasource.ProfileDataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProfileDataSource</span></code></a> class, child of <a class="reference internal" href="#categorize.datasource.DataSource" title="categorize.datasource.DataSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataSource</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>filename</strong> (<em>str</em>) – Raw lidar or radar file.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>str</em>) – Raw lidar or radar file.</li>
+<li><strong>radar</strong> (<em>bool</em><em>, </em><em>optional</em>) – Indicates if data is from cloud radar.
+Default is False.</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -3727,6 +3738,225 @@ instrument.</li>
 <dt id="utils.is_timestamp">
 <code class="descclassname">utils.</code><code class="descname">is_timestamp</code><span class="sig-paren">(</span><em>string</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/utils.html#is_timestamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#utils.is_timestamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-cloudnetarray">
+<span id="cloudnetpy-cloudnetarray"></span><h3>cloudnetpy.cloudnetarray<a class="headerlink" href="#module-cloudnetarray" title="Permalink to this headline">¶</a></h3>
+<p>CloudnetArray class.</p>
+<dl class="class">
+<dt id="cloudnetarray.CloudnetArray">
+<em class="property">class </em><code class="descclassname">cloudnetarray.</code><code class="descname">CloudnetArray</code><span class="sig-paren">(</span><em>netcdf4_variable</em>, <em>name</em>, <em>units_from_user=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores netCDF4 variables as CloudnetArrays.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>netcdf4_variable</strong> (<em>netCDF4 Variable</em>) – The netCDF4 <code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code> instance.</li>
+<li><strong>name</strong> (<em>str</em>) – Name of the variable.</li>
+<li><strong>units_from_user</strong> (<em>str</em><em>, </em><em>optional</em>) – Units of the variable.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="cloudnetarray.CloudnetArray.name">
+<code class="descname">name</code><a class="headerlink" href="#cloudnetarray.CloudnetArray.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cloudnetarray.CloudnetArray.data">
+<code class="descname">data</code><a class="headerlink" href="#cloudnetarray.CloudnetArray.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>The actual data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">array_like</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cloudnetarray.CloudnetArray.data_type">
+<code class="descname">data_type</code><a class="headerlink" href="#cloudnetarray.CloudnetArray.data_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>‘i4’ for integers, ‘f4’ for floats.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="cloudnetarray.CloudnetArray.units">
+<code class="descname">units</code><a class="headerlink" href="#cloudnetarray.CloudnetArray.units" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <cite>units_from_user</cite> argument if it is given. Otherwise
+copied from the original netcdf4 variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cloudnetarray.CloudnetArray.lin2db">
+<code class="descname">lin2db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.lin2db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.lin2db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts linear units to log.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cloudnetarray.CloudnetArray.db2lin">
+<code class="descname">db2lin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.db2lin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.db2lin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts log units to linear.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cloudnetarray.CloudnetArray.mask_indices">
+<code class="descname">mask_indices</code><span class="sig-paren">(</span><em>ind</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.mask_indices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.mask_indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Masks data from given indices.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ind</strong> (<em>tuple</em>) – Indices to be masked.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cloudnetarray.CloudnetArray.rebin_data">
+<code class="descname">rebin_data</code><span class="sig-paren">(</span><em>time</em>, <em>time_new</em>, <em>height=None</em>, <em>height_new=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.rebin_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.rebin_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rebins <cite>data</cite> in time and optionally interpolates in height.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>time</strong> (<em>ndarray</em>) – 1D time array.</li>
+<li><strong>time_new</strong> (<em>ndarray</em>) – 1D new time array.</li>
+<li><strong>height</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – 1D height array.</li>
+<li><strong>height_new</strong> (<em>ndarray</em><em>, </em><em>optional</em>) – 1D new height array. Should be
+given if also <cite>height</cite> is given.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="cloudnetarray.CloudnetArray.fetch_attributes">
+<code class="descname">fetch_attributes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.fetch_attributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.fetch_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of user-defined attributes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cloudnetarray.CloudnetArray.set_attributes">
+<code class="descname">set_attributes</code><span class="sig-paren">(</span><em>attributes</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#CloudnetArray.set_attributes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.CloudnetArray.set_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set some attributes if they exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>attributes</strong> (<em>MetaData</em>) – The <code class="xref py py-class docutils literal notranslate"><span class="pre">MetaData</span></code> instance, containing
+name / value pairs to be added as instance attributes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="cloudnetarray.RadarArray">
+<em class="property">class </em><code class="descclassname">cloudnetarray.</code><code class="descname">RadarArray</code><span class="sig-paren">(</span><em>netcdf4_variable</em>, <em>name</em>, <em>units_from_user=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#RadarArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.RadarArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="#cloudnetarray.RadarArray" title="cloudnetarray.RadarArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadarArray</span></code></a> class, child of <a class="reference internal" href="#cloudnetarray.CloudnetArray" title="cloudnetarray.CloudnetArray"><code class="xref py py-class docutils literal notranslate"><span class="pre">CloudnetArray</span></code></a>.</p>
+<p>This class contains additional, cloud radar -specific methods.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>netcdf4_variable</strong> (<em>netCDF4 Variable</em>) – The netCDF4 <code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code> instance.</li>
+<li><strong>name</strong> (<em>str</em>) – Name of the variable.</li>
+<li><strong>units_from_user</strong> (<em>str</em><em>, </em><em>optional</em>) – Units of the variable.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="cloudnetarray.RadarArray.filter_isolated_pixels">
+<code class="descname">filter_isolated_pixels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#RadarArray.filter_isolated_pixels"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.RadarArray.filter_isolated_pixels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Filter vertical artifacts in radar data.</p>
+<p class="rubric">Notes</p>
+<p>These kind of artifacts are seen in RPG data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cloudnetarray.RadarArray.calc_linear_std">
+<code class="descname">calc_linear_std</code><span class="sig-paren">(</span><em>time</em>, <em>time_new</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#RadarArray.calc_linear_std"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.RadarArray.calc_linear_std" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates std of radar velocity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>time</strong> (<em>ndarray</em>) – 1D time array.</li>
+<li><strong>time_new</strong> (<em>ndarray</em>) – 1D new time array.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Notes</p>
+<p>The result is masked if the bin contains masked values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="cloudnetarray.RadarArray.rebin_velocity">
+<code class="descname">rebin_velocity</code><span class="sig-paren">(</span><em>time</em>, <em>time_new</em>, <em>folding_velocity</em>, <em>sequence_indices</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/cloudnetarray.html#RadarArray.rebin_velocity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#cloudnetarray.RadarArray.rebin_velocity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rebins radar velocity in polar coordinates.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>time</strong> (<em>ndarray</em>) – 1D time array.</li>
+<li><strong>time_new</strong> (<em>ndarray</em>) – 1D new time array.</li>
+<li><strong>folding_velocity</strong> (<em>float / list</em>) – Folding velocity (m/s). Can be float
+when it’s the same for all altitudes, or list when it matches
+difference altitude regions (defined in <cite>sequence_indices</cite>).</li>
+<li><strong>sequence_indices</strong> (<em>list</em>) – List containing indices of different folding
+regions, e.g. [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10]].</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>

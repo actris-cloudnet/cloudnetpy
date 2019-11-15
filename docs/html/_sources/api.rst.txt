@@ -209,3 +209,8 @@ cloudnetpy.utils
    :members:
 
 
+cloudnetpy.cloudnetarray
+........................
+
+.. automodule:: cloudnetarray
+   :members:
