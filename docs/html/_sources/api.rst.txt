@@ -10,13 +10,11 @@ cloud remote sensing measurements into Cloudnet products. A full processing
 goes in steps. Each step produces a file which used as an input for the
 next step.
 
-Raw data to categorize
-......................
+Raw data conversion
+...................
 
 Cloudnet instruments provide raw data in various formats that need to
-be first converted into netCDF with standardized metadata. After that,
-the data can be combined in a single categorize file.
-
+be first converted into netCDF with standardized metadata.
 
 .. autofunction:: instruments.mira2nc
 
@@ -24,11 +22,18 @@ the data can be combined in a single categorize file.
 
 .. autofunction:: instruments.ceilo2nc
 
+
+The categorize file
+...................
+
+The categorize file concatenates all input data into common
+time / height grid.
+
 .. autofunction:: categorize.generate_categorize
 
 
-Categorize to products
-......................
+Product generation
+..................
 
 Starting from the categorize file, several geophysical products can be
 generated.
@@ -196,21 +201,37 @@ drizzle
    :members:
 
 
+product_tools
+.............
+
+.. automodule:: products.product_tools
+   :members:
+
+
 Misc
 ----
 
 Documentation for various modules with low-level
 functionality.
 
-cloudnetpy.utils
-................
+
+utils
+.....
 
 .. automodule:: utils
    :members:
 
 
-cloudnetpy.cloudnetarray
-........................
+cloudnetarray
+.............
 
 .. automodule:: cloudnetarray
    :members:
+
+
+output
+......
+
+.. automodule:: output
+   :members:
+

@@ -168,7 +168,9 @@
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
+ | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
@@ -181,6 +183,8 @@
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#output.add_file_type">add_file_type() (in module output)</a>
+</li>
       <li><a href="api.html#categorize.radar.Radar.add_meta">add_meta() (categorize.radar.Radar method)</a>
 </li>
       <li><a href="api.html#products.lwc.Lwc.adjust_clouds_to_match_lwp">adjust_clouds_to_match_lwp() (products.lwc.Lwc method)</a>
@@ -189,10 +193,10 @@
 </li>
       <li><a href="api.html#categorize.datasource.DataSource.append_data">append_data() (categorize.datasource.DataSource method)</a>
 </li>
-      <li><a href="api.html#utils.array_to_probability">array_to_probability() (in module utils)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#utils.array_to_probability">array_to_probability() (in module utils)</a>
+</li>
       <li><a href="api.html#products.lwc.LwcSource.atmosphere">atmosphere (products.lwc.LwcSource attribute)</a>
 </li>
       <li><a href="api.html#categorize.atmos.GasAttenuation.atten">atten (categorize.atmos.GasAttenuation attribute)</a>
@@ -269,12 +273,12 @@
 </li>
       <li><a href="api.html#module-categorize.insects">categorize.insects (module)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#module-categorize.lidar">categorize.lidar (module)</a>
 </li>
       <li><a href="api.html#module-categorize.melting">categorize.melting (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#module-categorize.model">categorize.model (module)</a>
 </li>
       <li><a href="api.html#module-categorize.mwr">categorize.mwr (module)</a>
@@ -283,8 +287,14 @@
 </li>
       <li><a href="api.html#products.lwc.LwcSource.categorize_bits">categorize_bits (products.lwc.LwcSource attribute)</a>
 </li>
-      <li><a href="api.html#categorize.classify.ClassificationResult.category_bits">category_bits (categorize.classify.ClassificationResult attribute)</a>
+      <li><a href="api.html#products.product_tools.CategorizeBits">CategorizeBits (class in products.product_tools)</a>
 </li>
+      <li><a href="api.html#categorize.classify.ClassificationResult.category_bits">category_bits (categorize.classify.ClassificationResult attribute)</a>
+
+      <ul>
+        <li><a href="api.html#products.product_tools.CategorizeBits.category_bits">(products.product_tools.CategorizeBits attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api.html#instruments.ceilo2nc">ceilo2nc() (in module instruments)</a>
 </li>
       <li><a href="api.html#tests.check_data_quality">check_data_quality() (in module tests)</a>
@@ -308,6 +318,10 @@
       <li><a href="api.html#products.drizzle.DrizzleClassification.cold_rain">cold_rain (products.drizzle.DrizzleClassification attribute)</a>
 </li>
       <li><a href="api.html#plotting.compare_files">compare_files() (in module plotting)</a>
+</li>
+      <li><a href="api.html#output.copy_global">copy_global() (in module output)</a>
+</li>
+      <li><a href="api.html#output.copy_variables">copy_variables() (in module output)</a>
 </li>
       <li><a href="api.html#categorize.radar.Radar.correct_atten">correct_atten() (categorize.radar.Radar method)</a>
 </li>
@@ -469,6 +483,8 @@
 </li>
       <li><a href="api.html#utils.get_site_information">get_site_information() (in module utils)</a>
 </li>
+      <li><a href="api.html#products.product_tools.get_source">get_source() (in module products.product_tools)</a>
+</li>
       <li><a href="api.html#utils.get_time">get_time() (in module utils)</a>
 </li>
       <li><a href="api.html#utils.get_uuid">get_uuid() (in module utils)</a>
@@ -501,6 +517,8 @@
 </li>
       <li><a href="api.html#utils.init">init() (in module utils)</a>
 </li>
+      <li><a href="api.html#output.init_file">init_file() (in module output)</a>
+</li>
       <li><a href="api.html#categorize.classify.ClassificationResult.insect_prob">insect_prob (categorize.classify.ClassificationResult attribute)</a>
 </li>
       <li><a href="api.html#utils.interpolate_2d">interpolate_2d() (in module utils)</a>
@@ -508,6 +526,8 @@
       <li><a href="api.html#utils.interpolate_2d_masked">interpolate_2d_masked() (in module utils)</a>
 </li>
       <li><a href="api.html#categorize.droplet.interpolate_lwp">interpolate_lwp() (in module categorize.droplet)</a>
+</li>
+      <li><a href="api.html#products.product_tools.interpolate_model">interpolate_model() (in module products.product_tools)</a>
 </li>
       <li><a href="api.html#categorize.model.Model.interpolate_to_common_height">interpolate_to_common_height() (categorize.model.Model method)</a>
 </li>
@@ -532,11 +552,17 @@
 </li>
         <li><a href="api.html#products.lwc.LwcSource.is_rain">(products.lwc.LwcSource attribute)</a>
 </li>
+        <li><a href="api.html#products.product_tools.ProductClassification.is_rain">(products.product_tools.ProductClassification attribute)</a>
+</li>
       </ul></li>
       <li><a href="api.html#utils.is_timestamp">is_timestamp() (in module utils)</a>
 </li>
       <li><a href="api.html#categorize.classify.ClassificationResult.is_undetected_melting">is_undetected_melting (categorize.classify.ClassificationResult attribute)</a>
+
+      <ul>
+        <li><a href="api.html#products.product_tools.ProductClassification.is_undetected_melting">(products.product_tools.ProductClassification attribute)</a>
 </li>
+      </ul></li>
       <li><a href="api.html#products.drizzle.DrizzleClassification.is_v_sigma">is_v_sigma (products.drizzle.DrizzleClassification attribute)</a>
 </li>
       <li><a href="api.html#utils.isbit">isbit() (in module utils)</a>
@@ -619,6 +645,8 @@
 </li>
       <li><a href="api.html#categorize.model.Model.mean_height">mean_height (categorize.model.Model attribute)</a>
 </li>
+      <li><a href="api.html#output.merge_history">merge_history() (in module output)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#instruments.mira2nc">mira2nc() (in module instruments)</a>
@@ -646,9 +674,19 @@
   </ul></td>
 </tr></table>
 
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#module-output">output (module)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#products.product_tools.ProductClassification">ProductClassification (class in products.product_tools)</a>
+</li>
       <li><a href="api.html#module-products.classification">products.classification (module)</a>
 </li>
       <li><a href="api.html#module-products.drizzle">products.drizzle (module)</a>
@@ -659,7 +697,17 @@
 </li>
       <li><a href="api.html#module-products.lwc">products.lwc (module)</a>
 </li>
+      <li><a href="api.html#module-products.product_tools">products.product_tools (module)</a>
+</li>
       <li><a href="api.html#categorize.datasource.ProfileDataSource">ProfileDataSource (class in categorize.datasource)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Q">Q</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#products.product_tools.CategorizeBits.quality_bits">quality_bits (products.product_tools.CategorizeBits attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -676,6 +724,8 @@
       <li><a href="api.html#cloudnetarray.RadarArray">RadarArray (class in cloudnetarray)</a>
 </li>
       <li><a href="api.html#utils.range_to_height">range_to_height() (in module utils)</a>
+</li>
+      <li><a href="api.html#products.product_tools.read_nc_fields">read_nc_fields() (in module products.product_tools)</a>
 </li>
       <li><a href="api.html#utils.rebin_1d">rebin_1d() (in module utils)</a>
 </li>
@@ -707,16 +757,18 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#output.save_product_file">save_product_file() (in module output)</a>
+</li>
       <li><a href="api.html#products.lwc.Lwc.screen_rain">screen_rain() (products.lwc.Lwc method)</a>
 </li>
       <li><a href="api.html#categorize.model.Model.screen_sparse_fields">screen_sparse_fields() (categorize.model.Model method)</a>
 </li>
       <li><a href="api.html#utils.seconds2hours">seconds2hours() (in module utils)</a>
 </li>
-      <li><a href="api.html#categorize.radar.Radar.sequence_indices">sequence_indices (categorize.radar.Radar attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#categorize.radar.Radar.sequence_indices">sequence_indices (categorize.radar.Radar attribute)</a>
+</li>
       <li><a href="api.html#cloudnetarray.CloudnetArray.set_attributes">set_attributes() (cloudnetarray.CloudnetArray method)</a>
 </li>
       <li><a href="api.html#utils.setbit">setbit() (in module utils)</a>
@@ -759,9 +811,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#categorize.atmos.LiquidAttenuation.uncorrected">uncorrected (categorize.atmos.LiquidAttenuation attribute)</a>
 </li>
+      <li><a href="api.html#cloudnetarray.CloudnetArray.units">units (cloudnetarray.CloudnetArray attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#cloudnetarray.CloudnetArray.units">units (cloudnetarray.CloudnetArray attribute)</a>
+      <li><a href="api.html#output.update_attributes">update_attributes() (in module output)</a>
 </li>
       <li><a href="api.html#module-utils">utils (module)</a>
 </li>
