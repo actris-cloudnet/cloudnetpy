@@ -1,4 +1,4 @@
-""" Functions for Categorize output file writing."""
+""" Functions for file writing."""
 import netCDF4
 from cloudnetpy import utils, version
 from cloudnetpy.metadata import COMMON_ATTRIBUTES
@@ -24,7 +24,18 @@ def update_attributes(cloudnet_variables, attributes):
 
 
 def save_product_file(short_id, obj, file_name, copy_from_cat=()):
-    """Saves a standard Cloudnet product file."""
+    """Saves a standard Cloudnet product file.
+
+    Args:
+        short_id (str): Short file identifier, e.g. 'lwc', 'iwc', 'drizzle',
+            'classification'.
+        obj (object): Instance containing product specific attributes: `time`,
+            `dataset`, `data`.
+        file_name (str): Name of the output file to be generated.
+        copy_from_cat (tuple, optional): Variables to be copied from the
+            categorize file.
+
+    """
     identifier = _get_identifier(short_id)
     dimensions = {'time': len(obj.time),
                   'height': len(obj.dataset.variables['height'])}
@@ -51,7 +62,15 @@ def _get_identifier(short_id):
 
 
 def merge_history(root_group, file_type, *sources):
-    """Merges history fields from one or several files and creates a new record."""
+    """Merges history fields from one or several files and creates a new record.
+
+    Args:
+        root_group (netCDF Dataset): The netCDF Dataset instance.
+        file_type (str): Long description of the file.
+        *sources (obj): Objects that were used to generate this product. Their
+            `history` attribute will be copied to the new product.
+
+    """
     new_record = f"{utils.get_time()} - {file_type} file created"
     old_history = ''
     for source in sources:
@@ -60,7 +79,14 @@ def merge_history(root_group, file_type, *sources):
 
 
 def init_file(file_name, dimensions, obs):
-    """Initializes a Cloudnet file for writing."""
+    """Initializes a Cloudnet file for writing.
+
+    Args:
+        file_name (str): File name to be generated.
+        dimensions (dict): Dictionary containing dimension for this file.
+        obs (dict): Dictionary containing :class:`CloudnetArray` instances.
+
+    """
     root_group = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     for key, dimension in dimensions.items():
         root_group.createDimension(key, dimension)
@@ -102,7 +128,14 @@ def _add_standard_global_attributes(root_group):
 
 
 def copy_variables(source, target, var_list):
-    """Copies variables (and their attributes) from one file to another."""
+    """Copies variables (and their attributes) from one file to another.
+
+    Args:
+        source (object): Source object.
+        target (object): Target object.
+        var_list (list): List of variables to be copied.
+
+    """
     for var_name, variable in source.variables.items():
         if var_name in var_list:
             var_out = target.createVariable(var_name, variable.datatype,
@@ -113,12 +146,25 @@ def copy_variables(source, target, var_list):
 
 
 def copy_global(source, target, attr_list):
-    """Copies global attributes from one file to another."""
+    """Copies global attributes from one file to another.
+
+    Args:
+        source (object): Source object.
+        target (object): Target object.
+        attr_list (list): List of attributes to be copied.
+
+    """
     for attr_name in source.ncattrs():
         if attr_name in attr_list:
             setattr(target, attr_name, source.getncattr(attr_name))
 
 
 def add_file_type(root_group, file_type):
-    """Adds cloudnet_file_type global attribute."""
+    """Adds cloudnet_file_type global attribute.
+
+    Args:
+        root_group (object): netCDF Dataset instance.
+        file_type (str): Name of the Cloudnet file type.
+
+    """
     root_group.cloudnet_file_type = file_type
