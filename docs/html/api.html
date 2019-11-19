@@ -666,7 +666,7 @@ Default is False.</li>
 <dl class="attribute">
 <dt id="categorize.datasource.DataSource.source">
 <code class="descname">source</code><a class="headerlink" href="#categorize.datasource.DataSource.source" title="Permalink to this definition">¶</a></dt>
-<dd><p>Global attribute <cite>source</cite> from <em>input_file</em>.</p>
+<dd><p>Global attribute <cite>source</cite> read from the input file.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -743,15 +743,16 @@ dictionary, fetched from the input NetCDF file.</p>
 
 <dl class="method">
 <dt id="categorize.datasource.DataSource.append_data">
-<code class="descname">append_data</code><span class="sig-paren">(</span><em>data</em>, <em>key</em>, <em>name=None</em>, <em>units=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/datasource.html#DataSource.append_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.datasource.DataSource.append_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds new CloudnetVariable into self.data dictionary.</p>
+<code class="descname">append_data</code><span class="sig-paren">(</span><em>array</em>, <em>key</em>, <em>name=None</em>, <em>units=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/datasource.html#DataSource.append_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.datasource.DataSource.append_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds new CloudnetVariable into <cite>data</cite> attribute.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>data</strong> (<em>ndarray</em>) – Data to be added.</li>
-<li><strong>key</strong> (<em>str</em>) – Key for self.data dict.</li>
+<li><strong>array</strong> (<em>ndarray</em>) – Array to be added.</li>
+<li><strong>key</strong> (<em>str</em>) – Key used with <em>array</em> when added to <cite>data</cite> attribute
+(which is a dictionary).</li>
 <li><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – CloudnetArray.name attribute. Default value
 is <em>key</em>.</li>
 <li><strong>units</strong> (<em>str</em><em>, </em><em>optional</em>) – CloudnetArray.units attribute.</li>
@@ -952,7 +953,8 @@ regimes of the radar.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>attenuations</strong> (<em>dict</em>) – 2-D attenuations due to atmospheric gases.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>attenuations</strong> (<em>dict</em>) – 2-D attenuations due to atmospheric gases
+and liquid: <cite>radar_gas_atten</cite>, <cite>radar_liquid_atten</cite>.</td>
 </tr>
 </tbody>
 </table>
@@ -961,7 +963,9 @@ regimes of the radar.</p>
 <dl class="method">
 <dt id="categorize.radar.Radar.calc_errors">
 <code class="descname">calc_errors</code><span class="sig-paren">(</span><em>attenuations</em>, <em>classification</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/categorize/radar.html#Radar.calc_errors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#categorize.radar.Radar.calc_errors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates error and sensitivity of radar echo.</p>
+<dd><p>Calculates uncertainties of radar echo.</p>
+<p>Calculates and adds <cite>Z_error</cite>, <cite>Z_sensitivity</cite> and <cite>Z_bias</cite>
+<code class="xref py py-class docutils literal notranslate"><span class="pre">CloudnetArray</span></code> instances to <cite>data</cite> attribute.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
