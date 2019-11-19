@@ -18,7 +18,7 @@ class DataSource:
     Attributes:
         filename (str): Filename of the input file.
         dataset (Dataset): A netCDF4 Dataset instance.
-        source (str): Global attribute `source` from *input_file*.
+        source (str): Global attribute `source` read from the input file.
         time (MaskedArray): Time array of the instrument.
         altitude (float): Altitude of instrument above mean sea level (m).
         data (dict): Dictionary containing :class:`CloudnetArray` instances.
@@ -54,18 +54,19 @@ class DataSource:
                 return self.dataset.variables[arg][:]
         raise RuntimeError('Missing variable in the input file.')
 
-    def append_data(self, data, key, name=None, units=None):
-        """Adds new CloudnetVariable into self.data dictionary.
+    def append_data(self, array, key, name=None, units=None):
+        """Adds new CloudnetVariable into `data` attribute.
 
         Args:
-            data (ndarray): Data to be added.
-            key (str): Key for self.data dict.
+            array (ndarray): Array to be added.
+            key (str): Key used with *array* when added to `data` attribute
+                (which is a dictionary).
             name (str, optional): CloudnetArray.name attribute. Default value
                 is *key*.
             units (str, optional): CloudnetArray.units attribute.
 
         """
-        self.data[key] = self._array_type(data, name or key, units)
+        self.data[key] = self._array_type(array, name or key, units)
 
     def close(self):
         """Closes the open file."""

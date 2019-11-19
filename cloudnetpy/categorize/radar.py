@@ -78,7 +78,8 @@ class Radar(ProfileDataSource):
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
-            attenuations (dict): 2-D attenuations due to atmospheric gases.
+            attenuations (dict): 2-D attenuations due to atmospheric gases
+                and liquid: `radar_gas_atten`, `radar_liquid_atten`.
 
         """
         z_corrected = self.data['Z'][:] + attenuations['radar_gas_atten']
@@ -87,7 +88,10 @@ class Radar(ProfileDataSource):
         self.append_data(z_corrected, 'Z')
 
     def calc_errors(self, attenuations, classification):
-        """Calculates error and sensitivity of radar echo.
+        """Calculates uncertainties of radar echo.
+
+        Calculates and adds `Z_error`, `Z_sensitivity` and `Z_bias`
+        :class:`CloudnetArray` instances to `data` attribute.
 
         Args:
             attenuations (dict): 2-D attenuations due to atmospheric gases.
