@@ -128,7 +128,7 @@ def _read_string(file_id):
 
 def _get_number_of_levels(header):
     for name in ('range', 'temperature', 'humidity', 'chirp'):
-        yield int(header['number_of_' + name + '_levels'])
+        yield int(header[f"number_of_{name}_levels"])
 
 
 def _dim(length, dtype='f'):
