@@ -3,7 +3,7 @@ import numpy as np
 
 
 def read_rpg_header(file_name, level, version=3):
-    """Reads the header file.
+    """Reads header from RPG binary file.
 
     Supports LV0 / LV1 files and version 2 / 3.
 
