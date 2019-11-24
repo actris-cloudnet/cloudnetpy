@@ -13,13 +13,14 @@ def read_rpg_header(file_name, level, version=3):
         version (int, optional): RPG software version (2 or 3). Default is 3.
 
     Returns:
-        tuple: 2-element tuple containing the header and file position.
+        tuple: 2-element tuple containing the header (as dict) and file position.
 
     """
     def _read_block(*fields):
         block = np.fromfile(file, np.dtype(list(fields)), 1)
         for name in block.dtype.names:
-            header[name] = np.array(block[name], dtype='float')
+            array = block[name][0]
+            header[name] = np.array(array, dtype=_get_dtype(array))
 
     header = {}
     file = open(file_name, 'rb')
@@ -133,3 +134,9 @@ def _get_number_of_levels(header):
 
 def _dim(length, dtype='f'):
     return f"({length},){dtype}"
+
+
+def _get_dtype(array):
+    if array.dtype in (np.int8, np.int32, np.uint32):
+        return int
+    return float
