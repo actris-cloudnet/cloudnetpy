@@ -1,8 +1,6 @@
 """General helper functions for all products."""
 import netCDF4
 import cloudnetpy.utils as utils
-import numpy.ma as ma
-from cloudnetpy.products.lwc import LwcSource, Lwc
 
 
 class CategorizeBits:

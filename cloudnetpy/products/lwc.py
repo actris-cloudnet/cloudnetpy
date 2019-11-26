@@ -39,10 +39,10 @@ def generate_lwc(categorize_file, output_file):
     """
     lwc_source = LwcSource(categorize_file)
     lwc_obj = Lwc(lwc_source)
-    lwc_obj.adjust_clouds_to_match_lwp()
-    lwc_obj.calc_lwc_error()
     lwc_obj.screen_rain()
-    _append_data(lwc_source, lwc_obj)
+    cloud_obj = AdjustCloudsLwp(lwc_source)
+    error_obj = CalculateError(lwc_source)
+    _append_data(lwc_source, lwc_obj, error_obj, cloud_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
     output.save_product_file('lwc', lwc_source, output_file,
                              copy_from_cat=('lwp', 'lwp_error'))
@@ -104,16 +104,9 @@ class Lwc:
     def __init__(self, lwc_source):
         self.lwc_source = lwc_source
         self.dheight = self.lwc_source.dheight
-        self.echo = self._get_echo()
         self.is_liquid = self._get_liquid()
         self.lwc_adiabatic = self._init_lwc_adiabatic()
         self.lwc = self._adiabatic_lwc_to_lwc()
-        self.status = self._init_status()
-        self.lwc_error = None
-
-    def _get_echo(self):
-        quality_bits = self.lwc_source.categorize_bits.quality_bits
-        return {'radar': quality_bits['radar'], 'lidar': quality_bits['lidar']}
 
     def _get_liquid(self):
         category_bits = self.lwc_source.categorize_bits.category_bits
@@ -143,26 +136,67 @@ class Lwc:
         """Masks profiles with rain."""
         is_rain = self.lwc_source.is_rain.astype(bool)
         self.lwc[is_rain, :] = ma.masked
-        self.lwc_error[is_rain, :] = ma.masked
-        self.status[is_rain, :] = 4
 
 
 class AdjustCloudsLwp:
     """Adjust clouds (where possible) so that theoretical and measured LWP agree."""
     def __init__(self, lwc_source):
         lwc_obj = Lwc(lwc_source)
-        self.lwc = lwc_obj.lwc
-        self.lwc_adiabatic = lwc_obj.lwc_adiabatic
-        self.status = lwc_obj.status
-        self.is_liquid = lwc_obj.is_liquid
         self.lwc_source = lwc_source
-        self.dheight = lwc_source.dheight
-        self.adjustable_clouds = self._find_adjustable_clouds()
+        self.lwc = lwc_obj.lwc
+        self.is_liquid = lwc_obj.is_liquid
+        self.lwc_adiabatic = lwc_obj.lwc_adiabatic
+        self.echo = self._get_echo()
+        self.status = self._init_status()
+        top_clouds = self._find_adjustable_clouds()
+        self._adjust_cloud_tops(top_clouds)
 
-        self._adjust_cloud_tops(self.adjustable_clouds)
+    def _init_status(self):
+        status = ma.zeros(self.is_liquid.shape, dtype=int)
+        status[self.is_liquid] = 1
+        return status
+
+    def _get_echo(self):
+        quality_bits = self.lwc_source.categorize_bits.quality_bits
+        return {'radar': quality_bits['radar'], 'lidar': quality_bits['lidar']}
+
+    def _adjust_cloud_tops(self, adjustable_clouds):
+        """Adjusts cloud top index so that measured lwc corresponds to
+        theoretical value.
+        """
+        for time_index in np.unique(np.where(adjustable_clouds)[0]):
+            base_index = np.where(adjustable_clouds[time_index, :])[0][0]
+            self._update_status(time_index)
+            self._adjust_lwc(time_index, base_index)
+
+    def _update_status(self, time_ind):
+        alt_indices = np.where(self.is_liquid[time_ind, :])[0]
+        self.status[time_ind, alt_indices] = 2
+
+    def _adjust_lwc(self, time_ind, base_ind):
+        lwc_base = self.lwc_adiabatic[time_ind, base_ind]
+        distance_from_base = 1
+        while True:
+            top_ind = base_ind + distance_from_base
+            lwc_top = lwc_base * (distance_from_base + 1)
+            self.lwc_adiabatic[time_ind, top_ind] = lwc_top
+            if not self.status[time_ind, top_ind]:
+                self.status[time_ind, top_ind] = 3
+            if self._has_converged(time_ind) or self._out_of_bound(top_ind):
+                break
+            distance_from_base += 1
+
+    def _has_converged(self, ind):
+        lwc_sum = ma.sum(self.lwc_adiabatic[ind, :])
+        if lwc_sum * self.lwc_source.dheight > self.lwc_source.lwp[ind]:
+            return True
+        return False
+
+    def _out_of_bound(self, ind):
+        return ind >= self.lwc.shape[1] - 1
 
     def _find_adjustable_clouds(self):
-        top_clouds = find_topmost_clouds(self.is_liquid)
+        top_clouds = self._find_topmost_clouds()
         detection_type = self._find_echo_combinations_in_liquid()
         detection_type[~top_clouds] = 0
         lidar_only_clouds = self._find_lidar_only_clouds(detection_type)
@@ -170,15 +204,23 @@ class AdjustCloudsLwp:
         top_clouds = self._remove_good_profiles(top_clouds)
         return top_clouds
 
+    def _find_topmost_clouds(self):
+        """From 2d binary cloud field, return the uppermost cloud layer only.
 
-    def _find_lwp_difference(self):
-        """Returns difference of theoretical LWP and measured LWP (g/m2).
+        Args:
+            is_cloud (ndarray): Boolean array denoting presence of clouds.
 
-        In theory, this difference should be always positive. Negative values
-        indicate missing (or too narrow) liquid clouds.
+        Returns:
+            ndarray: Copy of input array containing only the uppermost cloud
+            layer in each profile.
+
         """
-        lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.dheight
-        return lwc_sum - self.lwc_source.lwp
+        top_clouds = np.copy(self.is_liquid)
+        cloud_edges = top_clouds[:, :-1][:, ::-1] < top_clouds[:, 1:][:, ::-1]
+        topmost_bases = self.is_liquid.shape[1] - 1 - np.argmax(cloud_edges, axis=1)
+        for n, base in enumerate(topmost_bases):
+            top_clouds[n, :base] = 0
+        return top_clouds
 
     def _find_echo_combinations_in_liquid(self):
         """Classifies liquid clouds by detection type: 1=lidar, 2=radar, 3=both."""
@@ -209,43 +251,19 @@ class AdjustCloudsLwp:
         top_clouds[~dubious_profiles, :] = 0
         return top_clouds
 
+    def _find_lwp_difference(self):
+        """Returns difference of theoretical LWP and measured LWP (g/m2).
 
-
-
-    def _adjust_cloud_tops(self, adjustable_clouds):
-        """Adjusts cloud top index so that measured lwc corresponds to
-        theoretical value.
+        In theory, this difference should be always positive. Negative values
+        indicate missing (or too narrow) liquid clouds.
         """
-        for time_index in np.unique(np.where(adjustable_clouds)[0]):
-            base_index = np.where(adjustable_clouds[time_index, :])[0][0]
-            self._update_status(time_index)
-            self._adjust_lwc(time_index, base_index)
+        lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.lwc_source.dheight
+        return lwc_sum - self.lwc_source.lwp
 
-    def _has_converged(self, ind):
-        lwc_sum = ma.sum(self.lwc_adiabatic[ind, :])
-        if lwc_sum * self.dheight > self.lwc_source.lwp[ind]:
-            return True
-        return False
-
-    def _out_of_bound(self, ind):
-        return ind >= self.lwc.shape[1] - 1
-
-    def _adjust_lwc(self, time_ind, base_ind):
-        lwc_base = self.lwc_adiabatic[time_ind, base_ind]
-        distance_from_base = 1
-        while True:
-            top_ind = base_ind + distance_from_base
-            lwc_top = lwc_base * (distance_from_base + 1)
-            self.lwc_adiabatic[time_ind, top_ind] = lwc_top
-            if not self.status[time_ind, top_ind]:
-                self.status[time_ind, top_ind] = 3
-            if self._has_converged(time_ind) or self._out_of_bound(top_ind):
-                break
-            distance_from_base += 1
-
-    def _update_status(self, time_ind):
-        alt_indices = np.where(self.is_liquid[time_ind, :])[0]
-        self.status[time_ind, alt_indices] = 2
+    def screen_rain(self):
+        """Masks profiles with rain."""
+        is_rain = self.lwc_source.is_rain.astype(bool)
+        self.status[is_rain, :] = 4
 
 
 class CalculateError:
@@ -289,30 +307,16 @@ class CalculateError:
         lwc_error[ind] = error_in[ind]
         return lwc_error
 
-
-def find_topmost_clouds(is_cloud):
-    """From 2d binary cloud field, return the uppermost cloud layer only.
-
-    Args:
-        is_cloud (ndarray): Boolean array denoting presence of clouds.
-
-    Returns:
-        ndarray: Copy of input array containing only the uppermost cloud
-        layer in each profile.
-
-    """
-    top_clouds = np.copy(is_cloud)
-    cloud_edges = top_clouds[:, :-1][:, ::-1] < top_clouds[:, 1:][:, ::-1]
-    topmost_bases = is_cloud.shape[1] - 1 - np.argmax(cloud_edges, axis=1)
-    for n, base in enumerate(topmost_bases):
-        top_clouds[n, :base] = 0
-    return top_clouds
+    def screen_rain(self):
+        """Masks profiles with rain."""
+        is_rain = self.lwc_source.is_rain.astype(bool)
+        self.lwc_error[is_rain, :] = ma.masked
 
 
-def _append_data(lwc_data, lwc_obj):
+def _append_data(lwc_data, lwc_obj, error_obj, cloud_obj):
     lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc', units='kg m-3')
-    lwc_data.append_data(lwc_obj.lwc_error, 'lwc_error', units='dB')
-    lwc_data.append_data(lwc_obj.status, 'lwc_retrieval_status')
+    lwc_data.append_data(error_obj.lwc_error, 'lwc_error', units='dB')
+    lwc_data.append_data(cloud_obj.status, 'lwc_retrieval_status')
 
 
 COMMENTS = {
