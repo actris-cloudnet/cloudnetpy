@@ -39,11 +39,8 @@ def generate_lwc(categorize_file, output_file):
     """
     lwc_source = LwcSource(categorize_file)
     lwc_obj = Lwc(lwc_source)
-    lwc_obj.screen_rain()
     cloud_obj = AdjustCloudsLwp(lwc_source)
-    cloud_obj.screen_rain()
     error_obj = CalculateError(lwc_source)
-    error_obj.screen_rain()
     _append_data(lwc_source, lwc_obj, error_obj, cloud_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
     output.save_product_file('lwc', lwc_source, output_file,
@@ -109,6 +106,7 @@ class Lwc:
         self.is_liquid = self._get_liquid()
         self.lwc_adiabatic = self._init_lwc_adiabatic()
         self.lwc = self._adiabatic_lwc_to_lwc()
+        self.screen_rain()
 
     def _get_liquid(self):
         category_bits = self.lwc_source.categorize_bits.category_bits
@@ -152,6 +150,7 @@ class AdjustCloudsLwp:
         self.status = self._init_status()
         top_clouds = self._find_adjustable_clouds()
         self._adjust_cloud_tops(top_clouds)
+        self.screen_rain()
 
     def _init_status(self):
         status = ma.zeros(self.is_liquid.shape, dtype=int)
@@ -275,6 +274,7 @@ class CalculateError:
         self.lwc = lwc_obj.lwc
         self.lwc_source = lwc_source
         self.lwc_error = self.calculate_lwc_error()
+        self.screen_rain()
 
     def calculate_lwc_error(self):
         lwc_relative_error = self._calc_lwc_relative_error()
