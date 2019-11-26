@@ -25,7 +25,7 @@ class Radar(ProfileDataSource):
 
     """
     def __init__(self, radar_file):
-        super().__init__(radar_file)
+        super().__init__(radar_file, radar=True)
         self.radar_frequency = float(self.getvar('radar_frequency', 'frequency'))
         self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.folding_velocity = self._get_folding_velocity()
@@ -51,7 +51,7 @@ class Radar(ProfileDataSource):
                 self.data[key].lin2db()
             elif key == 'v':
                 # This has some problems with RPG data when folding is present.
-                self.data[key].rebin_in_polar(self.time, time_new,
+                self.data[key].rebin_velocity(self.time, time_new,
                                               self.folding_velocity,
                                               self.sequence_indices)
             elif key == 'v_sigma':
@@ -78,7 +78,8 @@ class Radar(ProfileDataSource):
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
-            attenuations (dict): 2-D attenuations due to atmospheric gases.
+            attenuations (dict): 2-D attenuations due to atmospheric gases
+                and liquid: `radar_gas_atten`, `radar_liquid_atten`.
 
         """
         z_corrected = self.data['Z'][:] + attenuations['radar_gas_atten']
@@ -87,7 +88,10 @@ class Radar(ProfileDataSource):
         self.append_data(z_corrected, 'Z')
 
     def calc_errors(self, attenuations, classification):
-        """Calculates error and sensitivity of radar echo.
+        """Calculates uncertainties of radar echo.
+
+        Calculates and adds `Z_error`, `Z_sensitivity` and `Z_bias`
+        :class:`CloudnetArray` instances to `data` attribute.
 
         Args:
             attenuations (dict): 2-D attenuations due to atmospheric gases.

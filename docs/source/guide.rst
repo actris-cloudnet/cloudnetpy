@@ -16,7 +16,7 @@ Instructions can be found from `CloudnetPy's Github page <https://github.com/tuk
 Testing
 -------
 
-To run CloudnetPy tests, you first need to
+To run the CloudnetPy test suite, first
 clone the whole repository from `GitHub
 <https://github.com/tukiains/cloudnetpy>`_:
 

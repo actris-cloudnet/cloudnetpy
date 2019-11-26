@@ -1,4 +1,4 @@
-"""General helper functions for all products."""
+"""General helper classes and functions for all products."""
 import netCDF4
 import cloudnetpy.utils as utils
 
@@ -8,6 +8,13 @@ class CategorizeBits:
 
     Args:
         categorize_file (str): Categorize file name.
+
+    Attributes:
+        category_bits (dict): Dictionary containing boolean fields for `droplet`,
+            `falling`, `cold`, `melting`, `aerosol`, `insect`.
+
+        quality_bits (dict): Dictionary containing boolean fields for `radar`,
+            `lidar`, `clutter`, `molecular`, `attenuated`, `corrected`.
 
     """
     category_keys = ('droplet', 'falling', 'cold', 'melting', 'aerosol',
@@ -38,6 +45,11 @@ class ProductClassification(CategorizeBits):
     Args:
         categorize_file (str): Categorize file name.
 
+    Attributes:
+        is_rain (ndarray): 1D array denoting rainy profiles.
+        is_undetected_melting (ndarray): 1D array denoting profiles which should
+            contain melting layer but was not detected from the data.
+
     """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
@@ -47,7 +59,16 @@ class ProductClassification(CategorizeBits):
 
 
 def get_source(data_handler):
-    """Returns uuid (or filename if uuid not found) of the source file."""
+    """Returns uuid (or filename if uuid not found) of the source file.
+
+    Args:
+        data_handler (netCDF Dataset): The netCDF Dataset instance.
+
+    Returns:
+        str: The `file_uuid` attribute, if exits. If missing, return the
+        `filename` attribute.
+
+    """
     return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
 
 
@@ -61,7 +82,7 @@ def read_nc_fields(nc_file, names):
 
     Returns:
         ndarray/list: Array in case of one variable passed as a string.
-            List of arrays otherwise.
+        List of arrays otherwise.
 
     """
     names = [names] if isinstance(names, str) else names
@@ -81,7 +102,7 @@ def interpolate_model(cat_file, names):
 
     Returns:
         ndarray/list: Array in case of one variable passed as a string.
-            List of arrays otherwise.
+        List of arrays otherwise.
 
     """
     def _interp_field(var_name):
