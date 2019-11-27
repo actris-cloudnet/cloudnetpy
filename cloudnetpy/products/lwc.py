@@ -127,11 +127,6 @@ class Lwc:
                                                            self.lwc_source.lwp)
         return lwc_scaled / self.dheight
 
-    def _init_status(self):
-        status = ma.zeros(self.is_liquid.shape, dtype=int)
-        status[self.is_liquid] = 1
-        return status
-
     def screen_rain(self):
         """Masks profiles with rain."""
         is_rain = self.lwc_source.is_rain.astype(bool)

@@ -1,9 +1,8 @@
 import numpy as np
-from collections import namedtuple
 from numpy import testing
 import pytest
 import netCDF4
-from cloudnetpy.products.lwc import LwcSource, Lwc
+from cloudnetpy.products.lwc import LwcSource, Lwc, AdjustCloudsLwp, CalculateError
 
 
 DIMENSIONS = ('time', 'height', 'model_time', 'model_height')
@@ -71,49 +70,37 @@ def test_get_atmosphere_p(lwc_source_file):
     testing.assert_array_equal(compare, obj.atmosphere[-1])
 
 
+@pytest.fixture(scope='session')
+class LwcSourceObj(object):
+    is_liquid = np.array([0, 0, 0, 0, 1, 1])
+    height = np.array([1, 2, 3, 4, 5, 6, 7])
+    categorize_bits = object
+    categorize_bits.category_bits = {'Droplet': np.array([0, 0, 0, 1, 1, 1, 0])}
+    categorize_bits.quantity_bits = {'radar': np.array([0, 0, 0, 1, 1, 1, 0]),
+                                     'lidar': np.array([0, 1, 1, 1, 0, 0, 0])}
+    atmosphere = [np.array([290, 290, 291, 291, 292, 292, 293]),
+                  np.array([990, 990, 1000, 1000, 1010, 1010, 1020])]
+    lwp = np.array([0, 1, 1, 2, 1, 1])
+    lwp_error = np.array([0.2, 0.1, 0.1, 0.2, 0.1, 0.3])
+    is_rain = np.array([0, 1, 1, 0, 1, 1])
 
 
-
-
-def test_get_echo():
+def test_get_liquid(LwcSourceObj):
     assert True
 
 
-def test_get_liquid():
+def test_init_lwc_adiabatic(LwcSourceObj):
     assert True
 
 
-def test_init_lwc_adiabatic():
+def test_adiabatic_lwc_to_lwc(LwcSourceObj):
     assert True
 
 
-def test_adiabatic_lwc_to_lwc():
+def test_adjust_clouds_to_match_lwp(LwcSourceObj):
     assert True
 
 
-def test_init_status():
+def test_screen_rain_lwc(LwcSourceObj):
     assert True
 
-
-def test_adjust_clouds_to_match_lwp():
-    assert True
-
-
-def test_find_lwp_difference():
-    assert True
-
-
-def test_find_adjustable_clouds():
-    assert True
-
-
-def test_adjust_cloud_tops():
-    assert True
-
-
-def test_calc_lwc_error():
-    assert True
-
-
-def test_screen_rain():
-    assert True

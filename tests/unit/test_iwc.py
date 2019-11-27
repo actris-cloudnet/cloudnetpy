@@ -181,7 +181,7 @@ def test_find_cold_above_rain(cold, is_rain, melting, result, iwc_cat_file):
     testing.assert_array_equal(obj._find_cold_above_rain().data, result)
 
 
-# TODO: Think also values as some point for test below
+# TODO: Think also values as some point for tests below
 
 """
 def test_z_to_iwc(iwc_source_file):
