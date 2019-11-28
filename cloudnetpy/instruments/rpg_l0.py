@@ -155,6 +155,6 @@ class RpgBinL0:
 
         #print(float_block2.shape)
 
-        return None
+        return 0
 
 
