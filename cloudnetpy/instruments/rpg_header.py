@@ -57,10 +57,10 @@ def read_rpg_header(file_name, level, version=3):
                 ('latitude', 'f'),
                 ('longitude', 'f'),
                 ('calibration_interval', 'i4'),
-                ('number_of_range_levels', 'i4'),
-                ('number_of_temperature_levels', 'i4'),
-                ('number_of_humidity_levels', 'i4'),
-                ('number_of_chirp_levels', 'i4'))
+                ('n_range_levels', 'i4'),
+                ('n_temperature_levels', 'i4'),
+                ('n_humidity_levels', 'i4'),
+                ('n_chirp_levels', 'i4'))
 
     n_levels, n_temp, n_humidity, n_chirp = _get_number_of_levels(header)
 
@@ -129,7 +129,7 @@ def _read_string(file_id):
 
 def _get_number_of_levels(header):
     for name in ('range', 'temperature', 'humidity', 'chirp'):
-        yield int(header[f"number_of_{name}_levels"])
+        yield int(header[f"n_{name}_levels"])
 
 
 def _dim(length, dtype='f'):
@@ -140,3 +140,4 @@ def _get_dtype(array):
     if array.dtype in (np.int8, np.int32, np.uint32):
         return int
     return float
+
