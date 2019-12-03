@@ -90,7 +90,7 @@ class DataSource:
 
     def _init_time(self):
         time = self.getvar('time')
-        if max(time) > 24:
+        if max(time) > 25:
             time = utils.seconds2hours(time)
         return time
 
