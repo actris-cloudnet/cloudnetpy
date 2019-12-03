@@ -75,7 +75,7 @@ def test_get_atmosphere_p(lwc_source_file):
 class LwcSourceObj:
     def __init__(self):
         self.is_liquid = np.asarray([[1, 0, 1], [0, 1, 0], [1, 1, 1], [0, 0, 1], [0, 1, 1]], dtype=bool)
-        self.dheight = np.array([1, 2, 3])
+        self.dheight = 10
         self.categorize_bits = \
             CategorizeBits(category_bits={'droplet': np.asarray([[1, 0, 1], [0, 1, 0],
                                                                  [1, 1, 1], [0, 0, 1],
@@ -124,72 +124,71 @@ def test_screen_rain_lwc():
 
 
 def test_init_status():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_get_echo():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_adjust_cloud_tops():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_update_status():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_adjust_lwc():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_has_converged():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_out_of_bound():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_find_adjustable_clouds():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_find_topmost_clouds():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_find_echo_combinations_in_liquid():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_find_lidar_only_clouds():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_remove_good_profiles():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_find_lwp_difference():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_screen_rain():
-    obj = AdjustCloudsLwp(LwcSourceObj)
+    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
-
 
