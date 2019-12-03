@@ -74,7 +74,8 @@ def test_get_atmosphere_p(lwc_source_file):
 
 class LwcSourceObj:
     def __init__(self):
-        self.is_liquid = np.asarray([[1, 0, 1], [0, 1, 0], [1, 1, 1], [0, 0, 1], [0, 1, 1]], dtype=bool)
+        self.is_liquid = np.asarray([[1, 0, 1], [0, 1, 0], [1, 1, 1],
+                                     [0, 0, 1], [0, 1, 1]], dtype=bool)
         self.dheight = 10
         self.categorize_bits = \
             CategorizeBits(category_bits={'droplet': np.asarray([[1, 0, 1], [0, 1, 0],
@@ -97,98 +98,99 @@ class LwcSourceObj:
         self.is_rain = np.array([1, 0, 0, 1, 1])
 
 
-def test_get_liquid():
-    obj = Lwc(LwcSourceObj())
-    assert type(obj.is_liquid) is np.ndarray
-    assert 1 or 0 in obj.is_liquid
+LWC_OBJ = Lwc(LwcSourceObj())
+ADJUST_OBJ = AdjustCloudsLwp(LwcSourceObj())
+ERROR_OBJ = CalculateError(LwcSourceObj())
+
+
+@pytest.mark.parametrize("value", [0, 1])
+def test_get_liquid(value):
+    assert value in LWC_OBJ.is_liquid
+
+# TODO: Mieti paremmat testit, laske jokin ratkaisu, mihin verrataan
 
 
 def test_init_lwc_adiabatic():
-    obj = Lwc(LwcSourceObj())
     # Hard to test anything other
-    assert type(obj.lwc_adiabatic) is np.ma.core.MaskedArray
+    assert type(LWC_OBJ.lwc_adiabatic) is np.ma.core.MaskedArray
 
 
 def test_adiabatic_lwc_to_lwc():
-    obj = Lwc(LwcSourceObj())
-    assert len(obj.lwc_adiabatic) == 5 and len(obj.lwc_adiabatic[0]) == 3
-
-
-def test_adjust_clouds_to_match_lwp():
-    assert True
+    assert len(LWC_OBJ.lwc_adiabatic) == 5 and len(LWC_OBJ.lwc_adiabatic[0]) == 3
 
 
 def test_screen_rain_lwc():
-    obj = Lwc(LwcSourceObj())
-    assert type(obj.lwc) is np.ma.core.MaskedArray
+    assert type(LWC_OBJ.lwc) is np.ma.core.MaskedArray
 
 
-def test_init_status():
-    obj = AdjustCloudsLwp(LwcSourceObj())
-    assert True
+@pytest.mark.parametrize("value", [0, 1])
+def test_init_status(value):
+    assert value in ADJUST_OBJ._init_status()
 
 
-def test_get_echo():
-    obj = AdjustCloudsLwp(LwcSourceObj())
-    assert True
+@pytest.mark.parametrize("key", ['radar', 'lidar'])
+def test_get_echo(key):
+    assert key in ADJUST_OBJ.echo.keys()
 
 
+"""
 def test_adjust_cloud_tops():
-    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
+"""
 
 
-def test_update_status():
-    obj = AdjustCloudsLwp(LwcSourceObj())
-    assert True
+@pytest.mark.parametrize("value", [0, 1, 2])
+def test_update_status(value):
+    time = np.array([1, 3])
+    ADJUST_OBJ._update_status(time)
+    assert value in ADJUST_OBJ.status
 
 
-def test_adjust_lwc():
-    obj = AdjustCloudsLwp(LwcSourceObj())
-    assert True
+@pytest.mark.parametrize("value", [0, 1, 2, 3])
+def test_adjust_lwc(value):
+    time = 0
+    base = 0
+    ADJUST_OBJ.status = np.array([[1, 0, 0, 0, 2], [0, 0, 1, 0, 2]])
+    ADJUST_OBJ._adjust_lwc(time, base)
+    assert value in ADJUST_OBJ.status
 
 
 def test_has_converged():
-    obj = AdjustCloudsLwp(LwcSourceObj())
-    assert True
+    ind = 1
+    assert ADJUST_OBJ._has_converged(ind) is True
 
 
 def test_out_of_bound():
-    obj = AdjustCloudsLwp(LwcSourceObj())
-    assert True
+    ind = 2
+    assert ADJUST_OBJ._out_of_bound(ind) is True
 
 
 def test_find_adjustable_clouds():
-    obj = AdjustCloudsLwp(LwcSourceObj())
-    assert True
+    assert 1 not in ADJUST_OBJ._find_adjustable_clouds()
 
 
 def test_find_topmost_clouds():
-    obj = AdjustCloudsLwp(LwcSourceObj())
-    assert True
+    compare = np.asarray([[0, 0, 1], [0, 1, 0], [0, 0, 1],
+                          [0, 0, 1], [0, 1, 1]], dtype=bool)
+    testing.assert_array_equal(ADJUST_OBJ._find_topmost_clouds(), compare)
 
 
 def test_find_echo_combinations_in_liquid():
-    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_find_lidar_only_clouds():
-    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_remove_good_profiles():
-    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_find_lwp_difference():
-    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
 
 def test_screen_rain():
-    obj = AdjustCloudsLwp(LwcSourceObj())
     assert True
 
