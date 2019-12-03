@@ -16,6 +16,7 @@ def fake_mwr_file(tmpdir_factory):
     var[:] = np.arange(n_time)
     var = root_grp.createVariable('lwp', 'f8', 'time')
     var[:] = np.array([0.1, 2.5, -0.1, 0.2, 0.0])
+    var.units = 'g / m^2'
     root_grp.close()
     return file_name
 
