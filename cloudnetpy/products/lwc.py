@@ -133,7 +133,7 @@ class Lwc:
         self.lwc[is_rain, :] = ma.masked
 
 
-class AdjustCloudsLwp:
+class LwcStatus:
     """Adjust clouds (where possible) so that theoretical and measured LWP agree."""
     def __init__(self, lwc_source):
         lwc_obj = Lwc(lwc_source)
