@@ -107,8 +107,6 @@ ERROR_OBJ = CalculateError(LwcSourceObj())
 def test_get_liquid(value):
     assert value in LWC_OBJ.is_liquid
 
-# TODO: Mieti paremmat testit, laske jokin ratkaisu, mihin verrataan
-
 
 def test_init_lwc_adiabatic():
     compare = np.array([[-0.0002, 0.0, 0.0], [0.0, 0.0001, 0.0],
