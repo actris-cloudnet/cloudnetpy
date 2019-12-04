@@ -39,7 +39,7 @@ def generate_lwc(categorize_file, output_file):
     """
     lwc_source = LwcSource(categorize_file)
     lwc_obj = Lwc(lwc_source)
-    cloud_obj = AdjustCloudsLwp(lwc_source)
+    cloud_obj = LwcStatus(lwc_source)
     error_obj = CalculateError(lwc_source)
     _append_data(lwc_source, lwc_obj, error_obj, cloud_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
