@@ -26,8 +26,13 @@ class Mwr(DataSource):
             self.data[key].rebin_data(self.time, time_grid)
 
     def _init_lwp_data(self):
-        # TODO: How to deal with negative LWP values?
-        lwp = self.getvar('LWP_data', 'lwp')
+        possible_names = ('LWP_data', 'lwp', 'clwvi')
+        for name in possible_names:
+            if name in self.dataset.variables:
+                lwp = self.dataset.variables[name][:]
+                unit = self.dataset.variables[name].units
+        if 'kg' in unit:
+            lwp *= 1000
         lwp[lwp < 0] = 0
         self.append_data(lwp, 'lwp', units='g m-2')
 

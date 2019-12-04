@@ -35,7 +35,9 @@ class JenoptikCeilo(Ceilometer):
             assert all(np.diff(time) > 0)
         except AssertionError:
             raise RuntimeError('Inconsistent ceilometer time stamps.')
-        return utils.seconds2hours(time)
+        if max(time) > 24:
+            time = utils.seconds2hours(time)
+        return time
 
     def _read_date(self):
         return [self.dataset.year, self.dataset.month, self.dataset.day]

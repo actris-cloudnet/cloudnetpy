@@ -47,8 +47,8 @@ def get_target_classification(categorize_bits):
     classification[bits['melting']] = 6
     classification[bits['melting'] & bits['droplet']] = 7
     classification[bits['aerosol']] = 8
-    classification[bits['insect']] = 9
-    classification[bits['aerosol'] & bits['insect']] = 10
+    classification[bits['insect'] & ~clutter] = 9
+    classification[bits['aerosol'] & bits['insect'] & ~clutter] = 10
     classification[clutter & ~bits['aerosol']] = 0
     return classification
 

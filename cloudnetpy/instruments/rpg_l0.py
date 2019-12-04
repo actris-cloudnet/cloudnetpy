@@ -15,15 +15,14 @@ class RpgBinL0:
 
     def read_rpg_data(self):
         """Reads the actual data from rpg binary file."""
-        Dimensions = namedtuple('Dimensions', ['n_samples',
-                                               'n_gates',
-                                               'n_layers_t',
-                                               'n_layers_h'])
 
         def _create_dimensions():
             """Returns possible lengths of the data arrays."""
-            n_samples = np.fromfile(file, np.int32, 1)
-            return Dimensions(int(n_samples),
+            Dimensions = namedtuple('Dimensions', ['n_samples',
+                                                   'n_gates',
+                                                   'n_layers_t',
+                                                   'n_layers_h'])
+            return Dimensions(int(np.fromfile(file, np.int32, 1)),
                               int(self.header['n_range_levels']),
                               int(self.header['n_temperature_levels']),
                               int(self.header['n_humidity_levels']))
@@ -54,28 +53,68 @@ class RpgBinL0:
                 'receiver_temperature',
                 'pc_temperature'))
 
-            block2_vars = dict.fromkeys((
-                'Ze',
-                'v',
-                'width',
-                'skewness',
-                'kurtosis'))
+            if self.level == 1:
 
-            if self.header['dual_polarization'] > 0:
-                block2_vars.update(dict.fromkeys((
-                    'ldr',
-                    'correlation_coefficient',
-                    'spectral_differential_phase')))
-            elif self.header['dual_polarization'] == 2:
-                block2_vars.update(dict.fromkeys((
-                    'Zdr'
-                    'correlation_coefficient'
-                    'spectral_differential_phase'
-                    '_',
-                    'spectral_slanted_ldr',
-                    'spectral_slanted_correlation_coefficient',
-                    'specific_differential_phase_shift',
-                    'differential_attenuation')))
+                block2_vars = dict.fromkeys((
+                    'Ze',
+                    'v',
+                    'width',
+                    'skewness',
+                    'kurtosis'))
+
+                if self.header['dual_polarization'] > 0:
+                    block2_vars.update(dict.fromkeys((
+                        'ldr',
+                        'correlation_coefficient',
+                        'spectral_differential_phase')))
+
+                elif self.header['dual_polarization'] == 2:
+                    block2_vars.update(dict.fromkeys((
+                        'Zdr'
+                        'correlation_coefficient'
+                        'spectral_differential_phase'
+                        '_',
+                        'spectral_slanted_ldr',
+                        'spectral_slanted_correlation_coefficient',
+                        'specific_differential_phase_shift',
+                        'differential_attenuation')))
+
+            else:
+
+                block2_vars = {}
+
+                if self.header['compression'] == 0:
+
+                    block2_vars['doppler_spectrum'] = None
+
+                    if self.header['dual_polarization'] > 0:
+                        block2_vars.update(dict.fromkeys((
+                            'doppler_spectrum_h',
+                            'covariance_spectrum_re',
+                            'covariance_spectrum_im')))
+
+                elif self.header['compression'] > 0:
+
+                    block2_vars.update(dict.fromkeys(
+                        'doppler_spectrum_compressed'))
+
+                    if self.header['dual_polarization'] > 0:
+                        block2_vars.update(dict.fromkeys((
+                            'doppler_spectrum_h_compressed',
+                            'covariance_spectrum_re_compressed',
+                            'covariance_spectrum_im_compressed')))
+
+                if self.header['compression'] == 2:
+
+                    block2_vars.update(dict.fromkeys((
+                        'differential_reflectivity_compressed',
+                        'spectral_correlation_coefficient_compressed',
+                        'spectral_differential_phase_compressed')))
+
+                    if self.header['dual_polarization'] == 2:
+                        block2_vars.update(dict.fromkeys((
+                            'spectral_slanted_ldr_compressed',
+                            'spectral_slanted_correlation_coefficient_compressed')))
 
             return vrs, block1_vars, block2_vars
 
@@ -129,7 +168,7 @@ class RpgBinL0:
                 for n, ind in enumerate(is_data_ind):
                     float_block2[sample, ind, :n_samples[n]] = data_array[n][:n_samples[n]]
 
-            elif self.header['compression'] > 0:  # Dimitris radar
+            elif self.header['compression'] > 0:
 
                 for _ in is_data_ind:
 
@@ -146,15 +185,14 @@ class RpgBinL0:
 
         file.close()
         for n, name in enumerate(block1):
-            block1[name] = float_block1[:, n]  # there is still stuff in end of block1 after this
+            block1[name] = float_block1[:, n]  # with l0 there is still stuff in end of block1 after this
 
-        #for n, name in enumerate(block2):
-        #    block2[name] = float_block2[:, :, n]
+        #if self.level == 1:
+        #    for n, name in enumerate(block2):
+        #        block2[name] = float_block2[:, :, n]
+        #else:
 
-        #return {**aux, **block1, **block2}
 
-        #print(float_block2.shape)
-
-        return 0
+        return {**aux, **block1, **block2}
 
 
