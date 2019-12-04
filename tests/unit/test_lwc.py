@@ -176,21 +176,67 @@ def test_find_topmost_clouds():
 
 
 def test_find_echo_combinations_in_liquid():
-    assert True
+    ADJUST_OBJ.echo['lidar'] = np.array([[0, 0, 1, 1, 0], [0, 1, 1, 0, 0]])
+    ADJUST_OBJ.echo['radar'] = np.array([[0, 0, 0, 0, 0], [0, 0, 1, 1, 1]])
+    ADJUST_OBJ.is_liquid = np.array([[1, 0, 1, 1, 1], [0, 0, 1, 1, 1]])
+    compare = np.array([[0, 0, 1, 1, 0], [0, 0, 3, 2, 2]])
+    testing.assert_equal(ADJUST_OBJ._find_echo_combinations_in_liquid(), compare)
 
 
 def test_find_lidar_only_clouds():
-    assert True
+    inds = np.array([[1, 0, 0, 1, 0], [0, 1, 0, 1, 3]])
+    compare = np.array([True, False])
+    testing.assert_equal(ADJUST_OBJ._find_lidar_only_clouds(inds), compare)
 
 
 def test_remove_good_profiles():
-    assert True
+    top_c = np.asarray([[0, 0, 1], [0, 0, 1], [0, 1, 1], [0, 1, 0], [0, 0, 0]], dtype=bool)
+    compare = np.asarray([[0, 0, 0], [0, 0, 0], [0, 1, 1], [0, 0, 0], [0, 0, 0]], dtype=bool)
+    testing.assert_equal(ADJUST_OBJ._remove_good_profiles(top_c), compare)
 
 
 def test_find_lwp_difference():
+    ADJUST_OBJ.lwc_adiabatic = np.array([[1, 8, 2], [2, 3, 7], [3, 0, 1], [2, 2, 8], [9, 0, 1]])
+    ADJUST_OBJ.lwc_source.lwp = np.array([50, 30, 70, 10, 40])
+    compare = np.array([60, 90, -30, 110, 60])
+    testing.assert_equal(ADJUST_OBJ._find_lwp_difference(), compare)
+
+
+@pytest.mark.parametrize("value", [0, 1, 2, 3, 4])
+def test_screen_rain_status(value):
+    ADJUST_OBJ.lwc_source.is_rain = np.array([0, 1])
+    ADJUST_OBJ.status = np.array([[0, 2, 2, 3, 1], [1, 3, 0, 2, 2]])
+    ADJUST_OBJ.screen_rain()
+    assert value in ADJUST_OBJ.status
+
+
+def test_calculate_lwc_error():
     assert True
 
 
-def test_screen_rain():
+def test_limit_error():
     assert True
 
+
+def test_calc_lwc_gradient():
+    assert True
+
+
+def test_calc_lwc_relative_error():
+    assert True
+
+
+def test_calc_lwp_relative_error():
+    assert True
+
+
+def test_calc_combined_error():
+    assert True
+
+
+def test_fill_error_array():
+    assert True
+
+
+def test_screen_rain_error():
+    assert True
