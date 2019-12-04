@@ -268,3 +268,11 @@ def test_screen_rain_error():
     compare = np.ma.array([[0, 0, 0], [0, 0, 0], [0.502, 0.255, 0.174],
                            [0, 0, 0], [0, 0, 0]], mask=0)
     testing.assert_equal(np.around(ERROR_OBJ.lwc_error, decimals=3), compare)
+
+
+@pytest.mark.parametrize("key", ["lwc", "lwc_retrieval_status", "lwc_error"])
+def test_append_data(lwc_source_file, key):
+    from cloudnetpy.products.lwc import _append_data
+    lwc_source = LwcSource(lwc_source_file)
+    _append_data(lwc_source, LWC_OBJ, ERROR_OBJ, STATUS_OBJ)
+    assert key in lwc_source.data.keys()
