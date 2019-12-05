@@ -65,17 +65,7 @@ class DrizzleSource(DataSource):
 
     def _read_mie_lut(self):
         """Reads mie scattering look-up table."""
-        def _get_mie_file():
-            module_path = os.path.dirname(os.path.abspath(__file__))
-            return '/'.join((module_path, 'mie_lu_tables.nc'))
-
-        def _get_wl_band():
-            """Returns string corresponding the radar frequency."""
-            radar_frequency = self.getvar('radar_frequency')
-            wl_band = utils.get_wl_band(radar_frequency)
-            return '35' if wl_band == 0 else '94'
-
-        mie_file = _get_mie_file()
+        mie_file = self._get_mie_file()
         nc = netCDF4.Dataset(mie_file)
         mie = nc.variables
         lut = {'Do': mie['lu_medianD'][:],
@@ -83,12 +73,22 @@ class DrizzleSource(DataSource):
                'S': mie['lu_k'][:],
                'lwf': mie['lu_LWF'][:],
                'termv': mie['lu_termv'][:]}
-        band = _get_wl_band()
+        band = self._get_wl_band()
         lut.update({'width': mie[f"lu_width_{band}"][:],
                     'ray': mie[f"lu_mie_ray_{band}"][:],
                     'v': mie[f"lu_v_{band}"][:]})
         nc.close()
         return lut
+
+    def _get_mie_file(self):
+        module_path = os.path.dirname(os.path.abspath(__file__))
+        return '/'.join((module_path, 'mie_lu_tables.nc'))
+
+    def _get_wl_band(self):
+        """Returns string corresponding the radar frequency."""
+        radar_frequency = self.getvar('radar_frequency')
+        wl_band = utils.get_wl_band(radar_frequency)
+        return '35' if wl_band == 0 else '94'
 
 
 class DrizzleClassification(ProductClassification):
