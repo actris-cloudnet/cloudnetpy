@@ -150,6 +150,9 @@ class DrizzleClassification(ProductClassification):
         return np.any(self.category_bits['melting'], axis=1)
 
 
+# Tähän saakka semi selkeetä. Tutkitaan ja hutkitaan loppu koodi
+# Koodi jäsennelty. Muokataan lwc:n tapaan loput super funktiot luokiksi
+
 def correct_spectral_width(cat_file):
     """Corrects spectral width.
 
@@ -171,28 +174,24 @@ def correct_spectral_width(cat_file):
 
     def _calc_v_sigma_factor():
         beam_divergence = _calc_beam_divergence()
-        wind = calc_horizontal_wind(cat_file)
+        wind = _calc_horizontal_wind()
         actual_wind = (wind + beam_divergence) ** (2/3)
         scaled_wind = (30*wind + beam_divergence) ** (2/3)
         return actual_wind / (scaled_wind - actual_wind)
 
+    def _calc_horizontal_wind():
+        """Calculates magnitude of horizontal wind.
+
+        Returns:
+            ndarray: Horizontal wind (m s-1).
+
+        """
+        u_wind, v_wind = p_tools.interpolate_model(cat_file, ['uwind', 'vwind'])
+        return utils.l2norm(u_wind, v_wind)
+
     width, v_sigma = p_tools.read_nc_fields(cat_file, ['width', 'v_sigma'])
     sigma_factor = _calc_v_sigma_factor()
     return width - sigma_factor * v_sigma
-
-
-def calc_horizontal_wind(cat_file):
-    """Calculates magnitude of horizontal wind.
-
-    Args:
-        cat_file: Categorize file name.
-
-    Returns:
-        ndarray: Horizontal wind (m s-1).
-
-    """
-    u_wind, v_wind = p_tools.interpolate_model(cat_file, ['uwind', 'vwind'])
-    return utils.l2norm(u_wind, v_wind)
 
 
 def drizzle_solve(data, drizzle_class, width_ht):
@@ -230,10 +229,30 @@ def drizzle_solve(data, drizzle_class, width_ht):
         threshold = 1e-3
         return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold
 
+    def _calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
+        """ Drizzle diameter calculation.
+
+        Args:
+            beta_z_ratio (ndarray): Beta to z ratio, multiplied by (2 / pi).
+            mu (ndarray, optional): Shape parameter for gamma calculations. Default is 0.
+            ray (ndarray, optional): Mie to Rayleigh ratio for z. Default is 1.
+            k (ndarray, optional): Alpha to beta ratio . Default is 1.
+
+        Returns:
+            ndarray: Drizzle diameter.
+
+        References:
+            https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
+
+        """
+        const = ray * k * beta_z_ratio
+        return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1 / 4)
+
+
     params, dia_init = _init_variables()
     beta_z_ratio = _calc_beta_z_ratio()
     drizzle_ind = np.where(drizzle_class.drizzle == 1)
-    dia_init[drizzle_ind] = calc_dia(beta_z_ratio[drizzle_ind], k=18.8)
+    dia_init[drizzle_ind] = _calc_dia(beta_z_ratio[drizzle_ind], k=18.8)
     # Negation because width look-up table is descending order:
     width_lut = -data.mie['width'][:]
     n_widths, n_dia = width_lut.shape[0], len(data.mie['Do'])
@@ -242,7 +261,7 @@ def drizzle_solve(data, drizzle_class, width_ht):
     for i, j in zip(*drizzle_ind):
         for _ in range(max_ite):
             lut_ind = _find_lut_indices(i, j)
-            dia = calc_dia(beta_z_ratio[i, j] * params['beta_corr'][i, j],
+            dia = _calc_dia(beta_z_ratio[i, j] * params['beta_corr'][i, j],
                            data.mie['mu'][lut_ind[0]],
                            data.mie['ray'][lut_ind],
                            data.mie['S'][lut_ind])
@@ -253,26 +272,6 @@ def drizzle_solve(data, drizzle_class, width_ht):
         beta_factor = np.exp(2*params['S'][i, j]*data.beta[i, j]*data.dheight)
         params['beta_corr'][i, (j+1):] *= beta_factor
     return params
-
-
-def calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
-    """ Drizzle diameter calculation.
-
-    Args:
-        beta_z_ratio (ndarray): Beta to z ratio, multiplied by (2 / pi).
-        mu (ndarray, optional): Shape parameter for gamma calculations. Default is 0.
-        ray (ndarray, optional): Mie to Rayleigh ratio for z. Default is 1.
-        k (ndarray, optional): Alpha to beta ratio . Default is 1.
-
-    Returns:
-        ndarray: Drizzle diameter.
-
-    References:
-        https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
-
-    """
-    const = ray * k * beta_z_ratio
-    return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1/4)
 
 
 def _calc_derived_products(data, parameters):
@@ -325,6 +324,7 @@ def _calc_derived_products(data, parameters):
             'v_drizzle': v_drizzle, 'v_air': v_air}
 
 
+# Tehdään tästä ainakin oma luokkansa
 def _calc_errors(categorize, parameters):
     """Estimates errors in the retrieved drizzle products."""
 
@@ -421,6 +421,11 @@ def _calc_errors(categorize, parameters):
         """Converts linear error values to dB."""
         return {name: lin2db(value) for name, value in data.items()}
 
+    def _get_drizzle_indices(diameter):
+        return {'drizzle': diameter > 0,
+                'small': np.logical_and(diameter <= 1e-4, diameter > 1e-5),
+                'tiny': np.logical_and(diameter <= 1e-5, diameter > 0)}
+
     drizzle_indices = _get_drizzle_indices(parameters['Do'])
     error_input = _read_input_uncertainty('error')
     bias_input = _read_input_uncertainty('bias')
@@ -430,12 +435,6 @@ def _calc_errors(categorize, parameters):
     _add_supplementary_errors()
     _add_supplementary_biases()
     return _convert_to_db(results)
-
-
-def _get_drizzle_indices(diameter):
-    return {'drizzle': diameter > 0,
-            'small': np.logical_and(diameter <= 1e-4, diameter > 1e-5),
-            'tiny': np.logical_and(diameter <= 1e-5, diameter > 0)}
 
 
 def _screen_rain(results, classification):
