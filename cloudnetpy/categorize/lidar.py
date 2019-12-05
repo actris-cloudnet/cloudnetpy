@@ -11,7 +11,7 @@ class Lidar(ProfileDataSource):
     """
     def __init__(self, lidar_file):
         super().__init__(lidar_file)
-        self._unknown_to_cloudnet(('beta_smooth', 'beta'), 'beta')
+        self._unknown_to_cloudnet(('beta', 'beta_smooth'), 'beta')
         self._add_meta()
 
     def rebin_to_grid(self, time_new, height_new):

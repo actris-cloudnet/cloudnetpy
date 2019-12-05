@@ -36,7 +36,7 @@ def ceilo2nc(input_file, output_file, site_meta):
         >>> ceilo2nc('jenoptik_raw.nc', 'jenoptik.nc', site_meta)
 
     """
-    ceilo = _initialize_ceilo(input_file)
+    ceilo = _initialize_ceilo(input_file, site_meta['name'])
     ceilo.read_ceilometer_file()
     beta_variants = ceilo.calc_beta()
     _append_data(ceilo, beta_variants)
@@ -45,7 +45,7 @@ def ceilo2nc(input_file, output_file, site_meta):
     _save_ceilo(ceilo, output_file, site_meta['name'])
 
 
-def _initialize_ceilo(file):
+def _initialize_ceilo(file, site_name):
     model = _find_ceilo_model(file)
     if model == 'cl51':
         return Cl51(file)
@@ -54,7 +54,7 @@ def _initialize_ceilo(file):
     elif model == 'ct25k':
         return Ct25k(file)
     elif model == 'chm15k':
-        return JenoptikCeilo(file)
+        return JenoptikCeilo(file, site_name)
     raise RuntimeError('Error: Unknown ceilo model.')
 
 
