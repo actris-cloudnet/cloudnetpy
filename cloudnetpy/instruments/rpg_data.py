@@ -1,16 +1,16 @@
+"""Module aiming to implement a generic RPG data reader."""
 from cloudnetpy.instruments.rpg_header import read_rpg_header
 from collections import namedtuple
 import numpy as np
-import sys
 import bisect
 
 
-class RpgBinL0:
+class RpgBin:
     """RPG Cloud Radar Level 0 v3 data reader."""
-    def __init__(self, filename, level):
+    def __init__(self, filename, level, version=3):
         self.filename = filename
         self.level = level
-        self.header, self._file_position = read_rpg_header(filename, level)
+        self.header, self._file_position = read_rpg_header(filename, level, version=version)
         self.data = self.read_rpg_data()
 
     def read_rpg_data(self):
@@ -66,16 +66,13 @@ class RpgBinL0:
                     block2_vars.update(dict.fromkeys((
                         'ldr',
                         'correlation_coefficient',
-                        'spectral_differential_phase')))
+                        'differential_phase')))
 
-                elif self.header['dual_polarization'] == 2:
+                if self.header['dual_polarization'] == 2:
                     block2_vars.update(dict.fromkeys((
-                        'Zdr'
-                        'correlation_coefficient'
-                        'spectral_differential_phase'
-                        '_',
-                        'spectral_slanted_ldr',
-                        'spectral_slanted_correlation_coefficient',
+                        'slanted_Ze',
+                        'slanted_ldr',
+                        'slanted_correlation_coefficient',
                         'specific_differential_phase_shift',
                         'differential_attenuation')))
 
@@ -184,15 +181,12 @@ class RpgBinL0:
                         is_anti_applied, min_velocity = np.fromfile(file, np.dtype('int8, float32'), 1)[0]
 
         file.close()
+
         for n, name in enumerate(block1):
             block1[name] = float_block1[:, n]  # with l0 there is still stuff in end of block1 after this
 
-        #if self.level == 1:
-        #    for n, name in enumerate(block2):
-        #        block2[name] = float_block2[:, :, n]
-        #else:
-
+        if self.level == 1:
+            for n, name in enumerate(block2):
+                block2[name] = float_block2[:, :, n]
 
         return {**aux, **block1, **block2}
-
-

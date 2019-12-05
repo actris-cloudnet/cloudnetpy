@@ -1,5 +1,6 @@
 """Module for reading RPG 94 GHz radar header."""
 import numpy as np
+import sys
 
 
 def read_rpg_header(file_name, level, version=3):
@@ -16,7 +17,7 @@ def read_rpg_header(file_name, level, version=3):
         tuple: 2-element tuple containing the header (as dict) and file position.
 
     """
-    def _read_block(*fields):
+    def read(*fields):
         block = np.fromfile(file, np.dtype(list(fields)), 1)
         for name in block.dtype.names:
             array = block[name][0]
@@ -25,87 +26,87 @@ def read_rpg_header(file_name, level, version=3):
     header = {}
     file = open(file_name, 'rb')
 
-    _read_block(('file_code', 'i4'),
-                ('header_length', 'i4'))  # bytes
+    read(('file_code', 'i4'),
+         ('header_length', 'i4'))  # bytes
 
     if version >= 3:
-        _read_block(('start_time', 'uint32'),
-                    ('stop_time', 'uint32'))
+        read(('start_time', 'uint32'),
+             ('stop_time', 'uint32'))
 
-    _read_block(('program_number', 'i4'),
-                ('model_number', 'i4'))  # 0 = Single pol. 1 = Dual pol.
+    read(('program_number', 'i4'),
+         ('model_number', 'i4'))  # 0 = Single pol. 1 = Dual pol.
 
     header['program_name'] = _read_string(file)
     header['customer_name'] = _read_string(file)
 
-    _read_block(('radar_frequency', 'f'),  # GHz
-                ('antenna_separation', 'f'),  # m
-                ('antenna_diameter', 'f'),  # m
-                ('antenna_gain', 'f'),
-                ('half_power_beam_width', 'f'))  # degrees
+    read(('radar_frequency', 'f'),  # GHz
+         ('antenna_separation', 'f'),  # m
+         ('antenna_diameter', 'f'),  # m
+         ('antenna_gain', 'f'),
+         ('half_power_beam_width', 'f'))  # degrees
 
     if level == 0:
-        _read_block(('radar_constant', 'f'))
+        read(('radar_constant', 'f'))
 
-    _read_block(('dual_polarization', 'i1'))  # 0=Single, 1=Dual (LDR), 2=Dual (STSR)
+    read(('dual_polarization', 'i1'))  # 0=Single, 1=Dual (LDR), 2=Dual (STSR)
 
     if level == 0:
-        _read_block(('compression', 'i1'),  # 0=Not compressed, 1=Compressed
+        read(('compression', 'i1'),  # 0=Not compressed, 1=Compressed
                     ('anti_alias', 'i1'))  # 0=Not anti-aliased, 1=Anti-aliased
 
-    _read_block(('sample_duration', 'f'),  # s
-                ('latitude', 'f'),
-                ('longitude', 'f'),
-                ('calibration_interval', 'i4'),
-                ('n_range_levels', 'i4'),
-                ('n_temperature_levels', 'i4'),
-                ('n_humidity_levels', 'i4'),
-                ('n_chirp_levels', 'i4'))
+    read(('sample_duration', 'f'),  # s
+         ('latitude', 'f'),
+         ('longitude', 'f'),
+         ('calibration_interval', 'i4'),
+         ('n_range_levels', 'i4'),
+         ('n_temperature_levels', 'i4'),
+         ('n_humidity_levels', 'i4'),
+         ('n_chirp_levels', 'i4'))
 
     n_levels, n_temp, n_humidity, n_chirp = _get_number_of_levels(header)
 
-    _read_block(('range', _dim(n_levels)),
-                ('temperature_levels', _dim(n_temp)),
-                ('humidity_levels', _dim(n_humidity)))
+    read(('range', _dim(n_levels)),
+         ('temperature_levels', _dim(n_temp)),
+         ('humidity_levels', _dim(n_humidity)))
 
     if level == 0:
-        _read_block(('range_factors', _dim(n_levels)))
+        read(('range_factors', _dim(n_levels)))
 
-    _read_block(('n_spectral_samples', _dim(n_chirp, 'i4')),
-                ('chirp_start_indices', _dim(n_chirp, 'i4')),
-                ('n_averaged_chirps', _dim(n_chirp, 'i4')),
-                ('integration_time', _dim(n_chirp)),  # s
-                ('range_resolution', _dim(n_chirp)),  # m
-                ('nyquist_velocity', _dim(n_chirp)))  # m/s
+    read(('n_spectral_samples', _dim(n_chirp, 'i4')),
+         ('chirp_start_indices', _dim(n_chirp, 'i4')),
+         ('n_averaged_chirps', _dim(n_chirp, 'i4')),
+         ('integration_time', _dim(n_chirp)),  # s
+         ('range_resolution', _dim(n_chirp)),  # m
+         ('nyquist_velocity', _dim(n_chirp)))  # m/s
 
     if version > 2:
         if level == 0:
-            _read_block(('channel_bandwidth', _dim(n_chirp)),  # Hz
-                        ('chirp_low_if', _dim(n_chirp, 'i4')),  # Hz
-                        ('chirp_high_if', _dim(n_chirp, 'i4')),  # Hz
-                        ('range_min', _dim(n_chirp, 'i4')),  # m
-                        ('range_max', _dim(n_chirp, 'i4')),  # m
-                        ('chirp_fft_size', _dim(n_chirp, 'i4')),  # Must be power of 2
-                        ('n_invalid_samples', _dim(n_chirp, 'i4')),
-                        ('chirp_center_freq', _dim(n_chirp)),  # MHz
-                        ('chirp_bandwidth', _dim(n_chirp)),  # MHz
-                        ('fft_start_ind', _dim(n_chirp, 'i4')),
-                        ('fft_stop_ind', _dim(n_chirp, 'i4')),
-                        ('chrp_fft_no', _dim(n_chirp, 'i4')),
-                        ('adc_sample_rate', 'i4'),  # Hz
-                        ('max_range', 'i4'))  # m
+            read(('channel_bandwidth', _dim(n_chirp)),  # Hz
+                 ('chirp_low_if', _dim(n_chirp, 'i4')),  # Hz
+                 ('chirp_high_if', _dim(n_chirp, 'i4')),  # Hz
+                 ('range_min', _dim(n_chirp, 'i4')),  # m
+                 ('range_max', _dim(n_chirp, 'i4')),  # m
+                 ('chirp_fft_size', _dim(n_chirp, 'i4')),  # Must be power of 2
+                 ('n_invalid_samples', _dim(n_chirp, 'i4')),
+                 ('chirp_center_freq', _dim(n_chirp)),  # MHz
+                 ('chirp_bandwidth', _dim(n_chirp)),  # MHz
+                 ('fft_start_ind', _dim(n_chirp, 'i4')),
+                 ('fft_stop_ind', _dim(n_chirp, 'i4')),
+                 ('chrp_fft_no', _dim(n_chirp, 'i4')),
+                 ('adc_sample_rate', 'i4'),  # Hz
+                 ('max_range', 'i4'))  # m
 
-        _read_block(('is_power_levelling', 'i1'),  # 0=no, 1=yes
-                    ('is_spike_filter', 'i1'),  # 0=no, 1=yes
-                    ('is_phase_correction', 'i1'),  # 0=no, 1=yes
-                    ('is_relative_power_correction', 'i1'),  # 0=no, 1=yes
-                    ('fft_window', 'i1'),  # 0=square, 1=parzen, 2=blackman, 3=welch, 4=slepian2, 5=slepian3
-                    ('adc_input_voltage_range', 'i4'),  # mV
-                    ('noise_filter_threshold', 'f4'))  # multiple of STD in spectra
+        read(('is_power_levelling', 'i1'),  # 0=no, 1=yes
+             ('is_spike_filter', 'i1'),  # 0=no, 1=yes
+             ('is_phase_correction', 'i1'),  # 0=no, 1=yes
+             ('is_relative_power_correction', 'i1'),  # 0=no, 1=yes
+             ('fft_window', 'i1'),  # 0=square, 1=parzen, 2=blackman, 3=welch, 4=slepian2, 5=slepian3
+             ('adc_input_voltage_range', 'i4'),  # mV
+             ('noise_filter_threshold', 'f4'))  # multiple of STD in spectra
 
         if level == 0:
-            _read_block(('dummy1', _dim(25, 'i4')),
-                        ('dummy2', _dim(10000, 'uint32')))
+            read(('dummy1', _dim(25, 'i4')),
+                 ('dummy2', _dim(10000, 'uint32')))
 
     file_position = file.tell()
     file.close()
