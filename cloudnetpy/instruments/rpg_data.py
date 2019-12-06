@@ -1,8 +1,9 @@
 """Module aiming to implement a generic RPG data reader."""
-from cloudnetpy.instruments.rpg_header import read_rpg_header, get_rpg_file_type
+import bisect
 from collections import namedtuple
 import numpy as np
-import bisect
+from cloudnetpy.instruments.rpg_header import read_rpg_header, get_rpg_file_type
+import sys
 
 
 class RpgBin:
@@ -90,7 +91,7 @@ class RpgBin:
                             'covariance_spectrum_re',
                             'covariance_spectrum_im')))
 
-                elif self.header['compression'] > 0:
+                else:
 
                     block2_vars.update(dict.fromkeys(
                         'doppler_spectrum_compressed'))
@@ -116,7 +117,8 @@ class RpgBin:
             return vrs, block1_vars, block2_vars
 
         def _get_float_block_lengths():
-            block_one_length = len(block1) + 3 + dims.n_layers_t + (2*dims.n_layers_h) + (2*dims.n_gates)
+            block_one_length = (len(block1) + 3 + dims.n_layers_t +
+                                (2*dims.n_layers_h) + (2*dims.n_gates))
             if self.level == 0 and self.header['dual_polarization'] > 0:
                 block_one_length += 2*dims.n_gates
             block_two_length = len(block2)
@@ -124,10 +126,10 @@ class RpgBin:
 
         def _init_float_blocks():
             block_one = np.zeros((dims.n_samples, n_floats1))
-            if self.level == 0:
-                block_two = np.zeros((dims.n_samples, dims.n_gates, max(n_spectral_samples)))
-            else:
+            if self.level == 1:
                 block_two = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
+            else:
+                block_two = np.empty((dims.n_samples, dims.n_gates), dtype=object)
             return block_one, block_two
 
         file = open(self.filename, 'rb')
@@ -160,10 +162,8 @@ class RpgBin:
                 n_samples = [n_spectral_samples[bisect.bisect(chirp_indices, x)-1]
                              for x in is_data_ind]
                 dtype = ' '.join([f"int32, ({n_var*x},)float32, " for x in n_samples])
-                data_array = np.array(np.fromfile(file, np.dtype(dtype), 1)
-                                      [0].tolist())[1::2]
-                for n, ind in enumerate(is_data_ind):
-                    float_block2[sample, ind, :n_samples[n]] = data_array[n][:n_samples[n]]
+                float_block2[sample, is_data_ind] = np.array(np.fromfile(file, np.dtype(dtype), 1)
+                                                             [0].tolist())[1::2]
 
             elif self.header['compression'] > 0:
 
@@ -188,5 +188,9 @@ class RpgBin:
         if self.level == 1:
             for n, name in enumerate(block2):
                 block2[name] = float_block2[:, :, n]
+
+        else:
+            # add L0 here
+            pass
 
         return {**aux, **block1, **block2}
