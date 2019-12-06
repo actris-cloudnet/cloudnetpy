@@ -51,7 +51,7 @@ def read_rpg_header(file_name):
 
     if level == 0:
         read(('compression', 'i1'),  # 0=Not compressed, 1=Compressed
-                    ('anti_alias', 'i1'))  # 0=Not anti-aliased, 1=Anti-aliased
+             ('anti_alias', 'i1'))  # 0=Not anti-aliased, 1=Anti-aliased
 
     read(('sample_duration', 'f'),  # s
          ('latitude', 'f'),
@@ -117,11 +117,11 @@ def _read_string(file_id):
     """Read characters from binary data until whitespace."""
     str_out = ''
     while True:
-        c = np.fromfile(file_id, np.int8, 1)
-        if c:
-            if c < 0:
-                c = 0
-            str_out += chr(c)
+        value = np.fromfile(file_id, np.int8, 1)
+        if value:
+            if value < 0:
+                value = 0
+            str_out += chr(value)
         else:
             break
     return str_out
