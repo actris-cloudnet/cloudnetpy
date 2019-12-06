@@ -1,16 +1,16 @@
 """Module aiming to implement a generic RPG data reader."""
-from cloudnetpy.instruments.rpg_header import read_rpg_header
+from cloudnetpy.instruments.rpg_header import read_rpg_header, get_rpg_file_type
 from collections import namedtuple
 import numpy as np
 import bisect
 
 
 class RpgBin:
-    """RPG Cloud Radar Level 0 v3 data reader."""
-    def __init__(self, filename, level, version=3):
+    """RPG Cloud Radar Level 0/1 Version 2/3 data reader."""
+    def __init__(self, filename):
         self.filename = filename
-        self.level = level
-        self.header, self._file_position = read_rpg_header(filename, level, version=version)
+        self.header, self._file_position = read_rpg_header(filename)
+        self.level, self.version = get_rpg_file_type(self.header)
         self.data = self.read_rpg_data()
 
     def read_rpg_data(self):

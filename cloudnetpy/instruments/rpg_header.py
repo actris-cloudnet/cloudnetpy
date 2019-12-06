@@ -1,17 +1,14 @@
 """Module for reading RPG 94 GHz radar header."""
 import numpy as np
-import sys
 
 
-def read_rpg_header(file_name, level, version=3):
+def read_rpg_header(file_name):
     """Reads header from RPG binary file.
 
-    Supports LV0 / LV1 files and version 2 / 3.
+    Supports Level 0/1 and version 2/3.
 
     Args:
         file_name (str): name of the file.
-        level (int): File level (0 or 1).
-        version (int, optional): RPG software version (2 or 3). Default is 3.
 
     Returns:
         tuple: 2-element tuple containing the header (as dict) and file position.
@@ -28,6 +25,8 @@ def read_rpg_header(file_name, level, version=3):
 
     read(('file_code', 'i4'),
          ('header_length', 'i4'))  # bytes
+
+    level, version = get_rpg_file_type(header)
 
     if version >= 3:
         read(('start_time', 'uint32'),
@@ -142,3 +141,27 @@ def _get_dtype(array):
         return int
     return float
 
+
+def get_rpg_file_type(header):
+    """Find level and version of RPG cloud radar binary file.
+
+    Args:
+        header (dict): Header of the radar file containing *file_code* key.
+
+    Returns:
+        tuple: 2-element tuple containing Level (0 or 1) and Version (2 or 3).
+
+    Raises:
+        RuntimeError: Unknown file type.
+
+    """
+    file_code = header['file_code']
+    if file_code == 789346:
+        return 0, 2
+    elif file_code == 889346:
+        return 0, 3
+    elif file_code == 789347:
+        return 1, 2
+    elif file_code == 889347:
+        return 1, 3
+    raise RuntimeError('Unknown RPG binary file.')
