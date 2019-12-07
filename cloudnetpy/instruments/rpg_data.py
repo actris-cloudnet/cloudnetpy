@@ -1,9 +1,6 @@
 """Module aiming to implement a generic RPG data reader."""
-import bisect
-from collections import namedtuple
 import numpy as np
 from cloudnetpy.instruments.rpg_header import read_rpg_header, get_rpg_file_type
-import sys
 
 
 class RpgBin:
@@ -17,153 +14,63 @@ class RpgBin:
     def read_rpg_data(self):
         """Reads the actual data from rpg binary file."""
 
-        def _create_dimensions():
-            """Returns possible lengths of the data arrays."""
-            Dimensions = namedtuple('Dimensions', ['n_samples',
-                                                   'n_gates',
-                                                   'n_layers_t',
-                                                   'n_layers_h'])
-            return Dimensions(int(np.fromfile(file, np.int32, 1)),
-                              int(self.header['n_range_levels']),
-                              int(self.header['n_temperature_levels']),
-                              int(self.header['n_humidity_levels']))
-
-        def _create_variables():
-            """Initializes dictionaries for data arrays."""
-            vrs = {'sample_length': np.zeros(dims.n_samples, np.int),
-                   'time': np.zeros(dims.n_samples, np.int),
-                   'time_ms': np.zeros(dims.n_samples, np.int),
-                   'quality_flag': np.zeros(dims.n_samples, np.int)}
-
-            block1_vars = dict.fromkeys((
-                'rain_rate',
-                'relative_humidity',
-                'temperature',
-                'pressure',
-                'wind_speed',
-                'wind_direction',
-                'voltage',
-                'brightness_temperature',
-                'lwp',
-                'if_power',
-                'elevation',
-                'azimuth',
-                'status_flag',
-                'transmitted_power',
-                'transmitter_temperature',
-                'receiver_temperature',
-                'pc_temperature'))
-
-            if self.level == 1:
-
-                block2_vars = dict.fromkeys((
-                    'Ze',
-                    'v',
-                    'width',
-                    'skewness',
-                    'kurtosis'))
-
-                if self.header['dual_polarization'] > 0:
-                    block2_vars.update(dict.fromkeys((
-                        'ldr',
-                        'correlation_coefficient',
-                        'differential_phase')))
-
-                if self.header['dual_polarization'] == 2:
-                    block2_vars.update(dict.fromkeys((
-                        'slanted_Ze',
-                        'slanted_ldr',
-                        'slanted_correlation_coefficient',
-                        'specific_differential_phase_shift',
-                        'differential_attenuation')))
-
-            else:
-
-                block2_vars = {}
-
-                if self.header['compression'] == 0:
-
-                    block2_vars['doppler_spectrum'] = None
-
-                    if self.header['dual_polarization'] > 0:
-                        block2_vars.update(dict.fromkeys((
-                            'doppler_spectrum_h',
-                            'covariance_spectrum_re',
-                            'covariance_spectrum_im')))
-
-                else:
-
-                    block2_vars.update(dict.fromkeys(
-                        'doppler_spectrum_compressed'))
-
-                    if self.header['dual_polarization'] > 0:
-                        block2_vars.update(dict.fromkeys((
-                            'doppler_spectrum_h_compressed',
-                            'covariance_spectrum_re_compressed',
-                            'covariance_spectrum_im_compressed')))
-
-                if self.header['compression'] == 2:
-
-                    block2_vars.update(dict.fromkeys((
-                        'differential_reflectivity_compressed',
-                        'spectral_correlation_coefficient_compressed',
-                        'spectral_differential_phase_compressed')))
-
-                    if self.header['dual_polarization'] == 2:
-                        block2_vars.update(dict.fromkeys((
-                            'spectral_slanted_ldr_compressed',
-                            'spectral_slanted_correlation_coefficient_compressed')))
-
-            return vrs, block1_vars, block2_vars
-
-        def _get_float_block_lengths():
-            block_one_length = (len(block1) + 3 + dims.n_layers_t +
-                                (2*dims.n_layers_h) + (2*dims.n_gates))
+        def _get_float_block_length():
+            block_length = (len(dict1) + 3 +
+                            self.header['n_temperature_levels'] +
+                            (2 * self.header['n_humidity_levels']) +
+                            (2 * self.header['n_range_levels']))
             if self.level == 0 and self.header['dual_polarization'] > 0:
-                block_one_length += 2*dims.n_gates
-            return block_one_length, len(block2)
+                block_length += 2 * self.header['n_range_levels']
+            return block_length
 
         def _init_float_blocks():
-            block_one = np.zeros((dims.n_samples, n_floats1))
+            block_one = np.zeros((n_profiles, n_floats))
             if self.level == 1:
-                block_two = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
+                block_two = np.zeros((n_profiles,
+                                      self.header['n_range_levels'],
+                                      len(dict2)))
             else:
-                max_len = max(self.header['n_spectral_samples']) * len(block2)
-                block_two = np.zeros((dims.n_samples, dims.n_gates, max_len))
+                max_len = max(self.header['n_spectral_samples']) * len(dict2)
+                block_two = np.zeros((n_profiles,
+                                      self.header['n_range_levels'],
+                                      max_len))
             return block_one, block_two
 
         file = open(self.filename, 'rb')
         file.seek(self._file_position)
-        dims = _create_dimensions()
-        aux, block1, block2 = _create_variables()
-        n_floats1, n_floats2 = _get_float_block_lengths()
+        n_profiles = int(np.fromfile(file, np.int32, 1))
+        dict0 = _create_dict0(n_profiles)
+        dict1 = _create_dict1()
+        dict2 = _create_dict2(self.level, self.header)
+        n_floats = _get_float_block_length()
         float_block1, float_block2 = _init_float_blocks()
-
         n_samples_at_each_height = _get_n_samples(self.header)
 
-        for sample in range(dims.n_samples):
+        for prof in range(n_profiles):
 
-            aux['sample_length'][sample] = np.fromfile(file, np.int32, 1)
-            aux['time'][sample] = np.fromfile(file, np.uint32, 1)
-            aux['time_ms'][sample] = np.fromfile(file, np.int32, 1)
-            aux['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
-            float_block1[sample, :] = np.fromfile(file, np.float32, n_floats1)
-            is_data_ind = np.where(np.fromfile(file, np.int8, dims.n_gates))[0]
+            dict0['sample_length'][prof] = np.fromfile(file, np.int32, 1)
+            dict0['time'][prof] = np.fromfile(file, np.uint32, 1)
+            dict0['time_ms'][prof] = np.fromfile(file, np.int32, 1)
+            dict0['quality_flag'][prof] = np.fromfile(file, np.int8, 1)
+            float_block1[prof, :] = np.fromfile(file, np.float32, n_floats)
+            is_data_ind = np.where(np.fromfile(file, np.int8,
+                                               self.header['n_range_levels']))[0]
 
             if self.level == 1:
 
-                n_valid = len(is_data_ind)
-                values = np.fromfile(file, np.float32, n_floats2 * n_valid)
-                float_block2[sample, is_data_ind, :] = values.reshape(n_valid, n_floats2)
+                n_valid, n_keys = len(is_data_ind), len(dict2)
+                values = np.fromfile(file, np.float32, n_keys * n_valid)
+                float_block2[prof, is_data_ind, :] = values.reshape(n_valid,
+                                                                    n_keys)
 
             elif self.header['compression'] == 0:
 
-                n_var = len(block2)
+                n_keys = len(dict2)
                 n_samples = n_samples_at_each_height[is_data_ind]
-                dtype = ' '.join([f"int32, ({n_var*x},)float32, " for x in n_samples])
-                data = np.array(np.fromfile(file, np.dtype(dtype), 1)[0].tolist())[1::2]
-                for alt_ind, prof in zip(is_data_ind, data):
-                    float_block2[sample, alt_ind, :n_samples_at_each_height[alt_ind]] = prof
+                dtype = ' '.join([f"int32, ({n_keys*x},)float32, " for x in n_samples])
+                data_chunk = np.array(np.fromfile(file, np.dtype(dtype), 1)[0].tolist())[1::2]
+                for alt_ind, data in zip(is_data_ind, data_chunk):
+                    float_block2[prof, alt_ind, :n_samples_at_each_height[alt_ind]] = data
 
             else:
 
@@ -182,27 +89,27 @@ class RpgBin:
 
         file.close()
 
-        for n, name in enumerate(block1):
-            block1[name] = float_block1[:, n]
+        for n, name in enumerate(dict1):
+            dict1[name] = float_block1[:, n]
 
         if self.level == 1:
-            for n, name in enumerate(block2):
-                block2[name] = float_block2[:, :, n]
+            for n, name in enumerate(dict2):
+                dict2[name] = float_block2[:, :, n]
 
         elif self.header['compression'] == 0:
 
-            n_var = len(block2)
-            for key in block2:
-                block2[key] = np.zeros((dims.n_samples, dims.n_gates,
-                                        max(self.header['n_spectral_samples'])))
+            n_keys = len(dict2)
+            for key in dict2:
+                dict2[key] = np.zeros((n_profiles, self.header['n_range_levels'],
+                                       max(self.header['n_spectral_samples'])))
 
             for n_spec in np.unique(self.header['n_spectral_samples']):
                 ind = np.where(n_samples_at_each_height == n_spec)[0]
-                blocks = np.split(float_block2[:, ind, :n_spec*n_var], n_var)
-                for name, block in zip(block2, blocks):
-                    block2[name][:, ind, :n_spec] = block
+                blocks = np.split(float_block2[:, ind, :n_spec*n_keys], n_keys)
+                for name, block in zip(dict2, blocks):
+                    dict2[name][:, ind, :n_spec] = block
 
-        return {**aux, **block1, **block2}
+        return {**dict0, **dict1, **dict2}
 
 
 def _get_n_samples(header):
@@ -211,3 +118,85 @@ def _get_n_samples(header):
     sub_arrays = np.split(array, header['chirp_start_indices'][1:])
     sub_arrays *= header['n_spectral_samples']
     return np.concatenate(sub_arrays)
+
+
+def _create_dict0(n_profiles):
+    """Initializes dictionaries for data arrays."""
+    return {'sample_length': np.zeros(n_profiles, np.int),
+            'time': np.zeros(n_profiles, np.int),
+            'time_ms': np.zeros(n_profiles, np.int),
+            'quality_flag': np.zeros(n_profiles, np.int)}
+
+
+def _create_dict1():
+    return dict.fromkeys((
+        'rain_rate',
+        'relative_humidity',
+        'temperature',
+        'pressure',
+        'wind_speed',
+        'wind_direction',
+        'voltage',
+        'brightness_temperature',
+        'lwp',
+        'if_power',
+        'elevation',
+        'azimuth',
+        'status_flag',
+        'transmitted_power',
+        'transmitter_temperature',
+        'receiver_temperature',
+        'pc_temperature'))
+
+
+def _create_dict2(level, header):
+    if level == 1:
+        return _create_dict2_l1(header)
+    return _create_dict2_l0(header)
+
+
+def _create_dict2_l1(header):
+    the_dict = dict.fromkeys((
+        'Ze',
+        'v',
+        'width',
+        'skewness',
+        'kurtosis'))
+    if header['dual_polarization'] > 0:
+        the_dict.update(dict.fromkeys((
+            'ldr',
+            'correlation_coefficient',
+            'differential_phase')))
+    if header['dual_polarization'] == 2:
+        the_dict.update(dict.fromkeys((
+            'slanted_Ze',
+            'slanted_ldr',
+            'slanted_correlation_coefficient',
+            'specific_differential_phase_shift',
+            'differential_attenuation')))
+    return the_dict
+
+
+def _create_dict2_l0(header):
+    fix = '' if header['compression'] == 0 else '_compressed'
+    the_dict = _init_l0_dict(fix, header)
+    if header['compression'] == 2:
+        the_dict.update(the_dict.fromkeys((
+            'differential_reflectivity_compressed',
+            'spectral_correlation_coefficient_compressed',
+            'spectral_differential_phase_compressed')))
+        if header['dual_polarization'] == 2:
+            the_dict.update(the_dict.fromkeys((
+                'spectral_slanted_ldr_compressed',
+                'spectral_slanted_correlation_coefficient_compressed')))
+    return the_dict
+
+
+def _init_l0_dict(fix, header):
+    the_dict = {f"doppler_spectrum{fix}": None}
+    if header['dual_polarization'] > 0:
+        the_dict.update(the_dict.fromkeys((
+            f"doppler_spectrum_h{fix}",
+            f"covariance_spectrum_re{fix}",
+            f"covariance_spectrum_im{fix}")))
+    return the_dict

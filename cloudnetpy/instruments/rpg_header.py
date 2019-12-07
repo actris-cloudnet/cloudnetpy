@@ -1,5 +1,6 @@
 """Module for reading RPG 94 GHz radar header."""
 import numpy as np
+from cloudnetpy import utils
 
 
 def read_rpg_header(file_name):
@@ -18,7 +19,10 @@ def read_rpg_header(file_name):
         block = np.fromfile(file, np.dtype(list(fields)), 1)
         for name in block.dtype.names:
             array = block[name][0]
-            header[name] = np.array(array, dtype=_get_dtype(array))
+            if utils.isscalar(array):
+                header[name] = array
+            else:
+                header[name] = np.array(array, dtype=_get_dtype(array))
 
     header = {}
     file = open(file_name, 'rb')
