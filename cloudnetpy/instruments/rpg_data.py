@@ -33,6 +33,7 @@ class RpgBin:
         dict0 = _create_dict0(n_profiles)
         dict1 = _create_dict1()
         dict2 = _create_dict2(self.level, self.header)
+        n_keys = len(dict2)
         n_floats = _get_float_block_length(self.level, self.header, dict1)
         float_block1, float_block2 = _init_float_blocks()
         n_samples_at_each_height = _get_n_samples(self.header)
@@ -49,19 +50,17 @@ class RpgBin:
 
             if self.level == 1:
 
-                n_valid, n_keys = len(is_data_ind), len(dict2)
+                n_valid = len(is_data_ind)
                 values = np.fromfile(file, np.float32, n_keys * n_valid)
-                float_block2[prof, is_data_ind, :] = values.reshape(n_valid,
-                                                                    n_keys)
+                float_block2[prof, is_data_ind, :] = values.reshape(n_valid, n_keys)
 
             elif self.header['compression'] == 0:
 
-                n_keys = len(dict2)
                 n_samples = n_samples_at_each_height[is_data_ind]
                 dtype = ' '.join([f"int32, ({n_keys*x},)float32, " for x in n_samples])
                 data_chunk = np.array(np.fromfile(file, np.dtype(dtype), 1)[0].tolist())[1::2]
-                for alt_ind, data in zip(is_data_ind, data_chunk):
-                    float_block2[prof, alt_ind, :n_samples_at_each_height[alt_ind]] = data
+                for alt_ind, array in zip(is_data_ind, data_chunk):
+                    float_block2[prof, alt_ind, :n_samples_at_each_height[alt_ind]] = array
 
             else:
 
@@ -89,7 +88,6 @@ class RpgBin:
 
         elif self.header['compression'] == 0:
 
-            n_keys = len(dict2)
             for key in dict2:
                 dict2[key] = np.zeros((n_profiles, self.header['n_range_levels'],
                                        max(self.header['n_spectral_samples'])))
