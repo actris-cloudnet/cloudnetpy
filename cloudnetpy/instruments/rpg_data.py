@@ -14,15 +14,6 @@ class RpgBin:
     def read_rpg_data(self):
         """Reads the actual data from rpg binary file."""
 
-        def _get_float_block_length():
-            block_length = (len(dict1) + 3 +
-                            self.header['n_temperature_levels'] +
-                            (2 * self.header['n_humidity_levels']) +
-                            (2 * self.header['n_range_levels']))
-            if self.level == 0 and self.header['dual_polarization'] > 0:
-                block_length += 2 * self.header['n_range_levels']
-            return block_length
-
         def _init_float_blocks():
             block_one = np.zeros((n_profiles, n_floats))
             if self.level == 1:
@@ -42,7 +33,7 @@ class RpgBin:
         dict0 = _create_dict0(n_profiles)
         dict1 = _create_dict1()
         dict2 = _create_dict2(self.level, self.header)
-        n_floats = _get_float_block_length()
+        n_floats = _get_float_block_length(self.level, self.header, dict1)
         float_block1, float_block2 = _init_float_blocks()
         n_samples_at_each_height = _get_n_samples(self.header)
 
@@ -200,3 +191,13 @@ def _init_l0_dict(fix, header):
             f"covariance_spectrum_re{fix}",
             f"covariance_spectrum_im{fix}")))
     return the_dict
+
+
+def _get_float_block_length(level, header, dict1):
+    block_length = (len(dict1) + 3 +
+                    header['n_temperature_levels'] +
+                    (2 * header['n_humidity_levels']) +
+                    (2 * header['n_range_levels']))
+    if level == 0 and header['dual_polarization'] > 0:
+        block_length += 2 * header['n_range_levels']
+    return block_length
