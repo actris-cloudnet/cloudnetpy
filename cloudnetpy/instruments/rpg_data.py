@@ -121,15 +121,15 @@ class RpgBin:
                                 (2*dims.n_layers_h) + (2*dims.n_gates))
             if self.level == 0 and self.header['dual_polarization'] > 0:
                 block_one_length += 2*dims.n_gates
-            block_two_length = len(block2)
-            return block_one_length, block_two_length
+            return block_one_length, len(block2)
 
         def _init_float_blocks():
             block_one = np.zeros((dims.n_samples, n_floats1))
             if self.level == 1:
                 block_two = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
             else:
-                block_two = np.empty((dims.n_samples, dims.n_gates), dtype=object)
+                max_len = max(self.header['n_spectral_samples']) * len(block2)
+                block_two = np.zeros((dims.n_samples, dims.n_gates, max_len))
             return block_one, block_two
 
         file = open(self.filename, 'rb')
@@ -137,9 +137,9 @@ class RpgBin:
         dims = _create_dimensions()
         aux, block1, block2 = _create_variables()
         n_floats1, n_floats2 = _get_float_block_lengths()
-        n_spectral_samples = self.header['n_spectral_samples']
-        chirp_indices = self.header['chirp_start_indices']
         float_block1, float_block2 = _init_float_blocks()
+
+        n_samples_at_each_height = _get_n_samples(self.header)
 
         for sample in range(dims.n_samples):
 
@@ -158,14 +158,14 @@ class RpgBin:
 
             elif self.header['compression'] == 0:
 
-                n_var = 4 if self.header['dual_polarization'] > 0 else 1
-                n_samples = [n_spectral_samples[bisect.bisect(chirp_indices, x)-1]
-                             for x in is_data_ind]
+                n_var = len(block2)
+                n_samples = n_samples_at_each_height[is_data_ind]
                 dtype = ' '.join([f"int32, ({n_var*x},)float32, " for x in n_samples])
-                float_block2[sample, is_data_ind] = np.array(np.fromfile(file, np.dtype(dtype), 1)
-                                                             [0].tolist())[1::2]
+                data = np.array(np.fromfile(file, np.dtype(dtype), 1)[0].tolist())[1::2]
+                for alt_ind, prof in zip(is_data_ind, data):
+                    float_block2[sample, alt_ind, :n_samples_at_each_height[alt_ind]] = prof
 
-            elif self.header['compression'] > 0:
+            else:
 
                 for _ in is_data_ind:
 
@@ -183,14 +183,31 @@ class RpgBin:
         file.close()
 
         for n, name in enumerate(block1):
-            block1[name] = float_block1[:, n]  # with l0 there is still stuff in end of block1 after this
+            block1[name] = float_block1[:, n]
 
         if self.level == 1:
             for n, name in enumerate(block2):
                 block2[name] = float_block2[:, :, n]
 
-        else:
-            # add L0 here
-            pass
+        elif self.header['compression'] == 0:
+
+            n_var = len(block2)
+            for key in block2:
+                block2[key] = np.zeros((dims.n_samples, dims.n_gates,
+                                        max(self.header['n_spectral_samples'])))
+
+            for n_spec in np.unique(self.header['n_spectral_samples']):
+                ind = np.where(n_samples_at_each_height == n_spec)[0]
+                blocks = np.split(float_block2[:, ind, :n_spec*n_var], n_var)
+                for name, block in zip(block2, blocks):
+                    block2[name][:, ind, :n_spec] = block
 
         return {**aux, **block1, **block2}
+
+
+def _get_n_samples(header):
+    """Finds number of spectral samples at each height."""
+    array = np.ones(header['n_range_levels'], dtype=int)
+    sub_arrays = np.split(array, header['chirp_start_indices'][1:])
+    sub_arrays *= header['n_spectral_samples']
+    return np.concatenate(sub_arrays)
