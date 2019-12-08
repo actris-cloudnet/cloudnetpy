@@ -60,19 +60,21 @@ class RpgBin:
                 dtype = ' '.join([f"int32, ({n_keys*x},)float32, " for x in n_samples])
                 data_chunk = np.array(np.fromfile(file, np.dtype(dtype), 1)[0].tolist())[1::2]
                 for alt_ind, array in zip(is_data_ind, data_chunk):
-                    float_block2[prof, alt_ind, :n_samples_at_each_height[alt_ind]] = array
+                    float_block2[prof, alt_ind, :n_samples_at_each_height[alt_ind]*n_keys] = array
 
             else:
 
-                for _ in is_data_ind:
+                for alt_ind in is_data_ind:
 
-                    n_bytes_in_block = np.fromfile(file, np.int32, 1)
+                    _ = np.fromfile(file, np.int32, 1)
                     n_blocks = int(np.fromfile(file, np.int8, 1)[0])
                     min_ind, max_ind = np.fromfile(file, np.dtype(f"({n_blocks}, )int16"), 2)
                     n_indices = max_ind - min_ind
-
-                    n_values = (sum(n_indices) + len(n_indices)) * 4 + 2
-                    all_data = np.fromfile(file, np.float32, n_values)
+                    n_values = (sum(n_indices) + len(n_indices)) * n_keys
+                    inds = np.concatenate([np.arange(i1, i2+1) for i1, i2 in zip(min_ind, max_ind)])
+                    inds = np.concatenate([inds+(1024*n) for n in range(n_keys)])
+                    float_block2[prof, alt_ind, inds] = np.fromfile(file, np.float32, n_values)
+                    _ = np.fromfile(file, np.int32, 2)
 
                     if self.header['anti_alias'] == 1:
                         is_anti_applied, min_velocity = np.fromfile(file, np.dtype('int8, float32'), 1)[0]
@@ -94,7 +96,7 @@ class RpgBin:
 
             for n_spec in np.unique(self.header['n_spectral_samples']):
                 ind = np.where(n_samples_at_each_height == n_spec)[0]
-                blocks = np.split(float_block2[:, ind, :n_spec*n_keys], n_keys)
+                blocks = np.split(float_block2[:, ind, :n_spec*n_keys], n_keys, axis=2)
                 for name, block in zip(dict2, blocks):
                     dict2[name][:, ind, :n_spec] = block
 
