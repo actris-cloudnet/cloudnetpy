@@ -1,7 +1,6 @@
 """Module aiming to implement a generic RPG data reader."""
 import numpy as np
 from cloudnetpy.instruments.rpg_header import read_rpg_header, get_rpg_file_type
-import gc
 
 
 class RpgBin:
@@ -22,24 +21,31 @@ class RpgBin:
                                       self.header['n_range_levels'],
                                       len(dict2)))
             else:
-                max_spec = max(self.header['n_spectral_samples'])
                 for key in dict2:
                     dict2[key] = np.zeros((n_profiles,
                                            self.header['n_range_levels'],
-                                           max_spec), dtype=np.int32)
+                                           max_spectra), dtype=np.float32)
                 block_two = np.zeros((n_profiles,
                                       self.header['n_range_levels'],
-                                      max_spec * len(dict2)), dtype=np.int32)
+                                      max_spectra * len(dict2)), dtype=np.float32)
 
             return block_one, block_two
+
+        def _pre_calc_range():
+            """Need this later in the loop."""
+            if self.level == 0 and self.header['compression'] > 0:
+                return [max_spectra * n for n in range(n_keys)]
+            return None
 
         file = open(self.filename, 'rb')
         file.seek(self._file_position)
         n_profiles = int(np.fromfile(file, np.int32, 1))
+        max_spectra = max(self.header['n_spectral_samples'])
         dict0 = _create_dict0(n_profiles)
         dict1 = _create_dict1()
         dict2 = _create_dict2(self.level, self.header)
         n_keys = len(dict2)
+        ran = _pre_calc_range()
         n_floats = _get_float_block_length(self.level, self.header, dict1)
         float_block1, float_block2 = _init_float_blocks()
         n_samples_at_each_height = _get_n_samples(self.header)
@@ -73,14 +79,13 @@ class RpgBin:
                 for alt_ind in is_data_ind:
 
                     _ = np.fromfile(file, np.int32, 1)
-                    n_blocks = int(np.fromfile(file, np.int8, 1)[0])
+                    n_blocks = np.fromfile(file, np.int8, 1)[0]
                     min_ind, max_ind = np.fromfile(file, np.dtype(f"({n_blocks}, )int16"), 2)
                     n_indices = max_ind - min_ind
                     n_values = (sum(n_indices) + len(n_indices)) * n_keys
                     inds = np.concatenate([np.arange(i1, i2+1) for i1, i2 in zip(min_ind, max_ind)])
-                    inds = np.concatenate([inds+(1024*n) for n in range(n_keys)])
+                    inds = np.concatenate([inds+n for n in ran])
                     float_block2[prof, alt_ind, inds] = np.fromfile(file, np.float32, n_values)
-
                     _ = np.fromfile(file, np.int32, 2)
 
                     if self.header['anti_alias'] == 1:
