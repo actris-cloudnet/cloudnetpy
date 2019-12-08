@@ -1,6 +1,7 @@
 """Module aiming to implement a generic RPG data reader."""
 import numpy as np
 from cloudnetpy.instruments.rpg_header import read_rpg_header, get_rpg_file_type
+import gc
 
 
 class RpgBin:
@@ -15,16 +16,21 @@ class RpgBin:
         """Reads the actual data from rpg binary file."""
 
         def _init_float_blocks():
-            block_one = np.zeros((n_profiles, n_floats))
+            block_one = np.zeros((n_profiles, n_floats), dtype=np.int32)
             if self.level == 1:
                 block_two = np.zeros((n_profiles,
                                       self.header['n_range_levels'],
                                       len(dict2)))
             else:
-                max_len = max(self.header['n_spectral_samples']) * len(dict2)
+                max_spec = max(self.header['n_spectral_samples'])
+                for key in dict2:
+                    dict2[key] = np.zeros((n_profiles,
+                                           self.header['n_range_levels'],
+                                           max_spec), dtype=np.int32)
                 block_two = np.zeros((n_profiles,
                                       self.header['n_range_levels'],
-                                      max_len))
+                                      max_spec * len(dict2)), dtype=np.int32)
+
             return block_one, block_two
 
         file = open(self.filename, 'rb')
@@ -74,6 +80,7 @@ class RpgBin:
                     inds = np.concatenate([np.arange(i1, i2+1) for i1, i2 in zip(min_ind, max_ind)])
                     inds = np.concatenate([inds+(1024*n) for n in range(n_keys)])
                     float_block2[prof, alt_ind, inds] = np.fromfile(file, np.float32, n_values)
+
                     _ = np.fromfile(file, np.int32, 2)
 
                     if self.header['anti_alias'] == 1:
@@ -88,11 +95,7 @@ class RpgBin:
             for n, name in enumerate(dict2):
                 dict2[name] = float_block2[:, :, n]
 
-        elif self.header['compression'] == 0:
-
-            for key in dict2:
-                dict2[key] = np.zeros((n_profiles, self.header['n_range_levels'],
-                                       max(self.header['n_spectral_samples'])))
+        else:
 
             for n_spec in np.unique(self.header['n_spectral_samples']):
                 ind = np.where(n_samples_at_each_height == n_spec)[0]
