@@ -89,7 +89,8 @@ class RpgBin:
                     _ = np.fromfile(file, np.int32, 2)
 
                     if self.header['anti_alias'] == 1:
-                        is_anti_applied, min_velocity = np.fromfile(file, np.dtype('int8, float32'), 1)[0]
+                        # these need to be saved somehow also
+                        is_anti_al, min_vel = np.fromfile(file, np.dtype('int8, float32'), 1)[0]
 
         file.close()
 
@@ -120,7 +121,6 @@ def _get_n_samples(header):
 
 
 def _create_dict0(n_profiles):
-    """Initializes dictionaries for data arrays."""
     return {'sample_length': np.zeros(n_profiles, np.int),
             'time': np.zeros(n_profiles, np.int),
             'time_ms': np.zeros(n_profiles, np.int),
@@ -181,13 +181,13 @@ def _create_dict2_l0(header):
     the_dict = _init_l0_dict(fix, header)
     if header['compression'] == 2:
         the_dict.update(the_dict.fromkeys((
-            'differential_reflectivity_compressed',
-            'spectral_correlation_coefficient_compressed',
-            'spectral_differential_phase_compressed')))
+            f"differential_reflectivity{fix}",
+            f"spectral_correlation_coefficient{fix}",
+            f"spectral_differential_phase{fix}")))
         if header['dual_polarization'] == 2:
             the_dict.update(the_dict.fromkeys((
-                'spectral_slanted_ldr_compressed',
-                'spectral_slanted_correlation_coefficient_compressed')))
+                f"spectral_slanted_ldr{fix}",
+                f"spectral_slanted_correlation_coefficient{fix}")))
     return the_dict
 
 
@@ -202,10 +202,14 @@ def _init_l0_dict(fix, header):
 
 
 def _get_float_block_length(level, header, dict1):
-    block_length = (len(dict1) + 3 +
-                    header['n_temperature_levels'] +
-                    (2 * header['n_humidity_levels']) +
-                    (2 * header['n_range_levels']))
+    block_length = _init_float_block_length(dict1, header)
     if level == 0 and header['dual_polarization'] > 0:
         block_length += 2 * header['n_range_levels']
     return block_length
+
+
+def _init_float_block_length(dict1, header):
+    return (len(dict1) + 3 +
+            header['n_temperature_levels'] +
+            (2 * header['n_humidity_levels']) +
+            (2 * header['n_range_levels']))
