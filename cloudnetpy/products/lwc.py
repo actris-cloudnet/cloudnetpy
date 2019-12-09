@@ -39,9 +39,9 @@ def generate_lwc(categorize_file, output_file):
     """
     lwc_source = LwcSource(categorize_file)
     lwc_obj = Lwc(lwc_source)
-    cloud_obj = LwcStatus(lwc_source)
-    error_obj = CalculateError(lwc_source)
-    _append_data(lwc_source, lwc_obj, error_obj, cloud_obj)
+    cloud_obj = LwcStatus(lwc_source, lwc_obj)
+    error_obj = CalculateError(lwc_source, lwc_obj)
+    _append_data(lwc_source, lwc_obj, cloud_obj, error_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
     output.save_product_file('lwc', lwc_source, output_file,
                              copy_from_cat=('lwp', 'lwp_error'))
@@ -135,8 +135,7 @@ class Lwc:
 
 class LwcStatus:
     """Adjust clouds (where possible) so that theoretical and measured LWP agree."""
-    def __init__(self, lwc_source):
-        lwc_obj = Lwc(lwc_source)
+    def __init__(self, lwc_source, lwc_obj):
         self.lwc_source = lwc_source
         self.lwc = lwc_obj.lwc
         self.is_liquid = lwc_obj.is_liquid
@@ -264,8 +263,7 @@ class LwcStatus:
 
 class CalculateError:
     """Calculates liquid water content error. """
-    def __init__(self, lwc_source):
-        lwc_obj = Lwc(lwc_source)
+    def __init__(self, lwc_source, lwc_obj):
         self.lwc = lwc_obj.lwc
         self.lwc_source = lwc_source
         self.lwc_error = self.calculate_lwc_error()
@@ -310,10 +308,10 @@ class CalculateError:
         self.lwc_error[is_rain, :] = ma.masked
 
 
-def _append_data(lwc_data, lwc_obj, error_obj, cloud_obj):
+def _append_data(lwc_data, lwc_obj, cloud_obj, error_obj):
     lwc_data.append_data(lwc_obj.lwc * G_TO_KG, 'lwc', units='kg m-3')
-    lwc_data.append_data(error_obj.lwc_error, 'lwc_error', units='dB')
     lwc_data.append_data(cloud_obj.status, 'lwc_retrieval_status')
+    lwc_data.append_data(error_obj.lwc_error, 'lwc_error', units='dB')
 
 
 COMMENTS = {
