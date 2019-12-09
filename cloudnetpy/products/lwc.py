@@ -223,6 +223,7 @@ class LwcStatus:
         radar_detected = (self.is_liquid & self.echo['radar']).astype(int) * 2
         return lidar_detected + radar_detected
 
+    @staticmethod
     def _find_lidar_only_clouds(self, detection):
         """Finds top clouds that contain only lidar-detected pixels.
 
@@ -275,6 +276,7 @@ class CalculateError:
         combined_error = self._calc_combined_error(lwc_relative_error, lwp_relative_error)
         return self._fill_error_array(combined_error)
 
+    @staticmethod
     def _limit_error(self, error, max_value):
         error[error > max_value] = max_value
         return error
@@ -292,6 +294,7 @@ class CalculateError:
         error = self.lwc_source.lwp_error / self.lwc_source.lwp
         return self._limit_error(error, 10)
 
+    @staticmethod
     def _calc_combined_error(self, error_2d, error_1d):
         error_1d_transposed = utils.transpose(error_1d)
         return utils.l2norm(error_2d, error_1d_transposed)
