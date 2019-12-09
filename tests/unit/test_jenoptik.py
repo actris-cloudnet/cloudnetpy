@@ -30,13 +30,16 @@ def fake_jenoptik_file(tmpdir):
     return file_name
 
 
+site_name = 'Mace Head'
+
+
 def test_calc_range(fake_jenoptik_file):
-    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file)
-    assert_array_equal(obj._calc_range(), [2500, 3500, 4500, 5500])
+    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
+    assert_array_equal(obj._calc_range(), [1500, 2500, 3500, 4500])
 
 
 def test_convert_time(fake_jenoptik_file):
-    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file)
+    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
     assert_array_equal(obj._convert_time(), [1, 2, 3])
 
 
@@ -44,23 +47,23 @@ def test_convert_time_error(fake_jenoptik_file):
     root_grp = netCDF4.Dataset(fake_jenoptik_file, "a")
     root_grp.variables['time'][:] = np.array([1, 0, 3])
     root_grp.close()
-    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file)
+    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
     with pytest.raises(RuntimeError):
         obj._convert_time()
 
 
 def test_read_date(fake_jenoptik_file):
-    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file)
+    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
     assert_array_equal(obj._read_date(), ('2019', '5', '23'))
 
 
 def test_read_metadata(fake_jenoptik_file):
-    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file)
+    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
     assert obj._read_metadata()['tilt_angle'] == 2
 
 
 def test_get_nn(fake_jenoptik_file):
-    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file)
+    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
     nn1 = obj._get_nn()
     assert np.all(nn1.data < 1.1)
     assert np.all(nn1.data > 0.9)
