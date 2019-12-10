@@ -84,7 +84,7 @@ class DrizzleSource(DataSource):
         return lut
 
     @staticmethod
-    def _get_mie_file(self):
+    def _get_mie_file():
         module_path = os.path.dirname(os.path.abspath(__file__))
         return '/'.join((module_path, 'mie_lu_tables.nc'))
 
@@ -242,12 +242,12 @@ class DrizzleSolving:
         self.params['S'][i, j] = self.data.mie['S'][lut_ind]
 
     @staticmethod
-    def _is_converged(self, i, j, dia, dia_init):
+    def _is_converged(i, j, dia, dia_init):
         threshold = 1e-3
         return abs((dia - dia_init[i, j]) / dia_init[i, j]) < threshold
 
     @staticmethod
-    def _calc_dia(self, beta_z_ratio, mu=0, ray=1, k=1):
+    def _calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
         """ Drizzle diameter calculation.
 
         Args:
@@ -357,7 +357,7 @@ class CalculateErrors:
         self.errors = self._calc_errors()
 
     @staticmethod
-    def _get_drizzle_indices(self, diameter):
+    def _get_drizzle_indices(diameter):
         return {'drizzle': diameter > 0,
                 'small': np.logical_and(diameter <= 1e-4, diameter > 1e-5),
                 'tiny': np.logical_and(diameter <= 1e-5, diameter > 0)}
@@ -418,7 +418,7 @@ class CalculateErrors:
         return error
 
     @staticmethod
-    def add_error_component(self, error, source, ind):
+    def add_error_component(error, source, ind):
         error[ind] = source[ind]
 
     def _calc_parameter_biases(self):
