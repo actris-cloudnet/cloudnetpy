@@ -113,3 +113,4 @@ def interpolate_model(cat_file, names):
     names = [names] if isinstance(names, str) else names
     data = [_interp_field(name) for name in names]
     return data[0] if len(data) == 1 else data
+
