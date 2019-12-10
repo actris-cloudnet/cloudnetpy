@@ -99,8 +99,8 @@ class LwcSourceObj:
 
 
 LWC_OBJ = Lwc(LwcSourceObj())
-STATUS_OBJ = LwcStatus(LwcSourceObj())
-ERROR_OBJ = CalculateError(LwcSourceObj())
+STATUS_OBJ = LwcStatus(LwcSourceObj(), LWC_OBJ)
+ERROR_OBJ = CalculateError(LwcSourceObj(), LWC_OBJ)
 
 
 @pytest.mark.parametrize("value", [0, 1])
@@ -274,5 +274,5 @@ def test_screen_rain_error():
 def test_append_data(lwc_source_file, key):
     from cloudnetpy.products.lwc import _append_data
     lwc_source = LwcSource(lwc_source_file)
-    _append_data(lwc_source, LWC_OBJ, ERROR_OBJ, STATUS_OBJ)
+    _append_data(lwc_source, LWC_OBJ, STATUS_OBJ, ERROR_OBJ)
     assert key in lwc_source.data.keys()
