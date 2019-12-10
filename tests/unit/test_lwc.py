@@ -1,9 +1,10 @@
 import numpy as np
-from numpy import testing
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 from collections import namedtuple
 import pytest
 import netCDF4
-from cloudnetpy.products.lwc import LwcSource, Lwc, LwcStatus, CalculateError
+from cloudnetpy.products.lwc import LwcSource, Lwc, LwcStatus, LwcError
+from cloudnetpy.categorize import atmos
 
 
 DIMENSIONS = ('time', 'height', 'model_time', 'model_height')
@@ -33,11 +34,11 @@ def lwc_source_file(tmpdir_factory, file_metadata):
     var = root_grp.createVariable('temperature', 'f8', ('time', 'height'))
     var[:] = np.array([[282, 280, 278],
                        [286, 284, 282],
-                      [284, 282, 280]])
+                       [284, 282, 280]])
     var = root_grp.createVariable('pressure', 'f8', ('time', 'height'))
     var[:] = np.array([[1010, 1000, 990],
                        [1020, 1010, 1000],
-                      [1030, 1020, 1010]])
+                       [1030, 1020, 1010]])
     root_grp.close()
     return file_name
 
@@ -56,43 +57,56 @@ def _create_dimension_variables(root_grp):
             x.units = 'm'
 
 
-def test_get_atmosphere_T(lwc_source_file):
+def test_get_atmosphere_t(lwc_source_file):
     obj = LwcSource(lwc_source_file)
     compare = np.array([[282, 280, 278],
                         [286, 284, 282],
                         [284, 282, 280]])
-    testing.assert_array_equal(compare, obj.atmosphere[0])
+    assert_array_equal(compare, obj.atmosphere[0])
 
 
 def test_get_atmosphere_p(lwc_source_file):
     obj = LwcSource(lwc_source_file)
     compare = np.array([[1010, 1000, 990],
-               [1020, 1010, 1000],
-               [1030, 1020, 1010]])
-    testing.assert_array_equal(compare, obj.atmosphere[-1])
+                        [1020, 1010, 1000],
+                        [1030, 1020, 1010]])
+    assert_array_equal(compare, obj.atmosphere[-1])
 
 
 class LwcSourceObj:
     def __init__(self):
-        self.is_liquid = np.asarray([[1, 0, 1], [0, 1, 0], [1, 1, 1],
-                                     [0, 0, 1], [0, 1, 1]], dtype=bool)
+        self.is_liquid = np.asarray([[1, 0, 1],
+                                     [0, 1, 0],
+                                     [1, 1, 1],
+                                     [0, 0, 1],
+                                     [0, 1, 1]], dtype=bool)
         self.dheight = 10
         self.categorize_bits = \
-            CategorizeBits(category_bits={'droplet': np.asarray([[1, 0, 1], [0, 1, 0],
-                                                                 [1, 1, 1], [0, 0, 1],
+            CategorizeBits(category_bits={'droplet': np.asarray([[1, 0, 1],
+                                                                 [0, 1, 0],
+                                                                 [1, 1, 1],
+                                                                 [0, 0, 1],
                                                                  [0, 1, 1]], dtype=bool)},
-                           quality_bits={'radar': np.asarray([[1, 0, 1], [0, 1, 0],
-                                                              [1, 1, 1], [0, 0, 1],
+                           quality_bits={'radar': np.asarray([[1, 0, 1],
+                                                              [0, 1, 0],
+                                                              [1, 1, 1],
+                                                              [0, 0, 1],
                                                               [0, 1, 1]], dtype=bool),
-                                         'lidar': np.asarray([[1, 0, 1], [0, 1, 0],
-                                                              [1, 1, 1], [0, 0, 1],
+                                         'lidar': np.asarray([[1, 0, 1],
+                                                              [0, 1, 0],
+                                                              [1, 1, 1],
+                                                              [0, 0, 1],
                                                               [0, 1, 1]], dtype=bool)})
-        self.atmosphere = [np.array([[282, 281, 280], [280, 279, 278],
-                                     [286, 285, 284], [284, 283, 282],
+        self.atmosphere = (np.array([[282, 281, 280],
+                                     [280, 279, 278],
+                                     [286, 285, 284],
+                                     [284, 283, 282],
                                      [284, 283, 282]]),
-                           np.array([[1010, 1005, 1000], [1000, 995, 990],
-                                     [1020, 1015, 1010], [1100, 1005, 1000],
-                                     [1030, 1025, 1020]])]
+                           np.array([[1010, 1005, 1000],
+                                     [1000, 995, 990],
+                                     [1020, 1015, 1010],
+                                     [1100, 1005, 1000],
+                                     [1030, 1025, 1020]]))
         self.lwp = np.array([1, 0, 2, 2, 1])
         self.lwp_error = np.array([0.1, 0.2, 0.1, 0.3, 0.0])
         self.is_rain = np.array([1, 0, 0, 1, 1])
@@ -100,7 +114,7 @@ class LwcSourceObj:
 
 LWC_OBJ = Lwc(LwcSourceObj())
 STATUS_OBJ = LwcStatus(LwcSourceObj(), LWC_OBJ)
-ERROR_OBJ = CalculateError(LwcSourceObj(), LWC_OBJ)
+ERROR_OBJ = LwcError(LwcSourceObj(), LWC_OBJ)
 
 
 @pytest.mark.parametrize("value", [0, 1])
@@ -108,26 +122,34 @@ def test_get_liquid(value):
     assert value in LWC_OBJ.is_liquid
 
 
-def test_init_lwc_adiabatic():
-    compare = np.array([[-0.0002, 0.0, 0.0], [0.0, 0.0001, 0.0],
-                        [-0.0022, -0.0044, -0.0065], [0.0, 0.0, -0.0002],
-                        [0.0, -0.0003, -0.0006]])
-    testing.assert_equal(np.around(LWC_OBJ._init_lwc_adiabatic(),
-                                   decimals=4), compare)
-
-
-def test_adiabatic_lwc_to_lwc():
-    compare = np.array([[0.106, 0.0, -0.006], [0.0, 0.0, 0.0],
-                        [0.0333, 0.0667, 0.1], [0.0, 0.0, 0.2],
-                        [0.0, 0.0333, 0.0667]])
-    testing.assert_equal(np.around(LWC_OBJ._adiabatic_lwc_to_lwc(),
-                                   decimals=4), compare)
+def test_init_lwc_adiabatic(lwc_source_file):
+    lwc_source = LwcSourceObj()
+    compare = atmos.fill_clouds_with_lwc_dz(lwc_source.atmosphere,
+                                            lwc_source.is_liquid)
+    compare[0, 0] *= 10
+    compare[0, 2] *= 10
+    compare[1, 1] *= 10
+    compare[2, 0] *= 10
+    compare[2, 1] *= 20
+    compare[2, 2] *= 30
+    compare[3, 2] *= 10
+    compare[4, 1] *= 10
+    compare[4, 2] *= 20
+    assert_array_almost_equal(LWC_OBJ._init_lwc_adiabatic(), compare)
 
 
 def test_screen_rain_lwc():
-    compare = np.ma.array([[-1, -1, -1], [0, 0, 0], [0.033, 0.067, 0.1],
-                           [-1, -1, -1], [-1, -1, -1]], mask=-1)
-    testing.assert_equal(np.around(LWC_OBJ.lwc, decimals=3), compare)
+    compare = np.ma.array([[5, 1, 2],
+                           [0, 0, 0],
+                           [0.033, 0.067, 0.1],
+                           [5, 3, 5],
+                           [2, 4, 6]],
+                          mask=[[1, 1, 1],
+                                [0, 0, 0],
+                                [0, 0, 0],
+                                [1, 1, 1],
+                                [1, 1, 1]])
+    assert_array_equal(compare.mask, LWC_OBJ.lwc.mask)
 
 
 @pytest.mark.parametrize("value", [0, 1])
@@ -173,7 +195,7 @@ def test_find_adjustable_clouds():
 def test_find_topmost_clouds():
     compare = np.asarray([[0, 0, 1], [0, 1, 0], [0, 0, 1],
                           [0, 0, 1], [0, 1, 1]], dtype=bool)
-    testing.assert_array_equal(STATUS_OBJ._find_topmost_clouds(), compare)
+    assert_array_equal(STATUS_OBJ._find_topmost_clouds(), compare)
 
 
 def test_find_echo_combinations_in_liquid():
@@ -181,26 +203,26 @@ def test_find_echo_combinations_in_liquid():
     STATUS_OBJ.echo['radar'] = np.array([[0, 0, 0, 0, 0], [0, 0, 1, 1, 1]])
     STATUS_OBJ.is_liquid = np.array([[1, 0, 1, 1, 1], [0, 0, 1, 1, 1]])
     compare = np.array([[0, 0, 1, 1, 0], [0, 0, 3, 2, 2]])
-    testing.assert_equal(STATUS_OBJ._find_echo_combinations_in_liquid(), compare)
+    assert_array_equal(STATUS_OBJ._find_echo_combinations_in_liquid(), compare)
 
 
 def test_find_lidar_only_clouds():
     inds = np.array([[1, 0, 0, 1, 0], [0, 1, 0, 1, 3]])
     compare = np.array([True, False])
-    testing.assert_equal(STATUS_OBJ._find_lidar_only_clouds(inds), compare)
+    assert_array_equal(STATUS_OBJ._find_lidar_only_clouds(inds), compare)
 
 
 def test_remove_good_profiles():
     top_c = np.asarray([[0, 0, 1], [0, 0, 1], [0, 1, 1], [0, 1, 0], [0, 0, 0]], dtype=bool)
     compare = np.asarray([[0, 0, 0], [0, 0, 0], [0, 1, 1], [0, 0, 0], [0, 0, 0]], dtype=bool)
-    testing.assert_equal(STATUS_OBJ._remove_good_profiles(top_c), compare)
+    assert_array_equal(STATUS_OBJ._remove_good_profiles(top_c), compare)
 
 
 def test_find_lwp_difference():
     STATUS_OBJ.lwc_adiabatic = np.array([[1, 8, 2], [2, 3, 7], [3, 0, 1], [2, 2, 8], [9, 0, 1]])
     STATUS_OBJ.lwc_source.lwp = np.array([50, 30, 70, 10, 40])
     compare = np.array([60, 90, -30, 110, 60])
-    testing.assert_equal(STATUS_OBJ._find_lwp_difference(), compare)
+    assert_array_equal(STATUS_OBJ._find_lwp_difference(), compare)
 
 
 @pytest.mark.parametrize("value", [0, 1, 2, 3, 4])
@@ -212,9 +234,12 @@ def test_screen_rain_status(value):
 
 
 def test_calculate_lwc_error():
-    compare = np.ma.array([[0, 0, 0], [0, 0, 0], [0.502, 0.255, 0.174],
-                           [0, 0, 0], [0, 0, 0]], mask=0)
-    testing.assert_equal(np.around(ERROR_OBJ.calculate_lwc_error(),
+    compare = np.ma.array([[0, 0, 0],
+                           [0, 0, 0],
+                           [0.502, 0.255, 0.174],
+                           [0, 0, 0],
+                           [0, 0, 0]], mask=0)
+    assert_array_equal(np.around(ERROR_OBJ._calculate_lwc_error(),
                                    decimals=3), compare)
 
 
@@ -224,26 +249,34 @@ def test_limit_error():
     max_v = 0.5
     compare = np.array([[0, 0, 0.5], [0.2, 0.4, 0.3], [0.5, 0.5, 0.3],
                         [0.5, 0.5, 0.5], [0, 0.1, 0.2]])
-    testing.assert_equal(ERROR_OBJ._limit_error(error, max_v), compare)
+    assert_array_equal(ERROR_OBJ._limit_error(error, max_v), compare)
 
 
 def test_calc_lwc_gradient():
-    compare = np.array([[0.0, 0.0, 0.0], [0.02, 0.03, 0.05],
-                        [0.03, 0.03, 0.03], [0.02, 0.03, 0.05],[0.0, 0.0, 0.0]])
-    testing.assert_equal(np.around(ERROR_OBJ._calc_lwc_gradient(), decimals=2),
+
+    compare = np.array([[0, 0, 0],
+                        [0.02, 0.03, 0.05],
+                        [0.03, 0.03, 0.03],
+                        [0.02, 0.03, 0.05],
+                        [0.0, 0.0, 0.0]])
+
+    #print(ERROR_OBJ._calc_lwc_gradient())
+
+    assert_array_equal(np.around(ERROR_OBJ._calc_lwc_gradient(), decimals=2),
                          compare)
 
 
 def test_calc_lwc_relative_error():
     compare = np.ma.array([[0, 0, 0], [0, 0, 0], [0.5, 0.25, 0.17],
                            [0, 0, 0], [0, 0, 0]], mask=0)
-    testing.assert_equal(np.around(ERROR_OBJ._calc_lwc_relative_error(), decimals=2),
+    #print(ERROR_OBJ._calc_lwc_relative_error())
+    assert_array_equal(np.around(ERROR_OBJ._calc_lwc_relative_error(), decimals=2),
                          compare)
 
 
 def test_calc_lwp_relative_error():
     compare = np.array([0.1, 10.0, 0.05, 0.15, 0.0])
-    testing.assert_equal(ERROR_OBJ._calc_lwp_relative_error(), compare)
+    assert_array_equal(ERROR_OBJ._calc_lwp_relative_error(), compare)
 
 
 def test_calc_combined_error():
@@ -252,7 +285,7 @@ def test_calc_combined_error():
     err_1d = np.array([0.3, 0.2, 0.6, 0, 0.1])
     compare = np.array([[0.3, 0.316, 0.316], [0.283, 0.447, 0.25],
                         [0.6, 0.671, 0.608], [0.1, 0.5, 0.5], [0.1, 0.224, 0.412]])
-    testing.assert_equal(np.around(ERROR_OBJ._calc_combined_error(err_2d, err_1d),
+    assert_array_equal(np.around(ERROR_OBJ._calc_combined_error(err_2d, err_1d),
                                    decimals=3), compare)
 
 
@@ -261,13 +294,13 @@ def test_fill_error_array():
                        [0.1, 0.5, 0.5], [0, 0.2, 0.4]])
     compare = np.ma.array([[0, 0, 0], [0, 0, 0], [0.0, 0.3, 0.1],
                            [0, 0, 0], [0, 0, 0]], mask=0)
-    testing.assert_equal(ERROR_OBJ._fill_error_array(error_in), compare)
+    assert_array_equal(ERROR_OBJ._fill_error_array(error_in), compare)
 
 
 def test_screen_rain_error():
     compare = np.ma.array([[0, 0, 0], [0, 0, 0], [0.502, 0.255, 0.174],
                            [0, 0, 0], [0, 0, 0]], mask=0)
-    testing.assert_equal(np.around(ERROR_OBJ.lwc_error, decimals=3), compare)
+    assert_array_equal(np.around(ERROR_OBJ.lwc_error, decimals=3), compare)
 
 
 @pytest.mark.parametrize("key", ["lwc", "lwc_retrieval_status", "lwc_error"])
