@@ -15,18 +15,23 @@ from cloudnetpy.products.product_tools import ProductClassification
 
 def generate_drizzle(categorize_file, output_file):
     """Generates Cloudnet drizzle product.
+
     This function calculates different drizzle properties from
     cloud radar and lidar measurements. The results are written in a netCDF file.
+
     Args:
         categorize_file (str): Categorize file name.
         output_file (str): Output file name.
+
     Examples:
         >>> from cloudnetpy.products import generate_drizzle
         >>> generate_drizzle('categorize.nc', 'drizzle.nc')
+
     References:
         O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
         Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
         J. Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
+
     """
     drizzle_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
@@ -88,14 +93,17 @@ class DrizzleSource(DataSource):
 
 class DrizzleClassification(ProductClassification):
     """Class storing the information about different drizzle types, child of  :class:`ProductClassification`.
+
     Args:
         categorize_file (str): Categorize file name.
+
     Attributes:
         is_v_sigma (ndarray): 2D array denoting finite v_sigma.
         warm_liquid (ndarray): 2D array denoting warm liquid.
         drizzle (ndarray): 2D array denoting drizzle presence.
         would_be_drizzle (ndarray): 2D array denoting possible drizzle pixels.
         cold_rain (ndarray): 1D array denoting profiles with melting layer.
+
     """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
@@ -144,13 +152,17 @@ class DrizzleClassification(ProductClassification):
 
 def correct_spectral_width(cat_file):
     """Corrects spectral width.
+
     Removes the effect of turbulence and horizontal wind that cause
     spectral broadening of the Doppler velocity.
+
     Args:
         cat_file (str): Categorize file name.
+
     Returns:
         ndarray: Spectral width containing the correction for turbulence
         broadening.
+
     """
     def _calc_beam_divergence():
         beam_width = 0.5
@@ -171,10 +183,13 @@ def correct_spectral_width(cat_file):
 
 def calc_horizontal_wind(cat_file):
     """Calculates magnitude of horizontal wind.
+
     Args:
         cat_file: Categorize file name.
+
     Returns:
         ndarray: Horizontal wind (m s-1).
+
     """
     u_wind, v_wind = p_tools.interpolate_model(cat_file, ['uwind', 'vwind'])
     return utils.l2norm(u_wind, v_wind)
@@ -182,12 +197,15 @@ def calc_horizontal_wind(cat_file):
 
 def drizzle_solve(data, drizzle_class, width_ht):
     """Estimates drizzle parameters.
+
     Args:
         data (DrizzleSource): The :class:`DrizzleSource` instance.
         drizzle_class (DrizzleClassification): The :class:`DrizzleClassification` instance.
         width_ht (ndarray): 2D corrected spectral width.
+
     Returns:
         dict: Dictionary of retrieved drizzle parameters, `Do`, `mu`, `S`, `beta_corr`.
+
     """
     def _init_variables():
         shape = data.z.shape
@@ -239,15 +257,19 @@ def drizzle_solve(data, drizzle_class, width_ht):
 
 def calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
     """ Drizzle diameter calculation.
+
     Args:
         beta_z_ratio (ndarray): Beta to z ratio, multiplied by (2 / pi).
         mu (ndarray, optional): Shape parameter for gamma calculations. Default is 0.
         ray (ndarray, optional): Mie to Rayleigh ratio for z. Default is 1.
         k (ndarray, optional): Alpha to beta ratio . Default is 1.
+
     Returns:
         ndarray: Drizzle diameter.
+
     References:
         https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
+
     """
     const = ray * k * beta_z_ratio
     return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1/4)
