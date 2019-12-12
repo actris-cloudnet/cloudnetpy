@@ -201,16 +201,6 @@ def test_screen_rain_status(value):
     assert value in STATUS_OBJ.status
 
 
-def test_calculate_lwc_error():
-    # TODO: Create better test
-    compare = np.ma.array([[0.709, 0, 0.709],
-                           [0.5, 0.2, 0.1]],
-                          mask=[[0, 1, 0],
-                                [1, 1, 1]])
-    assert_array_equal(np.around(ERROR_OBJ.calculate_lwc_error(),
-                                   decimals=3), compare)
-
-
 def test_limit_error():
     error = np.array([[0, 0, 1], [0.2, 0.4, 0.3]])
     max_v = 0.5
@@ -223,7 +213,7 @@ def test_calc_lwc_gradient():
     compare = np.array([[0.15, 0.0, 0.14],
                         [0.10, 0.0, 0.10]])
     assert_array_equal(np.around(ERROR_OBJ._calc_lwc_gradient(), decimals=2),
-                         compare)
+                       compare)
 
 
 def test_calc_lwc_relative_error():
@@ -233,32 +223,38 @@ def test_calc_lwc_relative_error():
                           mask=[[0, 1, 0],
                                 [1, 1, 1]])
     assert_array_equal(np.around(ERROR_OBJ._calc_lwc_relative_error(), decimals=2),
-                         compare)
+                       compare)
 
 
 def test_calc_lwp_relative_error():
-    # TODO: Create better test
-    compare = np.array([0.05, 10.0])
+    ERROR_OBJ.lwc_source.lwp = np.array([0.1, 0.5])
+    ERROR_OBJ.lwc_source.lwp_error = np.array([0.2, 5.5])
+    compare = ERROR_OBJ.lwc_source.lwp_error / ERROR_OBJ.lwc_source.lwp
+    compare[compare > 10] = 10
     assert_array_equal(ERROR_OBJ._calc_lwp_relative_error(), compare)
 
 
 def test_calc_combined_error():
-    # TODO: Create better test
+    from cloudnetpy.utils import transpose, l2norm
     err_2d = np.array([[0, 0.1, 0.1], [0.2, 0.4, 0.15]])
     err_1d = np.array([0.3, 0.2])
-    compare = np.array([[0.3, 0.316, 0.316], [0.283, 0.447, 0.25]])
-    assert_array_equal(np.around(ERROR_OBJ._calc_combined_error(err_2d, err_1d),
-                                   decimals=3), compare)
+    compare = l2norm(err_2d, transpose(err_1d))
+    assert_array_equal(ERROR_OBJ._calc_combined_error(err_2d, err_1d), compare)
 
 
 def test_fill_error_array():
-    # TODO: Create better test
     error_in = np.array([[0, 0.1, 0.1], [0.2, 0.4, 0.15]])
-    compare = np.ma.array([[0, 0, 0.1],
+    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.1],
+                               [0.1, 0.2, 0.2]],
+                              mask=[[0, 1, 0],
+                                    [1, 0, 0]])
+    compare = np.ma.array([[0, 0, 0],
                            [0, 0, 0]],
                           mask=[[0, 1, 0],
-                                [1, 1, 1]])
-    assert_array_equal(ERROR_OBJ._fill_error_array(error_in), compare)
+                                [1, 0, 0]])
+    ERROR_OBJ._fill_error_array(error_in)
+    error = ERROR_OBJ._fill_error_array(error_in)
+    assert_array_almost_equal(error.mask, compare.mask)
 
 
 def test_screen_rain_error():
@@ -266,7 +262,7 @@ def test_screen_rain_error():
                            [0, 0, 0]],
                           mask=[[0, 1, 0],
                                 [1, 1, 1]])
-    assert_array_equal(np.around(ERROR_OBJ.lwc_error, decimals=3), compare)
+    assert_array_equal(ERROR_OBJ.lwc_error.mask, compare.mask)
 
 
 @pytest.mark.parametrize("key", ["lwc", "lwc_retrieval_status", "lwc_error"])
