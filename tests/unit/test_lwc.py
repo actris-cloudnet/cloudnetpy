@@ -209,21 +209,21 @@ def test_limit_error():
 
 
 def test_calc_lwc_gradient():
-    # TODO: Create better test
-    compare = np.array([[0.15, 0.0, 0.14],
-                        [0.10, 0.0, 0.10]])
-    assert_array_equal(np.around(ERROR_OBJ._calc_lwc_gradient(), decimals=2),
-                       compare)
+    from cloudnetpy.utils import l2norm
+    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.3],
+                                 [0.1, 0.3, 0.6]])
+    compare = l2norm(*np.gradient(ERROR_OBJ.lwc))
+    assert_array_almost_equal(ERROR_OBJ._calc_lwc_gradient(), compare)
 
 
 def test_calc_lwc_relative_error():
-    # TODO: Create better test
-    compare = np.ma.array([[0.71, 0, 0.71],
-                           [0.5, 0.25, 0.17]],
-                          mask=[[0, 1, 0],
-                                [1, 1, 1]])
-    assert_array_equal(np.around(ERROR_OBJ._calc_lwc_relative_error(), decimals=2),
-                       compare)
+    from cloudnetpy.utils import l2norm
+    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.3],
+                                 [0.1, 0.3, 0.6]])
+    x = l2norm(*np.gradient(ERROR_OBJ.lwc))
+    compare = x / ERROR_OBJ.lwc / 2
+    compare[compare > 5] = 5
+    assert_array_almost_equal(ERROR_OBJ._calc_lwc_relative_error(), compare)
 
 
 def test_calc_lwp_relative_error():
