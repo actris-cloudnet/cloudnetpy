@@ -91,13 +91,9 @@ class Lwc:
     Attributes:
         lwc_source (LwcSource): The :class:`LwcSource` instance.
         dheight (float): Median difference in height vector.
-        echo (dict): Dictionary containing `radar` and `lidar` that are
-            2D arrays denoting which instrument detected the pixel.
         is_liquid (ndarray): 2D array denoting liquid.
         lwc_adiabatic (ndarray): 2D array storing adiabatic lwc.
         lwc (ndarray): 2D array of liquid water content (scaled with lwp).
-        status (ndarray): Indicates where is liquid, and where it was adjusted.
-        lwc_error (ndarray): 2D lwc error estimate.
 
     """
     def __init__(self, lwc_source):
@@ -199,16 +195,6 @@ class LwcStatus:
         return top_clouds
 
     def _find_topmost_clouds(self):
-        """From 2d binary cloud field, return the uppermost cloud layer only.
-
-        Args:
-            is_cloud (ndarray): Boolean array denoting presence of clouds.
-
-        Returns:
-            ndarray: Copy of input array containing only the uppermost cloud
-            layer in each profile.
-
-        """
         top_clouds = np.copy(self.is_liquid)
         cloud_edges = top_clouds[:, :-1][:, ::-1] < top_clouds[:, 1:][:, ::-1]
         topmost_bases = self.is_liquid.shape[1] - 1 - np.argmax(cloud_edges, axis=1)
@@ -227,8 +213,7 @@ class LwcStatus:
         """Finds top clouds that contain only lidar-detected pixels.
 
         Args:
-            detection_type (ndarray): Array of integers where 1=lidar, 2=radar,
-            3=both.
+            detection (ndarray): Array of integers where 1=lidar, 2=radar, 3=both.
 
         Returns:
             ndarray: Boolean array containing top-clouds that are detected only
@@ -266,10 +251,10 @@ class LwcError:
     def __init__(self, lwc_source, lwc_obj):
         self.lwc = lwc_obj.lwc
         self.lwc_source = lwc_source
-        self.lwc_error = self.calculate_lwc_error()
+        self.lwc_error = self._calculate_lwc_error()
         self.screen_rain()
 
-    def calculate_lwc_error(self):
+    def _calculate_lwc_error(self):
         lwc_relative_error = self._calc_lwc_relative_error()
         lwp_relative_error = self._calc_lwp_relative_error()
         combined_error = self._calc_combined_error(lwc_relative_error, lwp_relative_error)
@@ -357,7 +342,7 @@ DEFINITIONS = {
          'Value 1: Reliable retrieval.\n'
          'Value 2: Cloud pixel whose top has been adjusted so that the theoretical\n'
          '         liquid water path would match observation.\n'
-         'Value 3: New cloud pixel introduced so that the theoretical liquid\n' 
+         'Value 3: New cloud pixel introduced so that the theoretical liquid\n'
          '         water path would match observation.\n'
          'Value 4: Rain present: cloud extent is difficult to ascertain and liquid\n'
          '         water path also uncertain.'),
