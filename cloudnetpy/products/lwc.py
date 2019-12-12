@@ -138,8 +138,7 @@ class LwcStatus:
         self.lwc_adiabatic = lwc_obj.lwc_adiabatic
         self.echo = self._get_echo()
         self.status = self._init_status()
-        top_clouds = self._find_adjustable_clouds()
-        self._adjust_cloud_tops(top_clouds)
+        self._adjust_cloud_tops(self._find_adjustable_clouds())
         self.screen_rain()
 
     def _init_status(self):
