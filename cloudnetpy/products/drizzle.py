@@ -83,10 +83,9 @@ class DrizzleSource(DataSource):
         nc.close()
         return lut
 
-    @staticmethod
-    def _get_mie_file():
-        module_path = os.path.dirname(os.path.abspath(__file__))
-        return '/'.join((module_path, 'mie_lu_tables.nc'))
+    def _get_mie_file(self):
+        self.module_path = os.path.dirname(os.path.abspath(__file__))
+        return '/'.join((self.module_path, 'mie_lu_tables.nc'))
 
     def _get_wl_band(self):
         """Returns string corresponding the radar frequency."""

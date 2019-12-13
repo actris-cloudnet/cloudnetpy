@@ -2,10 +2,10 @@ import numpy as np
 from numpy import testing
 from collections import namedtuple
 import pytest
+from pathlib import Path
 import netCDF4
 import cloudnetpy.products.drizzle as drizzle
 from cloudnetpy.products.drizzle import *
-
 
 DIMENSIONS = ('time', 'height', 'model_time', 'model_height')
 TEST_ARRAY = np.arange(3)
@@ -21,24 +21,20 @@ def drizzle_source_file(tmpdir_factory, file_metadata):
     var = root_grp.createVariable('altitude', 'f8')
     var[:] = 1
     var.units = 'km'
-    var = root_grp.createVariable('lwp', 'f8', 'time')
+    var = root_grp.createVariable('beta', 'f8', 'time')
     var[:] = [1, 1, 0.5]
-    var = root_grp.createVariable('lwp_error', 'f8', 'time')
-    var[:] = [0.2, 0.2, 0.1]
-    var = root_grp.createVariable('is_rain', 'i4', 'time')
-    var[:] = [0, 1, 1]
+    var = root_grp.createVariable('v', 'f8', 'time')
+    var[:] = [2, 5, 5]
+    var = root_grp.createVariable('v_sigma', 'f8', 'time')
+    var[:] = [-2, 5, 2]
+    var = root_grp.createVariable('Z', 'f8', 'time')
+    var[:] = [5, 10, 15]
     var = root_grp.createVariable('category_bits', 'i4', 'time')
     var[:] = [0, 1, 2]
     var = root_grp.createVariable('quality_bits', 'i4', 'time')
     var[:] = [8, 16, 32]
-    var = root_grp.createVariable('temperature', 'f8', ('time', 'height'))
-    var[:] = np.array([[282, 280, 278],
-                       [286, 284, 282],
-                      [284, 282, 280]])
-    var = root_grp.createVariable('pressure', 'f8', ('time', 'height'))
-    var[:] = np.array([[1010, 1000, 990],
-                       [1020, 1010, 1000],
-                      [1030, 1020, 1010]])
+    var = root_grp.createVariable('radar_frequency', 'f8')
+    var[:] = 35.5  # TODO: How to check with multiple options
     root_grp.close()
     return file_name
 
@@ -57,24 +53,52 @@ def _create_dimension_variables(root_grp):
             x.units = 'm'
 
 
-# Luodaan tähän ensin taas fake_source filu,
+def test_convert_z_units(drizzle_source_file):
+    from cloudnetpy.utils import db2lin
+    obj = DrizzleSource(drizzle_source_file)
+    z = obj.getvar('Z') - 180
+    compare = db2lin(z)
+    testing.assert_array_almost_equal(obj._convert_z_units(), compare)
 
-def test_convert_z_units():
+
+@pytest.mark.parametrize('key',
+     ['Do', 'mu', 'S', 'lwf', 'termv', 'width', 'ray', 'v'])
+def test_read_mie_lut(drizzle_source_file, key):
+    obj = DrizzleSource(drizzle_source_file)
+    assert key in obj.mie.keys()
+
+
+def test_get_mie_file(drizzle_source_file):
+    obj = DrizzleSource(drizzle_source_file)
+    obj.module_path = ''.join((str(Path(__file__).parents[2]), '/cloudnetpy/products/'))
+    obj._get_mie_file()
+    compare = '/'.join((obj.module_path, 'mie_lu_tables.nc'))
+    testing.assert_equal(obj._get_mie_file(), compare)
+
+
+def test_get_wl_band(drizzle_source_file):
+    obj = DrizzleSource(drizzle_source_file)
+    compare = '35'
+    testing.assert_equal(obj._get_wl_band(), compare)
+
+
+def test_find_v_sigma():
     assert True
 
 
-def test_read_mie_lut():
+def test_find_warm_liquid():
     assert True
 
 
-def test_get_mie_file():
-    _get_mie_file = drizzle.DrizzleSource._get_mie_file()
-    print(_get_mie_file)
-
+def test_find_drizzle():
     assert True
 
 
-def test_get_wl_band():
+def test_find_would_be_drizzle():
+    assert True
+
+
+def test_find_cold_rain():
     assert True
 
 
@@ -115,4 +139,6 @@ def test_get_drizzle_indices():
                'tiny': [False, False, False, True]}
     for key in d.keys():
         testing.assert_array_equal(d[key], correct[key])
+
+
 
