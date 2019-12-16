@@ -25,8 +25,6 @@ def drizzle_source_file(tmpdir_factory, file_metadata):
     var[:] = [1, 1, 0.5]
     var = root_grp.createVariable('v', 'f8', 'time')
     var[:] = [2, 5, 5]
-    var = root_grp.createVariable('v_sigma', 'f8', 'time')
-    var[:] = [-2, 5, 2]
     var = root_grp.createVariable('Z', 'f8', 'time')
     var[:] = [5, 10, 15]
     var = root_grp.createVariable('category_bits', 'i4', 'time')
@@ -82,24 +80,105 @@ def test_get_wl_band(drizzle_source_file):
     testing.assert_equal(obj._get_wl_band(), compare)
 
 
-def test_find_v_sigma():
-    assert True
+@pytest.fixture(scope='session')
+def drizzle_cat_file(tmpdir_factory, file_metadata):
+    file_name = tmpdir_factory.mktemp("data").join("file.nc")
+    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
+    n_points = 2
+    m_points = 3
+    root_grp.createDimension('time', n_points)
+    var = root_grp.createVariable('time', 'f8', 'time')
+    var[:] = np.arange(n_points)
+    root_grp.createDimension('dheight', m_points)
+    var = root_grp.createVariable('dheight', 'f8', 'dheight')
+    var[:] = np.arange(m_points)
+    var = root_grp.createVariable('category_bits', 'i4', ('time', 'dheight'))
+    var[:] = [[0, 1, 2], [4, 8, 16]]
+    var = root_grp.createVariable('quality_bits', 'i4', ('time', 'dheight'))
+    var[:] = [[0, 1, 2], [4, 8, 16]]
+    var = root_grp.createVariable('is_rain', 'i4', ('time', 'dheight'))
+    var[:] = [[0, 1, 1], [1, 0, 0]]
+    var = root_grp.createVariable('is_undetected_melting', 'i4', ('time', 'dheight'))
+    var[:] = [[0, 1, 0], [1, 0, 0]]
+    var = root_grp.createVariable('v_sigma', 'f8', ('time', 'dheight'))
+    var[:] = [[-2, np.nan, 2], [1, -1, 0]]
+    root_grp.close()
+    return file_name
 
 
-def test_find_warm_liquid():
-    assert True
+def test_find_v_sigma(drizzle_cat_file):
+    obj = DrizzleClassification(drizzle_cat_file)
+    compare = np.array([[1, 0, 1], [1, 1, 1]], dtype=bool)
+    testing.assert_array_almost_equal(obj._find_v_sigma(drizzle_cat_file), compare)
 
 
-def test_find_drizzle():
-    assert True
+def test_find_warm_liquid(drizzle_cat_file):
+    obj = DrizzleClassification(drizzle_cat_file)
+    obj.category_bits['droplet'] = np.array([0, 0, 0, 1, 1, 1, 0], dtype=bool)
+    obj.category_bits['cold'] = np.array([1, 1, 0, 0, 1, 0, 1], dtype=bool)
+    compare = np.array([0, 0, 0, 1, 0, 1, 0], dtype=bool)
+    testing.assert_array_almost_equal(obj._find_warm_liquid(), compare)
 
 
-def test_find_would_be_drizzle():
-    assert True
+@pytest.mark.parametrize("is_rain, falling, droplet, cold, melting, insect, "
+                         "radar, lidar, clutter, molecular, attenuated, "
+                         "v_sigma", [
+    (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
+     np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
+     np.array([0, 0, 0, 1]), np.array([0, 0, 0, 0]),
+     np.array([1, 1, 1, 1]), np.array([1, 1, 1, 1]),
+     np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
+     np.array([0, 0, 0, 1]), np.array([1, 1, 0, 1]))])
+def test_find_drizzle(drizzle_cat_file, is_rain, falling, droplet, cold, melting,
+                      insect, radar, lidar, clutter, molecular, attenuated, v_sigma):
+    obj = DrizzleClassification(drizzle_cat_file)
+    obj.is_rain = is_rain
+    obj.category_bits['falling'] = falling
+    obj.category_bits['droplet'] = droplet
+    obj.category_bits['cold'] = cold
+    obj.category_bits['melting'] = melting
+    obj.category_bits['insect'] = insect
+    obj.quality_bits['radar'] = radar
+    obj.quality_bits['lidar'] = lidar
+    obj.quality_bits['clutter'] = clutter
+    obj.quality_bits['molecular'] = molecular
+    obj.quality_bits['attenuated'] = attenuated
+    obj.is_v_sigma = v_sigma
+    compare = np.array([[1, 1, 0, 0],
+                        [1, 1, 0, 0],
+                        [1, 1, 0, 0],
+                        [1, 1, 0, 0]])
+    testing.assert_array_almost_equal(obj._find_drizzle(), compare)
 
 
-def test_find_cold_rain():
-    assert True
+@pytest.mark.parametrize("is_rain, warm, falling, melting, insect, "
+                         "radar, clutter, molecular", [
+    (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
+     np.array([1, 1, 1, 0]), np.array([0, 0, 0, 1]),
+     np.array([0, 0, 0, 1]), np.array([0, 1, 1, 0]),
+     np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]))])
+def test_find_would_be_drizzle(drizzle_cat_file, is_rain, warm, falling, melting,
+                               insect, radar, clutter, molecular):
+    obj = DrizzleClassification(drizzle_cat_file)
+    obj.is_rain = is_rain
+    obj.warm_liquid = warm
+    obj.category_bits['falling'] = falling
+    obj.category_bits['melting'] = melting
+    obj.category_bits['insect'] = insect
+    obj.quality_bits['radar'] = radar
+    obj.quality_bits['clutter'] = clutter
+    obj.quality_bits['molecular'] = molecular
+    compare = np.array([[0, 1, 1, 0],
+                        [0, 1, 1, 0],
+                        [0, 1, 1, 0],
+                        [0, 1, 1, 0]])
+    testing.assert_array_almost_equal(obj._find_would_be_drizzle(), compare)
+
+
+def test_find_cold_rain(drizzle_cat_file):
+    obj = DrizzleClassification(drizzle_cat_file)
+    compare = np.array([0, 1])
+    testing.assert_array_almost_equal(obj._find_cold_rain(), compare)
 
 
 @pytest.mark.parametrize("x, result", [
