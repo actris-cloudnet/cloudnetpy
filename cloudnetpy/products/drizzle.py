@@ -212,6 +212,7 @@ class DrizzleSolving:
 
     """
     def __init__(self, drizzle_source, drizzle_class, spectral_width):
+        print("init alkaa")
         self.data = drizzle_source
         self.drizzle_class = drizzle_class
         self.width_ht = spectral_width.width_ht
@@ -232,7 +233,7 @@ class DrizzleSolving:
     def _find_lut_indices(self, i, j, dia_init, n_dia, n_widths):
         ind_dia = bisect_left(self.data.mie['Do'], dia_init[i, j], hi=n_dia-1)
         ind_width = bisect_left(self.width_lut[:, ind_dia], -self.width_ht[i, j], hi=n_widths-1)
-        # Ei varmaa toimiiko negaatio -self.width_ht:lle, tarkastetaan
+        # Ei varmaa toimiiko negaatio ~self.width_ht:lle, tarkastetaan
         return ind_width, ind_dia
 
     def _update_result_tables(self, i, j, dia, lut_ind):
