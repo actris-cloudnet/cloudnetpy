@@ -212,7 +212,6 @@ class DrizzleSolving:
 
     """
     def __init__(self, drizzle_source, drizzle_class, spectral_width):
-        print("init alkaa")
         self.data = drizzle_source
         self.drizzle_class = drizzle_class
         self.width_ht = spectral_width.width_ht
