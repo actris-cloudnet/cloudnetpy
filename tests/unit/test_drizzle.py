@@ -1,3 +1,5 @@
+from unittest import TestCase
+
 import numpy as np
 from numpy import testing
 from collections import namedtuple
@@ -60,7 +62,7 @@ def test_convert_z_units(drizzle_source_file):
 
 
 @pytest.mark.parametrize('key',
-     ['Do', 'mu', 'S', 'lwf', 'termv', 'width', 'ray', 'v'])
+                         ['Do', 'mu', 'S', 'lwf', 'termv', 'width', 'ray', 'v'])
 def test_read_mie_lut(drizzle_source_file, key):
     obj = DrizzleSource(drizzle_source_file)
     assert key in obj.mie.keys()
@@ -80,6 +82,7 @@ def test_get_wl_band(drizzle_source_file):
     testing.assert_equal(obj._get_wl_band(), compare)
 
 
+# TODO: Mieti, miten tämä kannattaa siistiä
 @pytest.fixture(scope='session')
 def drizzle_cat_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
@@ -89,19 +92,33 @@ def drizzle_cat_file(tmpdir_factory, file_metadata):
     root_grp.createDimension('time', n_points)
     var = root_grp.createVariable('time', 'f8', 'time')
     var[:] = np.arange(n_points)
-    root_grp.createDimension('dheight', m_points)
-    var = root_grp.createVariable('dheight', 'f8', 'dheight')
+    root_grp.createDimension('height', m_points)
+    var = root_grp.createVariable('height', 'f8', 'height')
     var[:] = np.arange(m_points)
-    var = root_grp.createVariable('category_bits', 'i4', ('time', 'dheight'))
+    root_grp.createDimension('model_time', n_points)
+    var = root_grp.createVariable('model_time', 'f8', 'model_time')
+    var[:] = np.arange(n_points)
+    root_grp.createDimension('model_height', m_points)
+    var = root_grp.createVariable('model_height', 'f8', 'model_height')
+    var[:] = np.arange(m_points)
+    var = root_grp.createVariable('dheight', 'f8')
+    var[:] = 10
+    var = root_grp.createVariable('uwind', 'f8', ('model_time', 'model_height'))
+    var[:] = [[2, 2, 1], [1, 3, 5]]
+    var = root_grp.createVariable('vwind', 'f8', ('model_time', 'model_height'))
+    var[:] = [[-2, -2, 1], [1, -3, 0]]
+    var = root_grp.createVariable('category_bits', 'i4', ('time', 'height'))
     var[:] = [[0, 1, 2], [4, 8, 16]]
-    var = root_grp.createVariable('quality_bits', 'i4', ('time', 'dheight'))
+    var = root_grp.createVariable('quality_bits', 'i4', ('time', 'height'))
     var[:] = [[0, 1, 2], [4, 8, 16]]
-    var = root_grp.createVariable('is_rain', 'i4', ('time', 'dheight'))
+    var = root_grp.createVariable('is_rain', 'i4', ('time', 'height'))
     var[:] = [[0, 1, 1], [1, 0, 0]]
-    var = root_grp.createVariable('is_undetected_melting', 'i4', ('time', 'dheight'))
+    var = root_grp.createVariable('is_undetected_melting', 'i4', ('time', 'height'))
     var[:] = [[0, 1, 0], [1, 0, 0]]
-    var = root_grp.createVariable('v_sigma', 'f8', ('time', 'dheight'))
+    var = root_grp.createVariable('v_sigma', 'f8', ('time', 'height'))
     var[:] = [[-2, np.nan, 2], [1, -1, 0]]
+    var = root_grp.createVariable('width', 'f8', ('time', 'height'))
+    var[:] = [[2, 0, 1], [1, 3, 0]]
     root_grp.close()
     return file_name
 
@@ -123,12 +140,12 @@ def test_find_warm_liquid(drizzle_cat_file):
 @pytest.mark.parametrize("is_rain, falling, droplet, cold, melting, insect, "
                          "radar, lidar, clutter, molecular, attenuated, "
                          "v_sigma", [
-    (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
-     np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
-     np.array([0, 0, 0, 1]), np.array([0, 0, 0, 0]),
-     np.array([1, 1, 1, 1]), np.array([1, 1, 1, 1]),
-     np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
-     np.array([0, 0, 0, 1]), np.array([1, 1, 0, 1]))])
+                             (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
+                              np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
+                              np.array([0, 0, 0, 1]), np.array([0, 0, 0, 0]),
+                              np.array([1, 1, 1, 1]), np.array([1, 1, 1, 1]),
+                              np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
+                              np.array([0, 0, 0, 1]), np.array([1, 1, 0, 1]))])
 def test_find_drizzle(drizzle_cat_file, is_rain, falling, droplet, cold, melting,
                       insect, radar, lidar, clutter, molecular, attenuated, v_sigma):
     obj = DrizzleClassification(drizzle_cat_file)
@@ -153,10 +170,10 @@ def test_find_drizzle(drizzle_cat_file, is_rain, falling, droplet, cold, melting
 
 @pytest.mark.parametrize("is_rain, warm, falling, melting, insect, "
                          "radar, clutter, molecular", [
-    (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
-     np.array([1, 1, 1, 0]), np.array([0, 0, 0, 1]),
-     np.array([0, 0, 0, 1]), np.array([0, 1, 1, 0]),
-     np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]))])
+                             (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
+                              np.array([1, 1, 1, 0]), np.array([0, 0, 0, 1]),
+                              np.array([0, 0, 0, 1]), np.array([0, 1, 1, 0]),
+                              np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]))])
 def test_find_would_be_drizzle(drizzle_cat_file, is_rain, warm, falling, melting,
                                insect, radar, clutter, molecular):
     obj = DrizzleClassification(drizzle_cat_file)
@@ -179,6 +196,48 @@ def test_find_cold_rain(drizzle_cat_file):
     obj = DrizzleClassification(drizzle_cat_file)
     compare = np.array([0, 1])
     testing.assert_array_almost_equal(obj._find_cold_rain(), compare)
+
+
+def test_calculate_spectral_width(drizzle_cat_file):
+    obj = CorrectSpectralWidth(drizzle_cat_file)
+    width = netCDF4.Dataset(drizzle_cat_file).variables['width'][:]
+    v_sigma = netCDF4.Dataset(drizzle_cat_file).variables['v_sigma'][:]
+    factor = obj._calc_v_sigma_factor()
+    compare = width - factor * v_sigma
+    testing.assert_almost_equal(obj.calculate_spectral_width(), compare)
+
+
+def test_calc_beam_divergence(drizzle_cat_file):
+    obj = CorrectSpectralWidth(drizzle_cat_file)
+    height = netCDF4.Dataset(drizzle_cat_file).variables['height'][:]
+    compare = height*np.deg2rad(0.5)
+    testing.assert_almost_equal(obj._calc_beam_divergence(), compare)
+
+
+def test_calc_v_sigma_factor(drizzle_cat_file):
+    from cloudnetpy.utils import l2norm
+    obj = CorrectSpectralWidth(drizzle_cat_file)
+    height = netCDF4.Dataset(drizzle_cat_file).variables['height'][:]
+    uwind = netCDF4.Dataset(drizzle_cat_file).variables['uwind'][:]
+    vwind = netCDF4.Dataset(drizzle_cat_file).variables['vwind'][:]
+    beam = height*np.deg2rad(0.5)
+    wind = l2norm(uwind, vwind)
+    a_wind = (wind + beam) ** (2/3)
+    s_wind = (30*wind + beam) ** (2/3)
+    compare = a_wind / (s_wind - a_wind)
+    testing.assert_array_almost_equal(obj._calc_v_sigma_factor(), compare)
+
+
+def test_calc_horizontal_wind(drizzle_cat_file):
+    from cloudnetpy.utils import l2norm
+    obj = CorrectSpectralWidth(drizzle_cat_file)
+    uwind = netCDF4.Dataset(drizzle_cat_file).variables['uwind'][:]
+    vwind = netCDF4.Dataset(drizzle_cat_file).variables['vwind'][:]
+    compare = l2norm(uwind, vwind)
+    testing.assert_array_almost_equal(obj._calc_horizontal_wind(), compare)
+
+
+
 
 
 @pytest.mark.parametrize("x, result", [
@@ -218,6 +277,3 @@ def test_get_drizzle_indices():
                'tiny': [False, False, False, True]}
     for key in d.keys():
         testing.assert_array_equal(d[key], correct[key])
-
-
-
