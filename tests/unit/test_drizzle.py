@@ -311,27 +311,37 @@ def params_objects(class_objects):
 
 
 def test_find_indices(class_objects, params_objects):
+    # TODO: how to test
     d_source, d_class, s_width = class_objects
     obj = CalculateProducts(d_source, params_objects)
     assert True
 
 
-def test_calc_derived_products(class_objects, params_objects):
+@pytest.mark.parametrize('key', [
+    'drizzle_N', 'drizzle_lwc', 'drizzle_lwf', 'v_drizzle', 'v_air'])
+def test_calc_derived_products(class_objects, params_objects, key):
     d_source, d_class, s_width = class_objects
     obj = CalculateProducts(d_source, params_objects)
-    assert True
+    dictio = obj._calc_derived_products()
+    assert key in dictio.keys()
 
 
 def test_calc_density(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
     obj = CalculateProducts(d_source, params_objects)
-    assert True
+    obj.data.z = np.array([1, 2, 3])
+    compare = obj.data.z * 3.67 ** 6 / obj.parameters['Do'] ** 6
+    testing.assert_array_almost_equal(obj._calc_density(), compare)
 
 
 def test_calc_lwc(class_objects, params_objects):
+    # TODO: Maybe not ok to do it this way
     d_source, d_class, s_width = class_objects
     obj = CalculateProducts(d_source, params_objects)
-    assert True
+    dia, mu, s = [obj.parameters.get(key) for key in ('Do', 'mu', 'S')]
+    gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
+    compare = 1000 / 3 * obj.data.beta * s * dia * gamma_ratio
+    testing.assert_array_almost_equal(obj._calc_lwc(), compare)
 
 
 def test_calc_lwf(class_objects, params_objects):
@@ -343,13 +353,21 @@ def test_calc_lwf(class_objects, params_objects):
 def test_calc_fall_velocity(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
     obj = CalculateProducts(d_source, params_objects)
-    assert True
+    lwc_in = np.array([[0.001, 0.001, 0.002],
+                       [0.003, 0.002, 0.001]])
+    compare = np.array([[0.001, 0.001, 0.002],
+                       [0.003, 0.002, 0.001]])
+    testing.assert_array_almost_equal(obj._calc_lwf(lwc_in), compare)
 
 
 def test_calc_v_air(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
     obj = CalculateProducts(d_source, params_objects)
-    assert True
+    d_v = np.array([[2.0, 2.0, 4.0], [1.0, 3.0, 5.0]])
+    obj.ind_drizzle = (np.array([0, 1]), np.array([1, 2]))
+    compare = np.array([[-2.0, 0.0, -4.0],
+                        [-1.0, -3.0, -2.0]])
+    testing.assert_array_almost_equal(obj._calc_v_air(d_v), compare)
 
 
 
