@@ -29,7 +29,7 @@ def drizzle_source_file(tmpdir_factory, file_metadata):
     var = root_grp.createVariable('beta', 'f8', ('time', 'height'))
     var[:] = [[0.1, 0.1, 0.1], [1, 0.2, 3]]
     var = root_grp.createVariable('beta_error', 'f8', ('time', 'height'))
-    var[:] = [[0.1, 0.0, 0.1], [0.1, 0.2, 0.3]]
+    var[:] = 1
     var = root_grp.createVariable('beta_bias', 'f8')
     var[:] = 1
     var = root_grp.createVariable('v', 'f8', ('time', 'height'))
