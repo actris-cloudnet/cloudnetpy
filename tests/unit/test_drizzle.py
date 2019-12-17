@@ -28,10 +28,10 @@ def drizzle_source_file(tmpdir_factory, file_metadata):
     var.units = 'km'
     var = root_grp.createVariable('beta', 'f8', ('time', 'height'))
     var[:] = [[0.1, 0.1, 0.1], [1, 0.2, 3]]
-    var = root_grp.createVariable('beta_error', 'f8', ('time', 'height'))
-    var[:] = 1
+    var = root_grp.createVariable('beta_error', 'f8')
+    var[:] = 0.1
     var = root_grp.createVariable('beta_bias', 'f8')
-    var[:] = 1
+    var[:] = 0.1
     var = root_grp.createVariable('v', 'f8', ('time', 'height'))
     var[:] = [[1, 2, 3], [1, 2, 3]]
     var = root_grp.createVariable('Z', 'f8', ('time', 'height'))
@@ -39,7 +39,7 @@ def drizzle_source_file(tmpdir_factory, file_metadata):
     var = root_grp.createVariable('Z_error', 'f8', ('time', 'height'))
     var[:] = [[.01, 0.1, 0.2], [0.3, 0.2, 0.1]]
     var = root_grp.createVariable('Z_bias', 'f8')
-    var[:] = 1
+    var[:] = 0.1
     var = root_grp.createVariable('category_bits', 'i4', ('time', 'height'))
     var[:] = [[0, 1, 2], [4, 8, 16]]
     var = root_grp.createVariable('quality_bits', 'i4', ('time', 'height'))
@@ -389,7 +389,6 @@ def test_read_input_uncertainty(class_objects, params_objects):
     obj = CalculateErrors(d_source, params_objects)
     assert True
 
-"""
 def test_calc_errors(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
     obj = CalculateErrors(d_source, params_objects)
@@ -491,10 +490,6 @@ def test_convert_to_db(class_objects, params_objects):
     obj = CalculateErrors(d_source, params_objects)
     assert True
 
-"""
-
-
-
 
 @pytest.mark.parametrize("x, result", [
     (-1000, -1),
@@ -524,7 +519,7 @@ def test_lin2db_raise():
     with pytest.raises(ValueError):
         drizzle.lin2db(-1)
 
-
+"""
 def test_get_drizzle_indices():
     dia = np.array([-1, 2 * 1e-5, 1, 1e-6])
     d = drizzle.CalculateErrors._get_drizzle_indices(dia)
@@ -533,5 +528,5 @@ def test_get_drizzle_indices():
                'tiny': [False, False, False, True]}
     for key in d.keys():
         testing.assert_array_equal(d[key], correct[key])
-
+"""
 
