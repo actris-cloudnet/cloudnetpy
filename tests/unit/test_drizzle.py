@@ -130,13 +130,13 @@ def test_find_warm_liquid(drizzle_cat_file):
 
 
 @pytest.mark.parametrize("is_rain, falling, droplet, cold, melting, insect, "
-     "radar, lidar, clutter, molecular, attenuated, v_sigma", [
-         (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
-          np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
-          np.array([0, 0, 0, 1]), np.array([0, 0, 0, 0]),
-          np.array([1, 1, 1, 1]), np.array([1, 1, 1, 1]),
-          np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
-          np.array([0, 0, 0, 1]), np.array([1, 1, 0, 1]))])
+                         "radar, lidar, clutter, molecular, attenuated, v_sigma", [
+                             (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
+                              np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
+                              np.array([0, 0, 0, 1]), np.array([0, 0, 0, 0]),
+                              np.array([1, 1, 1, 1]), np.array([1, 1, 1, 1]),
+                              np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]),
+                              np.array([0, 0, 0, 1]), np.array([1, 1, 0, 1]))])
 def test_find_drizzle(drizzle_cat_file, is_rain, falling, droplet, cold, melting,
                       insect, radar, lidar, clutter, molecular, attenuated, v_sigma):
     obj = DrizzleClassification(drizzle_cat_file)
@@ -160,11 +160,11 @@ def test_find_drizzle(drizzle_cat_file, is_rain, falling, droplet, cold, melting
 
 
 @pytest.mark.parametrize("is_rain, warm, falling, melting, insect, "
-     "radar, clutter, molecular", [
-         (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
-          np.array([1, 1, 1, 0]), np.array([0, 0, 0, 1]),
-          np.array([0, 0, 0, 1]), np.array([0, 1, 1, 0]),
-          np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]))])
+                         "radar, clutter, molecular", [
+                             (np.array([0, 0, 0, 0]), np.array([1, 1, 1, 1]),
+                              np.array([1, 1, 1, 0]), np.array([0, 0, 0, 1]),
+                              np.array([0, 0, 0, 1]), np.array([0, 1, 1, 0]),
+                              np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]))])
 def test_find_would_be_drizzle(drizzle_cat_file, is_rain, warm, falling, melting,
                                insect, radar, clutter, molecular):
     obj = DrizzleClassification(drizzle_cat_file)
@@ -237,25 +237,40 @@ def class_objects(drizzle_source_file, drizzle_cat_file):
     return [drizzle_source, drizzle_class, spectral_w]
 
 
-def test_init_variables(class_objects):
+@pytest.mark.parametrize('key', ['Do', 'mu', 'S', 'beta_corr'])
+def test_init_variables(class_objects, key):
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
-    assert True
+    result, x = obj._init_variables()
+    assert key in result.keys()
 
 
 def test_calc_beta_z_ratio(class_objects):
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
-    assert True
+    obj.data.beta = np.array([[1, 1, 2], [1, 1, 3]])
+    obj.data.z = np.array([[2, 2, 1], [1, 1, 1]])
+    compare = 2 / np.pi * obj.data.beta / obj.data.z
+    testing.assert_array_almost_equal(obj._calc_beta_z_ratio(), compare)
 
 
 def test_find_lut_indices(class_objects):
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
-    assert True
+    i = 1
+    j = 2
+    dia_init = np.array([[1, 3, 2], [3, 1, 2]])
+    n_dia = 1
+    n_width = 2
+    ind_d = bisect_left(obj.data.mie['Do'], dia_init[i, j], hi=n_dia - 1)
+    ind_w = bisect_left(obj.width_lut[:, ind_d], -obj.width_ht[i, j], hi=n_width - 1)
+    compare = (ind_w, ind_d)
+    testing.assert_almost_equal(obj._find_lut_indices
+                                (i, j, dia_init, n_dia, n_width), compare)
 
 
 def test_update_result_tables(class_objects):
+    # TODO: How to test?
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
     assert True
@@ -264,20 +279,77 @@ def test_update_result_tables(class_objects):
 def test_is_converged(class_objects):
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
-    assert True
+    i = 1
+    j = 2
+    dia_init = np.array([[1, 3, 2], [3, 1, 2]])
+    dia = 1
+    compare = False
+    assert obj._is_converged(i, j, dia, dia_init) == compare
 
 
 def test_calc_dia(class_objects):
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
-    assert True
+    beta_z = np.array([1, 2, 3])
+    compare = (gamma(3) / gamma(7) * 3.67 ** 4 / beta_z) ** (1 / 4)
+    testing.assert_array_almost_equal(obj._calc_dia(beta_z), compare)
 
 
-def test_solve_drizzle(class_objects):
+# TODO: How to test?
+@pytest.mark.parametrize('key', ['Do', 'mu', 'S', 'beta_corr'])
+def test_solve_drizzle(class_objects, key):
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
+    assert key in obj.params.keys()
+
+
+# Create params object with class_objects
+@pytest.fixture(scope='session')
+def params_objects(class_objects):
+    d_source, d_class, s_width = class_objects
+    return DrizzleSolving(d_source, d_class, s_width)
+
+
+def test_find_indices(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateProducts(d_source, params_objects)
     assert True
 
+
+def test_calc_derived_products(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateProducts(d_source, params_objects)
+    assert True
+
+
+def test_calc_density(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateProducts(d_source, params_objects)
+    assert True
+
+
+def test_calc_lwc(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateProducts(d_source, params_objects)
+    assert True
+
+
+def test_calc_lwf(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateProducts(d_source, params_objects)
+    assert True
+
+
+def test_calc_fall_velocity(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateProducts(d_source, params_objects)
+    assert True
+
+
+def test_calc_v_air(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateProducts(d_source, params_objects)
+    assert True
 
 
 
