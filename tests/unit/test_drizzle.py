@@ -28,10 +28,18 @@ def drizzle_source_file(tmpdir_factory, file_metadata):
     var.units = 'km'
     var = root_grp.createVariable('beta', 'f8', ('time', 'height'))
     var[:] = [[0.1, 0.1, 0.1], [1, 0.2, 3]]
+    var = root_grp.createVariable('beta_error', 'f8', ('time', 'height'))
+    var[:] = [[0.1, 0.0, 0.1], [0.1, 0.2, 0.3]]
+    var = root_grp.createVariable('beta_bias', 'f8')
+    var[:] = 1
     var = root_grp.createVariable('v', 'f8', ('time', 'height'))
     var[:] = [[1, 2, 3], [1, 2, 3]]
     var = root_grp.createVariable('Z', 'f8', ('time', 'height'))
     var[:] = [[1, 0.1, 0.2], [0.3, 2, 0.1]]
+    var = root_grp.createVariable('Z_error', 'f8', ('time', 'height'))
+    var[:] = [[.01, 0.1, 0.2], [0.3, 0.2, 0.1]]
+    var = root_grp.createVariable('Z_bias', 'f8')
+    var[:] = 1
     var = root_grp.createVariable('category_bits', 'i4', ('time', 'height'))
     var[:] = [[0, 1, 2], [4, 8, 16]]
     var = root_grp.createVariable('quality_bits', 'i4', ('time', 'height'))
@@ -356,7 +364,7 @@ def test_calc_fall_velocity(class_objects, params_objects):
     lwc_in = np.array([[0.001, 0.001, 0.002],
                        [0.003, 0.002, 0.001]])
     compare = np.array([[0.001, 0.001, 0.002],
-                       [0.003, 0.002, 0.001]])
+                        [0.003, 0.002, 0.001]])
     testing.assert_array_almost_equal(obj._calc_lwf(lwc_in), compare)
 
 
@@ -369,6 +377,121 @@ def test_calc_v_air(class_objects, params_objects):
                         [-1.0, -3.0, -2.0]])
     testing.assert_array_almost_equal(obj._calc_v_air(d_v), compare)
 
+
+def test_get_drizzle_indices(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_read_input_uncertainty(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+"""
+def test_calc_errors(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_parameter_errors(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_dia_error(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_lwc_error(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_lwf_error(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_s_error(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_error(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_stack_errors(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_add_error_component(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_parameter_biases(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_bias(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_add_supplementary_errors(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_n_error(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_v_error(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_add_supplementary_biases(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_calc_n_bias(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+
+def test_convert_to_db(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    obj = CalculateErrors(d_source, params_objects)
+    assert True
+
+"""
 
 
 
@@ -410,3 +533,5 @@ def test_get_drizzle_indices():
                'tiny': [False, False, False, True]}
     for key in d.keys():
         testing.assert_array_equal(d[key], correct[key])
+
+
