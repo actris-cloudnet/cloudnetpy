@@ -278,7 +278,7 @@ def test_find_lut_indices(class_objects):
 
 
 def test_update_result_tables(class_objects):
-    # TODO: How to test?
+    # TODO: How to test? oikeisiin paikkoihin
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
     assert True
@@ -388,6 +388,7 @@ def test_read_input_uncertainty(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
     obj = CalculateErrors(d_source, params_objects)
     assert True
+
 
 def test_calc_errors(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
