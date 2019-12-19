@@ -11,6 +11,7 @@ from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification
+from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 
 def generate_drizzle(categorize_file, output_file):
@@ -35,14 +36,14 @@ def generate_drizzle(categorize_file, output_file):
     """
     drizzle_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
-    spectral_width = _CorrectSpectralWidth(categorize_file)
+    spectral_width = CorrectSpectralWidth(categorize_file)
     drizzle_parameters = DrizzleSolving(drizzle_data, drizzle_class,
                                         spectral_width)
     derived_products = CalculateProducts(drizzle_data, drizzle_parameters)
-    errors = CalculateErrors(drizzle_data, drizzle_parameters)
+    errors = get_drizzle_error(drizzle_data, drizzle_parameters)
     retrieval_status = RetrievalStatus(drizzle_class)
     results = {**drizzle_parameters.params, **derived_products.derived_products,
-               **errors.errors}
+               **errors}
     results = _screen_rain(results, drizzle_class)
     results['drizzle_retrieval_status'] = retrieval_status.retrieval_status
     _append_data(drizzle_data, results)
@@ -153,7 +154,7 @@ class DrizzleClassification(ProductClassification):
         return np.any(self.category_bits['melting'], axis=1)
 
 
-class _CorrectSpectralWidth:
+class CorrectSpectralWidth:
     """Corrects spectral width.
 
     Removes the effect of turbulence and horizontal wind that cause

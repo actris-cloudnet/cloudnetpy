@@ -8,6 +8,7 @@ from pathlib import Path
 import netCDF4
 import cloudnetpy.products.drizzle as drizzle
 from cloudnetpy.products.drizzle import *
+from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 DIMENSIONS_X = ('time', 'model_time')
 TEST_ARRAY_X = np.arange(2)
@@ -72,8 +73,8 @@ def test_convert_z_units(drizzle_source_file):
     testing.assert_array_almost_equal(obj._convert_z_units(), compare)
 
 
-@pytest.mark.parametrize('key',
-                         ['Do', 'mu', 'S', 'lwf', 'termv', 'width', 'ray', 'v'])
+@pytest.mark.parametrize('key', [
+    'Do', 'mu', 'S', 'lwf', 'termv', 'width', 'ray', 'v'])
 def test_read_mie_lut(drizzle_source_file, key):
     obj = DrizzleSource(drizzle_source_file)
     assert key in obj.mie.keys()
@@ -81,7 +82,7 @@ def test_read_mie_lut(drizzle_source_file, key):
 
 def test_get_mie_file(drizzle_source_file):
     obj = DrizzleSource(drizzle_source_file)
-    obj.module_path = ''.join((str(Path(__file__).parents[2]), '/cloudnetpy/products/'))
+    obj.module_path = ''.join((str(Path(__file__).parents[2]), '/cloudnetpy/products'))
     obj._get_mie_file()
     compare = '/'.join((obj.module_path, 'mie_lu_tables.nc'))
     testing.assert_equal(obj._get_mie_file(), compare)
@@ -203,7 +204,7 @@ def test_calculate_spectral_width(drizzle_cat_file):
     v_sigma = netCDF4.Dataset(drizzle_cat_file).variables['v_sigma'][:]
     factor = obj._calc_v_sigma_factor()
     compare = width - factor * v_sigma
-    testing.assert_almost_equal(obj.calculate_spectral_width(), compare)
+    testing.assert_almost_equal(obj._calculate_spectral_width(), compare)
 
 
 def test_calc_beam_divergence(drizzle_cat_file):
@@ -265,16 +266,15 @@ def test_calc_beta_z_ratio(class_objects):
 def test_find_lut_indices(class_objects):
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
-    i = 1
-    j = 2
+    ind = (1, 2)
     dia_init = np.array([[1, 3, 2], [3, 1, 2]])
     n_dia = 1
     n_width = 2
-    ind_d = bisect_left(obj.data.mie['Do'], dia_init[i, j], hi=n_dia - 1)
-    ind_w = bisect_left(obj.width_lut[:, ind_d], -obj.width_ht[i, j], hi=n_width - 1)
+    ind_d = bisect_left(obj.data.mie['Do'], dia_init[ind], hi=n_dia - 1)
+    ind_w = bisect_left(obj.width_lut[:, ind_d], -obj.width_ht[ind], hi=n_width - 1)
     compare = (ind_w, ind_d)
     testing.assert_almost_equal(obj._find_lut_indices
-                                (i, j, dia_init, n_dia, n_width), compare)
+                                (ind, dia_init, n_dia, n_width), compare)
 
 
 def test_update_result_tables(class_objects):
@@ -287,12 +287,11 @@ def test_update_result_tables(class_objects):
 def test_is_converged(class_objects):
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
-    i = 1
-    j = 2
+    ind = (1, 2)
     dia_init = np.array([[1, 3, 2], [3, 1, 2]])
     dia = 1
     compare = False
-    assert obj._is_converged(i, j, dia, dia_init) == compare
+    assert obj._is_converged(ind, dia, dia_init) == compare
 
 
 def test_calc_dia(class_objects):
@@ -301,14 +300,6 @@ def test_calc_dia(class_objects):
     beta_z = np.array([1, 2, 3])
     compare = (gamma(3) / gamma(7) * 3.67 ** 4 / beta_z) ** (1 / 4)
     testing.assert_array_almost_equal(obj._calc_dia(beta_z), compare)
-
-
-# TODO: How to test?
-@pytest.mark.parametrize('key', ['Do', 'mu', 'S', 'beta_corr'])
-def test_solve_drizzle(class_objects, key):
-    d_source, d_class, s_width = class_objects
-    obj = DrizzleSolving(d_source, d_class, s_width)
-    assert key in obj.params.keys()
 
 
 # Create params object with class_objects
@@ -343,7 +334,6 @@ def test_calc_density(class_objects, params_objects):
 
 
 def test_calc_lwc(class_objects, params_objects):
-    # TODO: Maybe not ok to do it this way
     d_source, d_class, s_width = class_objects
     obj = CalculateProducts(d_source, params_objects)
     dia, mu, s = [obj.parameters.get(key) for key in ('Do', 'mu', 'S')]
@@ -378,118 +368,90 @@ def test_calc_v_air(class_objects, params_objects):
     testing.assert_array_almost_equal(obj._calc_v_air(d_v), compare)
 
 
-def test_get_drizzle_indices(class_objects, params_objects):
+@pytest.fixture(scope='session')
+def ret_status(class_objects):
     d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
+    obj = RetrievalStatus(d_class)
+    return obj
+
+
+@pytest.mark.parametrize("value", [
+    0, 1, 2])
+def test_find_retrieval_below_melting(ret_status, value):
+    obj = ret_status
+    obj.retrieval_status = np.array([[0, 0, 1],
+                                     [1, 1, 0],
+                                     [0, 1, 1]])
+    obj.classification.cold_rain = np.array([0, 1, 1])
+    obj.classification.drizzle = np.array([[1, 1, 0],
+                                           [0, 1, 1],
+                                           [1, 0, 0]])
+    obj._find_retrieval_below_melting()
+    assert value in obj.retrieval_status
+
+
+@pytest.mark.parametrize("value", [
+    0, 1, 2, 3, 4])
+def test_find_retrieval_in_warm_liquid(ret_status, value):
+    obj = ret_status
+    obj.retrieval_status = np.array([[0, 0, 1],
+                                     [1, 2, 3],
+                                     [2, 1, 1]])
+    obj.classification.warm_liquid = np.array([[1, 0, 0],
+                                               [0, 0, 1],
+                                               [1, 0, 1]])
+    obj._find_retrieval_in_warm_liquid()
+    assert value in obj.retrieval_status
+
+
+@pytest.mark.parametrize("value", [
+    0, 1, 2, 3, 4, 5])
+def test_get_retrieval_status(ret_status, value):
+    obj = ret_status
+    obj.retrieval_status = np.array([[0, 0, 1],
+                                     [1, 1, 0],
+                                     [0, 1, 1]])
+    obj.classification.cold_rain = np.array([0, 1, 0])
+    obj.classification.drizzle = np.array([[1, 1, 0],
+                                           [0, 1, 1],
+                                           [1, 0, 0]])
+    obj.classification.warm_liquid = np.array([[1, 1, 0],
+                                               [0, 0, 1],
+                                               [1, 0, 1]])
+    obj.classification.would_be_drizzle = np.array([[0, 1, 0],
+                                                    [0, 0, 1],
+                                                    [0, 0, 0]])
+    obj.classification.is_rain = np.array([1, 0, 0])
+    obj._get_retrieval_status()
+    assert value in obj.retrieval_status
+
+
+@pytest.fixture(scope='session')
+def result(class_objects, params_objects):
+    d_source, d_class, s_width = class_objects
+    errors = get_drizzle_error(d_source, params_objects)
+    cal_products = CalculateProducts(d_source, params_objects)
+    return {**params_objects.params, **cal_products.derived_products,
+            **errors}
+
+
+def test_screen_rain(class_objects, result):
+    d_source, d_class, s_width = class_objects
+    # TODO: Finnish code
     assert True
 
 
-def test_read_input_uncertainty(class_objects, params_objects):
+@pytest.mark.parametrize("key", [
+    "Do", "mu", "S", "beta_corr", "drizzle_N", "drizzle_lwc", "drizzle_lwf", "v_drizzle",
+    "v_air", "Do_error", "drizzle_lwc_error", "drizzle_lwf_error", "S_error",
+    "Do_bias", "drizzle_lwc_bias", "drizzle_lwf_bias", "drizzle_N_error",
+    "v_drizzle_error", "mu_error", "drizzle_N_bias", "v_drizzle_bias"])
+def test_append_data(class_objects, result, key):
+    from cloudnetpy.products.drizzle import _append_data
     d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_errors(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_parameter_errors(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_dia_error(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_lwc_error(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_lwf_error(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_s_error(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_error(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_stack_errors(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_add_error_component(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_parameter_biases(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_bias(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_add_supplementary_errors(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_n_error(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_v_error(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_add_supplementary_biases(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_calc_n_bias(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
-
-
-def test_convert_to_db(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateErrors(d_source, params_objects)
-    assert True
+    _append_data(d_source, result)
+    print(key)
+    assert key in d_source.data.keys()
 
 
 @pytest.mark.parametrize("x, result", [
@@ -519,15 +481,3 @@ def test_lin2db(x, result):
 def test_lin2db_raise():
     with pytest.raises(ValueError):
         drizzle.lin2db(-1)
-
-"""
-def test_get_drizzle_indices():
-    dia = np.array([-1, 2 * 1e-5, 1, 1e-6])
-    d = drizzle.CalculateErrors._get_drizzle_indices(dia)
-    correct = {'drizzle': [False, True, True, True],
-               'small': [False, True, False, False],
-               'tiny': [False, False, False, True]}
-    for key in d.keys():
-        testing.assert_array_equal(d[key], correct[key])
-"""
-
