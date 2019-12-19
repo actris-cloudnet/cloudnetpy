@@ -437,7 +437,7 @@ def result(class_objects, params_objects):
 
 def test_screen_rain(class_objects, result):
     d_source, d_class, s_width = class_objects
-    # TODO: Finnish code
+    # TODO: Finish code
     assert True
 
 
