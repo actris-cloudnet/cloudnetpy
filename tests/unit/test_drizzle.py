@@ -277,11 +277,18 @@ def test_find_lut_indices(class_objects):
                                 (ind, dia_init, n_dia, n_width), compare)
 
 
-def test_update_result_tables(class_objects):
-    # TODO: How to test? oikeisiin paikkoihin
+@pytest.mark.parametrize('key, value', [
+    ('Do', 10),
+    ('mu', -1),
+    ('S', 93.7247943)])
+def test_update_result_tables(class_objects, key, value):
     d_source, d_class, s_width = class_objects
     obj = DrizzleSolving(d_source, d_class, s_width)
-    assert True
+    ind = (0, 1)
+    dia = 10
+    lut = (0, 1)
+    obj._update_result_tables(ind, dia, lut)
+    testing.assert_almost_equal(obj.params[key][ind], value)
 
 
 def test_is_converged(class_objects):
@@ -310,10 +317,14 @@ def params_objects(class_objects):
 
 
 def test_find_indices(class_objects, params_objects):
-    # TODO: how to test
     d_source, d_class, s_width = class_objects
     obj = CalculateProducts(d_source, params_objects)
-    assert True
+    obj.parameters['Do'] = np.array([[0.0, 1.0, 1.0],
+                                     [1.0, 1.0, 0.0]])
+    x, y = obj._find_indices()
+    compare = (np.array([0, 0, 1, 1]),
+               np.array([1, 2, 0, 1]))
+    testing.assert_array_almost_equal(x, compare)
 
 
 @pytest.mark.parametrize('key', [
@@ -343,19 +354,23 @@ def test_calc_lwc(class_objects, params_objects):
 
 
 def test_calc_lwf(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
-    obj = CalculateProducts(d_source, params_objects)
-    assert True
-
-
-def test_calc_fall_velocity(class_objects, params_objects):
+    # TODO: fix this
     d_source, d_class, s_width = class_objects
     obj = CalculateProducts(d_source, params_objects)
     lwc_in = np.array([[0.001, 0.001, 0.002],
                        [0.003, 0.002, 0.001]])
-    compare = np.array([[0.001, 0.001, 0.002],
-                        [0.003, 0.002, 0.001]])
+    compare = np.array([[0.001, 0.005508, 0.011016],
+                        [0.016524, 0.011016, 0.001]])
     testing.assert_array_almost_equal(obj._calc_lwf(lwc_in), compare)
+
+
+def test_calc_fall_velocity(class_objects, params_objects):
+    # TODO: fix this
+    d_source, d_class, s_width = class_objects
+    obj = CalculateProducts(d_source, params_objects)
+    compare = np.array([[0, -7.11002091, -7.11002091],
+                        [-7.11002091, -7.11002091, 0]])
+    testing.assert_array_almost_equal(obj._calc_fall_velocity(), compare)
 
 
 def test_calc_v_air(class_objects, params_objects):
@@ -436,9 +451,15 @@ def result(class_objects, params_objects):
 
 
 def test_screen_rain(class_objects, result):
+    from cloudnetpy.products.drizzle import _screen_rain
     d_source, d_class, s_width = class_objects
-    # TODO: Finish code
-    assert True
+    result = _screen_rain(result, d_class)
+    compare = True
+    for key in result.keys():
+        if not utils.isscalar(result[key]):
+            if not np.any(result[key][-1]) == np.any(np.array([0, 0, 0])):
+                compare = False
+    assert compare is True
 
 
 @pytest.mark.parametrize("key", [
@@ -450,7 +471,6 @@ def test_append_data(class_objects, result, key):
     from cloudnetpy.products.drizzle import _append_data
     d_source, d_class, s_width = class_objects
     _append_data(d_source, result)
-    print(key)
     assert key in d_source.data.keys()
 
 
