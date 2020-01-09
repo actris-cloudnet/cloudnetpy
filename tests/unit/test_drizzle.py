@@ -1,11 +1,6 @@
-from unittest import TestCase
-
-import numpy as np
 from numpy import testing
-from collections import namedtuple
 import pytest
 from pathlib import Path
-import netCDF4
 import cloudnetpy.products.drizzle as drizzle
 from cloudnetpy.products.drizzle import *
 from cloudnetpy.products.drizzle_error import get_drizzle_error
@@ -487,17 +482,3 @@ def test_db2lin(x, result):
 def test_db2lin_raise():
     with pytest.raises(ValueError):
         drizzle.db2lin(150)
-
-
-@pytest.mark.parametrize("x, result", [
-    (1e6, 60),
-    (1e5, 50),
-    (1e4, 40),
-])
-def test_lin2db(x, result):
-    testing.assert_array_almost_equal(drizzle.lin2db(x), result, decimal=3)
-
-
-def test_lin2db_raise():
-    with pytest.raises(ValueError):
-        drizzle.lin2db(-1)
