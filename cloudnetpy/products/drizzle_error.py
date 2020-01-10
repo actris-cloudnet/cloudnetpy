@@ -21,6 +21,7 @@ MU_ERROR_SMALL = 0.25
 def get_drizzle_error(categorize, drizzle_parameters):
     parameters = drizzle_parameters.params
     drizzle_indices = _get_drizzle_indices(parameters['Do'])
+    print(drizzle_indices['small'])
     error_input = _read_input_uncertainty(categorize, 'error')
     bias_input = _read_input_uncertainty(categorize, 'bias')
     errors = _calc_errors(drizzle_indices, error_input, bias_input)
