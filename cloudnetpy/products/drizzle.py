@@ -11,6 +11,7 @@ from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import ProductClassification
+from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 
 def generate_drizzle(categorize_file, output_file):
@@ -36,13 +37,13 @@ def generate_drizzle(categorize_file, output_file):
     drizzle_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
     spectral_width = CorrectSpectralWidth(categorize_file)
-    drizzle_parameters = DrizzleSolving\
-        (drizzle_data, drizzle_class, spectral_width)
+    drizzle_parameters = DrizzleSolving(drizzle_data, drizzle_class,
+                                        spectral_width)
     derived_products = CalculateProducts(drizzle_data, drizzle_parameters)
-    errors = CalculateErrors(drizzle_data, drizzle_parameters)
+    errors = get_drizzle_error(drizzle_data, drizzle_parameters)
     retrieval_status = RetrievalStatus(drizzle_class)
     results = {**drizzle_parameters.params, **derived_products.derived_products,
-               **errors.errors}
+               **errors}
     results = _screen_rain(results, drizzle_class)
     results['drizzle_retrieval_status'] = retrieval_status.retrieval_status
     _append_data(drizzle_data, results)
@@ -83,10 +84,9 @@ class DrizzleSource(DataSource):
         nc.close()
         return lut
 
-    @staticmethod
-    def _get_mie_file():
-        module_path = os.path.dirname(os.path.abspath(__file__))
-        return '/'.join((module_path, 'mie_lu_tables.nc'))
+    def _get_mie_file(self):
+        self._module_path = os.path.dirname(os.path.abspath(__file__))
+        return '/'.join((self._module_path, 'mie_lu_tables.nc'))
 
     def _get_wl_band(self):
         """Returns string corresponding the radar frequency."""
@@ -170,17 +170,12 @@ class CorrectSpectralWidth:
     """
     def __init__(self, cat_file):
         self.cat_file = cat_file
-        self.width_ht = self.calculate_spectral_width()
+        self.width_ht = self._calculate_spectral_width()
 
-    def calculate_spectral_width(self):
+    def _calculate_spectral_width(self):
         width, v_sigma = p_tools.read_nc_fields(self.cat_file, ['width', 'v_sigma'])
         sigma_factor = self._calc_v_sigma_factor()
         return width - sigma_factor * v_sigma
-
-    def _calc_beam_divergence(self):
-        beam_width = 0.5
-        height = p_tools.read_nc_fields(self.cat_file, 'height')
-        return height * np.deg2rad(beam_width)
 
     def _calc_v_sigma_factor(self):
         beam_divergence = self._calc_beam_divergence()
@@ -188,6 +183,11 @@ class CorrectSpectralWidth:
         actual_wind = (wind + beam_divergence) ** (2/3)
         scaled_wind = (30*wind + beam_divergence) ** (2/3)
         return actual_wind / (scaled_wind - actual_wind)
+
+    def _calc_beam_divergence(self):
+        beam_width = 0.5
+        height = p_tools.read_nc_fields(self.cat_file, 'height')
+        return height * np.deg2rad(beam_width)
 
     def _calc_horizontal_wind(self):
         """Calculates magnitude of horizontal wind.
@@ -230,21 +230,22 @@ class DrizzleSolving:
     def _calc_beta_z_ratio(self):
         return 2 / np.pi * self.data.beta / self.data.z
 
-    def _find_lut_indices(self, i, j, dia_init, n_dia, n_widths):
-        ind_dia = bisect_left(self.data.mie['Do'], dia_init[i, j], hi=n_dia-1)
-        ind_width = bisect_left(self.width_lut[:, ind_dia], -self.width_ht[i, j], hi=n_widths-1)
+    def _find_lut_indices(self, ind, dia_init, n_dia, n_widths):
+        ind_dia = bisect_left(self.data.mie['Do'], dia_init[ind], hi=n_dia-1)
+        ind_width = bisect_left(self.width_lut[:, ind_dia], -self.width_ht[ind],
+                                hi=n_widths-1)
         # Ei varmaa toimiiko negaatio -self.width_ht:lle, tarkastetaan
         return ind_width, ind_dia
 
-    def _update_result_tables(self, i, j, dia, lut_ind):
-        self.params['Do'][i, j] = dia
-        self.params['mu'][i, j] = self.data.mie['mu'][lut_ind[0]]
-        self.params['S'][i, j] = self.data.mie['S'][lut_ind]
+    def _update_result_tables(self, ind, dia, lut_ind):
+        self.params['Do'][ind] = dia
+        self.params['mu'][ind] = self.data.mie['mu'][lut_ind[0]]
+        self.params['S'][ind] = self.data.mie['S'][lut_ind]
 
     @staticmethod
-    def _is_converged(i, j, dia, dia_init):
+    def _is_converged(ind, dia, dia_init):
         threshold = 1e-3
-        return abs((dia - dia_init[i, j]) / dia_init[i, j]) < threshold
+        return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold
 
     @staticmethod
     def _calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
@@ -273,19 +274,19 @@ class DrizzleSolving:
         n_widths, n_dia = self.width_lut.shape[0], len(self.data.mie['Do'])
         # width_ht = -self.width_ht
         max_ite = 10
-        for i, j in zip(*drizzle_ind):
+        for ind in zip(*drizzle_ind):
             for _ in range(max_ite):
-                lut_ind = self._find_lut_indices(i, j, dia_init, n_dia, n_widths)
-                dia = self._calc_dia(self.beta_z_ratio[i, j] * self.params['beta_corr'][i, j],
+                lut_ind = self._find_lut_indices(ind, dia_init, n_dia, n_widths)
+                dia = self._calc_dia(self.beta_z_ratio[ind] * self.params['beta_corr'][ind],
                                self.data.mie['mu'][lut_ind[0]],
                                self.data.mie['ray'][lut_ind],
                                self.data.mie['S'][lut_ind])
-                self. _update_result_tables(i, j, dia, lut_ind)
-                if self._is_converged(i, j, dia, dia_init):
+                self. _update_result_tables(ind, dia, lut_ind)
+                if self._is_converged(ind, dia, dia_init):
                     break
-                self.dia_init[i, j] = dia
-            beta_factor = np.exp(2*self.params['S'][i, j]*self.data.beta[i, j]*self.data.dheight)
-            self.params['beta_corr'][i, (j+1):] *= beta_factor
+                self.dia_init[ind] = dia
+            beta_factor = np.exp(2*self.params['S'][ind]*self.data.beta[ind]*self.data.dheight)
+            self.params['beta_corr'][ind[0], (ind[-1]+1):] *= beta_factor
 
 
 class CalculateProducts:
@@ -328,7 +329,8 @@ class CalculateProducts:
     def _calc_lwf(self, lwc_in):
         """Calculates drizzle liquid water flux."""
         flux = ma.copy(lwc_in)
-        flux[self.ind_drizzle] *= self.data.mie['lwf'][self.ind_lut] * self.data.mie['termv'][self.ind_lut[1]]
+        flux[self.ind_drizzle] *= self.data.mie['lwf'][self.ind_lut] * \
+                                  self.data.mie['termv'][self.ind_lut[1]]
         return flux
 
     def _calc_fall_velocity(self):
@@ -342,124 +344,6 @@ class CalculateProducts:
         velocity = -np.copy(droplet_velocity)
         velocity[self.ind_drizzle] += self.data.v[self.ind_drizzle]
         return velocity
-
-
-class CalculateErrors:
-    """Estimates errors in the retrieved drizzle products."""
-    def __init__(self, categorize, drizzle_parameters):
-        self.categorize = categorize
-        self.parameters = drizzle_parameters.params
-        self.mu_error = 0.07
-        self.mu_error_small = 0.25
-        self.drizzle_indices = self._get_drizzle_indices(self.parameters['Do'])
-        self.error_input = self._read_input_uncertainty('error')
-        self.bias_input = self._read_input_uncertainty('bias')
-        self.errors = self._calc_errors()
-
-    @staticmethod
-    def _get_drizzle_indices(diameter):
-        return {'drizzle': diameter > 0,
-                'small': np.logical_and(diameter <= 1e-4, diameter > 1e-5),
-                'tiny': np.logical_and(diameter <= 1e-5, diameter > 0)}
-
-    def _read_input_uncertainty(self, uncertainty_type):
-        return tuple(db2lin(self.categorize.getvar(f'{key}_{uncertainty_type}'))
-                     for key in ('Z', 'beta'))
-
-    def _calc_errors(self):
-        errors = self._calc_parameter_errors()
-        biases = self._calc_parameter_biases()
-        self.results = {**errors, **biases}
-        self._add_supplementary_errors()
-        self._add_supplementary_biases()
-        return self._convert_to_db()
-
-    def _calc_parameter_errors(self):
-        return {'Do_error': self._calc_dia_error(),
-                'drizzle_lwc_error': self._calc_lwc_error(),
-                'drizzle_lwf_error': self._calc_lwf_error(),
-                'S_error': self._calc_s_error()}
-
-    def _calc_dia_error(self):
-        error = self._calc_error(2/7, (1, 1), add_mu=True)
-        error_small = self._calc_error(1/4, (1, 1), add_mu_small=True)
-        return self._stack_errors(error, error_small)
-
-    def _calc_lwc_error(self):
-        error = self._calc_error(1/7, (1, 6))
-        error_small = self._calc_error(1/4, (1, 3))
-        return self._stack_errors(error, error_small)
-
-    def _calc_lwf_error(self):
-        error = self._calc_error(1/7, (3, 4), add_mu=True)
-        error_small = self._calc_error(1/2, (1, 1), add_mu_small=True)
-        error_tiny = self._calc_error(1/4, (3, 1), add_mu_small=True)
-        return self._stack_errors(error, error_small, error_tiny)
-
-    def _calc_s_error(self):
-        error = self._calc_error(1/2, (1, 1))
-        return self._stack_errors(error)
-
-    def _calc_error(self, scale, weights, add_mu=False, add_mu_small=False):
-        error = utils.l2norm_weighted(self.error_input, scale, weights)
-        if add_mu:
-            error = utils.l2norm(error, self.mu_error)
-        if add_mu_small:
-            error = utils.l2norm(error, self.mu_error_small)
-        return error
-
-    def _stack_errors(self, error_in, error_small=None, error_tiny=None):
-        error = ma.zeros(error_in.shape)
-        self.add_error_component(error, error_in, self.drizzle_indices['drizzle'])
-        if error_small is not None:
-            self.add_error_component(error, error_small, self.drizzle_indices['small'])
-        if error_tiny is not None:
-            self.add_error_component(error, error_tiny, self.drizzle_indices['tiny'])
-        return error
-
-    @staticmethod
-    def add_error_component(error, source, ind):
-        error[ind] = source[ind]
-
-    def _calc_parameter_biases(self):
-        dia_bias = self._calc_bias(2/7, (1, 1))
-        lwc_bias = self._calc_bias(1/7, (1, 6))
-        lwf_bias = self._calc_bias(1/7, (3, 4))
-        return {'Do_bias': dia_bias,
-                'drizzle_lwc_bias': lwc_bias,
-                'drizzle_lwf_bias': lwf_bias}
-
-    def _calc_bias(self, scale, weights):
-        return utils.l2norm_weighted(self.bias_input, scale, weights)
-
-    def _add_supplementary_errors(self):
-        self.results['drizzle_N_error'] = self._calc_n_error()
-        self.results['v_drizzle_error'] = self._calc_v_error()
-        self.results['mu_error'] = self.mu_error
-
-    def _calc_n_error(self):
-        z_error = self.error_input[0]
-        dia_error = db2lin(self.results['Do_error'])
-        n_error = utils.l2norm(z_error, 6*dia_error)
-        return self._stack_errors(n_error)
-
-    def _calc_v_error(self):
-        error = self.results['Do_error']
-        error[self.drizzle_indices['tiny']] *= error[self.drizzle_indices['tiny']]
-        return error
-
-    def _add_supplementary_biases(self):
-        self.results['drizzle_N_bias'] = self._calc_n_bias()
-        self.results['v_drizzle_bias'] = self.results['Do_bias']
-
-    def _calc_n_bias(self):
-        z_bias = self.bias_input[0]
-        dia_bias = db2lin(self.results['Do_bias'])
-        return utils.l2norm_weighted((z_bias, dia_bias), 1, (1, 6))
-
-    def _convert_to_db(self):
-        """Converts linear error values to dB."""
-        return {name: lin2db(value) for name, value in self.results.items()}
 
 
 class RetrievalStatus:
@@ -603,8 +487,3 @@ def db2lin(x):
         raise ValueError('Too large values in drizzle.db2lin()')
     return ma.exp(x / COR) - 1
 
-
-def lin2db(x):
-    if ma.min(x) < -0.9:
-        raise ValueError('Too small values in drizzle.lin2db()')
-    return ma.log(x + 1) * COR
