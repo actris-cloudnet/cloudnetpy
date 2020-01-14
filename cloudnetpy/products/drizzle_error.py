@@ -19,6 +19,16 @@ MU_ERROR_SMALL = 0.25
 
 
 def get_drizzle_error(categorize, drizzle_parameters):
+    """ Estimates error and bias for drizzle classification.
+
+    Args:
+        categorize (DrizzleSource): The :class:`DrizzleSource` instance.
+        drizzle_parameters (DrizzleSolving): The :class:`DrizzleSolving` instance.
+
+    Returns:
+        errors (dict): Dictionary containing information of estimated error and bias for drizzle
+
+    """
     parameters = drizzle_parameters.params
     drizzle_indices = _get_drizzle_indices(parameters['Do'])
     print(drizzle_indices['small'])
