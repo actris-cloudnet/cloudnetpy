@@ -209,9 +209,10 @@ class DrizzleSolving:
         width_ht (ndarray): 2D corrected spectral width.
 
     Attributes:
-        dict: Dictionary of retrieved drizzle parameters, `Do`, `mu`, `S`, `beta_corr`.
         data (DrizzleSource): The :class:`DrizzleSource` instance.
         drizzle_class (DrizzleSource): The :class:`DrizzleSource` instance.
+        width_ht (ndarray): 2D array of spectral width information.
+        params (dict): Dictionary of retrieved drizzle parameters, `Do`, `mu`, `S`, `beta_corr`.
 
     """
     def __init__(self, drizzle_source, drizzle_class, spectral_width):
@@ -349,6 +350,7 @@ class CalculateProducts:
 
 
 class RetrievalStatus:
+    """Generates drizzle retrieval status information."""
     def __init__(self, drizzle_class):
         self.classification = drizzle_class
         self._get_retrieval_status()
