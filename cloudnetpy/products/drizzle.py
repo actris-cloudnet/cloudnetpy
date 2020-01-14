@@ -163,9 +163,9 @@ class CorrectSpectralWidth:
     Args:
         cat_file (str): Categorize file name.
 
-    Returns:
-        ndarray: Spectral width containing the correction for turbulence
-        broadening.
+    Attributes:
+        cat_file (str): Categorize file name.
+        width_ht (ndarray): 2D array of spectral width information.
 
     """
     def __init__(self, cat_file):
@@ -204,12 +204,14 @@ class DrizzleSolving:
     """Estimates drizzle parameters.
 
     Args:
-        data (DrizzleSource): The :class:`DrizzleSource` instance.
+        drizzle_source (DrizzleSource): The :class:`DrizzleSource` instance.
         drizzle_class (DrizzleClassification): The :class:`DrizzleClassification` instance.
         width_ht (ndarray): 2D corrected spectral width.
 
-    Returns:
+    Attributes:
         dict: Dictionary of retrieved drizzle parameters, `Do`, `mu`, `S`, `beta_corr`.
+        data (DrizzleSource): The :class:`DrizzleSource` instance.
+        drizzle_class (DrizzleSource): The :class:`DrizzleSource` instance.
 
     """
     def __init__(self, drizzle_source, drizzle_class, spectral_width):

@@ -68,7 +68,6 @@ def test_iwc_z_factor(iwc_source_file):
     assert compare == round(obj.z_factor, 3)
 
 
-# TODO: Might not be the best test for this
 @pytest.mark.parametrize("result", [
     'K2liquid0', 'ZT', 'T', 'Z', 'c'])
 def test_iwc_coeffs(result, iwc_source_file):
@@ -77,16 +76,14 @@ def test_iwc_coeffs(result, iwc_source_file):
 
 
 def test_iwc_temperature(iwc_source_file):
-    # TODO: test with different model grid
     obj = IwcSource(iwc_source_file)
     compare = np.array([[8.85, 6.85, 4.85],
                        [12.85, 10.85, 8.85],
-                      [10.85, 8.85, 6.85]])
+                       [10.85, 8.85, 6.85]])
     testing.assert_almost_equal(compare, obj.temperature)
 
 
 def test_iwc_mean_temperature(iwc_source_file):
-    # TODO: test with different model grid
     obj = IwcSource(iwc_source_file)
     compare = np.array([10.85, 8.85, 6.85])
     testing.assert_almost_equal(compare, obj.mean_temperature)
@@ -180,8 +177,6 @@ def test_find_cold_above_rain(cold, is_rain, melting, result, iwc_cat_file):
     obj.is_rain = is_rain
     testing.assert_array_equal(obj._find_cold_above_rain().data, result)
 
-
-# TODO: Think also values as some point for tests below
 
 """
 def test_z_to_iwc(iwc_source_file):

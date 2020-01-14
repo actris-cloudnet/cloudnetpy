@@ -130,7 +130,21 @@ class Lwc:
 
 
 class LwcStatus:
-    """Adjust clouds (where possible) so that theoretical and measured LWP agree."""
+    """Adjust clouds (where possible) so that theoretical and measured LWP agree.
+
+    Args:
+        lwc_source (LwcSource): The :class:`LwcSource` instance.
+        lwc_obj (Lwc):  The :class:`Lwc` instance.
+
+    Attributes:
+        lwc_source (LwcSource): The :class:`LwcSource` instance.
+        lwc (Lwc): The :class:`Lwc` instance
+        is_liquid (ndarray): 2D array denoting liquid.
+        lwc_adiabatic (ndarray): 2D array storing adiabatic lwc.
+        echo (dict): Dictionary storing radar and lidar echos
+        status (ndarray): 2D array storing lwc status classification
+
+    """
     def __init__(self, lwc_source, lwc_obj):
         self.lwc_source = lwc_source
         self.lwc = lwc_obj.lwc
@@ -247,7 +261,18 @@ class LwcStatus:
 
 
 class LwcError:
-    """Calculates liquid water content error. """
+    """Calculates liquid water content error.
+
+    Args:
+        lwc_source (LwcSource): The :class:`LwcSource` instance.
+        lwc_obj (Lwc):  The :class:`Lwc` instance.
+
+    Attributes:
+        lwc_source (LwcSource): The :class:`LwcSource` instance.
+        lwc (Lwc): The :class:`Lwc` instance
+        lwc_error (ndarray): 2D array storing lwc_error.
+
+    """
     def __init__(self, lwc_source, lwc_obj):
         self.lwc = lwc_obj.lwc
         self.lwc_source = lwc_source

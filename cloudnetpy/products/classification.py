@@ -26,16 +26,16 @@ def generate_classification(categorize_file, output_file):
     """
     data_handler = DataSource(categorize_file)
     categorize_bits = CategorizeBits(categorize_file)
-    classification = get_target_classification(categorize_bits)
+    classification = _get_target_classification(categorize_bits)
     data_handler.append_data(classification, 'target_classification')
-    status = get_detection_status(categorize_bits)
+    status = _get_detection_status(categorize_bits)
     data_handler.append_data(status, 'detection_status')
     output.update_attributes(data_handler.data, CLASSIFICATION_ATTRIBUTES)
     output.save_product_file('classification', data_handler, output_file)
     data_handler.close()
 
 
-def get_target_classification(categorize_bits):
+def _get_target_classification(categorize_bits):
     bits = categorize_bits.category_bits
     clutter = categorize_bits.quality_bits['clutter']
     classification = np.zeros(bits['cold'].shape, dtype=int)
@@ -53,7 +53,7 @@ def get_target_classification(categorize_bits):
     return classification
 
 
-def get_detection_status(categorize_bits):
+def _get_detection_status(categorize_bits):
     bits = categorize_bits.quality_bits
     status = np.zeros(bits['radar'].shape, dtype=int)
     status[bits['radar'] & bits['lidar']] = 1
