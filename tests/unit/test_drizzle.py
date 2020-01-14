@@ -197,7 +197,7 @@ def test_find_cold_rain(drizzle_cat_file):
 
 
 def test_calculate_spectral_width(drizzle_cat_file):
-    obj = drizzle.CorrectSpectralWidth(drizzle_cat_file)
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
     width = netCDF4.Dataset(drizzle_cat_file).variables['width'][:]
     v_sigma = netCDF4.Dataset(drizzle_cat_file).variables['v_sigma'][:]
     factor = obj._calc_v_sigma_factor()
@@ -206,7 +206,7 @@ def test_calculate_spectral_width(drizzle_cat_file):
 
 
 def test_calc_beam_divergence(drizzle_cat_file):
-    obj = drizzle.CorrectSpectralWidth(drizzle_cat_file)
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
     height = netCDF4.Dataset(drizzle_cat_file).variables['height'][:]
     compare = height * np.deg2rad(0.5)
     testing.assert_almost_equal(obj._calc_beam_divergence(), compare)
@@ -214,7 +214,7 @@ def test_calc_beam_divergence(drizzle_cat_file):
 
 def test_calc_v_sigma_factor(drizzle_cat_file):
     from cloudnetpy.utils import l2norm
-    obj = drizzle.CorrectSpectralWidth(drizzle_cat_file)
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
     height = netCDF4.Dataset(drizzle_cat_file).variables['height'][:]
     uwind = netCDF4.Dataset(drizzle_cat_file).variables['uwind'][:]
     vwind = netCDF4.Dataset(drizzle_cat_file).variables['vwind'][:]
@@ -228,7 +228,7 @@ def test_calc_v_sigma_factor(drizzle_cat_file):
 
 def test_calc_horizontal_wind(drizzle_cat_file):
     from cloudnetpy.utils import l2norm
-    obj = drizzle.CorrectSpectralWidth(drizzle_cat_file)
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
     uwind = netCDF4.Dataset(drizzle_cat_file).variables['uwind'][:]
     vwind = netCDF4.Dataset(drizzle_cat_file).variables['vwind'][:]
     compare = l2norm(uwind, vwind)
@@ -240,7 +240,7 @@ def test_calc_horizontal_wind(drizzle_cat_file):
 def class_objects(drizzle_source_file, drizzle_cat_file):
     drizzle_source = drizzle.DrizzleSource(drizzle_source_file)
     drizzle_class = drizzle.DrizzleClassification(drizzle_cat_file)
-    spectral_w = drizzle.CorrectSpectralWidth(drizzle_cat_file)
+    spectral_w = drizzle.SpectralWidth(drizzle_cat_file)
     return [drizzle_source, drizzle_class, spectral_w]
 
 

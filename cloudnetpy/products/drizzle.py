@@ -36,7 +36,7 @@ def generate_drizzle(categorize_file, output_file):
     """
     drizzle_data = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
-    spectral_width = CorrectSpectralWidth(categorize_file)
+    spectral_width = SpectralWidth(categorize_file)
     drizzle_parameters = DrizzleSolving(drizzle_data, drizzle_class,
                                         spectral_width)
     derived_products = CalculateProducts(drizzle_data, drizzle_parameters)
@@ -154,22 +154,23 @@ class DrizzleClassification(ProductClassification):
         return np.any(self.category_bits['melting'], axis=1)
 
 
-class CorrectSpectralWidth:
-    """Corrects spectral width.
+class SpectralWidth:
+    """Calculates corrected spectral width.
 
     Removes the effect of turbulence and horizontal wind that cause
     spectral broadening of the Doppler velocity.
 
     Args:
-        cat_file (str): Categorize file name.
+        categorize_file (str): Categorize file name.
 
-    Returns:
-        ndarray: Spectral width containing the correction for turbulence
-        broadening.
+    Attributes:
+        categorize_file (str): Categorize file name.
+        width_ht (ndarray): Spectral width containing the correction for turbulence
+            broadening.
 
     """
-    def __init__(self, cat_file):
-        self.cat_file = cat_file
+    def __init__(self, categorize_file):
+        self.cat_file = categorize_file
         self.width_ht = self._calculate_spectral_width()
 
     def _calculate_spectral_width(self):
@@ -234,7 +235,6 @@ class DrizzleSolving:
         ind_dia = bisect_left(self.data.mie['Do'], dia_init[ind], hi=n_dia-1)
         ind_width = bisect_left(self.width_lut[:, ind_dia], -self.width_ht[ind],
                                 hi=n_widths-1)
-        # Ei varmaa toimiiko negaatio -self.width_ht:lle, tarkastetaan
         return ind_width, ind_dia
 
     def _update_result_tables(self, ind, dia, lut_ind):
@@ -270,9 +270,7 @@ class DrizzleSolving:
     def solve_drizzle(self, dia_init):
         drizzle_ind = np.where(self.drizzle_class.drizzle == 1)
         dia_init[drizzle_ind] = self._calc_dia(self.beta_z_ratio[drizzle_ind], k=18.8)
-        # Negation because width look-up table is descending order:
         n_widths, n_dia = self.width_lut.shape[0], len(self.data.mie['Do'])
-        # width_ht = -self.width_ht
         max_ite = 10
         for ind in zip(*drizzle_ind):
             for _ in range(max_ite):
@@ -329,8 +327,8 @@ class CalculateProducts:
     def _calc_lwf(self, lwc_in):
         """Calculates drizzle liquid water flux."""
         flux = ma.copy(lwc_in)
-        flux[self.ind_drizzle] *= self.data.mie['lwf'][self.ind_lut] * \
-                                  self.data.mie['termv'][self.ind_lut[1]]
+        flux[self.ind_drizzle] *= (self.data.mie['lwf'][self.ind_lut]
+                                   * self.data.mie['termv'][self.ind_lut[1]])
         return flux
 
     def _calc_fall_velocity(self):
