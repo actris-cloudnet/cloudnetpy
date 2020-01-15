@@ -34,26 +34,38 @@ def generate_drizzle(categorize_file, output_file):
         J. Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
 
     """
-    drizzle_data = DrizzleSource(categorize_file)
+    drizzle_source = DrizzleSource(categorize_file)
     drizzle_class = DrizzleClassification(categorize_file)
     spectral_width = SpectralWidth(categorize_file)
-    drizzle_parameters = DrizzleSolving(drizzle_data, drizzle_class,
-                                        spectral_width)
-    derived_products = CalculateProducts(drizzle_data, drizzle_parameters)
-    errors = get_drizzle_error(drizzle_data, drizzle_parameters)
+    drizzle_solver = DrizzleSolver(drizzle_source, drizzle_class,
+                                   spectral_width)
+    derived_products = DrizzleProducts(drizzle_source, drizzle_solver)
+    errors = get_drizzle_error(drizzle_source, drizzle_solver)
     retrieval_status = RetrievalStatus(drizzle_class)
-    results = {**drizzle_parameters.params, **derived_products.derived_products,
+    results = {**drizzle_solver.params, **derived_products.derived_products,
                **errors}
     results = _screen_rain(results, drizzle_class)
     results['drizzle_retrieval_status'] = retrieval_status.retrieval_status
-    _append_data(drizzle_data, results)
-    output.update_attributes(drizzle_data.data, DRIZZLE_ATTRIBUTES)
-    output.save_product_file('drizzle', drizzle_data, output_file)
-    drizzle_data.close()
+    _append_data(drizzle_source, results)
+    output.update_attributes(drizzle_source.data, DRIZZLE_ATTRIBUTES)
+    output.save_product_file('drizzle', drizzle_source, output_file)
+    drizzle_source.close()
 
 
 class DrizzleSource(DataSource):
-    """Class holding the input data for drizzle calculations."""
+    """Class holding the input data for drizzle calculations.
+
+    Args:
+        categorize_file (str): Categorize file name.
+
+    Attributes:
+        mie (dict): Mie look-up table data.
+        dheight (float): Median difference of height array.
+        z (ndarray): 2D radar echo (linear units).
+        beta (ndarray): 2D lidar backscatter.
+        v (ndarray): 2D doppler velocity.
+
+    """
     def __init__(self, categorize_file):
         super().__init__(categorize_file)
         self.mie = self._read_mie_lut()
@@ -96,7 +108,8 @@ class DrizzleSource(DataSource):
 
 
 class DrizzleClassification(ProductClassification):
-    """Class storing the information about different drizzle types, child of  :class:`ProductClassification`.
+    """Class storing the information about different drizzle types,
+    child of  :class:`ProductClassification`.
 
     Args:
         categorize_file (str): Categorize file name.
@@ -165,8 +178,8 @@ class SpectralWidth:
 
     Attributes:
         categorize_file (str): Categorize file name.
-        width_ht (ndarray): Spectral width containing the correction for turbulence
-            broadening.
+        width_ht (ndarray): Spectral width containing the correction for
+            turbulence broadening.
 
     """
     def __init__(self, categorize_file):
@@ -201,46 +214,47 @@ class SpectralWidth:
         return utils.l2norm(u_wind, v_wind)
 
 
-class DrizzleSolving:
+class DrizzleSolver:
     """Estimates drizzle parameters.
 
     Args:
-        data (DrizzleSource): The :class:`DrizzleSource` instance.
+        drizzle_source (DrizzleSource): The :class:`DrizzleSource` instance.
         drizzle_class (DrizzleClassification): The :class:`DrizzleClassification` instance.
-        width_ht (ndarray): 2D corrected spectral width.
+        spectral_width (SpectralWidth): The :class:`SpectralWidth` instance.
 
-    Returns:
-        dict: Dictionary of retrieved drizzle parameters, `Do`, `mu`, `S`, `beta_corr`.
+    Attributes:
+        params (dict): Dictionary of retrieved drizzle parameters 'Do', 'mu',
+            'S', 'beta_corr'.
 
     """
     def __init__(self, drizzle_source, drizzle_class, spectral_width):
-        self.data = drizzle_source
-        self.drizzle_class = drizzle_class
-        self.width_ht = spectral_width.width_ht
-        self.width_lut = -self.data.mie['width'][:]
-        self.params, self.dia_init = self._init_variables()
-        self.beta_z_ratio = self._calc_beta_z_ratio()
-        self.solve_drizzle(self.dia_init)
+        self._data = drizzle_source
+        self._drizzle_class = drizzle_class
+        self._width_ht = spectral_width.width_ht
+        self._width_lut = -self._data.mie['width'][:]
+        self.params, self._dia_init = self._init_variables()
+        self._beta_z_ratio = self._calc_beta_z_ratio()
+        self._solve_drizzle(self._dia_init)
 
     def _init_variables(self):
-        shape = self.data.z.shape
+        shape = self._data.z.shape
         res = {'Do': np.zeros(shape), 'mu': np.zeros(shape),
                'S': np.zeros(shape), 'beta_corr': np.ones(shape)}
         return res, np.zeros(shape)
 
     def _calc_beta_z_ratio(self):
-        return 2 / np.pi * self.data.beta / self.data.z
+        return 2 / np.pi * self._data.beta / self._data.z
 
     def _find_lut_indices(self, ind, dia_init, n_dia, n_widths):
-        ind_dia = bisect_left(self.data.mie['Do'], dia_init[ind], hi=n_dia-1)
-        ind_width = bisect_left(self.width_lut[:, ind_dia], -self.width_ht[ind],
+        ind_dia = bisect_left(self._data.mie['Do'], dia_init[ind], hi=n_dia - 1)
+        ind_width = bisect_left(self._width_lut[:, ind_dia], -self._width_ht[ind],
                                 hi=n_widths-1)
         return ind_width, ind_dia
 
     def _update_result_tables(self, ind, dia, lut_ind):
         self.params['Do'][ind] = dia
-        self.params['mu'][ind] = self.data.mie['mu'][lut_ind[0]]
-        self.params['S'][ind] = self.data.mie['S'][lut_ind]
+        self.params['mu'][ind] = self._data.mie['mu'][lut_ind[0]]
+        self.params['S'][ind] = self._data.mie['S'][lut_ind]
 
     @staticmethod
     def _is_converged(ind, dia, dia_init):
@@ -267,39 +281,49 @@ class DrizzleSolving:
         const = ray * k * beta_z_ratio
         return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1 / 4)
 
-    def solve_drizzle(self, dia_init):
-        drizzle_ind = np.where(self.drizzle_class.drizzle == 1)
-        dia_init[drizzle_ind] = self._calc_dia(self.beta_z_ratio[drizzle_ind], k=18.8)
-        n_widths, n_dia = self.width_lut.shape[0], len(self.data.mie['Do'])
+    def _solve_drizzle(self, dia_init):
+        drizzle_ind = np.where(self._drizzle_class.drizzle == 1)
+        dia_init[drizzle_ind] = self._calc_dia(self._beta_z_ratio[drizzle_ind], k=18.8)
+        n_widths, n_dia = self._width_lut.shape[0], len(self._data.mie['Do'])
         max_ite = 10
         for ind in zip(*drizzle_ind):
             for _ in range(max_ite):
                 lut_ind = self._find_lut_indices(ind, dia_init, n_dia, n_widths)
-                dia = self._calc_dia(self.beta_z_ratio[ind] * self.params['beta_corr'][ind],
-                               self.data.mie['mu'][lut_ind[0]],
-                               self.data.mie['ray'][lut_ind],
-                               self.data.mie['S'][lut_ind])
+                dia = self._calc_dia(self._beta_z_ratio[ind] * self.params['beta_corr'][ind],
+                                     self._data.mie['mu'][lut_ind[0]],
+                                     self._data.mie['ray'][lut_ind],
+                                     self._data.mie['S'][lut_ind])
                 self. _update_result_tables(ind, dia, lut_ind)
                 if self._is_converged(ind, dia, dia_init):
                     break
-                self.dia_init[ind] = dia
-            beta_factor = np.exp(2*self.params['S'][ind]*self.data.beta[ind]*self.data.dheight)
+                self._dia_init[ind] = dia
+            beta_factor = np.exp(2 * self.params['S'][ind] * self._data.beta[ind] * self._data.dheight)
             self.params['beta_corr'][ind[0], (ind[-1]+1):] *= beta_factor
 
 
-class CalculateProducts:
-    """Calculates additional quantities from the drizzle properties."""
-    def __init__(self, drizzle_source, drizzle_parameters):
-        self.data = drizzle_source
-        self.parameters = drizzle_parameters.params
-        self.ind_drizzle, self.ind_lut = self._find_indices()
+class DrizzleProducts:
+    """Calculates additional quantities from the drizzle properties.
+
+    Args:
+        drizzle_source (DrizzleSource): The :class:`DrizzleSource` instance.
+        drizzle_solver (DrizzleSolver): The :class:`DrizzleSolver` instance.
+
+    Attributes:
+        derived_products (dict): Dictionary containing derived drizzle products:
+            'drizzle_N', 'drizzle_lwc', 'drizzle_lwf', 'v_drizzle', 'v_air'.
+
+    """
+    def __init__(self, drizzle_source, drizzle_solver):
+        self._data = drizzle_source
+        self._params = drizzle_solver.params
+        self._ind_drizzle, self._ind_lut = self._find_indices()
         self.derived_products = self._calc_derived_products()
 
     def _find_indices(self):
-        drizzle_ind = np.where(self.parameters['Do'])
-        ind_mu = np.searchsorted(self.data.mie['mu'], self.parameters['mu'][drizzle_ind])
-        ind_dia = np.searchsorted(self.data.mie['Do'], self.parameters['Do'][drizzle_ind])
-        n_widths, n_dia = len(self.data.mie['mu']), len(self.data.mie['Do'])
+        drizzle_ind = np.where(self._params['Do'])
+        ind_mu = np.searchsorted(self._data.mie['mu'], self._params['mu'][drizzle_ind])
+        ind_dia = np.searchsorted(self._data.mie['Do'], self._params['Do'][drizzle_ind])
+        n_widths, n_dia = len(self._data.mie['mu']), len(self._data.mie['Do'])
         ind_mu[ind_mu >= n_widths] = n_widths - 1
         ind_dia[ind_dia >= n_dia] = n_dia - 1
         return drizzle_ind, (ind_mu, ind_dia)
@@ -315,55 +339,66 @@ class CalculateProducts:
 
     def _calc_density(self):
         """Calculates drizzle number density (m-3)."""
-        return self.data.z * 3.67 ** 6 / self.parameters['Do'] ** 6
+        return self._data.z * 3.67 ** 6 / self._params['Do'] ** 6
 
     def _calc_lwc(self):
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
-        dia, mu, s = [self.parameters.get(key) for key in ('Do', 'mu', 'S')]
+        dia, mu, s = [self._params.get(key) for key in ('Do', 'mu', 'S')]
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
-        return rho_water / 3 * self.data.beta * s * dia * gamma_ratio
+        return rho_water / 3 * self._data.beta * s * dia * gamma_ratio
 
     def _calc_lwf(self, lwc_in):
         """Calculates drizzle liquid water flux."""
         flux = ma.copy(lwc_in)
-        flux[self.ind_drizzle] *= (self.data.mie['lwf'][self.ind_lut]
-                                   * self.data.mie['termv'][self.ind_lut[1]])
+        flux[self._ind_drizzle] *= (self._data.mie['lwf'][self._ind_lut]
+                                    * self._data.mie['termv'][self._ind_lut[1]])
         return flux
 
     def _calc_fall_velocity(self):
         """Calculates drizzle droplet fall velocity (m s-1)."""
-        velocity = np.zeros_like(self.parameters['Do'])
-        velocity[self.ind_drizzle] = -self.data.mie['v'][self.ind_lut]
+        velocity = np.zeros_like(self._params['Do'])
+        velocity[self._ind_drizzle] = -self._data.mie['v'][self._ind_lut]
         return velocity
 
     def _calc_v_air(self, droplet_velocity):
         """Calculates vertical air velocity."""
         velocity = -np.copy(droplet_velocity)
-        velocity[self.ind_drizzle] += self.data.v[self.ind_drizzle]
+        velocity[self._ind_drizzle] += self._data.v[self._ind_drizzle]
         return velocity
 
 
 class RetrievalStatus:
+    """Estimates the status of drizzle retrievals.
+
+    Args:
+        drizzle_class (DrizzleClassification): The :class:`DrizzleClassification` instance.
+
+    Attributes:
+        drizzle_class (DrizzleClassification): The :class:`DrizzleClassification` instance.
+        retrieval_status (ndarray): 2D array containing drizzle retrieval status
+            information.
+    """
     def __init__(self, drizzle_class):
-        self.classification = drizzle_class
+        self.drizzle_class = drizzle_class
+        self.retrieval_status = None
         self._get_retrieval_status()
 
+    def _get_retrieval_status(self):
+        self.retrieval_status = np.copy(self.drizzle_class.drizzle).astype(int)
+        self._find_retrieval_below_melting()
+        self.retrieval_status[self.drizzle_class.would_be_drizzle == 1] = 3
+        self._find_retrieval_in_warm_liquid()
+        self.retrieval_status[self.drizzle_class.is_rain == 1, :] = 5
+
     def _find_retrieval_below_melting(self):
-        cold_rain = utils.transpose(self.classification.cold_rain)
-        below_melting = cold_rain * self.classification.drizzle
+        cold_rain = utils.transpose(self.drizzle_class.cold_rain)
+        below_melting = cold_rain * self.drizzle_class.drizzle
         self.retrieval_status[below_melting == 1] = 2
 
     def _find_retrieval_in_warm_liquid(self):
-        in_warm_liquid = (self.retrieval_status == 0) * self.classification.warm_liquid
+        in_warm_liquid = (self.retrieval_status == 0) * self.drizzle_class.warm_liquid
         self.retrieval_status[in_warm_liquid == 1] = 4
-
-    def _get_retrieval_status(self):
-        self.retrieval_status = np.copy(self.classification.drizzle).astype(int)
-        self._find_retrieval_below_melting()
-        self.retrieval_status[self.classification.would_be_drizzle == 1] = 3
-        self._find_retrieval_in_warm_liquid()
-        self.retrieval_status[self.classification.is_rain == 1, :] = 5
 
 
 def _screen_rain(results, classification):
