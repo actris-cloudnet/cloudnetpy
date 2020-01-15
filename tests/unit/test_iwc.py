@@ -178,21 +178,6 @@ def test_find_cold_above_rain(cold, is_rain, melting, result, iwc_cat_file):
     testing.assert_array_equal(obj._find_cold_above_rain().data, result)
 
 
-"""
-def test_z_to_iwc(iwc_source_file):
-    from cloudnetpy.products.iwc import _z_to_iwc
-    data = IwcSource(iwc_source_file)
-    data.temperature = np.array([1, 2, 2])
-    data.mean_temperature = np.array([1.5])
-    data.z_factor = np.array([1, 2, 3])
-    Coefficients = namedtuple('Coefficients', 'K2liquid0 ZT T Z c')
-    data.coeffs = Coefficients(0.1, 0.1, 0.2, 0.05, 0)
-    obj = _z_to_iwc(data, 'Z')
-    # TODO: Also a bit complicated, continue later
-    assert True
-"""
-
-
 def test_append_iwc_including_rain(iwc_source_file, iwc_cat_file):
     from cloudnetpy.products.iwc import _append_iwc_including_rain
     ice_class = _IceClassification(iwc_cat_file)
@@ -227,12 +212,27 @@ def test_append_bias(iwc_source_file):
     assert 'iwc_bias' in ice_data.data.keys()
 
 
-"""
-def test_append_iwc_status(iwc_source_file, iwc_cat_file):
+# Create fake data to get all options for classification
+class IceClass:
+    def __init__(self):
+        self.corrected_ice = np.asarray([[0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0]], dtype=bool)
+        self.uncorrected_ice = np.asarray([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 0]], dtype=bool)
+        self.is_ice = np.asarray([[0, 1, 1, 0, 0, 0], [0, 0, 0, 1, 1, 0]], dtype=bool)
+        self.cold_above_rain = np.asarray([[0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0]], dtype=bool)
+        self.ice_above_rain = np.asarray([[0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0]], dtype=bool)
+        self.would_be_ice = np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0]], dtype=bool)
+
+
+@pytest.mark.parametrize('value', [
+    0, 1, 2, 3, 4, 5, 6, 7
+])
+def test_append_iwc_status(iwc_source_file, value):
     from cloudnetpy.products.iwc import _append_iwc_status
-    ice_class = _IceClassification(iwc_cat_file)
+    ice_class = IceClass()
     ice_data = IwcSource(iwc_source_file)
-    ice_data.data['iwc'] = [1, 1, 1]
-    # TODO: This is a bit more complicated then other. How to test?
-    assert True
-"""
+    ice_data.data['iwc'] = np.ma.array([[1, 1, 1, 1, 1, 1],
+                                        [1, 1, 1, 1, 1, 1]],
+                                       mask=[[True, True, False, False, False, False],
+                                             [True, True, True, False, False, False]])
+    _append_iwc_status(ice_data, ice_class)
+    assert value in ice_data.data['iwc_retrieval_status'][:]
