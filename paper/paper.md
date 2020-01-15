@@ -13,7 +13,6 @@ authors:
   - name: Ewan O'Connor
     affiliation: 1
   - name: Anniina Korpinen
-    affiliation: 1
 affiliations:
  - name: Finnish Meteorological Institute, Helsinki, Finland
    index: 1
@@ -23,15 +22,15 @@ bibliography: paper.bib
 
 # Summary
 
-Active ground-based remote sensing instruments such as cloud radars and lidars
+Active ground-based remote sensing instruments such as cloud radars and lidars 
 provide vertical profiles of clouds and aerosols with high vertical and 
 temporal resolution. Cloud radars typically operate in the sub-millimeter 
 wavelength region, around 35 or 94 GHz, 
-mainly providing information on ice clouds, rain and insects. Optical lidars,
+mainly providing information on ice clouds, rain and insects. Optical lidars, 
 on the other hand, are more sensitive to liquid clouds and aerosols. 
 Combining these two supplementary data sources with temperature and humidity 
-from a numerical weather prediction model makes it possible to classify 
-various scattering objects of the atmosphere, such as ice particles, water droplets and aerosols.
+from a numerical weather prediction model makes it possible to accurately classify 
+various scattering objects of the atmosphere, such as drizzle and melting ice particles. 
 Furthermore, adding a passive microwave radiometer, an instrument measuring 
 liquid water path, quantitative retrievals of geophysical 
 products such as ice water content, liquid water content 
@@ -42,8 +41,9 @@ and to retrieve target classification and other products, were developed within
 the so-called Cloudnet project [@IllingworthEtAl07]. Since the project started 
 in 2002, a network of around 15 stations around Europe has been established 
 to regularly collect, process and distribute Cloudnet data (http://cloudnet.fmi.fi). 
-While the methodology is valid, more robust and operational processing 
-software is called for (What is meant by robust and operational? Can also be explained in the next sentence, e.g. because we're dealing with huge amounts of data we can't use matlab anymore, and have to use something more modern.). In the forthcoming years, Cloudnet will be one of 
+While the methodology is valid, it is important to have a Cloudnet software 
+that can efficiently handle large amounts of data and reliably perform 
+continuous data processing. In the forthcoming years, Cloudnet will be one of 
 the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
 Infrastructure) [@ACTRIS_handbook], where the Cloudnet framework 
 is utilized to process gigabytes of cloud remote sensing data per day 
@@ -52,24 +52,24 @@ and is supposed to be fully operational in 2025.
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers the full Cloudnet processing chain starting from the raw 
-measurements and providing roughly the same functionality as the original 
-Cloudnet software written in Matlab and C (citation?). The outputs of the two programs 
-are similar but not identical because several methods were revised 
-during the refactoring process. For example, because most modern cloud 
+measurements and providing roughly the same functionality as the original, 
+proprietary Cloudnet software written in Matlab and C. The outputs of the
+two programs are similar but not identical because several methods were 
+revised during the refactoring process. For example, because most modern cloud 
 radars are polarimetric, CloudnetPy uses linear depolarization ratio 
 to improve the detection of melting layer and insects. Also the 
 liquid layer detection is now based on the shape of lidar backscatter 
-profile instead of threshold values [@TuononenEtAl19]. Detailed
-verification of the updated methods is a subject of future studies.
-The CloudnetPy API is designed to serve the operational processing (What operational processing?), but 
-it should be straightforward for site operators and scientific community
-with access to raw data to run the software, improve existing 
-methods and develop new products.
+profile instead of threshold values [@TuononenEtAl19]. Detailed 
+verification of the updated methods is a subject of future studies. 
+The CloudnetPy API is designed to serve the operational cloud remote sensing data 
+processing in ACTRIS, but it should be straightforward for site operators and 
+scientific community with access to raw data to run the software, improve 
+existing methods and develop new products.
 
 
 # Acknowledgements
 
-The authors would like to thank the Academy of Finland for supporting
-the development of ACTRIS activities in Finland.
+The authors would like to thank Lauri Kangassalo for providing comments on the manuscript 
+and the Academy of Finland for supporting ACTRIS activities in Finland.
 
 # References
