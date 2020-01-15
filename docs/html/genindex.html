@@ -159,7 +159,6 @@
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
- | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
@@ -187,16 +186,14 @@
 </li>
       <li><a href="api.html#categorize.radar.Radar.add_meta">add_meta() (categorize.radar.Radar method)</a>
 </li>
-      <li><a href="api.html#products.lwc.Lwc.adjust_clouds_to_match_lwp">adjust_clouds_to_match_lwp() (products.lwc.Lwc method)</a>
-</li>
       <li><a href="api.html#categorize.datasource.DataSource.altitude">altitude (categorize.datasource.DataSource attribute)</a>
 </li>
       <li><a href="api.html#categorize.datasource.DataSource.append_data">append_data() (categorize.datasource.DataSource method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.array_to_probability">array_to_probability() (in module utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#products.lwc.LwcSource.atmosphere">atmosphere (products.lwc.LwcSource attribute)</a>
 </li>
       <li><a href="api.html#categorize.atmos.GasAttenuation.atten">atten (categorize.atmos.GasAttenuation attribute)</a>
@@ -216,7 +213,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#categorize.classify.ClassData.beta">beta (categorize.classify.ClassData attribute)</a>
+
+      <ul>
+        <li><a href="api.html#products.drizzle.DrizzleSource.beta">(products.drizzle.DrizzleSource attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.binvec">binvec() (in module utils)</a>
@@ -235,17 +236,11 @@
 </li>
       <li><a href="api.html#categorize.atmos.calc_dew_point_temperature">calc_dew_point_temperature() (in module categorize.atmos)</a>
 </li>
-      <li><a href="api.html#products.drizzle.calc_dia">calc_dia() (in module products.drizzle)</a>
-</li>
       <li><a href="api.html#categorize.radar.Radar.calc_errors">calc_errors() (categorize.radar.Radar method)</a>
-</li>
-      <li><a href="api.html#products.drizzle.calc_horizontal_wind">calc_horizontal_wind() (in module products.drizzle)</a>
 </li>
       <li><a href="api.html#cloudnetarray.RadarArray.calc_linear_std">calc_linear_std() (cloudnetarray.RadarArray method)</a>
 </li>
       <li><a href="api.html#categorize.atmos.calc_lwc_change_rate">calc_lwc_change_rate() (in module categorize.atmos)</a>
-</li>
-      <li><a href="api.html#products.lwc.Lwc.calc_lwc_error">calc_lwc_error() (products.lwc.Lwc method)</a>
 </li>
       <li><a href="api.html#categorize.atmos.calc_mixing_ratio">calc_mixing_ratio() (in module categorize.atmos)</a>
 </li>
@@ -277,15 +272,17 @@
 </li>
       <li><a href="api.html#module-categorize.melting">categorize.melting (module)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#module-categorize.model">categorize.model (module)</a>
 </li>
       <li><a href="api.html#module-categorize.mwr">categorize.mwr (module)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#module-categorize.radar">categorize.radar (module)</a>
 </li>
       <li><a href="api.html#products.lwc.LwcSource.categorize_bits">categorize_bits (products.lwc.LwcSource attribute)</a>
+</li>
+      <li><a href="api.html#products.drizzle.SpectralWidth.categorize_file">categorize_file (products.drizzle.SpectralWidth attribute)</a>
 </li>
       <li><a href="api.html#products.product_tools.CategorizeBits">CategorizeBits (class in products.product_tools)</a>
 </li>
@@ -327,8 +324,6 @@
 </li>
       <li><a href="api.html#categorize.droplet.correct_liquid_top">correct_liquid_top() (in module categorize.droplet)</a>
 </li>
-      <li><a href="api.html#products.drizzle.correct_spectral_width">correct_spectral_width() (in module products.drizzle)</a>
-</li>
       <li><a href="api.html#categorize.atmos.LiquidAttenuation.corrected">corrected (categorize.atmos.LiquidAttenuation attribute)</a>
 </li>
       <li><a href="api.html#utils.cumsumr">cumsumr() (in module utils)</a>
@@ -363,13 +358,17 @@
         <li><a href="api.html#utils.db2lin">(in module utils)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#utils.del_dict_keys">del_dict_keys() (in module utils)</a>
 </li>
-      <li><a href="api.html#products.lwc.Lwc.dheight">dheight (products.lwc.Lwc attribute)</a>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#products.drizzle.DrizzleProducts.derived_products">derived_products (products.drizzle.DrizzleProducts attribute)</a>
+</li>
+      <li><a href="api.html#products.drizzle.DrizzleSource.dheight">dheight (products.drizzle.DrizzleSource attribute)</a>
 
       <ul>
+        <li><a href="api.html#products.lwc.Lwc.dheight">(products.lwc.Lwc attribute)</a>
+</li>
         <li><a href="api.html#products.lwc.LwcSource.dheight">(products.lwc.LwcSource attribute)</a>
 </li>
       </ul></li>
@@ -377,19 +376,15 @@
 </li>
       <li><a href="api.html#products.drizzle.DrizzleClassification.drizzle">drizzle (products.drizzle.DrizzleClassification attribute)</a>
 </li>
-      <li><a href="api.html#products.drizzle.drizzle_solve">drizzle_solve() (in module products.drizzle)</a>
+      <li><a href="api.html#products.drizzle.RetrievalStatus.drizzle_class">drizzle_class (products.drizzle.RetrievalStatus attribute)</a>
 </li>
       <li><a href="api.html#products.drizzle.DrizzleClassification">DrizzleClassification (class in products.drizzle)</a>
 </li>
-      <li><a href="api.html#products.drizzle.DrizzleSource">DrizzleSource (class in products.drizzle)</a>
+      <li><a href="api.html#products.drizzle.DrizzleProducts">DrizzleProducts (class in products.drizzle)</a>
 </li>
-  </ul></td>
-</tr></table>
-
-<h2 id="E">E</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api.html#products.lwc.Lwc.echo">echo (products.lwc.Lwc attribute)</a>
+      <li><a href="api.html#products.drizzle.DrizzleSolver">DrizzleSolver (class in products.drizzle)</a>
+</li>
+      <li><a href="api.html#products.drizzle.DrizzleSource">DrizzleSource (class in products.drizzle)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -434,8 +429,6 @@
       <li><a href="api.html#categorize.droplet.find_liquid">find_liquid() (in module categorize.droplet)</a>
 </li>
       <li><a href="api.html#categorize.melting.find_melting_layer">find_melting_layer() (in module categorize.melting)</a>
-</li>
-      <li><a href="api.html#products.lwc.find_topmost_clouds">find_topmost_clouds() (in module products.lwc)</a>
 </li>
       <li><a href="api.html#categorize.radar.Radar.folding_velocity">folding_velocity (categorize.radar.Radar attribute)</a>
 </li>
@@ -617,11 +610,13 @@
 </li>
       <li><a href="api.html#products.lwc.Lwc.lwc_adiabatic">lwc_adiabatic (products.lwc.Lwc attribute)</a>
 </li>
-      <li><a href="api.html#products.lwc.Lwc.lwc_error">lwc_error (products.lwc.Lwc attribute)</a>
-</li>
       <li><a href="api.html#products.lwc.Lwc.lwc_source">lwc_source (products.lwc.Lwc attribute)</a>
 </li>
+      <li><a href="api.html#products.lwc.LwcError">LwcError (class in products.lwc)</a>
+</li>
       <li><a href="api.html#products.lwc.LwcSource">LwcSource (class in products.lwc)</a>
+</li>
+      <li><a href="api.html#products.lwc.LwcStatus">LwcStatus (class in products.lwc)</a>
 </li>
       <li><a href="api.html#categorize.classify.ClassData.lwp">lwp (categorize.classify.ClassData attribute)</a>
 
@@ -649,6 +644,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#products.drizzle.DrizzleSource.mie">mie (products.drizzle.DrizzleSource attribute)</a>
+</li>
       <li><a href="api.html#instruments.mira2nc">mira2nc() (in module instruments)</a>
 </li>
       <li><a href="api.html#categorize.model.Model">Model (class in categorize.model)</a>
@@ -685,6 +682,8 @@
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#products.drizzle.DrizzleSolver.params">params (products.drizzle.DrizzleSolver attribute)</a>
+</li>
       <li><a href="api.html#products.product_tools.ProductClassification">ProductClassification (class in products.product_tools)</a>
 </li>
       <li><a href="api.html#module-products.classification">products.classification (module)</a>
@@ -731,10 +730,10 @@
 </li>
       <li><a href="api.html#utils.rebin_2d">rebin_2d() (in module utils)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#cloudnetarray.CloudnetArray.rebin_data">rebin_data() (cloudnetarray.CloudnetArray method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#categorize.lidar.Lidar.rebin_to_grid">rebin_to_grid() (categorize.lidar.Lidar method)</a>
 
       <ul>
@@ -746,6 +745,10 @@
       <li><a href="api.html#cloudnetarray.RadarArray.rebin_velocity">rebin_velocity() (cloudnetarray.RadarArray method)</a>
 </li>
       <li><a href="api.html#categorize.radar.Radar.remove_incomplete_pixels">remove_incomplete_pixels() (categorize.radar.Radar method)</a>
+</li>
+      <li><a href="api.html#products.drizzle.RetrievalStatus.retrieval_status">retrieval_status (products.drizzle.RetrievalStatus attribute)</a>
+</li>
+      <li><a href="api.html#products.drizzle.RetrievalStatus">RetrievalStatus (class in products.drizzle)</a>
 </li>
       <li><a href="api.html#instruments.rpg2nc">rpg2nc() (in module instruments)</a>
 </li>
@@ -760,13 +763,19 @@
       <li><a href="api.html#output.save_product_file">save_product_file() (in module output)</a>
 </li>
       <li><a href="api.html#products.lwc.Lwc.screen_rain">screen_rain() (products.lwc.Lwc method)</a>
+
+      <ul>
+        <li><a href="api.html#products.lwc.LwcError.screen_rain">(products.lwc.LwcError method)</a>
 </li>
+        <li><a href="api.html#products.lwc.LwcStatus.screen_rain">(products.lwc.LwcStatus method)</a>
+</li>
+      </ul></li>
       <li><a href="api.html#categorize.model.Model.screen_sparse_fields">screen_sparse_fields() (categorize.model.Model method)</a>
-</li>
-      <li><a href="api.html#utils.seconds2hours">seconds2hours() (in module utils)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#utils.seconds2hours">seconds2hours() (in module utils)</a>
+</li>
       <li><a href="api.html#categorize.radar.Radar.sequence_indices">sequence_indices (categorize.radar.Radar attribute)</a>
 </li>
       <li><a href="api.html#cloudnetarray.CloudnetArray.set_attributes">set_attributes() (cloudnetarray.CloudnetArray method)</a>
@@ -775,7 +784,7 @@
 </li>
       <li><a href="api.html#categorize.datasource.DataSource.source">source (categorize.datasource.DataSource attribute)</a>
 </li>
-      <li><a href="api.html#products.lwc.Lwc.status">status (products.lwc.Lwc attribute)</a>
+      <li><a href="api.html#products.drizzle.SpectralWidth">SpectralWidth (class in products.drizzle)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -826,7 +835,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#categorize.classify.ClassData.v">v (categorize.classify.ClassData attribute)</a>
+
+      <ul>
+        <li><a href="api.html#products.drizzle.DrizzleSource.v">(products.drizzle.DrizzleSource attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#categorize.classify.ClassData.v_sigma">v_sigma (categorize.classify.ClassData attribute)</a>
@@ -843,6 +856,8 @@
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api.html#products.drizzle.SpectralWidth.width_ht">width_ht (products.drizzle.SpectralWidth attribute)</a>
+</li>
       <li><a href="api.html#categorize.radar.Radar.wl_band">wl_band (categorize.radar.Radar attribute)</a>
 </li>
       <li><a href="api.html#products.drizzle.DrizzleClassification.would_be_drizzle">would_be_drizzle (products.drizzle.DrizzleClassification attribute)</a>
@@ -854,7 +869,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api.html#categorize.classify.ClassData.z">z (categorize.classify.ClassData attribute)</a>
+
+      <ul>
+        <li><a href="api.html#products.drizzle.DrizzleSource.z">(products.drizzle.DrizzleSource attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
 </tr></table>
 

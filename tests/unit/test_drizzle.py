@@ -1,8 +1,11 @@
+import numpy as np
 from numpy import testing
 import pytest
 from pathlib import Path
+import netCDF4
+from bisect import bisect_left
+from cloudnetpy import utils
 import cloudnetpy.products.drizzle as drizzle
-from cloudnetpy.products.drizzle import *
 from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 DIMENSIONS_X = ('time', 'model_time')
@@ -61,22 +64,21 @@ def _create_dimension_variables(root_grp, test_array, dimension):
 
 
 def test_convert_z_units(drizzle_source_file):
-    from cloudnetpy.utils import db2lin
-    obj = DrizzleSource(drizzle_source_file)
+    obj = drizzle.DrizzleSource(drizzle_source_file)
     z = obj.getvar('Z') - 180
-    compare = db2lin(z)
+    compare = utils.db2lin(z)
     testing.assert_array_almost_equal(obj._convert_z_units(), compare)
 
 
 @pytest.mark.parametrize('key', [
     'Do', 'mu', 'S', 'lwf', 'termv', 'width', 'ray', 'v'])
 def test_read_mie_lut(drizzle_source_file, key):
-    obj = DrizzleSource(drizzle_source_file)
+    obj = drizzle.DrizzleSource(drizzle_source_file)
     assert key in obj.mie.keys()
 
 
 def test_get_mie_file(drizzle_source_file):
-    obj = DrizzleSource(drizzle_source_file)
+    obj = drizzle.DrizzleSource(drizzle_source_file)
     obj.module_path = ''.join((str(Path(__file__).parents[2]), '/cloudnetpy/products'))
     obj._get_mie_file()
     compare = '/'.join((obj.module_path, 'mie_lu_tables.nc'))
@@ -84,7 +86,7 @@ def test_get_mie_file(drizzle_source_file):
 
 
 def test_get_wl_band(drizzle_source_file):
-    obj = DrizzleSource(drizzle_source_file)
+    obj = drizzle.DrizzleSource(drizzle_source_file)
     compare = '35'
     testing.assert_equal(obj._get_wl_band(), compare)
 
@@ -120,13 +122,13 @@ def drizzle_cat_file(tmpdir_factory, file_metadata):
 
 
 def test_find_v_sigma(drizzle_cat_file):
-    obj = DrizzleClassification(drizzle_cat_file)
+    obj = drizzle.DrizzleClassification(drizzle_cat_file)
     compare = np.array([[1, 0, 1], [1, 1, 1]], dtype=bool)
     testing.assert_array_almost_equal(obj._find_v_sigma(drizzle_cat_file), compare)
 
 
 def test_find_warm_liquid(drizzle_cat_file):
-    obj = DrizzleClassification(drizzle_cat_file)
+    obj = drizzle.DrizzleClassification(drizzle_cat_file)
     obj.category_bits['droplet'] = np.array([0, 0, 0, 1, 1, 1, 0], dtype=bool)
     obj.category_bits['cold'] = np.array([1, 1, 0, 0, 1, 0, 1], dtype=bool)
     compare = np.array([0, 0, 0, 1, 0, 1, 0], dtype=bool)
@@ -143,7 +145,7 @@ def test_find_warm_liquid(drizzle_cat_file):
                               np.array([0, 0, 0, 1]), np.array([1, 1, 0, 1]))])
 def test_find_drizzle(drizzle_cat_file, is_rain, falling, droplet, cold, melting,
                       insect, radar, lidar, clutter, molecular, attenuated, v_sigma):
-    obj = DrizzleClassification(drizzle_cat_file)
+    obj = drizzle.DrizzleClassification(drizzle_cat_file)
     obj.is_rain = is_rain
     obj.category_bits['falling'] = falling
     obj.category_bits['droplet'] = droplet
@@ -171,7 +173,7 @@ def test_find_drizzle(drizzle_cat_file, is_rain, falling, droplet, cold, melting
                               np.array([0, 0, 0, 1]), np.array([0, 0, 0, 1]))])
 def test_find_would_be_drizzle(drizzle_cat_file, is_rain, warm, falling, melting,
                                insect, radar, clutter, molecular):
-    obj = DrizzleClassification(drizzle_cat_file)
+    obj = drizzle.DrizzleClassification(drizzle_cat_file)
     obj.is_rain = is_rain
     obj.warm_liquid = warm
     obj.category_bits['falling'] = falling
@@ -188,13 +190,13 @@ def test_find_would_be_drizzle(drizzle_cat_file, is_rain, warm, falling, melting
 
 
 def test_find_cold_rain(drizzle_cat_file):
-    obj = DrizzleClassification(drizzle_cat_file)
+    obj = drizzle.DrizzleClassification(drizzle_cat_file)
     compare = np.array([0, 1])
     testing.assert_array_almost_equal(obj._find_cold_rain(), compare)
 
 
 def test_calculate_spectral_width(drizzle_cat_file):
-    obj = CorrectSpectralWidth(drizzle_cat_file)
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
     width = netCDF4.Dataset(drizzle_cat_file).variables['width'][:]
     v_sigma = netCDF4.Dataset(drizzle_cat_file).variables['v_sigma'][:]
     factor = obj._calc_v_sigma_factor()
@@ -203,20 +205,19 @@ def test_calculate_spectral_width(drizzle_cat_file):
 
 
 def test_calc_beam_divergence(drizzle_cat_file):
-    obj = CorrectSpectralWidth(drizzle_cat_file)
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
     height = netCDF4.Dataset(drizzle_cat_file).variables['height'][:]
     compare = height * np.deg2rad(0.5)
     testing.assert_almost_equal(obj._calc_beam_divergence(), compare)
 
 
 def test_calc_v_sigma_factor(drizzle_cat_file):
-    from cloudnetpy.utils import l2norm
-    obj = CorrectSpectralWidth(drizzle_cat_file)
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
     height = netCDF4.Dataset(drizzle_cat_file).variables['height'][:]
     uwind = netCDF4.Dataset(drizzle_cat_file).variables['uwind'][:]
     vwind = netCDF4.Dataset(drizzle_cat_file).variables['vwind'][:]
     beam = height * np.deg2rad(0.5)
-    wind = l2norm(uwind, vwind)
+    wind = utils.l2norm(uwind, vwind)
     a_wind = (wind + beam) ** (2 / 3)
     s_wind = (30 * wind + beam) ** (2 / 3)
     compare = a_wind / (s_wind - a_wind)
@@ -224,49 +225,48 @@ def test_calc_v_sigma_factor(drizzle_cat_file):
 
 
 def test_calc_horizontal_wind(drizzle_cat_file):
-    from cloudnetpy.utils import l2norm
-    obj = CorrectSpectralWidth(drizzle_cat_file)
+    obj = drizzle.SpectralWidth(drizzle_cat_file)
     uwind = netCDF4.Dataset(drizzle_cat_file).variables['uwind'][:]
     vwind = netCDF4.Dataset(drizzle_cat_file).variables['vwind'][:]
-    compare = l2norm(uwind, vwind)
+    compare = utils.l2norm(uwind, vwind)
     testing.assert_array_almost_equal(obj._calc_horizontal_wind(), compare)
 
 
 # Create objects for all coming tests witch uses these classes
 @pytest.fixture(scope='session')
 def class_objects(drizzle_source_file, drizzle_cat_file):
-    drizzle_source = DrizzleSource(drizzle_source_file)
-    drizzle_class = DrizzleClassification(drizzle_cat_file)
-    spectral_w = CorrectSpectralWidth(drizzle_cat_file)
+    drizzle_source = drizzle.DrizzleSource(drizzle_source_file)
+    drizzle_class = drizzle.DrizzleClassification(drizzle_cat_file)
+    spectral_w = drizzle.SpectralWidth(drizzle_cat_file)
     return [drizzle_source, drizzle_class, spectral_w]
 
 
 @pytest.mark.parametrize('key', ['Do', 'mu', 'S', 'beta_corr'])
 def test_init_variables(class_objects, key):
     d_source, d_class, s_width = class_objects
-    obj = DrizzleSolving(d_source, d_class, s_width)
+    obj = drizzle.DrizzleSolver(d_source, d_class, s_width)
     result, x = obj._init_variables()
     assert key in result.keys()
 
 
 def test_calc_beta_z_ratio(class_objects):
     d_source, d_class, s_width = class_objects
-    obj = DrizzleSolving(d_source, d_class, s_width)
-    obj.data.beta = np.array([[1, 1, 2], [1, 1, 3]])
-    obj.data.z = np.array([[2, 2, 1], [1, 1, 1]])
-    compare = 2 / np.pi * obj.data.beta / obj.data.z
+    obj = drizzle.DrizzleSolver(d_source, d_class, s_width)
+    obj._data.beta = np.array([[1, 1, 2], [1, 1, 3]])
+    obj._data.z = np.array([[2, 2, 1], [1, 1, 1]])
+    compare = 2 / np.pi * obj._data.beta / obj._data.z
     testing.assert_array_almost_equal(obj._calc_beta_z_ratio(), compare)
 
 
 def test_find_lut_indices(class_objects):
     d_source, d_class, s_width = class_objects
-    obj = DrizzleSolving(d_source, d_class, s_width)
+    obj = drizzle.DrizzleSolver(d_source, d_class, s_width)
     ind = (1, 2)
     dia_init = np.array([[1, 3, 2], [3, 1, 2]])
     n_dia = 1
     n_width = 2
-    ind_d = bisect_left(obj.data.mie['Do'], dia_init[ind], hi=n_dia - 1)
-    ind_w = bisect_left(obj.width_lut[:, ind_d], -obj.width_ht[ind], hi=n_width - 1)
+    ind_d = bisect_left(obj._data.mie['Do'], dia_init[ind], hi=n_dia - 1)
+    ind_w = bisect_left(obj._width_lut[:, ind_d], -obj._width_ht[ind], hi=n_width - 1)
     compare = (ind_w, ind_d)
     testing.assert_almost_equal(obj._find_lut_indices
                                 (ind, dia_init, n_dia, n_width), compare)
@@ -278,7 +278,7 @@ def test_find_lut_indices(class_objects):
     ('S', 93.7247943)])
 def test_update_result_tables(class_objects, key, value):
     d_source, d_class, s_width = class_objects
-    obj = DrizzleSolving(d_source, d_class, s_width)
+    obj = drizzle.DrizzleSolver(d_source, d_class, s_width)
     ind = (0, 1)
     dia = 10
     lut = (0, 1)
@@ -288,7 +288,7 @@ def test_update_result_tables(class_objects, key, value):
 
 def test_is_converged(class_objects):
     d_source, d_class, s_width = class_objects
-    obj = DrizzleSolving(d_source, d_class, s_width)
+    obj = drizzle.DrizzleSolver(d_source, d_class, s_width)
     ind = (1, 2)
     dia_init = np.array([[1, 3, 2], [3, 1, 2]])
     dia = 1
@@ -298,9 +298,9 @@ def test_is_converged(class_objects):
 
 def test_calc_dia(class_objects):
     d_source, d_class, s_width = class_objects
-    obj = DrizzleSolving(d_source, d_class, s_width)
+    obj = drizzle.DrizzleSolver(d_source, d_class, s_width)
     beta_z = np.array([1, 2, 3])
-    compare = (gamma(3) / gamma(7) * 3.67 ** 4 / beta_z) ** (1 / 4)
+    compare = (drizzle.gamma(3) / drizzle.gamma(7) * 3.67 ** 4 / beta_z) ** (1 / 4)
     testing.assert_array_almost_equal(obj._calc_dia(beta_z), compare)
 
 
@@ -308,14 +308,14 @@ def test_calc_dia(class_objects):
 @pytest.fixture(scope='session')
 def params_objects(class_objects):
     d_source, d_class, s_width = class_objects
-    return DrizzleSolving(d_source, d_class, s_width)
+    return drizzle.DrizzleSolver(d_source, d_class, s_width)
 
 
 def test_find_indices(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
-    obj = CalculateProducts(d_source, params_objects)
-    obj.parameters['Do'] = np.array([[0.0, 1.0, 1.0],
-                                     [1.0, 1.0, 0.0]])
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
+    obj._params['Do'] = np.array([[0.0, 1.0, 1.0],
+                                  [1.0, 1.0, 0.0]])
     x, y = obj._find_indices()
     compare = (np.array([0, 0, 1, 1]),
                np.array([1, 2, 0, 1]))
@@ -326,32 +326,32 @@ def test_find_indices(class_objects, params_objects):
     'drizzle_N', 'drizzle_lwc', 'drizzle_lwf', 'v_drizzle', 'v_air'])
 def test_calc_derived_products(class_objects, params_objects, key):
     d_source, d_class, s_width = class_objects
-    obj = CalculateProducts(d_source, params_objects)
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
     dictio = obj._calc_derived_products()
     assert key in dictio.keys()
 
 
 def test_calc_density(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
-    obj = CalculateProducts(d_source, params_objects)
-    obj.data.z = np.array([1, 2, 3])
-    compare = obj.data.z * 3.67 ** 6 / obj.parameters['Do'] ** 6
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
+    obj._data.z = np.array([1, 2, 3])
+    compare = obj._data.z * 3.67 ** 6 / obj._params['Do'] ** 6
     testing.assert_array_almost_equal(obj._calc_density(), compare)
 
 
 def test_calc_lwc(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
-    obj = CalculateProducts(d_source, params_objects)
-    dia, mu, s = [obj.parameters.get(key) for key in ('Do', 'mu', 'S')]
-    gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
-    compare = 1000 / 3 * obj.data.beta * s * dia * gamma_ratio
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
+    dia, mu, s = [obj._params.get(key) for key in ('Do', 'mu', 'S')]
+    gamma_ratio = drizzle.gamma(4 + mu) / drizzle.gamma(3 + mu) / (3.67 + mu)
+    compare = 1000 / 3 * obj._data.beta * s * dia * gamma_ratio
     testing.assert_array_almost_equal(obj._calc_lwc(), compare)
 
 
 def test_calc_lwf(class_objects, params_objects):
     # TODO: fix this
     d_source, d_class, s_width = class_objects
-    obj = CalculateProducts(d_source, params_objects)
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
     lwc_in = np.array([[0.001, 0.001, 0.002],
                        [0.003, 0.002, 0.001]])
     compare = np.array([[0.001, 0.005508, 0.011016],
@@ -362,7 +362,7 @@ def test_calc_lwf(class_objects, params_objects):
 def test_calc_fall_velocity(class_objects, params_objects):
     # TODO: fix this
     d_source, d_class, s_width = class_objects
-    obj = CalculateProducts(d_source, params_objects)
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
     compare = np.array([[0, -7.11002091, -7.11002091],
                         [-7.11002091, -7.11002091, 0]])
     testing.assert_array_almost_equal(obj._calc_fall_velocity(), compare)
@@ -370,9 +370,9 @@ def test_calc_fall_velocity(class_objects, params_objects):
 
 def test_calc_v_air(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
-    obj = CalculateProducts(d_source, params_objects)
+    obj = drizzle.DrizzleProducts(d_source, params_objects)
     d_v = np.array([[2.0, 2.0, 4.0], [1.0, 3.0, 5.0]])
-    obj.ind_drizzle = (np.array([0, 1]), np.array([1, 2]))
+    obj._ind_drizzle = (np.array([0, 1]), np.array([1, 2]))
     compare = np.array([[-2.0, 0.0, -4.0],
                         [-1.0, -3.0, -2.0]])
     testing.assert_array_almost_equal(obj._calc_v_air(d_v), compare)
@@ -381,7 +381,7 @@ def test_calc_v_air(class_objects, params_objects):
 @pytest.fixture(scope='session')
 def ret_status(class_objects):
     d_source, d_class, s_width = class_objects
-    obj = RetrievalStatus(d_class)
+    obj = drizzle.RetrievalStatus(d_class)
     return obj
 
 
@@ -392,10 +392,10 @@ def test_find_retrieval_below_melting(ret_status, value):
     obj.retrieval_status = np.array([[0, 0, 1],
                                      [1, 1, 0],
                                      [0, 1, 1]])
-    obj.classification.cold_rain = np.array([0, 1, 1])
-    obj.classification.drizzle = np.array([[1, 1, 0],
-                                           [0, 1, 1],
-                                           [1, 0, 0]])
+    obj.drizzle_class.cold_rain = np.array([0, 1, 1])
+    obj.drizzle_class.drizzle = np.array([[1, 1, 0],
+                                          [0, 1, 1],
+                                          [1, 0, 0]])
     obj._find_retrieval_below_melting()
     assert value in obj.retrieval_status
 
@@ -407,9 +407,9 @@ def test_find_retrieval_in_warm_liquid(ret_status, value):
     obj.retrieval_status = np.array([[0, 0, 1],
                                      [1, 2, 3],
                                      [2, 1, 1]])
-    obj.classification.warm_liquid = np.array([[1, 0, 0],
-                                               [0, 0, 1],
-                                               [1, 0, 1]])
+    obj.drizzle_class.warm_liquid = np.array([[1, 0, 0],
+                                              [0, 0, 1],
+                                              [1, 0, 1]])
     obj._find_retrieval_in_warm_liquid()
     assert value in obj.retrieval_status
 
@@ -421,17 +421,17 @@ def test_get_retrieval_status(ret_status, value):
     obj.retrieval_status = np.array([[0, 0, 1],
                                      [1, 1, 0],
                                      [0, 1, 1]])
-    obj.classification.cold_rain = np.array([0, 1, 0])
-    obj.classification.drizzle = np.array([[1, 1, 0],
-                                           [0, 1, 1],
-                                           [1, 0, 0]])
-    obj.classification.warm_liquid = np.array([[1, 1, 0],
-                                               [0, 0, 1],
-                                               [1, 0, 1]])
-    obj.classification.would_be_drizzle = np.array([[0, 1, 0],
-                                                    [0, 0, 1],
-                                                    [0, 0, 0]])
-    obj.classification.is_rain = np.array([1, 0, 0])
+    obj.drizzle_class.cold_rain = np.array([0, 1, 0])
+    obj.drizzle_class.drizzle = np.array([[1, 1, 0],
+                                          [0, 1, 1],
+                                          [1, 0, 0]])
+    obj.drizzle_class.warm_liquid = np.array([[1, 1, 0],
+                                              [0, 0, 1],
+                                              [1, 0, 1]])
+    obj.drizzle_class.would_be_drizzle = np.array([[0, 1, 0],
+                                                   [0, 0, 1],
+                                                   [0, 0, 0]])
+    obj.drizzle_class.is_rain = np.array([1, 0, 0])
     obj._get_retrieval_status()
     assert value in obj.retrieval_status
 
@@ -440,7 +440,7 @@ def test_get_retrieval_status(ret_status, value):
 def result(class_objects, params_objects):
     d_source, d_class, s_width = class_objects
     errors = get_drizzle_error(d_source, params_objects)
-    cal_products = CalculateProducts(d_source, params_objects)
+    cal_products = drizzle.DrizzleProducts(d_source, params_objects)
     return {**params_objects.params, **cal_products.derived_products,
             **errors}
 

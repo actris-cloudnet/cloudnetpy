@@ -1,6 +1,6 @@
 # CloudnetPy
 
-[![Build Status](https://travis-ci.org/tukiains/cloudnetpy.svg?branch=master)](https://travis-ci.org/tukiains/cloudnetpy)
+[![Build Status](https://travis-ci.org/actris-cloudnet/cloudnetpy.svg?branch=master)](https://travis-ci.org/actris-cloudnet/cloudnetpy)
 [![Documentation Status](https://readthedocs.org/projects/cloudnetpy/badge/?version=latest)](https://cloudnetpy.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/cloudnetpy.svg)](https://badge.fury.io/py/cloudnetpy)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3529512.svg)](https://doi.org/10.5281/zenodo.3529512)
