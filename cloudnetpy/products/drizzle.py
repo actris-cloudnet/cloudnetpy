@@ -339,7 +339,9 @@ class DrizzleProducts:
 
     def _calc_density(self):
         """Calculates drizzle number density (m-3)."""
-        return self._data.z * 3.67 ** 6 / self._params['Do'] ** 6
+        a = self._data.z * 3.67 ** 6
+        b = self._params['Do'] ** 6
+        return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
 
     def _calc_lwc(self):
         """Calculates drizzle liquid water content (kg m-3)"""

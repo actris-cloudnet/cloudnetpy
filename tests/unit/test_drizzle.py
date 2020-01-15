@@ -332,15 +332,18 @@ def test_calc_derived_products(class_objects, params_objects, key):
 
 
 def test_calc_density(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
+    d_source, _, _ = class_objects
     obj = drizzle.DrizzleProducts(d_source, params_objects)
-    obj._data.z = np.array([1, 2, 3])
-    compare = obj._data.z * 3.67 ** 6 / obj._params['Do'] ** 6
+    obj._data.z = np.array([[1, 1, 1],
+                            [1, 1, 1]])
+    a = 3.67**6 / 1**6
+    compare = np.array([[0.0, a, a],
+                       [a, a, 0.0]])
     testing.assert_array_almost_equal(obj._calc_density(), compare)
 
 
 def test_calc_lwc(class_objects, params_objects):
-    d_source, d_class, s_width = class_objects
+    d_source, _, _ = class_objects
     obj = drizzle.DrizzleProducts(d_source, params_objects)
     dia, mu, s = [obj._params.get(key) for key in ('Do', 'mu', 'S')]
     gamma_ratio = drizzle.gamma(4 + mu) / drizzle.gamma(3 + mu) / (3.67 + mu)
