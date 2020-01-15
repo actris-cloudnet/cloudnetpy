@@ -279,5 +279,3 @@ def test_append_iwc_status(iwc_source_file, value):
                                              [True, True, True, False, False, False]])
     _append_iwc_status(ice_data, ice_class)
     assert value in ice_data.data['iwc_retrieval_status'][:]
-
-
