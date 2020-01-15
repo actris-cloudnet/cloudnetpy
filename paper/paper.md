@@ -31,7 +31,7 @@ mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds and aerosols. 
 Combining these two supplementary data sources with temperature and humidity 
 from a numerical weather prediction model makes it possible to classify 
-various scattering objects of the atmosphere, such as ... (What is a scattering object?).
+various scattering objects of the atmosphere, such as ice particles, water droplets and aerosols.
 Furthermore, adding a passive microwave radiometer, an instrument measuring 
 liquid water path, quantitative retrievals of geophysical 
 products such as ice water content, liquid water content 
