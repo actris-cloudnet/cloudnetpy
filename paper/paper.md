@@ -30,8 +30,8 @@ wavelength region, around 35 or 94 GHz,
 mainly providing information on ice clouds, rain and insects. Optical lidars,
 on the other hand, are more sensitive to liquid clouds and aerosols. 
 Combining these two supplementary data sources with temperature and humidity 
-from a numerical weather prediction model makes it is possible to classify 
-various scattering objects of the atmosphere.
+from a numerical weather prediction model makes it possible to classify 
+various scattering objects of the atmosphere, such as ... (What is a scattering object?).
 Furthermore, adding a passive microwave radiometer, an instrument measuring 
 liquid water path, quantitative retrievals of geophysical 
 products such as ice water content, liquid water content 
@@ -43,17 +43,17 @@ the so-called Cloudnet project [@IllingworthEtAl07]. Since the project started
 in 2002, a network of around 15 stations around Europe has been established 
 to regularly collect, process and distribute Cloudnet data (http://cloudnet.fmi.fi). 
 While the methodology is valid, more robust and operational processing 
-software is called for. In the forthcoming years, Cloudnet will be one of 
+software is called for (What is meant by robust and operational? Can also be explained in the next sentence, e.g. because we're dealing with huge amounts of data we can't use matlab anymore, and have to use something more modern.). In the forthcoming years, Cloudnet will be one of 
 the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
 Infrastructure) [@ACTRIS_handbook], where the Cloudnet framework 
 is utilized to process gigabytes of cloud remote sensing data per day 
 in near real time. ACTRIS is moving into implementation phase in 2020 
-and is supposed to be fully operational in 2025.
+and is supposed to be fully operational in 2025. 
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers the full Cloudnet processing chain starting from the raw 
 measurements and providing roughly the same functionality as the original 
-Cloudnet software written in Matlab and C. The outputs of the two programs 
+Cloudnet software written in Matlab and C (citation?). The outputs of the two programs 
 are similar but not identical because several methods were revised 
 during the refactoring process. For example, because most modern cloud 
 radars are polarimetric, CloudnetPy uses linear depolarization ratio 
@@ -61,7 +61,7 @@ to improve the detection of melting layer and insects. Also the
 liquid layer detection is now based on the shape of lidar backscatter 
 profile instead of threshold values [@TuononenEtAl19]. Detailed
 verification of the updated methods is a subject of future studies.
-The CloudnetPy API is designed to serve the operational processing, but 
+The CloudnetPy API is designed to serve the operational processing (What operational processing?), but 
 it should be straightforward for site operators and scientific community
 with access to raw data to run the software, improve existing 
 methods and develop new products.
