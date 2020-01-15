@@ -213,7 +213,6 @@ def _append_iwc_status(iwc_data, ice_class):
     retrieval_status = np.zeros(iwc.shape, dtype=int)
     is_iwc = ~iwc.mask
     retrieval_status[is_iwc] = 1
-    print(ice_class.corrected_ice)
     retrieval_status[is_iwc & ice_class.corrected_ice] = 2
     retrieval_status[is_iwc & ice_class.uncorrected_ice] = 3
     retrieval_status[~is_iwc & ice_class.is_ice] = 4

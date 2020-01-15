@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.ma as ma
 from collections import namedtuple
 from numpy import testing
 import pytest
@@ -24,6 +25,8 @@ def iwc_source_file(tmpdir_factory, file_metadata):
     var[:] = [5, 10, 15]
     var = root_grp.createVariable('Z_bias', 'f8', 'time')
     var[:] = [5, 10, 15]
+    var = root_grp.createVariable('Z_error', 'f8', 'time')
+    var[:] = [0.1, 0.2, 0.3]
     var = root_grp.createVariable('radar_frequency', 'f8')
     var[:] = 35.5  # TODO: How to check with multiple options
     var = root_grp.createVariable('temperature', 'f8', ('time', 'height'))
@@ -187,6 +190,17 @@ def test_append_iwc_including_rain(iwc_source_file, iwc_cat_file):
     assert 'iwc_inc_rain' in ice_data.data.keys()
 
 
+def test_append_iwc_including_rain_indices(iwc_source_file, iwc_cat_file):
+    from cloudnetpy.products.iwc import _append_iwc_including_rain
+    ice_class = _IceClassification(iwc_cat_file)
+    ice_class.is_ice = np.array([0, 0, 1])
+    ice_data = IwcSource(iwc_source_file)
+    _append_iwc_including_rain(ice_data, ice_class)
+    x = ice_data.data['iwc_inc_rain'][:]
+    x = x.mask
+    assert np.alltrue(x[1:])
+
+
 def test_append_iwc(iwc_source_file, iwc_cat_file):
     from cloudnetpy.products.iwc import _append_iwc
     ice_class = _IceClassification(iwc_cat_file)
@@ -195,6 +209,29 @@ def test_append_iwc(iwc_source_file, iwc_cat_file):
     ice_data.data['iwc_inc_rain'] = [1, 1, 1]
     _append_iwc(ice_data, ice_class)
     assert 'iwc' in ice_data.data.keys()
+
+
+def test_append_iwc_indices(iwc_source_file, iwc_cat_file):
+    from cloudnetpy.products.iwc import _append_iwc
+    ice_class = _IceClassification(iwc_cat_file)
+    ice_class.ice_above_rain = np.array([0, 0, 1])
+    ice_data = IwcSource(iwc_source_file)
+    ice_data.data['iwc_inc_rain'] = [1, 1, 1]
+    _append_iwc(ice_data, ice_class)
+    x = ice_data.data['iwc'][:]
+    x = x.mask
+    assert np.alltrue(x[:2])
+
+
+def test_iwc_error(iwc_source_file, iwc_cat_file):
+    from cloudnetpy.products.iwc import _append_iwc_error
+    ice_data = IwcSource(iwc_source_file)
+    ice_class = _IceClassification(iwc_cat_file)
+    ice_class.uncorrected_ice = np.array([1, 0, 1])
+    ice_class.is_ice = np.array([0, 0, 1])
+    ice_class.ice_above_rain = np.array([1, 1, 0])
+    _append_iwc_error(ice_data, ice_class)
+    assert 'iwc_error' in ice_data.data.keys()
 
 
 def test_append_sensitivity(iwc_source_file):
@@ -215,12 +252,18 @@ def test_append_bias(iwc_source_file):
 # Create fake data to get all options for classification
 class IceClass:
     def __init__(self):
-        self.corrected_ice = np.asarray([[0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0]], dtype=bool)
-        self.uncorrected_ice = np.asarray([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 0]], dtype=bool)
-        self.is_ice = np.asarray([[0, 1, 1, 0, 0, 0], [0, 0, 0, 1, 1, 0]], dtype=bool)
-        self.cold_above_rain = np.asarray([[0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0]], dtype=bool)
-        self.ice_above_rain = np.asarray([[0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0]], dtype=bool)
-        self.would_be_ice = np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0]], dtype=bool)
+        self.corrected_ice = np.asarray([[0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0]],
+                                        dtype=bool)
+        self.uncorrected_ice = np.asarray([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 0]],
+                                          dtype=bool)
+        self.is_ice = np.asarray([[0, 1, 1, 0, 0, 0], [0, 0, 0, 1, 1, 0]],
+                                 dtype=bool)
+        self.cold_above_rain = np.asarray([[0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0]],
+                                          dtype=bool)
+        self.ice_above_rain = np.asarray([[0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0]],
+                                         dtype=bool)
+        self.would_be_ice = np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0]],
+                                       dtype=bool)
 
 
 @pytest.mark.parametrize('value', [
