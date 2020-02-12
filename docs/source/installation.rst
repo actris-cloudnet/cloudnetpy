@@ -10,7 +10,7 @@ many other Linux systems as well.
 Python Installation
 -------------------
 
-These instructions are for the current stable Python release, Python3.7:
+These instructions are for Python3.7:
 
 .. code-block:: console
 		
@@ -47,6 +47,6 @@ CloudnetPy is now ready for use from that virtual environment.
    CloudnetPy codebase is rapidly developing and the PyPI package does not
    necessarily contain all the latest features and modifications. To get an up-to-date
    version of CloudnetPy, download it directly from `GitHub
-   <https://github.com/tukiains/cloudnetpy>`_.
+   <https://github.com/actris-cloudnet/cloudnetpy>`_.
 
 

@@ -40,6 +40,6 @@ calibration database and comprehensive quality control / assurance procedures:
 See also:
 
 - Cloudnet home: http://devcloudnet.fmi.fi/
-- CloudnetPy source: https://github.com/tukiains/cloudnetpy
+- CloudnetPy source: https://github.com/actris-cloudnet/cloudnetpy
 - ACTRIS home: http://actris.eu/
 - ACTRIS data portal: http://actris.nilu.no/

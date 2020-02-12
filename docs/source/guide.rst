@@ -10,7 +10,7 @@ tests and fixing bugs.
 How to contribute
 -----------------
 
-Instructions can be found from `CloudnetPy's Github page <https://github.com/tukiains/cloudnetpy/blob/master/CONTRIBUTING.md>`_.
+Instructions can be found from `CloudnetPy's Github page <https://github.com/actris-cloudnet/cloudnetpy/blob/master/CONTRIBUTING.md>`_.
 
 
 Testing
@@ -22,7 +22,7 @@ clone the whole repository from `GitHub
 
 .. code-block:: console
 
-	$ git clone https://github.com/tukiains/cloudnetpy
+	$ git clone https://github.com/actris-cloudnet/cloudnetpy
 
 Testing environment
 ...................
