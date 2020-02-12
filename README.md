@@ -19,14 +19,14 @@ CloudnetPy is a refactored fork of the currently operational (Matlab) processing
 
 <img src="docs/source/_static/20190423_mace-head_classification.png">
 
-##Installation
+## Installation
 
-###From PyPI
+### From PyPI
 ```
 $ pip3 install cloudnetpy
 ```
 
-###From the source
+### From the source
 ```
 $ git clone https://github.com/actris-cloudnet/cloudnetpy
 $ cd cloudnetpy/
@@ -35,6 +35,6 @@ $ source venv/bin/activate
 (venv) $ pip3 install .
 ```
 
-##Contributing
+## Contributing
 
 We encourage you to contribute to CloudnetPy! Please check out the [contribution guidelines](CONTRIBUTING.md) about how to proceed.
