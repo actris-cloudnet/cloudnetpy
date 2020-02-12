@@ -42,8 +42,8 @@ and drizzle properties become feasible [@OConnorEtAl05, @HoganEtAl06].
 
 Methodology and prototype software to combine these different data sources, 
 and to retrieve target classification and other products, were developed within 
-the EU-funded Cloudnet project [@IllingworthEtAl07].  
-Since Cloudnet started in 2002, the network has expanded from 3 stations to a coordinated
+the EU-funded Cloudnet project [@IllingworthEtAl07]. Since Cloudnet started in 
+2002, the network has expanded from 3 stations to a coordinated
 and continuously operated network of around 15 stations across Europe. 
 The network routinely collects, processes and distributes Cloudnet data (http://cloudnet.fmi.fi). 
 While the current methodology has been validated, it is important to develop the Cloudnet software 
@@ -52,8 +52,8 @@ continuous data processing. In the forthcoming years, Cloudnet will be one of
 the key components in ACTRIS (Aerosol, Clouds and Trace Gases Research 
 Infrastructure) [@ACTRIS_handbook], where the Cloudnet framework 
 will process gigabytes of cloud remote sensing data per day 
-in near real time. The ACTRIS RI is now in its implementation phase  
-and aims to be fully operational in 2025. 
+in near real time. The ACTRIS RI is now in its implementation phase and 
+aims to be fully operational in 2025. 
 
 CloudnetPy is a Python implementation of the Cloudnet processing scheme. 
 CloudnetPy covers the full Cloudnet processing chain starting from the raw 
