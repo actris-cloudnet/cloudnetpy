@@ -42,8 +42,7 @@ and drizzle properties become feasible [@OConnorEtAl05, @HoganEtAl06].
 
 Methodology and prototype software to combine these different data sources, 
 and to retrieve target classification and other products, were developed within 
-the EU-funded Cloudnet project [@IllingworthEtAl07]. 
-Development continued within the EU-funded ACTRIS projects
+the EU-funded Cloudnet project [@IllingworthEtAl07].  
 Since Cloudnet started in 2002, the network has expanded from 3 stations to a coordinated
 and continuously operated network of around 15 stations across Europe. 
 The network routinely collects, processes and distributes Cloudnet data (http://cloudnet.fmi.fi). 
@@ -68,16 +67,16 @@ now based on the lidar attenuated backscatter profile shape instead of relying o
 threshold values [@TuononenEtAl19]. Detailed 
 verification of the updated methods is a subject of future studies. 
 The CloudnetPy API is designed to serve the operational cloud remote sensing data 
-processing in ACTRIS, but also be straightforward for site operators and the 
+processing in ACTRIS, but it will be straightforward for site operators and the 
 scientific community with access to the raw data to run the software, improve 
 existing methods and develop new products.
 
 
 # Acknowledgements
 
-The authors would like to thank Lauri Kangassalo for providing comments on the manuscript 
-and the Academy of Finland for supporting ACTRIS activities in Finland.
 The research was supported by the European Union Framework Programme for Research and 
-Innovation, Horizon 2020 (ACTRIS-2,  grant  no.  654109).
+Innovation, Horizon 2020 (ACTRIS-2,  grant  no.  654109). The authors would like to 
+thank the Academy of Finland for supporting ACTRIS activities in Finland
+and Lauri Kangassalo for providing comments on the manuscript.
 
 # References
