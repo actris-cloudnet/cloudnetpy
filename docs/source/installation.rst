@@ -4,18 +4,15 @@ Installation Instructions
 
 CloudnetPy can be installed on any computer supporting Python3.6 (or higher).
 The actual installation procedure depends on the operating system. The
-instructions below are for Ubuntu, although they work with
-many other Linux systems as well.
+instructions below are for Ubuntu.
 
 Python Installation
 -------------------
 
-These instructions are for Python3.7:
-
 .. code-block:: console
 		
    $ sudo apt update && sudo apt upgrade
-   $ sudo apt install python3.7 python3.7-venv python3-pip
+   $ sudo apt install python3 python3-venv python3-pip python3-tk
 
 Virtual Environment
 -------------------
@@ -24,7 +21,7 @@ Create a new virtual environment and activate it:
 
 .. code-block:: console
 		
-   $ python3.7 -m venv venv
+   $ python3 -m venv venv
    $ source venv/bin/activate
 
 

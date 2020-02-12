@@ -16,7 +16,7 @@ setup(
     long_description_content_type='text/markdown',
     author='Finnish Meteorological Institute',
     author_email='simo.tukiainen@fmi.fi',
-    url='https://github.com/tukiains/cloudnetpy',
+    url='https://github.com/actris-cloudnet/cloudnetpy',
     license='MIT License',
     packages=find_packages(),
     include_package_data=True,

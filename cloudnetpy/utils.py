@@ -2,12 +2,12 @@
 
 import uuid
 import datetime
+import re
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
 import requests
-import re
 
 
 SECONDS_PER_HOUR = 3600
