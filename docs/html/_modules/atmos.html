@@ -1,0 +1,461 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>atmos &#8212; CloudnetPy  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">CloudnetPy  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for atmos</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; This module contains functions to calculate</span>
+<span class="sd">various atmospheric parameters.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">numpy.ma</span> <span class="k">as</span> <span class="nn">ma</span>
+<span class="kn">import</span> <span class="nn">scipy.constants</span>
+<span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">constants</span> <span class="k">as</span> <span class="n">con</span>
+<span class="kn">from</span> <span class="nn">cloudnetpy</span> <span class="k">import</span> <span class="n">utils</span>
+
+
+<span class="n">HPA_TO_P</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">P_TO_HPA</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="n">M_TO_KM</span> <span class="o">=</span> <span class="mf">0.001</span>
+<span class="n">KG_TO_G</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">TWO_WAY</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+<div class="viewcode-block" id="calc_lwc_change_rate"><a class="viewcode-back" href="../api.html#atmos.calc_lwc_change_rate">[docs]</a><span class="k">def</span> <span class="nf">calc_lwc_change_rate</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">pressure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns rate of change of condensable water (LWC).</span>
+
+<span class="sd">    Calculates the theoretical adiabatic rate of increase of LWC</span>
+<span class="sd">    with height, given the cloud base temperature and pressure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        temperature (ndarray): Temperature of cloud base (K).</span>
+<span class="sd">        pressure (ndarray): Pressure of cloud base (Pa).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: dlwc/dz (g m-3 m-1)</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        Brenguier, 1991, https://bit.ly/2QCSJtb</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">svp</span> <span class="o">=</span> <span class="n">calc_saturation_vapor_pressure</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
+    <span class="n">svp_mixing_ratio</span> <span class="o">=</span> <span class="n">calc_mixing_ratio</span><span class="p">(</span><span class="n">svp</span><span class="p">,</span> <span class="n">pressure</span><span class="p">)</span>
+    <span class="n">air_density</span> <span class="o">=</span> <span class="n">calc_air_density</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">svp_mixing_ratio</span><span class="p">)</span>
+    <span class="n">kelvin_per_kg</span> <span class="o">=</span> <span class="n">calc_psychrometric_constant</span><span class="p">(</span><span class="n">temperature</span><span class="p">)</span>
+    <span class="n">pressure_difference</span> <span class="o">=</span> <span class="n">pressure</span> <span class="o">-</span> <span class="n">svp</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="n">kelvin_per_kg</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">kelvin_per_kg</span> <span class="o">+</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">latent_heat</span> <span class="o">*</span> <span class="n">svp_mixing_ratio</span>
+                               <span class="o">*</span> <span class="n">air_density</span> <span class="o">/</span> <span class="n">pressure_difference</span><span class="p">))</span>
+    <span class="n">f3</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span> <span class="o">*</span> <span class="n">svp</span> <span class="o">*</span> <span class="n">pressure_difference</span><span class="o">**-</span><span class="mi">2</span>
+    <span class="n">dqs_dp</span> <span class="o">=</span> <span class="n">f1</span> <span class="o">*</span> <span class="n">f2</span> <span class="o">*</span> <span class="n">f3</span>
+    <span class="n">dqs_dz</span> <span class="o">=</span> <span class="n">dqs_dp</span> <span class="o">*</span> <span class="n">air_density</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="o">-</span><span class="n">scipy</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">g</span>
+    <span class="k">return</span> <span class="n">dqs_dz</span> <span class="o">*</span> <span class="n">KG_TO_G</span></div>
+
+
+<div class="viewcode-block" id="calc_saturation_vapor_pressure"><a class="viewcode-back" href="../api.html#atmos.calc_saturation_vapor_pressure">[docs]</a><span class="k">def</span> <span class="nf">calc_saturation_vapor_pressure</span><span class="p">(</span><span class="n">temperature</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        temperature (ndarray): Temperature (K).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Saturation vapor pressure (Pa).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ratio</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">T0</span> <span class="o">/</span> <span class="n">temperature</span>
+    <span class="n">inv_ratio</span> <span class="o">=</span> <span class="n">ratio</span><span class="o">**-</span><span class="mi">1</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="mf">10.79574</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">ratio</span><span class="p">)</span>
+                   <span class="o">-</span> <span class="mf">5.028</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">inv_ratio</span><span class="p">)</span>
+                   <span class="o">+</span> <span class="mf">1.50475e-4</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="o">-</span><span class="mf">8.2969</span> <span class="o">*</span> <span class="p">(</span><span class="n">inv_ratio</span><span class="o">-</span><span class="mi">1</span><span class="p">))))</span>
+                   <span class="o">+</span> <span class="mf">0.42873e-3</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span> <span class="o">**</span> <span class="p">(</span><span class="mf">4.76955</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">ratio</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+                   <span class="o">+</span> <span class="mf">0.78614</span><span class="p">))</span> <span class="o">*</span> <span class="n">HPA_TO_P</span></div>
+
+
+<div class="viewcode-block" id="calc_mixing_ratio"><a class="viewcode-back" href="../api.html#atmos.calc_mixing_ratio">[docs]</a><span class="k">def</span> <span class="nf">calc_mixing_ratio</span><span class="p">(</span><span class="n">svp</span><span class="p">,</span> <span class="n">pressure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates mixing ratio from saturation vapor pressure and pressure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        svp (ndarray): Saturation vapor pressure (Pa).</span>
+<span class="sd">        pressure (ndarray): Atmospheric pressure (Pa).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Mixing ratio (kg kg-1).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span> <span class="o">*</span> <span class="n">svp</span> <span class="o">/</span> <span class="p">(</span><span class="n">pressure</span><span class="o">-</span><span class="n">svp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="calc_air_density"><a class="viewcode-back" href="../api.html#atmos.calc_air_density">[docs]</a><span class="k">def</span> <span class="nf">calc_air_density</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">temperature</span><span class="p">,</span> <span class="n">svp_mixing_ratio</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates air density (kg m-3).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pressure (ndarray): Pressure (Pa).</span>
+<span class="sd">        temperature (ndarray): Temperature (K).</span>
+<span class="sd">        svp_mixing_ratio (ndarray): Saturation vapor pressure mixing ratio (kg/kg).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Air density (kg m-3).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pressure</span> <span class="o">/</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">Rs</span> <span class="o">*</span> <span class="n">temperature</span> <span class="o">*</span> <span class="p">(</span><span class="mf">0.6</span> <span class="o">*</span> <span class="n">svp_mixing_ratio</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="calc_psychrometric_constant"><a class="viewcode-back" href="../api.html#atmos.calc_psychrometric_constant">[docs]</a><span class="k">def</span> <span class="nf">calc_psychrometric_constant</span><span class="p">(</span><span class="n">pressure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns psychrometric constant.</span>
+
+<span class="sd">    Psychrometric constant relates the partial pressure</span>
+<span class="sd">    of water in air to the air temperature.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pressure (ndarray): Atmospheric pressure (Pa).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Psychrometric constant value (Pa K-1)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pressure</span><span class="o">*</span><span class="n">con</span><span class="o">.</span><span class="n">specific_heat</span> <span class="o">/</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">latent_heat</span><span class="o">*</span><span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="calc_wet_bulb_temperature"><a class="viewcode-back" href="../api.html#atmos.calc_wet_bulb_temperature">[docs]</a><span class="k">def</span> <span class="nf">calc_wet_bulb_temperature</span><span class="p">(</span><span class="n">model_data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns wet bulb temperature.</span>
+
+<span class="sd">    Returns wet bulb temperature for given temperature,</span>
+<span class="sd">    pressure and relative humidity. Algorithm is based on a Taylor</span>
+<span class="sd">    expansion of a simple expression for the saturated vapour pressure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model_data (dict): Model variables &#39;temperature&#39;, &#39;pressure&#39;, &#39;rh&#39;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Wet bulb temperature (K).</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        J. Sullivan and L. D. Sanders: Method for obtaining wet-bulb</span>
+<span class="sd">        temperatures by modifying the psychrometric formula.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_screen_rh</span><span class="p">():</span>
+        <span class="n">rh</span> <span class="o">=</span> <span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;rh&#39;</span><span class="p">]</span>
+        <span class="n">rh_min</span> <span class="o">=</span> <span class="mf">1e-5</span>
+        <span class="n">rh</span><span class="p">[</span><span class="n">rh</span> <span class="o">&lt;</span> <span class="n">rh_min</span><span class="p">]</span> <span class="o">=</span> <span class="n">rh_min</span>
+        <span class="k">return</span> <span class="n">rh</span>
+
+    <span class="k">def</span> <span class="nf">_vapor_derivatives</span><span class="p">():</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="mf">17.269</span>
+        <span class="n">tn</span> <span class="o">=</span> <span class="mf">35.86</span>
+        <span class="n">f1</span> <span class="o">=</span> <span class="n">m</span><span class="o">*</span><span class="p">(</span><span class="n">tn</span> <span class="o">-</span> <span class="n">con</span><span class="o">.</span><span class="n">T0</span><span class="p">)</span>
+        <span class="n">f2</span> <span class="o">=</span> <span class="n">dew_point</span> <span class="o">-</span> <span class="n">tn</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="o">-</span><span class="n">vapor_pressure</span><span class="o">*</span><span class="n">f1</span><span class="o">/</span><span class="p">(</span><span class="n">f2</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">second</span> <span class="o">=</span> <span class="n">vapor_pressure</span><span class="o">*</span><span class="p">((</span><span class="n">f1</span><span class="o">/</span><span class="p">(</span><span class="n">f2</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">f1</span><span class="o">/</span><span class="p">(</span><span class="n">f2</span><span class="o">**</span><span class="mi">3</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span>
+
+    <span class="n">relative_humidity</span> <span class="o">=</span> <span class="n">_screen_rh</span><span class="p">()</span>
+    <span class="n">saturation_pressure</span> <span class="o">=</span> <span class="n">calc_saturation_vapor_pressure</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">])</span>
+    <span class="n">vapor_pressure</span> <span class="o">=</span> <span class="n">saturation_pressure</span> <span class="o">*</span> <span class="n">relative_humidity</span>
+    <span class="n">dew_point</span> <span class="o">=</span> <span class="n">calc_dew_point_temperature</span><span class="p">(</span><span class="n">vapor_pressure</span><span class="p">)</span>
+    <span class="n">psychrometric_constant</span> <span class="o">=</span> <span class="n">calc_psychrometric_constant</span><span class="p">(</span><span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">])</span>
+    <span class="n">first_der</span><span class="p">,</span> <span class="n">second_der</span> <span class="o">=</span> <span class="n">_vapor_derivatives</span><span class="p">()</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">second_der</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">first_der</span> <span class="o">+</span> <span class="n">psychrometric_constant</span> <span class="o">-</span> <span class="n">dew_point</span><span class="o">*</span><span class="n">second_der</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">model_data</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">psychrometric_constant</span>
+         <span class="o">-</span> <span class="n">dew_point</span><span class="o">*</span><span class="n">first_der</span>
+         <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">dew_point</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">second_der</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="n">b</span><span class="o">+</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">b</span><span class="o">*</span><span class="n">b</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="n">a</span><span class="o">*</span><span class="n">c</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">a</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="calc_dew_point_temperature"><a class="viewcode-back" href="../api.html#atmos.calc_dew_point_temperature">[docs]</a><span class="k">def</span> <span class="nf">calc_dew_point_temperature</span><span class="p">(</span><span class="n">vapor_pressure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Returns dew point temperature.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        vapor_pressure (ndarray): Water vapor pressure (Pa).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Dew point temperature (K).</span>
+
+<span class="sd">    Notes:</span>
+<span class="sd">        Method from Vaisala&#39;s white paper: &quot;Humidity conversion formulas&quot;.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">vaisala_parameters_over_water</span> <span class="o">=</span> <span class="p">(</span><span class="mf">6.116441</span><span class="p">,</span> <span class="mf">7.591386</span><span class="p">,</span> <span class="mf">240.7263</span><span class="p">)</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">tn</span> <span class="o">=</span> <span class="n">vaisala_parameters_over_water</span>
+    <span class="n">dew_point_celsius</span> <span class="o">=</span> <span class="n">tn</span> <span class="o">/</span> <span class="p">((</span><span class="n">m</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">vapor_pressure</span><span class="o">*</span><span class="n">P_TO_HPA</span><span class="o">/</span><span class="n">a</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">c2k</span><span class="p">(</span><span class="n">dew_point_celsius</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_attenuations"><a class="viewcode-back" href="../api.html#atmos.get_attenuations">[docs]</a><span class="k">def</span> <span class="nf">get_attenuations</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mwr</span><span class="p">,</span> <span class="n">classification</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates attenuations due to atmospheric gases and liquid water.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (Model): Model data.</span>
+<span class="sd">        mwr (Mwr): Mwr data.</span>
+<span class="sd">        classification (ClassificationResult): Classified atmospheric</span>
+<span class="sd">            scatterers.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        dict: Dict containing &#39;radar_gas_atten&#39;, &#39;radar_liquid_atten&#39;,</span>
+<span class="sd">            &#39;liquid_atten_err&#39;, &#39;liquid_corrected&#39; and &#39;liquid_uncorrected&#39;</span>
+<span class="sd">            fields.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gas</span> <span class="o">=</span> <span class="n">GasAttenuation</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">)</span>
+    <span class="n">liquid</span> <span class="o">=</span> <span class="n">LiquidAttenuation</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">,</span> <span class="n">mwr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;radar_gas_atten&#39;</span><span class="p">:</span> <span class="n">gas</span><span class="o">.</span><span class="n">atten</span><span class="p">,</span>
+            <span class="s1">&#39;radar_liquid_atten&#39;</span><span class="p">:</span> <span class="n">liquid</span><span class="o">.</span><span class="n">atten</span><span class="p">,</span>
+            <span class="s1">&#39;liquid_atten_err&#39;</span><span class="p">:</span> <span class="n">liquid</span><span class="o">.</span><span class="n">atten_err</span><span class="p">,</span>
+            <span class="s1">&#39;liquid_corrected&#39;</span><span class="p">:</span> <span class="n">liquid</span><span class="o">.</span><span class="n">corrected</span><span class="p">,</span>
+            <span class="s1">&#39;liquid_uncorrected&#39;</span><span class="p">:</span> <span class="n">liquid</span><span class="o">.</span><span class="n">uncorrected</span><span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="Attenuation"><a class="viewcode-back" href="../api.html#atmos.Attenuation">[docs]</a><span class="k">class</span> <span class="nc">Attenuation</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Base class for gas and liquid attenuations.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dheight</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">mdiff</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">data_dense</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_liquid_in_pixel</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="n">classification</span><span class="o">.</span><span class="n">category_bits</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classification</span> <span class="o">=</span> <span class="n">classification</span></div>
+
+
+<div class="viewcode-block" id="GasAttenuation"><a class="viewcode-back" href="../api.html#atmos.GasAttenuation">[docs]</a><span class="k">class</span> <span class="nc">GasAttenuation</span><span class="p">(</span><span class="n">Attenuation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Radar gas attenuation class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atten</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_gas_atten</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_calc_gas_atten</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">atten</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_gas_atten</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fix_atten_in_liquid</span><span class="p">(</span><span class="n">atten</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_specific_to_gas_atten</span><span class="p">(</span><span class="n">atten</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_init_gas_atten</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">[</span><span class="s1">&#39;specific_gas_atten&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_fix_atten_in_liquid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">atten</span><span class="p">):</span>
+        <span class="n">saturated_atten</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">[</span><span class="s1">&#39;specific_saturated_gas_atten&#39;</span><span class="p">]</span>
+        <span class="n">atten</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_liquid_in_pixel</span><span class="p">]</span> <span class="o">=</span> <span class="n">saturated_atten</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_liquid_in_pixel</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_specific_to_gas_atten</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specific_atten</span><span class="p">):</span>
+        <span class="n">layer1_atten</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">[</span><span class="s1">&#39;gas_atten&#39;</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">atten_cumsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">specific_atten</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">atten</span> <span class="o">=</span> <span class="n">TWO_WAY</span> <span class="o">*</span> <span class="n">atten_cumsum</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dheight</span> <span class="o">*</span> <span class="n">M_TO_KM</span>
+        <span class="n">atten</span> <span class="o">+=</span> <span class="n">utils</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">layer1_atten</span><span class="p">)</span>
+        <span class="n">atten</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">atten</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">layer1_atten</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">atten</span></div>
+
+
+<div class="viewcode-block" id="LiquidAttenuation"><a class="viewcode-back" href="../api.html#atmos.LiquidAttenuation">[docs]</a><span class="k">class</span> <span class="nc">LiquidAttenuation</span><span class="p">(</span><span class="n">Attenuation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Radar liquid attenuation class.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">,</span> <span class="n">mwr</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">classification</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mwr</span> <span class="o">=</span> <span class="n">mwr</span><span class="o">.</span><span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lwc_dz_err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_lwc_change_rate_error</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atten</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_liquid_atten</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atten_err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_liquid_atten_err</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">corrected</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uncorrected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen_attenuations</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_get_lwc_change_rate_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">atmosphere</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">[</span><span class="s1">&#39;temperature&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">[</span><span class="s1">&#39;pressure&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">fill_clouds_with_lwc_dz</span><span class="p">(</span><span class="n">atmosphere</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_liquid_in_pixel</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_liquid_atten</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finds radar liquid attenuation.&quot;&quot;&quot;</span>
+        <span class="n">lwc</span> <span class="o">=</span> <span class="n">calc_adiabatic_lwc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lwc_dz_err</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dheight</span><span class="p">)</span>
+        <span class="n">lwc_scaled</span> <span class="o">=</span> <span class="n">distribute_lwp_to_liquid_clouds</span><span class="p">(</span><span class="n">lwc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mwr</span><span class="p">[</span><span class="s1">&#39;lwp&#39;</span><span class="p">][:])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_attenuation</span><span class="p">(</span><span class="n">lwc_scaled</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_get_liquid_atten_err</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finds radar liquid attenuation error.&quot;&quot;&quot;</span>
+        <span class="n">lwc_err_scaled</span> <span class="o">=</span> <span class="n">distribute_lwp_to_liquid_clouds</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lwc_dz_err</span><span class="p">,</span>
+                                                         <span class="bp">self</span><span class="o">.</span><span class="n">_mwr</span><span class="p">[</span><span class="s1">&#39;lwp_error&#39;</span><span class="p">][:])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calc_attenuation</span><span class="p">(</span><span class="n">lwc_err_scaled</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_calc_attenuation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lwc_scaled</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Finds liquid attenuation (dB).&quot;&quot;&quot;</span>
+        <span class="n">liquid_attenuation</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lwc_scaled</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">spec_liq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">[</span><span class="s1">&#39;specific_liquid_atten&#39;</span><span class="p">]</span>
+        <span class="n">lwp_cumsum</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">lwc_scaled</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">spec_liq</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">liquid_attenuation</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">TWO_WAY</span> <span class="o">*</span> <span class="n">lwp_cumsum</span> <span class="o">*</span> <span class="n">M_TO_KM</span>
+        <span class="k">return</span> <span class="n">liquid_attenuation</span>
+
+    <span class="k">def</span> <span class="nf">_screen_attenuations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">melting_layer</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">isbit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classification</span><span class="o">.</span><span class="n">category_bits</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">uncorrected</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">melting_layer</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+        <span class="n">uncorrected</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">classification</span><span class="o">.</span><span class="n">is_rain</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">corrected</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">atten</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">filled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">uncorrected</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">atten</span><span class="p">[</span><span class="n">uncorrected</span><span class="p">]</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">masked</span>
+        <span class="k">return</span> <span class="n">corrected</span><span class="p">,</span> <span class="n">uncorrected</span></div>
+
+
+<div class="viewcode-block" id="fill_clouds_with_lwc_dz"><a class="viewcode-back" href="../api.html#atmos.fill_clouds_with_lwc_dz">[docs]</a><span class="k">def</span> <span class="nf">fill_clouds_with_lwc_dz</span><span class="p">(</span><span class="n">atmosphere</span><span class="p">,</span> <span class="n">is_liquid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Fills liquid clouds with lwc change rate at the cloud bases.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        atmosphere (tuple): 2-element tuple containing temperature (K) and pressure (Pa).</span>
+<span class="sd">        is_liquid (ndarray): Boolean array indicating presence of liquid clouds.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        liquid water content change rate (g/m3/m), so that for each cloud</span>
+<span class="sd">            the base value is filled for the whole cloud.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lwc_dz</span> <span class="o">=</span> <span class="n">get_lwc_change_rate_at_bases</span><span class="p">(</span><span class="n">atmosphere</span><span class="p">,</span> <span class="n">is_liquid</span><span class="p">)</span>
+    <span class="n">lwc_dz_filled</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lwc_dz</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">lwc_dz_filled</span><span class="p">[</span><span class="n">is_liquid</span><span class="p">]</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">ffill</span><span class="p">(</span><span class="n">lwc_dz</span><span class="p">[</span><span class="n">is_liquid</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">lwc_dz_filled</span></div>
+
+
+<div class="viewcode-block" id="get_lwc_change_rate_at_bases"><a class="viewcode-back" href="../api.html#atmos.get_lwc_change_rate_at_bases">[docs]</a><span class="k">def</span> <span class="nf">get_lwc_change_rate_at_bases</span><span class="p">(</span><span class="n">atmosphere</span><span class="p">,</span> <span class="n">is_liquid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds LWC change rate in liquid cloud bases.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        atmosphere (tuple): 2-element tuple containing temperature (K) and</span>
+<span class="sd">            pressure (Pa).</span>
+<span class="sd">        is_liquid (ndarray): Boolean array indicating presence of liquid clouds.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        liquid water content change rate at cloud bases (kg/m3/m).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">liquid_bases</span> <span class="o">=</span> <span class="n">find_cloud_bases</span><span class="p">(</span><span class="n">is_liquid</span><span class="p">)</span>
+    <span class="n">lwc_dz</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">liquid_bases</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">lwc_dz</span><span class="p">[</span><span class="n">liquid_bases</span><span class="p">]</span> <span class="o">=</span> <span class="n">calc_lwc_change_rate</span><span class="p">(</span><span class="n">atmosphere</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">liquid_bases</span><span class="p">],</span>
+                                                <span class="n">atmosphere</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">liquid_bases</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">lwc_dz</span></div>
+
+
+<div class="viewcode-block" id="find_cloud_bases"><a class="viewcode-back" href="../api.html#atmos.find_cloud_bases">[docs]</a><span class="k">def</span> <span class="nf">find_cloud_bases</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds bases of clouds.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        array (ndarray): 2D boolean array denoting clouds or some other</span>
+<span class="sd">            similar field.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Boolean array indicating bases of the individual clouds.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">zeros</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">array_padded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">array_padded</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="calc_adiabatic_lwc"><a class="viewcode-back" href="../api.html#atmos.calc_adiabatic_lwc">[docs]</a><span class="k">def</span> <span class="nf">calc_adiabatic_lwc</span><span class="p">(</span><span class="n">lwc_change_rate</span><span class="p">,</span> <span class="n">dheight</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates adiabatic liquid water content (g/m3).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lwc_change_rate (ndarray): Liquid water content change rate (g/m3/m)</span>
+<span class="sd">            calculated at the base of each cloud and filled to that cloud.</span>
+<span class="sd">        dheight: Median difference of the height vector (m).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Liquid water content (g/m3).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_liquid</span> <span class="o">=</span> <span class="n">lwc_change_rate</span> <span class="o">!=</span> <span class="mi">0</span>
+    <span class="n">ind_from_base</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">cumsumr</span><span class="p">(</span><span class="n">is_liquid</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ind_from_base</span> <span class="o">*</span> <span class="n">dheight</span> <span class="o">*</span> <span class="n">lwc_change_rate</span></div>
+
+
+<div class="viewcode-block" id="distribute_lwp_to_liquid_clouds"><a class="viewcode-back" href="../api.html#atmos.distribute_lwp_to_liquid_clouds">[docs]</a><span class="k">def</span> <span class="nf">distribute_lwp_to_liquid_clouds</span><span class="p">(</span><span class="n">lwc</span><span class="p">,</span> <span class="n">lwp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds LWC that would produce measured LWP.</span>
+
+<span class="sd">    Calculates LWP-weighted, normalized LWC. This is the measured</span>
+<span class="sd">    LWP distributed to liquid cloud pixels according to their</span>
+<span class="sd">    theoretical proportion, i.e., sum(scaled LWC) = measured LWP.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        lwc (ndarray): 2D liquid water content (g/m3).</span>
+<span class="sd">        lwp (ndarray): 1D liquid water path (g/m2).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: 2D LWP-weighted, normalized LWC (g/m2).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lwc_sum</span> <span class="o">=</span> <span class="n">ma</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">lwc</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">lwc</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="n">lwc_sum</span> <span class="o">*</span> <span class="n">lwp</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="c2k"><a class="viewcode-back" href="../api.html#atmos.c2k">[docs]</a><span class="k">def</span> <span class="nf">c2k</span><span class="p">(</span><span class="n">temp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts Celsius to Kelvins.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">+</span> <span class="mf">273.15</span></div>
+
+
+<div class="viewcode-block" id="k2c"><a class="viewcode-back" href="../api.html#atmos.k2c">[docs]</a><span class="k">def</span> <span class="nf">k2c</span><span class="p">(</span><span class="n">temp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts Kelvins to Celsius.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">ma</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">temp</span><span class="p">)</span> <span class="o">-</span> <span class="mf">273.15</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">CloudnetPy  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Finnish Meteorological Institute.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>

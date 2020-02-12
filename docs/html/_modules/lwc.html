@@ -1,0 +1,140 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>lwc &#8212; CloudnetPy  documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">CloudnetPy  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for lwc</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Module for liquid water content calculations.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">cloudnetpy.constants</span> <span class="k">as</span> <span class="nn">con</span>
+
+
+<div class="viewcode-block" id="adiabatic_lwc"><a class="viewcode-back" href="../api.html#lwc.adiabatic_lwc">[docs]</a><span class="k">def</span> <span class="nf">adiabatic_lwc</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns adiabatic LWC change rate.</span>
+
+<span class="sd">    Calculates the theoretical adiabatic rate of increase of LWC with</span>
+<span class="sd">    height, or pressure, given the cloud base temperature and pressure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        T (ndarray): Temperature of cloud base (K).</span>
+<span class="sd">        P (ndarray): Pressure of cloud base (Pa).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: dlwc/dz in kg m-3 m-1</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        Brenguier, 1991, https://bit.ly/2QCSJtb</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">g</span>
+    <span class="n">cp</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">specific_heat</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">latent_heat</span>
+    <span class="n">R</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">Rs</span>
+
+    <span class="n">qs</span><span class="p">,</span> <span class="n">es</span> <span class="o">=</span> <span class="n">temp2mixingratio</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
+    <span class="n">rhoa</span> <span class="o">=</span> <span class="n">P</span> <span class="o">/</span> <span class="p">(</span><span class="n">R</span><span class="o">*</span><span class="n">T</span><span class="o">*</span><span class="p">(</span><span class="mf">0.6</span><span class="o">*</span><span class="n">qs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">cp</span><span class="o">*</span><span class="n">T</span><span class="o">/</span><span class="p">(</span><span class="n">L</span><span class="o">*</span><span class="n">e</span><span class="p">),</span> <span class="n">P</span><span class="o">-</span><span class="n">es</span>
+    <span class="n">f1</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">+</span> <span class="n">a</span>
+    <span class="n">f2</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="n">a</span> <span class="o">+</span> <span class="p">(</span><span class="n">L</span><span class="o">*</span><span class="n">qs</span><span class="o">*</span><span class="n">rhoa</span><span class="o">/</span><span class="n">b</span><span class="p">))</span>
+    <span class="n">f3</span> <span class="o">=</span> <span class="n">rhoa</span><span class="o">*</span><span class="n">g</span><span class="o">*</span><span class="n">e</span><span class="o">*</span><span class="n">es</span><span class="o">*</span><span class="n">b</span><span class="o">**-</span><span class="mi">2</span>
+    <span class="k">return</span> <span class="n">rhoa</span><span class="o">*</span><span class="n">f1</span><span class="o">*</span><span class="n">f2</span><span class="o">*</span><span class="n">f3</span></div>
+
+
+<div class="viewcode-block" id="temp2mixingratio"><a class="viewcode-back" href="../api.html#lwc.temp2mixingratio">[docs]</a><span class="k">def</span> <span class="nf">temp2mixingratio</span><span class="p">(</span><span class="n">T</span><span class="p">,</span> <span class="n">P</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts temperature and pressure to mixing ratio.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        T (ndarray): Temperature (K).</span>
+<span class="sd">        P (ndarray): Pressure (Pa).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        ndarray: Mixing ratio.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="n">T</span><span class="o">/</span><span class="n">con</span><span class="o">.</span><span class="n">T0</span>
+    <span class="n">t2</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">con</span><span class="o">.</span><span class="n">T0</span><span class="o">/</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">svp</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="mf">10.79574</span><span class="o">*</span><span class="n">t2</span><span class="o">-</span><span class="mf">5.028</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="n">t1</span><span class="p">)</span>
+               <span class="o">+</span> <span class="mf">1.50475e-4</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="mf">8.2969</span><span class="o">*</span><span class="p">(</span><span class="n">t1</span><span class="o">-</span><span class="mi">1</span><span class="p">))))</span>
+               <span class="o">+</span> <span class="mf">0.42873e-3</span><span class="o">*</span><span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="p">(</span><span class="mf">4.76955</span><span class="o">*</span><span class="n">t2</span><span class="p">))</span>
+               <span class="o">+</span> <span class="mf">2.78614</span><span class="p">)</span>
+    <span class="n">mixing_ratio</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">mw_ratio</span><span class="o">*</span><span class="n">svp</span><span class="o">/</span><span class="p">(</span><span class="n">P</span><span class="o">-</span><span class="n">svp</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mixing_ratio</span><span class="p">,</span> <span class="n">svp</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">CloudnetPy  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2019, Finnish Meteorological Institute.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.
+    </div>
+  </body>
+</html>
