@@ -38,7 +38,7 @@ drizzle drops, insects and aerosol particles.
 Furthermore, adding a passive microwave radiometer, an instrument measuring 
 liquid water path, attenuation corrections and quantitative retrievals of geophysical 
 products such as ice water content, liquid water content 
-and drizzle properties become feasible [@OConnorEtAl05, @HoganEtAl06].
+and drizzle properties become feasible [@OConnorEtAl05; @HoganEtAl06].
 
 Methodology and prototype software to combine these different data sources, 
 and to retrieve target classification and other products, were developed within 
