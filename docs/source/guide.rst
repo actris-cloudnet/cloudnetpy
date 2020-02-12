@@ -27,15 +27,14 @@ clone the whole repository from `GitHub
 Testing environment
 ...................
 
-Now, create a virtual environment and install external packages
-needed by Cloudnetpy:
+Now, create a virtual environment and install pytest and CloudnetPy:
 
 .. code-block:: console
 
     $ cd cloudnetpy
     $ python3 -m venv venv
     $ source venv/bin/activate
-    (venv) $ pip3 install numpy scipy netCDF4 matplotlib requests pytest
+    (venv) $ pip3 install pytest .
 
 Running all tests
 .................
