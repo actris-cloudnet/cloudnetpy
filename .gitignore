@@ -5,3 +5,5 @@ tests/source_data/
 docs/html/
 docs/doctrees/
 *egg-info*
+build/
+dist/

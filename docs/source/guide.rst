@@ -18,7 +18,7 @@ Testing
 
 To run the CloudnetPy test suite, first
 clone the whole repository from `GitHub
-<https://github.com/tukiains/cloudnetpy>`_:
+<https://github.com/actris-cloudnet/cloudnetpy>`_:
 
 .. code-block:: console
 
