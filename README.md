@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/actris-cloudnet/cloudnetpy.svg?branch=master)](https://travis-ci.org/actris-cloudnet/cloudnetpy)
 [![Documentation Status](https://readthedocs.org/projects/cloudnetpy/badge/?version=latest)](https://cloudnetpy.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/cloudnetpy.svg)](https://badge.fury.io/py/cloudnetpy)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3529512.svg)](https://doi.org/10.5281/zenodo.3529512)
+[![DOI](https://zenodo.org/badge/233602651.svg)](https://zenodo.org/badge/latestdoi/233602651)
 
 CloudnetPy is a Python software for producing vertical profiles of cloud properties from ground-based 
 remote sensing measurements. The Cloudnet processing combines cloud radar, optical lidar, microwave 
