@@ -74,7 +74,7 @@ def main():
         mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta)
         ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
     for name, file in calibrated_files.items():
-        check_metadata(file, log_file)  # we know these fail at the moment
+        check_metadata(file, log_file)
         check_data_quality(file, log_file)
 
     input_files = {

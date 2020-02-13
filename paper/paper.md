@@ -17,7 +17,7 @@ authors:
 affiliations:
  - name: Finnish Meteorological Institute, Helsinki, Finland
    index: 1
-date: 12 February 2020
+date: 13 February 2020
 bibliography: paper.bib
 ---
 
