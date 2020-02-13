@@ -300,7 +300,9 @@ class LwcError:
         return self._limit_error(error, 5)
 
     def _calc_lwp_relative_error(self):
-        error = self.lwc_source.lwp_error / self.lwc_source.lwp
+        err = self.lwc_source.lwp_error
+        value = self.lwc_source.lwp
+        error = np.divide(err, value, out=np.zeros_like(err), where=value != 0)
         return self._limit_error(error, 10)
 
     @staticmethod

@@ -1,10 +1,10 @@
 """Model module, containing the :class:`Model` class."""
 import numpy as np
 import numpy.ma as ma
+from scipy.interpolate import interp1d
 from cloudnetpy import CloudnetArray
 from cloudnetpy.categorize import DataSource, atmos
 from cloudnetpy import utils
-from scipy.interpolate import interp1d
 
 
 class Model(DataSource):

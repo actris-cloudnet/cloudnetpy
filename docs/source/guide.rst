@@ -10,7 +10,7 @@ tests and fixing bugs.
 How to contribute
 -----------------
 
-Instructions can be found from `CloudnetPy's Github page <https://github.com/tukiains/cloudnetpy/blob/master/CONTRIBUTING.md>`_.
+Instructions can be found from `CloudnetPy's Github page <https://github.com/actris-cloudnet/cloudnetpy/blob/master/CONTRIBUTING.md>`_.
 
 
 Testing
@@ -22,20 +22,19 @@ clone the whole repository from `GitHub
 
 .. code-block:: console
 
-	$ git clone https://github.com/tukiains/cloudnetpy
+	$ git clone https://github.com/actris-cloudnet/cloudnetpy
 
 Testing environment
 ...................
 
-Now, create a virtual environment and install external packages
-needed by Cloudnetpy:
+Now, create a virtual environment and install pytest and CloudnetPy:
 
 .. code-block:: console
 
     $ cd cloudnetpy
     $ python3 -m venv venv
     $ source venv/bin/activate
-    (venv) $ pip3 install numpy scipy netCDF4 matplotlib requests pytest
+    (venv) $ pip3 install pytest .
 
 Running all tests
 .................

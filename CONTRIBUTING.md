@@ -5,7 +5,7 @@ First off, thanks for taking the time to contribute! :+1:
 Reporting bugs
 --------------
 
-* Create a new [issue](https://github.com/tukiains/cloudnetpy/issues)
+* Create a new [issue](https://github.com/actris-cloudnet/cloudnetpy/issues)
 * Describe the problem and steps to reproduce it
 * Suggest a fix if you can but this is not mandatory
 
@@ -13,7 +13,7 @@ Proposing code improvements
 ---------------------------
 
 If you have a good idea how to improve the code without changing the actual outcome
-of the processing, you can directly create a [pull request](https://github.com/tukiains/cloudnetpy/pulls) (PR). 
+of the processing, you can directly create a [pull request](https://github.com/actris-cloudnet/cloudnetpy/pulls) (PR). 
 Examples of these kind of changes are, for example, better 
 
 * unit tests
@@ -32,5 +32,5 @@ reviewed and tested before accepting. Examples include, for example, modificatio
 * threshold values used in different functions / methods
 * constant values
 
-Also for these sort of proposals, you can open a new [issue](https://github.com/tukiains/cloudnetpy/issues)
+Also for these sort of proposals, you can open a new [issue](https://github.com/actris-cloudnet/cloudnetpy/issues)
 where the idea can be discussed before (possible) implementation.
