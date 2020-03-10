@@ -23,7 +23,7 @@ CloudnetPy is a refactored fork of the currently operational (Matlab) processing
 
 ### From PyPI
 ```
-$ pip3 install cloudnetpy
+$ python3 -m pip install cloudnetpy
 ```
 
 ### From the source
@@ -32,7 +32,7 @@ $ git clone https://github.com/actris-cloudnet/cloudnetpy
 $ cd cloudnetpy/
 $ python3 -m venv venv
 $ source venv/bin/activate
-(venv) $ pip3 install .
+(venv) $ python3 -m pip install .
 ```
 
 ## Contributing
