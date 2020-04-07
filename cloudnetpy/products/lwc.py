@@ -12,7 +12,7 @@ from cloudnetpy.products.product_tools import CategorizeBits
 G_TO_KG = 0.001
 
 
-def generate_lwc(categorize_file, output_file):
+def generate_lwc(categorize_file, output_file, keep_uuid=False):
     """Generates Cloudnet liquid water content product.
 
     This function calculates cloud liquid water content using the so-called
@@ -23,6 +23,9 @@ def generate_lwc(categorize_file, output_file):
     Args:
         categorize_file (str): Categorize file name.
         output_file (str): Output file name.
+        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+            if that exists. Default is False when new UUID is generated.
+
 
     Examples:
         >>> from cloudnetpy.products import generate_lwc
@@ -43,7 +46,7 @@ def generate_lwc(categorize_file, output_file):
     error_obj = LwcError(lwc_source, lwc_obj)
     _append_data(lwc_source, lwc_obj, cloud_obj, error_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
-    output.save_product_file('lwc', lwc_source, output_file,
+    output.save_product_file('lwc', lwc_source, output_file, keep_uuid,
                              copy_from_cat=('lwp', 'lwp_error'))
     lwc_source.close()
 

@@ -24,7 +24,7 @@ def update_attributes(cloudnet_variables, attributes):
             cloudnet_variables[key].set_attributes(COMMON_ATTRIBUTES[key])
 
 
-def save_product_file(short_id, obj, file_name, copy_from_cat=()):
+def save_product_file(short_id, obj, file_name, keep_uuid, copy_from_cat=()):
     """Saves a standard Cloudnet product file.
 
     Args:
@@ -33,6 +33,8 @@ def save_product_file(short_id, obj, file_name, copy_from_cat=()):
         obj (object): Instance containing product specific attributes: `time`,
             `dataset`, `data`.
         file_name (str): Name of the output file to be generated.
+        keep_uuid (bool): If True and old file with the same name
+            exists, uses UUID from that existing file.
         copy_from_cat (tuple, optional): Variables to be copied from the
             categorize file.
 
@@ -40,7 +42,7 @@ def save_product_file(short_id, obj, file_name, copy_from_cat=()):
     identifier = _get_identifier(short_id)
     dimensions = {'time': len(obj.time),
                   'height': len(obj.dataset.variables['height'])}
-    root_group = init_file(file_name, dimensions, obj.data)
+    root_group = init_file(file_name, dimensions, obj.data, keep_uuid)
     add_file_type(root_group, short_id)
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
     copy_variables(obj.dataset, root_group, vars_from_source)

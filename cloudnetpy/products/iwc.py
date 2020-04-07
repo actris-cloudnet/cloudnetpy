@@ -14,7 +14,7 @@ from cloudnetpy.products.product_tools import ProductClassification
 G_TO_KG = 0.001
 
 
-def generate_iwc(categorize_file, output_file):
+def generate_iwc(categorize_file, output_file, keep_uuid=False):
     """Generates Cloudnet ice water content product.
 
     This function calculates ice water content using the so-called Z-T method.
@@ -25,6 +25,8 @@ def generate_iwc(categorize_file, output_file):
     Args:
         categorize_file (str): Categorize file name.
         output_file (str): Output file name.
+        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+            if that exists. Default is False when new UUID is generated.
 
     Examples:
         >>> from cloudnetpy.products import generate_iwc
@@ -46,7 +48,7 @@ def generate_iwc(categorize_file, output_file):
     _append_iwc_sensitivity(iwc_data)
     _append_iwc_status(iwc_data, ice_class)
     output.update_attributes(iwc_data.data, IWC_ATTRIBUTES)
-    output.save_product_file('iwc', iwc_data, output_file)
+    output.save_product_file('iwc', iwc_data, output_file, keep_uuid)
     iwc_data.close()
 
 

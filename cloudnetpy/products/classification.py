@@ -6,7 +6,7 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
-def generate_classification(categorize_file, output_file):
+def generate_classification(categorize_file, output_file, keep_uuid=False):
     """Generates Cloudnet classification product.
 
     This function reads the initial classification masks from a
@@ -16,8 +16,9 @@ def generate_classification(categorize_file, output_file):
 
     Args:
         categorize_file (str): Categorize file name.
-
         output_file (str): Output file name.
+        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+            if that exists. Default is False when new UUID is generated.
 
     Examples:
         >>> from cloudnetpy.products import generate_classification
@@ -31,7 +32,7 @@ def generate_classification(categorize_file, output_file):
     status = _get_detection_status(categorize_bits)
     data_handler.append_data(status, 'detection_status')
     output.update_attributes(data_handler.data, CLASSIFICATION_ATTRIBUTES)
-    output.save_product_file('classification', data_handler, output_file)
+    output.save_product_file('classification', data_handler, output_file, keep_uuid)
     data_handler.close()
 
 

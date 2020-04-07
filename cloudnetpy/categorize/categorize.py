@@ -8,7 +8,7 @@ from cloudnetpy.categorize.mwr import Mwr
 from cloudnetpy.categorize.lidar import Lidar
 
 
-def generate_categorize(input_files, output_file):
+def generate_categorize(input_files, output_file, keep_uuid=False):
     """Generates Cloudnet categorize file.
 
     The measurements are rebinned into a common height / time grid,
@@ -21,6 +21,8 @@ def generate_categorize(input_files, output_file):
         input_files (dict): dict containing file names for calibrated
             `radar`, `lidar`, `model` and `mwr` files.
         output_file (str): Full path of the output file.
+        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+            if that exists. Default is False when new UUID is generated.
 
     Raises:
         RuntimeError: Failed to create the categorize file.
@@ -82,11 +84,11 @@ def generate_categorize(input_files, output_file):
     quality = classify.fetch_quality(radar, lidar, classification, attenuations)
     output_data = _prepare_output()
     output.update_attributes(output_data, CATEGORIZE_ATTRIBUTES)
-    _save_cat(output_file, radar, lidar, model, output_data)
+    _save_cat(output_file, radar, lidar, model, output_data, keep_uuid)
     _close_all()
 
 
-def _save_cat(file_name, radar, lidar, model, obs):
+def _save_cat(file_name, radar, lidar, model, obs, keep_uuid):
     """Creates a categorize netCDF4 file and saves all data into it."""
 
     def _merge_source():
@@ -97,7 +99,7 @@ def _save_cat(file_name, radar, lidar, model, obs):
             'height': len(radar.height),
             'model_time': len(model.time),
             'model_height': len(model.mean_height)}
-    rootgrp = output.init_file(file_name, dims, obs)
+    rootgrp = output.init_file(file_name, dims, obs, keep_uuid)
     output.add_file_type(rootgrp, 'categorize')
     output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
     rootgrp.title = f"Categorize file from {radar.location}"
