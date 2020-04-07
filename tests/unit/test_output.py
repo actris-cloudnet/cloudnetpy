@@ -45,6 +45,7 @@ def fake_nc_file(tmpdir_factory):
     root_grp.a = 1
     root_grp.b = 2
     root_grp.c = 3
+    root_grp.file_uuid = 'abcde'
     var = root_grp.createVariable('a', 'f8')
     var[:] = 1.0
     var = root_grp.createVariable('b', 'f8')
@@ -63,6 +64,8 @@ def test_copy_global(tmpdir_factory, fake_nc_file):
     output.copy_global(source, root_grp, attr_list)
     for attr in attr_list:
         assert getattr(root_grp, attr) == getattr(source, attr)
+    root_grp.close()
+    source.close()
 
 
 def test_copy_variables(tmpdir_factory, fake_nc_file):
@@ -73,6 +76,7 @@ def test_copy_variables(tmpdir_factory, fake_nc_file):
     output.copy_variables(source, root_grp, var_list)
     for var in var_list:
         assert source.variables[var][:] == root_grp.variables[var][:]
+    root_grp.close()
 
 
 def test_merge_history():
@@ -85,3 +89,21 @@ def test_merge_history():
     output.merge_history(root, file_type, source1, source2)
     assert utils.is_timestamp(f"-{root.history[:19]}") is True
     assert root.history[19:] == ' - dummy file created\nsome history x\nsome history y'
+
+
+def test_get_old_uuid(fake_nc_file):
+    assert output._get_old_uuid(True, fake_nc_file) == 'abcde'
+    assert output._get_old_uuid(False, fake_nc_file) is None
+    assert output._get_old_uuid(True, 'new_file.nc') is None
+    assert output._get_old_uuid(False, 'new_file.nc') is None
+
+
+def test_copy_variables(tmpdir_factory, fake_nc_file):
+    file = tmpdir_factory.mktemp("data").join("nc_file.nc")
+    root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
+    output._add_standard_global_attributes(root_grp, 'abcd')
+    assert root_grp.file_uuid == 'abcd'
+    assert root_grp.Conventions == 'CF-1.7'
+    output._add_standard_global_attributes(root_grp)
+    assert root_grp.file_uuid != 'abcd'
+    root_grp.close()
