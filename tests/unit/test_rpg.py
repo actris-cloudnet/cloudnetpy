@@ -14,8 +14,8 @@ def example_files(tmpdir):
 
 
 def test_get_rpg_files(example_files):
-    dir_name = example_files.dirname + '/data/'
-    result = [f"{dir_name}{x}" for x in ('f.LV1', 'g.LV1')]
+    dir_name = example_files.dirname + '/data'
+    result = ['/'.join((dir_name, x)) for x in ('f.LV1', 'g.LV1')]
     assert rpg.get_rpg_files(dir_name) == result
 
 

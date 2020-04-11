@@ -43,7 +43,7 @@ def rpg2nc(path_to_l1_files, output_file, site_meta, keep_uuid=False):
 def get_rpg_files(path_to_l1_files):
     """Returns list of RPG Level 1 files for one day - sorted by filename."""
     files = os.listdir(path_to_l1_files)
-    l1_files = [f"{path_to_l1_files}{file}" for file in files if file.endswith('LV1')]
+    l1_files = ['/'.join((path_to_l1_files, file)) for file in files if file.endswith('LV1')]
     l1_files.sort()
     return l1_files
 
