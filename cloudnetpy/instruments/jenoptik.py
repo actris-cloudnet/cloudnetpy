@@ -11,6 +11,7 @@ instrument_info = namedtuple('instrument_info',
                               'overlap_function_params',
                               'is_range_corrected'])
 
+# TODO: should be a separate config file or accessible over http api
 CEILOMETER_INFO = {
     'punta-arenas': instrument_info(
         calibration_factor=1e-12,
@@ -19,7 +20,11 @@ CEILOMETER_INFO = {
     'mace-head': instrument_info(
         calibration_factor=4.5e-11,
         overlap_function_params=(500, 200),
-        is_range_corrected=False)
+        is_range_corrected=False),
+    'bucharest': instrument_info(
+        calibration_factor=0.79e-8,
+        overlap_function_params=(0, 1),
+        is_range_corrected=True),
 }
 
 
@@ -107,3 +112,5 @@ def _read_calibration_info(site_name):
         return CEILOMETER_INFO['punta-arenas']
     elif 'mace' in site_name.lower():
         return CEILOMETER_INFO['mace-head']
+    else:
+        return CEILOMETER_INFO[site_name.lower()]

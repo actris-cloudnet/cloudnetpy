@@ -14,7 +14,7 @@ from cloudnetpy.products.product_tools import ProductClassification
 from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 
-def generate_drizzle(categorize_file, output_file):
+def generate_drizzle(categorize_file, output_file, keep_uuid=False):
     """Generates Cloudnet drizzle product.
 
     This function calculates different drizzle properties from
@@ -23,6 +23,8 @@ def generate_drizzle(categorize_file, output_file):
     Args:
         categorize_file (str): Categorize file name.
         output_file (str): Output file name.
+        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+            if that exists. Default is False when new UUID is generated.
 
     Examples:
         >>> from cloudnetpy.products import generate_drizzle
@@ -48,7 +50,7 @@ def generate_drizzle(categorize_file, output_file):
     results['drizzle_retrieval_status'] = retrieval_status.retrieval_status
     _append_data(drizzle_source, results)
     output.update_attributes(drizzle_source.data, DRIZZLE_ATTRIBUTES)
-    output.save_product_file('drizzle', drizzle_source, output_file)
+    output.save_product_file('drizzle', drizzle_source, output_file, keep_uuid)
     drizzle_source.close()
 
 

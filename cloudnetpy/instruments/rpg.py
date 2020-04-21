@@ -8,7 +8,7 @@ from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 
-def rpg2nc(path_to_l1_files, output_file, site_meta):
+def rpg2nc(path_to_l1_files, output_file, site_meta, keep_uuid=False):
     """Converts RPG cloud radar binary files into netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
@@ -20,6 +20,8 @@ def rpg2nc(path_to_l1_files, output_file, site_meta):
         site_meta (dict): Dictionary containing information about the
             site. Required key value pairs are `altitude` (metres above mean
             sea level) and `name`.
+        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+            if that exists. Default is False when new UUID is generated.
 
     Raises:
         RuntimeError: Failed to read the binary data.
@@ -35,13 +37,13 @@ def rpg2nc(path_to_l1_files, output_file, site_meta):
     rpg = Rpg(one_day_of_data, site_meta)
     rpg.linear_to_db(('Ze', 'antenna_gain'))
     output.update_attributes(rpg.data, RPG_ATTRIBUTES)
-    _save_rpg(rpg, output_file)
+    _save_rpg(rpg, output_file, keep_uuid)
 
 
 def get_rpg_files(path_to_l1_files):
     """Returns list of RPG Level 1 files for one day - sorted by filename."""
     files = os.listdir(path_to_l1_files)
-    l1_files = [f"{path_to_l1_files}{file}" for file in files if file.endswith('LV1')]
+    l1_files = ['/'.join((path_to_l1_files, file)) for file in files if file.endswith('LV1')]
     l1_files.sort()
     return l1_files
 
@@ -325,7 +327,7 @@ class Rpg:
         return datetime.datetime.utcfromtimestamp(time_median).strftime('%Y %m %d').split()
 
 
-def _save_rpg(rpg, output_file):
+def _save_rpg(rpg, output_file, keep_uuid):
     """Saves the RPG radar file.
 
     Notes:
@@ -336,7 +338,7 @@ def _save_rpg(rpg, output_file):
             'range': len(rpg.data['range'][:]),
             'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}
 
-    rootgrp = output.init_file(output_file, dims, rpg.data)
+    rootgrp = output.init_file(output_file, dims, rpg.data, keep_uuid)
     output.add_file_type(rootgrp, 'radar')
     rootgrp.title = f"Radar file from {rpg.location}"
     rootgrp.year, rootgrp.month, rootgrp.day = rpg.date

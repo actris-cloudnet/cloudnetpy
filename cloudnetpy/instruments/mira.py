@@ -8,7 +8,7 @@ from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 
 
-def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False):
+def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False, keep_uuid=False):
     """Converts METEK MIRA-35 cloud radar Level 1 file into netCDF file.
 
     This function converts raw cloud radar file into a much smaller file that
@@ -22,6 +22,8 @@ def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False):
             site. Required key value pair is `name`.
         rebin_data (bool, optional): If True, rebins data to 30s resolution.
             Otherwise keeps the native resolution. Default is False.
+        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+            if that exists. Default is False when new UUID is generated.
 
     Examples:
           >>> from cloudnetpy.instruments import mira2nc
@@ -38,7 +40,7 @@ def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False):
     raw_mira.screen_by_snr(snr_gain)
     raw_mira.add_meta()
     output.update_attributes(raw_mira.data, MIRA_ATTRIBUTES)
-    _save_mira(mmclx_file, raw_mira, output_file)
+    _save_mira(mmclx_file, raw_mira, output_file, keep_uuid)
 
 
 class Mira(DataSource):
@@ -112,11 +114,11 @@ class Mira(DataSource):
         return np.sqrt(binning_ratio)
 
 
-def _save_mira(mmclx_file, raw_radar, output_file):
+def _save_mira(mmclx_file, raw_radar, output_file, keep_uuid):
     """Saves the MIRA radar file."""
     dims = {'time': len(raw_radar.time),
             'range': len(raw_radar.range)}
-    rootgrp = output.init_file(output_file, dims, raw_radar.data)
+    rootgrp = output.init_file(output_file, dims, raw_radar.data, keep_uuid)
     fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg')
     output.copy_variables(netCDF4.Dataset(mmclx_file), rootgrp, fields_from_raw)
     output.add_file_type(rootgrp, 'radar')

@@ -7,7 +7,7 @@ from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 
-def ceilo2nc(input_file, output_file, site_meta):
+def ceilo2nc(input_file, output_file, site_meta, keep_uuid=False):
     """Converts Vaisala and Jenoptik raw files into netCDF file.
 
     This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
@@ -25,6 +25,8 @@ def ceilo2nc(input_file, output_file, site_meta):
         site_meta (dict): Dictionary containing information about the
             site. Required key value pairs are `name` and `altitude`
             (metres above mean sea level).
+        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+            if that exists. Default is False when new UUID is generated.
 
     Raises:
         RuntimeError: Failed to read or process raw ceilometer data.
@@ -42,7 +44,7 @@ def ceilo2nc(input_file, output_file, site_meta):
     _append_data(ceilo, beta_variants)
     _append_height(ceilo, site_meta['altitude'])
     output.update_attributes(ceilo.data, ATTRIBUTES)
-    _save_ceilo(ceilo, output_file, site_meta['name'])
+    _save_ceilo(ceilo, output_file, site_meta['name'], keep_uuid)
 
 
 def _initialize_ceilo(file, site_name):
@@ -95,11 +97,11 @@ def _append_data(ceilo, beta_variants):
         ceilo.data['wavelength'] = CloudnetArray(ceilo.wavelength, 'wavelength', 'nm')
 
 
-def _save_ceilo(ceilo, output_file, location):
+def _save_ceilo(ceilo, output_file, location, keep_uuid):
     """Saves the ceilometer netcdf-file."""
     dims = {'time': len(ceilo.time),
             'range': len(ceilo.range)}
-    rootgrp = output.init_file(output_file, dims, ceilo.data)
+    rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid)
     output.add_file_type(rootgrp, 'lidar')
     if hasattr(ceilo, 'dataset'):
         output.copy_variables(ceilo.dataset, rootgrp, ('wavelength',))
