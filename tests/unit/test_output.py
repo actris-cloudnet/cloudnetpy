@@ -98,7 +98,7 @@ def test_get_old_uuid(fake_nc_file):
     assert output._get_old_uuid(False, 'new_file.nc') is None
 
 
-def test_copy_variables(tmpdir_factory, fake_nc_file):
+def test_add_standard_global_attributes(tmpdir_factory, fake_nc_file):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
     root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
     output._add_standard_global_attributes(root_grp, 'abcd')
