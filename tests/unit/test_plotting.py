@@ -57,9 +57,3 @@ class TestReadAxValues:
 
     def test_2(self, nc_file, test_array):
         assert_array_equal(plotting._read_ax_values(nc_file)[1], test_array/1000)
-
-    def test_3(self, nc_file, test_array):
-        assert_array_equal(plotting._read_ax_values(nc_file, 'model')[0], test_array)
-
-    def test_4(self, nc_file, test_array):
-        assert_array_equal(plotting._read_ax_values(nc_file, 'model')[1], test_array/1000)

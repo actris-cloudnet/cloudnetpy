@@ -22,6 +22,7 @@ def file_metadata():
         'location': 'Kumpula',
         'case_date': date(int(year), int(month), int(day)),
         'altitude_km': 0.5,
+        'cloudnet_file_type': 'classification'
     }
 
 
@@ -55,7 +56,7 @@ def _create_dimension_variables(root_grp):
 
 
 def _create_global_attributes(root_grp, meta):
-    for key in ('year', 'month', 'day', 'location'):
+    for key in ('year', 'month', 'day', 'location', 'cloudnet_file_type'):
         setattr(root_grp, key, meta[key])
 
 
