@@ -15,7 +15,7 @@ from cloudnetpy.products.product_tools import CategorizeBits
 
 
 def generate_figure(nc_file, field_names, show=True, save_path=None,
-                    max_y=12, dpi=200, image_name=None):
+                    max_y=12, dpi=200, image_name=None, sub_title=True):
     """Generates a Cloudnet figure.
 
     Args:
@@ -29,6 +29,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             more pixels, i.e., better image quality. Default is 200.
         image_name (str, optional): Name (and full path) of the output image.
             Overrides the *save_path* option. Default is None.
+        sub_title (bool, optional): Add subtitle to image. Default is True.
 
     Examples:
         >>> from cloudnetpy.plotting import generate_figure
@@ -43,7 +44,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
     for ax, field, name in zip(axes, valid_fields, valid_names):
         plot_type = ATTRIBUTES[name].plot_type
-        ax_value = _read_ax_values(nc_file, plot_type)
+        ax_value = _read_ax_values(nc_file)
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
         _set_ax(ax, max_y)
         _set_title(ax, name, '')
@@ -58,68 +59,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         else:
             _plot_colormesh_data(ax, field, name, ax_value)
 
-    case_date = _set_labels(fig, axes[-1], nc_file)
+    case_date = _set_labels(fig, axes[-1], nc_file, sub_title)
     _handle_saving(image_name, save_path, show, dpi, case_date, valid_names)
-
-
-def compare_files(nc_files, field_name, show=True, relative_err=False,
-                  save_path=None, max_y=12, dpi=200, image_name=None):
-    """ Plots one particular field from old and new cloudnet files.
-
-    Args:
-        nc_files (tuple): Tuple of strings of the two files to compare
-                         [0] = old Cloudnet file
-                         [1] = new CloudnetPy file
-        field_name (str): Name of variable to be plotted.
-        show (bool, optional): If True, shows the plot.
-        relative_err (bool, optional): If True, plots also relative error. Makes
-            sense only for continuous variables. Default is False.
-        save_path (str, optional): If defined, saves the image to this path.
-            Default is None.
-        max_y (int, optional): Upper limit of images (km). Default is 12.
-        dpi (int, optional): Quality of plots. Default is 200.
-        image_name (str, optional): Name (and full path) of the output image.
-            Overrides the *save_path* option. Default is None.
-
-    """
-
-    def _init_figure():
-        n_subs = 3 if relative_err else 2
-        return _initialize_figure(n_subs)
-
-    plot_type = ATTRIBUTES[field_name].plot_type
-    fields = [_find_valid_fields(file, [field_name])[0][0] for file in nc_files]
-    ax_values = [_read_ax_values(nc_file) for nc_file in nc_files]
-    subtitle = (" from CloudnetPy", " from Cloudnet")
-    fig, axes = _init_figure()
-
-    for ii, ax in enumerate(axes[:2]):
-        field, ax_value = _screen_high_altitudes(fields[ii], ax_values[ii],
-                                                 max_y)
-        _set_ax(ax, max_y)
-        _set_title(ax, field_name, subtitle[ii])
-
-        if plot_type == 'model':
-            _plot_colormesh_data(ax, field, field_name, ax_value)
-        elif plot_type == 'bar':
-            if field_name == 'lwp' and ii == 1:
-                field *= 1000
-            _plot_bar_data(ax, field, ax_value[0])
-            _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
-        elif plot_type == 'segment':
-            if ii == 1:
-                field, field_name = meta_for_old_files.fix_old_data(field, field_name)
-            _plot_segment_data(ax, field, field_name, ax_value)
-        else:
-            _plot_colormesh_data(ax, field, field_name, ax_value)
-            if relative_err and ii == 1:
-                _set_ax(axes[-1], max_y)
-                error, ax_value = _get_relative_error(fields, ax_values, max_y)
-                _plot_relative_error(axes[-1], error, ax_value, field_name)
-
-    case_date = _set_labels(fig, axes[-1], nc_files[0])
-    _handle_saving(image_name, save_path, show, dpi, case_date, [field_name],
-                   '_comparison')
 
 
 def _handle_saving(image_name, save_path, show, dpi, case_date, field_names,
@@ -140,11 +81,12 @@ def _get_relative_error(fields, ax_values, max_y):
     return _screen_high_altitudes(error, ax_values[1], max_y)
 
 
-def _set_labels(fig, ax, nc_file):
+def _set_labels(fig, ax, nc_file, sub_title=True):
     ax.set_xlabel('Time (UTC)', fontsize=13)
     case_date = _read_date(nc_file)
     site_name = _read_location(nc_file)
-    _add_subtitle(fig, case_date, site_name)
+    if sub_title:
+        _add_subtitle(fig, case_date, site_name)
     return case_date
 
 
@@ -182,21 +124,18 @@ def _initialize_figure(n_subplots):
     return fig, axes
 
 
-def _read_ax_values(nc_file, ax_type=None):
+def _read_ax_values(nc_file):
     """Returns time and height arrays."""
-
-    def _get_correct_dimension(field_names):
-        """Model dimensions are different in old/new files."""
-        nc = netCDF4.Dataset(nc_file)
-        for name in field_names:
-            yield name.split('_')[-1] if name not in nc.variables else name
-        nc.close()
-
-    if ax_type == 'model':
-        fields = _get_correct_dimension(['model_time', 'model_height'])
+    nc = netCDF4.Dataset(nc_file)
+    file_type = nc.cloudnet_file_type
+    nc.close()
+    if file_type == 'radar':
+        fields = ['time', 'range']
     else:
         fields = ['time', 'height']
     time, height = ptools.read_nc_fields(nc_file, fields)
+    if file_type == 'model':
+        height = ma.mean(height, axis=0)
     height_km = height / 1000
     return time, height_km
 
@@ -355,7 +294,7 @@ def _add_subtitle(fig, case_date, site_name):
     """Adds subtitle into figure."""
     text = _get_subtitle_text(case_date, site_name)
     fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
-                 verticalalignment='bottom', fontweight='bold')
+                 verticalalignment='bottom')
 
 
 def _get_subtitle_text(case_date, site_name):
@@ -395,3 +334,63 @@ def _plot_relative_error(ax, error, ax_values, name):
 
 def _lin2log(*args):
     return [ma.log10(x) for x in args]
+
+
+def compare_files(nc_files, field_name, show=True, relative_err=False,
+                  save_path=None, max_y=12, dpi=200, image_name=None):
+    """ Plots one particular field from old and new cloudnet files.
+
+    Args:
+        nc_files (tuple): Tuple of strings of the two files to compare
+                         [0] = old Cloudnet file
+                         [1] = new CloudnetPy file
+        field_name (str): Name of variable to be plotted.
+        show (bool, optional): If True, shows the plot.
+        relative_err (bool, optional): If True, plots also relative error. Makes
+            sense only for continuous variables. Default is False.
+        save_path (str, optional): If defined, saves the image to this path.
+            Default is None.
+        max_y (int, optional): Upper limit of images (km). Default is 12.
+        dpi (int, optional): Quality of plots. Default is 200.
+        image_name (str, optional): Name (and full path) of the output image.
+            Overrides the *save_path* option. Default is None.
+
+    """
+
+    def _init_figure():
+        n_subs = 3 if relative_err else 2
+        return _initialize_figure(n_subs)
+
+    plot_type = ATTRIBUTES[field_name].plot_type
+    fields = [_find_valid_fields(file, [field_name])[0][0] for file in nc_files]
+    ax_values = [_read_ax_values(nc_file) for nc_file in nc_files]
+    subtitle = (" from CloudnetPy", " from Cloudnet")
+    fig, axes = _init_figure()
+
+    for ii, ax in enumerate(axes[:2]):
+        field, ax_value = _screen_high_altitudes(fields[ii], ax_values[ii],
+                                                 max_y)
+        _set_ax(ax, max_y)
+        _set_title(ax, field_name, subtitle[ii])
+
+        if plot_type == 'model':
+            _plot_colormesh_data(ax, field, field_name, ax_value)
+        elif plot_type == 'bar':
+            if field_name == 'lwp' and ii == 1:
+                field *= 1000
+            _plot_bar_data(ax, field, ax_value[0])
+            _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
+        elif plot_type == 'segment':
+            if ii == 1:
+                field, field_name = meta_for_old_files.fix_old_data(field, field_name)
+            _plot_segment_data(ax, field, field_name, ax_value)
+        else:
+            _plot_colormesh_data(ax, field, field_name, ax_value)
+            if relative_err and ii == 1:
+                _set_ax(axes[-1], max_y)
+                error, ax_value = _get_relative_error(fields, ax_values, max_y)
+                _plot_relative_error(axes[-1], error, ax_value, field_name)
+
+    case_date = _set_labels(fig, axes[-1], nc_files[0])
+    _handle_saving(image_name, save_path, show, dpi, case_date, [field_name],
+                   '_comparison')
