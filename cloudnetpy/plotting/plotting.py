@@ -239,6 +239,9 @@ def _plot_colormesh_data(ax, data, name, axes):
     """
     variables = ATTRIBUTES[name]
 
+    if name == 'cloud_fraction':
+        data[data<0.1] = ma.masked
+
     if variables.plot_type == 'bit':
         cmap = ListedColormap(variables.cbar)
         pos = ax.get_position()

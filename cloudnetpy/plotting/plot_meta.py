@@ -249,7 +249,15 @@ ATTRIBUTES = {
         name='Model temperature',
         cbar='RdBu_r',
         clabel='K',
-        plot_range=(203, 303),
+        plot_range=(223.15, 323.15),
+        plot_scale=_LIN,
+        plot_type='model'
+    ),
+    'cloud_fraction': PlotMeta(
+        name='Cloud fraction',
+        cbar='Blues',
+        clabel='',
+        plot_range=(0, 1),
         plot_scale=_LIN,
         plot_type='model'
     ),
@@ -257,7 +265,7 @@ ATTRIBUTES = {
         name='Wet-bulb temperature',
         cbar='RdBu_r',
         clabel='K',
-        plot_range=(203, 303),
+        plot_range=(223.15, 323.15),
         plot_scale=_LIN,
         plot_type='mesh'
     ),
