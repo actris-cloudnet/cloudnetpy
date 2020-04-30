@@ -285,7 +285,7 @@ def _reduce_header(header_in):
     header = header_in.copy()
     for name in header:
         first_row = header[name][0]
-        assert np.isclose(header[name], first_row).all(), f"Inconsistent header: {name}"
+        assert np.isclose(header[name], first_row, rtol=1e-3).all(), f"Inconsistent header: {name}"
         header[name] = first_row
     return header
 
