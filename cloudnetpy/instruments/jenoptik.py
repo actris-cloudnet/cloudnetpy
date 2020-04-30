@@ -18,7 +18,7 @@ CEILOMETER_INFO = {
         overlap_function_params=(0, 1),
         is_range_corrected=True),
     'mace-head': instrument_info(
-        calibration_factor=4.5e-11,
+        calibration_factor=5.2e-15,
         overlap_function_params=(500, 200),
         is_range_corrected=False),
     'bucharest': instrument_info(

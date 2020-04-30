@@ -60,10 +60,3 @@ def test_read_date(fake_jenoptik_file):
 def test_read_metadata(fake_jenoptik_file):
     obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
     assert obj._read_metadata()['tilt_angle'] == 2
-
-
-def test_get_nn(fake_jenoptik_file):
-    obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
-    nn1 = obj._get_nn()
-    assert np.all(nn1.data < 1.1)
-    assert np.all(nn1.data > 0.9)
