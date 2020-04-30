@@ -22,11 +22,14 @@ CEILOMETER_INFO = {
         overlap_function_params=(500, 200),
         is_range_corrected=False),
     'bucharest': instrument_info(
-        calibration_factor=0.79e-8,
+        calibration_factor=5e-12,
+        overlap_function_params=(0, 1),
+        is_range_corrected=True),
+    'granada': instrument_info(
+        calibration_factor=5.2e-12,
         overlap_function_params=(0, 1),
         is_range_corrected=True),
 }
-
 
 class JenoptikCeilo(Ceilometer):
     """Class for Jenoptik chm15k ceilometer."""
@@ -67,27 +70,12 @@ class JenoptikCeilo(Ceilometer):
     def _convert_backscatter(self):
         """Steps to convert Jenoptik SNR to raw beta."""
         beta_raw = self._getvar('beta_raw')
-        data_std = self._getvar('stddev')
-        normalised_apd = self._get_nn()
-        beta_raw *= utils.transpose(data_std / normalised_apd)
         if not self.calibration_info.is_range_corrected:
             beta_raw *= self.range ** 2
         overlap_function = _get_overlap(self.range, self.calibration_info)
         beta_raw /= overlap_function
         beta_raw *= self.calibration_info.calibration_factor
         return beta_raw
-
-    def _get_nn(self):
-        """TODO: Should be checked."""
-        nn1 = self._getvar('nn1', 'NN1')
-        median_nn1 = ma.median(nn1)
-        if 120 < median_nn1 < 160:
-            step_factor, reference, scale = 1.24, 140, 5
-        elif 3200 < median_nn1 < 4000:
-            step_factor, reference, scale = 1.035, 3685, 1
-        else:
-            return 1
-        return step_factor ** (-(nn1-reference) / scale)
 
     def _getvar(self, *args):
         """Reads data of variable (array or scalar) from netcdf-file."""
