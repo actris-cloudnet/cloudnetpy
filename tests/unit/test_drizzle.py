@@ -470,18 +470,3 @@ def test_append_data(class_objects, result, key):
     d_source, d_class, s_width = class_objects
     _append_data(d_source, result)
     assert key in d_source.data.keys()
-
-
-@pytest.mark.parametrize("x, result", [
-    (-1000, -1),
-    (-100, -0.99999),
-    (-10, -0.9),
-    (-1, np.exp(-1 / 10 * np.log(10)) - 1),
-])
-def test_db2lin(x, result):
-    testing.assert_array_almost_equal(drizzle.db2lin(x), result, decimal=5)
-
-
-def test_db2lin_raise():
-    with pytest.raises(ValueError):
-        drizzle.db2lin(150)

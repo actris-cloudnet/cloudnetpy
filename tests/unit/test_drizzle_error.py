@@ -82,24 +82,15 @@ def test_stack_errors():
     (-1000, -1),
     (-100, -0.99999),
     (-10, -0.9),
-    (-1, np.exp(-1 / 10 * np.log(10)) - 1)])
+    (1000, np.exp(100 / 10 * np.log(10)) - 1)])
 def test_db2lin(x, result):
     testing.assert_array_almost_equal(de.db2lin(x), result, decimal=5)
-
-
-def test_db2lin_raise():
-    with pytest.raises(ValueError):
-        de.db2lin(150)
 
 
 @pytest.mark.parametrize("x, result", [
     (1e6, 60),
     (1e5, 50),
-    (1e4, 40)])
+    (1e4, 40),
+    (-100.0, -10)])
 def test_lin2db(x, result):
     testing.assert_array_almost_equal(de.lin2db(x), result, decimal=3)
-
-
-def test_lin2db_raise():
-    with pytest.raises(ValueError):
-        de.lin2db(-1)

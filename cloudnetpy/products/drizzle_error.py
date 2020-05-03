@@ -144,13 +144,15 @@ def _stack_errors(error_in, drizzle_indices, error_small=None, error_tiny=None):
 COR = 10 / np.log(10)
 
 
-def db2lin(x):
-    if ma.max(x) > 100:
-        raise ValueError('Too large values in drizzle.db2lin()')
+def db2lin(x_in):
+    x = ma.copy(x_in)
+    threshold = 100
+    x[x > threshold] = threshold
     return ma.exp(x / COR) - 1
 
 
-def lin2db(x):
-    if ma.min(x) < -0.9:
-        raise ValueError('Too small values in drizzle.lin2db()')
+def lin2db(x_in):
+    x = ma.copy(x_in)
+    threshold = -0.9
+    x[x < threshold] = threshold
     return ma.log(x + 1) * COR
