@@ -513,15 +513,3 @@ DRIZZLE_ATTRIBUTES = {
         long_name='Drizzle parameter retrieval status',
     )
 }
-
-
-# drizzle error linear / log conversion from the Matlab code:
-
-COR = 10 / np.log(10)
-
-
-def db2lin(x):
-    if ma.max(x) > 100:
-        raise ValueError('Too large values in drizzle.db2lin()')
-    return ma.exp(x / COR) - 1
-
