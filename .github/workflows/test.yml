@@ -26,8 +26,8 @@ jobs:
     - name: Lint with pylint
       run: |
         pip install pylint
-        pylint **/*.py --errors-only --ignored-modules=netCDF4
+        pylint cloudnetpy/**/*.py --errors-only
     - name: Test with pytest
       run: |
-        pip install pytest
+        pip install pytest pytest-cov
         pytest --cov=cloudnetpy tests/unit/
