@@ -9,11 +9,13 @@ from tests import utils
 def main(test_file, log_file):
     utils.init_logger(test_file, log_file)
 
-    pytest.main(['-s',
-                 '-v',
-                 '--tb=line',
-                 'data_quality/test_data.py',
-                 '--test_file', test_file])
+    res = pytest.main(['-s',
+                       '-v',
+                       '--tb=line',
+                       'data_quality/test_data.py',
+                       '--test_file', test_file])
+    if res.name != 'OK':
+        sys.exit(1)
 
 
 if __name__ == "__main__":

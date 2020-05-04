@@ -47,8 +47,6 @@ def _process_product_file(product_type, path, categorize_file):
 
 def main():
 
-    run_unit_tests()
-
     test_path = utils.get_test_path()
     source_path = f"{test_path}/source_data/"
     _load_test_data(source_path)
