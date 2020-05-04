@@ -15,7 +15,10 @@ def check_metadata(file, log_file=None):
     test_path = utils.get_test_path()
     script = f"{test_path}/meta_qc.py"
     print(f"Checking metadata of {file}")
-    subprocess.call([script, file, _validate_log_file(log_file)])
+    try:
+        subprocess.check_call([script, file, _validate_log_file(log_file)])
+    except subprocess.CalledProcessError:
+        raise
 
 
 def check_data_quality(file, log_file=None):
@@ -30,7 +33,10 @@ def check_data_quality(file, log_file=None):
     test_path = utils.get_test_path()
     script = f"{test_path}/data_qc.py"
     print(f"Checking data quality of {file}")
-    subprocess.call([script, file, _validate_log_file(log_file)])
+    try:
+        subprocess.check_call([script, file, _validate_log_file(log_file)])
+    except subprocess.CalledProcessError:
+        raise
 
 
 def _validate_log_file(log_file):
