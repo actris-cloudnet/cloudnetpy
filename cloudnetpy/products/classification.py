@@ -19,6 +19,9 @@ def generate_classification(categorize_file, output_file, keep_uuid=False):
         output_file (str): Output file name.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+    
+    Returns:
+        uuid: UUID of the generated file.
 
     Examples:
         >>> from cloudnetpy.products import generate_classification

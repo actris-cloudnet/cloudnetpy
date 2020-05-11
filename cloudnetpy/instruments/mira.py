@@ -24,6 +24,9 @@ def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False, keep_uuid=Fals
             Otherwise keeps the native resolution. Default is False.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+    
+    Returns:
+        uuid: UUID of the generated file.
 
     Examples:
           >>> from cloudnetpy.instruments import mira2nc

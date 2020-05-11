@@ -23,6 +23,9 @@ def generate_categorize(input_files, output_file, keep_uuid=False):
         output_file (str): Full path of the output file.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+    
+    Returns:
+        uuid: UUID of the generated file.
 
     Raises:
         RuntimeError: Failed to create the categorize file.
