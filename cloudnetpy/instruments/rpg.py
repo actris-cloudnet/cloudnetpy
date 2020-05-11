@@ -24,7 +24,7 @@ def rpg2nc(path_to_l1_files, output_file, site_meta, keep_uuid=False):
             if that exists. Default is False when new UUID is generated.
 
     Returns:
-        uuid: UUID of the generated file.
+        str: UUID of the generated file.
 
     Raises:
         RuntimeError: Failed to read the binary data.

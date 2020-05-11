@@ -27,7 +27,7 @@ def generate_lwc(categorize_file, output_file, keep_uuid=False):
             if that exists. Default is False when new UUID is generated.
     
     Returns:
-        uuid: UUID of the generated file.
+        str: UUID of the generated file.
 
     Examples:
         >>> from cloudnetpy.products import generate_lwc

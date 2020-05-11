@@ -29,7 +29,7 @@ def ceilo2nc(input_file, output_file, site_meta, keep_uuid=False):
             if that exists. Default is False when new UUID is generated.
     
     Returns:
-        uuid: UUID of the generated file.
+        str: UUID of the generated file.
 
     Raises:
         RuntimeError: Failed to read or process raw ceilometer data.
