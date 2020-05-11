@@ -8,7 +8,7 @@ import importlib
 from cloudnetpy.instruments import mira2nc
 from cloudnetpy.instruments import ceilo2nc
 from cloudnetpy.categorize import generate_categorize
-from tests import check_data_quality, check_metadata, utils
+from tests import check_data_quality, check_metadata, check_is_valid_uuid, utils
 
 PROCESS = True
 
@@ -40,9 +40,10 @@ def _load_test_data(input_path):
 def _process_product_file(product_type, path, categorize_file):
     output_file = f"{path}{product_type}.nc"
     module = importlib.import_module(f"cloudnetpy.products")
+    uuid = ''
     if PROCESS:
-        getattr(module, f"generate_{product_type}")(categorize_file, output_file)
-    return output_file
+        uuid = getattr(module, f"generate_{product_type}")(categorize_file, output_file)
+    return (output_file, uuid)
 
 
 def main():
@@ -68,12 +69,17 @@ def main():
         'lidar': f"{source_path}lidar.nc",
     }
     site_meta = {'name': 'Mace Head', 'altitude': 13}
+    uuid1 = ''
+    uuid2 = ''
     if PROCESS:
-        mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta)
-        ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
+        uuid1 = mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta)
+        uuid2 = ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
     for name, file in calibrated_files.items():
         check_metadata(file, log_file)
         check_data_quality(file, log_file)
+
+    check_is_valid_uuid(uuid1)
+    check_is_valid_uuid(uuid2)
 
     input_files = {
         'radar': calibrated_files['radar'],
@@ -82,16 +88,19 @@ def main():
         'model': f"{source_path}{prefix}ecmwf.nc",
     }
     categorize_file = f"{source_path}categorize.nc"
+    uuid = ''
     if PROCESS:
-        generate_categorize(input_files, categorize_file)
+        uuid = generate_categorize(input_files, categorize_file)
     check_metadata(categorize_file, log_file)
     check_data_quality(categorize_file, log_file)
+    check_is_valid_uuid(uuid)
 
     product_file_types = ['iwc', 'lwc', 'drizzle', 'classification']
     for file in product_file_types:
-        product_file = _process_product_file(file, source_path, categorize_file)
+        product_file, uuid = _process_product_file(file, source_path, categorize_file)
         check_metadata(product_file, log_file)
         check_data_quality(product_file, log_file)
+        check_is_valid_uuid(uuid)
 
 
 if __name__ == "__main__":
