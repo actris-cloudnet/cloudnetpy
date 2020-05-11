@@ -46,9 +46,10 @@ def generate_lwc(categorize_file, output_file, keep_uuid=False):
     error_obj = LwcError(lwc_source, lwc_obj)
     _append_data(lwc_source, lwc_obj, cloud_obj, error_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
-    output.save_product_file('lwc', lwc_source, output_file, keep_uuid,
+    uuid = output.save_product_file('lwc', lwc_source, output_file, keep_uuid,
                              copy_from_cat=('lwp', 'lwp_error'))
     lwc_source.close()
+    return uuid
 
 
 class LwcSource(DataSource):

@@ -43,6 +43,7 @@ def save_product_file(short_id, obj, file_name, keep_uuid, copy_from_cat=()):
     dimensions = {'time': len(obj.time),
                   'height': len(obj.dataset.variables['height'])}
     root_group = init_file(file_name, dimensions, obj.data, keep_uuid)
+    uuid = root_group.file_uuid
     add_file_type(root_group, short_id)
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
     copy_variables(obj.dataset, root_group, vars_from_source)
@@ -51,6 +52,7 @@ def save_product_file(short_id, obj, file_name, keep_uuid, copy_from_cat=()):
     copy_global(obj.dataset, root_group, ('location', 'day', 'month', 'year'))
     merge_history(root_group, identifier, obj)
     root_group.close()
+    return uuid
 
 
 def _get_identifier(short_id):

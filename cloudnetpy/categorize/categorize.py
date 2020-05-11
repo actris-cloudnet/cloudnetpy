@@ -84,8 +84,9 @@ def generate_categorize(input_files, output_file, keep_uuid=False):
     quality = classify.fetch_quality(radar, lidar, classification, attenuations)
     output_data = _prepare_output()
     output.update_attributes(output_data, CATEGORIZE_ATTRIBUTES)
-    _save_cat(output_file, radar, lidar, model, output_data, keep_uuid)
+    uuid = _save_cat(output_file, radar, lidar, model, output_data, keep_uuid)
     _close_all()
+    return uuid
 
 
 def _save_cat(file_name, radar, lidar, model, obs, keep_uuid):
@@ -100,6 +101,7 @@ def _save_cat(file_name, radar, lidar, model, obs, keep_uuid):
             'model_time': len(model.time),
             'model_height': len(model.mean_height)}
     rootgrp = output.init_file(file_name, dims, obs, keep_uuid)
+    uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'categorize')
     output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
     rootgrp.title = f"Categorize file from {radar.location}"
@@ -109,6 +111,7 @@ def _save_cat(file_name, radar, lidar, model, obs, keep_uuid):
     output.merge_history(rootgrp, 'categorize', radar, lidar)
     _merge_source()
     rootgrp.close()
+    return uuid
 
 
 COMMENTS = {

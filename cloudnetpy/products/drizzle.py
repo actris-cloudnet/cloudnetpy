@@ -50,8 +50,9 @@ def generate_drizzle(categorize_file, output_file, keep_uuid=False):
     results['drizzle_retrieval_status'] = retrieval_status.retrieval_status
     _append_data(drizzle_source, results)
     output.update_attributes(drizzle_source.data, DRIZZLE_ATTRIBUTES)
-    output.save_product_file('drizzle', drizzle_source, output_file, keep_uuid)
+    uuid = output.save_product_file('drizzle', drizzle_source, output_file, keep_uuid)
     drizzle_source.close()
+    return uuid
 
 
 class DrizzleSource(DataSource):
