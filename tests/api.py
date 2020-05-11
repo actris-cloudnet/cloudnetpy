@@ -1,7 +1,7 @@
 import subprocess
+from uuid import UUID
 import pytest
 from tests import utils
-from uuid import UUID
 
 
 def check_metadata(file, log_file=None):
@@ -39,9 +39,10 @@ def check_data_quality(file, log_file=None):
     except subprocess.CalledProcessError:
         raise
 
+
 def check_is_valid_uuid(uuid):
     try:
-        uuid_obj = UUID(uuid, version=4)
+        UUID(uuid, version=4)
     except (ValueError, TypeError):
         raise AssertionError(f'{uuid} is not a valid UUID.')
 
