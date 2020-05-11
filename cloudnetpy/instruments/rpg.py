@@ -23,6 +23,9 @@ def rpg2nc(path_to_l1_files, output_file, site_meta, keep_uuid=False):
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
 
+    Returns:
+        str: UUID of the generated file.
+
     Raises:
         RuntimeError: Failed to read the binary data.
 
@@ -37,7 +40,7 @@ def rpg2nc(path_to_l1_files, output_file, site_meta, keep_uuid=False):
     rpg = Rpg(one_day_of_data, site_meta)
     rpg.linear_to_db(('Ze', 'antenna_gain'))
     output.update_attributes(rpg.data, RPG_ATTRIBUTES)
-    _save_rpg(rpg, output_file, keep_uuid)
+    return _save_rpg(rpg, output_file, keep_uuid)
 
 
 def get_rpg_files(path_to_l1_files):
@@ -339,6 +342,7 @@ def _save_rpg(rpg, output_file, keep_uuid):
             'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}
 
     rootgrp = output.init_file(output_file, dims, rpg.data, keep_uuid)
+    uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'radar')
     rootgrp.title = f"Radar file from {rpg.location}"
     rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
@@ -346,6 +350,7 @@ def _save_rpg(rpg, output_file, keep_uuid):
     rootgrp.history = f"{utils.get_time()} - radar file created"
     rootgrp.source = rpg.source
     rootgrp.close()
+    return uuid
 
 
 DEFINITIONS = {

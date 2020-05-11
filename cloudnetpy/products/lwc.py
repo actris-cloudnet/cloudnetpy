@@ -25,7 +25,9 @@ def generate_lwc(categorize_file, output_file, keep_uuid=False):
         output_file (str): Output file name.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
-
+    
+    Returns:
+        str: UUID of the generated file.
 
     Examples:
         >>> from cloudnetpy.products import generate_lwc
@@ -46,9 +48,10 @@ def generate_lwc(categorize_file, output_file, keep_uuid=False):
     error_obj = LwcError(lwc_source, lwc_obj)
     _append_data(lwc_source, lwc_obj, cloud_obj, error_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
-    output.save_product_file('lwc', lwc_source, output_file, keep_uuid,
+    uuid = output.save_product_file('lwc', lwc_source, output_file, keep_uuid,
                              copy_from_cat=('lwp', 'lwp_error'))
     lwc_source.close()
+    return uuid
 
 
 class LwcSource(DataSource):

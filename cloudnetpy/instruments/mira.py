@@ -24,6 +24,9 @@ def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False, keep_uuid=Fals
             Otherwise keeps the native resolution. Default is False.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+    
+    Returns:
+        str: UUID of the generated file.
 
     Examples:
           >>> from cloudnetpy.instruments import mira2nc
@@ -40,7 +43,7 @@ def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False, keep_uuid=Fals
     raw_mira.screen_by_snr(snr_gain)
     raw_mira.add_meta()
     output.update_attributes(raw_mira.data, MIRA_ATTRIBUTES)
-    _save_mira(mmclx_file, raw_mira, output_file, keep_uuid)
+    return _save_mira(mmclx_file, raw_mira, output_file, keep_uuid)
 
 
 class Mira(DataSource):
@@ -119,6 +122,7 @@ def _save_mira(mmclx_file, raw_radar, output_file, keep_uuid):
     dims = {'time': len(raw_radar.time),
             'range': len(raw_radar.range)}
     rootgrp = output.init_file(output_file, dims, raw_radar.data, keep_uuid)
+    uuid = rootgrp.file_uuid
     fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg')
     output.copy_variables(netCDF4.Dataset(mmclx_file), rootgrp, fields_from_raw)
     output.add_file_type(rootgrp, 'radar')
@@ -128,6 +132,7 @@ def _save_mira(mmclx_file, raw_radar, output_file, keep_uuid):
     rootgrp.history = f"{utils.get_time()} - radar file created"
     rootgrp.source = raw_radar.source
     rootgrp.close()
+    return uuid
 
 
 def _find_measurement_date(raw_radar):

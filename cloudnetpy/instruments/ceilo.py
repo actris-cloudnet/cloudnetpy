@@ -27,6 +27,9 @@ def ceilo2nc(input_file, output_file, site_meta, keep_uuid=False):
             (metres above mean sea level).
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+    
+    Returns:
+        str: UUID of the generated file.
 
     Raises:
         RuntimeError: Failed to read or process raw ceilometer data.
@@ -44,7 +47,7 @@ def ceilo2nc(input_file, output_file, site_meta, keep_uuid=False):
     _append_data(ceilo, beta_variants)
     _append_height(ceilo, site_meta['altitude'])
     output.update_attributes(ceilo.data, ATTRIBUTES)
-    _save_ceilo(ceilo, output_file, site_meta['name'], keep_uuid)
+    return _save_ceilo(ceilo, output_file, site_meta['name'], keep_uuid)
 
 
 def _initialize_ceilo(file, site_name):
@@ -102,6 +105,7 @@ def _save_ceilo(ceilo, output_file, location, keep_uuid):
     dims = {'time': len(ceilo.time),
             'range': len(ceilo.range)}
     rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid)
+    uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'lidar')
     if hasattr(ceilo, 'dataset'):
         output.copy_variables(ceilo.dataset, rootgrp, ('wavelength',))
@@ -111,6 +115,7 @@ def _save_ceilo(ceilo, output_file, location, keep_uuid):
     rootgrp.history = f"{utils.get_time()} - ceilometer file created"
     rootgrp.source = ceilo.model
     rootgrp.close()
+    return uuid
 
 
 ATTRIBUTES = {

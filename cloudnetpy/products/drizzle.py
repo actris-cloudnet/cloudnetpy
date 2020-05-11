@@ -25,6 +25,9 @@ def generate_drizzle(categorize_file, output_file, keep_uuid=False):
         output_file (str): Output file name.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+    
+    Returns:
+        str: UUID of the generated file.
 
     Examples:
         >>> from cloudnetpy.products import generate_drizzle
@@ -50,8 +53,9 @@ def generate_drizzle(categorize_file, output_file, keep_uuid=False):
     results['drizzle_retrieval_status'] = retrieval_status.retrieval_status
     _append_data(drizzle_source, results)
     output.update_attributes(drizzle_source.data, DRIZZLE_ATTRIBUTES)
-    output.save_product_file('drizzle', drizzle_source, output_file, keep_uuid)
+    uuid = output.save_product_file('drizzle', drizzle_source, output_file, keep_uuid)
     drizzle_source.close()
+    return uuid
 
 
 class DrizzleSource(DataSource):
