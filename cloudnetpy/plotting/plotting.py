@@ -30,6 +30,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         image_name (str, optional): Name (and full path) of the output image.
             Overrides the *save_path* option. Default is None.
         sub_title (bool, optional): Add subtitle to image. Default is True.
+        title (bool, optional): Add title to image. Default is True.
 
     Examples:
         >>> from cloudnetpy.plotting import generate_figure
@@ -47,7 +48,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         ax_value = _read_ax_values(nc_file)
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
         _set_ax(ax, max_y)
-        _set_title(ax, name, '')
+        if title:
+            _set_title(ax, name, '')
 
         if plot_type == 'bar':
             _plot_bar_data(ax, field, ax_value[0])
