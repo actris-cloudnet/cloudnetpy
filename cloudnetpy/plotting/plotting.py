@@ -15,7 +15,7 @@ from cloudnetpy.products.product_tools import CategorizeBits
 
 
 def generate_figure(nc_file, field_names, show=True, save_path=None,
-                    max_y=12, dpi=200, image_name=None, sub_title=True):
+                    max_y=12, dpi=200, image_name=None, sub_title=True, title=True):
     """Generates a Cloudnet figure.
 
     Args:
@@ -30,6 +30,7 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         image_name (str, optional): Name (and full path) of the output image.
             Overrides the *save_path* option. Default is None.
         sub_title (bool, optional): Add subtitle to image. Default is True.
+        title (bool, optional): Add title to image. Default is True.
 
     Examples:
         >>> from cloudnetpy.plotting import generate_figure
@@ -47,7 +48,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         ax_value = _read_ax_values(nc_file)
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
         _set_ax(ax, max_y)
-        _set_title(ax, name, '')
+        if title:
+            _set_title(ax, name, '')
 
         if plot_type == 'bar':
             _plot_bar_data(ax, field, ax_value[0])
@@ -240,7 +242,7 @@ def _plot_colormesh_data(ax, data, name, axes):
     variables = ATTRIBUTES[name]
 
     if name == 'cloud_fraction':
-        data[data<0.1] = ma.masked
+        data[data < 0.1] = ma.masked
 
     if variables.plot_type == 'bit':
         cmap = ListedColormap(variables.cbar)
@@ -325,7 +327,7 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     plt.show()
 
 
-def _plot_relative_error(ax, error, ax_values, name):
+def _plot_relative_error(ax, error, ax_values):
     pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap='RdBu', vmin=-30,
                        vmax=30)
     colorbar = _init_colorbar(pl, ax)
@@ -392,7 +394,7 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
             if relative_err and ii == 1:
                 _set_ax(axes[-1], max_y)
                 error, ax_value = _get_relative_error(fields, ax_values, max_y)
-                _plot_relative_error(axes[-1], error, ax_value, field_name)
+                _plot_relative_error(axes[-1], error, ax_value)
 
     case_date = _set_labels(fig, axes[-1], nc_files[0])
     _handle_saving(image_name, save_path, show, dpi, case_date, [field_name],
