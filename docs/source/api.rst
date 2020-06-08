@@ -13,8 +13,11 @@ next step.
 Raw data conversion
 ...................
 
-Cloudnet instruments provide raw data in various formats that need to
-be first converted into netCDF with standardized metadata.
+Different Cloudnet instruments provide raw data in various formats (netCDF, binary, text)
+that first need to be converted into homogeneous Cloudnet netCDF files
+containing harmonized units and other metadata. This initial processing step
+is necessary to ensure that the subsequent processing steps work with
+all supported instrument combinations.
 
 .. autofunction:: instruments.mira2nc
 
