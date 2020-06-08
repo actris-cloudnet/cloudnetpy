@@ -51,12 +51,11 @@ def main():
     test_path = utils.get_test_path()
     source_path = f"{test_path}/source_data/"
     _load_test_data(source_path)
-    prefix = '20190517_mace-head_'
     log_file = f"{source_path}Mace_Head.log"
 
     raw_files = {
-        'radar': f"{source_path}{prefix}mira_raw.nc",
-        'lidar': f"{source_path}{prefix}chm15k_raw.nc",
+        'radar': f"{source_path}raw_mira_radar.mmclx",
+        'lidar': f"{source_path}raw_chm15k_lidar.nc",
     }
     """"
     We know these fail at the moment:
@@ -84,8 +83,8 @@ def main():
     input_files = {
         'radar': calibrated_files['radar'],
         'lidar': calibrated_files['lidar'],
-        'mwr': f"{source_path}{prefix}hatpro.nc",
-        'model': f"{source_path}{prefix}ecmwf.nc",
+        'mwr': f"{source_path}hatpro_mwr.nc",
+        'model': f"{source_path}ecmwf_model.nc",
     }
     categorize_file = f"{source_path}categorize.nc"
     uuid = ''
