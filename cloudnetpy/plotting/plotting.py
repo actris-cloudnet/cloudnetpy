@@ -224,7 +224,7 @@ def _plot_segment_data(ax, data, name, axes):
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
                        vmax=len(cbar) - 0.5)
     colorbar = _init_colorbar(pl, ax)
-    colorbar.set_ticks(np.arange(len(clabel) + 1))
+    colorbar.set_ticks(np.arange(len(clabel)))
     colorbar.ax.set_yticklabels(clabel, fontsize=13)
 
 
