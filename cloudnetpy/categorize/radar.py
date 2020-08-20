@@ -61,7 +61,13 @@ class Radar(ProfileDataSource):
         self.time = time_new
 
     def remove_incomplete_pixels(self):
-        """Removes pixels where some of the (required) variables are existing."""
+        """Mask radar pixels where one or more required quantities are missing.
+
+        All valid radar pixels **must** contain proper values for `Z`, `width` and `v`.
+        Otherwise there is some kind of problem with the data and the pixel should
+        not be used in any further analysis.
+
+        """
         good_ind = (~ma.getmaskarray(self.data['Z'][:])
                     & ~ma.getmaskarray(self.data['width'][:])
                     & ~ma.getmaskarray(self.data['v'][:]))
@@ -69,7 +75,16 @@ class Radar(ProfileDataSource):
             self.data[key].mask_indices(~good_ind)
 
     def filter_speckle_noise(self):
-        """Removes speckle noise from radar data."""
+        """Removes speckle noise from radar data.
+
+        Any isolated radar pixel, i.e. "hot pixel", is assumed to
+        exist due to speckle noise. This is a crude approach and a
+        more sophisticated method could be implemented here later.
+
+        See Also:
+            :func:`utils.filter_isolated_pixels()`
+
+        """
         for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
             if key in self.data.keys():
                 self.data[key].filter_isolated_pixels()
@@ -80,6 +95,10 @@ class Radar(ProfileDataSource):
         Args:
             attenuations (dict): 2-D attenuations due to atmospheric gases
                 and liquid: `radar_gas_atten`, `radar_liquid_atten`.
+
+        References:
+            The method is based on Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ
+            and the original Cloudnet Matlab implementation.
 
         """
         z_corrected = self.data['Z'][:] + attenuations['radar_gas_atten']
@@ -97,6 +116,10 @@ class Radar(ProfileDataSource):
             attenuations (dict): 2-D attenuations due to atmospheric gases.
             classification (ClassificationResult): The
                 :class:`ClassificationResult` instance.
+
+        References:
+            The method is based on Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ
+            and the original Cloudnet Matlab implementation.
 
         """
         def _calc_sensitivity():
