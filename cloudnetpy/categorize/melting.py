@@ -42,6 +42,10 @@ def find_melting_layer(obs, smooth=True):
     Returns:
         ndarray: 2-D boolean array denoting the melting layer.
 
+    Notes:
+        This melting layer detection method is novel and needs
+        to be validated.
+
     """
 
     melting_layer = np.zeros(obs.tw.shape, dtype=bool)

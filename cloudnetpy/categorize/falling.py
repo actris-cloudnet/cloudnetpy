@@ -22,6 +22,9 @@ def find_falling_hydrometeors(obs, is_liquid, is_insects):
     Returns:
         ndarray: 2-D boolean array containing falling hydrometeors.
 
+    References:
+        Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ.
+
     """
 
     falling_from_radar = _find_falling_from_radar(obs, is_insects)

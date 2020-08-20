@@ -34,6 +34,9 @@ def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
         - ndarray: 2-D probability of pixel containing insects.
         - ndarray: 2-D boolean flag of insects presence.
 
+    Notes:
+        This insect detection method is novel and needs to be validated.
+
     """
     probabilities = _insect_probability(obs)
     insect_prob = _screen_insects(*probabilities, melting_layer, liquid_layers, obs)

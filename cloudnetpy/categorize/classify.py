@@ -26,6 +26,16 @@ def classify_measurements(radar, lidar, model, mwr):
         ClassificationResult:
             The :class:`ClassificationResult` instance.
 
+    References:
+        The Cloudnet classification scheme is based on methodology proposed by
+        Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ and its
+        proprietary Matlab implementation.
+
+    Notes:
+        Some of the individual classification methods are changed in this Python
+        implementation compared to the original Cloudnet methodology.
+        Especially methods classifying insects, melting layer and liquid droplets.
+
     """
     obs = ClassData(radar, lidar, model, mwr)
     bits = [None] * 6
