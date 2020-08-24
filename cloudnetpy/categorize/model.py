@@ -45,8 +45,8 @@ class Model(DataSource):
         """Interpolates model variables to common height grid.
 
         Args:
-            wl_band (int): Integer denoting the wavelength band of the
-                radar (0=35.5 GHz, 1=94 GHz).
+            wl_band (int): Integer denoting the approximate wavelength
+                band of the cloud radar (0 = ~35.5 GHz, 1 = ~94 GHz).
 
         """
         def _interpolate_variable():

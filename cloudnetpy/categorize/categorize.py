@@ -46,7 +46,8 @@ def generate_categorize(input_files, output_file, keep_uuid=False):
     """
 
     def _interpolate_to_cloudnet_grid():
-        model.interpolate_to_common_height(radar.wl_band)
+        wl_band = utils.get_wl_band(radar.radar_frequency)
+        model.interpolate_to_common_height(wl_band)
         model.interpolate_to_grid(time, height)
         mwr.rebin_to_grid(time)
         radar.rebin_to_grid(time)

@@ -15,7 +15,6 @@ class Radar(ProfileDataSource):
 
     Attributes:
         radar_frequency (float): Radar frequency (GHz).
-        wl_band (int): Int corresponding to frequency 0 = 35.5 GHz, 1 = 94 GHz.
         folding_velocity (float): Radar's folding velocity (m/s).
         location (str): Location of the radar, copied from the global attribute
             `location` of the *radar_file*.
@@ -27,7 +26,6 @@ class Radar(ProfileDataSource):
     def __init__(self, radar_file):
         super().__init__(radar_file, radar=True)
         self.radar_frequency = float(self.getvar('radar_frequency', 'frequency'))
-        self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, 'location', '')
