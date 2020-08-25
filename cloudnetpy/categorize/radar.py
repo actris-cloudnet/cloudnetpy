@@ -15,19 +15,23 @@ class Radar(ProfileDataSource):
 
     Attributes:
         radar_frequency (float): Radar frequency (GHz).
-        wl_band (int): Int corresponding to frequency 0 = 35.5 GHz, 1 = 94 GHz.
         folding_velocity (float): Radar's folding velocity (m/s).
         location (str): Location of the radar, copied from the global attribute
             `location` of the *radar_file*.
         sequence_indices (list): Indices denoting the different altitude
             regimes of the radar.
-        type (str): Type of the radar, e.g. 'RPG-FMCW', 'METEK MIRA-36'
+        type (str): Type of the radar, copied from the global attribute
+            `source` of the *radar_file*. Can be free form string but must
+            include either 'rpg' or 'mira' denoting one of the two supported
+            radars.
+
+    See Also:
+        :func:`instruments.rpg2nc()`, :func:`instruments.mira2nc()`
 
     """
     def __init__(self, radar_file):
         super().__init__(radar_file, radar=True)
         self.radar_frequency = float(self.getvar('radar_frequency', 'frequency'))
-        self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, 'location', '')
@@ -61,7 +65,13 @@ class Radar(ProfileDataSource):
         self.time = time_new
 
     def remove_incomplete_pixels(self):
-        """Removes pixels where some of the (required) variables are existing."""
+        """Mask radar pixels where one or more required quantities are missing.
+
+        All valid radar pixels **must** contain proper values for `Z`, `width` and `v`.
+        Otherwise there is some kind of problem with the data and the pixel should
+        not be used in any further analysis.
+
+        """
         good_ind = (~ma.getmaskarray(self.data['Z'][:])
                     & ~ma.getmaskarray(self.data['width'][:])
                     & ~ma.getmaskarray(self.data['v'][:]))
@@ -69,7 +79,16 @@ class Radar(ProfileDataSource):
             self.data[key].mask_indices(~good_ind)
 
     def filter_speckle_noise(self):
-        """Removes speckle noise from radar data."""
+        """Removes speckle noise from radar data.
+
+        Any isolated radar pixel, i.e. "hot pixel", is assumed to
+        exist due to speckle noise. This is a crude approach and a
+        more sophisticated method could be implemented here later.
+
+        See Also:
+            :func:`utils.filter_isolated_pixels()`
+
+        """
         for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
             if key in self.data.keys():
                 self.data[key].filter_isolated_pixels()
@@ -80,6 +99,10 @@ class Radar(ProfileDataSource):
         Args:
             attenuations (dict): 2-D attenuations due to atmospheric gases
                 and liquid: `radar_gas_atten`, `radar_liquid_atten`.
+
+        References:
+            The method is based on Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ
+            and the original Cloudnet Matlab implementation.
 
         """
         z_corrected = self.data['Z'][:] + attenuations['radar_gas_atten']
@@ -97,6 +120,10 @@ class Radar(ProfileDataSource):
             attenuations (dict): 2-D attenuations due to atmospheric gases.
             classification (ClassificationResult): The
                 :class:`ClassificationResult` instance.
+
+        References:
+            The method is based on Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ
+            and the original Cloudnet Matlab implementation.
 
         """
         def _calc_sensitivity():

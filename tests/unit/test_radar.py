@@ -54,11 +54,6 @@ def test_sequence_indices(fake_radar_file):
     assert_array_equal(obj.sequence_indices, [[0, 1, 2, 3]])
 
 
-def test_wl_band(fake_radar_file):
-    obj = Radar(fake_radar_file)
-    assert obj.wl_band == 0
-
-
 def test_folding_velocity(fake_radar_file):
     obj = Radar(fake_radar_file)
     assert obj.folding_velocity == FOLDING_VELOCITY

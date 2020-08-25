@@ -308,7 +308,7 @@ class Rpg:
         self._mask_invalid_ldr()
         self.data = {}
         self._init_data()
-        self.source = 'RPG-FMCW'
+        self.source = 'RPG-FMCW-94'
         self.location = site_properties['name']
 
     def _init_data(self):
