@@ -20,7 +20,13 @@ class Radar(ProfileDataSource):
             `location` of the *radar_file*.
         sequence_indices (list): Indices denoting the different altitude
             regimes of the radar.
-        type (str): Type of the radar, e.g. 'RPG-FMCW', 'METEK MIRA-36'
+        type (str): Type of the radar, copied from the global attribute
+            `source` of the *radar_file*. Can be free form string but must
+            include either 'rpg' or 'mira' denoting one of the two supported
+            radars.
+
+    See Also:
+        :func:`instruments.rpg2nc()`, :func:`instruments.mira2nc()`
 
     """
     def __init__(self, radar_file):
