@@ -24,7 +24,9 @@ def find_freezing_region(obs, melting_layer):
 
     Notes:
         It is not clear how model temperature and melting layer should be
-        ideally combined to determine the sub-zero region.
+        ideally combined to determine the sub-zero region. This current
+        method differs slightly from the original Matlab code and should
+        be validated more carefully later.
 
     """
     is_freezing = np.zeros(obs.tw.shape, dtype=bool)

@@ -21,6 +21,9 @@ def correct_liquid_top(obs, liquid, is_freezing, limit=200):
     Returns:
         ndarray: Corrected liquid cloud array.
 
+    References:
+        Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ.
+
     """
     is_liquid_corrected = np.copy(liquid['presence'])
     top_above = utils.n_elements(obs.height, limit)
@@ -60,6 +63,10 @@ def find_liquid(obs, peak_amp=1e-6,
 
     Returns:
         dict: Dict containing `presence`, `bases` and `tops`.
+
+    References:
+        The method is based on Tuononen, M. et.al, 2019,
+        https://acp.copernicus.org/articles/19/1985/2019/.
 
     """
     def _is_proper_peak():
