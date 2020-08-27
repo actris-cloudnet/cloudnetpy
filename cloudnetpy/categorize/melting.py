@@ -30,9 +30,10 @@ def find_melting_layer(obs, smooth=True):
     the rest -8..+6.
 
     Notes:
-        There might be some detection problems with strong updrafts of air.
-        In these cases the absolute values for speed do not make sense (rain
-        drops can even move upwards instead of down).
+        This melting layer detection method is novel and needs to be validated.
+        Also note that there might be some detection problems with strong
+        updrafts of air. In these cases the absolute values for speed do not
+        make sense (rain drops can even move upwards instead of down).
 
     Args:
         obs (ClassData): The :class:`ClassData` instance.
@@ -41,10 +42,6 @@ def find_melting_layer(obs, smooth=True):
 
     Returns:
         ndarray: 2-D boolean array denoting the melting layer.
-
-    Notes:
-        This melting layer detection method is novel and needs
-        to be validated.
 
     """
 
