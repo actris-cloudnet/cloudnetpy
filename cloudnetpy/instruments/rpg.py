@@ -140,7 +140,7 @@ class RpgBin:
         while True:
             c = np.fromfile(file_id, np.int8, 1)
             if c:
-                str_out += chr(c)
+                str_out += chr(c[0])
             else:
                 break
         return str_out
