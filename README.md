@@ -35,6 +35,9 @@ $ python3 -m venv venv
 $ source venv/bin/activate
 (venv) $ python3 -m pip install .
 ```
+## Citing
+If you wish to acknowledge CloudnetPy in your publication, please cite:
+>Tukiainen et al., (2020). CloudnetPy: A Python package for processing cloud remote sensing data. Journal of Open Source Software, 5(53), 2123, https://doi.org/10.21105/joss.02123
 
 ## Contributing
 
