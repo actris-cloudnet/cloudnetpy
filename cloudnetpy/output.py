@@ -48,11 +48,27 @@ def save_product_file(short_id, obj, file_name, keep_uuid, copy_from_cat=()):
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
     copy_variables(obj.dataset, root_group, vars_from_source)
     root_group.title = f"{identifier.capitalize()} file from {obj.dataset.location}"
-    root_group.source = f"Categorize file: {product_tools.get_source(obj)}"
+    root_group.source_file_uuids = get_source_uuids(root_group, obj)
     copy_global(obj.dataset, root_group, ('location', 'day', 'month', 'year'))
     merge_history(root_group, identifier, obj)
     root_group.close()
     return uuid
+
+
+def get_source_uuids(*sources):
+    """Returns file_uuid attributes of objects.
+
+    Args:
+        *sources (obj): Objects whose file_uuid attributes are read (if exist).
+
+    Returns:
+        str: UUIDs separated by comma.
+
+    """
+    uuids = [source.dataset.file_uuid for source in sources if hasattr(source, 'dataset')
+             and hasattr(source.dataset, 'file_uuid')]
+    unique_uuids = list(set(uuids))
+    return ', '.join(unique_uuids)
 
 
 def _get_identifier(short_id):

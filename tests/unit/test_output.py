@@ -5,7 +5,7 @@ from cloudnetpy import utils
 
 
 @pytest.mark.parametrize("short_id, result", [
-    ('lwc','liquid water content'),
+    ('lwc', 'liquid water content'),
     ('iwc', 'ice water content'),
     ('drizzle', 'drizzle'),
     ('classification', 'classification'),
@@ -89,6 +89,16 @@ def test_merge_history():
     output.merge_history(root, file_type, source1, source2)
     assert utils.is_timestamp(f"-{root.history[:19]}") is True
     assert root.history[19:] == ' - dummy file created\nsome history x\nsome history y'
+
+
+def test_get_source_uuids():
+    uuid1, uuid2 = 'simorules', 'abcdefg'
+    source1, source2, source3 = RootGrp(), RootGrp(), RootGrp()
+    source1.dataset.file_uuid = uuid1
+    source2.dataset.file_uuid = uuid2
+    res = output.get_source_uuids(source1, source2, source3)
+    for value in (uuid1, uuid2, ', '):
+        assert value in res
 
 
 def test_get_old_uuid(fake_nc_file):
