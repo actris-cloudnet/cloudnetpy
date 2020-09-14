@@ -114,6 +114,7 @@ def _save_ceilo(ceilo, output_file, location, keep_uuid):
     rootgrp.location = location
     rootgrp.history = f"{utils.get_time()} - ceilometer file created"
     rootgrp.source = ceilo.model
+    output.add_references(rootgrp)
     rootgrp.close()
     return uuid
 

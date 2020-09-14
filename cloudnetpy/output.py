@@ -51,6 +51,7 @@ def save_product_file(short_id, obj, file_name, keep_uuid, copy_from_cat=()):
     root_group.source_file_uuids = get_source_uuids(root_group, obj)
     copy_global(obj.dataset, root_group, ('location', 'day', 'month', 'year'))
     merge_history(root_group, identifier, obj)
+    add_references(root_group, short_id)
     root_group.close()
     return uuid
 
@@ -184,7 +185,7 @@ def copy_global(source, target, attr_list):
     Args:
         source (object): Source object.
         target (object): Target object.
-        attr_list (list): List of attributes to be copied.
+        attr_list (list / tuple): List of attributes to be copied.
 
     """
     for attr_name in source.ncattrs():
@@ -201,3 +202,22 @@ def add_file_type(root_group, file_type):
 
     """
     root_group.cloudnet_file_type = file_type
+
+
+def add_references(root_group, identifier=None):
+    """Adds references attribute to object.
+
+    Args:
+        root_group (obj): netCDF Dataset instance.
+        identifier (str, optional): Cloudnet file type, e.g., 'iwc'.
+
+    """
+    references = 'https://doi.org/10.21105/joss.02123'
+    if identifier:
+        if identifier in ('lwc', 'categorize'):
+            references += ', https://doi.org/10.1175/BAMS-88-6-883'
+        if identifier == 'iwc':
+            references += ', https://doi.org/10.1175/JAM2340.1'
+        if identifier == 'drizzle':
+            references += ', https://doi.org/10.1175/JAM-2181.1'
+    root_group.references = references

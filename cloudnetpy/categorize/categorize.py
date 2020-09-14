@@ -108,7 +108,7 @@ def _save_cat(file_name, radar, lidar, model, mwr, obs, keep_uuid):
     rootgrp.source_file_uuids = output.get_source_uuids(radar, lidar, model, mwr)
     # Needs to solve how to provide institution
     # rootgrp.institution = f"Data processed at {config.INSTITUTE}"
-    rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
+    output.add_references(rootgrp, 'categorize')
     output.merge_history(rootgrp, 'categorize', radar, lidar)
     rootgrp.close()
     return uuid

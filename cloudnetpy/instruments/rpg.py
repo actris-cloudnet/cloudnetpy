@@ -349,6 +349,7 @@ def _save_rpg(rpg, output_file, keep_uuid):
     rootgrp.location = rpg.location
     rootgrp.history = f"{utils.get_time()} - radar file created"
     rootgrp.source = rpg.source
+    output.add_references(rootgrp)
     rootgrp.close()
     return uuid
 

@@ -31,6 +31,7 @@ CEILOMETER_INFO = {
         is_range_corrected=True),
 }
 
+
 class JenoptikCeilo(Ceilometer):
     """Class for Jenoptik chm15k ceilometer."""
     def __init__(self, file_name, site_name):
