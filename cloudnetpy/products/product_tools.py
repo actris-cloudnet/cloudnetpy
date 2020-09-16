@@ -58,20 +58,6 @@ class ProductClassification(CategorizeBits):
                                                     'is_undetected_melting')
 
 
-def get_source(data_handler):
-    """Returns uuid (or filename if uuid not found) of the source file.
-
-    Args:
-        data_handler (netCDF Dataset): The netCDF Dataset instance.
-
-    Returns:
-        str: The `file_uuid` attribute, if exits. If missing, return the
-        `filename` attribute.
-
-    """
-    return getattr(data_handler.dataset, 'file_uuid', data_handler.filename)
-
-
 def read_nc_fields(nc_file, names):
     """Reads selected variables from a netCDF file.
 

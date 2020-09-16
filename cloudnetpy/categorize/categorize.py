@@ -88,17 +88,13 @@ def generate_categorize(input_files, output_file, keep_uuid=False):
     quality = classify.fetch_quality(radar, lidar, classification, attenuations)
     output_data = _prepare_output()
     output.update_attributes(output_data, CATEGORIZE_ATTRIBUTES)
-    uuid = _save_cat(output_file, radar, lidar, model, output_data, keep_uuid)
+    uuid = _save_cat(output_file, radar, lidar, model, mwr, output_data, keep_uuid)
     _close_all()
     return uuid
 
 
-def _save_cat(file_name, radar, lidar, model, obs, keep_uuid):
+def _save_cat(file_name, radar, lidar, model, mwr, obs, keep_uuid):
     """Creates a categorize netCDF4 file and saves all data into it."""
-
-    def _merge_source():
-        # Probably should include mwr and model source if existing
-        rootgrp.source = f"radar: {radar.source}\nlidar: {lidar.source}"
 
     dims = {'time': len(radar.time),
             'height': len(radar.height),
@@ -109,11 +105,11 @@ def _save_cat(file_name, radar, lidar, model, obs, keep_uuid):
     output.add_file_type(rootgrp, 'categorize')
     output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
     rootgrp.title = f"Categorize file from {radar.location}"
+    rootgrp.source_file_uuids = output.get_source_uuids(radar, lidar, model, mwr)
     # Needs to solve how to provide institution
     # rootgrp.institution = f"Data processed at {config.INSTITUTE}"
-    rootgrp.references = 'https://doi.org/10.1175/BAMS-88-6-883'
+    output.add_references(rootgrp, 'categorize')
     output.merge_history(rootgrp, 'categorize', radar, lidar)
-    _merge_source()
     rootgrp.close()
     return uuid
 

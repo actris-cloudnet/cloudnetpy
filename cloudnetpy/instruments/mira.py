@@ -131,6 +131,7 @@ def _save_mira(mmclx_file, raw_radar, output_file, keep_uuid):
     rootgrp.location = raw_radar.location
     rootgrp.history = f"{utils.get_time()} - radar file created"
     rootgrp.source = raw_radar.source
+    output.add_references(rootgrp)
     rootgrp.close()
     return uuid
 
