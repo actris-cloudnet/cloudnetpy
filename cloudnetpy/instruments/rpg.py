@@ -129,6 +129,10 @@ class RpgBin:
         append(('FFT_window',), np.int8)  # 0=square, 1=parzen, 2=blackman, 3=welch, 4=slepian2, 5=slepian3
         append(('input_voltage_range',))
         append(('noise_threshold',), np.float32)
+        # Fix for Level 1 version 4 files:
+        if int(header['file_code']) >= 889348:
+            _ = np.fromfile(file, np.int32, 25)
+            _ = np.fromfile(file, np.uint32, 10000)
         self._file_position = file.tell()
         file.close()
         return header
