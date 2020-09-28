@@ -29,6 +29,10 @@ CEILOMETER_INFO = {
         calibration_factor=5.2e-12,
         overlap_function_params=(0, 1),
         is_range_corrected=True),
+    'lindenberg': instrument_info(
+        calibration_factor=2.5e-11,
+        overlap_function_params=(0, 1),
+        is_range_corrected=True),
 }
 
 
