@@ -328,10 +328,14 @@ class Rpg:
             self.data[name].lin2db()
 
     def _get_date(self):
-        epoch = datetime.datetime(2001, 1, 1).timestamp()
         time_median = float(ma.median(self.raw_data['time']))
-        time_median += epoch
-        return datetime.datetime.utcfromtimestamp(time_median).strftime('%Y %m %d').split()
+        return _get_rpg_time(time_median)
+
+
+def _get_rpg_time(timestamp: float) -> list:
+    epoch = datetime.datetime(2001, 1, 1).timestamp()
+    timestamp += epoch
+    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y %m %d').split()
 
 
 def _save_rpg(rpg, output_file, keep_uuid):
