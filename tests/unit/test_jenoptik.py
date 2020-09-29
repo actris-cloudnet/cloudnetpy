@@ -60,3 +60,19 @@ def test_read_date(fake_jenoptik_file):
 def test_read_metadata(fake_jenoptik_file):
     obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
     assert obj._read_metadata()['tilt_angle'] == 2
+
+
+@pytest.mark.parametrize("site, value", [
+    ('lindenberg', (0, 1)),
+    ('mace-head', (500, 200)),
+])
+def test_get_overlap(site, value):
+
+    class CalibrationInfo:
+        overlap_function_params = value
+
+    range_ceilo = np.array([1, 2, 3, 4, 5])
+
+    res = jenoptik._get_overlap(range_ceilo, jenoptik.CEILOMETER_INFO[site])
+    refe = jenoptik._get_overlap(range_ceilo, CalibrationInfo())
+    assert_array_equal(res, refe)

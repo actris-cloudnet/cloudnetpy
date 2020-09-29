@@ -15,7 +15,7 @@ instrument_info = namedtuple('instrument_info',
 CEILOMETER_INFO = {
     'punta-arenas': instrument_info(
         calibration_factor=1e-12,
-        overlap_function_params=(0, 1),
+        overlap_function_params=None,
         is_range_corrected=True),
     'mace-head': instrument_info(
         calibration_factor=5.2e-15,
@@ -23,15 +23,15 @@ CEILOMETER_INFO = {
         is_range_corrected=False),
     'bucharest': instrument_info(
         calibration_factor=5e-12,
-        overlap_function_params=(0, 1),
+        overlap_function_params=None,
         is_range_corrected=True),
     'granada': instrument_info(
         calibration_factor=5.2e-12,
-        overlap_function_params=(0, 1),
+        overlap_function_params=None,
         is_range_corrected=True),
     'lindenberg': instrument_info(
         calibration_factor=2.5e-11,
-        overlap_function_params=(0, 1),
+        overlap_function_params=None,
         is_range_corrected=True),
 }
 
@@ -96,7 +96,7 @@ class JenoptikCeilo(Ceilometer):
 
 def _get_overlap(range_ceilo, calibration_info):
     """Approximative overlap function."""
-    params = calibration_info.overlap_function_params
+    params = calibration_info.overlap_function_params or (0, 1)
     return utils.array_to_probability(range_ceilo, *params)
 
 
