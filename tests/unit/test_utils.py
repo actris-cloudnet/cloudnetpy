@@ -59,6 +59,7 @@ def test_mdiff(input, output):
     (np.array([2, 3]), np.array([3, 4]), np.sqrt([13, 25])),
     (np.array([2, 3]), ma.array([3, 4], mask=True), [2, 3]),
     (np.array([2, 3]), ma.array([3, 4], mask=[0, 1]), [np.sqrt(13), 3]),
+    (np.array([[2, 2], [2, 2]]), 3, [[np.sqrt(13), np.sqrt(13)], [np.sqrt(13), np.sqrt(13)]]),
 ])
 def test_l2_norm(a, b, result):
     assert_array_almost_equal(utils.l2norm(a, b), result)
@@ -206,11 +207,12 @@ def test_n_elements_2(x, a, result):
     assert utils.n_elements(x, a, 'time') == result
 
 
-def test_l2_norm_weighted():
-    x = (2, 3)
-    weights = (1, 2)
-    scale = 10
-    assert_array_almost_equal(utils.l2norm_weighted(x, scale, weights), 10*np.sqrt([40]))
+@pytest.mark.parametrize("data, scale, weights, result", [
+    ((2, 3), 10, (1, 2), 10*np.sqrt([40])),
+    ((np.array([1, 2]), 3), 10, (2, 3), 10*np.sqrt([85, 97]))
+])
+def test_l2_norm_weighted(data, scale, weights, result):
+    assert_array_almost_equal(utils.l2norm_weighted(data, scale, weights), result)
 
 
 @pytest.mark.parametrize("x_new, y_new, result", [

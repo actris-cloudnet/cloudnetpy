@@ -357,7 +357,8 @@ def l2norm_weighted(values, overall_scale, term_weights):
     TODO: Probably better use masked arrays instead of tuples.
 
     """
-    weighted_values = ma.multiply(values, term_weights)
+    generic_values = ma.array(values, dtype=object)
+    weighted_values = ma.multiply(generic_values, term_weights)
     return overall_scale * l2norm(*weighted_values)
 
 
