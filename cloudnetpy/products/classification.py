@@ -1,4 +1,5 @@
 """Module for creating classification file."""
+from typing import Union
 import numpy as np
 from cloudnetpy import output
 from cloudnetpy.categorize import DataSource
@@ -6,7 +7,10 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
-def generate_classification(categorize_file, output_file, keep_uuid=False):
+def generate_classification(categorize_file: str,
+                            output_file: str,
+                            keep_uuid: bool = False,
+                            uuid: Union[str, None] = None) -> str:
     """Generates Cloudnet classification product.
 
     This function reads the initial classification masks from a
@@ -19,6 +23,7 @@ def generate_classification(categorize_file, output_file, keep_uuid=False):
         output_file (str): Output file name.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+        uuid (str, optional): Set specific UUID for the file.
     
     Returns:
         str: UUID of the generated file.
@@ -35,7 +40,7 @@ def generate_classification(categorize_file, output_file, keep_uuid=False):
     status = _get_detection_status(categorize_bits)
     data_handler.append_data(status, 'detection_status')
     output.update_attributes(data_handler.data, CLASSIFICATION_ATTRIBUTES)
-    uuid = output.save_product_file('classification', data_handler, output_file, keep_uuid)
+    uuid = output.save_product_file('classification', data_handler, output_file, keep_uuid, uuid)
     data_handler.close()
     return uuid
 

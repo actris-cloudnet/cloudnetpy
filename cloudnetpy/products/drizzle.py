@@ -2,6 +2,7 @@
 """
 import os
 from bisect import bisect_left
+from typing import Union
 import numpy as np
 import numpy.ma as ma
 from scipy.special import gamma
@@ -14,7 +15,10 @@ from cloudnetpy.products.product_tools import ProductClassification
 from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 
-def generate_drizzle(categorize_file, output_file, keep_uuid=False):
+def generate_drizzle(categorize_file: str,
+                     output_file: str,
+                     keep_uuid: bool = False,
+                     uuid: Union[str, None] = None) -> str:
     """Generates Cloudnet drizzle product.
 
     This function calculates different drizzle properties from
@@ -25,6 +29,7 @@ def generate_drizzle(categorize_file, output_file, keep_uuid=False):
         output_file (str): Output file name.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+        uuid (str, optional): Set specific UUID for the file.
     
     Returns:
         str: UUID of the generated file.
@@ -53,7 +58,7 @@ def generate_drizzle(categorize_file, output_file, keep_uuid=False):
     results['drizzle_retrieval_status'] = retrieval_status.retrieval_status
     _append_data(drizzle_source, results)
     output.update_attributes(drizzle_source.data, DRIZZLE_ATTRIBUTES)
-    uuid = output.save_product_file('drizzle', drizzle_source, output_file, keep_uuid)
+    uuid = output.save_product_file('drizzle', drizzle_source, output_file, keep_uuid, uuid)
     drizzle_source.close()
     return uuid
 

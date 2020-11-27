@@ -1,6 +1,7 @@
 """Module for creating Cloudnet liquid water content file
 using scaled-adiabatic method.
 """
+from typing import Union
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils, output
@@ -12,7 +13,10 @@ from cloudnetpy.products.product_tools import CategorizeBits
 G_TO_KG = 0.001
 
 
-def generate_lwc(categorize_file, output_file, keep_uuid=False):
+def generate_lwc(categorize_file: str,
+                 output_file: str,
+                 keep_uuid: bool = False,
+                 uuid: Union[str, None] = None) -> str:
     """Generates Cloudnet liquid water content product.
 
     This function calculates cloud liquid water content using the so-called
@@ -25,6 +29,7 @@ def generate_lwc(categorize_file, output_file, keep_uuid=False):
         output_file (str): Output file name.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+        uuid (str, optional): Set specific UUID for the file.
     
     Returns:
         str: UUID of the generated file.
@@ -48,7 +53,7 @@ def generate_lwc(categorize_file, output_file, keep_uuid=False):
     error_obj = LwcError(lwc_source, lwc_obj)
     _append_data(lwc_source, lwc_obj, cloud_obj, error_obj)
     output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
-    uuid = output.save_product_file('lwc', lwc_source, output_file, keep_uuid,
+    uuid = output.save_product_file('lwc', lwc_source, output_file, keep_uuid, uuid,
                              copy_from_cat=('lwp', 'lwp_error'))
     lwc_source.close()
     return uuid

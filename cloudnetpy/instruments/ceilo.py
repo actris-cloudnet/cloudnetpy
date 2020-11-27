@@ -1,5 +1,6 @@
 """Module for reading and processing Vaisala / Jenoptik ceilometers."""
 import linecache
+from typing import Union
 import numpy as np
 from cloudnetpy.instruments.jenoptik import JenoptikCeilo
 from cloudnetpy.instruments.vaisala import Cl31, Cl51, Ct25k
@@ -7,7 +8,11 @@ from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 
-def ceilo2nc(input_file, output_file, site_meta, keep_uuid=False):
+def ceilo2nc(input_file: str,
+             output_file: str,
+             site_meta: dict,
+             keep_uuid: bool = False,
+             uuid: Union[str, None] = None) -> str:
     """Converts Vaisala and Jenoptik raw files into netCDF file.
 
     This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
@@ -27,7 +32,8 @@ def ceilo2nc(input_file, output_file, site_meta, keep_uuid=False):
             (metres above mean sea level).
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
-    
+        uuid (str, optional): Set specific UUID for the file.
+
     Returns:
         str: UUID of the generated file.
 
@@ -47,7 +53,7 @@ def ceilo2nc(input_file, output_file, site_meta, keep_uuid=False):
     _append_data(ceilo, beta_variants)
     _append_height(ceilo, site_meta['altitude'])
     output.update_attributes(ceilo.data, ATTRIBUTES)
-    return _save_ceilo(ceilo, output_file, site_meta['name'], keep_uuid)
+    return _save_ceilo(ceilo, output_file, site_meta['name'], keep_uuid, uuid)
 
 
 def _initialize_ceilo(file, site_name):
@@ -100,11 +106,11 @@ def _append_data(ceilo, beta_variants):
         ceilo.data['wavelength'] = CloudnetArray(ceilo.wavelength, 'wavelength', 'nm')
 
 
-def _save_ceilo(ceilo, output_file, location, keep_uuid):
+def _save_ceilo(ceilo, output_file, location, keep_uuid, uuid: Union[str, None] = None) -> str:
     """Saves the ceilometer netcdf-file."""
     dims = {'time': len(ceilo.time),
             'range': len(ceilo.range)}
-    rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid)
+    rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'lidar')
     if hasattr(ceilo, 'dataset'):
