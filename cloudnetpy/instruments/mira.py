@@ -1,5 +1,5 @@
 """Module for reading raw cloud radar data."""
-import os
+from typing import Union
 import netCDF4
 import numpy as np
 import numpy.ma as ma
@@ -8,7 +8,12 @@ from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 
 
-def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False, keep_uuid=False):
+def mira2nc(mmclx_file: str,
+            output_file: str,
+            site_meta: dict,
+            rebin_data: bool = False,
+            keep_uuid: bool = False,
+            uuid: Union[str, None] = None) -> str:
     """Converts METEK MIRA-35 cloud radar Level 1 file into netCDF file.
 
     This function converts raw cloud radar file into a much smaller file that
@@ -24,6 +29,7 @@ def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False, keep_uuid=Fals
             Otherwise keeps the native resolution. Default is False.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+        uuid (str, optional): Set specific UUID for the file.
     
     Returns:
         str: UUID of the generated file.
@@ -43,7 +49,7 @@ def mira2nc(mmclx_file, output_file, site_meta, rebin_data=False, keep_uuid=Fals
     raw_mira.screen_by_snr(snr_gain)
     raw_mira.add_meta()
     output.update_attributes(raw_mira.data, MIRA_ATTRIBUTES)
-    return _save_mira(mmclx_file, raw_mira, output_file, keep_uuid)
+    return _save_mira(mmclx_file, raw_mira, output_file, keep_uuid, uuid)
 
 
 class Mira(DataSource):
@@ -117,11 +123,11 @@ class Mira(DataSource):
         return np.sqrt(binning_ratio)
 
 
-def _save_mira(mmclx_file, raw_radar, output_file, keep_uuid):
+def _save_mira(mmclx_file, raw_radar, output_file, keep_uuid, uuid: Union[str, None]):
     """Saves the MIRA radar file."""
     dims = {'time': len(raw_radar.time),
             'range': len(raw_radar.range)}
-    rootgrp = output.init_file(output_file, dims, raw_radar.data, keep_uuid)
+    rootgrp = output.init_file(output_file, dims, raw_radar.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg')
     output.copy_variables(netCDF4.Dataset(mmclx_file), rootgrp, fields_from_raw)

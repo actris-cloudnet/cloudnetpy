@@ -1,4 +1,5 @@
 """Module that generates Cloudnet categorize file."""
+from typing import Union
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos, classify
 from cloudnetpy.metadata import MetaData
@@ -8,7 +9,10 @@ from cloudnetpy.categorize.mwr import Mwr
 from cloudnetpy.categorize.lidar import Lidar
 
 
-def generate_categorize(input_files, output_file, keep_uuid=False):
+def generate_categorize(input_files: dict,
+                        output_file: str,
+                        keep_uuid: bool = False,
+                        uuid: Union[str, None] = None) -> str:
     """Generates Cloudnet categorize file.
 
     The measurements are rebinned into a common height / time grid,
@@ -23,6 +27,7 @@ def generate_categorize(input_files, output_file, keep_uuid=False):
         output_file (str): Full path of the output file.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+        uuid (str, optional): Set specific UUID for the file.
     
     Returns:
         str: UUID of the generated file.
@@ -88,19 +93,19 @@ def generate_categorize(input_files, output_file, keep_uuid=False):
     quality = classify.fetch_quality(radar, lidar, classification, attenuations)
     output_data = _prepare_output()
     output.update_attributes(output_data, CATEGORIZE_ATTRIBUTES)
-    uuid = _save_cat(output_file, radar, lidar, model, mwr, output_data, keep_uuid)
+    uuid = _save_cat(output_file, radar, lidar, model, mwr, output_data, keep_uuid, uuid)
     _close_all()
     return uuid
 
 
-def _save_cat(file_name, radar, lidar, model, mwr, obs, keep_uuid):
+def _save_cat(file_name, radar, lidar, model, mwr, obs, keep_uuid, uuid: Union[str, None] = None) -> str:
     """Creates a categorize netCDF4 file and saves all data into it."""
 
     dims = {'time': len(radar.time),
             'height': len(radar.height),
             'model_time': len(model.time),
             'model_height': len(model.mean_height)}
-    rootgrp = output.init_file(file_name, dims, obs, keep_uuid)
+    rootgrp = output.init_file(file_name, dims, obs, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'categorize')
     output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))

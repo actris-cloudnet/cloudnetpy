@@ -68,16 +68,15 @@ def main():
         'lidar': f"{source_path}lidar.nc",
     }
     site_meta = {'name': 'Mace Head', 'altitude': 13}
-    uuid1 = ''
     uuid2 = ''
     if PROCESS:
-        uuid1 = mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta)
+        uuid1 = mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta, uuid='kissa')
+        assert uuid1 == 'kissa'
         uuid2 = ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
     for name, file in calibrated_files.items():
         check_metadata(file, log_file)
         check_data_quality(file, log_file)
 
-    check_is_valid_uuid(uuid1)
     check_is_valid_uuid(uuid2)
 
     input_files = {

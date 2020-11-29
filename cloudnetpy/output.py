@@ -1,9 +1,9 @@
 """ Functions for file writing."""
 import os
+from typing import Union
 import netCDF4
 from cloudnetpy import utils, version
 from cloudnetpy.metadata import COMMON_ATTRIBUTES
-from cloudnetpy.products import product_tools
 
 
 def update_attributes(cloudnet_variables, attributes):
@@ -24,7 +24,8 @@ def update_attributes(cloudnet_variables, attributes):
             cloudnet_variables[key].set_attributes(COMMON_ATTRIBUTES[key])
 
 
-def save_product_file(short_id, obj, file_name, keep_uuid, copy_from_cat=()):
+def save_product_file(short_id: str, obj, file_name: str, keep_uuid: bool,
+                      uuid: Union[str, None], copy_from_cat=()) -> str:
     """Saves a standard Cloudnet product file.
 
     Args:
@@ -35,6 +36,7 @@ def save_product_file(short_id, obj, file_name, keep_uuid, copy_from_cat=()):
         file_name (str): Name of the output file to be generated.
         keep_uuid (bool): If True and old file with the same name
             exists, uses UUID from that existing file.
+        uuid (str): Set specific UUID for the file.
         copy_from_cat (tuple, optional): Variables to be copied from the
             categorize file.
 
@@ -42,7 +44,7 @@ def save_product_file(short_id, obj, file_name, keep_uuid, copy_from_cat=()):
     identifier = _get_identifier(short_id)
     dimensions = {'time': len(obj.time),
                   'height': len(obj.dataset.variables['height'])}
-    root_group = init_file(file_name, dimensions, obj.data, keep_uuid)
+    root_group = init_file(file_name, dimensions, obj.data, keep_uuid, uuid)
     uuid = root_group.file_uuid
     add_file_type(root_group, short_id)
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
@@ -100,7 +102,7 @@ def merge_history(root_group, file_type, *sources):
     root_group.history = f"{new_record}{old_history}"
 
 
-def init_file(file_name, dimensions, obs, keep_uuid=None):
+def init_file(file_name, dimensions, obs, keep_uuid=None, uuid: Union[str, None] = None) -> netCDF4.Dataset:
     """Initializes a Cloudnet file for writing.
 
     Args:
@@ -109,14 +111,15 @@ def init_file(file_name, dimensions, obs, keep_uuid=None):
         obs (dict): Dictionary containing :class:`CloudnetArray` instances.
         keep_uuid (bool, optional): If True and old file with the same name
             exists, uses UUID from that existing file.
+        uuid (str, optional): Set specific UUID for the file.
 
     """
-    old_id = _get_old_uuid(keep_uuid, file_name)
+    specific_uuid = uuid or _get_old_uuid(keep_uuid, file_name)
     root_group = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     for key, dimension in dimensions.items():
         root_group.createDimension(key, dimension)
     _write_vars2nc(root_group, obs)
-    _add_standard_global_attributes(root_group, old_id)
+    _add_standard_global_attributes(root_group, specific_uuid)
     return root_group
 
 
@@ -155,7 +158,7 @@ def _write_vars2nc(rootgrp, cloudnet_variables):
             setattr(nc_variable, attr, getattr(obj, attr))
 
 
-def _add_standard_global_attributes(root_group, uuid=None):
+def _add_standard_global_attributes(root_group, uuid: Union[str, None] = None) -> None:
     root_group.Conventions = 'CF-1.7'
     root_group.cloudnetpy_version = version.__version__
     root_group.file_uuid = uuid or utils.get_uuid()

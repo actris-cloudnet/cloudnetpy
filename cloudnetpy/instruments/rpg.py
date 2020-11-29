@@ -2,13 +2,18 @@
 import os
 import datetime
 from collections import namedtuple
+from typing import Union
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 
-def rpg2nc(path_to_l1_files, output_file, site_meta, keep_uuid=False):
+def rpg2nc(path_to_l1_files: str,
+           output_file: str,
+           site_meta: dict,
+           keep_uuid: bool = False,
+           uuid: Union[str, None] = None) -> str:
     """Converts RPG cloud radar binary files into netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
@@ -22,6 +27,7 @@ def rpg2nc(path_to_l1_files, output_file, site_meta, keep_uuid=False):
             sea level) and `name`.
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
+        uuid (str, optional): Set specific UUID for the file.
 
     Returns:
         str: UUID of the generated file.
@@ -40,7 +46,7 @@ def rpg2nc(path_to_l1_files, output_file, site_meta, keep_uuid=False):
     rpg = Rpg(one_day_of_data, site_meta)
     rpg.linear_to_db(('Ze', 'antenna_gain'))
     output.update_attributes(rpg.data, RPG_ATTRIBUTES)
-    return _save_rpg(rpg, output_file, keep_uuid)
+    return _save_rpg(rpg, output_file, keep_uuid, uuid)
 
 
 def get_rpg_files(path_to_l1_files):
@@ -338,7 +344,7 @@ def _get_rpg_time(timestamp: float) -> list:
     return datetime.datetime.fromtimestamp(timestamp).strftime('%Y %m %d').split()
 
 
-def _save_rpg(rpg, output_file, keep_uuid):
+def _save_rpg(rpg, output_file, keep_uuid, uuid: Union[str, None] = None) -> str:
     """Saves the RPG radar file.
 
     Notes:
@@ -349,7 +355,7 @@ def _save_rpg(rpg, output_file, keep_uuid):
             'range': len(rpg.data['range'][:]),
             'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}
 
-    rootgrp = output.init_file(output_file, dims, rpg.data, keep_uuid)
+    rootgrp = output.init_file(output_file, dims, rpg.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'radar')
     rootgrp.title = f"Radar file from {rpg.location}"
