@@ -26,7 +26,7 @@ class Mwr(DataSource):
             self.data[key].rebin_data(self.time, time_grid)
 
     def _init_lwp_data(self):
-        possible_names = ('LWP_data', 'lwp', 'clwvi')
+        possible_names = ('LWP_data', 'lwp', 'LWP', 'clwvi')
         for name in possible_names:
             if name in self.dataset.variables:
                 lwp = self.dataset.variables[name][:]
