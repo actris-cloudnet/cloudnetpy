@@ -7,7 +7,8 @@ FIELDS = ('name',
           'ylabel',
           'plot_range',
           'plot_scale',
-          'plot_type')
+          'plot_type',
+          'source')
 
 PlotMeta = namedtuple('PlotMeta', FIELDS)
 PlotMeta.__new__.__defaults__ = (None,) * len(FIELDS)
@@ -404,6 +405,15 @@ ATTRIBUTES = {
         plot_range=(0, 1),
         plot_scale=_LIN,
         plot_type='bar'
+    ),
+    'LWP': PlotMeta(
+        name='Liquid water path',
+        cbar='Blues',
+        ylabel=_KGM2,
+        plot_range=(0, 1),
+        plot_scale=_LIN,
+        plot_type='bar',
+        source='mwr'
     ),
     'target_classification': PlotMeta(
         name='Target classification',
