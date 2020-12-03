@@ -4,7 +4,7 @@ from datetime import date
 import numpy as np
 import numpy.ma as ma
 import netCDF4
-import re
+from scipy.signal import lfilter
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -314,10 +314,10 @@ def _plot_instrument_data(ax, data, name, type, axes):
 
 def _plot_mwr(ax, data, name, axes):
     time = axes[0]
+    time, data = _remove_nextday_times(time, data)
     rolling_mean, width = _calculate_rolling_mean(time, data)
-    #ax.plot(time, data/1000, color='royalblue', linewidth=0.02)
-    ax.bar(time, data.T / 1000, width=1 / 2400, align='center', alpha=0.5,
-           color='royalblue')
+    data_filter = _filter_noise(data/1000, 10)
+    ax.plot(time, data_filter, color='royalblue', linewidth=0.1)
     ax.plot(time, np.zeros(data.shape), color='k', linewidth=0.8)
     ax.plot(time[int(width / 2 - 1):int(-width / 2)], rolling_mean,
             color='sienna', linewidth=2.0)
@@ -325,6 +325,15 @@ def _plot_mwr(ax, data, name, axes):
             color='wheat', linewidth=0.6)
     _set_ax(ax, round(np.max(data / 1000), 3) + 0.0005, ATTRIBUTES[name].ylabel,
             min_y=round(np.min(data / 1000), 3) - 0.0005)
+
+
+def _remove_nextday_times(time, data):
+    n = 100
+    for i, t in enumerate(time[-n:-1]):
+        if t > time[-n:][i+1]:
+            nextday = i - n
+            return time[:nextday], data[:nextday]
+    return time, data
 
 
 def _calculate_rolling_mean(time, data):
@@ -335,6 +344,13 @@ def _calculate_rolling_mean(time, data):
     rolling_mean = np.convolve(data / 1000, rolling_window, 'valid') \
                    / np.sum(rolling_window)
     return rolling_mean, width
+
+
+def _filter_noise(data, n=5):
+    """IIR filter"""
+    b = [1.0 / n] * n
+    a = 1
+    return lfilter(b, a, data)
 
 
 def _init_colorbar(plot, axis):
