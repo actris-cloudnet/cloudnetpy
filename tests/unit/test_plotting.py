@@ -1,4 +1,5 @@
 import pytest
+import numpy.testing as testing
 from numpy.testing import assert_array_equal
 from cloudnetpy.plotting import plotting
 from datetime import date
@@ -48,6 +49,34 @@ def test_create_save_name(file_metadata):
     datestr = file_metadata['year'] + file_metadata['month'] + file_metadata['day']
     fields = ['ldr', 'z']
     assert plotting._create_save_name(path, case_date, fields) == f"/foo/bar/{datestr}_ldr_z.png"
+
+
+def test_remove_nextday_times():
+    times = [1, 2, 3, 4, 5, 6, 1, 2, 3]
+    data = [1, 1, 1, 2, 2, 2, 3, 3, 3]
+    x, y = plotting._remove_nextday_times(times, data, 8)
+    assert x == times[:-3]
+    assert y == data[:-3]
+
+
+def test_calculate_rolling_mean():
+    import numpy as np
+    time = np.array([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
+    data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    r_window = np.blackman(4)
+    r_mean = np.convolve(data, r_window, 'valid') / np.sum(r_window)
+    x, y = plotting._calculate_rolling_mean(time, data)
+    testing.assert_array_almost_equal(x, r_mean)
+
+
+def test_filter_noise():
+    from scipy.signal import lfilter
+    import numpy as np
+    data = np.array([1, 1, 5, -5, 1, 1, 5, -5, 1, 1, -5, 5])
+    x = plotting._filter_noise(data, 3)
+    b = [1.0 / 3] * 3
+    data = lfilter(b, 1, data)
+    testing.assert_array_almost_equal(x, data)
 
 
 class TestReadAxValues:
