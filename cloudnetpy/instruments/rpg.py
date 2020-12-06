@@ -2,7 +2,7 @@
 import os
 import datetime
 from collections import namedtuple
-from typing import Union
+from typing import Union, Tuple
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray
@@ -13,7 +13,8 @@ def rpg2nc(path_to_l1_files: str,
            output_file: str,
            site_meta: dict,
            keep_uuid: bool = False,
-           uuid: Union[str, None] = None) -> str:
+           uuid: Union[str, None] = None,
+           date: Union[str, None] = None) -> Tuple[str, list]:
     """Converts RPG cloud radar binary files into netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
@@ -28,9 +29,16 @@ def rpg2nc(path_to_l1_files: str,
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
         uuid (str, optional): Set specific UUID for the file.
+        date (str, optional): Expected date in the input files. If not set,
+            all files will be used. This might cause unexpected behavior if
+            there are files from several days. If date is set as 'YYY-MM-DD',
+            only files that match the date will be used.
 
     Returns:
-        str: UUID of the generated file.
+        tuple: 2-element tuple containing
+
+        - str: UUID of the generated file.
+        - list: Files used in the processing.
 
     Raises:
         RuntimeError: Failed to read the binary data.
@@ -42,14 +50,16 @@ def rpg2nc(path_to_l1_files: str,
 
     """
     l1_files = get_rpg_files(path_to_l1_files)
-    one_day_of_data = _create_one_day_data_record(l1_files)
+    one_day_of_data, valid_files = _create_one_day_data_record(l1_files, date)
+    if not valid_files:
+        return '', []
     rpg = Rpg(one_day_of_data, site_meta)
     rpg.linear_to_db(('Ze', 'antenna_gain'))
     output.update_attributes(rpg.data, RPG_ATTRIBUTES)
-    return _save_rpg(rpg, output_file, keep_uuid, uuid)
+    return _save_rpg(rpg, output_file, valid_files, keep_uuid, uuid)
 
 
-def get_rpg_files(path_to_l1_files):
+def get_rpg_files(path_to_l1_files: str) -> list:
     """Returns list of RPG Level 1 files for one day - sorted by filename."""
     files = os.listdir(path_to_l1_files)
     l1_files = ['/'.join((path_to_l1_files, file)) for file in files if file.endswith('LV1')]
@@ -57,22 +67,40 @@ def get_rpg_files(path_to_l1_files):
     return l1_files
 
 
-def _create_one_day_data_record(l1_files):
+def _create_one_day_data_record(l1_files: list, date: Union[str, None]) -> Tuple[dict, list]:
     """Concatenates all RPG data from one day."""
-    rpg_objects = get_rpg_objects(l1_files)
+    rpg_objects, valid_files = get_rpg_objects(l1_files, date)
     rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
     try:
         rpg_header = _reduce_header(rpg_header)
     except AssertionError as error:
         raise RuntimeError(error)
     rpg_raw_data = _mask_invalid_data(rpg_raw_data)
-    return {**rpg_header, **rpg_raw_data}
+    return {**rpg_header, **rpg_raw_data}, valid_files
 
 
-def get_rpg_objects(rpg_files):
+def get_rpg_objects(files: list, date: Union[str, None]) -> Tuple[list, list]:
     """Creates a list of Rpg() objects from the file names."""
-    for file in rpg_files:
-        yield RpgBin(file)
+    objects = []
+    valid_files = []
+    for file in files:
+        obj = RpgBin(file)
+        try:
+            _validate_date(obj, date)
+        except ValueError:
+            continue
+        objects.append(obj)
+        valid_files.append(file)
+    return objects, valid_files
+
+
+def _validate_date(obj, date: Union[str, None]) -> None:
+    if not date:
+        return
+    for t in obj.data['time'][:]:
+        date_str = '-'.join(_get_rpg_time(t))
+        if date_str != date:
+            raise ValueError
 
 
 class RpgBin:
@@ -344,19 +372,19 @@ def _get_rpg_time(timestamp: float) -> list:
     return datetime.datetime.fromtimestamp(timestamp).strftime('%Y %m %d').split()
 
 
-def _save_rpg(rpg, output_file, keep_uuid, uuid: Union[str, None] = None) -> str:
-    """Saves the RPG radar file.
-
-    Notes:
-
-    """
+def _save_rpg(rpg: Rpg,
+              output_file: str,
+              valid_files: list,
+              keep_uuid: bool,
+              uuid: Union[str, None] = None) -> Tuple[str, list]:
+    """Saves the RPG radar file."""
 
     dims = {'time': len(rpg.data['time'][:]),
             'range': len(rpg.data['range'][:]),
             'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}
 
     rootgrp = output.init_file(output_file, dims, rpg.data, keep_uuid, uuid)
-    uuid = rootgrp.file_uuid
+    file_uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'radar')
     rootgrp.title = f"Radar file from {rpg.location}"
     rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
@@ -365,7 +393,7 @@ def _save_rpg(rpg, output_file, keep_uuid, uuid: Union[str, None] = None) -> str
     rootgrp.source = rpg.source
     output.add_references(rootgrp)
     rootgrp.close()
-    return uuid
+    return file_uuid, valid_files
 
 
 DEFINITIONS = {
