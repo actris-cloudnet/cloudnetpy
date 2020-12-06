@@ -71,10 +71,11 @@ def _create_one_day_data_record(l1_files: list, date: Union[str, None]) -> Tuple
     """Concatenates all RPG data from one day."""
     rpg_objects, valid_files = get_rpg_objects(l1_files, date)
     rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
-    try:
-        rpg_header = _reduce_header(rpg_header)
-    except AssertionError as error:
-        raise RuntimeError(error)
+    if len(valid_files) > 1:
+        try:
+            rpg_header = _reduce_header(rpg_header)
+        except AssertionError as error:
+            raise RuntimeError(error)
     rpg_raw_data = _mask_invalid_data(rpg_raw_data)
     return {**rpg_header, **rpg_raw_data}, valid_files
 
