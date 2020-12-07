@@ -4,11 +4,12 @@ from datetime import date
 import numpy as np
 import numpy.ma as ma
 import netCDF4
+from scipy.signal import lfilter
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from cloudnetpy import utils
-from cloudnetpy.plotting import meta_for_old_files
+from cloudnetpy.plotting import legacy_meta
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
@@ -41,16 +42,22 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         >>> generate_figure('drizzle_file.nc', ['Do', 'mu', 'S'], max_y=3)
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
+    is_h = _check_file_flags(nc_file)
     fig, axes = _initialize_figure(len(valid_fields))
 
     for ax, field, name in zip(axes, valid_fields, valid_names):
         plot_type = ATTRIBUTES[name].plot_type
-        ax_value = _read_ax_values(nc_file)
-        field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
-        _set_ax(ax, max_y)
         if title:
             _set_title(ax, name, '')
-
+        if is_h is False:
+            source = ATTRIBUTES[name].source
+            ax_value = _read_instrument_ax_values(nc_file, is_h)
+            _plot_instrument_data(ax, field, name, source, ax_value)
+            continue
+        else:
+            ax_value = _read_ax_values(nc_file)
+            field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
+            _set_ax(ax, max_y)
         if plot_type == 'bar':
             _plot_bar_data(ax, field, ax_value[0])
             _set_ax(ax, 2, ATTRIBUTES[name].ylabel)
@@ -60,7 +67,6 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
 
         else:
             _plot_colormesh_data(ax, field, name, ax_value)
-
     case_date = _set_labels(fig, axes[-1], nc_file, sub_title)
     _handle_saving(image_name, save_path, show, dpi, case_date, valid_names)
 
@@ -117,6 +123,15 @@ def _find_valid_fields(nc_file, names):
     return valid_data, valid_names
 
 
+def _check_file_flags(nc_file):
+    nc = netCDF4.Dataset(nc_file)
+    is_height = True
+    if 'height' not in nc.variables:
+        if 'range' not in nc.variables:
+            is_height = False
+    return is_height
+
+
 def _initialize_figure(n_subplots):
     """Creates an empty figure according to the number of subplots."""
     fig, axes = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8))
@@ -142,6 +157,15 @@ def _read_ax_values(nc_file):
     return time, height_km
 
 
+def _read_instrument_ax_values(nc_file, h_flag):
+    """Converts instruments dimension a readable format."""
+    nc = netCDF4.Dataset(nc_file)
+    time = nc.variables['time']
+    dtime = utils.seconds2hours(time[:])
+    nc.close()
+    return dtime, None
+
+
 def _screen_high_altitudes(data_field, ax_values, max_y):
     """Removes altitudes from 2D data that are not visible in the figure.
 
@@ -162,10 +186,10 @@ def _screen_high_altitudes(data_field, ax_values, max_y):
     return data_field, (ax_values[0], alt)
 
 
-def _set_ax(ax, max_y, ylabel=None):
+def _set_ax(ax, max_y, ylabel=None, min_y=0.0):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
-    ax.set_ylim(0, max_y)
+    ax.set_ylim(min_y, max_y)
     ax.set_xticks(np.arange(0, 25, 4, dtype=int))
     ax.set_xticklabels(ticks_x_labels, fontsize=12)
     ax.set_ylabel('Height (km)', fontsize=13)
@@ -268,6 +292,56 @@ def _plot_colormesh_data(ax, data, name, axes):
         colorbar.ax.set_yticklabels(tick_labels)
 
 
+def _plot_instrument_data(ax, data, name, type, axes):
+    #TODO: add other instruments
+    if type == 'mwr':
+        _plot_mwr(ax, data, name, axes)
+    pos = ax.get_position()
+    ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
+
+
+def _plot_mwr(ax, data, name, axes):
+    time = axes[0]
+    time, data = _remove_timestamps_of_next_date(time, data)
+    rolling_mean, width = _calculate_rolling_mean(time, data/1000)
+    data_filter = _filter_noise(data/1000, 10)
+    ax.plot(time, data_filter, color='royalblue', linewidth=0.1)
+    ax.plot(time, np.zeros(data.shape), color='k', linewidth=0.8)
+    ax.plot(time[int(width / 2 - 1):int(-width / 2)], rolling_mean,
+            color='sienna', linewidth=2.0)
+    ax.plot(time[int(width / 2 - 1):int(-width / 2)], rolling_mean,
+            color='wheat', linewidth=0.6)
+    _set_ax(ax, round(np.max(data / 1000), 3) + 0.0005, ATTRIBUTES[name].ylabel,
+            min_y=round(np.min(data / 1000), 3) - 0.0005)
+
+
+def _remove_timestamps_of_next_date(time, data, n=100):
+    """Check if timestamps of a next date is in a time-array. If so, remove
+        extra timestamps which should not be included in a current date."""
+    for i, t in enumerate(time[-n:-1]):
+        if t > time[-n:][i+1]:
+            nextday = i - n + 1
+            return time[:nextday], data[:nextday]
+    return time, data
+
+
+def _calculate_rolling_mean(time, data):
+    width = len(time[time <= 0.3])
+    if (width % 2) != 0:
+        width = width + 1
+    rolling_window = np.blackman(width)
+    rolling_mean = np.convolve(data, rolling_window, 'valid')
+    rolling_mean = rolling_mean / np.sum(rolling_window)
+    return rolling_mean, width
+
+
+def _filter_noise(data, n=5):
+    """IIR filter"""
+    b = [1.0 / n] * n
+    a = 1
+    return lfilter(b, a, data)
+
+
 def _init_colorbar(plot, axis):
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="1%", pad=0.25)
@@ -347,8 +421,8 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
 
     Args:
         nc_files (tuple): Tuple of strings of the two files to compare
-                         [0] = old Cloudnet file
-                         [1] = new CloudnetPy file
+                         [0] = CloudnetPy file
+                         [1] = legacy Cloudnet file
         field_name (str): Name of variable to be plotted.
         show (bool, optional): If True, shows the plot.
         relative_err (bool, optional): If True, plots also relative error. Makes
@@ -387,7 +461,7 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
             _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
         elif plot_type == 'segment':
             if ii == 1:
-                field, field_name = meta_for_old_files.fix_old_data(field, field_name)
+                field, field_name = legacy_meta.fix_legacy_data(field, field_name)
             _plot_segment_data(ax, field, field_name, ax_value)
         else:
             _plot_colormesh_data(ax, field, field_name, ax_value)

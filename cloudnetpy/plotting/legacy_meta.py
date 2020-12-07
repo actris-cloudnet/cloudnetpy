@@ -53,7 +53,7 @@ ATTRIBUTES = {
 }
 
 
-def fix_old_data(data, name):
+def fix_legacy_data(data, name):
     def _remove_data():
         segments = [x[0] for x in ATTRIBUTES[name].hidden]
         segments_to_hide = np.char.startswith(segments, '_')
