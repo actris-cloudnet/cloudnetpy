@@ -178,10 +178,10 @@ class RpgBin:
         str_out = ''
         while True:
             c = np.fromfile(file_id, np.int8, 1)
-            if c:
-                str_out += chr(c[0])
-            else:
+            if len(c) == 0 or c[0] == 0:
                 break
+            else:
+                str_out += chr(c[0])
         return str_out
 
     def read_rpg_data(self):
