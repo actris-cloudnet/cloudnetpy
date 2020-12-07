@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from cloudnetpy import utils
-from cloudnetpy.plotting import meta_for_old_files
+from cloudnetpy.plotting import legacy_meta
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
@@ -421,8 +421,8 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
 
     Args:
         nc_files (tuple): Tuple of strings of the two files to compare
-                         [0] = old Cloudnet file
-                         [1] = new CloudnetPy file
+                         [0] = CloudnetPy file
+                         [1] = legacy Cloudnet file
         field_name (str): Name of variable to be plotted.
         show (bool, optional): If True, shows the plot.
         relative_err (bool, optional): If True, plots also relative error. Makes
@@ -461,7 +461,7 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
             _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
         elif plot_type == 'segment':
             if ii == 1:
-                field, field_name = meta_for_old_files.fix_old_data(field, field_name)
+                field, field_name = legacy_meta.fix_legacy_data(field, field_name)
             _plot_segment_data(ax, field, field_name, ax_value)
         else:
             _plot_colormesh_data(ax, field, field_name, ax_value)
