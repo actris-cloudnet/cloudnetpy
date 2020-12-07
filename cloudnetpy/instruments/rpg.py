@@ -99,7 +99,7 @@ def _validate_date(obj, date: Union[str, None]) -> None:
     if not date:
         return
     for t in obj.data['time'][:]:
-        date_str = '-'.join(_get_rpg_time(t))
+        date_str = '-'.join(utils.seconds2date(t)[:3])
         if date_str != date:
             raise ValueError
 
@@ -363,14 +363,13 @@ class Rpg:
             self.data[name].lin2db()
 
     def _get_date(self):
-        time_median = float(ma.median(self.raw_data['time']))
-        return _get_rpg_time(time_median)
-
-
-def _get_rpg_time(timestamp: float) -> list:
-    epoch = datetime.datetime(2001, 1, 1).timestamp()
-    timestamp += epoch
-    return datetime.datetime.fromtimestamp(timestamp).strftime('%Y %m %d').split()
+        time_first = self.raw_data['time'][0]
+        time_last = self.raw_data['time'][-1]
+        date_first = utils.seconds2date(time_first)[:3]
+        date_last = utils.seconds2date(time_last)[:3]
+        if date_first != date_last:
+            print('Warning: Measurements from different days')
+        return date_first
 
 
 def _save_rpg(rpg: Rpg,

@@ -40,13 +40,6 @@ class TestReduceHeader:
                                {'a': 1, 'b': 2, 'c': 3})
 
 
-def test_get_rpg_time():
-    secs_in_day = 24 * 60 * 60
-    assert rpg._get_rpg_time(0) == ['2001', '01', '01']
-    assert rpg._get_rpg_time(secs_in_day - 1) == ['2001', '01', '01']
-    assert rpg._get_rpg_time(secs_in_day) == ['2001', '01', '02']
-
-
 class TestRPG2nc:
 
     file_path = f'{SCRIPT_PATH}/data/rpg-fmcw-94'
