@@ -42,16 +42,16 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         >>> generate_figure('drizzle_file.nc', ['Do', 'mu', 'S'], max_y=3)
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
-    h_check, type_check = _check_file_flags(nc_file)
+    is_h = _check_file_flags(nc_file)
     fig, axes = _initialize_figure(len(valid_fields))
 
     for ax, field, name in zip(axes, valid_fields, valid_names):
         plot_type = ATTRIBUTES[name].plot_type
         if title:
             _set_title(ax, name, '')
-        if h_check is False or type_check is False:
+        if is_h is False:
             source = ATTRIBUTES[name].source
-            ax_value = _read_instrument_ax_values(nc_file, h_check)
+            ax_value = _read_instrument_ax_values(nc_file, is_h)
             _plot_instrument_data(ax, field, name, source, ax_value)
             continue
         else:
@@ -125,14 +125,11 @@ def _find_valid_fields(nc_file, names):
 
 def _check_file_flags(nc_file):
     nc = netCDF4.Dataset(nc_file)
-    height_check = True
-    file_type_check = True
+    is_height = True
     if 'height' not in nc.variables:
         if 'range' not in nc.variables:
-            height_check = False
-    if not hasattr(nc, 'cloudnet_file_type'):
-        file_type_check = False
-    return height_check, file_type_check
+            is_height = False
+    return is_height
 
 
 def _initialize_figure(n_subplots):
@@ -163,19 +160,10 @@ def _read_ax_values(nc_file):
 def _read_instrument_ax_values(nc_file, h_flag):
     """Converts instruments dimension a readable format."""
     nc = netCDF4.Dataset(nc_file)
-    height_km = None
-    if h_flag is True:
-        try:
-            h = 'range'
-            height = nc.variables[h]
-        except AttributeError:
-            h = 'height'
-            height = nc.variables[h]
-        height_km = height / 1000
     time = nc.variables['time']
     dtime = utils.seconds2hours(time[:])
     nc.close()
-    return dtime, height_km
+    return dtime, None
 
 
 def _screen_high_altitudes(data_field, ax_values, max_y):
@@ -314,7 +302,7 @@ def _plot_instrument_data(ax, data, name, type, axes):
 
 def _plot_mwr(ax, data, name, axes):
     time = axes[0]
-    time, data = _remove_nextday_times(time, data)
+    time, data = _remove_timestamps_of_next_date(time, data)
     rolling_mean, width = _calculate_rolling_mean(time, data/1000)
     data_filter = _filter_noise(data/1000, 10)
     ax.plot(time, data_filter, color='royalblue', linewidth=0.1)
@@ -327,7 +315,9 @@ def _plot_mwr(ax, data, name, axes):
             min_y=round(np.min(data / 1000), 3) - 0.0005)
 
 
-def _remove_nextday_times(time, data, n=100):
+def _remove_timestamps_of_next_date(time, data, n=100):
+    """Check if timestamps of a next date is in a time-array. If so, remove
+        extra timestamps which should not be included in a current date."""
     for i, t in enumerate(time[-n:-1]):
         if t > time[-n:][i+1]:
             nextday = i - n + 1
@@ -340,8 +330,8 @@ def _calculate_rolling_mean(time, data):
     if (width % 2) != 0:
         width = width + 1
     rolling_window = np.blackman(width)
-    rolling_mean = np.convolve(data, rolling_window, 'valid') \
-                   / np.sum(rolling_window)
+    rolling_mean = np.convolve(data, rolling_window, 'valid')
+    rolling_mean = rolling_mean / np.sum(rolling_window)
     return rolling_mean, width
 
 
@@ -483,15 +473,3 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
     case_date = _set_labels(fig, axes[-1], nc_files[0])
     _handle_saving(image_name, save_path, show, dpi, case_date, [field_name],
                    '_comparison')
-
-
-def main():
-    nc_file = '/home/korpinen/Documents/ACTRIS/cloudnet_data/mwr.nc'
-    save_path = '/home/korpinen/Documents/ACTRIS/test_figs/'
-    generate_figure(nc_file, ['LWP'], save_path=save_path, show=False)
-    #nc_file = '/home/korpinen/Documents/ACTRIS/cloudnet_data/categorize.nc'
-    #generate_figure(nc_file, ['lwp'])
-
-
-if __name__ == "__main__":
-    main()

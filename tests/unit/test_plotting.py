@@ -51,10 +51,10 @@ def test_create_save_name(file_metadata):
     assert plotting._create_save_name(path, case_date, fields) == f"/foo/bar/{datestr}_ldr_z.png"
 
 
-def test_remove_nextday_times():
+def test_remove_timestamps_of_next_date():
     times = [1, 2, 3, 4, 5, 6, 1, 2, 3]
     data = [1, 1, 1, 2, 2, 2, 3, 3, 3]
-    x, y = plotting._remove_nextday_times(times, data, 8)
+    x, y = plotting._remove_timestamps_of_next_date(times, data, 8)
     assert x == times[:-3]
     assert y == data[:-3]
 
