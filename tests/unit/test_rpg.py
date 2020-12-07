@@ -1,8 +1,10 @@
 from os import path
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 import pytest
+import shutil
 from numpy.testing import assert_array_equal
 from cloudnetpy.instruments import rpg
+from distutils.dir_util import copy_tree
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 
@@ -81,3 +83,12 @@ class TestRPG2nc:
                              self.site_meta, date='2020-10-23',
                              uuid=test_uuid)
         assert uuid == test_uuid
+
+    def test_handling_of_corrupted_files(self):
+        temp_dir = TemporaryDirectory()
+        copy_tree(self.file_path, temp_dir.name)
+        with open(f'{temp_dir.name}/foo.LV1', 'w') as f:
+            f.write('kissa')
+        _, files = rpg.rpg2nc(temp_dir.name, self.temp_file.name,
+                              self.site_meta, date='2020-10-22')
+        assert len(files) == 2

@@ -85,10 +85,10 @@ def get_rpg_objects(files: list, date: Union[str, None]) -> Tuple[list, list]:
     objects = []
     valid_files = []
     for file in files:
-        obj = RpgBin(file)
         try:
+            obj = RpgBin(file)
             _validate_date(obj, date)
-        except ValueError:
+        except (TypeError, ValueError):
             continue
         objects.append(obj)
         valid_files.append(file)
