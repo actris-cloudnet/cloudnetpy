@@ -8,8 +8,10 @@ import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
 import requests
+import pytz
 
 
+SECONDS_PER_MINUTE = 60
 SECONDS_PER_HOUR = 3600
 SECONDS_PER_DAY = 86400
 
@@ -33,6 +35,40 @@ def seconds2hours(time_in_seconds):
     if fraction_hour[-1] == 0:
         fraction_hour[-1] = 24
     return fraction_hour
+
+
+def seconds2time(time_in_seconds: float) -> list:
+    """Converts seconds since some epoch to time of day.
+
+    Args:
+        time_in_seconds (float): seconds since some epoch.
+
+    Returns:
+        list: [hours, minutes, seconds] formatted as '05' etc.
+
+    """
+    seconds_since_midnight = np.mod(time_in_seconds, SECONDS_PER_DAY)
+    hours = seconds_since_midnight // SECONDS_PER_HOUR
+    minutes = seconds_since_midnight % SECONDS_PER_HOUR // SECONDS_PER_MINUTE
+    seconds = seconds_since_midnight % SECONDS_PER_MINUTE
+    time = [hours, minutes, seconds]
+    return [str(t).zfill(2) for t in time]
+
+
+def seconds2date(time_in_seconds: float, epoch=(2001, 1, 1)) -> list:
+    """Converts seconds since some epoch to datetime (UTC).
+
+    Args:
+        time_in_seconds (float): seconds since some epoch.
+        epoch (tuple, optional): Epoch, default is (2001, 1, 1) (UTC).
+
+    Returns:
+        list: [year, month, day, hours, minutes, seconds] formatted as '05' etc (UTC).
+
+    """
+    epoch_in_seconds = datetime.datetime.timestamp(datetime.datetime(*epoch, tzinfo=pytz.utc))
+    timestamp = time_in_seconds + epoch_in_seconds
+    return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y %m %d %H %M %S').split()
 
 
 def time_grid(time_step=30):

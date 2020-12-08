@@ -411,3 +411,29 @@ def test_find_first_empty_line(tmpdir):
 ])
 def test_is_timestamp(input, result):
     assert utils.is_timestamp(input) == result
+
+
+@pytest.mark.parametrize("input, result", [
+    (0, ['00', '00', '00']),
+    (24*60*60-1, ['23', '59', '59']),
+    (24 * 60 * 60 * 10, ['00', '00', '00']),
+])
+def test_seconds2time(input, result):
+    assert utils.seconds2time(input) == result
+
+
+@pytest.mark.parametrize("input, result, epoch", [
+    (0, ['1970', '01', '01', '00', '00', '00'], (1970, 1, 1)),
+    (0, ['2001', '01', '01', '00', '00', '00'], (2001, 1, 1)),
+    (24*60*60*10 + 1, ['2001', '01', '11', '00', '00', '01'], (2001, 1, 1)),
+    (24*60*60 - 1, ['2001', '01', '01', '23', '59', '59'], (2001, 1, 1)),
+    (625107602, ['1989', '10', '23', '01', '00', '02'], (1970, 1, 1)),
+    (625107602, ['1990', '10', '23', '01', '00', '02'], (1971, 1, 1)),
+    (625107602, ['1995', '10', '23', '01', '00', '02'], (1976, 1, 1)),
+    (625107602, ['1996', '10', '23', '01', '00', '02'], (1977, 1, 1)),
+    (1545730073, ['2018', '12', '25', '09', '27', '53'], (1970, 1, 1)),
+    (625107602, ['2020', '10', '23', '01', '00', '02'], (2001, 1, 1))
+])
+def test_seconds2date(input, result, epoch):
+    assert utils.seconds2date(input, epoch) == result
+    assert result[3:] == utils.seconds2time(input)
