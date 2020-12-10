@@ -141,10 +141,10 @@ def _initialize_figure(n_subplots):
     return fig, axes
 
 
-def _read_ax_values(nc_file):
+def _read_ax_values(nc_file, file_type: str = None):
     """Returns time and height arrays."""
     nc = netCDF4.Dataset(nc_file)
-    file_type = nc.cloudnet_file_type
+    file_type = file_type or nc.cloudnet_file_type
     nc.close()
     if file_type == 'radar':
         fields = ['time', 'range']
@@ -413,6 +413,50 @@ def _plot_relative_error(ax, error, ax_values):
 
 def _lin2log(*args):
     return [ma.log10(x) for x in args]
+
+# LEGACY DATA PLOTTING ROUTINES:
+
+
+def generate_legacy_figure(full_path: str,
+                           product: str,
+                           field_name: str,
+                           show: bool = False,
+                           save_path: str = None,
+                           max_y: int = 12,
+                           dpi: int = 200,
+                           image_name: str = None) -> None:
+    """ Plots one particular field from Cloudnet legacy product file.
+
+    Args:
+        full_path (str): Full path of a legacy Cloudnet file.
+        product (str): Cloudnet file type.
+        field_name (str): Name of variable to be plotted.
+        show (bool, optional): If True, shows the plot. Default is False.
+        save_path (str, optional): If defined, saves the image to this path.
+            Default is None.
+        max_y (int, optional): Upper limit of images (km). Default is 12.
+        dpi (int, optional): Quality of plots. Default is 200.
+        image_name (str, optional): Name (and full path) of the output image.
+            Overrides the *save_path* option. Default is None.
+
+    """
+    plot_type = ATTRIBUTES[field_name].plot_type
+    field = _find_valid_fields(full_path, [field_name])[0][0]
+    fig, ax = _initialize_figure(1)
+    ax = ax[0]
+    ax_values = _read_ax_values(full_path, product)
+    field, ax_value = _screen_high_altitudes(field, ax_values, max_y)
+    _set_ax(ax, max_y)
+    if plot_type == 'bar':
+        _plot_bar_data(ax, field, ax_value[0])
+        _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
+    elif plot_type == 'segment':
+        field, field_name = legacy_meta.fix_legacy_data(field, field_name)
+        _plot_segment_data(ax, field, field_name, ax_value)
+    else:
+        _plot_colormesh_data(ax, field, field_name, ax_value)
+    case_date = _set_labels(fig, ax, full_path, False)
+    _handle_saving(image_name, save_path, show, dpi, case_date, [field_name])
 
 
 def compare_files(nc_files, field_name, show=True, relative_err=False,
