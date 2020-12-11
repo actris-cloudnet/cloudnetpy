@@ -3,6 +3,7 @@
 from datetime import date
 import numpy as np
 import numpy.ma as ma
+from numpy import ndarray
 import netCDF4
 from scipy.signal import lfilter
 import matplotlib.pyplot as plt
@@ -42,17 +43,17 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
         >>> generate_figure('drizzle_file.nc', ['Do', 'mu', 'S'], max_y=3)
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
-    is_h = _check_file_flags(nc_file)
+    is_height = _is_height_dimension(nc_file)
     fig, axes = _initialize_figure(len(valid_fields))
 
     for ax, field, name in zip(axes, valid_fields, valid_names):
         plot_type = ATTRIBUTES[name].plot_type
         if title:
             _set_title(ax, name, '')
-        if is_h is False:
+        if not is_height:
             source = ATTRIBUTES[name].source
-            ax_value = _read_instrument_ax_values(nc_file, is_h)
-            _plot_instrument_data(ax, field, name, source, ax_value)
+            time = _read_time_vector(nc_file)
+            _plot_instrument_data(ax, field, name, source, time)
             continue
         else:
             ax_value = _read_ax_values(nc_file)
@@ -123,16 +124,14 @@ def _find_valid_fields(nc_file, names):
     return valid_data, valid_names
 
 
-def _check_file_flags(nc_file):
-    nc = netCDF4.Dataset(nc_file)
-    is_height = True
-    if 'height' not in nc.variables:
-        if 'range' not in nc.variables:
-            is_height = False
+def _is_height_dimension(full_path: str) -> bool:
+    nc = netCDF4.Dataset(full_path)
+    is_height = any([key in nc.variables for key in ('height', 'range')])
+    nc.close()
     return is_height
 
 
-def _initialize_figure(n_subplots):
+def _initialize_figure(n_subplots: int):
     """Creates an empty figure according to the number of subplots."""
     fig, axes = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8))
     fig.subplots_adjust(left=0.06, right=0.73)
@@ -141,29 +140,30 @@ def _initialize_figure(n_subplots):
     return fig, axes
 
 
-def _read_ax_values(nc_file):
+def _read_ax_values(full_path: str, file_type: str = None):
     """Returns time and height arrays."""
-    nc = netCDF4.Dataset(nc_file)
-    file_type = nc.cloudnet_file_type
-    nc.close()
+    if not file_type:
+        nc = netCDF4.Dataset(full_path)
+        file_type = nc.cloudnet_file_type
+        nc.close()
     if file_type == 'radar':
         fields = ['time', 'range']
     else:
         fields = ['time', 'height']
-    time, height = ptools.read_nc_fields(nc_file, fields)
+    time, height = ptools.read_nc_fields(full_path, fields)
     if file_type == 'model':
         height = ma.mean(height, axis=0)
     height_km = height / 1000
     return time, height_km
 
 
-def _read_instrument_ax_values(nc_file, h_flag):
-    """Converts instruments dimension a readable format."""
+def _read_time_vector(nc_file: str) -> ndarray:
+    """Converts time vector to fraction hour."""
     nc = netCDF4.Dataset(nc_file)
     time = nc.variables['time']
-    dtime = utils.seconds2hours(time[:])
+    fraction_time = utils.seconds2hours(time[:])
     nc.close()
-    return dtime, None
+    return fraction_time
 
 
 def _screen_high_altitudes(data_field, ax_values, max_y):
@@ -292,16 +292,14 @@ def _plot_colormesh_data(ax, data, name, axes):
         colorbar.ax.set_yticklabels(tick_labels)
 
 
-def _plot_instrument_data(ax, data, name, type, axes):
-    #TODO: add other instruments
-    if type == 'mwr':
-        _plot_mwr(ax, data, name, axes)
+def _plot_instrument_data(ax, data, name, product, time):
+    if product == 'mwr':
+        _plot_mwr(ax, data, name, time)
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
 
-def _plot_mwr(ax, data, name, axes):
-    time = axes[0]
+def _plot_mwr(ax, data, name, time):
     time, data = _remove_timestamps_of_next_date(time, data)
     rolling_mean, width = _calculate_rolling_mean(time, data/1000)
     data_filter = _filter_noise(data/1000, 10)
@@ -413,6 +411,50 @@ def _plot_relative_error(ax, error, ax_values):
 
 def _lin2log(*args):
     return [ma.log10(x) for x in args]
+
+# LEGACY DATA PLOTTING ROUTINES:
+
+
+def generate_legacy_figure(full_path: str,
+                           product: str,
+                           field_name: str,
+                           show: bool = False,
+                           save_path: str = None,
+                           max_y: int = 12,
+                           dpi: int = 200,
+                           image_name: str = None) -> None:
+    """ Plots one particular field from Cloudnet legacy product file.
+
+    Args:
+        full_path (str): Full path of a legacy Cloudnet file.
+        product (str): Cloudnet file type.
+        field_name (str): Name of variable to be plotted.
+        show (bool, optional): If True, shows the plot. Default is False.
+        save_path (str, optional): If defined, saves the image to this path.
+            Default is None.
+        max_y (int, optional): Upper limit of images (km). Default is 12.
+        dpi (int, optional): Quality of plots. Default is 200.
+        image_name (str, optional): Name (and full path) of the output image.
+            Overrides the *save_path* option. Default is None.
+
+    """
+    plot_type = ATTRIBUTES[field_name].plot_type
+    field = _find_valid_fields(full_path, [field_name])[0][0]
+    fig, ax = _initialize_figure(1)
+    ax = ax[0]
+    ax_values = _read_ax_values(full_path, product)
+    field, ax_value = _screen_high_altitudes(field, ax_values, max_y)
+    _set_ax(ax, max_y)
+    if plot_type == 'bar':
+        _plot_bar_data(ax, field, ax_value[0])
+        _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
+    elif plot_type == 'segment':
+        field, field_name = legacy_meta.fix_legacy_data(field, field_name)
+        _plot_segment_data(ax, field, field_name, ax_value)
+    else:
+        _plot_colormesh_data(ax, field, field_name, ax_value)
+    case_date = _set_labels(fig, ax, full_path, False)
+    _handle_saving(image_name, save_path, show, dpi, case_date, [field_name])
 
 
 def compare_files(nc_files, field_name, show=True, relative_err=False,

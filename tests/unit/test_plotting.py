@@ -1,3 +1,5 @@
+from scipy.signal import lfilter
+import numpy as np
 import pytest
 import numpy.testing as testing
 from numpy.testing import assert_array_equal
@@ -60,7 +62,6 @@ def test_remove_timestamps_of_next_date():
 
 
 def test_calculate_rolling_mean():
-    import numpy as np
     time = np.array([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
     data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
     r_window = np.blackman(4)
@@ -70,8 +71,6 @@ def test_calculate_rolling_mean():
 
 
 def test_filter_noise():
-    from scipy.signal import lfilter
-    import numpy as np
     data = np.array([1, 1, 5, -5, 1, 1, 5, -5, 1, 1, -5, 5])
     x = plotting._filter_noise(data, 3)
     b = [1.0 / 3] * 3
