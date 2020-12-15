@@ -42,3 +42,6 @@ If you wish to acknowledge CloudnetPy in your publication, please cite:
 ## Contributing
 
 We encourage you to contribute to CloudnetPy! Please check out the [contribution guidelines](CONTRIBUTING.md) about how to proceed.
+
+## License
+MIT
