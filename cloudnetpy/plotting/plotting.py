@@ -324,7 +324,7 @@ def _remove_timestamps_of_next_date(time, data, n=100):
 
 
 def _calculate_rolling_mean(time, data):
-    width = len(time[time <= 0.3])
+    width = len(time[time <= time[0] + 0.3])
     if (width % 2) != 0:
         width = width + 1
     rolling_window = np.blackman(width)
