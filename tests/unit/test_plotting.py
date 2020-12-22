@@ -34,7 +34,7 @@ def test__generate_log_cbar_ticklabel_list(vmin, vmax, result):
 def test_get_subtitle_text():
     case_date = date(2019, 5, 7)
     site_name = 'Mace-Head'
-    assert plotting._get_subtitle_text(case_date, site_name) == 'Mace Head, 7 May 2019'
+    assert 'Mace Head' in plotting._get_subtitle_text(case_date, site_name)
 
 
 def test_read_location(nc_file):
