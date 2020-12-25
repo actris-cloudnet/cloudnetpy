@@ -1,17 +1,23 @@
+import pytest
 from cloudnetpy.instruments import mira
 
 
-class _Object:
-    def __init__(self, source):
-        self.dataset = _Nest(source)
+class TestMeasurementDate:
 
+    correct_date = ['2020', '05', '24']
 
-class _Nest:
-    def __init__(self, source):
-        self.source = source
+    @pytest.fixture(autouse=True)
+    def _init(self, raw_mira_file):
+        self.raw_radar = mira.Mira(raw_mira_file, {'name': 'Test'})
 
+    def test_validate_date_default(self):
+        self.raw_radar.validate_date(None)
+        assert self.raw_radar.date == self.correct_date
 
-def test_find_measurement_date():
-    radar = _Object('190517_000002.pds.off')
-    date = mira._find_measurement_date(radar)
-    assert date == ('2019', '05', '17')
+    def test_validate_date(self):
+        self.raw_radar.validate_date('2020-05-24')
+        assert self.raw_radar.date == self.correct_date
+
+    def test_validate_date_fails(self):
+        with pytest.raises(ValueError):
+            self.raw_radar.validate_date('2020-05-23')

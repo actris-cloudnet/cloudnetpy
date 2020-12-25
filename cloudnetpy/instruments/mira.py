@@ -13,7 +13,8 @@ def mira2nc(mmclx_file: str,
             site_meta: dict,
             rebin_data: bool = False,
             keep_uuid: bool = False,
-            uuid: Union[str, None] = None) -> str:
+            uuid: Union[str, None] = None,
+            date: Union[str, None] = None) -> str:
     """Converts METEK MIRA-35 cloud radar Level 1 file into netCDF file.
 
     This function converts raw cloud radar file into a much smaller file that
@@ -30,7 +31,8 @@ def mira2nc(mmclx_file: str,
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
         uuid (str, optional): Set specific UUID for the file.
-    
+        date (str, optional): Expected date as YYYY-MM-DD of all profiles in the file.
+
     Returns:
         str: UUID of the generated file.
 
@@ -41,6 +43,7 @@ def mira2nc(mmclx_file: str,
 
     """
     raw_mira = Mira(mmclx_file, site_meta)
+    raw_mira.validate_date(date)
     raw_mira.linear_to_db(('Ze', 'ldr', 'SNR'))
     if rebin_data:
         snr_gain = raw_mira.rebin_fields()
@@ -74,6 +77,7 @@ class Mira(DataSource):
         self._init_data()
         self.range = self.getvar(self, 'range')
         self.location = site_meta['name']
+        self.date = None
 
     def _init_data(self):
         """Reads correct fields and fixes the names."""
@@ -82,6 +86,19 @@ class Mira(DataSource):
             array = self.getvar(raw_key)
             array[~np.isfinite(array)] = ma.masked
             self.data[name] = CloudnetArray(array, name)
+
+    def validate_date(self, expected_date: Union[str, None] = None) -> None:
+        """Validates MIRA date timestamps."""
+        epoch = (1970, 1, 1)
+        time_stamps = self.getvar('time')
+        date0 = utils.seconds2date(time_stamps[0], epoch)[:3]
+        for t in time_stamps[1:]:
+            date = utils.seconds2date(t, epoch)[:3]
+            if date != date0:
+                raise ValueError('Error: MIRA dates from different days.')
+            if expected_date and '-'.join(date) != expected_date:
+                raise ValueError('Error: MIRA date differs from expected.')
+        self.date = date0
 
     def linear_to_db(self, variables_to_log):
         """Changes linear units to logarithmic."""
@@ -129,24 +146,17 @@ def _save_mira(mmclx_file, raw_radar, output_file, keep_uuid, uuid: Union[str, N
             'range': len(raw_radar.range)}
     rootgrp = output.init_file(output_file, dims, raw_radar.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
-    fields_from_raw = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg')
+    fields_from_raw = ['nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg']
     output.copy_variables(netCDF4.Dataset(mmclx_file), rootgrp, fields_from_raw)
     output.add_file_type(rootgrp, 'radar')
     rootgrp.title = f"Radar file from {raw_radar.location}"
-    rootgrp.year, rootgrp.month, rootgrp.day = _find_measurement_date(raw_radar)
+    rootgrp.year, rootgrp.month, rootgrp.day = raw_radar.date
     rootgrp.location = raw_radar.location
     rootgrp.history = f"{utils.get_time()} - radar file created"
     rootgrp.source = raw_radar.source
     output.add_references(rootgrp)
     rootgrp.close()
     return uuid
-
-
-def _find_measurement_date(raw_radar):
-    """Finds measurement date from the netCDF global attribute 'source'"""
-    source = raw_radar.dataset.source
-    date = source.split('_')[0]
-    return f"20{date[:2]}", date[2:4], date[4:6]
 
 
 MIRA_ATTRIBUTES = {
