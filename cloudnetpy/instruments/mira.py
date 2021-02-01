@@ -1,4 +1,5 @@
 """Module for reading raw cloud radar data."""
+import os
 from typing import Union
 import netCDF4
 import numpy as np
@@ -6,24 +7,27 @@ import numpy.ma as ma
 from cloudnetpy import output, utils, CloudnetArray
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
+from cloudnetpy import concat_lib
+from tempfile import NamedTemporaryFile
 
 
-def mira2nc(mmclx_file: str,
+def mira2nc(raw_mira: str,
             output_file: str,
             site_meta: dict,
             rebin_data: bool = False,
             keep_uuid: bool = False,
             uuid: Union[str, None] = None,
             date: Union[str, None] = None) -> str:
-    """Converts METEK MIRA-35 cloud radar Level 1 file into netCDF file.
+    """Converts METEK MIRA-35 cloud radar Level 1 file(s) into netCDF file.
 
-    This function converts raw cloud radar file into a much smaller file that
+    This function converts raw MIRA file(s) into a much smaller file that
     contains only the relevant data and can be used in further processing
     steps.
 
     Args:
-        mmclx_file (str): Raw radar file in netCDF format.
-        output_file (str): Output file name.
+        raw_mira (str): Filename of a daily MIRA *.mmclx file. Can be also a folder
+            containing several non-concatenated *.mmclx files from one day.
+        output_file (str): Output filename.
         site_meta (dict): Dictionary containing information about the
             site. Required key value pair is `name`.
         rebin_data (bool, optional): If True, rebins data to 30s resolution.
@@ -36,13 +40,25 @@ def mira2nc(mmclx_file: str,
     Returns:
         str: UUID of the generated file.
 
+    Raises:
+        ValueError: Timestamps from several days or timestamps do not match the expected date.
+
     Examples:
           >>> from cloudnetpy.instruments import mira2nc
           >>> site_meta = {'name': 'Vehmasmaki'}
           >>> mira2nc('raw_radar.mmclx', 'radar.nc', site_meta)
+          >>> mira2nc('/one/day/of/mira/mmclx/files/', 'radar.nc', site_meta)
 
     """
-    raw_mira = Mira(mmclx_file, site_meta)
+    if os.path.isdir(raw_mira):
+        temp_file = NamedTemporaryFile()
+        mmclx_filename = temp_file.name
+        valid_filenames = utils.get_sorted_filenames(raw_mira, '.mmclx')
+        variables = ['Zg', 'VELg', 'RMSg', 'LDRg', 'SNRg']
+        concat_lib.concatenate_files(valid_filenames, mmclx_filename, variables=variables)
+    else:
+        mmclx_filename = raw_mira
+    raw_mira = Mira(mmclx_filename, site_meta)
     raw_mira.validate_date(date)
     raw_mira.linear_to_db(('Ze', 'ldr', 'SNR'))
     if rebin_data:
@@ -52,7 +68,7 @@ def mira2nc(mmclx_file: str,
     raw_mira.screen_by_snr(snr_gain)
     raw_mira.add_meta()
     output.update_attributes(raw_mira.data, MIRA_ATTRIBUTES)
-    return _save_mira(mmclx_file, raw_mira, output_file, keep_uuid, uuid)
+    return _save_mira(mmclx_filename, raw_mira, output_file, keep_uuid, uuid)
 
 
 class Mira(DataSource):
