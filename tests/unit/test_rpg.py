@@ -1,28 +1,11 @@
 from os import path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 import pytest
-import shutil
 from numpy.testing import assert_array_equal
 from cloudnetpy.instruments import rpg
 from distutils.dir_util import copy_tree
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
-
-
-@pytest.fixture
-def example_files(tmpdir):
-    file_names = ['f.LV1', 'f.txt', 'f.LV0', 'f.lv1', 'g.LV1']
-    folder = tmpdir.mkdir('data/')
-    for name in file_names:
-        with open(folder.join(name), 'wb') as f:
-            f.write(b'abc')
-    return folder
-
-
-def test_get_rpg_files(example_files):
-    dir_name = example_files.dirname + '/data'
-    result = ['/'.join((dir_name, x)) for x in ('f.LV1', 'g.LV1')]
-    assert rpg.get_rpg_files(dir_name) == result
 
 
 class TestReduceHeader:
