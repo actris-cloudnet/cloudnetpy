@@ -1,5 +1,5 @@
 """ This module contains general helper functions. """
-
+import os
 import uuid
 import datetime
 import re
@@ -685,3 +685,11 @@ def is_timestamp(string):
     if reg_exp.match(string) is not None:
         return True
     return False
+
+
+def get_sorted_filenames(path_to_files: str, extension: str) -> list:
+    """Returns full paths of files with some extension, sorted by filename."""
+    all_files = os.listdir(path_to_files)
+    files = ['/'.join((path_to_files, file)) for file in all_files if file.endswith(extension)]
+    files.sort()
+    return files
