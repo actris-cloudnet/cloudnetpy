@@ -81,16 +81,18 @@ class Concat:
             if (variables is not None and key not in variables
                     and key not in self.constants and key != 'time'):
                 continue
+            self.first_file[key].set_auto_scale(False)
             array = self.first_file[key][:]
             dimensions = self._get_dim(array)
-            data_type = _get_dtype(key, array)
-            var = self.concatenated_file.createVariable(key, data_type, dimensions, zlib=True,
+            var = self.concatenated_file.createVariable(key, array.dtype, dimensions, zlib=True,
                                                         complevel=3, shuffle=False)
+            var.set_auto_scale(False)
             var[:] = array
             _copy_attributes(self.first_file[key], var)
 
     def _append_data(self, filename: str) -> None:
         file = netCDF4.Dataset(filename)
+        file.set_auto_scale(False)
         ind0 = len(self.concatenated_file.variables['time'])
         ind1 = ind0 + len(file.variables['time'])
         for key in self.concatenated_file.variables.keys():
@@ -122,12 +124,3 @@ def _copy_attributes(source, target) -> None:
     for attr in source.ncattrs():
         value = getattr(source, attr)
         setattr(target, attr, str(value))
-
-
-def _get_dtype(key: str, array: np.ndarray) -> str:
-    """Returns correct data type for array."""
-    if key == 'time':
-        return 'f8'
-    if 'int' in str(array.dtype):
-        return 'i4'
-    return 'f4'
