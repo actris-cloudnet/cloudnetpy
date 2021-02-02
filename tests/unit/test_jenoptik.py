@@ -54,7 +54,7 @@ def test_convert_time_error(fake_jenoptik_file):
 
 def test_read_date(fake_jenoptik_file):
     obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, site_name)
-    assert_array_equal(obj._read_date(), ('2019', '5', '23'))
+    assert_array_equal(obj._read_date(), ('2019', '05', '23'))
 
 
 def test_read_metadata(fake_jenoptik_file):

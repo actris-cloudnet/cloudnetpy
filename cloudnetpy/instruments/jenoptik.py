@@ -2,7 +2,6 @@
 from collections import namedtuple
 import netCDF4
 import numpy as np
-import numpy.ma as ma
 from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy import utils
 
@@ -70,7 +69,9 @@ class JenoptikCeilo(Ceilometer):
         return time
 
     def _read_date(self):
-        return [self.dataset.year, self.dataset.month, self.dataset.day]
+        return [str(self.dataset.year),
+                str(self.dataset.month).zfill(2),
+                str(self.dataset.day).zfill(2)]
 
     def _convert_backscatter(self):
         """Steps to convert Jenoptik SNR to raw beta."""
