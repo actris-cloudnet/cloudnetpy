@@ -3,42 +3,40 @@ from cloudnetpy.categorize import datasource
 import pytest
 
 
-def test_init_altitude(nc_file, file_metadata):
-    obj = datasource.DataSource(nc_file)
-    assert obj.altitude == file_metadata['altitude_km'] * 1000
+class TestDataSource:
 
+    @pytest.fixture(autouse=True)
+    def init_tests(self, nc_file):
+        self.obj = datasource.DataSource(nc_file)
 
-def test_getvar(nc_file, test_array):
-    obj = datasource.DataSource(nc_file)
-    assert_array_equal(obj.getvar('model_height'), test_array)
+    def test_init_altitude(self, file_metadata):
+        assert self.obj.altitude == file_metadata['altitude_km'] * 1000
 
+    def test_getvar(self, test_array):
+        assert_array_equal(self.obj.getvar('model_height'), test_array)
 
-def test_getvar_missing(nc_file):
-    obj = datasource.DataSource(nc_file)
-    with pytest.raises(RuntimeError):
-        obj.getvar('not_existing_variable')
+    def test_get_date(self):
+        assert_array_equal(self.obj.get_date(), ['2019', '05', '23'])
 
+    def test_getvar_missing(self):
+        with pytest.raises(RuntimeError):
+            self.obj.getvar('not_existing_variable')
 
-def test_init_time(nc_file, test_array):
-    obj = datasource.DataSource(nc_file)
-    assert_array_equal(obj.time, test_array)
+    def test_init_time(self, test_array):
+        assert_array_equal(self.obj.time, test_array)
 
+    def test_close(self):
+        assert self.obj.dataset.isopen() is True
+        self.obj.close()
+        assert self.obj.dataset.isopen() is False
 
-def test_close(nc_file):
-    obj = datasource.DataSource(nc_file)
-    assert obj.dataset.isopen() is True
-    obj.close()
-    assert obj.dataset.isopen() is False
+    def test_km2m(self, test_array):
+        alt = self.obj.dataset.variables['range']
+        assert_array_equal(self.obj.km2m(alt), test_array * 1000)
 
-
-def test_km2m(nc_file, test_array):
-    obj = datasource.DataSource(nc_file)
-    assert_array_equal(obj.km2m(obj.dataset.variables['range']), test_array * 1000)
-
-
-def test_m2km(nc_file, test_array):
-    obj = datasource.DataSource(nc_file)
-    assert_array_equal(obj.m2km(obj.dataset.variables['height']), test_array / 1000)
+    def test_m2km(self, test_array):
+        alt = self.obj.dataset.variables['height']
+        assert_array_equal(self.obj.m2km(alt), test_array / 1000)
 
 
 def test_get_height_m(nc_file, test_array):

@@ -2,6 +2,7 @@
 and :class:`ProfileDataSource` classes.
 """
 import os
+from datetime import datetime
 import numpy as np
 import netCDF4
 from cloudnetpy import RadarArray, CloudnetArray, utils
@@ -67,6 +68,25 @@ class DataSource:
 
         """
         self.data[key] = self._array_type(array, name or key, units)
+
+    def get_date(self) -> list:
+        """Returns date components.
+
+        Returns:
+            list: Date components [YYYY, MM, DD].
+
+        Raises:
+             RuntimeError: Not found or invalid date.
+
+        """
+        try:
+            year = str(self.dataset.year)
+            month = str(self.dataset.month).zfill(2)
+            day = str(self.dataset.day).zfill(2)
+            datetime.strptime(f'{year}{month}{day}', '%Y%m%d')
+        except (AttributeError, ValueError):
+            raise RuntimeError('Missing or invalid date in global attributes.')
+        return [year, month, day]
 
     def close(self):
         """Closes the open file."""
