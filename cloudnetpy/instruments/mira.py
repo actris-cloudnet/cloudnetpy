@@ -25,8 +25,8 @@ def mira2nc(raw_mira: str,
     steps.
 
     Args:
-        raw_mira (str): Filename of a daily MIRA *.mmclx file. Can be also a folder
-            containing several non-concatenated *.mmclx files from one day.
+        raw_mira (str): Filename of a daily MIRA .mmclx file. Can be also a folder
+            containing several non-concatenated .mmclx files from one day.
         output_file (str): Output filename.
         site_meta (dict): Dictionary containing information about the
             site. Required key value pair is `name`.

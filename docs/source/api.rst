@@ -217,6 +217,12 @@ Misc
 Documentation for various modules with low-level
 functionality.
 
+concat_lib
+..........
+
+.. automodule:: concat_lib
+   :members:
+
 
 utils
 .....

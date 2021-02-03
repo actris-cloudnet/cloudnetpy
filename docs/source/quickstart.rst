@@ -52,14 +52,9 @@ Model data
 ----------
 
 Model files needed in the next processing step can be downloaded
-from `Cloudnet http API <http://devcloudnet.fmi.fi/api/>`_. Several models
-may be available depending on the site and date, see for example
-`this day <http://devcloudnet.fmi.fi/api/models/?site_code=mace-head&date=20190303>`_.
-Any model file can be used in the processing but the recommended order is
-
-#. ecmwf
-#. icon-iglo-12-23
-#. gdas1
+from the `Cloudnet http API <https://actris-cloudnet.github.io/dataportal/>`_.
+Several models may be available depending on the site and date.
+The list of different model models can be found `here <https://cloudnet.fmi.fi/api/models/>`_.
 
 Categorize processing
 ---------------------
