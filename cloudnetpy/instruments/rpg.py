@@ -31,7 +31,7 @@ def rpg2nc(path_to_l1_files: str,
         uuid (str, optional): Set specific UUID for the file.
         date (str, optional): Expected date in the input files. If not set,
             all files will be used. This might cause unexpected behavior if
-            there are files from several days. If date is set as 'YYY-MM-DD',
+            there are files from several days. If date is set as 'YYYY-MM-DD',
             only files that match the date will be used.
 
     Returns:
