@@ -67,7 +67,8 @@ def mira2nc(raw_mira: str,
         snr_gain = 1
     raw_mira.screen_by_snr(snr_gain)
     raw_mira.add_meta()
-    output.update_attributes(raw_mira.data, MIRA_ATTRIBUTES)
+    attributes = output.add_time_attribute(MIRA_ATTRIBUTES, raw_mira.date)
+    output.update_attributes(raw_mira.data, attributes)
     return _save_mira(mmclx_filename, raw_mira, output_file, keep_uuid, uuid)
 
 

@@ -52,7 +52,8 @@ def ceilo2nc(input_file: str,
     beta_variants = ceilo.calc_beta()
     _append_data(ceilo, beta_variants)
     _append_height(ceilo, site_meta['altitude'])
-    output.update_attributes(ceilo.data, ATTRIBUTES)
+    attributes = output.add_time_attribute(ATTRIBUTES, ceilo.date)
+    output.update_attributes(ceilo.data, attributes)
     return _save_ceilo(ceilo, output_file, site_meta['name'], keep_uuid, uuid)
 
 
@@ -114,7 +115,7 @@ def _save_ceilo(ceilo, output_file, location, keep_uuid, uuid: Union[str, None] 
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'lidar')
     if hasattr(ceilo, 'dataset'):
-        output.copy_variables(ceilo.dataset, rootgrp, ('wavelength',))
+        output.copy_variables(ceilo.dataset, rootgrp, ['wavelength'])
     rootgrp.title = f"Ceilometer file from {location}"
     rootgrp.year, rootgrp.month, rootgrp.day = ceilo.date
     rootgrp.location = location

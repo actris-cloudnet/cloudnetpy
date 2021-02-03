@@ -28,7 +28,7 @@ def generate_categorize(input_files: dict,
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
         uuid (str, optional): Set specific UUID for the file.
-    
+
     Returns:
         str: UUID of the generated file.
 
@@ -92,7 +92,9 @@ def generate_categorize(input_files: dict,
     radar.calc_errors(attenuations, classification)
     quality = classify.fetch_quality(radar, lidar, classification, attenuations)
     output_data = _prepare_output()
-    output.update_attributes(output_data, CATEGORIZE_ATTRIBUTES)
+    date = radar.get_date()
+    attributes = output.add_time_attribute(CATEGORIZE_ATTRIBUTES, date)
+    output.update_attributes(output_data, attributes)
     uuid = _save_cat(output_file, radar, lidar, model, mwr, output_data, keep_uuid, uuid)
     _close_all()
     return uuid

@@ -55,7 +55,8 @@ def rpg2nc(path_to_l1_files: str,
         return '', []
     rpg = Rpg(one_day_of_data, site_meta)
     rpg.linear_to_db(('Ze', 'antenna_gain'))
-    output.update_attributes(rpg.data, RPG_ATTRIBUTES)
+    attributes = output.add_time_attribute(RPG_ATTRIBUTES, rpg.date)
+    output.update_attributes(rpg.data, attributes)
     return _save_rpg(rpg, output_file, valid_files, keep_uuid, uuid)
 
 
