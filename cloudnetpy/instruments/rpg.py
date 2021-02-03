@@ -49,7 +49,7 @@ def rpg2nc(path_to_l1_files: str,
         >>> rpg2nc('/path/to/files/', 'test.nc', site_meta)
 
     """
-    l1_files = get_rpg_files(path_to_l1_files)
+    l1_files = utils.get_sorted_filenames(path_to_l1_files, '.LV1')
     one_day_of_data, valid_files = _create_one_day_data_record(l1_files, date)
     if not valid_files:
         return '', []
@@ -57,14 +57,6 @@ def rpg2nc(path_to_l1_files: str,
     rpg.linear_to_db(('Ze', 'antenna_gain'))
     output.update_attributes(rpg.data, RPG_ATTRIBUTES)
     return _save_rpg(rpg, output_file, valid_files, keep_uuid, uuid)
-
-
-def get_rpg_files(path_to_l1_files: str) -> list:
-    """Returns list of RPG Level 1 files for one day - sorted by filename."""
-    files = os.listdir(path_to_l1_files)
-    l1_files = ['/'.join((path_to_l1_files, file)) for file in files if file.endswith('LV1')]
-    l1_files.sort()
-    return l1_files
 
 
 def _create_one_day_data_record(l1_files: list, date: Union[str, None]) -> Tuple[dict, list]:

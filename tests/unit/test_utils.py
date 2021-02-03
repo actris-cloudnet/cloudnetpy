@@ -438,3 +438,19 @@ def test_seconds2time(input, result):
 def test_seconds2date(input, result, epoch):
     assert utils.seconds2date(input, epoch) == result
     assert result[3:] == utils.seconds2time(input)
+
+
+@pytest.fixture
+def example_files(tmpdir):
+    file_names = ['f.LV1', 'f.txt', 'f.LV0', 'f.lv1', 'g.LV1']
+    folder = tmpdir.mkdir('data/')
+    for name in file_names:
+        with open(folder.join(name), 'wb') as f:
+            f.write(b'abc')
+    return folder
+
+
+def test_get_sorted_filenames(example_files):
+    dir_name = example_files.dirname + '/data'
+    result = ['/'.join((dir_name, x)) for x in ('f.LV1', 'g.LV1')]
+    assert utils.get_sorted_filenames(dir_name, '.LV1') == result
