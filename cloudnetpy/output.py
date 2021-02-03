@@ -3,10 +3,26 @@ import os
 from typing import Union
 import netCDF4
 from cloudnetpy import utils, version
-from cloudnetpy.metadata import COMMON_ATTRIBUTES
+from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
-def update_attributes(cloudnet_variables, attributes):
+def add_time_attribute(attributes: dict, date: list) -> dict:
+    """"Adds time attribute with correct units.
+
+    Args:
+        attributes (dict): Attributes of variables.
+        date (list): Date as ['YYYY', 'MM', 'DD'].
+
+    Returns:
+        dict: Same attributes with 'time' attribute added.
+
+    """
+    date = '-'.join(date)
+    attributes['time'] = MetaData(units=f'hours since {date} 00:00:00')
+    return attributes
+
+
+def update_attributes(cloudnet_variables, attributes) -> None:
     """Overrides existing CloudnetArray-attributes.
 
     Overrides existing attributes using hard-coded values.

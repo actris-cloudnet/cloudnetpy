@@ -2,6 +2,7 @@ from cloudnetpy import output
 import pytest
 import netCDF4
 from cloudnetpy import utils
+from cloudnetpy.metadata import MetaData
 
 
 @pytest.mark.parametrize("short_id, result", [
@@ -71,7 +72,7 @@ def test_copy_global(tmpdir_factory, fake_nc_file):
 def test_copy_variables(tmpdir_factory, fake_nc_file):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
     root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
-    var_list = ('a', 'b', 'c')
+    var_list = ['a', 'b', 'c']
     source = netCDF4.Dataset(fake_nc_file)
     output.copy_variables(source, root_grp, var_list)
     for var in var_list:
@@ -119,3 +120,12 @@ def test_add_standard_global_attributes(tmpdir_factory, fake_nc_file):
     output._add_standard_global_attributes(root_grp)
     assert root_grp.file_uuid != 'abcd'
     root_grp.close()
+
+
+def test_add_time_attribute():
+    attr = MetaData(long_name='Some name', units='xy')
+    attributes = {'kissa': attr}
+    date = ['2020', '01', '12']
+    new_attributes = output.add_time_attribute(attributes, date)
+    assert new_attributes['time'].units == 'hours since 2020-01-12 00:00:00'
+    assert new_attributes['kissa'].units == 'xy'
