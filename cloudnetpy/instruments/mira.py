@@ -108,8 +108,8 @@ class Mira(DataSource):
         epoch = (1970, 1, 1)
         time_stamps = self.getvar('time')
         date0 = utils.seconds2date(time_stamps[0], epoch)[:3]
-        for t in time_stamps[1:]:
-            date = utils.seconds2date(t-1, epoch)[:3]  # t-1s to prevent error on 24:00
+        for t in time_stamps[1:-1]:  # Ignore last timestamp (it can be 24:00)
+            date = utils.seconds2date(t, epoch)[:3]
             if date != date0:
                 raise ValueError('Error: MIRA dates from different days.')
             if expected_date and '-'.join(date) != expected_date:
