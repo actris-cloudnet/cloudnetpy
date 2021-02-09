@@ -1,5 +1,5 @@
 """This module contains RPG Cloud Radar related functions."""
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 import numpy as np
 from cloudnetpy import utils, output
 from cloudnetpy.metadata import MetaData
@@ -9,33 +9,33 @@ from cloudnetpy.instruments import rpg
 def hatpro2nc(path_to_lwp_files: str,
               output_file: str,
               site_meta: dict,
-              keep_uuid: bool = False,
-              uuid: Union[str, None] = None,
-              date: Union[str, None] = None) -> Tuple[str, list]:
+              keep_uuid: Optional[bool] = False,
+              uuid: Optional[str] = None,
+              date: Optional[str] = None) -> Tuple[str, list]:
     """Converts RPG HATPRO LWP binary files into netCDF file.
 
     This function reads one day of RPG HATPRO binary files,
     concatenates the data and writes it into netCDF file.
 
     Args:
-        path_to_lwp_files (str): Folder containing one day of RPG HATPRO files.
-        output_file (str): Output file name.
-        site_meta (dict): Dictionary containing information about the
+        path_to_lwp_files: Folder containing one day of RPG HATPRO files.
+        output_file: Output file name.
+        site_meta: Dictionary containing information about the
             site. Required key value pairs are `altitude` (metres above mean
             sea level) and `name`.
-        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+        keep_uuid: If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
-        uuid (str, optional): Set specific UUID for the file.
-        date (str, optional): Expected date in the input files. If not set,
+        uuid: Set specific UUID for the file.
+        date: Expected date in the input files. If not set,
             all files will be used. This might cause unexpected behavior if
             there are files from several days. If date is set as 'YYYY-MM-DD',
             only files that match the date will be used.
 
     Returns:
-        tuple: 2-element tuple containing
+        2-element tuple containing
 
-        - str: UUID of the generated file.
-        - list: Files used in the processing.
+        - UUID of the generated file.
+        - Files used in the processing.
 
     Raises:
         RuntimeError: Failed to read the binary data.
@@ -46,30 +46,18 @@ def hatpro2nc(path_to_lwp_files: str,
         >>> hatpro2nc('/path/to/files/', 'hatpro.nc', site_meta)
 
     """
-    filenames = utils.get_sorted_filenames(path_to_lwp_files, '.LWP')
-    one_day_of_data, valid_files = _create_one_day_data_record(filenames, date)
+    all_files = utils.get_sorted_filenames(path_to_lwp_files, '.LWP')
+    rpg_objects, valid_files = _get_rpg_objects(all_files, date)
+    one_day_of_data = rpg.create_one_day_data_record(rpg_objects)
     if not valid_files:
         return '', []
     hatpro = rpg.Rpg(one_day_of_data, site_meta, 'RPG-HATPRO')
     attributes = output.add_time_attribute(ATTRIBUTES, hatpro.date)
     output.update_attributes(hatpro.data, attributes)
-    return _save_hatpro(hatpro, output_file, valid_files, keep_uuid, uuid)
+    return rpg.save_rpg(hatpro, output_file, valid_files, keep_uuid, uuid)
 
 
-def _create_one_day_data_record(l1_files: list, date: Union[str, None]) -> Tuple[dict, list]:
-    """Concatenates all HATPRO data from one day."""
-    hatpro_objects, valid_files = _get_hatpro_objects(l1_files, date)
-    data, header = rpg.stack_rpg_data(hatpro_objects)
-    if len(valid_files) > 1:
-        try:
-            header = rpg.reduce_header(header)
-        except AssertionError as error:
-            raise RuntimeError(error)
-    data = rpg.mask_invalid_data(data)
-    return {**header, **data}, valid_files
-
-
-def _get_hatpro_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
+def _get_rpg_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
     """Creates a list of HATPRO objects from the file names."""
     objects = []
     valid_files = []
@@ -149,29 +137,6 @@ class HatproBin:
 
         file.close()
         return data
-
-
-def _save_hatpro(hatpro: rpg.Rpg,
-                 output_file: str,
-                 valid_files: list,
-                 keep_uuid: bool,
-                 uuid: Union[str, None] = None) -> Tuple[str, list]:
-    """Saves the HATPRO file."""
-
-    dims = {'time': len(hatpro.data['time'][:])}
-
-    file_type = 'mwr'
-    rootgrp = output.init_file(output_file, dims, hatpro.data, keep_uuid, uuid)
-    file_uuid = rootgrp.file_uuid
-    output.add_file_type(rootgrp, file_type)
-    rootgrp.title = f"{file_type.capitalize()} file from {hatpro.location}"
-    rootgrp.year, rootgrp.month, rootgrp.day = hatpro.date
-    rootgrp.location = hatpro.location
-    rootgrp.history = f"{utils.get_time()} - {file_type} file created"
-    rootgrp.source = hatpro.source
-    output.add_references(rootgrp)
-    rootgrp.close()
-    return file_uuid, valid_files
 
 
 DEFINITIONS = {
