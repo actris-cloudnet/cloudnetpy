@@ -1,6 +1,4 @@
 """This module contains RPG Cloud Radar related functions."""
-import os
-import datetime
 from collections import namedtuple
 from typing import Union, Tuple
 import numpy as np
@@ -53,7 +51,8 @@ def rpg2nc(path_to_l1_files: str,
     one_day_of_data, valid_files = _create_one_day_data_record(l1_files, date)
     if not valid_files:
         return '', []
-    rpg = Rpg(one_day_of_data, site_meta)
+    rpg = Rpg(one_day_of_data, site_meta, 'RPG-FMCW-94')
+    rpg.mask_invalid_ldr()
     rpg.linear_to_db(('Ze', 'antenna_gain'))
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, rpg.date)
     output.update_attributes(rpg.data, attributes)
@@ -63,13 +62,13 @@ def rpg2nc(path_to_l1_files: str,
 def _create_one_day_data_record(l1_files: list, date: Union[str, None]) -> Tuple[dict, list]:
     """Concatenates all RPG data from one day."""
     rpg_objects, valid_files = get_rpg_objects(l1_files, date)
-    rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
+    rpg_raw_data, rpg_header = stack_rpg_data(rpg_objects)
     if len(valid_files) > 1:
         try:
-            rpg_header = _reduce_header(rpg_header)
+            rpg_header = reduce_header(rpg_header)
         except AssertionError as error:
             raise RuntimeError(error)
-    rpg_raw_data = _mask_invalid_data(rpg_raw_data)
+    rpg_raw_data = mask_invalid_data(rpg_raw_data)
     return {**rpg_header, **rpg_raw_data}, valid_files
 
 
@@ -296,7 +295,7 @@ class RpgBin:
         return {**aux, **block1, **block2}
 
 
-def _stack_rpg_data(rpg_objects):
+def stack_rpg_data(rpg_objects):
     """Combines data from hourly Rpg() objects.
 
     Notes:
@@ -315,7 +314,7 @@ def _stack_rpg_data(rpg_objects):
     return data, header
 
 
-def _reduce_header(header_in):
+def reduce_header(header_in):
     """Removes duplicate header data."""
     header = header_in.copy()
     for name in header:
@@ -325,37 +324,38 @@ def _reduce_header(header_in):
     return header
 
 
-def _mask_invalid_data(rpg_data):
+def mask_invalid_data(rpg_data):
     for name in rpg_data:
         rpg_data[name] = ma.masked_equal(rpg_data[name], 0)
     return rpg_data
 
 
 class Rpg:
-    def __init__(self, raw_data, site_properties):
+    """Class for RPG FMCW-94 and HATPRO data."""
+    def __init__(self, raw_data: dict, site_properties: dict, source: str):
         self.raw_data = raw_data
         self.date = self._get_date()
         self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
         self.raw_data['altitude'] = site_properties['altitude']
-        self._mask_invalid_ldr()
-        self.data = {}
-        self._init_data()
-        self.source = 'RPG-FMCW-94'
+        self.data = self._init_data()
+        self.source = source
         self.location = site_properties['name']
 
-    def _init_data(self):
-        for key in self.raw_data:
-            self.data[key] = CloudnetArray(self.raw_data[key], key)
+    def mask_invalid_ldr(self) -> None:
+        self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
 
-    def _mask_invalid_ldr(self):
-        self.raw_data['ldr'] = ma.masked_less_equal(self.raw_data['ldr'], -35)
-
-    def linear_to_db(self, variables_to_log):
+    def linear_to_db(self, variables_to_log: tuple) -> None:
         """Changes some linear units to logarithmic."""
         for name in variables_to_log:
             self.data[name].lin2db()
 
-    def _get_date(self):
+    def _init_data(self) -> dict:
+        data = {}
+        for key in self.raw_data:
+            data[key] = CloudnetArray(self.raw_data[key], key)
+        return data
+
+    def _get_date(self) -> list:
         time_first = self.raw_data['time'][0]
         time_last = self.raw_data['time'][-1]
         date_first = utils.seconds2date(time_first)[:3]
