@@ -75,7 +75,7 @@ def _get_rpg_objects(files: list, expected_date: Union[str, None]) -> Tuple[list
 
 
 def _validate_date(obj, expected_date: str):
-    if obj.header['_lwp_time_ref'] == 0:
+    if obj.header['_time_reference'] == 0:
         raise ValueError('Can not validate non-UTC dates.')
     inds = []
     for ind, timestamp in enumerate(obj.data['time'][:]):
@@ -99,20 +99,14 @@ class HatproBin:
 
     def read_header(self) -> dict:
         """Reads the header."""
-
-        def append(names: tuple, dtype: type = np.int32, n_values: int = 1) -> None:
-            """Updates header dictionary."""
-            for name in names:
-                header[name] = np.fromfile(file, dtype, int(n_values))
-
-        header = {}
         file = open(self.filename, 'rb')
-        append(('file_code',
-                '_n_samples'), np.int32)
-        append(('_lwp_min',
-                '_lwp_max',), np.float32)
-        append(('_lwp_time_ref',
-                'lwp_retrieval'), np.int32)
+        header = {
+            'file_code': np.fromfile(file, np.int32, 1),
+            '_n_samples': np.fromfile(file, np.int32, 1),
+            '_lwp_min_max': np.fromfile(file, np.float32, 2),
+            '_time_reference': np.fromfile(file, np.int32, 1),
+            'retrieval_method': np.fromfile(file, np.int32, 1)
+        }
         self._file_position = file.tell()
         file.close()
         return header
@@ -124,28 +118,50 @@ class HatproBin:
 
         data = {
             'time': np.zeros(self.header['_n_samples'], dtype=np.int32),
-            'rain_flag': np.zeros(self.header['_n_samples'], dtype=np.int32),
+            'quality_flag': np.zeros(self.header['_n_samples'], dtype=np.int32),
             'lwp': np.zeros(self.header['_n_samples']),
-            'lwp_angle': np.zeros(self.header['_n_samples'])
+            'zenith': np.zeros(self.header['_n_samples'], dtype=np.float)
         }
+
+        version = self._get_hatpro_version()
+        angle_dtype = np.float if version == 1 else np.int32
+        data['_instrument_angles'] = np.zeros(self.header['_n_samples'], dtype=angle_dtype)
 
         for sample in range(self.header['_n_samples'][0]):
             data['time'][sample] = np.fromfile(file, np.int32, 1)
-            data['rain_flag'][sample] = np.fromfile(file, np.int8, 1)
-            data['lwp'][sample] = np.fromfile(file, np.float32, 1)
-            data['lwp_angle'][sample] = np.fromfile(file, np.float32, 1)
+            data['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
+            data['lwp'][sample] = np.fromfile(file, np.int32, 1)
+            data['_instrument_angles'][sample] = np.fromfile(file, angle_dtype, 1)
+
+        data = _add_zenith(version, data)
 
         file.close()
         return data
 
+    def _get_hatpro_version(self) -> int:
+        if self.header['file_code'][0] == 934501978:
+            return 1
+        if self.header['file_code'][0] == 934501000:
+            return 2
+        else:
+            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"][0]}')
+
+
+def _add_zenith(version: int, data: dict) -> dict:
+    if version == 1:
+        del data['zenith']  # Impossible to understand how zenith is decoded in the values
+    else:
+        data['zenith'] = np.array([int(str(x)[:5])/1000 for x in data['_instrument_angles']])
+    return data
+
 
 DEFINITIONS = {
-    'lwp_retrieval':
+    'retrieval_method':
         ('\n'
          'Value 0: Linear Regression\n'
          'Value 1: Quadratic Regression\n'
          'Value 2: Neural Network'),
-    'rain_flag':
+    'quality_flag':
         ('\n'
          'Bit 0: Rain information (0=no rain, 1=raining)\n'
          'Bit 1/2: Quality level (0=Not evaluated, 1=high, 2=medium, 3=low)\n'
@@ -160,18 +176,22 @@ ATTRIBUTES = {
     'program_number': MetaData(
         long_name='Program number',
     ),
-    'lwp_retrieval': MetaData(
+    'retrieval_method': MetaData(
         long_name='Retrieval method',
-        definition=DEFINITIONS['lwp_retrieval']
+        definition=DEFINITIONS['retrieval_method']
     ),
     'lwp': MetaData(
         long_name='Liquid water path',
         units='g m-2'
     ),
-    'rain_flag': MetaData(
-        long_name='Rain flag.',
-        definition=DEFINITIONS['rain_flag'],
-        comment='Rain information as 8 bit array. See RPG HATPRO manual for more information.'
+    'zenith': MetaData(
+        long_name='Zenith angle',
+        units='degrees',
+    ),
+    'quality_flag': MetaData(
+        long_name='Quality flag.',
+        definition=DEFINITIONS['quality_flag'],
+        comment='Quality information as an 8 bit array. See RPG HATPRO manual for more information.'
     )
 
 }
