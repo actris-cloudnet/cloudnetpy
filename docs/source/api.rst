@@ -25,6 +25,8 @@ all supported instrument combinations.
 
 .. autofunction:: instruments.ceilo2nc
 
+.. autofunction:: instruments.hatpro2nc
+
 
 The categorize file
 ...................
