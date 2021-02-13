@@ -1,5 +1,6 @@
 """ This module contains general helper functions. """
 import os
+from typing import Union
 import uuid
 import datetime
 import re
@@ -693,3 +694,11 @@ def get_sorted_filenames(path_to_files: str, extension: str) -> list:
     files = ['/'.join((path_to_files, file)) for file in all_files if file.endswith(extension)]
     files.sort()
     return files
+
+
+def str_to_numeric(value: str) -> Union[int, float]:
+    """Converts string to number (int or float)."""
+    try:
+        return int(value)
+    except ValueError:
+        return float(value)
