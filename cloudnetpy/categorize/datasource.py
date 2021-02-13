@@ -118,7 +118,7 @@ class DataSource:
         """Returns altitude of the instrument (m)."""
         if 'altitude' in self.dataset.variables:
             altitude_above_sea = self.km2m(self.dataset.variables['altitude'])
-            return float(altitude_above_sea)
+            return float(np.mean(altitude_above_sea))
         return None
 
     def _netcdf_to_cloudnet(self, fields):
