@@ -1,9 +1,11 @@
 """Radar module, containing the :class:`Radar` class."""
 import math
+from typing import Union
 import numpy as np
 import numpy.ma as ma
 from scipy import constants
 from cloudnetpy.categorize import ProfileDataSource
+from cloudnetpy.categorize.classify import ClassificationResult
 from cloudnetpy import utils
 
 
@@ -11,13 +13,13 @@ class Radar(ProfileDataSource):
     """Radar class, child of ProfileDataSource.
 
     Args:
-        radar_file (str): File name of the calibrated radar netCDF file.
+        full_path: Cloudnet Level 1 radar netCDF file.
 
     Attributes:
         radar_frequency (float): Radar frequency (GHz).
         folding_velocity (float): Radar's folding velocity (m/s).
-        location (str): Location of the radar, copied from the global attribute
-            `location` of the *radar_file*.
+        location (str): Location of the radar, copied from the global attribute `location` of the
+            input file.
         sequence_indices (list): Indices denoting the different altitude
             regimes of the radar.
         type (str): Type of the radar, copied from the global attribute
@@ -29,23 +31,22 @@ class Radar(ProfileDataSource):
         :func:`instruments.rpg2nc()`, :func:`instruments.mira2nc()`
 
     """
-    def __init__(self, radar_file):
-        super().__init__(radar_file, radar=True)
+    def __init__(self, full_path: str):
+        super().__init__(full_path, radar=True)
         self.radar_frequency = float(self.getvar('radar_frequency', 'frequency'))
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, 'location', '')
         self.type = getattr(self.dataset, 'source', '')
-        self._netcdf_to_cloudnet(('v', 'width', 'ldr'))
-        self._unknown_to_cloudnet(('Zh', 'Zv', 'Ze'), 'Z', units='dBZ')
+        self._variables_to_cloudnet_arrays(('v', 'width', 'ldr'))
+        self._unknown_variable_to_cloudnet_array(('Zh', 'Zv', 'Ze'), 'Z', units='dBZ')
         self._init_sigma_v()
 
-    def rebin_to_grid(self, time_new):
+    def rebin_to_grid(self, time_new: np.ndarray) -> None:
         """Rebins radar data in time using mean.
 
         Args:
-            time_new (ndarray): Target time array as fraction hour. Updates
-                *time* attribute.
+            time_new: Target time array as fraction hour. Updates *time* attribute.
 
         """
         for key in self.data:
@@ -64,12 +65,15 @@ class Radar(ProfileDataSource):
                 self.data[key].rebin_data(self.time, time_new)
         self.time = time_new
 
-    def remove_incomplete_pixels(self):
+    def remove_incomplete_pixels(self) -> None:
         """Mask radar pixels where one or more required quantities are missing.
 
         All valid radar pixels **must** contain proper values for `Z`, `width` and `v`.
         Otherwise there is some kind of problem with the data and the pixel should
         not be used in any further analysis.
+
+        Notes:
+            This does not work with BASTA radar (no width).
 
         """
         good_ind = (~ma.getmaskarray(self.data['Z'][:])
@@ -78,7 +82,7 @@ class Radar(ProfileDataSource):
         for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
             self.data[key].mask_indices(~good_ind)
 
-    def filter_speckle_noise(self):
+    def filter_speckle_noise(self) -> None:
         """Removes speckle noise from radar data.
 
         Any isolated radar pixel, i.e. "hot pixel", is assumed to
@@ -93,12 +97,12 @@ class Radar(ProfileDataSource):
             if key in self.data.keys():
                 self.data[key].filter_isolated_pixels()
 
-    def correct_atten(self, attenuations):
+    def correct_atten(self, attenuations: dict) -> None:
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
-            attenuations (dict): 2-D attenuations due to atmospheric gases
-                and liquid: `radar_gas_atten`, `radar_liquid_atten`.
+            attenuations: 2-D attenuations due to atmospheric gases and liquid: `radar_gas_atten`,
+                `radar_liquid_atten`.
 
         References:
             The method is based on Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ
@@ -110,23 +114,22 @@ class Radar(ProfileDataSource):
         z_corrected[ind] += attenuations['radar_liquid_atten'][ind]
         self.append_data(z_corrected, 'Z')
 
-    def calc_errors(self, attenuations, classification):
+    def calc_errors(self, attenuations: dict, classification: ClassificationResult) -> None:
         """Calculates uncertainties of radar echo.
 
-        Calculates and adds `Z_error`, `Z_sensitivity` and `Z_bias`
-        :class:`CloudnetArray` instances to `data` attribute.
+        Calculates and adds `Z_error`, `Z_sensitivity` and `Z_bias` :class:`CloudnetArray`
+        instances to `data` attribute.
 
         Args:
-            attenuations (dict): 2-D attenuations due to atmospheric gases.
-            classification (ClassificationResult): The
-                :class:`ClassificationResult` instance.
+            attenuations: 2-D attenuations due to atmospheric gases.
+            classification: The :class:`ClassificationResult` instance.
 
         References:
             The method is based on Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ
             and the original Cloudnet Matlab implementation.
 
         """
-        def _calc_sensitivity():
+        def _calc_sensitivity() -> np.ndarray:
             """Returns sensitivity of radar as function of altitude."""
             mean_gas_atten = ma.mean(attenuations['radar_gas_atten'], axis=0)
             z_sensitivity = z_power_min + log_range + mean_gas_atten
@@ -134,8 +137,8 @@ class Radar(ProfileDataSource):
             z_sensitivity[~zc.mask] = zc[~zc.mask]
             return z_sensitivity
 
-        def _calc_error():
-            z_precision = 4.343 * (1 / np.sqrt(_number_of_pulses())
+        def _calc_error() -> np.ndarray:
+            z_precision = 4.343 * (1 / np.sqrt(_number_of_independent_pulses())
                                    + utils.db2lin(z_power_min - z_power) / 3)
             gas_error = attenuations['radar_gas_atten'] * 0.1
             liq_error = attenuations['liquid_atten_err'].filled(0)
@@ -143,14 +146,13 @@ class Radar(ProfileDataSource):
             z_error[attenuations['liquid_uncorrected']] = ma.masked
             return z_error
 
-        def _number_of_pulses():
-            """Returns number of independent pulses."""
+        def _number_of_independent_pulses() -> float:
             seconds_in_hour = 3600
             dwell_time = utils.mdiff(self.time) * seconds_in_hour
             return (dwell_time * self.radar_frequency * 1e9 * 4
                     * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
 
-        def _calc_z_power_min():
+        def _calc_z_power_min() -> float:
             if ma.all(z_power.mask):
                 return 0
             return np.percentile(z_power.compressed(), 0.1)
@@ -164,19 +166,19 @@ class Radar(ProfileDataSource):
         self.append_data(_calc_sensitivity(), 'Z_sensitivity')
         self.append_data(1, 'Z_bias')
 
-    def add_meta(self):
+    def add_meta(self) -> None:
         """Copies misc. metadata from the input file."""
         for key in ('latitude', 'longitude', 'altitude'):
             self.append_data(self.getvar(key), key)
         for key in ('time', 'height', 'radar_frequency'):
             self.append_data(getattr(self, key), key)
 
-    def _init_sigma_v(self):
+    def _init_sigma_v(self) -> None:
         """Initializes std of the velocity field. The std will be calculated
         later when re-binning the data."""
         self.append_data(self.getvar('v'), 'v_sigma')
 
-    def _get_sequence_indices(self):
+    def _get_sequence_indices(self) -> list:
         """Mira has only one sequence and one folding velocity. RPG has
         several sequences with different folding velocities."""
         all_indices = np.arange(len(self.height))
@@ -185,7 +187,7 @@ class Radar(ProfileDataSource):
             return np.split(all_indices, starting_indices[1:])
         return [all_indices]
 
-    def _get_folding_velocity(self):
+    def _get_folding_velocity(self) -> Union[np.ndarray, float]:
         for key in ('nyquist_velocity', 'NyquistVelocity'):
             if key in self.dataset.variables:
                 return self.getvar(key)
@@ -195,6 +197,6 @@ class Radar(ProfileDataSource):
         raise RuntimeError('Unable to determine folding velocity')
 
 
-def _prf_to_folding_velocity(prf, radar_frequency):
+def _prf_to_folding_velocity(prf: np.ndarray, radar_frequency: float) -> float:
     ghz_to_hz = 1e9
     return float(prf * constants.c / (4*radar_frequency*ghz_to_hz))
