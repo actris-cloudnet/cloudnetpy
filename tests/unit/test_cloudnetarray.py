@@ -39,6 +39,7 @@ def fake_nc_file(tmpdir_factory):
     ("1.0", np.array([1.0]), 'f4'),
     (np.array([1]), np.array([1]), 'i4'),
     (np.array([1.0]), np.array([1.0]), 'f4'),
+    (np.median([1.0, 1.0, 1.0]), np.array([1.0]), 'f4'),
 ])
 def test_different_inputs(array, expected_data, expected_dtype):
     obj = CloudnetArray(array, 'test')
