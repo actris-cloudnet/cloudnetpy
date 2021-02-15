@@ -648,13 +648,12 @@ def array_to_probability(arr_in, loc, scale, invert=False):
     return prob
 
 
-def range_to_height(range_los, tilt_angle):
+def range_to_height(range_los: np.ndarray, tilt_angle: float) -> np.ndarray:
     """Converts distances from a tilted instrument to height above the ground.
 
     Args:
-        range_los (ndarray): Distances towards the line of sign from the
-            instrument.
-        tilt_angle (float): Angle in degrees from the zenith.
+        range_los: Distances towards the line of sign from the instrument.
+        tilt_angle: Angle in degrees from the zenith.
 
     Returns:
         ndarray: Altitudes of the LOS points.
