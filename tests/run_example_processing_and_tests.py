@@ -8,7 +8,7 @@ import importlib
 from cloudnetpy.instruments import mira2nc
 from cloudnetpy.instruments import ceilo2nc
 from cloudnetpy.categorize import generate_categorize
-from tests import check_data_quality, check_metadata, check_is_valid_uuid, utils
+from tests import check_data_quality, check_metadata, check_is_valid_uuid, utils, check_attributes
 
 PROCESS = True
 
@@ -77,6 +77,7 @@ def main():
         check_metadata(file, log_file)
         check_data_quality(file, log_file)
 
+    check_attributes(calibrated_files['radar'], site_meta)
     check_is_valid_uuid(uuid2)
 
     input_files = {
@@ -92,13 +93,15 @@ def main():
     check_metadata(categorize_file, log_file)
     check_data_quality(categorize_file, log_file)
     check_is_valid_uuid(uuid)
+    check_attributes(categorize_file, site_meta)
 
-    product_file_types = ['iwc', 'lwc', 'drizzle', 'classification']
+    product_file_types = ['classification', 'iwc', 'lwc', 'drizzle']
     for file in product_file_types:
         product_file, uuid = _process_product_file(file, source_path, categorize_file)
         check_metadata(product_file, log_file)
         check_data_quality(product_file, log_file)
         check_is_valid_uuid(uuid)
+        check_attributes(categorize_file, site_meta)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import subprocess
 from uuid import UUID
 import pytest
+import netCDF4
 from tests import utils
 
 
@@ -45,6 +46,12 @@ def check_is_valid_uuid(uuid):
         UUID(uuid, version=4)
     except (ValueError, TypeError):
         raise AssertionError(f'{uuid} is not a valid UUID.')
+
+
+def check_attributes(full_path: str, metadata: dict):
+    nc = netCDF4.Dataset(full_path)
+    assert nc.variables['altitude'][:] == metadata['altitude']
+    nc.close()
 
 
 def _validate_log_file(log_file):
