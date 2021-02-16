@@ -320,4 +320,7 @@ CATEGORIZE_ATTRIBUTES = {
         long_name='Laser wavelength',
         units='nm'
     ),
+    'v': MetaData(
+        ancillary_variables='v_sigma',
+    )
 }
