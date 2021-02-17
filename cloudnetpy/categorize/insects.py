@@ -1,12 +1,17 @@
 """Module to find insects from data."""
+from typing import Optional, Tuple
 import numpy as np
 import numpy.ma as ma
 from scipy.ndimage.filters import gaussian_filter
 from cloudnetpy import utils
 from cloudnetpy.categorize import droplet
+from cloudnetpy.categorize.containers import ClassData
 
 
-def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
+def find_insects(obs: ClassData,
+                 melting_layer: np.ndarray,
+                 liquid_layers: np.ndarray,
+                 prob_lim: Optional[float] = 0.8) -> Tuple[np.ndarray, np.ndarray]:
     """Returns insect probability and boolean array of insect presence.
 
     Insects are classified by estimating heuristic probability
@@ -22,17 +27,16 @@ def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
     above melting layer.
 
     Args:
-        obs (ClassData): The :class:`ClassData` instance.
-        melting_layer (ndarray): 2D array denoting melting layer.
-        liquid_layers (ndarray): 2D array denoting liquid layers.
-        prob_lim (float, optional): Probability higher than
-            this will lead to positive detection. Default is 0.8.
+        obs: The :class:`ClassData` instance.
+        melting_layer: 2D array denoting melting layer.
+        liquid_layers: 2D array denoting liquid layers.
+        prob_lim: Probability higher than this will lead to positive detection. Default is 0.8.
 
     Returns:
         tuple: 2-element tuple containing
 
-        - ndarray: 2-D probability of pixel containing insects.
-        - ndarray: 2-D boolean flag of insects presence.
+        - 2-D probability of pixel containing insects.
+        - 2-D boolean flag of insects presence.
 
     Notes:
         This insect detection method is novel and needs to be validated.
@@ -44,7 +48,7 @@ def find_insects(obs, melting_layer, liquid_layers, prob_lim=0.8):
     return is_insects, ma.masked_where(insect_prob == 0, insect_prob)
 
 
-def _insect_probability(obs):
+def _insect_probability(obs: ClassData) -> Tuple[np.ndarray, np.ndarray]:
     prob = _get_probabilities(obs)
     prob_from_ldr = _calc_prob_from_ldr(prob)
     prob_from_others = _calc_prob_from_all(prob)
@@ -53,7 +57,7 @@ def _insect_probability(obs):
     return prob_combined, prob_from_others
 
 
-def _get_probabilities(obs):
+def _get_probabilities(obs: ClassData) -> dict:
     smooth_v = _get_smoothed_v(obs)
     lwp_interp = droplet.interpolate_lwp(obs)
     fun = utils.array_to_probability
@@ -68,30 +72,34 @@ def _get_probabilities(obs):
         'v_sigma': fun(obs.v_sigma, 0.01, 0.1)}
 
 
-def _get_smoothed_v(obs, sigma=(5, 5)):
+def _get_smoothed_v(obs: ClassData,
+                    sigma: Optional[Tuple[float, float]] = (5, 5)) -> np.ndarray:
     smoothed_v = gaussian_filter(obs.v, sigma)
     smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
     return smoothed_v
 
 
-def _calc_prob_from_ldr(prob):
+def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
     """This is the most reliable proxy for insects."""
     return prob['z'] * prob['temp_loose'] * prob['ldr']
 
 
-def _calc_prob_from_all(prob):
+def _calc_prob_from_all(prob: dict) -> np.ndarray:
     """This can be used to detect insects when ldr is not available."""
     return prob['z'] * prob['temp_strict'] * prob['v'] * prob['width']
 
 
-def _adjust_for_radar(obs, prob, prob_from_others):
+def _adjust_for_radar(obs: ClassData,
+                      prob: dict,
+                      prob_from_others: np.ndarray) -> np.ndarray:
     """Adds radar-specific weighting to insect probabilities."""
     if 'mira' in obs.radar_type.lower():
         prob_from_others *= prob['lwp']
     return prob_from_others
 
 
-def _fill_missing_pixels(prob_from_ldr, prob_from_others):
+def _fill_missing_pixels(prob_from_ldr: np.ndarray,
+                         prob_from_others: np.ndarray) -> np.ndarray:
     prob_combined = np.copy(prob_from_ldr)
     no_ldr = np.where(prob_from_ldr == 0)
     prob_combined[no_ldr] = prob_from_others[no_ldr]
