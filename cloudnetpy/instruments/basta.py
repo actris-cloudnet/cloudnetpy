@@ -12,7 +12,7 @@ def basta2nc(basta_file: str,
              keep_uuid: bool = False,
              uuid: Optional[str] = None,
              date: Optional[str] = None) -> str:
-    """Converts daily BASTA cloud radar file into netCDF file.
+    """Converts BASTA cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function converts daily BASTA file into a much smaller file that
     contains only the relevant data and can be used in further processing
@@ -28,7 +28,7 @@ def basta2nc(basta_file: str,
         date: Expected date of the measurements as YYYY-MM-DD.
 
     Returns:
-        str: UUID of the generated file.
+        UUID of the generated file.
 
     Raises:
         ValueError: Timestamps do not match the expected date.

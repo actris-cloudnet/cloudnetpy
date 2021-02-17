@@ -13,7 +13,7 @@ def rpg2nc(path_to_l1_files: str,
            keep_uuid: Optional[bool] = False,
            uuid: Optional[str] = None,
            date: Optional[str] = None) -> Tuple[str, list]:
-    """Converts RPG cloud radar binary files into netCDF file.
+    """Converts RPG FMCW-94 cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
     concatenates the data and writes it into netCDF file.

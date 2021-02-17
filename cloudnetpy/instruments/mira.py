@@ -16,7 +16,7 @@ def mira2nc(raw_mira: str,
             keep_uuid: Optional[bool] = False,
             uuid: Optional[str] = None,
             date: Optional[str] = None) -> str:
-    """Converts METEK MIRA-35 cloud radar Level 1 file(s) into netCDF file.
+    """Converts METEK MIRA-35 cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function converts raw MIRA file(s) into a much smaller file that
     contains only the relevant data and can be used in further processing
@@ -36,7 +36,7 @@ def mira2nc(raw_mira: str,
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
-        str: UUID of the generated file.
+        UUID of the generated file.
 
     Raises:
         ValueError: Timestamps from several days or timestamps do not match the expected date.

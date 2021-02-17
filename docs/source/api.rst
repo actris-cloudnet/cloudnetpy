@@ -23,6 +23,8 @@ all supported instrument combinations.
 
 .. autofunction:: instruments.rpg2nc
 
+.. autofunction:: instruments.basta2nc
+
 .. autofunction:: instruments.ceilo2nc
 
 .. autofunction:: instruments.hatpro2nc

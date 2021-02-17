@@ -12,9 +12,9 @@ def hatpro2nc(path_to_lwp_files: str,
               keep_uuid: Optional[bool] = False,
               uuid: Optional[str] = None,
               date: Optional[str] = None) -> Tuple[str, list]:
-    """Converts RPG HATPRO LWP binary files into netCDF file.
+    """Converts RPG HATPRO microwave radiometer data (LWP) into Cloudnet Level 1b netCDF file.
 
-    This function reads one day of RPG HATPRO binary files,
+    This function reads one day of RPG HATPRO .LWP binary files,
     concatenates the data and writes it into netCDF file.
 
     Args:

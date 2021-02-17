@@ -13,7 +13,7 @@ def generate_categorize(input_files: dict,
                         output_file: str,
                         keep_uuid: Optional[bool] = False,
                         uuid: Optional[str] = None) -> str:
-    """Generates Cloudnet categorize file.
+    """Generates Cloudnet Level 1c categorize file.
 
     The measurements are rebinned into a common height / time grid,
     and classified as different types of scatterers such as ice, liquid,

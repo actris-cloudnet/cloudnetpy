@@ -13,7 +13,7 @@ def ceilo2nc(full_path: str,
              site_meta: dict,
              keep_uuid: Optional[bool] = False,
              uuid: Optional[str] = None) -> str:
-    """Converts Vaisala and Jenoptik raw files into netCDF file.
+    """Converts Vaisala / Jenoptik ceilometer data into Cloudnet Level 1b netCDF file.
 
     This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
     ceilometer files and writes the data into netCDF file. Three variants
