@@ -1,5 +1,5 @@
 """Module that generates Cloudnet categorize file."""
-from typing import Union
+from typing import Union, Optional
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos, classify
 from cloudnetpy.metadata import MetaData
@@ -11,8 +11,8 @@ from cloudnetpy.categorize.lidar import Lidar
 
 def generate_categorize(input_files: dict,
                         output_file: str,
-                        keep_uuid: bool = False,
-                        uuid: Union[str, None] = None) -> str:
+                        keep_uuid: Optional[bool] = False,
+                        uuid: Optional[str] = None) -> str:
     """Generates Cloudnet categorize file.
 
     The measurements are rebinned into a common height / time grid,
@@ -22,15 +22,15 @@ def generate_categorize(input_files: dict,
     in *ouput_file* which is a compressed netCDF4 file.
 
     Args:
-        input_files (dict): dict containing file names for calibrated
-            `radar`, `lidar`, `model` and `mwr` files.
-        output_file (str): Full path of the output file.
-        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
-            if that exists. Default is False when new UUID is generated.
-        uuid (str, optional): Set specific UUID for the file.
+        input_files: dict containing file names for calibrated `radar`, `lidar`, `model` and
+            `mwr` files.
+        output_file: Full path of the output file.
+        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
+            when new UUID is generated.
+        uuid: Set specific UUID for the file.
 
     Returns:
-        str: UUID of the generated file.
+        UUID of the generated file.
 
     Raises:
         RuntimeError: Failed to create the categorize file.
@@ -51,73 +51,83 @@ def generate_categorize(input_files: dict,
     """
 
     def _interpolate_to_cloudnet_grid():
-        wl_band = utils.get_wl_band(radar.radar_frequency)
-        model.interpolate_to_common_height(wl_band)
-        model.interpolate_to_grid(time, height)
-        mwr.rebin_to_grid(time)
-        radar.rebin_to_grid(time)
-        lidar.rebin_to_grid(time, height)
+        wl_band = utils.get_wl_band(data['radar'].radar_frequency)
+        data['model'].interpolate_to_common_height(wl_band)
+        data['model'].interpolate_to_grid(time, height)
+        data['mwr'].rebin_to_grid(time)
+        data['radar'].rebin_to_grid(time)
+        data['lidar'].rebin_to_grid(time, height)
 
-    def _prepare_output():
-        radar.add_meta()
-        model.screen_sparse_fields()
+    def _prepare_output() -> dict:
+        data['radar'].add_meta()
+        data['model'].screen_sparse_fields()
         for key in ('category_bits', 'insect_prob', 'is_rain', 'is_undetected_melting'):
-            radar.append_data(getattr(classification, key), key)
+            data['radar'].append_data(getattr(classification, key), key)
         for key in ('radar_liquid_atten', 'radar_gas_atten'):
-            radar.append_data(attenuations[key], key)
-        radar.append_data(quality['quality_bits'], 'quality_bits')
-        return {**radar.data, **lidar.data, **model.data, **model.data_sparse,
-                **mwr.data}
+            data['radar'].append_data(attenuations[key], key)
+        data['radar'].append_data(quality['quality_bits'], 'quality_bits')
+        return {**data['radar'].data,
+                **data['lidar'].data,
+                **data['model'].data,
+                **data['model'].data_sparse,
+                **data['mwr'].data}
 
     def _define_dense_grid():
-        return utils.time_grid(), radar.height
+        return utils.time_grid(), data['radar'].height
 
     def _close_all():
-        for obj in (radar, lidar, model, mwr):
+        for obj in data.values():
             obj.close()
 
-    radar = Radar(input_files['radar'])
-    lidar = Lidar(input_files['lidar'])
-    model = Model(input_files['model'], radar.altitude)
-    mwr = Mwr(input_files['mwr'])
+    data = {
+        'radar': Radar(input_files['radar']),
+        'lidar': Lidar(input_files['lidar']),
+        'mwr': Mwr(input_files['mwr'])
+    }
+    data['model'] = Model(input_files['model'], data['radar'].altitude)
+
     time, height = _define_dense_grid()
     _interpolate_to_cloudnet_grid()
-    if 'rpg' in radar.type.lower():
-        radar.filter_speckle_noise()
-    radar.remove_incomplete_pixels()
-    model.calc_wet_bulb()
-    classification = classify.classify_measurements(radar, lidar, model, mwr)
-    attenuations = atmos.get_attenuations(model, mwr, classification)
-    radar.correct_atten(attenuations)
-    radar.calc_errors(attenuations, classification)
-    quality = classify.fetch_quality(radar, lidar, classification, attenuations)
-    output_data = _prepare_output()
-    date = radar.get_date()
+    if 'rpg' in data['radar'].type.lower():
+        data['radar'].filter_speckle_noise()
+    data['radar'].remove_incomplete_pixels()
+    data['model'].calc_wet_bulb()
+    classification = classify.classify_measurements(data)
+    attenuations = atmos.get_attenuations(data, classification)
+    data['radar'].correct_atten(attenuations)
+    data['radar'].calc_errors(attenuations, classification)
+    quality = classify.fetch_quality(data, classification, attenuations)
+    cloudnet_arrays = _prepare_output()
+    date = data['radar'].get_date()
     attributes = output.add_time_attribute(CATEGORIZE_ATTRIBUTES, date)
-    output.update_attributes(output_data, attributes)
-    uuid = _save_cat(output_file, radar, lidar, model, mwr, output_data, keep_uuid, uuid)
+    output.update_attributes(cloudnet_arrays, attributes)
+    uuid = _save_cat(output_file, data, cloudnet_arrays, keep_uuid, uuid)
     _close_all()
     return uuid
 
 
-def _save_cat(file_name, radar, lidar, model, mwr, obs, keep_uuid, uuid: Union[str, None] = None) -> str:
+def _save_cat(full_path: str,
+              data_obs: dict,
+              cloudnet_arrays: dict,
+              keep_uuid: bool,
+              uuid: Union[str, None]) -> str:
     """Creates a categorize netCDF4 file and saves all data into it."""
 
-    dims = {'time': len(radar.time),
-            'height': len(radar.height),
-            'model_time': len(model.time),
-            'model_height': len(model.mean_height)}
-    rootgrp = output.init_file(file_name, dims, obs, keep_uuid, uuid)
-    uuid = rootgrp.file_uuid
-    output.add_file_type(rootgrp, 'categorize')
-    output.copy_global(radar.dataset, rootgrp, ('year', 'month', 'day', 'location'))
-    rootgrp.title = f"Categorize file from {radar.location}"
-    rootgrp.source_file_uuids = output.get_source_uuids(radar, lidar, model, mwr)
-    # Needs to solve how to provide institution
-    # rootgrp.institution = f"Data processed at {config.INSTITUTE}"
-    output.add_references(rootgrp, 'categorize')
-    output.merge_history(rootgrp, 'categorize', radar, lidar)
-    rootgrp.close()
+    dims = {'time': len(data_obs['radar'].time),
+            'height': len(data_obs['radar'].height),
+            'model_time': len(data_obs['model'].time),
+            'model_height': len(data_obs['model'].mean_height)}
+
+    file_type = 'categorize'
+    nc = output.init_file(full_path, dims, cloudnet_arrays, keep_uuid, uuid)
+    uuid = nc.file_uuid
+    output.add_file_type(nc, file_type)
+    output.copy_global(data_obs['radar'].dataset, nc, ('year', 'month', 'day', 'location'))
+    nc.title = f"{file_type.capitalize()} file from {data_obs['radar'].location}"
+    nc.source_file_uuids = output.get_source_uuids(data_obs)
+    output.add_references(nc, file_type)
+    output.merge_history(nc, file_type, data_obs['radar'], data_obs['lidar'])
+    nc.close()
     return uuid
 
 

@@ -3,6 +3,7 @@ import numpy as np
 import numpy.ma as ma
 from numpy.testing import assert_array_equal
 from cloudnetpy.categorize import classify
+from cloudnetpy.categorize import containers
 
 
 class Obs:
@@ -40,25 +41,23 @@ class TestFindRain:
 
     def test_1(self):
         result = np.zeros(len(self.time))
-        assert_array_equal(classify._find_rain(self.z, self.time), result)
+        assert_array_equal(containers._find_rain(self.z, self.time), result)
 
     def test_2(self):
         self.z[:, 3] = 0.1
         result = np.ones(len(self.time))
-        assert_array_equal(classify._find_rain(self.z, self.time), result)
+        assert_array_equal(containers._find_rain(self.z, self.time), result)
 
     def test_3(self):
         self.z[5, 3] = 0.1
         result = np.ones(len(self.time))
         result[3:7] = 1
-        assert_array_equal(classify._find_rain(self.z, self.time,
-                                               time_buffer=1), result)
+        assert_array_equal(containers._find_rain(self.z, self.time, time_buffer=1), result)
 
     def test_4(self):
         self.z[1440, 3] = 0.1
         result = np.ones(len(self.time))
-        assert_array_equal(classify._find_rain(self.z, self.time,
-                                               time_buffer=1500), result)
+        assert_array_equal(containers._find_rain(self.z, self.time, time_buffer=1500), result)
 
 
 def test_find_clutter():
@@ -68,7 +67,7 @@ def test_find_clutter():
     v[:, 5] = 0.04
     result = np.zeros(v.shape)
     result[:3, 5] = 1
-    assert_array_equal(classify._find_clutter(v, is_rain), result)
+    assert_array_equal(containers._find_clutter(v, is_rain), result)
 
 
 def test_find_drizzle_and_falling():

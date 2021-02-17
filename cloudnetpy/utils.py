@@ -233,15 +233,15 @@ def filter_x_pixels(array):
     return filtered_array
 
 
-def isbit(integer, nth_bit):
-    """Tests if nth bit (0,1,2..) is on for the input number.
+def isbit(data: np.ndarray, nth_bit: int) -> np.ndarray:
+    """Tests if nth bit (0,1,2..) is on for a number.
 
     Args:
-        integer (int): A number.
-        nth_bit (int): Investigated bit.
+        data: Integer data.
+        nth_bit: Investigated bit.
 
     Returns:
-        bool: True if set, otherwise False.
+        True if set, otherwise False.
 
     Raises:
         ValueError: negative bit as input.
@@ -259,7 +259,7 @@ def isbit(integer, nth_bit):
     if nth_bit < 0:
         raise ValueError('Negative bit number.')
     mask = 1 << nth_bit
-    return integer & mask > 0
+    return data & mask > 0
 
 
 def setbit(integer, nth_bit):
