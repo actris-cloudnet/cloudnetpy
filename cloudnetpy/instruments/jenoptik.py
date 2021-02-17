@@ -33,6 +33,10 @@ CEILOMETER_INFO = {
         calibration_factor=2.5e-11,
         overlap_function_params=None,
         is_range_corrected=True),
+    'palaiseau': instrument_info(
+        calibration_factor=3.6e-11,
+        overlap_function_params=None,
+        is_range_corrected=True),
 }
 
 
