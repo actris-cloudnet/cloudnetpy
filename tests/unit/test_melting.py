@@ -39,7 +39,7 @@ def test__is_good_ldr_peak(ldr, v, indices, result):
     ([-1, -1.9, -1, 0], (1, 2), False),
 ])
 def test__is_good_ldr_peak(v, indices, result):
-    assert melting._is_good_v_peak(v, indices) is result
+    assert melting._is_good_v_peak(v, *indices) is result
 
 
 class Obs:

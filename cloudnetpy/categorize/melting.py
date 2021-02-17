@@ -1,13 +1,15 @@
 """Functions to find melting layer from data."""
 
+from typing import Optional, Tuple
 import numpy as np
 import numpy.ma as ma
 from scipy.ndimage.filters import gaussian_filter
 from cloudnetpy.constants import T0
 from cloudnetpy.categorize import droplet
+from cloudnetpy.categorize.containers import ClassData
 
 
-def find_melting_layer(obs, smooth=True):
+def find_melting_layer(obs: ClassData, smooth: Optional[bool] = True) -> np.ndarray:
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Melting layer is detected using linear depolarization ratio, *ldr*,
@@ -36,12 +38,11 @@ def find_melting_layer(obs, smooth=True):
         make sense (rain drops can even move upwards instead of down).
 
     Args:
-        obs (ClassData): The :class:`ClassData` instance.
-        smooth (bool, optional): If True, apply a small
-            Gaussian smoother to the melting layer. Default is True.
+        obs: The :class:`ClassData` instance.
+        smooth: If True, apply a small Gaussian smoother to the melting layer. Default is True.
 
     Returns:
-        ndarray: 2-D boolean array denoting the melting layer.
+        2-D boolean array denoting the melting layer.
 
     """
 
@@ -62,13 +63,13 @@ def find_melting_layer(obs, smooth=True):
             ldr_peak = np.argmax(ldr_prof)
             v_peak = np.argmax(v_dprof)
             try:
-                top, base = _basetop(ldr_dprof, ldr_peak)
+                base, top = _basetop(ldr_dprof, ldr_peak)
                 if _is_good_ldr_peak(ldr_prof, v_prof, (base, ldr_peak, top)):
                     melting_layer[ind, temp_indices[ldr_peak-1]:temp_indices[top]+1] = True
             except:
                 try:
-                    top, base = _basetop(v_dprof, v_peak)
-                    if _is_good_v_peak(v_prof, (base, top)):
+                    base, top = _basetop(v_dprof, v_peak)
+                    if _is_good_v_peak(v_prof, base, top):
                         melting_layer[ind, temp_indices[v_peak-1:v_peak+2]] = True
                 except:
                     continue
@@ -78,13 +79,14 @@ def find_melting_layer(obs, smooth=True):
     return melting_layer
 
 
-def _is_good_v_peak(v, indices):
-    base, top = indices
+def _is_good_v_peak(v: np.ndarray, base: int, top: int) -> bool:
     diff = v[top] - v[base]
     return diff > 0.5 and v[base] < -2
 
 
-def _is_good_ldr_peak(ldr, v, indices):
+def _is_good_ldr_peak(ldr: np.ndarray,
+                      v: np.ndarray,
+                      indices: Tuple[int, int, int]) -> bool:
     base, peak, top = indices
     conditions = (ldr[peak] - ldr[top] > 4,
                   ldr[peak] - ldr[base] > 4,
@@ -93,14 +95,14 @@ def _is_good_ldr_peak(ldr, v, indices):
     return all(conditions)
 
 
-def _basetop(dprof, pind):
+def _basetop(dprof: np.ndarray, pind: int) -> Tuple[int, int]:
     """Finds the base and top of peak in ldr or v profile."""
     top = droplet.ind_top(dprof, pind, len(dprof), 10, 2)
     base = droplet.ind_base(dprof, pind, 10, 2)
-    return top, base
+    return base, top
 
 
-def _get_temp_indices(t_prof, t_range):
+def _get_temp_indices(t_prof: np.ndarray, t_range: np.ndarray) -> np.ndarray:
     """Finds indices of temperature profile covering the given range."""
     bottom_point = np.where(t_prof < (T0 - t_range[0]))[0][0]
     top_point = np.where(t_prof > (T0 + t_range[0]))[0]
@@ -108,7 +110,7 @@ def _get_temp_indices(t_prof, t_range):
     return np.arange(bottom_point, top_point + 1)
 
 
-def _find_model_temperature_range(model_type):
+def _find_model_temperature_range(model_type: str) -> Tuple[float, float]:
     """Returns temperature range around 0C for given model type."""
     if 'ecmwf' in model_type.lower():
         return -4, 3
