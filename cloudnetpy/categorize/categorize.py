@@ -124,7 +124,7 @@ def _save_cat(full_path: str,
     output.add_file_type(nc, file_type)
     output.copy_global(data_obs['radar'].dataset, nc, ('year', 'month', 'day', 'location'))
     nc.title = f"{file_type.capitalize()} file from {data_obs['radar'].location}"
-    nc.source_file_uuids = output.get_source_uuids(data_obs)
+    nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
     output.add_references(nc, file_type)
     output.merge_history(nc, file_type, data_obs['radar'], data_obs['lidar'])
     nc.close()

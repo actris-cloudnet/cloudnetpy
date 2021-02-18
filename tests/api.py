@@ -1,8 +1,8 @@
 import subprocess
 from uuid import UUID
 import pytest
-import netCDF4
 from tests import utils
+import netCDF4
 
 
 def check_metadata(file, log_file=None):
@@ -39,6 +39,16 @@ def check_data_quality(file, log_file=None):
         subprocess.check_call([script, file, _validate_log_file(log_file)])
     except subprocess.CalledProcessError:
         raise
+
+
+def check_source_file_uuids(file: str, expected_uuids: tuple):
+    nc = netCDF4.Dataset(file)
+    source_uuids = nc.source_file_uuids.replace(',', '').split(' ')
+    for uuid in expected_uuids:
+        assert uuid in source_uuids
+    for uuid in source_uuids:
+        assert uuid in expected_uuids
+    nc.close()
 
 
 def check_is_valid_uuid(uuid):

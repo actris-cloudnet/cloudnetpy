@@ -8,12 +8,11 @@ import importlib
 from cloudnetpy.instruments import mira2nc
 from cloudnetpy.instruments import ceilo2nc
 from cloudnetpy.categorize import generate_categorize
-from tests import check_data_quality, check_metadata, check_is_valid_uuid, utils, check_attributes
+from tests import check_data_quality, check_metadata, utils
+from tests import api
 
-PROCESS = True
 
-
-def _load_test_data(input_path):
+def _load_test_data(input_path: str):
 
     def _load_zip():
         sys.stdout.write("\nLoading input files...")
@@ -37,13 +36,11 @@ def _load_test_data(input_path):
             _load_zip()
 
 
-def _process_product_file(product_type, path, categorize_file):
+def _process_product_file(product_type: str, path: str, categorize_file: str) -> tuple:
     output_file = f"{path}{product_type}.nc"
     module = importlib.import_module(f"cloudnetpy.products")
-    uuid = ''
-    if PROCESS:
-        uuid = getattr(module, f"generate_{product_type}")(categorize_file, output_file)
-    return (output_file, uuid)
+    uuid = getattr(module, f"generate_{product_type}")(categorize_file, output_file)
+    return output_file, uuid
 
 
 def main():
@@ -67,18 +64,16 @@ def main():
         'radar': f"{source_path}radar.nc",
         'lidar': f"{source_path}lidar.nc",
     }
-    site_meta = {'name': 'Mace Head', 'altitude': 13}
-    uuid2 = ''
-    if PROCESS:
-        uuid1 = mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta, uuid='kissa')
-        assert uuid1 == 'kissa'
-        uuid2 = ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
+    site_meta = {'name': 'Mace Head', 'altitude': 13.0}
+    uuid_radar = mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta, uuid='kissa')
+    assert uuid_radar == 'kissa'
+    uuid_lidar = ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
     for name, file in calibrated_files.items():
         check_metadata(file, log_file)
         check_data_quality(file, log_file)
 
-    check_attributes(calibrated_files['radar'], site_meta)
-    check_is_valid_uuid(uuid2)
+    api.check_attributes(calibrated_files['radar'], site_meta)
+    api.check_is_valid_uuid(uuid_lidar)
 
     input_files = {
         'radar': calibrated_files['radar'],
@@ -87,21 +82,20 @@ def main():
         'model': f"{source_path}ecmwf_model.nc",
     }
     categorize_file = f"{source_path}categorize.nc"
-    uuid = ''
-    if PROCESS:
-        uuid = generate_categorize(input_files, categorize_file)
+    uuid_categorize = generate_categorize(input_files, categorize_file)
     check_metadata(categorize_file, log_file)
     check_data_quality(categorize_file, log_file)
-    check_is_valid_uuid(uuid)
-    check_attributes(categorize_file, site_meta)
+    api.check_is_valid_uuid(uuid_categorize)
+    api.check_source_file_uuids(categorize_file, (uuid_lidar, uuid_radar))
 
     product_file_types = ['classification', 'iwc', 'lwc', 'drizzle']
     for file in product_file_types:
-        product_file, uuid = _process_product_file(file, source_path, categorize_file)
+        product_file, uuid_product = _process_product_file(file, source_path, categorize_file)
         check_metadata(product_file, log_file)
         check_data_quality(product_file, log_file)
-        check_is_valid_uuid(uuid)
-        check_attributes(categorize_file, site_meta)
+        api.check_is_valid_uuid(uuid_product)
+        api.check_attributes(product_file, site_meta)
+        api.check_source_file_uuids(product_file, (uuid_categorize,))
 
 
 if __name__ == "__main__":
