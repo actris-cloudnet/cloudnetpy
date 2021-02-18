@@ -63,7 +63,7 @@ class Basta(NcRadar):
         site_meta (dict): Site properties in a dictionary. Required key is `name`.
 
     """
-    radar_frequency = 35.0
+    radar_frequency = 95.0
 
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, site_meta)
