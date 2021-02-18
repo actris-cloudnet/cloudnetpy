@@ -46,6 +46,7 @@ def basta2nc(basta_file: str,
     basta.init_data(keymap)
     if date is not None:
         basta.validate_date(date)
+    basta.screen_data(keymap)
     basta.add_meta()
     basta.add_geolocation()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
@@ -59,8 +60,8 @@ class Basta(NcRadar):
     """Class for BASTA raw radar data. Child of NcRadar().
 
     Args:
-        full_path (str): BASTA netCDF filename.
-        site_meta (dict): Site properties in a dictionary. Required key is `name`.
+        full_path: BASTA netCDF filename.
+        site_meta: Site properties in a dictionary. Required key is `name`.
 
     """
     radar_frequency = 95.0
@@ -69,6 +70,12 @@ class Basta(NcRadar):
         super().__init__(full_path, site_meta)
         self.date = self.get_date()
         self.source = 'BASTA'
+
+    def screen_data(self, keymap: dict) -> None:
+        """Saves only valid pixels."""
+        mask = self.getvar('background_mask')
+        for key in keymap.values():
+            self.data[key].mask_indices(np.where(mask != 1))
 
     def validate_date(self, expected_date: str) -> None:
         """Validates expected data."""
