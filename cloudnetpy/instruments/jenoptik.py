@@ -44,7 +44,7 @@ class JenoptikCeilo(Ceilometer):
     """Class for Jenoptik chm15k ceilometer."""
     def __init__(self, file_name, site_name):
         super().__init__(file_name)
-        self.model = 'Jenoptik CHM15k'
+        self.model = 'Lufft CHM15k'
         self.dataset = netCDF4.Dataset(self.file_name)
         self.variables = self.dataset.variables
         self.noise_params = (70, 2e-14, 0.3e-6, (1e-9, 4e-9))
