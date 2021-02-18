@@ -1,8 +1,6 @@
 """This module contains RPG Cloud Radar related functions."""
-import os
-import datetime
 from collections import namedtuple
-from typing import Union, Tuple
+from typing import Union, Tuple, Optional
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray
@@ -12,33 +10,33 @@ from cloudnetpy.metadata import MetaData
 def rpg2nc(path_to_l1_files: str,
            output_file: str,
            site_meta: dict,
-           keep_uuid: bool = False,
-           uuid: Union[str, None] = None,
-           date: Union[str, None] = None) -> Tuple[str, list]:
-    """Converts RPG cloud radar binary files into netCDF file.
+           keep_uuid: Optional[bool] = False,
+           uuid: Optional[str] = None,
+           date: Optional[str] = None) -> Tuple[str, list]:
+    """Converts RPG FMCW-94 cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
     concatenates the data and writes it into netCDF file.
 
     Args:
-        path_to_l1_files (str): Folder containing one day of RPG LV1 files.
-        output_file (str): Output file name.
-        site_meta (dict): Dictionary containing information about the
+        path_to_l1_files: Folder containing one day of RPG LV1 files.
+        output_file: Output file name.
+        site_meta: Dictionary containing information about the
             site. Required key value pairs are `altitude` (metres above mean
             sea level) and `name`.
-        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
+        keep_uuid: If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
-        uuid (str, optional): Set specific UUID for the file.
-        date (str, optional): Expected date in the input files. If not set,
+        uuid: Set specific UUID for the file.
+        date: Expected date in the input files. If not set,
             all files will be used. This might cause unexpected behavior if
             there are files from several days. If date is set as 'YYYY-MM-DD',
             only files that match the date will be used.
 
     Returns:
-        tuple: 2-element tuple containing
+        2-element tuple containing
 
-        - str: UUID of the generated file.
-        - list: Files used in the processing.
+        - UUID of the generated file.
+        - Files used in the processing.
 
     Raises:
         RuntimeError: Failed to read the binary data.
@@ -50,50 +48,150 @@ def rpg2nc(path_to_l1_files: str,
 
     """
     l1_files = utils.get_sorted_filenames(path_to_l1_files, '.LV1')
-    one_day_of_data, valid_files = _create_one_day_data_record(l1_files, date)
+    rpg_objects, valid_files = get_rpg_objects(l1_files, date)
+    one_day_of_data = create_one_day_data_record(rpg_objects)
     if not valid_files:
         return '', []
-    rpg = Rpg(one_day_of_data, site_meta)
+    rpg = Rpg(one_day_of_data, site_meta, 'RPG-FMCW-94')
+    rpg.mask_invalid_ldr()
     rpg.linear_to_db(('Ze', 'antenna_gain'))
-    output.update_attributes(rpg.data, RPG_ATTRIBUTES)
-    return _save_rpg(rpg, output_file, valid_files, keep_uuid, uuid)
+    attributes = output.add_time_attribute(RPG_ATTRIBUTES, rpg.date)
+    output.update_attributes(rpg.data, attributes)
+    return save_rpg(rpg, output_file, valid_files, keep_uuid, uuid)
 
 
-def _create_one_day_data_record(l1_files: list, date: Union[str, None]) -> Tuple[dict, list]:
+def create_one_day_data_record(rpg_objects: list) -> dict:
     """Concatenates all RPG data from one day."""
-    rpg_objects, valid_files = get_rpg_objects(l1_files, date)
-    rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
-    if len(valid_files) > 1:
+    rpg_raw_data, rpg_header = stack_rpg_data(rpg_objects)
+    if len(rpg_objects) > 1:
         try:
-            rpg_header = _reduce_header(rpg_header)
+            rpg_header = reduce_header(rpg_header)
         except AssertionError as error:
             raise RuntimeError(error)
-    rpg_raw_data = _mask_invalid_data(rpg_raw_data)
-    return {**rpg_header, **rpg_raw_data}, valid_files
+    rpg_raw_data = mask_invalid_data(rpg_raw_data)
+    return {**rpg_header, **rpg_raw_data}
 
 
-def get_rpg_objects(files: list, date: Union[str, None]) -> Tuple[list, list]:
+def get_rpg_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
     """Creates a list of Rpg() objects from the file names."""
     objects = []
     valid_files = []
     for file in files:
         try:
             obj = RpgBin(file)
-            _validate_date(obj, date)
-        except (TypeError, ValueError):
+            if expected_date is not None:
+                _validate_date(obj, expected_date)
+        except (TypeError, ValueError) as err:
+            print(err)
             continue
         objects.append(obj)
         valid_files.append(file)
     return objects, valid_files
 
 
-def _validate_date(obj, date: Union[str, None]) -> None:
-    if not date:
-        return
+def _validate_date(obj, expected_date: Union[str, None]) -> None:
     for t in obj.data['time'][:]:
         date_str = '-'.join(utils.seconds2date(t)[:3])
-        if date_str != date:
-            raise ValueError
+        if date_str != expected_date:
+            raise ValueError('Dates do not match.')
+
+
+def stack_rpg_data(rpg_objects):
+    """Combines data from hourly Rpg() objects.
+
+    Notes:
+        Ignores variable names starting with an underscore.
+
+    """
+    def _stack(source, target, fun):
+        for name, value in source.items():
+            if not name.startswith('_'):
+                target[name] = (fun((target[name], value)) if name in target else value)
+    data, header = {}, {}
+    for rpg in rpg_objects:
+        _stack(rpg.data, data, np.concatenate)
+        _stack(rpg.header, header, np.vstack)
+    return data, header
+
+
+def reduce_header(header_in: dict) -> dict:
+    """Removes duplicate header data."""
+    header = header_in.copy()
+    for name in header:
+        first_row = header[name][0]
+        assert np.isclose(header[name], first_row, rtol=1e-3).all(), f"Inconsistent header: {name}"
+        header[name] = first_row
+    return header
+
+
+def mask_invalid_data(rpg_data):
+    for name in rpg_data:
+        rpg_data[name] = ma.masked_equal(rpg_data[name], 0)
+    return rpg_data
+
+
+class Rpg:
+    """Class for RPG FMCW-94 and HATPRO data."""
+    def __init__(self, raw_data: dict, site_properties: dict, source: str):
+        self.raw_data = raw_data
+        self.date = self._get_date()
+        self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
+        self.raw_data['altitude'] = np.array(site_properties['altitude'])
+        self.data = self._init_data()
+        self.source = source
+        self.location = site_properties['name']
+
+    def mask_invalid_ldr(self) -> None:
+        self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
+
+    def linear_to_db(self, variables_to_log: tuple) -> None:
+        """Changes some linear units to logarithmic."""
+        for name in variables_to_log:
+            self.data[name].lin2db()
+
+    def _init_data(self) -> dict:
+        data = {}
+        for key in self.raw_data:
+            data[key] = CloudnetArray(self.raw_data[key], key)
+        return data
+
+    def _get_date(self) -> list:
+        time_first = self.raw_data['time'][0]
+        time_last = self.raw_data['time'][-1]
+        date_first = utils.seconds2date(time_first)[:3]
+        date_last = utils.seconds2date(time_last)[:3]
+        if date_first != date_last:
+            print('Warning: Measurements from different days')
+        return date_first
+
+
+def save_rpg(rpg: Rpg,
+             output_file: str,
+             valid_files: list,
+             keep_uuid: bool,
+             uuid: Union[str, None] = None) -> Tuple[str, list]:
+    """Saves the RPG radar / mwr file."""
+
+    dims = {'time': len(rpg.data['time'][:])}
+
+    if 'fmcw' in rpg.source.lower():
+        dims['range'] = len(rpg.data['range'][:])
+        dims['chirp_sequence'] = len(rpg.data['chirp_start_indices'][:])
+        file_type = 'radar'
+    else:
+        file_type = 'mwr'
+
+    rootgrp = output.init_file(output_file, dims, rpg.data, keep_uuid, uuid)
+    file_uuid = rootgrp.file_uuid
+    output.add_file_type(rootgrp, file_type)
+    rootgrp.title = f"{file_type.capitalize()} file from {rpg.location}"
+    rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
+    rootgrp.location = rpg.location
+    rootgrp.history = f"{utils.get_time()} - {file_type} file created"
+    rootgrp.source = rpg.source
+    output.add_references(rootgrp)
+    rootgrp.close()
+    return file_uuid, valid_files
 
 
 class RpgBin:
@@ -293,99 +391,6 @@ class RpgBin:
         for n, name in enumerate(block2):
             block2[name] = float_block2[:, :, n]
         return {**aux, **block1, **block2}
-
-
-def _stack_rpg_data(rpg_objects):
-    """Combines data from hourly Rpg() objects.
-
-    Notes:
-        Ignores variable names starting with an underscore.
-
-    """
-    def _stack(source, target, fun):
-        for name, value in source.items():
-            if not name.startswith('_'):
-                target[name] = (fun((target[name], value))
-                                if name in target else value)
-    data, header = {}, {}
-    for rpg in rpg_objects:
-        _stack(rpg.data, data, np.concatenate)
-        _stack(rpg.header, header, np.vstack)
-    return data, header
-
-
-def _reduce_header(header_in):
-    """Removes duplicate header data."""
-    header = header_in.copy()
-    for name in header:
-        first_row = header[name][0]
-        assert np.isclose(header[name], first_row, rtol=1e-3).all(), f"Inconsistent header: {name}"
-        header[name] = first_row
-    return header
-
-
-def _mask_invalid_data(rpg_data):
-    for name in rpg_data:
-        rpg_data[name] = ma.masked_equal(rpg_data[name], 0)
-    return rpg_data
-
-
-class Rpg:
-    def __init__(self, raw_data, site_properties):
-        self.raw_data = raw_data
-        self.date = self._get_date()
-        self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
-        self.raw_data['altitude'] = site_properties['altitude']
-        self._mask_invalid_ldr()
-        self.data = {}
-        self._init_data()
-        self.source = 'RPG-FMCW-94'
-        self.location = site_properties['name']
-
-    def _init_data(self):
-        for key in self.raw_data:
-            self.data[key] = CloudnetArray(self.raw_data[key], key)
-
-    def _mask_invalid_ldr(self):
-        self.raw_data['ldr'] = ma.masked_less_equal(self.raw_data['ldr'], -35)
-
-    def linear_to_db(self, variables_to_log):
-        """Changes some linear units to logarithmic."""
-        for name in variables_to_log:
-            self.data[name].lin2db()
-
-    def _get_date(self):
-        time_first = self.raw_data['time'][0]
-        time_last = self.raw_data['time'][-1]
-        date_first = utils.seconds2date(time_first)[:3]
-        date_last = utils.seconds2date(time_last)[:3]
-        if date_first != date_last:
-            print('Warning: Measurements from different days')
-        return date_first
-
-
-def _save_rpg(rpg: Rpg,
-              output_file: str,
-              valid_files: list,
-              keep_uuid: bool,
-              uuid: Union[str, None] = None) -> Tuple[str, list]:
-    """Saves the RPG radar file."""
-
-    dims = {'time': len(rpg.data['time'][:]),
-            'range': len(rpg.data['range'][:]),
-            'chirp_sequence': len(rpg.data['chirp_start_indices'][:])}
-
-    rootgrp = output.init_file(output_file, dims, rpg.data, keep_uuid, uuid)
-    file_uuid = rootgrp.file_uuid
-    output.add_file_type(rootgrp, 'radar')
-    rootgrp.title = f"Radar file from {rpg.location}"
-    rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
-    rootgrp.location = rpg.location
-    rootgrp.history = f"{utils.get_time()} - radar file created"
-    rootgrp.source = rpg.source
-    output.add_references(rootgrp)
-    rootgrp.close()
-    return file_uuid, valid_files
 
 
 DEFINITIONS = {

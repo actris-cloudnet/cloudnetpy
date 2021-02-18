@@ -1,68 +1,81 @@
 """ Functions for file writing."""
 import os
-from typing import Union
+from typing import Union, Optional
+import numpy as np
 import netCDF4
 from cloudnetpy import utils, version
-from cloudnetpy.metadata import COMMON_ATTRIBUTES
+from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
+from cloudnetpy.instruments.mira import Mira
+from cloudnetpy.instruments.basta import Basta
 
 
-def update_attributes(cloudnet_variables, attributes):
-    """Overrides existing CloudnetArray-attributes.
+def save_radar_level1b(source_full_path: str,
+                       radar: Union[Basta, Mira],
+                       output_file: str,
+                       keep_uuid: Union[bool, None],
+                       uuid: Union[str, None],
+                       vars_from_source: Optional[tuple] = ()) -> str:
+    """Saves pre-processed cloud radar data to a Cloudnet Level 1b "radar" file."""
+    file_type = 'radar'
+    dimensions = {'time': len(radar.time),
+                  'range': len(radar.range)}
 
-    Overrides existing attributes using hard-coded values.
-    New attributes are added.
-
-    Args:
-        cloudnet_variables (dict): CloudnetArray instances.
-        attributes (dict): Product-specific attributes.
-
-    """
-    for key in cloudnet_variables:
-        if key in attributes:
-            cloudnet_variables[key].set_attributes(attributes[key])
-        if key in COMMON_ATTRIBUTES:
-            cloudnet_variables[key].set_attributes(COMMON_ATTRIBUTES[key])
-
-
-def save_product_file(short_id: str, obj, file_name: str, keep_uuid: bool,
-                      uuid: Union[str, None], copy_from_cat=()) -> str:
-    """Saves a standard Cloudnet product file.
-
-    Args:
-        short_id (str): Short file identifier, e.g. 'lwc', 'iwc', 'drizzle',
-            'classification'.
-        obj (object): Instance containing product specific attributes: `time`,
-            `dataset`, `data`.
-        file_name (str): Name of the output file to be generated.
-        keep_uuid (bool): If True and old file with the same name
-            exists, uses UUID from that existing file.
-        uuid (str): Set specific UUID for the file.
-        copy_from_cat (tuple, optional): Variables to be copied from the
-            categorize file.
-
-    """
-    identifier = _get_identifier(short_id)
-    dimensions = {'time': len(obj.time),
-                  'height': len(obj.dataset.variables['height'])}
-    root_group = init_file(file_name, dimensions, obj.data, keep_uuid, uuid)
-    uuid = root_group.file_uuid
-    add_file_type(root_group, short_id)
-    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
-    copy_variables(obj.dataset, root_group, vars_from_source)
-    root_group.title = f"{identifier.capitalize()} file from {obj.dataset.location}"
-    root_group.source_file_uuids = get_source_uuids(root_group, obj)
-    copy_global(obj.dataset, root_group, ('location', 'day', 'month', 'year'))
-    merge_history(root_group, identifier, obj)
-    add_references(root_group, short_id)
-    root_group.close()
+    nc = init_file(output_file, dimensions, radar.data, keep_uuid, uuid)
+    uuid = nc.file_uuid
+    add_file_type(nc, file_type)
+    nc_source = netCDF4.Dataset(source_full_path)
+    copy_variables(nc_source, nc, vars_from_source)
+    nc.title = f"{file_type.capitalize()} file from {radar.location}"
+    nc.year, nc.month, nc.day = radar.date
+    nc.location = radar.location
+    nc.history = f"{utils.get_time()} - {file_type} file created"
+    nc.source = radar.source
+    add_references(nc)
+    nc.close()
+    nc_source.close()
     return uuid
 
 
-def get_source_uuids(*sources):
+def save_product_file(short_id: str,
+                      obj,
+                      file_name: str,
+                      keep_uuid: bool,
+                      uuid: Union[str, None],
+                      copy_from_cat: Optional[tuple] = ()) -> str:
+    """Saves a standard Cloudnet product file.
+
+    Args:
+        short_id: Short file identifier, e.g. 'lwc', 'iwc', 'drizzle', 'classification'.
+        obj: Instance containing product specific attributes: `time`, `dataset`, `data`.
+        file_name: Name of the output file to be generated.
+        keep_uuid: If True and old file with the same name exists, uses UUID from that
+            existing file.
+        uuid: Set specific UUID for the file.
+        copy_from_cat: Variables to be copied from the categorize file.
+
+    """
+    human_readable_file_type = _get_identifier(short_id)
+    dimensions = {'time': len(obj.time),
+                  'height': len(obj.dataset.variables['height'])}
+    nc = init_file(file_name, dimensions, obj.data, keep_uuid, uuid)
+    uuid = nc.file_uuid
+    add_file_type(nc, short_id)
+    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
+    copy_variables(obj.dataset, nc, vars_from_source)
+    nc.title = f"{human_readable_file_type.capitalize()} file from {obj.dataset.location}"
+    nc.source_file_uuids = get_source_uuids(nc, obj)
+    copy_global(obj.dataset, nc, ('location', 'day', 'month', 'year'))
+    merge_history(nc, human_readable_file_type, obj)
+    add_references(nc, short_id)
+    nc.close()
+    return uuid
+
+
+def get_source_uuids(*sources) -> str:
     """Returns file_uuid attributes of objects.
 
     Args:
-        *sources (obj): Objects whose file_uuid attributes are read (if exist).
+        *sources: Objects whose file_uuid attributes are read (if exist).
 
     Returns:
         str: UUIDs separated by comma.
@@ -74,145 +87,100 @@ def get_source_uuids(*sources):
     return ', '.join(unique_uuids)
 
 
-def _get_identifier(short_id):
-    valid_ids = ('lwc', 'iwc', 'drizzle', 'classification')
-    if short_id not in valid_ids:
-        raise ValueError('Invalid product id.')
-    if short_id == 'iwc':
-        return 'ice water content'
-    elif short_id == 'lwc':
-        return 'liquid water content'
-    return short_id
-
-
-def merge_history(root_group, file_type, *sources):
+def merge_history(nc: netCDF4.Dataset, file_type: str, *sources) -> None:
     """Merges history fields from one or several files and creates a new record.
 
     Args:
-        root_group (netCDF Dataset): The netCDF Dataset instance.
-        file_type (str): Long description of the file.
-        *sources (obj): Objects that were used to generate this product. Their
-            `history` attribute will be copied to the new product.
+        nc: The netCDF Dataset instance.
+        file_type: Long description of the file.
+        *sources: Objects that were used to generate this product. Their `history` attribute will
+            be copied to the new product.
 
     """
     new_record = f"{utils.get_time()} - {file_type} file created"
     old_history = ''
     for source in sources:
         old_history += f"\n{source.dataset.history}"
-    root_group.history = f"{new_record}{old_history}"
+    nc.history = f"{new_record}{old_history}"
 
 
-def init_file(file_name, dimensions, obs, keep_uuid=None, uuid: Union[str, None] = None) -> netCDF4.Dataset:
+def init_file(file_name: str,
+              dimensions: dict,
+              cloudnet_arrays: dict,
+              keep_uuid: Optional[bool] = None,
+              uuid: Union[str, None] = None) -> netCDF4.Dataset:
     """Initializes a Cloudnet file for writing.
 
     Args:
-        file_name (str): File name to be generated.
-        dimensions (dict): Dictionary containing dimension for this file.
-        obs (dict): Dictionary containing :class:`CloudnetArray` instances.
-        keep_uuid (bool, optional): If True and old file with the same name
-            exists, uses UUID from that existing file.
-        uuid (str, optional): Set specific UUID for the file.
+        file_name: File name to be generated.
+        dimensions: Dictionary containing dimension for this file.
+        cloudnet_arrays: Dictionary containing :class:`CloudnetArray` instances.
+        keep_uuid: If True and old file with the same name exists, uses UUID from that file.
+        uuid: Set specific UUID for the file.
 
     """
     specific_uuid = uuid or _get_old_uuid(keep_uuid, file_name)
-    root_group = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
+    nc = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     for key, dimension in dimensions.items():
-        root_group.createDimension(key, dimension)
-    _write_vars2nc(root_group, obs)
-    _add_standard_global_attributes(root_group, specific_uuid)
-    return root_group
+        nc.createDimension(key, dimension)
+    _write_vars2nc(nc, cloudnet_arrays)
+    _add_standard_global_attributes(nc, specific_uuid)
+    return nc
 
 
-def _get_old_uuid(keep_uuid, file_name):
-    if keep_uuid and os.path.isfile(file_name):
-        nc = netCDF4.Dataset(file_name)
-        uuid = nc.file_uuid
-        nc.close()
-        return uuid
-    return None
-
-
-def _write_vars2nc(rootgrp, cloudnet_variables):
-    """Iterates over Cloudnet instances and write to given rootgrp."""
-
-    def _get_dimensions(array):
-        """Finds correct dimensions for a variable."""
-        if utils.isscalar(array):
-            return ()
-        variable_size = ()
-        file_dims = rootgrp.dimensions
-        array_dims = array.shape
-        for length in array_dims:
-            dim = [key for key in file_dims.keys()
-                   if file_dims[key].size == length][0]
-            variable_size = variable_size + (dim,)
-        return variable_size
-
-    for key in cloudnet_variables:
-        obj = cloudnet_variables[key]
-        size = _get_dimensions(obj.data)
-        nc_variable = rootgrp.createVariable(obj.name, obj.data_type, size,
-                                             zlib=True)
-        nc_variable[:] = obj.data
-        for attr in obj.fetch_attributes():
-            setattr(nc_variable, attr, getattr(obj, attr))
-
-
-def _add_standard_global_attributes(root_group, uuid: Union[str, None] = None) -> None:
-    root_group.Conventions = 'CF-1.7'
-    root_group.cloudnetpy_version = version.__version__
-    root_group.file_uuid = uuid or utils.get_uuid()
-
-
-def copy_variables(source, target, var_list):
+def copy_variables(source: netCDF4.Dataset,
+                   target: netCDF4.Dataset,
+                   keys: tuple) -> None:
     """Copies variables (and their attributes) from one file to another.
 
     Args:
-        source (object): Source object.
-        target (object): Target object.
-        var_list (list): List of variables to be copied.
+        source: Source object.
+        target: Target object.
+        keys: Variable names to be copied.
 
     """
-    for var_name, variable in source.variables.items():
-        if var_name in var_list:
-            var_out = target.createVariable(var_name, variable.datatype,
-                                            variable.dimensions)
-            var_out.setncatts({k: variable.getncattr(k)
-                               for k in variable.ncattrs()})
+    for key in keys:
+        if key in source.variables:
+            variable = source.variables[key]
+            var_out = target.createVariable(key, variable.datatype, variable.dimensions)
+            var_out.setncatts({k: variable.getncattr(k) for k in variable.ncattrs()})
             var_out[:] = variable[:]
 
 
-def copy_global(source, target, attr_list):
+def copy_global(source: netCDF4.Dataset,
+                target: netCDF4.Dataset,
+                attributes: tuple) -> None:
     """Copies global attributes from one file to another.
 
     Args:
-        source (object): Source object.
-        target (object): Target object.
-        attr_list (list / tuple): List of attributes to be copied.
+        source: Source object.
+        target: Target object.
+        attributes: List of attributes to be copied.
 
     """
-    for attr_name in source.ncattrs():
-        if attr_name in attr_list:
-            setattr(target, attr_name, source.getncattr(attr_name))
+    source_attributes = source.ncattrs()
+    for attr in attributes:
+        if attr in source_attributes:
+            setattr(target, attr, source.getncattr(attr))
 
 
-def add_file_type(root_group, file_type):
+def add_file_type(nc: netCDF4.Dataset, file_type: str) -> None:
     """Adds cloudnet_file_type global attribute.
 
     Args:
-        root_group (object): netCDF Dataset instance.
-        file_type (str): Name of the Cloudnet file type.
+        nc: netCDF Dataset instance.
+        file_type: Name of the Cloudnet file type.
 
     """
-    root_group.cloudnet_file_type = file_type
+    nc.cloudnet_file_type = file_type
 
 
-def add_references(root_group, identifier=None):
-    """Adds references attribute to object.
+def add_references(nc: netCDF4.Dataset, identifier: Optional[str] = None) -> None:
+    """Adds references attribute to netCDF file.
 
     Args:
-        root_group (obj): netCDF Dataset instance.
-        identifier (str, optional): Cloudnet file type, e.g., 'iwc'.
+        nc: netCDF Dataset instance.
+        identifier: Cloudnet file type, e.g., 'iwc'.
 
     """
     references = 'https://doi.org/10.21105/joss.02123'
@@ -223,4 +191,88 @@ def add_references(root_group, identifier=None):
             references += ', https://doi.org/10.1175/JAM2340.1'
         if identifier == 'drizzle':
             references += ', https://doi.org/10.1175/JAM-2181.1'
-    root_group.references = references
+    nc.references = references
+
+
+def add_time_attribute(attributes: dict, date: list) -> dict:
+    """"Adds time attribute with correct units.
+
+    Args:
+        attributes: Attributes of variables.
+        date: Date as ['YYYY', 'MM', 'DD'].
+
+    Returns:
+        dict: Same attributes with 'time' attribute added.
+
+    """
+    date = '-'.join(date)
+    attributes['time'] = MetaData(units=f'hours since {date} 00:00:00')
+    return attributes
+
+
+def update_attributes(cloudnet_variables: dict, attributes: dict) -> None:
+    """Overrides existing CloudnetArray-attributes.
+
+    Overrides existing attributes using hard-coded values.
+    New attributes are added.
+
+    Args:
+        cloudnet_variables: CloudnetArray instances.
+        attributes: Product-specific attributes.
+
+    """
+    for key in cloudnet_variables:
+        if key in attributes:
+            cloudnet_variables[key].set_attributes(attributes[key])
+        if key in COMMON_ATTRIBUTES:
+            cloudnet_variables[key].set_attributes(COMMON_ATTRIBUTES[key])
+
+
+def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
+    """Iterates over Cloudnet instances and write to netCDF file."""
+    for obj in cloudnet_variables.values():
+        size = _get_dimensions(nc, obj.data)
+        nc_variable = nc.createVariable(obj.name, obj.data_type, size, zlib=True)
+        nc_variable[:] = obj.data
+        for attr in obj.fetch_attributes():
+            setattr(nc_variable, attr, getattr(obj, attr))
+
+
+def _get_dimensions(nc: netCDF4.Dataset, data: np.ndarray) -> tuple:
+    """Finds correct dimensions for a variable."""
+    if utils.isscalar(data):
+        return ()
+    variable_size = ()
+    file_dims = nc.dimensions
+    array_dims = data.shape
+    for length in array_dims:
+        dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
+        variable_size = variable_size + (dim,)
+    return variable_size
+
+
+def _get_identifier(short_id: str) -> str:
+    valid_ids = ('lwc', 'iwc', 'drizzle', 'classification')
+    if short_id not in valid_ids:
+        raise ValueError('Invalid product id.')
+    if short_id == 'iwc':
+        return 'ice water content'
+    elif short_id == 'lwc':
+        return 'liquid water content'
+    return short_id
+
+
+def _add_standard_global_attributes(nc: netCDF4.Dataset,
+                                    uuid: Union[str, None] = None) -> None:
+    nc.Conventions = 'CF-1.7'
+    nc.cloudnetpy_version = version.__version__
+    nc.file_uuid = uuid or utils.get_uuid()
+
+
+def _get_old_uuid(keep_uuid: bool, full_path: str) -> Union[str, None]:
+    if keep_uuid and os.path.isfile(full_path):
+        nc = netCDF4.Dataset(full_path)
+        uuid = nc.file_uuid
+        nc.close()
+        return uuid
+    return None

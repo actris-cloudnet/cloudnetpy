@@ -9,7 +9,8 @@ FIELDS = (
     'definition',
     'references',
     'ancillary_variables',
-    'positive')
+    'positive',
+    'axis')
 
 MetaData = namedtuple('MetaData', FIELDS)
 MetaData.__new__.__defaults__ = (None,) * len(MetaData._fields)
@@ -18,15 +19,17 @@ MetaData.__new__.__defaults__ = (None,) * len(MetaData._fields)
 COMMON_ATTRIBUTES = {
     'time': MetaData(
         long_name='Time UTC',
-        units='decimal hours since midnight'
+        axis='T',
     ),
     'height': MetaData(
         long_name='Height above mean sea level',
+        axis='Z',
         units='m',
         comment='Height grid from the mean sea level towards zenith.'
     ),
     'range': MetaData(
         long_name='Range from instrument',
+        axis='Z',
         units='m',
         comment='Height grid from the instrument towards the line of sight.'
     ),
@@ -61,8 +64,7 @@ COMMON_ATTRIBUTES = {
         units='m s-1',
         comment=('This parameter is the radial component of the velocity, with positive\n'
                  'velocities are away from the radar.'),
-        positive='up',
-        ancillary_variables='v_sigma'
+        positive='up'
     ),
     'v_sigma': MetaData(
         long_name='Standard deviation of mean Doppler velocity',

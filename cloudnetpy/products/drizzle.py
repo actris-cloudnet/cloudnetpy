@@ -30,7 +30,7 @@ def generate_drizzle(categorize_file: str,
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
         uuid (str, optional): Set specific UUID for the file.
-    
+
     Returns:
         str: UUID of the generated file.
 
@@ -57,7 +57,9 @@ def generate_drizzle(categorize_file: str,
     results = _screen_rain(results, drizzle_class)
     results['drizzle_retrieval_status'] = retrieval_status.retrieval_status
     _append_data(drizzle_source, results)
-    output.update_attributes(drizzle_source.data, DRIZZLE_ATTRIBUTES)
+    date = drizzle_source.get_date()
+    attributes = output.add_time_attribute(DRIZZLE_ATTRIBUTES, date)
+    output.update_attributes(drizzle_source.data, attributes)
     uuid = output.save_product_file('drizzle', drizzle_source, output_file, keep_uuid, uuid)
     drizzle_source.close()
     return uuid

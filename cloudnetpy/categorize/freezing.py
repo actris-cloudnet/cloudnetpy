@@ -4,9 +4,10 @@ import numpy.ma as ma
 from scipy.interpolate import interp1d
 from cloudnetpy.constants import T0
 from cloudnetpy import utils
+from cloudnetpy.categorize.containers import ClassData
 
 
-def find_freezing_region(obs, melting_layer):
+def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarray:
     """Finds freezing region using the model temperature and melting layer.
 
     Every profile that contains melting layer, subzero region starts from
@@ -16,11 +17,11 @@ def find_freezing_region(obs, melting_layer):
     interpolated for all profiles.
 
     Args:
-        obs (ClassData): The :class:`ClassData` instance.
-        melting_layer (ndarray): 2-D boolean array denoting melting layer.
+        obs: The :class:`ClassData` instance.
+        melting_layer: 2-D boolean array denoting melting layer.
 
     Returns:
-        ndarray: 2-D boolean array denoting the sub-zero region.
+        2-D boolean array denoting the sub-zero region.
 
     Notes:
         It is not clear how model temperature and melting layer should be
@@ -47,23 +48,22 @@ def find_freezing_region(obs, melting_layer):
     return is_freezing
 
 
-def _find_mean_melting_alt(obs, melting_layer):
+def _find_mean_melting_alt(obs: ClassData, melting_layer: np.ndarray) -> np.ndarray:
     assert melting_layer.dtype == bool
     alt_array = np.tile(obs.height, (len(obs.time), 1))
     melting_alts = ma.array(alt_array, mask=~melting_layer)
     return ma.median(melting_alts, axis=1)
 
 
-def _find_t0_alt(temperature, height):
+def _find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
     """ Interpolates altitudes where temperature goes below freezing.
 
     Args:
-        temperature (ndarray): 2-D temperature (K).
-        height (ndarray): 1-D altitude grid (m).
+        temperature: 2-D temperature (K).
+        height: 1-D altitude grid (m).
 
     Returns:
-        ndarray: 1-D array denoting altitudes where the
-            temperature drops below 0 deg C.
+        1-D array denoting altitudes where the temperature drops below 0 deg C.
 
     """
     alt = np.array([])

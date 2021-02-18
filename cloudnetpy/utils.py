@@ -1,5 +1,6 @@
 """ This module contains general helper functions. """
 import os
+from typing import Union
 import uuid
 import datetime
 import re
@@ -232,15 +233,15 @@ def filter_x_pixels(array):
     return filtered_array
 
 
-def isbit(integer, nth_bit):
-    """Tests if nth bit (0,1,2..) is on for the input number.
+def isbit(data: np.ndarray, nth_bit: int) -> np.ndarray:
+    """Tests if nth bit (0,1,2..) is on for a number.
 
     Args:
-        integer (int): A number.
-        nth_bit (int): Investigated bit.
+        data: Integer data.
+        nth_bit: Investigated bit.
 
     Returns:
-        bool: True if set, otherwise False.
+        True if set, otherwise False.
 
     Raises:
         ValueError: negative bit as input.
@@ -258,7 +259,7 @@ def isbit(integer, nth_bit):
     if nth_bit < 0:
         raise ValueError('Negative bit number.')
     mask = 1 << nth_bit
-    return integer & mask > 0
+    return data & mask > 0
 
 
 def setbit(integer, nth_bit):
@@ -647,13 +648,12 @@ def array_to_probability(arr_in, loc, scale, invert=False):
     return prob
 
 
-def range_to_height(range_los, tilt_angle):
+def range_to_height(range_los: np.ndarray, tilt_angle: float) -> np.ndarray:
     """Converts distances from a tilted instrument to height above the ground.
 
     Args:
-        range_los (ndarray): Distances towards the line of sign from the
-            instrument.
-        tilt_angle (float): Angle in degrees from the zenith.
+        range_los: Distances towards the line of sign from the instrument.
+        tilt_angle: Angle in degrees from the zenith.
 
     Returns:
         ndarray: Altitudes of the LOS points.
@@ -693,3 +693,11 @@ def get_sorted_filenames(path_to_files: str, extension: str) -> list:
     files = ['/'.join((path_to_files, file)) for file in all_files if file.endswith(extension)]
     files.sort()
     return files
+
+
+def str_to_numeric(value: str) -> Union[int, float]:
+    """Converts string to number (int or float)."""
+    try:
+        return int(value)
+    except ValueError:
+        return float(value)

@@ -32,7 +32,7 @@ def generate_iwc(categorize_file: str,
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
         uuid (str, optional): Set specific UUID for the file.
-    
+
     Returns:
         str: UUID of the generated file.
 
@@ -55,7 +55,9 @@ def generate_iwc(categorize_file: str,
     _append_iwc_error(iwc_data, ice_class)
     _append_iwc_sensitivity(iwc_data)
     _append_iwc_status(iwc_data, ice_class)
-    output.update_attributes(iwc_data.data, IWC_ATTRIBUTES)
+    date = iwc_data.get_date()
+    attributes = output.add_time_attribute(IWC_ATTRIBUTES, date)
+    output.update_attributes(iwc_data.data, attributes)
     uuid = output.save_product_file('iwc', iwc_data, output_file, keep_uuid, uuid)
     iwc_data.close()
     return uuid

@@ -30,7 +30,7 @@ def generate_lwc(categorize_file: str,
         keep_uuid (bool, optional): If True, keeps the UUID of the old file,
             if that exists. Default is False when new UUID is generated.
         uuid (str, optional): Set specific UUID for the file.
-    
+
     Returns:
         str: UUID of the generated file.
 
@@ -52,9 +52,11 @@ def generate_lwc(categorize_file: str,
     cloud_obj = LwcStatus(lwc_source, lwc_obj)
     error_obj = LwcError(lwc_source, lwc_obj)
     _append_data(lwc_source, lwc_obj, cloud_obj, error_obj)
-    output.update_attributes(lwc_source.data, LWC_ATTRIBUTES)
+    date = lwc_source.get_date()
+    attributes = output.add_time_attribute(LWC_ATTRIBUTES, date)
+    output.update_attributes(lwc_source.data, attributes)
     uuid = output.save_product_file('lwc', lwc_source, output_file, keep_uuid, uuid,
-                             copy_from_cat=('lwp', 'lwp_error'))
+                                    copy_from_cat=('lwp', 'lwp_error'))
     lwc_source.close()
     return uuid
 
