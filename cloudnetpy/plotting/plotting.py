@@ -106,11 +106,11 @@ def _set_title(ax, field_name, identifier=" from CloudnetPy"):
 def _find_valid_fields(nc_file, names):
     """Returns valid field names and corresponding data."""
     valid_names, valid_data = names[:], []
-    nc = netCDF4.Dataset(nc_file)
     try:
         bits = CategorizeBits(nc_file)
     except KeyError:
         bits = None
+    nc = netCDF4.Dataset(nc_file)
     for name in names:
         if name in nc.variables:
             valid_data.append(nc.variables[name][:])
@@ -121,6 +121,8 @@ def _find_valid_fields(nc_file, names):
         else:
             valid_names.remove(name)
     nc.close()
+    if not valid_names:
+        raise ValueError('No fields to be plotted')
     return valid_data, valid_names
 
 

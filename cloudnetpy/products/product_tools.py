@@ -28,10 +28,14 @@ class CategorizeBits:
         self.category_bits = self._read_bits('category')
         self.quality_bits = self._read_bits('quality')
 
-    def _read_bits(self, bit_type):
+    def _read_bits(self, bit_type: str) -> dict:
         """ Converts bitfield into dictionary."""
         nc = netCDF4.Dataset(self._categorize_file)
-        bitfield = nc.variables[f"{bit_type}_bits"][:]
+        try:
+            bitfield = nc.variables[f"{bit_type}_bits"][:]
+        except KeyError:
+            nc.close()
+            raise KeyError
         keys = getattr(CategorizeBits, f"{bit_type}_keys")
         bits = {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
         nc.close()
