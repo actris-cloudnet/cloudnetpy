@@ -291,10 +291,10 @@ class RpgBin:
 
         def _create_variables():
             """Initializes dictionaries for data arrays."""
-            vrs = {'sample_length': np.zeros(dims.n_samples, np.int),
-                   'time': np.zeros(dims.n_samples, np.int),
-                   'time_ms': np.zeros(dims.n_samples, np.int),
-                   'quality_flag': np.zeros(dims.n_samples, np.int)}
+            vrs = {'sample_length': np.zeros(dims.n_samples, int),
+                   'time': np.zeros(dims.n_samples, int),
+                   'time_ms': np.zeros(dims.n_samples, int),
+                   'quality_flag': np.zeros(dims.n_samples, int)}
 
             block1_vars = dict.fromkeys((
                 'rain_rate',

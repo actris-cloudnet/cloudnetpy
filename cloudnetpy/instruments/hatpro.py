@@ -120,11 +120,11 @@ class HatproBin:
             'time': np.zeros(self.header['_n_samples'], dtype=np.int32),
             'quality_flag': np.zeros(self.header['_n_samples'], dtype=np.int32),
             'lwp': np.zeros(self.header['_n_samples']),
-            'zenith': np.zeros(self.header['_n_samples'], dtype=np.float)
+            'zenith': np.zeros(self.header['_n_samples'], dtype=np.float32)
         }
 
         version = self._get_hatpro_version()
-        angle_dtype = np.float if version == 1 else np.int32
+        angle_dtype = np.float32 if version == 1 else np.int32
         data['_instrument_angles'] = np.zeros(self.header['_n_samples'], dtype=angle_dtype)
 
         for sample in range(self.header['_n_samples'][0]):
