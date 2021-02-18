@@ -73,6 +73,7 @@ def mira2nc(raw_mira: str,
     mira.screen_by_snr(snr_gain)
     mira.add_meta()
     mira.add_geolocation()
+    mira.close()
     attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
     output.update_attributes(mira.data, attributes)
     fields_from_source = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg')

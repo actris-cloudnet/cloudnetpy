@@ -49,6 +49,7 @@ def basta2nc(basta_file: str,
     basta.screen_data(keymap)
     basta.add_meta()
     basta.add_geolocation()
+    basta.close()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
     fields_from_source = ('elevation', 'pulse_width')
