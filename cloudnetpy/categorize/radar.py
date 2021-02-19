@@ -38,8 +38,7 @@ class Radar(ProfileDataSource):
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, 'location', '')
         self.type = getattr(self.dataset, 'source', '')
-        self._variables_to_cloudnet_arrays(('v', 'width', 'ldr'))
-        self._unknown_variable_to_cloudnet_array(('Zh', 'Zv', 'Ze'), 'Z', units='dBZ')
+        self._init_data()
         self._init_sigma_v()
 
     def rebin_to_grid(self, time_new: np.ndarray) -> None:
@@ -68,18 +67,18 @@ class Radar(ProfileDataSource):
     def remove_incomplete_pixels(self) -> None:
         """Mask radar pixels where one or more required quantities are missing.
 
-        All valid radar pixels **must** contain proper values for `Z`, `width` and `v`.
-        Otherwise there is some kind of problem with the data and the pixel should
-        not be used in any further analysis.
-
-        Notes:
-            This does not work with BASTA radar (no width).
+        All valid radar pixels **must** contain proper values for `Z`, and `v` and
+        also for `width` if exists. Otherwise there is some kind of problem with the
+        data and the pixel should not be used in any further analysis.
 
         """
         good_ind = (~ma.getmaskarray(self.data['Z'][:])
-                    & ~ma.getmaskarray(self.data['width'][:])
                     & ~ma.getmaskarray(self.data['v'][:]))
-        for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
+
+        if 'width' in self.data.keys():
+            good_ind = good_ind & ~ma.getmaskarray(self.data['width'][:])
+
+        for key in self.data.keys():
             self.data[key].mask_indices(~good_ind)
 
     def filter_speckle_noise(self) -> None:
@@ -138,6 +137,8 @@ class Radar(ProfileDataSource):
             return z_sensitivity
 
         def _calc_error() -> np.ndarray:
+            if 'width' not in self.data:
+                return 0.3
             z_precision = 4.343 * (1 / np.sqrt(_number_of_independent_pulses())
                                    + utils.db2lin(z_power_min - z_power) / 3)
             gas_error = attenuations['radar_gas_atten'] * 0.1
@@ -172,6 +173,14 @@ class Radar(ProfileDataSource):
             self.append_data(self.getvar(key), key)
         for key in ('time', 'height', 'radar_frequency'):
             self.append_data(getattr(self, key), key)
+
+    def _init_data(self):
+        self._unknown_variable_to_cloudnet_array(('Ze',), 'Z', units='dBZ')
+        for key in ('v', 'ldr', 'width'):
+            try:
+                self._variables_to_cloudnet_arrays((key,))
+            except KeyError:
+                continue
 
     def _init_sigma_v(self) -> None:
         """Initializes std of the velocity field. The std will be calculated

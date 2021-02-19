@@ -52,17 +52,18 @@ class ClassData:
     """
     def __init__(self, data: dict):
         self.z = data['radar'].data['Z'][:]
-        self.ldr = data['radar'].data['ldr'][:]
         self.v = data['radar'].data['v'][:]
-        self.width = data['radar'].data['width'][:]
         self.v_sigma = data['radar'].data['v_sigma'][:]
-        self.tw = data['model'].data['Tw'][:]
-        self.beta = data['lidar'].data['beta'][:]
-        self.lwp = data['mwr'].data['lwp'][:]
+        for key in ('ldr', 'width'):
+            if key in data['radar'].data.keys():
+                setattr(self, key, data['radar'].data[key][:])
         self.time = data['radar'].time
         self.height = data['radar'].height
-        self.model_type = data['model'].type
         self.radar_type = data['radar'].type
+        self.tw = data['model'].data['Tw'][:]
+        self.model_type = data['model'].type
+        self.beta = data['lidar'].data['beta'][:]
+        self.lwp = data['mwr'].data['lwp'][:]
         self.is_rain = _find_rain(self.z, self.time)
         self.is_clutter = _find_clutter(self.v, self.is_rain)
 

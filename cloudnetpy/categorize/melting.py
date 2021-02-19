@@ -47,31 +47,45 @@ def find_melting_layer(obs: ClassData, smooth: Optional[bool] = True) -> np.ndar
     """
 
     melting_layer = np.zeros(obs.tw.shape, dtype=bool)
-    ldr_diff = np.diff(obs.ldr, axis=1).filled(0)
+
+    if hasattr(obs, 'ldr'):
+        ldr_diff = np.diff(obs.ldr, axis=1).filled(0)
+        is_ldr = True
+    else:
+        is_ldr = False
+        ldr_prof = None
+        ldr_dprof = None
+
     v_diff = np.diff(obs.v, axis=1).filled(0)
     t_range = _find_model_temperature_range(obs.model_type)
 
     for ind, t_prof in enumerate(obs.tw):
 
         temp_indices = _get_temp_indices(t_prof, t_range)
-        ldr_prof = obs.ldr[ind, temp_indices]
-        ldr_dprof = ldr_diff[ind, temp_indices]
+
+        if is_ldr:
+            ldr_prof = obs.ldr[ind, temp_indices]
+            ldr_dprof = ldr_diff[ind, temp_indices]
+
         v_prof = obs.v[ind, temp_indices]
         v_dprof = v_diff[ind, temp_indices]
 
         if ma.count(ldr_prof) > 3 or ma.count(v_prof) > 3:
-            ldr_peak = np.argmax(ldr_prof)
-            v_peak = np.argmax(v_dprof)
             try:
+                if is_ldr:
+                    ldr_peak = np.argmax(ldr_prof)
+                else:
+                    raise ValueError
                 base, top = _basetop(ldr_dprof, ldr_peak)
                 if _is_good_ldr_peak(ldr_prof, v_prof, (base, ldr_peak, top)):
                     melting_layer[ind, temp_indices[ldr_peak-1]:temp_indices[top]+1] = True
-            except:
+            except (ValueError, IndexError):
+                v_peak = np.argmax(v_dprof)
                 try:
                     base, top = _basetop(v_dprof, v_peak)
                     if _is_good_v_peak(v_prof, base, top):
                         melting_layer[ind, temp_indices[v_peak-1:v_peak+2]] = True
-                except:
+                except (ValueError, IndexError):
                     continue
     if smooth:
         smoothed_layer = gaussian_filter(np.array(melting_layer, dtype=float), (2, 0.1))

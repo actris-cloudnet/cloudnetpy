@@ -62,9 +62,9 @@ def _get_probabilities(obs: ClassData) -> dict:
     lwp_interp = droplet.interpolate_lwp(obs)
     fun = utils.array_to_probability
     return {
-        'width': fun(obs.width, 1, 0.3, True),
+        'width': fun(obs.width, 1, 0.3, True) if hasattr(obs, 'width') else 1,
         'z': fun(obs.z, -15, 8, True),
-        'ldr': fun(obs.ldr, -20, 5),
+        'ldr': fun(obs.ldr, -20, 5) if hasattr(obs, 'ldr') else 1,
         'temp_loose': fun(obs.tw, 268, 2),
         'temp_strict': fun(obs.tw, 274, 1),
         'v': fun(smooth_v, -2.5, 2),
