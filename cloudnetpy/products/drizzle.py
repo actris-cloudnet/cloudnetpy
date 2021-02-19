@@ -311,7 +311,8 @@ class DrizzleSolver:
                 if self._is_converged(ind, dia, dia_init):
                     break
                 self._dia_init[ind] = dia
-            beta_factor = np.exp(2 * self.params['S'][ind] * self._data.beta[ind] * self._data.dheight)
+            beta_factor = np.exp(2 * self.params['S'][ind] * self._data.beta[ind] *
+                                 self._data.dheight)
             self.params['beta_corr'][ind[0], (ind[-1]+1):] *= beta_factor
 
 

@@ -63,7 +63,7 @@ _CLABEL = {
          ("Drizzle or rain", _COLORS['blue']),
          ("Drizzle/rain & cloud droplets", _COLORS['purple']),
          ("Ice", _COLORS['lightsteel']),
-         ("Ice & supercooled droplets",  _COLORS['darkpurple']),
+         ("Ice & supercooled droplets", _COLORS['darkpurple']),
          ("Melting ice", _COLORS['orange']),
          ("Melting ice & cloud droplets", _COLORS['yellowgreen']),
          ("Aerosols", _COLORS['lightbrown']),

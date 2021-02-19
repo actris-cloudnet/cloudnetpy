@@ -78,8 +78,8 @@ class Radar(ProfileDataSource):
         if 'width' in self.data.keys():
             good_ind = good_ind & ~ma.getmaskarray(self.data['width'][:])
 
-        for key in self.data.keys():
-            self.data[key].mask_indices(~good_ind)
+        for array in self.data.values():
+            array.mask_indices(~good_ind)
 
     def filter_speckle_noise(self) -> None:
         """Removes speckle noise from radar data.

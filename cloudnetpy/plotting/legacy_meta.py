@@ -2,9 +2,9 @@
 Metadata for old Cloudnet files, enabling us to
 plot the old files and compare with the new files.
 """
+from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
-from collections import namedtuple
 
 FIELDS = ('hidden',
           'swapped',

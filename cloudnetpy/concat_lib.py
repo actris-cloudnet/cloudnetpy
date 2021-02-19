@@ -107,8 +107,7 @@ class Concat:
 
     def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
         nc = netCDF4.Dataset(output_file, 'w', format='NETCDF4_CLASSIC')
-        dimensions = [key for key in self.first_file.dimensions.keys()]
-        for dim in dimensions:
+        for dim in self.first_file.dimensions.keys():
             dim_len = None if dim == 'time' else len(self.first_file[dim])
             nc.createDimension(dim, dim_len)
         return nc

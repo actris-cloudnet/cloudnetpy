@@ -225,7 +225,7 @@ class RpgBin:
                 'antenna_diameter',
                 'antenna_gain',  # linear
                 'half_power_beam_width'), np.float32)
-        append(('dual_polarization',), np.int8)  # 0 = single pol, 1 = dual pol (LDR), 2 = dual pol (STSR) ?
+        append(('dual_polarization',), np.int8)  # 0 = single pol, 1 = LDR, 2 = STSR
         append(('sample_duration',), np.float32)
         append(('latitude',
                 'longitude'), np.float32)
@@ -270,8 +270,7 @@ class RpgBin:
             c = np.fromfile(file_id, np.int8, 1)
             if len(c) == 0 or c[0] == 0:
                 break
-            else:
-                str_out += chr(c[0])
+            str_out += chr(c[0])
         return str_out
 
     def read_rpg_data(self):

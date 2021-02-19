@@ -257,7 +257,7 @@ def _get_identifier(short_id: str) -> str:
         raise ValueError('Invalid product id.')
     if short_id == 'iwc':
         return 'ice water content'
-    elif short_id == 'lwc':
+    if short_id == 'lwc':
         return 'liquid water content'
     return short_id
 

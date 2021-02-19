@@ -4,6 +4,7 @@ from typing import Union
 import uuid
 import datetime
 import re
+from json import JSONDecodeError
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
@@ -616,7 +617,7 @@ def get_site_information(site, *args):
         result = [float(x) for x in result]
         if len(result) == 1:
             result = result[0]
-    except:
+    except JSONDecodeError:
         result = [0]*len(args)
     return result
 

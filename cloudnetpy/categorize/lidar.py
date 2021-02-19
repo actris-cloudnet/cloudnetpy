@@ -1,6 +1,6 @@
 """Lidar module, containing the :class:`Lidar` class."""
 import numpy as np
-from cloudnetpy.categorize import ProfileDataSource
+from cloudnetpy.categorize.datasource import ProfileDataSource
 
 
 class Lidar(ProfileDataSource):

@@ -143,8 +143,7 @@ class HatproBin:
             return 1
         if self.header['file_code'][0] == 934501000:
             return 2
-        else:
-            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"][0]}')
+        raise ValueError(f'Unknown HATPRO version. {self.header["file_code"][0]}')
 
 
 def _add_zenith(version: int, data: dict) -> dict:
@@ -166,7 +165,7 @@ DEFINITIONS = {
          'Bit 0: Rain information (0=no rain, 1=raining)\n'
          'Bit 1/2: Quality level (0=Not evaluated, 1=high, 2=medium, 3=low)\n'
          'Bit 3/4: Reason for reduced quality'),
- }
+}
 
 ATTRIBUTES = {
     'file_code': MetaData(

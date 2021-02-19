@@ -55,10 +55,9 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
             time = _read_time_vector(nc_file)
             _plot_instrument_data(ax, field, name, source, time)
             continue
-        else:
-            ax_value = _read_ax_values(nc_file)
-            field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
-            _set_ax(ax, max_y)
+        ax_value = _read_ax_values(nc_file)
+        field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
+        _set_ax(ax, max_y)
         if plot_type == 'bar':
             _plot_bar_data(ax, field, ax_value[0])
             _set_ax(ax, 2, ATTRIBUTES[name].ylabel)
