@@ -43,7 +43,7 @@ def fake_radar_file(tmpdir_factory):
     var[:] = MASKED_ONE
     var = root_grp.createVariable('ldr', 'f8', ('time', 'height'))
     var[:] = EMPTY_ARRAY
-    var = root_grp.createVariable('Zh', 'f8', ('time', 'height'))
+    var = root_grp.createVariable('Ze', 'f8', ('time', 'height'))
     var[:] = EMPTY_ARRAY
     root_grp.close()
     return file_name
