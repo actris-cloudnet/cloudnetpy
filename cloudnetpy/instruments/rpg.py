@@ -93,7 +93,7 @@ def _validate_date(obj, expected_date: Union[str, None]) -> None:
     for t in obj.data['time'][:]:
         date_str = '-'.join(utils.seconds2date(t)[:3])
         if date_str != expected_date:
-            raise ValueError('Dates do not match.')
+            raise ValueError('Warning: Ignoring a file (time stamps not what expected)')
 
 
 def stack_rpg_data(rpg_objects):
