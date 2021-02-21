@@ -52,8 +52,7 @@ def hatpro2nc(path_to_lwp_files: str,
     if not valid_files:
         return '', []
     hatpro = rpg.Rpg(one_day_of_data, site_meta, 'RPG-HATPRO')
-    attributes = output.add_time_attribute(ATTRIBUTES, hatpro.date)
-    output.update_attributes(hatpro.data, attributes)
+    output.update_attributes(hatpro.data, ATTRIBUTES)
     return rpg.save_rpg(hatpro, output_file, valid_files, keep_uuid, uuid)
 
 
@@ -119,7 +118,7 @@ class HatproBin:
         data = {
             'time': np.zeros(self.header['_n_samples'], dtype=np.int32),
             'quality_flag': np.zeros(self.header['_n_samples'], dtype=np.int32),
-            'lwp': np.zeros(self.header['_n_samples']),
+            'LWP': np.zeros(self.header['_n_samples']),
             'zenith': np.zeros(self.header['_n_samples'], dtype=np.float32)
         }
 
@@ -130,7 +129,7 @@ class HatproBin:
         for sample in range(self.header['_n_samples'][0]):
             data['time'][sample] = np.fromfile(file, np.int32, 1)
             data['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
-            data['lwp'][sample] = np.fromfile(file, np.int32, 1)
+            data['LWP'][sample] = np.fromfile(file, np.int32, 1)
             data['_instrument_angles'][sample] = np.fromfile(file, angle_dtype, 1)
 
         data = _add_zenith(version, data)
@@ -168,6 +167,10 @@ DEFINITIONS = {
 }
 
 ATTRIBUTES = {
+    'time': MetaData(
+        units='seconds since 2001-01-01 00:00:00',
+        long_name='sample time',
+    ),
     'file_code': MetaData(
         long_name='File code',
         comment='RPG HATPRO software version.',
@@ -179,7 +182,7 @@ ATTRIBUTES = {
         long_name='Retrieval method',
         definition=DEFINITIONS['retrieval_method']
     ),
-    'lwp': MetaData(
+    'LWP': MetaData(
         long_name='Liquid water path',
         units='g m-2'
     ),

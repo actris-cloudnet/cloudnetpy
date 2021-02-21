@@ -53,6 +53,7 @@ def rpg2nc(path_to_l1_files: str,
     if not valid_files:
         return '', []
     rpg = Rpg(one_day_of_data, site_meta, 'RPG-FMCW-94')
+    rpg.convert_time_to_fraction_hour()
     rpg.mask_invalid_ldr()
     rpg.linear_to_db(('Ze', 'antenna_gain'))
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, rpg.date)
@@ -135,11 +136,13 @@ class Rpg:
     def __init__(self, raw_data: dict, site_properties: dict, source: str):
         self.raw_data = raw_data
         self.date = self._get_date()
-        self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
         self.raw_data['altitude'] = np.array(site_properties['altitude'])
         self.data = self._init_data()
         self.source = source
         self.location = site_properties['name']
+
+    def convert_time_to_fraction_hour(self):
+        self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
 
     def mask_invalid_ldr(self) -> None:
         self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
