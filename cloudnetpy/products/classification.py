@@ -1,16 +1,17 @@
 """Module for creating classification file."""
-from typing import Union
+from typing import Tuple, Optional
 import numpy as np
 from cloudnetpy import output
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
+from cloudnetpy.categorize import atmos
 
 
 def generate_classification(categorize_file: str,
                             output_file: str,
                             keep_uuid: bool = False,
-                            uuid: Union[str, None] = None) -> str:
+                            uuid: Optional[str] = None) -> str:
     """Generates Cloudnet classification product.
 
     This function reads the initial classification masks from a
@@ -19,11 +20,10 @@ def generate_classification(categorize_file: str,
     netCDF file.
 
     Args:
-        categorize_file (str): Categorize file name.
-        output_file (str): Output file name.
-        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
-            if that exists. Default is False when new UUID is generated.
-        uuid (str, optional): Set specific UUID for the file.
+        categorize_file: Categorize file name.
+        output_file: Output file name.
+        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False when new UUID is generated.
+        uuid: Set specific UUID for the file.
 
     Returns:
         str: UUID of the generated file.
@@ -33,21 +33,24 @@ def generate_classification(categorize_file: str,
         >>> generate_classification('categorize.nc', 'classification.nc')
 
     """
-    data_handler = DataSource(categorize_file)
+    product_container = DataSource(categorize_file)
     categorize_bits = CategorizeBits(categorize_file)
     classification = _get_target_classification(categorize_bits)
-    data_handler.append_data(classification, 'target_classification')
+    product_container.append_data(classification, 'target_classification')
     status = _get_detection_status(categorize_bits)
-    data_handler.append_data(status, 'detection_status')
-    date = data_handler.get_date()
+    product_container.append_data(status, 'detection_status')
+    bases, tops = _get_cloud_base_and_top_heights(classification, product_container)
+    product_container.append_data(bases, 'cloud_base_height')
+    product_container.append_data(tops, 'cloud_top_height')
+    date = product_container.get_date()
     attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
-    output.update_attributes(data_handler.data, attributes)
-    uuid = output.save_product_file('classification', data_handler, output_file, keep_uuid, uuid)
-    data_handler.close()
+    output.update_attributes(product_container.data, attributes)
+    uuid = output.save_product_file('classification', product_container, output_file, keep_uuid, uuid)
+    product_container.close()
     return uuid
 
 
-def _get_target_classification(categorize_bits):
+def _get_target_classification(categorize_bits: CategorizeBits) -> np.ndarray:
     bits = categorize_bits.category_bits
     clutter = categorize_bits.quality_bits['clutter']
     classification = np.zeros(bits['cold'].shape, dtype=int)
@@ -65,7 +68,7 @@ def _get_target_classification(categorize_bits):
     return classification
 
 
-def _get_detection_status(categorize_bits):
+def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
     bits = categorize_bits.quality_bits
     status = np.zeros(bits['radar'].shape, dtype=int)
     status[bits['radar'] & bits['lidar']] = 1
@@ -76,6 +79,22 @@ def _get_detection_status(categorize_bits):
     status[bits['clutter']] = 6
     status[bits['molecular'] & ~bits['radar']] = 7
     return status
+
+
+def _get_cloud_base_and_top_heights(classification: np.ndarray,
+                                    product_container: DataSource) -> Tuple[np.ndarray, np.ndarray]:
+    height = product_container.getvar('height')
+    cloud_mask = _find_cloud_mask(classification)
+    lowest_bases = atmos.find_lowest_cloud_bases(cloud_mask, height)
+    highest_tops = atmos.find_highest_cloud_tops(cloud_mask, height)
+    return lowest_bases, highest_tops
+
+
+def _find_cloud_mask(classification: np.ndarray) -> np.ndarray:
+    cloud_mask = np.zeros(classification.shape, dtype=int)
+    for value in [1, 3, 4, 5]:
+        cloud_mask[classification == value] = 1
+    return cloud_mask
 
 
 COMMENTS = {
@@ -125,5 +144,13 @@ CLASSIFICATION_ATTRIBUTES = {
         long_name='Radar and lidar detection status',
         comment=COMMENTS['detection_status'],
         definition=DEFINITIONS['detection_status']
-    )
+    ),
+    'cloud_top_height': MetaData(
+        long_name='Height of cloud top above mean sea level',
+        units='m',
+    ),
+    'cloud_base_height': MetaData(
+        long_name='Height of cloud base above mean sea level',
+        units='m',
+    ),
 }

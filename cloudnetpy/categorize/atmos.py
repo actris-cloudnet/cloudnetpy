@@ -386,6 +386,25 @@ def find_cloud_tops(array: np.ndarray) -> np.ndarray:
     return np.fliplr(bases_of_flipped)
 
 
+def find_lowest_cloud_bases(cloud_mask: np.ndarray, height: np.ndarray) -> ma.MaskedArray:
+    """Finds altitudes of cloud bases."""
+    cloud_heights = cloud_mask * height
+    return _find_lowest_heights(cloud_heights)
+
+
+def find_highest_cloud_tops(cloud_mask: np.ndarray, height: np.ndarray) -> ma.MaskedArray:
+    """Finds altitudes of cloud tops."""
+    cloud_heights = cloud_mask * height
+    cloud_heights_flipped = np.fliplr(cloud_heights)
+    return _find_lowest_heights(cloud_heights_flipped)
+
+
+def _find_lowest_heights(cloud_heights: np.ndarray) -> ma.MaskedArray:
+    inds = (cloud_heights != 0).argmax(axis=1)
+    heights = np.array([cloud_heights[i, ind] for i, ind in enumerate(inds)])
+    return ma.masked_equal(heights, 0.0)
+
+
 def calc_adiabatic_lwc(lwc_change_rate: np.ndarray, dheight: float) -> np.ndarray:
     """Calculates adiabatic liquid water content (g/m3).
 
