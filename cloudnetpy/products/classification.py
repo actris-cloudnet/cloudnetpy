@@ -40,8 +40,10 @@ def generate_classification(categorize_file: str,
     status = _get_detection_status(categorize_bits)
     product_container.append_data(status, 'detection_status')
     bases, tops = _get_cloud_base_and_top_heights(classification, product_container)
-    product_container.append_data(bases, 'cloud_base_height')
-    product_container.append_data(tops, 'cloud_top_height')
+    product_container.append_data(bases, 'cloud_base_height_amsl')
+    product_container.append_data(tops, 'cloud_top_height_amsl')
+    product_container.append_data(bases - product_container.altitude, 'cloud_base_height_agl')
+    product_container.append_data(tops - product_container.altitude, 'cloud_top_height_agl')
     date = product_container.get_date()
     attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
     output.update_attributes(product_container.data, attributes)
@@ -87,6 +89,7 @@ def _get_cloud_base_and_top_heights(classification: np.ndarray,
     cloud_mask = _find_cloud_mask(classification)
     lowest_bases = atmos.find_lowest_cloud_bases(cloud_mask, height)
     highest_tops = atmos.find_highest_cloud_tops(cloud_mask, height)
+    assert (highest_tops - lowest_bases >= 0).all()
     return lowest_bases, highest_tops
 
 
@@ -145,12 +148,20 @@ CLASSIFICATION_ATTRIBUTES = {
         comment=COMMENTS['detection_status'],
         definition=DEFINITIONS['detection_status']
     ),
-    'cloud_top_height': MetaData(
+    'cloud_top_height_amsl': MetaData(
         long_name='Height of cloud top above mean sea level',
         units='m',
     ),
-    'cloud_base_height': MetaData(
+    'cloud_base_height_amsl': MetaData(
         long_name='Height of cloud base above mean sea level',
+        units='m',
+    ),
+    'cloud_top_height_agl': MetaData(
+        long_name='Height of cloud top above ground level',
+        units='m',
+    ),
+    'cloud_base_height_agl': MetaData(
+        long_name='Height of cloud base above ground level',
         units='m',
     ),
 }
