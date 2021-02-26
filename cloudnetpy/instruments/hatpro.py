@@ -82,7 +82,7 @@ def _validate_date(obj, expected_date: str):
         if date == expected_date:
             inds.append(ind)
     if not inds:
-        raise ValueError('No profiles matching the expected date.')
+        raise ValueError('Warning: Ignoring a file (time stamps not what expected)')
     for key in obj.data.keys():
         obj.data[key] = obj.data[key][inds]
     return obj

@@ -142,7 +142,10 @@ class Rpg:
         self.location = site_properties['name']
 
     def convert_time_to_fraction_hour(self):
-        self.raw_data['time'] = utils.seconds2hours(self.raw_data['time'])
+        key = 'time'
+        fraction_hour = utils.seconds2hours(self.raw_data[key])
+        self.raw_data[key] = fraction_hour
+        self.data[key] = CloudnetArray(fraction_hour, key)
 
     def mask_invalid_ldr(self) -> None:
         self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
