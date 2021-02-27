@@ -21,6 +21,18 @@ def fake_mwr_file(tmpdir_factory):
     return file_name
 
 
+@pytest.fixture(scope='session')
+def bad_mwr_file(tmpdir_factory):
+    """Creates invalid mwr file for testing."""
+    file_name = tmpdir_factory.mktemp("data").join("mwr_file.nc")
+    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
+    root_grp.createDimension('time', 5)
+    var = root_grp.createVariable('xxx', 'f8', 'time')
+    var[:] = np.array([0.1, 2.5, -0.1, 0.2, 0.0])
+    root_grp.close()
+    return file_name
+
+
 def test_init_lwp_data(fake_mwr_file):
     obj = Mwr(fake_mwr_file)
     result = np.array([0.1, 2.5, 0.0, 0.2, 0.0])
@@ -40,3 +52,8 @@ def test_rebin_to_grid(fake_mwr_file):
     obj.rebin_to_grid(time_new)
     result = np.array([2.5, 0.2])
     assert_array_equal(obj.data['lwp'][:], result)
+
+
+def test_missing_variable(bad_mwr_file):
+    with pytest.raises(RuntimeError):
+        Mwr(bad_mwr_file)
