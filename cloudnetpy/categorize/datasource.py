@@ -1,6 +1,4 @@
-"""Datasource module, containing the :class:`DataSource`
-and :class:`ProfileDataSource` classes.
-"""
+"""Datasource module, containing the :class:`DataSource class.`"""
 import os
 from datetime import datetime
 from typing import Optional, Union
@@ -31,6 +29,7 @@ class DataSource:
         self.source = getattr(self.dataset, 'source', '')
         self.time = self._init_time()
         self.altitude = self._init_altitude()
+        self.height = self._init_height()
         self.data = {}
         self._is_radar = radar
 
@@ -124,6 +123,15 @@ class DataSource:
             return float(np.mean(altitude_above_sea))
         return None
 
+    def _init_height(self) -> Union[np.array, None]:
+        """Returns height array above mean sea level (m)."""
+        if 'height' in self.dataset.variables:
+            return self.km2m(self.dataset.variables['height'])
+        elif 'range' in self.dataset.variables and self.altitude is not None:
+            range_instrument = self.km2m(self.dataset.variables['range'])
+            return np.array(range_instrument + self.altitude)
+        return None
+
     def _variables_to_cloudnet_arrays(self, keys: tuple) -> None:
         """Transforms netCDF4-variables into CloudnetArrays.
 
@@ -159,26 +167,3 @@ class DataSource:
                 self.append_data(self.dataset.variables[name], key, units=units)
                 return
         raise RuntimeError('Missing variable in the input file.')
-
-
-class ProfileDataSource(DataSource):
-    """The :class:`ProfileDataSource` class, child of :class:`DataSource`.
-
-    Args:
-        full_path: Raw lidar or radar file.
-        radar: Indicates if data is from cloud radar. Default is False.
-
-    Attributes:
-        height (ndarray): Measurement height grid above mean sea level (m).
-
-    """
-    def __init__(self, full_path: str, radar: Optional[bool] = False):
-        super().__init__(full_path, radar)
-        self.height = self._get_height()
-
-    def _get_height(self) -> np.array:
-        """Returns height array above mean sea level (m)."""
-        if 'height' in self.dataset.variables:
-            return self.km2m(self.dataset.variables['height'])
-        range_instrument = self.km2m(self.dataset.variables['range'])
-        return np.array(range_instrument + self.altitude)

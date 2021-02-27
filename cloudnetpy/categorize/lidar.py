@@ -1,10 +1,10 @@
 """Lidar module, containing the :class:`Lidar` class."""
 import numpy as np
-from cloudnetpy.categorize.datasource import ProfileDataSource
+from cloudnetpy.categorize.datasource import DataSource
 
 
-class Lidar(ProfileDataSource):
-    """Lidar class, child of ProfileDataSource.
+class Lidar(DataSource):
+    """Lidar class, child of DataSource.
 
     Args:
         full_path: Cloudnet Level 1 lidar netCDF file.

@@ -6,7 +6,7 @@ from cloudnetpy.categorize import DataSource
 
 
 class NcRadar(DataSource):
-    """Class for radars providing netCDF files. Child of ProfileDataSource().
+    """Class for radars providing netCDF files. Child of DataSource().
 
     Args:
         full_path: Filename of a radar-produced netCDF file.

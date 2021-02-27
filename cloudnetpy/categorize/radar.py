@@ -4,13 +4,13 @@ from typing import Union
 import numpy as np
 import numpy.ma as ma
 from scipy import constants
-from cloudnetpy.categorize import ProfileDataSource
+from cloudnetpy.categorize import DataSource
 from cloudnetpy.categorize.classify import ClassificationResult
 from cloudnetpy import utils
 
 
-class Radar(ProfileDataSource):
-    """Radar class, child of ProfileDataSource.
+class Radar(DataSource):
+    """Radar class, child of DataSource.
 
     Args:
         full_path: Cloudnet Level 1 radar netCDF file.
