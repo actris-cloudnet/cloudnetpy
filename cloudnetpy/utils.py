@@ -1,15 +1,13 @@
 """ This module contains general helper functions. """
 import os
-from typing import Union
+from typing import Union, Optional, Tuple, Iterator
 import uuid
 import datetime
 import re
-from json import JSONDecodeError
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
-import requests
 import pytz
 
 
@@ -18,15 +16,14 @@ SECONDS_PER_HOUR = 3600
 SECONDS_PER_DAY = 86400
 
 
-def seconds2hours(time_in_seconds):
+def seconds2hours(time_in_seconds: np.ndarray) -> np.ndarray:
     """Converts seconds since some epoch to fraction hour.
 
     Args:
-        time_in_seconds (ndarray): 1-D array of seconds since some epoch
-            that starts on midnight.
+        time_in_seconds: 1-D array of seconds since some epoch that starts on midnight.
 
     Returns:
-        ndarray: Time as fraction hour.
+        Time as fraction hour.
 
     Notes:
         Excludes leap seconds.
@@ -43,7 +40,7 @@ def seconds2time(time_in_seconds: float) -> list:
     """Converts seconds since some epoch to time of day.
 
     Args:
-        time_in_seconds (float): seconds since some epoch.
+        time_in_seconds: seconds since some epoch.
 
     Returns:
         list: [hours, minutes, seconds] formatted as '05' etc.
@@ -57,15 +54,15 @@ def seconds2time(time_in_seconds: float) -> list:
     return [str(t).zfill(2) for t in time]
 
 
-def seconds2date(time_in_seconds: float, epoch=(2001, 1, 1)) -> list:
+def seconds2date(time_in_seconds: float, epoch: Optional[tuple] = (2001, 1, 1)) -> list:
     """Converts seconds since some epoch to datetime (UTC).
 
     Args:
-        time_in_seconds (float): seconds since some epoch.
-        epoch (tuple, optional): Epoch, default is (2001, 1, 1) (UTC).
+        time_in_seconds: Seconds since some epoch.
+        epoch: Epoch, default is (2001, 1, 1) (UTC).
 
     Returns:
-        list: [year, month, day, hours, minutes, seconds] formatted as '05' etc (UTC).
+        [year, month, day, hours, minutes, seconds] formatted as '05' etc (UTC).
 
     """
     epoch_in_seconds = datetime.datetime.timestamp(datetime.datetime(*epoch, tzinfo=pytz.utc))
@@ -73,18 +70,17 @@ def seconds2date(time_in_seconds: float, epoch=(2001, 1, 1)) -> list:
     return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y %m %d %H %M %S').split()
 
 
-def time_grid(time_step=30):
+def time_grid(time_step: Optional[int] = 30) -> np.ndarray:
     """Returns decimal hour array between 0 and 24.
 
     Computes fraction hour time vector 0-24 with user-given
     resolution (in seconds).
 
     Args:
-        time_step (int, optional): Time resolution in seconds, greater
-            than 1. Default is 30.
+        time_step: Time resolution in seconds, greater than 1. Default is 30.
 
     Returns:
-        ndarray: Time vector between 0 and 24.
+        Time vector between 0 and 24.
 
     Raises:
         ValueError: Bad resolution as input.
@@ -96,11 +92,11 @@ def time_grid(time_step=30):
     return np.arange(half_step, 24+half_step, half_step*2)
 
 
-def binvec(x):
+def binvec(x: Union[np.ndarray, list]) -> np.ndarray:
     """Converts 1-D center points to bins with even spacing.
 
     Args:
-        x (array_like): 1-D array of N real values.
+        x: 1-D array of N real values.
 
     Returns:
         ndarray: N + 1 edge values.
@@ -115,79 +111,84 @@ def binvec(x):
     return np.linspace(edge1, edge2, len(x)+1)
 
 
-def rebin_2d(x_in, data, x_new, statistic='mean', n_min=1):
+def rebin_2d(x_in: np.ndarray,
+             array: ma.MaskedArray,
+             x_new: np.ndarray,
+             statistic: Optional[str] = 'mean',
+             n_min: Optional[int] = 1) -> ma.MaskedArray:
     """Rebins 2-D data in one dimension.
 
     Args:
-        x_in (ndarray): 1-D array with shape (n,).
-        data (MaskedArray): 2-D input data with shape (n, m).
-        x_new (ndarray): 1-D target vector (center points)
-            with shape (N,).
-        statistic (str, optional): Statistic to be calculated. Possible
-            statistics are 'mean', 'std'. Default is 'mean'.
-        n_min (int): Minimum number of points to have good statistics in a bin.
-            Default is 1.
+        x_in: 1-D array with shape (n,).
+        array: 2-D input data with shape (n, m).
+        x_new: 1-D target vector (center points) with shape (N,).
+        statistic: Statistic to be calculated. Possible statistics are 'mean', 'std'.
+            Default is 'mean'.
+        n_min: Minimum number of points to have good statistics in a bin. Default is 1.
 
     Returns:
-        MaskedArray: Rebinned data with shape (N, m).
+        Rebinned data with shape (N, m).
 
-    Notes: 0-values are masked in the returned array.
+    Notes:
+        0-values are masked in the returned array.
 
     """
     edges = binvec(x_new)
-    datai = np.zeros((len(x_new), data.shape[1]))
-    data = ma.masked_invalid(data)  # data may contain nan-values
-    for ind, values in enumerate(data.T):
+    result = np.zeros((len(x_new), array.shape[1]))
+    array_screened = ma.masked_invalid(array, copy=True)  # data may contain nan-values
+    for ind, values in enumerate(array_screened.T):
         mask = ~values.mask
         if ma.any(values[mask]):
-            datai[:, ind], _, bin_no = stats.binned_statistic(x_in[mask],
-                                                              values[mask],
-                                                              statistic=statistic,
-                                                              bins=edges)
+            result[:, ind], _, bin_no = stats.binned_statistic(x_in[mask],
+                                                               values[mask],
+                                                               statistic=statistic,
+                                                               bins=edges)
             if n_min > 1:
                 unique, counts = np.unique(bin_no, return_counts=True)
-                datai[unique[counts < n_min]-1, ind] = 0
+                result[unique[counts < n_min]-1, ind] = 0
 
-    datai[~np.isfinite(datai)] = 0
-    return ma.masked_equal(datai, 0)
+    result[~np.isfinite(result)] = 0
+    return ma.masked_equal(result, 0)
 
 
-def rebin_1d(x_in, data, x_new, statistic='mean'):
+def rebin_1d(x_in: np.ndarray,
+             array: ma.MaskedArray,
+             x_new: np.ndarray,
+             statistic: Optional[str] = 'mean') -> ma.MaskedArray:
     """Rebins 1D array.
 
     Args:
-        x_in (ndarray): 1-D array with shape (n,).
-        data (MaskedArray): 1-D input data with shape (m,).
-        x_new (ndarray): 1-D target vector (center points) with shape (N,).
-        statistic (str, optional): Statistic to be calculated. Possible
-            statistics are 'mean', 'std'. Default is 'mean'.
+        x_in: 1-D array with shape (n,).
+        array: 1-D input data with shape (m,).
+        x_new: 1-D target vector (center points) with shape (N,).
+        statistic: Statistic to be calculated. Possible statistics are 'mean', 'std'.
+            Default is 'mean'.
 
     Returns:
-        MaskedArray: Rebinned data with shape (N,).
+        Rebinned data with shape (N,).
 
     """
     edges = binvec(x_new)
-    datai = np.zeros(len(x_new))
-    data = ma.masked_invalid(data)  # data may contain nan-values
-    mask = ~data.mask  # pylint: disable=E1101
-    if ma.any(data[mask]):
-        datai, _, _ = stats.binned_statistic(x_in[mask],
-                                             data[mask],
-                                             statistic=statistic,
-                                             bins=edges)
-    datai[~np.isfinite(datai)] = 0
-    return ma.masked_equal(datai, 0)
+    result = np.zeros(len(x_new))
+    array_screened = ma.masked_invalid(array, copy=True)  # data may contain nan-values
+    mask = ~array_screened.mask  # pylint: disable=E1101
+    if ma.any(array_screened[mask]):
+        result, _, _ = stats.binned_statistic(x_in[mask],
+                                              array_screened[mask],
+                                              statistic=statistic,
+                                              bins=edges)
+    result[~np.isfinite(result)] = 0
+    return ma.masked_equal(result, 0)
 
 
-def filter_isolated_pixels(array):
+def filter_isolated_pixels(array: np.ndarray) -> np.ndarray:
     """From a 2D boolean array, remove completely isolated single cells.
 
     Args:
-        array (ndarray): 2-D boolean array (numpy array or list) containing
-             isolated values.
+        array: 2-D boolean array containing isolated values.
 
     Returns:
-        ndarray: Cleaned array.
+        Cleaned array.
 
     Examples:
         >>> filter_isolated_pixels([[0, 0, 0], [0, 1, 0], [0, 0, 0]])
@@ -195,32 +196,29 @@ def filter_isolated_pixels(array):
                    [0, 0, 0],
                    [0, 0, 0]])
 
-
     """
     filtered_array = np.copy(array)
-    id_regions, num_ids = ndimage.label(filtered_array,
-                                        structure=np.ones((3, 3)))
+    id_regions, num_ids = ndimage.label(filtered_array, structure=np.ones((3, 3)))
     id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids + 1))).astype(int)
     area_mask = id_sizes == 1
     filtered_array[area_mask[id_regions]] = 0
     return filtered_array
 
 
-def filter_x_pixels(array):
+def filter_x_pixels(array: np.ndarray) -> np.ndarray:
     """From a 2D boolean array, remove cells isolated in x-direction.
 
     Args:
-        array (ndarray): 2-D boolean array containing isolated pixels in x-direction.
+        array: 2-D boolean array containing isolated pixels in x-direction.
 
     Returns:
-        ndarray: Cleaned array.
+        Cleaned array.
 
     Examples:
         >>> filter_x_pixels([[1, 0, 0], [0, 1, 0], [0, 1, 1]])
             array([[0, 0, 0],
                    [0, 1, 0],
                    [0, 1, 0]])
-
 
     """
     filtered_array = np.copy(array)
@@ -234,15 +232,15 @@ def filter_x_pixels(array):
     return filtered_array
 
 
-def isbit(data: np.ndarray, nth_bit: int) -> np.ndarray:
-    """Tests if nth bit (0,1,2..) is on for a number.
+def isbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
+    """Tests if nth bit (0,1,2..) is set.
 
     Args:
-        data: Integer data.
+        array: Integer array.
         nth_bit: Investigated bit.
 
     Returns:
-        True if set, otherwise False.
+        Boolean array denoting values where nth_bit is set.
 
     Raises:
         ValueError: negative bit as input.
@@ -258,20 +256,20 @@ def isbit(data: np.ndarray, nth_bit: int) -> np.ndarray:
 
     """
     if nth_bit < 0:
-        raise ValueError('Negative bit number.')
+        raise ValueError('Negative bit number')
     mask = 1 << nth_bit
-    return data & mask > 0
+    return array & mask > 0
 
 
-def setbit(integer, nth_bit):
-    """Sets nth bit (0, 1, 2..) on input number.
+def setbit(array: np.ndarray, nth_bit: int) -> int:
+    """Sets nth bit (0, 1, 2..) on number.
 
     Args:
-        integer (int): A number.
-        nth_bit (int): Bit to be set.
+        array: Integer array.
+        nth_bit: Bit to be set.
 
     Returns:
-        int: Integer where nth bit is set.
+        Integer where nth bit is set.
 
     Raises:
         ValueError: negative bit as input.
@@ -287,44 +285,49 @@ def setbit(integer, nth_bit):
 
     """
     if nth_bit < 0:
-        raise ValueError('Negative bit number.')
+        raise ValueError('Negative bit number')
     mask = 1 << nth_bit
-    integer |= mask
-    return integer
+    array |= mask
+    return array
 
 
-def interpolate_2d(x, y, z, x_new, y_new):
+def interpolate_2d(x: np.ndarray,
+                   y: np.ndarray,
+                   z: np.ndarray,
+                   x_new: np.ndarray,
+                   y_new: np.ndarray) -> np.ndarray:
     """Linear interpolation of gridded 2d data.
 
     Args:
-        x (ndarray): 1-D array.
-        y (ndarray): 1-D array.
-        z (ndarray): 2-D array at points (x, y).
-        x_new (ndarray): 1-D array.
-        y_new (ndarray): 1-D array.
+        x: 1-D array.
+        y: 1-D array.
+        z: 2-D array at points (x, y).
+        x_new: 1-D array.
+        y_new: 1-D array.
 
     Returns:
-        ndarray: Interpolated data.
+        Interpolated data.
 
     Notes:
-        Does not work with nans. Ignores mask of masked data.
-        Does not extrapolate.
+        Does not work with nans. Ignores mask of masked data. Does not extrapolate.
 
     """
     fun = RectBivariateSpline(x, y, z, kx=1, ky=1)
     return fun(x_new, y_new)
 
 
-def interpolate_2d_masked(array, ax_values, ax_values_new):
+def interpolate_2d_masked(array: ma.MaskedArray,
+                          ax_values: Tuple[np.ndarray, np.ndarray],
+                          ax_values_new: Tuple[np.ndarray, np.ndarray]) -> ma.MaskedArray:
     """Interpolates 2D array preserving the mask.
 
     Args:
-        array (ndarray): 2D masked array.
-        ax_values (tuple): 2-element tuple containing x and y values of the input array.
-        ax_values_new (tuple): 2-element tuple containing new x and y values.
+        array: 2D masked array.
+        ax_values: 2-element tuple containing x and y values of the input array.
+        ax_values_new: 2-element tuple containing new x and y values.
 
     Returns:
-        ndarray: Interpolated 2D masked array.
+        Interpolated 2D masked array.
 
     Notes:
         Uses linear interpolation.
@@ -338,35 +341,34 @@ def interpolate_2d_masked(array, ax_values, ax_values_new):
     return _mask_invalid_values(data_interp)
 
 
-def calc_relative_error(reference, array):
+def calc_relative_error(reference: np.ndarray, array: np.ndarray) -> np.ndarray:
     """Calculates relative error (%)."""
     return ((array - reference) / reference) * 100
 
 
-def db2lin(x, scale=10):
+def db2lin(array: np.ndarray, scale: Optional[int] = 10) -> np.ndarray:
     """dB to linear conversion."""
-    return 10**(x/scale)
+    return 10**(array/scale)
 
 
-def lin2db(x, scale=10):
+def lin2db(array: np.ndarray, scale: Optional[int] = 10) -> np.ndarray:
     """Linear to dB conversion."""
-    return scale*ma.log10(x)
+    return scale*ma.log10(array)
 
 
-def mdiff(x):
+def mdiff(array: np.ndarray) -> float:
     """Returns median difference of 1-D array."""
-    return ma.median(ma.diff(x))
+    return ma.median(ma.diff(array))
 
 
-def l2norm(*args):
+def l2norm(*args: any) -> ma.MaskedArray:
     """Returns l2 norm.
 
     Args:
-       *args: Variable number of data (*array_like*)
-           with the same shape.
+       *args: Variable number of data (*array_like*) with the same shape.
 
     Returns:
-        MaskedArray: The l2 norm.
+        The l2 norm.
 
     """
     ss = 0
@@ -375,7 +377,7 @@ def l2norm(*args):
     return ma.sqrt(ss)
 
 
-def l2norm_weighted(values, overall_scale, term_weights):
+def l2norm_weighted(values: tuple, overall_scale: float, term_weights: tuple) -> float:
     """Calculates scaled and weighted Euclidean distance.
 
     Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
@@ -383,16 +385,15 @@ def l2norm_weighted(values, overall_scale, term_weights):
     for the terms.
 
     Args:
-        values (tuple): Tuple containing the values.
-        overall_scale (float): Scale factor for the calculated
-            Euclidean distance.
-        term_weights (tuple): Weights for the terms. Must be single
-            float or a list of numbers (one per term).
+        values: Tuple containing the values.
+        overall_scale: Scale factor for the calculated Euclidean distance.
+        term_weights: Weights for the terms. Must be single float or a list of numbers
+            (one per term).
 
     Returns:
-        float: Scaled and weighted Euclidean distance.
+        Scaled and weighted Euclidean distance.
 
-    TODO: Probably better use masked arrays instead of tuples.
+    TODO: Use masked arrays instead of tuples.
 
     """
     generic_values = ma.array(values, dtype=object)
@@ -400,16 +401,15 @@ def l2norm_weighted(values, overall_scale, term_weights):
     return overall_scale * l2norm(*weighted_values)
 
 
-def cumsumr(x, axis=0):
+def cumsumr(array: np.ndarray, axis: Optional[int] = 0) -> np.ndarray:
     """Finds cumulative sum that resets on 0.
 
     Args:
-        x (ndarray): Input array.
-        axis (int, optional): Axis where the sum is calculated.
-            Default is 0.
+        array: Input array.
+        axis: Axis where the sum is calculated. Default is 0.
 
     Returns:
-        ndarray: Cumulative sum, restarted at 0.
+        Cumulative sum, restarted at 0.
 
     Examples:
         >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])
@@ -417,16 +417,16 @@ def cumsumr(x, axis=0):
             [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]
 
     """
-    cums = x.cumsum(axis=axis)
-    return cums - np.maximum.accumulate(cums*(x == 0), axis=axis)  # pylint: disable=E1101
+    cums = array.cumsum(axis=axis)
+    return cums - np.maximum.accumulate(cums * (array == 0), axis=axis)  # pylint: disable=E1101
 
 
-def ffill(arr, value=0):
-    """Forward fills a numpy array.
+def ffill(array: np.ndarray, value: Optional[int] = 0) -> np.ndarray:
+    """Forward fills an array.
 
     Args:
-        arr (ndarray): 1-D or 2-D array.
-        value (int): Value to be filled. Default is 0.
+        array: 1-D or 2-D array.
+        value: Value to be filled. Default is 0.
 
     Returns:
         ndarray: Forward-filled array.
@@ -440,25 +440,27 @@ def ffill(arr, value=0):
         Works only in axis=1 direction.
 
     """
-    ndims = len(arr.shape)
-    ran = np.arange(arr.shape[ndims-1])
-    idx = np.where((arr != value), ran, 0)
+    ndims = len(array.shape)
+    ran = np.arange(array.shape[ndims - 1])
+    idx = np.where((array != value), ran, 0)
     idx = np.maximum.accumulate(idx, axis=ndims-1)  # pylint: disable=E1101
     if ndims == 2:
-        return arr[np.arange(idx.shape[0])[:, None], idx]
-    return arr[idx]
+        return array[np.arange(idx.shape[0])[:, None], idx]
+    return array[idx]
 
 
-def init(nvars, shape, dtype=float, masked=True):
+def init(n_vars: int,
+         shape: tuple,
+         dtype: Optional[type] = float,
+         masked: Optional[bool] = True) -> Iterator[Union[np.ndarray, ma.MaskedArray]]:
     """Initializes several numpy arrays.
 
     Args:
-        nvars (int): Number of arrays to be generated.
-        shape (tuple): Shape of the arrays, e.g. (2, 3).
-        dtype (data-type, optional): The desired data-type
-            for the arrays, e.g., int. Default is float.
-        masked (bool): If True, generated arrays are masked
-            arrays, else ordinary numpy arrays. Default is True.
+        n_vars: Number of arrays to be generated.
+        shape: Shape of the arrays, e.g. (2, 3).
+        dtype: The desired data-type for the arrays, e.g., int. Default is float.
+        masked: If True, generated arrays are masked arrays, else ordinary numpy arrays.
+            Default is True.
 
     Yields:
         Iterator containing the empty arrays.
@@ -474,26 +476,23 @@ def init(nvars, shape, dtype=float, masked=True):
 
     """
     fun = ma.zeros if masked else np.zeros
-    for _ in range(nvars):
+    for _ in range(n_vars):
         yield fun(shape, dtype=dtype)
 
 
-def n_elements(x, dist, var=None):
+def n_elements(array: np.ndarray, dist: float, var: Optional[str] = None) -> int:
     """Returns the number of elements that cover certain distance.
 
     Args:
-        x (ndarray): Input array with arbitrary units
-            or time in fraction hour. *x* should be
-            evenly spaced or at least close to.
-        dist (float): Distance to be covered. If x is fraction time,
-            *dist* is in minutes. Otherwise *x* and *dist* should have
-            the same units.
-        var (str, optional): 'time' or None. If None, inputs
-            have the same units. If 'time', input is fraction hour
-            and distance in minutes. Default is None.
+        array: Input array with arbitrary units or time in fraction hour. *x* should be evenly
+            spaced or at least close to.
+        dist: Distance to be covered. If x is fraction time, *dist* is in minutes. Otherwise *x*
+            and *dist* should have the same units.
+        var: If 'time', input is fraction hour and distance in minutes, else inputs have the same
+            units. Default is None (same units).
 
     Returns:
-        int: Number of elements in the input array that cover *dist*.
+        Number of elements in the input array that cover *dist*.
 
     Examples:
         >>> x = np.array([2, 4, 6, 8, 10])
@@ -514,13 +513,13 @@ def n_elements(x, dist, var=None):
             10
 
     """
-    n = dist/mdiff(x)
+    n = dist/mdiff(array)
     if var == 'time':
         n = n/60
     return int(np.round(n))
 
 
-def isscalar(array):
+def isscalar(array: any) -> bool:
     """Tests if input is scalar.
 
     By "scalar" we mean that array has a single value.
@@ -542,104 +541,80 @@ def isscalar(array):
     return False
 
 
-def get_time():
+def get_time() -> str:
     """Returns current UTC-time."""
     return datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
 
 
-def date_range(start_date, end_date):
-    """Return range between two dates (datetimes)."""
+def date_range(start_date: datetime.date,
+               end_date: datetime.date) -> Iterator[datetime.date]:
+    """Returns range between two dates (datetimes)."""
     for n in range(int((end_date - start_date).days)):
         yield start_date + datetime.timedelta(n)
 
 
-def get_uuid():
+def get_uuid() -> str:
     """Returns unique identifier."""
     return uuid.uuid4().hex
 
 
-def get_wl_band(radar_frequency):
+def get_wl_band(radar_frequency: Union[float, int]) -> int:
     """Returns integer corresponding to radar frequency.
 
     Args:
-        radar_frequency (float): Radar frequency (GHz).
+        radar_frequency: Radar frequency (GHz).
 
     Returns:
-        int: 0=35GHz radar, 1=94Ghz radar.
+        0 = 35GHz radar, 1 = 94Ghz radar.
 
     """
     return 0 if (30 < radar_frequency < 40) else 1
 
 
-def transpose(x):
+def transpose(data: np.ndarray) -> np.ndarray:
     """Transposes numpy array of (n, ) to (n, 1)."""
-    return x[:, np.newaxis]
+    if data.ndim != 1 or len(data) <= 1:
+        raise ValueError('Invalid input array shape')
+    return data[:, np.newaxis]
 
 
-def del_dict_keys(dict_in, keys):
-    """Removes multiple keys from dictionary.
+def del_dict_keys(data: dict, keys: Union[tuple, list]) -> dict:
+    """Deletes multiple keys from dictionary.
 
     Args:
-        dict_in (dict): A dictionary.
-        keys (list / tuple): list of keys to be deleted.
+        data: A dictionary.
+        keys: Keys to be deleted.
 
     Returns:
-        dict: Dictionary without the deleted keys.
+        Dictionary without the deleted keys.
 
     """
-    temp_dict = dict_in.copy()
+    temp_dict = data.copy()
     for key in keys:
-        if key in dict_in:
+        if key in data:
             del temp_dict[key]
     return temp_dict
 
 
-def get_site_information(site, *args):
-    """Reads site information from Cloudnet http API.
-
-    Args:
-        site (str): Site identifier, e.g. 'mace-head' or 'lindenberg'.
-        args: Variable number of field names to be queried.
-            Possible field names are 'latitude', 'longitude', 'altitude'
-            and 'site_name'.
-
-    Returns:
-        list: List of return values as floats.
-
-    Examples:
-        >>> get_site_information('mace-head', 'latitude', 'longitude')
-
-    """
-    fields = ','.join(args)
-    query = f"http://devcloudnet.fmi.fi/api/sites/?site_code={site}&fields={fields}"
-    try:
-        result = [*requests.get(query).json()[0]['fields'].values()]
-        result = [float(x) for x in result]
-        if len(result) == 1:
-            result = result[0]
-    except JSONDecodeError:
-        result = [0]*len(args)
-    return result
-
-
-def array_to_probability(arr_in, loc, scale, invert=False):
+def array_to_probability(array: ma.MaskedArray,
+                         loc: float,
+                         scale: float,
+                         invert: Optional[bool] = False) -> np.ndarray:
     """Converts continuous variable into 0-1 probability.
 
     Args:
-        arr_in (MaskedArray): Masked numpy array.
-        loc (float): Center of the distribution. Values smaller than this
-            will have small probability. Values greater than this will have
-            large probability.
-        scale (float): Width of the distribution, i.e., how fast the probability
-            drops or increases from the peak.
-        invert (bool, optional): If True, large values have small
-            probability and vice versa. Default is False.
+        array: Masked numpy array.
+        loc: Center of the distribution. Values smaller than this will have small probability.
+            Values greater than this will have large probability.
+        scale: Width of the distribution, i.e., how fast the probability drops or increases from
+            the peak.
+        invert: If True, large values have small probability and vice versa. Default is False.
 
     Returns:
-        ndarray: Probability.
+        Probability with the same shape as the input data.
 
     """
-    arr = ma.copy(arr_in)
+    arr = ma.copy(array)
     prob = np.zeros(arr.shape)
     ind = ~arr.mask
     if invert:
@@ -654,15 +629,19 @@ def range_to_height(range_los: np.ndarray, tilt_angle: float) -> np.ndarray:
 
     Args:
         range_los: Distances towards the line of sign from the instrument.
-        tilt_angle: Angle in degrees from the zenith.
+        tilt_angle: Angle in degrees from the zenith (0 = zenith).
 
     Returns:
-        ndarray: Altitudes of the LOS points.
+        Altitudes of the LOS points.
+
+    Notes:
+        Uses plane parallel Earth approximation.
+
     """
     return range_los * np.cos(np.deg2rad(tilt_angle))
 
 
-def find_first_empty_line(file_name):
+def find_first_empty_line(file_name: str) -> int:
     """Finds first text file line that is empty."""
     line_number = 1
     with open(file_name) as file:
@@ -673,25 +652,25 @@ def find_first_empty_line(file_name):
     return line_number
 
 
-def is_empty_line(line):
+def is_empty_line(line: str) -> bool:
     """Tests if a line (of a text file) is empty."""
     if line in ('\n', '\r\n'):
         return True
     return False
 
 
-def is_timestamp(string):
+def is_timestamp(timestamp: str) -> bool:
     """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss"""
     reg_exp = re.compile(r'-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
-    if reg_exp.match(string) is not None:
+    if reg_exp.match(timestamp) is not None:
         return True
     return False
 
 
-def get_sorted_filenames(path_to_files: str, extension: str) -> list:
+def get_sorted_filenames(file_path: str, extension: str) -> list:
     """Returns full paths of files with some extension, sorted by filename."""
-    all_files = os.listdir(path_to_files)
-    files = ['/'.join((path_to_files, file)) for file in all_files if file.endswith(extension)]
+    all_files = os.listdir(file_path)
+    files = ['/'.join((file_path, file)) for file in all_files if file.endswith(extension)]
     files.sort()
     return files
 

@@ -36,6 +36,7 @@ class NcRadar(DataSource):
             self.data[name].lin2db()
 
     def add_meta(self) -> None:
+        """Adds metadata."""
         for key in ('time', 'range', 'radar_frequency'):
             self.append_data(getattr(self, key), key)
         possible_nyquist_names = ('ambiguous_velocity', 'NyquistVelocity')

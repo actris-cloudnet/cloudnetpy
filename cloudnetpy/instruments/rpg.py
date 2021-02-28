@@ -1,10 +1,10 @@
 """This module contains RPG Cloud Radar related functions."""
-from collections import namedtuple
-from typing import Union, Tuple, Optional
+from typing import Union, Tuple, Optional, List
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
+from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
 
 
 def rpg2nc(path_to_l1_files: str,
@@ -48,8 +48,8 @@ def rpg2nc(path_to_l1_files: str,
 
     """
     l1_files = utils.get_sorted_filenames(path_to_l1_files, '.LV1')
-    rpg_objects, valid_files = get_rpg_objects(l1_files, date)
-    one_day_of_data = create_one_day_data_record(rpg_objects)
+    fmcw94_objects, valid_files = _get_fmcw94_objects(l1_files, date)
+    one_day_of_data = create_one_day_data_record(fmcw94_objects)
     if not valid_files:
         return '', []
     rpg = Rpg(one_day_of_data, site_meta, 'RPG-FMCW-94')
@@ -61,44 +61,20 @@ def rpg2nc(path_to_l1_files: str,
     return save_rpg(rpg, output_file, valid_files, keep_uuid, uuid)
 
 
-def create_one_day_data_record(rpg_objects: list) -> dict:
+def create_one_day_data_record(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -> dict:
     """Concatenates all RPG data from one day."""
-    rpg_raw_data, rpg_header = stack_rpg_data(rpg_objects)
+    rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
     if len(rpg_objects) > 1:
         try:
-            rpg_header = reduce_header(rpg_header)
+            rpg_header = _reduce_header(rpg_header)
         except AssertionError as error:
             raise RuntimeError(error)
-    rpg_raw_data = mask_invalid_data(rpg_raw_data)
+    rpg_raw_data = _mask_invalid_data(rpg_raw_data)
     return {**rpg_header, **rpg_raw_data}
 
 
-def get_rpg_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
-    """Creates a list of Rpg() objects from the file names."""
-    objects = []
-    valid_files = []
-    for file in files:
-        try:
-            obj = RpgBin(file)
-            if expected_date is not None:
-                _validate_date(obj, expected_date)
-        except (TypeError, ValueError) as err:
-            print(err)
-            continue
-        objects.append(obj)
-        valid_files.append(file)
-    return objects, valid_files
-
-
-def _validate_date(obj, expected_date: Union[str, None]) -> None:
-    for t in obj.data['time'][:]:
-        date_str = '-'.join(utils.seconds2date(t)[:3])
-        if date_str != expected_date:
-            raise ValueError('Warning: Ignoring a file (time stamps not what expected)')
-
-
-def stack_rpg_data(rpg_objects):
-    """Combines data from hourly Rpg() objects.
+def _stack_rpg_data(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -> Tuple[dict, dict]:
+    """Combines data from hourly RPG objects.
 
     Notes:
         Ignores variable names starting with an underscore.
@@ -115,20 +91,46 @@ def stack_rpg_data(rpg_objects):
     return data, header
 
 
-def reduce_header(header_in: dict) -> dict:
+def _reduce_header(header: dict) -> dict:
     """Removes duplicate header data."""
-    header = header_in.copy()
+    header_out = header.copy()
     for name in header:
         first_row = header[name][0]
         assert np.isclose(header[name], first_row, rtol=1e-3).all(), f"Inconsistent header: {name}"
-        header[name] = first_row
-    return header
+        header_out[name] = first_row
+    return header_out
 
 
-def mask_invalid_data(rpg_data):
-    for name in rpg_data:
-        rpg_data[name] = ma.masked_equal(rpg_data[name], 0)
-    return rpg_data
+def _mask_invalid_data(data: dict) -> dict:
+    """Masks zero values from data."""
+    data_out = data.copy()
+    for name in data:
+        data_out[name] = ma.masked_equal(data[name], 0)
+    return data_out
+
+
+def _get_fmcw94_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
+    """Creates a list of Rpg() objects from the file names."""
+    objects = []
+    valid_files = []
+    for file in files:
+        try:
+            obj = Fmcw94Bin(file)
+            if expected_date is not None:
+                _validate_date(obj, expected_date)
+        except (TypeError, ValueError) as err:
+            print(err)
+            continue
+        objects.append(obj)
+        valid_files.append(file)
+    return objects, valid_files
+
+
+def _validate_date(obj, expected_date: str) -> None:
+    for t in obj.data['time'][:]:
+        date_str = '-'.join(utils.seconds2date(t)[:3])
+        if date_str != expected_date:
+            raise ValueError('Warning: Ignoring a file (time stamps not what expected)')
 
 
 class Rpg:
@@ -175,7 +177,7 @@ def save_rpg(rpg: Rpg,
              output_file: str,
              valid_files: list,
              keep_uuid: bool,
-             uuid: Union[str, None] = None) -> Tuple[str, list]:
+             uuid: Union[str, None]) -> Tuple[str, list]:
     """Saves the RPG radar / mwr file."""
 
     dims = {'time': len(rpg.data['time'][:])}
@@ -198,204 +200,6 @@ def save_rpg(rpg: Rpg,
     output.add_references(rootgrp)
     rootgrp.close()
     return file_uuid, valid_files
-
-
-class RpgBin:
-    """RPG Cloud Radar Level 1 data reader."""
-    def __init__(self, filename):
-        self.filename = filename
-        self._file_position = 0
-        self.header = self.read_rpg_header()
-        self.data = self.read_rpg_data()
-
-    def read_rpg_header(self):
-        """Reads the header or rpg binary file."""
-
-        def append(names, dtype=np.int32, n_values=1):
-            """Updates header dictionary."""
-            for name in names:
-                header[name] = np.fromfile(file, dtype, int(n_values))
-
-        header = {}
-        file = open(self.filename, 'rb')
-        append(('file_code',
-                '_header_length'), np.int32)
-        append(('_start_time',
-                '_stop_time'), np.uint32)
-        append(('program_number',))
-        append(('model_number',))  # 0 = single polarization, 1 = dual pol.
-        header['_program_name'] = self.read_string(file)
-        header['_customer_name'] = self.read_string(file)
-        append(('radar_frequency',
-                'antenna_separation',
-                'antenna_diameter',
-                'antenna_gain',  # linear
-                'half_power_beam_width'), np.float32)
-        append(('dual_polarization',), np.int8)  # 0 = single pol, 1 = LDR, 2 = STSR
-        append(('sample_duration',), np.float32)
-        append(('latitude',
-                'longitude'), np.float32)
-        append(('calibration_interval',
-                '_number_of_range_gates',
-                '_number_of_temperature_levels',
-                '_number_of_humidity_levels',
-                '_number_of_chirp_sequences'))
-        append(('range',), np.float32, int(header['_number_of_range_gates']))
-        append(('_temperature_levels',), np.float32,
-               int(header['_number_of_temperature_levels']))
-        append(('_humidity_levels',), np.float32,
-               int(header['_number_of_humidity_levels']))
-        append(('number_of_spectral_samples',
-                'chirp_start_indices',
-                'number_of_averaged_chirps'),
-               n_values=int(header['_number_of_chirp_sequences']))
-        append(('integration_time',
-                'range_resolution',
-                'nyquist_velocity'), np.float32,
-               int(header['_number_of_chirp_sequences']))
-        append(('_is_power_levelling',
-                '_is_spike_filter',
-                '_is_phase_correction',
-                '_is_relative_power_correction'), np.int8)
-        append(('FFT_window',), np.int8)  # 0=square, 1=parzen, 2=blackman, 3=welch, 4=slepian2, 5=slepian3
-        append(('input_voltage_range',))
-        append(('noise_threshold',), np.float32)
-        # Fix for Level 1 version 4 files:
-        if int(header['file_code']) >= 889348:
-            _ = np.fromfile(file, np.int32, 25)
-            _ = np.fromfile(file, np.uint32, 10000)
-        self._file_position = file.tell()
-        file.close()
-        return header
-
-    @staticmethod
-    def read_string(file_id):
-        """Read characters from binary data until whitespace."""
-        str_out = ''
-        while True:
-            c = np.fromfile(file_id, np.int8, 1)
-            if len(c) == 0 or c[0] == 0:
-                break
-            str_out += chr(c[0])
-        return str_out
-
-    def read_rpg_data(self):
-        """Reads the actual data from rpg binary file."""
-        Dimensions = namedtuple('Dimensions', ['n_samples',
-                                               'n_gates',
-                                               'n_layers_t',
-                                               'n_layers_h'])
-
-        def _create_dimensions():
-            """Returns possible lengths of the data arrays."""
-            n_samples = np.fromfile(file, np.int32, 1)
-            return Dimensions(int(n_samples),
-                              int(self.header['_number_of_range_gates']),
-                              int(self.header['_number_of_temperature_levels']),
-                              int(self.header['_number_of_humidity_levels']))
-
-        def _create_variables():
-            """Initializes dictionaries for data arrays."""
-            vrs = {'sample_length': np.zeros(dims.n_samples, int),
-                   'time': np.zeros(dims.n_samples, int),
-                   'time_ms': np.zeros(dims.n_samples, int),
-                   'quality_flag': np.zeros(dims.n_samples, int)}
-
-            block1_vars = dict.fromkeys((
-                'rain_rate',
-                'relative_humidity',
-                'temperature',
-                'pressure',
-                'wind_speed',
-                'wind_direction',
-                'voltage',
-                'brightness_temperature',
-                'lwp',
-                'if_power',
-                'elevation',
-                'azimuth',
-                'status_flag',
-                'transmitted_power',
-                'transmitter_temperature',
-                'receiver_temperature',
-                'pc_temperature'))
-
-            block2_vars = dict.fromkeys((  # vertical polarization
-                'Ze',
-                'v',
-                'width',
-                'skewness',
-                '_kurtosis'))
-
-            if self.header['dual_polarization'] == 1:
-                block2_vars.update(dict.fromkeys((
-                    'ldr',
-                    'correlation_coefficient',
-                    'spectral_differential_phase')))
-            elif self.header['dual_polarization'] == 2:
-                block2_vars.update(dict.fromkeys((
-                    'Zdr'
-                    'correlation_coefficient'
-                    'spectral_differential_phase'
-                    '_',
-                    'spectral_slanted_ldr',
-                    'spectral_slanted_correlation_coefficient',
-                    'specific_differential_phase_shift',
-                    'differential_attenuation')))
-            return vrs, block1_vars, block2_vars
-
-        def _add_sensitivities():
-            ind0 = len(block1) + n_dummy
-            ind1 = ind0 + dims.n_gates
-            block1['_sensitivity_limit_v'] = float_block1[:, ind0:ind1]
-            if self.header['dual_polarization']:
-                block1['_sensitivity_limit_h'] = float_block1[:, ind1:]
-
-        def _get_length_of_dummy_data():
-            return 3 + dims.n_layers_t + 2*dims.n_layers_h
-
-        def _get_length_of_sensitivity_data():
-            if self.header['dual_polarization']:
-                return 2*dims.n_gates
-            return dims.n_gates
-
-        def _get_float_block_lengths():
-            block_one_length = len(block1) + n_dummy + n_sens
-            block_two_length = len(block2)
-            return block_one_length, block_two_length
-
-        def _init_float_blocks():
-            block_one = np.zeros((dims.n_samples, n_floats1))
-            block_two = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
-            return block_one, block_two
-
-        file = open(self.filename, 'rb')
-        file.seek(self._file_position)
-        dims = _create_dimensions()
-        aux, block1, block2 = _create_variables()
-        n_dummy = _get_length_of_dummy_data()
-        n_sens = _get_length_of_sensitivity_data()
-        n_floats1, n_floats2 = _get_float_block_lengths()
-        float_block1, float_block2 = _init_float_blocks()
-
-        for sample in range(dims.n_samples):
-            aux['sample_length'][sample] = np.fromfile(file, np.int32, 1)
-            aux['time'][sample] = np.fromfile(file, np.uint32, 1)
-            aux['time_ms'][sample] = np.fromfile(file, np.int32, 1)
-            aux['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
-            float_block1[sample, :] = np.fromfile(file, np.float32, n_floats1)
-            is_data = np.fromfile(file, np.int8, dims.n_gates)
-            is_data_ind = np.where(is_data)[0]
-            n_valid = len(is_data_ind)
-            values = np.fromfile(file, np.float32, n_floats2*n_valid)
-            float_block2[sample, is_data_ind, :] = values.reshape(n_valid, n_floats2)
-        file.close()
-        for n, name in enumerate(block1):
-            block1[name] = float_block1[:, n]
-        _add_sensitivities()
-        for n, name in enumerate(block2):
-            block2[name] = float_block2[:, :, n]
-        return {**aux, **block1, **block2}
 
 
 DEFINITIONS = {

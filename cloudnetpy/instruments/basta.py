@@ -9,7 +9,7 @@ from cloudnetpy.metadata import MetaData
 def basta2nc(basta_file: str,
              output_file: str,
              site_meta: dict,
-             keep_uuid: bool = False,
+             keep_uuid: Optional[bool] = False,
              uuid: Optional[str] = None,
              date: Optional[str] = None) -> str:
     """Converts BASTA cloud radar data into Cloudnet Level 1b netCDF file.

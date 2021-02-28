@@ -116,7 +116,9 @@ class Mira(NcRadar):
             if key not in self.data.keys():  # Not provided by user
                 self.append_data(value, key)
 
-    def screen_by_snr(self, snr_gain: Optional[int] = 1, snr_limit: Optional[int] = -17) -> None:
+    def screen_by_snr(self,
+                      snr_gain: Optional[int] = 1,
+                      snr_limit: Optional[int] = -17) -> None:
         """Screens by SNR."""
         ind = np.where(self.data['SNR'][:] * snr_gain < snr_limit)
         for field in self.data:
@@ -127,7 +129,7 @@ class Mira(NcRadar):
         time_stamps = self.getvar('time')
         return utils.seconds2date(time_stamps[0], self.epoch)[:3]
 
-    def rebin_fields(self):
+    def rebin_fields(self) -> float:
         """Rebins fields."""
         time_grid = utils.time_grid()
         for field in self.data:
@@ -137,7 +139,7 @@ class Mira(NcRadar):
         return snr_gain
 
     @staticmethod
-    def _estimate_snr_gain(time_sparse, time_dense):
+    def _estimate_snr_gain(time_sparse: np.ndarray, time_dense: np.ndarray) -> float:
         """Returns factor for SNR (dB) increase when data is binned."""
         binning_ratio = utils.mdiff(time_sparse) / utils.mdiff(time_dense)
         return np.sqrt(binning_ratio)
