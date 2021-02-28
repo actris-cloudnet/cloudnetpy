@@ -1,281 +1,166 @@
 import numpy as np
 import numpy.ma as ma
-from collections import namedtuple
 from numpy import testing
+from numpy.testing import assert_array_equal
 import pytest
 import netCDF4
-from cloudnetpy.products.iwc import IwcSource, _IceClassification
-
-DIMENSIONS = ('time', 'height', 'model_time', 'model_height')
-TEST_ARRAY = np.arange(3)
+from cloudnetpy.products.iwc import IwcSource, IceClassification
 
 
 @pytest.fixture(scope='session')
-def iwc_source_file(tmpdir_factory, file_metadata):
+def categorize_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    _create_dimensions(root_grp)
-    _create_dimension_variables(root_grp)
-    var = root_grp.createVariable('altitude', 'f8')
+    nc = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
+    dimensions = {'time': 3, 'height': 2, 'model_time': 3, 'model_height': 2}
+    for name, value in dimensions.items():
+        nc.createDimension(name, value)
+        var = nc.createVariable(name, 'f8', name)
+        var[:] = np.arange(value)
+        if name == 'height':
+            var.units = 'm'
+    var = nc.createVariable('altitude', 'f8')
     var[:] = 1
     var.units = 'km'
-    var = root_grp.createVariable('Z', 'f8', 'time')
-    var[:] = [5, 10, 15]
-    var = root_grp.createVariable('Z_sensitivity', 'f8', 'time')
-    var[:] = [5, 10, 15]
-    var = root_grp.createVariable('Z_bias', 'f8', 'time')
-    var[:] = [5, 10, 15]
-    var = root_grp.createVariable('Z_error', 'f8', 'time')
-    var[:] = [0.1, 0.2, 0.3]
-    var = root_grp.createVariable('radar_frequency', 'f8')
-    var[:] = 35.5  # TODO: How to check with multiple options
-    var = root_grp.createVariable('temperature', 'f8', ('time', 'height'))
-    var[:] = np.array([[282, 280, 278],
-                       [286, 284, 282],
-                      [284, 282, 280]])
-    root_grp.close()
+    nc.createVariable('Z_bias', 'f8')[:] = 0.5
+    nc.createVariable('radar_frequency', 'f8')[:] = 35.5
+    nc.createVariable('Z', 'f8', ('time', 'height'))[:] = np.array([[10, 20],
+                                                                    [10, 20],
+                                                                    [10, 20]])
+    nc.createVariable('Z_error', 'f8', ('time', 'height'))[:] = np.array([[1, 2],
+                                                                          [1, 2],
+                                                                          [2, 3]])
+    nc.createVariable('category_bits', 'i4', ('time', 'height'))[:] = np.array([[0, 1],
+                                                                                [2, 3],
+                                                                                [4, 8]])
+    nc.createVariable('quality_bits', 'i4', ('time', 'height'))[:] = np.array([[0, 1],
+                                                                               [2, 3],
+                                                                               [4, 8]])
+    temperature = np.array([[280, 290], [280, 290], [280, 290]])
+    nc.createVariable('temperature', 'f8', ('model_time', 'model_height'))[:] = temperature
+    nc.createVariable('Z_sensitivity', 'f8', 'height')[:] = 2.0
+    nc.createVariable('is_rain', 'i4', 'time')[:] = [0, 1, 0]
+    nc.createVariable('is_undetected_melting', 'i4', 'time')[:] = [1, 0, 0]
+    nc.close()
     return file_name
 
 
-def _create_dimensions(root_grp):
-    n_dim = len(TEST_ARRAY)
-    for dim_name in DIMENSIONS:
-        root_grp.createDimension(dim_name, n_dim)
+def test_iwc_wl_band(categorize_file):
+    obj = IwcSource(categorize_file)
+    assert obj.wl_band == 0
 
 
-def _create_dimension_variables(root_grp):
-    for dim_name in DIMENSIONS:
-        x = root_grp.createVariable(dim_name, 'f8', (dim_name,))
-        x[:] = TEST_ARRAY
-        if dim_name == 'height':
-            x.units = 'm'
-
-
-def test_iwc_wl_band(iwc_source_file):
-    obj = IwcSource(iwc_source_file)
-    compare = 0
-    assert compare == obj.wl_band
-
-
-def test_iwc_spec_liq_atten(iwc_source_file):
-    obj = IwcSource(iwc_source_file)
-    compare = 1
-    assert compare == obj.spec_liq_atten
-
-
-def test_iwc_z_factor(iwc_source_file):
-    obj = IwcSource(iwc_source_file)
-    Coefficients = namedtuple('Coefficients', 'K2liquid0')
-    obj.coeffs = Coefficients(10)
-    compare = -0.25
-    assert compare == round(obj.z_factor, 3)
-
-
-@pytest.mark.parametrize("result", [
-    'K2liquid0', 'ZT', 'T', 'Z', 'c'])
-def test_iwc_coeffs(result, iwc_source_file):
-    obj = IwcSource(iwc_source_file)
+@pytest.mark.parametrize("result", ['K2liquid0', 'ZT', 'T', 'Z', 'c'])
+def test_iwc_coeffs(result, categorize_file):
+    obj = IwcSource(categorize_file)
     assert result in obj.coeffs._fields
+    assert obj.coeffs == (0.878, 0.000242, -0.0186, 0.0699, -1.63)
 
 
-def test_iwc_temperature(iwc_source_file):
-    obj = IwcSource(iwc_source_file)
-    compare = np.array([[8.85, 6.85, 4.85],
-                       [12.85, 10.85, 8.85],
-                       [10.85, 8.85, 6.85]])
-    testing.assert_almost_equal(compare, obj.temperature)
+def test_iwc_temperature(categorize_file):
+    obj = IwcSource(categorize_file)
+    expected = [[6.85, 16.85],
+                [6.85, 16.85],
+                [6.85, 16.85]]
+    testing.assert_almost_equal(obj.temperature, expected)
 
 
-def test_iwc_mean_temperature(iwc_source_file):
-    obj = IwcSource(iwc_source_file)
-    compare = np.array([10.85, 8.85, 6.85])
-    testing.assert_almost_equal(compare, obj.mean_temperature)
+class TestIceClassification:
+
+    @pytest.fixture(autouse=True)
+    def run_before_tests(self, categorize_file):
+        self.obj = IceClassification(categorize_file)
+
+    def test_find_ice(self):
+        self.obj.category_bits['falling'] = np.array([1, 1, 1, 0, 1, 1, 0, 1, 1])
+        self.obj.category_bits['cold'] = np.array([0, 1, 1, 0, 1, 1, 0, 1, 1])
+        self.obj.category_bits['melting'] = np.array([0, 0, 0, 0, 0, 0, 0, 0, 1])
+        self.obj.category_bits['insect'] = np.array([0, 0, 0, 0, 0, 1, 0, 0, 0])
+        expected = [0, 1, 1, 0, 1, 0, 0, 1, 0]
+        testing.assert_array_equal(self.obj._find_ice(), expected)
+
+    def test_would_be_ice(self):
+        self.obj.category_bits['falling'] = np.array([1, 1, 1, 0, 1, 1, 0, 1, 1])
+        self.obj.category_bits['cold'] = np.array([0, 0, 1, 0, 0, 1, 0, 0, 1])
+        self.obj.category_bits['melting'] = np.array([0, 0, 0, 1, 0, 0, 0, 0, 1])
+        self.obj.category_bits['insect'] = np.array([1, 0, 0, 0, 0, 0, 0, 0, 1])
+        expected = [0, 1, 0, 1, 1, 0, 0, 1, 1]
+        testing.assert_array_equal(self.obj._find_would_be_ice(), expected)
+
+    def test_find_corrected_ice(self):
+        self.obj.is_ice = np.array([1, 1, 1, 1, 0, 0])
+        self.obj.quality_bits['attenuated'] = np.array([1, 1, 1, 0, 1, 0])
+        self.obj.quality_bits['corrected'] = np.array([1, 0, 0, 1, 1, 0])
+        expected = [1, 0, 0, 0, 0, 0]
+        testing.assert_array_equal(self.obj._find_corrected_ice(), expected)
+
+    def test_find_uncorrected_ice(self):
+        self.obj.is_ice = np.array([1, 1, 1, 1, 0, 0])
+        self.obj.quality_bits['attenuated'] = np.array([1, 1, 0, 0, 1, 1])
+        self.obj.quality_bits['corrected'] = np.array([1, 0, 1, 1, 0, 0])
+        expected = [0, 1, 0, 0, 0, 0]
+        testing.assert_array_equal(self.obj._find_uncorrected_ice(), expected)
+
+    def test_find_ice_above_rain(self):
+        self.obj.is_ice = np.array([[1, 1, 0], [1, 0, 1]])
+        self.obj.is_rain = np.array([1, 0])
+        expected = [[1, 1, 0], [0, 0, 0]]
+        testing.assert_array_equal(self.obj._find_ice_above_rain(), expected)
+
+    def test_find_cold_above_rain(self):
+        self.obj.category_bits['cold'] = np.array([[0, 0, 1], [0, 1, 1], [1, 1, 1]])
+        self.obj.category_bits['melting'] = np.array([[0, 1, 0], [1, 1, 0], [1, 0, 0]])
+        self.obj.is_rain = np.array([1, 1, 0])
+        expected = [[0, 0, 1], [0, 0, 1], [0, 0, 0]]
+        testing.assert_array_equal(self.obj._find_cold_above_rain().data, expected)
 
 
-@pytest.fixture(scope='session')
-def iwc_cat_file(tmpdir_factory, file_metadata):
-    file_name = tmpdir_factory.mktemp("data").join("file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    n_points = 7
-    root_grp.createDimension('time', n_points)
-    var = root_grp.createVariable('time', 'f8', 'time')
-    var[:] = np.arange(n_points)
-    var = root_grp.createVariable('category_bits', 'i4', 'time')
-    var[:] = [0, 1, 2, 4, 8, 16, 32]
-    var = root_grp.createVariable('quality_bits', 'i4', 'time')
-    var[:] = [0, 1, 2, 4, 8, 16, 32]
-    var = root_grp.createVariable('is_rain', 'i4', 'time')
-    var[:] = [0, 1, 1, 1, 0, 0, 0]
-    var = root_grp.createVariable('is_undetected_melting', 'i4', 'time')
-    var[:] = [0, 1, 0, 1, 0, 0, 1]
-    root_grp.close()
-    return file_name
+class TestAppending:
+
+    @pytest.fixture(autouse=True)
+    def run_before_tests(self, categorize_file):
+        self.ice_class = IceClassification(categorize_file)
+        self.iwc_source = IwcSource(categorize_file)
+
+    def test_append_iwc_including_rain(self):
+        self.ice_class.is_ice = np.array([[0, 1], [1, 1], [0, 0]], dtype=bool)
+        self.iwc_source.append_iwc_including_rain(self.ice_class)
+        expected_mask = [[1, 0], [0, 0], [1, 1]]
+        assert_array_equal(self.iwc_source.data['iwc_inc_rain'][:].mask, expected_mask)
+
+    def test_append_iwc(self):
+        self.ice_class.ice_above_rain = np.array([0, 0, 0, 1, 1], dtype=bool)
+        self.iwc_source.data['iwc_inc_rain'] = ma.array([1, 2, 3, 4, 5], mask=[1, 0, 1, 0, 1])
+        self.iwc_source.append_iwc(self.ice_class)
+        expected_mask = [1, 0, 1, 1, 1]
+        assert_array_equal(self.iwc_source.data['iwc'][:].mask, expected_mask)
+
+    def test_iwc_error(self):
+        self.ice_class.is_ice = np.array([[0, 0], [0, 1], [1, 1]], dtype=bool)
+        self.ice_class.ice_above_rain = np.array([[1, 0], [1, 0], [1, 0]], dtype=bool)
+        self.iwc_source.append_error(self.ice_class)
+        expected_mask = [[1, 1], [1, 0], [1, 0]]
+        assert_array_equal(self.iwc_source.data['iwc_error'][:].mask, expected_mask)
+
+    def test_append_sensitivity(self):
+        self.iwc_source.append_sensitivity()
+        assert self.iwc_source.data['iwc_sensitivity'][:].shape == (2,)
+
+    def test_append_bias(self):
+        self.iwc_source.append_bias()
+        assert isinstance(self.iwc_source.data['iwc_bias'].data[()], float)
 
 
-@pytest.mark.parametrize("falling, cold, melting, insect, result", [
-    (np.array([1, 1, 1, 1, 1, 1, 1]), np.array([0, 1, 0, 1, 0, 1, 0]),
-     np.array([1, 1, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 0, 0, 0, 0]),
-     np.array([0, 0, 0, 1, 0, 1, 0]))])
-def test_find_ice(falling, cold, melting,  insect, result, iwc_cat_file):
-    obj = _IceClassification(iwc_cat_file)
-    obj.category_bits['falling'] = falling
-    obj.category_bits['cold'] = cold
-    obj.category_bits['melting'] = melting
-    obj.category_bits['insect'] = insect
-    testing.assert_array_equal(obj._find_ice().data, result)
-
-
-@pytest.mark.parametrize("falling, cold, melting, insect, result", [
-    (np.array([1, 1, 1, 1, 1, 1, 1]), np.array([0, 1, 0, 1, 0, 1, 0]),
-     np.array([1, 1, 1, 0, 0, 0, 0]), np.array([0, 0, 0, 0, 0, 0, 0]),
-     np.array([1, 1, 1, 0, 1, 0, 1]))])
-def test_find_would_be_ice(falling, cold, melting,  insect, result, iwc_cat_file):
-    obj = _IceClassification(iwc_cat_file)
-    obj.category_bits['falling'] = falling
-    obj.category_bits['cold'] = cold
-    obj.category_bits['melting'] = melting
-    obj.category_bits['insect'] = insect
-    testing.assert_array_equal(obj._find_would_be_ice().data, result)
-
-
-@pytest.mark.parametrize("is_ice, attenuated, corrected, result", [
-    (np.array([0, 0, 0, 1, 0, 1, 0]), np.array([1, 1, 0, 1, 0, 0, 1]),
-     np.array([0, 0, 1, 1, 0, 1, 1]), np.array([0, 0, 0, 1, 0, 0, 0]))])
-def test_find_corrected_ice(is_ice, attenuated, corrected, result, iwc_cat_file):
-    obj = _IceClassification(iwc_cat_file)
-    obj.quality_bits['attenuated'] = attenuated
-    obj.quality_bits['corrected'] = corrected
-    obj.is_ice = is_ice
-    testing.assert_array_equal(obj._find_corrected_ice().data, result)
-
-
-@pytest.mark.parametrize("is_ice, attenuated, corrected, result", [
-    (np.array([0, 0, 0, 1, 0, 1, 0]), np.array([1, 1, 0, 1, 0, 1, 1]),
-     np.array([0, 0, 1, 0, 0, 0, 1]), np.array([0, 0, 0, 1, 0, 1, 0]))])
-def test_find_uncorrected_ice(is_ice, attenuated, corrected, result, iwc_cat_file):
-    obj = _IceClassification(iwc_cat_file)
-    obj.quality_bits['attenuated'] = attenuated
-    obj.quality_bits['corrected'] = corrected
-    obj.is_ice = is_ice
-    testing.assert_array_equal(obj._find_uncorrected_ice().data, result)
-
-
-@pytest.mark.parametrize("is_ice, is_rain, result", [
-    (np.array([1, 0, 1]), np.array([0, 0, 1]),
-     np.array([[0, 0, 0], [0, 0, 0], [1, 0, 1]]))])
-def test_find_ice_above_rain(is_ice, is_rain, result, iwc_cat_file):
-    obj = _IceClassification(iwc_cat_file)
-    obj.is_ice = is_ice
-    obj.is_rain = is_rain
-    testing.assert_array_equal(obj._find_ice_above_rain().data, result)
-
-
-@pytest.mark.parametrize("cold, is_rain, melting, result", [
-    (np.array([1, 0, 1]), np.array([0, 0, 1]), np.array([1, 1, 0]),
-     np.array([[0, 0, 0], [0, 0, 0], [0, 0, 1]]))])
-def test_find_cold_above_rain(cold, is_rain, melting, result, iwc_cat_file):
-    obj = _IceClassification(iwc_cat_file)
-    obj.category_bits['cold'] = cold
-    obj.category_bits['melting'] = melting
-    obj.is_rain = is_rain
-    testing.assert_array_equal(obj._find_cold_above_rain().data, result)
-
-
-def test_append_iwc_including_rain(iwc_source_file, iwc_cat_file):
-    from cloudnetpy.products.iwc import _append_iwc_including_rain
-    ice_class = _IceClassification(iwc_cat_file)
-    ice_class.is_ice = np.array([0, 0, 1])
-    ice_data = IwcSource(iwc_source_file)
-    _append_iwc_including_rain(ice_data, ice_class)
-    assert 'iwc_inc_rain' in ice_data.data.keys()
-
-
-def test_append_iwc_including_rain_indices(iwc_source_file, iwc_cat_file):
-    from cloudnetpy.products.iwc import _append_iwc_including_rain
-    ice_class = _IceClassification(iwc_cat_file)
-    ice_class.is_ice = np.array([0, 0, 1])
-    ice_data = IwcSource(iwc_source_file)
-    _append_iwc_including_rain(ice_data, ice_class)
-    x = ice_data.data['iwc_inc_rain'][:]
-    x = x.mask
-    assert np.alltrue(x[1:])
-
-
-def test_append_iwc(iwc_source_file, iwc_cat_file):
-    from cloudnetpy.products.iwc import _append_iwc
-    ice_class = _IceClassification(iwc_cat_file)
-    ice_class.ice_above_rain = np.array([0, 0, 1])
-    ice_data = IwcSource(iwc_source_file)
-    ice_data.data['iwc_inc_rain'] = [1, 1, 1]
-    _append_iwc(ice_data, ice_class)
-    assert 'iwc' in ice_data.data.keys()
-
-
-def test_append_iwc_indices(iwc_source_file, iwc_cat_file):
-    from cloudnetpy.products.iwc import _append_iwc
-    ice_class = _IceClassification(iwc_cat_file)
-    ice_class.ice_above_rain = np.array([0, 0, 1])
-    ice_data = IwcSource(iwc_source_file)
-    ice_data.data['iwc_inc_rain'] = [1, 1, 1]
-    _append_iwc(ice_data, ice_class)
-    x = ice_data.data['iwc'][:]
-    x = x.mask
-    assert np.alltrue(x[:2])
-
-
-def test_iwc_error(iwc_source_file, iwc_cat_file):
-    from cloudnetpy.products.iwc import _append_iwc_error
-    ice_data = IwcSource(iwc_source_file)
-    ice_class = _IceClassification(iwc_cat_file)
-    ice_class.uncorrected_ice = np.array([1, 0, 1])
-    ice_class.is_ice = np.array([0, 0, 1])
-    ice_class.ice_above_rain = np.array([1, 1, 0])
-    _append_iwc_error(ice_data, ice_class)
-    assert 'iwc_error' in ice_data.data.keys()
-
-
-def test_append_sensitivity(iwc_source_file):
-    from cloudnetpy.products.iwc import _append_iwc_sensitivity
-    ice_data = IwcSource(iwc_source_file)
-    ice_data.mean_temperature = np.array([1.5])
-    _append_iwc_sensitivity(ice_data)
-    assert 'iwc_sensitivity' in ice_data.data.keys()
-
-
-def test_append_bias(iwc_source_file):
-    from cloudnetpy.products.iwc import _append_iwc_bias
-    ice_data = IwcSource(iwc_source_file)
-    _append_iwc_bias(ice_data)
-    assert 'iwc_bias' in ice_data.data.keys()
-
-
-# Create fake data to get all options for classification
-class IceClass:
-    def __init__(self):
-        self.corrected_ice = np.asarray([[0, 0, 0, 1, 0, 0], [0, 0, 0, 1, 0, 0]],
-                                        dtype=bool)
-        self.uncorrected_ice = np.asarray([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 0]],
-                                          dtype=bool)
-        self.is_ice = np.asarray([[0, 1, 1, 0, 0, 0], [0, 0, 0, 1, 1, 0]],
-                                 dtype=bool)
-        self.cold_above_rain = np.asarray([[0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0]],
-                                          dtype=bool)
-        self.ice_above_rain = np.asarray([[0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0]],
-                                         dtype=bool)
-        self.would_be_ice = np.asarray([[0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0]],
-                                       dtype=bool)
-
-
-@pytest.mark.parametrize('value', [
-    0, 1, 2, 3, 4, 5, 6, 7
-])
-def test_append_iwc_status(iwc_source_file, value):
-    from cloudnetpy.products.iwc import _append_iwc_status
-    ice_class = IceClass()
-    ice_data = IwcSource(iwc_source_file)
-    ice_data.data['iwc'] = np.ma.array([[1, 1, 1, 1, 1, 1],
-                                        [1, 1, 1, 1, 1, 1]],
-                                       mask=[[True, True, False, False, False, False],
-                                             [True, True, True, False, False, False]])
-    _append_iwc_status(ice_data, ice_class)
-    assert value in ice_data.data['iwc_retrieval_status'][:]
+def test_append_iwc_status(categorize_file):
+    iwc_source = IwcSource(categorize_file)
+    ice_class = IceClassification(categorize_file)
+    iwc_source.data['iwc'] = ma.array([[1, 1], [1, 1], [1, 1]], dtype=float,
+                                      mask=[[1, 0], [0, 0], [0, 0]])
+    ice_class.is_ice = np.array([[1, 0], [0, 0], [0, 0]], dtype=bool)
+    ice_class.corrected_ice = np.array([[0, 0], [1, 0], [0, 1]], dtype=bool)
+    ice_class.uncorrected_ice = np.array([[0, 0], [0, 1], [1, 0]], dtype=bool)
+    ice_class.cold_above_rain = np.array([[0, 0], [0, 0], [1, 0]], dtype=bool)
+    ice_class.ice_above_rain = np.array([[0, 0], [0, 0], [0, 1]], dtype=bool)
+    ice_class.would_be_ice = np.array([[0, 0], [0, 0], [0, 0]], dtype=bool)
+    iwc_source.append_status(ice_class)
+    for value in range(1, 7):
+        assert value in iwc_source.data['iwc_retrieval_status'][:]
