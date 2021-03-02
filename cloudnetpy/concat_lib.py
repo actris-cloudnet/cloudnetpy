@@ -5,24 +5,27 @@ import netCDF4
 from cloudnetpy import utils
 
 
-def concatenate_files(filenames: list, output_file: str,
+def concatenate_files(filenames: list,
+                      output_file: str,
+                      concat_dimension: Optional[str] = 'time',
                       variables: Optional[list] = None,
                       new_attributes: Optional[dict] = None) -> None:
-    """Concatenate list of netCDF files in time dimension.
+    """Concatenate netCDF files in one dimension.
 
     Args:
         filenames: List of files to be concatenated.
         output_file: Output file name.
-        variables: List of variables with the 'time' dimension to be concatenated.
-            Default is None when all variables with 'time' will be saved.
+        concat_dimension: Dimension name for concatenation. Default is 'time'.
+        variables: List of variables with the 'concat_dimension' to be concatenated.
+            Default is None when all variables with 'concat_dimension' will be saved.
         new_attributes: Optional new global attributes as {'attribute_name': value}.
 
     Notes:
-        Arrays without 'time' dimension, scalars, and global attributes will be taken from
-        the first file.
+        Arrays without 'concat_dimension', scalars, and global attributes will be taken from
+        the first file. Groups, possibly present in a NETCDF4 formatted file, are ignored.
 
     """
-    concat = Concat(filenames, output_file)
+    concat = Concat(filenames, output_file, concat_dimension)
     concat.get_constants()
     concat.create_global_attributes(new_attributes)
     concat.concat_data(variables)
@@ -30,8 +33,12 @@ def concatenate_files(filenames: list, output_file: str,
 
 
 class Concat:
-    def __init__(self, filenames: list, output_file: str):
+    def __init__(self,
+                 filenames: list,
+                 output_file: str,
+                 concat_dimension: Optional[str] = 'time'):
         self.filenames = sorted(filenames)
+        self.concat_dimension = concat_dimension
         self.first_file = netCDF4.Dataset(self.filenames[0])
         self.concatenated_file = self._init_output_file(output_file)
         self.constants = ()
@@ -44,10 +51,10 @@ class Concat:
                 setattr(self.concatenated_file, key, value)
 
     def get_constants(self):
-        """Finds constants, i.e. arrays that have no time dimension and are not concatenated."""
+        """Finds constants, i.e. arrays that have no concat_dimension and are not concatenated."""
         for key, value in self.first_file.variables.items():
             dims = self._get_dim(value[:])
-            if 'time' not in dims:
+            if self.concat_dimension not in dims:
                 self.constants += (key,)
 
     def close(self):
@@ -65,7 +72,7 @@ class Concat:
     def _write_initial_data(self, variables: Union[list, None]) -> None:
         for key in self.first_file.variables.keys():
             if (variables is not None and key not in variables
-                    and key not in self.constants and key != 'time'):
+                    and key not in self.constants and key != self.concat_dimension):
                 continue
             self.first_file[key].set_auto_scale(False)
             array = self.first_file[key][:]
@@ -79,8 +86,8 @@ class Concat:
     def _append_data(self, filename: str) -> None:
         file = netCDF4.Dataset(filename)
         file.set_auto_scale(False)
-        ind0 = len(self.concatenated_file.variables['time'])
-        ind1 = ind0 + len(file.variables['time'])
+        ind0 = len(self.concatenated_file.variables[self.concat_dimension])
+        ind1 = ind0 + len(file.variables[self.concat_dimension])
         for key in self.concatenated_file.variables.keys():
             array = file[key][:]
             if array.ndim == 0 or key in self.constants:
@@ -101,14 +108,15 @@ class Concat:
             try:
                 dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
             except IndexError:
-                dim = 'time'
+                dim = self.concat_dimension
             variable_size += (dim,)
         return variable_size
 
     def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
-        nc = netCDF4.Dataset(output_file, 'w', format='NETCDF4_CLASSIC')
+        data_model = 'NETCDF4' if self.first_file.data_model == 'NETCDF4' else 'NETCDF4_CLASSIC'
+        nc = netCDF4.Dataset(output_file, 'w', format=data_model)
         for dim in self.first_file.dimensions.keys():
-            dim_len = None if dim == 'time' else len(self.first_file[dim])
+            dim_len = None if dim == self.concat_dimension else len(self.first_file[dim])
             nc.createDimension(dim, dim_len)
         return nc
 

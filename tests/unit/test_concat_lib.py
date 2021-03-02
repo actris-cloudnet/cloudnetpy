@@ -88,6 +88,7 @@ def test_concatenate_files_with_mira():
     nc = netCDF4.Dataset(output_file.name)
     assert len(nc.variables['time']) == 145 + 146
     assert len(nc.variables['range']) == 413
+    assert nc.data_model == 'NETCDF4_CLASSIC'
     for var in ('prf', 'microsec'):
         assert var in nc.variables
     for var in ('VELg', 'elv'):
