@@ -1,5 +1,6 @@
 """ This module contains unit tests for atmos-module. """
 import numpy as np
+import numpy.ma as ma
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 import pytest
 from cloudnetpy.categorize import atmos
@@ -73,6 +74,36 @@ def test_find_cloud_tops():
                   [0, 1, 0, 0],
                   [0, 1, 0, 1]])
     assert_array_almost_equal(atmos.find_cloud_tops(x), b)
+
+
+def test_find_lowest_cloud_bases():
+    cloud_mask = np.array([[0, 1, 0, 1],
+                           [0, 1, 1, 0],
+                           [1, 0, 1, 1],
+                           [1, 0, 0, 0],
+                           [0, 0, 0, 0],
+                           [1, 1, 1, 1],
+                           [0, 0, 1, 1]])
+    height = np.array([1.0, 2.0, 3.0, 4.0])
+    expected = ma.array([2.0, 2.0, 1.0, 1.0, 0.0, 1.0, 3.0], mask=[0, 0, 0, 0, 1, 0, 0])
+    result = atmos.find_lowest_cloud_bases(cloud_mask, height)
+    assert_array_almost_equal(result.data, expected.data)
+    assert_array_almost_equal(result.mask, expected.mask)
+
+
+def test_find_highest_cloud_tops():
+    cloud_mask = np.array([[0, 1, 0, 1],
+                           [0, 1, 1, 0],
+                           [1, 0, 1, 1],
+                           [1, 0, 0, 0],
+                           [0, 0, 0, 0],
+                           [1, 1, 1, 1],
+                           [0, 0, 1, 1]])
+    height = np.array([1.0, 2.0, 3.0, 4.0])
+    expected = ma.array([4.0, 3.0, 4.0, 1.0, 0.0, 4.0, 4.0], mask=[0, 0, 0, 0, 1, 0, 0])
+    result = atmos.find_highest_cloud_tops(cloud_mask, height)
+    assert_array_almost_equal(result.data, expected.data)
+    assert_array_almost_equal(result.mask, expected.mask)
 
 
 def test_distribute_lwp_to_liquid_clouds():
