@@ -1,24 +1,24 @@
-"""Module for creating Cloudnet ice water content file
-using Z-T method.
-"""
-from typing import Union
+"""Module for creating Cloudnet ice water content file using Z-T method."""
+from typing import Optional
 from collections import namedtuple
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos
 from cloudnetpy.metadata import MetaData
-from cloudnetpy.products import product_tools as p_tools
+from cloudnetpy.products import product_tools
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.products.product_tools import ProductClassification
 
 G_TO_KG = 0.001
 
+Coefficients = namedtuple('Coefficients', 'K2liquid0 ZT T Z c')
+
 
 def generate_iwc(categorize_file: str,
                  output_file: str,
-                 keep_uuid: bool = False,
-                 uuid: Union[str, None] = None):
+                 keep_uuid: Optional[bool] = False,
+                 uuid: Optional[str] = None) -> str:
     """Generates Cloudnet ice water content product.
 
     This function calculates ice water content using the so-called Z-T method.
@@ -27,14 +27,14 @@ def generate_iwc(categorize_file: str,
     netCDF file.
 
     Args:
-        categorize_file (str): Categorize file name.
-        output_file (str): Output file name.
-        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
-            if that exists. Default is False when new UUID is generated.
-        uuid (str, optional): Set specific UUID for the file.
+        categorize_file: Categorize file name.
+        output_file: Output file name.
+        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False when
+            new UUID is generated.
+        uuid: Set specific UUID for the file.
 
     Returns:
-        str: UUID of the generated file.
+        UUID of the generated file.
 
     Examples:
         >>> from cloudnetpy.products import generate_iwc
@@ -47,76 +47,27 @@ def generate_iwc(categorize_file: str,
         J. Appl. Meteor. Climatol., 45, 301–317, https://doi.org/10.1175/JAM2340.1
 
     """
-    iwc_data = IwcSource(categorize_file)
-    ice_class = _IceClassification(categorize_file)
-    _append_iwc_including_rain(iwc_data, ice_class)
-    _append_iwc(iwc_data, ice_class)
-    _append_iwc_bias(iwc_data)
-    _append_iwc_error(iwc_data, ice_class)
-    _append_iwc_sensitivity(iwc_data)
-    _append_iwc_status(iwc_data, ice_class)
-    date = iwc_data.get_date()
+    iwc_source = IwcSource(categorize_file)
+    ice_classification = IceClassification(categorize_file)
+    iwc_source.append_iwc_including_rain(ice_classification)
+    iwc_source.append_iwc(ice_classification)
+    iwc_source.append_bias()
+    iwc_source.append_sensitivity()
+    iwc_source.append_error(ice_classification)
+    iwc_source.append_status(ice_classification)
+    date = iwc_source.get_date()
     attributes = output.add_time_attribute(IWC_ATTRIBUTES, date)
-    output.update_attributes(iwc_data.data, attributes)
-    uuid = output.save_product_file('iwc', iwc_data, output_file, keep_uuid, uuid)
-    iwc_data.close()
+    output.update_attributes(iwc_source.data, attributes)
+    uuid = output.save_product_file('iwc', iwc_source, output_file, keep_uuid, uuid)
+    iwc_source.close()
     return uuid
 
 
-class IwcSource(DataSource):
-    """Class containing data needed in the ice water content Z-T method."""
-    def __init__(self, categorize_file):
-        super().__init__(categorize_file)
-        self.wl_band = utils.get_wl_band(self.getvar('radar_frequency'))
-        self.spec_liq_atten = self._get_approximate_specific_liquid_atten()
-        self.coeffs = self._get_iwc_coeffs()
-        self.z_factor = self._get_z_factor()
-        self.temperature = self._get_temperature_field(categorize_file)
-        self.mean_temperature = self._get_mean_temperature()
-
-    def _get_z_factor(self):
-        """Returns empirical scaling factor for radar echo."""
-        return utils.lin2db(self.coeffs.K2liquid0 / 0.93)
-
-    def _get_iwc_coeffs(self):
-        """Returns coefficients for ice water content retrieval.
-
-        References:
-            Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
-        """
-        Coefficients = namedtuple('Coefficients', 'K2liquid0 ZT T Z c')
-        if self.wl_band == 0:
-            return Coefficients(0.878, 0.000242, -0.0186, 0.0699, -1.63)
-        return Coefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
-
-    def _get_approximate_specific_liquid_atten(self):
-        """Returns approximate liquid water attenuation (dB).
-
-        Returns estimate of the liquid water attenuation for
-        pixels that are affected by it but not corrected
-        for some reason.
-
-        """
-        if self.wl_band == 0:
-            return 1.0
-        return 4.5
-
-    @staticmethod
-    def _get_temperature_field(cat_file):
-        """Returns interpolated temperatures in Celsius."""
-        temperature = p_tools.interpolate_model(cat_file, 'temperature')
-        return atmos.k2c(temperature)
-
-    def _get_mean_temperature(self):
-        """Returns mean temperature for each altitude."""
-        return ma.mean(self.temperature, axis=0)
-
-
-class _IceClassification(ProductClassification):
+class IceClassification(ProductClassification):
     """Class storing the information about different ice types.
        Child of ProductClassification().
     """
-    def __init__(self, categorize_file):
+    def __init__(self, categorize_file: str):
         super().__init__(categorize_file)
         self.is_ice = self._find_ice()
         self.would_be_ice = self._find_would_be_ice()
@@ -125,114 +76,140 @@ class _IceClassification(ProductClassification):
         self.ice_above_rain = self._find_ice_above_rain()
         self.cold_above_rain = self._find_cold_above_rain()
 
-    def _find_ice(self):
+    def _find_ice(self) -> np.ndarray:
         return (self.category_bits['falling']
                 & self.category_bits['cold']
                 & ~self.category_bits['melting']
                 & ~self.category_bits['insect'])
 
-    def _find_would_be_ice(self):
+    def _find_would_be_ice(self) -> np.ndarray:
         warm_falling = (self.category_bits['falling']
                         & ~self.category_bits['cold']
                         & ~self.category_bits['insect'])
         return warm_falling | self.category_bits['melting']
 
-    def _find_corrected_ice(self):
+    def _find_corrected_ice(self) -> np.ndarray:
         return (self.is_ice
                 & self.quality_bits['attenuated']
                 & self.quality_bits['corrected'])
 
-    def _find_uncorrected_ice(self):
+    def _find_uncorrected_ice(self) -> np.ndarray:
         return (self.is_ice
                 & self.quality_bits['attenuated']
                 & ~self.quality_bits['corrected'])
 
-    def _find_ice_above_rain(self):
+    def _find_ice_above_rain(self) -> np.ndarray:
         is_rain = utils.transpose(self.is_rain)
         return (self.is_ice * is_rain) == 1
 
-    def _find_cold_above_rain(self):
+    def _find_cold_above_rain(self) -> np.ndarray:
         is_cold = self.category_bits['cold']
         is_rain = utils.transpose(self.is_rain)
-        return (((is_cold * is_rain) == 1)
-                & ~self.category_bits['melting'])
+        is_cold_rain = (is_cold * is_rain) == 1
+        return is_cold_rain & ~self.category_bits['melting']
 
 
-def _z_to_iwc(iwc_data, z_variable):
-    """Calculates temperature weighted z, i.e. ice water content (kg m-3)."""
-    def _get_correct_temperature():
+class IwcSource(DataSource):
+
+    """Data container for ice water content calculations."""
+    def __init__(self, categorize_file: str):
+        super().__init__(categorize_file)
+        self.wl_band = utils.get_wl_band(self.getvar('radar_frequency'))
+        self.coeffs = self._get_iwc_coeffs()
+        self.z_factor = self._get_z_factor()
+        self.temperature = self._get_temperature(categorize_file)
+
+    def append_sensitivity(self) -> None:
+        """Calculates iwc sensitivity."""
+        iwc_sensitivity = self._z_to_iwc('Z_sensitivity')
+        self.append_data(iwc_sensitivity, 'iwc_sensitivity')
+
+    def append_bias(self) -> None:
+        """Calculates iwc bias."""
+        iwc_bias = self.getvar('Z_bias') * self.coeffs.Z * 10
+        self.append_data(iwc_bias, 'iwc_bias')
+
+    def append_iwc_including_rain(self, ice_classification: IceClassification) -> None:
+        """Calculates ice water content (including ice above rain)."""
+        iwc_including_rain = self._z_to_iwc('Z')
+        iwc_including_rain[~ice_classification.is_ice] = ma.masked
+        self.append_data(iwc_including_rain, 'iwc_inc_rain')
+
+    def append_iwc(self, ice_classification: IceClassification) -> None:
+        """Calculates ice water content"""
+        iwc = ma.copy(self.data['iwc_inc_rain'][:])
+        iwc[ice_classification.ice_above_rain] = ma.masked
+        self.append_data(iwc, 'iwc')
+
+    def append_error(self, ice_classification: IceClassification) -> None:
+        """Estimates error of ice water content."""
+
+        def _calc_random_error() -> np.ndarray:
+            scaled_temperature = self.coeffs.ZT * self.temperature
+            scaled_temperature += self.coeffs.Z
+            return self.getvar('Z_error') * scaled_temperature * 10
+
+        def _calc_error_in_uncorrected_ice() -> np.ndarray:
+            spec_liq_atten = 1.0 if self.wl_band == 0 else 4.5
+            liq_atten_scaled = spec_liq_atten * self.coeffs.Z
+            lwp_prior = 250  # g / m-2
+            return lwp_prior * liq_atten_scaled * 2 * 1e-3 * 10
+
+        retrieval_uncertainty = 1.7  # dB
+        random_error = _calc_random_error()
+        error_uncorrected = _calc_error_in_uncorrected_ice()
+        iwc_error = utils.l2norm(retrieval_uncertainty, random_error)
+        iwc_error[ice_classification.uncorrected_ice] = utils.l2norm(retrieval_uncertainty,
+                                                                     error_uncorrected)
+        iwc_error[(~ice_classification.is_ice | ice_classification.ice_above_rain)] = ma.masked
+        self.append_data(iwc_error, 'iwc_error')
+
+    def append_status(self, ice_classification: IceClassification) -> None:
+        """Returns information about the status of iwc retrieval."""
+        iwc = self.data['iwc'][:]
+        retrieval_status = np.zeros(iwc.shape, dtype=int)
+        is_iwc = ~iwc.mask
+        retrieval_status[is_iwc] = 1
+        retrieval_status[is_iwc & ice_classification.corrected_ice] = 2
+        retrieval_status[is_iwc & ice_classification.uncorrected_ice] = 3
+        retrieval_status[~is_iwc & ice_classification.is_ice] = 4
+        retrieval_status[ice_classification.cold_above_rain] = 6
+        retrieval_status[ice_classification.ice_above_rain] = 5
+        retrieval_status[ice_classification.would_be_ice & (retrieval_status == 0)] = 7
+        self.append_data(retrieval_status, 'iwc_retrieval_status')
+
+    def _get_iwc_coeffs(self) -> Coefficients:
+        """Returns coefficients for ice water content retrieval.
+
+        References:
+            Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
+        """
+        if self.wl_band == 0:
+            return Coefficients(0.878, 0.000242, -0.0186, 0.0699, -1.63)
+        return Coefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
+
+    def _get_z_factor(self) -> float:
+        """Returns empirical scaling factor for radar echo."""
+        return utils.lin2db(self.coeffs.K2liquid0 / 0.93)
+
+    @staticmethod
+    def _get_temperature(categorize_file: str) -> np.ndarray:
+        """Returns interpolated temperatures in Celsius."""
+        temperature = product_tools.interpolate_model(categorize_file, 'temperature')
+        return atmos.k2c(temperature)
+
+    def _z_to_iwc(self, z_variable: str) -> np.ndarray:
+        """Calculates temperature weighted z, i.e. ice water content (kg m-3)."""
         if z_variable == 'Z':
-            return iwc_data.temperature
-        return iwc_data.mean_temperature
-
-    temperature = _get_correct_temperature()
-    z_scaled = iwc_data.getvar(z_variable) + iwc_data.z_factor
-    coeffs = iwc_data.coeffs
-    return 10 ** (coeffs.ZT * z_scaled * temperature
-                  + coeffs.T * temperature
-                  + coeffs.Z * z_scaled
-                  + coeffs.c) * G_TO_KG
-
-
-def _append_iwc_including_rain(iwc_data, ice_class):
-    """Calculates ice water content (including ice above rain)."""
-    iwc_including_rain = _z_to_iwc(iwc_data, 'Z')
-    iwc_including_rain[~ice_class.is_ice] = ma.masked
-    iwc_data.append_data(iwc_including_rain, 'iwc_inc_rain')
-
-
-def _append_iwc(iwc_data, ice_class):
-    iwc = ma.copy(iwc_data.data['iwc_inc_rain'][:])
-    iwc[ice_class.ice_above_rain] = ma.masked
-    iwc_data.append_data(iwc, 'iwc')
-
-
-def _append_iwc_error(iwc_data, ice_class):
-    """Estimates error of ice water content."""
-
-    def _calc_random_error():
-        scaled_temperature = iwc_data.coeffs.ZT * iwc_data.temperature
-        scaled_temperature += iwc_data.coeffs.Z
-        return iwc_data.getvar('Z_error') * scaled_temperature * 10
-
-    def _calc_error_in_uncorrected_ice():
-        lwp_prior = 250  # g / m-2
-        liq_atten_scaled = iwc_data.spec_liq_atten * iwc_data.coeffs.Z
-        return lwp_prior * liq_atten_scaled * 2 * 1e-3 * 10
-
-    retrieval_uncertainty = 1.7  # dB
-    random_error = _calc_random_error()
-    error_uncorrected = _calc_error_in_uncorrected_ice()
-    iwc_error = utils.l2norm(retrieval_uncertainty, random_error)
-    iwc_error[ice_class.uncorrected_ice] = utils.l2norm(retrieval_uncertainty,
-                                                        error_uncorrected)
-    iwc_error[(~ice_class.is_ice | ice_class.ice_above_rain)] = ma.masked
-    iwc_data.append_data(iwc_error, 'iwc_error')
-
-
-def _append_iwc_sensitivity(iwc_data):
-    iwc_sensitivity = _z_to_iwc(iwc_data, 'Z_sensitivity')
-    iwc_data.append_data(iwc_sensitivity, 'iwc_sensitivity')
-
-
-def _append_iwc_bias(iwc_data):
-    iwc_bias = iwc_data.getvar('Z_bias') * iwc_data.coeffs.Z * 10
-    iwc_data.append_data(iwc_bias, 'iwc_bias')
-
-
-def _append_iwc_status(iwc_data, ice_class):
-    """Returns information about the status of iwc retrieval."""
-    iwc = iwc_data.data['iwc'][:]
-    retrieval_status = np.zeros(iwc.shape, dtype=int)
-    is_iwc = ~iwc.mask
-    retrieval_status[is_iwc] = 1
-    retrieval_status[is_iwc & ice_class.corrected_ice] = 2
-    retrieval_status[is_iwc & ice_class.uncorrected_ice] = 3
-    retrieval_status[~is_iwc & ice_class.is_ice] = 4
-    retrieval_status[ice_class.cold_above_rain] = 6
-    retrieval_status[ice_class.ice_above_rain] = 5
-    retrieval_status[ice_class.would_be_ice & (retrieval_status == 0)] = 7
-    iwc_data.append_data(retrieval_status, 'iwc_retrieval_status')
+            temperature = self.temperature
+        else:
+            temperature = ma.mean(self.temperature, axis=0)
+        z_scaled = self.getvar(z_variable) + self.z_factor
+        coeffs = self.coeffs
+        return 10 ** (coeffs.ZT * z_scaled * temperature
+                      + coeffs.T * temperature
+                      + coeffs.Z * z_scaled
+                      + coeffs.c) * G_TO_KG
 
 
 COMMENTS = {

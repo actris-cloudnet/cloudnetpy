@@ -6,7 +6,7 @@ from cloudnetpy.categorize import DataSource
 
 
 class NcRadar(DataSource):
-    """Class for radars providing netCDF files. Child of ProfileDataSource().
+    """Class for radars providing netCDF files. Child of DataSource().
 
     Args:
         full_path: Filename of a radar-produced netCDF file.
@@ -36,6 +36,7 @@ class NcRadar(DataSource):
             self.data[name].lin2db()
 
     def add_meta(self) -> None:
+        """Adds metadata."""
         for key in ('time', 'range', 'radar_frequency'):
             self.append_data(getattr(self, key), key)
         possible_nyquist_names = ('ambiguous_velocity', 'NyquistVelocity')

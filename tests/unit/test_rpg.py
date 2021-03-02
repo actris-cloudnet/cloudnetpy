@@ -13,13 +13,13 @@ class TestReduceHeader:
     header = {'a': n_points * [1], 'b': n_points * [2], 'c': n_points * [3]}
 
     def test_1(self):
-        assert_array_equal(rpg.reduce_header(self.header),
+        assert_array_equal(rpg._reduce_header(self.header),
                            {'a': 1, 'b': 2, 'c': 3})
 
     def test_2(self):
         self.header['a'][50] = 10
         with pytest.raises(AssertionError):
-            assert_array_equal(rpg.reduce_header(self.header),
+            assert_array_equal(rpg._reduce_header(self.header),
                                {'a': 1, 'b': 2, 'c': 3})
 
 

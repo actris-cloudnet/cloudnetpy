@@ -1,9 +1,9 @@
 """This module contains RPG Cloud Radar related functions."""
 from typing import Union, Tuple, Optional
-import numpy as np
 from cloudnetpy import utils, output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments import rpg
+from cloudnetpy.instruments.rpg_reader import HatproBin
 
 
 def hatpro2nc(path_to_lwp_files: str,
@@ -47,8 +47,8 @@ def hatpro2nc(path_to_lwp_files: str,
 
     """
     all_files = utils.get_sorted_filenames(path_to_lwp_files, '.LWP')
-    rpg_objects, valid_files = _get_rpg_objects(all_files, date)
-    one_day_of_data = rpg.create_one_day_data_record(rpg_objects)
+    hatpro_objects, valid_files = _get_hatpro_objects(all_files, date)
+    one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
     if not valid_files:
         return '', []
     hatpro = rpg.Rpg(one_day_of_data, site_meta, 'RPG-HATPRO')
@@ -56,7 +56,7 @@ def hatpro2nc(path_to_lwp_files: str,
     return rpg.save_rpg(hatpro, output_file, valid_files, keep_uuid, uuid)
 
 
-def _get_rpg_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
+def _get_hatpro_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
     """Creates a list of HATPRO objects from the file names."""
     objects = []
     valid_files = []
@@ -86,71 +86,6 @@ def _validate_date(obj, expected_date: str):
     for key in obj.data.keys():
         obj.data[key] = obj.data[key][inds]
     return obj
-
-
-class HatproBin:
-    """HATPRO binary file reader."""
-    def __init__(self, filename):
-        self.filename = filename
-        self._file_position = 0
-        self.header = self.read_header()
-        self.data = self.read_data()
-
-    def read_header(self) -> dict:
-        """Reads the header."""
-        file = open(self.filename, 'rb')
-        header = {
-            'file_code': np.fromfile(file, np.int32, 1),
-            '_n_samples': np.fromfile(file, np.int32, 1),
-            '_lwp_min_max': np.fromfile(file, np.float32, 2),
-            '_time_reference': np.fromfile(file, np.int32, 1),
-            'retrieval_method': np.fromfile(file, np.int32, 1)
-        }
-        self._file_position = file.tell()
-        file.close()
-        return header
-
-    def read_data(self) -> dict:
-        """Reads the data."""
-        file = open(self.filename, 'rb')
-        file.seek(self._file_position)
-
-        data = {
-            'time': np.zeros(self.header['_n_samples'], dtype=np.int32),
-            'quality_flag': np.zeros(self.header['_n_samples'], dtype=np.int32),
-            'LWP': np.zeros(self.header['_n_samples']),
-            'zenith': np.zeros(self.header['_n_samples'], dtype=np.float32)
-        }
-
-        version = self._get_hatpro_version()
-        angle_dtype = np.float32 if version == 1 else np.int32
-        data['_instrument_angles'] = np.zeros(self.header['_n_samples'], dtype=angle_dtype)
-
-        for sample in range(self.header['_n_samples'][0]):
-            data['time'][sample] = np.fromfile(file, np.int32, 1)
-            data['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
-            data['LWP'][sample] = np.fromfile(file, np.float32, 1)
-            data['_instrument_angles'][sample] = np.fromfile(file, angle_dtype, 1)
-
-        data = _add_zenith(version, data)
-
-        file.close()
-        return data
-
-    def _get_hatpro_version(self) -> int:
-        if self.header['file_code'][0] == 934501978:
-            return 1
-        if self.header['file_code'][0] == 934501000:
-            return 2
-        raise ValueError(f'Unknown HATPRO version. {self.header["file_code"][0]}')
-
-
-def _add_zenith(version: int, data: dict) -> dict:
-    if version == 1:
-        del data['zenith']  # Impossible to understand how zenith is decoded in the values
-    else:
-        data['zenith'] = np.array([int(str(x)[:5])/1000 for x in data['_instrument_angles']])
-    return data
 
 
 DEFINITIONS = {

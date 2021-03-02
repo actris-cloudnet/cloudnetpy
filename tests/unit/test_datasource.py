@@ -38,7 +38,5 @@ class TestDataSource:
         alt = self.obj.dataset.variables['height']
         assert_array_equal(self.obj.m2km(alt), test_array / 1000)
 
-
-def test_get_height_m(nc_file, test_array):
-    obj = datasource.ProfileDataSource(nc_file)
-    assert_array_equal(obj.height, test_array)
+    def test_get_height_m(self, test_array):
+        assert_array_equal(self.obj.height, test_array)
