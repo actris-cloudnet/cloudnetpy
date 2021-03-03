@@ -5,7 +5,7 @@ import numpy as np
 import numpy.ma as ma
 from numpy import ndarray
 import netCDF4
-from scipy.signal import lfilter
+from scipy.signal import lfilter, filtfilt
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -303,9 +303,12 @@ def _plot_instrument_data(ax, data, name, product, time):
 def _plot_mwr(ax, data, name, time):
     time, data = _remove_timestamps_of_next_date(time, data)
     rolling_mean, width = _calculate_rolling_mean(time, data/1000)
-    data_filter = _filter_noise(data/1000, 10)
-    ax.plot(time, data_filter, color='royalblue', linewidth=0.1)
-    ax.plot(time, np.zeros(data.shape), color='k', linewidth=0.8)
+    gaps = _find_time_gap_indices(time)
+    n, linewidth = _get_filter_linewidth_constants(data)
+    data_filter = _filter_noise(data/1000, n)
+    time[gaps] = np.nan
+    ax.plot(time, data_filter, color='royalblue', lw=linewidth)
+    ax.axhline(linewidth=0.8, color='k')
     ax.plot(time[int(width / 2 - 1):int(-width / 2)], rolling_mean,
             color='sienna', linewidth=2.0)
     ax.plot(time[int(width / 2 - 1):int(-width / 2)], rolling_mean,
@@ -324,6 +327,30 @@ def _remove_timestamps_of_next_date(time, data, n=100):
     return time, data
 
 
+def _find_time_gap_indices(time):
+    time_diff = np.diff(time)
+    time_diff_median = np.median(time_diff)
+    n = round(len(time) / 500)
+    if len(time) < 10000:
+        n = round(len(time) / 50, 0)
+    gaps = np.where(time_diff > time_diff_median*n)[0]
+    return gaps
+
+
+def _get_filter_linewidth_constants(data):
+    length = len(data)
+    n = round(int(length / 10000), 1)
+    if length < 10000:
+        linewidth = 0.9
+    if 10000 <= length < 38000:
+        linewidth = 0.7
+    if 38000 <= length < 55000:
+        linewidth = 0.27
+    if 55000 <= length:
+        linewidth = 0.25
+    return n, linewidth
+
+
 def _calculate_rolling_mean(time, data):
     width = len(time[time <= time[0] + 0.3])
     if (width % 2) != 0:
@@ -336,9 +363,12 @@ def _calculate_rolling_mean(time, data):
 
 def _filter_noise(data, n=5):
     """IIR filter"""
+    print(n)
+    if n <= 1:
+        n = 2
     b = [1.0 / n] * n
     a = 1
-    return lfilter(b, a, data)
+    return filtfilt(b, a, data)
 
 
 def _init_colorbar(plot, axis):
@@ -516,3 +546,18 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
     case_date = _set_labels(fig, axes[-1], nc_files[0])
     _handle_saving(image_name, save_path, show, dpi, case_date, [field_name],
                    '_comparison')
+
+
+def main():
+    import os
+    from pathlib import Path
+    root = os.path.split(Path(__file__).parent)[0]
+    root = os.path.split(root)[0]
+    root = os.path.split(root)[0]
+    nc_file = f'{root}/cloudnet_data/20210303_granada_hatpro.nc'
+    save_path = f'{root}/test_figs/'
+    generate_figure(nc_file, ['LWP'], save_path=save_path, show=False)
+
+
+if __name__ == "__main__":
+    main()

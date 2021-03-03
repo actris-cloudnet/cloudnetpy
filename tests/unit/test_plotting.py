@@ -60,6 +60,31 @@ def test_remove_timestamps_of_next_date():
     assert x == times[:-3]
     assert y == data[:-3]
 
+@pytest.mark.parametrize("data, x, y", [
+    (5000, 1, 0.9),
+    (32000, 3, 0.7),
+    (46000, 5, 0.3),
+    (75000, 8, 0.25)])
+def test_get_filter_linewidth_constants(data, x, y):
+    data = np.linspace(1, 1, data)
+    n, lw = plotting._get_filter_linewidth_constants(data)
+    assert n == x
+    assert lw == y
+
+
+def test_find_time_gap_indices():
+    time = np.linspace(1, 100, 100)
+    indices = []
+    for i, t in enumerate(time[0::9]):
+        if i == 0:
+            continue
+        j = i*10 - 1
+        time[j:] = time[j:] + 10
+        indices.append(j - 1)
+    indices.remove(indices[-1])
+    gaps = plotting._find_time_gap_indices(time)
+    testing.assert_array_almost_equal(gaps, indices)
+
 
 def test_calculate_rolling_mean():
     time = np.array([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
