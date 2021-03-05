@@ -330,25 +330,26 @@ def _remove_timestamps_of_next_date(time, data, n=100):
 def _find_time_gap_indices(time):
     time_diff = np.diff(time)
     time_diff_median = np.median(time_diff)
-    n = round(len(time) / 500)
+    x = 500
     if len(time) < 10000:
-        n = round(len(time) / 50, 0)
+        x = 50
+    n = round(len(time) / x, 0)
     gaps = np.where(time_diff > time_diff_median*n)[0]
     return gaps
 
 
 def _get_filter_linewidth_constants(data):
     length = len(data)
-    n = round(int(length / 10000), 1)
+    n = np.rint(np.nextafter((length / 10000), (length / 10000)+1))
     if length < 10000:
         linewidth = 0.9
     if 10000 <= length < 38000:
         linewidth = 0.7
     if 38000 <= length < 55000:
-        linewidth = 0.27
+        linewidth = 0.3
     if 55000 <= length:
         linewidth = 0.25
-    return n, linewidth
+    return int(n), linewidth
 
 
 def _calculate_rolling_mean(time, data):
@@ -361,9 +362,8 @@ def _calculate_rolling_mean(time, data):
     return rolling_mean, width
 
 
-def _filter_noise(data, n=5):
+def _filter_noise(data, n):
     """IIR filter"""
-    print(n)
     if n <= 1:
         n = 2
     b = [1.0 / n] * n
@@ -547,17 +547,3 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
     _handle_saving(image_name, save_path, show, dpi, case_date, [field_name],
                    '_comparison')
 
-
-def main():
-    import os
-    from pathlib import Path
-    root = os.path.split(Path(__file__).parent)[0]
-    root = os.path.split(root)[0]
-    root = os.path.split(root)[0]
-    nc_file = f'{root}/cloudnet_data/20210303_granada_hatpro.nc'
-    save_path = f'{root}/test_figs/'
-    generate_figure(nc_file, ['LWP'], save_path=save_path, show=False)
-
-
-if __name__ == "__main__":
-    main()

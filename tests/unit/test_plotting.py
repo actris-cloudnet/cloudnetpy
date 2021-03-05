@@ -1,4 +1,4 @@
-from scipy.signal import lfilter
+from scipy.signal import filtfilt
 import numpy as np
 import pytest
 import numpy.testing as testing
@@ -99,7 +99,7 @@ def test_filter_noise():
     data = np.array([1, 1, 5, -5, 1, 1, 5, -5, 1, 1, -5, 5])
     x = plotting._filter_noise(data, 3)
     b = [1.0 / 3] * 3
-    data = lfilter(b, 1, data)
+    data = filtfilt(b, 1, data)
     testing.assert_array_almost_equal(x, data)
 
 
