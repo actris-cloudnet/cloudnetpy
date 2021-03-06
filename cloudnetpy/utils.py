@@ -9,6 +9,7 @@ import numpy.ma as ma
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline
 import pytz
+import requests
 
 
 SECONDS_PER_MINUTE = 60
@@ -681,3 +682,12 @@ def str_to_numeric(value: str) -> Union[int, float]:
         return int(value)
     except ValueError:
         return float(value)
+
+
+def fetch_cloudnet_model_types() -> list:
+    """Finds different model types."""
+    url = f"https://cloudnet.fmi.fi/api/models"
+    data = requests.get(url=url).json()
+    models = [model['id'] for model in data]
+    model_types = [model.split('-')[0] for model in models]
+    return list(set(model_types))

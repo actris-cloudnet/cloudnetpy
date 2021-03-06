@@ -106,8 +106,8 @@ def _calc_mean_height(model_heights):
 
 def _find_model_type(file_name):
     """Finds model type from the model filename."""
-    possible_keys = ('ecmwf', 'gdas')
+    possible_keys = utils.fetch_cloudnet_model_types()
     for key in possible_keys:
         if key in file_name:
             return key
-    return ''
+    raise ValueError('Unknown model type')

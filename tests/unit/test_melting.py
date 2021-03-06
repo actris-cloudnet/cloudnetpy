@@ -6,8 +6,10 @@ from cloudnetpy.categorize import melting
 
 
 @pytest.mark.parametrize("model, result", [
-    ('some_ecmwf_model', (-4, 3)),
-    ('some_other_model', (-8, 6)),
+    ('gdas1', (-8, 6)),
+    ('ecmwf', (-4, 3)),
+    ('some_icon_version', (-4, 3)),
+    ('some_harmonie_version', (-4, 3)),
 ])
 def test_find_model_temperature_range(model, result):
     assert melting._find_model_temperature_range(model) == result

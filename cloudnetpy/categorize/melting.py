@@ -126,6 +126,6 @@ def _get_temp_indices(t_prof: np.ndarray, t_range: np.ndarray) -> np.ndarray:
 
 def _find_model_temperature_range(model_type: str) -> Tuple[float, float]:
     """Returns temperature range around 0C for given model type."""
-    if 'ecmwf' in model_type.lower():
-        return -4, 3
-    return -8, 6
+    if 'gdas1' in model_type.lower():
+        return -8, 6
+    return -4, 3

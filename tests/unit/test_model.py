@@ -8,9 +8,7 @@ from cloudnetpy.categorize import model
 
 @pytest.mark.parametrize("input, result", [
     ('this_is_a_ecmwf_model_file.nc', 'ecmwf'),
-    ('a_gdasXYZ_model_file.nc', 'gdas'),
-    ('an_unknown.nc', '')
-
+    ('a_gdas1XYZ_model_file.nc', 'gdas1'),
 ])
 def test_find_model_type(input, result):
     assert model._find_model_type(input) == result
