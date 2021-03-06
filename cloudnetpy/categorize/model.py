@@ -97,8 +97,6 @@ class Model(DataSource):
     def _get_model_heights(self, alt_site):
         """Returns model heights for each time step."""
         model_heights = self.dataset.variables['height']
-        if ma.count_masked(model_heights[:] > 0):
-            raise RuntimeError('Masked values in the data file! Aborting..')
         return self.km2m(model_heights) + alt_site
 
 
