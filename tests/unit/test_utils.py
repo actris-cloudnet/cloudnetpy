@@ -237,6 +237,45 @@ def test_interp_2d(x_new, y_new, result):
                               result)
 
 
+@pytest.mark.parametrize("x_new, y_new, expected", [
+    ([1.1, 1.9], [10., 20], ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 0]])),
+    ([1., 2.1], [15., 25], ma.array([[0.75, 1.25], [np.nan, np.nan]], mask=[[0, 0], [1, 1]])),
+    ([1., 10], [15., 25], ma.array([[0.75, 1.25], [np.nan, np.nan]], mask=[[0, 0], [1, 1]])),
+    ([1.5, 1.9], [10., 31], ma.array([[0.5, np.nan], [0.5, np.nan]], mask=[[0, 1], [0, 1]])),
+    ([1, 2], [9, 30], ma.array([[np.nan, 1.5], [np.nan, 1.5]], mask=[[1, 0], [1, 0]])),
+])
+def test_interpolate_2d_mask_edge(x_new, y_new, expected):
+    x = np.array([1., 2, 3])
+    y = np.array([10., 20, 30])
+    z = ma.array([[0.5, 1, 1.5],
+                  [0.5, 1, 1.5],
+                  [0.5, 1, 1.5]], mask=[[0, 0, 0],
+                                        [0, 0, 0],
+                                        [1, 1, 1]])
+    result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
+    assert_array_almost_equal(result.data, expected.data)
+    assert_array_almost_equal(result.mask, expected.mask)
+
+
+@pytest.mark.parametrize("x_new, y_new, expected", [
+    ([1.1, 1.4], [10., 20], ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 0]])),
+    ([1.1, 1.6], [10., 20], ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 1]])),
+    ([1.1, 2.4], [9., 20], ma.array([[np.nan, 1], [np.nan, 1]], mask=[[1, 0], [1, 1]])),
+    ([1.7, 2.3], [12., 28], ma.array([[0.6, 1.4], [0.6, 1.4]], mask=[[0, 0], [0, 0]])),
+])
+def test_interpolate_2d_mask_middle(x_new, y_new, expected):
+    x = np.array([1., 2, 3])
+    y = np.array([10., 20, 30])
+    z = ma.array([[0.5, 1, 1.5],
+                  [0.5, 1e-5, 1.5],
+                  [0.5, 1, 1.5]], mask=[[0, 0, 0],
+                                        [0, 1, 0],
+                                        [0, 0, 0]])
+    result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
+    assert_array_almost_equal(result.data, expected.data)
+    assert_array_almost_equal(result.mask, expected.mask)
+
+
 class TestArrayToProbability:
     x = np.arange(11)
     loc = 5

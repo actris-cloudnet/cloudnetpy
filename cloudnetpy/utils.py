@@ -7,7 +7,7 @@ import re
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
-from scipy.interpolate import RectBivariateSpline
+from scipy.interpolate import RectBivariateSpline, griddata
 import pytz
 import requests
 
@@ -317,21 +317,53 @@ def interpolate_2d(x: np.ndarray,
     return fun(x_new, y_new)
 
 
-def interpolate_2d_masked(array: ma.MaskedArray,
-                          ax_values: Tuple[np.ndarray, np.ndarray],
-                          ax_values_new: Tuple[np.ndarray, np.ndarray]) -> ma.MaskedArray:
-    """Interpolates 2D array preserving the mask.
+def interpolate_2d_mask(x: np.ndarray,
+                        y: np.ndarray,
+                        z: ma.MaskedArray,
+                        x_new: np.ndarray,
+                        y_new: np.ndarray) -> ma.MaskedArray:
+    """Interpolates 2D masked array preserving the mask.
 
     Args:
-        array: 2D masked array.
-        ax_values: 2-element tuple containing x and y values of the input array.
-        ax_values_new: 2-element tuple containing new x and y values.
+        x: 1D array, x-coordinates.
+        y: 1D array, y-coordinates.
+        z: 2D masked array, data values.
+        x_new: 1D array, new x-coordinates.
+        y_new: 1D array, new y-coordinates.
 
     Returns:
         Interpolated 2D masked array.
 
     Notes:
-        Uses linear interpolation.
+        Points outside the original range will be nans (and masked). Uses linear interpolation.
+        Input data may contain nan-values.
+
+    """
+    z = ma.masked_invalid(z, copy=True)
+    # Interpolate ignoring masked values:
+    valid_points = ~z.mask
+    xx, yy = np.meshgrid(y, x)
+    x_valid = xx[valid_points]
+    y_valid = yy[valid_points]
+    z_valid = z[valid_points]
+    xx_new, yy_new = np.meshgrid(y_new, x_new)
+    data = griddata((x_valid, y_valid), z_valid.ravel(), (xx_new, yy_new), method='linear')
+    # Preserve mask:
+    mask_fun = RectBivariateSpline(x, y, z.mask[:], kx=1, ky=1)
+    mask = mask_fun(x_new, y_new)
+    mask[mask < 0.5] = 0
+    masked_array = ma.array(data, mask=mask.astype(bool))
+    masked_array = ma.masked_invalid(masked_array)
+    return masked_array
+
+
+def interpolate_2d_masked(array: ma.MaskedArray,
+                          ax_values: Tuple[np.ndarray, np.ndarray],
+                          ax_values_new: Tuple[np.ndarray, np.ndarray]) -> ma.MaskedArray:
+    """Interpolates 2D array preserving the mask.
+
+    Notes:
+        Deprecated. Use interpolate_2d_mask instead which is more accurate.
 
     """
     def _mask_invalid_values(data_in):
