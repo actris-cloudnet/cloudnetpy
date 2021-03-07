@@ -406,7 +406,11 @@ def l2norm(*args: any) -> ma.MaskedArray:
     """
     ss = 0
     for arg in args:
-        ss = ss + arg ** 2
+        if isinstance(arg, ma.MaskedArray):
+            arg[~arg.mask] = arg[~arg.mask] ** 2
+        else:
+            arg = arg ** 2
+        ss = ss + arg
     return ma.sqrt(ss)
 
 
