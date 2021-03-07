@@ -237,21 +237,23 @@ class GasAttenuation(Attenuation):
         self.atten = self._calc_gas_atten()
 
     def _calc_gas_atten(self) -> np.ndarray:
-        atten = np.copy(self._model['specific_gas_atten'])
-        self._fix_atten_in_liquid(atten)
-        return self._specific_to_gas_atten(atten)
+        specific_atten = ma.copy(self._model['specific_gas_atten'])
+        specific_atten_corrected = self._fix_atten_in_liquid(specific_atten)
+        gas_atten = self._specific_to_gas_atten(specific_atten_corrected)
+        return gas_atten
 
     def _fix_atten_in_liquid(self, atten: np.ndarray) -> np.ndarray:
         saturated_atten = self._model['specific_saturated_gas_atten']
         atten[self._liquid_in_pixel] = saturated_atten[self._liquid_in_pixel]
+        return atten
 
     def _specific_to_gas_atten(self, specific_atten: np.ndarray) -> np.ndarray:
         layer1_atten = self._model['gas_atten'][:, 0]
-        atten_cumsum = np.cumsum(specific_atten, axis=1)
+        atten_cumsum = ma.cumsum(specific_atten, axis=1)
         atten = TWO_WAY * atten_cumsum * self._dheight * M_TO_KM
         atten += utils.transpose(layer1_atten)
         atten = np.insert(atten, 0, layer1_atten, axis=1)[:, :-1]
-        return atten
+        return ma.array(atten, mask=atten_cumsum.mask)
 
 
 class LiquidAttenuation(Attenuation):
