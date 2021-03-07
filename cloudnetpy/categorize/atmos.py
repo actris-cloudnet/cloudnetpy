@@ -158,7 +158,7 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
     c = (-model_data['temperature']*psychrometric_constant
          - dew_point*first_der
          + 0.5*dew_point**2*second_der)
-    return (-b+np.sqrt(b*b-4*a*c))/(2*a)
+    return (-b+ma.sqrt(b*b-4*a*c))/(2*a)
 
 
 def calc_dew_point_temperature(vapor_pressure: np.ndarray) -> np.ndarray:

@@ -11,8 +11,8 @@ class Model(DataSource):
     """Model class, child of DataSource.
 
     Args:
-        model_file (str): File name of the NWP model file.
-        alt_site (float): Altitude of the site above mean sea level (m).
+        model_file: File name of the NWP model file.
+        alt_site: Altitude of the site above mean sea level (m).
 
     Attributes:
         type (str): Model type, e.g. 'gdas1' or 'ecwmf'.
@@ -31,7 +31,7 @@ class Model(DataSource):
                     'specific_liquid_atten')
     fields_sparse = fields_dense + ('q', 'uwind', 'vwind')
 
-    def __init__(self, model_file, alt_site):
+    def __init__(self, model_file: str, alt_site: float):
         super().__init__(model_file)
         self.type = _find_model_type(model_file)
         self.model_heights = self._get_model_heights(alt_site)
@@ -41,70 +41,73 @@ class Model(DataSource):
         self.data_dense = {}
         self._append_grid()
 
-    def interpolate_to_common_height(self, wl_band):
+    def interpolate_to_common_height(self, wl_band: int) -> None:
         """Interpolates model variables to common height grid.
 
         Args:
-            wl_band (int): Integer denoting the approximate wavelength
-                band of the cloud radar (0 = ~35.5 GHz, 1 = ~94 GHz).
+            wl_band: Integer denoting the approximate wavelength band of the
+                cloud radar (0 = ~35.5 GHz, 1 = ~94 GHz).
 
         """
-        def _interpolate_variable():
-            datai = np.zeros((len(self.time), len(self.mean_height)))
-            for ind, (alt, prof) in enumerate(zip(self.model_heights, data)):
-                fun = interp1d(alt, prof, fill_value='extrapolate')
-                datai[ind, :] = fun(self.mean_height)
+        def _interpolate_variable(data_in: ma.MaskedArray) -> CloudnetArray:
+            datai = ma.zeros((len(self.time), len(self.mean_height)))
+            for ind, (alt, prof) in enumerate(zip(self.model_heights, data_in)):
+                if prof.mask.all():
+                    datai[ind, :] = ma.masked
+                else:
+                    fun = interp1d(alt, prof, fill_value='extrapolate')
+                    datai[ind, :] = fun(self.mean_height)
             return CloudnetArray(datai, key, units)
 
         for key in self.fields_sparse:
             variable = self.dataset.variables[key]
-            data = np.array(variable[:])
+            data = variable[:]
             units = variable.units
             if 'atten' in key:
                 data = data[wl_band, :, :]
-            self.data_sparse[key] = _interpolate_variable()
+            self.data_sparse[key] = _interpolate_variable(data)
 
-    def interpolate_to_grid(self, time_grid, height_grid):
+    def interpolate_to_grid(self, time_grid: np.ndarray, height_grid: np.ndarray) -> None:
         """Interpolates model variables to Cloudnet's dense time / height grid.
 
         Args:
-            time_grid (ndarray): The target time array (fraction hour).
-            height_grid (ndarray): The target height array (m).
+            time_grid: The target time array (fraction hour).
+            height_grid: The target height array (m).
 
         """
         for key in self.fields_dense:
-            self.data_dense[key] = utils.interpolate_2d(self.time,
-                                                        self.mean_height,
-                                                        self.data_sparse[key][:],
-                                                        time_grid, height_grid)
+            self.data_dense[key] = utils.interpolate_2d_mask(self.time,
+                                                             self.mean_height,
+                                                             self.data_sparse[key][:],
+                                                             time_grid, height_grid)
         self.height = height_grid
 
-    def calc_wet_bulb(self):
+    def calc_wet_bulb(self) -> None:
         """Calculates wet-bulb temperature in dense grid."""
         wet_bulb_temp = atmos.calc_wet_bulb_temperature(self.data_dense)
         self.append_data(wet_bulb_temp, 'Tw', units='K')
 
-    def screen_sparse_fields(self):
+    def screen_sparse_fields(self) -> None:
         """Removes model fields that we don't want to write in the output."""
         fields_to_keep = ('temperature', 'pressure', 'q', 'uwind', 'vwind')
-        self.data_sparse = {key: self.data_sparse[key]
-                            for key in fields_to_keep}
+        self.data_sparse = {key: self.data_sparse[key] for key in fields_to_keep}
 
-    def _append_grid(self):
+    def _append_grid(self) -> None:
         self.append_data(self.time, 'model_time')
         self.append_data(self.mean_height, 'model_height')
 
-    def _get_model_heights(self, alt_site):
+    def _get_model_heights(self, alt_site: float) -> np.ndarray:
         """Returns model heights for each time step."""
         model_heights = self.dataset.variables['height']
         return self.km2m(model_heights) + alt_site
 
 
-def _calc_mean_height(model_heights):
-    return np.mean(np.array(model_heights), axis=0)
+def _calc_mean_height(model_heights: np.ndarray) -> np.ndarray:
+    mean_height = ma.mean(model_heights, axis=0)
+    return np.array(mean_height)
 
 
-def _find_model_type(file_name):
+def _find_model_type(file_name: str) -> str:
     """Finds model type from the model filename."""
     possible_keys = utils.fetch_cloudnet_model_types()
     for key in possible_keys:
