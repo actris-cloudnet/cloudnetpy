@@ -96,8 +96,7 @@ def _get_relative_error(fields: list, ax_values: list, max_y: int):
     return _screen_high_altitudes(error, ax_values[1], max_y)
 
 
-def _set_labels(fig: plt.axes.fig, ax: plt.axes.axes, nc_file: str,
-                sub_title: bool =True) -> date:
+def _set_labels(fig, ax, nc_file: str, sub_title: bool =True) -> date:
     ax.set_xlabel('Time (UTC)', fontsize=13)
     case_date = _read_date(nc_file)
     site_name = _read_location(nc_file)
@@ -106,8 +105,7 @@ def _set_labels(fig: plt.axes.fig, ax: plt.axes.axes, nc_file: str,
     return case_date
 
 
-def _set_title(ax: plt.axes.axes, field_name: str,
-               identifier: str = " from CloudnetPy"):
+def _set_title(ax, field_name: str, identifier: str = " from CloudnetPy"):
     ax.set_title(f"{ATTRIBUTES[field_name].name}{identifier}", fontsize=14)
 
 
@@ -196,8 +194,7 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int):
     return data_field, (ax_values[0], alt)
 
 
-def _set_ax(ax: plt.axes.axes, max_y: float, ylabel: str = None,
-            min_y: float = 0.0):
+def _set_ax(ax, max_y: float, ylabel: str = None, min_y: float = 0.0):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
     ax.set_ylim(min_y, max_y)
@@ -215,7 +212,7 @@ def _get_standard_time_ticks(resolution: int = 4) -> list:
             for i in np.arange(0, 24.01, resolution)]
 
 
-def _plot_bar_data(ax: plt.axes.axes, data: np.Ma.MaskedArray, time: ndarray):
+def _plot_bar_data(ax, data: ndarray, time: ndarray):
     """Plots 1D variable as bar plot.
 
     Args:
@@ -232,7 +229,7 @@ def _plot_bar_data(ax: plt.axes.axes, data: np.Ma.MaskedArray, time: ndarray):
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
 
-def _plot_segment_data(ax: plt.axes.axes, data: ndarray, name: str, axes: tuple):
+def _plot_segment_data(ax, data: ndarray, name: str, axes: tuple):
     """Plots categorical 2D variable.
 
     Args:
@@ -263,8 +260,7 @@ def _plot_segment_data(ax: plt.axes.axes, data: ndarray, name: str, axes: tuple)
     colorbar.ax.set_yticklabels(clabel, fontsize=13)
 
 
-def _plot_colormesh_data(ax: plt.axes.axes,  data: ndarray, name: str,
-                         axes: tuple):
+def _plot_colormesh_data(ax,  data: ndarray, name: str, axes: tuple):
     """Plots continuous 2D variable.
 
     Creates only one plot, so can be used both one plot and subplot type of figs.
@@ -304,15 +300,15 @@ def _plot_colormesh_data(ax: plt.axes.axes,  data: ndarray, name: str,
         colorbar.ax.set_yticklabels(tick_labels)
 
 
-def _plot_instrument_data(ax: plt.axes.axes, data: ndarray, name: str,
-                          product: str, time: ndarray):
+def _plot_instrument_data(ax, data: ndarray, name: str, product: str,
+                          time: ndarray):
     if product == 'mwr':
         _plot_mwr(ax, data, name, time)
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
 
-def _plot_mwr(ax: plt.axes.axes, data: ndarray, name: str, time: ndarray):
+def _plot_mwr(ax, data: ndarray, name: str, time: ndarray):
     time, data_g = _remove_timestamps_of_next_date(time, data)
     # Change g/m2 to kg/m2
     data_kg = data_g / 1000
@@ -383,7 +379,7 @@ def _filter_noise(data: ndarray, n: int):
     return filtfilt(b, a, data)
 
 
-def _init_colorbar(plot: object, axis: plt.axes.axes) -> plt.colorbar:
+def _init_colorbar(plot, axis):
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="1%", pad=0.25)
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
@@ -410,7 +406,7 @@ def _read_date(nc_file: str) -> date:
     return case_date
 
 
-def _add_subtitle(fig: plt.axes.fig, case_date: date, site_name: str):
+def _add_subtitle(fig, case_date: date, site_name: str):
     """Adds subtitle into figure."""
     text = _get_subtitle_text(case_date, site_name)
     fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
@@ -444,8 +440,7 @@ def plot_2d(data: ndarray, cbar: bool = True, cmap: str = 'viridis',
     plt.show()
 
 
-def _plot_relative_error(ax: plt.axes.axes, error: np.Ma.MaskedArray,
-                         ax_values: tuple):
+def _plot_relative_error(ax, error: ndarray, ax_values: tuple):
     pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap='RdBu', vmin=-30,
                        vmax=30)
     colorbar = _init_colorbar(pl, ax)
