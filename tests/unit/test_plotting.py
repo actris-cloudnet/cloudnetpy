@@ -67,21 +67,14 @@ def test_remove_timestamps_of_next_date():
     (75000, 8, 0.25)])
 def test_get_filter_linewidth_constants(data, x, y):
     data = np.linspace(1, 1, data)
-    n, lw = plotting._get_filter_linewidth_constants(data)
+    n, lw = plotting._get_constants_for_noise_filter_and_linewidth(data)
     assert n == x
     assert lw == y
 
 
 def test_find_time_gap_indices():
-    time = np.linspace(1, 100, 100)
-    indices = []
-    for i, t in enumerate(time[0::9]):
-        if i == 0:
-            continue
-        j = i*10 - 1
-        time[j:] = time[j:] + 10
-        indices.append(j - 1)
-    indices.remove(indices[-1])
+    time = np.array([0.01, 0.02, 0.04, 0.13, 0.14, 0.23, 0.24])
+    indices = (2, 4)
     gaps = plotting._find_time_gap_indices(time)
     testing.assert_array_almost_equal(gaps, indices)
 

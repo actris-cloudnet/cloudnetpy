@@ -5,7 +5,7 @@ import numpy as np
 import numpy.ma as ma
 from numpy import ndarray
 import netCDF4
-from scipy.signal import lfilter, filtfilt
+from scipy.signal import filtfilt
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -16,8 +16,15 @@ from cloudnetpy.plotting.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
-def generate_figure(nc_file, field_names, show=True, save_path=None,
-                    max_y=12, dpi=200, image_name=None, sub_title=True, title=True):
+def generate_figure(nc_file: str,
+                    field_names: list,
+                    show: bool = True,
+                    save_path: str = None,
+                    max_y: int = 12,
+                    dpi: int = 200,
+                    image_name: str = None,
+                    sub_title: bool = True,
+                    title: bool = True):
     """Generates a Cloudnet figure.
 
     Args:
@@ -71,8 +78,8 @@ def generate_figure(nc_file, field_names, show=True, save_path=None,
     _handle_saving(image_name, save_path, show, dpi, case_date, valid_names)
 
 
-def _handle_saving(image_name, save_path, show, dpi, case_date, field_names,
-                   fix=""):
+def _handle_saving(image_name: str, save_path: str, show: bool, dpi: int,
+                   case_date: date, field_names: list, fix: str = ""):
     if image_name:
         plt.savefig(image_name, bbox_inches='tight', dpi=dpi)
     elif save_path:
@@ -83,13 +90,14 @@ def _handle_saving(image_name, save_path, show, dpi, case_date, field_names,
     plt.close()
 
 
-def _get_relative_error(fields, ax_values, max_y):
+def _get_relative_error(fields: list, ax_values: list, max_y: int):
     old_data_interp = utils.interpolate_2d_masked(fields[0], *ax_values)
     error = utils.calc_relative_error(old_data_interp, fields[1])
     return _screen_high_altitudes(error, ax_values[1], max_y)
 
 
-def _set_labels(fig, ax, nc_file, sub_title=True):
+def _set_labels(fig: plt.axes.fig, ax: plt.axes.axes, nc_file: str,
+                sub_title: bool =True) -> date:
     ax.set_xlabel('Time (UTC)', fontsize=13)
     case_date = _read_date(nc_file)
     site_name = _read_location(nc_file)
@@ -98,11 +106,12 @@ def _set_labels(fig, ax, nc_file, sub_title=True):
     return case_date
 
 
-def _set_title(ax, field_name, identifier=" from CloudnetPy"):
+def _set_title(ax: plt.axes.axes, field_name: str,
+               identifier: str = " from CloudnetPy"):
     ax.set_title(f"{ATTRIBUTES[field_name].name}{identifier}", fontsize=14)
 
 
-def _find_valid_fields(nc_file, names):
+def _find_valid_fields(nc_file: str, names: list):
     """Returns valid field names and corresponding data."""
     valid_names, valid_data = names[:], []
     try:
@@ -167,7 +176,7 @@ def _read_time_vector(nc_file: str) -> ndarray:
     return fraction_time
 
 
-def _screen_high_altitudes(data_field, ax_values, max_y):
+def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int):
     """Removes altitudes from 2D data that are not visible in the figure.
 
     Bug in pcolorfast causing effect to axis not noticing limitation while
@@ -187,7 +196,8 @@ def _screen_high_altitudes(data_field, ax_values, max_y):
     return data_field, (ax_values[0], alt)
 
 
-def _set_ax(ax, max_y, ylabel=None, min_y=0.0):
+def _set_ax(ax: plt.axes.axes, max_y: float, ylabel: str = None,
+            min_y: float = 0.0):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
     ax.set_ylim(min_y, max_y)
@@ -199,18 +209,18 @@ def _set_ax(ax, max_y, ylabel=None, min_y=0.0):
         ax.set_ylabel(ylabel, fontsize=13)
 
 
-def _get_standard_time_ticks(resolution=4):
+def _get_standard_time_ticks(resolution: int = 4) -> list:
     """Returns typical ticks / labels for a time vector between 0-24h."""
     return [f"{int(i):02d}:00" if 24 > i > 0 else ''
             for i in np.arange(0, 24.01, resolution)]
 
 
-def _plot_bar_data(ax, data, time):
+def _plot_bar_data(ax: plt.axes.axes, data: np.Ma.MaskedArray, time: ndarray):
     """Plots 1D variable as bar plot.
 
     Args:
         ax (obj): Axes object.
-        data (ndarray): 1D data array.
+        data (maskedArray): 1D data array.
         time (ndarray): 1D time array.
 
     """
@@ -222,7 +232,7 @@ def _plot_bar_data(ax, data, time):
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
 
-def _plot_segment_data(ax, data, name, axes):
+def _plot_segment_data(ax: plt.axes.axes, data: ndarray, name: str, axes: tuple):
     """Plots categorical 2D variable.
 
     Args:
@@ -253,7 +263,8 @@ def _plot_segment_data(ax, data, name, axes):
     colorbar.ax.set_yticklabels(clabel, fontsize=13)
 
 
-def _plot_colormesh_data(ax, data, name, axes):
+def _plot_colormesh_data(ax: plt.axes.axes,  data: ndarray, name: str,
+                         axes: tuple):
     """Plots continuous 2D variable.
 
     Creates only one plot, so can be used both one plot and subplot type of figs.
@@ -293,31 +304,34 @@ def _plot_colormesh_data(ax, data, name, axes):
         colorbar.ax.set_yticklabels(tick_labels)
 
 
-def _plot_instrument_data(ax, data, name, product, time):
+def _plot_instrument_data(ax: plt.axes.axes, data: ndarray, name: str,
+                          product: str, time: ndarray):
     if product == 'mwr':
         _plot_mwr(ax, data, name, time)
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
 
-def _plot_mwr(ax, data, name, time):
-    time, data = _remove_timestamps_of_next_date(time, data)
-    rolling_mean, width = _calculate_rolling_mean(time, data/1000)
+def _plot_mwr(ax: plt.axes.axes, data: ndarray, name: str, time: ndarray):
+    time, data_g = _remove_timestamps_of_next_date(time, data)
+    # Change g/m2 to kg/m2
+    data_kg = data_g / 1000
+    rolling_mean, width = _calculate_rolling_mean(time, data_kg)
     gaps = _find_time_gap_indices(time)
-    n, linewidth = _get_filter_linewidth_constants(data)
-    data_filter = _filter_noise(data/1000, n)
+    n, linewidth = _get_constants_for_noise_filter_and_linewidth(data_kg)
+    data_filtered = _filter_noise(data_kg, n)
     time[gaps] = np.nan
-    ax.plot(time, data_filter, color='royalblue', lw=linewidth)
+    ax.plot(time, data_filtered, color='royalblue', lw=linewidth)
     ax.axhline(linewidth=0.8, color='k')
     ax.plot(time[int(width / 2 - 1):int(-width / 2)], rolling_mean,
             color='sienna', linewidth=2.0)
     ax.plot(time[int(width / 2 - 1):int(-width / 2)], rolling_mean,
             color='wheat', linewidth=0.6)
-    _set_ax(ax, round(np.max(data / 1000), 3) + 0.0005, ATTRIBUTES[name].ylabel,
-            min_y=round(np.min(data / 1000), 3) - 0.0005)
+    _set_ax(ax, round(np.max(data_kg), 3) + 0.0005, ATTRIBUTES[name].ylabel,
+            min_y=round(np.min(data_kg), 3) - 0.0005)
 
 
-def _remove_timestamps_of_next_date(time, data, n=100):
+def _remove_timestamps_of_next_date(time: ndarray, data: ndarray, n: int = 100):
     """Check if timestamps of a next date is in a time-array. If so, remove
         extra timestamps which should not be included in a current date."""
     for i, t in enumerate(time[-n:-1]):
@@ -327,18 +341,16 @@ def _remove_timestamps_of_next_date(time, data, n=100):
     return time, data
 
 
-def _find_time_gap_indices(time):
+def _find_time_gap_indices(time: ndarray) -> ndarray:
+    # Find time gaps bigger than 5min
     time_diff = np.diff(time)
-    time_diff_median = np.median(time_diff)
-    x = 500
-    if len(time) < 10000:
-        x = 50
-    n = round(len(time) / x, 0)
-    gaps = np.where(time_diff > time_diff_median*n)[0]
+    dec_hour_5min = 0.085
+    gaps = np.where(time_diff > dec_hour_5min)[0]
     return gaps
 
 
-def _get_filter_linewidth_constants(data):
+def _get_constants_for_noise_filter_and_linewidth(data: ndarray):
+    # Get constants for visualizations depending of number of measurement of dataset
     length = len(data)
     n = np.rint(np.nextafter((length / 10000), (length / 10000)+1))
     if length < 10000:
@@ -352,7 +364,7 @@ def _get_filter_linewidth_constants(data):
     return int(n), linewidth
 
 
-def _calculate_rolling_mean(time, data):
+def _calculate_rolling_mean(time: ndarray, data: ndarray):
     width = len(time[time <= time[0] + 0.3])
     if (width % 2) != 0:
         width = width + 1
@@ -362,7 +374,7 @@ def _calculate_rolling_mean(time, data):
     return rolling_mean, width
 
 
-def _filter_noise(data, n):
+def _filter_noise(data: ndarray, n: int):
     """IIR filter"""
     if n <= 1:
         n = 2
@@ -371,18 +383,18 @@ def _filter_noise(data, n):
     return filtfilt(b, a, data)
 
 
-def _init_colorbar(plot, axis):
+def _init_colorbar(plot: object, axis: plt.axes.axes) -> plt.colorbar:
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="1%", pad=0.25)
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
-def _generate_log_cbar_ticklabel_list(vmin, vmax):
+def _generate_log_cbar_ticklabel_list(vmin: float, vmax: float) -> list:
     """Create list of log format colorbar label ticks as string"""
     return ['10$^{%s}$' % int(i) for i in np.arange(vmin, vmax+1)]
 
 
-def _read_location(nc_file):
+def _read_location(nc_file: str) -> str:
     """Returns measurement date string."""
     nc = netCDF4.Dataset(nc_file)
     site_name = nc.location
@@ -390,7 +402,7 @@ def _read_location(nc_file):
     return site_name
 
 
-def _read_date(nc_file):
+def _read_date(nc_file: str) -> date:
     """Returns measurement date string."""
     nc = netCDF4.Dataset(nc_file)
     case_date = date(int(nc.year), int(nc.month), int(nc.day))
@@ -398,25 +410,27 @@ def _read_date(nc_file):
     return case_date
 
 
-def _add_subtitle(fig, case_date, site_name):
+def _add_subtitle(fig: plt.axes.fig, case_date: date, site_name: str):
     """Adds subtitle into figure."""
     text = _get_subtitle_text(case_date, site_name)
     fig.suptitle(text, fontsize=13, y=0.885, x=0.07, horizontalalignment='left',
                  verticalalignment='bottom')
 
 
-def _get_subtitle_text(case_date, site_name):
+def _get_subtitle_text(case_date: date, site_name: str) -> str:
     site_name = site_name.replace('-', ' ')
     return f"{site_name}, {case_date.strftime('%-d %b %Y')}"
 
 
-def _create_save_name(save_path, case_date, field_names, fix=''):
+def _create_save_name(save_path: str, case_date: date,
+                      field_names: list, fix: str = '') -> str:
     """Creates file name for saved images."""
     date_string = case_date.strftime("%Y%m%d")
     return f"{save_path}{date_string}_{'_'.join(field_names)}{fix}.png"
 
 
-def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
+def plot_2d(data: ndarray, cbar: bool = True, cmap: str = 'viridis',
+            ncolors: int = 50, clim: tuple = None):
     """Simple plot of 2d variable."""
     plt.close()
     if cbar:
@@ -430,7 +444,8 @@ def plot_2d(data, cbar=True, cmap='viridis', ncolors=50, clim=None):
     plt.show()
 
 
-def _plot_relative_error(ax, error, ax_values):
+def _plot_relative_error(ax: plt.axes.axes, error: np.Ma.MaskedArray,
+                         ax_values: tuple):
     pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap='RdBu', vmin=-30,
                        vmax=30)
     colorbar = _init_colorbar(pl, ax)
@@ -440,7 +455,7 @@ def _plot_relative_error(ax, error, ax_values):
     ax.set_title(f"Median relative error: {median_error} %", fontsize=14)
 
 
-def _lin2log(*args):
+def _lin2log(*args: ndarray) -> list:
     return [ma.log10(x) for x in args]
 
 # LEGACY DATA PLOTTING ROUTINES:
@@ -488,8 +503,14 @@ def generate_legacy_figure(full_path: str,
     _handle_saving(image_name, save_path, show, dpi, case_date, [field_name])
 
 
-def compare_files(nc_files, field_name, show=True, relative_err=False,
-                  save_path=None, max_y=12, dpi=200, image_name=None):
+def compare_files(nc_files: list,
+                  field_name: str,
+                  show: bool = True,
+                  relative_err: bool = False,
+                  save_path: str = None,
+                  max_y: int = 12,
+                  dpi: int = 200,
+                  image_name: str = None):
     """ Plots one particular field from old and new cloudnet files.
 
     Args:
@@ -546,4 +567,3 @@ def compare_files(nc_files, field_name, show=True, relative_err=False,
     case_date = _set_labels(fig, axes[-1], nc_files[0])
     _handle_saving(image_name, save_path, show, dpi, case_date, [field_name],
                    '_comparison')
-
