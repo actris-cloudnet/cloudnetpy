@@ -1,4 +1,4 @@
-from scipy.signal import lfilter
+from scipy.signal import filtfilt
 import numpy as np
 import pytest
 import numpy.testing as testing
@@ -60,6 +60,24 @@ def test_remove_timestamps_of_next_date():
     assert x == times[:-3]
     assert y == data[:-3]
 
+@pytest.mark.parametrize("data, x, y", [
+    (5000, 1, 0.9),
+    (32000, 3, 0.7),
+    (46000, 5, 0.3),
+    (75000, 8, 0.25)])
+def test_get_filter_linewidth_constants(data, x, y):
+    data = np.linspace(1, 1, data)
+    n, lw = plotting._get_constants_for_noise_filter_and_linewidth(data)
+    assert n == x
+    assert lw == y
+
+
+def test_find_time_gap_indices():
+    time = np.array([0.01, 0.02, 0.04, 0.13, 0.14, 0.23, 0.24])
+    indices = (2, 4)
+    gaps = plotting._find_time_gap_indices(time)
+    testing.assert_array_almost_equal(gaps, indices)
+
 
 def test_calculate_rolling_mean():
     time = np.array([0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9])
@@ -74,7 +92,7 @@ def test_filter_noise():
     data = np.array([1, 1, 5, -5, 1, 1, 5, -5, 1, 1, -5, 5])
     x = plotting._filter_noise(data, 3)
     b = [1.0 / 3] * 3
-    data = lfilter(b, 1, data)
+    data = filtfilt(b, 1, data)
     testing.assert_array_almost_equal(x, data)
 
 
