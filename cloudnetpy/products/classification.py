@@ -75,8 +75,8 @@ def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
     status = np.zeros(bits['radar'].shape, dtype=int)
     status[bits['radar'] & bits['lidar']] = 1
     status[bits['radar'] & ~bits['lidar'] & ~bits['attenuated']] = 2
-    status[bits['radar'] & bits['corrected']] = 4
-    status[bits['lidar'] & ~bits['radar']] = 3
+    status[bits['radar'] & bits['corrected']] = 3
+    status[bits['lidar'] & ~bits['radar']] = 4
     status[bits['radar'] & bits['attenuated'] & ~bits['corrected']] = 5
     status[bits['clutter']] = 6
     status[bits['molecular'] & ~bits['radar']] = 7
