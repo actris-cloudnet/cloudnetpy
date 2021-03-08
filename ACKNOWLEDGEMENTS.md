@@ -10,7 +10,6 @@ Below is a partial list. Please add your name if it has been left off.
 - Anthony Illingworth
 - Anniina Korpinen
 - Ewan O'Connor
+- Willi Schimmel
 - Simo Tukiainen
 - Minttu Tuononen
-
-
