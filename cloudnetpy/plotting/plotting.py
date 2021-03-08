@@ -1,5 +1,5 @@
 """Misc. plotting routines for Cloudnet products."""
-
+from typing import Optional, Tuple
 from datetime import date
 import numpy as np
 import numpy.ma as ma
@@ -20,11 +20,11 @@ def generate_figure(nc_file: str,
                     field_names: list,
                     show: bool = True,
                     save_path: str = None,
-                    max_y: int = 12,
-                    dpi: int = 200,
-                    image_name: str = None,
-                    sub_title: bool = True,
-                    title: bool = True):
+                    max_y: Optional[int] = 12,
+                    dpi: Optional[int] = 200,
+                    image_name: Optional[str] = None,
+                    sub_title: Optional[bool] = True,
+                    title: Optional[bool] = True):
     """Generates a Cloudnet figure.
 
     Args:
@@ -90,13 +90,13 @@ def _handle_saving(image_name: str, save_path: str, show: bool, dpi: int,
     plt.close()
 
 
-def _get_relative_error(fields: list, ax_values: list, max_y: int):
+def _get_relative_error(fields: list, ax_values: list, max_y: int) -> tuple:
     old_data_interp = utils.interpolate_2d_masked(fields[0], *ax_values)
     error = utils.calc_relative_error(old_data_interp, fields[1])
     return _screen_high_altitudes(error, ax_values[1], max_y)
 
 
-def _set_labels(fig, ax, nc_file: str, sub_title: bool =True) -> date:
+def _set_labels(fig, ax, nc_file: str, sub_title: bool = True) -> date:
     ax.set_xlabel('Time (UTC)', fontsize=13)
     case_date = _read_date(nc_file)
     site_name = _read_location(nc_file)
@@ -109,7 +109,7 @@ def _set_title(ax, field_name: str, identifier: str = " from CloudnetPy"):
     ax.set_title(f"{ATTRIBUTES[field_name].name}{identifier}", fontsize=14)
 
 
-def _find_valid_fields(nc_file: str, names: list):
+def _find_valid_fields(nc_file: str, names: list) -> Tuple[list, list]:
     """Returns valid field names and corresponding data."""
     valid_names, valid_data = names[:], []
     try:
@@ -139,7 +139,7 @@ def _is_height_dimension(full_path: str) -> bool:
     return is_height
 
 
-def _initialize_figure(n_subplots: int):
+def _initialize_figure(n_subplots: int) -> tuple:
     """Creates an empty figure according to the number of subplots."""
     fig, axes = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8))
     fig.subplots_adjust(left=0.06, right=0.73)
@@ -148,7 +148,7 @@ def _initialize_figure(n_subplots: int):
     return fig, axes
 
 
-def _read_ax_values(full_path: str, file_type: str = None):
+def _read_ax_values(full_path: str, file_type: str = None) -> Tuple[ndarray, ndarray]:
     """Returns time and height arrays."""
     if not file_type:
         nc = netCDF4.Dataset(full_path)
@@ -174,7 +174,8 @@ def _read_time_vector(nc_file: str) -> ndarray:
     return fraction_time
 
 
-def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int):
+def _screen_high_altitudes(data_field: ndarray, ax_values: tuple,
+                           max_y: int) -> tuple:
     """Removes altitudes from 2D data that are not visible in the figure.
 
     Bug in pcolorfast causing effect to axis not noticing limitation while
@@ -239,7 +240,7 @@ def _plot_segment_data(ax, data: ndarray, name: str, axes: tuple):
         axes (tuple): Time and height 1D arrays.
 
     """
-    def _hide_segments(data_in):
+    def _hide_segments(data_in: ndarray) -> Tuple[ndarray, list, list]:
         labels = [x[0] for x in variables.clabel]
         colors = [x[1] for x in variables.clabel]
         segments_to_hide = np.char.startswith(labels, '_')
@@ -327,7 +328,8 @@ def _plot_mwr(ax, data: ndarray, name: str, time: ndarray):
             min_y=round(np.min(data_kg), 3) - 0.0005)
 
 
-def _remove_timestamps_of_next_date(time: ndarray, data: ndarray, n: int = 100):
+def _remove_timestamps_of_next_date(time: ndarray, data: ndarray,
+                                    n: int = 100) -> Tuple[ndarray, ndarray]:
     """Check if timestamps of a next date is in a time-array. If so, remove
         extra timestamps which should not be included in a current date."""
     for i, t in enumerate(time[-n:-1]):
@@ -345,7 +347,7 @@ def _find_time_gap_indices(time: ndarray) -> ndarray:
     return gaps
 
 
-def _get_constants_for_noise_filter_and_linewidth(data: ndarray):
+def _get_constants_for_noise_filter_and_linewidth(data: ndarray) -> Tuple[int, float]:
     # Get constants for visualizations depending of number of measurement of dataset
     length = len(data)
     n = np.rint(np.nextafter((length / 10000), (length / 10000)+1))
@@ -360,7 +362,7 @@ def _get_constants_for_noise_filter_and_linewidth(data: ndarray):
     return int(n), linewidth
 
 
-def _calculate_rolling_mean(time: ndarray, data: ndarray):
+def _calculate_rolling_mean(time: ndarray, data: ndarray) -> Tuple[ndarray, int]:
     width = len(time[time <= time[0] + 0.3])
     if (width % 2) != 0:
         width = width + 1
@@ -370,7 +372,7 @@ def _calculate_rolling_mean(time: ndarray, data: ndarray):
     return rolling_mean, width
 
 
-def _filter_noise(data: ndarray, n: int):
+def _filter_noise(data: ndarray, n: int) -> ndarray:
     """IIR filter"""
     if n <= 1:
         n = 2
