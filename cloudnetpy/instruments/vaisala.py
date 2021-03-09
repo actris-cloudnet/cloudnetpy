@@ -62,12 +62,14 @@ class VaisalaCeilo(Ceilometer):
                     return i
 
         def _parse_data_lines(starting_indices: list) -> list:
-            return [[data[n + line_number] for n in starting_indices]
+            return [[data[n + line_number] for n in starting_indices
+                     if (n + line_number) < len(data)]
                     for line_number in range(number_of_data_lines)]
 
         timestamp_line_numbers = _find_timestamp_line_numbers()
         number_of_data_lines = _find_number_of_data_lines(timestamp_line_numbers[0])
-        return _parse_data_lines(timestamp_line_numbers)
+        data_lines = _parse_data_lines(timestamp_line_numbers)
+        return data_lines
 
     @staticmethod
     def _get_message_number(header_line_1: dict) -> int:
