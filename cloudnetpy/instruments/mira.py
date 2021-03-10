@@ -1,6 +1,6 @@
 """Module for reading raw cloud radar data."""
 import os
-from typing import Union, List, Optional
+from typing import List, Optional
 from tempfile import NamedTemporaryFile
 import numpy as np
 from cloudnetpy import output, utils
@@ -66,6 +66,7 @@ def mira2nc(raw_mira: str,
     mira.init_data(keymap)
     if date is not None:
         mira.screen_time(date)
+        mira.date = date.split('-')
     mira.linear_to_db(('Ze', 'ldr', 'SNR'))
     if rebin_data:
         snr_gain = mira.rebin_fields()
@@ -133,10 +134,6 @@ class Mira(NcRadar):
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(ind)
 
-    def _init_mira_date(self) -> List[str]:
-        time_stamps = self.getvar('time')
-        return utils.seconds2date(time_stamps[0], self.epoch)[:3]
-
     def rebin_fields(self) -> float:
         """Rebins fields."""
         time_grid = utils.time_grid()
@@ -151,6 +148,10 @@ class Mira(NcRadar):
         """Returns factor for SNR (dB) increase when data is binned."""
         binning_ratio = utils.mdiff(time_sparse) / utils.mdiff(time_dense)
         return np.sqrt(binning_ratio)
+
+    def _init_mira_date(self) -> List[str]:
+        time_stamps = self.getvar('time')
+        return utils.seconds2date(time_stamps[0], self.epoch)[:3]
 
 
 ATTRIBUTES = {
