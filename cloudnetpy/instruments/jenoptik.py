@@ -30,11 +30,11 @@ CEILOMETER_INFO = {
         overlap_function_params=None,
         is_range_corrected=True),
     'lindenberg': instrument_info(
-        calibration_factor=2.5e-11,
+        calibration_factor=4e-12,
         overlap_function_params=None,
         is_range_corrected=True),
     'palaiseau': instrument_info(
-        calibration_factor=3.6e-11,
+        calibration_factor=2.3e-12,
         overlap_function_params=None,
         is_range_corrected=True),
 }
