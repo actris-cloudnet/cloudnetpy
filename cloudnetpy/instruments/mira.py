@@ -129,9 +129,9 @@ class Mira(NcRadar):
                       snr_limit: Optional[int] = -17) -> None:
         """Screens by SNR."""
         ind = np.where(self.data['SNR'][:] * snr_gain < snr_limit)
-        for field in self.data:
-            if self.data[field].data.ndim == 2:  # Screen only 2d variables
-                self.data[field].mask_indices(ind)
+        for cloudnet_array in self.data.values():
+            if cloudnet_array.data.ndim == 2:
+                cloudnet_array.mask_indices(ind)
 
     def _init_mira_date(self) -> List[str]:
         time_stamps = self.getvar('time')
@@ -140,8 +140,8 @@ class Mira(NcRadar):
     def rebin_fields(self) -> float:
         """Rebins fields."""
         time_grid = utils.time_grid()
-        for field in self.data:
-            self.data[field].rebin_data(self.time, time_grid)
+        for cloudnet_array in self.data.values():
+            cloudnet_array.rebin_data(self.time, time_grid)
         snr_gain = self._estimate_snr_gain(time_grid, self.time)
         self.time = time_grid
         return snr_gain
