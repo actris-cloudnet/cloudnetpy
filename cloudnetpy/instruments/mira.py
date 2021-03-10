@@ -64,7 +64,8 @@ def mira2nc(raw_mira: str,
 
     mira = Mira(mmclx_filename, site_meta)
     mira.init_data(keymap)
-    mira.validate_date(date)
+    if date is not None:
+        mira.screen_time(date)
     mira.linear_to_db(('Ze', 'ldr', 'SNR'))
     if rebin_data:
         snr_gain = mira.rebin_fields()
@@ -98,15 +99,22 @@ class Mira(NcRadar):
         self.date = self._init_mira_date()
         self.source = 'METEK MIRA-35'
 
-    def validate_date(self, expected_date: Union[str, None]) -> None:
-        """Validates MIRA date timestamps."""
+    def screen_time(self, expected_date: str) -> None:
+        """Screens incorrect time stamps."""
         time_stamps = self.getvar('time')
-        for t in time_stamps[1:-1]:  # Ignore last timestamp (it can be 24:00)
-            date = utils.seconds2date(t, self.epoch)[:3]
-            if date != self.date:
-                raise ValueError('Error: MIRA dates from different days.')
-            if expected_date is not None and '-'.join(date) != expected_date:
-                raise ValueError('Error: MIRA date differs from expected.')
+        inds = []
+        for ind, timestamp in enumerate(time_stamps):
+            date = '-'.join(utils.seconds2date(timestamp, self.epoch)[:3])
+            if date == expected_date:
+                inds.append(ind)
+        if not inds:
+            raise ValueError('Error: MIRA date differs from expected.')
+        for cloudnet_array in self.data.values():
+            array = cloudnet_array.data
+            n_time = len(time_stamps)
+            if isinstance(array, np.ndarray) and array.ndim == 2 and array.shape[0] == n_time:
+                cloudnet_array.data = array[inds, :]
+        self.time = self.time[inds]
 
     def add_geolocation(self):
         """Adds geo info (from global attributes to variables)."""
