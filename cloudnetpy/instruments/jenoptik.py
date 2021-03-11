@@ -37,6 +37,10 @@ CEILOMETER_INFO = {
         calibration_factor=2.3e-12,
         overlap_function_params=None,
         is_range_corrected=True),
+    'juelich': instrument_info(
+        calibration_factor=2.3e-12,
+        overlap_function_params=None,
+        is_range_corrected=True),
 }
 
 
@@ -111,4 +115,6 @@ def _read_calibration_info(site_name: str) -> instrument_info:
         return CEILOMETER_INFO['punta-arenas']
     if 'mace' in site_name.lower():
         return CEILOMETER_INFO['mace-head']
+    if 'jülich' in site_name.lower():
+        return CEILOMETER_INFO['juelich']
     return CEILOMETER_INFO[site_name.lower()]
