@@ -58,9 +58,10 @@ def generate_figure(nc_file: str,
         if title:
             _set_title(ax, name, '')
         if not is_height:
+            unit = _get_variable_unit(nc_file, name)
             source = ATTRIBUTES[name].source
             time = _read_time_vector(nc_file)
-            _plot_instrument_data(ax, field, name, source, time)
+            _plot_instrument_data(ax, field, name, source, time, unit)
             continue
         ax_value = _read_ax_values(nc_file)
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
@@ -137,6 +138,14 @@ def _is_height_dimension(full_path: str) -> bool:
     is_height = any([key in nc.variables for key in ('height', 'range')])
     nc.close()
     return is_height
+
+
+def _get_variable_unit(full_path: str, name: str) -> str:
+    nc = netCDF4.Dataset(full_path)
+    var = nc.variables[name]
+    unit = var.units
+    nc.close()
+    return unit
 
 
 def _initialize_figure(n_subplots: int) -> tuple:
@@ -302,21 +311,21 @@ def _plot_colormesh_data(ax,  data: ndarray, name: str, axes: tuple):
 
 
 def _plot_instrument_data(ax, data: ndarray, name: str, product: str,
-                          time: ndarray):
+                          time: ndarray, unit: str):
     if product == 'mwr':
-        _plot_mwr(ax, data, name, time)
+        _plot_mwr(ax, data, name, time, unit)
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
 
-def _plot_mwr(ax, data: ndarray, name: str, time: ndarray):
-    time, data_g = _remove_timestamps_of_next_date(time, data)
-    # Change g/m2 to kg/m2
-    data_kg = data_g / 1000
-    rolling_mean, width = _calculate_rolling_mean(time, data_kg)
+def _plot_mwr(ax, data: ndarray, name: str, time: ndarray, unit: str):
+    time, data = _remove_timestamps_of_next_date(time, data)
+    data, time = _select_none_masked_values(data, time)
+    data = _change_unit2kg(data, unit)
+    rolling_mean, width = _calculate_rolling_mean(time, data)
     gaps = _find_time_gap_indices(time)
-    n, linewidth = _get_constants_for_noise_filter_and_linewidth(data_kg)
-    data_filtered = _filter_noise(data_kg, n)
+    n, linewidth = _get_constants_for_noise_filter_and_linewidth(data)
+    data_filtered = _filter_noise(data, n)
     time[gaps] = np.nan
     ax.plot(time, data_filtered, color='royalblue', lw=linewidth)
     ax.axhline(linewidth=0.8, color='k')
@@ -324,8 +333,8 @@ def _plot_mwr(ax, data: ndarray, name: str, time: ndarray):
             color='sienna', linewidth=2.0)
     ax.plot(time[int(width / 2 - 1):int(-width / 2)], rolling_mean,
             color='wheat', linewidth=0.6)
-    _set_ax(ax, round(np.max(data_kg), 3) + 0.0005, ATTRIBUTES[name].ylabel,
-            min_y=round(np.min(data_kg), 3) - 0.0005)
+    _set_ax(ax, round(np.max(data), 3) + 0.0005, ATTRIBUTES[name].ylabel,
+            min_y=round(np.min(data), 3) - 0.0005)
 
 
 def _remove_timestamps_of_next_date(time: ndarray, data: ndarray,
@@ -337,6 +346,18 @@ def _remove_timestamps_of_next_date(time: ndarray, data: ndarray,
             nextday = i - n + 1
             return time[:nextday], data[:nextday]
     return time, data
+
+
+def _select_none_masked_values(data: ndarray, time: ndarray) -> tuple:
+    time = time[~data.mask]
+    data = data[~data.mask]
+    return data, time
+
+
+def _change_unit2kg(data, unit):
+    if 'kg' in unit:
+        return data
+    return data / 1000
 
 
 def _find_time_gap_indices(time: ndarray) -> ndarray:
