@@ -53,13 +53,6 @@ def test_create_save_name(file_metadata):
     assert plotting._create_save_name(path, case_date, fields) == f"/foo/bar/{datestr}_ldr_z.png"
 
 
-def test_remove_timestamps_of_next_date():
-    times = [1, 2, 3, 4, 5, 6, 1, 2, 3]
-    data = [1, 1, 1, 2, 2, 2, 3, 3, 3]
-    x, y = plotting._remove_timestamps_of_next_date(times, data, 8)
-    assert x == times[:-3]
-    assert y == data[:-3]
-
 @pytest.mark.parametrize("data, x, y", [
     (5000, 1, 0.9),
     (32000, 3, 0.7),
@@ -96,12 +89,21 @@ def test_filter_noise():
     testing.assert_array_almost_equal(x, data)
 
 
-def test_select_none_masked_values():
+def test_select_none_masked_values_array():
     data = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     mask = [0, 3, 7]
     data[mask] = np.ma.masked
     time = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     compare = np.array([2, 3, 5, 6, 7, 9])
+    x, y = plotting._select_none_masked_values(data, time)
+    testing.assert_array_almost_equal(x, compare)
+    testing.assert_array_almost_equal(y, compare)
+
+
+def test_select_none_masked_values_bool():
+    data = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    time = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    compare = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     x, y = plotting._select_none_masked_values(data, time)
     testing.assert_array_almost_equal(x, compare)
     testing.assert_array_almost_equal(y, compare)

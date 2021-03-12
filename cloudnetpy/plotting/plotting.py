@@ -319,7 +319,6 @@ def _plot_instrument_data(ax, data: ndarray, name: str, product: str,
 
 
 def _plot_mwr(ax, data: ndarray, name: str, time: ndarray, unit: str):
-    time, data = _remove_timestamps_of_next_date(time, data)
     data, time = _select_none_masked_values(data, time)
     data = _change_unit2kg(data, unit)
     rolling_mean, width = _calculate_rolling_mean(time, data)
@@ -337,21 +336,13 @@ def _plot_mwr(ax, data: ndarray, name: str, time: ndarray, unit: str):
             min_y=round(np.min(data), 3) - 0.0005)
 
 
-def _remove_timestamps_of_next_date(time: ndarray, data: ndarray,
-                                    n: int = 100) -> Tuple[ndarray, ndarray]:
-    """Check if timestamps of a next date is in a time-array. If so, remove
-        extra timestamps which should not be included in a current date."""
-    for i, t in enumerate(time[-n:-1]):
-        if t > time[-n:][i+1]:
-            nextday = i - n + 1
-            return time[:nextday], data[:nextday]
-    return time, data
-
-
 def _select_none_masked_values(data: ndarray, time: ndarray) -> tuple:
-    time = time[~data.mask]
-    data = data[~data.mask]
-    return data, time
+    good_values = ~data.mask
+    try:
+        if good_values:
+            return data, time
+    except ValueError:
+        return data[good_values], time[good_values]
 
 
 def _change_unit2kg(data, unit):
