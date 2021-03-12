@@ -150,7 +150,8 @@ class Rpg:
         self.data[key] = CloudnetArray(fraction_hour, key)
 
     def mask_invalid_ldr(self) -> None:
-        self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
+        if 'ldr' in self.data:
+            self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
 
     def linear_to_db(self, variables_to_log: tuple) -> None:
         """Changes some linear units to logarithmic."""
