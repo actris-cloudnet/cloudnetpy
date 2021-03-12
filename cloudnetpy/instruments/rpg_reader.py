@@ -76,6 +76,8 @@ class Fmcw94Bin:
         str_out = ''
         while True:
             c = np.fromfile(file_id, np.int8, 1)
+            if len(c) == 1 and c[0] < 0:
+                c = [63]
             if len(c) == 0 or c[0] == 0:
                 break
             str_out += chr(c[0])
