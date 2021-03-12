@@ -706,8 +706,9 @@ def is_timestamp(timestamp: str) -> bool:
 
 def get_sorted_filenames(file_path: str, extension: str) -> list:
     """Returns full paths of files with some extension, sorted by filename."""
+    extension = extension.lower()
     all_files = os.listdir(file_path)
-    files = ['/'.join((file_path, file)) for file in all_files if file.endswith(extension)]
+    files = ['/'.join((file_path, file)) for file in all_files if file.lower().endswith(extension)]
     files.sort()
     return files
 

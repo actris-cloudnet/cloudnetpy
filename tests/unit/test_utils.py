@@ -486,7 +486,7 @@ def example_files(tmpdir):
 
 def test_get_sorted_filenames(example_files):
     dir_name = example_files.dirname + '/data'
-    result = ['/'.join((dir_name, x)) for x in ('f.LV1', 'g.LV1')]
+    result = ['/'.join((dir_name, x)) for x in ('f.LV1', 'f.lv1', 'g.LV1')]
     assert utils.get_sorted_filenames(dir_name, '.LV1') == result
 
 
