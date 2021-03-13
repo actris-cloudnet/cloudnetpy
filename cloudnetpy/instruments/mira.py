@@ -73,6 +73,7 @@ def mira2nc(raw_mira: str,
     else:
         snr_gain = 1
     mira.screen_by_snr(snr_gain)
+    mira.mask_invalid_data()
     mira.add_meta()
     mira.add_geolocation()
     mira.close()
@@ -133,6 +134,15 @@ class Mira(NcRadar):
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(ind)
+
+    def mask_invalid_data(self):
+        """Makes sure Z and v masks are also in other 2d variables."""
+        z_mask = self.data['Ze'][:].mask
+        v_mask = self.data['v'][:].mask
+        for cloudnet_array in self.data.values():
+            if cloudnet_array.data.ndim == 2:
+                cloudnet_array.mask_indices(z_mask)
+                cloudnet_array.mask_indices(v_mask)
 
     def rebin_fields(self) -> float:
         """Rebins fields."""
