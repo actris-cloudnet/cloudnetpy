@@ -1,6 +1,7 @@
 """Module for reading / converting BASTA radar data."""
 from typing import Optional
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy import output
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
@@ -89,7 +90,7 @@ class Basta(NcRadar):
         """Adds geo info."""
         for key in ('latitude', 'longitude', 'altitude'):
             if key not in self.data.keys():  # Not provided by user
-                value = np.median(self.getvar(key))
+                value = ma.median(self.getvar(key))
                 self.append_data(value.astype(float), key)
 
 
