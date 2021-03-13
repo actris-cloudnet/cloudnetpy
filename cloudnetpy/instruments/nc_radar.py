@@ -1,7 +1,7 @@
 """Module for reading raw cloud radar data."""
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import CloudnetArray
+from cloudnetpy import RadarArray
 from cloudnetpy.categorize import DataSource
 
 
@@ -28,7 +28,7 @@ class NcRadar(DataSource):
             name = keymap[key]
             array = self.getvar(key)
             array[~np.isfinite(array)] = ma.masked
-            self.data[name] = CloudnetArray(array, name)
+            self.data[name] = RadarArray(array, name)
 
     def linear_to_db(self, variables_to_log: tuple) -> None:
         """Changes linear units to logarithmic."""
