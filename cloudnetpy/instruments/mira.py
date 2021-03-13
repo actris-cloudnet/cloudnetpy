@@ -89,9 +89,8 @@ class Mira(NcRadar):
     """Class for MIRA-35 raw radar data. Child of NcRadar().
 
     Args:
-        full_path (str): Filename of a daily MIRA .mmclx NetCDF file.
-        site_meta (dict): Site properties in a dictionary. Required
-            keys are: `name`.
+        full_path: Filename of a daily MIRA .mmclx NetCDF file.
+        site_meta: Site properties in a dictionary. Required keys are: `name`.
 
     """
     radar_frequency = 35.5
@@ -119,7 +118,7 @@ class Mira(NcRadar):
                 cloudnet_array.data = array[inds, :]
         self.time = self.time[inds]
 
-    def add_geolocation(self):
+    def add_geolocation(self) -> None:
         """Adds geo info (from global attributes to variables)."""
         for key in ('Latitude', 'Longitude', 'Altitude'):
             value = getattr(self.dataset, key).split()[0]
@@ -127,16 +126,14 @@ class Mira(NcRadar):
             if key not in self.data.keys():  # Not provided by user
                 self.append_data(value, key)
 
-    def screen_by_snr(self,
-                      snr_gain: Optional[int] = 1,
-                      snr_limit: Optional[int] = -17) -> None:
+    def screen_by_snr(self, snr_gain: float, snr_limit: Optional[float] = -17) -> None:
         """Screens by SNR."""
         ind = np.where(self.data['SNR'][:] * snr_gain < snr_limit)
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(ind)
 
-    def mask_invalid_data(self):
+    def mask_invalid_data(self) -> None:
         """Makes sure Z and v masks are also in other 2d variables."""
         z_mask = self.data['Ze'][:].mask
         v_mask = self.data['v'][:].mask
@@ -145,7 +142,7 @@ class Mira(NcRadar):
                 cloudnet_array.mask_indices(z_mask)
                 cloudnet_array.mask_indices(v_mask)
 
-    def filter_vertical_artifacts(self):
+    def filter_vertical_artifacts(self) -> None:
         """Filters vertical stripe artifacts."""
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
