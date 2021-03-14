@@ -74,7 +74,6 @@ def mira2nc(raw_mira: str,
         snr_gain = 1
     mira.screen_by_snr(snr_gain)
     mira.mask_invalid_data()
-    mira.filter_vertical_artifacts()
     mira.add_meta()
     mira.add_geolocation()
     mira.close()
@@ -142,11 +141,15 @@ class Mira(NcRadar):
                 cloudnet_array.mask_indices(z_mask)
                 cloudnet_array.mask_indices(v_mask)
 
-    def filter_vertical_artifacts(self) -> None:
-        """Filters vertical stripe artifacts."""
+    def filter_noise(self) -> None:
+        """Filters isolated pixels and vertical stripes.
+
+        Notes:
+            Use with caution, might remove actual data too.
+        """
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
-                cloudnet_array.filter_isolated_pixels()
+                cloudnet_array.filter_vertical_stripes()
 
     def rebin_fields(self) -> float:
         """Rebins fields."""

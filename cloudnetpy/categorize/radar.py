@@ -54,7 +54,6 @@ class Radar(DataSource):
                 self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
             elif key == 'v':
-                # This has some problems with RPG data when folding is present.
                 self.data[key].rebin_velocity(self.time, time_new,
                                               self.folding_velocity,
                                               self.sequence_indices)
@@ -88,13 +87,10 @@ class Radar(DataSource):
         exist due to speckle noise. This is a crude approach and a
         more sophisticated method could be implemented here later.
 
-        See Also:
-            :func:`utils.filter_isolated_pixels()`
-
         """
         for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
             if key in self.data.keys():
-                self.data[key].filter_isolated_pixels()
+                self.data[key].filter_vertical_stripes()
 
     def correct_atten(self, attenuations: dict) -> None:
         """Corrects radar echo for liquid and gas attenuation.

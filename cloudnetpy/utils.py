@@ -198,12 +198,8 @@ def filter_isolated_pixels(array: np.ndarray) -> np.ndarray:
                    [0, 0, 0]])
 
     """
-    filtered_array = np.copy(array)
-    id_regions, num_ids = ndimage.label(filtered_array, structure=np.ones((3, 3)))
-    id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids + 1))).astype(int)
-    area_mask = id_sizes == 1
-    filtered_array[area_mask[id_regions]] = 0
-    return filtered_array
+    structure = np.ones((3, 3))
+    return _filter(array, structure)
 
 
 def filter_x_pixels(array: np.ndarray) -> np.ndarray:
@@ -215,6 +211,9 @@ def filter_x_pixels(array: np.ndarray) -> np.ndarray:
     Returns:
         Cleaned array.
 
+    Notes:
+        Stronger cleaning than `filter_isolated_pixels()`
+
     Examples:
         >>> filter_x_pixels([[1, 0, 0], [0, 1, 0], [0, 1, 1]])
             array([[0, 0, 0],
@@ -222,12 +221,14 @@ def filter_x_pixels(array: np.ndarray) -> np.ndarray:
                    [0, 1, 0]])
 
     """
+    structure = np.array([[0, 1, 0], [0, 1, 0], [0, 1, 0]])
+    return _filter(array, structure)
+
+
+def _filter(array: np.ndarray, structure: np.ndarray) -> np.ndarray:
     filtered_array = np.copy(array)
-    id_regions, num_ids = ndimage.label(filtered_array,
-                                        structure=np.array([[0, 1, 0],
-                                                            [0, 1, 0],
-                                                            [0, 1, 0]]))
-    id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids+1))).astype(int)
+    id_regions, num_ids = ndimage.label(filtered_array, structure=structure)
+    id_sizes = np.array(ndimage.sum(array, id_regions, range(num_ids + 1))).astype(int)
     area_mask = id_sizes == 1
     filtered_array[area_mask[id_regions]] = 0
     return filtered_array

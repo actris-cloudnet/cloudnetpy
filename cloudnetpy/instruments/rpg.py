@@ -2,7 +2,7 @@
 from typing import Union, Tuple, Optional, List
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import utils, output, CloudnetArray
+from cloudnetpy import utils, output, CloudnetArray, RadarArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
 
@@ -143,15 +143,27 @@ class Rpg:
         self.source = source
         self.location = site_properties['name']
 
-    def convert_time_to_fraction_hour(self):
+    def convert_time_to_fraction_hour(self) -> None:
+        """Converts time to fraction hour."""
         key = 'time'
         fraction_hour = utils.seconds2hours(self.raw_data[key])
         self.raw_data[key] = fraction_hour
         self.data[key] = CloudnetArray(fraction_hour, key)
 
     def mask_invalid_ldr(self) -> None:
+        """Removes ldr outliers."""
         if 'ldr' in self.data:
             self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
+
+    def filter_noise(self) -> None:
+        """Filters isolated pixels and vertical stripes.
+
+        Notes:
+            Use with caution, might remove actual data too.
+        """
+        for cloudnet_array in self.data.values():
+            if cloudnet_array.data.ndim == 2:
+                cloudnet_array.filter_vertical_stripes()
 
     def linear_to_db(self, variables_to_log: tuple) -> None:
         """Changes some linear units to logarithmic."""
@@ -161,7 +173,7 @@ class Rpg:
     def _init_data(self) -> dict:
         data = {}
         for key in self.raw_data:
-            data[key] = CloudnetArray(self.raw_data[key], key)
+            data[key] = RadarArray(self.raw_data[key], key)
         return data
 
     def _get_date(self) -> list:

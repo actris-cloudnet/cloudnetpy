@@ -124,16 +124,17 @@ class RadarArray(CloudnetArray):
     This class contains additional, cloud radar -specific methods.
 
     """
-
     def filter_isolated_pixels(self) -> None:
-        """Filter vertical artifacts in radar data.
+        """Filters hot pixels from radar data."""
+        self._filter(utils.filter_isolated_pixels)
 
-        Notes:
-            These kind of artifacts are seen in RPG data.
+    def filter_vertical_stripes(self) -> None:
+        """Filters vertical artifacts from radar data."""
+        self._filter(utils.filter_x_pixels)
 
-        """
+    def _filter(self, fun: any) -> None:
         is_data = (~self.data.mask).astype(int)
-        is_data_filtered = utils.filter_x_pixels(is_data)
+        is_data_filtered = fun(is_data)
         self.data[is_data_filtered == 0] = ma.masked
 
     def calc_linear_std(self, time: np.ndarray, time_new: np.ndarray) -> None:
