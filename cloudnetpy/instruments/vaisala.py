@@ -1,5 +1,5 @@
 """Module with classes for Vaisala ceilometers."""
-from typing import Tuple
+from typing import Tuple, Union, Optional
 import numpy as np
 from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy import utils
@@ -12,11 +12,12 @@ SECONDS_IN_HOUR = 3600
 
 class VaisalaCeilo(Ceilometer):
     """Base class for Vaisala ceilometers."""
-    def __init__(self, full_path: str):
+    def __init__(self, full_path: str, date: Optional[str] = None):
         super().__init__(full_path)
         self._backscatter_scale_factor = 1
         self._hex_conversion_params = (1, 1, 1)
         self._message_number = None
+        self._date = date
 
     def _fetch_data_lines(self) -> list:
         """Finds data lines (header + backscatter) from ceilometer file."""
@@ -49,12 +50,14 @@ class VaisalaCeilo(Ceilometer):
         profiles[ind] -= self._hex_conversion_params[2]
         return profiles.astype(float) / self._backscatter_scale_factor
 
-    @staticmethod
-    def _screen_invalid_lines(data: list) -> list:
+    def _screen_invalid_lines(self, data: list) -> list:
         """Removes empty (and other weird) lines from the list of data."""
 
         def _find_timestamp_line_numbers() -> list:
             return [n for n, _ in enumerate(data) if utils.is_timestamp(data[n])]
+
+        def _find_correct_dates(line_numbers: list) -> list:
+            return [n for n in line_numbers if data[n].strip('-')[:10] == self._date]
 
         def _find_number_of_data_lines(timestamp_line_number: int) -> int:
             for i, line in enumerate(data[timestamp_line_number:]):
@@ -67,6 +70,8 @@ class VaisalaCeilo(Ceilometer):
                     for line_number in range(number_of_data_lines)]
 
         timestamp_line_numbers = _find_timestamp_line_numbers()
+        if self._date is not None:
+            timestamp_line_numbers = _find_correct_dates(timestamp_line_numbers)
         number_of_data_lines = _find_number_of_data_lines(timestamp_line_numbers[0])
         data_lines = _parse_data_lines(timestamp_line_numbers)
         return data_lines
@@ -168,8 +173,8 @@ class VaisalaCeilo(Ceilometer):
 class ClCeilo(VaisalaCeilo):
     """Base class for Vaisala CL31/CL51 ceilometers."""
 
-    def __init__(self, full_path: str):
-        super().__init__(full_path)
+    def __init__(self, full_path: str, date: Optional[str] = None):
+        super().__init__(full_path, date)
         self._hex_conversion_params = (5, 524288, 1048576)
         self._backscatter_scale_factor = 1e8
         self.noise_params = (100, 1e-12, 3e-6, (1.1e-8, 2.9e-8))
@@ -200,16 +205,16 @@ class ClCeilo(VaisalaCeilo):
 
 class Cl51(ClCeilo):
     """Class for Vaisala CL51 ceilometer."""
-    def __init__(self, full_path: str):
-        super().__init__(full_path)
+    def __init__(self, full_path: str, date: Union[str, None]):
+        super().__init__(full_path, date)
         self.model = 'cl51'
         self.wavelength = 915
 
 
 class Cl31(ClCeilo):
     """Class for Vaisala CL31 ceilometer."""
-    def __init__(self, full_path: str):
-        super().__init__(full_path)
+    def __init__(self, full_path: str, date: Union[str, None]):
+        super().__init__(full_path, date)
         self.model = 'cl31'
         self.wavelength = 910
 

@@ -12,7 +12,8 @@ def ceilo2nc(full_path: str,
              output_file: str,
              site_meta: dict,
              keep_uuid: Optional[bool] = False,
-             uuid: Optional[str] = None) -> str:
+             uuid: Optional[str] = None,
+             date: Optional[str] = None) -> str:
     """Converts Vaisala / Jenoptik ceilometer data into Cloudnet Level 1b netCDF file.
 
     This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
@@ -32,6 +33,7 @@ def ceilo2nc(full_path: str,
         keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
             when new UUID is generated.
         uuid: Set specific UUID for the file.
+        date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
         UUID of the generated file.
@@ -46,7 +48,7 @@ def ceilo2nc(full_path: str,
         >>> ceilo2nc('jenoptik_raw.nc', 'jenoptik.nc', site_meta)
 
     """
-    ceilo = _initialize_ceilo(full_path, site_meta['name'])
+    ceilo = _initialize_ceilo(full_path, site_meta['name'], date)
     ceilo.read_ceilometer_file()
     beta_variants = ceilo.calc_beta()
     _append_data(ceilo, beta_variants)
@@ -56,12 +58,14 @@ def ceilo2nc(full_path: str,
     return _save_ceilo(ceilo, output_file, site_meta['name'], keep_uuid, uuid)
 
 
-def _initialize_ceilo(full_path: str, site_name: str) -> Union[Cl51, Cl31, Ct25k, JenoptikCeilo]:
+def _initialize_ceilo(full_path: str,
+                      site_name: str,
+                      date: Union[str, None]) -> Union[Cl51, Cl31, Ct25k, JenoptikCeilo]:
     model = _find_ceilo_model(full_path)
     if model == 'cl51':
-        return Cl51(full_path)
+        return Cl51(full_path, date)
     if model == 'cl31':
-        return Cl31(full_path)
+        return Cl31(full_path, date)
     if model == 'ct25k':
         return Ct25k(full_path)
     return JenoptikCeilo(full_path, site_name)
