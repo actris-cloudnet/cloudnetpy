@@ -68,7 +68,7 @@ def _initialize_ceilo(full_path: str,
         return Cl31(full_path, date)
     if model == 'ct25k':
         return Ct25k(full_path)
-    return JenoptikCeilo(full_path, site_name)
+    return JenoptikCeilo(full_path, site_name, date)
 
 
 def _find_ceilo_model(full_path: str) -> str:

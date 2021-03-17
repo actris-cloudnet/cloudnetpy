@@ -1,5 +1,5 @@
 """Module with a class for Jenoptik ceilometer."""
-from typing import Union, List
+from typing import Union, List, Optional
 from collections import namedtuple
 import netCDF4
 import numpy as np
@@ -46,8 +46,9 @@ CEILOMETER_INFO = {
 
 class JenoptikCeilo(Ceilometer):
     """Class for Jenoptik chm15k ceilometer."""
-    def __init__(self, file_name, site_name):
+    def __init__(self, file_name: str, site_name: str, date: Optional[str] = None):
         super().__init__(file_name)
+        self._expected_date = date
         self.model = 'Lufft CHM15k'
         self.dataset = netCDF4.Dataset(self.file_name)
         self.variables = self.dataset.variables
@@ -57,9 +58,9 @@ class JenoptikCeilo(Ceilometer):
     def read_ceilometer_file(self) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""
         self.range = self._calc_range()
-        self.time = self._convert_time()
-        self.date = self._read_date()
         self.backscatter = self._convert_backscatter()
+        self.time = self._fetch_time()
+        self.date = self._read_date()
         self.metadata = self._read_metadata()
 
     def _calc_range(self) -> np.ndarray:
@@ -67,15 +68,23 @@ class JenoptikCeilo(Ceilometer):
         ceilo_range = self._getvar('range')
         return ceilo_range - utils.mdiff(ceilo_range)/2
 
-    def _convert_time(self) -> np.ndarray:
-        time = self.variables['time']
-        try:
-            assert all(np.diff(time) > 0)
-        except AssertionError:
-            raise RuntimeError('Inconsistent ceilometer time stamps.')
-        if max(time) > 24:
-            time = utils.seconds2hours(time)
-        return time
+    def _fetch_time(self) -> np.ndarray:
+        time = self.variables['time'][:]
+        ind = time.argsort()
+        time = time[ind]
+        self.backscatter = self.backscatter[ind, :]
+        if self._expected_date is not None:
+            epoch = utils.get_epoch(self.variables['time'].units)
+            valid_ind = []
+            for ind, timestamp in enumerate(time):
+                date = '-'.join(utils.seconds2date(timestamp, epoch)[:3])
+                if date == self._expected_date:
+                    valid_ind.append(ind)
+            if not valid_ind:
+                raise ValueError('Error: CHM15k date differs from expected.')
+            time = time[valid_ind]
+            self.backscatter = self.backscatter[valid_ind, :]
+        return utils.seconds2hours(time)
 
     def _read_date(self) -> List[str]:
         return [str(self.dataset.year),
