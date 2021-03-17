@@ -729,3 +729,25 @@ def fetch_cloudnet_model_types() -> list:
     models = [model['id'] for model in data]
     model_types = [model.split('-')[0] for model in models]
     return list(set(model_types))
+
+
+def get_epoch(units: str) -> tuple:
+    """Finds epoch from units string."""
+    fallback = (2001, 1, 1)
+    try:
+        date = units.split()[2]
+    except IndexError:
+        return fallback
+    date = date.replace(',', '')
+    try:
+        date_components = [int(x) for x in date.split('-')]
+    except ValueError:
+        try:
+            date_components = [int(x) for x in date.split('.')]
+        except ValueError:
+            return fallback
+    year, month, day = date_components
+    current_year = datetime.datetime.today().year
+    if (1900 < year <= current_year) and (0 < month < 13) and (0 < day < 32):
+        return tuple(date_components)
+    return fallback
