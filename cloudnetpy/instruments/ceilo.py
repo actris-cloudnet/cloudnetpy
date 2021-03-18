@@ -45,8 +45,9 @@ def ceilo2nc(full_path: str,
 
     Examples:
         >>> from cloudnetpy.instruments import ceilo2nc
-        >>> site_meta = {'name': 'Mace-Head', 'altitude':5}
+        >>> site_meta = {'name': 'Mace-Head', 'altitude': 5}
         >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc', site_meta)
+        >>> site_meta = {'name': 'Juelich', 'altitude': 108, 'calibration_factor': 2.3e-12}
         >>> ceilo2nc('chm15k_raw.nc', 'chm15k.nc', site_meta)
 
     """
