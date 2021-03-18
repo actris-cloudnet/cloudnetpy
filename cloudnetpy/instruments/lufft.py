@@ -33,7 +33,10 @@ class LufftCeilo(Ceilometer):
         beta_raw = self._getvar('beta_raw')
         overlap_function = _get_overlap(self.range)
         beta_raw /= overlap_function
-        beta_raw *= calibration_factor or 3e-12
+        if calibration_factor is None:
+            print('Warning: using default calibration factor for CHM15k')
+            calibration_factor = 3e-12
+        beta_raw *= calibration_factor
         return beta_raw
 
     def _fetch_time(self) -> np.ndarray:
