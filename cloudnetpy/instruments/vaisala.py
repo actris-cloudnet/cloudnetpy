@@ -179,13 +179,14 @@ class ClCeilo(VaisalaCeilo):
         self._backscatter_scale_factor = 1e8
         self.noise_params = (100, 1e-12, 3e-6, (1.1e-8, 2.9e-8))
 
-    def read_ceilometer_file(self) -> None:
+    def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Read all lines of data from the file."""
         header, data_lines = self._read_common_header_part()
         header.append(self._read_header_line_4(data_lines[-3]))
         self.metadata = self._handle_metadata(header)
         self.range = self._calc_range()
         self.backscatter = self._read_backscatter(data_lines[-2])
+        self.backscatter *= calibration_factor or 1
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number != 2:

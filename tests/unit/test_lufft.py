@@ -1,5 +1,5 @@
 """ This module contains unit tests for ceilo-module. """
-from cloudnetpy.instruments import jenoptik
+from cloudnetpy.instruments import lufft
 import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -29,13 +29,12 @@ def fake_jenoptik_file(tmpdir):
 
 class TestCHM15k:
 
-    site_name = 'Mace Head'
     date = '2021-02-21'
 
     @pytest.fixture(autouse=True)
     def init_tests(self, fake_jenoptik_file):
         self.file = fake_jenoptik_file
-        self.obj = jenoptik.JenoptikCeilo(fake_jenoptik_file, self.site_name, self.date)
+        self.obj = lufft.LufftCeilo(fake_jenoptik_file, self.date)
         self.obj.backscatter = np.random.rand(5, 4)
 
     def test_calc_range(self):
@@ -54,7 +53,7 @@ class TestCHM15k:
         assert self.obj._read_metadata()['tilt_angle'] == 2
 
     def test_convert_time_error(self):
-        obj = jenoptik.JenoptikCeilo(self.file, self.site_name, '2022-01-01')
+        obj = lufft.LufftCeilo(self.file, '2022-01-01')
         obj.backscatter = np.random.rand(5, 4)
         with pytest.raises(ValueError):
             obj._fetch_time()

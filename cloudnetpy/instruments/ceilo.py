@@ -1,8 +1,8 @@
-"""Module for reading and processing Vaisala / Jenoptik ceilometers."""
+"""Module for reading and processing Vaisala / Lufft ceilometers."""
 import linecache
 from typing import Union, Optional
 import numpy as np
-from cloudnetpy.instruments.jenoptik import JenoptikCeilo
+from cloudnetpy.instruments.lufft import LufftCeilo
 from cloudnetpy.instruments.vaisala import Cl31, Cl51, Ct25k
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
@@ -14,9 +14,9 @@ def ceilo2nc(full_path: str,
              keep_uuid: Optional[bool] = False,
              uuid: Optional[str] = None,
              date: Optional[str] = None) -> str:
-    """Converts Vaisala / Jenoptik ceilometer data into Cloudnet Level 1b netCDF file.
+    """Converts Vaisala / Lufft ceilometer data into Cloudnet Level 1b netCDF file.
 
-    This function reads raw Vaisala (CT25k, CL31, CL51) and Jenoptik (CHM15k)
+    This function reads raw Vaisala (CT25k, CL31, CL51) and Lufft (CHM15k)
     ceilometer files and writes the data into netCDF file. Three variants
     of the attenuated backscatter are saved in the file:
 
@@ -25,11 +25,13 @@ def ceilo2nc(full_path: str,
         3. SNR-screened backscatter with smoothed weak background, `beta_smooth`
 
     Args:
-        full_path: Ceilometer file name. For Vaisala it is a text file, for Jenoptik it is
+        full_path: Ceilometer file name. For Vaisala it is a text file, for CHM15k it is
             a netCDF file.
         output_file: Output file name, e.g. 'ceilo.nc'.
-        site_meta: Dictionary containing information about the site. Required key value pairs
-            are `name` and `altitude` (metres above mean sea level).
+        site_meta: Dictionary containing information about the site and instrument.
+            Required key value pairs are `name` and `altitude` (metres above mean sea level).
+            Also 'calibration_factor' is recommended because the default value is probably
+            incorrect.
         keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
             when new UUID is generated.
         uuid: Set specific UUID for the file.
@@ -45,11 +47,11 @@ def ceilo2nc(full_path: str,
         >>> from cloudnetpy.instruments import ceilo2nc
         >>> site_meta = {'name': 'Mace-Head', 'altitude':5}
         >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc', site_meta)
-        >>> ceilo2nc('jenoptik_raw.nc', 'jenoptik.nc', site_meta)
+        >>> ceilo2nc('chm15k_raw.nc', 'chm15k.nc', site_meta)
 
     """
-    ceilo = _initialize_ceilo(full_path, site_meta['name'], date)
-    ceilo.read_ceilometer_file()
+    ceilo = _initialize_ceilo(full_path, date)
+    ceilo.read_ceilometer_file(site_meta.get('calibration_factor', None))
     beta_variants = ceilo.calc_beta()
     _append_data(ceilo, beta_variants)
     _append_height(ceilo, site_meta['altitude'])
@@ -59,8 +61,7 @@ def ceilo2nc(full_path: str,
 
 
 def _initialize_ceilo(full_path: str,
-                      site_name: str,
-                      date: Union[str, None]) -> Union[Cl51, Cl31, Ct25k, JenoptikCeilo]:
+                      date: Union[str, None]) -> Union[Cl51, Cl31, Ct25k, LufftCeilo]:
     model = _find_ceilo_model(full_path)
     if model == 'cl51':
         return Cl51(full_path, date)
@@ -68,7 +69,7 @@ def _initialize_ceilo(full_path: str,
         return Cl31(full_path, date)
     if model == 'ct25k':
         return Ct25k(full_path)
-    return JenoptikCeilo(full_path, site_name, date)
+    return LufftCeilo(full_path, date)
 
 
 def _find_ceilo_model(full_path: str) -> str:
@@ -85,7 +86,7 @@ def _find_ceilo_model(full_path: str) -> str:
     raise RuntimeError('Error: Unknown ceilo model.')
 
 
-def _append_height(ceilo: Union[Cl51, Cl31, Ct25k, JenoptikCeilo],
+def _append_height(ceilo: Union[Cl51, Cl31, Ct25k, LufftCeilo],
                    site_altitude: float) -> None:
     """Finds height above mean sea level."""
     tilt_angle = np.median(ceilo.metadata['tilt_angle'])
@@ -94,7 +95,7 @@ def _append_height(ceilo: Union[Cl51, Cl31, Ct25k, JenoptikCeilo],
     ceilo.data['height'] = CloudnetArray(height, 'height')
 
 
-def _append_data(ceilo: Union[Cl51, Cl31, Ct25k, JenoptikCeilo],
+def _append_data(ceilo: Union[Cl51, Cl31, Ct25k, LufftCeilo],
                  beta_variants: tuple):
     """Adds data / metadata as CloudnetArrays to ceilo.data."""
     for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
@@ -109,7 +110,7 @@ def _append_data(ceilo: Union[Cl51, Cl31, Ct25k, JenoptikCeilo],
         ceilo.data['wavelength'] = CloudnetArray(ceilo.wavelength, 'wavelength', 'nm')
 
 
-def _save_ceilo(ceilo: Union[Cl51, Cl31, Ct25k, JenoptikCeilo],
+def _save_ceilo(ceilo: Union[Cl51, Cl31, Ct25k, LufftCeilo],
                 output_file: str,
                 location: str,
                 keep_uuid: bool,
