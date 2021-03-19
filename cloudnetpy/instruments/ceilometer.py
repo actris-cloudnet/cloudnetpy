@@ -18,6 +18,7 @@ class Ceilometer:
         self.time = []
         self.date = []
         self.noise_params = (1, 1, 1, (1, 1))
+        self.calibration_factor = None
 
     def calc_beta(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Converts range-corrected raw beta to noise-screened beta."""

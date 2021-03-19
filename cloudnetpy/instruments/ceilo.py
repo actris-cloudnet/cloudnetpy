@@ -101,14 +101,12 @@ def _append_data(ceilo: Union[Cl51, Cl31, Ct25k, LufftCeilo],
     """Adds data / metadata as CloudnetArrays to ceilo.data."""
     for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
         ceilo.data[name] = CloudnetArray(data, name)
-    for field in ('range', 'time'):
+    for field in ('range', 'time', 'wavelength', 'calibration_factor'):
         ceilo.data[field] = CloudnetArray(getattr(ceilo, field), field)
     for field, data in ceilo.metadata.items():
         first_element = data if utils.isscalar(data) else data[0]
         if not isinstance(first_element, str):  # String array writing not yet supported
             ceilo.data[field] = CloudnetArray(np.array(ceilo.metadata[field], dtype=float), field)
-    if hasattr(ceilo, 'wavelength'):
-        ceilo.data['wavelength'] = CloudnetArray(ceilo.wavelength, 'wavelength', 'nm')
 
 
 def _save_ceilo(ceilo: Union[Cl51, Cl31, Ct25k, LufftCeilo],
@@ -124,8 +122,6 @@ def _save_ceilo(ceilo: Union[Cl51, Cl31, Ct25k, LufftCeilo],
     rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'lidar')
-    if hasattr(ceilo, 'dataset'):
-        output.copy_variables(ceilo.dataset, rootgrp, ('wavelength',))
     rootgrp.title = f"Ceilometer file from {location}"
     rootgrp.year, rootgrp.month, rootgrp.day = ceilo.date
     rootgrp.location = location
@@ -234,5 +230,13 @@ ATTRIBUTES = {
         long_name='Window contamination',
         units='mV',
         comment='Measured at internal ADC input.'
+    ),
+    'calibration_factor': MetaData(
+        long_name='Backscatter calibration factor',
+        units='',
+    ),
+    'wavelength': MetaData(
+        long_name='Laser wavelength',
+        units='nm',
     )
 }

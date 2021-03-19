@@ -186,7 +186,8 @@ class ClCeilo(VaisalaCeilo):
         self.metadata = self._handle_metadata(header)
         self.range = self._calc_range()
         self.backscatter = self._read_backscatter(data_lines[-2])
-        self.backscatter *= calibration_factor or 1
+        self.calibration_factor = calibration_factor or 1
+        self.backscatter *= self.calibration_factor
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number != 2:

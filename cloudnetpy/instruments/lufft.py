@@ -15,6 +15,7 @@ class LufftCeilo(Ceilometer):
         self.dataset = netCDF4.Dataset(self.file_name)
         self.variables = self.dataset.variables
         self.noise_params = (70, 2e-14, 0.3e-6, (1e-9, 4e-9))
+        self.wavelength = 1064
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""
@@ -36,6 +37,7 @@ class LufftCeilo(Ceilometer):
         if calibration_factor is None:
             print('Warning: using default calibration factor for CHM15k')
             calibration_factor = 3e-12
+        self.calibration_factor = calibration_factor
         beta_raw *= calibration_factor
         return beta_raw
 
