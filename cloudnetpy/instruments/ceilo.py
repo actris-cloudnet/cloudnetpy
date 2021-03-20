@@ -75,10 +75,10 @@ def _find_ceilo_model(full_path: str) -> str:
     if full_path.lower().endswith('.nc'):
         return 'chm15k'
     first_empty_line = utils.find_first_empty_line(full_path)
-    hint = linecache.getline(full_path, first_empty_line + 2)[1:3]
-    if hint == 'CL':
+    line = linecache.getline(full_path, first_empty_line + 2)
+    if 'CL' in line:
         return 'cl31_or_cl51'
-    if hint == 'CT':
+    if 'CT' in line:
         return 'ct25k'
     raise RuntimeError('Error: Unknown ceilo model.')
 
@@ -90,6 +90,7 @@ def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
     height = utils.range_to_height(ceilo.range, float(tilt_angle))
     height += float(site_altitude)
     ceilo.data['height'] = CloudnetArray(height, 'height')
+    ceilo.data['altitude'] = CloudnetArray(site_altitude, 'altitude')
 
 
 def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
