@@ -1,5 +1,5 @@
 """Module with classes for Vaisala ceilometers."""
-from typing import Tuple, Union, Optional
+from typing import Tuple, Optional
 import numpy as np
 from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy import utils
@@ -149,18 +149,17 @@ class VaisalaCeilo(Ceilometer):
     def _read_header_line_1(self, lines: list) -> dict:
         """Reads all first header lines from CT25k and CL ceilometers."""
         fields = ('model_id', 'unit_id', 'software_level', 'message_number', 'message_subclass')
-        if 'cl' in self.model:
-            indices = [1, 3, 4, 7, 8, 9]
-        else:
+        if self.model == 'ct25k':
             indices = [1, 3, 4, 6, 7, 8]
+        else:
+            indices = [1, 3, 4, 7, 8, 9]
         values = [split_string(line, indices) for line in lines]
         return values_to_dict(fields, values)
 
     @staticmethod
     def _read_header_line_2(lines: list) -> dict:
         """Reads the second header line."""
-        fields = ('detection_status', 'warning', 'cloud_base_data',
-                  'warning_flags')
+        fields = ('detection_status', 'warning', 'cloud_base_data', 'warning_flags')
         values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
         return values_to_dict(fields, values)
 
@@ -188,6 +187,16 @@ class ClCeilo(VaisalaCeilo):
         self.backscatter = self._read_backscatter(data_lines[-2])
         self.calibration_factor = calibration_factor or 1
         self.backscatter *= self.calibration_factor
+        self._store_ceilometer_info()
+
+    def _store_ceilometer_info(self):
+        n_gates = self.backscatter.shape[1]
+        if n_gates < 1000:
+            self.model = 'cl31'
+            self.wavelength = '910'
+        else:
+            self.model = 'cl51'
+            self.wavelength = '915'
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number != 2:
@@ -203,22 +212,6 @@ class ClCeilo(VaisalaCeilo):
                 'background_light', 'measurement_parameters', 'backscatter_sum')
         values = [line.split() for line in lines]
         return values_to_dict(keys, values)
-
-
-class Cl51(ClCeilo):
-    """Class for Vaisala CL51 ceilometer."""
-    def __init__(self, full_path: str, date: Union[str, None]):
-        super().__init__(full_path, date)
-        self.model = 'cl51'
-        self.wavelength = 915
-
-
-class Cl31(ClCeilo):
-    """Class for Vaisala CL31 ceilometer."""
-    def __init__(self, full_path: str, date: Union[str, None]):
-        super().__init__(full_path, date)
-        self.model = 'cl31'
-        self.wavelength = 910
 
 
 class Ct25k(VaisalaCeilo):

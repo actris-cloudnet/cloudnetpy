@@ -10,7 +10,6 @@ class Ceilometer:
 
     def __init__(self, full_path: str):
         self.file_name = full_path
-        self.model = ''
         self.backscatter = np.array([])
         self.data = {}
         self.metadata = {}
@@ -19,6 +18,8 @@ class Ceilometer:
         self.date = []
         self.noise_params = (1, 1, 1, (1, 1))
         self.calibration_factor = None
+        self.model = None
+        self.wavelength = None
 
     def calc_beta(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Converts range-corrected raw beta to noise-screened beta."""
