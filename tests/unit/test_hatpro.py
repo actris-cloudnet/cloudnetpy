@@ -21,9 +21,11 @@ class TestHatpro2nc:
         assert len(uuid) == 32
 
     def test_processing_of_several_files(self):
-        _, files = hatpro.hatpro2nc(self.file_path, self.temp_file.name, self.site_meta,
-                                    date='2021-01-23')
+        test_uuid = 'abc'
+        uuid, files = hatpro.hatpro2nc(self.file_path, self.temp_file.name, self.site_meta,
+                                    date='2021-01-23', uuid=test_uuid)
         assert len(files) == 2
+        assert uuid == test_uuid
 
     def test_processing_of_one_file(self):
         _, files = hatpro.hatpro2nc(self.file_path, self.temp_file.name, self.site_meta,
@@ -34,12 +36,6 @@ class TestHatpro2nc:
         _, files = hatpro.hatpro2nc(self.file_path, self.temp_file.name, self.site_meta,
                                     date='2020-10-24')
         assert len(files) == 0
-
-    def test_uuid_from_user(self):
-        test_uuid = 'abc'
-        uuid, _ = hatpro.hatpro2nc(self.file_path, self.temp_file.name, self.site_meta,
-                                   date='2021-01-23', uuid=test_uuid)
-        assert uuid == test_uuid
 
     def test_handling_of_corrupted_files(self):
         temp_dir = TemporaryDirectory()
