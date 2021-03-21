@@ -94,11 +94,22 @@ def test_interpolate_to_common_height(fake_model_file):
         assert key in obj.data_sparse
 
 
+@pytest.mark.parametrize('data, expected', [
+    (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=[[1, 1, 1, 0, 0, 0, 0, 1]]), 1),
+    (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=False), 4),
+    (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=False), 4),
+    (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=True), 0),
+    (np.array([[1, 2], [1, 2], [1, 2], [1, 2]]), 4),
+])
+def test_find_valid_profiles(data, expected):
+    assert model._find_number_of_valid_profiles(data) == expected
+
+
 def test_interpolate_to_grid(fake_model_file):
     obj = model.Model(str(fake_model_file), ALT_SITE)
     radar_wl_band = 0
     obj.interpolate_to_common_height(radar_wl_band)
-    time_grid = np.array([1,3])
+    time_grid = np.array([1, 3])
     height_grid = np.array([1, 3])
     obj.interpolate_to_grid(time_grid, height_grid)
     assert_array_equal(obj.height, height_grid)

@@ -76,9 +76,13 @@ class Model(DataSource):
 
         """
         for key in self.fields_dense:
+            array = self.data_sparse[key][:]
+            valid_profiles = _find_number_of_valid_profiles(array)
+            if valid_profiles < 2:
+                raise RuntimeError('Bad model file: too few proper profiles')
             self.data_dense[key] = utils.interpolate_2d_mask(self.time,
                                                              self.mean_height,
-                                                             self.data_sparse[key][:],
+                                                             array,
                                                              time_grid, height_grid)
         self.height = height_grid
 
@@ -114,3 +118,11 @@ def _find_model_type(file_name: str) -> str:
         if key in file_name:
             return key
     raise ValueError('Unknown model type')
+
+
+def _find_number_of_valid_profiles(array: np.ndarray) -> int:
+    n_good = 0
+    for row in array:
+        if not hasattr(row, 'mask') or np.sum(row.mask.astype(int)) == 0:
+            n_good += 1
+    return n_good
