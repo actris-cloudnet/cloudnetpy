@@ -47,7 +47,7 @@ class Parsivel:
         self._file_contents, self._spectra = self._read_parsivel()
         self.source = 'Parsivel'
         self.location = site_meta['name']
-        self.date = self._get_date()
+        self.date = self._init_date()
         self.data = {}
 
     def validate_date(self, expected_date: str):
@@ -73,16 +73,28 @@ class Parsivel:
                 continue
             data_as_float = np.array([float(value) for value in data_dict[key]])
             self.data[key] = CloudnetArray(data_as_float, key)
-        self.data['time'] = self.convert_time(data_dict)
+        self.data['time'] = self._convert_time(data_dict)
         self.data['spectrum'] = self._read_spectrum()
 
     @staticmethod
-    def convert_time(data: dict) -> CloudnetArray:
+    def _convert_time(data: dict) -> CloudnetArray:
         seconds = []
         for ind, timestamp in enumerate(data['_time']):
             hour, minute, sec = timestamp.split(':')
             seconds.append(int(hour)*3600 + int(minute)*60 + int(sec))
         return CloudnetArray(utils.seconds2hours(seconds), 'time')
+
+    def _read_spectrum(self) -> CloudnetArray:
+        n_spectra = max([len(row) for row in self._spectra])
+        array = ma.masked_all((len(self._file_contents), n_spectra))
+        for time_ind, row in enumerate(self._spectra):
+            if row != ['ZERO']:
+                for spec_ind, value in enumerate(row):
+                    try:
+                        array[time_ind, spec_ind] = int(value)
+                    except ValueError:
+                        pass
+        return CloudnetArray(array, 'spectrum')
 
     def _read_parsivel(self) -> tuple:
         regular_content = []
@@ -98,19 +110,7 @@ class Parsivel:
                 spectra.append(spectrum.split(';'))
         return regular_content, spectra
 
-    def _read_spectrum(self) -> CloudnetArray:
-        n_spectra = max([len(row) for row in self._spectra])
-        data = ma.masked_all((len(self._file_contents), n_spectra))
-        for ind, row in enumerate(self._spectra):
-            if row != ['ZERO']:
-                for ind2, value in enumerate(row):
-                    try:
-                        data[ind, ind2] = int(value)
-                    except ValueError:
-                        pass
-        return CloudnetArray(data, 'spectrum')
-
-    def _get_date(self):
+    def _init_date(self):
         return self._file_contents[0][0].split('/')
 
 
@@ -126,9 +126,10 @@ def save_disdrometer(disdrometer: Parsivel,
                      uuid: Union[str, None]) -> str:
     """Saves disdrometer file."""
 
-    dims = {'time': len(disdrometer.data['time'][:]),
-            'spectrum': disdrometer.data['spectrum'][:].shape[1]
-            }
+    dims = {
+        'time': len(disdrometer.data['time'][:]),
+        'spectrum': disdrometer.data['spectrum'][:].shape[1]
+        }
     file_type = 'disdrometer'
     rootgrp = output.init_file(output_file, dims, disdrometer.data, keep_uuid, uuid)
     file_uuid = rootgrp.file_uuid
