@@ -1,6 +1,7 @@
 """Module for reading / converting disdrometer data."""
 from typing import Optional, Union
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy import output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.vaisala import values_to_dict
@@ -43,17 +44,21 @@ def disdrometer2nc(disdrometer_file: str,
 class Parsivel:
     def __init__(self, filename: str, site_meta: dict):
         self.filename = filename
-        self._file_contents = self._read_parsivel()
+        self._file_contents, self._spectra = self._read_parsivel()
         self.source = 'Parsivel'
         self.location = site_meta['name']
         self.date = self._get_date()
         self.data = {}
 
     def validate_date(self, expected_date: str):
-        self._file_contents = [row for row in self._file_contents
-                               if row[0].replace('/', '-') == expected_date]
-        if not self._file_contents:
-            raise ValueError
+        valid_ind = []
+        for ind, row in enumerate(self._file_contents):
+            if row[0].replace('/', '-') == expected_date:
+                valid_ind.append(ind)
+        if not valid_ind:
+            raise ValueError('No measurements from expected date')
+        self._file_contents = [self._file_contents[ind] for ind in valid_ind]
+        self._spectra = [self._spectra[ind] for ind in valid_ind]
         self.date = expected_date.split('-')
 
     def init_data(self):
@@ -61,7 +66,7 @@ class Parsivel:
                 'radar_reflectivity', 'mor_visibility', 'signal_amplitude',
                 'number_of_particles', 'sensor_temperature', 'heating_current',
                 'sensor_voltage', 'kinetic_energy', 'snow_intensity', '_weather_code_synop_wawa',
-                '_weather_code_metar/speci', '_weather_code_nws', '_spectrum')
+                '_weather_code_metar/speci', '_weather_code_nws')
         data_dict = values_to_dict(keys, self._file_contents)
         for key in keys:
             if key.startswith('_'):
@@ -69,6 +74,7 @@ class Parsivel:
             data_as_float = np.array([float(value) for value in data_dict[key]])
             self.data[key] = CloudnetArray(data_as_float, key)
         self.data['time'] = self.convert_time(data_dict)
+        self.data['spectrum'] = self._read_spectrum()
 
     @staticmethod
     def convert_time(data: dict) -> CloudnetArray:
@@ -78,13 +84,40 @@ class Parsivel:
             seconds.append(int(hour)*3600 + int(minute)*60 + int(sec))
         return CloudnetArray(utils.seconds2hours(seconds), 'time')
 
-    def _read_parsivel(self) -> list:
+    def _read_parsivel(self) -> tuple:
+        regular_content = []
+        spectra = []
         with open(self.filename, encoding="utf8", errors="ignore") as file:
             file.readline()
-            return [row.split(';') for row in file if row != '\n']
+            for row in file:
+                if row == '\n':
+                    continue
+                start, end = '<SPECTRUM>', '</SPECTRUM>'
+                regular_content.append(row[:row.rfind(start)].split(';'))
+                spectrum = find_between_substrings(row, start, end)
+                spectra.append(spectrum.split(';'))
+        return regular_content, spectra
+
+    def _read_spectrum(self) -> CloudnetArray:
+        n_spectra = max([len(row) for row in self._spectra])
+        data = ma.masked_all((len(self._file_contents), n_spectra))
+        for ind, row in enumerate(self._spectra):
+            if row != ['ZERO']:
+                for ind2, value in enumerate(row):
+                    try:
+                        data[ind, ind2] = int(value)
+                    except ValueError:
+                        pass
+        return CloudnetArray(data, 'spectrum')
 
     def _get_date(self):
         return self._file_contents[0][0].split('/')
+
+
+def find_between_substrings(data: str, left_substring: str, right_substring: str) -> str:
+    left_index = data.find(left_substring) + len(left_substring)
+    right_index = data.rfind(right_substring)
+    return data[left_index:right_index]
 
 
 def save_disdrometer(disdrometer: Parsivel,
@@ -93,7 +126,9 @@ def save_disdrometer(disdrometer: Parsivel,
                      uuid: Union[str, None]) -> str:
     """Saves disdrometer file."""
 
-    dims = {'time': len(disdrometer.data['time'][:])}
+    dims = {'time': len(disdrometer.data['time'][:]),
+            'spectrum': disdrometer.data['spectrum'][:].shape[1]
+            }
     file_type = 'disdrometer'
     rootgrp = output.init_file(output_file, dims, disdrometer.data, keep_uuid, uuid)
     file_uuid = rootgrp.file_uuid
@@ -146,4 +181,7 @@ ATTRIBUTES = {
         long_name='Snow intensity',
         units='mm/h'
     ),
+    'spectrum': MetaData(
+        long_name='Spectrum'
+    )
 }
