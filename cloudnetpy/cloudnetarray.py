@@ -29,12 +29,14 @@ class CloudnetArray:
     def __init__(self,
                  variable: Union[netCDF4.Variable, np.ndarray, float, int],
                  name: str,
-                 units_from_user: Optional[str] = None):
+                 units_from_user: Optional[str] = None,
+                 dimensions: Optional[tuple] = None):
         self.variable = variable
         self.name = name
         self.data = self._init_data()
         self.units = self._init_units(units_from_user)
         self.data_type = self._init_data_type()
+        self.dimensions = dimensions
 
     def lin2db(self) -> None:
         """Converts linear units to log."""
@@ -78,7 +80,7 @@ class CloudnetArray:
         """Returns list of user-defined attributes."""
         attributes = []
         for attr in self.__dict__:
-            if attr not in ('name', 'data', 'data_type', 'variable'):
+            if attr not in ('name', 'data', 'data_type', 'variable', 'dimensions'):
                 attributes.append(attr)
         return attributes
 
