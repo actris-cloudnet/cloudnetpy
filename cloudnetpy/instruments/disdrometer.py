@@ -103,6 +103,7 @@ class Disdrometer:
 
 
 class Thies(Disdrometer):
+
     def __init__(self, filename: str, site_meta: dict):
         super().__init__(filename, site_meta, 'Thies-LNM')
         self.date = self._init_date()
@@ -110,13 +111,12 @@ class Thies(Disdrometer):
     def init_data(self):
         ind_and_key = [
             (4, '_time'),
-            (12, 'precipitation_intensity_1min_total'),
-            (13, 'precipitation_intensity_1min_liquid'),
-            (14, 'precipitation_intensity_1min_solid'),
-            (16, 'visibility'),
+            (13, 'precipitation_intensity'),  # liquid
+            (14, 'snow_intensity'),
+            (16, 'mor_visibility'),
             (17, 'radar_reflectivity'),
-            (18, 'measuring_quality'),
-            (19, 'maximum_diameter_hail'),
+            (18, 'measurement_quality'),
+            (19, 'maximum_hail_diameter'),
             (20, 'laser_status'),
             (21, 'static_signal'),
             (44, 'ambient_temperature'),
@@ -139,6 +139,38 @@ class Parsivel(Disdrometer):
     def __init__(self, filename: str, site_meta: dict):
         super().__init__(filename, site_meta, 'Parsivel')
         self.date = self._init_date()
+        self._create_velocity_vectors()
+        self._create_diameter_vectors()
+
+    def _create_velocity_vectors(self):
+        spreads = [0.1, 0.2, 0.4, 0.8, 1.6, 3.2]
+        start = 0.05
+        lower, mid, upper = self.create_vectors(spreads, start)
+        self.data['lower_velocity'] = CloudnetArray(lower, 'lower_velocity',
+                                                    dimensions=('velocity',))
+        self.data['upper_velocity'] = CloudnetArray(upper, 'upper_velocity',
+                                                    dimensions=('velocity',))
+
+    def _create_diameter_vectors(self):
+        spreads = [0.125, 0.25, 0.5, 1, 2, 3]
+        start = 0.062
+        lower, mid, upper = self.create_vectors(spreads, start)
+        self.data['lower_diameter'] = CloudnetArray(lower, 'lower_diameter',
+                                                    dimensions=('diameter',))
+        self.data['upper_diameter'] = CloudnetArray(upper, 'upper_diameter',
+                                                    dimensions=('diameter',))
+
+    @staticmethod
+    def create_vectors(spreads: list, start: float) -> tuple:
+        n_values = [10, 5, 5, 5, 5, 2]
+        mid_value, lower_limit, upper_limit = [], [], []
+        for spread, n in zip(spreads, n_values):
+            mid = np.linspace(start, start + (n-1)*spread, n)
+            velocity = np.append(mid_value, mid)
+            lower_limit = np.append(lower_limit, mid - spread/2)
+            upper_limit = np.append(upper_limit, mid + spread/2)
+            start = velocity[-1] + spread*1.5
+        return lower_limit, mid_value, upper_limit
 
     def init_data(self):
         keys = ('_date', '_time', 'precipitation_intensity', '_precipitation_since_start',
@@ -150,16 +182,19 @@ class Parsivel(Disdrometer):
         self.data['spectrum'] = self._read_spectrum()
 
     def _read_spectrum(self) -> CloudnetArray:
-        n_spectra = max([len(row) for row in self._spectra])
-        array = ma.masked_all((len(self._file_contents), n_spectra))
+        n_diameter = 32
+        n_velocity = 32
+        array = ma.masked_all((len(self._file_contents), n_velocity, n_diameter))
         for time_ind, row in enumerate(self._spectra):
             if row != ['ZERO']:
+                values = ma.masked_all((1024, ))
                 for spec_ind, value in enumerate(row):
                     try:
-                        array[time_ind, spec_ind] = int(value)
+                        values[spec_ind] = int(value)
                     except ValueError:
                         pass
-        return CloudnetArray(array, 'spectrum')
+                array[time_ind, :, :] = np.reshape(values, (32, 32))
+        return CloudnetArray(array, 'spectrum', dimensions=('time', 'velocity', 'diameter'))
 
     def _init_date(self) -> list:
         return self._file_contents[0][0].split('/')
@@ -173,7 +208,8 @@ def save_disdrometer(disdrometer: Union[Parsivel, Thies],
 
     dims = {
         'time': len(disdrometer.data['time'][:]),
-        'spectrum': disdrometer.data['spectrum'][:].shape[1]
+        'diameter': disdrometer.data['lower_diameter'][:].shape[0],
+        'velocity': disdrometer.data['lower_velocity'][:].shape[0]
         }
     file_type = 'disdrometer'
     rootgrp = output.init_file(output_file, dims, disdrometer.data, keep_uuid, uuid)
@@ -206,13 +242,14 @@ def _convert_time(data: dict) -> CloudnetArray:
 def _format_date(date: str):
     day, month, year = date.split('.')
     year = f'20{year}'
-    return f'{year}-{month}-{day}'
+    return f'{year}-{month.zfill(2)}-{day.zfill(2)}'
 
 
 ATTRIBUTES = {
     'precipitation_intensity': MetaData(
         long_name='Precipitation intensity',
-        units='mm/h'
+        units='mm/h',
+        comment='Rain droplets only'
     ),
     'radar_reflectivity': MetaData(
         long_name='Radar reflectivity',
@@ -235,6 +272,10 @@ ATTRIBUTES = {
         long_name='Sensor temperature',
         units='C'
     ),
+    'ambient_temperature': MetaData(
+        long_name='Ambient temperature',
+        units='C'
+    ),
     'heating_current': MetaData(
         long_name='Heating current',
         units='A'
@@ -249,5 +290,21 @@ ATTRIBUTES = {
     ),
     'spectrum': MetaData(
         long_name='Spectrum'
-    )
+    ),
+    'measurement_quality': MetaData(
+        long_name='Measurement quality',
+        units='%'
+    ),
+    'maximum_hail_diameter': MetaData(
+        long_name='Maximum hail diameter',
+        units='mm'
+    ),
+    'laser_status': MetaData(
+        long_name='Laser status',
+        comment='0 = ON, 1 = OFF'
+    ),
+    'static_signal': MetaData(
+        long_name='Static signal',
+        comment='0 = OK, 1 = ERROR'
+    ),
 }
