@@ -8,6 +8,10 @@ from cloudnetpy.instruments.vaisala import values_to_dict
 from cloudnetpy import CloudnetArray, utils
 
 
+PARSIVEL = 'Parsivel'
+THIES = 'Thies-LNM'
+
+
 def disdrometer2nc(disdrometer_file: str,
                    output_file: str,
                    instrument: str,
@@ -18,7 +22,7 @@ def disdrometer2nc(disdrometer_file: str,
     """Converts disdrometer data into Cloudnet Level 1b netCDF file.
 
     Args:
-        disdrometer_file: Filename of disdrometer .txt file.
+        disdrometer_file: Filename of disdrometer .log file.
         output_file: Output filename.
         instrument: Disdrometer model. One of: parsivel|thies-lnm.
         site_meta: Dictionary containing information about the site. Required key is `name`.
@@ -60,10 +64,10 @@ class Disdrometer:
     def validate_date(self, expected_date: str) -> None:
         valid_ind = []
         for ind, row in enumerate(self._file_contents):
-            if self.source == 'Parsivel':
-                date = row[0].replace('/', '-')
+            if self.source == PARSIVEL:
+                date = '-'.join(_parse_parsivel_timestamp(row[0])[:3])
             else:
-                date = _format_date(row[3])
+                date = _format_thies_date(row[3])
             if date == expected_date:
                 valid_ind.append(ind)
         if not valid_ind:
@@ -73,79 +77,132 @@ class Disdrometer:
         self.date = expected_date.split('-')
 
     def _read_file(self) -> tuple:
-        regular_content = []
-        spectra = []
+        scalars, vectors, spectra = [], [], []
         with open(self.filename, encoding="utf8", errors="ignore") as file:
-            if self.source == 'Parsivel':
-                file.readline()
             for row in file:
                 if row == '\n':
                     continue
-                if self.source == 'Parsivel':
-                    start, end = '<SPECTRUM>', '</SPECTRUM>'
-                    regular_content.append(row[:row.rfind(start)].split(';'))
-                    spectrum = _find_between_substrings(row, start, end)
-                    spectra.append(spectrum.split(';'))
+                if self.source == PARSIVEL:
+                    values = row.split(';')
+                    if '\n' in values:
+                        values.remove('\n')
+                    if len(values) != 1106:
+                        print('Warning: skipping non-standard Parsivel data')
+                        continue
+                    scalars.append(values[:18])
+                    vectors.append(values[18:18+64])  # not yet used
+                    spectra.append(values[18+64:])
                 else:
                     values = row.split(';')
-                    regular_content.append(values[:79])
+                    scalars.append(values[:79])
                     spectra.append(values[79:-2])
-        return regular_content, spectra
+        return scalars, spectra
 
-    def _append_data(self, keys: tuple, data: list) -> None:
+    def _append_data(self, column_and_key: list) -> None:
+        indices, keys = zip(*column_and_key)
+        data = self._parse_useful_data(indices)
         data_dict = values_to_dict(keys, data)
         for key in keys:
             if key.startswith('_'):
                 continue
-            data_as_float = np.array([float(value) for value in data_dict[key]])
-            self.data[key] = CloudnetArray(data_as_float, key)
-        self.data['time'] = _convert_time(data_dict)
+            float_array = np.array([float(value) for value in data_dict[key]])
+            self.data[key] = CloudnetArray(float_array, key)
+        self.data['time'] = self._convert_time(data_dict)
+
+    def _parse_useful_data(self, indices: list) -> list:
+        data = []
+        for row in self._file_contents:
+            useful_data = [row[ind] for ind in indices]
+            data.append(useful_data)
+        return data
+
+    def _convert_time(self, data: dict) -> CloudnetArray:
+        seconds = []
+        for ind, timestamp in enumerate(data['_time']):
+            if self.source == PARSIVEL:
+                _, _, _, hour, minute, sec = _parse_parsivel_timestamp(timestamp)
+            else:
+                hour, minute, sec = timestamp.split(':')
+            seconds.append(int(hour)*3600 + int(minute)*60 + int(sec))
+        return CloudnetArray(utils.seconds2hours(seconds), 'time')
 
 
 class Thies(Disdrometer):
 
     def __init__(self, filename: str, site_meta: dict):
-        super().__init__(filename, site_meta, 'Thies-LNM')
+        super().__init__(filename, site_meta, THIES)
         self.date = self._init_date()
 
     def init_data(self):
-        ind_and_key = [
+        column_and_key = [
             (4, '_time'),
-            (13, 'precipitation_intensity'),  # liquid
+            (13, 'rain_rate'),  # liquid
             (14, 'snow_intensity'),
-            (16, 'mor_visibility'),
+            (16, 'visibility'),
             (17, 'radar_reflectivity'),
             (18, 'measurement_quality'),
             (19, 'maximum_hail_diameter'),
             (20, 'laser_status'),
             (21, 'static_signal'),
             (44, 'ambient_temperature'),
+            (49, 'n_particles')
         ]
-        indices, keys = zip(*ind_and_key)
-        data = []
-        for row in self._file_contents:
-            useful_data = [row[ind] for ind in indices]
-            data.append(useful_data)
-        self._append_data(keys, data)
+        self._append_data(column_and_key)
         self.data['spectrum'] = CloudnetArray(np.array(self._spectra), 'spectrum')
 
     def _init_date(self) -> list:
         first_date = self._file_contents[0][3]
-        first_date = _format_date(first_date)
+        first_date = _format_thies_date(first_date)
         return first_date.split('-')
 
 
 class Parsivel(Disdrometer):
     def __init__(self, filename: str, site_meta: dict):
-        super().__init__(filename, site_meta, 'Parsivel')
+        super().__init__(filename, site_meta, PARSIVEL)
         self.date = self._init_date()
         self._create_velocity_vectors()
         self._create_diameter_vectors()
 
+    def init_data(self):
+        column_and_key = [
+            (0, '_time'),
+            (1, 'rain_rate'),  # liquid
+            (2, 'rain_accum'),
+            (4, 'radar_reflectivity'),
+            (5, 'visibility'),
+            (7, 'signal_amplitude'),
+            (8, 'n_particles'),
+            (9, 'sensor_temperature'),
+            (12, 'heating_current'),
+            (13, 'sensor_voltage'),
+        ]
+        self._append_data(column_and_key)
+        self.data['spectrum'] = self._read_spectrum()
+
+    def _read_spectrum(self) -> CloudnetArray:
+        n_velocity = 32
+        n_diameter = 32
+        array = ma.masked_all((len(self._file_contents), n_velocity, n_diameter))
+        for time_ind, row in enumerate(self._spectra):
+            values = ma.masked_all((1024, ))
+            for spec_ind, value in enumerate(row):
+                try:
+                    value = int(value)
+                    if value != 0:
+                        values[spec_ind] = value
+                except ValueError:
+                    pass
+            array[time_ind, :, :] = np.reshape(values, (32, 32))
+        return CloudnetArray(array, 'spectrum', dimensions=('time', 'velocity', 'diameter'))
+
+    def _init_date(self) -> list:
+        timestamp = self._file_contents[0][0]
+        return _parse_parsivel_timestamp(timestamp)[:3]
+
     def _create_velocity_vectors(self):
         spreads = [0.1, 0.2, 0.4, 0.8, 1.6, 3.2]
         start = 0.05
-        lower, mid, upper = self.create_vectors(spreads, start)
+        lower, mid, upper = self._create_vectors(spreads, start)
         self.data['lower_velocity'] = CloudnetArray(lower, 'lower_velocity',
                                                     dimensions=('velocity',))
         self.data['upper_velocity'] = CloudnetArray(upper, 'upper_velocity',
@@ -154,14 +211,14 @@ class Parsivel(Disdrometer):
     def _create_diameter_vectors(self):
         spreads = [0.125, 0.25, 0.5, 1, 2, 3]
         start = 0.062
-        lower, mid, upper = self.create_vectors(spreads, start)
+        lower, mid, upper = self._create_vectors(spreads, start)
         self.data['lower_diameter'] = CloudnetArray(lower, 'lower_diameter',
                                                     dimensions=('diameter',))
         self.data['upper_diameter'] = CloudnetArray(upper, 'upper_diameter',
                                                     dimensions=('diameter',))
 
     @staticmethod
-    def create_vectors(spreads: list, start: float) -> tuple:
+    def _create_vectors(spreads: list, start: float) -> tuple:
         n_values = [10, 5, 5, 5, 5, 2]
         mid_value, lower_limit, upper_limit = [], [], []
         for spread, n in zip(spreads, n_values):
@@ -172,33 +229,6 @@ class Parsivel(Disdrometer):
             start = velocity[-1] + spread*1.5
         return lower_limit, mid_value, upper_limit
 
-    def init_data(self):
-        keys = ('_date', '_time', 'precipitation_intensity', '_precipitation_since_start',
-                'radar_reflectivity', 'mor_visibility', 'signal_amplitude',
-                'number_of_particles', 'sensor_temperature', 'heating_current',
-                'sensor_voltage', 'kinetic_energy', 'snow_intensity', '_weather_code_synop_wawa',
-                '_weather_code_metar/speci', '_weather_code_nws')
-        self._append_data(keys, self._file_contents)
-        self.data['spectrum'] = self._read_spectrum()
-
-    def _read_spectrum(self) -> CloudnetArray:
-        n_diameter = 32
-        n_velocity = 32
-        array = ma.masked_all((len(self._file_contents), n_velocity, n_diameter))
-        for time_ind, row in enumerate(self._spectra):
-            if row != ['ZERO']:
-                values = ma.masked_all((1024, ))
-                for spec_ind, value in enumerate(row):
-                    try:
-                        values[spec_ind] = int(value)
-                    except ValueError:
-                        pass
-                array[time_ind, :, :] = np.reshape(values, (32, 32))
-        return CloudnetArray(array, 'spectrum', dimensions=('time', 'velocity', 'diameter'))
-
-    def _init_date(self) -> list:
-        return self._file_contents[0][0].split('/')
-
 
 def save_disdrometer(disdrometer: Union[Parsivel, Thies],
                      output_file: str,
@@ -206,11 +236,12 @@ def save_disdrometer(disdrometer: Union[Parsivel, Thies],
                      uuid: Union[str, None]) -> str:
     """Saves disdrometer file."""
 
-    dims = {
-        'time': len(disdrometer.data['time'][:]),
-        'diameter': disdrometer.data['lower_diameter'][:].shape[0],
-        'velocity': disdrometer.data['lower_velocity'][:].shape[0]
-        }
+    dims = {'time': len(disdrometer.data['time'][:])}
+    if disdrometer.source == PARSIVEL:
+        dims['diameter'] = disdrometer.data['lower_diameter'][:].shape[0]
+        dims['velocity'] = disdrometer.data['lower_velocity'][:].shape[0]
+    else:
+        dims['spectrum'] = disdrometer.data['spectrum'][:].shape[1]
     file_type = 'disdrometer'
     rootgrp = output.init_file(output_file, dims, disdrometer.data, keep_uuid, uuid)
     file_uuid = rootgrp.file_uuid
@@ -225,21 +256,17 @@ def save_disdrometer(disdrometer: Union[Parsivel, Thies],
     return file_uuid
 
 
-def _find_between_substrings(data: str, left_substring: str, right_substring: str) -> str:
-    left_index = data.find(left_substring) + len(left_substring)
-    right_index = data.rfind(right_substring)
-    return data[left_index:right_index]
+def _parse_parsivel_timestamp(timestamp: str) -> list:
+    year = timestamp[:4]
+    month = timestamp[4:6]
+    day = timestamp[6:8]
+    hour = timestamp[8:10]
+    minute = timestamp[10:12]
+    second = timestamp[12:14]
+    return [year, month, day, hour, minute, second]
 
 
-def _convert_time(data: dict) -> CloudnetArray:
-    seconds = []
-    for ind, timestamp in enumerate(data['_time']):
-        hour, minute, sec = timestamp.split(':')
-        seconds.append(int(hour)*3600 + int(minute)*60 + int(sec))
-    return CloudnetArray(utils.seconds2hours(seconds), 'time')
-
-
-def _format_date(date: str):
+def _format_thies_date(date: str):
     day, month, year = date.split('.')
     year = f'20{year}'
     return f'{year}-{month.zfill(2)}-{day.zfill(2)}'
@@ -255,7 +282,7 @@ ATTRIBUTES = {
         long_name='Radar reflectivity',
         units='dBZ'
     ),
-    'mor_visibility': MetaData(
+    'visibility': MetaData(
         long_name='Meteorological optical range visibility',
         units='m'
     ),

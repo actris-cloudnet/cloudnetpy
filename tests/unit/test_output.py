@@ -72,7 +72,7 @@ def test_copy_global(tmpdir_factory, fake_nc_file):
 def test_copy_variables(tmpdir_factory, fake_nc_file):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
     root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
-    var_list = ['a', 'b', 'c']
+    var_list = ('a', 'b', 'c')
     source = netCDF4.Dataset(fake_nc_file)
     output.copy_variables(source, root_grp, var_list)
     for var in var_list:
