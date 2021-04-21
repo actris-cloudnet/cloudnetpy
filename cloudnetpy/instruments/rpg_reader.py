@@ -131,18 +131,18 @@ class Fmcw94Bin:
                 'skewness',
                 '_kurtosis'))
 
-            if self.header['dual_polarization'] == 1:
+            if int(self.header['dual_polarization'][0]) == 1:
                 block2_vars.update(dict.fromkeys((
                     'ldr',
                     'correlation_coefficient',
                     'spectral_differential_phase')))
-            elif self.header['dual_polarization'] == 2:
+            elif int(self.header['dual_polarization'][0]) == 2:
                 block2_vars.update(dict.fromkeys((
-                    'Zdr'
-                    'correlation_coefficient'
-                    'spectral_differential_phase'
+                    'differential_reflectivity',
+                    'correlation_coefficient',
+                    'spectral_differential_phase',
                     '_',
-                    'spectral_slanted_ldr',
+                    'ldr',
                     'spectral_slanted_correlation_coefficient',
                     'specific_differential_phase_shift',
                     'differential_attenuation')))
@@ -152,14 +152,14 @@ class Fmcw94Bin:
             ind0 = len(block1) + n_dummy
             ind1 = ind0 + dims.n_gates
             block1['_sensitivity_limit_v'] = float_block1[:, ind0:ind1]
-            if self.header['dual_polarization']:
+            if int(self.header['dual_polarization'][0]) > 0:
                 block1['_sensitivity_limit_h'] = float_block1[:, ind1:]
 
         def _get_length_of_dummy_data():
             return 3 + dims.n_layers_t + 2*dims.n_layers_h
 
         def _get_length_of_sensitivity_data():
-            if self.header['dual_polarization']:
+            if int(self.header['dual_polarization'][0]) > 0:
                 return 2*dims.n_gates
             return dims.n_gates
 
