@@ -178,10 +178,11 @@ def _read_ax_values(full_path: str, file_type: str = None) -> Tuple[ndarray, nda
 def _read_time_vector(nc_file: str) -> ndarray:
     """Converts time vector to fraction hour."""
     nc = netCDF4.Dataset(nc_file)
-    time = nc.variables['time']
-    fraction_time = utils.seconds2hours(time[:])
+    time = nc.variables['time'][:]
     nc.close()
-    return fraction_time
+    if max(time) < 24:
+        return time
+    return utils.seconds2hours(time)
 
 
 def _screen_high_altitudes(data_field: ndarray, ax_values: tuple,
