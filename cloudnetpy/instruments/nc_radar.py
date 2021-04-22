@@ -46,7 +46,7 @@ class NcRadar(DataSource):
         if 'altitude' in self.data:
             try:
                 elevation = self.getvar('elv', 'elevation')
-                tilt_angle = 90 - np.median(elevation)
+                tilt_angle = 90 - ma.median(elevation)
             except RuntimeError:
                 print('Warning: assuming 90 deg elevation')
                 tilt_angle = 0

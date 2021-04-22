@@ -174,7 +174,7 @@ class Rpg:
     def add_height(self):
         if 'altitude' in self.data:
             try:
-                elevation = np.median(self.data['elevation'].data)
+                elevation = ma.median(self.data['elevation'].data)
                 tilt_angle = 90 - elevation
             except RuntimeError:
                 print('Warning: assuming 90 deg elevation')
