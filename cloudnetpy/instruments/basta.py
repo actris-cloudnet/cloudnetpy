@@ -50,6 +50,7 @@ def basta2nc(basta_file: str,
     basta.screen_data(keymap)
     basta.add_meta()
     basta.add_geolocation()
+    basta.add_height()
     basta.close()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)

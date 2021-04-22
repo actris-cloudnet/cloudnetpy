@@ -159,11 +159,12 @@ def _initialize_figure(n_subplots: int) -> tuple:
 
 def _read_ax_values(full_path: str, file_type: str = None) -> Tuple[ndarray, ndarray]:
     """Returns time and height arrays."""
+    nc = netCDF4.Dataset(full_path)
     if not file_type:
-        nc = netCDF4.Dataset(full_path)
         file_type = nc.cloudnet_file_type
-        nc.close()
-    if file_type == 'radar':
+    is_height = True if 'height' in nc.variables else False
+    nc.close()
+    if is_height is not True:
         fields = ['time', 'range']
     else:
         fields = ['time', 'height']

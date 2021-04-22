@@ -76,6 +76,7 @@ def mira2nc(raw_mira: str,
     mira.mask_invalid_data()
     mira.add_meta()
     mira.add_geolocation()
+    mira.add_height()
     mira.close()
     attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
     output.update_attributes(mira.data, attributes)

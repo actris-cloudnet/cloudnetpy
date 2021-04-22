@@ -56,6 +56,7 @@ def rpg2nc(path_to_l1_files: str,
     rpg.convert_time_to_fraction_hour()
     rpg.mask_invalid_ldr()
     rpg.linear_to_db(('Ze', 'antenna_gain'))
+    rpg.add_height()
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, rpg.date)
     output.update_attributes(rpg.data, attributes)
     return save_rpg(rpg, output_file, valid_files, keep_uuid, uuid)
@@ -169,6 +170,18 @@ class Rpg:
         """Changes some linear units to logarithmic."""
         for name in variables_to_log:
             self.data[name].lin2db()
+
+    def add_height(self):
+        if 'altitude' in self.data:
+            try:
+                elevation = np.median(self.data['elevation'].data)
+                tilt_angle = 90 - elevation
+            except RuntimeError:
+                print('Warning: assuming 90 deg elevation')
+                tilt_angle = 0
+            height = utils.range_to_height(self.data['range'].data, tilt_angle)
+            height += float(self.data['altitude'].data)
+            self.data['height'] = CloudnetArray(height, 'height')
 
     def _init_data(self) -> dict:
         data = {}

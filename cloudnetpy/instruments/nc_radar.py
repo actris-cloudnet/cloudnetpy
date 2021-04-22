@@ -1,7 +1,7 @@
 """Module for reading raw cloud radar data."""
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import RadarArray
+from cloudnetpy import RadarArray, CloudnetArray, utils
 from cloudnetpy.categorize import DataSource
 
 
@@ -41,6 +41,18 @@ class NcRadar(DataSource):
             self.append_data(getattr(self, key), key)
         possible_nyquist_names = ('ambiguous_velocity', 'NyquistVelocity')
         self._unknown_variable_to_cloudnet_array(possible_nyquist_names, 'nyquist_velocity')
+
+    def add_height(self):
+        if 'altitude' in self.data:
+            try:
+                elevation = self.getvar('elv', 'elevation')
+                tilt_angle = 90 - np.median(elevation)
+            except RuntimeError:
+                print('Warning: assuming 90 deg elevation')
+                tilt_angle = 0
+            height = utils.range_to_height(self.getvar('range'), tilt_angle)
+            height += float(self.data['altitude'].data)
+            self.data['height'] = CloudnetArray(height, 'height')
 
     def _add_site_meta(self, site_meta: dict) -> None:
         for key, value in site_meta.items():
