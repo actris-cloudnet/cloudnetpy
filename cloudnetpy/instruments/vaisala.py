@@ -229,7 +229,7 @@ class Ct25k(VaisalaCeilo):
         self.noise_params = (40, 2e-14, 0.3e-6, (3e-10, 1.5e-9))
         self.wavelength = 905
 
-    def read_ceilometer_file(self) -> None:
+    def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Read all lines of data from the file."""
         header, data_lines = self._read_common_header_part()
         header.append(self._read_header_line_3(data_lines[3]))
@@ -237,6 +237,8 @@ class Ct25k(VaisalaCeilo):
         self.range = self._calc_range()
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.backscatter = self._read_backscatter(hex_profiles)
+        self.calibration_factor = calibration_factor or 1
+        self.backscatter *= self.calibration_factor
         # TODO: should study the background noise to determine if the
         # next call is needed. It can be the case with cl31/51 also.
         self._range_correct_upper_part()
