@@ -75,7 +75,12 @@ def _find_ceilo_model(full_path: str) -> str:
     if full_path.lower().endswith('.nc'):
         return 'chm15k'
     first_empty_line = utils.find_first_empty_line(full_path)
-    line = linecache.getline(full_path, first_empty_line + 2)
+    max_number_of_empty_lines = 10
+    for n in range(1, max_number_of_empty_lines):
+        line = linecache.getline(full_path, first_empty_line + n)
+        if not utils.is_empty_line(line):
+            line = linecache.getline(full_path, first_empty_line + n + 1)
+            break
     if 'CL' in line:
         return 'cl31_or_cl51'
     if 'CT' in line:
