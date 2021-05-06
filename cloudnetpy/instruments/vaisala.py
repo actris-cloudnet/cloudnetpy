@@ -252,11 +252,13 @@ class Ct25k(VaisalaCeilo):
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number in (1, 3, 6):
             raise RuntimeError('Unsupported message number.')
-        keys = ('scale', 'measurement_mode', 'laser_energy',
+        keys = ('measurement_mode', 'laser_energy',
                 'laser_temperature', 'receiver_sensitivity',
                 'window_contamination', 'tilt_angle', 'background_light',
                 'measurement_parameters', 'backscatter_sum')
         values = [line.split() for line in lines]
+        if len(values[0]) == 10:
+            keys = ('scale',) + keys
         return values_to_dict(keys, values)
 
 
