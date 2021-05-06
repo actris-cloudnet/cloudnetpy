@@ -226,7 +226,7 @@ class Ct25k(VaisalaCeilo):
         self.model = 'ct25k'
         self._hex_conversion_params = (4, 32768, 65536)
         self._backscatter_scale_factor = 1e7
-        self.noise_params = (40, 2e-14, 0.3e-6, (3e-10, 1.5e-9))
+        self.noise_params = (40, 1e-12, 0.3e-6, (1e-7, 6e-7))
         self.wavelength = 905
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
