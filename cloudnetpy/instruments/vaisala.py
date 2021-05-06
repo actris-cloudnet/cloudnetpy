@@ -165,7 +165,7 @@ class VaisalaCeilo(Ceilometer):
 
     def _range_correct_upper_part(self) -> None:
         altitude_limit = 2400
-        ind = np.where(self.range > altitude_limit)
+        ind = np.where(self.range < altitude_limit)
         self.backscatter[:, ind] *= (self.range[ind]*M2KM)**2
 
 
@@ -241,7 +241,7 @@ class Ct25k(VaisalaCeilo):
         self.backscatter *= self.calibration_factor
         # TODO: should study the background noise to determine if the
         # next call is needed. It can be the case with cl31/51 also.
-        self._range_correct_upper_part()
+        # self._range_correct_upper_part()
 
     @staticmethod
     def _parse_hex_profiles(lines: list) -> list:
