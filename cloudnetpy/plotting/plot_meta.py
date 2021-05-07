@@ -338,7 +338,7 @@ ATTRIBUTES = {
         name='Radar reflectivity factor',
         cbar='viridis',
         clabel=_DBZ,
-        plot_range=(-40, 20),
+        plot_range=(-40, 15),
         plot_scale=_LIN,     # already logarithmic
         plot_type='mesh'
      ),
