@@ -86,7 +86,7 @@ def test_find_strong_peaks():
     assert_array_equal(peaks, ([0, 1], [3, 2]))
 
 
-def test_intepolate_lwp():
+def test_interpolate_lwp():
     class Obs:
         def __init__(self):
             self.time = np.arange(11)
@@ -95,6 +95,16 @@ def test_intepolate_lwp():
     obs = Obs()
     lwp_interpolated = droplet.interpolate_lwp(obs)
     assert_array_equal(obs.lwp_orig, lwp_interpolated)
+
+
+def test_interpolate_lwp_masked():
+    class Obs:
+        def __init__(self):
+            self.time = np.arange(5)
+            self.lwp = ma.array([1, 2, 3, 4, 5], mask=True)
+    obs = Obs()
+    lwp_interpolated = droplet.interpolate_lwp(obs)
+    assert_array_equal(np.zeros(5,), lwp_interpolated)
 
 
 @pytest.mark.parametrize("is_freezing, top_above, result", [
