@@ -92,6 +92,12 @@ class Radar(DataSource):
             if key in self.data.keys():
                 self.data[key].filter_vertical_stripes()
 
+    def filter_1st_gate_artifact(self) -> None:
+        """Removes 1st range gate velocity artifact."""
+        velocity_limit = 4
+        ind = np.where(self.data['v'][:, 0] > velocity_limit)
+        self.data['v'][:][ind, 0] = ma.masked
+
     def correct_atten(self, attenuations: dict) -> None:
         """Corrects radar echo for liquid and gas attenuation.
 

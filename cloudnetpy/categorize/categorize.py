@@ -90,6 +90,7 @@ def generate_categorize(input_files: dict,
     _interpolate_to_cloudnet_grid()
     if 'rpg' in data['radar'].type.lower():
         data['radar'].filter_speckle_noise()
+        data['radar'].filter_1st_gate_artifact()
     data['radar'].remove_incomplete_pixels()
     data['model'].calc_wet_bulb()
     classification = classify.classify_measurements(data)
