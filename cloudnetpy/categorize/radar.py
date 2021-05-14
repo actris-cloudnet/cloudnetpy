@@ -98,6 +98,45 @@ class Radar(DataSource):
         ind = np.where(self.data['v'][:, 0] > velocity_limit)
         self.data['v'][:][ind, 0] = ma.masked
 
+    def filter_stripes(self, variable: str) -> None:
+        if variable not in self.data:
+            return
+        data = self.data[variable][:]
+        n_points_in_profiles = ma.count(data, axis=1)
+        n_profiles_with_data = np.count_nonzero(n_points_in_profiles)
+        if n_profiles_with_data < 300:
+            return
+        n_vertical = self._filter(data, 1)
+        n_horizontal = self._filter(data, 0)
+        print(f'Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes from radar '
+              f'data using {variable}')
+
+    def _filter(self, data: np.array, axis: int) -> int:
+        n_blocks = 50
+        axis_complement = 0 if axis == 1 else 1
+        len_block = int(np.floor(data.shape[axis_complement] / n_blocks))
+        block_indices = np.arange(0, len_block)
+        n_removed_total = 0
+        for block_number in range(n_blocks):
+            if axis == 0:
+                data_block = data[:, block_indices]
+            else:
+                data_block = data[block_indices, :]
+            n_values = ma.count(data_block, axis=axis)
+            n_values_nonzero = n_values[n_values > 0]
+            threshold = np.median(n_values_nonzero) + (2 * np.std(n_values_nonzero))
+            ind = np.where((n_values > threshold) & (n_values > (0.5 * data.shape[axis])))
+            true_ind = [int(x) for x in (block_number * len_block + ind[0])]
+            n_removed = len(ind[0])
+            if n_removed > 0:
+                n_removed_total += n_removed
+                if axis == 1:
+                    self.data['v'][:][true_ind, :] = ma.masked
+                else:
+                    self.data['v'][:][:, true_ind] = ma.masked
+            block_indices += len_block
+        return n_removed_total
+
     def correct_atten(self, attenuations: dict) -> None:
         """Corrects radar echo for liquid and gas attenuation.
 
