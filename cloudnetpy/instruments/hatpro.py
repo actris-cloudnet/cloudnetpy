@@ -63,6 +63,7 @@ def _get_hatpro_objects(files: list, expected_date: Union[str, None]) -> Tuple[l
     for file in files:
         try:
             obj = HatproBin(file)
+            obj.screen_bad_profiles()
             if expected_date is not None:
                 obj = _validate_date(obj, expected_date)
         except (TypeError, ValueError) as err:

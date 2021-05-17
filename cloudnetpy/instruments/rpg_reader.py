@@ -1,5 +1,6 @@
 from collections import namedtuple
 import numpy as np
+from cloudnetpy import utils
 
 
 class Fmcw94Bin:
@@ -209,6 +210,14 @@ class HatproBin:
         self._file_position = 0
         self.header = self.read_header()
         self.data = self.read_data()
+
+    def screen_bad_profiles(self):
+        good_ind = []
+        for ind, flag in enumerate(self.data['quality_flag']):
+            if not (utils.isbit(flag, 1) and utils.isbit(flag, 2)):
+                good_ind.append(ind)
+        for key in self.data.keys():
+            self.data[key] = self.data[key][good_ind]
 
     def read_header(self) -> dict:
         """Reads the header."""
