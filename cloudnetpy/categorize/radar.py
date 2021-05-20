@@ -106,34 +106,57 @@ class Radar(DataSource):
         n_profiles_with_data = np.count_nonzero(n_points_in_profiles)
         if n_profiles_with_data < 300:
             return
-        n_vertical = self._filter(data, 1)
-        n_horizontal = self._filter(data, 0)
+        n_vertical = self._filter(data, 1, min_coverage=0.5, z_limit=10, distance=4, n_blocks=100)
+        n_horizontal = self._filter(data, 0, min_coverage=0.3, z_limit=-30, distance=3, n_blocks=20)
         print(f'Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes from radar '
               f'data using {variable}')
 
-    def _filter(self, data: np.array, axis: int) -> int:
-        n_blocks = 50
+    def _filter(self, data: np.array,
+                axis: int,
+                min_coverage: float,
+                z_limit: float,
+                distance: float,
+                n_blocks: int) -> int:
+
         axis_complement = 0 if axis == 1 else 1
         len_block = int(np.floor(data.shape[axis_complement] / n_blocks))
         block_indices = np.arange(0, len_block)
         n_removed_total = 0
+
         for block_number in range(n_blocks):
+
             if axis == 0:
                 data_block = data[:, block_indices]
             else:
                 data_block = data[block_indices, :]
+
             n_values = ma.count(data_block, axis=axis)
-            n_values_nonzero = n_values[n_values > 0]
-            threshold = np.median(n_values_nonzero) + (2 * np.std(n_values_nonzero))
-            ind = np.where((n_values > threshold) & (n_values > (0.5 * data.shape[axis])))
+
+            try:
+                q1 = np.quantile(n_values, 0.25)
+                q3 = np.quantile(n_values, 0.75)
+            except IndexError:
+                continue
+            threshold = q3 + distance * (q3 - q1)
+
+            ind = np.where((n_values > threshold) & (n_values > (min_coverage * data.shape[axis])))
             true_ind = [int(x) for x in (block_number * len_block + ind[0])]
             n_removed = len(ind[0])
+
+            if n_removed > 5:
+                continue
+
             if n_removed > 0:
                 n_removed_total += n_removed
                 if axis == 1:
-                    self.data['v'][:][true_ind, :] = ma.masked
+                    for ind in true_ind:
+                        ind2 = np.where(self.data['Z'][ind, :] < z_limit)
+                        self.data['v'][:][ind, ind2] = ma.masked
                 else:
-                    self.data['v'][:][:, true_ind] = ma.masked
+                    for ind in true_ind:
+                        ind2 = np.where(self.data['Z'][:, ind] < z_limit)
+                        self.data['v'][:][ind2, ind] = ma.masked
+
             block_indices += len_block
         return n_removed_total
 
