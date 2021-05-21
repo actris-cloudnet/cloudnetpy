@@ -99,6 +99,7 @@ class Radar(DataSource):
         self.data['v'][:][ind, 0] = ma.masked
 
     def filter_stripes(self, variable: str) -> None:
+        """Filters vertical and horizontal stripe-shaped artifacts from radar data."""
         if variable not in self.data:
             return
         data = self.data[variable][:]
@@ -118,46 +119,43 @@ class Radar(DataSource):
                 distance: float,
                 n_blocks: int) -> int:
 
-        axis_complement = 0 if axis == 1 else 1
-        len_block = int(np.floor(data.shape[axis_complement] / n_blocks))
-        block_indices = np.arange(0, len_block)
+        if axis == 0:
+            data = data.T
+            echo = self.data['Z'][:].T
+        else:
+            echo = self.data['Z'][:]
+
+        len_block = int(np.floor(data.shape[0] / n_blocks))
+        block_indices = np.arange(len_block)
         n_removed_total = 0
 
         for block_number in range(n_blocks):
 
-            if axis == 0:
-                data_block = data[:, block_indices]
-            else:
-                data_block = data[block_indices, :]
-
-            n_values = ma.count(data_block, axis=axis)
+            data_block = data[block_indices, :]
+            n_values = ma.count(data_block, axis=1)
 
             try:
                 q1 = np.quantile(n_values, 0.25)
                 q3 = np.quantile(n_values, 0.75)
             except IndexError:
                 continue
-            threshold = q3 + distance * (q3 - q1)
+            threshold = distance * (q3 - q1) + q3
 
-            ind = np.where((n_values > threshold) & (n_values > (min_coverage * data.shape[axis])))
-            true_ind = [int(x) for x in (block_number * len_block + ind[0])]
-            n_removed = len(ind[0])
+            ind = np.where((n_values > threshold) & (n_values > (min_coverage * data.shape[1])))[0]
+            true_ind = [int(x) for x in (block_number * len_block + ind)]
+            n_removed = len(ind)
 
             if n_removed > 5:
                 continue
 
             if n_removed > 0:
                 n_removed_total += n_removed
-                if axis == 1:
-                    for ind in true_ind:
-                        ind2 = np.where(self.data['Z'][ind, :] < z_limit)
-                        self.data['v'][:][ind, ind2] = ma.masked
-                else:
-                    for ind in true_ind:
-                        ind2 = np.where(self.data['Z'][:, ind] < z_limit)
-                        self.data['v'][:][ind2, ind] = ma.masked
-
+                for ind in true_ind:
+                    ind2 = np.where(echo[ind, :] < z_limit)
+                    indices = [ind, ind2] if axis == 1 else [ind2, ind]
+                    self.data['v'][:][indices] = ma.masked
             block_indices += len_block
+
         return n_removed_total
 
     def correct_atten(self, attenuations: dict) -> None:
