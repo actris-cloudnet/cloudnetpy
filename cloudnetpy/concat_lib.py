@@ -118,7 +118,7 @@ class Concat:
         data_model = 'NETCDF4' if self.first_file.data_model == 'NETCDF4' else 'NETCDF4_CLASSIC'
         nc = netCDF4.Dataset(output_file, 'w', format=data_model)
         for dim in self.first_file.dimensions.keys():
-            dim_len = None if dim == self.concat_dimension else len(self.first_file[dim])
+            dim_len = None if dim == self.concat_dimension else self.first_file.dimensions[dim].size
             nc.createDimension(dim, dim_len)
         return nc
 
