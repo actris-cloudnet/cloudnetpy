@@ -77,8 +77,10 @@ class Concat:
             self.first_file[key].set_auto_scale(False)
             array = self.first_file[key][:]
             dimensions = self._get_dim(array)
+            fill_value = getattr(self.first_file[key], '_FillValue', None)
             var = self.concatenated_file.createVariable(key, array.dtype, dimensions, zlib=True,
-                                                        complevel=3, shuffle=False)
+                                                        complevel=3, shuffle=False,
+                                                        fill_value=fill_value)
             var.set_auto_scale(False)
             var[:] = array
             _copy_attributes(self.first_file[key], var)
@@ -123,5 +125,6 @@ class Concat:
 
 def _copy_attributes(source: netCDF4.Dataset, target: netCDF4.Dataset) -> None:
     for attr in source.ncattrs():
-        value = getattr(source, attr)
-        setattr(target, attr, value)
+        if attr != '_FillValue':
+            value = getattr(source, attr)
+            setattr(target, attr, value)
