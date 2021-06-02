@@ -90,6 +90,7 @@ class DrizzleSource(DataSource):
     def _convert_z_units(self):
         """Converts reflectivity factor to SI units."""
         z = self.getvar('Z') - 180
+        z[z > 0.0] = 0.0
         return utils.db2lin(z)
 
     def _read_mie_lut(self):
