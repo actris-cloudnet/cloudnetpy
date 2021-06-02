@@ -205,7 +205,7 @@ class SpectralWidth:
         try:
             width, v_sigma = p_tools.read_nc_fields(self.cat_file, ['width', 'v_sigma'])
         except KeyError:
-            raise RuntimeError('Unable to create drizzle product without spectral width')
+            raise NotImplementedError('Unable to create drizzle product without spectral width')
         sigma_factor = self._calc_v_sigma_factor()
         return width - sigma_factor * v_sigma
 
