@@ -1,5 +1,6 @@
 """This module contains RPG Cloud Radar related functions."""
 from typing import Union, Tuple, Optional, List
+import logging
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray, RadarArray
@@ -120,7 +121,7 @@ def _get_fmcw94_objects(files: list, expected_date: Union[str, None]) -> Tuple[l
             if expected_date is not None:
                 _validate_date(obj, expected_date)
         except (TypeError, ValueError) as err:
-            print(err)
+            logging.warning(err)
             continue
         objects.append(obj)
         valid_files.append(file)
@@ -131,7 +132,7 @@ def _validate_date(obj, expected_date: str) -> None:
     for t in obj.data['time'][:]:
         date_str = '-'.join(utils.seconds2date(t)[:3])
         if date_str != expected_date:
-            raise ValueError('Warning: Ignoring a file (time stamps not what expected)')
+            raise ValueError('Ignoring a file (time stamps not what expected)')
 
 
 class Rpg:
@@ -177,7 +178,7 @@ class Rpg:
                 elevation = ma.median(self.data['elevation'].data)
                 tilt_angle = 90 - elevation
             except RuntimeError:
-                print('Warning: assuming 90 deg elevation')
+                logging.warning('Assuming 90 deg elevation')
                 tilt_angle = 0
             height = utils.range_to_height(self.data['range'].data, tilt_angle)
             height += float(self.data['altitude'].data)
@@ -195,7 +196,7 @@ class Rpg:
         date_first = utils.seconds2date(time_first)[:3]
         date_last = utils.seconds2date(time_last)[:3]
         if date_first != date_last:
-            print('Warning: Measurements from different days')
+            logging.warning('Measurements from different days')
         return date_first
 
 

@@ -1,5 +1,6 @@
 """This module contains RPG Cloud Radar related functions."""
 from typing import Union, Tuple, Optional
+import logging
 from cloudnetpy import utils, output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments import rpg
@@ -67,7 +68,7 @@ def _get_hatpro_objects(files: list, expected_date: Union[str, None]) -> Tuple[l
             if expected_date is not None:
                 obj = _validate_date(obj, expected_date)
         except (TypeError, ValueError) as err:
-            print(err)
+            logging.warning(err)
             continue
         objects.append(obj)
         valid_files.append(file)
@@ -76,14 +77,14 @@ def _get_hatpro_objects(files: list, expected_date: Union[str, None]) -> Tuple[l
 
 def _validate_date(obj, expected_date: str):
     if obj.header['_time_reference'] == 0:
-        raise ValueError('Can not validate non-UTC dates.')
+        raise ValueError('Ignoring a file (can not validate non-UTC dates)')
     inds = []
     for ind, timestamp in enumerate(obj.data['time'][:]):
         date = '-'.join(utils.seconds2date(timestamp)[:3])
         if date == expected_date:
             inds.append(ind)
     if not inds:
-        raise ValueError('Warning: Ignoring a file (time stamps not what expected)')
+        raise ValueError('Ignoring a file (time stamps not what expected)')
     for key in obj.data.keys():
         obj.data[key] = obj.data[key][inds]
     return obj

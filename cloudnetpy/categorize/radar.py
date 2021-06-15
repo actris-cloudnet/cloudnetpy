@@ -7,6 +7,7 @@ from scipy import constants
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.categorize.classify import ClassificationResult
 from cloudnetpy import utils
+import logging
 
 
 class Radar(DataSource):
@@ -109,8 +110,8 @@ class Radar(DataSource):
             return
         n_vertical = self._filter(data, 1, min_coverage=0.5, z_limit=10, distance=4, n_blocks=100)
         n_horizontal = self._filter(data, 0, min_coverage=0.3, z_limit=-30, distance=3, n_blocks=20)
-        print(f'Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes from radar '
-              f'data using {variable}')
+        logging.info(f'Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes from '
+                     f'radar data using {variable}')
 
     def _filter(self, data: np.array,
                 axis: int,

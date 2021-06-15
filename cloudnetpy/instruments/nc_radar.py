@@ -1,4 +1,5 @@
 """Module for reading raw cloud radar data."""
+import logging
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import RadarArray, CloudnetArray, utils
@@ -48,7 +49,7 @@ class NcRadar(DataSource):
                 elevation = self.getvar('elv', 'elevation')
                 tilt_angle = 90 - ma.median(elevation)
             except RuntimeError:
-                print('Warning: assuming 90 deg elevation')
+                logging.warning('Assuming 90 deg elevation')
                 tilt_angle = 0
             height = utils.range_to_height(self.getvar('range'), tilt_angle)
             height += float(self.data['altitude'].data)
