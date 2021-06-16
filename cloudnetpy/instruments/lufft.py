@@ -1,5 +1,6 @@
 """Module with a class for Lufft chm15k ceilometer."""
 from typing import Union, List, Optional
+import logging
 import netCDF4
 import numpy as np
 from cloudnetpy.instruments.ceilometer import Ceilometer
@@ -35,7 +36,7 @@ class LufftCeilo(Ceilometer):
         overlap_function = _get_overlap(self.range)
         beta_raw /= overlap_function
         if calibration_factor is None:
-            print('Warning: using default calibration factor for CHM15k')
+            logging.warning('Using default calibration factor for CHM15k')
             calibration_factor = 3e-12
         self.calibration_factor = calibration_factor
         beta_raw *= calibration_factor

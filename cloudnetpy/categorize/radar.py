@@ -7,6 +7,7 @@ from scipy import constants
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.categorize.classify import ClassificationResult
 from cloudnetpy import utils
+import logging
 
 
 class Radar(DataSource):
@@ -97,6 +98,66 @@ class Radar(DataSource):
         velocity_limit = 4
         ind = np.where(self.data['v'][:, 0] > velocity_limit)
         self.data['v'][:][ind, 0] = ma.masked
+
+    def filter_stripes(self, variable: str) -> None:
+        """Filters vertical and horizontal stripe-shaped artifacts from radar data."""
+        if variable not in self.data:
+            return
+        data = self.data[variable][:]
+        n_points_in_profiles = ma.count(data, axis=1)
+        n_profiles_with_data = np.count_nonzero(n_points_in_profiles)
+        if n_profiles_with_data < 300:
+            return
+        n_vertical = self._filter(data, 1, min_coverage=0.5, z_limit=10, distance=4, n_blocks=100)
+        n_horizontal = self._filter(data, 0, min_coverage=0.3, z_limit=-30, distance=3, n_blocks=20)
+        logging.info(f'Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes from '
+                     f'radar data using {variable}')
+
+    def _filter(self, data: np.array,
+                axis: int,
+                min_coverage: float,
+                z_limit: float,
+                distance: float,
+                n_blocks: int) -> int:
+
+        if axis == 0:
+            data = data.T
+            echo = self.data['Z'][:].T
+        else:
+            echo = self.data['Z'][:]
+
+        len_block = int(np.floor(data.shape[0] / n_blocks))
+        block_indices = np.arange(len_block)
+        n_removed_total = 0
+
+        for block_number in range(n_blocks):
+
+            data_block = data[block_indices, :]
+            n_values = ma.count(data_block, axis=1)
+
+            try:
+                q1 = np.quantile(n_values, 0.25)
+                q3 = np.quantile(n_values, 0.75)
+            except IndexError:
+                continue
+            threshold = distance * (q3 - q1) + q3
+
+            ind = np.where((n_values > threshold) & (n_values > (min_coverage * data.shape[1])))[0]
+            true_ind = [int(x) for x in (block_number * len_block + ind)]
+            n_removed = len(ind)
+
+            if n_removed > 5:
+                continue
+
+            if n_removed > 0:
+                n_removed_total += n_removed
+                for ind in true_ind:
+                    ind2 = np.where(echo[ind, :] < z_limit)
+                    indices = [ind, ind2] if axis == 1 else [ind2, ind]
+                    self.data['v'][:][indices] = ma.masked
+            block_indices += len_block
+
+        return n_removed_total
 
     def correct_atten(self, attenuations: dict) -> None:
         """Corrects radar echo for liquid and gas attenuation.

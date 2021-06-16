@@ -1,5 +1,6 @@
 """Module with classes for Vaisala ceilometers."""
 from typing import Tuple, Optional
+import logging
 import numpy as np
 from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy import utils
@@ -45,7 +46,7 @@ class VaisalaCeilo(Ceilometer):
             try:
                 profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
             except ValueError:
-                print('Warning: bad value in raw ceilometer data')
+                logging.warning('Bad value in raw ceilometer data')
         ind = np.where(profiles & self._hex_conversion_params[1] != 0)
         profiles[ind] -= self._hex_conversion_params[2]
         return profiles.astype(float) / self._backscatter_scale_factor
