@@ -18,9 +18,10 @@ implementation of the Cloudnet processing scheme.
    installation
    quickstart
    api
+   fileformat
    guide
-   
-	    
+
+
 
 Indices and tables
 ==================
