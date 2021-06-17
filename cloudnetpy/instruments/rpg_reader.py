@@ -101,7 +101,7 @@ class Fmcw94Bin:
 
         def _create_variables():
             """Initializes dictionaries for data arrays."""
-            vrs = {'sample_length': np.zeros(dims.n_samples, int),
+            vrs = {'_sample_length': np.zeros(dims.n_samples, int),
                    'time': np.zeros(dims.n_samples, int),
                    'time_ms': np.zeros(dims.n_samples, int),
                    'quality_flag': np.zeros(dims.n_samples, int)}
@@ -184,7 +184,7 @@ class Fmcw94Bin:
         float_block1, float_block2 = _init_float_blocks()
 
         for sample in range(dims.n_samples):
-            aux['sample_length'][sample] = np.fromfile(file, np.int32, 1)
+            aux['_sample_length'][sample] = np.fromfile(file, np.int32, 1)
             aux['time'][sample] = np.fromfile(file, np.uint32, 1)
             aux['time_ms'][sample] = np.fromfile(file, np.int32, 1)
             aux['quality_flag'][sample] = np.fromfile(file, np.int8, 1)

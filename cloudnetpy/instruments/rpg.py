@@ -396,12 +396,16 @@ RPG_ATTRIBUTES = {
         long_name='Wind speed',
         units='m s-1',
     ),
+    'relative_humidity': MetaData(
+        long_name='Relative humidity',
+        units='%',
+    ),
     'Zdr': MetaData(
         long_name='Differential reflectivity',
         units='dB'
     ),
     'Ze': MetaData(
-        long_name='Radar reflectivity factor.',
+        long_name='Radar reflectivity factor',
         units='dBZ',
     )
 }
