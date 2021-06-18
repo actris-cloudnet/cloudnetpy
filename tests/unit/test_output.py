@@ -111,7 +111,7 @@ def test_get_old_uuid(fake_nc_file):
     assert output._get_old_uuid(False, 'new_file.nc') is None
 
 
-def test_add_standard_global_attributes(tmpdir_factory, fake_nc_file):
+def test_add_standard_global_attributes(tmpdir_factory):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
     root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
     output._add_standard_global_attributes(root_grp, 'abcd')
@@ -129,3 +129,15 @@ def test_add_time_attribute():
     new_attributes = output.add_time_attribute(attributes, date)
     assert new_attributes['time'].units == 'hours since 2020-01-12 00:00:00'
     assert new_attributes['kissa'].units == 'xy'
+
+
+def test_fix_attribute_name(tmpdir_factory):
+    file = tmpdir_factory.mktemp("data").join("nc_file.nc")
+    nc = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
+    var = nc.createVariable('a', 'f8')
+    var[:] = 1.0
+    var.unit = 'm'
+    output.fix_attribute_name(nc)
+    assert hasattr(nc.variables['a'], 'units') is True
+    assert hasattr(nc.variables['a'], 'unit') is False
+    assert nc.variables['a'].units == 'm'

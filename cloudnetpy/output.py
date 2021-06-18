@@ -25,6 +25,7 @@ def save_radar_level1b(source_full_path: str,
     add_file_type(nc, file_type)
     nc_source = netCDF4.Dataset(source_full_path)
     copy_variables(nc_source, nc, vars_from_source)
+    fix_attribute_name(nc)
     nc.title = f"{file_type.capitalize()} file from {radar.location}"
     nc.year, nc.month, nc.day = radar.date
     nc.location = radar.location
@@ -276,3 +277,15 @@ def _get_old_uuid(keep_uuid: bool, full_path: str) -> Union[str, None]:
         nc.close()
         return uuid
     return None
+
+
+def fix_attribute_name(nc: netCDF4.Dataset) -> None:
+    """Changes incorrect 'unit' variable attribute to correct 'units'.
+
+    This is true at least for 'drg' variable in raw MIRA files.
+
+    """
+    for var in nc.variables:
+        if 'unit' in nc[var].ncattrs():
+            nc[var].setncattr('units', nc[var].unit)
+            nc[var].delncattr('unit')
