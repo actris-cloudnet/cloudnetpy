@@ -1,5 +1,6 @@
 """ Functions for file writing."""
 import os
+import logging
 from typing import Union, Optional
 import numpy as np
 import netCDF4
@@ -287,5 +288,6 @@ def fix_attribute_name(nc: netCDF4.Dataset) -> None:
     """
     for var in nc.variables:
         if 'unit' in nc[var].ncattrs():
+            logging.info('Renaming "unit" attribute into "units"')
             nc[var].setncattr('units', nc[var].unit)
             nc[var].delncattr('unit')
