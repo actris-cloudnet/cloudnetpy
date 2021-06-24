@@ -149,7 +149,8 @@ class DataSource:
     def _unknown_variable_to_cloudnet_array(self,
                                             possible_names: tuple,
                                             key: str,
-                                            units: Optional[str] = None):
+                                            units: Optional[str] = None,
+                                            ignore_mask: Optional[bool] = False):
         """Transforms single netCDF4 variable into CloudnetArray.
 
         Args:
@@ -157,6 +158,7 @@ class DataSource:
                 input NetCDF file.
             key: Key for self.data dictionary and name-attribute for the saved CloudnetArray object.
             units: Units attribute for the CloudnetArray object.
+            ignore_mask: If true, always writes an ordinary numpy array.
 
         Raises:
             RuntimeError: No variable found.
@@ -164,6 +166,9 @@ class DataSource:
         """
         for name in possible_names:
             if name in self.dataset.variables:
-                self.append_data(self.dataset.variables[name], key, units=units)
+                array = self.dataset.variables[name]
+                if ignore_mask is True:
+                    array = np.array(array)
+                self.append_data(array, key, units=units)
                 return
         raise RuntimeError('Missing variable in the input file.')
