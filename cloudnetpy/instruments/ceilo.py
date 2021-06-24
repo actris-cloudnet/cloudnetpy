@@ -94,7 +94,7 @@ def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
     tilt_angle = np.median(ceilo.metadata['tilt_angle'])
     height = utils.range_to_height(ceilo.range, float(tilt_angle))
     height += float(site_altitude)
-    ceilo.data['height'] = CloudnetArray(height, 'height')
+    ceilo.data['height'] = CloudnetArray(np.array(height), 'height')
     ceilo.data['altitude'] = CloudnetArray(site_altitude, 'altitude')
 
 
@@ -104,7 +104,7 @@ def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
     for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
         ceilo.data[name] = CloudnetArray(data, name)
     for field in ('range', 'time', 'wavelength', 'calibration_factor'):
-        ceilo.data[field] = CloudnetArray(getattr(ceilo, field), field)
+        ceilo.data[field] = CloudnetArray(np.array(getattr(ceilo, field)), field)
     for field, data in ceilo.metadata.items():
         first_element = data if utils.isscalar(data) else data[0]
         if not isinstance(first_element, str):  # String array writing not yet supported

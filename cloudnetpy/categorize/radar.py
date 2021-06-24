@@ -235,7 +235,7 @@ class Radar(DataSource):
         for key in ('latitude', 'longitude', 'altitude'):
             self.append_data(np.array(self.getvar(key)), key)
         for key in ('time', 'height', 'radar_frequency'):
-            self.append_data(getattr(self, key), key)
+            self.append_data(np.array(getattr(self, key)), key)
 
     def _init_data(self):
         self._unknown_variable_to_cloudnet_array(('Ze',), 'Z', units='dBZ')

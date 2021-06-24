@@ -39,9 +39,10 @@ class NcRadar(DataSource):
     def add_meta(self) -> None:
         """Adds metadata."""
         for key in ('time', 'range', 'radar_frequency'):
-            self.append_data(getattr(self, key), key)
+            self.append_data(np.array(getattr(self, key)), key)
         possible_nyquist_names = ('ambiguous_velocity', 'NyquistVelocity')
-        self._unknown_variable_to_cloudnet_array(possible_nyquist_names, 'nyquist_velocity')
+        self._unknown_variable_to_cloudnet_array(possible_nyquist_names, 'nyquist_velocity',
+                                                 ignore_mask=True)
 
     def add_height(self):
         if 'altitude' in self.data:
@@ -53,6 +54,7 @@ class NcRadar(DataSource):
                 tilt_angle = 0
             height = utils.range_to_height(self.getvar('range'), tilt_angle)
             height += float(self.data['altitude'].data)
+            height = np.array(height)
             self.data['height'] = CloudnetArray(height, 'height')
 
     def _add_site_meta(self, site_meta: dict) -> None:

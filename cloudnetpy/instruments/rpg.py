@@ -150,7 +150,7 @@ class Rpg:
         key = 'time'
         fraction_hour = utils.seconds2hours(self.raw_data[key])
         self.raw_data[key] = fraction_hour
-        self.data[key] = CloudnetArray(fraction_hour, key)
+        self.data[key] = CloudnetArray(np.array(fraction_hour), key)
 
     def mask_invalid_ldr(self) -> None:
         """Removes ldr outliers."""
