@@ -144,9 +144,12 @@ def copy_variables(source: netCDF4.Dataset,
     """
     for key in keys:
         if key in source.variables:
+            fill_value = getattr(source.variables[key], '_FillValue', False)
             variable = source.variables[key]
-            var_out = target.createVariable(key, variable.datatype, variable.dimensions)
-            var_out.setncatts({k: variable.getncattr(k) for k in variable.ncattrs()})
+            var_out = target.createVariable(key, variable.datatype, variable.dimensions,
+                                            fill_value=fill_value)
+            var_out.setncatts({k: variable.getncattr(k) for k in variable.ncattrs()
+                               if k != '_FillValue'})
             var_out[:] = variable[:]
 
 
