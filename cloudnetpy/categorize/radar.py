@@ -233,7 +233,7 @@ class Radar(DataSource):
     def add_meta(self) -> None:
         """Copies misc. metadata from the input file."""
         for key in ('latitude', 'longitude', 'altitude'):
-            self.append_data(self.getvar(key), key)
+            self.append_data(np.array(self.getvar(key)), key)
         for key in ('time', 'height', 'radar_frequency'):
             self.append_data(getattr(self, key), key)
 
