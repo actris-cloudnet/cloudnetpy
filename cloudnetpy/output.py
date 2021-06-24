@@ -3,6 +3,7 @@ import os
 import logging
 from typing import Union, Optional
 import numpy as np
+import numpy.ma as ma
 import netCDF4
 from cloudnetpy import utils, version
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
@@ -233,8 +234,15 @@ def update_attributes(cloudnet_variables: dict, attributes: dict) -> None:
 def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
     """Iterates over Cloudnet instances and write to netCDF file."""
     for obj in cloudnet_variables.values():
+
+        if ma.isMaskedArray(obj.data):
+            fill_value = netCDF4.default_fillvals[obj.data_type]
+        else:
+            fill_value = False
+
         size = _get_dimensions(nc, obj.data)
-        nc_variable = nc.createVariable(obj.name, obj.data_type, size, zlib=True)
+        nc_variable = nc.createVariable(obj.name, obj.data_type, size, zlib=True,
+                                        fill_value=fill_value)
         nc_variable[:] = obj.data
         for attr in obj.fetch_attributes():
             setattr(nc_variable, attr, getattr(obj, attr))
