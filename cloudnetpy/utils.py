@@ -382,12 +382,16 @@ def calc_relative_error(reference: np.ndarray, array: np.ndarray) -> np.ndarray:
 
 def db2lin(array: np.ndarray, scale: Optional[int] = 10) -> np.ndarray:
     """dB to linear conversion."""
-    return ma.power(10, (array/scale))
+    if ma.isMaskedArray(array):
+        return ma.power(10, (array/scale))
+    return np.power(10, (array/scale))
 
 
 def lin2db(array: np.ndarray, scale: Optional[int] = 10) -> np.ndarray:
     """Linear to dB conversion."""
-    return scale*ma.log10(array)
+    if ma.isMaskedArray(array):
+        return scale*ma.log10(array)
+    return scale*np.log10(array)
 
 
 def mdiff(array: np.ndarray) -> float:

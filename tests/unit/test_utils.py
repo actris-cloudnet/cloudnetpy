@@ -368,12 +368,34 @@ def test_lin2db(input, result):
     assert utils.lin2db(*input) == result
 
 
+@pytest.mark.parametrize("input, expected", [
+    (np.array([1e-10, 1e-10]), np.array([-100.0, -100.0])),
+    (ma.array([1e-10, 1e-10], mask=[0, 1]), ma.array([-100.0, -100.0], mask=[0, 1])),
+])
+def test_lin2db_arrays(input, expected):
+    converted = utils.lin2db(input)
+    assert_array_equal(converted, expected)
+    if ma.isMaskedArray(input):
+        assert_array_equal(converted.mask, expected.mask)
+
+
 @pytest.mark.parametrize("input, result", [
     ((-100,), 1e-10),
     ((-10, 1), 1e-10),
 ])
 def test_db2lin(input, result):
     assert utils.db2lin(*input) == result
+
+
+@pytest.mark.parametrize("input, expected", [
+    (np.array([-100.0, -100.0]), np.array([1e-10, 1e-10])),
+    (ma.array([-100.0, -100.0], mask=[0, 1]), ma.array([1e-10, 1e-10], mask=[0, 1])),
+])
+def test_db2lin_arrays(input, expected):
+    converted = utils.db2lin(input)
+    assert_array_equal(converted, expected)
+    if ma.isMaskedArray(input):
+        assert_array_equal(converted.mask, expected.mask)
 
 
 def test_time_grid():
