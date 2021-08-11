@@ -63,7 +63,7 @@ def _get_probabilities(obs: ClassData) -> dict:
     fun = utils.array_to_probability
     return {
         'width': fun(obs.width, 1, 0.3, True) if hasattr(obs, 'width') else 1,
-        'z': fun(obs.z, 0, 8, True),
+        'z_strong': fun(obs.z, 0, 8, True),
         'z_weak': fun(obs.z, -20, 8, True),
         'ldr': fun(obs.ldr, -25, 5) if hasattr(obs, 'ldr') else None,
         'temp_loose': fun(obs.tw, 270, 2),
@@ -83,7 +83,7 @@ def _get_smoothed_v(obs: ClassData,
 def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
     """This is the most reliable proxy for insects."""
     if prob['ldr'] is None:
-        return ma.masked_all(prob['z'].shape)
+        return ma.masked_all(prob['z_strong'].shape)
     return prob['ldr'] * prob['temp_loose'] * prob['z']
 
 
