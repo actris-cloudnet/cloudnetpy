@@ -83,7 +83,7 @@ def _get_smoothed_v(obs: ClassData,
 def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
     """This is the most reliable proxy for insects."""
     if prob['ldr'] is None:
-        return ma.masked_all(prob['z_strong'].shape)
+        return np.zeros(prob['z_strong'].shape)
     return prob['ldr'] * prob['temp_loose']
 
 
