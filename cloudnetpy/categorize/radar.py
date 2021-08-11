@@ -110,8 +110,9 @@ class Radar(DataSource):
             return
         n_vertical = self._filter(data, 1, min_coverage=0.5, z_limit=10, distance=4, n_blocks=100)
         n_horizontal = self._filter(data, 0, min_coverage=0.3, z_limit=-30, distance=3, n_blocks=20)
-        logging.info(f'Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes from '
-                     f'radar data using {variable}')
+        if n_vertical > 0 or n_horizontal > 0:
+            logging.info(f'Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes '
+                         f'from radar data using {variable}')
 
     def _filter(self, data: np.array,
                 axis: int,
