@@ -102,7 +102,7 @@ def _is_good_ldr_peak(ldr: np.ndarray,
                       v: np.ndarray,
                       indices: Tuple[int, int, int]) -> bool:
     base, peak, top = indices
-    conditions = (ldr[peak] - ldr[top] > 4,
+    conditions = (ldr[peak] - ldr[top] > 3,
                   ldr[peak] - ldr[base] > 4,
                   ldr[peak] > -30,
                   v[base] < -1)
