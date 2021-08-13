@@ -66,7 +66,7 @@ def _get_probabilities(obs: ClassData) -> dict:
         'z_strong': fun(obs.z, 0, 8, True),
         'z_weak': fun(obs.z, -20, 8, True),
         'ldr': fun(obs.ldr, -25, 5) if hasattr(obs, 'ldr') else None,
-        'temp_loose': fun(obs.tw, 270, 2),
+        'temp_loose': fun(obs.tw, 268, 2),
         'temp_strict': fun(obs.tw, 274, 1),
         'v': fun(smooth_v, -3.5, 2),
         'lwp': utils.transpose(fun(lwp_interp, 150, 50, invert=True)),
