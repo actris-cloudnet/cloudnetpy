@@ -50,17 +50,19 @@ def find_liquid(obs: ClassData,
                 max_width: Optional[float] = 300,
                 min_points: Optional[int] = 3,
                 min_top_der: Optional[float] = 1e-7,
-                min_lwp: Optional[float] = 0) -> dict:
+                min_lwp: Optional[float] = 0,
+                min_alt: Optional[float] = 100) -> dict:
     """ Estimate liquid layers from SNR-screened attenuated backscatter.
 
     Args:
         obs: The :class:`ClassData` instance.
-        peak_amp: Minimum value of peak. Default is 2e-5.
+        peak_amp: Minimum value of peak. Default is 1e-6.
         max_width: Maximum width of peak. Default is 300 (m).
         min_points: Minimum number of valid points in peak. Default is 3.
         min_top_der: Minimum derivative above peak, defined as
-            (beta_peak-beta_top) / (alt_top-alt_peak), which is always positive. Default is 2e-7.
+            (beta_peak-beta_top) / (alt_top-alt_peak). Default is 1e-7.
         min_lwp: Minimum value from linearly interpolated lwp measured by the mwr. Default is 0.
+        min_alt: Minimum altitude of the peak from the ground. Default is 100 (m).
 
     Returns:
         Dict containing `presence`, `bases` and `tops`.
@@ -74,7 +76,8 @@ def find_liquid(obs: ClassData,
         conditions = (npoints >= min_points,
                       peak_width < max_width,
                       top_der > min_top_der,
-                      is_positive_lwp)
+                      is_positive_lwp,
+                      peak_alt > min_alt)
         return all(conditions)
 
     def _save_peak_position():
@@ -84,11 +87,6 @@ def find_liquid(obs: ClassData,
 
     lwp_int = interpolate_lwp(obs)
     beta = ma.copy(obs.beta)
-
-    # TODO: append zero-row into data instead of setting first values to zero.
-    # This fix is because the peak can be the very first value
-    # (thus there is no proper base in data)
-    beta[:, 0] = 0
     height = obs.height
 
     is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,
@@ -109,6 +107,7 @@ def find_liquid(obs: ClassData,
             continue
         npoints = np.count_nonzero(lprof[base:top+1])
         peak_width = height[top] - height[base]
+        peak_alt = height[peak] - height[0]
         top_der = (lprof[peak] - lprof[top]) / (height[top] - height[peak])
         is_positive_lwp = lwp_int[n] > min_lwp
         if _is_proper_peak():

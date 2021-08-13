@@ -94,7 +94,6 @@ def generate_categorize(input_files: dict,
     for variable in ('v', 'v_sigma', 'ldr'):
         data['radar'].filter_stripes(variable)
     data['radar'].remove_incomplete_pixels()
-    data['lidar'].remove_low_level_outliers()
     data['model'].calc_wet_bulb()
     classification = classify.classify_measurements(data)
     attenuations = atmos.get_attenuations(data, classification)
