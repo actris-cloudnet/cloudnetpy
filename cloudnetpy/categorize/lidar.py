@@ -1,5 +1,7 @@
 """Lidar module, containing the :class:`Lidar` class."""
+import logging
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy.categorize.datasource import DataSource
 
 

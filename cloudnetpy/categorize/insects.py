@@ -63,11 +63,12 @@ def _get_probabilities(obs: ClassData) -> dict:
     fun = utils.array_to_probability
     return {
         'width': fun(obs.width, 1, 0.3, True) if hasattr(obs, 'width') else 1,
-        'z': fun(obs.z, -15, 8, True),
-        'ldr': fun(obs.ldr, -20, 5) if hasattr(obs, 'ldr') else 1,
+        'z_strong': fun(obs.z, 0, 8, True),
+        'z_weak': fun(obs.z, -20, 8, True),
+        'ldr': fun(obs.ldr, -25, 5) if hasattr(obs, 'ldr') else None,
         'temp_loose': fun(obs.tw, 268, 2),
         'temp_strict': fun(obs.tw, 274, 1),
-        'v': fun(smooth_v, -2.5, 2),
+        'v': fun(smooth_v, -3.5, 2),
         'lwp': utils.transpose(fun(lwp_interp, 150, 50, invert=True)),
         'v_sigma': fun(obs.v_sigma, 0.01, 0.1)}
 
@@ -81,12 +82,15 @@ def _get_smoothed_v(obs: ClassData,
 
 def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
     """This is the most reliable proxy for insects."""
-    return prob['z'] * prob['temp_loose'] * prob['ldr']
+    if prob['ldr'] is None:
+        return np.zeros(prob['z_strong'].shape)
+    return prob['ldr'] * prob['temp_loose']
 
 
 def _calc_prob_from_all(prob: dict) -> np.ndarray:
-    """This can be used to detect insects when ldr is not available."""
-    return prob['z'] * prob['temp_strict'] * prob['v'] * prob['width']
+    """This can be tried when LDR is not available. To detect insects without LDR unambiguously is
+    difficult and might result in many false positives and/or false negatives."""
+    return prob['z_weak'] * prob['temp_strict'] * prob['width'] * prob['v']
 
 
 def _adjust_for_radar(obs: ClassData,

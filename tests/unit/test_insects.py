@@ -14,12 +14,12 @@ class Obs:
 
 
 def test_calc_prob_from_ldr():
-    prob = {'z': 0.5, 'temp_loose': 0.5, 'ldr': 0.5}
-    assert insects._calc_prob_from_ldr(prob) == 0.5**3
+    prob = {'z': 0.5, 'temp_loose': 0.5, 'ldr': 0.5, 'temp_strict': 0.5}
+    assert insects._calc_prob_from_ldr(prob) == 0.5**2
 
 
 def test_calc_prob_from_all():
-    prob = {'z': 0.5, 'temp_strict': 0.5, 'v': 0.5, 'width': 0.5}
+    prob = {'z': 0.5, 'temp_strict': 0.5, 'v': 0.5, 'width': 0.5, 'z_weak': 0.5}
     assert insects._calc_prob_from_all(prob) == 0.5**4
 
 
