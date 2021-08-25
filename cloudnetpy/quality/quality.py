@@ -39,7 +39,7 @@ class Quality:
                 max_value = np.max(self._nc.variables[var][:])
                 min_value = np.min(self._nc.variables[var][:])
                 if min_value < limits[0] or max_value > limits[1]:
-                    invalid.append(var)
+                    invalid.append((var, (min_value, max_value), limits))
                     self.n_data_test_failures += 1
         return invalid
 
@@ -49,8 +49,9 @@ class Quality:
             if hasattr(self._nc, key):
                 self.n_metadata_tests += 1
                 limits = tuple(map(float, limits.split(',')))
-                if not limits[0] <= int(self._nc.getncattr(key)) <= limits[1]:
-                    invalid.append(key)
+                value = int(self._nc.getncattr(key))
+                if not limits[0] <= value <= limits[1]:
+                    invalid.append((key, value, limits))
                     self.n_metadata_test_failures += 1
         return invalid
 
@@ -59,8 +60,9 @@ class Quality:
         for key, expected_unit in self._metadata_config.items('variable_units'):
             if key in self._nc.variables:
                 self.n_metadata_tests += 1
+                value = self._nc.variables[key].units
                 if self._nc.variables[key].units != expected_unit:
-                    invalid.append(key)
+                    invalid.append((key, value, expected_unit))
                     self.n_metadata_test_failures += 1
         return invalid
 
