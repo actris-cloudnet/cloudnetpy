@@ -4,7 +4,7 @@ Quickstart
 
 Processing is easy using CloudnetPy's high level APIs. You only need some
 measurement data from your instruments. And if you don't have it, you can
-always try `these example files <http://devcloudnet.fmi.fi/files/cloudnetpy_test_input_files.zip>`_.
+always try `these example files <http://lake.fmi.fi/cloudnet-public/cloudnetpy_test_input_files.zip>`_.
 
 Radar processing
 ----------------

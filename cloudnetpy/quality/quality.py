@@ -7,6 +7,7 @@ FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 class Quality:
+    """Class containing quality control routines."""
 
     def __init__(self, filename: str):
         self.n_metadata_tests = 0
@@ -18,6 +19,17 @@ class Quality:
         self._data_config = _read_config(f'{FILE_PATH}/data_quality_config.ini')
 
     def check_metadata(self) -> dict:
+        """Check metadata of Cloudnet file.
+
+        Returns:
+            dict: Dictionary containing test results and some diagnostics.
+
+        Examples:
+            >>> from cloudnetpy.quality import Quality
+            >>> quality = Quality('/foo/bar/categorize.nc')
+            >>> result = quality.check_meta()
+
+        """
         return {
             'missing_variables': self._find_missing_keys('required_variables'),
             'missing_global_attributes': self._find_missing_keys('required_global_attributes'),
@@ -25,9 +37,21 @@ class Quality:
             'invalid_units': self._find_invalid_variable_units()}
 
     def check_data(self) -> dict:
+        """Check data values of Cloudnet file.
+
+        Returns:
+            dict: Dictionary containing test results and some diagnostics.
+
+        Examples:
+            >>> from cloudnetpy.quality import Quality
+            >>> quality = Quality('/foo/bar/categorize.nc')
+            >>> result = quality.check_data()
+
+        """
         return {'data_out_of_bounds': self._find_invalid_data_values()}
 
     def close(self) -> None:
+        """Close the inspected file."""
         self._nc.close()
 
     def _find_invalid_data_values(self) -> list:
