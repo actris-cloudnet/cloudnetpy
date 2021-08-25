@@ -252,10 +252,10 @@ def test_fill_error_array():
 
 
 def test_screen_rain_error():
-    compare = np.ma.array([[0.709, 0, 0.709],
+    expected = np.ma.array([[0.709, 0, 0.709],
                            [0, 0, 0]], mask=[[0, 1, 0],
                                              [1, 1, 1]])
-    assert_array_equal(ERROR_OBJ.error.mask, compare.mask)
+    assert_array_equal(ERROR_OBJ.error.mask, expected.mask)
 
 
 @pytest.mark.parametrize("key", ["lwc", "lwc_retrieval_status", "lwc_error"])
