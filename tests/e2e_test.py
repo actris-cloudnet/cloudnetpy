@@ -3,13 +3,14 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from zipfile import ZipFile
+from uuid import UUID
 import requests
 import importlib
 from cloudnetpy.instruments import mira2nc
 from cloudnetpy.instruments import ceilo2nc
 from cloudnetpy.categorize import generate_categorize
-from tests import check_data_quality, check_metadata, utils
-from tests import api
+from cloudnetpy.quality import Quality
+import netCDF4
 
 
 def _load_test_data(input_path: str):
@@ -23,7 +24,7 @@ def _load_test_data(input_path: str):
         fl.close()
         sys.stdout.write("    Done.\n")
 
-    url = 'http://devcloudnet.fmi.fi/files/cloudnetpy_test_input_files.zip'
+    url = 'https://lake.fmi.fi/cloudnet-public/cloudnetpy_test_input_files.zip'
     zip_name = os.path.split(url)[-1]
     full_zip_name = f"{input_path}{zip_name}"
     is_dir = os.path.isdir(input_path)
@@ -45,57 +46,77 @@ def _process_product_file(product_type: str, path: str, categorize_file: str) ->
 
 def main():
 
-    test_path = utils.get_test_path()
+    test_path = Path(__file__).parent
     source_path = f"{test_path}/source_data/"
     _load_test_data(source_path)
-    log_file = f"{source_path}Mace_Head.log"
 
     raw_files = {
         'radar': f"{source_path}raw_mira_radar.mmclx",
-        'lidar': f"{source_path}raw_chm15k_lidar.nc",
-    }
-    """"
-    We know these fail at the moment:
-    for name, file in raw_files.items():
-        check_metadata(file, log_file)
-    """
+        'lidar': f"{source_path}raw_chm15k_lidar.nc"}
 
     calibrated_files = {
         'radar': f"{source_path}radar.nc",
-        'lidar': f"{source_path}lidar.nc",
-    }
+        'lidar': f"{source_path}lidar.nc"}
+
     site_meta = {'name': 'Mace Head', 'altitude': 13.0}
     uuid_radar = mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta, uuid='kissa')
     assert uuid_radar == 'kissa'
     uuid_lidar = ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
-    for name, file in calibrated_files.items():
-        check_metadata(file, log_file)
-        check_data_quality(file, log_file)
-
-    api.check_attributes(calibrated_files['radar'], site_meta)
-    api.check_is_valid_uuid(uuid_lidar)
+    for _, filename in calibrated_files.items():
+        _run_tests(filename)
+    _check_attributes(calibrated_files['radar'], site_meta)
+    _check_is_valid_uuid(uuid_lidar)
 
     input_files = {
         'radar': calibrated_files['radar'],
         'lidar': calibrated_files['lidar'],
         'mwr': f"{source_path}hatpro_mwr.nc",
-        'model': f"{source_path}ecmwf_model.nc",
-    }
+        'model': f"{source_path}ecmwf_model.nc"}
+
     categorize_file = f"{source_path}categorize.nc"
     uuid_categorize = generate_categorize(input_files, categorize_file)
-    check_metadata(categorize_file, log_file)
-    check_data_quality(categorize_file, log_file)
-    api.check_is_valid_uuid(uuid_categorize)
-    api.check_source_file_uuids(categorize_file, (uuid_lidar, uuid_radar))
+    _run_tests(categorize_file)
+    _check_is_valid_uuid(uuid_categorize)
+    _check_source_file_uuids(categorize_file, (uuid_lidar, uuid_radar))
 
     product_file_types = ['classification', 'iwc', 'lwc', 'drizzle']
     for file in product_file_types:
         product_file, uuid_product = _process_product_file(file, source_path, categorize_file)
-        check_metadata(product_file, log_file)
-        check_data_quality(product_file, log_file)
-        api.check_is_valid_uuid(uuid_product)
-        api.check_attributes(product_file, site_meta)
-        api.check_source_file_uuids(product_file, (uuid_categorize,))
+        _run_tests(product_file)
+        _check_is_valid_uuid(uuid_product)
+        _check_attributes(product_file, site_meta)
+        _check_source_file_uuids(product_file, (uuid_categorize,))
+
+
+def _run_tests(filename: str):
+    quality = Quality(filename)
+    quality.check_data()
+    quality.check_metadata()
+    assert quality.n_metadata_test_failures == 0
+    assert quality.n_data_test_failures == 0
+
+
+def _check_source_file_uuids(file: str, expected_uuids: tuple):
+    nc = netCDF4.Dataset(file)
+    source_uuids = nc.source_file_uuids.replace(',', '').split(' ')
+    for uuid in expected_uuids:
+        assert uuid in source_uuids
+    for uuid in source_uuids:
+        assert uuid in expected_uuids
+    nc.close()
+
+
+def _check_is_valid_uuid(uuid):
+    try:
+        UUID(uuid, version=4)
+    except (ValueError, TypeError):
+        raise AssertionError(f'{uuid} is not a valid UUID.')
+
+
+def _check_attributes(full_path: str, metadata: dict):
+    nc = netCDF4.Dataset(full_path)
+    assert nc.variables['altitude'][:] == metadata['altitude']
+    nc.close()
 
 
 if __name__ == "__main__":
