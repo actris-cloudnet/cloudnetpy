@@ -67,15 +67,15 @@ def test_add_supplementary_biases(results, key):
 
 def test_calc_error():
     from cloudnetpy.utils import l2norm_weighted
-    compare = l2norm_weighted(ERROR_INPUT, 1, 1)
-    testing.assert_almost_equal(de._calc_error(1, 1, ERROR_INPUT), compare)
+    expected = l2norm_weighted(ERROR_INPUT, 1, 1)
+    testing.assert_almost_equal(de._calc_error(1, 1, ERROR_INPUT), expected)
 
 
 def test_stack_errors():
     DRIZZLE_INDICES['drizzle'] = np.array([[0, 1, 1], [1, 1, 0]], dtype=bool)
-    compare = np.ma.array(ERROR_INPUT[0], mask=[[1, 0, 0], [0, 0, 1]])
+    expected = np.ma.array(ERROR_INPUT[0], mask=[[1, 0, 0], [0, 0, 1]])
     x = de._stack_errors(ERROR_INPUT[0], DRIZZLE_INDICES)
-    testing.assert_array_almost_equal(x, compare)
+    testing.assert_array_almost_equal(x, expected)
 
 
 @pytest.mark.parametrize("x, result", [

@@ -62,9 +62,8 @@ CloudnetPy offers an easy-to-use plotting interface:
 .. autofunction:: plotting.generate_figure
 
 There is also possibility to compare CloundetPy files with the
-Matlab-processed old files which are available from `devcloudnet.fmi.fi
-<http://devcloudnet.fmi.fi>`_:
-
+Matlab-processed legacy files
+(tagged "legacy" in the `Cloudnet data portal <https://cloudnet.fmi.fi>`_):
 
 .. autofunction:: plotting.compare_files
 
@@ -72,20 +71,10 @@ Matlab-processed old files which are available from `devcloudnet.fmi.fi
 Quality control
 ...............
 
-CloudnetPy Github source contains functions to check the quality of the
-processed files. These can be used to validate the metadata of the files
-and perform various checks for the data.
+CloudnetPy contains tools to check the metadata and data of the processed files.
 
-.. autofunction:: tests.check_metadata
-
-.. autofunction:: tests.check_data_quality
-
-.. autofunction:: tests.run_unit_tests
-
-.. note::
-
-    Quality control routines are not included in the CloudnetPy PyPI
-    package.
+.. automodule:: quality.quality
+   :members:
 
 
 Categorize modules

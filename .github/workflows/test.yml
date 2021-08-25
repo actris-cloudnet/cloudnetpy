@@ -34,4 +34,4 @@ jobs:
     - name: Run e2e-test
       run: |
         cd tests/
-        python3 run_example_processing_and_tests.py
+        python3 e2e_test.py

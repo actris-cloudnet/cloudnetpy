@@ -94,36 +94,36 @@ def test_select_none_masked_values_array():
     mask = [0, 3, 7]
     data[mask] = np.ma.masked
     time = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    compare = np.array([2, 3, 5, 6, 7, 9])
+    expected = np.array([2, 3, 5, 6, 7, 9])
     x, y = plotting._select_none_masked_values(data, time)
-    testing.assert_array_almost_equal(x, compare)
-    testing.assert_array_almost_equal(y, compare)
+    testing.assert_array_almost_equal(x, expected)
+    testing.assert_array_almost_equal(y, expected)
 
 
 def test_select_none_masked_values_bool():
     data = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     time = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    compare = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    expected = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     x, y = plotting._select_none_masked_values(data, time)
-    testing.assert_array_almost_equal(x, compare)
-    testing.assert_array_almost_equal(y, compare)
+    testing.assert_array_almost_equal(x, expected)
+    testing.assert_array_almost_equal(y, expected)
 
 
 def test_change_unit2kg():
     data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     unit = 'g m-2'
     x = plotting._change_unit2kg(data, unit)
-    compare = np.array([0.001, 0.002, 0.003, 0.004, 0.005, 0.006,
+    expected = np.array([0.001, 0.002, 0.003, 0.004, 0.005, 0.006,
                         0.007, 0.008, 0.009])
-    testing.assert_array_almost_equal(x, compare)
+    testing.assert_array_almost_equal(x, expected)
 
 
 def test_keep_unit_kg():
     data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     unit = 'kg m-2'
     x = plotting._change_unit2kg(data, unit)
-    compare = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    testing.assert_array_almost_equal(x, compare)
+    expected = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    testing.assert_array_almost_equal(x, expected)
 
 
 class TestReadAxValues:
