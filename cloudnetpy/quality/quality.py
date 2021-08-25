@@ -31,10 +31,10 @@ class Quality:
 
         """
         return {
-            'missing_variables': self._find_missing_keys('required_variables'),
-            'missing_global_attributes': self._find_missing_keys('required_global_attributes'),
-            'invalid_global_attribute_values': self._find_invalid_global_attribute_values(),
-            'invalid_units': self._find_invalid_variable_units()}
+            'missingVariables': self._find_missing_keys('required_variables'),
+            'missingGlobalAttributes': self._find_missing_keys('required_global_attributes'),
+            'invalidGlobalAttributeValues': self._find_invalid_global_attribute_values(),
+            'invalidUnits': self._find_invalid_variable_units()}
 
     def check_data(self) -> dict:
         """Check data values of Cloudnet file.
@@ -48,7 +48,7 @@ class Quality:
             >>> result = quality.check_data()
 
         """
-        return {'data_out_of_bounds': self._find_invalid_data_values()}
+        return {'outOfBounds': self._find_invalid_data_values()}
 
     def close(self) -> None:
         """Close the inspected file."""
