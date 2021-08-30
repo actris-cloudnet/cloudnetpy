@@ -2,7 +2,8 @@
 import linecache
 from typing import Union, Optional
 import numpy as np
-from cloudnetpy.instruments.lufft import LufftCeilo
+import netCDF4
+from cloudnetpy.instruments.lufft import LufftCeilo, CL61d
 from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
@@ -68,11 +69,19 @@ def _initialize_ceilo(full_path: str,
         return ClCeilo(full_path, date)
     if model == 'ct25k':
         return Ct25k(full_path)
+    if model == 'cl61d':
+        return CL61d(full_path, date)
     return LufftCeilo(full_path, date)
 
 
 def _find_ceilo_model(full_path: str) -> str:
     if full_path.lower().endswith('.nc'):
+        nc = netCDF4.Dataset(full_path)
+        title = nc.title.lower()
+        nc.close()
+        for identifier in ['cl61d', 'cl61-d']:
+            if identifier in title or identifier in full_path.lower():
+                return 'cl61d'
         return 'chm15k'
     first_empty_line = utils.find_first_empty_line(full_path)
     max_number_of_empty_lines = 10

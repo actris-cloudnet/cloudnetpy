@@ -32,8 +32,10 @@ class Ceilometer:
         range_squared = _get_range_squared(self.range)
         is_saturation = self._find_saturated_profiles()
         beta = _screen_beta(self.backscatter, False)
+
         # smoothed version:
         beta_smooth = ma.copy(self.backscatter)
+
         cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
         beta_smooth[cloud_ind] = cloud_limit
         sigma = _calc_sigma_units(self.time, self.range)
