@@ -11,7 +11,13 @@ SCRIPT_PATH = path.dirname(path.realpath(__file__))
 
 
 def test_find_ceilo_model_jenoptik():
-    assert ceilo._find_ceilo_model('ceilo.nc') == 'chm15k'
+    file = f'{SCRIPT_PATH}/data/chm15k/00100_A202010220005_CHM170137.nc'
+    assert ceilo._find_ceilo_model(file) == 'chm15k'
+
+
+def test_find_ceilo_model_cl61d():
+    file = f'{SCRIPT_PATH}/data/cl61d/live_20210829_104420.nc'
+    assert ceilo._find_ceilo_model(file) == 'cl61d'
 
 
 @pytest.mark.parametrize("fix, result", [
