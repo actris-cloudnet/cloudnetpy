@@ -5,6 +5,26 @@ import netCDF4
 from cloudnetpy import utils
 
 
+def update_nc(old_file: str, new_file: str):
+    """Appends data to daily netCDF file.
+
+    Args:
+        old_file: Filename of a daily netCDF file.
+        new_file: Filename of a new file whose data will be appended to the end.
+
+    Notes:
+        Requires 'time' variable with unlimited dimension.
+
+    """
+    nc_old = netCDF4.Dataset(old_file, 'a')
+    nc_new = netCDF4.Dataset(new_file)
+    valid_ind = _find_valid_time_indices(nc_old, nc_new)
+    if len(valid_ind) > 0:
+        _update_fields(nc_old, nc_new, valid_ind)
+    nc_new.close()
+    nc_old.close()
+
+
 def concatenate_files(filenames: list,
                       output_file: str,
                       concat_dimension: Optional[str] = 'time',
@@ -128,3 +148,25 @@ def _copy_attributes(source: netCDF4.Dataset, target: netCDF4.Dataset) -> None:
         if attr != '_FillValue':
             value = getattr(source, attr)
             setattr(target, attr, value)
+
+
+def _find_valid_time_indices(nc_old: netCDF4.Dataset, nc_new:netCDF4.Dataset):
+    return np.where(nc_new.variables['time'][:] > nc_old.variables['time'][-1])[0]
+
+
+def _update_fields(nc_old: netCDF4.Dataset, nc_new: netCDF4.Dataset, valid_ind: list):
+    ind0 = len(nc_old.variables['time'])
+    idx = [ind0 + x for x in valid_ind]
+    concat_dimension = nc_old.variables['time'].dimensions[0]
+    for field in nc_new.variables:
+        if field not in nc_old.variables:
+            continue
+        dimensions = nc_new.variables[field].dimensions
+        if concat_dimension in dimensions:
+            concat_ind = dimensions.index(concat_dimension)
+            if len(dimensions) == 1:
+                nc_old.variables[field][idx] = nc_new.variables[field][valid_ind]
+            elif len(dimensions) == 2 and concat_ind == 0:
+                nc_old.variables[field][idx, :] = nc_new.variables[field][valid_ind, :]
+            elif len(dimensions) == 2 and concat_ind == 1:
+                nc_old.variables[field][:, idx] = nc_new.variables[field][:, valid_ind]
