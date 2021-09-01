@@ -407,5 +407,8 @@ RPG_ATTRIBUTES = {
     'Ze': MetaData(
         long_name='Radar reflectivity factor',
         units='dBZ',
+    ),
+    'lwp': MetaData(
+        units='g m-2'
     )
 }
