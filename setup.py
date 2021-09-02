@@ -21,7 +21,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     python_requires='>=3.6',
-    install_requires=['scipy', 'netCDF4', 'matplotlib', 'requests', 'pytz'],
+    install_requires=['scipy', 'netCDF4', 'matplotlib', 'requests', 'pytz', 'pytest'],
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3.6",

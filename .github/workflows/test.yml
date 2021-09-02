@@ -29,7 +29,7 @@ jobs:
         pylint cloudnetpy/**/*.py --errors-only
     - name: Test with pytest
       run: |
-        pip install pytest pytest-cov
+        pip install pytest-cov
         pytest --cov=cloudnetpy tests/unit/
     - name: Run e2e-test
       run: |
