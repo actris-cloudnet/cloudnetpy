@@ -17,13 +17,19 @@ def ceilo2nc(full_path: str,
              date: Optional[str] = None) -> str:
     """Converts Vaisala / Lufft ceilometer data into Cloudnet Level 1b netCDF file.
 
-    This function reads raw Vaisala (CT25k, CL31, CL51) and Lufft (CHM15k)
+    This function reads raw Vaisala (CT25k, CL31, CL51, CL61-D) and Lufft (CHM15k)
     ceilometer files and writes the data into netCDF file. Three variants
     of the attenuated backscatter are saved in the file:
 
         1. Raw backscatter, `beta_raw`
         2. Signal-to-noise screened backscatter, `beta`
         3. SNR-screened backscatter with smoothed weak background, `beta_smooth`
+
+    With CL61-D three additional depolarisation parameters are saved:
+
+        1. Raw depolarisation, `depolarisation_raw`
+        2. Signal-to-noise screened depolarisation, `depolarisation`
+        3. SNR-screened depolarisation with smoothed weak background, `depolarisation_smooth`
 
     Args:
         full_path: Ceilometer file name. For Vaisala it is a text file, for CHM15k it is
@@ -52,14 +58,18 @@ def ceilo2nc(full_path: str,
         >>> ceilo2nc('chm15k_raw.nc', 'chm15k.nc', site_meta)
 
     """
-    ceilo = _initialize_ceilo(full_path, date)
-    ceilo.read_ceilometer_file(site_meta.get('calibration_factor', None))
-    beta_variants = ceilo.calc_beta()
-    _append_data(ceilo, beta_variants)
-    _append_height(ceilo, site_meta['altitude'])
-    attributes = output.add_time_attribute(ATTRIBUTES, ceilo.date)
-    output.update_attributes(ceilo.data, attributes)
-    return _save_ceilo(ceilo, output_file, site_meta['name'], keep_uuid, uuid)
+    ceilo_obj = _initialize_ceilo(full_path, date)
+    ceilo_obj.read_ceilometer_file(site_meta.get('calibration_factor', None))
+    beta_variants = ceilo_obj.calc_beta()
+    if 'cl61' in ceilo_obj.model.lower():
+        depol_variants = ceilo_obj.calc_depol()
+    else:
+        depol_variants = None
+    _append_data(ceilo_obj, beta_variants, depol_variants)
+    _append_height(ceilo_obj, site_meta['altitude'])
+    attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.date)
+    output.update_attributes(ceilo_obj.data, attributes)
+    return _save_ceilo(ceilo_obj, output_file, site_meta['name'], keep_uuid, uuid)
 
 
 def _initialize_ceilo(full_path: str,
@@ -108,10 +118,13 @@ def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
 
 
 def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
-                 beta_variants: tuple):
+                 beta_variants: tuple, depol_variants=None):
     """Adds data / metadata as CloudnetArrays to ceilo.data."""
     for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
         ceilo.data[name] = CloudnetArray(data, name)
+    if depol_variants is not None:
+        for data, name in zip(depol_variants, ('depolarisation_raw', 'depolarisation', 'depolarisation_smooth')):
+            ceilo.data[name] = CloudnetArray(data, name)
     for field in ('range', 'time', 'wavelength', 'calibration_factor'):
         ceilo.data[field] = CloudnetArray(np.array(getattr(ceilo, field)), field)
     for field, data in ceilo.metadata.items():
@@ -120,7 +133,7 @@ def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
             ceilo.data[field] = CloudnetArray(np.array(ceilo.metadata[field], dtype=float), field)
 
 
-def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
+def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, CL61d],
                 output_file: str,
                 location: str,
                 keep_uuid: bool,

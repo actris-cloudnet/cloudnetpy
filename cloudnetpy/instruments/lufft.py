@@ -14,14 +14,13 @@ class LufftCeilo(Ceilometer):
         self._expected_date = date
         self.model = 'Lufft CHM15k'
         self.dataset = netCDF4.Dataset(self.file_name)
-        self.variables = self.dataset.variables
         self.noise_params = (70, 2e-14, 0.3e-6, (1e-9, 4e-9))
         self.wavelength = 1064
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""
         self.range = self._calc_range()
-        self.backscatter = self._calibrate_backscatter(calibration_factor)
+        self.processed_variables['backscatter'] = self._calibrate_backscatter(calibration_factor)
         self.time = self._fetch_time()
         self.date = self._read_date()
         self.metadata = self._read_metadata()
@@ -43,12 +42,12 @@ class LufftCeilo(Ceilometer):
         return beta_raw
 
     def _fetch_time(self) -> np.ndarray:
-        time = self.variables['time'][:]
+        time = self.dataset.variables['time'][:]
         ind = time.argsort()
         time = time[ind]
-        self.backscatter = self.backscatter[ind, :]
+        self.processed_variables['backscatter'] = self.processed_variables['backscatter'][ind, :]
         if self._expected_date is not None:
-            epoch = utils.get_epoch(self.variables['time'].units)
+            epoch = utils.get_epoch(self.dataset.variables['time'].units)
             valid_ind = []
             for ind, timestamp in enumerate(time):
                 date = '-'.join(utils.seconds2date(timestamp, epoch)[:3])
@@ -57,7 +56,7 @@ class LufftCeilo(Ceilometer):
             if not valid_ind:
                 raise ValueError(f'Error: {self.model} date differs from expected.')
             time = time[valid_ind]
-            self.backscatter = self.backscatter[valid_ind, :]
+            self.processed_variables['backscatter'] = self.processed_variables['backscatter'][valid_ind, :]
         return utils.seconds2hours(time)
 
     def _read_date(self) -> List[str]:
@@ -67,8 +66,8 @@ class LufftCeilo(Ceilometer):
 
     def _getvar(self, *args) -> Union[np.ndarray, float, None]:
         for arg in args:
-            if arg in self.variables:
-                var = self.variables[arg]
+            if arg in self.dataset.variables:
+                var = self.dataset.variables[arg]
                 return var[0] if utils.isscalar(var) else var[:]
         return None
 
@@ -91,7 +90,9 @@ class CL61d(LufftCeilo):
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from concatenated Vaisala CL61d netCDF file."""
         self.range = self._calc_range()
-        self.backscatter = self._calibrate_backscatter(calibration_factor)
+        self.processed_variables['backscatter'] = self._calibrate_backscatter(calibration_factor)
+        for key in ('p_pol', 'x_pol', 'linear_depol_ratio'):
+            self.processed_variables[key] = self._getvar(key)
         self.time = self._fetch_time()
         self.date = self._read_date()
         self.metadata = self._read_metadata()
@@ -105,13 +106,13 @@ class CL61d(LufftCeilo):
         if self._expected_date:
             return self._expected_date.split('-')
         else:
-            time = self.variables['time'][:]
+            time = self.dataset.variables['time'][:]
             date_first = utils.seconds2date(time[0], epoch=(1970, 1, 1))
             date_last = utils.seconds2date(time[-1], epoch=(1970, 1, 1))
             date_middle = utils.seconds2date(time[round(len(time)/2)], epoch=(1970, 1, 1))
             if date_first != date_last:
                 logging.warning('No expected date given and different dates in CL61d timestamps.')
-            return date_middle
+            return date_middle[:3]
 
     def _calibrate_backscatter(self, calibration_factor: Union[float, None]) -> np.ndarray:
         beta_raw = self._getvar('beta_att')
