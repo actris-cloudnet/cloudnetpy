@@ -318,6 +318,30 @@ ATTRIBUTES = {
         plot_scale=_LOG,
         plot_type='mesh'
     ),
+    'depolarisation_raw': PlotMeta(
+        name='Raw depolarisation',
+        cbar='viridis',
+        clabel='',
+        plot_range=(0, 1),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'depolarisation': PlotMeta(
+        name='Lidar depolarisation',
+        cbar='viridis',
+        clabel='',
+        plot_range=(0, 1),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'depolarisation_smooth': PlotMeta(
+        name='Lidar depolarisation (smoothed)',
+        cbar='viridis',
+        clabel='',
+        plot_range=(0, 1),
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'Z': PlotMeta(
         name='Radar reflectivity factor',
         cbar='viridis',
