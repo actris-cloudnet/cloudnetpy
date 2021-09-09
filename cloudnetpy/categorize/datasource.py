@@ -1,4 +1,5 @@
 """Datasource module, containing the :class:`DataSource class.`"""
+import logging
 import os
 from datetime import datetime
 from typing import Optional, Union
@@ -113,6 +114,7 @@ class DataSource:
     def _init_time(self) -> np.ndarray:
         time = self.getvar('time')
         if max(time) > 25:
+            logging.warning('Assuming time as seconds, converting to fraction hour')
             time = utils.seconds2hours(time)
         return time
 
