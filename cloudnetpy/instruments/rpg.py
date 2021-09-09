@@ -200,6 +200,18 @@ class Rpg:
         return date_first
 
 
+class Hatpro(Rpg):
+    def sort_timestamps(self):
+        key = 'LWP'
+        if key not in self.data:
+            logging.warning('No LWP vector, unable to sort')
+        time = self.data['time'].data[:]
+        array = self.data[key].data[:]
+        ind = time.argsort()
+        self.data['time'].data[:] = time[ind]
+        self.data[key].data[:] = array[ind]
+
+
 def save_rpg(rpg: Rpg,
              output_file: str,
              valid_files: list,
