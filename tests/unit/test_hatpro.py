@@ -2,6 +2,7 @@ from os import path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from cloudnetpy.instruments import hatpro
 from distutils.dir_util import copy_tree
+import netCDF4
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 
@@ -17,13 +18,13 @@ class TestHatpro2nc:
 
     def test_default_processing(self):
         uuid, files = hatpro.hatpro2nc(self.file_path, self.temp_file.name, self.site_meta)
-        assert len(files) == 3
+        assert len(files) == 4
         assert len(uuid) == 32
 
     def test_processing_of_several_files(self):
         test_uuid = 'abc'
         uuid, files = hatpro.hatpro2nc(self.file_path, self.temp_file.name, self.site_meta,
-                                    date='2021-01-23', uuid=test_uuid)
+                                       date='2021-01-23', uuid=test_uuid)
         assert len(files) == 2
         assert uuid == test_uuid
 
@@ -45,3 +46,17 @@ class TestHatpro2nc:
         _, files = hatpro.hatpro2nc(temp_dir.name, self.temp_file.name, self.site_meta,
                                     date='2021-01-23')
         assert len(files) == 2
+
+    def test_variables(self):
+        uuid, files = hatpro.hatpro2nc(self.file_path, self.temp_file.name, self.site_meta,
+                                       date='2021-07-26')
+        assert len(files) == 1
+        nc = netCDF4.Dataset(self.temp_file.name)
+        time = nc.variables['time']
+        assert 'hours since' in time.units
+        assert max(time[:]) < 24
+        for ind, t in enumerate(time[:-1]):
+            assert(time[ind+1] > t)
+        assert 'LWP' in nc.variables
+        assert 'g m-2' in nc.variables['LWP'].units
+        nc.close()
