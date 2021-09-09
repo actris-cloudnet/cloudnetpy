@@ -6,6 +6,7 @@ import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray, RadarArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
+from collections import Counter
 
 
 def rpg2nc(path_to_l1_files: str,
@@ -125,7 +126,20 @@ def _get_fmcw94_objects(files: list, expected_date: Union[str, None]) -> Tuple[l
             continue
         objects.append(obj)
         valid_files.append(file)
+    if objects:
+        objects, valid_files = _remove_files_with_bad_height(objects, valid_files)
     return objects, valid_files
+
+
+def _remove_files_with_bad_height(objects: list, files: list) -> Tuple[list, list]:
+    lengths = [obj.data['Ze'].shape[1] for obj in objects]
+    most_common = np.bincount(lengths).argmax()
+    files = [file for file, obj, length in zip(files, objects, lengths) if length == most_common]
+    objects = [obj for obj, length in zip(objects, lengths) if length == most_common]
+    n_removed = len(lengths) - len(files)
+    if n_removed > 0:
+        logging.warning(f'Removed {n_removed} RPG-FMCW-94 files due to inconsistent height vector')
+    return objects, files
 
 
 def _validate_date(obj, expected_date: str) -> None:
