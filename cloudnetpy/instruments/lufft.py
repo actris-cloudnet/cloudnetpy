@@ -14,13 +14,14 @@ class LufftCeilo(Ceilometer):
         self._expected_date = date
         self.model = 'Lufft CHM15k'
         self.dataset = netCDF4.Dataset(self.file_name)
-        self.noise_params = (70, 2e-14, 0.3e-6, (1e-9, 4e-9))
+        self.noise_params = (170, 2e-14, 0.3e-6, (1e-9, 4e-9))
         self.wavelength = 1064
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""
         self.range = self._calc_range()
-        self.processed_variables['backscatter'] = self._calibrate_backscatter(calibration_factor)
+        self.range_squared = self._get_range_squared()
+        self.processed_data['backscatter'] = self._calibrate_backscatter(calibration_factor)
         self.time = self._fetch_time()
         self.date = self._read_date()
         self.metadata = self._read_metadata()
@@ -45,7 +46,8 @@ class LufftCeilo(Ceilometer):
         time = self.dataset.variables['time'][:]
         ind = time.argsort()
         time = time[ind]
-        self.processed_variables['backscatter'] = self.processed_variables['backscatter'][ind, :]
+        for key in self.processed_data:
+            self.processed_data[key] = self.processed_data[key][ind, :]
         if self._expected_date is not None:
             epoch = utils.get_epoch(self.dataset.variables['time'].units)
             valid_ind = []
@@ -56,7 +58,8 @@ class LufftCeilo(Ceilometer):
             if not valid_ind:
                 raise ValueError(f'Error: {self.model} date differs from expected.')
             time = time[valid_ind]
-            self.processed_variables['backscatter'] = self.processed_variables['backscatter'][valid_ind, :]
+            for key in self.processed_data:
+                self.processed_data[key] = self.processed_data[key][valid_ind, :]
         return utils.seconds2hours(time)
 
     def _read_date(self) -> List[str]:
@@ -90,9 +93,10 @@ class CL61d(LufftCeilo):
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from concatenated Vaisala CL61d netCDF file."""
         self.range = self._calc_range()
-        self.processed_variables['backscatter'] = self._calibrate_backscatter(calibration_factor)
+        self.range_squared = self._get_range_squared()
+        self.processed_data['backscatter'] = self._calibrate_backscatter(calibration_factor)
         for key in ('p_pol', 'x_pol', 'linear_depol_ratio'):
-            self.processed_variables[key] = self._getvar(key)
+            self.processed_data[key] = self._getvar(key)
         self.time = self._fetch_time()
         self.date = self._read_date()
         self.metadata = self._read_metadata()

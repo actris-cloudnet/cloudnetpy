@@ -7,6 +7,7 @@ from cloudnetpy.instruments.lufft import LufftCeilo, CL61d
 from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
+import logging
 
 
 def ceilo2nc(full_path: str,
@@ -59,12 +60,13 @@ def ceilo2nc(full_path: str,
 
     """
     ceilo_obj = _initialize_ceilo(full_path, date)
+    logging.debug('reading daily file')
     ceilo_obj.read_ceilometer_file(site_meta.get('calibration_factor', None))
-    beta_variants = ceilo_obj.calc_beta()
     if 'cl61' in ceilo_obj.model.lower():
         depol_variants = ceilo_obj.calc_depol()
     else:
         depol_variants = None
+    beta_variants = ceilo_obj.calc_beta()
     _append_data(ceilo_obj, beta_variants, depol_variants)
     _append_height(ceilo_obj, site_meta['altitude'])
     attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.date)
@@ -123,8 +125,9 @@ def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
     for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
         ceilo.data[name] = CloudnetArray(data, name)
     if depol_variants is not None:
-        for data, name in zip(depol_variants, ('depolarisation_raw', 'depolarisation', 'depolarisation_smooth')):
+        for data, name in zip(depol_variants, ('depolarisation', 'depolarisation_smooth')):
             ceilo.data[name] = CloudnetArray(data, name)
+        del ceilo.data['beta_raw']
     for field in ('range', 'time', 'wavelength', 'calibration_factor'):
         ceilo.data[field] = CloudnetArray(np.array(getattr(ceilo, field)), field)
     for field, data in ceilo.metadata.items():
@@ -139,10 +142,8 @@ def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, CL61d],
                 keep_uuid: bool,
                 uuid: Union[str, None]) -> str:
     """Saves the ceilometer netcdf-file."""
-
     dims = {'time': len(ceilo.time),
             'range': len(ceilo.range)}
-
     rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'lidar')
@@ -172,6 +173,31 @@ ATTRIBUTES = {
         units='sr-1 m-1',
         comment=('Range corrected, SNR screened backscatter coefficient.\n'
                  'Weak background is smoothed using Gaussian 2D-kernel.')
+    ),
+    'depolarisation': MetaData(
+        long_name='Depolarisation',
+        units='%',
+        comment='SNR screened lidar depolarisation'
+    ),
+    'depolarisation_raw': MetaData(
+        long_name='Raw depolarisation',
+        units='%',
+    ),
+    'depolarisation_smooth': MetaData(
+        long_name='Smoothed lidar depolarisation',
+        units='%',
+        comment=('SNR screened lidar depolarisation.\n'
+                 'Weak background is smoothed using Gaussian 2D-kernel.')
+    ),
+    'p_pol': MetaData(
+        long_name='Raw attenuated backscatter coefficient - parallel component',
+        units='sr-1 m-1',
+        comment='Range-corrected, parallel-polarized component of attenuated backscatter.'
+    ),
+    'x_pol': MetaData(
+        long_name='Raw attenuated backscatter coefficient - cross component',
+        units='sr-1 m-1',
+        comment='Range-corrected, cross-polarized component of attenuated backscatter.'
     ),
     'scale': MetaData(
         long_name='Scale',
