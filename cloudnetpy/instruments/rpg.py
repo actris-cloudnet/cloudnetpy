@@ -53,14 +53,14 @@ def rpg2nc(path_to_l1_files: str,
     one_day_of_data = create_one_day_data_record(fmcw94_objects)
     if not valid_files:
         return '', []
-    rpg = Rpg(one_day_of_data, site_meta, 'RPG-FMCW-94')
-    rpg.convert_time_to_fraction_hour()
-    rpg.mask_invalid_ldr()
-    rpg.linear_to_db(('Ze', 'antenna_gain'))
-    rpg.add_height()
-    attributes = output.add_time_attribute(RPG_ATTRIBUTES, rpg.date)
-    output.update_attributes(rpg.data, attributes)
-    return save_rpg(rpg, output_file, valid_files, keep_uuid, uuid)
+    fmcw = Fmcw94(one_day_of_data, site_meta)
+    fmcw.convert_time_to_fraction_hour()
+    fmcw.mask_invalid_ldr()
+    fmcw.linear_to_db(('Ze', 'antenna_gain'))
+    fmcw.add_height()
+    attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
+    output.update_attributes(fmcw.data, attributes)
+    return save_rpg(fmcw, output_file, valid_files, keep_uuid, uuid)
 
 
 def create_one_day_data_record(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -> dict:
@@ -136,14 +136,14 @@ def _validate_date(obj, expected_date: str) -> None:
 
 
 class Rpg:
-    """Class for RPG FMCW-94 and HATPRO data."""
-    def __init__(self, raw_data: dict, site_properties: dict, source: str):
+    """Base class for RPG FMCW-94 cloud radar and HATPRO mwr."""
+    def __init__(self, raw_data: dict, site_properties: dict):
         self.raw_data = raw_data
         self.date = self._get_date()
         self.raw_data['altitude'] = np.array(site_properties['altitude'])
-        self.data = self._init_data()
-        self.source = source
         self.location = site_properties['name']
+        self.source = None
+        self.data = {}
 
     def convert_time_to_fraction_hour(self) -> None:
         """Converts time to fraction hour."""
@@ -152,25 +152,22 @@ class Rpg:
         self.raw_data[key] = fraction_hour
         self.data[key] = CloudnetArray(np.array(fraction_hour), key)
 
-    def mask_invalid_ldr(self) -> None:
-        """Removes ldr outliers."""
-        if 'ldr' in self.data:
-            self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
+    def _get_date(self) -> list:
+        time_first = self.raw_data['time'][0]
+        time_last = self.raw_data['time'][-1]
+        date_first = utils.seconds2date(time_first)[:3]
+        date_last = utils.seconds2date(time_last)[:3]
+        if date_first != date_last:
+            logging.warning('Measurements from different days')
+        return date_first
 
-    def filter_noise(self) -> None:
-        """Filters isolated pixels and vertical stripes.
 
-        Notes:
-            Use with caution, might remove actual data too.
-        """
-        for cloudnet_array in self.data.values():
-            if cloudnet_array.data.ndim == 2:
-                cloudnet_array.filter_vertical_stripes()
-
-    def linear_to_db(self, variables_to_log: tuple) -> None:
-        """Changes some linear units to logarithmic."""
-        for name in variables_to_log:
-            self.data[name].lin2db()
+class Fmcw94(Rpg):
+    """Class for RPG FMCW-94 Cloud radar."""
+    def __init__(self, raw_data: dict, site_properties: dict):
+        super().__init__(raw_data, site_properties)
+        self.data = self._init_data()
+        self.source = 'RPG-FMCW-94'
 
     def add_height(self):
         if 'altitude' in self.data:
@@ -184,23 +181,41 @@ class Rpg:
             height += float(self.data['altitude'].data)
             self.data['height'] = CloudnetArray(height, 'height')
 
+    def linear_to_db(self, variables_to_log: tuple) -> None:
+        """Changes linear units to logarithmic."""
+        for name in variables_to_log:
+            self.data[name].lin2db()
+
+    def mask_invalid_ldr(self) -> None:
+        """Removes ldr outliers."""
+        if 'ldr' in self.data:
+            self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
+
+    def filter_noise(self) -> None:
+        """Filters isolated pixels and vertical stripes.
+
+        Notes:
+            Use with caution, might remove actual data too.
+
+        """
+        for radar_array in self.data.values():
+            if radar_array.data.ndim == 2:
+                radar_array.filter_vertical_stripes()
+
     def _init_data(self) -> dict:
         data = {}
         for key in self.raw_data:
             data[key] = RadarArray(self.raw_data[key], key)
         return data
 
-    def _get_date(self) -> list:
-        time_first = self.raw_data['time'][0]
-        time_last = self.raw_data['time'][-1]
-        date_first = utils.seconds2date(time_first)[:3]
-        date_last = utils.seconds2date(time_last)[:3]
-        if date_first != date_last:
-            logging.warning('Measurements from different days')
-        return date_first
-
 
 class Hatpro(Rpg):
+    """Class for RPG HATPRO mwr."""
+    def __init__(self, raw_data: dict, site_properties: dict):
+        super().__init__(raw_data, site_properties)
+        self.data = self._init_data()
+        self.source = 'RPG-HATPRO'
+
     def sort_timestamps(self):
         key = 'LWP'
         if key not in self.data:
@@ -210,6 +225,12 @@ class Hatpro(Rpg):
         ind = time.argsort()
         self.data['time'].data[:] = time[ind]
         self.data[key].data[:] = array[ind]
+
+    def _init_data(self) -> dict:
+        data = {}
+        for key in self.raw_data:
+            data[key] = CloudnetArray(self.raw_data[key], key)
+        return data
 
 
 def save_rpg(rpg: Rpg,

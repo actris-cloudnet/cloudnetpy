@@ -52,7 +52,7 @@ def hatpro2nc(path_to_lwp_files: str,
     one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
     if not valid_files:
         return '', []
-    hatpro = rpg.Hatpro(one_day_of_data, site_meta, 'RPG-HATPRO')
+    hatpro = rpg.Hatpro(one_day_of_data, site_meta)
     hatpro.sort_timestamps()
     hatpro.convert_time_to_fraction_hour()
     attributes = output.add_time_attribute(ATTRIBUTES, hatpro.date)
