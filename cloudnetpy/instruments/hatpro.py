@@ -52,8 +52,11 @@ def hatpro2nc(path_to_lwp_files: str,
     one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
     if not valid_files:
         return '', []
-    hatpro = rpg.Rpg(one_day_of_data, site_meta, 'RPG-HATPRO')
-    output.update_attributes(hatpro.data, ATTRIBUTES)
+    hatpro = rpg.Hatpro(one_day_of_data, site_meta, 'RPG-HATPRO')
+    hatpro.sort_timestamps()
+    hatpro.convert_time_to_fraction_hour()
+    attributes = output.add_time_attribute(ATTRIBUTES, hatpro.date)
+    output.update_attributes(hatpro.data, attributes)
     return rpg.save_rpg(hatpro, output_file, valid_files, keep_uuid, uuid)
 
 
@@ -104,10 +107,6 @@ DEFINITIONS = {
 }
 
 ATTRIBUTES = {
-    'time': MetaData(
-        units='seconds since 2001-01-01 00:00:00',
-        long_name='sample time',
-    ),
     'file_code': MetaData(
         long_name='File code',
         comment='RPG HATPRO software version.',
