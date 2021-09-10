@@ -6,7 +6,6 @@ import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray, RadarArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
-from collections import Counter
 
 
 def rpg2nc(path_to_l1_files: str,
