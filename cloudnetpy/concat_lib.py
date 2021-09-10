@@ -5,24 +5,30 @@ import netCDF4
 from cloudnetpy import utils
 
 
-def update_nc(old_file: str, new_file: str):
-    """Appends data to daily netCDF file.
+def update_nc(old_file: str, new_file: str) -> int:
+    """Appends data to existing netCDF file.
 
     Args:
-        old_file: Filename of a daily netCDF file.
+        old_file: Filename of a existing netCDF file.
         new_file: Filename of a new file whose data will be appended to the end.
+
+    Returns:
+        1 = success, 0 = failed to add new data.
 
     Notes:
         Requires 'time' variable with unlimited dimension.
 
     """
+    success = 0
     nc_old = netCDF4.Dataset(old_file, 'a')
     nc_new = netCDF4.Dataset(new_file)
     valid_ind = _find_valid_time_indices(nc_old, nc_new)
     if len(valid_ind) > 0:
         _update_fields(nc_old, nc_new, valid_ind)
+        success = 1
     nc_new.close()
     nc_old.close()
+    return success
 
 
 def concatenate_files(filenames: list,

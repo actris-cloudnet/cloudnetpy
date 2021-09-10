@@ -24,7 +24,8 @@ class TestUpdateNc:
 
     def test_does_append_to_end(self):
         concat_lib.concatenate_files(self.files[:2], self.filename, concat_dimension='profile')
-        concat_lib.update_nc(self.filename, self.files[2])
+        succ = concat_lib.update_nc(self.filename, self.files[2])
+        assert succ == 1
         nc = netCDF4.Dataset(self.filename)
         time = nc.variables['time'][:]
         assert len(time) == 3 * 12
@@ -33,7 +34,8 @@ class TestUpdateNc:
 
     def test_does_not_append_to_beginning(self):
         concat_lib.concatenate_files(self.files[1:3], self.filename, concat_dimension='profile')
-        concat_lib.update_nc(self.filename, self.files[0])
+        succ = concat_lib.update_nc(self.filename, self.files[0])
+        assert succ == 0
         nc = netCDF4.Dataset(self.filename)
         time = nc.variables['time'][:]
         assert len(time) == 2 * 12
@@ -43,7 +45,8 @@ class TestUpdateNc:
     def test_does_not_append_to_middle(self):
         files = [self.files[0], self.files[2]]
         concat_lib.concatenate_files(files, self.filename, concat_dimension='profile')
-        concat_lib.update_nc(self.filename, self.files[1])
+        succ = concat_lib.update_nc(self.filename, self.files[1])
+        assert succ == 0
         nc = netCDF4.Dataset(self.filename)
         time = nc.variables['time'][:]
         assert len(time) == 2 * 12
