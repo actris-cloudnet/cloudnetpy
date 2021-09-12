@@ -16,7 +16,7 @@ def test_find_ceilo_model_jenoptik():
 
 
 def test_find_ceilo_model_cl61d():
-    file = f'{SCRIPT_PATH}/data/cl61d/live_20210829_104420.nc'
+    file = f'{SCRIPT_PATH}/data/cl61d/live_20210829_224520.nc'
     assert ceilo._find_ceilo_model(file) == 'cl61d'
 
 

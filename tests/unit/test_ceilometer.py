@@ -5,14 +5,16 @@ from cloudnetpy.instruments import ceilometer
 
 
 def test_remove_noise():
-    noise = 2
-    beta = ma.array([[1, 2, 3],
-                     [1, 2, 3]], mask=False)
+    snr_limit = 1
+    noise = np.array([1.1, -1.1])
+    array = ma.array([[1, 2, 3],
+                      [1, 2, 3]], mask=False)
     result = ma.array([[1, 2, 3],
                        [1, 2, 3]],
                       mask=[[1, 0, 0],
                             [1, 0, 0]])
-    assert_array_equal(ceilometer._remove_noise(beta.mask, noise), result.mask)
+    screened_array = ceilometer._remove_noise(array, noise, snr_limit)
+    assert_array_equal(screened_array.mask, result.mask)
 
 
 def test_calc_sigma_units():
@@ -24,27 +26,28 @@ def test_calc_sigma_units():
 
 
 def test_get_range_squared():
-    range_instru = np.array([1000, 2000, 3000])
+    obj = ceilometer.Ceilometer('/foo/bar')
+    obj.range = np.array([1000, 2000, 3000])
     result = np.array([1, 4, 9])
-    assert_array_equal(ceilometer._get_range_squared(range_instru), result)
+    assert_array_equal(obj._get_range_squared(), result)
 
 
 def test_calc_range_uncorrected_beta():
+    obj = ceilometer.Ceilometer('/foo/bar')
+    obj.range_squared = np.array([1, 2, 3])
     beta = np.array([[1, 2, 3],
                      [1, 2, 3]])
-    range_squared = np.array([1, 2, 3])
     result = np.ones((2, 3))
-    assert_array_equal(ceilometer._calc_range_uncorrected_beta(beta, range_squared),
-                       result)
+    assert_array_equal(obj._calc_range_uncorrected(beta), result)
 
 
 def test_calc_range_corrected_beta():
+    obj = ceilometer.Ceilometer('/foo/bar')
+    obj.range_squared = np.array([1, 2, 3])
     result = np.array([[1, 2, 3],
                        [1, 2, 3]])
-    range_squared = np.array([1, 2, 3])
     beta = np.ones((2, 3))
-    assert_array_equal(ceilometer._calc_range_corrected_beta(beta, range_squared),
-                       result)
+    assert_array_equal(obj._calc_range_corrected(beta), result)
 
 
 def test_estimate_clouds_from_beta():
@@ -81,7 +84,7 @@ def test_reset_low_values_above_saturation():
                      [0, 0, 0, 0.1],
                      [0, 0.6, 1.2, 1e-8]])
     noise = 1e-3
-    saturated = [1, 0, 1]
+    saturated = np.array([1, 0, 1])
     result = ma.array([[0, 10, 1e-6, 3],
                        [0, 0, 0, 0.1],
                        [0, 0.6, 1.2, 1e-8]],
@@ -96,8 +99,8 @@ def test_reset_low_values_above_saturation():
 def test_find_saturated_profiles():
     obj = ceilometer.Ceilometer('ceilo.txt')
     obj.noise_params = (2, 0.25, 1, (1, 1))
-    obj.backscatter = np.array([[0, 10, 1, 1.99],
-                                [0, 10, 2.1, 1],
-                                [0, 10, 1, 1]])
+    obj.processed_data['backscatter'] = np.array([[0, 10, 1, 1.99],
+                                                  [0, 10, 2.1, 1],
+                                                  [0, 10, 1, 1]])
     result = [1, 0, 1]
     assert_array_equal(obj._find_saturated_profiles(), result)
