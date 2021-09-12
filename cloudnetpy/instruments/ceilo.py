@@ -87,25 +87,26 @@ def _initialize_ceilo(full_path: str,
 
 
 def _find_ceilo_model(full_path: str) -> str:
-    if full_path.lower().endswith('.nc'):
+    try:
         nc = netCDF4.Dataset(full_path)
-        title = nc.title.lower()
+        title = nc.title
         nc.close()
         for identifier in ['cl61d', 'cl61-d']:
-            if identifier in title or identifier in full_path.lower():
+            if identifier in title.lower() or identifier in full_path.lower():
                 return 'cl61d'
         return 'chm15k'
-    first_empty_line = utils.find_first_empty_line(full_path)
-    max_number_of_empty_lines = 10
-    for n in range(1, max_number_of_empty_lines):
-        line = linecache.getline(full_path, first_empty_line + n)
-        if not utils.is_empty_line(line):
-            line = linecache.getline(full_path, first_empty_line + n + 1)
-            break
-    if 'CL' in line:
-        return 'cl31_or_cl51'
-    if 'CT' in line:
-        return 'ct25k'
+    except OSError:
+        first_empty_line = utils.find_first_empty_line(full_path)
+        max_number_of_empty_lines = 10
+        for n in range(1, max_number_of_empty_lines):
+            line = linecache.getline(full_path, first_empty_line + n)
+            if not utils.is_empty_line(line):
+                line = linecache.getline(full_path, first_empty_line + n + 1)
+                break
+        if 'CL' in line:
+            return 'cl31_or_cl51'
+        if 'CT' in line:
+            return 'ct25k'
     raise RuntimeError('Error: Unknown ceilo model.')
 
 
