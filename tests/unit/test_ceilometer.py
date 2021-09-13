@@ -24,7 +24,7 @@ class TestNoisyData:
         expected = ma.array([[1, 2, 3],
                              [1, 2, 3]], mask=[[1, 0, 0],
                                                [1, 0, 0]])
-        screened_array = self.noisy_data._remove_noise(array, noise)
+        screened_array = self.noisy_data._remove_noise(array, noise, True)
         assert_array_equal(screened_array.mask, expected.mask)
 
     def test_calc_range_uncorrected(self):

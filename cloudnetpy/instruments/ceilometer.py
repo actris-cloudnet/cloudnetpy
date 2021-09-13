@@ -34,7 +34,7 @@ class Ceilometer:
         """Converts raw depolarisation to noise-screened depolarisation."""
         snr_limit = 3
         noisy_data = NoisyData(*self._get_args(), snr_limit)
-        x_pol = noisy_data.screen_data(self.processed_data['x_pol'])
+        x_pol = noisy_data.screen_data(self.processed_data['x_pol'], keep_negative=True)
         depol = x_pol / self.processed_data['p_pol']
         sigma = _calc_sigma_units(self.time, self.range)
         p_pol_smooth = scipy.ndimage.filters.gaussian_filter(self.processed_data['p_pol'], sigma)
@@ -73,19 +73,25 @@ class NoisyData:
         self.snr_limit = snr_limit
         self._is_saturation = self._find_saturated_profiles()
 
-    def screen_data(self, array: np.ndarray, is_smoothed: Optional[bool] = False) -> np.ndarray:
+    def screen_data(self,
+                    array: np.ndarray,
+                    is_smoothed: Optional[bool] = False,
+                    keep_negative: Optional[bool] = False) -> np.ndarray:
         array = self._calc_range_uncorrected(array)
-        array = self._screen_by_snr(array, is_smoothed)
+        array = self._screen_by_snr(array, is_smoothed, keep_negative)
         array = self._calc_range_corrected(array)
         return array
 
-    def _screen_by_snr(self, array: np.ndarray, is_smoothed: bool) -> np.ndarray:
+    def _screen_by_snr(self,
+                       array: np.ndarray,
+                       is_smoothed: bool,
+                       keep_negative: bool) -> np.ndarray:
         """Screens noise from range-uncorrected lidar variable."""
         n_gates, _, saturation_noise, noise_min = self.noise_params
         noise_min = noise_min[0] if is_smoothed is True else noise_min[1]
         noise = _estimate_noise_from_top_gates(array, n_gates, noise_min)
         array = self._reset_low_values_above_saturation(array, saturation_noise)
-        array = self._remove_noise(array, noise)
+        array = self._remove_noise(array, noise, keep_negative)
         return array
 
     def _find_saturated_profiles(self) -> np.ndarray:
@@ -107,9 +113,13 @@ class NoisyData:
 
     def _remove_noise(self,
                       array: np.ndarray,
-                      noise: np.ndarray) -> np.ndarray:
+                      noise: np.ndarray,
+                      keep_negative: bool) -> np.ndarray:
         snr = array / utils.transpose(noise)
-        array[np.abs(snr) < self.snr_limit] = ma.masked
+        if keep_negative is True:
+            array[np.abs(snr) < self.snr_limit] = ma.masked
+        else:
+            array[snr < self.snr_limit] = ma.masked
         return array
 
     def _calc_range_uncorrected(self, array: np.ndarray) -> np.ndarray:
