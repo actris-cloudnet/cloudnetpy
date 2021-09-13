@@ -31,7 +31,7 @@ class LufftCeilo(Ceilometer):
         ceilo_range = self._getvar('range')
         return ceilo_range - utils.mdiff(ceilo_range)/2
 
-    def _calibrate_backscatter(self, calibration_factor: Union[float, None]) -> np.ndarray:
+    def _calibrate_backscatter(self, calibration_factor: Optional[float] = None) -> np.ndarray:
         beta_raw = self._getvar('beta_raw')
         overlap_function = _get_overlap(self.range)
         beta_raw /= overlap_function

@@ -75,7 +75,7 @@ def ceilo2nc(full_path: str,
 
 
 def _initialize_ceilo(full_path: str,
-                      date: Union[str, None]) -> Union[ClCeilo, Ct25k, LufftCeilo]:
+                      date: Optional[str] = None) -> Union[ClCeilo, Ct25k, LufftCeilo, CL61d]:
     model = _find_ceilo_model(full_path)
     if model == 'cl31_or_cl51':
         return ClCeilo(full_path, date)
@@ -110,7 +110,7 @@ def _find_ceilo_model(full_path: str) -> str:
     raise RuntimeError('Error: Unknown ceilo model.')
 
 
-def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
+def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, CL61d],
                    site_altitude: float) -> None:
     """Finds height above mean sea level."""
     tilt_angle = np.median(ceilo.metadata['tilt_angle'])
@@ -120,8 +120,9 @@ def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
     ceilo.data['altitude'] = CloudnetArray(site_altitude, 'altitude')
 
 
-def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
-                 beta_variants: tuple, depol_variants=None):
+def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, CL61d],
+                 beta_variants: tuple,
+                 depol_variants: Optional[tuple] = None):
     """Adds data / metadata as CloudnetArrays to ceilo.data."""
     for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
         ceilo.data[name] = CloudnetArray(data, name)
