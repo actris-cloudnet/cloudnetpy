@@ -14,7 +14,7 @@ class LufftCeilo(Ceilometer):
         self._expected_date = date
         self.model = 'Lufft CHM15k'
         self.dataset = netCDF4.Dataset(self.file_name)
-        self.noise_params = (170, 2e-14, 0.3e-6, (1e-9, 4e-9))
+        self.noise_params = (70, 2e-14, 0.3e-6, (1e-9, 4e-9))
         self.wavelength = 1064
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
@@ -82,13 +82,14 @@ class LufftCeilo(Ceilometer):
         return {'tilt_angle': tilt_angle}
 
 
-class CL61d(LufftCeilo):
+class Cl61d(LufftCeilo):
     """Class for Vaisala CL61d ceilometer."""
     def __init__(self, file_name: str, date: Optional[str] = None):
         super().__init__(file_name)
         self._expected_date = date
         self.model = 'Vaisala CL61d'
         self.wavelength = 910.55
+        self.noise_params = (100, 2e-14, 0.3e-6, (1e-9, 4e-9))
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from concatenated Vaisala CL61d netCDF file."""
@@ -109,16 +110,15 @@ class CL61d(LufftCeilo):
     def _read_date(self) -> List[str]:
         if self._expected_date:
             return self._expected_date.split('-')
-        else:
-            time = self.dataset.variables['time'][:]
-            date_first = utils.seconds2date(time[0], epoch=(1970, 1, 1))
-            date_last = utils.seconds2date(time[-1], epoch=(1970, 1, 1))
-            date_middle = utils.seconds2date(time[round(len(time)/2)], epoch=(1970, 1, 1))
-            if date_first != date_last:
-                logging.warning('No expected date given and different dates in CL61d timestamps.')
-            return date_middle[:3]
+        time = self.dataset.variables['time'][:]
+        date_first = utils.seconds2date(time[0], epoch=(1970, 1, 1))
+        date_last = utils.seconds2date(time[-1], epoch=(1970, 1, 1))
+        date_middle = utils.seconds2date(time[round(len(time)/2)], epoch=(1970, 1, 1))
+        if date_first != date_last:
+            logging.warning('No expected date given and different dates in CL61d timestamps.')
+        return date_middle[:3]
 
-    def _calibrate_backscatter(self, calibration_factor: Union[float, None]) -> np.ndarray:
+    def _calibrate_backscatter(self, calibration_factor: Optional[float] = None) -> np.ndarray:
         beta_raw = self._getvar('beta_att')
         if calibration_factor is None:
             logging.warning('Using default calibration factor')

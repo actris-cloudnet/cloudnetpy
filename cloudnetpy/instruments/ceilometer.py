@@ -20,6 +20,7 @@ class Ceilometer:
         self.date = []
         self.noise_params = (1, 1, 1, (1, 1))
         self.calibration_factor = 1
+        self.wavelength = None
 
     def calc_beta(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """Converts range-corrected raw beta to noise-screened beta."""
@@ -32,11 +33,11 @@ class Ceilometer:
 
     def calc_depol(self) -> Tuple[np.ndarray, np.ndarray]:
         """Converts raw depolarisation to noise-screened depolarisation."""
-        snr_limit = 3
+        snr_limit = 4
         noisy_data = NoisyData(*self._get_args(), snr_limit)
+        sigma = _calc_sigma_units(self.time, self.range)
         x_pol = noisy_data.screen_data(self.processed_data['x_pol'], keep_negative=True)
         depol = x_pol / self.processed_data['p_pol']
-        sigma = _calc_sigma_units(self.time, self.range)
         p_pol_smooth = scipy.ndimage.filters.gaussian_filter(self.processed_data['p_pol'], sigma)
         x_pol_smooth = scipy.ndimage.filters.gaussian_filter(self.processed_data['x_pol'], sigma)
         x_pol_smooth = noisy_data.screen_data(x_pol_smooth, is_smoothed=True)

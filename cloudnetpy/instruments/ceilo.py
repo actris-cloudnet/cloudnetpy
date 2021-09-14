@@ -1,13 +1,13 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
 import linecache
 from typing import Union, Optional
+import logging
 import numpy as np
 import netCDF4
-from cloudnetpy.instruments.lufft import LufftCeilo, CL61d
+from cloudnetpy.instruments.lufft import LufftCeilo, Cl61d
 from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
-import logging
 
 
 def ceilo2nc(full_path: str,
@@ -75,14 +75,14 @@ def ceilo2nc(full_path: str,
 
 
 def _initialize_ceilo(full_path: str,
-                      date: Optional[str] = None) -> Union[ClCeilo, Ct25k, LufftCeilo, CL61d]:
+                      date: Optional[str] = None) -> Union[ClCeilo, Ct25k, LufftCeilo, Cl61d]:
     model = _find_ceilo_model(full_path)
     if model == 'cl31_or_cl51':
         return ClCeilo(full_path, date)
     if model == 'ct25k':
         return Ct25k(full_path)
     if model == 'cl61d':
-        return CL61d(full_path, date)
+        return Cl61d(full_path, date)
     return LufftCeilo(full_path, date)
 
 
@@ -110,7 +110,7 @@ def _find_ceilo_model(full_path: str) -> str:
     raise RuntimeError('Error: Unknown ceilo model.')
 
 
-def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, CL61d],
+def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
                    site_altitude: float) -> None:
     """Finds height above mean sea level."""
     tilt_angle = np.median(ceilo.metadata['tilt_angle'])
@@ -120,7 +120,7 @@ def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, CL61d],
     ceilo.data['altitude'] = CloudnetArray(site_altitude, 'altitude')
 
 
-def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, CL61d],
+def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
                  beta_variants: tuple,
                  depol_variants: Optional[tuple] = None):
     """Adds data / metadata as CloudnetArrays to ceilo.data."""
@@ -138,7 +138,7 @@ def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, CL61d],
             ceilo.data[field] = CloudnetArray(np.array(ceilo.metadata[field], dtype=float), field)
 
 
-def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, CL61d],
+def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
                 output_file: str,
                 location: str,
                 keep_uuid: bool,
