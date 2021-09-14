@@ -167,7 +167,7 @@ class VaisalaCeilo(Ceilometer):
     def _range_correct_upper_part(self) -> None:
         altitude_limit = 2400
         ind = np.where(self.range < altitude_limit)
-        self.backscatter[:, ind] *= (self.range[ind]*M2KM)**2
+        self.processed_data['backscatter'][:, ind] *= (self.range[ind]*M2KM)**2
 
 
 class ClCeilo(VaisalaCeilo):
@@ -185,13 +185,14 @@ class ClCeilo(VaisalaCeilo):
         header.append(self._read_header_line_4(data_lines[-3]))
         self.metadata = self._handle_metadata(header)
         self.range = self._calc_range()
-        self.backscatter = self._read_backscatter(data_lines[-2])
+        self.range_squared = self._get_range_squared()
+        self.processed_data['backscatter'] = self._read_backscatter(data_lines[-2])
         self.calibration_factor = calibration_factor or 1
-        self.backscatter *= self.calibration_factor
+        self.processed_data['backscatter'] *= self.calibration_factor
         self._store_ceilometer_info()
 
     def _store_ceilometer_info(self):
-        n_gates = self.backscatter.shape[1]
+        n_gates = self.processed_data['backscatter'].shape[1]
         if n_gates < 1000:
             self.model = 'cl31'
             self.wavelength = '910'
@@ -236,10 +237,11 @@ class Ct25k(VaisalaCeilo):
         header.append(self._read_header_line_3(data_lines[3]))
         self.metadata = self._handle_metadata(header)
         self.range = self._calc_range()
+        self.range_squared = self._get_range_squared()
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
-        self.backscatter = self._read_backscatter(hex_profiles)
+        self.processed_data['backscatter'] = self._read_backscatter(hex_profiles)
         self.calibration_factor = calibration_factor or 1
-        self.backscatter *= self.calibration_factor
+        self.processed_data['backscatter'] *= self.calibration_factor
         # TODO: should study the background noise to determine if the
         # next call is needed. It can be the case with cl31/51 also.
         # self._range_correct_upper_part()

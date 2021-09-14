@@ -1,8 +1,10 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
 import linecache
 from typing import Union, Optional
+import logging
 import numpy as np
-from cloudnetpy.instruments.lufft import LufftCeilo
+import netCDF4
+from cloudnetpy.instruments.lufft import LufftCeilo, Cl61d
 from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
@@ -16,13 +18,19 @@ def ceilo2nc(full_path: str,
              date: Optional[str] = None) -> str:
     """Converts Vaisala / Lufft ceilometer data into Cloudnet Level 1b netCDF file.
 
-    This function reads raw Vaisala (CT25k, CL31, CL51) and Lufft (CHM15k)
+    This function reads raw Vaisala (CT25k, CL31, CL51, CL61-D) and Lufft (CHM15k)
     ceilometer files and writes the data into netCDF file. Three variants
     of the attenuated backscatter are saved in the file:
 
         1. Raw backscatter, `beta_raw`
         2. Signal-to-noise screened backscatter, `beta`
         3. SNR-screened backscatter with smoothed weak background, `beta_smooth`
+
+    With CL61-D three additional depolarisation parameters are saved:
+
+        1. Raw depolarisation, `depolarisation_raw`
+        2. Signal-to-noise screened depolarisation, `depolarisation`
+        3. SNR-screened depolarisation with smoothed weak background, `depolarisation_smooth`
 
     Args:
         full_path: Ceilometer file name. For Vaisala it is a text file, for CHM15k it is
@@ -51,44 +59,58 @@ def ceilo2nc(full_path: str,
         >>> ceilo2nc('chm15k_raw.nc', 'chm15k.nc', site_meta)
 
     """
-    ceilo = _initialize_ceilo(full_path, date)
-    ceilo.read_ceilometer_file(site_meta.get('calibration_factor', None))
-    beta_variants = ceilo.calc_beta()
-    _append_data(ceilo, beta_variants)
-    _append_height(ceilo, site_meta['altitude'])
-    attributes = output.add_time_attribute(ATTRIBUTES, ceilo.date)
-    output.update_attributes(ceilo.data, attributes)
-    return _save_ceilo(ceilo, output_file, site_meta['name'], keep_uuid, uuid)
+    ceilo_obj = _initialize_ceilo(full_path, date)
+    logging.debug('reading daily file')
+    ceilo_obj.read_ceilometer_file(site_meta.get('calibration_factor', None))
+    if 'cl61' in ceilo_obj.model.lower():
+        depol_variants = ceilo_obj.calc_depol()
+    else:
+        depol_variants = None
+    beta_variants = ceilo_obj.calc_beta()
+    _append_data(ceilo_obj, beta_variants, depol_variants)
+    _append_height(ceilo_obj, site_meta['altitude'])
+    attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.date)
+    output.update_attributes(ceilo_obj.data, attributes)
+    return _save_ceilo(ceilo_obj, output_file, site_meta['name'], keep_uuid, uuid)
 
 
 def _initialize_ceilo(full_path: str,
-                      date: Union[str, None]) -> Union[ClCeilo, Ct25k, LufftCeilo]:
+                      date: Optional[str] = None) -> Union[ClCeilo, Ct25k, LufftCeilo, Cl61d]:
     model = _find_ceilo_model(full_path)
     if model == 'cl31_or_cl51':
         return ClCeilo(full_path, date)
     if model == 'ct25k':
         return Ct25k(full_path)
+    if model == 'cl61d':
+        return Cl61d(full_path, date)
     return LufftCeilo(full_path, date)
 
 
 def _find_ceilo_model(full_path: str) -> str:
-    if full_path.lower().endswith('.nc'):
+    try:
+        nc = netCDF4.Dataset(full_path)
+        title = nc.title
+        nc.close()
+        for identifier in ['cl61d', 'cl61-d']:
+            if identifier in title.lower() or identifier in full_path.lower():
+                return 'cl61d'
         return 'chm15k'
-    first_empty_line = utils.find_first_empty_line(full_path)
-    max_number_of_empty_lines = 10
-    for n in range(1, max_number_of_empty_lines):
-        line = linecache.getline(full_path, first_empty_line + n)
-        if not utils.is_empty_line(line):
-            line = linecache.getline(full_path, first_empty_line + n + 1)
-            break
-    if 'CL' in line:
-        return 'cl31_or_cl51'
-    if 'CT' in line:
-        return 'ct25k'
+    except OSError:
+        first_empty_line = utils.find_first_empty_line(full_path)
+        max_number_of_empty_lines = 10
+        for n in range(1, max_number_of_empty_lines):
+            line = linecache.getline(full_path, first_empty_line + n)
+            if not utils.is_empty_line(line):
+                line = linecache.getline(full_path, first_empty_line + n + 1)
+                break
+        if 'CL' in line:
+            return 'cl31_or_cl51'
+        if 'CT' in line:
+            return 'ct25k'
     raise RuntimeError('Error: Unknown ceilo model.')
 
 
-def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
+def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
                    site_altitude: float) -> None:
     """Finds height above mean sea level."""
     tilt_angle = np.median(ceilo.metadata['tilt_angle'])
@@ -98,11 +120,16 @@ def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
     ceilo.data['altitude'] = CloudnetArray(site_altitude, 'altitude')
 
 
-def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
-                 beta_variants: tuple):
+def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
+                 beta_variants: tuple,
+                 depol_variants: Optional[tuple] = None):
     """Adds data / metadata as CloudnetArrays to ceilo.data."""
     for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
         ceilo.data[name] = CloudnetArray(data, name)
+    if depol_variants is not None:
+        for data, name in zip(depol_variants, ('depolarisation', 'depolarisation_smooth')):
+            ceilo.data[name] = CloudnetArray(data, name)
+        del ceilo.data['beta_raw']
     for field in ('range', 'time', 'wavelength', 'calibration_factor'):
         ceilo.data[field] = CloudnetArray(np.array(getattr(ceilo, field)), field)
     for field, data in ceilo.metadata.items():
@@ -111,16 +138,14 @@ def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
             ceilo.data[field] = CloudnetArray(np.array(ceilo.metadata[field], dtype=float), field)
 
 
-def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo],
+def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
                 output_file: str,
                 location: str,
                 keep_uuid: bool,
                 uuid: Union[str, None]) -> str:
     """Saves the ceilometer netcdf-file."""
-
     dims = {'time': len(ceilo.time),
             'range': len(ceilo.range)}
-
     rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'lidar')
@@ -150,6 +175,31 @@ ATTRIBUTES = {
         units='sr-1 m-1',
         comment=('Range corrected, SNR screened backscatter coefficient.\n'
                  'Weak background is smoothed using Gaussian 2D-kernel.')
+    ),
+    'depolarisation': MetaData(
+        long_name='Depolarisation',
+        units='%',
+        comment='SNR screened lidar depolarisation'
+    ),
+    'depolarisation_raw': MetaData(
+        long_name='Raw depolarisation',
+        units='%',
+    ),
+    'depolarisation_smooth': MetaData(
+        long_name='Smoothed lidar depolarisation',
+        units='%',
+        comment=('SNR screened lidar depolarisation.\n'
+                 'Weak background is smoothed using Gaussian 2D-kernel.')
+    ),
+    'p_pol': MetaData(
+        long_name='Raw attenuated backscatter coefficient - parallel component',
+        units='sr-1 m-1',
+        comment='Range-corrected, parallel-polarized component of attenuated backscatter.'
+    ),
+    'x_pol': MetaData(
+        long_name='Raw attenuated backscatter coefficient - cross component',
+        units='sr-1 m-1',
+        comment='Range-corrected, cross-polarized component of attenuated backscatter.'
     ),
     'scale': MetaData(
         long_name='Scale',
