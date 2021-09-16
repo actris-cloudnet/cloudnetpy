@@ -96,7 +96,7 @@ class Cl61d(LufftCeilo):
         self.range = self._calc_range()
         self.range_squared = self._get_range_squared()
         self.processed_data['backscatter'] = self._calibrate_backscatter(calibration_factor)
-        for key in ('p_pol', 'x_pol', 'linear_depol_ratio'):
+        for key in ('p_pol', 'x_pol'):
             self.processed_data[key] = self._getvar(key)
         self.time = self._fetch_time()
         self.date = self._read_date()
