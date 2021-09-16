@@ -1,6 +1,7 @@
 """Module for concatenating netCDF files."""
 from typing import Union, Optional
 import numpy as np
+import logging
 import netCDF4
 from cloudnetpy import utils
 
@@ -79,7 +80,11 @@ class Concat:
     def get_constants(self):
         """Finds constants, i.e. arrays that have no concat_dimension and are not concatenated."""
         for key, value in self.first_file.variables.items():
-            dims = self._get_dim(value[:])
+            try:
+                dims = self._get_dim(value[:])
+            except np.core._exceptions.UFuncTypeError:
+                logging.warning(f'Problem with reading {key} - skipping it')
+                continue
             if self.concat_dimension not in dims:
                 self.constants += (key,)
 
