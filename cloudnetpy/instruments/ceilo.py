@@ -26,11 +26,11 @@ def ceilo2nc(full_path: str,
         2. Signal-to-noise screened backscatter, `beta`
         3. SNR-screened backscatter with smoothed weak background, `beta_smooth`
 
-    With CL61-D three additional depolarisation parameters are saved:
+    With CL61-D `beta_raw` is not saved due to large file size. Instead, two dditional
+    depolarisation parameters are saved:
 
-        1. Raw depolarisation, `depolarisation_raw`
-        2. Signal-to-noise screened depolarisation, `depolarisation`
-        3. SNR-screened depolarisation with smoothed weak background, `depolarisation_smooth`
+        1. Signal-to-noise screened depolarisation, `depolarisation`
+        2. SNR-screened depolarisation with smoothed weak background, `depolarisation_smooth`
 
     Args:
         full_path: Ceilometer file name. For Vaisala it is a text file, for CHM15k it is
