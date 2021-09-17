@@ -6,6 +6,7 @@ import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray, RadarArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
+from cloudnetpy.exceptions import InconsistentDataError
 
 
 def rpg2nc(path_to_l1_files: str,
@@ -69,8 +70,8 @@ def create_one_day_data_record(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -
     if len(rpg_objects) > 1:
         try:
             rpg_header = _reduce_header(rpg_header)
-        except AssertionError as error:
-            raise RuntimeError(error)
+        except AssertionError as err:
+            raise InconsistentDataError(f'{err}')
     rpg_raw_data = _mask_invalid_data(rpg_raw_data)
     return {**rpg_header, **rpg_raw_data}
 
