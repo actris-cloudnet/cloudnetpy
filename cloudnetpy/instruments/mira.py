@@ -121,9 +121,12 @@ class Mira(NcRadar):
     def add_geolocation(self) -> None:
         """Adds geo info (from global attributes to variables)."""
         for key in ('Latitude', 'Longitude', 'Altitude'):
-            value = getattr(self.dataset, key).split()[0]
+            try:
+                value = getattr(self.dataset, key).split()[0]
+            except AttributeError:
+                value = None
             key = key.lower()
-            if key not in self.data.keys():  # Not provided by user
+            if key not in self.data.keys() and value is not None:  # Not provided by user
                 self.append_data(value, key)
 
     def screen_by_snr(self, snr_gain: float, snr_limit: Optional[float] = -17) -> None:
