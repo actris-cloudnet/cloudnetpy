@@ -49,7 +49,7 @@ _COLORS = {
     'lightgray': "#ECECEC",
     'gray': "#d3d3d3",
     'lightbrown': "#CEBC89",
-    'lightsteel': "#E5E3EB",
+    'lightsteel': "#a0b0bb",
     'steelblue': "#4682b4"
 }
 
