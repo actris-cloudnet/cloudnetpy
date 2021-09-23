@@ -59,7 +59,7 @@ class Disdrometer:
         self.data = {}
         self.source = source
         self.date = None
-        self._file_contents, self._spectra = self._read_file()
+        self._file_contents, self._spectra, self._vectors = self._read_file()
 
     def validate_date(self, expected_date: str) -> None:
         valid_ind = []
@@ -89,7 +89,7 @@ class Disdrometer:
                     if len(values) != 1106:
                         continue
                     scalars.append(values[:18])
-                    vectors.append(values[18:18+64])  # not yet used
+                    vectors.append(values[18:18+64])
                     spectra.append(values[18+64:])
                 else:
                     values = row.split(';')
@@ -97,7 +97,7 @@ class Disdrometer:
                     spectra.append(values[79:-2])
         if len(scalars) == 0:
             raise ValueError
-        return scalars, spectra
+        return scalars, spectra, vectors
 
     def _append_data(self, column_and_key: list) -> None:
         indices, keys = zip(*column_and_key)
@@ -139,7 +139,7 @@ class Parsivel(Disdrometer):
         column_and_key = [
             (0, '_time'),
             (1, 'rainfall_rate'),
-            #(2, 'rain_accum'),  # new
+            (2, '_rain_accum'),
             (3, 'synop_WaWa'),  # or synop_ww ?
             (4, 'radar_reflectivity'),
             (5, 'visibility'),
@@ -147,32 +147,37 @@ class Parsivel(Disdrometer):
             (7, 'sig_laser'),
             (8, 'n_particles'),
             (9, 'T_sensor'),
-            # (10, 'sensor_id'),
+            (10, '_sensor_id'),  # to global attributes
             (12, 'I_heating'),
             (13, 'V_sensor'),
             (14, 'state_sensor'),
-            # (15, 'station_name'),
-            #(16, 'rain_amount_absolute'),  # new
+            (15, '_station_name'),
+            (16, '_rain_amount_absolute'),
             (17, 'error_code')
         ]
         self._append_data(column_and_key)
-        self.data['data_raw'] = self._read_spectrum()
+        self._append_spectra()
+        self._append_vector_data()
 
-    def _read_spectrum(self) -> CloudnetArray:
-        n_velocity = 32
-        n_diameter = 32
+    def _append_spectra(self):
+        n_velocity, n_diameter = 32, 32
         array = ma.masked_all((len(self._file_contents), n_velocity, n_diameter))
         for time_ind, row in enumerate(self._spectra):
-            values = ma.masked_all((1024, ))
-            for spec_ind, value in enumerate(row):
-                try:
-                    value = int(value)
-                    if value != 0:
-                        values[spec_ind] = value
-                except ValueError:
-                    pass
-            array[time_ind, :, :] = np.reshape(values, (32, 32))
-        return CloudnetArray(array, 'data_raw', dimensions=('time', 'velocity', 'diameter'))
+            values = _parse_int(row)
+            array[time_ind, :, :] = np.reshape(values, (n_velocity, n_diameter))
+        self.data['data_raw'] = CloudnetArray(array, 'data_raw', dimensions=('time', 'velocity',
+                                                                             'diameter'))
+
+    def _append_vector_data(self):
+        n_diameter = 32
+        keys = ('number_concentration', 'fall_velocity')
+        data = {key: ma.masked_all((len(self._vectors), n_diameter)) for key in keys}
+        for time_ind, row in enumerate(self._vectors):
+            values = _parse_int(row)
+            for key, array in zip(keys, np.split(values, 2)):
+                data[key][time_ind, :] = array
+        for key in keys:
+            self.data[key] = CloudnetArray(data[key], key, dimensions=('time', 'diameter'))
 
     def _init_date(self) -> list:
         timestamp = self._file_contents[0][0]
@@ -284,6 +289,18 @@ def _format_thies_date(date: str):
     return f'{year}-{month.zfill(2)}-{day.zfill(2)}'
 
 
+def _parse_int(row: np.ndarray) -> np.ndarray:
+    values = ma.masked_all((len(row),))
+    for ind, value in enumerate(row):
+        try:
+            value = int(value)
+            if value != 0:
+                values[ind] = value
+        except ValueError:
+            pass
+    return values
+
+
 ATTRIBUTES = {
     'velocity': MetaData(
         long_name='Center fall velocity of precipitation particles',
@@ -365,6 +382,16 @@ ATTRIBUTES = {
     'error_code': MetaData(
         long_name='Error code',
         comment='Variable 25 - Error code.'
+    ),
+    'number_concentration': MetaData(
+        long_name='Number of particles per diameter class',
+        units='log10(m-3 mm-1)',
+        comment='Variable 90 - Field N (d)'
+    ),
+    'fall_velocity': MetaData(
+        long_name='Average velocity of each diameter class',
+        units='m s-1',
+        comment='Variable 91 - Field v (d)'
     ),
     'data_raw': MetaData(
         long_name='Raw Data as a function of particle diameter and velocity.',
