@@ -6,6 +6,7 @@ from cloudnetpy import output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.vaisala import values_to_dict
 from cloudnetpy import CloudnetArray, utils
+import logging
 
 
 PARSIVEL = 'Parsivel'
@@ -14,7 +15,6 @@ THIES = 'Thies-LNM'
 
 def disdrometer2nc(disdrometer_file: str,
                    output_file: str,
-                   instrument: str,
                    site_meta: dict,
                    keep_uuid: Optional[bool] = False,
                    uuid: Optional[str] = None,
@@ -24,7 +24,6 @@ def disdrometer2nc(disdrometer_file: str,
     Args:
         disdrometer_file: Filename of disdrometer .log file.
         output_file: Output filename.
-        instrument: Disdrometer model. One of: parsivel|thies-lnm.
         site_meta: Dictionary containing information about the site. Required key is `name`.
         keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
             when new UUID is generated.
@@ -38,12 +37,13 @@ def disdrometer2nc(disdrometer_file: str,
         ValueError: Timestamps do not match the expected date, or unknown disdrometer model.
 
     """
-    if instrument == 'parsivel':
+    try:
         disdrometer = Parsivel(disdrometer_file, site_meta)
-    elif instrument == 'thies-lnm':
-        disdrometer = Thies(disdrometer_file, site_meta)
-    else:
-        raise ValueError(f'Unknown disdrometer: {instrument}')
+    except ValueError:
+        try:
+            disdrometer = Thies(disdrometer_file, site_meta)
+        except IndexError:
+            raise ValueError('Can not read disdrometer file')
     if date is not None:
         disdrometer.validate_date(date)
     disdrometer.init_data()
@@ -87,7 +87,6 @@ class Disdrometer:
                     if '\n' in values:
                         values.remove('\n')
                     if len(values) != 1106:
-                        print('Warning: skipping non-standard Parsivel data')
                         continue
                     scalars.append(values[:18])
                     vectors.append(values[18:18+64])  # not yet used
@@ -96,6 +95,8 @@ class Disdrometer:
                     values = row.split(';')
                     scalars.append(values[:79])
                     spectra.append(values[79:-2])
+        if len(scalars) == 0:
+            raise ValueError
         return scalars, spectra
 
     def _append_data(self, column_and_key: list) -> None:

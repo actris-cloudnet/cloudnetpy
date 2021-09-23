@@ -19,8 +19,7 @@ class TestParsivel:
     @pytest.fixture(autouse=True)
     def init_tests(self):
         self.file = f'{self.file_path}juelich.log'
-        self.uuid = disdrometer.disdrometer2nc(self.file, self.temp_file.name, 'parsivel',
-                                               self.site_meta)
+        self.uuid = disdrometer.disdrometer2nc(self.file, self.temp_file.name, self.site_meta)
         self.nc = netCDF4.Dataset(self.temp_file.name)
         yield
         self.nc.close()
@@ -46,14 +45,12 @@ class TestParsivel2:
 
     def test_date_validation(self):
         temp_file = NamedTemporaryFile()
-        disdrometer.disdrometer2nc(self.file, temp_file.name, 'parsivel', self.site_meta,
-                                   date='2019-11-09')
+        disdrometer.disdrometer2nc(self.file, temp_file.name, self.site_meta, date='2019-11-09')
 
     def test_date_validation_fail(self):
         temp_file = NamedTemporaryFile()
         with pytest.raises(ValueError):
-            disdrometer.disdrometer2nc(self.file, temp_file.name, 'parsivel', self.site_meta,
-                                       date='2022-04-05')
+            disdrometer.disdrometer2nc(self.file, temp_file.name, self.site_meta, date='2022-04-05')
 
 
 class TestParsivel3:
@@ -62,5 +59,4 @@ class TestParsivel3:
 
     def test_date_validation(self):
         temp_file = NamedTemporaryFile()
-        disdrometer.disdrometer2nc(self.file, temp_file.name, 'parsivel', self.site_meta,
-                                   date='2021-04-16')
+        disdrometer.disdrometer2nc(self.file, temp_file.name, self.site_meta, date='2021-04-16')
