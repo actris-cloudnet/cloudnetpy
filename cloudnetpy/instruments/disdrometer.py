@@ -165,8 +165,8 @@ class Parsivel(Disdrometer):
         for time_ind, row in enumerate(self._spectra):
             values = _parse_int(row)
             array[time_ind, :, :] = np.reshape(values, (n_velocity, n_diameter))
-        self.data['data_raw'] = CloudnetArray(array, 'data_raw', dimensions=('time', 'velocity',
-                                                                             'diameter'))
+        self.data['data_raw'] = CloudnetArray(array, 'data_raw', dimensions=('time', 'diameter',
+                                                                             'velocity'))
 
     def _append_vector_data(self):
         n_diameter = 32
@@ -199,7 +199,7 @@ class Parsivel(Disdrometer):
         key = f'{name}_spread'
         self.data[key] = CloudnetArray(spread, key, dimensions=(name,))
         key = f'{name}_bnds'
-        self.data[key] = CloudnetArray(bounds, key, dimensions=(name, 2))
+        self.data[key] = CloudnetArray(bounds, key, dimensions=(name, 'nv'))
 
     @staticmethod
     def _create_vectors(spreads: list, start: float) -> tuple:

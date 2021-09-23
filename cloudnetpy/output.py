@@ -243,7 +243,7 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
         else:
             fill_value = False
 
-        size = _get_dimensions(nc, obj.data)
+        size = obj.dimensions or _get_dimensions(nc, obj.data)
         nc_variable = nc.createVariable(obj.name, obj.data_type, size, zlib=True,
                                         fill_value=fill_value)
         nc_variable[:] = obj.data
