@@ -181,20 +181,20 @@ class Parsivel(Disdrometer):
     def _create_velocity_vectors(self):
         spreads = [0.1, 0.2, 0.4, 0.8, 1.6, 3.2]
         start = 0.05
-        lower, mid, upper = self._create_vectors(spreads, start)
-        self.data['lower_velocity'] = CloudnetArray(lower, 'lower_velocity',
-                                                    dimensions=('velocity',))
-        self.data['upper_velocity'] = CloudnetArray(upper, 'upper_velocity',
-                                                    dimensions=('velocity',))
+        self._store_vectors(spreads, start, 'velocity')
 
     def _create_diameter_vectors(self):
         spreads = [0.125, 0.25, 0.5, 1, 2, 3]
         start = 0.062
-        lower, mid, upper = self._create_vectors(spreads, start)
-        self.data['lower_diameter'] = CloudnetArray(lower, 'lower_diameter',
-                                                    dimensions=('diameter',))
-        self.data['upper_diameter'] = CloudnetArray(upper, 'upper_diameter',
-                                                    dimensions=('diameter',))
+        self._store_vectors(spreads, start, 'diameter')
+
+    def _store_vectors(self, spreads: list, start: float, name: str):
+        mid, bounds, spread = self._create_vectors(spreads, start)
+        self.data[name] = CloudnetArray(mid, name, dimensions=(name,))
+        key = f'{name}_spread'
+        self.data[key] = CloudnetArray(spread, key, dimensions=(name,))
+        key = f'{name}_bnds'
+        self.data[key] = CloudnetArray(bounds, key, dimensions=(name, 2))
 
     @staticmethod
     def _create_vectors(spreads: list, start: float) -> tuple:
@@ -205,8 +205,11 @@ class Parsivel(Disdrometer):
             velocity = np.append(mid_value, mid)
             lower_limit = np.append(lower_limit, mid - spread/2)
             upper_limit = np.append(upper_limit, mid + spread/2)
+            mid_value = np.append(mid_value, mid)
             start = velocity[-1] + spread*1.5
-        return lower_limit, mid_value, upper_limit
+        bounds = np.stack((lower_limit, upper_limit)).T
+        spread = bounds[:, 1] - bounds[:, 0]
+        return mid_value, bounds, spread
 
 
 class Thies(Disdrometer):
@@ -246,8 +249,9 @@ def save_disdrometer(disdrometer: Union[Parsivel, Thies],
 
     dims = {'time': len(disdrometer.data['time'][:])}
     if disdrometer.source == PARSIVEL:
-        dims['diameter'] = disdrometer.data['lower_diameter'][:].shape[0]
-        dims['velocity'] = disdrometer.data['lower_velocity'][:].shape[0]
+        dims['diameter'] = disdrometer.data['diameter'][:].shape[0]
+        dims['velocity'] = disdrometer.data['velocity'][:].shape[0]
+        dims['nv'] = 2
     else:
         dims['data_raw'] = disdrometer.data['data_raw'][:].shape[1]
     file_type = 'disdrometer'
@@ -281,6 +285,36 @@ def _format_thies_date(date: str):
 
 
 ATTRIBUTES = {
+    'velocity': MetaData(
+        long_name='Center fall velocity of precipitation particles',
+        units='m s-1',
+        comment='Predefined velocity classes. Note the variable bin size.'
+    ),
+    'velocity_spread': MetaData(
+        long_name='Width of velocity interval',
+        units='m s-1',
+        comment='Bin size of each velocity interval.'
+    ),
+    'velocity_bnds': MetaData(
+        long_name='',
+        units='m s-1',
+        comment='Upper and lower bounds of velocity interval.'
+    ),
+    'diameter': MetaData(
+        long_name='Center diameter of precipitation particles',
+        units='m',
+        comment='Predefined diameter classes. Note the variable bin size.'
+    ),
+    'diameter_spread': MetaData(
+        long_name='Width of diameter interval',
+        units='m',
+        comment='Bin size of each diameter interval.'
+    ),
+    'diameter_bnds': MetaData(
+        long_name='',
+        units='m',
+        comment='Upper and lower bounds of diameter interval.'
+    ),
     'rainfall_rate': MetaData(
         long_name='Precipitation rate',
         units='mm h-1',
