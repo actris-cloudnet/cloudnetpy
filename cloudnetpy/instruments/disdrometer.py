@@ -65,10 +65,12 @@ class Disdrometer:
         self._file_contents, self._spectra, self._vectors = self._read_file()
 
     def convert_units(self):
-        mmh_to_ms = 3600 * 1000
-        key = 'rainfall_rate'
-        if key in self.data:
-            self.data[key].data /= mmh_to_ms
+        mm_to_m = 1e3
+        mmh_to_ms = 3600 * mm_to_m
+        c_to_k = 273.15
+        self._convert_data(('rainfall_rate',), mmh_to_ms)
+        self._convert_data(('diameter', 'diameter_spread', 'diameter_bnds'), mm_to_m)
+        self._convert_data(('T_sensor',), c_to_k, method='add')
 
     def add_meta(self):
         valid_keys = ('latitude', 'longitude', 'altitude')
@@ -143,6 +145,16 @@ class Disdrometer:
             seconds.append(int(hour)*3600 + int(minute)*60 + int(sec))
         return CloudnetArray(utils.seconds2hours(seconds), 'time')
 
+    def _convert_data(self, keys: tuple, value: float, method: Optional[str] = 'divide'):
+        for key in keys:
+            if key in self.data:
+                if method == 'divide':
+                    self.data[key].data /= value
+                elif method == 'add':
+                    self.data[key].data += value
+                else:
+                    raise ValueError
+
 
 class Parsivel(Disdrometer):
     def __init__(self, filename: str, site_meta: dict):
@@ -156,7 +168,7 @@ class Parsivel(Disdrometer):
             (0, '_time'),
             (1, 'rainfall_rate'),
             (2, '_rain_accum'),
-            (3, 'synop_WaWa'),  # or synop_ww ?
+            (3, 'synop_WaWa'),
             (4, 'radar_reflectivity'),
             (5, 'visibility'),
             (6, 'interval'),
@@ -172,8 +184,8 @@ class Parsivel(Disdrometer):
             (17, 'error_code')
         ]
         self._append_data(column_and_key)
-        self._append_spectra()
         self._append_vector_data()
+        self._append_spectra()
 
     def _append_spectra(self):
         n_velocity, n_diameter = 32, 32
@@ -329,7 +341,7 @@ ATTRIBUTES = {
         comment='Bin size of each velocity interval.'
     ),
     'velocity_bnds': MetaData(
-        long_name='',
+        long_name='Velocity bounds',
         units='m s-1',
         comment='Upper and lower bounds of velocity interval.'
     ),
@@ -344,7 +356,7 @@ ATTRIBUTES = {
         comment='Bin size of each diameter interval.'
     ),
     'diameter_bnds': MetaData(
-        long_name='',
+        long_name='Diameter bounds',
         units='m',
         comment='Upper and lower bounds of diameter interval.'
     ),
@@ -352,6 +364,10 @@ ATTRIBUTES = {
         long_name='Precipitation rate',
         units='m s-1',
         comment='Variable 01 - Rain intensity (32 bit) 0000.000.'
+    ),
+    'synop_WaWa': MetaData(
+        long_name='Synop code WaWa',
+        comment='Variable 03 - Weather code according to SYNOP wawa Table 4680.'
     ),
     'radar_reflectivity': MetaData(
         long_name='Equivalent radar reflectivity factor',
@@ -377,7 +393,7 @@ ATTRIBUTES = {
     ),
     'T_sensor': MetaData(
         long_name='Temperature in the sensor',
-        units='C',
+        units='K',
         comment='Variable 12 - Temperature in the sensor.'
     ),
     'I_heating': MetaData(
