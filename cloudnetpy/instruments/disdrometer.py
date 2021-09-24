@@ -63,6 +63,7 @@ class Disdrometer:
         self.source = source
         self.date = None
         self._file_contents, self._spectra, self._vectors = self._read_file()
+        self.sensor_id = None
 
     def convert_units(self):
         mm_to_m = 1e3
@@ -127,6 +128,8 @@ class Disdrometer:
             float_array = np.array([float(value) for value in data_dict[key]])
             self.data[key] = CloudnetArray(float_array, key)
         self.data['time'] = self._convert_time(data_dict)
+        if '_sensor_id' in data_dict:
+            self.sensor_id = data_dict['_sensor_id'][0]
 
     def _parse_useful_data(self, indices: list) -> list:
         data = []
@@ -296,6 +299,8 @@ def save_disdrometer(disdrometer: Union[Parsivel, Thies],
     rootgrp.location = disdrometer.location
     rootgrp.history = f"{utils.get_time()} - {file_type} file created"
     rootgrp.source = disdrometer.source
+    if disdrometer.sensor_id is not None:
+        rootgrp.sensor_id = disdrometer.sensor_id
     output.add_references(rootgrp)
     rootgrp.close()
     return file_uuid
