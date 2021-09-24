@@ -9,7 +9,7 @@ from cloudnetpy import CloudnetArray, utils
 import logging
 
 
-PARSIVEL = 'Parsivel'
+PARSIVEL = 'OTT Parsivel-2 optical disdrometer'
 THIES = 'Thies-LNM'
 
 
@@ -47,6 +47,8 @@ def disdrometer2nc(disdrometer_file: str,
     if date is not None:
         disdrometer.validate_date(date)
     disdrometer.init_data()
+    disdrometer.add_meta()
+    disdrometer.convert_units()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
     output.update_attributes(disdrometer.data, attributes)
     return save_disdrometer(disdrometer, output_file, keep_uuid, uuid)
@@ -55,11 +57,25 @@ def disdrometer2nc(disdrometer_file: str,
 class Disdrometer:
     def __init__(self, filename: str, site_meta: dict, source: str):
         self.filename = filename
+        self.site_meta = site_meta
         self.location = site_meta['name']
         self.data = {}
         self.source = source
         self.date = None
         self._file_contents, self._spectra, self._vectors = self._read_file()
+
+    def convert_units(self):
+        mmh_to_ms = 3600 * 1000
+        key = 'rainfall_rate'
+        if key in self.data:
+            self.data[key].data /= mmh_to_ms
+
+    def add_meta(self):
+        valid_keys = ('latitude', 'longitude', 'altitude')
+        for key, value in self.site_meta.items():
+            key = key.lower()
+            if key in valid_keys:
+                self.data[key] = CloudnetArray(value, key)
 
     def validate_date(self, expected_date: str) -> None:
         valid_ind = []
@@ -334,7 +350,7 @@ ATTRIBUTES = {
     ),
     'rainfall_rate': MetaData(
         long_name='Precipitation rate',
-        units='mm h-1',
+        units='m s-1',
         comment='Variable 01 - Rain intensity (32 bit) 0000.000.'
     ),
     'radar_reflectivity': MetaData(

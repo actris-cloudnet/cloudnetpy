@@ -25,7 +25,7 @@ class TestParsivel:
         self.nc.close()
 
     def test_global_attributes(self):
-        assert self.nc.source == 'Parsivel'
+        assert 'Parsivel' in self.nc.source
         assert self.nc.cloudnet_file_type == 'disdrometer'
         assert self.nc.title == 'Disdrometer file from Kumpula'
         assert self.nc.year == '2021'
