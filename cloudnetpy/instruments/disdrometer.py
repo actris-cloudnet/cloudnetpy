@@ -6,7 +6,6 @@ from cloudnetpy import output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.vaisala import values_to_dict
 from cloudnetpy import CloudnetArray, utils
-import logging
 
 
 PARSIVEL = 'OTT Parsivel-2 optical disdrometer'
@@ -140,13 +139,13 @@ class Disdrometer:
 
     def _convert_time(self, data: dict) -> CloudnetArray:
         seconds = []
-        for ind, timestamp in enumerate(data['_time']):
+        for timestamp in data['_time']:
             if self.source == PARSIVEL:
                 _, _, _, hour, minute, sec = _parse_parsivel_timestamp(timestamp)
             else:
                 hour, minute, sec = timestamp.split(':')
             seconds.append(int(hour)*3600 + int(minute)*60 + int(sec))
-        return CloudnetArray(utils.seconds2hours(seconds), 'time')
+        return CloudnetArray(utils.seconds2hours(np.array(seconds)), 'time')
 
     def _convert_data(self, keys: tuple, value: float, method: Optional[str] = 'divide'):
         for key in keys:
@@ -160,6 +159,9 @@ class Disdrometer:
 
 
 class Parsivel(Disdrometer):
+
+    n_velocity, n_diameter = 32, 32
+
     def __init__(self, filename: str, site_meta: dict):
         super().__init__(filename, site_meta, PARSIVEL)
         self.date = self._init_date()
@@ -191,18 +193,16 @@ class Parsivel(Disdrometer):
         self._append_spectra()
 
     def _append_spectra(self):
-        n_velocity, n_diameter = 32, 32
-        array = ma.masked_all((len(self._file_contents), n_velocity, n_diameter))
+        array = ma.masked_all((len(self._file_contents), self.n_velocity, self.n_diameter))
         for time_ind, row in enumerate(self._spectra):
             values = _parse_int(row)
-            array[time_ind, :, :] = np.reshape(values, (n_velocity, n_diameter))
+            array[time_ind, :, :] = np.reshape(values, (self.n_velocity, self.n_diameter))
         self.data['data_raw'] = CloudnetArray(array, 'data_raw', dimensions=('time', 'diameter',
                                                                              'velocity'))
 
     def _append_vector_data(self):
-        n_diameter = 32
         keys = ('number_concentration', 'fall_velocity')
-        data = {key: ma.masked_all((len(self._vectors), n_diameter)) for key in keys}
+        data = {key: ma.masked_all((len(self._vectors), self.n_diameter)) for key in keys}
         for time_ind, row in enumerate(self._vectors):
             values = _parse_int(row)
             for key, array in zip(keys, np.split(values, 2)):
