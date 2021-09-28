@@ -60,3 +60,28 @@ class TestParsivel3:
     def test_date_validation(self):
         temp_file = NamedTemporaryFile()
         disdrometer.disdrometer2nc(self.file, temp_file.name, self.site_meta, date='2021-04-16')
+
+
+class TestThies:
+
+    file_path = f'{SCRIPT_PATH}/data/thies-lnm/'
+    temp_file = NamedTemporaryFile()
+    site_meta = {'name': 'Lindenberg', 'latitude': 34.6}
+
+    @pytest.fixture(autouse=True)
+    def init_tests(self):
+        self.file = f'{self.file_path}2021091507.txt'
+        self.uuid = disdrometer.disdrometer2nc(self.file, self.temp_file.name, self.site_meta)
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
+
+    def test_processing(self):
+        temp_file = NamedTemporaryFile()
+        disdrometer.disdrometer2nc(self.file, temp_file.name, self.site_meta, date='2021-09-15')
+        assert self.nc.title == 'Disdrometer file from Lindenberg'
+        assert self.nc.year == '2021'
+        assert self.nc.month == '09'
+        assert self.nc.day == '15'
+        assert self.nc.location == 'Lindenberg'
+        assert self.nc.cloudnet_file_type == 'disdrometer'
