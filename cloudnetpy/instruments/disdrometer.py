@@ -46,6 +46,8 @@ def disdrometer2nc(disdrometer_file: str,
     if date is not None:
         disdrometer.validate_date(date)
     disdrometer.init_data()
+    if date is not None:
+        disdrometer.sort_time()
     disdrometer.add_meta()
     disdrometer.convert_units()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
@@ -95,6 +97,13 @@ class Disdrometer:
             if value:
                 self._file_data[key] = [self._file_data[key][ind] for ind in valid_ind]
         self.date = expected_date.split('-')
+
+    def sort_time(self) -> None:
+        time = self.data['time'][:]
+        ind = time.argsort()
+        for key, data in self.data.items():
+            if data.data.shape[0] == len(time):
+                data.data[:] = data.data[ind]
 
     def _read_file(self) -> dict:
         data = {
