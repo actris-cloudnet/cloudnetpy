@@ -74,6 +74,8 @@ class Disdrometer:
         self._convert_data(('rainfall_rate',), mmh_to_ms)
         self._convert_data(('diameter', 'diameter_spread', 'diameter_bnds'), mm_to_m)
         self._convert_data(('T_sensor',), c_to_k, method='add')
+        self._convert_data(('V_sensor_supply',), 10)
+        self._convert_data(('I_mean_laser',), 100)
 
     def add_meta(self):
         valid_keys = ('latitude', 'longitude', 'altitude')
@@ -101,7 +103,7 @@ class Disdrometer:
     def sort_time(self) -> None:
         time = self.data['time'][:]
         ind = time.argsort()
-        for key, data in self.data.items():
+        for _, data in self.data.items():
             if data.data.shape[0] == len(time):
                 data.data[:] = data.data[ind]
 
@@ -273,17 +275,55 @@ class Thies(Disdrometer):
 
     def init_data(self):
         column_and_key = [
+            (1, '_serial_number'),
+            (2, '_software_version'),
+            (3, '_date'),
             (4, '_time'),
-            (13, 'rainfall_rate'),  # liquid
-            (14, 'snow_intensity'),
+            (5, '_synop_5min_ww'),
+            (6, '_synop_5min_WaWa'),
+            (7, '_metar_5min_4678'),
+            (8, '_rainfall_rate_5min'),
+            (9, 'synop_WW'),  # 1min
+            (10, 'synop_WaWa'),  # 1min
+            (11, '_metar_1_min_4678'),
+            (12, '_rainfall_rate_1min_total'),
+            (13, 'rainfall_rate'),                # liquid, mm h-1
+            (14, '_rainfall_rate_1min_solid'),
+            (15, '_precipition_amount'),  # mm
             (16, 'visibility'),
             (17, 'radar_reflectivity'),
             (18, 'measurement_quality'),
             (19, 'maximum_hail_diameter'),
-            (20, 'laser_status'),
+            (20, 'status_laser'),
             (21, 'static_signal'),
-            (44, 'ambient_temperature'),
-            (49, 'n_particles')
+            (22, 'status_T_laser_analogue'),
+            (23, 'status_T_laser_digital'),
+            (24, 'status_I_laser_analogue'),
+            (25, 'status_I_laser_digital'),
+            (26, 'status_sensor_supply'),
+            (27, 'status_laser_heating'),
+            (28, 'status_receiver_heating'),
+            (29, 'status_temperature_sensor'),
+            (30, 'status_heating_supply'),
+            (31, 'status_heating_housing'),
+            (32, 'status_heating_heads'),
+            (33, 'status_heating_carriers'),
+            (34, 'status_laser_power'),
+            (35, '_status_reserve'),
+            (36, 'T_interior'),
+            (37, 'T_laser_driver'),   # 0-80 C
+            (38, 'I_mean_laser'),
+            (39, 'V_control'),  # mV 4005-4015
+            (40, 'V_optical_output'),  # mV 2300-6500
+            (41, 'V_sensor_supply'),  # 1/10V
+            (42, 'I_heating_laser_head'),  # mA
+            (43, 'I_heating_receiver_head'),  # mA
+            (44, 'T_ambient'),  # C
+            (45, '_V_heating_supply'),
+            (46, '_I_housing'),
+            (47, '_I_heating_heads'),
+            (48, '_I_heating_carriers'),
+            (49, 'n_particles'),
         ]
         self._append_data(column_and_key)
         self._append_spectra()
@@ -363,7 +403,7 @@ ATTRIBUTES = {
     'velocity': MetaData(
         long_name='Center fall velocity of precipitation particles',
         units='m s-1',
-        comment='Predefined velocity classes. Note the variable bin size.'
+        comment='Predefined velocity classes.'
     ),
     'velocity_spread': MetaData(
         long_name='Width of velocity interval',
@@ -378,7 +418,7 @@ ATTRIBUTES = {
     'diameter': MetaData(
         long_name='Center diameter of precipitation particles',
         units='m',
-        comment='Predefined diameter classes. Note the variable bin size.'
+        comment='Predefined diameter classes.'
     ),
     'diameter_spread': MetaData(
         long_name='Width of diameter interval',
@@ -396,6 +436,9 @@ ATTRIBUTES = {
     ),
     'synop_WaWa': MetaData(
         long_name='Synop code WaWa',
+    ),
+    'synop_WW': MetaData(
+        long_name='Synop code WW',
     ),
     'radar_reflectivity': MetaData(
         long_name='Equivalent radar reflectivity factor',
@@ -428,7 +471,7 @@ ATTRIBUTES = {
     ),
     'state_sensor': MetaData(
         long_name='State of the sensor',
-        comment='Sensor status: 0 = Everything is okay, 1 = Dirty, 2 = No measurement possible.'
+        comment='0 = OK, 1 = Dirty, 2 = No measurement possible.'
     ),
     'error_code': MetaData(
         long_name='Error code',
@@ -444,22 +487,73 @@ ATTRIBUTES = {
     'data_raw': MetaData(
         long_name='Raw Data as a function of particle diameter and velocity.',
     ),
+    'kinetic_energy': MetaData(
+        long_name='Kinetic energy',
+    ),
     # Thies-specific:
-    'ambient_temperature': MetaData(
+    'T_ambient': MetaData(
         long_name='Ambient temperature',
         units='C'
     ),
-    'heating_current': MetaData(
-        long_name='Heating current',
-        units='A'
+    'T_interior': MetaData(
+        long_name='Interior temperature',
+        units='C'
     ),
-    'sensor_voltage': MetaData(
-        long_name='Sensor voltage',
-        units='V'
+    'status_T_laser_analogue': MetaData(
+        long_name='Status of laser temperature (analogue)',
+        comment='0 = OK , 1 = Error'
     ),
-    'snow_intensity': MetaData(
-        long_name='Snow intensity',
-        units='mm/h'
+    'status_T_laser_digital': MetaData(
+        long_name='Status of laser temperature (digital)',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_I_laser_analogue': MetaData(
+        long_name='Status of laser current (analogue)',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_I_laser_digital': MetaData(
+        long_name='Status of laser current (digital)',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_sensor_supply': MetaData(
+        long_name='Status of sensor supply',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_laser_heating': MetaData(
+        long_name='Status of laser heating',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_receiver_heating': MetaData(
+        long_name='Status of receiver heating',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_temperature_sensor': MetaData(
+        long_name='Status of temperature sensor',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_heating_supply': MetaData(
+        long_name='Status of heating supply',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_heating_housing': MetaData(
+        long_name='Status of heating housing',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_heating_heads': MetaData(
+        long_name='Status of heating heads',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_heating_carriers': MetaData(
+        long_name='Status of heating carriers',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_laser_power': MetaData(
+        long_name='Status of laser power',
+        comment='0 = OK , 1 = Error'
+    ),
+    'status_laser': MetaData(
+        long_name='Status of laser',
+        comment='0 = OK/on , 1 = Off'
     ),
     'measurement_quality': MetaData(
         long_name='Measurement quality',
@@ -469,20 +563,37 @@ ATTRIBUTES = {
         long_name='Maximum hail diameter',
         units='mm'
     ),
-    'laser_status': MetaData(
-        long_name='Laser status',
-        comment='0 = ON, 1 = OFF'
-    ),
     'static_signal': MetaData(
         long_name='Static signal',
         comment='0 = OK, 1 = ERROR'
     ),
-    'kinetic_energy': MetaData(
-        long_name='Kinetic energy',
+    'T_laser_driver': MetaData(
+        long_name='Temperature of laser driver',
+        units='C'
     ),
-    'precipitation_intensity': MetaData(
-        long_name='Precipitation intensity',
-        units='mm/h',
-        comment='Rain droplets only'
+    'I_mean_laser': MetaData(
+        long_name='Mean value of laser current',
+        units='mA'
+    ),
+    'V_control': MetaData(
+        long_name='Control voltage',
+        units='mV',
+        comment='Reference value: 4010+-5'
+    ),
+    'V_optical_output': MetaData(
+        long_name='Voltage of optical control output',
+        units='mV',
+    ),
+    'V_sensor_supply': MetaData(
+        long_name='Voltage of sensor supply',
+        units='V',
+    ),
+    'I_heating_laser_head': MetaData(
+        long_name='Laser head heating current',
+        units='mA',
+    ),
+    'I_heating_receiver_head': MetaData(
+        long_name='Receiver head heating current',
+        units='mA',
     ),
 }
