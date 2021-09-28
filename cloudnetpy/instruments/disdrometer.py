@@ -8,7 +8,7 @@ from cloudnetpy.instruments.vaisala import values_to_dict
 from cloudnetpy import CloudnetArray, utils
 
 
-PARSIVEL = 'OTT Parsivel-2 optical disdrometer'
+PARSIVEL = 'OTT Parsivel-2'
 THIES = 'Thies-LNM'
 
 
@@ -63,7 +63,7 @@ class Disdrometer:
         self.n_diameter = None
         self.n_velocity = None
         self.data = {}
-        self._file_contents, self._spectra, self._vectors = self._read_file()
+        self._file_data = self._read_file()
 
     def convert_units(self):
         mm_to_m = 1e3
@@ -82,7 +82,7 @@ class Disdrometer:
 
     def validate_date(self, expected_date: str) -> None:
         valid_ind = []
-        for ind, row in enumerate(self._file_contents):
+        for ind, row in enumerate(self._file_data['scalars']):
             if self.source == PARSIVEL:
                 date = '-'.join(_parse_parsivel_timestamp(row[0])[:3])
             else:
@@ -91,12 +91,17 @@ class Disdrometer:
                 valid_ind.append(ind)
         if not valid_ind:
             raise ValueError('No measurements from expected date')
-        self._file_contents = [self._file_contents[ind] for ind in valid_ind]
-        self._spectra = [self._spectra[ind] for ind in valid_ind]
+        for key, value in self._file_data.items():
+            if value:
+                self._file_data[key] = [self._file_data[key][ind] for ind in valid_ind]
         self.date = expected_date.split('-')
 
-    def _read_file(self) -> tuple:
-        scalars, vectors, spectra = [], [], []
+    def _read_file(self) -> dict:
+        data = {
+            'scalars': [],
+            'vectors': [],
+            'spectra': []
+        }
         with open(self.filename, encoding="utf8", errors="ignore") as file:
             for row in file:
                 if row == '\n':
@@ -107,17 +112,16 @@ class Disdrometer:
                         values.remove('\n')
                     if len(values) != 1106:
                         continue
-                    scalars.append(values[:18])
-                    vectors.append(values[18:18+64])
-                    spectra.append(values[18+64:])
+                    data['scalars'].append(values[:18])
+                    data['vectors'].append(values[18:18+64])
+                    data['spectra'].append(values[18+64:])
                 else:
                     values = row.split(';')
-                    scalars.append(values[:79])
-                    spectra.append(values[79:-2])
-
-        if len(scalars) == 0:
+                    data['scalars'].append(values[:79])
+                    data['spectra'].append(values[79:-2])
+        if len(data['scalars']) == 0:
             raise ValueError
-        return scalars, spectra, vectors
+        return data
 
     def _append_data(self, column_and_key: list) -> None:
         indices, keys = zip(*column_and_key)
@@ -134,7 +138,7 @@ class Disdrometer:
 
     def _parse_useful_data(self, indices: list) -> list:
         data = []
-        for row in self._file_contents:
+        for row in self._file_data['scalars']:
             useful_data = [row[ind] for ind in indices]
             data.append(useful_data)
         return data
@@ -160,14 +164,14 @@ class Disdrometer:
                     raise ValueError
 
     def _append_spectra(self):
-        array = ma.masked_all((len(self._file_contents), self.n_diameter, self.n_velocity))
-        for time_ind, row in enumerate(self._spectra):
+        array = ma.masked_all((len(self._file_data['scalars']), self.n_diameter, self.n_velocity))
+        for time_ind, row in enumerate(self._file_data['spectra']):
             values = _parse_int(row)
             array[time_ind, :, :] = np.reshape(values, (self.n_diameter, self.n_velocity))
         self.data['data_raw'] = CloudnetArray(array, 'data_raw', dimensions=('time', 'diameter',
                                                                              'velocity'))
 
-    def _store_vectors(self, n_values: list, spreads: list, start: float, name: str):
+    def _store_vectors(self, n_values: list, spreads: list, name: str, start: Optional[float] = 0):
         mid, bounds, spread = self._create_vectors(n_values, spreads, start)
         self.data[name] = CloudnetArray(mid, name, dimensions=(name,))
         key = f'{name}_spread'
@@ -225,8 +229,9 @@ class Parsivel(Disdrometer):
 
     def _append_vector_data(self):
         keys = ('number_concentration', 'fall_velocity')
-        data = {key: ma.masked_all((len(self._vectors), self.n_diameter)) for key in keys}
-        for time_ind, row in enumerate(self._vectors):
+        data = {key: ma.masked_all((len(self._file_data['vectors']), self.n_diameter))
+                for key in keys}
+        for time_ind, row in enumerate(self._file_data['vectors']):
             values = _parse_int(row)
             for key, array in zip(keys, np.split(values, 2)):
                 data[key][time_ind, :] = array
@@ -234,20 +239,18 @@ class Parsivel(Disdrometer):
             self.data[key] = CloudnetArray(data[key], key, dimensions=('time', 'diameter'))
 
     def _init_date(self) -> list:
-        timestamp = self._file_contents[0][0]
+        timestamp = self._file_data['scalars'][0][0]
         return _parse_parsivel_timestamp(timestamp)[:3]
 
     def _create_velocity_vectors(self):
         n_values = [10, 5, 5, 5, 5, 2]
         spreads = [0.1, 0.2, 0.4, 0.8, 1.6, 3.2]
-        start = 0
-        self._store_vectors(n_values, spreads, start, 'velocity')
+        self._store_vectors(n_values, spreads, 'velocity')
 
     def _create_diameter_vectors(self):
         n_values = [10, 5, 5, 5, 5, 2]
         spreads = [0.125, 0.25, 0.5, 1, 2, 3]
-        start = 0
-        self._store_vectors(n_values, spreads, start, 'diameter')
+        self._store_vectors(n_values, spreads, 'diameter')
 
 
 class Thies(Disdrometer):
@@ -277,21 +280,19 @@ class Thies(Disdrometer):
         self._append_spectra()
 
     def _init_date(self) -> list:
-        first_date = self._file_contents[0][3]
+        first_date = self._file_data['scalars'][0][3]
         first_date = _format_thies_date(first_date)
         return first_date.split('-')
 
     def _create_velocity_vectors(self):
         n_values = [5, 6, 7, 1, 1]
         spreads = [0.2, 0.4, 0.8, 1, 10]
-        start = 0
-        self._store_vectors(n_values, spreads, start, 'velocity')
+        self._store_vectors(n_values, spreads, 'velocity')
 
     def _create_diameter_vectors(self):
         n_values = [3, 6, 13]
         spreads = [0.125, 0.25, 0.5]
-        start = 0.125
-        self._store_vectors(n_values, spreads, start, 'diameter')
+        self._store_vectors(n_values, spreads, 'diameter', start=0.125)
 
 
 def save_disdrometer(disdrometer: Union[Parsivel, Thies],
