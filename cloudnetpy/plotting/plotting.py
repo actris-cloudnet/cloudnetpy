@@ -214,7 +214,7 @@ def _set_ax(ax, max_y: float, ylabel: str = None, min_y: float = 0.0):
     ax.set_xticklabels(ticks_x_labels, fontsize=12)
     ax.set_ylabel('Height (km)', fontsize=13)
     ax.set_xlim(0, 24)
-    if ylabel:
+    if ylabel is not None:
         ax.set_ylabel(ylabel, fontsize=13)
 
 
@@ -316,8 +316,23 @@ def _plot_instrument_data(ax, data: ndarray, name: str, product: str,
                           time: ndarray, unit: str):
     if product == 'mwr':
         _plot_mwr(ax, data, name, time, unit)
+    if product == 'disdrometer':
+        _plot_disdrometer(ax, data, time, name, unit)
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
+
+
+def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
+    if name == 'rainfall_rate':
+        if unit == 'm s-1':
+            data *= 1000 * 3600
+        ax.plot(time, data, color='royalblue')
+        ylim = max((np.max(data)*1.05, 0.1))
+        _set_ax(ax, ylim, 'mm h-1')
+    if name == 'n_particles':
+        ax.plot(time, data, color='royalblue')
+        ylim = max((np.max(data)*1.05, 1))
+        _set_ax(ax, ylim, '')
 
 
 def _plot_mwr(ax, data: ndarray, name: str, time: ndarray, unit: str):

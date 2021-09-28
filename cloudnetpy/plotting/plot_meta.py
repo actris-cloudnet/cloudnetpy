@@ -439,6 +439,16 @@ ATTRIBUTES = {
         plot_type='bar',
         source='mwr'
     ),
+    'rainfall_rate': PlotMeta(
+        name='Rainfall rate',
+        plot_type='bar',
+        source='disdrometer'
+    ),
+    'n_particles': PlotMeta(
+        name='Number of particles',
+        plot_type='bar',
+        source='disdrometer'
+    ),
     'target_classification': PlotMeta(
         name='Target classification',
         clabel=_CLABEL['target_classification'],
