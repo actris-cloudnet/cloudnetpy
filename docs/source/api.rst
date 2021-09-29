@@ -29,6 +29,8 @@ all supported instrument combinations.
 
 .. autofunction:: instruments.hatpro2nc
 
+.. autofunction:: instruments.disdrometer2nc
+
 
 The categorize file
 ...................

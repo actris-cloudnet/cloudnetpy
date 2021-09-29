@@ -18,7 +18,8 @@ def disdrometer2nc(disdrometer_file: str,
                    keep_uuid: Optional[bool] = False,
                    uuid: Optional[str] = None,
                    date: Optional[str] = None) -> str:
-    """Converts disdrometer data into Cloudnet Level 1b netCDF file.
+    """Converts disdrometer data into Cloudnet Level 1b netCDF file. Accepts measurements from
+    OTT Parsivel-2 and Thies-LNM disdrometers.
 
     Args:
         disdrometer_file: Filename of disdrometer .log file.
@@ -34,6 +35,11 @@ def disdrometer2nc(disdrometer_file: str,
 
     Raises:
         ValueError: Timestamps do not match the expected date, or unknown disdrometer model.
+
+    Examples:
+        >>> from cloudnetpy.instruments import disdrometer2nc
+        >>> site_meta = {'name': 'Lindenberg', 'altitude': 104, 'latitude': 52.2, 'longitude': 14.1}
+        >>> uuid = disdrometer2nc('thies-lnm.log', 'thies-lnm.nc', site_meta)
 
     """
     try:
@@ -215,6 +221,12 @@ class Parsivel(Disdrometer):
         self._create_diameter_vectors()
 
     def init_data(self):
+        """
+        Note:
+            This is a custom format submitted by Juelich, Norunda and Ny-Alesund to Cloudnet
+            data portal. It does not follow the order in the Parsivel2 manual
+            https://www.fondriest.com/pdf/ott_parsivel2_manual.pdf
+        """
         column_and_key = [
             (0, '_time'),
             (1, 'rainfall_rate'),
@@ -274,6 +286,7 @@ class Thies(Disdrometer):
         self._create_diameter_vectors()
 
     def init_data(self):
+        """According to https://www.biral.com/wp-content/uploads/2015/01/5.4110.xx_.xxx_.pdf"""
         column_and_key = [
             (1, '_serial_number'),
             (2, '_software_version'),
