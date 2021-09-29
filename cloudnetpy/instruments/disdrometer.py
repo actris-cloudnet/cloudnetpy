@@ -6,6 +6,7 @@ from cloudnetpy import output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.vaisala import values_to_dict
 from cloudnetpy import CloudnetArray, utils
+from cloudnetpy.exceptions import DisdrometerDataError
 
 
 PARSIVEL = 'OTT Parsivel-2'
@@ -34,7 +35,8 @@ def disdrometer2nc(disdrometer_file: str,
         UUID of the generated file.
 
     Raises:
-        ValueError: Timestamps do not match the expected date, or unknown disdrometer model.
+        DisdrometerDataError: Timestamps do not match the expected date, or unable to read
+            the disdrometer file.
 
     Examples:
         >>> from cloudnetpy.instruments import disdrometer2nc
@@ -47,8 +49,8 @@ def disdrometer2nc(disdrometer_file: str,
     except ValueError:
         try:
             disdrometer = Thies(disdrometer_file, site_meta)
-        except IndexError:
-            raise ValueError('Can not read disdrometer file')
+        except (ValueError, IndexError):
+            raise DisdrometerDataError('Can not read disdrometer file')
     if date is not None:
         disdrometer.validate_date(date)
     disdrometer.init_data()
