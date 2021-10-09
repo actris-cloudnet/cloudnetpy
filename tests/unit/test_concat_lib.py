@@ -20,7 +20,8 @@ class TestUpdateNc:
     def run_before_and_after_tests(self):
         self.filename = 'dummy_test_file.nc'
         yield
-        os.remove(self.filename)
+        if os.path.isfile(self.filename):
+            os.remove(self.filename)
 
     def test_does_append_to_end(self):
         concat_lib.concatenate_files(self.files[:2], self.filename, concat_dimension='profile')
@@ -52,6 +53,13 @@ class TestUpdateNc:
         assert len(time) == 2 * 12
         for ind, timestamp in enumerate(time[:-1]):
             assert timestamp < time[ind+1]
+
+    def test_does_not_append_with_invalid_file(self):
+        non_nc_file = f'{SCRIPT_PATH}/data/vaisala/cl51.DAT'
+        files = [self.files[0], self.files[2]]
+        concat_lib.concatenate_files(files, self.filename, concat_dimension='profile')
+        succ = concat_lib.update_nc(self.filename, non_nc_file)
+        assert succ == 0
 
 
 class TestConcat:

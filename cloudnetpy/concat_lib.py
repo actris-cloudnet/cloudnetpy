@@ -21,8 +21,11 @@ def update_nc(old_file: str, new_file: str) -> int:
 
     """
     success = 0
+    try:
+        nc_new = netCDF4.Dataset(new_file)
+    except OSError:
+        return 0
     nc_old = netCDF4.Dataset(old_file, 'a')
-    nc_new = netCDF4.Dataset(new_file)
     valid_ind = _find_valid_time_indices(nc_old, nc_new)
     if len(valid_ind) > 0:
         _update_fields(nc_old, nc_new, valid_ind)
