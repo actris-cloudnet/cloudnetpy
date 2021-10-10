@@ -63,6 +63,9 @@ def test_mdiff(input, output):
 ])
 def test_l2_norm(a, b, result):
     assert_array_almost_equal(utils.l2norm(a, b), result)
+    for arg in [a, b]:
+        if isinstance(arg, ma.MaskedArray):
+            arg[~arg.mask] = np.sqrt(arg[~arg.mask])
 
 
 class TestRebin2D:
