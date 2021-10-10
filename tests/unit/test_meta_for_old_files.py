@@ -16,7 +16,13 @@ def test_fix_old_data():
 
 
 def test_fix_old_data_2():
+    global data_orig
     data, name = legacy_meta.fix_legacy_data(data_orig, 'detection_status')
     assert_array_equal(data_orig, data)
     assert ma.count(data) == 7
+
+    # Reset data_orig
+    data_orig = ma.array([[0, 1, 2],
+                          [3, 4, 5],
+                          [6, 7, 8]])
 
