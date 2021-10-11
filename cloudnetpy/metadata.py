@@ -111,4 +111,13 @@ COMMON_ATTRIBUTES = {
         long_name='Rain rate',
         units='mm h-1',
     ),
+    'beta': MetaData(
+        long_name='Attenuated backscatter coefficient',
+        units='sr-1 m-1',
+        comment='Range corrected, SNR screened, attenuated backscatter.'
+    ),
+    'wavelength': MetaData(
+        long_name='Laser wavelength',
+        units='nm',
+    )
 }
