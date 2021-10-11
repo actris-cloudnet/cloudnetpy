@@ -755,3 +755,65 @@ def get_epoch(units: str) -> tuple:
     if (1900 < year <= current_year) and (0 < month < 13) and (0 < day < 32):
         return tuple(date_components)
     return fallback
+
+
+def screen_by_time(data_in: dict, epoch: tuple, expected_date: str) -> dict:
+    """"Screen data by time.
+
+    Args:
+        data_in: Dictionary containing at least 'time' key and other numpy arrays.
+        epoch: Epoch of the time array, e.g., (1970, 1, 1)
+        expected_date: Expected date in yyyy-mm-dd
+
+    Returns:
+        data: Screened and sorted by the time vector.
+
+    Notes:
+        - Requires 'time' key
+        - Works for dimensions 1, 2, 3 (time has to be at 0-axis)
+        - Does nothing for scalars
+
+    """
+    data = data_in.copy()
+    valid_ind = find_valid_time_indices(data['time'], epoch, expected_date)
+    n_time = len(data['time'])
+    for key, array in data.items():
+        if array.ndim > 0 and array.shape[0] == n_time:
+            if array.ndim == 1:
+                data[key] = data[key][valid_ind]
+            if array.ndim == 2:
+                data[key] = data[key][valid_ind, :]
+            if array.ndim == 3:
+                data[key] = data[key][valid_ind, :, :]
+    return data
+
+
+def find_valid_time_indices(time: np.array, epoch: tuple, expected_date: str) -> list:
+    """Find valid time array indices for the given date.
+
+    Args:
+        time: Time in seconds from some epoch.
+        epoch: Epoch of the time array, e.g., (1970, 1, 1)
+        expected_date: Expected date in yyyy-mm-dd
+
+    Returns:
+        list: Valid indices for the given date in sorted order.
+
+    Raises:
+        RuntimeError: No valid timestamps.
+
+    Examples:
+        >>> time = [1, 5, 1e6, 3]
+        >>> find_valid_time_indices(time, (1970, 1, 1) '1970-01-01')
+            [0, 3, 2]
+
+    """
+    ind_sorted = np.argsort(time)
+    ind_valid = []
+    for ind, t in zip(ind_sorted, time):
+        date_str = '-'.join(seconds2date(t, epoch=epoch)[:3])
+        if date_str == expected_date:
+            ind_valid.append(ind)
+    if not ind_valid:
+        raise RuntimeError('No valid time indices')
+    return ind_valid

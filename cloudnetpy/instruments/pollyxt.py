@@ -35,9 +35,10 @@ def pollyxt2nc(input_folder: str,
         UUID of the generated file.
 
     """
-    polly = PollyXt(site_meta)
+    polly = PollyXt(site_meta, date)
     polly.fetch_data(input_folder)
-    polly.check_time(date)
+    polly.handle_time()
+    polly.prepare_data()
     attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
     return _save_pollyxt(polly, output_file, keep_uuid, uuid)
@@ -47,17 +48,17 @@ class PollyXt:
 
     wavelength = 1064
 
-    def __init__(self, site_metadata: dict):
+    def __init__(self, site_metadata: dict, expected_date: Union[str, None]):
         self.site_metadata = site_metadata
+        self.expected_date = expected_date
         self.source = 'PollyXT Raman Lidar'
         self.data = {}
-        self.date = None
         self.tilt_angle = site_metadata.get('tilt_angle', 5)
-
-    def check_time(self, date: str):
-        self.date = date.split('-')
+        self._epoch = None
+        self.date = None
 
     def fetch_data(self, input_folder: str):
+        """Read input data."""
         bsc_files = [file for file in glob.glob(f'{input_folder}/*[0-9]_att*.nc')]
         depol_files = [file for file in glob.glob(f'{input_folder}/*[0-9]_vol*.nc')]
         bsc_files.sort()
@@ -68,17 +69,14 @@ class PollyXt:
         if len(bsc_files) != len(depol_files):
             logging.info('Inconsistent number of pollyxt bsc / depol files')
             return
-
         self.data['range'] = _read_array_from_multiple_files(bsc_files, depol_files, 'height')
-        self.data['height'] = self.data['range'] * np.cos(np.radians(self.tilt_angle))
-        self.data['wavelength'] = self.wavelength
-
         calibration_factors = []
         bsc_key = 'attenuated_backscatter_1064nm'
         depol_key = 'volume_depolarization_ratio_532nm'
         for ind, (bsc_file, depol_file) in enumerate(zip(bsc_files, depol_files)):
             nc_bsc = netCDF4.Dataset(bsc_file, 'r')
             nc_depol = netCDF4.Dataset(depol_file, 'r')
+            self._epoch = utils.get_epoch(nc_bsc['time'].unit)
             try:
                 time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, 'time'))
             except AssertionError:
@@ -91,8 +89,12 @@ class PollyXt:
                 self._append_data(array, key)
             calibration_factors.append(nc_bsc.variables[bsc_key].Lidar_calibration_constant_used)
             _close(nc_bsc, nc_depol)
-
         self.data['calibration_factor'] = np.mean(calibration_factors)
+
+    def prepare_data(self):
+        """Add some additional data / metadata and convert into CloudnetArrays."""
+        self.data['height'] = self.data['range'] * np.cos(np.radians(self.tilt_angle))
+        self.data['wavelength'] = self.wavelength
         for key in self.data.keys():
             self.data[key] = CloudnetArray(self.data[key], name=key)
 
@@ -100,7 +102,13 @@ class PollyXt:
         if key not in self.data:
             self.data[key] = array
         else:
-            self.data[key] = ma.concatenate((self.data[key], array), axis=0)
+            self.data[key] = ma.concatenate((self.data[key], array))
+
+    def handle_time(self):
+        if self.expected_date is not None:
+            self.data = utils.screen_by_time(self.data, self._epoch, self.expected_date)
+        self.date = utils.seconds2date(self.data['time'][0], epoch=self._epoch)[:3]
+        self.data['time'] = utils.seconds2hours(self.data['time'])
 
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.array:
@@ -163,5 +171,3 @@ ATTRIBUTES = {
     ),
 
 }
-
-
