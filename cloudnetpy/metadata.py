@@ -119,5 +119,9 @@ COMMON_ATTRIBUTES = {
     'wavelength': MetaData(
         long_name='Laser wavelength',
         units='nm',
-    )
+    ),
+    'tilt_angle': MetaData(
+        long_name='Tilt angle from the zenith',
+        units='degrees',
+    ),
 }
