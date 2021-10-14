@@ -6,10 +6,10 @@ import netCDF4
 import numpy as np
 import numpy.ma as ma
 from numpy.testing import assert_array_equal
-from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy import output
 from cloudnetpy import utils
+from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
 
 
 def pollyxt2nc(input_folder: str,
@@ -23,9 +23,9 @@ def pollyxt2nc(input_folder: str,
     Args:
         input_folder: Filename of pollyxt file.
         output_file: Output filename.
-        site_meta: Dictionary containing information about the site. Required key is `name`.
-            If the tilt angle of the instrument is NOT 5 degrees, it should be provided like this:
-            {'tilt_angle': 6}.
+        site_meta: Dictionary containing information about the site. Required keys are `name` and
+            `altitude`. If the tilt angle of the instrument is NOT 5 degrees, it should be
+            provided like this: {'tilt_angle': 6}.
         keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
             when new UUID is generated.
         uuid: Set specific UUID for the file.
@@ -37,27 +37,37 @@ def pollyxt2nc(input_folder: str,
     """
     polly = PollyXt(site_meta, date)
     polly.fetch_data(input_folder)
-    polly.handle_time()
-    polly.prepare_data()
-    attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
+    polly.get_date_and_time(polly.epoch)
+    polly.fetch_tilt_angle()
+    for key in ('depolarisation', 'beta'):
+        polly.data[key] = polly.calc_screened_product(polly.data[f'{key}_raw'])
+    polly.data['beta_smooth'] = polly.calc_beta_smooth()
+    polly.prepare_data(site_meta)
+    polly.remove_raw_data()
+    polly.prepare_metadata()
+    polly.data_to_cloudnet_arrays()
+    attributes = output.add_time_attribute(ATTRIBUTES, polly.metadata['date'])
     output.update_attributes(polly.data, attributes)
     return _save_pollyxt(polly, output_file, keep_uuid, uuid)
 
 
-class PollyXt:
+class PollyXt(Ceilometer):
 
-    wavelength = 1064
+    noise_param = NoiseParam(n_gates=500)
 
-    def __init__(self, site_metadata: dict, expected_date: Union[str, None]):
-        self.site_metadata = site_metadata
+    def __init__(self, site_meta: dict, expected_date: Optional[str] = None):
+        super().__init__(self.noise_param)
+        self.metadata = site_meta
         self.expected_date = expected_date
-        self.source = 'PollyXT Raman Lidar'
-        self.data = {}
-        self.tilt_angle = site_metadata.get('tilt_angle', 5)
-        self._epoch = None
-        self.date = None
+        self.model = 'PollyXT Raman Lidar'
+        self.wavelength = 1064
+        self.epoch = None
 
-    def fetch_data(self, input_folder: str):
+    def fetch_tilt_angle(self) -> None:
+        default = 5
+        self.data['tilt_angle'] = self.metadata.get('tilt_angle', default)
+
+    def fetch_data(self, input_folder: str) -> None:
         """Read input data."""
         bsc_files = [file for file in glob.glob(f'{input_folder}/*[0-9]_att*.nc')]
         depol_files = [file for file in glob.glob(f'{input_folder}/*[0-9]_vol*.nc')]
@@ -76,39 +86,25 @@ class PollyXt:
         for ind, (bsc_file, depol_file) in enumerate(zip(bsc_files, depol_files)):
             nc_bsc = netCDF4.Dataset(bsc_file, 'r')
             nc_depol = netCDF4.Dataset(depol_file, 'r')
-            self._epoch = utils.get_epoch(nc_bsc['time'].unit)
+            self.epoch = utils.get_epoch(nc_bsc['time'].unit)
             try:
                 time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, 'time'))
             except AssertionError:
                 _close(nc_bsc, nc_depol)
                 continue
-            quality_mask = nc_bsc.variables['quality_mask_1064nm'][:]
-            beta = ma.masked_where(quality_mask != 0, nc_bsc.variables[bsc_key][:])
-            vol_depol = ma.masked_where(quality_mask != 0, nc_depol.variables[depol_key][:])
-            for array, key in zip([beta, vol_depol, time], ['beta', 'vol_depol', 'time']):
-                self._append_data(array, key)
+            beta_raw = nc_bsc.variables[bsc_key][:]
+            depol_raw = nc_depol.variables[depol_key][:]
+            for array, key in zip([beta_raw, depol_raw, time], ['beta_raw', 'depolarisation_raw',
+                                                                'time']):
+                self.data = utils.append_data(self.data, key, array)
             calibration_factors.append(nc_bsc.variables[bsc_key].Lidar_calibration_constant_used)
             _close(nc_bsc, nc_depol)
         self.data['calibration_factor'] = np.mean(calibration_factors)
 
-    def prepare_data(self):
-        """Add some additional data / metadata and convert into CloudnetArrays."""
-        self.data['height'] = self.data['range'] * np.cos(np.radians(self.tilt_angle))
-        self.data['wavelength'] = self.wavelength
-        for key in self.data.keys():
-            self.data[key] = CloudnetArray(self.data[key], name=key)
-
-    def _append_data(self, array: np.array, key: str) -> None:
-        if key not in self.data:
-            self.data[key] = array
-        else:
-            self.data[key] = ma.concatenate((self.data[key], array))
-
-    def handle_time(self):
-        if self.expected_date is not None:
-            self.data = utils.screen_by_time(self.data, self._epoch, self.expected_date)
-        self.date = utils.seconds2date(self.data['time'][0], epoch=self._epoch)[:3]
-        self.data['time'] = utils.seconds2hours(self.data['time'])
+    def screen_depol(self):
+        key = 'depolarisation'
+        self.data[key][self.data[key] <= 0] = ma.masked
+        self.data[key][self.data[key] > 1] = ma.masked
 
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.array:
@@ -149,25 +145,25 @@ def _save_pollyxt(polly: PollyXt,
     rootgrp = output.init_file(output_file, dims, polly.data, keep_uuid, uuid)
     file_uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, file_type)
-    rootgrp.title = f"{file_type.capitalize()} file from {polly.site_metadata['name']}"
-    rootgrp.year, rootgrp.month, rootgrp.day = polly.date
-    rootgrp.location = polly.site_metadata['name']
+    rootgrp.title = f"{file_type.capitalize()} file from {polly.metadata['name']}"
+    rootgrp.year, rootgrp.month, rootgrp.day = polly.metadata['date']
+    rootgrp.location = polly.metadata['name']
     rootgrp.history = f"{utils.get_time()} - {file_type} file created"
-    rootgrp.source = polly.source
+    rootgrp.source = polly.metadata['source']
     output.add_references(rootgrp)
     rootgrp.close()
     return file_uuid
 
 
 ATTRIBUTES = {
-    'vol_depol': MetaData(
-        long_name='Volume depolarisation ratio at 532 nm',
-        units='',
+    'depolarisation': MetaData(
+        long_name='Lidar depolarisation',
+        units='%',
+        comment='SNR screened lidar depolarisation at 532 nm'
     ),
     'calibration_factor': MetaData(
         long_name='Backscatter calibration factor',
         comment='Mean value of the day',
         units='',
     ),
-
 }

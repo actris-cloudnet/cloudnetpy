@@ -19,6 +19,9 @@ def fake_jenoptik_file(tmpdir):
     var = root_grp.createVariable('range', 'f8', 'range')
     var[:] = np.array([2000, 3000, 4000, 5000])
     var.units = 'm'
+    var = root_grp.createVariable('beta_raw', 'f8', ('time', 'range'))
+    var[:] = np.random.rand(5, 4)
+    var.units = 'sr-1 m-1'
     root_grp.createVariable('zenith', 'f8')[:] = 2
     root_grp.year = '2021'
     root_grp.month = '2'
@@ -35,25 +38,22 @@ class TestCHM15k:
     def init_tests(self, fake_jenoptik_file):
         self.file = fake_jenoptik_file
         self.obj = lufft.LufftCeilo(fake_jenoptik_file, self.date)
-        self.obj.backscatter = np.random.rand(5, 4)
+        self.obj.read_ceilometer_file()
 
     def test_calc_range(self):
-        assert_array_equal(self.obj._calc_range(), [1500, 2500, 3500, 4500])
+        assert_array_equal(self.obj.data['range'], [1500, 2500, 3500, 4500])
 
     def test_convert_time(self):
-        self.obj.backscatter = np.random.rand(5, 4)
-        time = self.obj._fetch_time()
-        assert len(time) == 4
-        assert all(np.diff(time) > 0)
+        assert len(self.obj.data['time']) == 4
+        assert all(np.diff(self.obj.data['time']) > 0)
 
     def test_read_date(self):
-        assert_array_equal(self.obj._read_date(), self.date.split('-'))
+        assert_array_equal(self.obj.metadata['date'], self.date.split('-'))
 
     def test_read_metadata(self):
-        assert self.obj._read_metadata()['tilt_angle'] == 2
+        assert self.obj.data['tilt_angle'] == 2
 
     def test_convert_time_error(self):
-        obj = lufft.LufftCeilo(self.file, '2022-01-01')
-        obj.backscatter = np.random.rand(5, 4)
+        obj = lufft.LufftCeilo(self.file, '2122-01-01')
         with pytest.raises(ValueError):
-            obj._fetch_time()
+            obj.read_ceilometer_file()

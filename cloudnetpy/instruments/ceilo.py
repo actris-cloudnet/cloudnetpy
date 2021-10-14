@@ -1,10 +1,10 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
 import linecache
 from typing import Union, Optional
-import logging
 import numpy as np
 import netCDF4
-from cloudnetpy.instruments.lufft import LufftCeilo, Cl61d
+from cloudnetpy.instruments.lufft import LufftCeilo
+from cloudnetpy.instruments.cl61d import Cl61d
 from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
@@ -60,16 +60,17 @@ def ceilo2nc(full_path: str,
 
     """
     ceilo_obj = _initialize_ceilo(full_path, date)
-    logging.debug('reading daily file')
-    ceilo_obj.read_ceilometer_file(site_meta.get('calibration_factor', None))
+    calibration_factor = site_meta.get('calibration_factor', None)
+    ceilo_obj.read_ceilometer_file(calibration_factor)
+    ceilo_obj.data['beta'] = ceilo_obj.calc_screened_product(ceilo_obj.data['beta_raw'])
+    ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(snr_limit=4)
     if 'cl61' in ceilo_obj.model.lower():
-        depol_variants = ceilo_obj.calc_depol()
-    else:
-        depol_variants = None
-    beta_variants = ceilo_obj.calc_beta()
-    _append_data(ceilo_obj, beta_variants, depol_variants)
-    _append_height(ceilo_obj, site_meta['altitude'])
-    attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.date)
+        ceilo_obj.data['depolarisation'], ceilo_obj.data['depolarisation_smooth'] = ceilo_obj.calc_depol()
+        ceilo_obj.remove_raw_data()
+    ceilo_obj.prepare_data(site_meta)
+    ceilo_obj.prepare_metadata()
+    ceilo_obj.data_to_cloudnet_arrays()
+    attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.metadata['date'])
     output.update_attributes(ceilo_obj.data, attributes)
     return _save_ceilo(ceilo_obj, output_file, site_meta['name'], keep_uuid, uuid)
 
@@ -120,37 +121,18 @@ def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
     ceilo.data['altitude'] = CloudnetArray(site_altitude, 'altitude')
 
 
-def _append_data(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
-                 beta_variants: tuple,
-                 depol_variants: Optional[tuple] = None):
-    """Adds data / metadata as CloudnetArrays to ceilo.data."""
-    for data, name in zip(beta_variants, ('beta_raw', 'beta', 'beta_smooth')):
-        ceilo.data[name] = CloudnetArray(data, name)
-    if depol_variants is not None:
-        for data, name in zip(depol_variants, ('depolarisation', 'depolarisation_smooth')):
-            ceilo.data[name] = CloudnetArray(data, name)
-        del ceilo.data['beta_raw']
-    for field in ('range', 'time', 'wavelength', 'calibration_factor'):
-        ceilo.data[field] = CloudnetArray(np.array(getattr(ceilo, field)), field)
-    for field, data in ceilo.metadata.items():
-        first_element = data if utils.isscalar(data) else data[0]
-        if not isinstance(first_element, str):  # String array writing not yet supported
-            ceilo.data[field] = CloudnetArray(np.array(ceilo.metadata[field], dtype=float), field)
-
-
 def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
                 output_file: str,
                 location: str,
                 keep_uuid: bool,
                 uuid: Union[str, None]) -> str:
     """Saves the ceilometer netcdf-file."""
-    dims = {'time': len(ceilo.time),
-            'range': len(ceilo.range)}
+    dims = {key: len(ceilo.data[key][:]) for key in ('time', 'range')}
     rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'lidar')
     rootgrp.title = f"Ceilometer file from {location}"
-    rootgrp.year, rootgrp.month, rootgrp.day = ceilo.date
+    rootgrp.year, rootgrp.month, rootgrp.day = ceilo.metadata['date']
     rootgrp.location = location
     rootgrp.history = f"{utils.get_time()} - ceilometer file created"
     rootgrp.source = ceilo.model
@@ -160,30 +142,10 @@ def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
 
 
 ATTRIBUTES = {
-    'beta': MetaData(
-        long_name='Attenuated backscatter coefficient',
-        units='sr-1 m-1',
-        comment='Range corrected, SNR screened, attenuated backscatter.'
-    ),
-    'beta_raw': MetaData(
-        long_name='Raw attenuated backscatter coefficient',
-        units='sr-1 m-1',
-        comment="Range corrected, attenuated backscatter."
-    ),
-    'beta_smooth': MetaData(
-        long_name='Smoothed attenuated backscatter coefficient',
-        units='sr-1 m-1',
-        comment=('Range corrected, SNR screened backscatter coefficient.\n'
-                 'Weak background is smoothed using Gaussian 2D-kernel.')
-    ),
     'depolarisation': MetaData(
-        long_name='Depolarisation',
+        long_name='Lidar depolarisation',
         units='%',
         comment='SNR screened lidar depolarisation'
-    ),
-    'depolarisation_raw': MetaData(
-        long_name='Raw depolarisation',
-        units='%',
     ),
     'depolarisation_smooth': MetaData(
         long_name='Smoothed lidar depolarisation',
@@ -287,8 +249,4 @@ ATTRIBUTES = {
         long_name='Backscatter calibration factor',
         units='',
     ),
-    'wavelength': MetaData(
-        long_name='Laser wavelength',
-        units='nm',
-    )
 }

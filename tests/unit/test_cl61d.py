@@ -13,7 +13,9 @@ class TestCl61d:
     site_meta = {
         'name': 'Hyytiälä',
         'altitude': 123,
-        'calibration_factor': 2.0
+        'calibration_factor': 2.0,
+        'latitude': 45.0,
+        'longitude': 22.0
     }
     files = glob.glob(f'{SCRIPT_PATH}/data/cl61d/*.nc')
     files.sort()
@@ -34,7 +36,8 @@ class TestCl61d:
             assert key in nc.variables
         for key in ('beta_raw', 'depolarisation_raw'):
             assert key not in nc.variables
-        for key in ('altitude', 'calibration_factor'):
+        for key in ('altitude', 'calibration_factor', 'latitude', 'longitude'):
+            print(key, nc.variables[key][:], type(nc.variables[key][:]))
             assert nc.variables[key][:] == self.site_meta[key]
         nc.close()
 
