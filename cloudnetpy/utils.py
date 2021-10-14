@@ -778,7 +778,9 @@ def screen_by_time(data_in: dict, epoch: tuple, expected_date: str) -> dict:
     valid_ind = find_valid_time_indices(data['time'], epoch, expected_date)
     n_time = len(data['time'])
     for key, array in data.items():
-        if array.ndim > 0 and array.shape[0] == n_time:
+        if isinstance(array, list) and len(array) > 1:
+            raise ValueError
+        if isinstance(array, np.ndarray) and array.ndim > 0 and array.shape[0] == n_time:
             if array.ndim == 1:
                 data[key] = data[key][valid_ind]
             if array.ndim == 2:
@@ -788,8 +790,8 @@ def screen_by_time(data_in: dict, epoch: tuple, expected_date: str) -> dict:
     return data
 
 
-def find_valid_time_indices(time: np.array, epoch: tuple, expected_date: str) -> list:
-    """Find valid time array indices for the given date.
+def find_valid_time_indices(time: np.ndarray, epoch: tuple, expected_date: str) -> list:
+    """Finds valid time array indices for the given date.
 
     Args:
         time: Time in seconds from some epoch.
@@ -810,10 +812,48 @@ def find_valid_time_indices(time: np.array, epoch: tuple, expected_date: str) ->
     """
     ind_sorted = np.argsort(time)
     ind_valid = []
-    for ind, t in zip(ind_sorted, time):
-        date_str = '-'.join(seconds2date(t, epoch=epoch)[:3])
+    for ind in ind_sorted:
+        date_str = '-'.join(seconds2date(time[ind], epoch=epoch)[:3])
         if date_str == expected_date:
             ind_valid.append(ind)
     if not ind_valid:
-        raise RuntimeError('No valid time indices')
+        raise ValueError('No valid time indices')
     return ind_valid
+
+
+def append_data(data_in: dict, key: str, array: np.ndarray) -> dict:
+    """Appends data to a dictionary field (creates the field if not yet present).
+
+    Args:
+        data_in: Dictionary where data will be appended.
+        key: Key of the field.
+        array: Numpy array to be appended to data_in[key].
+
+    """
+    data = data_in.copy()
+    if key not in data:
+        data[key] = array
+    else:
+        data[key] = ma.concatenate((data[key], array))
+    return data
+
+
+def edges2mid(data: np.ndarray, reference: str) -> np.ndarray:
+    """Shifts values half bin towards up or down.
+
+    Args:
+        data: 1D numpy array (e.g. range)
+        reference: If 'lower', increase values by half bin. If 'upper', decrease values.
+
+    Returns:
+        Shifted values.
+
+    """
+    if reference not in ('lower', 'upper'):
+        raise ValueError
+    gaps = (data[1:] - data[0:-1]) / 2
+    if reference == 'lower':
+        gaps = np.append(gaps, gaps[-1])
+        return data + gaps
+    gaps = np.insert(gaps, 0, gaps[0])
+    return data - gaps

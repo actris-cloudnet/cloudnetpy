@@ -516,3 +516,11 @@ def test_fetch_cloudnet_model_types():
     model_types = utils.fetch_cloudnet_model_types()
     for model_type in ('icon', 'harmonie', 'ecmwf', 'era5'):
         assert model_type in model_types
+
+
+@pytest.mark.parametrize("data, reference, expected", [
+    (np.array([0, 1, 2, 4, 6]), 'lower', np.array([0.5, 1.5, 3, 5, 7])),
+    (np.array([2, 4, 8, 10]), 'upper', np.array([1, 3, 6, 9]))
+])
+def test_edges2mid(data, reference, expected):
+    assert_array_equal(utils.edges2mid(data, reference), expected)
