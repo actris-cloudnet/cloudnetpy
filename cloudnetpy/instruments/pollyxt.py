@@ -42,6 +42,7 @@ def pollyxt2nc(input_folder: str,
     for key in ('depolarisation', 'beta'):
         polly.data[key] = polly.calc_screened_product(polly.data[f'{key}_raw'])
     polly.data['beta_smooth'] = polly.calc_beta_smooth()
+    polly.screen_depol()
     polly.prepare_data(site_meta)
     polly.remove_raw_data()
     polly.prepare_metadata()
@@ -107,7 +108,7 @@ class PollyXt(Ceilometer):
         self.data[key][self.data[key] > 1] = ma.masked
 
 
-def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.array:
+def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
     array = np.array([])
     for ind, (file1, file2) in enumerate(zip(files1, files2)):
         nc1 = netCDF4.Dataset(file1, 'r')
@@ -122,7 +123,7 @@ def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.array
 
 def _read_array_from_file_pair(nc_file1: netCDF4.Dataset,
                                nc_file2: netCDF4.Dataset,
-                               key: str) -> np.array:
+                               key: str) -> np.ndarray:
     array1 = nc_file1.variables[key][:]
     array2 = nc_file2.variables[key][:]
     assert_array_equal(array1, array2)
@@ -158,7 +159,7 @@ def _save_pollyxt(polly: PollyXt,
 ATTRIBUTES = {
     'depolarisation': MetaData(
         long_name='Lidar depolarisation',
-        units='%',
+        units='',
         comment='SNR screened lidar depolarisation at 532 nm'
     ),
     'calibration_factor': MetaData(

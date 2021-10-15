@@ -116,6 +116,12 @@ COMMON_ATTRIBUTES = {
         units='sr-1 m-1',
         comment='Range corrected, SNR screened, attenuated backscatter.'
     ),
+    'beta_smooth': MetaData(
+        long_name='Attenuated backscatter coefficient (',
+        units='sr-1 m-1',
+        comment='Range corrected, SNR screened, attenuated backscatter.\n'
+                'Weak background is smoothed using Gaussian 2D-kernel.'
+    ),
     'wavelength': MetaData(
         long_name='Laser wavelength',
         units='nm',
