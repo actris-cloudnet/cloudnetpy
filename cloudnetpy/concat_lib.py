@@ -208,10 +208,11 @@ def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int):
                 var[:] = array[:n_profiles]
             if array.ndim == 2:
                 var[:] = array[:n_profiles, :]
+        else:
+            var[:] = array
         for attr in nc.variables[key].ncattrs():
             if attr != '_FillValue':
                 value = getattr(nc.variables[key], attr)
                 setattr(var, attr, value)
-
     nc.close()
     nc_new.close()
