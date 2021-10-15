@@ -132,7 +132,7 @@ def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
     rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, 'lidar')
-    rootgrp.title = f"Ceilometer file from {location}"
+    rootgrp.title = f"Lidar file from {location}"
     rootgrp.year, rootgrp.month, rootgrp.day = ceilo.metadata['date']
     rootgrp.location = location
     rootgrp.history = f"{utils.get_time()} - ceilometer file created"

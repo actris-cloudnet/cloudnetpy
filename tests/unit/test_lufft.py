@@ -1,9 +1,14 @@
 """ This module contains unit tests for ceilo-module. """
-from cloudnetpy.instruments import lufft
+from cloudnetpy.instruments import lufft, ceilo2nc
 import pytest
 import numpy as np
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 import netCDF4
+import os
+import glob
+from cloudnetpy import concat_lib
+
+SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 @pytest.fixture
@@ -57,3 +62,69 @@ class TestCHM15k:
         obj = lufft.LufftCeilo(self.file, '2122-01-01')
         with pytest.raises(ValueError):
             obj.read_ceilometer_file()
+
+
+class TestWithRealData:
+
+    site_meta = {
+        'name': 'Bucharest',
+        'altitude': 123,
+        'latitude': 45.0,
+        'longitude': 22.0
+    }
+    files = glob.glob(f'{SCRIPT_PATH}/data/chm15k/*.nc')
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.output = 'dummy_output_file.nc'
+        self.filename = 'dummy_daily_file.nc'
+        concat_lib.concatenate_files(self.files, self.filename)
+        yield
+        os.remove(self.filename)
+        os.remove(self.output)
+
+    def test_variables(self):
+        ceilo2nc(self.filename, self.output, self.site_meta)
+        nc = netCDF4.Dataset(self.output)
+        for key in ('beta', 'beta_smooth', 'calibration_factor', 'range', 'height', 'tilt_angle',
+                    'time', 'beta_raw'):
+            assert key in nc.variables
+        for key in ('depolarisation_raw', 'depolarisation'):
+            assert key not in nc.variables
+        for key in ('altitude', 'latitude', 'longitude'):
+            assert nc.variables[key][:] == self.site_meta[key]
+        assert nc.variables['wavelength'][:] == 1064
+        assert nc.variables['tilt_angle'][:] == 0
+        assert nc.variables['tilt_angle'].units == 'degrees'
+        assert np.all((nc.variables['height'][:] - nc.variables['range'][:]) > 0)
+        assert_array_almost_equal(nc.variables['height'][:] - self.site_meta['altitude'],
+                                  nc.variables['range'][:], decimal=3)
+        assert np.all(np.diff(nc.variables['time'][:]) > 0)
+        assert nc.variables['beta'].units == 'sr-1 m-1'
+        assert nc.variables['beta_smooth'].units == 'sr-1 m-1'
+        nc.close()
+
+    def test_global_attributes(self):
+        uuid = ceilo2nc(self.filename, self.output, self.site_meta)
+        nc = netCDF4.Dataset(self.output)
+        assert nc.source == 'Lufft CHM15k ceilometer'
+        assert nc.location == self.site_meta['name']
+        assert nc.title == f'Lidar file from {self.site_meta["name"]}'
+        assert nc.file_uuid == uuid
+        assert nc.cloudnet_file_type == 'lidar'
+        assert nc.year == '2020'
+        assert nc.month == '10'
+        assert nc.day == '22'
+        nc.close()
+
+    def test_date_argument(self):
+        ceilo2nc(self.filename, self.output, self.site_meta, date='2020-10-22')
+        nc = netCDF4.Dataset(self.output)
+        assert len(nc.variables['time']) == 20
+        assert nc.year == '2020'
+        assert nc.month == '10'
+        assert nc.day == '22'
+        nc.close()
+        with pytest.raises(ValueError):
+            ceilo2nc(self.filename, self.output, self.site_meta, date='2020-10-23')
+

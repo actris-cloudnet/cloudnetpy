@@ -58,9 +58,9 @@ class TestCl61d:
     def test_global_attributes(self):
         uuid = ceilo2nc(self.filename, self.output, self.site_meta)
         nc = netCDF4.Dataset(self.output)
-        assert nc.source == 'Vaisala CL61d'
+        assert nc.source == 'Vaisala CL61d ceilometer'
         assert nc.location == self.site_meta['name']
-        assert nc.title == f'Ceilometer file from {self.site_meta["name"]}'
+        assert nc.title == f'Lidar file from {self.site_meta["name"]}'
         assert nc.file_uuid == uuid
         assert nc.cloudnet_file_type == 'lidar'
         nc.close()

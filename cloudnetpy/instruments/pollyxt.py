@@ -60,7 +60,7 @@ class PollyXt(Ceilometer):
         super().__init__(self.noise_param)
         self.metadata = site_meta
         self.expected_date = expected_date
-        self.model = 'PollyXT Raman Lidar'
+        self.model = 'PollyXT Raman lidar'
         self.wavelength = 1064
         self.epoch = None
 

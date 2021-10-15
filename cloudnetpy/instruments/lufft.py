@@ -17,7 +17,7 @@ class LufftCeilo(NcLidar):
         super().__init__(self.noise_param)
         self.file_name = file_name
         self.expected_date = expected_date
-        self.model = 'Lufft CHM15k'
+        self.model = 'Lufft CHM15k ceilometer'
         self.wavelength = 1064
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:

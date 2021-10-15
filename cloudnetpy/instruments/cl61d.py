@@ -17,7 +17,7 @@ class Cl61d(NcLidar):
         super().__init__(self.noise_param)
         self.file_name = file_name
         self.expected_date = expected_date
-        self.model = 'Vaisala CL61d'
+        self.model = 'Vaisala CL61d ceilometer'
         self.wavelength = 910.55
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:

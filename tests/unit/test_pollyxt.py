@@ -53,7 +53,7 @@ class TestPolly:
     def test_global_attributes(self):
         uuid = pollyxt2nc(self.filepath, self.output, self.site_meta)
         nc = netCDF4.Dataset(self.output)
-        assert nc.source == 'PollyXT Raman Lidar'
+        assert nc.source == 'PollyXT Raman lidar'
         assert nc.location == self.site_meta['name']
         assert nc.title == f'Lidar file from {self.site_meta["name"]}'
         assert nc.file_uuid == uuid
