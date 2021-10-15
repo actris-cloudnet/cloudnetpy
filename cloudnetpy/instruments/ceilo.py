@@ -65,8 +65,9 @@ def ceilo2nc(full_path: str,
     ceilo_obj.data['beta'] = ceilo_obj.calc_screened_product(ceilo_obj.data['beta_raw'])
     ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(snr_limit=4)
     if 'cl61' in ceilo_obj.model.lower():
-        ceilo_obj.data['depolarisation'], ceilo_obj.data['depolarisation_smooth'] = ceilo_obj.calc_depol()
+        ceilo_obj.data['depolarisation'] = ceilo_obj.calc_depol()
         ceilo_obj.remove_raw_data()
+    ceilo_obj.screen_depol()
     ceilo_obj.prepare_data(site_meta)
     ceilo_obj.prepare_metadata()
     ceilo_obj.data_to_cloudnet_arrays()
@@ -144,14 +145,8 @@ def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
 ATTRIBUTES = {
     'depolarisation': MetaData(
         long_name='Lidar depolarisation',
-        units='%',
+        units='',
         comment='SNR screened lidar depolarisation'
-    ),
-    'depolarisation_smooth': MetaData(
-        long_name='Smoothed lidar depolarisation',
-        units='%',
-        comment=('SNR screened lidar depolarisation.\n'
-                 'Weak background is smoothed using Gaussian 2D-kernel.')
     ),
     'p_pol': MetaData(
         long_name='Raw attenuated backscatter coefficient - parallel component',

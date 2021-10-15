@@ -102,11 +102,6 @@ class PollyXt(Ceilometer):
             _close(nc_bsc, nc_depol)
         self.data['calibration_factor'] = np.mean(calibration_factors)
 
-    def screen_depol(self):
-        key = 'depolarisation'
-        self.data[key][self.data[key] <= 0] = ma.masked
-        self.data[key][self.data[key] > 1] = ma.masked
-
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
     array = np.array([])

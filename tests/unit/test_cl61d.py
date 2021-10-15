@@ -4,6 +4,8 @@ from cloudnetpy import concat_lib
 from cloudnetpy.instruments import ceilo2nc
 import pytest
 import netCDF4
+import numpy as np
+import numpy.ma as ma
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -32,13 +34,25 @@ class TestCl61d:
     def test_variables(self):
         ceilo2nc(self.filename, self.output, self.site_meta)
         nc = netCDF4.Dataset(self.output)
-        for key in ('beta', 'depolarisation', 'beta_smooth', 'depolarisation_smooth'):
+        for key in ('beta', 'depolarisation', 'beta_smooth', 'calibration_factor', 'range',
+                    'height', 'tilt_angle', 'time'):
             assert key in nc.variables
-        for key in ('beta_raw', 'depolarisation_raw'):
+        for key in ('beta_raw', 'depolarisation_raw', 'x_pol', 'x_pol'):
             assert key not in nc.variables
-        for key in ('altitude', 'calibration_factor', 'latitude', 'longitude'):
-            print(key, nc.variables[key][:], type(nc.variables[key][:]))
+        for key in ('altitude', 'latitude', 'longitude'):
             assert nc.variables[key][:] == self.site_meta[key]
+        assert abs(nc.variables['wavelength'][:] - 910.55) < 0.001
+        assert nc.variables['tilt_angle'][:] == 3
+        assert nc.variables['tilt_angle'].units == 'degrees'
+        assert np.all((nc.variables['height'][:] - nc.variables['range'][:]) > 0)
+        assert np.all((nc.variables['height'][:] - self.site_meta['altitude']
+                       - nc.variables['range'][:]) < 0)
+        assert nc.variables['beta'].units == 'sr-1 m-1'
+        assert nc.variables['beta_smooth'].units == 'sr-1 m-1'
+        assert nc.variables['depolarisation'].units == ''
+        depol = nc.variables['depolarisation'][:]
+        assert ma.max(depol) < 1
+        assert ma.min(depol) > 0
         nc.close()
 
     def test_global_attributes(self):
@@ -55,6 +69,7 @@ class TestCl61d:
         ceilo2nc(self.filename, self.output, self.site_meta, date='2021-08-30')
         nc = netCDF4.Dataset(self.output)
         assert len(nc.variables['time']) == 12
+        assert np.all(np.diff(nc.variables['time'][:]) > 0)
         assert nc.year == '2021'
         assert nc.month == '08'
         assert nc.day == '30'

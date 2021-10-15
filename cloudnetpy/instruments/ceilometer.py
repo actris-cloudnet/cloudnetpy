@@ -79,10 +79,18 @@ class Ceilometer:
         keys = [key for key in self.data.keys() if 'raw' in key]
         for key in keys:
             del self.data[key]
+        self.data.pop('x_pol', None)
+        self.data.pop('p_pol', None)
 
     def data_to_cloudnet_arrays(self):
         for key, array in self.data.items():
             self.data[key] = CloudnetArray(array, key)
+
+    def screen_depol(self):
+        key = 'depolarisation'
+        if key in self.data:
+            self.data[key][self.data[key] <= 0] = ma.masked
+            self.data[key][self.data[key] > 1] = ma.masked
 
 
 class NoisyData:
