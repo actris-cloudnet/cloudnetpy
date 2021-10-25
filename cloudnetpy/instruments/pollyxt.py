@@ -41,7 +41,7 @@ def pollyxt2nc(input_folder: str,
     polly.fetch_tilt_angle()
     for key in ('depolarisation', 'beta'):
         polly.data[key] = polly.calc_screened_product(polly.data[f'{key}_raw'])
-    polly.data['beta_smooth'] = polly.calc_beta_smooth()
+    polly.data['beta_smooth'] = polly.calc_beta_smooth(polly.data['beta'])
     polly.screen_depol()
     polly.prepare_data(site_meta)
     polly.remove_raw_data()

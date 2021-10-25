@@ -40,10 +40,10 @@ class Ceilometer:
         array_screened = noisy_data.screen_data(array, snr_limit=snr_limit)
         return array_screened
 
-    def calc_beta_smooth(self, snr_limit: Optional[int] = 5) -> np.ndarray:
+    def calc_beta_smooth(self, beta: np.ndarray, snr_limit: Optional[int] = 5) -> np.ndarray:
         noisy_data = NoisyData(self.data, self.noise_param)
         beta_raw = ma.copy(self.data['beta_raw'])
-        cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta_raw)
+        cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
         beta_raw[cloud_ind] = cloud_limit
         sigma = calc_sigma_units(self.data['time'], self.data['range'])
         beta_raw_smooth = scipy.ndimage.filters.gaussian_filter(beta_raw, sigma)

@@ -63,7 +63,7 @@ def ceilo2nc(full_path: str,
     calibration_factor = site_meta.get('calibration_factor', None)
     ceilo_obj.read_ceilometer_file(calibration_factor)
     ceilo_obj.data['beta'] = ceilo_obj.calc_screened_product(ceilo_obj.data['beta_raw'])
-    ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(snr_limit=4)
+    ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(ceilo_obj.data['beta'])
     if 'cl61' in ceilo_obj.model.lower():
         ceilo_obj.data['depolarisation'] = ceilo_obj.calc_depol()
         ceilo_obj.remove_raw_data()
