@@ -82,7 +82,7 @@ def _initialize_ceilo(full_path: str,
     if model == 'cl31_or_cl51':
         return ClCeilo(full_path, date)
     if model == 'ct25k':
-        return Ct25k(full_path)
+        return Ct25k(full_path, date)
     if model == 'cl61d':
         return Cl61d(full_path, date)
     return LufftCeilo(full_path, date)
@@ -112,30 +112,20 @@ def _find_ceilo_model(full_path: str) -> str:
     raise RuntimeError('Error: Unknown ceilo model.')
 
 
-def _append_height(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
-                   site_altitude: float) -> None:
-    """Finds height above mean sea level."""
-    tilt_angle = np.median(ceilo.metadata['tilt_angle'])
-    height = utils.range_to_height(ceilo.range, float(tilt_angle))
-    height += float(site_altitude)
-    ceilo.data['height'] = CloudnetArray(np.array(height), 'height')
-    ceilo.data['altitude'] = CloudnetArray(site_altitude, 'altitude')
-
-
 def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
                 output_file: str,
                 location: str,
                 keep_uuid: bool,
                 uuid: Union[str, None]) -> str:
-    """Saves the ceilometer netcdf-file."""
     dims = {key: len(ceilo.data[key][:]) for key in ('time', 'range')}
+    file_type = 'lidar'
     rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
-    output.add_file_type(rootgrp, 'lidar')
-    rootgrp.title = f"Lidar file from {location}"
+    output.add_file_type(rootgrp, file_type)
+    rootgrp.title = f"{file_type.capitalize()} file from {location}"
     rootgrp.year, rootgrp.month, rootgrp.day = ceilo.metadata['date']
     rootgrp.location = location
-    rootgrp.history = f"{utils.get_time()} - ceilometer file created"
+    rootgrp.history = f"{utils.get_time()} - {file_type} file created"
     rootgrp.source = ceilo.model
     output.add_references(rootgrp)
     rootgrp.close()
@@ -146,7 +136,7 @@ ATTRIBUTES = {
     'depolarisation': MetaData(
         long_name='Lidar depolarisation',
         units='',
-        comment='SNR screened lidar depolarisation'
+        comment='SNR screened lidar depolarisation.'
     ),
     'p_pol': MetaData(
         long_name='Raw attenuated backscatter coefficient - parallel component',

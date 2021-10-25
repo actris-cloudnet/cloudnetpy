@@ -134,12 +134,10 @@ def _save_pollyxt(polly: PollyXt,
                   output_file: str,
                   keep_uuid: bool,
                   uuid: Union[str, None]) -> str:
-    """Saves the RPG radar / mwr file."""
-
     dims = {key: len(polly.data[key][:]) for key in ('time', 'range')}
     file_type = 'lidar'
     rootgrp = output.init_file(output_file, dims, polly.data, keep_uuid, uuid)
-    file_uuid = rootgrp.file_uuid
+    uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, file_type)
     rootgrp.title = f"{file_type.capitalize()} file from {polly.metadata['name']}"
     rootgrp.year, rootgrp.month, rootgrp.day = polly.metadata['date']
@@ -148,18 +146,18 @@ def _save_pollyxt(polly: PollyXt,
     rootgrp.source = polly.metadata['source']
     output.add_references(rootgrp)
     rootgrp.close()
-    return file_uuid
+    return uuid
 
 
 ATTRIBUTES = {
     'depolarisation': MetaData(
         long_name='Lidar depolarisation',
         units='',
-        comment='SNR screened lidar depolarisation at 532 nm'
+        comment='SNR screened lidar depolarisation at 532 nm.'
     ),
     'calibration_factor': MetaData(
         long_name='Backscatter calibration factor',
-        comment='Mean value of the day',
+        comment='Mean value of the day.',
         units='',
     ),
 }

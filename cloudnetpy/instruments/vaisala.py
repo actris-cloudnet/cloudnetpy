@@ -30,7 +30,7 @@ class VaisalaCeilo(Ceilometer):
 
     def _calc_range(self) -> np.ndarray:
         """Calculates range vector from the resolution and number of gates."""
-        if self.model == 'ct25k':
+        if 'CT25k' in self.model:
             range_resolution = 30
             n_gates = 256
         else:
@@ -75,6 +75,8 @@ class VaisalaCeilo(Ceilometer):
         timestamp_line_numbers = _find_timestamp_line_numbers()
         if self.expected_date is not None:
             timestamp_line_numbers = _find_correct_dates(timestamp_line_numbers)
+            if not timestamp_line_numbers:
+                raise ValueError('No valid timestamps found')
         number_of_data_lines = _find_number_of_data_lines(timestamp_line_numbers[0])
         data_lines = _parse_data_lines(timestamp_line_numbers)
         return data_lines
@@ -152,7 +154,7 @@ class VaisalaCeilo(Ceilometer):
     def _read_header_line_1(self, lines: list) -> dict:
         """Reads all first header lines from CT25k and CL ceilometers."""
         fields = ('model_id', 'unit_id', 'software_level', 'message_number', 'message_subclass')
-        if self.model == 'ct25k':
+        if 'CT25k' in self.model:
             indices = [1, 3, 4, 6, 7, 8]
         else:
             indices = [1, 3, 4, 7, 8, 9]
@@ -184,6 +186,7 @@ class ClCeilo(VaisalaCeilo):
         super().__init__(full_path, expected_date)
         self._hex_conversion_params = (5, 524288, 1048576)
         self._backscatter_scale_factor = 1e8
+        self.wavelength = 910
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Read all lines of data from the file."""
@@ -194,18 +197,16 @@ class ClCeilo(VaisalaCeilo):
         self.data['beta_raw'] = self._read_backscatter(data_lines[-2])
         self.data['calibration_factor'] = calibration_factor or 1
         self.data['beta_raw'] *= self.data['calibration_factor']
-        self.data['tilt_angle'] = np.mean(self.metadata['tilt_angle'])
+        self.data['tilt_angle'] = np.median(self.metadata['tilt_angle'])
         self.metadata['date'] = self._date
         self._store_ceilometer_info()
 
     def _store_ceilometer_info(self):
         n_gates = self.data['beta_raw'].shape[1]
         if n_gates < 1000:
-            self.model = 'cl31'
-            self.wavelength = '910'
+            self.model = 'Vaisala CL31 ceilometer'
         else:
-            self.model = 'cl51'
-            self.wavelength = '915'
+            self.model = 'Vaisala CL51 ceilometer'
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number != 2:
@@ -233,9 +234,9 @@ class Ct25k(VaisalaCeilo):
 
     noise_param = NoiseParam(n_gates=40, variance=1e-12,  min=6e-7, min_smooth=1e-7)
 
-    def __init__(self, input_file: str):
-        super().__init__(input_file)
-        self.model = 'ct25k'
+    def __init__(self, input_file: str, expected_date: Optional[str] = None):
+        super().__init__(input_file, expected_date)
+        self.model = 'Vaisala CT25k ceilometer'
         self._hex_conversion_params = (4, 32768, 65536)
         self._backscatter_scale_factor = 1e7
         self.wavelength = 905
@@ -250,6 +251,8 @@ class Ct25k(VaisalaCeilo):
         self.data['beta_raw'] = self._read_backscatter(hex_profiles)
         self.data['calibration_factor'] = calibration_factor or 1
         self.data['beta_raw'] *= self.data['calibration_factor']
+        self.data['tilt_angle'] = np.median(self.metadata['tilt_angle'])
+        self.metadata['date'] = self._date
         # TODO: should study the background noise to determine if the
         # next call is needed. It can be the case with cl31/51 also.
         # self._range_correct_upper_part()
@@ -262,7 +265,7 @@ class Ct25k(VaisalaCeilo):
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number in (1, 3, 6):
-            raise RuntimeError('Unsupported message number.')
+            raise RuntimeError(f'Unsupported message number: {self._message_number}')
         keys = ('measurement_mode', 'laser_energy',
                 'laser_temperature', 'receiver_sensitivity',
                 'window_contamination', 'tilt_angle', 'background_light',

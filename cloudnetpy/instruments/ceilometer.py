@@ -28,7 +28,7 @@ class Ceilometer:
         self.noise_param = noise_param
         self.data = {}          # Need to contain 'beta_raw', 'range' and 'time'
         self.metadata = {}      # Need to contain 'date' as ('yyyy', 'mm', 'dd')
-        self.model = None
+        self.model = ''
         self.wavelength = None
         self.expected_date = None
 
