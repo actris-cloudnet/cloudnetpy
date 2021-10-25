@@ -44,7 +44,6 @@ class TestCl61d:
         assert abs(nc.variables['wavelength'][:] - 910.55) < 0.001
         assert nc.variables['tilt_angle'][:] == 3
         assert nc.variables['tilt_angle'].units == 'degrees'
-        assert np.all((nc.variables['height'][:] - nc.variables['range'][:]) > 0)
         assert np.all((nc.variables['height'][:] - self.site_meta['altitude']
                        - nc.variables['range'][:]) < 0)
         assert nc.variables['beta'].units == 'sr-1 m-1'

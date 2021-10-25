@@ -41,7 +41,7 @@ def test_cl51_reading():
     file = f'{SCRIPT_PATH}/data/vaisala/cl51.DAT'
     ceilo.ceilo2nc(file, output_file.name, {'name': 'Norunda', 'altitude': 100})
     nc = netCDF4.Dataset(output_file.name)
-    assert nc.source == 'cl51'
+    assert nc.source == 'Vaisala CL51 ceilometer'
     assert nc.cloudnet_file_type == 'lidar'
     assert nc.location == 'Norunda'
     assert nc.year == '2020'
@@ -58,6 +58,6 @@ def test_cl31_reading():
     file = f'{SCRIPT_PATH}/data/vaisala/cl31.DAT'
     ceilo.ceilo2nc(file, output_file.name, {'name': 'Norunda', 'altitude': 100})
     nc = netCDF4.Dataset(output_file.name)
-    assert nc.source == 'cl31'
+    assert nc.source == 'Vaisala CL31 ceilometer'
     assert_almost_equal(nc.variables['wavelength'][:], 910)
     nc.close()

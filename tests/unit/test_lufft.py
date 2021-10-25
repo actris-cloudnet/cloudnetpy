@@ -96,7 +96,6 @@ class TestWithRealData:
         assert nc.variables['wavelength'][:] == 1064
         assert nc.variables['tilt_angle'][:] == 0
         assert nc.variables['tilt_angle'].units == 'degrees'
-        assert np.all((nc.variables['height'][:] - nc.variables['range'][:]) > 0)
         assert_array_almost_equal(nc.variables['height'][:] - self.site_meta['altitude'],
                                   nc.variables['range'][:], decimal=3)
         assert np.all(np.diff(nc.variables['time'][:]) > 0)
