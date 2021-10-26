@@ -23,10 +23,10 @@ class NcLidar(Ceilometer):
         epoch = utils.get_epoch(time.units)
         self.get_date_and_time(epoch)
 
-    def _fetch_tilt_angle(self, key: str, default: Optional[float] = 3) -> None:
+    def _fetch_zenith_angle(self, key: str, default: Optional[float] = 3) -> None:
         if key in self.dataset.variables:
-            tilt_angle = self.dataset.variables[key][:]
+            zenith_angle = self.dataset.variables[key][:]
         else:
-            tilt_angle = default
-            logging.warning(f'No tilt angle found, assuming {tilt_angle} degrees.')
-        self.data['tilt_angle'] = np.array(tilt_angle)
+            zenith_angle = default
+            logging.warning(f'No zenith angle found, assuming {zenith_angle} degrees.')
+        self.data['zenith_angle'] = np.array(zenith_angle)

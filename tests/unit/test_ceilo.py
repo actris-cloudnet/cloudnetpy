@@ -48,7 +48,7 @@ def test_cl51_reading():
     assert nc.month == '11'
     assert nc.day == '15'
     assert nc.variables['time'].shape == (2,)
-    assert nc.variables['tilt_angle'][:].all() < 5
+    assert nc.variables['zenith_angle'][:].all() < 5
     assert_almost_equal(nc.variables['altitude'][:], 100)
     nc.close()
 

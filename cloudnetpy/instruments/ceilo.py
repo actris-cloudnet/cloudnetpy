@@ -1,7 +1,6 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
 import linecache
 from typing import Union, Optional
-import numpy as np
 import netCDF4
 from cloudnetpy.instruments.lufft import LufftCeilo
 from cloudnetpy.instruments.cl61d import Cl61d
@@ -164,10 +163,6 @@ ATTRIBUTES = {
     'window_transmission': MetaData(
         long_name='Window transmission estimate',
         units='%',
-    ),
-    'tilt_angle': MetaData(
-        long_name='Tilt angle from vertical',
-        units='degrees',
     ),
     'laser_energy': MetaData(
         long_name='Laser pulse energy',

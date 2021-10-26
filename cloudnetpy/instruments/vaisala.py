@@ -197,7 +197,7 @@ class ClCeilo(VaisalaCeilo):
         self.data['beta_raw'] = self._read_backscatter(data_lines[-2])
         self.data['calibration_factor'] = calibration_factor or 1
         self.data['beta_raw'] *= self.data['calibration_factor']
-        self.data['tilt_angle'] = np.median(self.metadata['tilt_angle'])
+        self.data['zenith_angle'] = np.median(self.metadata['zenith_angle'])
         self.metadata['date'] = self._date
         self._store_ceilometer_info()
 
@@ -218,7 +218,7 @@ class ClCeilo(VaisalaCeilo):
     @staticmethod
     def _read_header_line_4(lines: list) -> dict:
         keys = ('scale', 'range_resolution', 'number_of_gates', 'laser_energy',
-                'laser_temperature', 'window_transmission', 'tilt_angle',
+                'laser_temperature', 'window_transmission', 'zenith_angle',
                 'background_light', 'measurement_parameters', 'backscatter_sum')
         values = [line.split() for line in lines]
         return values_to_dict(keys, values)
@@ -251,7 +251,7 @@ class Ct25k(VaisalaCeilo):
         self.data['beta_raw'] = self._read_backscatter(hex_profiles)
         self.data['calibration_factor'] = calibration_factor or 1
         self.data['beta_raw'] *= self.data['calibration_factor']
-        self.data['tilt_angle'] = np.median(self.metadata['tilt_angle'])
+        self.data['zenith_angle'] = np.median(self.metadata['zenith_angle'])
         self.metadata['date'] = self._date
         # TODO: should study the background noise to determine if the
         # next call is needed. It can be the case with cl31/51 also.
@@ -268,7 +268,7 @@ class Ct25k(VaisalaCeilo):
             raise RuntimeError(f'Unsupported message number: {self._message_number}')
         keys = ('measurement_mode', 'laser_energy',
                 'laser_temperature', 'receiver_sensitivity',
-                'window_contamination', 'tilt_angle', 'background_light',
+                'window_contamination', 'zenith_angle', 'background_light',
                 'measurement_parameters', 'backscatter_sum')
         values = [line.split() for line in lines]
         if len(values[0]) == 10:

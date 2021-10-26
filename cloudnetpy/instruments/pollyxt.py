@@ -24,8 +24,8 @@ def pollyxt2nc(input_folder: str,
         input_folder: Filename of pollyxt file.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required keys are `name` and
-            `altitude`. If the tilt angle of the instrument is NOT 5 degrees, it should be
-            provided like this: {'tilt_angle': 6}.
+            `altitude`. If the zenith angle of the instrument is NOT 5 degrees, it should be
+            provided like this: {'zenith_angle': 6}.
         keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
             when new UUID is generated.
         uuid: Set specific UUID for the file.
@@ -38,7 +38,7 @@ def pollyxt2nc(input_folder: str,
     polly = PollyXt(site_meta, date)
     polly.fetch_data(input_folder)
     polly.get_date_and_time(polly.epoch)
-    polly.fetch_tilt_angle()
+    polly.fetch_zenith_angle()
     for key in ('depolarisation', 'beta'):
         polly.data[key] = polly.calc_screened_product(polly.data[f'{key}_raw'])
     polly.data['beta_smooth'] = polly.calc_beta_smooth(polly.data['beta'])
@@ -64,9 +64,9 @@ class PollyXt(Ceilometer):
         self.wavelength = 1064
         self.epoch = None
 
-    def fetch_tilt_angle(self) -> None:
+    def fetch_zenith_angle(self) -> None:
         default = 5
-        self.data['tilt_angle'] = self.metadata.get('tilt_angle', default)
+        self.data['zenith_angle'] = self.metadata.get('zenith_angle', default)
 
     def fetch_data(self, input_folder: str) -> None:
         """Read input data."""

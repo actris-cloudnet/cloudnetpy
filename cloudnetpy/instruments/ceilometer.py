@@ -53,9 +53,9 @@ class Ceilometer:
 
     def prepare_data(self, site_meta: dict):
         """Add common additional data / metadata and convert into CloudnetArrays."""
-        tilt_angle = self.data['tilt_angle']
+        zenith_angle = self.data['zenith_angle']
         self.data['height'] = site_meta['altitude'] + utils.range_to_height(self.data['range'],
-                                                                            tilt_angle)
+                                                                            zenith_angle)
         for key in ('time', 'range'):
             self.data[key] = np.array(self.data[key])
         assert self.wavelength is not None

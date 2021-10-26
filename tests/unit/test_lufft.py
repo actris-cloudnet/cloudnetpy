@@ -56,7 +56,7 @@ class TestCHM15k:
         assert_array_equal(self.obj.metadata['date'], self.date.split('-'))
 
     def test_read_metadata(self):
-        assert self.obj.data['tilt_angle'] == 2
+        assert self.obj.data['zenith_angle'] == 2
 
     def test_convert_time_error(self):
         obj = lufft.LufftCeilo(self.file, '2122-01-01')
@@ -86,7 +86,7 @@ class TestWithRealData:
     def test_variables(self):
         ceilo2nc(self.filename, self.output, self.site_meta)
         nc = netCDF4.Dataset(self.output)
-        for key in ('beta', 'beta_smooth', 'calibration_factor', 'range', 'height', 'tilt_angle',
+        for key in ('beta', 'beta_smooth', 'calibration_factor', 'range', 'height', 'zenith_angle',
                     'time', 'beta_raw'):
             assert key in nc.variables
         for key in ('depolarisation_raw', 'depolarisation'):
@@ -94,8 +94,8 @@ class TestWithRealData:
         for key in ('altitude', 'latitude', 'longitude'):
             assert nc.variables[key][:] == self.site_meta[key]
         assert nc.variables['wavelength'][:] == 1064
-        assert nc.variables['tilt_angle'][:] == 0
-        assert nc.variables['tilt_angle'].units == 'degrees'
+        assert nc.variables['zenith_angle'][:] == 0
+        assert nc.variables['zenith_angle'].units == 'degree'
         assert_array_almost_equal(nc.variables['height'][:] - self.site_meta['altitude'],
                                   nc.variables['range'][:], decimal=3)
         assert np.all(np.diff(nc.variables['time'][:]) > 0)

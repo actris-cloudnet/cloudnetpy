@@ -26,7 +26,7 @@ class LufftCeilo(NcLidar):
         self._fetch_range(reference='upper')
         self._fetch_beta_raw(calibration_factor)
         self._fetch_time_and_date()
-        self._fetch_tilt_angle('zenith')
+        self._fetch_zenith_angle('zenith')
         self.dataset.close()
 
     def _fetch_beta_raw(self, calibration_factor: Optional[float] = None) -> None:

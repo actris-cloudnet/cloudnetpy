@@ -29,15 +29,15 @@ class TestPolly:
         pollyxt2nc(self.filepath, self.output, self.site_meta)
         nc = netCDF4.Dataset(self.output)
         for key in ('beta', 'depolarisation', 'beta_smooth', 'calibration_factor', 'range',
-                    'height', 'tilt_angle', 'time'):
+                    'height', 'zenith_angle', 'time'):
             assert key in nc.variables
         for key in ('beta_raw', 'depolarisation_raw'):
             assert key not in nc.variables
         for key in ('altitude', 'latitude', 'longitude'):
             assert nc.variables[key][:] == self.site_meta[key]
         assert nc.variables['wavelength'][:] == 1064
-        assert nc.variables['tilt_angle'][:] == 5
-        assert nc.variables['tilt_angle'].units == 'degrees'
+        assert nc.variables['zenith_angle'][:] == 5
+        assert nc.variables['zenith_angle'].units == 'degree'
         assert np.all((nc.variables['height'][:] - self.site_meta['altitude']
                        - nc.variables['range'][:]) < 0)
         assert np.all(np.diff(nc.variables['time'][:]) > 0)
