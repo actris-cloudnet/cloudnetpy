@@ -116,6 +116,11 @@ COMMON_ATTRIBUTES = {
         units='sr-1 m-1',
         comment='Range corrected, SNR screened, attenuated backscatter.'
     ),
+    'beta_raw': MetaData(
+        long_name='Raw attenuated backscatter coefficient',
+        units='sr-1 m-1',
+        comment='Range corrected raw attenuated backscatter.'
+    ),
     'beta_smooth': MetaData(
         long_name='Attenuated backscatter coefficient (',
         units='sr-1 m-1',
