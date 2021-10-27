@@ -139,8 +139,10 @@ class NoisyData:
     def _remove_noise(array: np.ndarray,
                       noise: np.ndarray,
                       keep_negative: bool,
-                      snr_limit: float) -> np.ndarray:
+                      snr_limit: float) -> ma.MaskedArray:
         snr = array / utils.transpose(noise)
+        if ma.isMaskedArray(array) is False:
+            array = ma.masked_array(array)
         if keep_negative is True:
             array[np.abs(snr) < snr_limit] = ma.masked
         else:
