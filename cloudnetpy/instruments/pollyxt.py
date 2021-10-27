@@ -4,7 +4,6 @@ from typing import Optional, Union
 import logging
 import netCDF4
 import numpy as np
-import numpy.ma as ma
 from numpy.testing import assert_array_equal
 from cloudnetpy.metadata import MetaData
 from cloudnetpy import output
@@ -44,7 +43,6 @@ def pollyxt2nc(input_folder: str,
     polly.data['beta_smooth'] = polly.calc_beta_smooth(polly.data['beta'])
     polly.screen_depol()
     polly.prepare_data(site_meta)
-    polly.remove_raw_data()
     polly.prepare_metadata()
     polly.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, polly.metadata['date'])
@@ -66,7 +64,7 @@ class PollyXt(Ceilometer):
 
     def fetch_zenith_angle(self) -> None:
         default = 5
-        self.data['zenith_angle'] = self.metadata.get('zenith_angle', default)
+        self.data['zenith_angle'] = float(self.metadata.get('zenith_angle', default))
 
     def fetch_data(self, input_folder: str) -> None:
         """Read input data."""
@@ -98,9 +96,11 @@ class PollyXt(Ceilometer):
             for array, key in zip([beta_raw, depol_raw, time], ['beta_raw', 'depolarisation_raw',
                                                                 'time']):
                 self.data = utils.append_data(self.data, key, array)
-            calibration_factors.append(nc_bsc.variables[bsc_key].Lidar_calibration_constant_used)
+            calibration_factor = nc_bsc.variables[bsc_key].Lidar_calibration_constant_used
+            calibration_factor = np.repeat(calibration_factor, len(time))
+            calibration_factors = np.concatenate([calibration_factors, calibration_factor])
             _close(nc_bsc, nc_depol)
-        self.data['calibration_factor'] = np.mean(calibration_factors)
+        self.data['calibration_factor'] = calibration_factors
 
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
@@ -151,13 +151,18 @@ def _save_pollyxt(polly: PollyXt,
 
 ATTRIBUTES = {
     'depolarisation': MetaData(
-        long_name='Lidar depolarisation',
-        units='',
-        comment='SNR screened lidar depolarisation at 532 nm.'
+        long_name='Lidar volume linear depolarisation ratio',
+        units='1',
+        comment='SNR-screened lidar volume linear depolarisation ratio at 532 nm.'
+    ),
+    'depolarisation_raw': MetaData(
+        long_name='Lidar volume linear depolarisation ratio',
+        units='1',
+        comment='Lidar volume linear depolarisation ratio at 532 nm.'
     ),
     'calibration_factor': MetaData(
-        long_name='Backscatter calibration factor',
-        comment='Mean value of the day.',
-        units='',
+        long_name='Attenuated backscatter calibration factor',
+        units='1',
+        comment='Calibration factor applied.'
     ),
 }

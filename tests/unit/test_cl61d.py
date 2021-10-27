@@ -48,8 +48,12 @@ class TestCl61d:
                        - nc.variables['range'][:]) < 0)
         assert nc.variables['beta'].units == 'sr-1 m-1'
         assert nc.variables['beta_smooth'].units == 'sr-1 m-1'
-        assert nc.variables['depolarisation'].units == ''
+        assert nc.variables['depolarisation'].units == '1'
         depol = nc.variables['depolarisation'][:]
+        assert nc.variables['zenith_angle'].dtype == 'float32'
+        assert nc.variables['latitude'].units == 'degree_north'
+        assert nc.variables['longitude'].units == 'degree_east'
+        assert nc.variables['altitude'].units == 'm'
         assert ma.max(depol) < 1
         assert ma.min(depol) > 0
         nc.close()

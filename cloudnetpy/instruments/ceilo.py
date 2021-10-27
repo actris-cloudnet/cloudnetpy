@@ -5,7 +5,7 @@ import netCDF4
 from cloudnetpy.instruments.lufft import LufftCeilo
 from cloudnetpy.instruments.cl61d import Cl61d
 from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
-from cloudnetpy import utils, output, CloudnetArray
+from cloudnetpy import utils, output
 from cloudnetpy.metadata import MetaData
 
 
@@ -133,19 +133,9 @@ def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
 
 ATTRIBUTES = {
     'depolarisation': MetaData(
-        long_name='Lidar depolarisation',
-        units='',
-        comment='SNR screened lidar depolarisation.'
-    ),
-    'p_pol': MetaData(
-        long_name='Raw attenuated backscatter coefficient - parallel component',
-        units='sr-1 m-1',
-        comment='Range-corrected, parallel-polarized component of attenuated backscatter.'
-    ),
-    'x_pol': MetaData(
-        long_name='Raw attenuated backscatter coefficient - cross component',
-        units='sr-1 m-1',
-        comment='Range-corrected, cross-polarized component of attenuated backscatter.'
+        long_name='Lidar volume linear depolarisation ratio',
+        units='1',
+        comment='SNR-screened lidar volume linear depolarisation ratio at 910.55 nm.'
     ),
     'scale': MetaData(
         long_name='Scale',
@@ -154,7 +144,7 @@ ATTRIBUTES = {
     ),
     'software_level': MetaData(
         long_name='Software level ID',
-        units='',
+        units='1',
     ),
     'laser_temperature': MetaData(
         long_name='Laser temperature',
@@ -184,28 +174,28 @@ ATTRIBUTES = {
     ),
     'number_of_gates': MetaData(
         long_name='Number of range gates in profile',
-        units='',
+        units='1',
     ),
     'unit_id': MetaData(
         long_name='Ceilometer unit number',
-        units='',
+        units='1',
     ),
     'message_number': MetaData(
         long_name='Message number',
-        units='',
+        units='1',
     ),
     'message_subclass': MetaData(
         long_name='Message subclass number',
-        units='',
+        units='1',
     ),
     'detection_status': MetaData(
         long_name='Detection status',
-        units='',
+        units='1',
         comment='From the internal software of the instrument.'
     ),
     'warning': MetaData(
         long_name='Warning and Alarm flag',
-        units='',
+        units='1',
         definition=('\n'
                     'Value 0: Self-check OK\n'
                     'Value W: At least one warning on\n'
@@ -213,7 +203,7 @@ ATTRIBUTES = {
     ),
     'warning_flags': MetaData(
         long_name='Warning flags',
-        units='',
+        units='1',
     ),
     'receiver_sensitivity': MetaData(
         long_name='Receiver sensitivity',
@@ -227,6 +217,6 @@ ATTRIBUTES = {
     ),
     'calibration_factor': MetaData(
         long_name='Backscatter calibration factor',
-        units='',
+        units='1',
     ),
 }

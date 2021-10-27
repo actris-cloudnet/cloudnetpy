@@ -101,6 +101,10 @@ class TestWithRealData:
         assert np.all(np.diff(nc.variables['time'][:]) > 0)
         assert nc.variables['beta'].units == 'sr-1 m-1'
         assert nc.variables['beta_smooth'].units == 'sr-1 m-1'
+        assert nc.variables['zenith_angle'].dtype == 'float32'
+        assert nc.variables['latitude'].units == 'degree_north'
+        assert nc.variables['longitude'].units == 'degree_east'
+        assert nc.variables['altitude'].units == 'm'
         nc.close()
 
     def test_global_attributes(self):

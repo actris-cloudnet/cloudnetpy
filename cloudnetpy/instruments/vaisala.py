@@ -195,7 +195,7 @@ class ClCeilo(VaisalaCeilo):
         self.metadata = self._handle_metadata(header)
         self.data['range'] = self._calc_range()
         self.data['beta_raw'] = self._read_backscatter(data_lines[-2])
-        self.data['calibration_factor'] = calibration_factor or 1
+        self.data['calibration_factor'] = calibration_factor or 1.0
         self.data['beta_raw'] *= self.data['calibration_factor']
         self.data['zenith_angle'] = np.median(self.metadata['zenith_angle'])
         self.metadata['date'] = self._date

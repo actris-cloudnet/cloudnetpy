@@ -4,13 +4,15 @@ from collections import namedtuple
 
 FIELDS = (
     'long_name',
+    'standard_name',
     'units',
     'comment',
     'definition',
     'references',
     'ancillary_variables',
     'positive',
-    'axis')
+    'axis',
+    'calendar')
 
 MetaData = namedtuple('MetaData', FIELDS)
 MetaData.__new__.__defaults__ = (None,) * len(MetaData._fields)
@@ -20,18 +22,19 @@ COMMON_ATTRIBUTES = {
     'time': MetaData(
         long_name='Time UTC',
         axis='T',
+        standard_name='time',
+        calendar='standard'
     ),
     'height': MetaData(
         long_name='Height above mean sea level',
-        axis='Z',
+        standard_name='height_above_mean_sea_level',
         units='m',
-        comment='Height grid from the mean sea level towards zenith.'
     ),
     'range': MetaData(
         long_name='Range from instrument',
         axis='Z',
         units='m',
-        comment='Height grid from the instrument towards the line of sight.'
+        comment='Distance from instrument to centre of each range bin.'
     ),
     'model_time': MetaData(
         long_name='Model time UTC',
@@ -43,14 +46,17 @@ COMMON_ATTRIBUTES = {
     ),
     'latitude': MetaData(
         long_name='Latitude of site',
-        units='degrees_north'
+        units='degree_north',
+        standard_name='latitude'
     ),
     'longitude': MetaData(
         long_name='Longitude of site',
-        units='degrees_east'
+        units='degree_east',
+        standard_name='longitude'
     ),
     'altitude': MetaData(
         long_name='Altitude of site',
+        standard_name='altitude',
         units='m'
     ),
     'width': MetaData(
@@ -114,18 +120,18 @@ COMMON_ATTRIBUTES = {
     'beta': MetaData(
         long_name='Attenuated backscatter coefficient',
         units='sr-1 m-1',
-        comment='Range corrected, SNR screened, attenuated backscatter.'
+        comment='SNR-screened attenuated backscatter coefficient.'
     ),
     'beta_raw': MetaData(
-        long_name='Raw attenuated backscatter coefficient',
+        long_name='Attenuated backscatter coefficient',
         units='sr-1 m-1',
-        comment='Range corrected raw attenuated backscatter.'
+        comment='Non-screened attenuated backscatter coefficient.'
     ),
     'beta_smooth': MetaData(
-        long_name='Attenuated backscatter coefficient (',
+        long_name='Attenuated backscatter coefficient',
         units='sr-1 m-1',
-        comment='Range corrected, SNR screened, attenuated backscatter.\n'
-                'Weak background is smoothed using Gaussian 2D-kernel.'
+        comment='SNR-screened attenuated backscatter coefficient.\n'
+                'Weak background smoothed using Gaussian 2D-kernel.'
     ),
     'wavelength': MetaData(
         long_name='Laser wavelength',
@@ -134,6 +140,7 @@ COMMON_ATTRIBUTES = {
     'zenith_angle': MetaData(
         long_name='Zenith angle',
         units='degree',
+        standard_name='zenith_angle',
         comment='Angle to the local vertical. A value of zero is directly overhead.'
     ),
 }

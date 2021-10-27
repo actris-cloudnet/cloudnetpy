@@ -116,7 +116,7 @@ def test_add_standard_global_attributes(tmpdir_factory):
     root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
     output._add_standard_global_attributes(root_grp, 'abcd')
     assert root_grp.file_uuid == 'abcd'
-    assert root_grp.Conventions == 'CF-1.7'
+    assert root_grp.Conventions == 'CF-1.8'
     output._add_standard_global_attributes(root_grp)
     assert root_grp.file_uuid != 'abcd'
     root_grp.close()
@@ -127,7 +127,7 @@ def test_add_time_attribute():
     attributes = {'kissa': attr}
     date = ['2020', '01', '12']
     new_attributes = output.add_time_attribute(attributes, date)
-    assert new_attributes['time'].units == 'hours since 2020-01-12 00:00:00'
+    assert new_attributes['time'].units == 'hours since 2020-01-12 00:00:00 +0:00'
     assert new_attributes['kissa'].units == 'xy'
 
 

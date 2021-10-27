@@ -28,22 +28,26 @@ class TestPolly:
     def test_variables(self):
         pollyxt2nc(self.filepath, self.output, self.site_meta)
         nc = netCDF4.Dataset(self.output)
-        for key in ('beta', 'depolarisation', 'beta_smooth', 'calibration_factor', 'range',
-                    'height', 'zenith_angle', 'time'):
+        for key in ('beta', 'beta_smooth', 'calibration_factor', 'range', 'height', 'zenith_angle',
+                    'time', 'beta_raw'):
             assert key in nc.variables
-        for key in ('beta_raw', 'depolarisation_raw'):
-            assert key not in nc.variables
         for key in ('altitude', 'latitude', 'longitude'):
             assert nc.variables[key][:] == self.site_meta[key]
-        assert nc.variables['wavelength'][:] == 1064
-        assert nc.variables['zenith_angle'][:] == 5
+        assert nc.variables['wavelength'][:] == 1064.0
+        assert nc.variables['wavelength'].dtype == 'float32'
+        assert nc.variables['zenith_angle'][:] == 5.0
         assert nc.variables['zenith_angle'].units == 'degree'
+        assert nc.variables['zenith_angle'].dtype == 'float32'
+        assert nc.variables['latitude'].units == 'degree_north'
+        assert nc.variables['longitude'].units == 'degree_east'
+        assert nc.variables['altitude'].units == 'm'
         assert np.all((nc.variables['height'][:] - self.site_meta['altitude']
                        - nc.variables['range'][:]) < 0)
         assert np.all(np.diff(nc.variables['time'][:]) > 0)
         assert nc.variables['beta'].units == 'sr-1 m-1'
         assert nc.variables['beta_smooth'].units == 'sr-1 m-1'
-        assert nc.variables['depolarisation'].units == ''
+        assert nc.variables['depolarisation'].units == '1'
+        assert nc.variables['depolarisation_raw'].units == '1'
         depol = nc.variables['depolarisation'][:]
         assert ma.max(depol) < 1
         assert ma.min(depol) > 0

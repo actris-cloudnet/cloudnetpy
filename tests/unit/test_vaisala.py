@@ -66,6 +66,10 @@ class TestCL51:
         assert nc.variables['wavelength'][:] == 910
         assert nc.variables['zenith_angle'][:] == 4.5
         assert nc.variables['zenith_angle'].units == 'degree'
+        assert nc.variables['zenith_angle'].dtype == 'float32'
+        assert nc.variables['latitude'].units == 'degree_north'
+        assert nc.variables['longitude'].units == 'degree_east'
+        assert nc.variables['altitude'].units == 'm'
         assert np.all((nc.variables['height'][:] - nc.variables['range'][:]) > 0)
         assert np.all((nc.variables['height'][:] - self.site_meta['altitude']
                        - nc.variables['range'][:]) < 0)
@@ -129,6 +133,10 @@ class TestCL31:
         assert nc.variables['wavelength'][:] == 910
         assert nc.variables['zenith_angle'][:] == 12
         assert nc.variables['zenith_angle'].units == 'degree'
+        assert nc.variables['zenith_angle'].dtype == 'float32'
+        assert nc.variables['latitude'].units == 'degree_north'
+        assert nc.variables['longitude'].units == 'degree_east'
+        assert nc.variables['altitude'].units == 'm'
         vertical_range = nc.variables['height'][:] - nc.variables['altitude'][:]
         assert np.all((nc.variables['range'][:] - vertical_range) > 0)
         assert nc.variables['beta'].units == 'sr-1 m-1'
@@ -198,6 +206,10 @@ class TestCT25k:
         assert nc.variables['wavelength'][:] == 905
         assert nc.variables['zenith_angle'][:] == 15
         assert nc.variables['zenith_angle'].units == 'degree'
+        assert nc.variables['zenith_angle'].dtype == 'float32'
+        assert nc.variables['latitude'].units == 'degree_north'
+        assert nc.variables['longitude'].units == 'degree_east'
+        assert nc.variables['altitude'].units == 'm'
         assert np.all((nc.variables['height'][:] - self.site_meta['altitude']
                        - nc.variables['range'][:]) < 0)
         assert np.all(np.diff(nc.variables['time'][:]) > 0)
