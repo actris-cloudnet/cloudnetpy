@@ -28,11 +28,14 @@ class TestPolly:
     def test_variables(self):
         pollyxt2nc(self.filepath, self.output, self.site_meta)
         nc = netCDF4.Dataset(self.output)
-        for key in ('beta', 'beta_smooth', 'calibration_factor', 'range', 'height', 'zenith_angle',
-                    'time', 'beta_raw'):
+        for key in ('beta', 'beta_raw', 'calibration_factor', 'range', 'height', 'zenith_angle',
+                    'time', 'depolarisation', 'depolarisation_raw'):
             assert key in nc.variables
+            assert bool(np.isnan(nc.variables[key]).all()) is False
         for key in ('altitude', 'latitude', 'longitude'):
             assert nc.variables[key][:] == self.site_meta[key]
+        for key in ('snr', 'beta_smooth', 'depolarisation_smooth'):
+            assert key not in nc.variables
         assert nc.variables['wavelength'][:] == 1064.0
         assert nc.variables['wavelength'].dtype == 'float32'
         assert nc.variables['zenith_angle'][:] == 5.0
@@ -45,12 +48,12 @@ class TestPolly:
                        - nc.variables['range'][:]) < 0)
         assert np.all(np.diff(nc.variables['time'][:]) > 0)
         assert nc.variables['beta'].units == 'sr-1 m-1'
-        assert nc.variables['beta_smooth'].units == 'sr-1 m-1'
+        assert ma.min(nc.variables['beta'][:]) > 0
         assert nc.variables['depolarisation'].units == '1'
         assert nc.variables['depolarisation_raw'].units == '1'
         depol = nc.variables['depolarisation'][:]
         assert ma.max(depol) < 1
-        assert ma.min(depol) > 0
+        assert ma.min(depol) > -0.1
         nc.close()
 
     def test_global_attributes(self):

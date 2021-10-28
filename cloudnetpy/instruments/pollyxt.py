@@ -9,6 +9,7 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy import output
 from cloudnetpy import utils
 from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
+import numpy.ma as ma
 
 
 def pollyxt2nc(input_folder: str,
@@ -38,10 +39,8 @@ def pollyxt2nc(input_folder: str,
     polly.fetch_data(input_folder)
     polly.get_date_and_time(polly.epoch)
     polly.fetch_zenith_angle()
-    for key in ('depolarisation', 'beta'):
-        polly.data[key] = polly.calc_screened_product(polly.data[f'{key}_raw'])
-    polly.data['beta_smooth'] = polly.calc_beta_smooth(polly.data['beta'])
-    polly.screen_depol()
+    polly.calc_screened_products(snr_limit=5)
+    polly.mask_nan_values()
     polly.prepare_data(site_meta)
     polly.prepare_metadata()
     polly.data_to_cloudnet_arrays()
@@ -62,6 +61,17 @@ class PollyXt(Ceilometer):
         self.wavelength = 1064
         self.epoch = None
 
+    def mask_nan_values(self):
+        for key, array in self.data.items():
+            if getattr(array, 'ndim', 0) > 0:
+                array[np.isnan(array)] = ma.masked
+
+    def calc_screened_products(self, snr_limit: float = 5.0):
+        keys = ('beta', 'depolarisation')
+        for key in keys:
+            self.data[key] = ma.masked_where(self.data['snr'] < snr_limit, self.data[f'{key}_raw'])
+        del self.data['snr']
+
     def fetch_zenith_angle(self) -> None:
         default = 5
         self.data['zenith_angle'] = float(self.metadata.get('zenith_angle', default))
@@ -81,7 +91,6 @@ class PollyXt(Ceilometer):
         self.data['range'] = _read_array_from_multiple_files(bsc_files, depol_files, 'height')
         calibration_factors = []
         bsc_key = 'attenuated_backscatter_1064nm'
-        depol_key = 'volume_depolarization_ratio_532nm'
         for ind, (bsc_file, depol_file) in enumerate(zip(bsc_files, depol_files)):
             nc_bsc = netCDF4.Dataset(bsc_file, 'r')
             nc_depol = netCDF4.Dataset(depol_file, 'r')
@@ -92,9 +101,11 @@ class PollyXt(Ceilometer):
                 _close(nc_bsc, nc_depol)
                 continue
             beta_raw = nc_bsc.variables[bsc_key][:]
-            depol_raw = nc_depol.variables[depol_key][:]
-            for array, key in zip([beta_raw, depol_raw, time], ['beta_raw', 'depolarisation_raw',
-                                                                'time']):
+            depol_raw = nc_depol.variables['volume_depolarization_ratio_532nm'][:]
+            snr = nc_bsc.variables['SNR_1064nm'][:]
+            for array, key in zip([beta_raw, depol_raw, time, snr], ['beta_raw',
+                                                                     'depolarisation_raw',
+                                                                     'time', 'snr']):
                 self.data = utils.append_data(self.data, key, array)
             calibration_factor = nc_bsc.variables[bsc_key].Lidar_calibration_constant_used
             calibration_factor = np.repeat(calibration_factor, len(time))
@@ -158,7 +169,7 @@ ATTRIBUTES = {
     'depolarisation_raw': MetaData(
         long_name='Lidar volume linear depolarisation ratio',
         units='1',
-        comment='Lidar volume linear depolarisation ratio at 532 nm.'
+        comment='Non-screened lidar volume linear depolarisation ratio at 532 nm.'
     ),
     'calibration_factor': MetaData(
         long_name='Attenuated backscatter calibration factor',
