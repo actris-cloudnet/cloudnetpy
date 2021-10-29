@@ -20,18 +20,14 @@ site_meta = {
 }
 files = glob.glob(f'{SCRIPT_PATH}/data/cl61d/*.nc')
 files.sort()
-daily_file = 'dummy_daily_file.nc'
-if os.path.isfile(daily_file):
-    os.remove(daily_file)
+daily_file = 'dummy_cl61_daily_file.nc'
 concat_lib.concatenate_files(files, daily_file, concat_dimension='profile')
 date = '2021-08-28'
 
 
 class TestCl61d:
 
-    output = 'dummy_output_file.nc'
-    if os.path.isfile(output):
-        os.remove(output)
+    output = 'dummy_cl61_output_file.nc'
     uuid = ceilo2nc(daily_file, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
@@ -60,15 +56,13 @@ class TestCl61d:
         assert self.nc.source == 'Vaisala CL61d ceilometer'
 
     def test_tear_down(self):
-        if os.path.isfile(self.output):
-            os.remove(self.output)
-        if os.path.isfile(daily_file):
-            os.remove(daily_file)
+        os.remove(self.output)
+        os.remove(daily_file)
         self.nc.close()
 
 
 def test_date_argument():
-    output = 'dummy_output_file.nc'
+    output = 'dummy_asdfasdfa_output_file.nc'
     concat_lib.concatenate_files(files, daily_file, concat_dimension='profile')
     ceilo2nc(daily_file, output, site_meta, date='2021-08-30')
     nc = netCDF4.Dataset(output)
@@ -78,8 +72,6 @@ def test_date_argument():
     assert nc.month == '08'
     assert nc.day == '30'
     nc.close()
-    if os.path.isfile(output):
-        os.remove(output)
-    if os.path.isfile(daily_file):
-        os.remove(daily_file)
+    os.remove(output)
+    os.remove(daily_file)
 

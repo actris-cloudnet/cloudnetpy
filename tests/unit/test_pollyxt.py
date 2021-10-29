@@ -23,8 +23,6 @@ date = '2021-09-17'
 class TestPolly:
 
     output = 'dummy_output_file.nc'
-    if os.path.isfile(output):
-        os.remove(output)
     uuid = pollyxt2nc(filepath, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
@@ -54,8 +52,7 @@ class TestPolly:
         assert self.nc.source == 'PollyXT Raman lidar'
 
     def test_tear_down(self):
-        if os.path.isfile(self.output):
-            os.remove(self.output)
+        os.remove(self.output)
         self.nc.close()
 
 
@@ -70,5 +67,4 @@ def test_date_argument():
     nc.close()
     with pytest.raises(ValueError):
         pollyxt2nc(filepath, output, site_meta, date='2021-09-15')
-    if os.path.isfile(output):
-        os.remove(output)
+    os.remove(output)

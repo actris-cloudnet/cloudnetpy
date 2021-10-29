@@ -47,13 +47,9 @@ site_meta = {
 
 
 class TestCL51:
-
     date = '2020-11-15'
-
     input = f'{SCRIPT_PATH}/data/vaisala/cl51.DAT'
-    output = 'dummy_output_file.nc'
-    if os.path.isfile(output):
-        os.remove(output)
+    output = 'dummy_cl51_file.nc'
     uuid = ceilo2nc(input, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
@@ -91,22 +87,17 @@ class TestCL51:
         nc.close()
         with pytest.raises(ValueError):
             ceilo2nc(self.input, output, site_meta, date='2021-09-15')
-        if os.path.isfile(output):
-            os.remove(output)
+        os.remove(output)
 
-    def test_tear_down(self):
-        if os.path.isfile(self.output):
-            os.remove(self.output)
+    def test_cleanup(self):
+        os.remove(self.output)
         self.nc.close()
 
 
 class TestCL31:
-
     date = '2020-04-10'
     input = f'{SCRIPT_PATH}/data/vaisala/cl31.DAT'
-    output = 'dummy_output_file.nc'
-    if os.path.isfile(output):
-        os.remove(output)
+    output = 'dummy_cl31_file.nc'
     uuid = ceilo2nc(input, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
@@ -151,22 +142,17 @@ class TestCL31:
         nc.close()
         with pytest.raises(ValueError):
             ceilo2nc(input, output, site_meta, date='2020-04-12')
-        if os.path.isfile(output):
-            os.remove(output)
+        os.remove(output)
 
-    def test_tear_down(self):
-        if os.path.isfile(self.output):
-            os.remove(self.output)
+    def test_cleanup(self):
+        os.remove(self.output)
         self.nc.close()
 
 
 class TestCT25k:
     date = '2020-10-29'
-
     input = f'{SCRIPT_PATH}/data/vaisala/ct25k.dat'
-    output = 'dummy_output_file.nc'
-    if os.path.isfile(output):
-        os.remove(output)
+    output = 'dummy_ct25k_file.nc'
     uuid = ceilo2nc(input, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
@@ -193,12 +179,18 @@ class TestCT25k:
         assert self.nc.source == 'Vaisala CT25k ceilometer'
 
     def test_date_argument(self):
-        ceilo2nc(self.input, self.output, site_meta, date='2020-10-29')
-        nc = netCDF4.Dataset(self.output)
+        output = 'falskdfjlskdf'
+        ceilo2nc(self.input, output, site_meta, date='2020-10-29')
+        nc = netCDF4.Dataset(output)
         assert len(nc.variables['time']) == 3
         assert nc.year == '2020'
         assert nc.month == '10'
         assert nc.day == '29'
         nc.close()
         with pytest.raises(ValueError):
-            ceilo2nc(self.input, self.output, site_meta, date='2021-09-15')
+            ceilo2nc(self.input, output, site_meta, date='2021-09-15')
+        os.remove(output)
+
+    def test_cleanup(self):
+        os.remove(self.output)
+        self.nc.close()

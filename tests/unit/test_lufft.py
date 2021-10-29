@@ -79,8 +79,8 @@ date = '2020-10-22'
 
 class TestWithRealData:
 
-    output = 'dummy_output_file.nc'
-    daily_file = 'dummy_daily_file.nc'
+    output = 'dummy_lufft_output_file.nc'
+    daily_file = 'dummy_lufft_daily_file.nc'
     concat_lib.concatenate_files(files, daily_file)
     uuid = ceilo2nc(daily_file, output, site_meta)
     nc = netCDF4.Dataset(output)
@@ -118,12 +118,9 @@ class TestWithRealData:
         nc.close()
         with pytest.raises(ValueError):
             ceilo2nc(self.daily_file, self.output, site_meta, date='2020-10-23')
-        if os.path.isfile(output):
-            os.remove(output)
+        os.remove(output)
 
     def test_tear_down(self):
-        if os.path.isfile(self.output):
-            os.remove(self.output)
-        if os.path.isfile(self.daily_file):
-            os.remove(self.daily_file)
+        os.remove(self.output)
+        os.remove(self.daily_file)
         self.nc.close()
