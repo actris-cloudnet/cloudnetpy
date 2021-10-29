@@ -92,6 +92,9 @@ class Ceilometer:
             self.data[key][self.data[key] <= 0] = ma.masked
             self.data[key][self.data[key] > 1] = ma.masked
 
+    def modify_beta_comment(self, snr_limit: float):
+        self.data['beta'].comment += f' SNR threshold applied: {snr_limit}.'
+
 
 class NoisyData:
     def __init__(self, data: dict, noise_param: NoiseParam):

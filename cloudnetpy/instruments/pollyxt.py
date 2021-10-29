@@ -35,17 +35,19 @@ def pollyxt2nc(input_folder: str,
         UUID of the generated file.
 
     """
+    snr_limit = 5
     polly = PollyXt(site_meta, date)
     polly.fetch_data(input_folder)
     polly.get_date_and_time(polly.epoch)
     polly.fetch_zenith_angle()
-    polly.calc_screened_products(snr_limit=5)
+    polly.calc_screened_products(snr_limit)
     polly.mask_nan_values()
     polly.prepare_data(site_meta)
     polly.prepare_metadata()
     polly.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, polly.metadata['date'])
     output.update_attributes(polly.data, attributes)
+    polly.modify_beta_comment(snr_limit)
     return _save_pollyxt(polly, output_file, keep_uuid, uuid)
 
 
