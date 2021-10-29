@@ -228,10 +228,10 @@ def update_attributes(cloudnet_variables: dict, attributes: dict) -> None:
 
     """
     for key in cloudnet_variables:
-        if key in attributes:
-            cloudnet_variables[key].set_attributes(attributes[key])
         if key in COMMON_ATTRIBUTES:
             cloudnet_variables[key].set_attributes(COMMON_ATTRIBUTES[key])
+        if key in attributes:
+            cloudnet_variables[key].set_attributes(attributes[key])
 
 
 def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
