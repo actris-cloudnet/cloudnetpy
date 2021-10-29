@@ -74,7 +74,8 @@ class TestCL51:
         assert np.all(np.diff(self.nc.variables['time'][:]) > 0)
 
     def test_comments(self):
-        assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
+        for key in ('beta', 'beta_smooth'):
+            assert 'SNR threshold applied: 5' in self.nc.variables[key].comment
 
     def test_global_attributes(self):
         assert self.nc.source == 'Vaisala CL51 ceilometer'
@@ -125,7 +126,8 @@ class TestCL31:
         assert self.nc.variables['zenith_angle'][:] == 12
 
     def test_comments(self):
-        assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
+        for key in ('beta', 'beta_smooth'):
+            assert 'SNR threshold applied: 5' in self.nc.variables[key].comment
 
     def test_global_attributes(self):
         assert self.nc.source == 'Vaisala CL31 ceilometer'
@@ -184,7 +186,8 @@ class TestCT25k:
         assert self.nc.variables['zenith_angle'][:] == 15
 
     def test_comments(self):
-        assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
+        for key in ('beta', 'beta_smooth'):
+            assert 'SNR threshold applied: 5' in self.nc.variables[key].comment
 
     def test_global_attributes(self):
         assert self.nc.source == 'Vaisala CT25k ceilometer'

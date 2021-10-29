@@ -74,8 +74,9 @@ def ceilo2nc(full_path: str,
     ceilo_obj.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.metadata['date'])
     output.update_attributes(ceilo_obj.data, attributes)
-    for key, value in zip(('beta', 'depolarisation'), (snr_limit, snr_limit_depol)):
-        ceilo_obj.add_snr_info(key, value)
+    for key in ('beta', 'beta_smooth'):
+        ceilo_obj.add_snr_info(key, snr_limit)
+    ceilo_obj.add_snr_info('depolarisation', snr_limit_depol)
     return _save_ceilo(ceilo_obj, output_file, site_meta['name'], keep_uuid, uuid)
 
 
