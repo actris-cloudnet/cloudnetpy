@@ -4,78 +4,68 @@ import pytest
 import netCDF4
 import numpy as np
 import numpy.ma as ma
+import sys
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(SCRIPT_PATH)
+from lidar_fun import LidarFun
+
+site_meta = {
+    'name': 'Mindelo',
+    'altitude': 123,
+    'latitude': 45.0,
+    'longitude': 22.0
+}
+filepath = f'{SCRIPT_PATH}/data/pollyxt/'
+date = '2021-09-17'
 
 
 class TestPolly:
 
-    site_meta = {
-        'name': 'Mindelo',
-        'altitude': 123,
-        'latitude': 45.0,
-        'longitude': 22.0
-    }
-    filepath = f'{SCRIPT_PATH}/data/pollyxt/'
+    output = 'dummy_output_file.nc'
+    uuid = pollyxt2nc(filepath, output, site_meta)
+    nc = netCDF4.Dataset(output)
+    lidar_fun = LidarFun(nc, site_meta, date, uuid)
 
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.output = 'dummy_output_file.nc'
-        yield
+    def test_variable_names(self):
+        keys = {'beta', 'beta_raw', 'calibration_factor', 'range', 'height', 'zenith_angle', 'time',
+                'depolarisation', 'depolarisation_raw', 'altitude', 'latitude', 'longitude',
+                'wavelength'}
+        assert set(self.nc.variables.keys()) == keys
+
+    def test_common_lidar(self):
+        for name, method in LidarFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.lidar_fun, name)()
+
+    def test_variable_values(self):
+        assert self.nc.variables['wavelength'][:] == 1064.0
+        assert self.nc.variables['zenith_angle'][:] == 5.0
+        assert ma.max(self.nc.variables['depolarisation'][:]) < 1
+        assert ma.min(self.nc.variables['depolarisation'][:]) > -0.1
+        assert np.all(np.diff(self.nc.variables['time'][:]) > 0)
+
+    def test_comments(self):
+        assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
+
+    def test_global_attributes(self):
+        assert self.nc.source == 'PollyXT Raman lidar'
+
+    def test_tear_down(self):
         if os.path.isfile(self.output):
             os.remove(self.output)
 
-    def test_variables(self):
-        pollyxt2nc(self.filepath, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        for key in ('beta', 'beta_raw', 'calibration_factor', 'range', 'height', 'zenith_angle',
-                    'time', 'depolarisation', 'depolarisation_raw'):
-            assert key in nc.variables
-            assert bool(np.isnan(nc.variables[key]).all()) is False
-        for key in ('altitude', 'latitude', 'longitude'):
-            assert nc.variables[key][:] == self.site_meta[key]
-        for key in ('snr', 'beta_smooth', 'depolarisation_smooth'):
-            assert key not in nc.variables
-        assert nc.variables['wavelength'][:] == 1064.0
-        assert nc.variables['wavelength'].dtype == 'float32'
-        assert nc.variables['zenith_angle'][:] == 5.0
-        assert nc.variables['zenith_angle'].units == 'degree'
-        assert nc.variables['zenith_angle'].dtype == 'float32'
-        assert nc.variables['latitude'].units == 'degree_north'
-        assert nc.variables['longitude'].units == 'degree_east'
-        assert nc.variables['altitude'].units == 'm'
-        assert np.all((nc.variables['height'][:] - self.site_meta['altitude']
-                       - nc.variables['range'][:]) < 0)
-        assert np.all(np.diff(nc.variables['time'][:]) > 0)
-        assert nc.variables['beta'].units == 'sr-1 m-1'
-        assert ma.min(nc.variables['beta'][:]) > 0
-        assert nc.variables['depolarisation'].units == '1'
-        assert nc.variables['depolarisation_raw'].units == '1'
-        depol = nc.variables['depolarisation'][:]
-        assert ma.max(depol) < 1
-        assert ma.min(depol) > -0.1
-        nc.close()
 
-    def test_global_attributes(self):
-        uuid = pollyxt2nc(self.filepath, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        assert nc.source == 'PollyXT Raman lidar'
-        assert nc.location == self.site_meta['name']
-        assert nc.title == f'Lidar file from {self.site_meta["name"]}'
-        assert nc.file_uuid == uuid
-        assert nc.cloudnet_file_type == 'lidar'
-        assert nc.year == '2021'
-        assert nc.month == '09'
-        assert nc.day == '17'
-        nc.close()
-
-    def test_date_argument(self):
-        pollyxt2nc(self.filepath, self.output, self.site_meta, date='2021-09-17')
-        nc = netCDF4.Dataset(self.output)
-        assert len(nc.variables['time']) == 80
-        assert nc.year == '2021'
-        assert nc.month == '09'
-        assert nc.day == '17'
-        nc.close()
-        with pytest.raises(ValueError):
-            pollyxt2nc(self.filepath, self.output, self.site_meta, date='2021-09-15')
+def test_date_argument():
+    output = 'dummy_output_file.nc'
+    pollyxt2nc(filepath, output, site_meta, date='2021-09-17')
+    nc = netCDF4.Dataset(output)
+    assert len(nc.variables['time']) == 80
+    assert nc.year == '2021'
+    assert nc.month == '09'
+    assert nc.day == '17'
+    nc.close()
+    with pytest.raises(ValueError):
+        pollyxt2nc(filepath, output, site_meta, date='2021-09-15')
+    if os.path.isfile(output):
+        os.remove(output)

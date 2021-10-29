@@ -216,7 +216,8 @@ ATTRIBUTES = {
         comment='Measured at internal ADC input.'
     ),
     'calibration_factor': MetaData(
-        long_name='Backscatter calibration factor',
+        long_name='Attenuated backscatter calibration factor',
         units='1',
+        comment='Calibration factor applied.'
     ),
 }
