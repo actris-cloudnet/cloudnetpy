@@ -37,9 +37,9 @@ class LidarFun:
         for key in ('altitude', 'latitude', 'longitude'):
             assert self.nc.variables[key][:] == self.site_meta[key]
         assert 900 < self.nc.variables['wavelength'][:] < 1065
-        assert 0 < self.nc.variables['zenith_angle'][:] < 90
+        assert 0 <= self.nc.variables['zenith_angle'][:] < 90
         assert np.all((self.nc.variables['height'][:] - self.site_meta['altitude']
-                       - self.nc.variables['range'][:]) < 0)
+                       - self.nc.variables['range'][:]) <= 1e-3)
         assert ma.min(self.nc.variables['beta'][:]) > 0
 
     def test_standard_names(self):

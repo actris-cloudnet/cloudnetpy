@@ -28,5 +28,7 @@ class NcLidar(Ceilometer):
             zenith_angle = self.dataset.variables[key][:]
         else:
             zenith_angle = float(default)
-            logging.warning(f'No zenith angle found, assuming {zenith_angle} degrees.')
+            logging.warning(f'No zenith angle found, assuming {zenith_angle} degrees')
+        if zenith_angle == 0:
+            logging.warning(f'Zenith angle 0 degrees - risk of specular reflection')
         self.data['zenith_angle'] = np.array(zenith_angle)
