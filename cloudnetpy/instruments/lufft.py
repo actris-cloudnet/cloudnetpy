@@ -11,7 +11,7 @@ from cloudnetpy import utils
 class LufftCeilo(NcLidar):
     """Class for Lufft chm15k ceilometer."""
 
-    noise_param = NoiseParam(n_gates=70)
+    noise_param = NoiseParam()
 
     def __init__(self, file_name: str, expected_date: Optional[str] = None):
         super().__init__(self.noise_param)

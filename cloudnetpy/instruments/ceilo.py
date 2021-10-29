@@ -77,7 +77,8 @@ def ceilo2nc(full_path: str,
     for key in ('beta', 'beta_smooth'):
         ceilo_obj.add_snr_info(key, snr_limit)
     ceilo_obj.add_snr_info('depolarisation', snr_limit_depol)
-    return _save_ceilo(ceilo_obj, output_file, site_meta['name'], keep_uuid, uuid)
+    ceilo_obj.metadata['name'] = site_meta['name']
+    return save_ceilo(ceilo_obj, output_file, keep_uuid, uuid)
 
 
 def _initialize_ceilo(full_path: str,
@@ -116,21 +117,20 @@ def _find_ceilo_model(full_path: str) -> str:
     raise RuntimeError('Error: Unknown ceilo model.')
 
 
-def _save_ceilo(ceilo: Union[ClCeilo, Ct25k, LufftCeilo, Cl61d],
-                output_file: str,
-                location: str,
-                keep_uuid: bool,
-                uuid: Union[str, None]) -> str:
+def save_ceilo(ceilo: any,
+               output_file: str,
+               keep_uuid: bool,
+               uuid: Union[str, None]) -> str:
     dims = {key: len(ceilo.data[key][:]) for key in ('time', 'range')}
     file_type = 'lidar'
     rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
     uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, file_type)
-    rootgrp.title = f"{file_type.capitalize()} file from {location}"
+    rootgrp.title = f"{file_type.capitalize()} file from {ceilo.metadata['name']}"
     rootgrp.year, rootgrp.month, rootgrp.day = ceilo.metadata['date']
-    rootgrp.location = location
+    rootgrp.location = ceilo.metadata['name']
     rootgrp.history = f"{utils.get_time()} - {file_type} file created"
-    rootgrp.source = ceilo.model
+    rootgrp.source = ceilo.metadata['source']
     output.add_references(rootgrp)
     rootgrp.close()
     return uuid

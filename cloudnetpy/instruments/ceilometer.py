@@ -10,21 +10,21 @@ class NoiseParam:
     """Noise parameters. Values are weakly instrument-dependent."""
     def __init__(self,
                  n_gates: Optional[int] = 70,
-                 variance: Optional [float] = 2e-14,
-                 saturation: Optional [float] = 0.3e-6,
-                 min: Optional[float] = 1e-9,
-                 min_smooth: Optional [float] = 4e-9):
+                 variance: Optional[float] = 2e-14,
+                 saturation: Optional[float] = 0.3e-6,
+                 min_noise: Optional[float] = 1e-9,
+                 min_noise_smooth: Optional[float] = 4e-9):
         self.n_gates = n_gates
         self.variance = variance
         self.saturation = saturation
-        self.min = min
-        self.min_smooth = min_smooth
+        self.min_noise = min_noise
+        self.min_noise_smooth = min_noise_smooth
 
 
 class Ceilometer:
     """Base class for all types of ceilometers and pollyxt."""
 
-    def __init__(self, noise_param: NoiseParam):
+    def __init__(self, noise_param: Optional[NoiseParam] = NoiseParam()):
         self.noise_param = noise_param
         self.data = {}          # Need to contain 'beta_raw', 'range' and 'time'
         self.metadata = {}      # Need to contain 'date' as ('yyyy', 'mm', 'dd')
@@ -118,7 +118,10 @@ class NoisyData:
                        keep_negative: bool,
                        snr_limit: float) -> np.ndarray:
         """Screens noise from range-uncorrected lidar variable."""
-        noise_min = self.noise_param.min_smooth if is_smoothed is True else self.noise_param.min
+        if is_smoothed is True:
+            noise_min = self.noise_param.min_noise_smooth
+        else:
+            noise_min = self.noise_param.min_noise
         noise = _estimate_noise_from_top_gates(array, self.noise_param.n_gates, noise_min)
         array = self._reset_low_values_above_saturation(array)
         array = self._remove_noise(array, noise, keep_negative, snr_limit)

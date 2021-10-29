@@ -179,8 +179,8 @@ class ClCeilo(VaisalaCeilo):
 
     noise_param = NoiseParam(n_gates=100,
                              variance=1e-12,
-                             min=2.9e-8,
-                             min_smooth=1.1e-8)
+                             min_noise=2.9e-8,
+                             min_noise_smooth=1.1e-8)
 
     def __init__(self, full_path: str, expected_date: Optional[str] = None):
         super().__init__(full_path, expected_date)
@@ -231,8 +231,10 @@ class Ct25k(VaisalaCeilo):
         https://www.manualslib.com/manual/1414094/Vaisala-Ct25k.html
 
     """
-
-    noise_param = NoiseParam(n_gates=40, variance=1e-12,  min=6e-7, min_smooth=1e-7)
+    noise_param = NoiseParam(n_gates=40,
+                             variance=1e-12,
+                             min_noise=6e-7,
+                             min_noise_smooth=1e-7)
 
     def __init__(self, input_file: str, expected_date: Optional[str] = None):
         super().__init__(input_file, expected_date)

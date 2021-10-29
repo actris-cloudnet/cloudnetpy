@@ -1,6 +1,6 @@
 """Module for reading / converting disdrometer data."""
 import glob
-from typing import Optional, Union
+from typing import Optional
 import logging
 import netCDF4
 import numpy as np
@@ -9,6 +9,7 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy import output
 from cloudnetpy import utils
 from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
+from cloudnetpy.instruments.ceilo import save_ceilo
 import numpy.ma as ma
 
 
@@ -48,15 +49,13 @@ def pollyxt2nc(input_folder: str,
     attributes = output.add_time_attribute(ATTRIBUTES, polly.metadata['date'])
     output.update_attributes(polly.data, attributes)
     polly.add_snr_info('beta', snr_limit)
-    return _save_pollyxt(polly, output_file, keep_uuid, uuid)
+    return save_ceilo(polly, output_file, keep_uuid, uuid)
 
 
 class PollyXt(Ceilometer):
 
-    noise_param = NoiseParam(n_gates=500)
-
     def __init__(self, site_meta: dict, expected_date: Optional[str] = None):
-        super().__init__(self.noise_param)
+        super().__init__()
         self.metadata = site_meta
         self.expected_date = expected_date
         self.model = 'PollyXT Raman lidar'
@@ -141,25 +140,6 @@ def _read_array_from_file_pair(nc_file1: netCDF4.Dataset,
 def _close(*args) -> None:
     for arg in args:
         arg.close()
-
-
-def _save_pollyxt(polly: PollyXt,
-                  output_file: str,
-                  keep_uuid: bool,
-                  uuid: Union[str, None]) -> str:
-    dims = {key: len(polly.data[key][:]) for key in ('time', 'range')}
-    file_type = 'lidar'
-    rootgrp = output.init_file(output_file, dims, polly.data, keep_uuid, uuid)
-    uuid = rootgrp.file_uuid
-    output.add_file_type(rootgrp, file_type)
-    rootgrp.title = f"{file_type.capitalize()} file from {polly.metadata['name']}"
-    rootgrp.year, rootgrp.month, rootgrp.day = polly.metadata['date']
-    rootgrp.location = polly.metadata['name']
-    rootgrp.history = f"{utils.get_time()} - {file_type} file created"
-    rootgrp.source = polly.metadata['source']
-    output.add_references(rootgrp)
-    rootgrp.close()
-    return uuid
 
 
 ATTRIBUTES = {
