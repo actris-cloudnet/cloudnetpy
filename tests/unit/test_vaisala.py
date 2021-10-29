@@ -5,9 +5,11 @@ import pytest
 import numpy as np
 from numpy.testing import assert_equal
 import netCDF4
-
+import sys
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(SCRIPT_PATH)
+from lidar_fun import LidarFun
 
 
 @pytest.mark.parametrize("input, result", [
@@ -36,202 +38,159 @@ def test_split_string(string, indices, result):
     assert_equal(vaisala.split_string(string, indices), result)
 
 
+site_meta = {
+    'name': 'Kumpula',
+    'altitude': 123,
+    'latitude': 45.0,
+    'longitude': 22.0
+}
+
+
 class TestCL51:
 
-    site_meta = {
-        'name': 'Kumpula',
-        'altitude': 123,
-        'latitude': 45.0,
-        'longitude': 22.0
-    }
+    date = '2020-11-15'
 
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.input = f'{SCRIPT_PATH}/data/vaisala/cl51.DAT'
-        self.output = 'dummy_output_file.nc'
-        yield
-        if os.path.isfile(self.output):
-            os.remove(self.output)
+    input = f'{SCRIPT_PATH}/data/vaisala/cl51.DAT'
+    output = 'dummy_output_file.nc'
+    if os.path.isfile(output):
+        os.remove(output)
+    uuid = ceilo2nc(input, output, site_meta)
+    nc = netCDF4.Dataset(output)
+    lidar_fun = LidarFun(nc, site_meta, date, uuid)
 
-    def test_variables(self):
-        ceilo2nc(self.input, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        for key in ('beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
-                    'zenith_angle', 'time'):
-            assert key in nc.variables
-        for key in ('depolarisation', 'depolarisation_raw', ):
-            assert key not in nc.variables
-        for key in ('altitude', 'latitude', 'longitude'):
-            assert nc.variables[key][:] == self.site_meta[key]
-        assert nc.variables['wavelength'][:] == 910
-        assert nc.variables['zenith_angle'][:] == 4.5
-        assert nc.variables['zenith_angle'].units == 'degree'
-        assert nc.variables['zenith_angle'].dtype == 'float32'
-        assert nc.variables['latitude'].units == 'degree_north'
-        assert nc.variables['longitude'].units == 'degree_east'
-        assert nc.variables['altitude'].units == 'm'
-        assert np.all((nc.variables['height'][:] - nc.variables['range'][:]) > 0)
-        assert np.all((nc.variables['height'][:] - self.site_meta['altitude']
-                       - nc.variables['range'][:]) < 0)
-        assert np.all(np.diff(nc.variables['time'][:]) > 0)
-        assert nc.variables['beta'].units == 'sr-1 m-1'
-        assert nc.variables['beta_smooth'].units == 'sr-1 m-1'
-        nc.close()
+    def test_variable_names(self):
+        keys = {'beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
+                'zenith_angle', 'time', 'altitude', 'latitude', 'longitude', 'wavelength'}
+        assert set(self.nc.variables.keys()) == keys
+
+    def test_common_lidar(self):
+        for name, method in LidarFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.lidar_fun, name)()
+
+    def test_variable_values(self):
+        assert self.nc.variables['wavelength'][:] == 910.0
+        assert self.nc.variables['zenith_angle'][:] == 4.5
+        assert np.all(np.diff(self.nc.variables['time'][:]) > 0)
+
+    def test_comments(self):
+        assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
 
     def test_global_attributes(self):
-        uuid = ceilo2nc(self.input, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        assert nc.source == 'Vaisala CL51 ceilometer'
-        assert nc.location == self.site_meta['name']
-        assert nc.title == f'Lidar file from {self.site_meta["name"]}'
-        assert nc.file_uuid == uuid
-        assert nc.cloudnet_file_type == 'lidar'
-        assert nc.year == '2020'
-        assert nc.month == '11'
-        assert nc.day == '15'
-        nc.close()
+        assert self.nc.source == 'Vaisala CL51 ceilometer'
 
     def test_date_argument(self):
-        ceilo2nc(self.input, self.output, self.site_meta, date='2020-11-15')
-        nc = netCDF4.Dataset(self.output)
+        output = 'dummy_sdfsdf_output_file.nc'
+        ceilo2nc(self.input, output, site_meta, date='2020-11-15')
+        nc = netCDF4.Dataset(output)
         assert len(nc.variables['time']) == 2
         assert nc.year == '2020'
         assert nc.month == '11'
         assert nc.day == '15'
         nc.close()
         with pytest.raises(ValueError):
-            ceilo2nc(self.input, self.output, self.site_meta, date='2021-09-15')
+            ceilo2nc(self.input, output, site_meta, date='2021-09-15')
+        if os.path.isfile(output):
+            os.remove(output)
+
+    def test_tear_down(self):
+        if os.path.isfile(self.output):
+            os.remove(self.output)
+        self.nc.close()
 
 
 class TestCL31:
 
-    site_meta = {
-        'name': 'Kumpula',
-        'altitude': 123,
-        'latitude': 45.0,
-        'longitude': 22.0
-    }
+    date = '2020-04-10'
+    input = f'{SCRIPT_PATH}/data/vaisala/cl31.DAT'
+    output = 'dummy_output_file.nc'
+    if os.path.isfile(output):
+        os.remove(output)
+    uuid = ceilo2nc(input, output, site_meta)
+    nc = netCDF4.Dataset(output)
+    lidar_fun = LidarFun(nc, site_meta, date, uuid)
 
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.input = f'{SCRIPT_PATH}/data/vaisala/cl31.DAT'
-        self.output = 'dummy_output_file.nc'
-        yield
-        if os.path.isfile(self.output):
-            os.remove(self.output)
+    def test_variable_names(self):
+        keys = {'beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
+                'zenith_angle', 'time', 'altitude', 'latitude', 'longitude', 'wavelength'}
+        assert set(self.nc.variables.keys()) == keys
 
-    def test_variables(self):
-        ceilo2nc(self.input, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        for key in ('beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
-                    'zenith_angle', 'time'):
-            assert key in nc.variables
-        for key in ('depolarisation', 'depolarisation_raw', ):
-            assert key not in nc.variables
-        for key in ('altitude', 'latitude', 'longitude'):
-            assert nc.variables[key][:] == self.site_meta[key]
-        assert nc.variables['wavelength'][:] == 910
-        assert nc.variables['zenith_angle'][:] == 12
-        assert nc.variables['zenith_angle'].units == 'degree'
-        assert nc.variables['zenith_angle'].dtype == 'float32'
-        assert nc.variables['latitude'].units == 'degree_north'
-        assert nc.variables['longitude'].units == 'degree_east'
-        assert nc.variables['altitude'].units == 'm'
-        vertical_range = nc.variables['height'][:] - nc.variables['altitude'][:]
-        assert np.all((nc.variables['range'][:] - vertical_range) > 0)
-        assert nc.variables['beta'].units == 'sr-1 m-1'
-        assert nc.variables['beta_smooth'].units == 'sr-1 m-1'
-        nc.close()
+    def test_common_lidar(self):
+        for name, method in LidarFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.lidar_fun, name)()
+
+    def test_variable_values(self):
+        assert self.nc.variables['wavelength'][:] == 910.0
+        assert self.nc.variables['zenith_angle'][:] == 12
+
+    def test_comments(self):
+        assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
 
     def test_global_attributes(self):
-        uuid = ceilo2nc(self.input, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        assert nc.source == 'Vaisala CL31 ceilometer'
-        assert nc.location == self.site_meta['name']
-        assert nc.title == f'Lidar file from {self.site_meta["name"]}'
-        assert nc.file_uuid == uuid
-        assert nc.cloudnet_file_type == 'lidar'
-        assert nc.year == '2020'
-        assert nc.month == '04'
-        assert nc.day == '10'
-        nc.close()
+        assert self.nc.source == 'Vaisala CL31 ceilometer'
 
     def test_date_argument(self):
-        self.input = f'{SCRIPT_PATH}/data/vaisala/cl31_badtime.DAT'
-        ceilo2nc(self.input, self.output, self.site_meta, date='2020-04-10')
-        nc = netCDF4.Dataset(self.output)
+        output = 'falskdfjlskdf'
+        input = f'{SCRIPT_PATH}/data/vaisala/cl31_badtime.DAT'
+        ceilo2nc(input, output, site_meta, date='2020-04-10')
+        nc = netCDF4.Dataset(output)
         assert len(nc.variables['time']) == 3
         assert nc.year == '2020'
         assert nc.month == '04'
         assert nc.day == '10'
         nc.close()
-        ceilo2nc(self.input, self.output, self.site_meta, date='2020-04-11')
-        nc = netCDF4.Dataset(self.output)
+        ceilo2nc(input, output, site_meta, date='2020-04-11')
+        nc = netCDF4.Dataset(output)
         assert len(nc.variables['time']) == 2
         assert nc.year == '2020'
         assert nc.month == '04'
         assert nc.day == '11'
         nc.close()
         with pytest.raises(ValueError):
-            ceilo2nc(self.input, self.output, self.site_meta, date='2020-04-12')
+            ceilo2nc(input, output, site_meta, date='2020-04-12')
+        if os.path.isfile(output):
+            os.remove(output)
+
+    def test_tear_down(self):
+        if os.path.isfile(self.output):
+            os.remove(self.output)
+        self.nc.close()
 
 
 class TestCT25k:
+    date = '2020-10-29'
 
-    site_meta = {
-        'name': 'Kumpula',
-        'altitude': 123,
-        'latitude': 45.0,
-        'longitude': 22.0
-    }
+    input = f'{SCRIPT_PATH}/data/vaisala/ct25k.dat'
+    output = 'dummy_output_file.nc'
+    if os.path.isfile(output):
+        os.remove(output)
+    uuid = ceilo2nc(input, output, site_meta)
+    nc = netCDF4.Dataset(output)
+    lidar_fun = LidarFun(nc, site_meta, date, uuid)
 
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.input = f'{SCRIPT_PATH}/data/vaisala/ct25k.dat'
-        self.output = 'dummy_output_file.nc'
-        yield
-        if os.path.isfile(self.output):
-            os.remove(self.output)
+    def test_variable_names(self):
+        keys = {'beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
+                'zenith_angle', 'time', 'altitude', 'latitude', 'longitude', 'wavelength'}
+        assert set(self.nc.variables.keys()) == keys
 
-    def test_variables(self):
-        ceilo2nc(self.input, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        for key in ('beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
-                    'zenith_angle', 'time'):
-            assert key in nc.variables
-        for key in ('depolarisation', 'depolarisation_raw', ):
-            assert key not in nc.variables
-        for key in ('altitude', 'latitude', 'longitude'):
-            assert nc.variables[key][:] == self.site_meta[key]
-        assert nc.variables['wavelength'][:] == 905
-        assert nc.variables['zenith_angle'][:] == 15
-        assert nc.variables['zenith_angle'].units == 'degree'
-        assert nc.variables['zenith_angle'].dtype == 'float32'
-        assert nc.variables['latitude'].units == 'degree_north'
-        assert nc.variables['longitude'].units == 'degree_east'
-        assert nc.variables['altitude'].units == 'm'
-        assert np.all((nc.variables['height'][:] - self.site_meta['altitude']
-                       - nc.variables['range'][:]) < 0)
-        assert np.all(np.diff(nc.variables['time'][:]) > 0)
-        assert nc.variables['beta'].units == 'sr-1 m-1'
-        assert nc.variables['beta_smooth'].units == 'sr-1 m-1'
-        nc.close()
+    def test_common_lidar(self):
+        for name, method in LidarFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.lidar_fun, name)()
+
+    def test_variable_values(self):
+        assert self.nc.variables['wavelength'][:] == 905
+        assert self.nc.variables['zenith_angle'][:] == 15
+
+    def test_comments(self):
+        assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
 
     def test_global_attributes(self):
-        uuid = ceilo2nc(self.input, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        assert nc.source == 'Vaisala CT25k ceilometer'
-        assert nc.location == self.site_meta['name']
-        assert nc.title == f'Lidar file from {self.site_meta["name"]}'
-        assert nc.file_uuid == uuid
-        assert nc.cloudnet_file_type == 'lidar'
-        assert nc.year == '2020'
-        assert nc.month == '10'
-        assert nc.day == '29'
-        nc.close()
+        assert self.nc.source == 'Vaisala CT25k ceilometer'
 
     def test_date_argument(self):
-        ceilo2nc(self.input, self.output, self.site_meta, date='2020-10-29')
+        ceilo2nc(self.input, self.output, site_meta, date='2020-10-29')
         nc = netCDF4.Dataset(self.output)
         assert len(nc.variables['time']) == 3
         assert nc.year == '2020'
@@ -239,4 +198,4 @@ class TestCT25k:
         assert nc.day == '29'
         nc.close()
         with pytest.raises(ValueError):
-            ceilo2nc(self.input, self.output, self.site_meta, date='2021-09-15')
+            ceilo2nc(self.input, self.output, site_meta, date='2021-09-15')

@@ -1,10 +1,9 @@
 """Module with a class for Lufft chm15k ceilometer."""
-from typing import Optional, Tuple
+from typing import Optional
 import logging
 import netCDF4
 import numpy as np
-import scipy.ndimage
-from cloudnetpy.instruments.ceilometer import NoiseParam, NoisyData, calc_sigma_units
+from cloudnetpy.instruments.ceilometer import NoiseParam, NoisyData
 from cloudnetpy.instruments.nc_lidar import NcLidar
 
 

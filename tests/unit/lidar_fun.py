@@ -18,7 +18,8 @@ class LidarFun:
 
     def test_data_types(self):
         for key in self.nc.variables.keys():
-            assert self.nc.variables[key].dtype == 'float32'
+            value = self.nc.variables[key].dtype
+            assert value == 'float32', f'{value} - {key}'
 
     def test_axis(self):
         assert self.nc.variables['time'].axis == 'T'

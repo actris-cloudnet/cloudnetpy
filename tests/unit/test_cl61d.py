@@ -21,6 +21,8 @@ site_meta = {
 files = glob.glob(f'{SCRIPT_PATH}/data/cl61d/*.nc')
 files.sort()
 daily_file = 'dummy_daily_file.nc'
+if os.path.isfile(daily_file):
+    os.remove(daily_file)
 concat_lib.concatenate_files(files, daily_file, concat_dimension='profile')
 date = '2021-08-28'
 
@@ -28,6 +30,8 @@ date = '2021-08-28'
 class TestCl61d:
 
     output = 'dummy_output_file.nc'
+    if os.path.isfile(output):
+        os.remove(output)
     uuid = ceilo2nc(daily_file, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
@@ -60,6 +64,7 @@ class TestCl61d:
             os.remove(self.output)
         if os.path.isfile(daily_file):
             os.remove(daily_file)
+        self.nc.close()
 
 
 def test_date_argument():

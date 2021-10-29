@@ -249,7 +249,7 @@ class Ct25k(VaisalaCeilo):
         self.data['range'] = self._calc_range()
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
         self.data['beta_raw'] = self._read_backscatter(hex_profiles)
-        self.data['calibration_factor'] = calibration_factor or 1
+        self.data['calibration_factor'] = calibration_factor or 1.0
         self.data['beta_raw'] *= self.data['calibration_factor']
         self.data['zenith_angle'] = np.median(self.metadata['zenith_angle'])
         self.metadata['date'] = self._date
