@@ -40,9 +40,8 @@ class Cl61d(NcLidar):
         for key in ('p_pol', 'x_pol'):
             self.data[key] = self.dataset.variables[key][:]
 
-    def calc_depol(self) -> np.ndarray:
+    def calc_depol(self, snr_limit: Optional[float] = 3.0) -> np.ndarray:
         """Converts raw depolarisation to noise-screened depolarisation."""
-        snr_limit = 3
         noisy_data = NoisyData(self.data, self.noise_param)
         x_pol = noisy_data.screen_data(self.data['x_pol'], keep_negative=True, snr_limit=snr_limit)
         return x_pol / self.data['p_pol']

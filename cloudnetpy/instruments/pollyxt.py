@@ -47,7 +47,7 @@ def pollyxt2nc(input_folder: str,
     polly.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, polly.metadata['date'])
     output.update_attributes(polly.data, attributes)
-    polly.modify_beta_comment(snr_limit)
+    polly.add_snr_info('beta', snr_limit)
     return _save_pollyxt(polly, output_file, keep_uuid, uuid)
 
 

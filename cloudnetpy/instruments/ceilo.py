@@ -58,13 +58,15 @@ def ceilo2nc(full_path: str,
         >>> ceilo2nc('chm15k_raw.nc', 'chm15k.nc', site_meta)
 
     """
+    snr_limit = 5
+    snr_limit_depol = 3
     ceilo_obj = _initialize_ceilo(full_path, date)
     calibration_factor = site_meta.get('calibration_factor', None)
     ceilo_obj.read_ceilometer_file(calibration_factor)
-    ceilo_obj.data['beta'] = ceilo_obj.calc_screened_product(ceilo_obj.data['beta_raw'])
-    ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(ceilo_obj.data['beta'])
+    ceilo_obj.data['beta'] = ceilo_obj.calc_screened_product(ceilo_obj.data['beta_raw'], snr_limit)
+    ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(ceilo_obj.data['beta'], snr_limit)
     if 'cl61' in ceilo_obj.model.lower():
-        ceilo_obj.data['depolarisation'] = ceilo_obj.calc_depol()
+        ceilo_obj.data['depolarisation'] = ceilo_obj.calc_depol(snr_limit_depol)
         ceilo_obj.remove_raw_data()
     ceilo_obj.screen_depol()
     ceilo_obj.prepare_data(site_meta)
@@ -72,6 +74,8 @@ def ceilo2nc(full_path: str,
     ceilo_obj.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.metadata['date'])
     output.update_attributes(ceilo_obj.data, attributes)
+    for key, value in zip(('beta', 'depolarisation'), (snr_limit, snr_limit_depol)):
+        ceilo_obj.add_snr_info(key, value)
     return _save_ceilo(ceilo_obj, output_file, site_meta['name'], keep_uuid, uuid)
 
 

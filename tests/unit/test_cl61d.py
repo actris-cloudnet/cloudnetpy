@@ -50,6 +50,7 @@ class TestCl61d:
 
     def test_comments(self):
         assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
+        assert 'SNR threshold applied: 3' in self.nc.variables['depolarisation'].comment
 
     def test_global_attributes(self):
         assert self.nc.source == 'Vaisala CL61d ceilometer'
