@@ -78,7 +78,7 @@ class TestMIRA2nc:
         assert nc.year == '2021'
         assert nc.month == '01'
         assert nc.day == '02'
-        assert nc.Conventions == 'CF-1.7'
+        assert nc.Conventions == 'CF-1.8'
         assert nc.source == 'METEK MIRA-35'
         assert nc.location == 'The_station'
         assert nc.title == 'Radar file from The_station'

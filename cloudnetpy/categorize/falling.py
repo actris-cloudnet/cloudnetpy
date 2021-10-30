@@ -32,9 +32,8 @@ def find_falling_hydrometeors(obs: ClassData,
 
     falling_from_radar = _find_falling_from_radar(obs, is_insects)
     falling_from_radar_fixed = _fix_liquid_dominated_radar(obs, falling_from_radar, is_liquid)
-    falling_from_lidar = _find_falling_from_lidar(obs, is_liquid)
     cold_aerosols = _find_cold_aerosols(obs, is_liquid)
-    return falling_from_radar_fixed | falling_from_lidar | cold_aerosols
+    return falling_from_radar_fixed | cold_aerosols
 
 
 def _find_falling_from_radar(obs: ClassData, is_insects: np.ndarray) -> np.ndarray:
@@ -42,12 +41,6 @@ def _find_falling_from_radar(obs: ClassData, is_insects: np.ndarray) -> np.ndarr
     no_clutter = ~obs.is_clutter
     no_insects = ~is_insects
     return is_z & no_clutter & no_insects
-
-
-def _find_falling_from_lidar(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
-    is_beta = ~obs.beta.mask
-    strong_beta_limit = 2e-6
-    return is_beta & (obs.beta.data > strong_beta_limit) & ~is_liquid
 
 
 def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:

@@ -212,7 +212,7 @@ def add_time_attribute(attributes: dict, date: list) -> dict:
 
     """
     date = '-'.join(date)
-    attributes['time'] = MetaData(units=f'hours since {date} 00:00:00')
+    attributes['time'] = MetaData(units=f'hours since {date} 00:00:00 +0:00')
     return attributes
 
 
@@ -228,10 +228,10 @@ def update_attributes(cloudnet_variables: dict, attributes: dict) -> None:
 
     """
     for key in cloudnet_variables:
-        if key in attributes:
-            cloudnet_variables[key].set_attributes(attributes[key])
         if key in COMMON_ATTRIBUTES:
             cloudnet_variables[key].set_attributes(COMMON_ATTRIBUTES[key])
+        if key in attributes:
+            cloudnet_variables[key].set_attributes(attributes[key])
 
 
 def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
@@ -277,7 +277,7 @@ def _get_identifier(short_id: str) -> str:
 
 def _add_standard_global_attributes(nc: netCDF4.Dataset,
                                     uuid: Union[str, None] = None) -> None:
-    nc.Conventions = 'CF-1.7'
+    nc.Conventions = 'CF-1.8'
     nc.cloudnetpy_version = version.__version__
     nc.file_uuid = uuid or utils.get_uuid()
 

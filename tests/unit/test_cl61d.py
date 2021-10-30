@@ -2,57 +2,76 @@ import os
 import glob
 from cloudnetpy import concat_lib
 from cloudnetpy.instruments import ceilo2nc
-import pytest
 import netCDF4
+import numpy as np
+import numpy.ma as ma
+import sys
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(SCRIPT_PATH)
+from lidar_fun import LidarFun
+
+site_meta = {
+    'name': 'Hyytiälä',
+    'altitude': 123,
+    'calibration_factor': 2.0,
+    'latitude': 45.0,
+    'longitude': 22.0
+}
+files = glob.glob(f'{SCRIPT_PATH}/data/cl61d/*.nc')
+files.sort()
+daily_file = 'dummy_cl61_daily_file.nc'
+concat_lib.concatenate_files(files, daily_file, concat_dimension='profile')
+date = '2021-08-28'
 
 
 class TestCl61d:
 
-    site_meta = {
-        'name': 'Hyytiälä',
-        'altitude': 123,
-        'calibration_factor': 2.0
-    }
-    files = glob.glob(f'{SCRIPT_PATH}/data/cl61d/*.nc')
-    files.sort()
+    output = 'dummy_cl61_output_file.nc'
+    uuid = ceilo2nc(daily_file, output, site_meta)
+    nc = netCDF4.Dataset(output)
+    lidar_fun = LidarFun(nc, site_meta, date, uuid)
 
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.output = 'dummy_output_file.nc'
-        self.filename = 'dummy_daily_file.nc'
-        concat_lib.concatenate_files(self.files, self.filename, concat_dimension='profile')
-        yield
-        os.remove(self.filename)
-        os.remove(self.output)
+    def test_variable_names(self):
+        keys = {'beta', 'beta_smooth', 'calibration_factor', 'range', 'height', 'zenith_angle',
+                'time', 'depolarisation', 'altitude', 'latitude', 'longitude', 'wavelength'}
+        assert set(self.nc.variables.keys()) == keys
 
-    def test_variables(self):
-        ceilo2nc(self.filename, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        for key in ('beta', 'depolarisation', 'beta_smooth', 'depolarisation_smooth'):
-            assert key in nc.variables
-        for key in ('beta_raw', 'depolarisation_raw'):
-            assert key not in nc.variables
-        for key in ('altitude', 'calibration_factor'):
-            assert nc.variables[key][:] == self.site_meta[key]
-        nc.close()
+    def test_common_lidar(self):
+        for name, method in LidarFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.lidar_fun, name)()
+
+    def test_variable_values(self):
+        assert abs(self.nc.variables['wavelength'][:] - 910.55) < 0.001
+        assert self.nc.variables['zenith_angle'][:] == 3.0
+        assert ma.max(self.nc.variables['depolarisation'][:]) < 1
+        assert ma.min(self.nc.variables['depolarisation'][:]) > -0.1
+
+    def test_comments(self):
+        assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
+        assert 'SNR threshold applied: 3' in self.nc.variables['depolarisation'].comment
 
     def test_global_attributes(self):
-        uuid = ceilo2nc(self.filename, self.output, self.site_meta)
-        nc = netCDF4.Dataset(self.output)
-        assert nc.source == 'Vaisala CL61d'
-        assert nc.location == self.site_meta['name']
-        assert nc.title == f'Ceilometer file from {self.site_meta["name"]}'
-        assert nc.file_uuid == uuid
-        assert nc.cloudnet_file_type == 'lidar'
-        nc.close()
+        assert self.nc.source == 'Vaisala CL61d ceilometer'
 
-    def test_date_argument(self):
-        ceilo2nc(self.filename, self.output, self.site_meta, date='2021-08-30')
-        nc = netCDF4.Dataset(self.output)
-        assert len(nc.variables['time']) == 12
-        assert nc.year == '2021'
-        assert nc.month == '08'
-        assert nc.day == '30'
-        nc.close()
+    def test_tear_down(self):
+        os.remove(self.output)
+        os.remove(daily_file)
+        self.nc.close()
+
+
+def test_date_argument():
+    output = 'dummy_asdfasdfa_output_file.nc'
+    concat_lib.concatenate_files(files, daily_file, concat_dimension='profile')
+    ceilo2nc(daily_file, output, site_meta, date='2021-08-30')
+    nc = netCDF4.Dataset(output)
+    assert len(nc.variables['time']) == 12
+    assert np.all(np.diff(nc.variables['time'][:]) > 0)
+    assert nc.year == '2021'
+    assert nc.month == '08'
+    assert nc.day == '30'
+    nc.close()
+    os.remove(output)
+    os.remove(daily_file)
+

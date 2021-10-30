@@ -184,3 +184,35 @@ def _update_fields(nc_old: netCDF4.Dataset, nc_new: netCDF4.Dataset, valid_ind: 
                 nc_old.variables[field][idx, :] = nc_new.variables[field][valid_ind, :]
             elif len(dimensions) == 2 and concat_ind == 1:
                 nc_old.variables[field][:, idx] = nc_new.variables[field][:, valid_ind]
+
+
+def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int):
+    """Truncates netcdf file in 'time' dimension taking only n_profiles.
+    Useful for creating small files for tests.
+    """
+    nc = netCDF4.Dataset(filename, 'r')
+    nc_new = netCDF4.Dataset(output_file, 'w', format=nc.data_model)
+    for dim in nc.dimensions.keys():
+        dim_len = None if dim == 'time' else nc.dimensions[dim].size
+        nc_new.createDimension(dim, dim_len)
+    for attr in nc.ncattrs():
+        value = getattr(nc, attr)
+        setattr(nc_new, attr, value)
+    for key in nc.variables:
+        array = nc.variables[key][:]
+        dimensions = nc.variables[key].dimensions
+        fill_value = getattr(nc.variables[key], '_FillValue', None)
+        var = nc_new.createVariable(key, array.dtype, dimensions, zlib=True, fill_value=fill_value)
+        if 'time' in dimensions[0]:
+            if array.ndim == 1:
+                var[:] = array[:n_profiles]
+            if array.ndim == 2:
+                var[:] = array[:n_profiles, :]
+        else:
+            var[:] = array
+        for attr in nc.variables[key].ncattrs():
+            if attr != '_FillValue':
+                value = getattr(nc.variables[key], attr)
+                setattr(var, attr, value)
+    nc.close()
+    nc_new.close()

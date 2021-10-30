@@ -755,3 +755,105 @@ def get_epoch(units: str) -> tuple:
     if (1900 < year <= current_year) and (0 < month < 13) and (0 < day < 32):
         return tuple(date_components)
     return fallback
+
+
+def screen_by_time(data_in: dict, epoch: tuple, expected_date: str) -> dict:
+    """"Screen data by time.
+
+    Args:
+        data_in: Dictionary containing at least 'time' key and other numpy arrays.
+        epoch: Epoch of the time array, e.g., (1970, 1, 1)
+        expected_date: Expected date in yyyy-mm-dd
+
+    Returns:
+        data: Screened and sorted by the time vector.
+
+    Notes:
+        - Requires 'time' key
+        - Works for dimensions 1, 2, 3 (time has to be at 0-axis)
+        - Does nothing for scalars
+
+    """
+    data = data_in.copy()
+    valid_ind = find_valid_time_indices(data['time'], epoch, expected_date)
+    n_time = len(data['time'])
+    for key, array in data.items():
+        if isinstance(array, list) and len(array) > 1:
+            raise ValueError
+        if isinstance(array, np.ndarray) and array.ndim > 0 and array.shape[0] == n_time:
+            if array.ndim == 1:
+                data[key] = data[key][valid_ind]
+            if array.ndim == 2:
+                data[key] = data[key][valid_ind, :]
+            if array.ndim == 3:
+                data[key] = data[key][valid_ind, :, :]
+    return data
+
+
+def find_valid_time_indices(time: np.ndarray, epoch: tuple, expected_date: str) -> list:
+    """Finds valid time array indices for the given date.
+
+    Args:
+        time: Time in seconds from some epoch.
+        epoch: Epoch of the time array, e.g., (1970, 1, 1)
+        expected_date: Expected date in yyyy-mm-dd
+
+    Returns:
+        list: Valid indices for the given date in sorted order.
+
+    Raises:
+        RuntimeError: No valid timestamps.
+
+    Examples:
+        >>> time = [1, 5, 1e6, 3]
+        >>> find_valid_time_indices(time, (1970, 1, 1) '1970-01-01')
+            [0, 3, 2]
+
+    """
+    ind_sorted = np.argsort(time)
+    ind_valid = []
+    for ind in ind_sorted:
+        date_str = '-'.join(seconds2date(time[ind], epoch=epoch)[:3])
+        if date_str == expected_date:
+            ind_valid.append(ind)
+    if not ind_valid:
+        raise ValueError('No valid time indices')
+    return ind_valid
+
+
+def append_data(data_in: dict, key: str, array: np.ndarray) -> dict:
+    """Appends data to a dictionary field (creates the field if not yet present).
+
+    Args:
+        data_in: Dictionary where data will be appended.
+        key: Key of the field.
+        array: Numpy array to be appended to data_in[key].
+
+    """
+    data = data_in.copy()
+    if key not in data:
+        data[key] = array
+    else:
+        data[key] = ma.concatenate((data[key], array))
+    return data
+
+
+def edges2mid(data: np.ndarray, reference: str) -> np.ndarray:
+    """Shifts values half bin towards up or down.
+
+    Args:
+        data: 1D numpy array (e.g. range)
+        reference: If 'lower', increase values by half bin. If 'upper', decrease values.
+
+    Returns:
+        Shifted values.
+
+    """
+    if reference not in ('lower', 'upper'):
+        raise ValueError
+    gaps = (data[1:] - data[0:-1]) / 2
+    if reference == 'lower':
+        gaps = np.append(gaps, gaps[-1])
+        return data + gaps
+    gaps = np.insert(gaps, 0, gaps[0])
+    return data - gaps
