@@ -45,8 +45,8 @@ class TestNoisyData:
                                       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3.6, 1e-5, 1e-8]]),
                 }
         noise_param = ceilometer.NoiseParam()
-        noise_param.variance = 1e-3
-        noise_param.saturation = 2.4
+        noise_param.variance_threshold = 1e-3
+        noise_param.saturation_threshold = 2.4
         noisy_data = ceilometer.NoisyData(data, noise_param)
         assert_array_equal(noisy_data._find_saturated_profiles(), [1, 0, 1])
         expected = ma.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1e-6, 1e-7],
@@ -60,7 +60,7 @@ class TestNoisyData:
         assert_array_equal(result.mask, expected.mask)
 
     def test_find_saturated_profiles(self):
-        self.noisy_data.noise_param.variance = 0.25
+        self.noisy_data.noise_param.variance_threshold = 0.25
         self.noisy_data.data['beta_raw'] = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 1.99],
                                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 2.1, 1],
                                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 1]])

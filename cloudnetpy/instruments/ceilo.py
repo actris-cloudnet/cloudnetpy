@@ -70,7 +70,6 @@ def ceilo2nc(full_path: str,
         ceilo_obj.remove_raw_data()
     ceilo_obj.screen_depol()
     ceilo_obj.prepare_data(site_meta)
-    ceilo_obj.prepare_metadata()
     ceilo_obj.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.metadata['date'])
     output.update_attributes(ceilo_obj.data, attributes)
@@ -131,7 +130,7 @@ def save_ceilo(ceilo: any,
     rootgrp.year, rootgrp.month, rootgrp.day = ceilo.metadata['date']
     rootgrp.location = ceilo.metadata['name']
     rootgrp.history = f"{utils.get_time()} - {file_type} file created"
-    rootgrp.source = ceilo.metadata['source']
+    rootgrp.source = ceilo.model
     output.add_references(rootgrp)
     rootgrp.close()
     return uuid

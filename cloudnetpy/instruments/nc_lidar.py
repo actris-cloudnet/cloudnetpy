@@ -9,7 +9,7 @@ import logging
 class NcLidar(Ceilometer):
     """Class for all lidars using netCDF files."""
 
-    def __init__(self, noise_param: NoiseParam):
+    def __init__(self, noise_param: Optional[NoiseParam] = NoiseParam()):
         super().__init__(noise_param)
         self.dataset = None
 

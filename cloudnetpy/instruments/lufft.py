@@ -3,7 +3,6 @@ from typing import Optional
 import logging
 import netCDF4
 import numpy as np
-from cloudnetpy.instruments.ceilometer import NoiseParam
 from cloudnetpy.instruments.nc_lidar import NcLidar
 from cloudnetpy import utils
 
@@ -11,10 +10,8 @@ from cloudnetpy import utils
 class LufftCeilo(NcLidar):
     """Class for Lufft chm15k ceilometer."""
 
-    noise_param = NoiseParam()
-
     def __init__(self, file_name: str, expected_date: Optional[str] = None):
-        super().__init__(self.noise_param)
+        super().__init__()
         self.file_name = file_name
         self.expected_date = expected_date
         self.model = 'Lufft CHM15k ceilometer'

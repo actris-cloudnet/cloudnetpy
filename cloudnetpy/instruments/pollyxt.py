@@ -1,6 +1,6 @@
 """Module for reading / converting disdrometer data."""
 import glob
-from typing import Optional
+from typing import Optional, Union
 import logging
 import netCDF4
 import numpy as np
@@ -8,7 +8,7 @@ from numpy.testing import assert_array_equal
 from cloudnetpy.metadata import MetaData
 from cloudnetpy import output
 from cloudnetpy import utils
-from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
+from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy.instruments.ceilo import save_ceilo
 import numpy.ma as ma
 
@@ -38,13 +38,12 @@ def pollyxt2nc(input_folder: str,
     """
     snr_limit = 5
     polly = PollyXt(site_meta, date)
-    polly.fetch_data(input_folder)
-    polly.get_date_and_time(polly.epoch)
+    epoch = polly.fetch_data(input_folder)
+    polly.get_date_and_time(epoch)
     polly.fetch_zenith_angle()
     polly.calc_screened_products(snr_limit)
     polly.mask_nan_values()
     polly.prepare_data(site_meta)
-    polly.prepare_metadata()
     polly.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, polly.metadata['date'])
     output.update_attributes(polly.data, attributes)
@@ -60,7 +59,6 @@ class PollyXt(Ceilometer):
         self.expected_date = expected_date
         self.model = 'PollyXT Raman lidar'
         self.wavelength = 1064
-        self.epoch = None
 
     def mask_nan_values(self):
         for key, array in self.data.items():
@@ -77,7 +75,7 @@ class PollyXt(Ceilometer):
         default = 5
         self.data['zenith_angle'] = float(self.metadata.get('zenith_angle', default))
 
-    def fetch_data(self, input_folder: str) -> None:
+    def fetch_data(self, input_folder: str) -> Union[tuple, None]:
         """Read input data."""
         bsc_files = [file for file in glob.glob(f'{input_folder}/*[0-9]_att*.nc')]
         depol_files = [file for file in glob.glob(f'{input_folder}/*[0-9]_vol*.nc')]
@@ -91,11 +89,12 @@ class PollyXt(Ceilometer):
             return
         self.data['range'] = _read_array_from_multiple_files(bsc_files, depol_files, 'height')
         calibration_factors = []
+        epoch = ()
         bsc_key = 'attenuated_backscatter_1064nm'
         for ind, (bsc_file, depol_file) in enumerate(zip(bsc_files, depol_files)):
             nc_bsc = netCDF4.Dataset(bsc_file, 'r')
             nc_depol = netCDF4.Dataset(depol_file, 'r')
-            self.epoch = utils.get_epoch(nc_bsc['time'].unit)
+            epoch = utils.get_epoch(nc_bsc['time'].unit)
             try:
                 time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, 'time'))
             except AssertionError:
@@ -113,6 +112,7 @@ class PollyXt(Ceilometer):
             calibration_factors = np.concatenate([calibration_factors, calibration_factor])
             _close(nc_bsc, nc_depol)
         self.data['calibration_factor'] = calibration_factors
+        return epoch
 
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:

@@ -9,14 +9,14 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 class NoiseParam:
     """Noise parameters. Values are weakly instrument-dependent."""
     def __init__(self,
-                 variance: Optional[float] = 2e-14,
-                 saturation: Optional[float] = 0.3e-6,
-                 min_noise: Optional[float] = 1e-9,
-                 min_noise_smooth: Optional[float] = 4e-9):
-        self.variance = variance
-        self.saturation = saturation
-        self.min_noise = min_noise
-        self.min_noise_smooth = min_noise_smooth
+                 variance_threshold: Optional[float] = 2e-14,
+                 saturation_threshold: Optional[float] = 0.3e-6,
+                 noise_min: Optional[float] = 1e-9,
+                 noise_smooth_min: Optional[float] = 4e-9):
+        self.variance_threshold = variance_threshold
+        self.saturation_threshold = saturation_threshold
+        self.noise_min = noise_min
+        self.noise_smooth_min = noise_smooth_min
 
 
 class Ceilometer:
@@ -61,11 +61,6 @@ class Ceilometer:
         for key in ('latitude', 'longitude', 'altitude'):
             if key in site_meta:
                 self.data[key] = float(site_meta[key])
-
-    def prepare_metadata(self):
-        """Add common global attributes."""
-        assert self.model is not None
-        self.metadata['source'] = self.model
 
     def get_date_and_time(self, epoch: tuple) -> None:
         if self.expected_date is not None:
@@ -117,9 +112,9 @@ class NoisyData:
                        snr_limit: float) -> np.ndarray:
         """Screens noise from range-uncorrected lidar variable."""
         if is_smoothed is True:
-            noise_min = self.noise_param.min_noise_smooth
+            noise_min = self.noise_param.noise_smooth_min
         else:
-            noise_min = self.noise_param.min_noise
+            noise_min = self.noise_param.noise_min
         noise = _estimate_background_noise(array, noise_min)
         array = self._reset_low_values_above_saturation(array)
         array = self._remove_noise(array, noise, keep_negative, snr_limit)
@@ -131,14 +126,14 @@ class NoisyData:
         for saturated_profile in np.where(is_saturation)[0]:
             profile = array[saturated_profile, :]
             peak_ind = np.argmax(profile)
-            alt_ind = np.where(profile[peak_ind:] < self.noise_param.saturation)[0] + peak_ind
+            alt_ind = np.where(profile[peak_ind:] < self.noise_param.saturation_threshold)[0] + peak_ind
             array[saturated_profile, alt_ind] = ma.masked
         return array
 
     def _find_saturated_profiles(self) -> np.ndarray:
         """Estimates saturated profiles using the variance of the top range gates."""
         var = _calc_var_from_top_gates(self.data['beta_raw'][:])
-        return var < self.noise_param.variance
+        return var < self.noise_param.variance_threshold
 
     @staticmethod
     def _remove_noise(array: np.ndarray,
