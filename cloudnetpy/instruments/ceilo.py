@@ -103,6 +103,7 @@ def _find_ceilo_model(full_path: str) -> str:
                 return 'cl61d'
         return 'chm15k'
     except OSError:
+        line = ''
         first_empty_line = utils.find_first_empty_line(full_path)
         max_number_of_empty_lines = 10
         for n in range(1, max_number_of_empty_lines):

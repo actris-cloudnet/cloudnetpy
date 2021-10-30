@@ -177,8 +177,7 @@ class VaisalaCeilo(Ceilometer):
 class ClCeilo(VaisalaCeilo):
     """Base class for Vaisala CL31/CL51 ceilometers."""
 
-    noise_param = NoiseParam(n_gates=100,
-                             variance=1e-12,
+    noise_param = NoiseParam(variance=1e-12,
                              min_noise=2.9e-8,
                              min_noise_smooth=1.1e-8)
 
@@ -231,8 +230,7 @@ class Ct25k(VaisalaCeilo):
         https://www.manualslib.com/manual/1414094/Vaisala-Ct25k.html
 
     """
-    noise_param = NoiseParam(n_gates=40,
-                             variance=1e-12,
+    noise_param = NoiseParam(variance=1e-12,
                              min_noise=6e-7,
                              min_noise_smooth=1e-7)
 

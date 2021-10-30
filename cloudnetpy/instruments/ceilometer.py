@@ -9,12 +9,10 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 class NoiseParam:
     """Noise parameters. Values are weakly instrument-dependent."""
     def __init__(self,
-                 n_gates: Optional[int] = 70,
                  variance: Optional[float] = 2e-14,
                  saturation: Optional[float] = 0.3e-6,
                  min_noise: Optional[float] = 1e-9,
                  min_noise_smooth: Optional[float] = 4e-9):
-        self.n_gates = n_gates
         self.variance = variance
         self.saturation = saturation
         self.min_noise = min_noise
@@ -122,7 +120,7 @@ class NoisyData:
             noise_min = self.noise_param.min_noise_smooth
         else:
             noise_min = self.noise_param.min_noise
-        noise = _estimate_noise_from_top_gates(array, self.noise_param.n_gates, noise_min)
+        noise = _estimate_background_noise(array, noise_min)
         array = self._reset_low_values_above_saturation(array)
         array = self._remove_noise(array, noise, keep_negative, snr_limit)
         return array
@@ -139,7 +137,7 @@ class NoisyData:
 
     def _find_saturated_profiles(self) -> np.ndarray:
         """Estimates saturated profiles using the variance of the top range gates."""
-        var = np.var(self.data['beta_raw'][:, -self.noise_param.n_gates:], axis=1)
+        var = _calc_var_from_top_gates(self.data['beta_raw'][:])
         return var < self.noise_param.variance
 
     @staticmethod
@@ -202,8 +200,15 @@ def _estimate_clouds_from_beta(beta: np.ndarray) -> Tuple[np.ndarray, np.ndarray
     return cloud_ind, beta[cloud_ind], cloud_limit
 
 
-def _estimate_noise_from_top_gates(data: np.ndarray, n_gates: int, noise_min: float) -> np.ndarray:
-    """Estimates noise from topmost range gates."""
-    noise = ma.std(data[:, -n_gates:], axis=1)
+def _estimate_background_noise(data: np.ndarray,
+                               noise_min: float) -> np.ndarray:
+    var = _calc_var_from_top_gates(data)
+    noise = np.sqrt(var)
     noise[noise < noise_min] = noise_min
     return noise
+
+
+def _calc_var_from_top_gates(data: np.ndarray) -> np.ndarray:
+    fraction = 0.1
+    n_gates = round(data.shape[1] * fraction)
+    return ma.var(data[:, -n_gates:], axis=1)

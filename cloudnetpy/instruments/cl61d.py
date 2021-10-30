@@ -10,7 +10,7 @@ from cloudnetpy.instruments.nc_lidar import NcLidar
 class Cl61d(NcLidar):
     """Class for Vaisala CL61d ceilometer."""
 
-    noise_param = NoiseParam(n_gates=100)
+    noise_param = NoiseParam()
 
     def __init__(self, file_name: str, expected_date: Optional[str] = None):
         super().__init__(self.noise_param)
