@@ -1,1 +1,4 @@
+sphinx
+sphinx_rtd_theme
 pytest==4.1.1
+docutils<0.18
