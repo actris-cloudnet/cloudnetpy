@@ -38,7 +38,8 @@ def ceilo2nc(full_path: str,
         site_meta: Dictionary containing information about the site and instrument.
             Required key value pairs are `name` and `altitude` (metres above mean sea level).
             Also 'calibration_factor' is recommended because the default value is probably
-            incorrect.
+            incorrect. If the backround noise is *not* range-corrected, you must define:
+            {'range_corrected': False}.
         keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
             when new UUID is generated.
         uuid: Set specific UUID for the file.
@@ -62,9 +63,12 @@ def ceilo2nc(full_path: str,
     snr_limit_depol = 3
     ceilo_obj = _initialize_ceilo(full_path, date)
     calibration_factor = site_meta.get('calibration_factor', None)
+    range_corrected = site_meta.get('range_corrected', True)
     ceilo_obj.read_ceilometer_file(calibration_factor)
-    ceilo_obj.data['beta'] = ceilo_obj.calc_screened_product(ceilo_obj.data['beta_raw'], snr_limit)
-    ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(ceilo_obj.data['beta'], snr_limit)
+    ceilo_obj.data['beta'] = ceilo_obj.calc_screened_product(ceilo_obj.data['beta_raw'],
+                                                             snr_limit, range_corrected)
+    ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(ceilo_obj.data['beta'],
+                                                               snr_limit, range_corrected)
     if 'cl61' in ceilo_obj.model.lower():
         ceilo_obj.data['depolarisation'] = ceilo_obj.calc_depol(snr_limit_depol)
         ceilo_obj.remove_raw_data()

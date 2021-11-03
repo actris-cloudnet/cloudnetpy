@@ -32,14 +32,18 @@ class Ceilometer:
 
     def calc_screened_product(self,
                               array: np.ndarray,
-                              snr_limit: Optional[int] = 5) -> np.ndarray:
+                              snr_limit: Optional[int] = 5,
+                              range_corrected: Optional[bool] = True) -> np.ndarray:
         """Screens noise from lidar variable."""
-        noisy_data = NoisyData(self.data, self.noise_param)
+        noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
         array_screened = noisy_data.screen_data(array, snr_limit=snr_limit)
         return array_screened
 
-    def calc_beta_smooth(self, beta: np.ndarray, snr_limit: Optional[int] = 5) -> np.ndarray:
-        noisy_data = NoisyData(self.data, self.noise_param)
+    def calc_beta_smooth(self,
+                         beta: np.ndarray,
+                         snr_limit: Optional[int] = 5,
+                         range_corrected: Optional[bool] = True) -> np.ndarray:
+        noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
         beta_raw = ma.copy(self.data['beta_raw'])
         cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
         beta_raw[cloud_ind] = cloud_limit
@@ -91,9 +95,10 @@ class Ceilometer:
 
 
 class NoisyData:
-    def __init__(self, data: dict, noise_param: NoiseParam):
+    def __init__(self, data: dict, noise_param: NoiseParam, range_corrected: bool):
         self.data = data
         self.noise_param = noise_param
+        self.range_corrected = range_corrected
 
     def screen_data(self,
                     data: np.array,
