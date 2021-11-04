@@ -177,8 +177,7 @@ class VaisalaCeilo(Ceilometer):
 class ClCeilo(VaisalaCeilo):
     """Base class for Vaisala CL31/CL51 ceilometers."""
 
-    noise_param = NoiseParam(variance_threshold=1e-12,
-                             noise_min=2.9e-8,
+    noise_param = NoiseParam(noise_min=3.1e-8,
                              noise_smooth_min=1.1e-8)
 
     def __init__(self, full_path: str, expected_date: Optional[str] = None):
@@ -230,8 +229,7 @@ class Ct25k(VaisalaCeilo):
         https://www.manualslib.com/manual/1414094/Vaisala-Ct25k.html
 
     """
-    noise_param = NoiseParam(variance_threshold=1e-12,
-                             noise_min=6e-7,
+    noise_param = NoiseParam(noise_min=6e-7,
                              noise_smooth_min=1e-7)
 
     def __init__(self, input_file: str, expected_date: Optional[str] = None):

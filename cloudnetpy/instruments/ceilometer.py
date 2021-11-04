@@ -4,17 +4,14 @@ import numpy.ma as ma
 import scipy.ndimage
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
+import logging
 
 
 class NoiseParam:
     """Noise parameters. Values are weakly instrument-dependent."""
     def __init__(self,
-                 variance_threshold: Optional[float] = 2e-14,
-                 saturation_threshold: Optional[float] = 0.3e-6,
                  noise_min: Optional[float] = 1e-9,
                  noise_smooth_min: Optional[float] = 4e-9):
-        self.variance_threshold = variance_threshold
-        self.saturation_threshold = saturation_threshold
         self.noise_min = noise_min
         self.noise_smooth_min = noise_smooth_min
 
@@ -99,53 +96,73 @@ class NoisyData:
         self.data = data
         self.noise_param = noise_param
         self.range_corrected = range_corrected
+        self._signal = None
 
     def screen_data(self,
                     data: np.array,
                     snr_limit: Optional[float] = 5,
                     is_smoothed: Optional[bool] = False,
                     keep_negative: Optional[bool] = False) -> np.ndarray:
-        array = self._calc_range_uncorrected(data)
-        array = self._screen_by_snr(array, is_smoothed, keep_negative, snr_limit)
-        array = self._calc_range_corrected(array)
-        return array
-
-    def _screen_by_snr(self,
-                       array: np.ndarray,
-                       is_smoothed: bool,
-                       keep_negative: bool,
-                       snr_limit: float) -> np.ndarray:
-        """Screens noise from range-uncorrected lidar variable."""
-        if is_smoothed is True:
-            noise_min = self.noise_param.noise_smooth_min
-        else:
-            noise_min = self.noise_param.noise_min
-        noise = _estimate_background_noise(array, noise_min)
-        array = self._reset_low_values_above_saturation(array)
-        array = self._remove_noise(array, noise, keep_negative, snr_limit)
-        return array
-
-    def _reset_low_values_above_saturation(self, array: np.ndarray) -> np.ndarray:
-        """Removes low values in saturated profiles above peak."""
-        is_saturation = self._find_saturated_profiles()
-        for saturated_profile in np.where(is_saturation)[0]:
-            profile = array[saturated_profile, :]
-            peak_ind = np.argmax(profile)
-            alt_ind = np.where(profile[peak_ind:] < self.noise_param.saturation_threshold)[0] + peak_ind
-            array[saturated_profile, alt_ind] = ma.masked
-        return array
-
-    def _find_saturated_profiles(self) -> np.ndarray:
-        """Estimates saturated profiles using the variance of the top range gates."""
-        var = _calc_var_from_top_gates(self.data['beta_raw'][:])
-        return var < self.noise_param.variance_threshold
+        filter_fog = True
+        filter_negatives = True
+        filter_snr = True
+        original_data = ma.copy(data)
+        self._signal = original_data
+        range_uncorrected = self._calc_range_uncorrected(original_data)
+        noise_min = self.noise_param.noise_smooth_min if is_smoothed is True else self.noise_param.noise_min
+        noise = _estimate_background_noise(range_uncorrected)
+        noise_below_threshold = noise < noise_min
+        logging.info(f'Adjusted noise of {sum(noise_below_threshold)} profiles')
+        noise[noise_below_threshold] = noise_min
+        if filter_negatives:
+            is_negative = self._remove_low_values_above_consequent_negatives(range_uncorrected)
+            noise[is_negative] = 1e-12
+        if filter_fog:
+            is_fog = self._find_fog_profiles()
+            self._clean_fog_profiles(range_uncorrected, is_fog)
+            noise[is_fog] = 1e-12
+        if filter_snr:
+            range_uncorrected = self._remove_noise(range_uncorrected, noise, keep_negative, snr_limit)
+        range_corrected = self._calc_range_corrected(range_uncorrected)
+        return range_corrected
 
     @staticmethod
-    def _remove_noise(array: np.ndarray,
+    def _remove_low_values_above_consequent_negatives(range_uncorrected: np.ndarray) -> np.ndarray:
+        n_negatives = 5
+        n_gates = 100
+        threshold = 3e-6
+        negative_data = range_uncorrected[:, :n_gates] < 0
+        n_consequent_negatives = utils.cumsumr(negative_data, axis=1)
+        time_ind, alt_ind = np.where(n_consequent_negatives > n_negatives)
+        for time, alt in zip(time_ind, alt_ind):
+            profile = range_uncorrected[time, alt:]
+            profile[profile < threshold] = ma.masked
+            range_uncorrected[time, alt:] = profile
+        cleaned_indices = np.unique(time_ind)
+        logging.info(f'Cleaned {len(cleaned_indices)} profiles with negative filter')
+        return np.unique(time_ind)
+
+    def _find_fog_profiles(self) -> np.ndarray:
+        """Finds saturated profiles from beta_raw (can be range-corrected or range-uncorrected)."""
+        n_gates = 20
+        signal_sum_threshold = 1e-3
+        variance_threshold = 1e-15
+        signal_sum = ma.sum(ma.abs(self.data['beta_raw'][:, :n_gates]), axis=1)
+        var = _calc_var_from_top_gates(self.data['beta_raw'])
+        is_fog = (signal_sum > signal_sum_threshold) | (var < variance_threshold)
+        logging.info(f'Cleaned {sum(is_fog)} profiles with fog filter')
+        return is_fog
+
+    def _remove_noise(self,
+                      array: np.ndarray,
                       noise: np.ndarray,
                       keep_negative: bool,
                       snr_limit: float) -> ma.MaskedArray:
         snr = array / utils.transpose(noise)
+        if self.range_corrected is False:
+            snr_scale_factor = 6
+            ind = self._get_altitude_ind()
+            snr[:, ind] *= snr_scale_factor
         if ma.isMaskedArray(array) is False:
             array = ma.masked_array(array)
         if keep_negative is True:
@@ -155,15 +172,46 @@ class NoisyData:
         return array
 
     def _calc_range_uncorrected(self, array: np.ndarray) -> np.ndarray:
-        return array / self._get_range_squared()
+        ind = self._get_altitude_ind()
+        array[:, ind] = array[:, ind] / self._get_range_squared()[ind]
+        return array
 
     def _calc_range_corrected(self, array: np.ndarray) -> np.ndarray:
-        return array * self._get_range_squared()
+        ind = self._get_altitude_ind()
+        array[:, ind] = array[:, ind] * self._get_range_squared()[ind]
+        return array
+
+    def _get_altitude_ind(self):
+        alt_limit = 2400
+        if self.range_corrected is False:
+            logging.warning(f'Raw data not range-corrected, correcting below {alt_limit} m')
+            return np.where(self.data['range'] < alt_limit)
+        else:
+            return np.arange(len(self.data['range']))
 
     def _get_range_squared(self) -> np.ndarray:
         """Returns range (m), squared and converted to km."""
         m2km = 0.001
         return (self.data['range'] * m2km) ** 2
+
+    def _clean_fog_profiles(self, array: np.ndarray, is_fog: np.ndarray) -> None:
+        """Removes values in saturated (e.g. fog) profiles above peak."""
+        threshold = 2e-6
+        for time_ind in np.where(is_fog)[0]:
+            signal = self._signal[time_ind, :]
+            peak_ind = np.argmax(signal)
+            array[time_ind, peak_ind:][signal[peak_ind:] < threshold] = ma.masked
+
+
+def _estimate_background_noise(data: np.ndarray) -> np.ndarray:
+    var = _calc_var_from_top_gates(data)
+    return np.sqrt(var)
+
+
+def _calc_var_from_top_gates(data: np.ndarray) -> np.ndarray:
+    fraction = 0.1
+    n_gates = round(data.shape[1] * fraction)
+    return ma.var(data[:, -n_gates:], axis=1)
 
 
 def calc_sigma_units(time_vector: np.array, range_los: np.array) -> Tuple[float, float]:
@@ -198,17 +246,3 @@ def _estimate_clouds_from_beta(beta: np.ndarray) -> Tuple[np.ndarray, np.ndarray
     cloud_limit = 1e-6
     cloud_ind = np.where(beta > cloud_limit)
     return cloud_ind, beta[cloud_ind], cloud_limit
-
-
-def _estimate_background_noise(data: np.ndarray,
-                               noise_min: float) -> np.ndarray:
-    var = _calc_var_from_top_gates(data)
-    noise = np.sqrt(var)
-    noise[noise < noise_min] = noise_min
-    return noise
-
-
-def _calc_var_from_top_gates(data: np.ndarray) -> np.ndarray:
-    fraction = 0.1
-    n_gates = round(data.shape[1] * fraction)
-    return ma.var(data[:, -n_gates:], axis=1)
