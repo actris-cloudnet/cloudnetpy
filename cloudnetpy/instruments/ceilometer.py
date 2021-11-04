@@ -102,10 +102,10 @@ class NoisyData:
                     data: np.array,
                     snr_limit: Optional[float] = 5,
                     is_smoothed: Optional[bool] = False,
-                    keep_negative: Optional[bool] = False) -> np.ndarray:
-        filter_fog = True
-        filter_negatives = True
-        filter_snr = True
+                    keep_negative: Optional[bool] = False,
+                    filter_fog: Optional[bool] = True,
+                    filter_negatives: Optional[bool] = True,
+                    filter_snr: Optional[bool] = True) -> np.ndarray:
         original_data = ma.copy(data)
         self._signal = original_data
         range_uncorrected = self._calc_range_uncorrected(original_data)
@@ -114,15 +114,16 @@ class NoisyData:
         noise_below_threshold = noise < noise_min
         logging.info(f'Adjusted noise of {sum(noise_below_threshold)} profiles')
         noise[noise_below_threshold] = noise_min
-        if filter_negatives:
+        if filter_negatives is True:
             is_negative = self._remove_low_values_above_consequent_negatives(range_uncorrected)
             noise[is_negative] = 1e-12
-        if filter_fog:
+        if filter_fog is True:
             is_fog = self._find_fog_profiles()
             self._clean_fog_profiles(range_uncorrected, is_fog)
             noise[is_fog] = 1e-12
-        if filter_snr:
-            range_uncorrected = self._remove_noise(range_uncorrected, noise, keep_negative, snr_limit)
+        if filter_snr is True:
+            range_uncorrected = self._remove_noise(range_uncorrected, noise, keep_negative,
+                                                   snr_limit)
         range_corrected = self._calc_range_corrected(range_uncorrected)
         return range_corrected
 
@@ -148,8 +149,8 @@ class NoisyData:
         signal_sum_threshold = 1e-3
         variance_threshold = 1e-15
         signal_sum = ma.sum(ma.abs(self.data['beta_raw'][:, :n_gates]), axis=1)
-        var = _calc_var_from_top_gates(self.data['beta_raw'])
-        is_fog = (signal_sum > signal_sum_threshold) | (var < variance_threshold)
+        variance = _calc_var_from_top_gates(self.data['beta_raw'])
+        is_fog = (signal_sum > signal_sum_threshold) | (variance < variance_threshold)
         logging.info(f'Cleaned {sum(is_fog)} profiles with fog filter')
         return is_fog
 

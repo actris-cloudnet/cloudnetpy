@@ -2,8 +2,6 @@
 from typing import Optional
 import logging
 import netCDF4
-import numpy as np
-from cloudnetpy.instruments.ceilometer import NoisyData
 from cloudnetpy.instruments.nc_lidar import NcLidar
 
 
@@ -34,11 +32,4 @@ class Cl61d(NcLidar):
         beta_raw *= calibration_factor
         self.data['calibration_factor'] = float(calibration_factor)
         self.data['beta_raw'] = beta_raw
-        for key in ('p_pol', 'x_pol'):
-            self.data[key] = self.dataset.variables[key][:]
-
-    def calc_depol(self, snr_limit: Optional[float] = 3.0) -> np.ndarray:
-        """Converts raw depolarisation to noise-screened depolarisation."""
-        noisy_data = NoisyData(self.data, self.noise_param)
-        x_pol = noisy_data.screen_data(self.data['x_pol'], keep_negative=True, snr_limit=snr_limit)
-        return x_pol / self.data['p_pol']
+        self.data['depolarisation'] = self.dataset.variables['x_pol'][:] / self.dataset.variables['p_pol'][:]

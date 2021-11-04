@@ -60,7 +60,6 @@ def ceilo2nc(full_path: str,
 
     """
     snr_limit = 5
-    snr_limit_depol = 3
     ceilo_obj = _initialize_ceilo(full_path, date)
     calibration_factor = site_meta.get('calibration_factor', None)
     range_corrected = site_meta.get('range_corrected', True)
@@ -70,7 +69,7 @@ def ceilo2nc(full_path: str,
     ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(ceilo_obj.data['beta'],
                                                                snr_limit, range_corrected)
     if 'cl61' in ceilo_obj.model.lower():
-        ceilo_obj.data['depolarisation'] = ceilo_obj.calc_depol(snr_limit_depol)
+        ceilo_obj.data['depolarisation'].mask = ceilo_obj.data['beta'].mask
         ceilo_obj.remove_raw_data()
     ceilo_obj.screen_depol()
     ceilo_obj.prepare_data(site_meta)
@@ -79,7 +78,6 @@ def ceilo2nc(full_path: str,
     output.update_attributes(ceilo_obj.data, attributes)
     for key in ('beta', 'beta_smooth'):
         ceilo_obj.add_snr_info(key, snr_limit)
-    ceilo_obj.add_snr_info('depolarisation', snr_limit_depol)
     ceilo_obj.metadata['name'] = site_meta['name']
     return save_ceilo(ceilo_obj, output_file, keep_uuid, uuid)
 
