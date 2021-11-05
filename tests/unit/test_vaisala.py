@@ -6,6 +6,7 @@ import numpy as np
 from numpy.testing import assert_equal
 import netCDF4
 import sys
+from cloudnetpy.exceptions import ValidTimeStampError
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -85,7 +86,7 @@ class TestCL51:
         assert nc.month == '11'
         assert nc.day == '15'
         nc.close()
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidTimeStampError):
             ceilo2nc(self.input, output, site_meta, date='2021-09-15')
         os.remove(output)
 
@@ -140,7 +141,7 @@ class TestCL31:
         assert nc.month == '04'
         assert nc.day == '11'
         nc.close()
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidTimeStampError):
             ceilo2nc(input, output, site_meta, date='2020-04-12')
         os.remove(output)
 
@@ -187,7 +188,7 @@ class TestCT25k:
         assert nc.month == '10'
         assert nc.day == '29'
         nc.close()
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidTimeStampError):
             ceilo2nc(self.input, output, site_meta, date='2021-09-15')
         os.remove(output)
 

@@ -4,6 +4,7 @@ import logging
 import numpy as np
 from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
 from cloudnetpy import utils
+from cloudnetpy.exceptions import ValidTimeStampError
 
 
 M2KM = 0.001
@@ -76,7 +77,7 @@ class VaisalaCeilo(Ceilometer):
         if self.expected_date is not None:
             timestamp_line_numbers = _find_correct_dates(timestamp_line_numbers)
             if not timestamp_line_numbers:
-                raise ValueError('No valid timestamps found')
+                raise ValidTimeStampError
         number_of_data_lines = _find_number_of_data_lines(timestamp_line_numbers[0])
         data_lines = _parse_data_lines(timestamp_line_numbers)
         return data_lines
