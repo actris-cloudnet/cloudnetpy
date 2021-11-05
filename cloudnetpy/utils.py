@@ -814,7 +814,7 @@ def find_valid_time_indices(time: np.ndarray, epoch: tuple, expected_date: str) 
     ind_valid = []
     for ind in ind_sorted:
         date_str = '-'.join(seconds2date(time[ind], epoch=epoch)[:3])
-        if date_str == expected_date:
+        if date_str == expected_date and time[ind] not in time[ind_valid]:
             ind_valid.append(ind)
     if not ind_valid:
         raise ValueError('No valid time indices')
