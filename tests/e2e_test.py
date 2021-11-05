@@ -58,10 +58,15 @@ def main():
         'radar': f"{source_path}radar.nc",
         'lidar': f"{source_path}lidar.nc"}
 
-    site_meta = {'name': 'Mace Head', 'altitude': 13.0}
+    site_meta = {
+        'name': 'Mace Head',
+        'altitude': 13.0
+    }
     uuid_radar = mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta, uuid='kissa')
     assert uuid_radar == 'kissa'
-    uuid_lidar = ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], site_meta)
+    lidar_meta = site_meta.copy()
+    lidar_meta['calibration_factor'] = 1e-8
+    uuid_lidar = ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], lidar_meta)
     for _, filename in calibrated_files.items():
         _run_tests(filename)
     _check_attributes(calibrated_files['radar'], site_meta)
@@ -90,10 +95,10 @@ def main():
 
 def _run_tests(filename: str):
     quality = Quality(filename)
-    quality.check_data()
-    quality.check_metadata()
-    assert quality.n_metadata_test_failures == 0
-    assert quality.n_data_test_failures == 0
+    res_quality = quality.check_data()
+    res_metadata = quality.check_metadata()
+    assert quality.n_metadata_test_failures == 0, f'{filename} - {res_metadata}'
+    assert quality.n_data_test_failures == 0, f'{filename} - {res_quality}'
 
 
 def _check_source_file_uuids(file: str, expected_uuids: tuple):
