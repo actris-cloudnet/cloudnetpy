@@ -92,63 +92,65 @@ class Ceilometer:
 
 
 class NoisyData:
-    def __init__(self, data: dict, noise_param: NoiseParam, range_corrected: bool):
+    def __init__(self, data: dict,
+                 noise_param: NoiseParam,
+                 range_corrected: Optional[bool] = True):
         self.data = data
         self.noise_param = noise_param
         self.range_corrected = range_corrected
-        self._signal = None
 
     def screen_data(self,
-                    data: np.array,
+                    data_in: np.array,
                     snr_limit: Optional[float] = 5,
                     is_smoothed: Optional[bool] = False,
                     keep_negative: Optional[bool] = False,
                     filter_fog: Optional[bool] = True,
                     filter_negatives: Optional[bool] = True,
                     filter_snr: Optional[bool] = True) -> np.ndarray:
-        original_data = ma.copy(data)
-        self._signal = original_data
-        range_uncorrected = self._calc_range_uncorrected(original_data)
-        noise_min = self.noise_param.noise_smooth_min if is_smoothed is True else self.noise_param.noise_min
-        noise = _estimate_background_noise(range_uncorrected)
-        noise_below_threshold = noise < noise_min
-        logging.info(f'Adjusted noise of {sum(noise_below_threshold)} profiles')
-        noise[noise_below_threshold] = noise_min
+        data = ma.copy(data_in)
+        self._calc_range_uncorrected(data)
+        noise = _estimate_background_noise(data)
+        noise = self._adjust_noise(noise, is_smoothed)
         if filter_negatives is True:
-            is_negative = self._remove_low_values_above_consequent_negatives(range_uncorrected)
+            is_negative = self._mask_low_values_above_consequent_negatives(data)
             noise[is_negative] = 1e-12
         if filter_fog is True:
             is_fog = self._find_fog_profiles()
-            self._clean_fog_profiles(range_uncorrected, is_fog)
+            self._clean_fog_profiles(data, is_fog)
             noise[is_fog] = 1e-12
         if filter_snr is True:
-            range_uncorrected = self._remove_noise(range_uncorrected, noise, keep_negative,
-                                                   snr_limit)
-        range_corrected = self._calc_range_corrected(range_uncorrected)
-        return range_corrected
+            data = self._remove_noise(data, noise, keep_negative, snr_limit)
+        self._calc_range_corrected(data)
+        return data
+
+    def _adjust_noise(self, noise: np.ndarray, is_smoothed: bool) -> np.ndarray:
+        noise_min = self.noise_param.noise_smooth_min if is_smoothed is True else self.noise_param.noise_min
+        noise_below_threshold = noise < noise_min
+        logging.info(f'Adjusted noise of {sum(noise_below_threshold)} profiles')
+        noise[noise_below_threshold] = noise_min
+        return noise
 
     @staticmethod
-    def _remove_low_values_above_consequent_negatives(range_uncorrected: np.ndarray) -> np.ndarray:
-        n_negatives = 5
-        n_gates = 100
-        threshold = 8e-6
-        negative_data = range_uncorrected[:, :n_gates] < 0
+    def _mask_low_values_above_consequent_negatives(data: np.ndarray,
+                                                    n_negatives: Optional[int] = 5,
+                                                    threshold: Optional[float] = 8e-6,
+                                                    n_gates: Optional[int] = 100) -> np.ndarray:
+        negative_data = data[:, :n_gates] < 0
         n_consequent_negatives = utils.cumsumr(negative_data, axis=1)
-        time_ind, alt_ind = np.where(n_consequent_negatives > n_negatives)
-        for time, alt in zip(time_ind, alt_ind):
-            profile = range_uncorrected[time, alt:]
+        time_indices, alt_indices = np.where(n_consequent_negatives > n_negatives)
+        for time_ind, alt_ind in zip(time_indices, alt_indices):
+            profile = data[time_ind, alt_ind:]
             profile[profile < threshold] = ma.masked
-            range_uncorrected[time, alt:] = profile
-        cleaned_indices = np.unique(time_ind)
-        logging.info(f'Cleaned {len(cleaned_indices)} profiles with negative filter')
-        return np.unique(time_ind)
+        cleaned_time_indices = np.unique(time_indices)
+        logging.info(f'Cleaned {len(cleaned_time_indices)} profiles with negative filter')
+        return cleaned_time_indices
 
-    def _find_fog_profiles(self) -> np.ndarray:
-        """Finds saturated profiles from beta_raw (can be range-corrected or range-uncorrected)."""
-        n_gates = 20
-        signal_sum_threshold = 1e-3
-        variance_threshold = 1e-15
-        signal_sum = ma.sum(ma.abs(self.data['beta_raw'][:, :n_gates]), axis=1)
+    def _find_fog_profiles(self,
+                           n_gates_for_signal_sum: Optional[int] = 20,
+                           signal_sum_threshold: Optional[float] = 1e-3,
+                           variance_threshold: Optional[float] = 1e-15) -> np.ndarray:
+        """Finds saturated (usually fog) profiles from beta_raw."""
+        signal_sum = ma.sum(ma.abs(self.data['beta_raw'][:, :n_gates_for_signal_sum]), axis=1)
         variance = _calc_var_from_top_gates(self.data['beta_raw'])
         is_fog = (signal_sum > signal_sum_threshold) | (variance < variance_threshold)
         logging.info(f'Cleaned {sum(is_fog)} profiles with fog filter')
@@ -172,17 +174,15 @@ class NoisyData:
             array[snr < snr_limit] = ma.masked
         return array
 
-    def _calc_range_uncorrected(self, array: np.ndarray) -> np.ndarray:
+    def _calc_range_uncorrected(self, data: np.ndarray) -> None:
         ind = self._get_altitude_ind()
-        array[:, ind] = array[:, ind] / self._get_range_squared()[ind]
-        return array
+        data[:, ind] = data[:, ind] / self._get_range_squared()[ind]
 
-    def _calc_range_corrected(self, array: np.ndarray) -> np.ndarray:
+    def _calc_range_corrected(self, data: np.ndarray) -> None:
         ind = self._get_altitude_ind()
-        array[:, ind] = array[:, ind] * self._get_range_squared()[ind]
-        return array
+        data[:, ind] = data[:, ind] * self._get_range_squared()[ind]
 
-    def _get_altitude_ind(self):
+    def _get_altitude_ind(self) -> np.ndarray:
         alt_limit = 2400
         if self.range_corrected is False:
             logging.warning(f'Raw data not range-corrected, correcting below {alt_limit} m')
@@ -195,13 +195,15 @@ class NoisyData:
         m2km = 0.001
         return (self.data['range'] * m2km) ** 2
 
-    def _clean_fog_profiles(self, array: np.ndarray, is_fog: np.ndarray) -> None:
+    @staticmethod
+    def _clean_fog_profiles(data: np.ndarray,
+                            is_fog: np.ndarray,
+                            threshold: Optional[float] = 2e-6) -> None:
         """Removes values in saturated (e.g. fog) profiles above peak."""
-        threshold = 2e-6
         for time_ind in np.where(is_fog)[0]:
-            signal = self._signal[time_ind, :]
-            peak_ind = np.argmax(signal)
-            array[time_ind, peak_ind:][signal[peak_ind:] < threshold] = ma.masked
+            profile = data[time_ind, :]
+            peak_ind = np.argmax(profile)
+            profile[peak_ind:][profile[peak_ind:] < threshold] = ma.masked
 
 
 def _estimate_background_noise(data: np.ndarray) -> np.ndarray:

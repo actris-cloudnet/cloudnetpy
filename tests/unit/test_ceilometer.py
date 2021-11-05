@@ -27,45 +27,60 @@ class TestNoisyData:
         screened_array = self.noisy_data._remove_noise(array, noise, True, snr_limit=1)
         assert_array_equal(screened_array.mask, expected.mask)
 
+    def test_remove_low_values_above_consequent_negatives(self):
+        data = ma.array([[2,  0,  0,  0, 0,   4, 0],
+                         [3, -1, -2, -3, 0.9, 1.1, 0],
+                         [1,  2,  1,  2, 0,   0, 0]], mask=False)
+        expected = ma.array([[2,  0,  0,  0,   0, 4, 0],
+                             [3, -1, -2, -3, 0.9, 1.1, 0],
+                             [1,  2,  1,  2,   0, 0, 0]],
+                            mask=[[0, 0, 0, 0, 0, 0, 0],
+                                  [0, 0, 0, 1, 1, 0, 1],
+                                  [0, 0, 0, 0, 0, 0, 0]])
+
+        res = self.noisy_data._mask_low_values_above_consequent_negatives(data, n_negatives=2,
+                                                                          threshold=1, n_gates=5)
+        expected_indices = np.array([1])
+        assert res == expected_indices
+        assert_array_equal(data.data, expected.data)
+        assert_array_equal(data.mask, expected.mask)
+
+    def test_clean_fog_profiles(self):
+        is_fog = np.array([1, 0, 1])
+        data = ma.array([[1,  2,  5,  0, 0.8,  1.1, 0],
+                         [3, -1, -2, -3, 0.9, 1.1, 0],
+                         [10,  2,  0.2,  2, 0,   0, 0]], mask=False)
+        expected = ma.array([[1,  2,  5,  0, 0.8, 1.1, 0],
+                             [3, -1, -2, -3, 0.9, 1.1, 0],
+                             [10,  2,  0.2,  2,   0, 0, 0]],
+                            mask=[[0, 0, 0, 1, 1, 0, 1],
+                                  [0, 0, 0, 0, 0, 0, 0],
+                                  [0, 0, 1, 0, 1, 1, 1]])
+        self.noisy_data._clean_fog_profiles(data, is_fog, threshold=1)
+        assert_array_equal(data.data, expected.data)
+        assert_array_equal(data.mask, expected.mask)
+
     def test_calc_range_uncorrected(self):
         beta = np.array([[1, 4, 9],
                          [1, 4, 9]])
         expected = np.ones((2, 3))
-        assert_array_equal(self.noisy_data._calc_range_uncorrected(beta), expected)
+        self.noisy_data._calc_range_uncorrected(beta)
+        assert_array_equal(beta, expected)
 
     def test_calc_range_corrected(self):
         beta = np.ones((2, 3))
         expected = np.array([[1, 4, 9],
                              [1, 4, 9]])
-        assert_array_equal(self.noisy_data._calc_range_corrected(beta), expected)
+        self.noisy_data._calc_range_corrected(beta)
+        assert_array_equal(beta, expected)
 
-    def test_reset_low_values_above_saturation(self):
-        data = {'beta_raw': ma.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1e-6, 1e-7],
-                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.3, 2.5],
-                                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3.6, 1e-5, 1e-8]]),
-                }
-        noise_param = ceilometer.NoiseParam()
-        noise_param.variance_threshold = 1e-3
-        noise_param.saturation_threshold = 2.4
-        noisy_data = ceilometer.NoisyData(data, noise_param)
-        assert_array_equal(noisy_data._find_saturated_profiles(), [1, 0, 1])
-        expected = ma.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1e-6, 1e-7],
-                             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.3, 2.5],
-                             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3.6, 1e-5, 1e-8]],
-                            mask=[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
-                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1]])
-        result = noisy_data._reset_low_values_above_saturation(data['beta_raw'])
-        assert_array_equal(result.data, expected.data)
-        assert_array_equal(result.mask, expected.mask)
-
-    def test_find_saturated_profiles(self):
-        self.noisy_data.noise_param.variance_threshold = 0.25
-        self.noisy_data.data['beta_raw'] = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 1.99],
-                                                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 2.1, 1],
-                                                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 1]])
-        result = [1, 0, 1]
-        assert_array_equal(self.noisy_data._find_saturated_profiles(), result)
+    def test_find_fog_profiles(self):
+        self.noisy_data.data['beta_raw'] = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 1.99],
+                                                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.1e-12, 1e-12, 1e-12],
+                                                     [2e-3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 2.1, 1],
+                                                     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 20]])
+        result = [0, 1, 1, 0]
+        assert_array_equal(self.noisy_data._find_fog_profiles(), result)
 
     def test_get_range_squared(self):
         result = np.array([1, 4, 9])
@@ -98,13 +113,12 @@ def test_estimate_clouds_from_beta():
     assert_array_equal(c, 1e-6)
 
 
-def test_estimate_noise_from_top_gates():
+def test_estimate_background_noise():
     beta = ma.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.4, 0.1, 0.2],
                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1],
                      [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.6, 1.2, 5.3]],
                     mask=[[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                           [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                           [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
-    noise_min = 0.001
-    result = np.array([np.std([0.1, 0.2]), np.std([0, 0.1]), noise_min])
-    assert_array_equal(ceilometer._estimate_background_noise(beta, noise_min), result)
+    result = np.array([np.std([0.1, 0.2]), np.std([0, 0.1]), np.std([0.6, 1.2, 5.3])])
+    assert_array_equal(ceilometer._estimate_background_noise(beta), result)
