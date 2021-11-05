@@ -131,7 +131,7 @@ class NoisyData:
     def _remove_low_values_above_consequent_negatives(range_uncorrected: np.ndarray) -> np.ndarray:
         n_negatives = 5
         n_gates = 100
-        threshold = 3e-6
+        threshold = 8e-6
         negative_data = range_uncorrected[:, :n_gates] < 0
         n_consequent_negatives = utils.cumsumr(negative_data, axis=1)
         time_ind, alt_ind = np.where(n_consequent_negatives > n_negatives)
