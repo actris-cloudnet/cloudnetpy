@@ -134,10 +134,12 @@ class NoisyData:
     def _mask_low_values_above_consequent_negatives(data: np.ndarray,
                                                     n_negatives: Optional[int] = 5,
                                                     threshold: Optional[float] = 8e-6,
-                                                    n_gates: Optional[int] = 100) -> np.ndarray:
-        negative_data = data[:, :n_gates] < 0
+                                                    n_gates: Optional[int] = 95,
+                                                    n_skip_lowest: Optional[int] = 5) -> np.ndarray:
+        negative_data = data[:, n_skip_lowest:n_gates + n_skip_lowest] < 0
         n_consequent_negatives = utils.cumsumr(negative_data, axis=1)
         time_indices, alt_indices = np.where(n_consequent_negatives > n_negatives)
+        alt_indices += n_skip_lowest
         for time_ind, alt_ind in zip(time_indices, alt_indices):
             profile = data[time_ind, alt_ind:]
             profile[profile < threshold] = ma.masked

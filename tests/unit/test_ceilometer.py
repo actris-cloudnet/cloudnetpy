@@ -38,8 +38,11 @@ class TestNoisyData:
                                   [0, 0, 0, 1, 1, 0, 1],
                                   [0, 0, 0, 0, 0, 0, 0]])
 
-        res = self.noisy_data._mask_low_values_above_consequent_negatives(data, n_negatives=2,
-                                                                          threshold=1, n_gates=5)
+        res = self.noisy_data._mask_low_values_above_consequent_negatives(data,
+                                                                          n_negatives=2,
+                                                                          threshold=1,
+                                                                          n_gates=5,
+                                                                          n_skip_lowest=0)
         expected_indices = np.array([1])
         assert res == expected_indices
         assert_array_equal(data.data, expected.data)
