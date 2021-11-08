@@ -185,12 +185,12 @@ class NoisyData:
         data[:, ind] = data[:, ind] * self._get_range_squared()[ind]
 
     def _get_altitude_ind(self) -> np.ndarray:
-        alt_limit = 2400
         if self.range_corrected is False:
+            alt_limit = 2400
             logging.warning(f'Raw data not range-corrected, correcting below {alt_limit} m')
-            return np.where(self.data['range'] < alt_limit)
         else:
-            return np.arange(len(self.data['range']))
+            alt_limit = 1e12
+        return np.where(self.data['range'] < alt_limit)
 
     def _get_range_squared(self) -> np.ndarray:
         """Returns range (m), squared and converted to km."""

@@ -65,7 +65,6 @@ def main():
     uuid_radar = mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta, uuid='kissa')
     assert uuid_radar == 'kissa'
     lidar_meta = site_meta.copy()
-    lidar_meta['calibration_factor'] = 1e-8
     uuid_lidar = ceilo2nc(raw_files['lidar'], calibrated_files['lidar'], lidar_meta)
     for _, filename in calibrated_files.items():
         _run_tests(filename)

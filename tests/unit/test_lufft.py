@@ -34,6 +34,7 @@ def fake_jenoptik_file(tmpdir):
     root_grp.year = '2021'
     root_grp.month = '2'
     root_grp.day = '21'
+    root_grp.software_version = "12.12.1 2.13 1.040 0"
     root_grp.close()
     return file_name
 
