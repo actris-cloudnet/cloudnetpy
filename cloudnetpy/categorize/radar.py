@@ -229,7 +229,7 @@ class Radar(DataSource):
         z_power_min = _calc_z_power_min()
         self.append_data(_calc_error(), 'Z_error')
         self.append_data(_calc_sensitivity(), 'Z_sensitivity')
-        self.append_data(1, 'Z_bias')
+        self.append_data(1.0, 'Z_bias')
 
     def add_meta(self) -> None:
         """Copies misc. metadata from the input file."""

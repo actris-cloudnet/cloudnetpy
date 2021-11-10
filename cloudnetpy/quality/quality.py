@@ -34,7 +34,9 @@ class Quality:
             'missingVariables': self._find_missing_keys('required_variables'),
             'missingGlobalAttributes': self._find_missing_keys('required_global_attributes'),
             'invalidGlobalAttributeValues': self._find_invalid_global_attribute_values(),
-            'invalidUnits': self._find_invalid_variable_units()}
+            'invalidUnits': self._find_invalid_variable_units(),
+            'invalidDataTypes': self._find_invalid_data_types()
+        }
 
     def check_data(self) -> dict:
         """Check data values of Cloudnet file.
@@ -85,9 +87,24 @@ class Quality:
             if key in self._nc.variables:
                 self.n_metadata_tests += 1
                 value = self._nc.variables[key].units
-                if self._nc.variables[key].units != expected_unit:
+                if value != expected_unit:
                     invalid.append((key, value, expected_unit))
                     self.n_metadata_test_failures += 1
+        return invalid
+
+    def _find_invalid_data_types(self) -> list:
+        invalid = []
+        for key in self._nc.variables:
+            expected_value = 'float32'
+            self.n_metadata_tests += 1
+            value = self._nc.variables[key].dtype.name
+            for config_key, custom_value in self._metadata_config.items('data_types'):
+                if config_key == key:
+                    expected_value = custom_value
+                    break
+            if value != expected_value:
+                invalid.append((key, value, expected_value))
+                self.n_metadata_test_failures += 1
         return invalid
 
     def _find_missing_keys(self, config_section: str) -> list:
