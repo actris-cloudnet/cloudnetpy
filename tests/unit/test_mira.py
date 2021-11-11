@@ -1,11 +1,24 @@
 from os import path
 import pytest
 from cloudnetpy.instruments import mira
-from tempfile import NamedTemporaryFile
 import netCDF4
+import sys
+import os
+from cloudnetpy.quality import Quality
 
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
+sys.path.append(SCRIPT_PATH)
+from radar_fun import RadarFun
+from all_products_fun import AllProductsFun
+
+site_meta = {
+    'name': 'The_station',
+    'latitude': 50,
+    'longitude': 104.5,
+    'altitude': 50
+}
+filepath = f'{SCRIPT_PATH}/data/mira/'
 
 
 class TestMeasurementDate:
@@ -26,77 +39,73 @@ class TestMeasurementDate:
 
 
 class TestMIRA2nc:
-
-    file_path = f'{SCRIPT_PATH}/data/mira/'
-
+    date = '2021-01-02'
     n_time1 = 146
     n_time2 = 145
+    output = 'dummy_mira_output_file.nc'
+    output2 = 'dummy_temp_mira_file.nc'
+    uuid = mira.mira2nc(f'{filepath}/20210102_0000.mmclx', output, site_meta)
+    quality = Quality(output)
+    res_data = quality.check_data()
+    res_metadata = quality.check_metadata()
+    nc = netCDF4.Dataset(output)
+    radar_fun = RadarFun(nc, site_meta, date, uuid)
+    all_fun = AllProductsFun(nc, site_meta, date, uuid)
 
-    site_meta = {
-        'name': 'The_station',
-        'longitude': 104.3,
-        'altitude': 50.2
-    }
+    def test_variable_names(self):
+        keys = {'Ze', 'v', 'width', 'ldr', 'SNR', 'time', 'range', 'radar_frequency',
+                'nyquist_velocity', 'latitude', 'longitude', 'altitude', 'zrg', 'prf', 'nfft',
+                'drg', 'rg0', 'zenith_angle', 'height', 'nave'}
+        assert set(self.nc.variables.keys()) == keys
 
-    @pytest.fixture(autouse=True)
-    def _init(self):
-        self.temp_file = NamedTemporaryFile()
+    def test_variables(self):
+        assert self.nc.variables['radar_frequency'][:].data == 35.5  # Hard coded
+        assert self.nc.variables['zenith_angle'][:].data == 0
+
+    def test_common(self):
+        for name, method in AllProductsFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.all_fun, name)()
+
+    def test_common_radar(self):
+        for name, method in RadarFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.radar_fun, name)()
+
+    def test_qc(self):
+        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
+        assert self.quality.n_data_test_failures == 0, self.res_data
+
+    def test_processing_of_one_nc_file(self):
+        assert len(self.nc.variables['time'][:]) == self.n_time1
+
+    def test_global_attributes(self):
+        assert self.nc.source == 'METEK MIRA-35'
 
     def test_processing_of_several_nc_files(self):
-        mira.mira2nc(self.file_path, self.temp_file.name, self.site_meta)
-        nc = netCDF4.Dataset(self.temp_file.name)
+        mira.mira2nc(filepath, self.output2, site_meta)
+        nc = netCDF4.Dataset(self.output2)
         assert len(nc.variables['time'][:]) == self.n_time1 + self.n_time2
         nc.close()
 
-    def test_processing_of_one_nc_file(self):
-        mira.mira2nc(f'{self.file_path}/20210102_0000.mmclx', self.temp_file.name, self.site_meta)
-        nc = netCDF4.Dataset(self.temp_file.name)
-        assert len(nc.variables['time'][:]) == self.n_time1
-        nc.close()
-
     def test_correct_date_validation(self):
-        mira.mira2nc(f'{self.file_path}/20210102_0000.mmclx', self.temp_file.name,
-                     self.site_meta, date='2021-01-02')
+        mira.mira2nc(f'{filepath}/20210102_0000.mmclx', self.output2, site_meta, date='2021-01-02')
 
     def test_wrong_date_validation(self):
         with pytest.raises(ValueError):
-            mira.mira2nc(f'{self.file_path}/20210102_0000.mmclx', self.temp_file.name,
-                         self.site_meta, date='2021-01-03')
+            mira.mira2nc(f'{filepath}/20210102_0000.mmclx', self.output2, site_meta,
+                         date='2021-01-03')
 
     def test_uuid_from_user(self):
         uuid_from_user = 'kissa'
-        uuid = mira.mira2nc(f'{self.file_path}/20210102_0000.mmclx', self.temp_file.name,
-                            self.site_meta, uuid=uuid_from_user)
-        nc = netCDF4.Dataset(self.temp_file.name)
+        uuid = mira.mira2nc(f'{filepath}/20210102_0000.mmclx', self.output2,
+                            site_meta, uuid=uuid_from_user)
+        nc = netCDF4.Dataset(self.output2)
         assert nc.file_uuid == uuid_from_user
         assert uuid == uuid_from_user
         nc.close()
 
-    def test_global_attributes(self):
-        mira.mira2nc(f'{self.file_path}/20210102_0000.mmclx', self.temp_file.name, self.site_meta)
-        nc = netCDF4.Dataset(self.temp_file.name)
-        assert nc.year == '2021'
-        assert nc.month == '01'
-        assert nc.day == '02'
-        assert nc.Conventions == 'CF-1.8'
-        assert nc.source == 'METEK MIRA-35'
-        assert nc.location == 'The_station'
-        assert nc.title == 'Radar file from The_station'
-        assert nc.cloudnet_file_type == 'radar'
-        nc.close()
-
-    def test_variables(self):
-        mira.mira2nc(f'{self.file_path}/20210102_0000.mmclx', self.temp_file.name, self.site_meta)
-        nc = netCDF4.Dataset(self.temp_file.name)
-        vars = ('Ze', 'v', 'width', 'ldr', 'SNR', 'time', 'range', 'radar_frequency',
-                'nyquist_velocity', 'latitude', 'longitude', 'altitude')
-        for var in vars:
-            assert var in nc.variables
-        assert nc.variables['radar_frequency'][:].data == 35.5  # Hard coded
-        assert abs(nc.variables['latitude'][:].data-50.9085) < 0.1  # From input file
-        for var in ('altitude', 'longitude'):
-            assert abs(nc.variables[var][:]-self.site_meta[var]) < 0.1  # From user
-        time = nc.variables['time'][:]
-        assert min(time) > 0
-        assert max(time) < 24
-        nc.close()
+    def test_tear_down(self):
+        os.remove(self.output)
+        os.remove(self.output2)
+        self.nc.close()

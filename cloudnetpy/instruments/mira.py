@@ -3,10 +3,12 @@ import os
 from typing import List, Optional
 from tempfile import NamedTemporaryFile
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy import output, utils
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
 from cloudnetpy import concat_lib
+from cloudnetpy import CloudnetArray
 
 
 def mira2nc(raw_mira: str,
@@ -58,7 +60,8 @@ def mira2nc(raw_mira: str,
         temp_file = NamedTemporaryFile()
         mmclx_filename = temp_file.name
         valid_filenames = utils.get_sorted_filenames(raw_mira, '.mmclx')
-        concat_lib.concatenate_files(valid_filenames, mmclx_filename, variables=list(keymap.keys()))
+        variables = list(keymap.keys()) + ['elv']
+        concat_lib.concatenate_files(valid_filenames, mmclx_filename, variables=variables)
     else:
         mmclx_filename = raw_mira
 
@@ -77,6 +80,7 @@ def mira2nc(raw_mira: str,
     mira.add_meta()
     mira.add_geolocation()
     mira.add_height()
+    mira.add_zenith_angle()
     mira.close()
     attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
     output.update_attributes(mira.data, attributes)
@@ -117,6 +121,11 @@ class Mira(NcRadar):
             if isinstance(array, np.ndarray) and array.ndim == 2 and array.shape[0] == n_time:
                 cloudnet_array.data = array[inds, :]
         self.time = self.time[inds]
+
+    def add_zenith_angle(self) -> None:
+        elevation = ma.median(self.getvar('elv', 'ele'))
+        zenith = 90 - elevation
+        self.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
 
     def add_geolocation(self) -> None:
         """Adds geo info (from global attributes to variables)."""

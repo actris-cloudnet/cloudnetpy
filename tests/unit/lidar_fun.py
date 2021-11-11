@@ -12,6 +12,11 @@ class LidarFun:
         self.date = date
         self.uuid = uuid
 
+    def test_data_types(self):
+        for key in self.nc.variables.keys():
+            value = self.nc.variables[key].dtype
+            assert value == 'float32', f'{value} - {key}'
+
     def test_axis(self):
         assert self.nc.variables['range'].axis == 'Z'
         for key in self.nc.variables.keys():

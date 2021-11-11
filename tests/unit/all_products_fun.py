@@ -15,22 +15,20 @@ class AllProductsFun:
         for key in self.nc.variables.keys():
             assert bool(np.isnan(self.nc.variables[key]).all()) is False
 
-    def test_data_types(self):
-        for key in self.nc.variables.keys():
-            value = self.nc.variables[key].dtype
-            assert value == 'float32', f'{value} - {key}'
-
     def test_time_axis(self):
         assert self.nc.variables['time'].axis == 'T'
 
     def test_empty_units(self):
         for key in self.nc.variables.keys():
             if hasattr(self.nc.variables[key], 'units'):
-                assert self.nc.variables[key].units != ''
+                value = self.nc.variables[key].units
+                assert value != '', f'{key} - {value}'
 
     def test_variable_values(self):
         for key in ('altitude', 'latitude', 'longitude'):
-            assert self.nc.variables[key][:] == self.site_meta[key]
+            value = self.nc.variables[key][:]
+            expected = self.site_meta[key]
+            assert value == expected, f'{value} != {expected}'
 
     def test_standard_names(self):
         data = [

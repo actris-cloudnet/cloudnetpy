@@ -60,4 +60,4 @@ class NcRadar(DataSource):
     def _add_site_meta(self, site_meta: dict) -> None:
         for key, value in site_meta.items():
             if key not in ('name',):
-                self.append_data(value, key)
+                self.append_data(float(value), key)
