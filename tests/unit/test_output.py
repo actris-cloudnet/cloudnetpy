@@ -89,7 +89,7 @@ def test_merge_history():
     source2.dataset.history = 'some history y'
     output.merge_history(root, file_type, source1, source2)
     assert utils.is_timestamp(f"-{root.history[:19]}") is True
-    assert root.history[19:] == ' - dummy file created\nsome history x\nsome history y'
+    assert root.history[19:] == ' +00:00 - dummy file created\nsome history x\nsome history y'
 
 
 def test_get_source_uuids():
@@ -127,7 +127,7 @@ def test_add_time_attribute():
     attributes = {'kissa': attr}
     date = ['2020', '01', '12']
     new_attributes = output.add_time_attribute(attributes, date)
-    assert new_attributes['time'].units == 'hours since 2020-01-12 00:00:00 +0:00'
+    assert new_attributes['time'].units == 'hours since 2020-01-12 00:00:00 +00:00'
     assert new_attributes['kissa'].units == 'xy'
 
 

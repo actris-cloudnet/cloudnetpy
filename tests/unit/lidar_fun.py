@@ -60,7 +60,7 @@ class LidarFun:
             ('longitude', 'degree_east'),
             ('altitude', 'm'),
             ('range', 'm'),
-            ('time', f'hours since {self.date} 00:00:00 +0:00'),
+            ('time', f'hours since {self.date} 00:00:00 +00:00'),
             ('calibration_factor', '1'),
             ('beta', 'sr-1 m-1'),
             ('beta_raw', 'sr-1 m-1'),

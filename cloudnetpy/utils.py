@@ -585,7 +585,7 @@ def isscalar(array: any) -> bool:
 
 def get_time() -> str:
     """Returns current UTC-time."""
-    return datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+    return f"{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} +00:00"
 
 
 def date_range(start_date: datetime.date,

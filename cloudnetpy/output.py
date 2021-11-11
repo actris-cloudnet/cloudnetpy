@@ -212,7 +212,7 @@ def add_time_attribute(attributes: dict, date: list) -> dict:
 
     """
     date = '-'.join(date)
-    attributes['time'] = MetaData(units=f'hours since {date} 00:00:00 +0:00')
+    attributes['time'] = MetaData(units=f'hours since {date} 00:00:00 +00:00')
     return attributes
 
 
