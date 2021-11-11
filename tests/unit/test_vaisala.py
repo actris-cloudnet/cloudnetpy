@@ -11,6 +11,7 @@ from cloudnetpy.exceptions import ValidTimeStampError
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from lidar_fun import LidarFun
+from all_products_fun import AllProductsFun
 
 
 @pytest.mark.parametrize("input, result", [
@@ -54,11 +55,17 @@ class TestCL51:
     uuid = ceilo2nc(input, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
+    all_fun = AllProductsFun(nc, site_meta, date, uuid)
 
     def test_variable_names(self):
         keys = {'beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
                 'zenith_angle', 'time', 'altitude', 'latitude', 'longitude', 'wavelength'}
         assert set(self.nc.variables.keys()) == keys
+
+    def test_common(self):
+        for name, method in AllProductsFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.all_fun, name)()
 
     def test_common_lidar(self):
         for name, method in LidarFun.__dict__.items():
@@ -102,11 +109,17 @@ class TestCL31:
     uuid = ceilo2nc(input, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
+    all_fun = AllProductsFun(nc, site_meta, date, uuid)
 
     def test_variable_names(self):
         keys = {'beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
                 'zenith_angle', 'time', 'altitude', 'latitude', 'longitude', 'wavelength'}
         assert set(self.nc.variables.keys()) == keys
+
+    def test_common(self):
+        for name, method in AllProductsFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.all_fun, name)()
 
     def test_common_lidar(self):
         for name, method in LidarFun.__dict__.items():
@@ -157,11 +170,17 @@ class TestCT25k:
     uuid = ceilo2nc(input, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
+    all_fun = AllProductsFun(nc, site_meta, date, uuid)
 
     def test_variable_names(self):
         keys = {'beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
                 'zenith_angle', 'time', 'altitude', 'latitude', 'longitude', 'wavelength'}
         assert set(self.nc.variables.keys()) == keys
+
+    def test_common(self):
+        for name, method in AllProductsFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.all_fun, name)()
 
     def test_common_lidar(self):
         for name, method in LidarFun.__dict__.items():

@@ -10,6 +10,7 @@ import sys
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from lidar_fun import LidarFun
+from all_products_fun import AllProductsFun
 
 site_meta = {
     'name': 'Hyytiälä',
@@ -31,11 +32,17 @@ class TestCl61d:
     uuid = ceilo2nc(daily_file, output, site_meta)
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
+    all_fun = AllProductsFun(nc, site_meta, date, uuid)
 
     def test_variable_names(self):
         keys = {'beta', 'beta_smooth', 'calibration_factor', 'range', 'height', 'zenith_angle',
                 'time', 'depolarisation', 'altitude', 'latitude', 'longitude', 'wavelength'}
         assert set(self.nc.variables.keys()) == keys
+
+    def test_common(self):
+        for name, method in AllProductsFun.__dict__.items():
+            if 'test_' in name:
+                getattr(self.all_fun, name)()
 
     def test_common_lidar(self):
         for name, method in LidarFun.__dict__.items():
