@@ -28,7 +28,8 @@ def save_radar_level1b(source_full_path: str,
     nc_source = netCDF4.Dataset(source_full_path)
     copy_variables(nc_source, nc, vars_from_source)
     fix_attribute_name(nc)
-    nc.title = f"{file_type.capitalize()} file from {radar.location}"
+    instrument = radar.source.split(' ')[-1]
+    nc.title = f"{instrument} cloud radar file from {radar.location}"
     nc.year, nc.month, nc.day = radar.date
     nc.location = radar.location
     nc.history = f"{utils.get_time()} - {file_type} file created"

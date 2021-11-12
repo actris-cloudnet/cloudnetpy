@@ -52,5 +52,4 @@ class RadarFun:
                 assert value == expected, f'{value} != {expected}'
 
     def test_global_attributes(self):
-        assert self.nc.title == f'Radar file from {self.site_meta["name"]}'
         assert self.nc.cloudnet_file_type == 'radar'
