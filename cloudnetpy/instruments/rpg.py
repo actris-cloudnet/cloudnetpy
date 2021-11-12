@@ -6,7 +6,7 @@ import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray, RadarArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
-from cloudnetpy.exceptions import InconsistentDataError
+from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 
 
 def rpg2nc(path_to_l1_files: str,
@@ -18,7 +18,7 @@ def rpg2nc(path_to_l1_files: str,
     """Converts RPG FMCW-94 cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
-    concatenates the data and writes it into netCDF file.
+    concatenates the data and writes a netCDF file.
 
     Args:
         path_to_l1_files: Folder containing one day of RPG LV1 files.
@@ -41,7 +41,7 @@ def rpg2nc(path_to_l1_files: str,
         - Files used in the processing.
 
     Raises:
-        RuntimeError: Failed to read the binary data.
+        ValidTimeStampError: No valid timestamps found.
 
     Examples:
         >>> from cloudnetpy.instruments import rpg2nc
@@ -57,7 +57,9 @@ def rpg2nc(path_to_l1_files: str,
     fmcw = Fmcw94(one_day_of_data, site_meta)
     fmcw.convert_time_to_fraction_hour()
     fmcw.mask_invalid_ldr()
-    fmcw.linear_to_db(('Ze', 'antenna_gain'))
+    fmcw.linear_to_db(('Zh', 'antenna_gain'))
+    fmcw.add_site_meta()
+    fmcw.add_zenith_angle()
     fmcw.add_height()
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
     output.update_attributes(fmcw.data, attributes)
@@ -104,12 +106,17 @@ def _reduce_header(header: dict) -> dict:
     return header_out
 
 
-def _mask_invalid_data(data: dict) -> dict:
-    """Masks zero values from data."""
-    data_out = data.copy()
+def _mask_invalid_data(data_in: dict) -> dict:
+    """Masks zeros and other fill values from data."""
+    data = data_in.copy()
+    fill_values = (-999, 1e-10)
     for name in data:
-        data_out[name] = ma.masked_equal(data[name], 0)
-    return data_out
+        data[name] = ma.masked_equal(data[name], 0)
+        for value in fill_values:
+            data[name][data[name] == value] = ma.masked
+            ind = np.isclose(data[name], value)
+            data[name][ind] = ma.masked
+    return data
 
 
 def _get_fmcw94_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
@@ -128,11 +135,13 @@ def _get_fmcw94_objects(files: list, expected_date: Union[str, None]) -> Tuple[l
         valid_files.append(file)
     if objects:
         objects, valid_files = _remove_files_with_bad_height(objects, valid_files)
+    if not valid_files:
+        raise ValidTimeStampError
     return objects, valid_files
 
 
 def _remove_files_with_bad_height(objects: list, files: list) -> Tuple[list, list]:
-    lengths = [obj.data['Ze'].shape[1] for obj in objects]
+    lengths = [obj.data['Zh'].shape[1] for obj in objects]
     most_common = np.bincount(lengths).argmax()
     files = [file for file, obj, length in zip(files, objects, lengths) if length == most_common]
     objects = [obj for obj, length in zip(objects, lengths) if length == most_common]
@@ -151,11 +160,11 @@ def _validate_date(obj, expected_date: str) -> None:
 
 class Rpg:
     """Base class for RPG FMCW-94 cloud radar and HATPRO mwr."""
-    def __init__(self, raw_data: dict, site_properties: dict):
+    def __init__(self, raw_data: dict, site_meta: dict):
         self.raw_data = raw_data
+        self.site_meta = site_meta
         self.date = self._get_date()
-        self.raw_data['altitude'] = np.array(site_properties['altitude'])
-        self.location = site_properties['name']
+        self.location = site_meta['name']
         self.source = None
         self.data = {}
 
@@ -165,6 +174,11 @@ class Rpg:
         fraction_hour = utils.seconds2hours(self.raw_data[key])
         self.raw_data[key] = fraction_hour
         self.data[key] = CloudnetArray(np.array(fraction_hour), key)
+
+    def add_site_meta(self) -> None:
+        for key, value in self.site_meta.items():
+            if key in ('latitude', 'longitude', 'altitude'):
+                self.data[key] = CloudnetArray(float(value), key)
 
     def _get_date(self) -> list:
         time_first = self.raw_data['time'][0]
@@ -183,17 +197,23 @@ class Fmcw94(Rpg):
         self.data = self._init_data()
         self.source = 'RPG-FMCW-94'
 
+    def add_zenith_angle(self) -> None:
+        """Adds solar zenith angle."""
+        elevation = self.data['elevation'].data
+        zenith = 90 - elevation
+        tolerance = 0.5
+        difference = np.diff(zenith)
+        if np.any(difference > tolerance):
+            logging.warning(f'Varying zenith angle. Maximum difference: {max(difference)}')
+        self.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
+        del self.data['elevation']
+
     def add_height(self):
-        if 'altitude' in self.data:
-            try:
-                elevation = ma.median(self.data['elevation'].data)
-                tilt_angle = 90 - elevation
-            except RuntimeError:
-                logging.warning('Assuming 90 deg elevation')
-                tilt_angle = 0
-            height = utils.range_to_height(self.data['range'].data, tilt_angle)
-            height += float(self.data['altitude'].data)
-            self.data['height'] = CloudnetArray(height, 'height')
+        """Adds height vector."""
+        zenith_angle = ma.median(self.data['zenith_angle'].data)
+        height = utils.range_to_height(self.data['range'].data, float(zenith_angle))
+        height += self.data['altitude'].data
+        self.data['height'] = CloudnetArray(height, 'height')
 
     def linear_to_db(self, variables_to_log: tuple) -> None:
         """Changes linear units to logarithmic."""
@@ -202,19 +222,9 @@ class Fmcw94(Rpg):
 
     def mask_invalid_ldr(self) -> None:
         """Removes ldr outliers."""
+        threshold = -35
         if 'ldr' in self.data:
-            self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, -35)
-
-    def filter_noise(self) -> None:
-        """Filters isolated pixels and vertical stripes.
-
-        Notes:
-            Use with caution, might remove actual data too.
-
-        """
-        for radar_array in self.data.values():
-            if radar_array.data.ndim == 2:
-                radar_array.filter_vertical_stripes()
+            self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, threshold)
 
     def _init_data(self) -> dict:
         data = {}
@@ -253,26 +263,17 @@ def save_rpg(rpg: Rpg,
              keep_uuid: bool,
              uuid: Union[str, None]) -> Tuple[str, list]:
     """Saves the RPG radar / mwr file."""
-
     dims = {'time': len(rpg.data['time'][:])}
-
     if 'fmcw' in rpg.source.lower():
         dims['range'] = len(rpg.data['range'][:])
         dims['chirp_sequence'] = len(rpg.data['chirp_start_indices'][:])
         file_type = 'radar'
     else:
         file_type = 'mwr'
-
-    rootgrp = output.init_file(output_file, dims, rpg.data, keep_uuid, uuid)
-    file_uuid = rootgrp.file_uuid
-    output.add_file_type(rootgrp, file_type)
-    rootgrp.title = f"{file_type.capitalize()} file from {rpg.location}"
-    rootgrp.year, rootgrp.month, rootgrp.day = rpg.date
-    rootgrp.location = rpg.location
-    rootgrp.history = f"{utils.get_time()} - {file_type} file created"
-    rootgrp.source = rpg.source
-    output.add_references(rootgrp)
-    rootgrp.close()
+    nc = output.init_file(output_file, dims, rpg.data, keep_uuid, uuid)
+    file_uuid = nc.file_uuid
+    output.write_common_level1b_parts(nc, rpg, file_type)
+    nc.close()
     return file_uuid, valid_files
 
 
@@ -308,15 +309,61 @@ DEFINITIONS = {
 }
 
 RPG_ATTRIBUTES = {
+    # LDR-mode radars:
+    'ldr': MetaData(
+        long_name='Linear depolarisation ratio',
+        units='dB'
+    ),
+    'rho_cx': MetaData(
+        long_name='Co-cross-channel correlation coefficient',
+        units='1'
+    ),
+    'phi_cx': MetaData(
+        long_name='Co-cross-channel differential phase',
+        units='rad'
+    ),
+    # STSR-mode radars
+    'zdr': MetaData(
+        long_name='Differential reflectivity',
+        units='dB'
+    ),
+    'rho_hv': MetaData(
+        long_name='Correlation coefficient',
+        units='1'
+    ),
+    'phi_dp': MetaData(
+        long_name='Differential phase',
+        units='rad'
+    ),
+    'sldr': MetaData(
+        long_name='Slanted linear depolarisation ratio',
+        units='dB'
+    ),
+    'srho_hv': MetaData(
+        long_name='Slanted correlation coefficient',
+        units='1'
+    ),
+    'kdp': MetaData(
+        long_name='Specific differential phase shift',
+        units='rad km-1'
+    ),
+    'differential_attenuation': MetaData(
+        long_name='',
+        units='dB km-1'
+    ),
+    # All radars
     'file_code': MetaData(
         long_name='File code',
+        units="1",
         comment='Indicates the RPG software version.',
     ),
     'program_number': MetaData(
         long_name='Program number',
+        units="1"
     ),
     'model_number': MetaData(
         long_name='Model number',
+        units="1",
         definition=DEFINITIONS['model_number']
     ),
     'antenna_separation': MetaData(
@@ -337,6 +384,7 @@ RPG_ATTRIBUTES = {
     ),
     'dual_polarization': MetaData(
         long_name='Dual polarisation type',
+        units="1",
         definition=DEFINITIONS['dual_polarization']
     ),
     'sample_duration': MetaData(
@@ -344,17 +392,20 @@ RPG_ATTRIBUTES = {
         units='s'
     ),
     'calibration_interval': MetaData(
-        long_name='Calibration interval in samples'
+        long_name='Calibration interval in samples',
+        units="1",
     ),
     'number_of_spectral_samples': MetaData(
         long_name='Number of spectral samples in each chirp sequence',
-        units='',
+        units='1',
     ),
     'chirp_start_indices': MetaData(
-        long_name='Chirp sequences start indices'
+        long_name='Chirp sequences start indices',
+        units="1",
     ),
     'number_of_averaged_chirps': MetaData(
-        long_name='Number of averaged chirps in sequence'
+        long_name='Number of averaged chirps in sequence',
+        units="1",
     ),
     'integration_time': MetaData(
         long_name='Integration time',
@@ -367,6 +418,7 @@ RPG_ATTRIBUTES = {
     ),
     'FFT_window': MetaData(
         long_name='FFT window type',
+        units="1",
         definition=DEFINITIONS['FFT_window']
     ),
     'input_voltage_range': MetaData(
@@ -375,7 +427,7 @@ RPG_ATTRIBUTES = {
     ),
     'noise_threshold': MetaData(
         long_name='Noise filter threshold factor',
-        units='',
+        units='1',
         comment='Multiple of the standard deviation of Doppler spectra.'
     ),
     'time_ms': MetaData(
@@ -384,7 +436,8 @@ RPG_ATTRIBUTES = {
     ),
     'quality_flag': MetaData(
         long_name='Quality flag',
-        definition=DEFINITIONS['quality_flag']
+        definition=DEFINITIONS['quality_flag'],
+        units="1",
     ),
     'voltage': MetaData(
         long_name='Voltage',
@@ -398,16 +451,14 @@ RPG_ATTRIBUTES = {
         long_name='IF power at ACD',
         units='uW',
     ),
-    'elevation': MetaData(
-        long_name='Elevation angle above horizon',
-        units='degrees',
-    ),
-    'azimuth': MetaData(
+    'azimuth_angle': MetaData(
         long_name='Azimuth angle',
-        units='degrees',
+        standard_name='solar_azimuth_angle',
+        units='degree',
     ),
     'status_flag': MetaData(
-        long_name='Status flag for heater and blower'
+        long_name='Status flag for heater and blower',
+        units="1",
     ),
     'transmitted_power': MetaData(
         long_name='Transmitted power',
@@ -427,13 +478,15 @@ RPG_ATTRIBUTES = {
     ),
     'skewness': MetaData(
         long_name='Skewness of spectra',
-        units='',
+        units='1',
+    ),
+    'kurtosis': MetaData(
+        long_name='Kurtosis of spectra',
+        units='1',
     ),
     'correlation_coefficient': MetaData(
         long_name='Correlation coefficient',
-    ),
-    'spectral_differential_phase': MetaData(
-        long_name='Spectral differential phase'
+        units="1",
     ),
     'wind_direction': MetaData(
         long_name='Wind direction',
@@ -446,14 +499,6 @@ RPG_ATTRIBUTES = {
     'relative_humidity': MetaData(
         long_name='Relative humidity',
         units='%',
-    ),
-    'Zdr': MetaData(
-        long_name='Differential reflectivity',
-        units='dB'
-    ),
-    'Ze': MetaData(
-        long_name='Radar reflectivity factor',
-        units='dBZ',
     ),
     'lwp': MetaData(
         units='g m-2'

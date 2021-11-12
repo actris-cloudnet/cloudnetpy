@@ -24,20 +24,26 @@ def save_radar_level1b(source_full_path: str,
 
     nc = init_file(output_file, dimensions, radar.data, keep_uuid, uuid)
     uuid = nc.file_uuid
-    add_file_type(nc, file_type)
     nc_source = netCDF4.Dataset(source_full_path)
     copy_variables(nc_source, nc, vars_from_source)
     fix_attribute_name(nc)
-    instrument = radar.source.split(' ')[-1]
-    nc.title = f"{instrument} cloud radar file from {radar.location}"
-    nc.year, nc.month, nc.day = radar.date
-    nc.location = radar.location
-    nc.history = f"{utils.get_time()} - {file_type} file created"
-    nc.source = radar.source
-    add_references(nc)
+    write_common_level1b_parts(nc, radar, file_type)
     nc.close()
     nc_source.close()
     return uuid
+
+
+def write_common_level1b_parts(nc: netCDF4.Dataset,
+                               obj: any,
+                               file_type: str) -> None:
+    add_file_type(nc, file_type)
+    instrument = obj.source.split(' ')[-1]
+    nc.title = f"{instrument} {file_type} file from {obj.location}"
+    nc.year, nc.month, nc.day = obj.date
+    nc.location = obj.location
+    nc.history = f"{utils.get_time()} - {file_type} file created"
+    nc.source = obj.source
+    add_references(nc)
 
 
 def save_product_file(short_id: str,

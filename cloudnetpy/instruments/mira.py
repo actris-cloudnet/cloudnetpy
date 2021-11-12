@@ -9,6 +9,7 @@ from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
 from cloudnetpy import concat_lib
 from cloudnetpy import CloudnetArray
+from cloudnetpy.exceptions import ValidTimeStampError
 
 
 def mira2nc(raw_mira: str,
@@ -41,7 +42,7 @@ def mira2nc(raw_mira: str,
         UUID of the generated file.
 
     Raises:
-        ValueError: Timestamps from several days or timestamps do not match the expected date.
+        ValidTimeStampError: No valid timestamps found.
 
     Examples:
           >>> from cloudnetpy.instruments import mira2nc
@@ -118,7 +119,7 @@ class Mira(NcRadar):
             if date == expected_date:
                 inds.append(ind)
         if not inds:
-            raise ValueError('Error: MIRA date differs from expected.')
+            raise ValidTimeStampError
         n_time = len(time_stamps)
         for key, cloudnet_array in self.data.items():
             array = cloudnet_array.data
@@ -198,13 +199,6 @@ class Mira(NcRadar):
 
 
 ATTRIBUTES = {
-    'Zh': MetaData(
-        long_name='Radar reflectivity factor',
-        units='dBZ',
-        comment='Calibrated reflectivity. Calibration convention: in the absence of attenuation,\n'
-                'a cloud at 273 K containing one million 100-micron droplets per cubic metre will\n'
-                'have a reflectivity of 0 dBZ at all frequencies.'
-    ),
     'SNR': MetaData(
         long_name='Signal-to-noise ratio',
         units='dB',

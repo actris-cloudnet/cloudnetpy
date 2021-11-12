@@ -34,7 +34,7 @@ class Radar(DataSource):
     """
     def __init__(self, full_path: str):
         super().__init__(full_path, radar=True)
-        self.radar_frequency = float(self.getvar('radar_frequency', 'frequency'))
+        self.radar_frequency = float(self.getvar('radar_frequency'))
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, 'location', '')
@@ -239,7 +239,7 @@ class Radar(DataSource):
             self.append_data(np.array(getattr(self, key)), key)
 
     def _init_data(self):
-        self._unknown_variable_to_cloudnet_array(('Ze',), 'Z', units='dBZ')
+        self._unknown_variable_to_cloudnet_array(('Zh',), 'Z', units='dBZ')
         for key in ('v', 'ldr', 'width'):
             try:
                 self._variables_to_cloudnet_arrays((key,))

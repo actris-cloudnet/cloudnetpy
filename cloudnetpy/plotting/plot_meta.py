@@ -358,7 +358,7 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
      ),
-    'Ze': PlotMeta(
+    'Zh': PlotMeta(
         name='Radar reflectivity factor',
         cbar='viridis',
         clabel=_DBZ,

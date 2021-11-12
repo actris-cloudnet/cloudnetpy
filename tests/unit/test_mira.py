@@ -6,6 +6,7 @@ from cloudnetpy.instruments import mira
 import netCDF4
 import numpy as np
 from cloudnetpy.quality import Quality
+from cloudnetpy.exceptions import ValidTimeStampError
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -34,7 +35,7 @@ class TestMeasurementDate:
         assert self.raw_radar.date == self.correct_date
 
     def test_validate_date_fails(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidTimeStampError):
             self.raw_radar.screen_time('2020-05-23')
 
 
@@ -94,7 +95,7 @@ class TestMIRA2nc:
 
     def test_global_attributes(self):
         assert self.nc.source == 'METEK MIRA-35'
-        assert self.nc.title == f'MIRA-35 cloud radar file from {site_meta["name"]}'
+        assert self.nc.title == f'MIRA-35 radar file from {site_meta["name"]}'
 
     def test_processing_of_several_nc_files(self):
         mira.mira2nc(filepath, self.output2, site_meta)
@@ -106,7 +107,7 @@ class TestMIRA2nc:
         mira.mira2nc(f'{filepath}/20210102_0000.mmclx', self.output2, site_meta, date='2021-01-02')
 
     def test_wrong_date_validation(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidTimeStampError):
             mira.mira2nc(f'{filepath}/20210102_0000.mmclx', self.output2, site_meta,
                          date='2021-01-03')
 

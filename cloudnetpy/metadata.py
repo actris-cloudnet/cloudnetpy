@@ -142,4 +142,11 @@ COMMON_ATTRIBUTES = {
         standard_name='zenith_angle',
         comment='Angle to the local vertical. A value of zero is directly overhead.'
     ),
+    'Zh': MetaData(
+        long_name='Radar reflectivity factor',
+        units='dBZ',
+        comment='Calibrated reflectivity. Calibration convention: in the absence of attenuation,\n'
+                'a cloud at 273 K containing one million 100-micron droplets per cubic metre will\n'
+                'have a reflectivity of 0 dBZ at all frequencies.'
+    ),
 }

@@ -1,3 +1,4 @@
+import logging
 from collections import namedtuple
 import numpy as np
 from cloudnetpy import utils
@@ -118,34 +119,36 @@ class Fmcw94Bin:
                 'lwp',
                 'if_power',
                 'elevation',
-                'azimuth',
+                'azimuth_angle',
                 'status_flag',
                 'transmitted_power',
                 'transmitter_temperature',
                 'receiver_temperature',
                 'pc_temperature'))
 
-            block2_vars = dict.fromkeys((  # vertical polarization
-                'Ze',
+            block2_vars = dict.fromkeys((
+                'Zh',
                 'v',
                 'width',
                 'skewness',
-                '_kurtosis'))
+                'kurtosis'))
 
             if int(self.header['dual_polarization'][0]) == 1:
+                logging.info('RPG cloud radar in LDR mode')
                 block2_vars.update(dict.fromkeys((
                     'ldr',
-                    'correlation_coefficient',
-                    'spectral_differential_phase')))
+                    'rho_cx',
+                    'phi_cx')))
             elif int(self.header['dual_polarization'][0]) == 2:
+                logging.info('RPG cloud radar in STSR mode')
                 block2_vars.update(dict.fromkeys((
-                    'differential_reflectivity',
-                    'correlation_coefficient',
-                    'spectral_differential_phase',
+                    'zdr',
+                    'rho_hv',
+                    'phi_dp',
                     '_',
-                    'ldr',
-                    'spectral_slanted_correlation_coefficient',
-                    'specific_differential_phase_shift',
+                    'sldr',
+                    'srho_hv',
+                    'kdp',
                     'differential_attenuation')))
             return vrs, block1_vars, block2_vars
 
