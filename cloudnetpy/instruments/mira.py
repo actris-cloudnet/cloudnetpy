@@ -1,9 +1,9 @@
 """Module for reading raw cloud radar data."""
+import logging
 import os
 from typing import List, Optional
 from tempfile import NamedTemporaryFile
 import numpy as np
-import numpy.ma as ma
 from cloudnetpy import output, utils
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
@@ -50,17 +50,18 @@ def mira2nc(raw_mira: str,
           >>> mira2nc('/one/day/of/mira/mmclx/files/', 'radar.nc', site_meta)
 
     """
-    keymap = {'Zg': 'Ze',
+    keymap = {'Zg': 'Zh',
               'VELg': 'v',
               'RMSg': 'width',
               'LDRg': 'ldr',
-              'SNRg': 'SNR'}
+              'SNRg': 'SNR',
+              'elv': 'elevation'}
 
     if os.path.isdir(raw_mira):
         temp_file = NamedTemporaryFile()
         mmclx_filename = temp_file.name
         valid_filenames = utils.get_sorted_filenames(raw_mira, '.mmclx')
-        variables = list(keymap.keys()) + ['elv']
+        variables = list(keymap.keys())
         concat_lib.concatenate_files(valid_filenames, mmclx_filename, variables=variables)
     else:
         mmclx_filename = raw_mira
@@ -70,7 +71,7 @@ def mira2nc(raw_mira: str,
     if date is not None:
         mira.screen_time(date)
         mira.date = date.split('-')
-    mira.linear_to_db(('Ze', 'ldr', 'SNR'))
+    mira.linear_to_db(('Zh', 'ldr', 'SNR'))
     if rebin_data:
         snr_gain = mira.rebin_fields()
     else:
@@ -84,7 +85,7 @@ def mira2nc(raw_mira: str,
     mira.close()
     attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
     output.update_attributes(mira.data, attributes)
-    fields_from_source = ('nfft', 'prf', 'nave', 'zrg', 'rg0', 'drg')
+    fields_from_source = ('nfft', 'prf', 'nave', 'rg0')
     return output.save_radar_level1b(mmclx_filename, mira, output_file, keep_uuid, uuid,
                                      fields_from_source)
 
@@ -115,17 +116,26 @@ class Mira(NcRadar):
                 inds.append(ind)
         if not inds:
             raise ValueError('Error: MIRA date differs from expected.')
-        for cloudnet_array in self.data.values():
+        n_time = len(time_stamps)
+        for key, cloudnet_array in self.data.items():
             array = cloudnet_array.data
-            n_time = len(time_stamps)
-            if isinstance(array, np.ndarray) and array.ndim == 2 and array.shape[0] == n_time:
-                cloudnet_array.data = array[inds, :]
+            if isinstance(array, np.ndarray) and array.shape[0] == n_time:
+                if array.ndim == 1:
+                    cloudnet_array.data = array[inds]
+                elif array.ndim == 2:
+                    cloudnet_array.data = array[inds, :]
         self.time = self.time[inds]
 
     def add_zenith_angle(self) -> None:
-        elevation = ma.median(self.getvar('elv', 'ele'))
+        """Adds solar zenith angle."""
+        elevation = self.data['elevation'].data
         zenith = 90 - elevation
+        tolerance = 0.5
+        difference = np.diff(zenith)
+        if np.any(difference > tolerance):
+            logging.warning(f'Varying zenith angle. Maximum difference: {max(difference)}')
         self.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
+        del self.data['elevation']
 
     def add_geolocation(self) -> None:
         """Adds geo info (from global attributes to variables)."""
@@ -147,7 +157,7 @@ class Mira(NcRadar):
 
     def mask_invalid_data(self) -> None:
         """Makes sure Z and v masks are also in other 2d variables."""
-        z_mask = self.data['Ze'][:].mask
+        z_mask = self.data['Zh'][:].mask
         v_mask = self.data['v'][:].mask
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
@@ -185,9 +195,12 @@ class Mira(NcRadar):
 
 
 ATTRIBUTES = {
-    'Ze': MetaData(
-        long_name='Radar reflectivity factor (uncorrected), vertical polarization',
+    'Zh': MetaData(
+        long_name='Radar reflectivity factor',
         units='dBZ',
+        comment='Calibrated reflectivity. Calibration convention: in the absence of attenuation,\n'
+                'a cloud at 273 K containing one million 100-micron droplets per cubic metre will\n'
+                'have a reflectivity of 0 dBZ at all frequencies.'
     ),
     'SNR': MetaData(
         long_name='Signal-to-noise ratio',

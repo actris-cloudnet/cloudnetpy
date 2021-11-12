@@ -70,7 +70,6 @@ COMMON_ATTRIBUTES = {
         units='m s-1',
         comment=('This parameter is the radial component of the velocity, with positive\n'
                  'velocities are away from the radar.'),
-        positive='up'
     ),
     'v_sigma': MetaData(
         long_name='Standard deviation of mean Doppler velocity',

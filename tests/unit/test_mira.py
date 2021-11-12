@@ -1,9 +1,10 @@
+import sys
+import os
 from os import path
 import pytest
 from cloudnetpy.instruments import mira
 import netCDF4
-import sys
-import os
+import numpy as np
 from cloudnetpy.quality import Quality
 
 
@@ -53,14 +54,14 @@ class TestMIRA2nc:
     all_fun = AllProductsFun(nc, site_meta, date, uuid)
 
     def test_variable_names(self):
-        keys = {'Ze', 'v', 'width', 'ldr', 'SNR', 'time', 'range', 'radar_frequency',
-                'nyquist_velocity', 'latitude', 'longitude', 'altitude', 'zrg', 'prf', 'nfft',
-                'drg', 'rg0', 'zenith_angle', 'height', 'nave'}
+        keys = {'Zh', 'v', 'width', 'ldr', 'SNR', 'time', 'range', 'radar_frequency',
+                'nyquist_velocity', 'latitude', 'longitude', 'altitude', 'prf', 'nfft',
+                'rg0', 'zenith_angle', 'height', 'nave'}
         assert set(self.nc.variables.keys()) == keys
 
     def test_variables(self):
         assert self.nc.variables['radar_frequency'][:].data == 35.5  # Hard coded
-        assert self.nc.variables['zenith_angle'][:].data == 0
+        assert np.all(self.nc.variables['zenith_angle'][:].data) == 0
 
     def test_common(self):
         for name, method in AllProductsFun.__dict__.items():

@@ -18,7 +18,7 @@ class RadarFun:
                 assert hasattr(self.nc.variables[key], 'axis') is False
 
     def test_variable_values(self):
-        assert 0 <= self.nc.variables['zenith_angle'][:] < 10
+        assert 0 <= np.all(self.nc.variables['zenith_angle'][:]) < 10
         assert np.all((self.nc.variables['height'][:] - self.site_meta['altitude']
                        - self.nc.variables['range'][:]) <= 1e-3)
 

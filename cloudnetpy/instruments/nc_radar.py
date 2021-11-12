@@ -59,5 +59,5 @@ class NcRadar(DataSource):
 
     def _add_site_meta(self, site_meta: dict) -> None:
         for key, value in site_meta.items():
-            if key not in ('name',):
-                self.append_data(float(value), key)
+            if key in ('latitude', 'longitude', 'altitude'):
+                self.append_data(np.array([float(value)]), key)
