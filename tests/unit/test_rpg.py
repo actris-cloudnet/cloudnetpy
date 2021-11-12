@@ -1,3 +1,5 @@
+import os
+import sys
 from os import path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 import pytest
@@ -6,6 +8,17 @@ from cloudnetpy.instruments import rpg
 from distutils.dir_util import copy_tree
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
+sys.path.append(SCRIPT_PATH)
+from radar_fun import RadarFun
+from all_products_fun import AllProductsFun
+
+site_meta = {
+    'name': 'the_station',
+    'altitude': 50,
+    'latitude': 23,
+    'longitude': 34.2
+}
+filepath = f'{SCRIPT_PATH}/data/rpg-fmcw-94'
 
 
 class TestReduceHeader:
@@ -13,24 +26,17 @@ class TestReduceHeader:
     header = {'a': n_points * [1], 'b': n_points * [2], 'c': n_points * [3]}
 
     def test_1(self):
-        assert_array_equal(rpg._reduce_header(self.header),
-                           {'a': 1, 'b': 2, 'c': 3})
+        assert_array_equal(rpg._reduce_header(self.header), {'a': 1, 'b': 2, 'c': 3})
 
     def test_2(self):
         self.header['a'][50] = 10
         with pytest.raises(AssertionError):
-            assert_array_equal(rpg._reduce_header(self.header),
-                               {'a': 1, 'b': 2, 'c': 3})
+            assert_array_equal(rpg._reduce_header(self.header), {'a': 1, 'b': 2, 'c': 3})
 
 
 class TestRPG2nc:
 
-    file_path = f'{SCRIPT_PATH}/data/rpg-fmcw-94'
-    site_meta = {
-        'name': 'the_station',
-        'altitude': 50
-    }
-    temp_file = NamedTemporaryFile()
+
 
     def test_default_processing(self):
         uuid, files = rpg.rpg2nc(self.file_path, self.temp_file.name,

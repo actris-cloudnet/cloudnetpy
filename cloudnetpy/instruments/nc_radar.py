@@ -28,6 +28,7 @@ class NcRadar(DataSource):
         for key in keymap:
             name = keymap[key]
             array = self.getvar(key)
+            array = np.array(array) if utils.isscalar(array) else array
             array[~np.isfinite(array)] = ma.masked
             self.data[name] = RadarArray(array, name)
 
@@ -60,4 +61,4 @@ class NcRadar(DataSource):
     def _add_site_meta(self, site_meta: dict) -> None:
         for key, value in site_meta.items():
             if key in ('latitude', 'longitude', 'altitude'):
-                self.append_data(np.array([float(value)]), key)
+                self.append_data(float(value), key)

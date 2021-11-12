@@ -7,7 +7,6 @@ import netCDF4
 import numpy as np
 from cloudnetpy.quality import Quality
 
-
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from radar_fun import RadarFun
@@ -55,8 +54,8 @@ class TestMIRA2nc:
 
     def test_variable_names(self):
         keys = {'Zh', 'v', 'width', 'ldr', 'SNR', 'time', 'range', 'radar_frequency',
-                'nyquist_velocity', 'latitude', 'longitude', 'altitude', 'prf', 'nfft',
-                'rg0', 'zenith_angle', 'height', 'nave'}
+                'nyquist_velocity', 'latitude', 'longitude', 'altitude',
+                'zenith_angle', 'height', 'rg0', 'nave', 'prf', 'nfft'}
         assert set(self.nc.variables.keys()) == keys
 
     def test_variables(self):
@@ -76,6 +75,19 @@ class TestMIRA2nc:
     def test_qc(self):
         assert self.quality.n_metadata_test_failures == 0, self.res_metadata
         assert self.quality.n_data_test_failures == 0, self.res_data
+
+    def test_long_names(self):
+        data = [
+            ('nfft', 'Number of FFT points'),
+            ('nave', 'Number of spectral averages (not accounting for overlapping FFTs)'),
+            ('rg0', 'Number of lowest range gates'),
+            ('prf', 'Pulse Repetition Frequency'),
+            ('SNR', 'Signal-to-noise ratio')
+        ]
+        for key, expected in data:
+            if key in self.nc.variables:
+                value = self.nc.variables[key].long_name
+                assert value == expected, f'{value} != {expected}'
 
     def test_processing_of_one_nc_file(self):
         assert len(self.nc.variables['time'][:]) == self.n_time1

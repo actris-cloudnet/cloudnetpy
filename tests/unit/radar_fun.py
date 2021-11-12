@@ -45,6 +45,8 @@ class RadarFun:
         data = [
             ('zenith_angle', 'Zenith angle'),
             ('range', 'Range from instrument'),
+            ('radar_frequency', 'Radar transmit frequency'),
+            ('Zh', 'Radar reflectivity factor')
         ]
         for key, expected in data:
             if key in self.nc.variables:

@@ -55,7 +55,12 @@ def mira2nc(raw_mira: str,
               'RMSg': 'width',
               'LDRg': 'ldr',
               'SNRg': 'SNR',
-              'elv': 'elevation'}
+              'elv': 'elevation',
+              'nfft': 'nfft',
+              'nave': 'nave',
+              'prf': 'prf',
+              'rg0': 'rg0'
+              }
 
     if os.path.isdir(raw_mira):
         temp_file = NamedTemporaryFile()
@@ -85,9 +90,7 @@ def mira2nc(raw_mira: str,
     mira.close()
     attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
     output.update_attributes(mira.data, attributes)
-    fields_from_source = ('nfft', 'prf', 'nave', 'rg0')
-    return output.save_radar_level1b(mmclx_filename, mira, output_file, keep_uuid, uuid,
-                                     fields_from_source)
+    return output.save_radar_level1b(mmclx_filename, mira, output_file, keep_uuid, uuid)
 
 
 class Mira(NcRadar):
@@ -119,7 +122,7 @@ class Mira(NcRadar):
         n_time = len(time_stamps)
         for key, cloudnet_array in self.data.items():
             array = cloudnet_array.data
-            if isinstance(array, np.ndarray) and array.shape[0] == n_time:
+            if not utils.isscalar(array) and array.shape[0] == n_time:
                 if array.ndim == 1:
                     cloudnet_array.data = array[inds]
                 elif array.ndim == 2:
@@ -205,5 +208,21 @@ ATTRIBUTES = {
     'SNR': MetaData(
         long_name='Signal-to-noise ratio',
         units='dB',
-    )
+    ),
+    'nfft': MetaData(
+        long_name='Number of FFT points',
+        units="1",
+    ),
+    'nave': MetaData(
+        long_name='Number of spectral averages (not accounting for overlapping FFTs)',
+        units="1",
+    ),
+    'rg0': MetaData(
+        long_name='Number of lowest range gates',
+        units="1"
+    ),
+    'prf': MetaData(
+        long_name='Pulse Repetition Frequency',
+        units="Hz",
+    ),
 }
