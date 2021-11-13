@@ -56,7 +56,8 @@ class TestPolly:
         assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
 
     def test_global_attributes(self):
-        assert self.nc.source == 'PollyXT Raman lidar'
+        assert self.nc.source == 'PollyXT'
+        assert self.nc.title == f"PollyXT Raman lidar file from {site_meta['name']}"
 
     def test_tear_down(self):
         os.remove(self.output)

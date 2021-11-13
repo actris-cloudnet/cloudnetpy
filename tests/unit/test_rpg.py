@@ -83,8 +83,8 @@ class TestRPG2nc:
                     assert not np.any(np.isclose(array, value)), f'{key} - {value}: {array}'
 
     def test_global_attributes(self):
-        assert self.nc.source == 'RPG-FMCW-94'
-        assert self.nc.title == f'RPG-FMCW-94 radar file from {site_meta["name"]}'
+        assert self.nc.source == 'RPG-Radiometer Physics RPG-FMCW-94'
+        assert self.nc.title == f'RPG-FMCW-94 cloud radar file from {site_meta["name"]}'
 
     def test_common_radar(self):
         for name, method in RadarFun.__dict__.items():
@@ -127,5 +127,5 @@ class TestRPG2nc:
 
     def test_cleanup(self):
         os.remove(self.output)
-        #os.remove(self.output2)
+        os.remove(self.output2)
         self.nc.close()

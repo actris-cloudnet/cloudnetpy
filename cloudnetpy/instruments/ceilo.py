@@ -60,7 +60,7 @@ def ceilo2nc(full_path: str,
 
     """
     snr_limit = 5
-    ceilo_obj = _initialize_ceilo(full_path, date)
+    ceilo_obj = _initialize_ceilo(full_path, site_meta, date)
     calibration_factor = site_meta.get('calibration_factor', None)
     range_corrected = site_meta.get('range_corrected', True)
     ceilo_obj.read_ceilometer_file(calibration_factor)
@@ -68,30 +68,30 @@ def ceilo2nc(full_path: str,
                                                              snr_limit, range_corrected)
     ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(ceilo_obj.data['beta'],
                                                                snr_limit, range_corrected)
-    if 'cl61' in ceilo_obj.model.lower():
+    if 'cl61' in ceilo_obj.instrument.model.lower():
         ceilo_obj.data['depolarisation'].mask = ceilo_obj.data['beta'].mask
         ceilo_obj.remove_raw_data()
     ceilo_obj.screen_depol()
-    ceilo_obj.prepare_data(site_meta)
+    ceilo_obj.prepare_data()
     ceilo_obj.data_to_cloudnet_arrays()
-    attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.metadata['date'])
+    attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.date)
     output.update_attributes(ceilo_obj.data, attributes)
     for key in ('beta', 'beta_smooth'):
         ceilo_obj.add_snr_info(key, snr_limit)
-    ceilo_obj.metadata['name'] = site_meta['name']
     return save_ceilo(ceilo_obj, output_file, keep_uuid, uuid)
 
 
 def _initialize_ceilo(full_path: str,
+                      site_meta: dict,
                       date: Optional[str] = None) -> Union[ClCeilo, Ct25k, LufftCeilo, Cl61d]:
     model = _find_ceilo_model(full_path)
     if model == 'cl31_or_cl51':
-        return ClCeilo(full_path, date)
+        return ClCeilo(full_path, site_meta, date)
     if model == 'ct25k':
-        return Ct25k(full_path, date)
+        return Ct25k(full_path, site_meta, date)
     if model == 'cl61d':
-        return Cl61d(full_path, date)
-    return LufftCeilo(full_path, date)
+        return Cl61d(full_path, site_meta, date)
+    return LufftCeilo(full_path, site_meta, date)
 
 
 def _find_ceilo_model(full_path: str) -> str:
@@ -124,17 +124,10 @@ def save_ceilo(ceilo: any,
                keep_uuid: bool,
                uuid: Union[str, None]) -> str:
     dims = {key: len(ceilo.data[key][:]) for key in ('time', 'range')}
-    file_type = 'lidar'
-    rootgrp = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
-    uuid = rootgrp.file_uuid
-    output.add_file_type(rootgrp, file_type)
-    rootgrp.title = f"{file_type.capitalize()} file from {ceilo.metadata['name']}"
-    rootgrp.year, rootgrp.month, rootgrp.day = ceilo.metadata['date']
-    rootgrp.location = ceilo.metadata['name']
-    rootgrp.history = f"{utils.get_time()} - {file_type} file created"
-    rootgrp.source = ceilo.model
-    output.add_references(rootgrp)
-    rootgrp.close()
+    nc = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
+    uuid = nc.file_uuid
+    output.write_common_level1b_parts(nc, ceilo)
+    nc.close()
     return uuid
 
 

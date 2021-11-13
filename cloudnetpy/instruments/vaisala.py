@@ -5,6 +5,7 @@ import numpy as np
 from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
 from cloudnetpy import utils
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments import instruments
 
 
 M2KM = 0.001
@@ -14,14 +15,19 @@ SECONDS_IN_HOUR = 3600
 
 class VaisalaCeilo(Ceilometer):
     """Base class for Vaisala ceilometers."""
-    def __init__(self, full_path: str, expected_date: Optional[str] = None):
+    def __init__(self, full_path: str, site_meta: dict, expected_date: Optional[str] = None):
         super().__init__(self.noise_param)
         self.full_path = full_path
+        self.site_meta = site_meta
         self.expected_date = expected_date
         self._backscatter_scale_factor = 1
         self._hex_conversion_params = (1, 1, 1)
         self._message_number = None
-        self._date = None
+
+    def _is_ct25k(self) -> bool:
+        if self.instrument is not None:
+            return 'CT25k' in self.instrument.model
+        return False
 
     def _fetch_data_lines(self) -> list:
         """Finds data lines (header + backscatter) from ceilometer file."""
@@ -31,7 +37,7 @@ class VaisalaCeilo(Ceilometer):
 
     def _calc_range(self) -> np.ndarray:
         """Calculates range vector from the resolution and number of gates."""
-        if 'CT25k' in self.model:
+        if self._is_ct25k():
             range_resolution = 30
             n_gates = 256
         else:
@@ -146,7 +152,7 @@ class VaisalaCeilo(Ceilometer):
         header = []
         data_lines = self._fetch_data_lines()
         self.data['time'] = self._calc_time(data_lines[0])
-        self._date = self._calc_date(data_lines[0])
+        self.date = self._calc_date(data_lines[0])
         header.append(self._read_header_line_1(data_lines[1]))
         self._message_number = self._get_message_number(header[0])
         header.append(self._read_header_line_2(data_lines[2]))
@@ -155,7 +161,7 @@ class VaisalaCeilo(Ceilometer):
     def _read_header_line_1(self, lines: list) -> dict:
         """Reads all first header lines from CT25k and CL ceilometers."""
         fields = ('model_id', 'unit_id', 'software_level', 'message_number', 'message_subclass')
-        if 'CT25k' in self.model:
+        if self._is_ct25k():
             indices = [1, 3, 4, 6, 7, 8]
         else:
             indices = [1, 3, 4, 7, 8, 9]
@@ -169,11 +175,6 @@ class VaisalaCeilo(Ceilometer):
         values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
         return values_to_dict(fields, values)
 
-    def _range_correct_upper_part(self) -> None:
-        altitude_limit = 2400
-        ind = np.where(self.data['range'] < altitude_limit)
-        self.data['beta_raw'][:, ind] *= (self.data['range'][ind]*M2KM)**2
-
 
 class ClCeilo(VaisalaCeilo):
     """Base class for Vaisala CL31/CL51 ceilometers."""
@@ -181,11 +182,10 @@ class ClCeilo(VaisalaCeilo):
     noise_param = NoiseParam(noise_min=3.1e-8,
                              noise_smooth_min=1.1e-8)
 
-    def __init__(self, full_path: str, expected_date: Optional[str] = None):
-        super().__init__(full_path, expected_date)
+    def __init__(self, full_path: str, site_meta: dict, expected_date: Optional[str] = None):
+        super().__init__(full_path, site_meta, expected_date)
         self._hex_conversion_params = (5, 524288, 1048576)
         self._backscatter_scale_factor = 1e8
-        self.wavelength = 910
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Read all lines of data from the file."""
@@ -197,15 +197,14 @@ class ClCeilo(VaisalaCeilo):
         self.data['calibration_factor'] = calibration_factor or 1.0
         self.data['beta_raw'] *= self.data['calibration_factor']
         self.data['zenith_angle'] = np.median(self.metadata['zenith_angle'])
-        self.metadata['date'] = self._date
         self._store_ceilometer_info()
 
     def _store_ceilometer_info(self):
         n_gates = self.data['beta_raw'].shape[1]
         if n_gates < 1000:
-            self.model = 'Vaisala CL31 ceilometer'
+            self.instrument = instruments.CL31
         else:
-            self.model = 'Vaisala CL51 ceilometer'
+            self.instrument = instruments.CL51
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number != 2:
@@ -233,12 +232,11 @@ class Ct25k(VaisalaCeilo):
     noise_param = NoiseParam(noise_min=6e-7,
                              noise_smooth_min=1e-7)
 
-    def __init__(self, input_file: str, expected_date: Optional[str] = None):
-        super().__init__(input_file, expected_date)
-        self.model = 'Vaisala CT25k ceilometer'
+    def __init__(self, input_file: str, site_meta: dict, expected_date: Optional[str] = None):
+        super().__init__(input_file, site_meta, expected_date)
         self._hex_conversion_params = (4, 32768, 65536)
         self._backscatter_scale_factor = 1e7
-        self.wavelength = 905
+        self.instrument = instruments.CT25K
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Read all lines of data from the file."""
@@ -251,10 +249,6 @@ class Ct25k(VaisalaCeilo):
         self.data['calibration_factor'] = calibration_factor or 1.0
         self.data['beta_raw'] *= self.data['calibration_factor']
         self.data['zenith_angle'] = np.median(self.metadata['zenith_angle'])
-        self.metadata['date'] = self._date
-        # TODO: should study the background noise to determine if the
-        # next call is needed. It can be the case with cl31/51 also.
-        # self._range_correct_upper_part()
 
     @staticmethod
     def _parse_hex_profiles(lines: list) -> list:

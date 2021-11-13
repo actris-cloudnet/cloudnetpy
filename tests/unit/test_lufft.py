@@ -47,7 +47,7 @@ class TestCHM15k:
     @pytest.fixture(autouse=True)
     def init_tests(self, fake_jenoptik_file):
         self.file = fake_jenoptik_file
-        self.obj = lufft.LufftCeilo(fake_jenoptik_file, self.date)
+        self.obj = lufft.LufftCeilo(fake_jenoptik_file, site_meta, self.date)
         self.obj.read_ceilometer_file()
 
     def test_calc_range(self):
@@ -58,13 +58,13 @@ class TestCHM15k:
         assert all(np.diff(self.obj.data['time']) > 0)
 
     def test_read_date(self):
-        assert_array_equal(self.obj.metadata['date'], self.date.split('-'))
+        assert_array_equal(self.obj.date, self.date.split('-'))
 
     def test_read_metadata(self):
         assert self.obj.data['zenith_angle'] == 2
 
     def test_convert_time_error(self):
-        obj = lufft.LufftCeilo(self.file, '2122-01-01')
+        obj = lufft.LufftCeilo(self.file, site_meta, '2122-01-01')
         with pytest.raises(ValueError):
             obj.read_ceilometer_file()
 
@@ -113,7 +113,8 @@ class TestWithRealData:
             assert 'SNR threshold applied: 5' in self.nc.variables[key].comment
 
     def test_global_attributes(self):
-        assert self.nc.source == 'Lufft CHM15k ceilometer'
+        assert self.nc.source == 'Lufft CHM15k'
+        assert self.nc.title == f'CHM15k ceilometer file from {site_meta["name"]}'
 
     def test_date_argument(self):
         output = 'asfadfadf'

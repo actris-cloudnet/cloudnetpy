@@ -10,6 +10,7 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy import concat_lib
 from cloudnetpy import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments.instruments import MIRA35
 
 
 def mira2nc(raw_mira: str,
@@ -85,6 +86,7 @@ def mira2nc(raw_mira: str,
     mira.screen_by_snr(snr_gain)
     mira.mask_invalid_data()
     mira.add_meta()
+    mira.add_site_meta()
     mira.add_geolocation()
     mira.add_height()
     mira.add_zenith_angle()
@@ -102,13 +104,12 @@ class Mira(NcRadar):
         site_meta: Site properties in a dictionary. Required keys are: `name`.
 
     """
-    radar_frequency = 35.5
     epoch = (1970, 1, 1)
 
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, site_meta)
         self.date = self._init_mira_date()
-        self.source = 'METEK MIRA-35'
+        self.instrument = MIRA35
 
     def screen_time(self, expected_date: str) -> None:
         """Screens incorrect time stamps."""

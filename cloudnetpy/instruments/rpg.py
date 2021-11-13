@@ -7,6 +7,7 @@ from cloudnetpy import utils, output, CloudnetArray, RadarArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
+from cloudnetpy.instruments import instruments
 
 
 def rpg2nc(path_to_l1_files: str,
@@ -165,8 +166,8 @@ class Rpg:
         self.site_meta = site_meta
         self.date = self._get_date()
         self.location = site_meta['name']
-        self.source = None
         self.data = {}
+        self.instrument = None
 
     def convert_time_to_fraction_hour(self) -> None:
         """Converts time to fraction hour."""
@@ -195,7 +196,7 @@ class Fmcw94(Rpg):
     def __init__(self, raw_data: dict, site_properties: dict):
         super().__init__(raw_data, site_properties)
         self.data = self._init_data()
-        self.source = 'RPG-FMCW-94'
+        self.instrument = instruments.FMCW94
 
     def add_zenith_angle(self) -> None:
         """Adds solar zenith angle."""
@@ -238,7 +239,7 @@ class Hatpro(Rpg):
     def __init__(self, raw_data: dict, site_properties: dict):
         super().__init__(raw_data, site_properties)
         self.data = self._init_data()
-        self.source = 'RPG-HATPRO'
+        self.instrument = instruments.HATPRO
 
     def sort_timestamps(self):
         key = 'LWP'
@@ -264,15 +265,12 @@ def save_rpg(rpg: Rpg,
              uuid: Union[str, None]) -> Tuple[str, list]:
     """Saves the RPG radar / mwr file."""
     dims = {'time': len(rpg.data['time'][:])}
-    if 'fmcw' in rpg.source.lower():
+    if rpg.instrument.type == 'cloud radar':
         dims['range'] = len(rpg.data['range'][:])
         dims['chirp_sequence'] = len(rpg.data['chirp_start_indices'][:])
-        file_type = 'radar'
-    else:
-        file_type = 'mwr'
     nc = output.init_file(output_file, dims, rpg.data, keep_uuid, uuid)
     file_uuid = nc.file_uuid
-    output.write_common_level1b_parts(nc, rpg, file_type)
+    output.write_common_level1b_parts(nc, rpg)
     nc.close()
     return file_uuid, valid_files
 

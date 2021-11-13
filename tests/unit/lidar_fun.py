@@ -72,5 +72,4 @@ class LidarFun:
                 assert value == expected, f'{value} != {expected}'
 
     def test_global_attributes(self):
-        assert self.nc.title == f'Lidar file from {self.site_meta["name"]}'
         assert self.nc.cloudnet_file_type == 'lidar'

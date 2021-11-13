@@ -82,7 +82,8 @@ class TestCL51:
             assert 'SNR threshold applied: 5' in self.nc.variables[key].comment
 
     def test_global_attributes(self):
-        assert self.nc.source == 'Vaisala CL51 ceilometer'
+        assert self.nc.source == 'Vaisala CL51'
+        assert self.nc.title == f'CL51 ceilometer file from {site_meta["name"]}'
 
     def test_date_argument(self):
         output = 'dummy_sdfsdf_output_file.nc'
@@ -135,7 +136,8 @@ class TestCL31:
             assert 'SNR threshold applied: 5' in self.nc.variables[key].comment
 
     def test_global_attributes(self):
-        assert self.nc.source == 'Vaisala CL31 ceilometer'
+        assert self.nc.source == 'Vaisala CL31'
+        assert self.nc.title == f'CL31 ceilometer file from {site_meta["name"]}'
 
     def test_date_argument(self):
         output = 'falskdfjlskdf'
@@ -196,7 +198,8 @@ class TestCT25k:
             assert 'SNR threshold applied: 5' in self.nc.variables[key].comment
 
     def test_global_attributes(self):
-        assert self.nc.source == 'Vaisala CT25k ceilometer'
+        assert self.nc.source == 'Vaisala CT25k'
+        assert self.nc.title == f'CT25k ceilometer file from {site_meta["name"]}'
 
     def test_date_argument(self):
         output = 'falskdfjlskdf'

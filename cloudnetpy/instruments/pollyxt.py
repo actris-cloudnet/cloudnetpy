@@ -11,6 +11,7 @@ from cloudnetpy import utils
 from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy.instruments.ceilo import save_ceilo
 import numpy.ma as ma
+from cloudnetpy.instruments import instruments
 
 
 def pollyxt2nc(input_folder: str,
@@ -43,9 +44,9 @@ def pollyxt2nc(input_folder: str,
     polly.fetch_zenith_angle()
     polly.calc_screened_products(snr_limit)
     polly.mask_nan_values()
-    polly.prepare_data(site_meta)
+    polly.prepare_data()
     polly.data_to_cloudnet_arrays()
-    attributes = output.add_time_attribute(ATTRIBUTES, polly.metadata['date'])
+    attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
     polly.add_snr_info('beta', snr_limit)
     return save_ceilo(polly, output_file, keep_uuid, uuid)
@@ -55,10 +56,9 @@ class PollyXt(Ceilometer):
 
     def __init__(self, site_meta: dict, expected_date: Optional[str] = None):
         super().__init__()
-        self.metadata = site_meta
+        self.site_meta = site_meta
         self.expected_date = expected_date
-        self.model = 'PollyXT Raman lidar'
-        self.wavelength = 1064
+        self.instrument = instruments.POLLYXT
 
     def mask_nan_values(self):
         for key, array in self.data.items():

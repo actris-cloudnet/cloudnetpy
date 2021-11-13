@@ -3,17 +3,18 @@ from typing import Optional
 import logging
 import netCDF4
 from cloudnetpy.instruments.nc_lidar import NcLidar
+from cloudnetpy.instruments import instruments
 
 
 class Cl61d(NcLidar):
     """Class for Vaisala CL61d ceilometer."""
 
-    def __init__(self, file_name: str, expected_date: Optional[str] = None):
+    def __init__(self, file_name: str, site_meta: dict, expected_date: Optional[str] = None):
         super().__init__()
         self.file_name = file_name
+        self.site_meta = site_meta
         self.expected_date = expected_date
-        self.model = 'Vaisala CL61d ceilometer'
-        self.wavelength = 910.55
+        self.instrument = instruments.CL61D
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from concatenated Vaisala CL61d netCDF file."""

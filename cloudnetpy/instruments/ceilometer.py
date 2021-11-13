@@ -23,9 +23,10 @@ class Ceilometer:
         self.noise_param = noise_param
         self.data = {}          # Need to contain 'beta_raw', 'range' and 'time'
         self.metadata = {}      # Need to contain 'date' as ('yyyy', 'mm', 'dd')
-        self.model = ''
-        self.wavelength = None
         self.expected_date = None
+        self.site_meta = None
+        self.date = None
+        self.instrument = None
 
     def calc_screened_product(self,
                               array: np.ndarray,
@@ -50,23 +51,22 @@ class Ceilometer:
         beta_smooth = noisy_data.screen_data(beta_raw_smooth, is_smoothed=True, snr_limit=snr_limit)
         return beta_smooth
 
-    def prepare_data(self, site_meta: dict):
+    def prepare_data(self):
         """Add common additional data / metadata and convert into CloudnetArrays."""
         zenith_angle = self.data['zenith_angle']
-        self.data['height'] = np.array(site_meta['altitude']
+        self.data['height'] = np.array(self.site_meta['altitude']
                                        + utils.range_to_height(self.data['range'], zenith_angle))
         for key in ('time', 'range'):
             self.data[key] = np.array(self.data[key])
-        assert self.wavelength is not None
-        self.data['wavelength'] = float(self.wavelength)
+        self.data['wavelength'] = float(self.instrument.wavelength)
         for key in ('latitude', 'longitude', 'altitude'):
-            if key in site_meta:
-                self.data[key] = float(site_meta[key])
+            if key in self.site_meta:
+                self.data[key] = float(self.site_meta[key])
 
     def get_date_and_time(self, epoch: tuple) -> None:
         if self.expected_date is not None:
             self.data = utils.screen_by_time(self.data, epoch, self.expected_date)
-        self.metadata['date'] = utils.seconds2date(self.data['time'][0], epoch=epoch)[:3]
+        self.date = utils.seconds2date(self.data['time'][0], epoch=epoch)[:3]
         self.data['time'] = utils.seconds2hours(self.data['time'])
 
     def remove_raw_data(self):

@@ -18,10 +18,10 @@ class NcRadar(DataSource):
     """
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, radar=True)
+        self.site_meta = site_meta
         self.range = self.getvar(self, 'range')
-        self.location = site_meta['name']
         self.date = None
-        self._add_site_meta(site_meta)
+        self.instrument = None
 
     def init_data(self, keymap: dict) -> None:
         """Reads correct fields and fixes the names."""
@@ -30,7 +30,7 @@ class NcRadar(DataSource):
             array = self.getvar(key)
             array = np.array(array) if utils.isscalar(array) else array
             array[~np.isfinite(array)] = ma.masked
-            self.data[name] = RadarArray(array, name)
+            self.append_data(array, name)
 
     def linear_to_db(self, variables_to_log: tuple) -> None:
         """Changes linear units to logarithmic."""
@@ -39,7 +39,8 @@ class NcRadar(DataSource):
 
     def add_meta(self) -> None:
         """Adds metadata."""
-        for key in ('time', 'range', 'radar_frequency'):
+        self.append_data(self.instrument.frequency, 'radar_frequency')
+        for key in ('time', 'range'):
             self.append_data(np.array(getattr(self, key)), key)
         possible_nyquist_names = ('ambiguous_velocity', 'NyquistVelocity')
         self._unknown_variable_to_cloudnet_array(possible_nyquist_names, 'nyquist_velocity',
@@ -58,7 +59,7 @@ class NcRadar(DataSource):
             height = np.array(height)
             self.data['height'] = CloudnetArray(height, 'height')
 
-    def _add_site_meta(self, site_meta: dict) -> None:
-        for key, value in site_meta.items():
+    def add_site_meta(self) -> None:
+        for key, value in self.site_meta.items():
             if key in ('latitude', 'longitude', 'altitude'):
                 self.append_data(float(value), key)

@@ -18,7 +18,6 @@ def save_radar_level1b(source_full_path: str,
                        uuid: Union[str, None],
                        vars_from_source: Optional[tuple] = ()) -> str:
     """Saves pre-processed cloud radar data to a Cloudnet Level 1b "radar" file."""
-    file_type = 'radar'
     dimensions = {'time': len(radar.time),
                   'range': len(radar.range)}
 
@@ -27,22 +26,21 @@ def save_radar_level1b(source_full_path: str,
     nc_source = netCDF4.Dataset(source_full_path)
     copy_variables(nc_source, nc, vars_from_source)
     fix_attribute_name(nc)
-    write_common_level1b_parts(nc, radar, file_type)
+    write_common_level1b_parts(nc, radar)
     nc.close()
     nc_source.close()
     return uuid
 
 
-def write_common_level1b_parts(nc: netCDF4.Dataset,
-                               obj: any,
-                               file_type: str) -> None:
-    add_file_type(nc, file_type)
-    instrument = obj.source.split(' ')[-1]
-    nc.title = f"{instrument} {file_type} file from {obj.location}"
+def write_common_level1b_parts(nc: netCDF4.Dataset, obj: any) -> None:
+    location = obj.site_meta['name']
+    add_file_type(nc, obj.instrument.domain)
+    nc.title = f"{obj.instrument.model} {obj.instrument.type} file from {location}"
     nc.year, nc.month, nc.day = obj.date
-    nc.location = obj.location
-    nc.history = f"{utils.get_time()} - {file_type} file created"
-    nc.source = obj.source
+    nc.location = location
+    nc.history = f"{utils.get_time()} - {obj.instrument.domain} file created"
+    prefix = f'{obj.instrument.manufacturer} ' if obj.instrument.manufacturer else ''
+    nc.source = f'{prefix}{obj.instrument.model}'
     add_references(nc)
 
 
