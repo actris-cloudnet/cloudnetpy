@@ -64,7 +64,8 @@ def rpg2nc(path_to_l1_files: str,
     fmcw.add_height()
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
     output.update_attributes(fmcw.data, attributes)
-    return save_rpg(fmcw, output_file, valid_files, keep_uuid, uuid)
+    uuid = output.save_level1b(fmcw, output_file, keep_uuid, uuid)
+    return uuid, valid_files
 
 
 def create_one_day_data_record(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -> dict:
@@ -256,23 +257,6 @@ class Hatpro(Rpg):
         for key in self.raw_data:
             data[key] = CloudnetArray(self.raw_data[key], key)
         return data
-
-
-def save_rpg(rpg: Rpg,
-             output_file: str,
-             valid_files: list,
-             keep_uuid: bool,
-             uuid: Union[str, None]) -> Tuple[str, list]:
-    """Saves the RPG radar / mwr file."""
-    dims = {'time': len(rpg.data['time'][:])}
-    if rpg.instrument.type == 'cloud radar':
-        dims['range'] = len(rpg.data['range'][:])
-        dims['chirp_sequence'] = len(rpg.data['chirp_start_indices'][:])
-    nc = output.init_file(output_file, dims, rpg.data, keep_uuid, uuid)
-    file_uuid = nc.file_uuid
-    output.write_common_level1b_parts(nc, rpg)
-    nc.close()
-    return file_uuid, valid_files
 
 
 DEFINITIONS = {

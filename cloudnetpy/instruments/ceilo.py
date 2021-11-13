@@ -78,7 +78,8 @@ def ceilo2nc(full_path: str,
     output.update_attributes(ceilo_obj.data, attributes)
     for key in ('beta', 'beta_smooth'):
         ceilo_obj.add_snr_info(key, snr_limit)
-    return save_ceilo(ceilo_obj, output_file, keep_uuid, uuid)
+    uuid = output.save_level1b(ceilo_obj, output_file, keep_uuid, uuid)
+    return uuid
 
 
 def _initialize_ceilo(full_path: str,
@@ -117,18 +118,6 @@ def _find_ceilo_model(full_path: str) -> str:
         if 'CT' in line:
             return 'ct25k'
     raise RuntimeError('Error: Unknown ceilo model.')
-
-
-def save_ceilo(ceilo: any,
-               output_file: str,
-               keep_uuid: bool,
-               uuid: Union[str, None]) -> str:
-    dims = {key: len(ceilo.data[key][:]) for key in ('time', 'range')}
-    nc = output.init_file(output_file, dims, ceilo.data, keep_uuid, uuid)
-    uuid = nc.file_uuid
-    output.write_common_level1b_parts(nc, ceilo)
-    nc.close()
-    return uuid
 
 
 ATTRIBUTES = {

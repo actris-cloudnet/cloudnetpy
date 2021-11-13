@@ -93,7 +93,8 @@ def mira2nc(raw_mira: str,
     mira.close()
     attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
     output.update_attributes(mira.data, attributes)
-    return output.save_radar_level1b(mmclx_filename, mira, output_file, keep_uuid, uuid)
+    uuid = output.save_level1b(mira, output_file, keep_uuid, uuid)
+    return uuid
 
 
 class Mira(NcRadar):

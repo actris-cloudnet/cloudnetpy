@@ -7,32 +7,19 @@ import numpy.ma as ma
 import netCDF4
 from cloudnetpy import utils, version
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
-from cloudnetpy.instruments.mira import Mira
-from cloudnetpy.instruments.basta import Basta
 
 
-def save_radar_level1b(source_full_path: str,
-                       radar: Union[Basta, Mira],
-                       output_file: str,
-                       keep_uuid: Union[bool, None],
-                       uuid: Union[str, None],
-                       vars_from_source: Optional[tuple] = ()) -> str:
-    """Saves pre-processed cloud radar data to a Cloudnet Level 1b "radar" file."""
-    dimensions = {'time': len(radar.time),
-                  'range': len(radar.range)}
-
-    nc = init_file(output_file, dimensions, radar.data, keep_uuid, uuid)
+def save_level1b(obj: any,
+                 output_file: str,
+                 keep_uuid: Union[bool, None],
+                 uuid: Union[str, None]) -> str:
+    """Saves Cloudnet Level 1b file."""
+    dimensions = {key: len(obj.data[key][:]) for key in ('time', 'range') if key in obj.data}
+    if 'chirp_start_indices' in obj.data:
+        dimensions['chirp_sequence'] = len(obj.data['chirp_start_indices'][:])
+    nc = init_file(output_file, dimensions, obj.data, keep_uuid, uuid)
     uuid = nc.file_uuid
-    nc_source = netCDF4.Dataset(source_full_path)
-    copy_variables(nc_source, nc, vars_from_source)
     fix_attribute_name(nc)
-    write_common_level1b_parts(nc, radar)
-    nc.close()
-    nc_source.close()
-    return uuid
-
-
-def write_common_level1b_parts(nc: netCDF4.Dataset, obj: any) -> None:
     location = obj.site_meta['name']
     add_file_type(nc, obj.instrument.domain)
     nc.title = f"{obj.instrument.model} {obj.instrument.type} file from {location}"
@@ -42,10 +29,12 @@ def write_common_level1b_parts(nc: netCDF4.Dataset, obj: any) -> None:
     prefix = f'{obj.instrument.manufacturer} ' if obj.instrument.manufacturer else ''
     nc.source = f'{prefix}{obj.instrument.model}'
     add_references(nc)
+    nc.close()
+    return uuid
 
 
 def save_product_file(short_id: str,
-                      obj,
+                      obj: any,
                       file_name: str,
                       keep_uuid: bool,
                       uuid: Union[str, None],

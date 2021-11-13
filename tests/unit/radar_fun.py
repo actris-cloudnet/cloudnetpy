@@ -11,6 +11,11 @@ class RadarFun:
         self.date = date
         self.uuid = uuid
 
+    def test_variable_names(self):
+        keys = {'Zh', 'v', 'radar_frequency', 'range', 'zenith_angle'}
+        for key in keys:
+            assert key in self.nc.variables
+
     def test_axis(self):
         assert self.nc.variables['range'].axis == 'Z'
         for key in self.nc.variables.keys():

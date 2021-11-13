@@ -9,7 +9,6 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy import output
 from cloudnetpy import utils
 from cloudnetpy.instruments.ceilometer import Ceilometer
-from cloudnetpy.instruments.ceilo import save_ceilo
 import numpy.ma as ma
 from cloudnetpy.instruments import instruments
 
@@ -49,7 +48,8 @@ def pollyxt2nc(input_folder: str,
     attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
     polly.add_snr_info('beta', snr_limit)
-    return save_ceilo(polly, output_file, keep_uuid, uuid)
+    uuid = output.save_level1b(polly, output_file, keep_uuid, uuid)
+    return uuid
 
 
 class PollyXt(Ceilometer):

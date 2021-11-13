@@ -71,6 +71,13 @@ FMCW94 = Instrument(
     frequency=94.0
 )
 
+BASTA = Instrument(
+    model='BASTA',
+    type='cloud radar',
+    domain='radar',
+    frequency=95.0
+)
+
 HATPRO = Instrument(
     manufacturer='RPG-Radiometer Physics',
     model='HATPRO',

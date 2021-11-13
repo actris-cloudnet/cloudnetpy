@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import RadarArray, CloudnetArray, utils
+from cloudnetpy import CloudnetArray, utils
 from cloudnetpy.categorize import DataSource
 
 

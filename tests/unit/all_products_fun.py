@@ -11,6 +11,11 @@ class AllProductsFun:
         self.date = date
         self.uuid = uuid
 
+    def test_variable_names(self):
+        keys = {'time', 'height', 'latitude', 'longitude', 'altitude'}
+        for key in keys:
+            assert key in self.nc.variables
+
     def test_nan_values(self):
         for key in self.nc.variables.keys():
             assert bool(np.isnan(self.nc.variables[key]).all()) is False

@@ -5,6 +5,7 @@ import numpy.ma as ma
 from cloudnetpy import output
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
+from cloudnetpy.instruments import instruments
 
 
 def basta2nc(basta_file: str,
@@ -40,7 +41,7 @@ def basta2nc(basta_file: str,
           >>> basta2nc('basta_file.nc', 'radar.nc', site_meta)
 
     """
-    keymap = {'reflectivity': 'Ze',
+    keymap = {'reflectivity': 'Zh',
               'velocity': 'v'}
 
     basta = Basta(basta_file, site_meta)
@@ -49,14 +50,15 @@ def basta2nc(basta_file: str,
         basta.validate_date(date)
     basta.screen_data(keymap)
     basta.add_meta()
+    basta.add_site_meta()
     basta.add_geolocation()
     basta.add_height()
+    basta.add_zenith_angle()
     basta.close()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
-    fields_from_source = ('elevation', 'pulse_width')
-    return output.save_radar_level1b(basta_file, basta, output_file, keep_uuid, uuid,
-                                     fields_from_source)
+    uuid = output.save_level1b(basta, output_file, keep_uuid, uuid)
+    return uuid
 
 
 class Basta(NcRadar):
@@ -67,12 +69,11 @@ class Basta(NcRadar):
         site_meta: Site properties in a dictionary. Required key is `name`.
 
     """
-    radar_frequency = 95.0
 
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, site_meta)
         self.date = self.get_date()
-        self.source = 'BASTA'
+        self.instrument = instruments.BASTA
 
     def screen_data(self, keymap: dict) -> None:
         """Saves only valid pixels."""
@@ -88,16 +89,18 @@ class Basta(NcRadar):
             raise ValueError('Basta date not what expected.')
 
     def add_geolocation(self):
-        """Adds geo info."""
+        """Adds geolocation."""
+        self.append_data(self.instrument.frequency, 'radar_frequency')
         for key in ('latitude', 'longitude', 'altitude'):
-            if key not in self.data.keys():  # Not provided by user
+            if key not in self.data.keys():
                 value = ma.median(self.getvar(key))
                 self.append_data(value.astype(float), key)
 
+    def add_zenith_angle(self):
+        """Adds solar zenith angle."""
+        elevation = self.getvar('elevation')
+        zenith_angle = 90 - elevation
+        self.append_data(zenith_angle, 'zenith_angle')
 
-ATTRIBUTES = {
-    'Ze': MetaData(
-        long_name='Radar reflectivity factor',
-        units='dBZ',
-    ),
-}
+
+ATTRIBUTES = {}

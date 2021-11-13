@@ -57,7 +57,8 @@ def hatpro2nc(path_to_lwp_files: str,
     hatpro.convert_time_to_fraction_hour()
     attributes = output.add_time_attribute(ATTRIBUTES, hatpro.date)
     output.update_attributes(hatpro.data, attributes)
-    return rpg.save_rpg(hatpro, output_file, valid_files, keep_uuid, uuid)
+    uuid = output.save_level1b(hatpro, output_file, keep_uuid, uuid)
+    return uuid, valid_files
 
 
 def _get_hatpro_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
