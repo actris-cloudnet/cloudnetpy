@@ -203,7 +203,7 @@ def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int):
         dimensions = nc.variables[key].dimensions
         fill_value = getattr(nc.variables[key], '_FillValue', None)
         var = nc_new.createVariable(key, array.dtype, dimensions, zlib=True, fill_value=fill_value)
-        if 'time' in dimensions[0]:
+        if dimensions and 'time' in dimensions[0]:
             if array.ndim == 1:
                 var[:] = array[:n_profiles]
             if array.ndim == 2:
