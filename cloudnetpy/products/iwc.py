@@ -17,7 +17,6 @@ Coefficients = namedtuple('Coefficients', 'K2liquid0 ZT T Z c')
 
 def generate_iwc(categorize_file: str,
                  output_file: str,
-                 keep_uuid: Optional[bool] = False,
                  uuid: Optional[str] = None) -> str:
     """Generates Cloudnet ice water content product.
 
@@ -29,8 +28,6 @@ def generate_iwc(categorize_file: str,
     Args:
         categorize_file: Categorize file name.
         output_file: Output file name.
-        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False when
-            new UUID is generated.
         uuid: Set specific UUID for the file.
 
     Returns:
@@ -58,7 +55,7 @@ def generate_iwc(categorize_file: str,
     date = iwc_source.get_date()
     attributes = output.add_time_attribute(IWC_ATTRIBUTES, date)
     output.update_attributes(iwc_source.data, attributes)
-    uuid = output.save_product_file('iwc', iwc_source, output_file, keep_uuid, uuid)
+    uuid = output.save_product_file('iwc', iwc_source, output_file, uuid)
     iwc_source.close()
     return uuid
 

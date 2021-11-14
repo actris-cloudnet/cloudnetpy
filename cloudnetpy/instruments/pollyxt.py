@@ -16,7 +16,6 @@ from cloudnetpy.instruments import instruments
 def pollyxt2nc(input_folder: str,
                output_file: str,
                site_meta: dict,
-               keep_uuid: Optional[bool] = False,
                uuid: Optional[str] = None,
                date: Optional[str] = None) -> str:
     """"
@@ -27,8 +26,6 @@ def pollyxt2nc(input_folder: str,
         site_meta: Dictionary containing information about the site. Required keys are `name` and
             `altitude`. If the zenith angle of the instrument is NOT 5 degrees, it should be
             provided like this: {'zenith_angle': 6}.
-        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
-            when new UUID is generated.
         uuid: Set specific UUID for the file.
         date: Expected date of the measurements as YYYY-MM-DD.
 
@@ -48,7 +45,7 @@ def pollyxt2nc(input_folder: str,
     attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
     polly.add_snr_info('beta', snr_limit)
-    uuid = output.save_level1b(polly, output_file, keep_uuid, uuid)
+    uuid = output.save_level1b(polly, output_file, uuid)
     return uuid
 
 

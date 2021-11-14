@@ -17,7 +17,6 @@ from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 def generate_drizzle(categorize_file: str,
                      output_file: str,
-                     keep_uuid: bool = False,
                      uuid: Union[str, None] = None) -> str:
     """Generates Cloudnet drizzle product.
 
@@ -27,8 +26,6 @@ def generate_drizzle(categorize_file: str,
     Args:
         categorize_file (str): Categorize file name.
         output_file (str): Output file name.
-        keep_uuid (bool, optional): If True, keeps the UUID of the old file,
-            if that exists. Default is False when new UUID is generated.
         uuid (str, optional): Set specific UUID for the file.
 
     Returns:
@@ -60,7 +57,7 @@ def generate_drizzle(categorize_file: str,
     date = drizzle_source.get_date()
     attributes = output.add_time_attribute(DRIZZLE_ATTRIBUTES, date)
     output.update_attributes(drizzle_source.data, attributes)
-    uuid = output.save_product_file('drizzle', drizzle_source, output_file, keep_uuid, uuid)
+    uuid = output.save_product_file('drizzle', drizzle_source, output_file, uuid)
     drizzle_source.close()
     return uuid
 

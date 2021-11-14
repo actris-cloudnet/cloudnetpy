@@ -10,7 +10,6 @@ from cloudnetpy.exceptions import ValidTimeStampError
 def basta2nc(basta_file: str,
              output_file: str,
              site_meta: dict,
-             keep_uuid: Optional[bool] = False,
              uuid: Optional[str] = None,
              date: Optional[str] = None) -> str:
     """Converts BASTA cloud radar data into Cloudnet Level 1b netCDF file.
@@ -23,8 +22,6 @@ def basta2nc(basta_file: str,
         basta_file: Filename of a daily BASTA .nc file.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key is `name`.
-        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
-            when new UUID is generated.
         uuid: Set specific UUID for the file.
         date: Expected date of the measurements as YYYY-MM-DD.
 
@@ -56,7 +53,7 @@ def basta2nc(basta_file: str,
     basta.close()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
-    uuid = output.save_level1b(basta, output_file, keep_uuid, uuid)
+    uuid = output.save_level1b(basta, output_file, uuid)
     return uuid
 
 

@@ -1,7 +1,6 @@
 """ Functions for file writing."""
-import os
 import logging
-from typing import Union, Optional
+from typing import Optional
 import numpy as np
 import numpy.ma as ma
 import netCDF4
@@ -11,13 +10,12 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 def save_level1b(obj: any,
                  output_file: str,
-                 keep_uuid: Union[bool, None],
-                 uuid: Union[str, None]) -> str:
+                 uuid: Optional[str] = None) -> str:
     """Saves Cloudnet Level 1b file."""
     dimensions = {key: len(obj.data[key][:]) for key in ('time', 'range') if key in obj.data}
     if 'chirp_start_indices' in obj.data:
         dimensions['chirp_sequence'] = len(obj.data['chirp_start_indices'][:])
-    nc = init_file(output_file, dimensions, obj.data, keep_uuid, uuid)
+    nc = init_file(output_file, dimensions, obj.data, uuid)
     uuid = nc.file_uuid
     fix_attribute_name(nc)
     location = obj.site_meta['name']
@@ -36,8 +34,7 @@ def save_level1b(obj: any,
 def save_product_file(short_id: str,
                       obj: any,
                       file_name: str,
-                      keep_uuid: bool,
-                      uuid: Union[str, None],
+                      uuid: Optional[str] = None,
                       copy_from_cat: Optional[tuple] = ()) -> str:
     """Saves a standard Cloudnet product file.
 
@@ -45,8 +42,6 @@ def save_product_file(short_id: str,
         short_id: Short file identifier, e.g. 'lwc', 'iwc', 'drizzle', 'classification'.
         obj: Instance containing product specific attributes: `time`, `dataset`, `data`.
         file_name: Name of the output file to be generated.
-        keep_uuid: If True and old file with the same name exists, uses UUID from that
-            existing file.
         uuid: Set specific UUID for the file.
         copy_from_cat: Variables to be copied from the categorize file.
 
@@ -54,7 +49,7 @@ def save_product_file(short_id: str,
     human_readable_file_type = _get_identifier(short_id)
     dimensions = {'time': len(obj.time),
                   'height': len(obj.dataset.variables['height'])}
-    nc = init_file(file_name, dimensions, obj.data, keep_uuid, uuid)
+    nc = init_file(file_name, dimensions, obj.data, uuid)
     uuid = nc.file_uuid
     add_file_type(nc, short_id)
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
@@ -104,24 +99,21 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, *sources) -> None:
 def init_file(file_name: str,
               dimensions: dict,
               cloudnet_arrays: dict,
-              keep_uuid: Optional[bool] = None,
-              uuid: Union[str, None] = None) -> netCDF4.Dataset:
+              uuid: Optional[str] = None) -> netCDF4.Dataset:
     """Initializes a Cloudnet file for writing.
 
     Args:
         file_name: File name to be generated.
         dimensions: Dictionary containing dimension for this file.
         cloudnet_arrays: Dictionary containing :class:`CloudnetArray` instances.
-        keep_uuid: If True and old file with the same name exists, uses UUID from that file.
         uuid: Set specific UUID for the file.
 
     """
-    specific_uuid = uuid or _get_old_uuid(keep_uuid, file_name)
     nc = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
     for key, dimension in dimensions.items():
         nc.createDimension(key, dimension)
     _write_vars2nc(nc, cloudnet_arrays)
-    _add_standard_global_attributes(nc, specific_uuid)
+    _add_standard_global_attributes(nc, uuid)
     return nc
 
 
@@ -270,19 +262,10 @@ def _get_identifier(short_id: str) -> str:
 
 
 def _add_standard_global_attributes(nc: netCDF4.Dataset,
-                                    uuid: Union[str, None] = None) -> None:
+                                    uuid: Optional[str] = None) -> None:
     nc.Conventions = 'CF-1.8'
     nc.cloudnetpy_version = version.__version__
     nc.file_uuid = uuid or utils.get_uuid()
-
-
-def _get_old_uuid(keep_uuid: bool, full_path: str) -> Union[str, None]:
-    if keep_uuid and os.path.isfile(full_path):
-        nc = netCDF4.Dataset(full_path)
-        uuid = nc.file_uuid
-        nc.close()
-        return uuid
-    return None
 
 
 def fix_attribute_name(nc: netCDF4.Dataset) -> None:

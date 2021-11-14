@@ -13,7 +13,6 @@ from cloudnetpy.instruments import instruments, general
 def rpg2nc(path_to_l1_files: str,
            output_file: str,
            site_meta: dict,
-           keep_uuid: Optional[bool] = False,
            uuid: Optional[str] = None,
            date: Optional[str] = None) -> Tuple[str, list]:
     """Converts RPG FMCW-94 cloud radar data into Cloudnet Level 1b netCDF file.
@@ -27,8 +26,6 @@ def rpg2nc(path_to_l1_files: str,
         site_meta: Dictionary containing information about the
             site. Required key value pairs are `altitude` (metres above mean
             sea level) and `name`.
-        keep_uuid: If True, keeps the UUID of the old file,
-            if that exists. Default is False when new UUID is generated.
         uuid: Set specific UUID for the file.
         date: Expected date in the input files. If not set,
             all files will be used. This might cause unexpected behavior if
@@ -64,7 +61,7 @@ def rpg2nc(path_to_l1_files: str,
     general.add_height(fmcw)
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
     output.update_attributes(fmcw.data, attributes)
-    uuid = output.save_level1b(fmcw, output_file, keep_uuid, uuid)
+    uuid = output.save_level1b(fmcw, output_file, uuid)
     return uuid, valid_files
 
 

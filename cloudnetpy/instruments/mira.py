@@ -15,7 +15,6 @@ from cloudnetpy.instruments import general
 def mira2nc(raw_mira: str,
             output_file: str,
             site_meta: dict,
-            keep_uuid: Optional[bool] = False,
             uuid: Optional[str] = None,
             date: Optional[str] = None) -> str:
     """Converts METEK MIRA-35 cloud radar data into Cloudnet Level 1b netCDF file.
@@ -30,8 +29,6 @@ def mira2nc(raw_mira: str,
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key value pair
             is `name`.
-        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False when
-            new UUID is generated.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -85,7 +82,7 @@ def mira2nc(raw_mira: str,
     mira.close()
     attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
     output.update_attributes(mira.data, attributes)
-    uuid = output.save_level1b(mira, output_file, keep_uuid, uuid)
+    uuid = output.save_level1b(mira, output_file, uuid)
     return uuid
 
 

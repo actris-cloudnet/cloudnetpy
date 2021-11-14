@@ -12,7 +12,6 @@ from cloudnetpy.metadata import MetaData
 def ceilo2nc(full_path: str,
              output_file: str,
              site_meta: dict,
-             keep_uuid: Optional[bool] = False,
              uuid: Optional[str] = None,
              date: Optional[str] = None) -> str:
     """Converts Vaisala / Lufft ceilometer data into Cloudnet Level 1b netCDF file.
@@ -40,8 +39,6 @@ def ceilo2nc(full_path: str,
             Also 'calibration_factor' is recommended because the default value is probably
             incorrect. If the backround noise is *not* range-corrected, you must define:
             {'range_corrected': False}.
-        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
-            when new UUID is generated.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -78,7 +75,7 @@ def ceilo2nc(full_path: str,
     output.update_attributes(ceilo_obj.data, attributes)
     for key in ('beta', 'beta_smooth'):
         ceilo_obj.add_snr_info(key, snr_limit)
-    uuid = output.save_level1b(ceilo_obj, output_file, keep_uuid, uuid)
+    uuid = output.save_level1b(ceilo_obj, output_file, uuid)
     return uuid
 
 

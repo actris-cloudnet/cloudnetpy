@@ -11,7 +11,6 @@ from cloudnetpy.categorize.lidar import Lidar
 
 def generate_categorize(input_files: dict,
                         output_file: str,
-                        keep_uuid: Optional[bool] = False,
                         uuid: Optional[str] = None) -> str:
     """Generates Cloudnet Level 1c categorize file.
 
@@ -25,8 +24,6 @@ def generate_categorize(input_files: dict,
         input_files: dict containing file names for calibrated `radar`, `lidar`, `model` and
             `mwr` files.
         output_file: Full path of the output file.
-        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
-            when new UUID is generated.
         uuid: Set specific UUID for the file.
 
     Returns:
@@ -104,7 +101,7 @@ def generate_categorize(input_files: dict,
     date = data['radar'].get_date()
     attributes = output.add_time_attribute(CATEGORIZE_ATTRIBUTES, date)
     output.update_attributes(cloudnet_arrays, attributes)
-    uuid = _save_cat(output_file, data, cloudnet_arrays, keep_uuid, uuid)
+    uuid = _save_cat(output_file, data, cloudnet_arrays, uuid)
     _close_all()
     return uuid
 
@@ -112,7 +109,6 @@ def generate_categorize(input_files: dict,
 def _save_cat(full_path: str,
               data_obs: dict,
               cloudnet_arrays: dict,
-              keep_uuid: bool,
               uuid: Union[str, None]) -> str:
     """Creates a categorize netCDF4 file and saves all data into it."""
 
@@ -122,7 +118,7 @@ def _save_cat(full_path: str,
             'model_height': len(data_obs['model'].mean_height)}
 
     file_type = 'categorize'
-    nc = output.init_file(full_path, dims, cloudnet_arrays, keep_uuid, uuid)
+    nc = output.init_file(full_path, dims, cloudnet_arrays, uuid)
     uuid = nc.file_uuid
     output.add_file_type(nc, file_type)
     output.copy_global(data_obs['radar'].dataset, nc, ('year', 'month', 'day', 'location'))

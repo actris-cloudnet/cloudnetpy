@@ -104,13 +104,6 @@ def test_get_source_uuids():
     assert len(res) == len(uuid1) + len(uuid2) + 2
 
 
-def test_get_old_uuid(fake_nc_file):
-    assert output._get_old_uuid(True, fake_nc_file) == 'abcde'
-    assert output._get_old_uuid(False, fake_nc_file) is None
-    assert output._get_old_uuid(True, 'new_file.nc') is None
-    assert output._get_old_uuid(False, 'new_file.nc') is None
-
-
 def test_add_standard_global_attributes(tmpdir_factory):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
     root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")

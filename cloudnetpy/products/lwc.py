@@ -15,7 +15,6 @@ G_TO_KG = 0.001
 
 def generate_lwc(categorize_file: str,
                  output_file: str,
-                 keep_uuid: Optional[bool] = False,
                  uuid: Optional[str] = None) -> str:
     """Generates Cloudnet liquid water content product.
 
@@ -27,8 +26,6 @@ def generate_lwc(categorize_file: str,
     Args:
         categorize_file: Categorize file name.
         output_file: Output file name.
-        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False when
-            new UUID is generated.
         uuid: Set specific UUID for the file.
 
     Returns:
@@ -55,7 +52,7 @@ def generate_lwc(categorize_file: str,
     date = lwc_source.get_date()
     attributes = output.add_time_attribute(LWC_ATTRIBUTES, date)
     output.update_attributes(lwc_source.data, attributes)
-    uuid = output.save_product_file('lwc', lwc_source, output_file, keep_uuid, uuid,
+    uuid = output.save_product_file('lwc', lwc_source, output_file, uuid,
                                     copy_from_cat=('lwp', 'lwp_error'))
     lwc_source.close()
     return uuid

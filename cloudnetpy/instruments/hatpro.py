@@ -10,7 +10,6 @@ from cloudnetpy.instruments.rpg_reader import HatproBin
 def hatpro2nc(path_to_lwp_files: str,
               output_file: str,
               site_meta: dict,
-              keep_uuid: Optional[bool] = False,
               uuid: Optional[str] = None,
               date: Optional[str] = None) -> Tuple[str, list]:
     """Converts RPG HATPRO microwave radiometer data (LWP) into Cloudnet Level 1b netCDF file.
@@ -24,8 +23,6 @@ def hatpro2nc(path_to_lwp_files: str,
         site_meta: Dictionary containing information about the
             site. Required key value pairs are `altitude` (metres above mean
             sea level) and `name`.
-        keep_uuid: If True, keeps the UUID of the old file,
-            if that exists. Default is False when new UUID is generated.
         uuid: Set specific UUID for the file.
         date: Expected date in the input files. If not set,
             all files will be used. This might cause unexpected behavior if
@@ -57,7 +54,7 @@ def hatpro2nc(path_to_lwp_files: str,
     hatpro.convert_time_to_fraction_hour()
     attributes = output.add_time_attribute(ATTRIBUTES, hatpro.date)
     output.update_attributes(hatpro.data, attributes)
-    uuid = output.save_level1b(hatpro, output_file, keep_uuid, uuid)
+    uuid = output.save_level1b(hatpro, output_file, uuid)
     return uuid, valid_files
 
 

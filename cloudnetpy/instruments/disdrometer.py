@@ -16,7 +16,6 @@ THIES = 'Thies-LNM'
 def disdrometer2nc(disdrometer_file: str,
                    output_file: str,
                    site_meta: dict,
-                   keep_uuid: Optional[bool] = False,
                    uuid: Optional[str] = None,
                    date: Optional[str] = None) -> str:
     """Converts disdrometer data into Cloudnet Level 1b netCDF file. Accepts measurements from
@@ -26,8 +25,6 @@ def disdrometer2nc(disdrometer_file: str,
         disdrometer_file: Filename of disdrometer .log file.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key is `name`.
-        keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False
-            when new UUID is generated.
         uuid: Set specific UUID for the file.
         date: Expected date of the measurements as YYYY-MM-DD.
 
@@ -60,7 +57,7 @@ def disdrometer2nc(disdrometer_file: str,
     disdrometer.convert_units()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
     output.update_attributes(disdrometer.data, attributes)
-    return save_disdrometer(disdrometer, output_file, keep_uuid, uuid)
+    return save_disdrometer(disdrometer, output_file, uuid)
 
 
 class Disdrometer:
@@ -361,7 +358,6 @@ class Thies(Disdrometer):
 
 def save_disdrometer(disdrometer: Union[Parsivel, Thies],
                      output_file: str,
-                     keep_uuid: bool,
                      uuid: Union[str, None]) -> str:
     """Saves disdrometer file."""
     dims = {
@@ -371,7 +367,7 @@ def save_disdrometer(disdrometer: Union[Parsivel, Thies],
         'nv': 2
     }
     file_type = 'disdrometer'
-    rootgrp = output.init_file(output_file, dims, disdrometer.data, keep_uuid, uuid)
+    rootgrp = output.init_file(output_file, dims, disdrometer.data, uuid)
     file_uuid = rootgrp.file_uuid
     output.add_file_type(rootgrp, file_type)
     rootgrp.title = f"{file_type.capitalize()} file from {disdrometer.site_meta['name']}"
