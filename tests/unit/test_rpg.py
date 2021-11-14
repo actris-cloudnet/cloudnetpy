@@ -65,6 +65,16 @@ class TestRPG2nc:
         for key in mandatory_variables:
             assert key in self.nc.variables
 
+    def test_long_names(self):
+        data = [
+            ('rho_cx', 'Co-cross-channel correlation coefficient'),
+            ('phi_cx', 'Co-cross-channel differential phase'),
+        ]
+        for key, expected in data:
+            if key in self.nc.variables:
+                value = self.nc.variables[key].long_name
+                assert value == expected, f'{value} != {expected}'
+
     def test_common(self):
         for name, method in AllProductsFun.__dict__.items():
             if 'test_' in name:

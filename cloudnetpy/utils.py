@@ -10,6 +10,7 @@ from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline, griddata
 import pytz
 import requests
+from cloudnetpy.exceptions import ValidTimeStampError
 
 
 SECONDS_PER_MINUTE = 60
@@ -817,7 +818,7 @@ def find_valid_time_indices(time: np.ndarray, epoch: tuple, expected_date: str) 
         if date_str == expected_date and time[ind] not in time[ind_valid]:
             ind_valid.append(ind)
     if not ind_valid:
-        raise ValueError('No valid time indices')
+        raise ValidTimeStampError
     return ind_valid
 
 

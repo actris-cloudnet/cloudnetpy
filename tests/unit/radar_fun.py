@@ -35,23 +35,16 @@ class RadarFun:
             value = self.nc.variables[key].standard_name
             assert value == expected, f'{value} != {expected}'
 
-    def test_units(self):
-        data = [
-            ('zenith_angle', 'degree'),
-            ('range', 'm'),
-            ('frequency', 'GHz'),
-        ]
-        for key, expected in data:
-            if key in self.nc.variables:
-                value = self.nc.variables[key].units
-                assert value == expected, f'{value} != {expected}'
-
     def test_long_names(self):
         data = [
             ('zenith_angle', 'Zenith angle'),
             ('range', 'Range from instrument'),
             ('radar_frequency', 'Radar transmit frequency'),
-            ('Zh', 'Radar reflectivity factor')
+            ('Zh', 'Radar reflectivity factor'),
+            ('v', 'Doppler velocity'),
+            ('ldr', 'Linear depolarisation ratio'),
+            ('width', 'Spectral width'),
+            ('nyquist_velocity', 'Nyquist velocity'),
         ]
         for key, expected in data:
             if key in self.nc.variables:

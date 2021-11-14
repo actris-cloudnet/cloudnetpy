@@ -2,7 +2,7 @@
 """
 import os
 from bisect import bisect_left
-from typing import Union
+from typing import Optional
 import numpy as np
 import numpy.ma as ma
 from scipy.special import gamma
@@ -17,7 +17,7 @@ from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 def generate_drizzle(categorize_file: str,
                      output_file: str,
-                     uuid: Union[str, None] = None) -> str:
+                     uuid: Optional[str] = None) -> str:
     """Generates Cloudnet drizzle product.
 
     This function calculates different drizzle properties from
@@ -114,7 +114,7 @@ class DrizzleSource(DataSource):
 
     def _get_wl_band(self):
         """Returns string corresponding the radar frequency."""
-        radar_frequency = self.getvar('radar_frequency')
+        radar_frequency = float(self.getvar('radar_frequency'))
         wl_band = utils.get_wl_band(radar_frequency)
         return '35' if wl_band == 0 else '94'
 

@@ -8,6 +8,7 @@ import os
 import glob
 from cloudnetpy import concat_lib
 import sys
+from cloudnetpy.exceptions import ValidTimeStampError
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -65,7 +66,7 @@ class TestCHM15k:
 
     def test_convert_time_error(self):
         obj = lufft.LufftCeilo(self.file, site_meta, '2122-01-01')
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidTimeStampError):
             obj.read_ceilometer_file()
 
 
@@ -125,7 +126,7 @@ class TestWithRealData:
         assert nc.month == '10'
         assert nc.day == '22'
         nc.close()
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidTimeStampError):
             ceilo2nc(self.daily_file, self.output, site_meta, date='2020-10-23')
         os.remove(output)
 
