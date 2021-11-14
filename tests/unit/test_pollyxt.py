@@ -5,6 +5,7 @@ import netCDF4
 import numpy as np
 import numpy.ma as ma
 import sys
+from cloudnetpy.exceptions import ValidTimeStampError
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -53,7 +54,7 @@ class TestPolly:
         assert np.all(np.diff(self.nc.variables['time'][:]) > 0)
 
     def test_comments(self):
-        assert 'SNR threshold applied: 5' in self.nc.variables['beta'].comment
+        assert 'SNR threshold applied: 2' in self.nc.variables['beta'].comment
 
     def test_global_attributes(self):
         assert self.nc.source == 'PollyXT'
@@ -73,6 +74,6 @@ def test_date_argument():
     assert nc.month == '09'
     assert nc.day == '17'
     nc.close()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValidTimeStampError):
         pollyxt2nc(filepath, output, site_meta, date='2021-09-15')
     os.remove(output)

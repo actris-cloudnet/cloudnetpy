@@ -33,7 +33,7 @@ def pollyxt2nc(input_folder: str,
         UUID of the generated file.
 
     """
-    snr_limit = 5
+    snr_limit = 2
     polly = PollyXt(site_meta, date)
     epoch = polly.fetch_data(input_folder)
     polly.get_date_and_time(epoch)
@@ -66,6 +66,8 @@ class PollyXt(Ceilometer):
         keys = ('beta', 'depolarisation')
         for key in keys:
             self.data[key] = ma.masked_where(self.data['snr'] < snr_limit, self.data[f'{key}_raw'])
+        self.data['depolarisation'][self.data['depolarisation'] > 1] = ma.masked
+        self.data['depolarisation'][self.data['depolarisation'] < 0] = ma.masked
         del self.data['snr']
 
     def fetch_zenith_angle(self) -> None:
