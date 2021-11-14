@@ -2,14 +2,14 @@
 import glob
 from typing import Optional, Union
 import logging
-import netCDF4
 import numpy as np
+import numpy.ma as ma
+import netCDF4
 from numpy.testing import assert_array_equal
 from cloudnetpy.metadata import MetaData
 from cloudnetpy import output
 from cloudnetpy import utils
 from cloudnetpy.instruments.ceilometer import Ceilometer
-import numpy.ma as ma
 from cloudnetpy.instruments import instruments
 
 
@@ -61,7 +61,7 @@ class PollyXt(Ceilometer):
         self.instrument = instruments.POLLYXT
 
     def mask_nan_values(self):
-        for key, array in self.data.items():
+        for array in self.data.values():
             if getattr(array, 'ndim', 0) > 0:
                 array[np.isnan(array)] = ma.masked
 
@@ -77,8 +77,8 @@ class PollyXt(Ceilometer):
 
     def fetch_data(self, input_folder: str) -> Union[tuple, None]:
         """Read input data."""
-        bsc_files = [file for file in glob.glob(f'{input_folder}/*[0-9]_att*.nc')]
-        depol_files = [file for file in glob.glob(f'{input_folder}/*[0-9]_vol*.nc')]
+        bsc_files = glob.glob(f'{input_folder}/*[0-9]_att*.nc')
+        depol_files = glob.glob(f'{input_folder}/*[0-9]_vol*.nc')
         bsc_files.sort()
         depol_files.sort()
         if not bsc_files:
@@ -91,7 +91,7 @@ class PollyXt(Ceilometer):
         calibration_factors = []
         epoch = ()
         bsc_key = 'attenuated_backscatter_1064nm'
-        for ind, (bsc_file, depol_file) in enumerate(zip(bsc_files, depol_files)):
+        for (bsc_file, depol_file) in zip(bsc_files, depol_files):
             nc_bsc = netCDF4.Dataset(bsc_file, 'r')
             nc_depol = netCDF4.Dataset(depol_file, 'r')
             epoch = utils.get_epoch(nc_bsc['time'].unit)

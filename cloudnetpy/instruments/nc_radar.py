@@ -16,13 +16,13 @@ class NcRadar(DataSource):
         Used with BASTA and MIRA radars.
     """
     def __init__(self, full_path: str, site_meta: dict):
-        super().__init__(full_path, radar=True)
+        super().__init__(full_path)
         self.site_meta = site_meta
         self.date = None
         self.instrument = None
 
     def init_data(self, keymap: dict) -> None:
-        """Reads correct fields and fixes the names."""
+        """Reads selected fields and fixes the names."""
         for key in keymap:
             name = keymap[key]
             array = self.getvar(key)

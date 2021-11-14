@@ -1,10 +1,10 @@
+import logging
 from typing import Tuple, Optional
 import numpy as np
 import numpy.ma as ma
 import scipy.ndimage
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-import logging
 
 
 class NoiseParam:
@@ -24,7 +24,7 @@ class Ceilometer:
         self.data = {}          # Need to contain 'beta_raw', 'range' and 'time'
         self.metadata = {}      # Need to contain 'date' as ('yyyy', 'mm', 'dd')
         self.expected_date = None
-        self.site_meta = None
+        self.site_meta = {}
         self.date = None
         self.instrument = None
 

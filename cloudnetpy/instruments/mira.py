@@ -1,5 +1,4 @@
 """Module for reading raw cloud radar data."""
-import logging
 import os
 from typing import List, Optional
 from tempfile import NamedTemporaryFile
@@ -8,7 +7,6 @@ from cloudnetpy import output, utils
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
 from cloudnetpy import concat_lib
-from cloudnetpy import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import MIRA35
 from cloudnetpy.instruments import general
@@ -17,7 +15,6 @@ from cloudnetpy.instruments import general
 def mira2nc(raw_mira: str,
             output_file: str,
             site_meta: dict,
-            rebin_data: Optional[bool] = False,
             keep_uuid: Optional[bool] = False,
             uuid: Optional[str] = None,
             date: Optional[str] = None) -> str:
@@ -33,8 +30,6 @@ def mira2nc(raw_mira: str,
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key value pair
             is `name`.
-        rebin_data: If True, rebins data to 30s resolution. Otherwise keeps the native resolution.
-            Default is False.
         keep_uuid: If True, keeps the UUID of the old file, if that exists. Default is False when
             new UUID is generated.
         uuid: Set specific UUID for the file.
@@ -80,11 +75,7 @@ def mira2nc(raw_mira: str,
         mira.screen_time(date)
         mira.date = date.split('-')
     general.linear_to_db(mira, ('Zh', 'ldr', 'SNR'))
-    if rebin_data:
-        snr_gain = mira.rebin_fields()
-    else:
-        snr_gain = 1
-    mira.screen_by_snr(snr_gain)
+    mira.screen_by_snr()
     mira.mask_invalid_data()
     mira.add_time_and_range()
     general.add_site_geolocation(mira)
@@ -133,20 +124,9 @@ class Mira(NcRadar):
                     cloudnet_array.data = array[inds, :]
         self.time = self.time[inds]
 
-    def add_geolocation(self) -> None:
-        """Adds geo info (from global attributes to variables)."""
-        for key in ('Latitude', 'Longitude', 'Altitude'):
-            try:
-                value = getattr(self.dataset, key).split()[0]
-            except AttributeError:
-                value = None
-            key = key.lower()
-            if key not in self.data.keys() and value is not None:  # Not provided by user
-                self.append_data(value, key)
-
-    def screen_by_snr(self, snr_gain: float, snr_limit: Optional[float] = -17) -> None:
+    def screen_by_snr(self, snr_limit: Optional[float] = -17) -> None:
         """Screens by SNR."""
-        ind = np.where(self.data['SNR'][:] * snr_gain < snr_limit)
+        ind = np.where(self.data['SNR'][:] < snr_limit)
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(ind)
@@ -159,31 +139,6 @@ class Mira(NcRadar):
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(z_mask)
                 cloudnet_array.mask_indices(v_mask)
-
-    def filter_noise(self) -> None:
-        """Filters isolated pixels and vertical stripes.
-
-        Notes:
-            Use with caution, might remove actual data too.
-        """
-        for cloudnet_array in self.data.values():
-            if cloudnet_array.data.ndim == 2:
-                cloudnet_array.filter_vertical_stripes()
-
-    def rebin_fields(self) -> float:
-        """Rebins fields."""
-        time_grid = utils.time_grid()
-        for cloudnet_array in self.data.values():
-            cloudnet_array.rebin_data(self.time, time_grid)
-        snr_gain = self._estimate_snr_gain(time_grid, self.time)
-        self.time = time_grid
-        return snr_gain
-
-    @staticmethod
-    def _estimate_snr_gain(time_sparse: np.ndarray, time_dense: np.ndarray) -> float:
-        """Returns factor for SNR (dB) increase when data is binned."""
-        binning_ratio = utils.mdiff(time_sparse) / utils.mdiff(time_dense)
-        return np.sqrt(binning_ratio)
 
     def _init_mira_date(self) -> List[str]:
         time_stamps = self.getvar('time')

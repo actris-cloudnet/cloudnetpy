@@ -120,6 +120,15 @@ class TestMIRA2nc:
         assert uuid == uuid_from_user
         nc.close()
 
+    def test_geolocation_from_source_file(self):
+        meta_without_geolocation = {'name': 'Kumpula'}
+        mira.mira2nc(f'{filepath}/20210102_0000.mmclx', self.output2, meta_without_geolocation)
+        nc = netCDF4.Dataset(self.output2)
+        for key in ('latitude', 'longitude', 'altitude'):
+            assert key in nc.variables
+            assert nc.variables[key][:] > 0
+        nc.close()
+
     def test_tear_down(self):
         os.remove(self.output)
         os.remove(self.output2)

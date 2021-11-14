@@ -8,9 +8,20 @@ from cloudnetpy import utils
 
 def add_site_geolocation(obj: any):
     """Adds site geolocation."""
-    for key, value in obj.site_meta.items():
-        if key in ('latitude', 'longitude', 'altitude'):
-            obj.data[key] = CloudnetArray(float(value), key)
+    for key in ('latitude', 'longitude', 'altitude'):
+        value = None
+        # User-supplied:
+        if key in obj.site_meta:
+            value = obj.site_meta[key]
+        # From source global attributes (MIRA):
+        elif hasattr(obj, 'dataset') and hasattr(obj.dataset, key.capitalize()):
+            value = float(getattr(obj.dataset, key.capitalize()).split()[0])
+        # From source data (BASTA / RPG):
+        elif hasattr(obj, 'dataset') and key in obj.dataset.variables:
+            value = obj.dataset.variables[key][:]
+        if value is not None:
+            value = float(ma.mean(value))
+            obj.data[key] = CloudnetArray(value, key)
 
 
 def add_radar_specific_variables(obj: any):

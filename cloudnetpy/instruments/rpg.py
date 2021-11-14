@@ -3,7 +3,7 @@ from typing import Union, Tuple, Optional, List
 import logging
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import utils, output, CloudnetArray, RadarArray
+from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
@@ -166,14 +166,13 @@ class Rpg:
         self.raw_data = raw_data
         self.site_meta = site_meta
         self.date = self._get_date()
-        self.data = {}
+        self.data = self._init_data()
         self.instrument = None
 
     def convert_time_to_fraction_hour(self) -> None:
         """Converts time to fraction hour."""
         key = 'time'
         fraction_hour = utils.seconds2hours(self.raw_data[key])
-        self.raw_data[key] = fraction_hour
         self.data[key] = CloudnetArray(np.array(fraction_hour), key)
 
     def _get_date(self) -> list:
@@ -185,12 +184,17 @@ class Rpg:
             logging.warning('Measurements from different days')
         return date_first
 
+    def _init_data(self) -> dict:
+        data = {}
+        for key in self.raw_data:
+            data[key] = CloudnetArray(self.raw_data[key], key)
+        return data
+
 
 class Fmcw94(Rpg):
     """Class for RPG FMCW-94 Cloud radar."""
     def __init__(self, raw_data: dict, site_properties: dict):
         super().__init__(raw_data, site_properties)
-        self.data = self._init_data()
         self.instrument = instruments.FMCW94
 
     def mask_invalid_ldr(self) -> None:
@@ -199,18 +203,11 @@ class Fmcw94(Rpg):
         if 'ldr' in self.data:
             self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, threshold)
 
-    def _init_data(self) -> dict:
-        data = {}
-        for key in self.raw_data:
-            data[key] = RadarArray(self.raw_data[key], key)
-        return data
-
 
 class Hatpro(Rpg):
     """Class for RPG HATPRO mwr."""
     def __init__(self, raw_data: dict, site_properties: dict):
         super().__init__(raw_data, site_properties)
-        self.data = self._init_data()
         self.instrument = instruments.HATPRO
 
     def sort_timestamps(self):
@@ -222,12 +219,6 @@ class Hatpro(Rpg):
         ind = time.argsort()
         self.data['time'].data[:] = time[ind]
         self.data[key].data[:] = array[ind]
-
-    def _init_data(self) -> dict:
-        data = {}
-        for key in self.raw_data:
-            data[key] = CloudnetArray(self.raw_data[key], key)
-        return data
 
 
 DEFINITIONS = {

@@ -1,11 +1,10 @@
 """Module for reading / converting BASTA radar data."""
 from typing import Optional
 import numpy as np
-import numpy.ma as ma
 from cloudnetpy import output
 from cloudnetpy.instruments.nc_radar import NcRadar
-from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments import instruments, general
+from cloudnetpy.exceptions import ValidTimeStampError
 
 
 def basta2nc(basta_file: str,
@@ -69,7 +68,6 @@ class Basta(NcRadar):
         site_meta: Site properties in a dictionary. Required key is `name`.
 
     """
-
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, site_meta)
         self.date = self.get_date()
@@ -86,7 +84,7 @@ class Basta(NcRadar):
         date_units = self.dataset.variables['time'].units
         date = date_units.split()[2]
         if expected_date != date:
-            raise ValueError('Basta date not what expected.')
+            raise ValidTimeStampError
 
 
 ATTRIBUTES = {}

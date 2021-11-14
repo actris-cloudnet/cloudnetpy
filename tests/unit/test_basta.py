@@ -19,14 +19,14 @@ site_meta = {
     'longitude': 104.5,
     'altitude': 50
 }
-filepath = f'{SCRIPT_PATH}/data/basta/'
+filename = f'{SCRIPT_PATH}/data/basta/basta_1a_cldradLz1R025m_v03_20210827_000000.nc'
 
 
 class TestBASTA:
     date = '2021-08-27'
     output = 'dummy_basta_output_file.nc'
     output2 = 'dummy_temp_basta_file.nc'
-    uuid = basta2nc(f'{filepath}/basta_1a_cldradLz1R025m_v03_20210827_000000.nc', output, site_meta)
+    uuid = basta2nc(filename, output, site_meta)
     quality = Quality(output)
     res_data = quality.check_data()
     res_metadata = quality.check_metadata()
@@ -56,6 +56,28 @@ class TestBASTA:
         assert self.quality.n_metadata_test_failures == 0, self.res_metadata
         assert self.quality.n_data_test_failures == 0, self.res_data
 
+    def test_geolocation_from_source_file(self):
+        meta_without_geolocation = {'name': 'Kumpula'}
+        basta2nc(filename, self.output2, meta_without_geolocation)
+        nc = netCDF4.Dataset(self.output2)
+        for key in ('latitude', 'longitude', 'altitude'):
+            assert key in nc.variables
+            assert nc.variables[key][:] > 0
+        nc.close()
+
+    def test_wrong_date_validation(self):
+        with pytest.raises(ValidTimeStampError):
+            basta2nc(filename, self.output2, site_meta, date='2021-01-04')
+
+    def test_uuid_from_user(self):
+        uuid_from_user = 'kissa'
+        uuid = basta2nc(filename, self.output2, site_meta, uuid=uuid_from_user)
+        nc = netCDF4.Dataset(self.output2)
+        assert nc.file_uuid == uuid_from_user
+        assert uuid == uuid_from_user
+        nc.close()
+
     def test_tear_down(self):
         os.remove(self.output)
+        os.remove(self.output2)
         self.nc.close()

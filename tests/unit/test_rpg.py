@@ -125,6 +125,15 @@ class TestRPG2nc:
         _, files = rpg.rpg2nc(temp_dir.name, self.output2, site_meta, date='2020-10-22')
         assert len(files) == 2
 
+    def test_geolocation_from_source_file(self):
+        meta_without_geolocation = {'name': 'Kumpula', 'altitude': 34}
+        rpg.rpg2nc(filepath, self.output2, meta_without_geolocation)
+        nc = netCDF4.Dataset(self.output2)
+        for key in ('latitude', 'longitude'):
+            assert key in nc.variables
+            assert nc.variables[key][:] > 0
+        nc.close()
+
     def test_cleanup(self):
         os.remove(self.output)
         os.remove(self.output2)

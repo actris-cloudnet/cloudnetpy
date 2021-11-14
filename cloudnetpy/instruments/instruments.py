@@ -84,4 +84,3 @@ HATPRO = Instrument(
     type='microwave radiometer',
     domain='mwr'
 )
-
