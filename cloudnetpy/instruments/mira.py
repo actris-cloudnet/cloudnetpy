@@ -11,6 +11,7 @@ from cloudnetpy import concat_lib
 from cloudnetpy import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import MIRA35
+from cloudnetpy.instruments import general
 
 
 def mira2nc(raw_mira: str,
@@ -78,18 +79,18 @@ def mira2nc(raw_mira: str,
     if date is not None:
         mira.screen_time(date)
         mira.date = date.split('-')
-    mira.linear_to_db(('Zh', 'ldr', 'SNR'))
+    general.linear_to_db(mira, ('Zh', 'ldr', 'SNR'))
     if rebin_data:
         snr_gain = mira.rebin_fields()
     else:
         snr_gain = 1
     mira.screen_by_snr(snr_gain)
     mira.mask_invalid_data()
-    mira.add_meta()
-    mira.add_site_meta()
-    mira.add_geolocation()
-    mira.add_height()
-    mira.add_zenith_angle()
+    mira.add_time_and_range()
+    general.add_site_geolocation(mira)
+    general.add_radar_specific_variables(mira)
+    general.add_zenith_angle(mira)
+    general.add_height(mira)
     mira.close()
     attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
     output.update_attributes(mira.data, attributes)
@@ -131,17 +132,6 @@ class Mira(NcRadar):
                 elif array.ndim == 2:
                     cloudnet_array.data = array[inds, :]
         self.time = self.time[inds]
-
-    def add_zenith_angle(self) -> None:
-        """Adds solar zenith angle."""
-        elevation = self.data['elevation'].data
-        zenith = 90 - elevation
-        tolerance = 0.5
-        difference = np.diff(zenith)
-        if np.any(difference > tolerance):
-            logging.warning(f'Varying zenith angle. Maximum difference: {max(difference)}')
-        self.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
-        del self.data['elevation']
 
     def add_geolocation(self) -> None:
         """Adds geo info (from global attributes to variables)."""

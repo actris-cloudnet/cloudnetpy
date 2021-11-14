@@ -7,7 +7,7 @@ from cloudnetpy import utils, output, CloudnetArray, RadarArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
-from cloudnetpy.instruments import instruments
+from cloudnetpy.instruments import instruments, general
 
 
 def rpg2nc(path_to_l1_files: str,
@@ -58,10 +58,10 @@ def rpg2nc(path_to_l1_files: str,
     fmcw = Fmcw94(one_day_of_data, site_meta)
     fmcw.convert_time_to_fraction_hour()
     fmcw.mask_invalid_ldr()
-    fmcw.linear_to_db(('Zh', 'antenna_gain'))
-    fmcw.add_site_meta()
-    fmcw.add_zenith_angle()
-    fmcw.add_height()
+    general.linear_to_db(fmcw, ('Zh', 'antenna_gain'))
+    general.add_site_geolocation(fmcw)
+    general.add_zenith_angle(fmcw)
+    general.add_height(fmcw)
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
     output.update_attributes(fmcw.data, attributes)
     uuid = output.save_level1b(fmcw, output_file, keep_uuid, uuid)
@@ -166,7 +166,6 @@ class Rpg:
         self.raw_data = raw_data
         self.site_meta = site_meta
         self.date = self._get_date()
-        self.location = site_meta['name']
         self.data = {}
         self.instrument = None
 
@@ -176,11 +175,6 @@ class Rpg:
         fraction_hour = utils.seconds2hours(self.raw_data[key])
         self.raw_data[key] = fraction_hour
         self.data[key] = CloudnetArray(np.array(fraction_hour), key)
-
-    def add_site_meta(self) -> None:
-        for key, value in self.site_meta.items():
-            if key in ('latitude', 'longitude', 'altitude'):
-                self.data[key] = CloudnetArray(float(value), key)
 
     def _get_date(self) -> list:
         time_first = self.raw_data['time'][0]
@@ -198,29 +192,6 @@ class Fmcw94(Rpg):
         super().__init__(raw_data, site_properties)
         self.data = self._init_data()
         self.instrument = instruments.FMCW94
-
-    def add_zenith_angle(self) -> None:
-        """Adds solar zenith angle."""
-        elevation = self.data['elevation'].data
-        zenith = 90 - elevation
-        tolerance = 0.5
-        difference = np.diff(zenith)
-        if np.any(difference > tolerance):
-            logging.warning(f'Varying zenith angle. Maximum difference: {max(difference)}')
-        self.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
-        del self.data['elevation']
-
-    def add_height(self):
-        """Adds height vector."""
-        zenith_angle = ma.median(self.data['zenith_angle'].data)
-        height = utils.range_to_height(self.data['range'].data, float(zenith_angle))
-        height += self.data['altitude'].data
-        self.data['height'] = CloudnetArray(height, 'height')
-
-    def linear_to_db(self, variables_to_log: tuple) -> None:
-        """Changes linear units to logarithmic."""
-        for name in variables_to_log:
-            self.data[name].lin2db()
 
     def mask_invalid_ldr(self) -> None:
         """Removes ldr outliers."""

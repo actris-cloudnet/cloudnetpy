@@ -1,1 +1,58 @@
+"""General helper functions for instrument processing."""
+import logging
+import numpy as np
+import numpy.ma as ma
+from cloudnetpy import CloudnetArray
+from cloudnetpy import utils
 
+
+def add_site_geolocation(obj: any):
+    """Adds site geolocation."""
+    for key, value in obj.site_meta.items():
+        if key in ('latitude', 'longitude', 'altitude'):
+            obj.data[key] = CloudnetArray(float(value), key)
+
+
+def add_radar_specific_variables(obj: any):
+    """Adds radar specific variables."""
+    key = 'radar_frequency'
+    obj.data[key] = CloudnetArray(obj.instrument.frequency, key)
+    possible_nyquist_names = ('ambiguous_velocity', 'NyquistVelocity')
+    data = obj.getvar(*possible_nyquist_names)
+    key = 'nyquist_velocity'
+    obj.data[key] = CloudnetArray(np.array(data), key)
+
+
+def add_zenith_angle(obj: any) -> None:
+    """Adds solar zenith angle."""
+    key = 'elevation'
+    try:
+        elevation = obj.data[key].data
+    except KeyError:
+        elevation = obj.getvar(key)
+    zenith = 90 - elevation
+    if not utils.isscalar(zenith):
+        tolerance = 0.5
+        difference = np.diff(zenith)
+        if np.any(difference > tolerance):
+            logging.warning(f'Varying zenith angle. Maximum difference: {max(difference)}')
+    obj.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
+    obj.data.pop(key, None)
+
+
+def add_height(obj: any):
+    try:
+        zenith_angle = ma.median(obj.data['zenith_angle'].data)
+    except RuntimeError:
+        logging.warning('Assuming 0 deg zenith_angle')
+        zenith_angle = 0
+    height = utils.range_to_height(obj.data['range'].data, zenith_angle)
+    height += obj.data['altitude'].data
+    height = np.array(height)
+    obj.data['height'] = CloudnetArray(height, 'height')
+
+
+def linear_to_db(obj, variables_to_log: tuple) -> None:
+    """Changes linear units to logarithmic."""
+    for name in variables_to_log:
+        obj.data[name].lin2db()

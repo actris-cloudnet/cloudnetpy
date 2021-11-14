@@ -5,7 +5,7 @@ import numpy.ma as ma
 from cloudnetpy import output
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
-from cloudnetpy.instruments import instruments
+from cloudnetpy.instruments import instruments, general
 
 
 def basta2nc(basta_file: str,
@@ -49,11 +49,11 @@ def basta2nc(basta_file: str,
     if date is not None:
         basta.validate_date(date)
     basta.screen_data(keymap)
-    basta.add_meta()
-    basta.add_site_meta()
-    basta.add_geolocation()
-    basta.add_height()
-    basta.add_zenith_angle()
+    basta.add_time_and_range()
+    general.add_site_geolocation(basta)
+    general.add_zenith_angle(basta)
+    general.add_radar_specific_variables(basta)
+    general.add_height(basta)
     basta.close()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
@@ -87,20 +87,6 @@ class Basta(NcRadar):
         date = date_units.split()[2]
         if expected_date != date:
             raise ValueError('Basta date not what expected.')
-
-    def add_geolocation(self):
-        """Adds geolocation."""
-        self.append_data(self.instrument.frequency, 'radar_frequency')
-        for key in ('latitude', 'longitude', 'altitude'):
-            if key not in self.data.keys():
-                value = ma.median(self.getvar(key))
-                self.append_data(value.astype(float), key)
-
-    def add_zenith_angle(self):
-        """Adds solar zenith angle."""
-        elevation = self.getvar('elevation')
-        zenith_angle = 90 - elevation
-        self.append_data(zenith_angle, 'zenith_angle')
 
 
 ATTRIBUTES = {}
