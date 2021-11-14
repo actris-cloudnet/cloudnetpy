@@ -134,13 +134,11 @@ class Fmcw94Bin:
                 'kurtosis'))
 
             if int(self.header['dual_polarization'][0]) == 1:
-                logging.info('RPG cloud radar in LDR mode')
                 block2_vars.update(dict.fromkeys((
                     'ldr',
                     'rho_cx',
                     'phi_cx')))
             elif int(self.header['dual_polarization'][0]) == 2:
-                logging.info('RPG cloud radar in STSR mode')
                 block2_vars.update(dict.fromkeys((
                     'zdr',
                     'rho_hv',

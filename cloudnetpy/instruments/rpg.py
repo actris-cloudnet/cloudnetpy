@@ -52,6 +52,7 @@ def rpg2nc(path_to_l1_files: str,
     one_day_of_data = create_one_day_data_record(fmcw94_objects)
     if not valid_files:
         return '', []
+    print_info(one_day_of_data)
     fmcw = Fmcw94(one_day_of_data, site_meta)
     fmcw.convert_time_to_fraction_hour()
     fmcw.mask_invalid_ldr()
@@ -63,6 +64,17 @@ def rpg2nc(path_to_l1_files: str,
     output.update_attributes(fmcw.data, attributes)
     uuid = output.save_level1b(fmcw, output_file, uuid)
     return uuid, valid_files
+
+
+def print_info(data: dict) -> None:
+    dual_pol = data['dual_polarization']
+    if dual_pol == 0:
+        mode = 'single polarisation'
+    elif dual_pol == 1:
+        mode = 'LDR'
+    else:
+        mode = 'STSR'
+    logging.info(f'RPG cloud radar in {mode} mode')
 
 
 def create_one_day_data_record(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -> dict:
