@@ -347,7 +347,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DBZ,
         plot_range=(-40, 15),
-        plot_scale=_LIN,     # already logarithmic
+        plot_scale=_LIN,
         plot_type='mesh'
      ),
     'Z_error': PlotMeta(
@@ -363,7 +363,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DBZ,
         plot_range=(-40, 15),
-        plot_scale=_LIN,     # already logarithmic
+        plot_scale=_LIN,
         plot_type='mesh'
      ),
     'ldr': PlotMeta(
@@ -371,9 +371,25 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(-30, -5),
-        plot_scale=_LIN,     # already logarithmic
+        plot_scale=_LIN,
         plot_type='mesh'
      ),
+    'sldr': PlotMeta(
+        name='Slanted linear depolarisation ratio',
+        cbar='viridis',
+        clabel=_DB,
+        plot_range=(-30, -5),  # TODO: check
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'zdr': PlotMeta(
+        name='Differential reflectivity',
+        cbar='viridis',
+        clabel=_DB,
+        plot_range=(-30, -5),  # TODO: check
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'width': PlotMeta(
         name='Spectral width',
         cbar='viridis',
@@ -390,6 +406,70 @@ ATTRIBUTES = {
         plot_scale=_LIN,
         plot_type='mesh'
      ),
+    'skewness': PlotMeta(
+        name='Skewness',
+        cbar='RdBu_r',
+        clabel='',
+        plot_range=(-1, 1),  # TODO: check
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'kurtosis': PlotMeta(
+        name='Kurtosis',
+        cbar='RdBu_r',
+        clabel='',
+        plot_range=(-1, 1),  # TODO: check
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'rho_cx': PlotMeta(
+        name='Co-cross-channel correlation coefficient',
+        cbar='viridis',
+        clabel='',
+        plot_range=(0, 1),  # TODO: check
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'srho_hv': PlotMeta(
+        name='Slanted correlation coefficient',
+        cbar='viridis',
+        clabel='',
+        plot_range=(0, 1),  # TODO: check
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'phi_cx': PlotMeta(
+        name='Co-cross-channel differential phase',
+        cbar='viridis',
+        clabel='rad',
+        plot_range=(0, 1),  # TODO: check
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'phi_dp': PlotMeta(
+        name='Differential phase',
+        cbar='viridis',
+        clabel='rad',
+        plot_range=(0, 1),  # TODO: check
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'kdp': PlotMeta(
+        name='Specific differential phase shift',
+        cbar='viridis',
+        clabel='rad km-1',
+        plot_range=(0, 6.2),  # TODO: check
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
+    'differential_attenuation': PlotMeta(
+        name='Differential attenuation',
+        cbar='viridis',
+        clabel='dB km-1',
+        plot_range=(-10, 10),  # TODO
+        plot_scale=_LIN,
+        plot_type='mesh'
+    ),
     'v_sigma': PlotMeta(
         name='Standard deviation of mean velocity',
         cbar='viridis',
@@ -419,7 +499,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(0, 1),
-        plot_scale=_LIN,     # already logarithmic
+        plot_scale=_LIN,
         plot_type='mesh'
      ),
     'lwp': PlotMeta(

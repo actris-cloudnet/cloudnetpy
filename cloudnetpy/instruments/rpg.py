@@ -301,7 +301,7 @@ RPG_ATTRIBUTES = {
         units='rad km-1'
     ),
     'differential_attenuation': MetaData(
-        long_name='',
+        long_name='Differential attenuation',
         units='dB km-1'
     ),
     # All radars
