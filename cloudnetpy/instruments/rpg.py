@@ -16,7 +16,7 @@ def rpg2nc(path_to_l1_files: str,
            site_meta: dict,
            uuid: Optional[str] = None,
            date: Optional[str] = None) -> Tuple[str, list]:
-    """Converts RPG FMCW-94 cloud radar data into Cloudnet Level 1b netCDF file.
+    """Converts RPG-FMCW-94 cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
     concatenates the data and writes a netCDF file.
@@ -202,7 +202,7 @@ class Rpg:
 
 
 class Fmcw(Rpg):
-    """Class for RPG FMCW-94 Cloud radar."""
+    """Class for RPG cloud radars."""
     def __init__(self, raw_data: dict, site_properties: dict):
         super().__init__(raw_data, site_properties)
         self.instrument = self._get_instrument(raw_data)
