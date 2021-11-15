@@ -1,6 +1,7 @@
 """This module contains RPG Cloud Radar related functions."""
 from typing import Union, Tuple, Optional, List
 import logging
+import math
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils, output, CloudnetArray
@@ -53,7 +54,7 @@ def rpg2nc(path_to_l1_files: str,
     if not valid_files:
         return '', []
     print_info(one_day_of_data)
-    fmcw = Fmcw94(one_day_of_data, site_meta)
+    fmcw = Fmcw(one_day_of_data, site_meta)
     fmcw.convert_time_to_fraction_hour()
     fmcw.mask_invalid_ldr()
     general.linear_to_db(fmcw, ('Zh', 'antenna_gain'))
@@ -200,17 +201,26 @@ class Rpg:
         return data
 
 
-class Fmcw94(Rpg):
+class Fmcw(Rpg):
     """Class for RPG FMCW-94 Cloud radar."""
     def __init__(self, raw_data: dict, site_properties: dict):
         super().__init__(raw_data, site_properties)
-        self.instrument = instruments.FMCW94
+        self.instrument = self._get_instrument(raw_data)
 
     def mask_invalid_ldr(self) -> None:
         """Removes ldr outliers."""
         threshold = -35
         if 'ldr' in self.data:
             self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, threshold)
+
+    @staticmethod
+    def _get_instrument(data: dict):
+        frequency = data['radar_frequency']
+        if math.isclose(frequency, 35, abs_tol=0.1):
+            return instruments.FMCW35
+        elif math.isclose(frequency, 94, abs_tol=0.1):
+            return instruments.FMCW94
+        raise RuntimeError(f'Unknown RPG cloud radar frequency: {frequency}')
 
 
 class Hatpro(Rpg):

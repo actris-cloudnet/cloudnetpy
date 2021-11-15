@@ -71,6 +71,14 @@ FMCW94 = Instrument(
     frequency=94.0
 )
 
+FMCW35 = Instrument(
+    manufacturer='RPG-Radiometer Physics',
+    model='RPG-FMCW-35',
+    type='cloud radar',
+    domain='radar',
+    frequency=35.0
+)
+
 BASTA = Instrument(
     model='BASTA',
     type='cloud radar',
