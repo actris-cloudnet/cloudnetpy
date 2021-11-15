@@ -65,6 +65,10 @@ class TestBASTA:
             assert nc.variables[key][:] > 0
         nc.close()
 
+    def test_global_attributes(self):
+        assert self.nc.source == 'BASTA'
+        assert self.nc.title == f'BASTA cloud radar from {site_meta["name"]}'
+
     def test_wrong_date_validation(self):
         with pytest.raises(ValidTimeStampError):
             basta2nc(filename, self.output2, site_meta, date='2021-01-04')

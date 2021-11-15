@@ -83,7 +83,7 @@ class TestCL51:
 
     def test_global_attributes(self):
         assert self.nc.source == 'Vaisala CL51'
-        assert self.nc.title == f'CL51 ceilometer file from {site_meta["name"]}'
+        assert self.nc.title == f'CL51 ceilometer from {site_meta["name"]}'
 
     def test_date_argument(self):
         output = 'dummy_sdfsdf_output_file.nc'
@@ -137,7 +137,7 @@ class TestCL31:
 
     def test_global_attributes(self):
         assert self.nc.source == 'Vaisala CL31'
-        assert self.nc.title == f'CL31 ceilometer file from {site_meta["name"]}'
+        assert self.nc.title == f'CL31 ceilometer from {site_meta["name"]}'
 
     def test_date_argument(self):
         output = 'falskdfjlskdf'
@@ -199,7 +199,7 @@ class TestCT25k:
 
     def test_global_attributes(self):
         assert self.nc.source == 'Vaisala CT25k'
-        assert self.nc.title == f'CT25k ceilometer file from {site_meta["name"]}'
+        assert self.nc.title == f'CT25k ceilometer from {site_meta["name"]}'
 
     def test_date_argument(self):
         output = 'falskdfjlskdf'

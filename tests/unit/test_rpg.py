@@ -96,7 +96,7 @@ class TestRPG2nc94GHz:
 
     def test_global_attributes(self):
         assert self.nc.source == 'RPG-Radiometer Physics RPG-FMCW-94'
-        assert self.nc.title == f'RPG-FMCW-94 cloud radar file from {site_meta["name"]}'
+        assert self.nc.title == f'RPG-FMCW-94 cloud radar from {site_meta["name"]}'
 
     def test_common_radar(self):
         for name, method in RadarFun.__dict__.items():
@@ -211,7 +211,7 @@ class TestRPG2ncSTSR35GHz:
 
     def test_global_attributes(self):
         assert self.nc.source == 'RPG-Radiometer Physics RPG-FMCW-35'
-        assert self.nc.title == f'RPG-FMCW-35 cloud radar file from {site_meta["name"]}'
+        assert self.nc.title == f'RPG-FMCW-35 cloud radar from {site_meta["name"]}'
 
     def test_common_radar(self):
         for name, method in RadarFun.__dict__.items():

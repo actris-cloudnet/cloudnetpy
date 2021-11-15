@@ -20,7 +20,7 @@ def save_level1b(obj: any,
     fix_attribute_name(nc)
     location = obj.site_meta['name']
     add_file_type(nc, obj.instrument.domain)
-    nc.title = f"{obj.instrument.model} {obj.instrument.category} file from {location}"
+    nc.title = f"{obj.instrument.model} {obj.instrument.category} from {location}"
     nc.year, nc.month, nc.day = obj.date
     nc.location = location
     nc.history = f"{utils.get_time()} - {obj.instrument.domain} file created"

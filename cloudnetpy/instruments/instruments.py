@@ -16,6 +16,7 @@ class Instrument:
 
 
 POLLYXT = Instrument(
+    manufacturer='TROPOS',
     domain='lidar',
     category='Raman lidar',
     model='PollyXT',

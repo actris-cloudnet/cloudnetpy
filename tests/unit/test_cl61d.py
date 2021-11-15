@@ -60,7 +60,7 @@ class TestCl61d:
 
     def test_global_attributes(self):
         assert self.nc.source == 'Vaisala CL61d'
-        assert self.nc.title == f'CL61d ceilometer file from {site_meta["name"]}'
+        assert self.nc.title == f'CL61d ceilometer from {site_meta["name"]}'
 
     def test_tear_down(self):
         os.remove(self.output)

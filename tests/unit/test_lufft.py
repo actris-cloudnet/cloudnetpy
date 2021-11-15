@@ -115,7 +115,7 @@ class TestWithRealData:
 
     def test_global_attributes(self):
         assert self.nc.source == 'Lufft CHM15k'
-        assert self.nc.title == f'CHM15k ceilometer file from {site_meta["name"]}'
+        assert self.nc.title == f'CHM15k ceilometer from {site_meta["name"]}'
 
     def test_date_argument(self):
         output = 'asfadfadf'
