@@ -1,4 +1,4 @@
-"""Module for reading / converting disdrometer data."""
+"""Module for reading / converting pollyxt data."""
 import glob
 from typing import Optional, Union
 import logging
