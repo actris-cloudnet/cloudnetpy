@@ -6,7 +6,6 @@ from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
 from cloudnetpy import utils
 
 
-
 class NcLidar(Ceilometer):
     """Class for all lidars using netCDF files."""
 
