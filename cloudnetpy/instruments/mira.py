@@ -61,6 +61,7 @@ def mira2nc(raw_mira: str,
         temp_file = NamedTemporaryFile()
         mmclx_filename = temp_file.name
         valid_filenames = utils.get_sorted_filenames(raw_mira, '.mmclx')
+        valid_filenames = general.get_files_with_common_range(valid_filenames)
         variables = list(keymap.keys())
         concat_lib.concatenate_files(valid_filenames, mmclx_filename, variables=variables)
     else:

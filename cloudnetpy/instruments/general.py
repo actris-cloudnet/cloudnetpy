@@ -4,6 +4,7 @@ import numpy as np
 import numpy.ma as ma
 from cloudnetpy import CloudnetArray
 from cloudnetpy import utils
+import netCDF4
 
 
 def add_site_geolocation(obj: any):
@@ -67,3 +68,18 @@ def linear_to_db(obj, variables_to_log: tuple) -> None:
     """Changes linear units to logarithmic."""
     for name in variables_to_log:
         obj.data[name].lin2db()
+
+
+def get_files_with_common_range(files: list) -> list:
+    """Returns files with the same (most common) number of range gates."""
+    n_range = []
+    for file in files:
+        nc = netCDF4.Dataset(file)
+        n_range.append(len(nc.variables['range']))
+        nc.close()
+    most_common = np.bincount(n_range).argmax()
+    n_removed = len(n_range != most_common)
+    if n_removed > 0:
+        logging.warning(f'Removed {n_removed} MIRA files due to inconsistent height vector')
+    ind = np.where(n_range == most_common)[0]
+    return [file for i, file in enumerate(files) if i in ind]
