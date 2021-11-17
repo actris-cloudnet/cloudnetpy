@@ -70,7 +70,7 @@ def mira2nc(raw_mira: str,
     mira = Mira(mmclx_filename, site_meta)
     mira.init_data(keymap)
     if date is not None:
-        mira.screen_time(date)
+        mira.screen_by_date(date)
         mira.date = date.split('-')
     general.linear_to_db(mira, ('Zh', 'ldr', 'SNR'))
     mira.screen_by_snr()
@@ -78,7 +78,8 @@ def mira2nc(raw_mira: str,
     mira.add_time_and_range()
     general.add_site_geolocation(mira)
     general.add_radar_specific_variables(mira)
-    general.add_zenith_angle(mira)
+    valid_indices = general.add_zenith_angle(mira)
+    general.screen_time_indices(mira, valid_indices)
     general.add_height(mira)
     mira.close()
     attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
@@ -102,25 +103,17 @@ class Mira(NcRadar):
         self.date = self._init_mira_date()
         self.instrument = MIRA35
 
-    def screen_time(self, expected_date: str) -> None:
+    def screen_by_date(self, expected_date: str) -> None:
         """Screens incorrect time stamps."""
         time_stamps = self.getvar('time')
-        inds = []
+        valid_indices = []
         for ind, timestamp in enumerate(time_stamps):
             date = '-'.join(utils.seconds2date(timestamp, self.epoch)[:3])
             if date == expected_date:
-                inds.append(ind)
-        if not inds:
+                valid_indices.append(ind)
+        if not valid_indices:
             raise ValidTimeStampError
-        n_time = len(time_stamps)
-        for key, cloudnet_array in self.data.items():
-            array = cloudnet_array.data
-            if not utils.isscalar(array) and array.shape[0] == n_time:
-                if array.ndim == 1:
-                    cloudnet_array.data = array[inds]
-                elif array.ndim == 2:
-                    cloudnet_array.data = array[inds, :]
-        self.time = self.time[inds]
+        general.screen_time_indices(self, valid_indices)
 
     def screen_by_snr(self, snr_limit: Optional[float] = -17) -> None:
         """Screens by SNR."""

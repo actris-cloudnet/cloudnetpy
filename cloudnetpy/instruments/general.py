@@ -35,21 +35,26 @@ def add_radar_specific_variables(obj: any):
     obj.data[key] = CloudnetArray(np.array(data), key)
 
 
-def add_zenith_angle(obj: any) -> None:
-    """Adds solar zenith angle."""
+def add_zenith_angle(obj: any) -> list:
+    """Adds solar zenith angle and returns valid time indices."""
     key = 'elevation'
     try:
         elevation = obj.data[key].data
     except KeyError:
         elevation = obj.getvar(key)
     zenith = 90 - elevation
-    if not utils.isscalar(zenith):
-        tolerance = 0.5
-        difference = np.diff(zenith)
-        if np.any(difference > tolerance):
-            logging.warning(f'Varying zenith angle. Maximum difference: {max(difference)}')
+    if utils.isscalar(zenith):
+        ind = np.arange(len(obj.time))
+    else:
+        median_value = ma.median(zenith)
+        tolerance = 0.1
+        ind = np.isclose(zenith, median_value, atol=tolerance)
+        n_removed = len(ind) - np.count_nonzero(ind)
+        if n_removed > 0:
+            logging.warning(f'Removed {n_removed} time steps due to varying zenith angle.')
     obj.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
     obj.data.pop(key, None)
+    return list(ind)
 
 
 def add_height(obj: any):
@@ -83,3 +88,15 @@ def get_files_with_common_range(files: list) -> list:
         logging.warning(f'Removed {n_removed} MIRA files due to inconsistent height vector')
     ind = np.where(n_range == most_common)[0]
     return [file for i, file in enumerate(files) if i in ind]
+
+
+def screen_time_indices(obj: any, valid_indices: list) -> None:
+    n_time = len(obj.time)
+    for key, cloudnet_array in obj.data.items():
+        array = cloudnet_array.data
+        if not utils.isscalar(array) and array.shape[0] == n_time:
+            if array.ndim == 1:
+                cloudnet_array.data = array[valid_indices]
+            elif array.ndim == 2:
+                cloudnet_array.data = array[valid_indices, :]
+    obj.time = obj.time[valid_indices]

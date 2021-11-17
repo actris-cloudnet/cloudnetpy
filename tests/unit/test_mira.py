@@ -31,12 +31,12 @@ class TestMeasurementDate:
         self.raw_radar = mira.Mira(raw_mira_file, {'name': 'Test'})
 
     def test_validate_date(self):
-        self.raw_radar.screen_time('2020-05-24')
+        self.raw_radar.screen_by_date('2020-05-24')
         assert self.raw_radar.date == self.correct_date
 
     def test_validate_date_fails(self):
         with pytest.raises(ValidTimeStampError):
-            self.raw_radar.screen_time('2020-05-23')
+            self.raw_radar.screen_by_date('2020-05-23')
 
 
 class TestMIRA2nc:
