@@ -1,8 +1,10 @@
 """Module for reading raw cloud radar data."""
 import os
+import logging
 from typing import List, Optional
 from tempfile import NamedTemporaryFile
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy import output, utils
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
@@ -51,6 +53,8 @@ def mira2nc(raw_mira: str,
               'LDRg': 'ldr',
               'SNRg': 'SNR',
               'elv': 'elevation',
+              'azi': 'azimuth_angle',
+              'aziv': 'azimuth_velocity',
               'nfft': 'nfft',
               'nave': 'nave',
               'prf': 'prf',
@@ -78,7 +82,7 @@ def mira2nc(raw_mira: str,
     mira.add_time_and_range()
     general.add_site_geolocation(mira)
     general.add_radar_specific_variables(mira)
-    valid_indices = general.add_zenith_angle(mira)
+    valid_indices = mira.add_solar_angles()
     general.screen_time_indices(mira, valid_indices)
     general.add_height(mira)
     mira.close()
@@ -130,6 +134,22 @@ class Mira(NcRadar):
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(z_mask)
                 cloudnet_array.mask_indices(v_mask)
+
+    def add_solar_angles(self) -> list:
+        """Adds solar zenith and azimuth angles and returns valid time indices."""
+        elevation = self.data['elevation'].data
+        azimuth_vel = self.data['azimuth_velocity'].data
+        zenith = 90 - elevation
+        is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
+        is_stable_azimuth = np.isclose(azimuth_vel, 0, atol=1e-6)
+        is_stable_profile = is_stable_zenith & is_stable_azimuth
+        n_removed = len(is_stable_profile) - np.count_nonzero(is_stable_profile)
+        if n_removed > 0:
+            logging.warning(f'Filtering {n_removed} profiles due to varying zenith / azimuth angle')
+        self.append_data(zenith, 'zenith_angle')
+        for key in ('elevation', 'azimuth_velocity'):
+            del self.data[key]
+        return list(is_stable_profile)
 
     def _init_mira_date(self) -> List[str]:
         time_stamps = self.getvar('time')

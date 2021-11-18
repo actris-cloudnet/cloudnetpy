@@ -35,9 +35,10 @@ class TestBASTA:
     all_fun = AllProductsFun(nc, site_meta, date, uuid)
 
     def test_variable_names(self):
-        keys = ('Zh',)
-        for key in keys:
-            assert key in self.nc.variables
+        keys = {'Zh', 'v', 'time', 'range', 'radar_frequency', 'height',
+                'nyquist_velocity', 'latitude', 'longitude', 'altitude',
+                'zenith_angle', 'radar_pitch', 'radar_yaw', 'radar_roll'}
+        assert set(self.nc.variables.keys()) == keys
 
     def test_variables(self):
         assert self.nc.variables['radar_frequency'][:].data == 95.0  # Hard coded

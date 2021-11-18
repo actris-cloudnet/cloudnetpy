@@ -59,7 +59,7 @@ def rpg2nc(path_to_l1_files: str,
     fmcw.mask_invalid_ldr()
     general.linear_to_db(fmcw, ('Zh', 'antenna_gain'))
     general.add_site_geolocation(fmcw)
-    general.add_zenith_angle(fmcw)
+    fmcw.add_solar_angles()
     general.add_height(fmcw)
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
     output.update_attributes(fmcw.data, attributes)
@@ -212,6 +212,18 @@ class Fmcw(Rpg):
         threshold = -35
         if 'ldr' in self.data:
             self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, threshold)
+
+    def add_solar_angles(self) -> list:
+        """Adds solar zenith and azimuth angles and returns valid time indices."""
+        elevation = self.data['elevation'].data
+        zenith = 90 - elevation
+        is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
+        n_removed = len(is_stable_zenith) - np.count_nonzero(is_stable_zenith)
+        if n_removed > 0:
+            logging.warning(f'Filtering {n_removed} profiles due to varying zenith / azimuth angle')
+        self.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
+        del self.data['elevation']
+        return list(is_stable_zenith)
 
     @staticmethod
     def _get_instrument(data: dict):
@@ -413,11 +425,6 @@ RPG_ATTRIBUTES = {
     'if_power': MetaData(
         long_name='IF power at ACD',
         units='uW',
-    ),
-    'azimuth_angle': MetaData(
-        long_name='Azimuth angle',
-        standard_name='solar_azimuth_angle',
-        units='degree',
     ),
     'status_flag': MetaData(
         long_name='Status flag for heater and blower',

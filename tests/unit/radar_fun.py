@@ -30,6 +30,7 @@ class RadarFun:
     def test_standard_names(self):
         data = [
             ('height', 'height_above_mean_sea_level'),
+            ('zenith_angle', 'zenith_angle')
         ]
         for key, expected in data:
             value = self.nc.variables[key].standard_name
@@ -38,6 +39,7 @@ class RadarFun:
     def test_long_names(self):
         data = [
             ('zenith_angle', 'Zenith angle'),
+            ('azimuth_angle', 'Azimuth angle'),
             ('range', 'Range from instrument'),
             ('radar_frequency', 'Radar transmit frequency'),
             ('Zh', 'Radar reflectivity factor'),

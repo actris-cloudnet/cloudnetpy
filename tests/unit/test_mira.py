@@ -5,6 +5,7 @@ import pytest
 from cloudnetpy.instruments import mira
 import netCDF4
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy.quality import Quality
 from cloudnetpy.exceptions import ValidTimeStampError
 
@@ -56,7 +57,7 @@ class TestMIRA2nc:
     def test_variable_names(self):
         keys = {'Zh', 'v', 'width', 'ldr', 'SNR', 'time', 'range', 'radar_frequency',
                 'nyquist_velocity', 'latitude', 'longitude', 'altitude',
-                'zenith_angle', 'height', 'rg0', 'nave', 'prf', 'nfft'}
+                'zenith_angle', 'azimuth_angle', 'height', 'rg0', 'nave', 'prf', 'nfft'}
         assert set(self.nc.variables.keys()) == keys
 
     def test_variables(self):
@@ -83,7 +84,7 @@ class TestMIRA2nc:
             ('nave', 'Number of spectral averages (not accounting for overlapping FFTs)'),
             ('rg0', 'Number of lowest range gates'),
             ('prf', 'Pulse Repetition Frequency'),
-            ('SNR', 'Signal-to-noise ratio')
+            ('SNR', 'Signal-to-noise ratio'),
         ]
         for key, expected in data:
             if key in self.nc.variables:

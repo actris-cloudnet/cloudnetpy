@@ -142,6 +142,11 @@ COMMON_ATTRIBUTES = {
         standard_name='zenith_angle',
         comment='Angle to the local vertical. A value of zero is directly overhead.'
     ),
+    'azimuth_angle': MetaData(
+        long_name='Azimuth angle',
+        standard_name='solar_azimuth_angle',
+        units='degree',
+    ),
     'Zh': MetaData(
         long_name='Radar reflectivity factor',
         units='dBZ',

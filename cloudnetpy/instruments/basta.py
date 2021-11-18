@@ -5,6 +5,7 @@ from cloudnetpy import output
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.instruments import instruments, general
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.metadata import MetaData
 
 
 def basta2nc(basta_file: str,
@@ -38,7 +39,10 @@ def basta2nc(basta_file: str,
 
     """
     keymap = {'reflectivity': 'Zh',
-              'velocity': 'v'}
+              'velocity': 'v',
+              'radar_pitch': 'radar_pitch',
+              'radar_yaw': 'radar_yaw',
+              'radar_roll': 'radar_roll'}
 
     basta = Basta(basta_file, site_meta)
     basta.init_data(keymap)
@@ -47,7 +51,7 @@ def basta2nc(basta_file: str,
     basta.screen_data(keymap)
     basta.add_time_and_range()
     general.add_site_geolocation(basta)
-    general.add_zenith_angle(basta)
+    basta.add_zenith_angle()
     general.add_radar_specific_variables(basta)
     general.add_height(basta)
     basta.close()
@@ -74,7 +78,8 @@ class Basta(NcRadar):
         """Saves only valid pixels."""
         mask = self.getvar('background_mask')
         for key in keymap.values():
-            self.data[key].mask_indices(np.where(mask != 1))
+            if self.data[key].data.ndim == mask.ndim:
+                self.data[key].mask_indices(np.where(mask != 1))
 
     def validate_date(self, expected_date: str) -> None:
         """Validates expected data."""
@@ -83,5 +88,28 @@ class Basta(NcRadar):
         if expected_date != date:
             raise ValidTimeStampError
 
+    def add_zenith_angle(self) -> None:
+        """Adds solar zenith and azimuth angles and returns valid time indices."""
+        elevation = self.getvar('elevation')
+        zenith = 90 - elevation
+        self.append_data(zenith, 'zenith_angle')
 
-ATTRIBUTES = {}
+
+ATTRIBUTES = {
+    'radar_pitch': MetaData(
+        long_name='Radar pitch angle',
+        units='degree',
+        standard_name='platform_roll'
+    ),
+    'radar_yaw': MetaData(
+        long_name='Radar yaw angle',
+        units="degree",
+        standard_name="platform_yaw"
+    ),
+    'radar_roll': MetaData(
+        long_name='Radar roll angle',
+        units="degree",
+        standard_name="platform_roll"
+    )
+}
+

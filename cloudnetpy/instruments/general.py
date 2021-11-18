@@ -35,28 +35,6 @@ def add_radar_specific_variables(obj: any):
     obj.data[key] = CloudnetArray(np.array(data), key)
 
 
-def add_zenith_angle(obj: any) -> list:
-    """Adds solar zenith angle and returns valid time indices."""
-    key = 'elevation'
-    try:
-        elevation = obj.data[key].data
-    except KeyError:
-        elevation = obj.getvar(key)
-    zenith = 90 - elevation
-    if utils.isscalar(zenith):
-        ind = np.arange(len(obj.time))
-    else:
-        median_value = ma.median(zenith)
-        tolerance = 0.1
-        ind = np.isclose(zenith, median_value, atol=tolerance)
-        n_removed = len(ind) - np.count_nonzero(ind)
-        if n_removed > 0:
-            logging.warning(f'Filtering {n_removed} profiles due to varying zenith angle')
-    obj.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
-    obj.data.pop(key, None)
-    return list(ind)
-
-
 def add_height(obj: any):
     try:
         zenith_angle = ma.median(obj.data['zenith_angle'].data)
