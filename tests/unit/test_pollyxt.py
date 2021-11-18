@@ -65,32 +65,42 @@ class TestPolly:
         self.nc.close()
 
 
-def test_date_argument():
-    output = 'dummy_output_file.nc'
-    pollyxt2nc(filepath, output, site_meta, date='2021-09-17')
-    nc = netCDF4.Dataset(output)
-    assert len(nc.variables['time']) == 80
-    assert nc.year == '2021'
-    assert nc.month == '09'
-    assert nc.day == '17'
-    nc.close()
-    with pytest.raises(ValidTimeStampError):
-        pollyxt2nc(filepath, output, site_meta, date='2021-09-15')
-    os.remove(output)
+class TestPolly2:
 
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.output2 = 'dummy_pollyx_file.nc'
+        yield
+        os.remove(self.output2)
 
-def test_site_meta():
-    site_meta = {
-        'name': 'Mindelo',
-        'altitude': 123,
-        'kissa': 34
-    }
-    output = 'dummy_output_file.nc'
-    pollyxt2nc(filepath, output, site_meta, date='2021-09-17')
-    nc = netCDF4.Dataset(output)
-    assert 'altitude' in nc.variables
-    for key in ('latitude', 'longitude', 'kissa'):
-        assert key not in nc.variables
-    nc.close()
-    os.remove(output)
+    def test_date_argument(self):
+        pollyxt2nc(filepath, self.output2, site_meta, date='2021-09-17')
+        nc = netCDF4.Dataset(self.output2)
+        assert len(nc.variables['time']) == 80
+        assert nc.year == '2021'
+        assert nc.month == '09'
+        assert nc.day == '17'
+        nc.close()
+        with pytest.raises(ValidTimeStampError):
+            pollyxt2nc(filepath, self.output2, site_meta, date='2021-09-15')
 
+    def test_snr_limit(self):
+        meta = site_meta.copy()
+        meta['snr_limit'] = 3.2
+        pollyxt2nc(filepath, self.output2, meta, date='2021-09-17')
+        nc = netCDF4.Dataset(self.output2)
+        assert 'SNR threshold applied: 3.2' in nc.variables['beta'].comment
+        nc.close()
+
+    def test_site_meta(self):
+        meta = {
+            'name': 'Mindelo',
+            'altitude': 123,
+            'kissa': 34
+        }
+        pollyxt2nc(filepath, self.output2, meta, date='2021-09-17')
+        nc = netCDF4.Dataset(self.output2)
+        assert 'altitude' in nc.variables
+        for key in ('latitude', 'longitude', 'kissa'):
+            assert key not in nc.variables
+        nc.close()

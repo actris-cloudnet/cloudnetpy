@@ -31,6 +31,7 @@ def pollyxt2nc(input_folder: str,
             - `latitude` (optional).
             - `longitude` (optional).
             - `zenith_angle`: If not the default 5 degrees (optional).
+            - `snr_limit`: If not the default 2 (optional).
         uuid: Set specific UUID for the file.
         date: Expected date of the measurements as YYYY-MM-DD.
 
@@ -39,11 +40,11 @@ def pollyxt2nc(input_folder: str,
 
     Examples:
         >>> from cloudnetpy.instruments import pollyxt2nc
-        >>> site_meta = {'name': 'Mindelo', 'altitude': 13, 'latitude': 16.9, 'zenith_angle': 6}
+        >>> site_meta = {'name': 'Mindelo', 'altitude': 13, 'latitude': 16.9, 'zenith_angle': 6, 'snr_limit': 3}
         >>> pollyxt2nc('/path/to/files/', 'pollyxt.nc', site_meta)
 
     """
-    snr_limit = 2
+    snr_limit = site_meta.get('snr_limit', 2)
     polly = PollyXt(site_meta, date)
     epoch = polly.fetch_data(input_folder)
     polly.get_date_and_time(epoch)
