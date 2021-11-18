@@ -51,7 +51,7 @@ def add_zenith_angle(obj: any) -> list:
         ind = np.isclose(zenith, median_value, atol=tolerance)
         n_removed = len(ind) - np.count_nonzero(ind)
         if n_removed > 0:
-            logging.warning(f'Removed {n_removed} time steps due to varying zenith angle.')
+            logging.warning(f'Filtering {n_removed} profiles due to varying zenith angle')
     obj.data['zenith_angle'] = CloudnetArray(zenith, 'zenith_angle')
     obj.data.pop(key, None)
     return list(ind)
@@ -85,7 +85,7 @@ def get_files_with_common_range(files: list) -> list:
     most_common = np.bincount(n_range).argmax()
     n_removed = len([n for n in n_range if n != most_common])
     if n_removed > 0:
-        logging.warning(f'Removed {n_removed} MIRA files due to inconsistent height vector')
+        logging.warning(f'Removing {n_removed} MIRA files due to inconsistent height vector')
     ind = np.where(n_range == most_common)[0]
     return [file for i, file in enumerate(files) if i in ind]
 
