@@ -83,7 +83,7 @@ def get_files_with_common_range(files: list) -> list:
         n_range.append(len(nc.variables['range']))
         nc.close()
     most_common = np.bincount(n_range).argmax()
-    n_removed = len(n_range != most_common)
+    n_removed = len([n for n in n_range if n != most_common])
     if n_removed > 0:
         logging.warning(f'Removed {n_removed} MIRA files due to inconsistent height vector')
     ind = np.where(n_range == most_common)[0]
