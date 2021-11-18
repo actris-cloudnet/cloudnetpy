@@ -77,3 +77,20 @@ def test_date_argument():
     with pytest.raises(ValidTimeStampError):
         pollyxt2nc(filepath, output, site_meta, date='2021-09-15')
     os.remove(output)
+
+
+def test_site_meta():
+    site_meta = {
+        'name': 'Mindelo',
+        'altitude': 123,
+        'kissa': 34
+    }
+    output = 'dummy_output_file.nc'
+    pollyxt2nc(filepath, output, site_meta, date='2021-09-17')
+    nc = netCDF4.Dataset(output)
+    assert 'altitude' in nc.variables
+    for key in ('latitude', 'longitude', 'kissa'):
+        assert key not in nc.variables
+    nc.close()
+    os.remove(output)
+

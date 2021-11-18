@@ -27,6 +27,8 @@ all supported instrument combinations.
 
 .. autofunction:: instruments.ceilo2nc
 
+.. autofunction:: instruments.pollyxt2nc
+
 .. autofunction:: instruments.hatpro2nc
 
 .. autofunction:: instruments.disdrometer2nc

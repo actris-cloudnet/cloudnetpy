@@ -18,19 +18,29 @@ def pollyxt2nc(input_folder: str,
                site_meta: dict,
                uuid: Optional[str] = None,
                date: Optional[str] = None) -> str:
-    """"
+    """
+    Converts PollyXT Raman lidar data into Cloudnet Level 1b netCDF file.
 
     Args:
-        input_folder: Filename of pollyxt file.
+        input_folder: Path to pollyxt netCDF files.
         output_file: Output filename.
-        site_meta: Dictionary containing information about the site. Required keys are `name` and
-            `altitude`. If the zenith angle of the instrument is NOT 5 degrees, it should be
-            provided like this: {'zenith_angle': 6}.
+        site_meta: Dictionary containing information about the site with keys:
+
+            - `name`: Name of the site (mandatory)
+            - `altitude`: Site altitude in [m] (mandatory).
+            - `latitude` (optional).
+            - `longitude` (optional).
+            - `zenith_angle`: If not the default 5 degrees (optional).
         uuid: Set specific UUID for the file.
         date: Expected date of the measurements as YYYY-MM-DD.
 
     Returns:
         UUID of the generated file.
+
+    Examples:
+        >>> from cloudnetpy.instruments import pollyxt2nc
+        >>> site_meta = {'name': 'Mindelo', 'altitude': 13, 'latitude': 16.9, 'zenith_angle': 6}
+        >>> pollyxt2nc('/path/to/files/', 'pollyxt.nc', site_meta)
 
     """
     snr_limit = 2
