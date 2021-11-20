@@ -242,7 +242,7 @@ class HatproBin:
         data = {
             'time': np.zeros(self.header['_n_samples'], dtype=np.int32),
             'quality_flag': np.zeros(self.header['_n_samples'], dtype=np.int32),
-            'LWP': np.zeros(self.header['_n_samples']),
+            'lwp': np.zeros(self.header['_n_samples']),
             'zenith': np.zeros(self.header['_n_samples'], dtype=np.float32)
         }
 
@@ -253,7 +253,7 @@ class HatproBin:
         for sample in range(self.header['_n_samples'][0]):
             data['time'][sample] = np.fromfile(file, np.int32, 1)
             data['quality_flag'][sample] = np.fromfile(file, np.int8, 1)
-            data['LWP'][sample] = np.fromfile(file, np.float32, 1)
+            data['lwp'][sample] = np.fromfile(file, np.float32, 1)
             data['_instrument_angles'][sample] = np.fromfile(file, angle_dtype, 1)
 
         data = self._add_zenith(version, data)

@@ -116,10 +116,6 @@ ATTRIBUTES = {
         long_name='Retrieval method',
         definition=DEFINITIONS['retrieval_method']
     ),
-    'LWP': MetaData(
-        long_name='Liquid water path',
-        units='g m-2'
-    ),
     'zenith': MetaData(
         long_name='Zenith angle',
         units='degrees',

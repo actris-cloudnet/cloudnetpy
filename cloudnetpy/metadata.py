@@ -94,7 +94,7 @@ COMMON_ATTRIBUTES = {
     ),
     'lwp': MetaData(
         long_name='Liquid water path',
-        units='',
+        units='g m-2',
     ),
     'lwp_error': MetaData(
         long_name='Error in liquid water path',

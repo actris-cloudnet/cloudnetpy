@@ -242,9 +242,9 @@ class Hatpro(Rpg):
         self.instrument = instruments.HATPRO
 
     def sort_timestamps(self):
-        key = 'LWP'
+        key = 'lwp'
         if key not in self.data:
-            logging.warning('No LWP vector, unable to sort')
+            logging.warning('No lwp vector, unable to sort')
         time = self.data['time'].data[:]
         array = self.data[key].data[:]
         ind = time.argsort()
@@ -470,7 +470,4 @@ RPG_ATTRIBUTES = {
         long_name='Relative humidity',
         units='%',
     ),
-    'lwp': MetaData(
-        units='g m-2'
-    )
 }

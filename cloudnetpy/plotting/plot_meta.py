@@ -508,14 +508,6 @@ ATTRIBUTES = {
         ylabel=_KGM2,
         plot_range=(0, 1),
         plot_scale=_LIN,
-        plot_type='bar'
-    ),
-    'LWP': PlotMeta(
-        name='Liquid water path',
-        cbar='Blues',
-        ylabel=_KGM2,
-        plot_range=(0, 1),
-        plot_scale=_LIN,
         plot_type='bar',
         source='mwr'
     ),
