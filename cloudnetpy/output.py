@@ -6,6 +6,7 @@ import numpy.ma as ma
 import netCDF4
 from cloudnetpy import utils, version
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
+from cloudnetpy.instruments.instruments import Instrument
 
 
 def save_level1b(obj: any,
@@ -19,14 +20,13 @@ def save_level1b(obj: any,
     uuid = nc.file_uuid
     fix_attribute_name(nc)
     location = obj.site_meta['name']
-    add_file_type(nc, obj.instrument.domain)
-    nc.title = f"{obj.instrument.model} {obj.instrument.category} from {location}"
+    nc.cloudnet_file_type = obj.instrument.domain
+    nc.title = get_l1b_title(obj.instrument, location)
     nc.year, nc.month, nc.day = obj.date
     nc.location = location
-    nc.history = f"{utils.get_time()} - {obj.instrument.domain} file created"
-    prefix = f'{obj.instrument.manufacturer} ' if obj.instrument.manufacturer else ''
-    nc.source = f'{prefix}{obj.instrument.model}'
-    add_references(nc)
+    nc.history = get_l1b_history(obj.instrument)
+    nc.source = get_l1b_source(obj.instrument)
+    nc.references = get_references()
     nc.close()
     return uuid
 
@@ -51,16 +51,50 @@ def save_product_file(short_id: str,
                   'height': len(obj.dataset.variables['height'])}
     nc = init_file(file_name, dimensions, obj.data, uuid)
     uuid = nc.file_uuid
-    add_file_type(nc, short_id)
+    nc.cloudnet_file_type = short_id
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
     copy_variables(obj.dataset, nc, vars_from_source)
     nc.title = f"{human_readable_file_type.capitalize()} file from {obj.dataset.location}"
     nc.source_file_uuids = get_source_uuids(nc, obj)
     copy_global(obj.dataset, nc, ('location', 'day', 'month', 'year'))
     merge_history(nc, human_readable_file_type, obj)
-    add_references(nc, short_id)
+    nc.references = get_references(short_id)
     nc.close()
     return uuid
+
+
+def get_l1b_source(instrument: Instrument) -> str:
+    """Returns level 1b file source."""
+    prefix = f'{instrument.manufacturer} ' if instrument.manufacturer else ''
+    return f'{prefix}{instrument.model}'
+
+
+def get_l1b_history(instrument: Instrument) -> str:
+    """Returns level 1b file history."""
+    return f"{utils.get_time()} - {instrument.domain} file created"
+
+
+def get_l1b_title(instrument: Instrument, location: str) -> str:
+    """Returns level 1b file title."""
+    return f"{instrument.model} {instrument.category} from {location}"
+
+
+def get_references(identifier: Optional[str] = None) -> str:
+    """"Returns references.
+
+    Args:
+        identifier: Cloudnet file type, e.g., 'iwc'.
+
+    """
+    references = 'https://doi.org/10.21105/joss.02123'
+    if identifier:
+        if identifier in ('lwc', 'categorize'):
+            references += ', https://doi.org/10.1175/BAMS-88-6-883'
+        if identifier == 'iwc':
+            references += ', https://doi.org/10.1175/JAM2340.1'
+        if identifier == 'drizzle':
+            references += ', https://doi.org/10.1175/JAM-2181.1'
+    return references
 
 
 def get_source_uuids(*sources) -> str:
@@ -154,36 +188,6 @@ def copy_global(source: netCDF4.Dataset,
     for attr in attributes:
         if attr in source_attributes:
             setattr(target, attr, source.getncattr(attr))
-
-
-def add_file_type(nc: netCDF4.Dataset, file_type: str) -> None:
-    """Adds cloudnet_file_type global attribute.
-
-    Args:
-        nc: netCDF Dataset instance.
-        file_type: Name of the Cloudnet file type.
-
-    """
-    nc.cloudnet_file_type = file_type
-
-
-def add_references(nc: netCDF4.Dataset, identifier: Optional[str] = None) -> None:
-    """Adds references attribute to netCDF file.
-
-    Args:
-        nc: netCDF Dataset instance.
-        identifier: Cloudnet file type, e.g., 'iwc'.
-
-    """
-    references = 'https://doi.org/10.21105/joss.02123'
-    if identifier:
-        if identifier in ('lwc', 'categorize'):
-            references += ', https://doi.org/10.1175/BAMS-88-6-883'
-        if identifier == 'iwc':
-            references += ', https://doi.org/10.1175/JAM2340.1'
-        if identifier == 'drizzle':
-            references += ', https://doi.org/10.1175/JAM-2181.1'
-    nc.references = references
 
 
 def add_time_attribute(attributes: dict, date: list) -> dict:

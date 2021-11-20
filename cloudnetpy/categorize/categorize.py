@@ -120,11 +120,11 @@ def _save_cat(full_path: str,
     file_type = 'categorize'
     nc = output.init_file(full_path, dims, cloudnet_arrays, uuid)
     uuid = nc.file_uuid
-    output.add_file_type(nc, file_type)
+    nc.cloudnet_file_type = file_type
     output.copy_global(data_obs['radar'].dataset, nc, ('year', 'month', 'day', 'location'))
     nc.title = f"{file_type.capitalize()} file from {data_obs['radar'].location}"
     nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
-    output.add_references(nc, file_type)
+    nc.references = output.get_references(file_type)
     output.merge_history(nc, file_type, data_obs['radar'], data_obs['lidar'])
     nc.close()
     return uuid

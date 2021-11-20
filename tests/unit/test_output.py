@@ -32,12 +32,6 @@ class History:
         self.history = None
 
 
-def test_add_file_type():
-    root_group = RootGrp()
-    output.add_file_type(root_group, 'drizzle')
-    assert root_group.cloudnet_file_type == 'drizzle'
-
-
 @pytest.fixture
 def fake_nc_file(tmpdir_factory):
     """Creates a simple categorize for testing."""

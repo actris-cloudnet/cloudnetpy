@@ -369,7 +369,7 @@ def save_disdrometer(disdrometer: Union[Parsivel, Thies],
     file_type = 'disdrometer'
     rootgrp = output.init_file(output_file, dims, disdrometer.data, uuid)
     file_uuid = rootgrp.file_uuid
-    output.add_file_type(rootgrp, file_type)
+    rootgrp.cloudnet_file_type = file_type
     rootgrp.title = f"{file_type.capitalize()} file from {disdrometer.site_meta['name']}"
     rootgrp.year, rootgrp.month, rootgrp.day = disdrometer.date
     rootgrp.location = disdrometer.site_meta['name']
@@ -377,7 +377,7 @@ def save_disdrometer(disdrometer: Union[Parsivel, Thies],
     rootgrp.source = disdrometer.source
     if disdrometer.sensor_id is not None:
         rootgrp.sensor_id = disdrometer.sensor_id
-    output.add_references(rootgrp)
+    rootgrp.references = output.get_references()
     rootgrp.close()
     return file_uuid
 
