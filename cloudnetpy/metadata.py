@@ -95,6 +95,7 @@ COMMON_ATTRIBUTES = {
     'lwp': MetaData(
         long_name='Liquid water path',
         units='g m-2',
+        standard_name='atmosphere_cloud_liquid_water_content'
     ),
     'lwp_error': MetaData(
         long_name='Error in liquid water path',

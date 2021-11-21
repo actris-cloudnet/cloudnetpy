@@ -243,7 +243,7 @@ class HatproBin:
             'time': np.zeros(self.header['_n_samples'], dtype=np.int32),
             'quality_flag': np.zeros(self.header['_n_samples'], dtype=np.int32),
             'lwp': np.zeros(self.header['_n_samples']),
-            'zenith': np.zeros(self.header['_n_samples'], dtype=np.float32)
+            'zenith_angle': np.zeros(self.header['_n_samples'], dtype=np.float32)
         }
 
         version = self._get_hatpro_version()
@@ -271,7 +271,8 @@ class HatproBin:
     @staticmethod
     def _add_zenith(version: int, data: dict) -> dict:
         if version == 1:
-            del data['zenith']  # Impossible to understand how zenith is decoded in the values
+            del data['zenith_angle']  # Impossible to understand how zenith is decoded in the values
         else:
-            data['zenith'] = np.array([int(str(x)[:5])/1000 for x in data['_instrument_angles']])
+            elevation_angle = [int(str(x)[:4])/100 for x in data['_instrument_angles']]
+            data['zenith_angle'] = 90 - np.array(elevation_angle)
         return data

@@ -5,6 +5,7 @@ from cloudnetpy import utils, output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments import rpg
 from cloudnetpy.instruments.rpg_reader import HatproBin
+from cloudnetpy.instruments import general
 
 
 def hatpro2nc(path_to_lwp_files: str,
@@ -51,7 +52,8 @@ def hatpro2nc(path_to_lwp_files: str,
         return '', []
     hatpro = rpg.Hatpro(one_day_of_data, site_meta)
     hatpro.sort_timestamps()
-    hatpro.convert_time_to_fraction_hour()
+    hatpro.convert_time_to_fraction_hour('float64')
+    general.add_site_geolocation(hatpro)
     attributes = output.add_time_attribute(ATTRIBUTES, hatpro.date)
     output.update_attributes(hatpro.data, attributes)
     uuid = output.save_level1b(hatpro, output_file, uuid)
@@ -108,21 +110,20 @@ ATTRIBUTES = {
     'file_code': MetaData(
         long_name='File code',
         comment='RPG HATPRO software version.',
+        units="1"
     ),
     'program_number': MetaData(
         long_name='Program number',
     ),
     'retrieval_method': MetaData(
         long_name='Retrieval method',
-        definition=DEFINITIONS['retrieval_method']
-    ),
-    'zenith': MetaData(
-        long_name='Zenith angle',
-        units='degrees',
+        definition=DEFINITIONS['retrieval_method'],
+        units='1'
     ),
     'quality_flag': MetaData(
         long_name='Quality flag.',
         definition=DEFINITIONS['quality_flag'],
+        units='1',
         comment='Quality information as an 8 bit array. See RPG HATPRO manual for more information.'
     )
 
