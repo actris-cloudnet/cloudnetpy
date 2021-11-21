@@ -12,7 +12,7 @@ class RadarFun:
         self.uuid = uuid
 
     def test_variable_names(self):
-        keys = {'Zh', 'v', 'radar_frequency', 'range', 'zenith_angle'}
+        keys = {'Zh', 'v', 'radar_frequency', 'range', 'zenith_angle', 'height'}
         for key in keys:
             assert key in self.nc.variables
 

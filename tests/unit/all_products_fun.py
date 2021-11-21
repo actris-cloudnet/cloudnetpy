@@ -12,7 +12,7 @@ class AllProductsFun:
         self.uuid = uuid
 
     def test_variable_names(self):
-        keys = {'time', 'height', 'latitude', 'longitude', 'altitude'}
+        keys = {'time', 'latitude', 'longitude', 'altitude'}
         for key in keys:
             assert key in self.nc.variables
 
@@ -44,6 +44,12 @@ class AllProductsFun:
         for key, expected in data:
             value = self.nc.variables[key].standard_name
             assert value == expected, f'{value} != {expected}'
+
+    def test_invalid_units(self):
+        for key in self.nc.variables:
+            variable = self.nc.variables[key]
+            assert hasattr(variable, 'units')
+            assert variable.units != '', key
 
     def test_units(self):
         data = [
