@@ -30,12 +30,13 @@ class CloudnetArray:
                  variable: Union[netCDF4.Variable, np.ndarray, float, int],
                  name: str,
                  units_from_user: Optional[str] = None,
-                 dimensions: Optional[tuple] = None):
+                 dimensions: Optional[tuple] = None,
+                 data_type: Optional[str] = None):
         self.variable = variable
         self.name = name
         self.data = self._init_data()
         self.units = self._init_units(units_from_user)
-        self.data_type = self._init_data_type()
+        self.data_type = data_type or self._init_data_type()
         self.dimensions = dimensions
 
     def lin2db(self) -> None:
