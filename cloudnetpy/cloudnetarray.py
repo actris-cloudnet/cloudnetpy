@@ -15,14 +15,9 @@ class CloudnetArray:
         variable: The netCDF4 :class:`Variable` instance, numpy array (masked or regular),
             or scalar (float, int).
         name: Name of the variable.
-        units_from_user: Units of the variable.
-
-    Attributes:
-        name (str): Name of the variable.
-        data (ndarray): The actual data.
-        data_type (str): 'i4' for integers, 'f4' for floats.
-        units (str): The `units_from_user` argument if it is given. Otherwise
-            copied from the original netcdf4 variable. Empty if input is just data.
+        units_from_user: Explicit units, optional.
+        dimensions: Explicit dimension names, optional.
+        data_type: Explicit data type, optional.
 
     """
 
@@ -35,7 +30,7 @@ class CloudnetArray:
         self.variable = variable
         self.name = name
         self.data = self._init_data()
-        self.units = self._init_units(units_from_user)
+        self.units = units_from_user or self._init_units()
         self.data_type = data_type or self._init_data_type()
         self.dimensions = dimensions
 
@@ -81,7 +76,7 @@ class CloudnetArray:
         """Returns list of user-defined attributes."""
         attributes = []
         for attr in self.__dict__:
-            if attr not in ('name', 'data', 'data_type', 'variable', 'dimensions'):
+            if attr not in ('variable', 'name', 'data', 'data_type', 'dimensions'):
                 attributes.append(attr)
         return attributes
 
@@ -107,9 +102,7 @@ class CloudnetArray:
                 pass
         raise ValueError(f'Incorrect CloudnetArray input: {self.variable}')
 
-    def _init_units(self, units_from_user: Union[str, None]) -> str:
-        if units_from_user is not None:
-            return units_from_user
+    def _init_units(self) -> str:
         return getattr(self.variable, 'units', '')
 
     def _init_data_type(self) -> str:
