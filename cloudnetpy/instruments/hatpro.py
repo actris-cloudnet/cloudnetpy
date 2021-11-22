@@ -6,6 +6,7 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments import rpg
 from cloudnetpy.instruments.rpg_reader import HatproBin
 from cloudnetpy.instruments import general
+from cloudnetpy.exceptions import ValidTimeStampError
 
 
 def hatpro2nc(path_to_lwp_files: str,
@@ -37,7 +38,7 @@ def hatpro2nc(path_to_lwp_files: str,
         - Files used in the processing.
 
     Raises:
-        RuntimeError: Failed to read the binary data.
+        ValidTimeStampError: No valid timestamps found.
 
     Examples:
         >>> from cloudnetpy.instruments import hatpro2nc
@@ -47,9 +48,9 @@ def hatpro2nc(path_to_lwp_files: str,
     """
     all_files = utils.get_sorted_filenames(path_to_lwp_files, '.LWP')
     hatpro_objects, valid_files = _get_hatpro_objects(all_files, date)
-    one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
     if not valid_files:
-        return '', []
+        raise ValidTimeStampError
+    one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
     hatpro = rpg.Hatpro(one_day_of_data, site_meta)
     hatpro.sort_timestamps()
     hatpro.convert_time_to_fraction_hour('float64')

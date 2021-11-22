@@ -2,10 +2,12 @@ import sys
 import os
 from os import path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from cloudnetpy.instruments import hatpro
-from cloudnetpy.quality import Quality
+import pytest
 from distutils.dir_util import copy_tree
 import netCDF4
+from cloudnetpy.instruments import hatpro
+from cloudnetpy.quality import Quality
+from cloudnetpy.exceptions import ValidTimeStampError
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -70,15 +72,16 @@ class TestHatpro2nc:
         assert len(files) == 1
 
     def test_processing_of_no_files(self):
-        _, files = hatpro.hatpro2nc(file_path, self.temp_file.name, site_meta, date='2020-10-24')
-        assert len(files) == 0
+        with pytest.raises(ValidTimeStampError):
+            hatpro.hatpro2nc(file_path, self.temp_file.name, site_meta, date='2020-10-24')
 
     def test_handling_of_corrupted_files(self):
         temp_dir = TemporaryDirectory()
         copy_tree(file_path, temp_dir.name)
         with open(f'{temp_dir.name}/foo.LV1', 'w') as f:
             f.write('kissa')
-        _, files = hatpro.hatpro2nc(temp_dir.name, self.temp_file.name, site_meta, date='2021-01-23')
+        _, files = hatpro.hatpro2nc(temp_dir.name, self.temp_file.name, site_meta,
+                                    date='2021-01-23')
         assert len(files) == 2
 
     def test_cleanup(self):
