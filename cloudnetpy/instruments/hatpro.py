@@ -22,9 +22,13 @@ def hatpro2nc(path_to_lwp_files: str,
     Args:
         path_to_lwp_files: Folder containing one day of RPG HATPRO files.
         output_file: Output file name.
-        site_meta: Dictionary containing information about the
-            site. Required key value pairs are `altitude` (metres above mean
-            sea level) and `name`.
+        site_meta: Dictionary containing information about the site with keys:
+
+            - `name`: Name of the site (required)
+            - `altitude`: Site altitude in [m] (optional).
+            - `latitude` (optional).
+            - `longitude` (optional).
+
         uuid: Set specific UUID for the file.
         date: Expected date in the input files. If not set,
             all files will be used. This might cause unexpected behavior if
