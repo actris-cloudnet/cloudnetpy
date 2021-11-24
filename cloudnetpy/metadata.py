@@ -12,7 +12,8 @@ FIELDS = (
     'ancillary_variables',
     'positive',
     'axis',
-    'calendar')
+    'calendar',
+    'source')
 
 MetaData = namedtuple('MetaData', FIELDS)
 MetaData.__new__.__defaults__ = (None,) * len(MetaData._fields)
@@ -77,7 +78,7 @@ COMMON_ATTRIBUTES = {
     ),
     'q': MetaData(
         long_name='Specific humidity',
-        units=''
+        units='1'
     ),
     'temperature': MetaData(
         long_name='Temperature',
@@ -97,13 +98,9 @@ COMMON_ATTRIBUTES = {
         units='g m-2',
         standard_name='atmosphere_cloud_liquid_water_content'
     ),
-    'lwp_error': MetaData(
-        long_name='Error in liquid water path',
-        units='',
-    ),
     'kurtosis': MetaData(
         long_name='Kurtosis of spectra',
-        units='',
+        units='1',
     ),
     'nyquist_velocity': MetaData(
         long_name='Nyquist velocity',

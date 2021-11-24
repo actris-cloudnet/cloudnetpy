@@ -190,19 +190,30 @@ def copy_global(source: netCDF4.Dataset,
             setattr(target, attr, source.getncattr(attr))
 
 
-def add_time_attribute(attributes: dict, date: list) -> dict:
-    """"Adds time attribute with correct units.
-
-    Args:
-        attributes: Attributes of variables.
-        date: Date as ['YYYY', 'MM', 'DD'].
-
-    Returns:
-        dict: Same attributes with 'time' attribute added.
-
-    """
+def add_time_attribute(attributes: dict, date: list, key: Optional[str] = 'time') -> dict:
+    """"Adds time attribute with correct units."""
     date = '-'.join(date)
-    attributes['time'] = MetaData(units=f'hours since {date} 00:00:00 +00:00')
+    attributes[key] = MetaData(units=f'hours since {date} 00:00:00 +00:00')
+    return attributes
+
+
+def add_source_attribute(attributes: dict, data: dict):
+    """Adds source attribute."""
+    variables = {
+        'radar': ('v', 'width', 'v_sigma', 'ldr', 'Z', 'zdr', 'sldr', 'radar_frequency',
+                  'Z_bias', 'Z_error', 'Z_sensitivity'),
+        'lidar': ('beta', 'lidar_wavelength', 'beta_bias', 'beta_error'),
+        'mwr': ('lwp', 'lwp_error'),
+        'model': ('uwind', 'vwind', 'Tw', 'q', 'pressure', 'temperature', 'model_height',
+                  'model_time',)
+    }
+    for instrument in variables:
+        model = data[instrument].dataset.source
+        for key in variables[instrument]:
+            if key in attributes:
+                attributes[key] = attributes[key]._replace(source=model)
+            else:
+                attributes[key] = MetaData(source=model)
     return attributes
 
 

@@ -97,7 +97,7 @@ class Model(DataSource):
         self.data_sparse = {key: self.data_sparse[key] for key in fields_to_keep}
 
     def _append_grid(self) -> None:
-        self.append_data(self.time, 'model_time')
+        self.append_data(np.array(self.time), 'model_time')
         self.append_data(self.mean_height, 'model_height')
 
     def _get_model_heights(self, alt_site: float) -> np.ndarray:

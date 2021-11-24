@@ -100,6 +100,8 @@ def generate_categorize(input_files: dict,
     cloudnet_arrays = _prepare_output()
     date = data['radar'].get_date()
     attributes = output.add_time_attribute(CATEGORIZE_ATTRIBUTES, date)
+    attributes = output.add_time_attribute(attributes, date, 'model_time')
+    attributes = output.add_source_attribute(attributes, data)
     output.update_attributes(cloudnet_arrays, attributes)
     uuid = _save_cat(output_file, data, cloudnet_arrays, uuid)
     _close_all()
@@ -141,63 +143,46 @@ COMMENTS = {
      'Bit 0 is the least significant.'),
 
     'quality_bits':
-    ('This variable contains information on the quality of the\n'
-     'data at each pixel. The information is in the form of an array\n'
-     'of bits, and the definitions of each bit are given in the definition\n'
-     'attribute. Bit 0 is the least significant.'),
+    ('This variable contains information on the quality of the data at each pixel. The information is in the form of an array\n'
+     'of bits, and the definitions of each bit are given in the definition attribute. Bit 0 is the least significant.'),
 
-    'LWP':
-    ('This variable is the vertically integrated liquid water directly over the\n'
-     'site. The temporal correlation of errors in liquid water path means that\n'
-     'it is not really meaningful to distinguish bias from random error, so only\n'
+    'lwp':
+    ('This variable is the vertically integrated liquid water directly over the site. The temporal correlation of errors\n'
+     'in liquid water path means that it is not really meaningful to distinguish bias from random error, so only\n'
      'an error variable is provided.'),
 
-    'LWP_error':
-    ('This variable is a rough estimate of the one-standard-deviation error\n'
-     'in liquid water path, calculated as a combination of a 20 g m-2 linear\n'
-     'error and a 25% fractional error.'),
+    'lwp_error':
+    ('This variable is a rough estimate of the one-standard-deviation error in liquid water path, '
+     'calculated as a combination of a 20 g m-2 linear error and a 25% fractional error.'),
 
     'radar_liquid_atten':
-    ('This variable was calculated from the liquid water path measured by\n'
-     'microwave radiometer using lidar and radar returns to perform an \n'
-     'approximate partitioning of the liquid water content with height.\n'
-     'Bit 5 of the quality_bits variable indicates where a correction for\n'
-     'liquid water attenuation has been performed.'),
+    ('This variable was calculated from the liquid water path measured by microwave radiometer using lidar\n'
+     'and radar returns to perform an approximate partitioning of the liquid water content with height. \n'
+     'Bit 5 of the quality_bits variable indicates where a correction for liquid water attenuation has been performed.'),
 
     'radar_gas_atten':
-    ('This variable was calculated from the model temperature, pressure and\n'
-     'humidity, but forcing pixels containing liquid cloud to saturation with\n'
-     'respect to liquid water. It has been used to correct Z.'),
+    ('This variable was calculated from the model temperature, pressure and humidity, but forcing pixels\n '
+     'containing liquid cloud to saturation with respect to liquid water. It has been used to correct Z.'),
 
     'Tw':
-    ('This variable was calculated from model T, P and relative humidity, first\n'
-     'interpolated into measurement grid.'),
+    ('This variable was derived from model temperature, pressure and relative humidity.'),
 
     'Z_sensitivity':
-    ('This variable is an estimate of the radar sensitivity, i.e. the minimum\n'
-     'detectable radar reflectivity, as a function of height. It includes the\n'
-     'effect of ground clutter and gas attenuation but not liquid attenuation.'),
+    ('This variable is an estimate of the radar sensitivity, i.e. the minimum detectable radar reflectivity,\n'
+     'as a function of height. It includes the effect of ground clutter and gas attenuation but not liquid attenuation.'),
 
     'Z_error':
-    ('This variable is an estimate of the one-standard-deviation random error in\n'
-     'radar reflectivity factor. It originates from the following independent\n'
-     'sources of error:\n'
-     '1) Precision in reflectivity estimate due to finite signal to noise\n'
-     '   and finite number of pulses\n'
-     '2) 10% uncertainty in gaseous attenuation correction (mainly due to\n'
-     '   error in model humidity field)\n'
-     '3) Error in liquid water path (given by the variable lwp_error) and\n'
-     '   its partitioning with height).'),
+    ('This variable is an estimate of the one-standard-deviation random error in radar reflectivity factor.\n'
+     'It originates from the following independent sources of error:\n'
+     '1) Precision in reflectivity estimate due to finite signal to noise and finite number of pulses\n'
+     '2) 10% uncertainty in gaseous attenuation correction (mainly due to error in model humidity field)\n'
+     '3) Error in liquid water path (given by the variable lwp_error) and its partitioning with height).'),
 
     'Z':
-    ('This variable has been corrected for attenuation by gaseous\n'
-     'attenuation (using the thermodynamic variables from a forecast\n'
-     'model; see the radar_gas_atten variable) and liquid attenuation\n'
-     '(using liquid water path from a microwave radiometer; see the\n'
-     'radar_liquid_atten variable) but rain and melting-layer attenuation\n'
-     'has not been corrected. Calibration convention: in the absence of\n'
-     'attenuation, a cloud at 273 K containing one million 100-micron droplets\n'
-     'per cubic metre will have a reflectivity of 0 dBZ at all frequencies.'),
+    ('This variable has been corrected for attenuation by gaseous attenuation (using the thermodynamic variables from a forecast\n'
+     'model; see the radar_gas_atten variable) and liquid attenuation (using liquid water path from a microwave radiometer; see the\n'
+     'radar_liquid_atten variable) but rain and melting-layer attenuation has not been corrected. Calibration convention: in the absence of\n'
+     'attenuation, a cloud at 273 K containing one million 100-micron droplets per cubic metre will have a reflectivity of 0 dBZ at all frequencies.'),
 
     'bias':
     'This variable is an estimate of the one-standard-deviation calibration error.',
@@ -208,10 +193,8 @@ DEFINITIONS = {
     'category_bits':
         ('\n'
          'Bit 0: Small liquid droplets are present.\n'
-         'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n'
-         '       likely ice particles, otherwise they are drizzle or rain drops.\n'
-         'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying\n'
-         '       the phase of Bit-1 particles.\n'
+         'Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most likely ice particles, otherwise they are drizzle or rain drops.\n'
+         'Bit 2: Wet-bulb temperature is less than 0 degrees C, implying the phase of Bit-1 particles.\n'
          'Bit 3: Melting ice particles are present.\n'
          'Bit 4: Aerosol particles are present and visible to the lidar.\n'
          'Bit 5: Insects are present and visible to the radar.'),
@@ -220,8 +203,7 @@ DEFINITIONS = {
         ('\n'
          'Bit 0: An echo is detected by the radar.\n'
          'Bit 1: An echo is detected by the lidar.\n'
-         'Bit 2: The apparent echo detected by the radar is ground clutter\n'
-         '       or some other non-atmospheric artifact.\n'
+         'Bit 2: The apparent echo detected by the radar is ground clutter or some other non-atmospheric artifact.\n'
          'Bit 3: The lidar echo is due to clear-air molecular scattering.\n'
          'Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n'
          '       will have caused radar and lidar attenuation; if bit 5 is set then\n'
@@ -257,10 +239,6 @@ CATEGORIZE_ATTRIBUTES = {
         units='dBZ',
         comment=COMMENTS['Z_sensitivity']
     ),
-    'Zh': MetaData(
-        long_name='Radar reflectivity factor (uncorrected), horizontal polarization',
-        units='dBZ',
-    ),
     'radar_liquid_atten': MetaData(
         long_name='Approximate two-way radar attenuation due to liquid water',
         units='dB',
@@ -285,15 +263,6 @@ CATEGORIZE_ATTRIBUTES = {
         long_name='Zonal wind',
         units='m s-1',
     ),
-    'is_rain': MetaData(
-        long_name='Presence of rain',
-        comment='Integer denoting the rain (1) or no rain (0).'
-    ),
-    'is_undetected_melting': MetaData(
-        long_name='Presence of undetected melting layer',
-        comment=('This variable denotes profiles where ice turns into drizzle/rain\n'
-                 'but no proper melting layer can be found from the data.')
-    ),
     'beta': MetaData(
         long_name='Attenuated backscatter coefficient',
         units='sr-1 m-1',
@@ -314,22 +283,26 @@ CATEGORIZE_ATTRIBUTES = {
     'category_bits': MetaData(
         long_name='Target categorization bits',
         comment=COMMENTS['category_bits'],
-        definition=DEFINITIONS['category_bits']
+        definition=DEFINITIONS['category_bits'],
+        units='1'
     ),
     'quality_bits': MetaData(
         long_name='Data quality bits',
         comment=COMMENTS['quality_bits'],
-        definition=DEFINITIONS['quality_bits']
-    ),
-    'insect_prob': MetaData(
-        long_name='Insect probability',
-        units='',
+        definition=DEFINITIONS['quality_bits'],
+        units='1'
     ),
     'lidar_wavelength': MetaData(
         long_name='Laser wavelength',
         units='nm'
     ),
-    'v': MetaData(
-        ancillary_variables='v_sigma',
-    )
+    'model_time': MetaData(
+        calendar='standard',
+        axis='T'
+    ),
+    'lwp_error': MetaData(
+        long_name='Error in liquid water path',
+        units='g m-2',
+        comment=COMMENTS['lwp_error']
+    ),
 }

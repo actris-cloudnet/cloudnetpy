@@ -426,8 +426,8 @@ ATTRIBUTES = {
         name='Co-cross-channel correlation coefficient',
         cbar='viridis',
         clabel='',
-        plot_range=(0, 1),  # TODO: check
-        plot_scale=_LIN,
+        plot_range=(1e-2, 1e0),
+        plot_scale=_LOG,
         plot_type='mesh'
     ),
     'srho_hv': PlotMeta(
