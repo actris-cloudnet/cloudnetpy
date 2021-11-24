@@ -42,12 +42,12 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
+    bits[3] = _fix_undetected_melting_layer(bits)
     return ClassificationResult(_bits_to_integer(bits),
                                 obs.is_rain,
                                 obs.is_clutter,
                                 insect_prob,
-                                liquid['bases'],
-                                _find_profiles_with_undetected_melting(bits))
+                                liquid['bases'])
 
 
 def fetch_quality(data: dict, classification: ClassificationResult, attenuations: dict) -> dict:
@@ -99,14 +99,12 @@ def _find_aerosols(obs: ClassData,
     return is_beta & ~is_falling & ~is_liquid
 
 
-def _find_profiles_with_undetected_melting(bits: list) -> np.ndarray:
+def _fix_undetected_melting_layer(bits: list) -> np.ndarray:
+    melting_layer = bits[3]
     drizzle_and_falling = _find_drizzle_and_falling(*bits[:3])
-    transition = ma.diff(drizzle_and_falling, axis=1)
-    is_transition = ma.any(transition, axis=1)
-    is_melting_layer = ma.any(bits[3], axis=1)
-    is_undetected_melting = is_transition & ~is_melting_layer
-    is_undetected_melting[is_undetected_melting == 0] = ma.masked
-    return is_undetected_melting.astype(int)
+    transition = ma.diff(drizzle_and_falling, axis=1) == -1
+    melting_layer[:, 1:][transition] = True
+    return melting_layer
 
 
 def _find_drizzle_and_falling(is_liquid: np.ndarray,
@@ -120,13 +118,16 @@ def _find_drizzle_and_falling(is_liquid: np.ndarray,
         is_freezing: 2D boolean array denoting subzero temperatures.
 
     Returns:
-        2D array where values are 1 (falling), 2 (drizzle), and masked (all others).
+        2D array where values are 1 (falling, drizzle, supercooled liquids),
+        2 (drizzle), and masked (all others).
 
     """
     falling_dry = is_falling & ~is_liquid
+    supercooled_liquids = is_liquid & is_freezing
     drizzle = falling_dry & ~is_freezing
     drizzle_and_falling = falling_dry.astype(int) + drizzle.astype(int)
     drizzle_and_falling = ma.copy(drizzle_and_falling)
+    drizzle_and_falling[supercooled_liquids] = 1
     drizzle_and_falling[drizzle_and_falling == 0] = ma.masked
     return drizzle_and_falling
 

@@ -10,8 +10,7 @@ class ClassificationResult(namedtuple('ClassificationResult',
                                        'is_rain',
                                        'is_clutter',
                                        'insect_prob',
-                                       'liquid_bases',
-                                       'is_undetected_melting'])):
+                                       'liquid_bases'])):
     """ Result of classification
 
     Attributes:
@@ -21,8 +20,6 @@ class ClassificationResult(namedtuple('ClassificationResult',
         is_clutter (ndarray): 2D array denoting presence of clutter.
         insect_prob (ndarray): 2D array denoting 0-1 probability of insects.
         liquid_bases (ndarray): 2D array denoting bases of liquid clouds.
-        is_undetected_melting (ndarray): 1D array denoting profiles that should
-            contain melting layer but was not detected from the data.
 
     """
 
