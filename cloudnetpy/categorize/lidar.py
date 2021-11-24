@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy.categorize.datasource import DataSource
+from scipy.interpolate import RegularGridInterpolator
 
 
 class Lidar(DataSource):
@@ -14,7 +15,7 @@ class Lidar(DataSource):
     """
     def __init__(self, full_path: str):
         super().__init__(full_path)
-        self._unknown_variable_to_cloudnet_array(('beta', 'beta_smooth'), 'beta')
+        self.append_data(self.getvar('beta'), 'beta')
         self._add_meta()
 
     def rebin_to_grid(self, time_new: np.ndarray, height_new: np.ndarray) -> None:
@@ -27,7 +28,41 @@ class Lidar(DataSource):
         """
         self.data['beta'].rebin_data(self.time, time_new, self.height, height_new)
 
+    def interpolate_to_grid(self, time_new: np.ndarray, height_new: np.ndarray, method='nearest'):
+        """Interpolate beta using nearest neighbor."""
+        max_height = 100  # m
+        max_time = 1  # min
+        max_time /= 60
+        data = self.data['beta'][:]
+        fun = RegularGridInterpolator((self.time, self.height), data, method=method,
+                                      bounds_error=False, fill_value=ma.masked)
+        xx, yy = np.meshgrid(time_new, height_new)
+        beta_interpolated = fun((xx, yy)).T
+        bad_time_indices = _get_bad_indices(self.time, time_new, max_time)
+        bad_height_indices = _get_bad_indices(self.height, height_new, max_height)
+        if bad_time_indices:
+            logging.warning(f'Unable to interpolate lidar for {len(bad_time_indices)} time steps')
+        beta_interpolated[bad_time_indices, :] = ma.masked
+        if bad_height_indices:
+            logging.warning(f'Unable to interpolate lidar for {len(bad_height_indices)} altitudes')
+        beta_interpolated[:, bad_height_indices] = ma.masked
+        self.data['beta'].data = beta_interpolated
+
     def _add_meta(self) -> None:
         self.append_data(float(self.getvar('wavelength')), 'lidar_wavelength')
         self.append_data(0.5, 'beta_error')
         self.append_data(3.0, 'beta_bias')
+
+
+def _get_bad_indices(original_grid: np.ndarray, new_grid: np.ndarray, threshold: float):
+    indices = []
+    min_original = min(original_grid)
+    max_original = max(original_grid)
+    for ind, value in enumerate(new_grid):
+        if value < min_original or value > max_original:
+            continue
+        diffu = np.abs(original_grid - value)
+        distance = diffu[diffu.argmin()]
+        if distance > threshold:
+            indices.append(ind)
+    return indices

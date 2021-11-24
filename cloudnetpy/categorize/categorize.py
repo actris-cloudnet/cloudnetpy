@@ -53,7 +53,7 @@ def generate_categorize(input_files: dict,
         data['model'].interpolate_to_grid(time, height)
         data['mwr'].rebin_to_grid(time)
         data['radar'].rebin_to_grid(time)
-        data['lidar'].rebin_to_grid(time, height)
+        data['lidar'].interpolate_to_grid(time, height)
 
     def _prepare_output() -> dict:
         data['radar'].add_meta()
