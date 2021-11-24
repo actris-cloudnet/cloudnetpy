@@ -27,21 +27,10 @@ class Mwr(DataSource):
             self.data[key].rebin_data(self.time, time_grid)
 
     def _init_lwp_data(self) -> None:
-        lwp, unit = None, None
-        possible_names = ('LWP_data', 'lwp', 'LWP', 'clwvi')
-        for name in possible_names:
-            if name in self.dataset.variables:
-                lwp = self.dataset.variables[name][:]
-                unit = self.dataset.variables[name].units
-        if lwp is None or unit is None:
-            raise RuntimeError('Error: Can not find LWP or determine its unit.')
-        if 'kg' in unit:
-            lwp *= 1000
-        lwp[lwp < 0] = 0
-        self.append_data(lwp, 'lwp', units='g m-2')
+        lwp = self.dataset.variables['lwp'][:]
+        self.append_data(lwp, 'lwp')
 
     def _init_lwp_error(self) -> None:
-        # TODO: Check these error values
         random_error, bias = 0.25, 50
         lwp_error = utils.l2norm(self.data['lwp'][:]*random_error, bias)
         self.append_data(lwp_error, 'lwp_error', units='g m-2')

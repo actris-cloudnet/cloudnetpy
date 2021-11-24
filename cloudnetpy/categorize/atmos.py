@@ -286,8 +286,10 @@ class LiquidAttenuation(Attenuation):
 
     def _get_liquid_atten(self) -> np.ndarray:
         """Finds radar liquid attenuation."""
+        lwp = self._mwr['lwp'][:]
+        lwp[lwp < 0] = 0
         lwc = calc_adiabatic_lwc(self._lwc_dz_err, self._dheight)
-        lwc_scaled = distribute_lwp_to_liquid_clouds(lwc, self._mwr['lwp'][:])
+        lwc_scaled = distribute_lwp_to_liquid_clouds(lwc, lwp)
         return self._calc_attenuation(lwc_scaled)
 
     def _get_liquid_atten_err(self) -> np.ndarray:
