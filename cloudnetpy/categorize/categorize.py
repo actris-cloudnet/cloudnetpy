@@ -58,7 +58,7 @@ def generate_categorize(input_files: dict,
     def _prepare_output() -> dict:
         data['radar'].add_meta()
         data['model'].screen_sparse_fields()
-        for key in ('category_bits', 'insect_prob', 'is_rain', 'is_undetected_melting'):
+        for key in ('category_bits',):
             data['radar'].append_data(getattr(classification, key), key)
         for key in ('radar_liquid_atten', 'radar_gas_atten'):
             data['radar'].append_data(attenuations[key], key)
