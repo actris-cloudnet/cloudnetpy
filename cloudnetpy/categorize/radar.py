@@ -41,6 +41,7 @@ class Radar(DataSource):
         self.type = getattr(self.dataset, 'source', '')
         self._init_data()
         self._init_sigma_v()
+        self._get_folding_velocity_full()
 
     def rebin_to_grid(self, time_new: np.ndarray) -> None:
         """Rebins radar data in time using mean.
@@ -50,7 +51,7 @@ class Radar(DataSource):
 
         """
         for key in self.data:
-            if key in ('Z', 'ldr'):
+            if key in ('Z', 'ldr', 'sldr'):
                 self.data[key].db2lin()
                 self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
@@ -60,8 +61,10 @@ class Radar(DataSource):
                                               self.sequence_indices)
             elif key == 'v_sigma':
                 self.data[key].calc_linear_std(self.time, time_new)
-            else:
+            elif key in ('width',):
                 self.data[key].rebin_data(self.time, time_new)
+            else:
+                continue
         self.time = time_new
 
     def remove_incomplete_pixels(self) -> None:
@@ -79,7 +82,8 @@ class Radar(DataSource):
             good_ind = good_ind & ~ma.getmaskarray(self.data['width'][:])
 
         for array in self.data.values():
-            array.mask_indices(~good_ind)
+            if array.data.ndim == 2:
+                array.mask_indices(~good_ind)
 
     def filter_speckle_noise(self) -> None:
         """Removes speckle noise from radar data.
@@ -261,13 +265,22 @@ class Radar(DataSource):
         return [all_indices]
 
     def _get_folding_velocity(self) -> Union[np.ndarray, float]:
-        for key in ('nyquist_velocity', 'NyquistVelocity'):
-            if key in self.dataset.variables:
-                return self.getvar(key)
+        if 'nyquist_velocity' in self.dataset.variables:
+            return self.getvar('nyquist_velocity')
         if 'prf' in self.dataset.variables:
             prf = self.getvar('prf')
             return _prf_to_folding_velocity(prf, self.radar_frequency)
         raise RuntimeError('Unable to determine folding velocity')
+
+    def _get_folding_velocity_full(self):
+        folding_velocity = []
+        if utils.isscalar(self.folding_velocity):
+            folding_velocity = np.repeat(self.folding_velocity, len(self.sequence_indices[0]))
+        else:
+            for indices, velocity in zip(self.sequence_indices, self.folding_velocity):
+                folding_velocity.append(np.repeat(velocity, len(indices)))
+            folding_velocity = np.hstack(folding_velocity)
+        self.append_data(folding_velocity, 'nyquist_velocity')
 
 
 def _prf_to_folding_velocity(prf: np.ndarray, radar_frequency: float) -> float:
