@@ -57,7 +57,7 @@ def save_product_file(short_id: str,
     nc.title = f"{human_readable_file_type.capitalize()} file from {obj.dataset.location}"
     nc.source_file_uuids = get_source_uuids(nc, obj)
     copy_global(obj.dataset, nc, ('location', 'day', 'month', 'year'))
-    merge_history(nc, human_readable_file_type, obj)
+    merge_history(nc, human_readable_file_type, {'categorize': obj})
     nc.references = get_references(short_id)
     nc.close()
     return uuid
@@ -113,20 +113,25 @@ def get_source_uuids(*sources) -> str:
     return ', '.join(unique_uuids)
 
 
-def merge_history(nc: netCDF4.Dataset, file_type: str, *sources) -> None:
+def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
     """Merges history fields from one or several files and creates a new record.
 
     Args:
         nc: The netCDF Dataset instance.
         file_type: Long description of the file.
-        *sources: Objects that were used to generate this product. Their `history` attribute will
-            be copied to the new product.
+        data: Dictionary of objects with history attribute.
 
     """
     new_record = f"{utils.get_time()} - {file_type} file created"
-    old_history = ''
-    for source in sources:
-        old_history += f"\n{source.dataset.history}"
+    histories = []
+    for key, obj in data.items():
+        if hasattr(obj.dataset, 'history'):
+            history = obj.dataset.history
+            history = history.split('\n')[-1] if key == 'model' else history
+            histories.append(history)
+    histories.sort(reverse=True)
+    old_history = [f'\n{history}' for history in histories]
+    old_history = ''.join(old_history)
     nc.history = f"{new_record}{old_history}"
 
 

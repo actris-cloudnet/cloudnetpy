@@ -127,7 +127,7 @@ def _save_cat(full_path: str,
     nc.title = f"{file_type.capitalize()} file from {data_obs['radar'].location}"
     nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
     nc.references = output.get_references(file_type)
-    output.merge_history(nc, file_type, data_obs['radar'], data_obs['lidar'])
+    output.merge_history(nc, file_type, data_obs)
     nc.close()
     return uuid
 
