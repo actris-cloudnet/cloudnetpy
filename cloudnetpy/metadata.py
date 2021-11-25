@@ -124,4 +124,12 @@ COMMON_ATTRIBUTES = {
         standard_name='solar_azimuth_angle',
         units='degree',
     ),
+    'temperature': MetaData(
+        long_name='Temperature',
+        units='K',
+    ),
+    'pressure': MetaData(
+        long_name='Pressure',
+        units='Pa',
+    ),
 }

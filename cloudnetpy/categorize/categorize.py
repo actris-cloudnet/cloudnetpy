@@ -291,14 +291,6 @@ CATEGORIZE_ATTRIBUTES = {
         long_name='Specific humidity',
         units='1'
     ),
-    'temperature': MetaData(
-        long_name='Temperature',
-        units='K',
-    ),
-    'pressure': MetaData(
-        long_name='Pressure',
-        units='Pa',
-    ),
     # MISC
     'category_bits': MetaData(
         long_name='Target categorization bits',

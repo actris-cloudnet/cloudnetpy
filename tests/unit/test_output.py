@@ -78,12 +78,12 @@ def test_merge_history():
     root = RootGrp()
     file_type = 'dummy'
     source1 = RootGrp()
-    source1.dataset.history = 'some history x'
+    source1.dataset.history = '20:00 some history x'
     source2 = RootGrp()
-    source2.dataset.history = 'some history y'
-    output.merge_history(root, file_type, source1, source2)
+    source2.dataset.history = '21:00 some history y'
+    output.merge_history(root, file_type, {'a': source1, 'b': source2})
     assert utils.is_timestamp(f"-{root.history[:19]}") is True
-    assert root.history[19:] == ' +00:00 - dummy file created\nsome history x\nsome history y'
+    assert root.history[19:] == ' +00:00 - dummy file created\n21:00 some history y\n20:00 some history x'
 
 
 def test_get_source_uuids():

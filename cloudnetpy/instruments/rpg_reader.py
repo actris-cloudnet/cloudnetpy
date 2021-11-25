@@ -108,7 +108,7 @@ class Fmcw94Bin:
                    'quality_flag': np.zeros(dims.n_samples, int)}
 
             block1_vars = dict.fromkeys((
-                'rain_rate',
+                'rainrate',
                 'relative_humidity',
                 'temperature',
                 'pressure',

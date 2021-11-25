@@ -72,46 +72,51 @@ def test_find_clutter():
 
 def test_find_drizzle_and_falling():
     is_liquid = np.array([[0, 0, 1, 1, 0, 0],
-                          [0, 0, 1, 0, 0, 0]])
+                          [0, 0, 1, 0, 0, 0]], dtype=bool)
 
     is_falling = np.array([[0, 1, 1, 1, 1, 0],
-                           [0, 0, 1, 1, 1, 1]])
+                           [0, 0, 1, 1, 1, 1]], dtype=bool)
 
     is_freezing = np.array([[0, 0, 0, 1, 1, 1],
-                            [0, 0, 0, 0, 1, 1]])
+                            [0, 0, 0, 0, 1, 1]], dtype=bool)
 
-    result = ma.array([[0, 2, 0, 0, 1, 0],
-                       [0, 0, 0, 2, 1, 1]],
-                      mask=[[1, 0, 1, 1, 0, 1],
-                            [1, 1, 1, 0, 0, 0]])
+    expected = ma.array([[0, 2, 0, 1, 1, 0],
+                         [0, 0, 0, 2, 1, 1]],
+                        mask=[[1, 0, 1, 0, 0, 1],
+                              [1, 1, 1, 0, 0, 0]])
 
-    assert_array_equal(classify._find_drizzle_and_falling(is_liquid, is_falling,
-                                                          is_freezing), result)
+    result = classify._find_drizzle_and_falling(is_liquid, is_falling, is_freezing)
+    assert_array_equal(expected.data, result.data)
+    assert_array_equal(expected.mask, result.mask)
 
 
-def test_find_profiles_with_undetected_melting():
+def test_fix_undetected_melting_layer():
     is_liquid = np.array([[0, 0, 1, 1, 0, 0],
                           [0, 0, 1, 0, 0, 0],
                           [0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0]])
+                          [0, 0, 0, 0, 0, 0]], dtype=bool)
 
     is_falling = np.array([[0, 1, 1, 1, 1, 0],
                            [0, 0, 1, 1, 1, 1],
                            [1, 1, 1, 1, 1, 1],
-                           [1, 1, 1, 1, 1, 1]])
+                           [1, 1, 1, 1, 1, 1]], dtype=bool)
 
     is_freezing = np.array([[0, 0, 0, 1, 1, 1],
                             [0, 0, 0, 0, 1, 1],
                             [0, 0, 0, 1, 1, 1],
-                            [0, 0, 0, 0, 0, 0]])
+                            [0, 0, 0, 0, 0, 0]], dtype=bool)
 
     is_melting = np.array([[0, 0, 0, 1, 0, 0],
                            [0, 0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0]])
+                           [0, 0, 0, 0, 0, 0]], dtype=bool)
 
-    result = np.array([0, 1, 1, 0])
+    expected = np.array([[0, 0, 0, 1, 0, 0],
+                         [0, 0, 0, 0, 1, 0],
+                         [0, 0, 0, 1, 0, 0],
+                         [0, 0, 0, 0, 0, 0]], dtype=bool)
+
     bits = [is_liquid, is_falling, is_freezing, is_melting]
-    undetected = classify._find_profiles_with_undetected_melting(bits)
-    assert_array_equal(undetected.data, result)
+    result = classify._fix_undetected_melting_layer(bits)
+    assert_array_equal(expected.data, result.data)
 

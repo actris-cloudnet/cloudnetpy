@@ -58,7 +58,7 @@ class TestRPG2nc94GHz:
     def test_variable_names(self):
         mandatory_variables = ('Zh', 'v', 'width', 'ldr', 'time', 'range', 'altitude', 'latitude',
                                'longitude', 'radar_frequency', 'nyquist_velocity', 'zenith_angle',
-                               'skewness', 'kurtosis', 'rain_rate', 'relative_humidity',
+                               'skewness', 'kurtosis', 'rainrate', 'relative_humidity',
                                'temperature', 'pressure', 'wind_speed', 'wind_direction',
                                'voltage', 'brightness_temperature', 'lwp', 'if_power',
                                'azimuth_angle', 'status_flag', 'transmitted_power',
@@ -161,7 +161,6 @@ class TestRPG2ncSTSR35GHz:
     output = 'dummy_rpg_stsr_output_file.nc'
     output2 = 'dummy_temp_stsr_rpg_file.nc'
     uuid, valid_files = rpg2nc(filepath, output, site_meta, date=date)
-    print(valid_files)
     quality = Quality(output)
     res_data = quality.check_data()
     res_metadata = quality.check_metadata()
@@ -172,7 +171,7 @@ class TestRPG2ncSTSR35GHz:
     def test_variable_names(self):
         mandatory_variables = ('Zh', 'v', 'width', 'sldr', 'time', 'range', 'altitude', 'latitude',
                                'longitude', 'radar_frequency', 'nyquist_velocity', 'zenith_angle',
-                               'skewness', 'kurtosis', 'rain_rate', 'relative_humidity',
+                               'skewness', 'kurtosis', 'rainrate', 'relative_humidity',
                                'temperature', 'pressure', 'wind_speed', 'wind_direction',
                                'voltage', 'brightness_temperature', 'lwp', 'if_power',
                                'azimuth_angle', 'status_flag', 'transmitted_power',
