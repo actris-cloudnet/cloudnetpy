@@ -243,8 +243,8 @@ class Radar(DataSource):
             self.append_data(np.array(getattr(self, key)), key)
 
     def _init_data(self):
-        self._unknown_variable_to_cloudnet_array(('Zh',), 'Z', units='dBZ')
-        for key in ('v', 'ldr', 'width'):
+        self.append_data(self.getvar('Zh'), 'Z', units='dBZ')
+        for key in ('v', 'ldr', 'width', 'sldr'):
             try:
                 self._variables_to_cloudnet_arrays((key,))
             except KeyError:
