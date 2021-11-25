@@ -37,14 +37,6 @@ COMMON_ATTRIBUTES = {
         units='m',
         comment='Distance from instrument to centre of each range bin.'
     ),
-    'model_time': MetaData(
-        long_name='Model time UTC',
-        units='decimal hours since midnight'
-    ),
-    'model_height': MetaData(
-        long_name='Height of model variables above mean sea level',
-        units='m'
-    ),
     'latitude': MetaData(
         long_name='Latitude of site',
         units='degree_north',
@@ -60,6 +52,13 @@ COMMON_ATTRIBUTES = {
         standard_name='altitude',
         units='m'
     ),
+    'Zh': MetaData(
+        long_name='Radar reflectivity factor',
+        units='dBZ',
+        comment='Calibrated reflectivity. Calibration convention: in the absence of attenuation,\n'
+                'a cloud at 273 K containing one million 100-micron droplets per cubic metre will\n'
+                'have a reflectivity of 0 dBZ at all frequencies.'
+    ),
     'width': MetaData(
         long_name='Spectral width',
         units='m s-1',
@@ -71,22 +70,6 @@ COMMON_ATTRIBUTES = {
         units='m s-1',
         comment=('This parameter is the radial component of the velocity, with positive\n'
                  'velocities are away from the radar.'),
-    ),
-    'v_sigma': MetaData(
-        long_name='Standard deviation of mean Doppler velocity',
-        units='m s-1'
-    ),
-    'q': MetaData(
-        long_name='Specific humidity',
-        units='1'
-    ),
-    'temperature': MetaData(
-        long_name='Temperature',
-        units='K',
-    ),
-    'pressure': MetaData(
-        long_name='Pressure',
-        units='Pa',
     ),
     'ldr': MetaData(
         long_name='Linear depolarisation ratio',
@@ -109,10 +92,6 @@ COMMON_ATTRIBUTES = {
     'radar_frequency': MetaData(
         long_name='Radar transmit frequency',
         units='GHz'
-    ),
-    'rain_rate': MetaData(
-        long_name='Rain rate',
-        units='mm h-1',
     ),
     'beta': MetaData(
         long_name='Attenuated backscatter coefficient',
@@ -144,12 +123,5 @@ COMMON_ATTRIBUTES = {
         long_name='Azimuth angle',
         standard_name='solar_azimuth_angle',
         units='degree',
-    ),
-    'Zh': MetaData(
-        long_name='Radar reflectivity factor',
-        units='dBZ',
-        comment='Calibrated reflectivity. Calibration convention: in the absence of attenuation,\n'
-                'a cloud at 273 K containing one million 100-micron droplets per cubic metre will\n'
-                'have a reflectivity of 0 dBZ at all frequencies.'
     ),
 }

@@ -151,10 +151,6 @@ COMMENTS = {
      'in liquid water path means that it is not really meaningful to distinguish bias from random error, so only\n'
      'an error variable is provided.'),
 
-    'lwp_error':
-    ('This variable is a rough estimate of the one-standard-deviation error in liquid water path, '
-     'calculated as a combination of a 20 g m-2 linear error and a 25% fractional error.'),
-
     'radar_liquid_atten':
     ('This variable was calculated from the liquid water path measured by microwave radiometer using lidar\n'
      'and radar returns to perform an approximate partitioning of the liquid water content with height. \n'
@@ -218,6 +214,7 @@ DEFINITIONS = {
 }
 
 CATEGORIZE_ATTRIBUTES = {
+    # Radar variables
     'Z': MetaData(
         long_name='Radar reflectivity factor',
         units='dBZ',
@@ -239,38 +236,16 @@ CATEGORIZE_ATTRIBUTES = {
         units='dBZ',
         comment=COMMENTS['Z_sensitivity']
     ),
-    'radar_liquid_atten': MetaData(
-        long_name='Approximate two-way radar attenuation due to liquid water',
-        units='dB',
-        comment=COMMENTS['radar_liquid_atten']
+    'v_sigma': MetaData(
+        long_name='Standard deviation of mean Doppler velocity',
+        units='m s-1'
     ),
-    'radar_gas_atten': MetaData(
-        long_name='Two-way radar attenuation due to atmospheric gases',
-        units='dB',
-        comment=COMMENTS['radar_gas_atten'],
-        references='Liebe (1985, Radio Sci. 20(5), 1069-1089)'
-    ),
-    'Tw': MetaData(
-        long_name='Wet-bulb temperature',
-        units='K',
-        comment=COMMENTS['Tw']
-    ),
-    'vwind': MetaData(
-        long_name='Meridional wind',
-        units='m s-1',
-    ),
-    'uwind': MetaData(
-        long_name='Zonal wind',
-        units='m s-1',
-    ),
+    # Lidar variables
     'beta': MetaData(
         long_name='Attenuated backscatter coefficient',
         units='sr-1 m-1',
+        comment='SNR-screened attenuated backscatter coefficient.',
         ancillary_variables='beta_error beta_bias'
-    ),
-    'beta_raw': MetaData(
-        long_name='Raw attenuated backscatter coefficient',
-        units='sr-1 m-1',
     ),
     'beta_error': MetaData(
         long_name='Error in attenuated backscatter coefficient',
@@ -280,6 +255,51 @@ CATEGORIZE_ATTRIBUTES = {
         long_name='Bias in attenuated backscatter coefficient',
         units='dB',
     ),
+    'lidar_wavelength': MetaData(
+        long_name='Laser wavelength',
+        units='nm'
+    ),
+    # MWR variables
+    'lwp_error': MetaData(
+        long_name='Error in liquid water path',
+        units='g m-2',
+    ),
+    # Model variables
+    'Tw': MetaData(
+        long_name='Wet-bulb temperature',
+        units='K',
+        comment=COMMENTS['Tw']
+    ),
+    'model_time': MetaData(
+        long_name='Model time UTC',
+        calendar='standard'
+    ),
+    'model_height': MetaData(
+        long_name='Height of model variables above mean sea level',
+        units='m',
+        axis='Z'
+    ),
+    'vwind': MetaData(
+        long_name='Meridional wind',
+        units='m s-1',
+    ),
+    'uwind': MetaData(
+        long_name='Zonal wind',
+        units='m s-1',
+    ),
+    'q': MetaData(
+        long_name='Specific humidity',
+        units='1'
+    ),
+    'temperature': MetaData(
+        long_name='Temperature',
+        units='K',
+    ),
+    'pressure': MetaData(
+        long_name='Pressure',
+        units='Pa',
+    ),
+    # MISC
     'category_bits': MetaData(
         long_name='Target categorization bits',
         comment=COMMENTS['category_bits'],
@@ -292,22 +312,20 @@ CATEGORIZE_ATTRIBUTES = {
         definition=DEFINITIONS['quality_bits'],
         units='1'
     ),
-    'lidar_wavelength': MetaData(
-        long_name='Laser wavelength',
-        units='nm'
-    ),
-    'model_time': MetaData(
-        calendar='standard',
-        axis='T'
-    ),
-    'lwp_error': MetaData(
-        long_name='Error in liquid water path',
-        units='g m-2',
-        comment=COMMENTS['lwp_error']
-    ),
     'rainrate': MetaData(
         long_name='Rain rate',
         units='mm h-1',
         comment='Fill values indicate rain with undefined intensity.'
-    )
+    ),
+    'radar_liquid_atten': MetaData(
+        long_name='Approximate two-way radar attenuation due to liquid water',
+        units='dB',
+        comment=COMMENTS['radar_liquid_atten']
+    ),
+    'radar_gas_atten': MetaData(
+        long_name='Two-way radar attenuation due to atmospheric gases',
+        units='dB',
+        comment=COMMENTS['radar_gas_atten'],
+        references='Liebe (1985, Radio Sci. 20(5), 1069-1089)'
+    ),
 }
