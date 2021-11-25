@@ -47,7 +47,8 @@ def classify_measurements(data: dict) -> ClassificationResult:
                                 obs.is_rain,
                                 obs.is_clutter,
                                 insect_prob,
-                                liquid['bases'])
+                                liquid['bases'],
+                                obs.rainrate)
 
 
 def fetch_quality(data: dict, classification: ClassificationResult, attenuations: dict) -> dict:

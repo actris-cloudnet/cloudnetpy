@@ -10,7 +10,8 @@ class ClassificationResult(namedtuple('ClassificationResult',
                                        'is_rain',
                                        'is_clutter',
                                        'insect_prob',
-                                       'liquid_bases'])):
+                                       'liquid_bases',
+                                       'rainrate'])):
     """ Result of classification
 
     Attributes:
@@ -20,6 +21,7 @@ class ClassificationResult(namedtuple('ClassificationResult',
         is_clutter (ndarray): 2D array denoting presence of clutter.
         insect_prob (ndarray): 2D array denoting 0-1 probability of insects.
         liquid_bases (ndarray): 2D array denoting bases of liquid clouds.
+        rainrate (ndarray): 1D rainrate.
 
     """
 
@@ -45,6 +47,7 @@ class ClassData:
         radar_type (str): Radar identifier.
         is_rain (ndarray): 2D boolean array denoting rain.
         is_clutter (ndarray): 2D boolean array denoting clutter.
+        rainrate: 1D rainrate.
 
     """
     def __init__(self, data: dict):
@@ -65,6 +68,7 @@ class ClassData:
         self.beta = data['lidar'].data['beta'][:]
         self.lwp = data['mwr'].data['lwp'][:]
         self.is_rain = _find_rain(self.z, self.time)
+        self.rainrate = _find_rainrate(self.is_rain)
         self.is_clutter = _find_clutter(self.v, self.is_rain)
 
 
@@ -95,6 +99,12 @@ def _find_rain(z: np.ndarray,
         ind2 = min(ind + n_steps, n_profiles)
         is_rain[ind1:ind2 + 1] = True
     return is_rain
+
+
+def _find_rainrate(is_rain: np.ndarray) -> np.ndarray:
+    rainrate = ma.zeros(len(is_rain))
+    rainrate[is_rain] = ma.masked
+    return rainrate
 
 
 def _find_clutter(v: np.ndarray,
