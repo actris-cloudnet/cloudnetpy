@@ -82,7 +82,6 @@ def generate_categorize(input_files: dict,
         'mwr': Mwr(input_files['mwr'])
     }
     data['model'] = Model(input_files['model'], data['radar'].altitude)
-
     time, height = _define_dense_grid()
     _interpolate_to_cloudnet_grid()
     if 'rpg' in data['radar'].type.lower():

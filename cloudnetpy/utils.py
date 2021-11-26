@@ -4,6 +4,7 @@ from typing import Union, Optional, Tuple, Iterator
 import uuid
 import datetime
 import re
+import warnings
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
@@ -381,11 +382,14 @@ def calc_relative_error(reference: np.ndarray, array: np.ndarray) -> np.ndarray:
     return ((array - reference) / reference) * 100
 
 
-def db2lin(array: np.ndarray, scale: Optional[int] = 10) -> np.ndarray:
+def db2lin(array: Union[float, np.ndarray], scale: Optional[int] = 10) -> np.ndarray:
     """dB to linear conversion."""
-    if ma.isMaskedArray(array):
-        return ma.power(10, (array/scale))
-    return np.power(10, (array/scale))
+    data = array / scale
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=RuntimeWarning)
+        if ma.isMaskedArray(data):
+            return ma.power(10, data)
+        return np.power(10, data)
 
 
 def lin2db(array: np.ndarray, scale: Optional[int] = 10) -> np.ndarray:
