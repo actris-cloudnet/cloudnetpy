@@ -1,4 +1,7 @@
 """General helper classes and functions for all products."""
+from typing import Union
+import numpy as np
+import numpy.ma as ma
 import netCDF4
 import cloudnetpy.utils as utils
 
@@ -23,7 +26,7 @@ class CategorizeBits:
     quality_keys = ('radar', 'lidar', 'clutter', 'molecular', 'attenuated',
                     'corrected')
 
-    def __init__(self, categorize_file):
+    def __init__(self, categorize_file: str):
         self._categorize_file = categorize_file
         self.category_bits = self._read_bits('category')
         self.quality_bits = self._read_bits('quality')
@@ -51,24 +54,26 @@ class ProductClassification(CategorizeBits):
 
     Attributes:
         is_rain (ndarray): 1D array denoting rainy profiles.
-        is_undetected_melting (ndarray): 1D array denoting profiles which should
-            contain melting layer but was not detected from the data.
 
     """
-    def __init__(self, categorize_file):
+    def __init__(self, categorize_file: str):
         super().__init__(categorize_file)
-        self.is_rain = read_nc_fields(categorize_file, 'is_rain')
-        self.is_undetected_melting = read_nc_fields(categorize_file,
-                                                    'is_undetected_melting')
+        self.is_rain = get_is_rain(categorize_file)
 
 
-def read_nc_fields(nc_file, names):
+def get_is_rain(filename: str) -> np.ndarray:
+    rainrate = read_nc_fields(filename, 'rainrate')
+    is_rain = rainrate != 0
+    is_rain[is_rain.mask] = True
+    return np.array(is_rain)
+
+
+def read_nc_fields(nc_file: str, names: Union[str, list]) -> Union[ma.MaskedArray, list]:
     """Reads selected variables from a netCDF file.
 
     Args:
-        nc_file (str): netCDF file name.
-        names (str/list): Variables to be read, e.g. 'temperature' or
-            ['ldr', 'lwp'].
+        nc_file: netCDF file name.
+        names: Variables to be read, e.g. 'temperature' or ['ldr', 'lwp'].
 
     Returns:
         ndarray/list: Array in case of one variable passed as a string.
@@ -82,22 +87,20 @@ def read_nc_fields(nc_file, names):
     return data[0] if len(data) == 1 else data
 
 
-def interpolate_model(cat_file, names):
+def interpolate_model(cat_file: str, names: Union[str, list]) -> Union[list, np.ndarray]:
     """Interpolates 2D model field into dense Cloudnet grid.
 
     Args:
-        cat_file (str): Categorize file name.
-        names (str/list): Model variable to be interpolated, e.g.
-            'temperature' or ['temperature', 'pressure'].
+        cat_file: Categorize file name.
+        names: Model variable to be interpolated, e.g. 'temperature' or ['temperature', 'pressure'].
 
     Returns:
-        ndarray/list: Array in case of one variable passed as a string.
-        List of arrays otherwise.
+        ndarray/list: Array in case of one variable passed as a string. List of arrays otherwise.
 
     """
     def _interp_field(var_name):
-        values = read_nc_fields(cat_file, ['model_time', 'model_height',
-                                           var_name, 'time', 'height'])
+        values = read_nc_fields(cat_file, ['model_time', 'model_height', var_name,
+                                           'time', 'height'])
         return utils.interpolate_2d(*values)
 
     names = [names] if isinstance(names, str) else names

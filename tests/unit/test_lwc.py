@@ -25,7 +25,7 @@ def lwc_source_file(tmpdir_factory, file_metadata):
     var[:] = [1, 1, 0.5]
     var = root_grp.createVariable('lwp_error', 'f8', 'time')
     var[:] = [0.2, 0.2, 0.1]
-    var = root_grp.createVariable('is_rain', 'i4', 'time')
+    var = root_grp.createVariable('rainrate', 'i4', 'time')
     var[:] = [0, 1, 1]
     var = root_grp.createVariable('category_bits', 'i4', 'time')
     var[:] = [0, 1, 2]

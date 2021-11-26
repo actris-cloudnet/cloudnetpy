@@ -1,6 +1,4 @@
-"""Module for creating Cloudnet liquid water content file
-using scaled-adiabatic method.
-"""
+"""Module for creating Cloudnet liquid water content file using scaled-adiabatic method."""
 from typing import Optional, Tuple
 import numpy as np
 import numpy.ma as ma
@@ -8,7 +6,7 @@ from cloudnetpy import utils, output
 from cloudnetpy.categorize import atmos, DataSource
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.metadata import MetaData
-from cloudnetpy.products.product_tools import CategorizeBits
+from cloudnetpy.products.product_tools import CategorizeBits, get_is_rain
 
 G_TO_KG = 0.001
 
@@ -81,7 +79,7 @@ class LwcSource(DataSource):
         super().__init__(categorize_file)
         self.lwp = self.getvar('lwp')
         self.lwp_error = self.getvar('lwp_error')
-        self.is_rain = self.getvar('is_rain')
+        self.is_rain = get_is_rain(categorize_file)
         self.dheight = utils.mdiff(self.getvar('height'))
         self.atmosphere = self._get_atmosphere(categorize_file)
         self.categorize_bits = CategorizeBits(categorize_file)

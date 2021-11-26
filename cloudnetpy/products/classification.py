@@ -1,6 +1,7 @@
 """Module for creating classification file."""
 from typing import Tuple, Optional
 import numpy as np
+import numpy.ma as ma
 from cloudnetpy import output
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData
@@ -85,6 +86,8 @@ def _get_cloud_base_and_top_heights(classification: np.ndarray,
                                     product_container: DataSource) -> Tuple[np.ndarray, np.ndarray]:
     height = product_container.getvar('height')
     cloud_mask = _find_cloud_mask(classification)
+    if not cloud_mask.any():
+        return ma.masked_all(cloud_mask.shape[0]), ma.masked_all(cloud_mask.shape[0])
     lowest_bases = atmos.find_lowest_cloud_bases(cloud_mask, height)
     highest_tops = atmos.find_highest_cloud_tops(cloud_mask, height)
     assert (highest_tops - lowest_bases >= 0).all()

@@ -100,10 +100,8 @@ def drizzle_cat_file(tmpdir_factory, file_metadata):
     var[:] = [[0, 1, 2], [4, 8, 16]]
     var = root_grp.createVariable('quality_bits', 'i4', ('time', 'height'))
     var[:] = [[0, 1, 2], [4, 8, 16]]
-    var = root_grp.createVariable('is_rain', 'i4', 'time')
-    var[:] = [0, 1]
-    var = root_grp.createVariable('is_undetected_melting', 'i4', 'time')
-    var[:] = [0, 1]
+    var = root_grp.createVariable('rainrate', 'i4', 'time')
+    var[:] = [0, 0]
     var = root_grp.createVariable('v_sigma', 'f8', ('time', 'height'))
     var[:] = [[-2, np.nan, 2], [1, -1, 0]]
     var = root_grp.createVariable('width', 'f8', ('time', 'height'))

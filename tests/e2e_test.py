@@ -13,30 +13,6 @@ from cloudnetpy.quality import Quality
 import netCDF4
 
 
-def _load_test_data(input_path: str):
-
-    def _load_zip():
-        sys.stdout.write("\nLoading input files...")
-        r = requests.get(url)
-        open(full_zip_name, 'wb').write(r.content)
-        fl = ZipFile(full_zip_name, 'r')
-        fl.extractall(input_path)
-        fl.close()
-        sys.stdout.write("    Done.\n")
-
-    url = 'https://lake.fmi.fi/cloudnet-public/cloudnetpy_test_input_files.zip'
-    zip_name = os.path.split(url)[-1]
-    full_zip_name = f"{input_path}{zip_name}"
-    is_dir = os.path.isdir(input_path)
-    if not is_dir:
-        os.mkdir(input_path)
-        _load_zip()
-    else:
-        is_file = os.path.isfile(full_zip_name)
-        if not is_file:
-            _load_zip()
-
-
 def _process_product_file(product_type: str, path: str, categorize_file: str) -> tuple:
     output_file = f"{path}{product_type}.nc"
     module = importlib.import_module(f"cloudnetpy.products")
@@ -48,7 +24,6 @@ def main():
 
     test_path = Path(__file__).parent
     source_path = f"{test_path}/source_data/"
-    _load_test_data(source_path)
 
     raw_files = {
         'radar': f"{source_path}raw_mira_radar.mmclx",
@@ -59,8 +34,10 @@ def main():
         'lidar': f"{source_path}lidar.nc"}
 
     site_meta = {
-        'name': 'Mace Head',
-        'altitude': 13.0
+        'name': 'Munich',
+        'altitude': 538,
+        'latitude': 48.148,
+        'longitude': 11.573
     }
     uuid_radar = mira2nc(raw_files['radar'], calibrated_files['radar'], site_meta, uuid='kissa')
     assert uuid_radar == 'kissa'
@@ -77,12 +54,12 @@ def main():
         'mwr': f"{source_path}hatpro_mwr.nc",
         'model': f"{source_path}ecmwf_model.nc"}
 
+    uuid_model, uuid_mwr = _get_uuids(input_files)
     categorize_file = f"{source_path}categorize.nc"
     uuid_categorize = generate_categorize(input_files, categorize_file)
     _run_tests(categorize_file)
     _check_is_valid_uuid(uuid_categorize)
-    _check_source_file_uuids(categorize_file, (uuid_lidar, uuid_radar))
-
+    _check_source_file_uuids(categorize_file, (uuid_lidar, uuid_radar, uuid_model, uuid_mwr))
     product_file_types = ['classification', 'iwc', 'lwc', 'drizzle']
     for file in product_file_types:
         product_file, uuid_product = _process_product_file(file, source_path, categorize_file)
@@ -121,6 +98,16 @@ def _check_attributes(full_path: str, metadata: dict):
     nc = netCDF4.Dataset(full_path)
     assert nc.variables['altitude'][:] == metadata['altitude']
     nc.close()
+
+
+def _get_uuids(data: dict) -> tuple:
+    nc = netCDF4.Dataset(data['model'])
+    uuid_model = nc.file_uuid
+    nc.close()
+    nc = netCDF4.Dataset(data['mwr'])
+    uuid_mwr = nc.file_uuid
+    nc.close()
+    return uuid_model, uuid_mwr
 
 
 if __name__ == "__main__":
