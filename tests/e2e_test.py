@@ -1,10 +1,7 @@
-import os
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from zipfile import ZipFile
 from uuid import UUID
-import requests
 import importlib
 from cloudnetpy.instruments import mira2nc
 from cloudnetpy.instruments import ceilo2nc
