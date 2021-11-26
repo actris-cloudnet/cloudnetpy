@@ -158,7 +158,7 @@ class Radar(DataSource):
                 n_removed_total += n_removed
                 for ind in true_ind:
                     ind2 = np.where(echo[ind, :] < z_limit)
-                    indices = [ind, ind2] if axis == 1 else [ind2, ind]
+                    indices = (ind, ind2) if axis == 1 else (ind2, ind)
                     self.data['v'][:][indices] = ma.masked
             block_indices += len_block
 
