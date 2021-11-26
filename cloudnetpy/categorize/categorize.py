@@ -264,6 +264,9 @@ CATEGORIZE_ATTRIBUTES = {
         long_name='Error in liquid water path',
         units='g m-2',
     ),
+    'lwp': MetaData(
+        ancillary_variables='lwp_error'
+    ),
     # Model variables
     'Tw': MetaData(
         long_name='Wet-bulb temperature',
