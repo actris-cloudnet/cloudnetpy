@@ -105,11 +105,11 @@ def _find_rain_from_radar_echo(z: np.ndarray,
 def _find_rain_rate(is_rain: np.ndarray, radar: any) -> np.ndarray:
     rain_rate = ma.zeros(len(is_rain))
     rain_rate[is_rain] = ma.masked
-    try:
-        radar_rain_rate = radar.getvar('rain_rate')
+    if 'rain_rate' in radar.data:
+        radar_rain_rate = radar.data['rain_rate'].data
         ind = np.where(~radar_rain_rate.mask)
         rain_rate[ind] = radar_rain_rate[ind]
-    except RuntimeError:
+    else:
         logging.info('No measured rain rate available')
     return rain_rate
 

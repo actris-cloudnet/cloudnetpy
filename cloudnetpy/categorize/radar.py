@@ -61,7 +61,7 @@ class Radar(DataSource):
                                               self.sequence_indices)
             elif key == 'v_sigma':
                 self.data[key].calc_linear_std(self.time, time_new)
-            elif key in ('width',):
+            elif key in ('width', 'rain_rate'):
                 self.data[key].rebin_data(self.time, time_new)
             else:
                 continue
