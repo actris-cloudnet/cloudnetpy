@@ -1,3 +1,4 @@
+import logging
 from collections import namedtuple
 from typing import Optional
 import numpy as np
@@ -11,7 +12,7 @@ class ClassificationResult(namedtuple('ClassificationResult',
                                        'is_clutter',
                                        'insect_prob',
                                        'liquid_bases',
-                                       'rainrate'])):
+                                       'rain_rate'])):
     """ Result of classification
 
     Attributes:
@@ -21,7 +22,7 @@ class ClassificationResult(namedtuple('ClassificationResult',
         is_clutter (ndarray): 2D array denoting presence of clutter.
         insect_prob (ndarray): 2D array denoting 0-1 probability of insects.
         liquid_bases (ndarray): 2D array denoting bases of liquid clouds.
-        rainrate (ndarray): 1D rainrate.
+        rain_rate (ndarray): 1D rain rate.
 
     """
 
@@ -47,7 +48,7 @@ class ClassData:
         radar_type (str): Radar identifier.
         is_rain (ndarray): 2D boolean array denoting rain.
         is_clutter (ndarray): 2D boolean array denoting clutter.
-        rainrate: 1D rainrate.
+        rain_rate: 1D rain rate.
 
     """
     def __init__(self, data: dict):
@@ -67,14 +68,14 @@ class ClassData:
         self.model_type = data['model'].type
         self.beta = data['lidar'].data['beta'][:]
         self.lwp = data['mwr'].data['lwp'][:]
-        self.is_rain = _find_rain(self.z, self.time)
-        self.rainrate = _find_rainrate(self.is_rain)
+        self.is_rain = _find_rain_from_radar_echo(self.z, self.time)
+        self.rain_rate = _find_rain_rate(self.is_rain, data['radar'])
         self.is_clutter = _find_clutter(self.v, self.is_rain)
 
 
-def _find_rain(z: np.ndarray,
-               time: np.ndarray,
-               time_buffer: Optional[int] = 5) -> np.ndarray:
+def _find_rain_from_radar_echo(z: np.ndarray,
+                               time: np.ndarray,
+                               time_buffer: Optional[int] = 5) -> np.ndarray:
     """Find profiles affected by rain.
 
     Rain is present in such profiles where the radar echo in
@@ -101,10 +102,16 @@ def _find_rain(z: np.ndarray,
     return is_rain
 
 
-def _find_rainrate(is_rain: np.ndarray) -> np.ndarray:
-    rainrate = ma.zeros(len(is_rain))
-    rainrate[is_rain] = ma.masked
-    return rainrate
+def _find_rain_rate(is_rain: np.ndarray, radar: any) -> np.ndarray:
+    rain_rate = ma.zeros(len(is_rain))
+    rain_rate[is_rain] = ma.masked
+    try:
+        radar_rain_rate = radar.getvar('rain_rate')
+        ind = np.where(~radar_rain_rate.mask)
+        rain_rate[ind] = radar_rain_rate[ind]
+    except RuntimeError:
+        logging.info('No measured rain rate available')
+    return rain_rate
 
 
 def _find_clutter(v: np.ndarray,

@@ -470,7 +470,7 @@ RPG_ATTRIBUTES = {
         long_name='Relative humidity',
         units='%',
     ),
-    'rainrate': MetaData(
+    'rain_rate': MetaData(
         long_name='Rain rate',
         units='mm h-1',
     ),

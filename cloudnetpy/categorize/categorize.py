@@ -58,7 +58,7 @@ def generate_categorize(input_files: dict,
     def _prepare_output() -> dict:
         data['radar'].add_meta()
         data['model'].screen_sparse_fields()
-        for key in ('category_bits', 'rainrate'):
+        for key in ('category_bits', 'rain_rate'):
             data['radar'].append_data(getattr(classification, key), key)
         for key in ('radar_liquid_atten', 'radar_gas_atten'):
             data['radar'].append_data(attenuations[key], key)
@@ -304,10 +304,10 @@ CATEGORIZE_ATTRIBUTES = {
         definition=DEFINITIONS['quality_bits'],
         units='1'
     ),
-    'rainrate': MetaData(
+    'rain_rate': MetaData(
         long_name='Rain rate',
         units='mm h-1',
-        comment='Fill values indicate rain with undefined intensity.'
+        comment='Fill values denote rain with undefined intensity.'
     ),
     'radar_liquid_atten': MetaData(
         long_name='Approximate two-way radar attenuation due to liquid water',

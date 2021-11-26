@@ -41,23 +41,23 @@ class TestFindRain:
 
     def test_1(self):
         result = np.zeros(len(self.time))
-        assert_array_equal(containers._find_rain(self.z, self.time), result)
+        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time), result)
 
     def test_2(self):
         self.z[:, 3] = 0.1
         result = np.ones(len(self.time))
-        assert_array_equal(containers._find_rain(self.z, self.time), result)
+        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time), result)
 
     def test_3(self):
         self.z[5, 3] = 0.1
         result = np.ones(len(self.time))
         result[3:7] = 1
-        assert_array_equal(containers._find_rain(self.z, self.time, time_buffer=1), result)
+        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1), result)
 
     def test_4(self):
         self.z[1440, 3] = 0.1
         result = np.ones(len(self.time))
-        assert_array_equal(containers._find_rain(self.z, self.time, time_buffer=1500), result)
+        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1500), result)
 
 
 def test_find_clutter():

@@ -58,7 +58,7 @@ class TestRPG2nc94GHz:
     def test_variable_names(self):
         mandatory_variables = ('Zh', 'v', 'width', 'ldr', 'time', 'range', 'altitude', 'latitude',
                                'longitude', 'radar_frequency', 'nyquist_velocity', 'zenith_angle',
-                               'skewness', 'kurtosis', 'rainrate', 'relative_humidity',
+                               'skewness', 'kurtosis', 'rain_rate', 'relative_humidity',
                                'temperature', 'pressure', 'wind_speed', 'wind_direction',
                                'voltage', 'brightness_temperature', 'lwp', 'if_power',
                                'azimuth_angle', 'status_flag', 'transmitted_power',
@@ -171,7 +171,7 @@ class TestRPG2ncSTSR35GHz:
     def test_variable_names(self):
         mandatory_variables = ('Zh', 'v', 'width', 'sldr', 'time', 'range', 'altitude', 'latitude',
                                'longitude', 'radar_frequency', 'nyquist_velocity', 'zenith_angle',
-                               'skewness', 'kurtosis', 'rainrate', 'relative_humidity',
+                               'skewness', 'kurtosis', 'rain_rate', 'relative_humidity',
                                'temperature', 'pressure', 'wind_speed', 'wind_direction',
                                'voltage', 'brightness_temperature', 'lwp', 'if_power',
                                'azimuth_angle', 'status_flag', 'transmitted_power',

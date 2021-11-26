@@ -62,8 +62,8 @@ class ProductClassification(CategorizeBits):
 
 
 def get_is_rain(filename: str) -> np.ndarray:
-    rainrate = read_nc_fields(filename, 'rainrate')
-    is_rain = rainrate != 0
+    rain_rate = read_nc_fields(filename, 'rain_rate')
+    is_rain = rain_rate != 0
     is_rain[is_rain.mask] = True
     return np.array(is_rain)
 

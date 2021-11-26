@@ -38,7 +38,7 @@ def categorize_file(tmpdir_factory, file_metadata):
     temperature = np.array([[280, 290], [280, 290], [280, 290]])
     nc.createVariable('temperature', 'f8', ('model_time', 'model_height'))[:] = temperature
     nc.createVariable('Z_sensitivity', 'f8', 'height')[:] = 2.0
-    nc.createVariable('rainrate', 'i4', 'time')[:] = [0, 1, 0]
+    nc.createVariable('rain_rate', 'i4', 'time')[:] = [0, 1, 0]
     nc.close()
     return file_name
 
