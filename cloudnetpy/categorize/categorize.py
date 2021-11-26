@@ -126,6 +126,7 @@ def _save_cat(full_path: str,
     nc.title = f"Cloud categorization products from {data_obs['radar'].location}"
     nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
     nc.references = output.get_references(file_type)
+    output.add_source_instruments(nc, data_obs)
     output.merge_history(nc, file_type, data_obs)
     nc.close()
     return uuid

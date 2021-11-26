@@ -135,6 +135,16 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
     nc.history = f"{new_record}{old_history}"
 
 
+def add_source_instruments(nc: netCDF4.Dataset, data: dict) -> None:
+    """Adds source attribute to categorize file."""
+    sources = []
+    for key, obj in data.items():
+        if hasattr(obj.dataset, 'source'):
+            sources.append(obj.dataset.source)
+    sources = [sources[0]] + [f'\n{source}' for source in sources[1:]]
+    nc.source = ''.join(sources)
+
+
 def init_file(file_name: str,
               dimensions: dict,
               cloudnet_arrays: dict,
@@ -209,7 +219,8 @@ def add_time_attribute(attributes: dict, date: list, key: Optional[str] = 'time'
 def add_source_attribute(attributes: dict, data: dict):
     """Adds source attribute."""
     variables = {
-        'radar': ('v', 'width', 'v_sigma', 'ldr', 'Z', 'zdr', 'sldr', 'radar_frequency'),
+        'radar': ('v', 'width', 'v_sigma', 'ldr', 'Z', 'zdr', 'sldr', 'radar_frequency',
+                  'nyquist_velocity'),
         'lidar': ('beta', 'lidar_wavelength'),
         'mwr': ('lwp',),
         'model': ('uwind', 'vwind', 'Tw', 'q', 'pressure', 'temperature')
