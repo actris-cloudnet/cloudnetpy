@@ -6,6 +6,7 @@ import numpy as np
 import numpy.ma as ma
 import sys
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.quality import Quality
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -29,6 +30,9 @@ class TestPolly:
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
     all_fun = AllProductsFun(nc, site_meta, date, uuid)
+    quality = Quality(output)
+    res_data = quality.check_data()
+    res_metadata = quality.check_metadata()
 
     def test_variable_names(self):
         keys = {'beta', 'beta_raw', 'calibration_factor', 'range', 'height', 'zenith_angle', 'time',
@@ -59,6 +63,10 @@ class TestPolly:
     def test_global_attributes(self):
         assert self.nc.source == 'TROPOS PollyXT'
         assert self.nc.title == f"PollyXT Raman lidar from {site_meta['name']}"
+
+    def test_qc(self):
+        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
+        assert self.quality.n_data_test_failures == 0, self.res_data
 
     def test_tear_down(self):
         os.remove(self.output)

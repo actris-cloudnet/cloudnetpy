@@ -27,31 +27,5 @@ class RadarFun:
         assert np.all((self.nc.variables['height'][:] - self.site_meta['altitude']
                        - self.nc.variables['range'][:]) <= 1e-3)
 
-    def test_standard_names(self):
-        data = [
-            ('height', 'height_above_mean_sea_level'),
-            ('zenith_angle', 'zenith_angle')
-        ]
-        for key, expected in data:
-            value = self.nc.variables[key].standard_name
-            assert value == expected, f'{value} != {expected}'
-
-    def test_long_names(self):
-        data = [
-            ('zenith_angle', 'Zenith angle'),
-            ('azimuth_angle', 'Azimuth angle'),
-            ('range', 'Range from instrument'),
-            ('radar_frequency', 'Radar transmit frequency'),
-            ('Zh', 'Radar reflectivity factor'),
-            ('v', 'Doppler velocity'),
-            ('ldr', 'Linear depolarisation ratio'),
-            ('width', 'Spectral width'),
-            ('nyquist_velocity', 'Nyquist velocity'),
-        ]
-        for key, expected in data:
-            if key in self.nc.variables:
-                value = self.nc.variables[key].long_name
-                assert value == expected, f'{value} != {expected}'
-
     def test_global_attributes(self):
         assert self.nc.cloudnet_file_type == 'radar'

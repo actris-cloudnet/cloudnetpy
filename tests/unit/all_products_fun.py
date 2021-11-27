@@ -35,16 +35,6 @@ class AllProductsFun:
             expected = self.site_meta[key]
             assert value == expected, f'{value} != {expected}'
 
-    def test_standard_names(self):
-        data = [
-            ('time', 'time'),
-            ('latitude', 'latitude'),
-            ('longitude', 'longitude'),
-        ]
-        for key, expected in data:
-            value = self.nc.variables[key].standard_name
-            assert value == expected, f'{value} != {expected}'
-
     def test_invalid_units(self):
         for key in self.nc.variables:
             variable = self.nc.variables[key]
@@ -52,10 +42,8 @@ class AllProductsFun:
             assert variable.units != '', key
 
     def test_units(self):
+        """Custom units that are not tested in QC tests."""
         data = [
-            ('latitude', 'degree_north'),
-            ('longitude', 'degree_east'),
-            ('altitude', 'm'),
             ('time', f'hours since {self.date} 00:00:00 +00:00'),
         ]
         for key, expected in data:
@@ -63,17 +51,56 @@ class AllProductsFun:
                 value = self.nc.variables[key].units
                 assert value == expected, f'{value} != {expected}'
 
+    def test_standard_names(self):
+        data = [
+            ('time', 'time'),
+            ('latitude', 'latitude'),
+            ('longitude', 'longitude'),
+            ('height', 'height_above_mean_sea_level'),
+            ('zenith_angle', 'zenith_angle'),
+            ('azimuth_angle', 'solar_azimuth_angle'),
+            ('lwp', 'atmosphere_cloud_liquid_water_content')
+        ]
+        for key, expected in data:
+            if key in self.nc.variables:
+                value = self.nc.variables[key].standard_name
+                assert value == expected, f'{value} != {expected}'
+
     def test_long_names(self):
         data = [
             ('latitude', 'Latitude of site'),
             ('longitude', 'Longitude of site'),
             ('altitude', 'Altitude of site'),
+            ('height', 'Height above mean sea level'),
             ('time', 'Time UTC'),
+            ('zenith_angle', 'Zenith angle'),
+            ('azimuth_angle', 'Azimuth angle'),
+            ('range', 'Range from instrument'),
+            ('radar_frequency', 'Radar transmit frequency'),
+            ('Zh', 'Radar reflectivity factor'),
+            ('v', 'Doppler velocity'),
+            ('ldr', 'Linear depolarisation ratio'),
+            ('width', 'Spectral width'),
+            ('nyquist_velocity', 'Nyquist velocity'),
+            ('zenith_angle', 'Zenith angle'),
+            ('range', 'Range from instrument'),
+            ('calibration_factor', 'Attenuated backscatter calibration factor'),
+            ('beta', 'Attenuated backscatter coefficient'),
+            ('beta_raw', 'Attenuated backscatter coefficient'),
+            ('depolarisation', 'Lidar volume linear depolarisation ratio'),
+            ('depolarisation_raw', 'Lidar volume linear depolarisation ratio'),
+            ('wavelength', 'Laser wavelength')
         ]
         for key, expected in data:
             if key in self.nc.variables:
                 value = self.nc.variables[key].long_name
                 assert value == expected, f'{value} != {expected}'
+
+    def test_long_name_format(self):
+        for key in self.nc.variables:
+            assert hasattr(self.nc.variables[key], 'long_name')
+            value = self.nc.variables[key].long_name
+            assert not value.endswith('.')
 
     def test_global_attributes(self):
         assert self.nc.location == self.site_meta['name']
