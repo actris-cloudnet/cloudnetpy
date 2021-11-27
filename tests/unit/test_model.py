@@ -4,6 +4,11 @@ from numpy.testing import assert_array_equal
 import pytest
 import netCDF4
 from cloudnetpy.categorize import model
+from cloudnetpy.quality import Quality
+import os
+
+
+SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 @pytest.mark.parametrize("input, result", [
@@ -114,3 +119,19 @@ def test_interpolate_to_grid(fake_model_file):
     obj.interpolate_to_grid(time_grid, height_grid)
     assert_array_equal(obj.height, height_grid)
     assert hasattr(obj, 'data_dense')
+
+
+class TestEcmwf:
+    filename = f'{SCRIPT_PATH}/../source_data/ecmwf_model.nc'
+    nc = netCDF4.Dataset(filename)
+    quality = Quality(filename)
+    res_data = quality.check_data()
+    res_metadata = quality.check_metadata()
+
+    def test_qc(self):
+        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
+        assert self.quality.n_data_test_failures == 0, self.res_data
+
+    def test_tear_down(self):
+        self.nc.close()
+

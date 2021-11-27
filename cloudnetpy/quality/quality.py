@@ -1,3 +1,4 @@
+from typing import Optional
 import os
 import configparser
 import numpy as np
@@ -34,8 +35,10 @@ class Quality:
             'missingVariables': self._find_missing_keys('required_variables'),
             'missingGlobalAttributes': self._find_missing_keys('required_global_attributes'),
             'invalidGlobalAttributeValues': self._find_invalid_global_attribute_values(),
-            'invalidUnits': self._find_invalid_variable_units(),
-            'invalidDataTypes': self._find_invalid_data_types()
+            'invalidDataTypes': self._find_invalid_data_types(),
+            'invalidUnits': self._check_attribute('units'),
+            'invalidLongNames': self._check_attribute('long_name', ignore_model=True),
+            'invalidStandardNames': self._check_attribute('standard_name', ignore_model=True),
         }
 
     def check_data(self) -> dict:
@@ -81,14 +84,16 @@ class Quality:
                     self.n_metadata_test_failures += 1
         return invalid
 
-    def _find_invalid_variable_units(self) -> list:
+    def _check_attribute(self, name: str, ignore_model: Optional[bool] = False):
         invalid = []
-        for key, expected_unit in self._metadata_config.items('variable_units'):
+        if ignore_model is True and self._nc.cloudnet_file_type == 'model':
+            return invalid
+        for key, expected in self._metadata_config.items(name):
             if key in self._nc.variables:
                 self.n_metadata_tests += 1
-                value = self._nc.variables[key].units
-                if value != expected_unit:
-                    invalid.append((key, value, expected_unit))
+                value = getattr(self._nc.variables[key], name, '')
+                if value != expected:
+                    invalid.append((key, value, expected))
                     self.n_metadata_test_failures += 1
         return invalid
 
