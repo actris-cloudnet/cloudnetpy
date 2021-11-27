@@ -313,7 +313,7 @@ CATEGORIZE_ATTRIBUTES = {
         comment='Fill values denote rain with undefined intensity.'
     ),
     'radar_liquid_atten': MetaData(
-        long_name='Approximate two-way radar attenuation due to liquid water',
+        long_name='Two-way radar attenuation due to liquid water',
         units='dB',
         comment=COMMENTS['radar_liquid_atten']
     ),

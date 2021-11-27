@@ -28,7 +28,7 @@ class Quality:
         Examples:
             >>> from cloudnetpy.quality import Quality
             >>> quality = Quality('/foo/bar/categorize.nc')
-            >>> result = quality.check_meta()
+            >>> result = quality.check_metadata()
 
         """
         return {
