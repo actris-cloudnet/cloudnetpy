@@ -92,7 +92,7 @@ def _handle_saving(image_name: str, save_path: str, show: bool, dpi: int,
 
 
 def _get_relative_error(fields: list, ax_values: list, max_y: int) -> tuple:
-    old_data_interp = utils.interpolate_2d_mask(fields[0], *ax_values)
+    old_data_interp = utils.interpolate_2d_mask(*ax_values[0], fields[0], *ax_values[1])
     error = utils.calc_relative_error(old_data_interp, fields[1])
     return _screen_high_altitudes(error, ax_values[1], max_y)
 
@@ -562,7 +562,10 @@ def compare_files(nc_files: list,
 
     plot_type = ATTRIBUTES[field_name].plot_type
     fields = [_find_valid_fields(file, [field_name])[0][0] for file in nc_files]
-    ax_values = [_read_ax_values(nc_file) for nc_file in nc_files]
+    nc = netCDF4.Dataset(nc_files[0])
+    file_type = nc.cloudnet_file_type
+    nc.close()
+    ax_values = [_read_ax_values(nc_file, file_type=file_type) for nc_file in nc_files]
     subtitle = (" from CloudnetPy", " from Cloudnet")
     fig, axes = _init_figure()
 
