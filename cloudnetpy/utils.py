@@ -1,6 +1,6 @@
 """ This module contains general helper functions. """
 import os
-from typing import Union, Optional, Tuple, Iterator
+from typing import Union, Optional, Iterator
 import uuid
 import datetime
 import re
@@ -358,23 +358,6 @@ def interpolate_2d_mask(x: np.ndarray,
     masked_array = ma.array(data, mask=mask.astype(bool))
     masked_array = ma.masked_invalid(masked_array)
     return masked_array
-
-
-def interpolate_2d_masked(array: ma.MaskedArray,
-                          ax_values: Tuple[np.ndarray, np.ndarray],
-                          ax_values_new: Tuple[np.ndarray, np.ndarray]) -> ma.MaskedArray:
-    """Interpolates 2D array preserving the mask.
-
-    Notes:
-        Deprecated. Use interpolate_2d_mask instead which is more accurate.
-
-    """
-    def _mask_invalid_values(data_in):
-        data_range = (np.min(array), np.max(array))
-        return ma.masked_outside(data_in, *data_range)
-
-    data_interp = interpolate_2d(*ax_values, array, *ax_values_new)
-    return _mask_invalid_values(data_interp)
 
 
 def calc_relative_error(reference: np.ndarray, array: np.ndarray) -> np.ndarray:

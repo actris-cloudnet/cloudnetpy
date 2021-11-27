@@ -92,7 +92,7 @@ def _handle_saving(image_name: str, save_path: str, show: bool, dpi: int,
 
 
 def _get_relative_error(fields: list, ax_values: list, max_y: int) -> tuple:
-    old_data_interp = utils.interpolate_2d_masked(fields[0], *ax_values)
+    old_data_interp = utils.interpolate_2d_mask(fields[0], *ax_values)
     error = utils.calc_relative_error(old_data_interp, fields[1])
     return _screen_high_altitudes(error, ax_values[1], max_y)
 
