@@ -220,7 +220,7 @@ def add_source_attribute(attributes: dict, data: dict):
     """Adds source attribute."""
     variables = {
         'radar': ('v', 'width', 'v_sigma', 'ldr', 'Z', 'zdr', 'sldr', 'radar_frequency',
-                  'nyquist_velocity'),
+                  'nyquist_velocity', 'rain_rate'),
         'lidar': ('beta', 'lidar_wavelength'),
         'mwr': ('lwp',),
         'model': ('uwind', 'vwind', 'Tw', 'q', 'pressure', 'temperature')
