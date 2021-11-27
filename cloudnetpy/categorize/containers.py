@@ -1,30 +1,19 @@
+from dataclasses import dataclass
 import logging
-from collections import namedtuple
 from typing import Optional
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils
 
 
-class ClassificationResult(namedtuple('ClassificationResult',
-                                      ['category_bits',
-                                       'is_rain',
-                                       'is_clutter',
-                                       'insect_prob',
-                                       'liquid_bases',
-                                       'rain_rate'])):
-    """ Result of classification
-
-    Attributes:
-        category_bits (ndarray): Array of integers concatenating all the
-            individual boolean bit arrays.
-        is_rain (ndarray): 1D array denoting presence of rain.
-        is_clutter (ndarray): 2D array denoting presence of clutter.
-        insect_prob (ndarray): 2D array denoting 0-1 probability of insects.
-        liquid_bases (ndarray): 2D array denoting bases of liquid clouds.
-        rain_rate (ndarray): 1D rain rate.
-
-    """
+@dataclass
+class ClassificationResult:
+    """ Result of classification"""
+    category_bits: np.ndarray
+    is_rain: np.ndarray
+    is_clutter: np.ndarray
+    liquid_bases: np.ndarray
+    rain_rate: np.ndarray
 
 
 class ClassData:

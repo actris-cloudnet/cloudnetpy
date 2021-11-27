@@ -1,18 +1,14 @@
+from dataclasses import dataclass
 
+
+@dataclass
 class Instrument:
-    def __init__(self,
-                 manufacturer: str = None,
-                 domain: str = None,
-                 category: str = None,
-                 model: str = None,
-                 wavelength: float = None,
-                 frequency: float = None):
-        self.manufacturer = manufacturer
-        self.domain = domain
-        self.category = category
-        self.model = model
-        self.wavelength = wavelength
-        self.frequency = frequency
+    manufacturer: str = None
+    domain: str = None
+    category: str = None
+    model: str = None
+    wavelength: float = None
+    frequency: float = None
 
 
 POLLYXT = Instrument(

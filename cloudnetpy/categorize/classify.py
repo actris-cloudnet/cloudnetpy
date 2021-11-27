@@ -46,7 +46,6 @@ def classify_measurements(data: dict) -> ClassificationResult:
     return ClassificationResult(_bits_to_integer(bits),
                                 obs.is_rain,
                                 obs.is_clutter,
-                                insect_prob,
                                 liquid['bases'],
                                 obs.rain_rate)
 
