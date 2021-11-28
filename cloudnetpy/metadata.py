@@ -15,8 +15,7 @@ FIELDS = (
     'calendar',
     'source')
 
-MetaData = namedtuple('MetaData', FIELDS)
-MetaData.__new__.__defaults__ = (None,) * len(MetaData._fields)
+MetaData = namedtuple('MetaData', FIELDS, defaults=(None,) * len(FIELDS))
 
 
 COMMON_ATTRIBUTES = {

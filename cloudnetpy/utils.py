@@ -8,7 +8,7 @@ import warnings
 import numpy as np
 import numpy.ma as ma
 from scipy import stats, ndimage
-from scipy.interpolate import RectBivariateSpline, griddata
+from scipy.interpolate import RectBivariateSpline, griddata, RegularGridInterpolator
 import pytz
 import requests
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -325,7 +325,7 @@ def interpolate_2d_mask(x: np.ndarray,
                         z: ma.MaskedArray,
                         x_new: np.ndarray,
                         y_new: np.ndarray) -> ma.MaskedArray:
-    """Interpolates 2D masked array preserving the mask.
+    """2D linear interpolation preserving the mask.
 
     Args:
         x: 1D array, x-coordinates.
@@ -358,6 +358,34 @@ def interpolate_2d_mask(x: np.ndarray,
     masked_array = ma.array(data, mask=mask.astype(bool))
     masked_array = ma.masked_invalid(masked_array)
     return masked_array
+
+
+def interpolate_2d_nearest(x: np.ndarray,
+                           y: np.ndarray,
+                           z: np.ndarray,
+                           x_new: np.ndarray,
+                           y_new: np.ndarray) -> ma.MaskedArray:
+    """2D nearest neighbor interpolation preserving mask.
+
+    Args:
+        x: 1D array, x-coordinates.
+        y: 1D array, y-coordinates.
+        z: 2D masked array, data values.
+        x_new: 1D array, new x-coordinates.
+        y_new: 1D array, new y-coordinates.
+
+    Returns:
+        Interpolated 2D masked array.
+
+    Notes:
+        Points outside the original range will be interpolated but masked.
+
+    """
+    data = ma.copy(z)
+    fun = RegularGridInterpolator((x, y), data, method='nearest', bounds_error=False,
+                                  fill_value=ma.masked)
+    xx, yy = np.meshgrid(x_new, y_new)
+    return fun((xx, yy)).T
 
 
 def calc_relative_error(reference: np.ndarray, array: np.ndarray) -> np.ndarray:

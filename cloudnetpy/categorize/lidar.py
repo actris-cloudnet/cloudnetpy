@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy.categorize.datasource import DataSource
-from scipy.interpolate import RegularGridInterpolator
+from cloudnetpy.utils import interpolate_2d_nearest
 
 
 class Lidar(DataSource):
@@ -33,11 +33,8 @@ class Lidar(DataSource):
         max_height = 100  # m
         max_time = 1  # min
         max_time /= 60
-        data = self.data['beta'][:]
-        fun = RegularGridInterpolator((self.time, self.height), data, method=method,
-                                      bounds_error=False, fill_value=ma.masked)
-        xx, yy = np.meshgrid(time_new, height_new)
-        beta_interpolated = fun((xx, yy)).T
+        beta_interpolated = interpolate_2d_nearest(self.time, self.height, self.data['beta'][:],
+                                                   time_new, height_new)
         bad_time_indices = _get_bad_indices(self.time, time_new, max_time)
         bad_height_indices = _get_bad_indices(self.height, height_new, max_height)
         if bad_time_indices:

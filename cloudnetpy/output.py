@@ -137,10 +137,7 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
 
 def add_source_instruments(nc: netCDF4.Dataset, data: dict) -> None:
     """Adds source attribute to categorize file."""
-    sources = []
-    for key, obj in data.items():
-        if hasattr(obj.dataset, 'source'):
-            sources.append(obj.dataset.source)
+    sources = [obj.source for obj in data.values() if hasattr(obj, 'source')]
     sources = [sources[0]] + [f'\n{source}' for source in sources[1:]]
     nc.source = ''.join(sources)
 
@@ -225,13 +222,13 @@ def add_source_attribute(attributes: dict, data: dict):
         'mwr': ('lwp',),
         'model': ('uwind', 'vwind', 'Tw', 'q', 'pressure', 'temperature')
     }
-    for instrument in variables:
-        model = data[instrument].dataset.source
-        for key in variables[instrument]:
+    for instrument, keys in variables.items():
+        source = data[instrument].dataset.source
+        for key in keys:
             if key in attributes:
-                attributes[key] = attributes[key]._replace(source=model)
+                attributes[key] = attributes[key]._replace(source=source)
             else:
-                attributes[key] = MetaData(source=model)
+                attributes[key] = MetaData(source=source)
     return attributes
 
 
