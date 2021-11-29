@@ -35,6 +35,7 @@ def generate_classification(categorize_file: str,
     product_container = DataSource(categorize_file)
     categorize_bits = CategorizeBits(categorize_file)
     classification = _get_target_classification(categorize_bits)
+    classification = _filter_bad_classifications(categorize_bits, classification)
     product_container.append_data(classification, 'target_classification')
     status = _get_detection_status(categorize_bits)
     product_container.append_data(status, 'detection_status')
@@ -54,7 +55,7 @@ def generate_classification(categorize_file: str,
 def _get_target_classification(categorize_bits: CategorizeBits) -> np.ndarray:
     bits = categorize_bits.category_bits
     clutter = categorize_bits.quality_bits['clutter']
-    classification = np.zeros(bits['cold'].shape, dtype=int)
+    classification = ma.zeros(bits['cold'].shape, dtype=int)
     classification[bits['droplet'] & ~bits['falling']] = 1
     classification[~bits['droplet'] & bits['falling']] = 2
     classification[bits['droplet'] & bits['falling']] = 3
@@ -99,6 +100,15 @@ def _find_cloud_mask(classification: np.ndarray) -> np.ndarray:
     for value in [1, 3, 4, 5]:
         cloud_mask[classification == value] = 1
     return cloud_mask
+
+
+def _filter_bad_classifications(categorize_bits: CategorizeBits, classification: np.ndarray):
+    """Removes classification result from profiles without any lidar data."""
+    bits = categorize_bits.quality_bits
+    lidar = bits['lidar']
+    ind = np.where(~lidar.any(axis=1))[0]
+    classification[ind, :] = ma.masked
+    return classification
 
 
 COMMENTS = {
