@@ -28,7 +28,7 @@ class Lidar(DataSource):
         """
         self.data['beta'].rebin_data(self.time, time_new, self.height, height_new)
 
-    def interpolate_to_grid(self, time_new: np.ndarray, height_new: np.ndarray, method='nearest'):
+    def interpolate_to_grid(self, time_new: np.ndarray, height_new: np.ndarray):
         """Interpolate beta using nearest neighbor."""
         max_height = 100  # m
         max_time = 1  # min
