@@ -84,7 +84,7 @@ def generate_categorize(input_files: dict,
     data['model'] = Model(input_files['model'], data['radar'].altitude)
     time, height = _define_dense_grid()
     _interpolate_to_cloudnet_grid()
-    if 'rpg' in data['radar'].type.lower():
+    if 'rpg' in data['radar'].type.lower() or 'basta' in data['radar'].type.lower():
         data['radar'].filter_speckle_noise()
         data['radar'].filter_1st_gate_artifact()
     for variable in ('v', 'v_sigma', 'ldr'):
