@@ -11,7 +11,7 @@ import netCDF4
 from cloudnetpy.instruments import rpg2nc
 from cloudnetpy.instruments import rpg
 from distutils.dir_util import copy_tree
-from cloudnetpy.quality import Quality
+from cloudnetpy_qc import Quality
 from cloudnetpy.exceptions import ValidTimeStampError
 
 

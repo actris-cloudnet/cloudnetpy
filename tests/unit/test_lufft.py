@@ -9,7 +9,7 @@ import glob
 from cloudnetpy import concat_lib
 import sys
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.quality import Quality
+from cloudnetpy_qc import Quality
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)

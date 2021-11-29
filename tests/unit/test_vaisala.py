@@ -7,6 +7,7 @@ from numpy.testing import assert_equal
 import netCDF4
 import sys
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy_qc import Quality
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -56,6 +57,9 @@ class TestCL51:
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
     all_fun = AllProductsFun(nc, site_meta, date, uuid)
+    quality = Quality(output)
+    res_data = quality.check_data()
+    res_metadata = quality.check_metadata()
 
     def test_variable_names(self):
         keys = {'beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
@@ -71,6 +75,10 @@ class TestCL51:
         for name, method in LidarFun.__dict__.items():
             if 'test_' in name:
                 getattr(self.lidar_fun, name)()
+
+    def test_qc(self):
+        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
+        assert self.quality.n_data_test_failures == 0, self.res_data
 
     def test_variable_values(self):
         assert self.nc.variables['wavelength'][:] == 910.0
@@ -111,6 +119,9 @@ class TestCL31:
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
     all_fun = AllProductsFun(nc, site_meta, date, uuid)
+    quality = Quality(output)
+    res_data = quality.check_data()
+    res_metadata = quality.check_metadata()
 
     def test_variable_names(self):
         keys = {'beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
@@ -126,6 +137,10 @@ class TestCL31:
         for name, method in LidarFun.__dict__.items():
             if 'test_' in name:
                 getattr(self.lidar_fun, name)()
+
+    def test_qc(self):
+        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
+        assert self.quality.n_data_test_failures == 0, self.res_data
 
     def test_variable_values(self):
         assert self.nc.variables['wavelength'][:] == 910.0
@@ -173,6 +188,9 @@ class TestCT25k:
     nc = netCDF4.Dataset(output)
     lidar_fun = LidarFun(nc, site_meta, date, uuid)
     all_fun = AllProductsFun(nc, site_meta, date, uuid)
+    quality = Quality(output)
+    res_data = quality.check_data()
+    res_metadata = quality.check_metadata()
 
     def test_variable_names(self):
         keys = {'beta', 'beta_raw', 'beta_smooth', 'calibration_factor', 'range', 'height',
@@ -188,6 +206,10 @@ class TestCT25k:
         for name, method in LidarFun.__dict__.items():
             if 'test_' in name:
                 getattr(self.lidar_fun, name)()
+
+    def test_qc(self):
+        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
+        assert self.quality.n_data_test_failures == 0, self.res_data
 
     def test_variable_values(self):
         assert self.nc.variables['wavelength'][:] == 905

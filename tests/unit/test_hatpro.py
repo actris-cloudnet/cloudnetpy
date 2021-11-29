@@ -6,8 +6,9 @@ import pytest
 from distutils.dir_util import copy_tree
 import netCDF4
 from cloudnetpy.instruments import hatpro
-from cloudnetpy.quality import Quality
+from cloudnetpy_qc import Quality
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy_qc import Quality
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)

@@ -5,8 +5,7 @@ import pytest
 from cloudnetpy.instruments import mira
 import netCDF4
 import numpy as np
-import numpy.ma as ma
-from cloudnetpy.quality import Quality
+from cloudnetpy_qc import Quality
 from cloudnetpy.exceptions import ValidTimeStampError
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))

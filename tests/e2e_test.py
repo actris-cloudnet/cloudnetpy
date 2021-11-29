@@ -6,7 +6,7 @@ import importlib
 from cloudnetpy.instruments import mira2nc
 from cloudnetpy.instruments import ceilo2nc
 from cloudnetpy.categorize import generate_categorize
-from cloudnetpy.quality import Quality
+from cloudnetpy_qc import Quality
 import netCDF4
 
 

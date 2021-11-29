@@ -72,15 +72,6 @@ Matlab-processed legacy files
 .. autofunction:: plotting.compare_files
 
 
-Quality control
-...............
-
-CloudnetPy contains tools to check the metadata and data of the processed files.
-
-.. automodule:: quality.quality
-   :members:
-
-
 Categorize modules
 ------------------
 

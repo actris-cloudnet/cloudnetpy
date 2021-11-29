@@ -4,8 +4,7 @@ from os import path
 import pytest
 from cloudnetpy.instruments import basta2nc
 import netCDF4
-import numpy as np
-from cloudnetpy.quality import Quality
+from cloudnetpy_qc import Quality
 from cloudnetpy.exceptions import ValidTimeStampError
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))

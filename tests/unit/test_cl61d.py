@@ -6,7 +6,7 @@ import netCDF4
 import numpy as np
 import numpy.ma as ma
 import sys
-from cloudnetpy.quality import Quality
+from cloudnetpy_qc import Quality
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
