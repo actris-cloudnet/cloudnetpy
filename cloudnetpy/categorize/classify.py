@@ -43,6 +43,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
     bits[3] = _fix_undetected_melting_layer(bits)
+    bits = _filter_insects(bits)
     return ClassificationResult(_bits_to_integer(bits),
                                 obs.is_rain,
                                 obs.is_clutter,
@@ -148,3 +149,16 @@ def _bits_to_integer(bits: list) -> np.ndarray:
         ind = np.where(bit)  # works also if bit is None
         int_array[ind] = utils.setbit(int_array[ind].astype(int), n)
     return int_array
+
+
+def _filter_insects(bits: list) -> list:
+    is_melting_layer = bits[3]
+    is_insects = bits[5]
+    is_falling = bits[1]
+    above_melting = utils.ffill(is_melting_layer)
+    ind = np.where(is_insects & above_melting)
+    is_falling[ind] = True
+    is_insects[ind] = False
+    bits[1] = is_falling
+    bits[5] = is_insects
+    return bits
