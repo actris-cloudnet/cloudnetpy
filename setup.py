@@ -22,7 +22,7 @@ setup(
     include_package_data=True,
     python_requires='>=3.8',
     install_requires=['scipy', 'netCDF4', 'matplotlib', 'requests', 'pytz', 'pytest',
-                      'cloudnetpy_qc'],
+                      'cloudnetpy_qc', 'scikit-image'],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Programming Language :: Python :: 3.8",

@@ -7,6 +7,7 @@ from cloudnetpy import utils
 from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize import melting, insects, falling, freezing
 from cloudnetpy.categorize.containers import ClassData, ClassificationResult
+import skimage
 
 
 def classify_measurements(data: dict) -> ClassificationResult:
@@ -169,7 +170,7 @@ def _filter_falling(bits: list) -> list:
     # filter falling ice speckle noise
     is_freezing = bits[2]
     is_falling = bits[1]
-    is_falling_filtered = utils.filter_x_pixels(is_falling)
+    is_falling_filtered = skimage.morphology.remove_small_objects(is_falling, 10, connectivity=1)
     is_filtered = is_falling & ~is_falling_filtered
     ind = np.where(is_freezing & is_filtered)
     is_falling[ind] = False
