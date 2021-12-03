@@ -59,24 +59,24 @@ _CLABEL = {
 
     'target_classification':
         (("_Clear sky", _COLORS['white']),
-         ("Cloud droplets", _COLORS['lightblue']),
+         ("Droplets", _COLORS['lightblue']),
          ("Drizzle or rain", _COLORS['blue']),
-         ("Drizzle/rain & cloud droplets", _COLORS['purple']),
+         ("Drizzle & droplets", _COLORS['purple']),
          ("Ice", _COLORS['lightsteel']),
-         ("Ice & supercooled droplets", _COLORS['darkpurple']),
-         ("Melting ice", _COLORS['orange']),
-         ("Melting ice & cloud droplets", _COLORS['yellowgreen']),
+         ("Ice & droplets", _COLORS['darkpurple']),
+         ("Melting", _COLORS['orange']),
+         ("Melting & droplets", _COLORS['yellowgreen']),
          ("Aerosols", _COLORS['lightbrown']),
          ("Insects", _COLORS['shockred']),
          ("Aerosols & insects", _COLORS['pink'])),
 
     'detection_status':
         (("_Clear sky", _COLORS['white']),
-         ("Good radar & lidar echos", _COLORS['green']),
+         ("Good radar & lidar echoes", _COLORS['green']),
          ("Good radar echo only", _COLORS['lightgreen']),
-         ("Radar corrected for liquid atten.", _COLORS['skyblue']),
-         ("Lidar echo only", _COLORS['yellow']),
-         ("Radar uncorrected for liquid atten.", _COLORS['seaweed_roll']),
+         ("Corrected for liquid att.", _COLORS['skyblue']),
+         ("Lidar only", _COLORS['yellow']),
+         ("Uncorrected for liquid att.", _COLORS['seaweed_roll']),
          ("Radar ground clutter", _COLORS['shockred']),
          ("_Lidar molecular scattering", _COLORS['pink'])),
 
