@@ -41,6 +41,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
     bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
+    bits = _filter_falling(bits)
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
     bits[3] = _fix_undetected_melting_layer(bits)
     bits = _filter_insects(bits)
@@ -161,4 +162,19 @@ def _filter_insects(bits: list) -> list:
     is_insects[ind] = False
     bits[1] = is_falling
     bits[5] = is_insects
+    return bits
+
+
+def _filter_falling(bits: list) -> list:
+    # filter falling ice speckle noise
+    is_freezing = bits[2]
+    is_falling = bits[1]
+    is_falling_filtered = utils.filter_x_pixels(is_falling)
+    is_filtered = is_falling & ~is_falling_filtered
+    ind = np.where(is_freezing & is_filtered)
+    is_falling[ind] = False
+    # in warm these are insects
+    ind = np.where(~is_freezing & is_filtered)
+    is_falling[ind] = False
+    bits[5][ind] = True
     return bits
