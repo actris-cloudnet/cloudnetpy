@@ -4,6 +4,7 @@ from typing import Optional
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import utils
+import skimage
 
 
 @dataclass
@@ -82,6 +83,7 @@ def _find_rain_from_radar_echo(z: np.ndarray,
 
     """
     is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(False)
+    is_rain = skimage.morphology.remove_small_objects(is_rain, 2, connectivity=1)   # Filter hot pixels
     n_profiles = len(time)
     n_steps = utils.n_elements(time, time_buffer, 'time')
     for ind in np.where(is_rain)[0]:

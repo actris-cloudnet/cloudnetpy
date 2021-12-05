@@ -1,6 +1,7 @@
 """ This module contains unit tests for classify-module. """
 import numpy as np
 import numpy.ma as ma
+import pytest
 from numpy.testing import assert_array_equal
 from cloudnetpy.categorize import classify
 from cloudnetpy.categorize import containers
@@ -37,27 +38,33 @@ def test_bits_to_integer():
 
 class TestFindRain:
     time = np.linspace(0, 24, 2880)  # 30 s resolution
-    z = np.zeros((len(time), 10))
 
-    def test_1(self):
+    @pytest.fixture(autouse=True)
+    def run_before_tests(self):
+        self.z = np.zeros((len(self.time), 10))
+        yield
+
+    def test_low_values(self):
         result = np.zeros(len(self.time))
         assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time), result)
 
-    def test_2(self):
+    def test_threshold_value(self):
         self.z[:, 3] = 0.1
         result = np.ones(len(self.time))
         assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time), result)
 
-    def test_3(self):
+    def test_hot_pixel_removal(self):
         self.z[5, 3] = 0.1
-        result = np.ones(len(self.time))
-        result[3:7] = 1
-        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1), result)
+        result = np.zeros(len(self.time))
+        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time,
+                                                                 time_buffer=1), result)
 
-    def test_4(self):
-        self.z[1440, 3] = 0.1
-        result = np.ones(len(self.time))
-        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1500), result)
+    def test_rain_spreading(self):
+        self.z[10:12, 3] = 0.1
+        result = np.zeros(len(self.time))
+        result[8:14] = 1
+        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time,
+                                                                 time_buffer=1), result)
 
 
 def test_find_clutter():
