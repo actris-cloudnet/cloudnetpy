@@ -45,17 +45,16 @@ def find_melting_layer(obs: ClassData, smooth: Optional[bool] = True) -> np.ndar
         2-D boolean array denoting the melting layer.
 
     """
-
     melting_layer = np.zeros(obs.tw.shape, dtype=bool)
 
-    is_ldr = False
     ldr_prof = None
     ldr_dprof = None
     ldr_diff = None
+    width_prof = None
 
     if hasattr(obs, 'ldr'):
+        # Required for peak detection
         ldr_diff = np.diff(obs.ldr, axis=1).filled(0)
-        is_ldr = True
 
     t_range = _find_model_temperature_range(obs.model_type)
 
@@ -63,32 +62,22 @@ def find_melting_layer(obs: ClassData, smooth: Optional[bool] = True) -> np.ndar
 
         temp_indices = _get_temp_indices(t_prof, t_range)
         z_prof = obs.z[ind, temp_indices]
-        height = obs.height[temp_indices]
-        width_prof = obs.width[ind, temp_indices]
+        v_prof = obs.v[ind, temp_indices]
 
-        if is_ldr is True:
+        if ldr_diff is not None:
             ldr_prof = obs.ldr[ind, temp_indices]
             ldr_dprof = ldr_diff[ind, temp_indices]
 
-        v_prof = obs.v[ind, temp_indices]
-
         if ma.count(ldr_prof) > 3 or ma.count(v_prof) > 3:
-
             try:
-                if is_ldr is True:
-                    ldr_peak = int(np.argmax(ldr_prof))
-                else:
-                    raise ValueError
-                base, top = _basetop(ldr_dprof, ldr_peak)
-
-                if _is_good_ldr_peak(ldr_prof, v_prof, z_prof, (base, ldr_peak, top)):
-                    melting_layer[ind, temp_indices[ldr_peak-1]:temp_indices[top]+1] = True
-
+                indices = _find_melting_layer_from_ldr(ldr_prof, ldr_dprof, v_prof, z_prof)
             except (ValueError, IndexError):
-
+                height = obs.height[temp_indices]
+                if hasattr(obs, 'width'):
+                    width_prof = obs.width[ind, temp_indices]
                 indices = _find_melting_layer_from_v(v_prof, width_prof, height)
-                if indices is not None:
-                    melting_layer[ind, indices] = True
+            if indices is not None:
+                melting_layer[ind, temp_indices[indices]] = True
 
     if smooth:
         smoothed_layer = gaussian_filter(np.array(melting_layer, dtype=float), (2, 0.1))
@@ -97,8 +86,29 @@ def find_melting_layer(obs: ClassData, smooth: Optional[bool] = True) -> np.ndar
     return melting_layer
 
 
+def _find_melting_layer_from_ldr(ldr_prof: np.ndarray,
+                                 ldr_dprof: np.ndarray,
+                                 v_prof: np.ndarray,
+                                 z_prof: np.ndarray) -> Union[np.ndarray, None]:
+    if ldr_prof is None:
+        raise ValueError
+
+    peak = int(np.argmax(ldr_prof))
+    base, top = _basetop(ldr_dprof, peak)
+    conditions = (ldr_prof[peak] - ldr_prof[base] > 4,
+                  ldr_prof[peak] > -30,
+                  z_prof[base] > -25,
+                  v_prof[base] < -1)
+
+    if all(conditions):
+        base = int(np.floor(base + (peak - base)/2))
+        indices = np.arange(base, top)
+        return indices
+    return None
+
+
 def _find_melting_layer_from_v(v_prof: np.ndarray,
-                               width_prof: np.ndarray,
+                               width_prof: Union[np.ndarray, None],
                                height: np.ndarray) -> Union[np.ndarray, None]:
     v = np.copy(v_prof[:-1])
     v_diff = np.diff(v_prof)
@@ -110,29 +120,23 @@ def _find_melting_layer_from_v(v_prof: np.ndarray,
         base = np.where(n_increasing[:top] == 0)[0][-1]
     except IndexError:
         return None
-    conditions = (width_prof[base] - width_prof[top] > 0.3,
-                  v_prof[top] - v_prof[base] > 1,
-                  50 < (height[top] - height[base]) < 300,
-                  v_prof[base] < -1)
+    if width_prof is not None:
+        conditions = (width_prof[base] - width_prof[top] > 0.2,
+                      v_prof[top] - v_prof[base] > 0.5,
+                      50 < (height[top] - height[base]) < 1000,
+                      v_prof[base] < -2)
+    else:
+        conditions = (v_prof[top] - v_prof[base] > 2,
+                      50 < (height[top] - height[base]) < 1000,
+                      v_prof[base] < -2)
     if all(conditions):
+        base = int(round(top - (top-base)/2))
         return np.arange(base, top)
-
-
-def _is_good_ldr_peak(ldr: np.ndarray,
-                      v: np.ndarray,
-                      z: np.ndarray,
-                      indices: Tuple[int, int, int]) -> bool:
-    base, peak, top = indices
-    conditions = (ldr[peak] - ldr[top] > 3,
-                  ldr[peak] - ldr[base] > 4,
-                  ldr[peak] > -30,
-                  z[base] > -25,
-                  v[base] < -1)
-    return all(conditions)
+    return None
 
 
 def _basetop(dprof: np.ndarray, pind: int) -> Tuple[int, int]:
-    """Finds the base and top of peak in ldr or v profile."""
+    """Finds the base and top of ldr peak."""
     top = droplet.ind_top(dprof, pind, len(dprof), 10, 2)
     base = droplet.ind_base(dprof, pind, 10, 2)
     return base, top

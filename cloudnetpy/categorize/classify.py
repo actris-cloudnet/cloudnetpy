@@ -35,7 +35,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
 
     """
     obs = ClassData(data)
-    bits = [None] * 6
+    bits = [np.array([])] * 6
     liquid = droplet.find_liquid(obs)
     bits[3] = melting.find_melting_layer(obs)
     bits[2] = freezing.find_freezing_region(obs, bits[3])
@@ -177,5 +177,6 @@ def _filter_falling(bits: list) -> list:
     # in warm these are insects
     ind = np.where(~is_freezing & is_filtered)
     is_falling[ind] = False
+    bits[1] = is_falling
     bits[5][ind] = True
     return bits

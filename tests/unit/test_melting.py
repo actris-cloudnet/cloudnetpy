@@ -29,21 +29,6 @@ def test_get_temp_indices(t_prof, t_range, result):
     assert_array_equal(indices, result)
 
 
-@pytest.mark.parametrize("ldr, v, indices, result", [
-    ([0, 1, 20, 100, 30, 2, 1], [-1, -2, -4, -1, 0, 0, 0], (1, 3, 6), True)
-])
-def test__is_good_ldr_peak(ldr, v, indices, result):
-    assert melting._is_good_ldr_peak(ldr, v, indices) is result
-
-
-@pytest.mark.parametrize("v, indices, result", [
-    ([-1, -2.1, -1, 0], (1, 2), True),
-    ([-1, -1.9, -1, 0], (1, 2), False),
-])
-def test__is_good_ldr_peak(v, indices, result):
-    assert melting._is_good_v_peak(v, *indices) is result
-
-
 class Obs:
     def __init__(self):
         self.tw = np.tile(np.linspace(275, 270, 10), (2, 1))
@@ -52,12 +37,14 @@ class Obs:
                             [1, 1, 1, 3, 150, 3, 1, 1, 1, 1]])
         self.v = ma.array([[-1, -1, -4, -2, -2, -1, 0, 0, 0, 0],
                           [-1, -1, -4, -2, -2, -1, 0, 0, 0, 0]])
+        self.z = ma.array([[1, 1, 1, 1, 1, 3, 1, 1, 1, 1],
+                            [1, 1, 1, 1, 1, 3, 1, 1, 1, 1]])
         self.model_type = 'ecmwf'
 
 
 def test_find_melting_layer():
     obs = Obs()
     layer = melting.find_melting_layer(obs, smooth=False)
-    result = np.array([[0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-                       [0, 0, 0, 1, 1, 1, 0, 0, 0, 0]])
+    result = np.array([[0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+                       [0, 0, 0, 1, 1, 0, 0, 0, 0, 0]])
     assert_array_equal(layer, result)
