@@ -3,11 +3,11 @@ radar / lidar measurements.
 """
 import numpy as np
 import numpy.ma as ma
+import skimage
 from cloudnetpy import utils
 from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize import melting, insects, falling, freezing
 from cloudnetpy.categorize.containers import ClassData, ClassificationResult
-import skimage
 
 
 def classify_measurements(data: dict) -> ClassificationResult:
@@ -40,7 +40,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[3] = melting.find_melting_layer(obs)
     bits[2] = freezing.find_freezing_region(obs, bits[3])
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
-    bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
+    bits[5] = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
     bits = _filter_falling(bits)
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
@@ -171,7 +171,7 @@ def _filter_falling(bits: list) -> list:
     is_freezing = bits[2]
     is_falling = bits[1]
     is_falling_filtered = skimage.morphology.remove_small_objects(is_falling, 10, connectivity=1)
-    is_filtered = is_falling & ~is_falling_filtered
+    is_filtered = is_falling & ~np.array(is_falling_filtered)
     ind = np.where(is_freezing & is_filtered)
     is_falling[ind] = False
     # in warm these are insects

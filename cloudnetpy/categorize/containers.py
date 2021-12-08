@@ -3,8 +3,8 @@ import logging
 from typing import Optional
 import numpy as np
 import numpy.ma as ma
-from cloudnetpy import utils
 import skimage
+from cloudnetpy import utils
 
 
 @dataclass

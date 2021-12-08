@@ -11,7 +11,7 @@ from cloudnetpy.categorize.containers import ClassData
 def find_insects(obs: ClassData,
                  melting_layer: np.ndarray,
                  liquid_layers: np.ndarray,
-                 prob_lim: Optional[float] = 0.8) -> Tuple[np.ndarray, np.ndarray]:
+                 prob_lim: Optional[float] = 0.8) -> np.ndarray:
     """Returns insect probability and boolean array of insect presence.
 
     Insects are classified by estimating heuristic probability
@@ -35,7 +35,6 @@ def find_insects(obs: ClassData,
     Returns:
         tuple: 2-element tuple containing
 
-        - 2-D probability of pixel containing insects.
         - 2-D boolean flag of insects presence.
 
     Notes:
@@ -45,7 +44,7 @@ def find_insects(obs: ClassData,
     probabilities = _insect_probability(obs)
     insect_prob = _screen_insects(*probabilities, melting_layer, liquid_layers, obs)
     is_insects = insect_prob > prob_lim
-    return is_insects, ma.masked_where(insect_prob == 0, insect_prob)
+    return is_insects
 
 
 def _insect_probability(obs: ClassData) -> Tuple[np.ndarray, np.ndarray]:
