@@ -43,9 +43,10 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[5] = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
     bits = _filter_falling(bits)
+    for _ in range(5):
+        bits[3] = _fix_undetected_melting_layer(bits)
+        bits = _filter_insects(bits)
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
-    bits[3] = _fix_undetected_melting_layer(bits)
-    bits = _filter_insects(bits)
     return ClassificationResult(_bits_to_integer(bits),
                                 obs.is_rain,
                                 obs.is_clutter,
@@ -157,10 +158,34 @@ def _filter_insects(bits: list) -> list:
     is_melting_layer = bits[3]
     is_insects = bits[5]
     is_falling = bits[1]
+
+    # Remove above melting layer
     above_melting = utils.ffill(is_melting_layer)
     ind = np.where(is_insects & above_melting)
     is_falling[ind] = True
     is_insects[ind] = False
+
+    # remove around melting layer:
+    original_insects = np.copy(is_insects)
+    n_gates = 5
+    for x, y in zip(*np.where(is_melting_layer)):
+        try:
+            # change insects to drizzle below melting layer pixel
+            ind1 = np.arange(y-n_gates, y)
+            ind11 = np.where(original_insects[x, ind1])[0]
+            n_drizzle = sum(is_falling[x, :y])
+            if n_drizzle > 5:
+                is_falling[x, ind1[ind11]] = True
+                is_insects[x, ind1[ind11]] = False
+            else:
+                continue
+            # change insects on the right and left of melting layer pixel to drizzle
+            ind1 = np.arange(x-n_gates, x+n_gates+1)
+            ind11 = np.where(original_insects[ind1, y])[0]
+            is_falling[ind1[ind11], y-1:y+2] = True
+            is_insects[ind1[ind11], y-1:y+2] = False
+        except IndexError:
+            continue
     bits[1] = is_falling
     bits[5] = is_insects
     return bits
@@ -174,7 +199,7 @@ def _filter_falling(bits: list) -> list:
     is_filtered = is_falling & ~np.array(is_falling_filtered)
     ind = np.where(is_freezing & is_filtered)
     is_falling[ind] = False
-    # in warm these are insects
+    # in warm these are (probably) insects
     ind = np.where(~is_freezing & is_filtered)
     is_falling[ind] = False
     bits[1] = is_falling

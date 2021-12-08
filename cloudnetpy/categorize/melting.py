@@ -98,7 +98,7 @@ def _find_melting_layer_from_ldr(ldr_prof: np.ndarray,
     conditions = (ldr_prof[peak] - ldr_prof[base] > 4,
                   ldr_prof[peak] > -30,
                   z_prof[base] > -25,
-                  v_prof[base] < -1)
+                  v_prof[base] < -1.5)
 
     if all(conditions):
         base = int(np.floor(base + (peak - base)/2))
