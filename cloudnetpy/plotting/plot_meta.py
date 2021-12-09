@@ -64,7 +64,7 @@ _CLABEL = {
          ("Drizzle & droplets", _COLORS['purple']),
          ("Ice", _COLORS['lightsteel']),
          ("Ice & droplets", _COLORS['darkpurple']),
-         ("Melting", _COLORS['orange']),
+         ("Melting ice", _COLORS['orange']),
          ("Melting & droplets", _COLORS['yellowgreen']),
          ("Aerosols", _COLORS['lightbrown']),
          ("Insects", _COLORS['shockred']),
@@ -72,14 +72,14 @@ _CLABEL = {
 
     'detection_status':
         (("_Clear sky", _COLORS['white']),
-         ("Lidar echo only", _COLORS['yellow']),
-         ("Uncorrected liquid atten.", _COLORS['seaweed_roll']),
-         ("Good radar & lidar", _COLORS['green']),
+         ("Lidar only", _COLORS['yellow']),
+         ("Uncorrected atten.", _COLORS['seaweed_roll']),
+         ("Radar & lidar", _COLORS['green']),
          ("_No radar but unknown atten.", _COLORS['purple']),
-         ("Radar echo only", _COLORS['lightgreen']),
+         ("Radar only", _COLORS['lightgreen']),
          ("_No radar but known atten.", _COLORS['orange']),
-         ("Corrected liquid atten.", _COLORS['skyblue']),
-         ("Radar ground clutter", _COLORS['shockred']),
+         ("Corrected atten.", _COLORS['skyblue']),
+         ("Clutter", _COLORS['shockred']),
          ("_Lidar molecular scattering", _COLORS['pink'])),
 
     'iwc_retrieval_status':

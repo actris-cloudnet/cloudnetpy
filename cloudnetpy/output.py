@@ -54,9 +54,9 @@ def save_product_file(short_id: str,
     nc.cloudnet_file_type = short_id
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
     copy_variables(obj.dataset, nc, vars_from_source)
-    nc.title = f"{human_readable_file_type.capitalize()} file from {obj.dataset.location}"
+    nc.title = f"{human_readable_file_type.capitalize()} products from {obj.dataset.location}"
     nc.source_file_uuids = get_source_uuids(nc, obj)
-    copy_global(obj.dataset, nc, ('location', 'day', 'month', 'year'))
+    copy_global(obj.dataset, nc, ('location', 'day', 'month', 'year', 'source'))
     merge_history(nc, human_readable_file_type, {'categorize': obj})
     nc.references = get_references(short_id)
     nc.close()

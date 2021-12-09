@@ -156,12 +156,14 @@ CLASSIFICATION_ATTRIBUTES = {
     'target_classification': MetaData(
         long_name='Target classification',
         comment=COMMENTS['target_classification'],
-        definition=DEFINITIONS['target_classification']
+        definition=DEFINITIONS['target_classification'],
+        units='1'
     ),
     'detection_status': MetaData(
         long_name='Radar and lidar detection status',
         comment=COMMENTS['detection_status'],
-        definition=DEFINITIONS['detection_status']
+        definition=DEFINITIONS['detection_status'],
+        units='1'
     ),
     'cloud_top_height_amsl': MetaData(
         long_name='Height of cloud top above mean sea level',
