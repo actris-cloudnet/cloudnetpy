@@ -14,18 +14,6 @@ PlotMeta = namedtuple('PlotMeta', FIELDS)
 PlotMeta.__new__.__defaults__ = (None,) * len(FIELDS)
 
 _HIDDEN = {
-    'detection_status':
-        ("Clear sky",
-         "Lidar echo only",
-         "Radar corrected for liquid atten",
-         "Good radar & lidar echos",
-         "_No radar but unknown atten.",
-         "Good radar echo only",
-         "_No radar mut known atten.",
-         "Radar uncorrected for liquid atten.",
-         "Radar ground clutter",
-         "Lidar molecular scattering"),
-
     'lwc_retrieval_status':
         ("No liquid water",
          "Reliable retrieval",
@@ -39,10 +27,6 @@ _HIDDEN = {
 ATTRIBUTES = {
     'specific_humidity': PlotMeta(
         rename='q'
-    ),
-    'detection_status': PlotMeta(
-        hidden=_HIDDEN['detection_status'],
-        swapped=[(1, 4), (2, 5), (1, 3), (2, 3), (3, 4)]
     ),
     'iwc_retrieval_status': PlotMeta(
         swapped=[(2, 3)]
