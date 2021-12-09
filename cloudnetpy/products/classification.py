@@ -73,13 +73,15 @@ def _get_target_classification(categorize_bits: CategorizeBits) -> np.ndarray:
 def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
     bits = categorize_bits.quality_bits
     status = np.zeros(bits['radar'].shape, dtype=int)
-    status[bits['radar'] & bits['lidar']] = 1
-    status[bits['radar'] & ~bits['lidar'] & ~bits['attenuated']] = 2
-    status[bits['radar'] & bits['corrected']] = 3
-    status[bits['lidar'] & ~bits['radar']] = 4
-    status[bits['radar'] & bits['attenuated'] & ~bits['corrected']] = 5
-    status[bits['clutter']] = 6
-    status[bits['molecular'] & ~bits['radar']] = 7
+    status[bits['lidar'] & ~bits['radar']] = 1
+    status[bits['radar'] & bits['lidar']] = 3
+    status[~bits['radar'] & bits['attenuated'] & ~bits['corrected']] = 4
+    status[bits['radar'] & ~bits['lidar'] & ~bits['attenuated']] = 5
+    status[~bits['radar'] & bits['attenuated'] & bits['corrected']] = 6
+    status[bits['radar'] & bits['corrected']] = 7
+    status[bits['radar'] & bits['attenuated'] & ~bits['corrected']] = 2
+    status[bits['clutter']] = 8
+    status[bits['molecular'] & ~bits['radar']] = 9
     return status
 
 
@@ -139,13 +141,15 @@ DEFINITIONS = {
     'detection_status':
         ('\n'
          'Value 0: Clear sky.\n'
-         'Value 1: Good radar and lidar echos.\n'
-         'Value 2: Good radar echo only.\n'
-         'Value 3: Radar echo, corrected for liquid attenuation.\n'
-         'Value 4: Lidar echo only.\n'
-         'Value 5: Radar echo, uncorrected for liquid attenuation.\n'         
-         'Value 6: Radar ground clutter.\n'
-         'Value 7: Lidar clear-air molecular scattering.'),
+         'Value 1: Lidar echo only.\n'
+         'Value 2: Radar echo but reflectivity may be unreliable as attenuation by rain, melting ice or liquid cloud has not been corrected.\n'
+         'Value 3: Good radar and lidar echos.\n'
+         'Value 4: No radar echo but rain or liquid cloud beneath mean that attenuation that would be experienced is unknown.\n'
+         'Value 5: Good radar echo only.\n'
+         'Value 6: No radar echo but known attenuation.\n'
+         'Value 7: Radar echo corrected for liquid attenuation using microwave radiometer data.\n'
+         'Value 8: Radar ground clutter.\n'
+         'Value 9: Lidar clear-air molecular scattering.'),
 }
 
 CLASSIFICATION_ATTRIBUTES = {

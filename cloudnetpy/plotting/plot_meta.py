@@ -72,11 +72,13 @@ _CLABEL = {
 
     'detection_status':
         (("_Clear sky", _COLORS['white']),
-         ("Good radar & lidar echoes", _COLORS['green']),
-         ("Good radar echo only", _COLORS['lightgreen']),
-         ("Corrected for liquid att.", _COLORS['skyblue']),
          ("Lidar only", _COLORS['yellow']),
-         ("Uncorrected for liquid att.", _COLORS['seaweed_roll']),
+         ("Radar echo but uncorrected atten", _COLORS['seaweed_roll']),
+         ("Good radar & lidar echoes", _COLORS['green']),
+         ("_No radar but unknown atten.", _COLORS['purple']),
+         ("Good radar echo only", _COLORS['lightgreen']),
+         ("_No radar but known atten.", _COLORS['orange']),
+         ("Corrected for liquid att.", _COLORS['skyblue']),
          ("Radar ground clutter", _COLORS['shockred']),
          ("_Lidar molecular scattering", _COLORS['pink'])),
 

@@ -1,6 +1,5 @@
 import numpy as np
 from numpy.testing import assert_array_equal
-import pytest
 from cloudnetpy.products import classification
 
 
@@ -16,7 +15,7 @@ class CategorizeBits:
                                                      [1, 1, 0, 0, 0, 0]], dtype=bool),
                               'aerosol': np.asarray([[1, 0, 1, 0, 0, 0],
                                                       [0, 0, 0, 0, 0, 0]], dtype=bool),
-                              'insect': np.asarray([[1, 1, 0, 0, 0, 0],
+                              'insect': np.asarray([[0, 1, 0, 0, 0, 0],
                                                      [0, 0, 1, 0, 0, 0]], dtype=bool),
                                }
         self.quality_bits = {'radar': np.asarray([[0, 0, 0, 1, 1, 1],
@@ -33,18 +32,20 @@ class CategorizeBits:
                                                       [1, 1, 0, 0, 0, 0]], dtype=bool)}
 
 
-@pytest.mark.parametrize('value', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-def test_get_target_classification(value):
+def test_get_target_classification():
     bits = CategorizeBits()
     target_classification = classification._get_target_classification(bits)
-    assert value in target_classification
+    expected = np.array([[8, 9, 8, 0, 3, 1],
+                         [6, 7, 9, 5, 2, 4]])
+    assert_array_equal(target_classification, expected)
 
 
-@pytest.mark.parametrize('value', [0, 1, 2, 3, 4, 5, 6, 7])
-def test_get_detection_status_value(value):
+def test_get_detection_status():
     bits = CategorizeBits()
     detection_status = classification._get_detection_status(bits)
-    assert value in detection_status
+    expected = np.array([[9, 4, 8, 8, 5, 2],
+                         [7, 9, 4, 3, 3, 5]])
+    assert_array_equal(detection_status, expected)
 
 
 def test_find_cloud_mask():
