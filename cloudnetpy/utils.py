@@ -616,7 +616,7 @@ def get_uuid() -> str:
     return uuid.uuid4().hex
 
 
-def get_wl_band(radar_frequency: Union[float, int]) -> int:
+def get_wl_band(radar_frequency: float) -> int:
     """Returns integer corresponding to radar frequency.
 
     Args:
@@ -627,6 +627,11 @@ def get_wl_band(radar_frequency: Union[float, int]) -> int:
 
     """
     return 0 if (30 < radar_frequency < 40) else 1
+
+
+def get_frequency(wl_band: int) -> str:
+    """Returns radar frequency string corresponding to wl band."""
+    return '35.5' if wl_band == 0 else '94'
 
 
 def transpose(data: np.ndarray) -> np.ndarray:

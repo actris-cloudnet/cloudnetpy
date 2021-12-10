@@ -50,10 +50,12 @@ def generate_iwc(categorize_file: str,
     iwc_source.append_iwc(ice_classification)
     iwc_source.append_bias()
     iwc_source.append_sensitivity()
-    iwc_source.append_error(ice_classification)
+    lwp_prior, bias = iwc_source.append_error(ice_classification)
     iwc_source.append_status(ice_classification)
     date = iwc_source.get_date()
     attributes = output.add_time_attribute(IWC_ATTRIBUTES, date)
+    attributes = _add_iwc_comment(attributes, iwc_source)
+    attributes = _add_iwc_error_comment(attributes, lwp_prior, bias)
     output.update_attributes(iwc_source.data, attributes)
     uuid = output.save_product_file('iwc', iwc_source, output_file, uuid)
     iwc_source.close()
@@ -138,7 +140,7 @@ class IwcSource(DataSource):
         iwc[ice_classification.ice_above_rain] = ma.masked
         self.append_data(iwc, 'iwc')
 
-    def append_error(self, ice_classification: IceClassification) -> None:
+    def append_error(self, ice_classification: IceClassification) -> tuple:
         """Estimates error of ice water content."""
 
         def _calc_random_error() -> np.ndarray:
@@ -149,9 +151,9 @@ class IwcSource(DataSource):
         def _calc_error_in_uncorrected_ice() -> np.ndarray:
             spec_liq_atten = 1.0 if self.wl_band == 0 else 4.5
             liq_atten_scaled = spec_liq_atten * self.coeffs.Z
-            lwp_prior = 250  # g / m-2
             return lwp_prior * liq_atten_scaled * 2 * 1e-3 * 10
 
+        lwp_prior = 250  # g m-2
         retrieval_uncertainty = 1.7  # dB
         random_error = _calc_random_error()
         error_uncorrected = _calc_error_in_uncorrected_ice()
@@ -160,6 +162,7 @@ class IwcSource(DataSource):
                                                                      error_uncorrected)
         iwc_error[(~ice_classification.is_ice | ice_classification.ice_above_rain)] = ma.masked
         self.append_data(iwc_error, 'iwc_error')
+        return lwp_prior, retrieval_uncertainty
 
     def append_status(self, ice_classification: IceClassification) -> None:
         """Returns information about the status of iwc retrieval."""
@@ -187,7 +190,7 @@ class IwcSource(DataSource):
 
     def _get_z_factor(self) -> float:
         """Returns empirical scaling factor for radar echo."""
-        return utils.lin2db(self.coeffs.K2liquid0 / 0.93)
+        return float(utils.lin2db(self.coeffs.K2liquid0 / 0.93))
 
     @staticmethod
     def _get_temperature(categorize_file: str) -> np.ndarray:
@@ -209,22 +212,42 @@ class IwcSource(DataSource):
                       + coeffs.c) * G_TO_KG
 
 
-COMMENTS = {
-    'iwc':
-        ('This variable was calculated from the radar reflectivity factor, after\n'
-         'correction for gaseous and liquid attenuation, and temperature taken\n'
-         'from a forecast model, using an empirical formula.'),
-
-    'iwc_error':
-        ('This variable is an estimate of the one-standard-deviation random error\n'
+def _add_iwc_error_comment(attributes: dict, lwp_prior, uncertainty: float) -> dict:
+    attributes['iwc_error'] = attributes['iwc_error']._replace(comment='This variable is an estimate of the one-standard-deviation random error\n'
          'in ice water content due to both the uncertainty of the retrieval\n'
-         '(about +50%/-33%, or 1.7 dB), and the random error in radar reflectivity\n'
+         f'(about {uncertainty} dB), and the random error in radar reflectivity\n'
          'factor from which ice water content was calculated. When liquid water is\n'
          'present beneath the ice but no microwave radiometer data were available to\n'
          'correct for the associated attenuation, the error also includes a\n'
-         'contribution equivalent to approximately 250 g m-2 of liquid water path\n'
-         'being uncorrected for.'),
+         f'contribution equivalent to approximately {lwp_prior} g m-2 of liquid water path\n'
+         'being uncorrected for.')
+    return attributes
 
+
+def _add_iwc_comment(attributes: dict, iwc: IwcSource) -> dict:
+    freq = utils.get_frequency(iwc.wl_band)
+    coeffs = iwc.coeffs
+    factor = round((coeffs[0]/0.93)*1000)/1000
+    attributes['iwc'] = attributes['iwc']._replace(comment=f"This variable was calculated from the {freq}-GHz radar reflectivity factor after correction for gaseous attenuation,\n"
+    "and temperature taken from a forecast model, using the following empirical formula:\n"
+    f"log10(iwc[g m-3]) = {coeffs[1]}Z[dBZ]T[degC] + {coeffs[3]}Z[dBZ] + {coeffs[2]}T[degC] + {coeffs[4]}.\n"
+    "In this formula Z is taken to be defined such that all frequencies of radar would measure the same Z in Rayleigh scattering ice.\n"
+    "However, the radar is more likely to have been calibrated such that all frequencies would measure the same Z in Rayleigh scattering\n"
+    f"liquid cloud at 0 degrees C. The measured Z is therefore multiplied by |K(liquid,0degC,{freq}GHz)|^2/0.93 = {factor} before applying this formula.\n"
+    "The formula has been used where the \"categorization\" data has diagnosed that the radar echo is due to ice, but note that in some cases\n"
+    "supercooled drizzle will erroneously be identified as ice. Missing data indicates either that ice cloud was present but it was only\n"
+    "detected by the lidar so its ice water content could not be estimated, or that there was rain below the ice associated with uncertain\n"
+    "attenuation of the reflectivities in the ice.\n"
+    "Note that where microwave radiometer liquid water path was available it was used to correct the radar for liquid attenuation when liquid\n"
+    "cloud occurred below the ice; this is indicated a value of 3 in the iwc_retrieval_status variable.  There is some uncertainty in this\n"
+    "prodedure which is reflected by an increase in the associated values in the iwc_error variable.\n"
+    "When microwave radiometer data were not available and liquid cloud occurred below the ice, the retrieval was still performed but its\n"
+    "reliability is questionable due to the uncorrected liquid water attenuation. This is indicated by a value of 2 in the iwc_retrieval_status\n"
+    "variable, and an increase in the value of the iwc_error variable")
+    return attributes
+
+
+COMMENTS = {
     'iwc_bias':
         ('This variable is an estimate of the possible systematic error in \n'
          'ice water content due to the calibration error of the radar \n'
@@ -251,13 +274,12 @@ DEFINITIONS = {
      'Value 0: No ice present.\n'
      'Value 1: Reliable retrieval.\n'
      'Value 2: Unreliable retrieval: Radar corrected using liquid water path\n'
-     '         data which can be inaccurate.'
+     '         data which can be inaccurate.\n'
      'Value 3: Unreliable retrieval: Uncorrected liquid attenuation due to\n'
-     '         missing liquid water path data.'
+     '         missing liquid water path data.\n'
      'Value 4: No retrieval: Ice detected only by the lidar.\n'
-     'Value 5: No retrieval: Rain below the detected ice leads to large\n'
-     '         uncertainties.\n'
-     'Value 6: Clear sky above rain and wet-bulb temperature less than 0degC: '
+     'Value 5: No retrieval: Rain below the detected ice leads to large uncertainties.\n'
+     'Value 6: Clear sky above rain and wet-bulb temperature less than 0degC:\n'
      '         if rain attenuation is strong, ice could be present but undetected.\n'
      'Value 7: Drizzle or rain that would have been classified as ice if the\n'
      '         wet-bulb temperature were less than 0degC.')
@@ -267,16 +289,14 @@ IWC_ATTRIBUTES = {
     'iwc': MetaData(
         long_name='Ice water content',
         units='kg m-3',
-        comment=COMMENTS['iwc'],
-        ancillary_variables='iwc_sensitivity iwc_bias'
+        ancillary_variables='iwc_error iwc_sensitivity iwc_bias'
     ),
     'iwc_error': MetaData(
-        long_name='Random error in ice water content, one standard deviation',
+        long_name='Random error in ice water content',
         units='dB',
-        comment=COMMENTS['iwc_error']
     ),
     'iwc_bias': MetaData(
-        long_name='Possible bias in ice water content, one standard deviation',
+        long_name='Possible bias in ice water content',
         units='dB',
         comment=COMMENTS['iwc_bias']
     ),
@@ -289,6 +309,7 @@ IWC_ATTRIBUTES = {
         long_name='Ice water content retrieval status',
         comment=COMMENTS['iwc_retrieval_status'],
         definition=DEFINITIONS['iwc_retrieval_status'],
+        units='1'
     ),
     'iwc_inc_rain': MetaData(
         long_name='Ice water content including rain',
