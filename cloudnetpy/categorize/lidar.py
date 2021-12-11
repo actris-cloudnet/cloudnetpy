@@ -18,16 +18,6 @@ class Lidar(DataSource):
         self.append_data(self.getvar('beta'), 'beta')
         self._add_meta()
 
-    def rebin_to_grid(self, time_new: np.ndarray, height_new: np.ndarray) -> None:
-        """Rebins lidar data in time and height using mean.
-
-        Args:
-            time_new: 1-D target time array (fraction hour).
-            height_new: 1-D target height array (m).
-
-        """
-        self.data['beta'].rebin_data(self.time, time_new, self.height, height_new)
-
     def interpolate_to_grid(self, time_new: np.ndarray, height_new: np.ndarray):
         """Interpolate beta using nearest neighbor."""
         max_height = 100  # m

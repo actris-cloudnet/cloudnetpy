@@ -52,25 +52,18 @@ class CloudnetArray:
 
     def rebin_data(self,
                    time: np.ndarray,
-                   time_new: np.ndarray,
-                   height: Optional[np.ndarray] = None,
-                   height_new: Optional[np.ndarray] = None) -> None:
-        """Rebins `data` in time and optionally interpolates in height.
+                   time_new: np.ndarray) -> None:
+        """Rebins `data` in time.
 
         Args:
             time: 1D time array.
             time_new: 1D new time array.
-            height: 1D height array.
-            height_new: 1D new height array. Should be given if also `height` is given.
 
         """
         if self.data.ndim == 1:
-            self.data = utils.rebin_1d(time, self.data.astype(float), time_new)
+            self.data = utils.rebin_1d(time, self.data, time_new)
         else:
             self.data = utils.rebin_2d(time, self.data, time_new)
-            if height is not None and height_new is not None:
-                self.data = utils.interpolate_2d_mask(time_new, height, self.data,
-                                                      time_new, height_new)
 
     def fetch_attributes(self) -> list:
         """Returns list of user-defined attributes."""
