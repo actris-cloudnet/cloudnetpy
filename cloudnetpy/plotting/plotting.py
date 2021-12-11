@@ -235,8 +235,7 @@ def _plot_bar_data(ax, data: ndarray, time: ndarray):
     """
     # TODO: unit change somewhere else
     ax.plot(time, data/1000, color='navy')
-    ax.bar(time, data.filled(0)/1000, width=1/120, align='center', alpha=0.5,
-           color='royalblue')
+    ax.bar(time, data.filled(0)/1000, width=1/120, align='center', alpha=0.5, color='royalblue')
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
@@ -263,10 +262,11 @@ def _plot_segment_data(ax, data: ndarray, name: str, axes: tuple):
         return data_in, colors, labels
 
     variables = ATTRIBUTES[name]
+    original_mask = np.copy(data.mask)
     data, cbar, clabel = _hide_segments(data)
     cmap = ListedColormap(cbar)
-    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5,
-                       vmax=len(cbar) - 0.5)
+    data[original_mask] = 999
+    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5, vmax=len(cbar) - 0.5)
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(len(clabel)))
     colorbar.ax.set_yticklabels(clabel, fontsize=13)

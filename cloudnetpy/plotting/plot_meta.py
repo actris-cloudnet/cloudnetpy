@@ -50,7 +50,8 @@ _COLORS = {
     'gray': "#d3d3d3",
     'lightbrown': "#CEBC89",
     'lightsteel': "#a0b0bb",
-    'steelblue': "#4682b4"
+    'steelblue': "#4682b4",
+    'mask': "#C8C8C8"
 }
 
 # Labels (and corresponding data) starting with an underscore are NOT shown:
@@ -68,7 +69,8 @@ _CLABEL = {
          ("Melting & droplets", _COLORS['yellowgreen']),
          ("Aerosols", _COLORS['lightbrown']),
          ("Insects", _COLORS['shockred']),
-         ("Aerosols & insects", _COLORS['pink'])),
+         ("Aerosols & insects", _COLORS['pink']),
+         ("Undefined", _COLORS['mask'])),
 
     'detection_status':
         (("_Clear sky", _COLORS['white']),
