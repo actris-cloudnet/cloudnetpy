@@ -186,9 +186,11 @@ class Radar(DataSource):
             and the original Cloudnet Matlab implementation.
 
         """
+        missing_values = np.where(self.data['Z'][:] == MISSING_VALUE)
         z_corrected = self.data['Z'][:] + attenuations['radar_gas_atten']
         ind = ma.where(attenuations['radar_liquid_atten'])
         z_corrected[ind] += attenuations['radar_liquid_atten'][ind]
+        z_corrected[missing_values] = MISSING_VALUE
         self.append_data(z_corrected, 'Z')
 
     def calc_errors(self, attenuations: dict, classification: ClassificationResult) -> None:

@@ -33,7 +33,7 @@ def find_falling_hydrometeors(obs: ClassData,
 
     falling_from_radar = _find_falling_from_radar(obs, is_insects)
     falling_from_radar_fixed = _fix_liquid_dominated_radar(obs, falling_from_radar, is_liquid)
-    falling_from_radar_fixed[obs.z >= MISSING_VALUE] = False
+    falling_from_radar_fixed[obs.z == MISSING_VALUE] = False
     cold_aerosols = _find_cold_aerosols(obs, is_liquid)
     return falling_from_radar_fixed | cold_aerosols
 
