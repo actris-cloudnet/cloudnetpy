@@ -14,3 +14,6 @@ LATENT_HEAT = 2.26e6
 
 # Specific gas constant for dry  air (J kg-1 K-1)
 RS = 287.058
+
+# Indicates missing profile in gridded products (masked values are for clear sky)
+MISSING_VALUE = 999
