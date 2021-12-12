@@ -52,8 +52,7 @@ def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
     temperature_limit = T0 - 15
     missing_data = obs.beta == MISSING_VALUE
     is_beta = ~obs.beta.mask & ~missing_data
-    region = utils.ffill(is_beta, 1) == 0
-    return is_beta & (obs.tw.data < temperature_limit) & ~is_liquid & region
+    return is_beta & (obs.tw.data < temperature_limit) & ~is_liquid
 
 
 def _fix_liquid_dominated_radar(obs: ClassData,
