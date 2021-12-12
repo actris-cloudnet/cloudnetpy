@@ -80,6 +80,7 @@ def fetch_quality(data: dict, classification: ClassificationResult, attenuations
     bits[0] = ~radar_echo.mask
     bits[0][radar_echo >= MISSING_VALUE] = False
     bits[1] = ~data['lidar'].data['beta'][:].mask
+    bits[1][lidar_echo == MISSING_VALUE] = False
     bits[2] = classification.is_clutter
     bits[4] = attenuations['liquid_corrected'] | attenuations['liquid_uncorrected']
     bits[5] = attenuations['liquid_corrected']
