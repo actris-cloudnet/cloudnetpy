@@ -52,18 +52,21 @@ class CloudnetArray:
 
     def rebin_data(self,
                    time: np.ndarray,
-                   time_new: np.ndarray) -> None:
+                   time_new: np.ndarray,
+                   missing_value: Optional[float] = ma.masked) -> None:
         """Rebins `data` in time.
 
         Args:
             time: 1D time array.
             time_new: 1D new time array.
+            missing_value: Optional missing value for profiles without data. Default is to mask
+                these.
 
         """
         if self.data.ndim == 1:
             self.data = utils.rebin_1d(time, self.data, time_new)
         else:
-            self.data = utils.rebin_2d(time, self.data, time_new)
+            self.data = utils.rebin_2d(time, self.data, time_new, missing_value=missing_value)
 
     def fetch_attributes(self) -> list:
         """Returns list of user-defined attributes."""

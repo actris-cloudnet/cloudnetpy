@@ -118,7 +118,8 @@ def rebin_2d(x_in: np.ndarray,
              array: ma.MaskedArray,
              x_new: np.ndarray,
              statistic: Optional[str] = 'mean',
-             n_min: Optional[int] = 1) -> ma.MaskedArray:
+             n_min: Optional[int] = 1,
+             missing_value: Optional[float] = ma.masked) -> ma.MaskedArray:
     """Rebins 2-D data in one dimension.
 
     Args:
@@ -128,6 +129,7 @@ def rebin_2d(x_in: np.ndarray,
         statistic: Statistic to be calculated. Possible statistics are 'mean', 'std'.
             Default is 'mean'.
         n_min: Minimum number of points to have good statistics in a bin. Default is 1.
+        missing_value: Optional missing value for profiles without data. Default is to mask these.
 
     Returns:
         Rebinned data with shape (N, m).
@@ -146,12 +148,16 @@ def rebin_2d(x_in: np.ndarray,
                                                                values[mask],
                                                                statistic=statistic,
                                                                bins=edges)
-            if n_min > 1:
-                unique, counts = np.unique(bin_no, return_counts=True)
-                result[unique[counts < n_min]-1, ind] = 0
-
     result[~np.isfinite(result)] = 0
-    return ma.masked_equal(result, 0)
+    result = ma.masked_equal(result, 0)
+
+    # Fill bins with not enough profiles
+    for ind in range(len(edges)-1):
+        is_data = np.where((x_in > edges[ind]) & (x_in < edges[ind+1]))[0]
+        if len(is_data) < n_min:
+            result[ind, :] = missing_value
+
+    return result
 
 
 def rebin_1d(x_in: np.ndarray,
