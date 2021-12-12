@@ -8,6 +8,7 @@ from cloudnetpy import utils
 from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize import melting, insects, falling, freezing
 from cloudnetpy.categorize.containers import ClassData, ClassificationResult
+from cloudnetpy.constants import MISSING_VALUE
 
 
 def classify_measurements(data: dict) -> ClassificationResult:
@@ -42,7 +43,6 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
     bits[5] = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
-    bits = _filter_falling(bits)
     for _ in range(5):
         bits[3] = _fix_undetected_melting_layer(bits)
         bits = _filter_insects(bits)
@@ -71,14 +71,21 @@ def fetch_quality(data: dict, classification: ClassificationResult, attenuations
             - bit 3: Molecular scattering present (currently not implemented!)
             - bit 4: Pixel was affected by liquid attenuation
             - bit 5: Liquid attenuation was corrected
+            - bit 6: Data gap in radar or lidar data
 
     """
-    bits = [None]*6
-    bits[0] = ~data['radar'].data['Z'][:].mask
+    bits = [np.ndarray([])]*7
+    radar_echo = data['radar'].data['Z'][:]
+    lidar_echo = data['lidar'].data['beta'][:]
+    bits[0] = ~radar_echo.mask
+    bits[0][radar_echo >= MISSING_VALUE] = False
     bits[1] = ~data['lidar'].data['beta'][:].mask
     bits[2] = classification.is_clutter
     bits[4] = attenuations['liquid_corrected'] | attenuations['liquid_uncorrected']
     bits[5] = attenuations['liquid_corrected']
+    bits[6] = np.zeros(bits[0].shape, dtype=bool)
+    bits[6][radar_echo >= MISSING_VALUE] = True
+    bits[6][lidar_echo == MISSING_VALUE] = True
     qbits = _bits_to_integer(bits)
     return {'quality_bits': qbits}
 
@@ -99,8 +106,9 @@ def _find_aerosols(obs: ClassData,
         2-D boolean array containing aerosols.
 
     """
+    missing_data = obs.beta == MISSING_VALUE
     is_beta = ~obs.beta.mask
-    return is_beta & ~is_falling & ~is_liquid
+    return is_beta & ~is_falling & ~is_liquid & ~missing_data
 
 
 def _fix_undetected_melting_layer(bits: list) -> np.ndarray:

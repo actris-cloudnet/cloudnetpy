@@ -7,6 +7,7 @@ from scipy import constants
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.categorize.classify import ClassificationResult
 from cloudnetpy import utils
+from cloudnetpy.constants import MISSING_VALUE
 import logging
 
 
@@ -50,8 +51,15 @@ class Radar(DataSource):
             time_new: Target time array as fraction hour. Updates *time* attribute.
 
         """
+        # Store info about missing profiles in Z using missing_value
+        key = 'Z'
+        self.data[key].db2lin()
+        self.data[key].rebin_data(self.time, time_new, missing_value=MISSING_VALUE)
+        mask = np.where(self.data[key][:] == MISSING_VALUE)
+        self.data[key].lin2db()
+        self.data[key][:][mask] = MISSING_VALUE
         for key in self.data:
-            if key in ('Z', 'ldr', 'sldr'):
+            if key in ('ldr', 'sldr'):
                 self.data[key].db2lin()
                 self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
@@ -65,6 +73,8 @@ class Radar(DataSource):
                 self.data[key].rebin_data(self.time, time_new)
             else:
                 continue
+            if self.data[key][:].ndim == 2:
+                self.data[key][:][mask] = MISSING_VALUE
         self.time = time_new
 
     def remove_incomplete_pixels(self) -> None:
@@ -107,7 +117,8 @@ class Radar(DataSource):
         """Filters vertical and horizontal stripe-shaped artifacts from radar data."""
         if variable not in self.data:
             return
-        data = self.data[variable][:]
+        data = ma.copy(self.data[variable][:])
+        data[data == MISSING_VALUE] = ma.masked
         n_points_in_profiles = ma.count(data, axis=1)
         n_profiles_with_data = np.count_nonzero(n_points_in_profiles)
         if n_profiles_with_data < 300:
@@ -118,7 +129,8 @@ class Radar(DataSource):
             logging.info(f'Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes '
                          f'from radar data using {variable}')
 
-    def _filter(self, data: np.array,
+    def _filter(self,
+                data: np.ndarray,
                 axis: int,
                 min_coverage: float,
                 z_limit: float,
@@ -136,10 +148,8 @@ class Radar(DataSource):
         n_removed_total = 0
 
         for block_number in range(n_blocks):
-
             data_block = data[block_indices, :]
             n_values = ma.count(data_block, axis=1)
-
             try:
                 q1 = np.quantile(n_values, 0.25)
                 q3 = np.quantile(n_values, 0.75)

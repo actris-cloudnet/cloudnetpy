@@ -4,6 +4,7 @@ from cloudnetpy import utils
 from cloudnetpy.categorize import atmos
 from cloudnetpy.constants import T0
 from cloudnetpy.categorize.containers import ClassData
+from cloudnetpy.constants import MISSING_VALUE
 
 
 def find_falling_hydrometeors(obs: ClassData,
@@ -32,6 +33,7 @@ def find_falling_hydrometeors(obs: ClassData,
 
     falling_from_radar = _find_falling_from_radar(obs, is_insects)
     falling_from_radar_fixed = _fix_liquid_dominated_radar(obs, falling_from_radar, is_liquid)
+    falling_from_radar_fixed[obs.z >= MISSING_VALUE] = False
     cold_aerosols = _find_cold_aerosols(obs, is_liquid)
     return falling_from_radar_fixed | cold_aerosols
 
@@ -48,7 +50,8 @@ def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
     have gap below in the profile are probably ice.
     """
     temperature_limit = T0 - 15
-    is_beta = ~obs.beta.mask
+    missing_data = obs.beta == MISSING_VALUE
+    is_beta = ~obs.beta.mask & ~missing_data
     region = utils.ffill(is_beta, 1) == 0
     return is_beta & (obs.tw.data < temperature_limit) & ~is_liquid & region
 

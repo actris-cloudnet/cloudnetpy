@@ -17,14 +17,14 @@ class CategorizeBits:
             `falling`, `cold`, `melting`, `aerosol`, `insect`.
 
         quality_bits (dict): Dictionary containing boolean fields for `radar`,
-            `lidar`, `clutter`, `molecular`, `attenuated`, `corrected`.
+            `lidar`, `clutter`, `molecular`, `attenuated`, `corrected` and `missing`.
 
     """
     category_keys = ('droplet', 'falling', 'cold', 'melting', 'aerosol',
                      'insect')
 
     quality_keys = ('radar', 'lidar', 'clutter', 'molecular', 'attenuated',
-                    'corrected')
+                    'corrected', 'missing')
 
     def __init__(self, categorize_file: str):
         self._categorize_file = categorize_file

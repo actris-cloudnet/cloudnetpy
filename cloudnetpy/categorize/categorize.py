@@ -220,8 +220,8 @@ DEFINITIONS = {
          'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
          '       using the microwave radiometer measurements of liquid water path\n'
          '       and the lidar estimation of the location of liquid water cloud;\n'
-         '       be aware that errors in reflectivity may result.'),
-
+         '       be aware that errors in reflectivity may result.\n'
+         'Bit 6: Missing radar or lidar profile. Target classification can not be performed.'),
 }
 
 CATEGORIZE_ATTRIBUTES = {
