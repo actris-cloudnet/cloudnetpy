@@ -4,6 +4,7 @@ import numpy as np
 import numpy.ma as ma
 from cloudnetpy.categorize.datasource import DataSource
 from cloudnetpy.utils import interpolate_2d_nearest
+from cloudnetpy.constants import MISSING_VALUE
 
 
 class Lidar(DataSource):
@@ -22,17 +23,26 @@ class Lidar(DataSource):
         """Interpolate beta using nearest neighbor."""
         max_height = 100  # m
         max_time = 1  # min
-        max_time /= 60
-        beta_interpolated = interpolate_2d_nearest(self.time, self.height, self.data['beta'][:],
-                                                   time_new, height_new)
-        bad_time_indices = _get_bad_indices(self.time, time_new, max_time)
+
+        # Remove completely masked profiles from the interpolation
+        beta = self.data['beta'][:]
+        indices = []
+        for ind, b in enumerate(beta):
+            if not ma.all(b) is ma.masked:
+                indices.append(ind)
+        beta_interpolated = interpolate_2d_nearest(self.time[indices], self.height,
+                                                   beta[indices, :], time_new, height_new)
+
+        # Filter profiles and range gates having data gap
+        max_time /= 60  # to fraction hour
+        bad_time_indices = _get_bad_indices(self.time[indices], time_new, max_time)
         bad_height_indices = _get_bad_indices(self.height, height_new, max_height)
         if bad_time_indices:
             logging.warning(f'Unable to interpolate lidar for {len(bad_time_indices)} time steps')
-        beta_interpolated[bad_time_indices, :] = ma.masked
+        beta_interpolated[bad_time_indices, :] = MISSING_VALUE
         if bad_height_indices:
             logging.warning(f'Unable to interpolate lidar for {len(bad_height_indices)} altitudes')
-        beta_interpolated[:, bad_height_indices] = ma.masked
+        beta_interpolated[:, bad_height_indices] = MISSING_VALUE
         self.data['beta'].data = beta_interpolated
 
     def _add_meta(self) -> None:
