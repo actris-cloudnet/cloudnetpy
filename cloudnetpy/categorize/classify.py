@@ -43,6 +43,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
     bits[5] = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
+    bits = _filter_falling(bits)
     for _ in range(5):
         bits[3] = _fix_undetected_melting_layer(bits)
         bits = _filter_insects(bits)
