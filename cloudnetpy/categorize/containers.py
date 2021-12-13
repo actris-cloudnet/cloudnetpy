@@ -5,6 +5,7 @@ import numpy as np
 import numpy.ma as ma
 import skimage
 from cloudnetpy import utils
+from cloudnetpy.constants import MISSING_VALUE
 
 
 @dataclass
@@ -83,6 +84,7 @@ def _find_rain_from_radar_echo(z: np.ndarray,
 
     """
     is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(False)
+    is_rain[z[:, 3] == MISSING_VALUE] = False
     is_rain = skimage.morphology.remove_small_objects(is_rain, 2, connectivity=1)   # Filter hot pixels
     n_profiles = len(time)
     n_steps = utils.n_elements(time, time_buffer, 'time')
