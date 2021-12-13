@@ -1,4 +1,5 @@
 """ This module contains general helper functions. """
+import logging
 import os
 from typing import Union, Optional, Iterator
 import uuid
@@ -152,10 +153,14 @@ def rebin_2d(x_in: np.ndarray,
     result = ma.masked_equal(result, 0)
 
     # Fill bins with not enough profiles
+    n_empty = 0
     for ind in range(len(edges)-1):
         is_data = np.where((x_in > edges[ind]) & (x_in < edges[ind+1]))[0]
         if len(is_data) < n_min:
             result[ind, :] = missing_value
+            n_empty += 1
+    if n_empty > 0:
+        logging.info(f'No radar data in {n_empty} bins')
 
     return result
 

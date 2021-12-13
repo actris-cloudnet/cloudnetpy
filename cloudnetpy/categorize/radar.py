@@ -142,6 +142,8 @@ class Radar(DataSource):
             echo = self.data['Z'][:].T
         else:
             echo = self.data['Z'][:]
+        echo = ma.copy(echo)
+        echo[echo == MISSING_VALUE] = ma.masked
 
         len_block = int(np.floor(data.shape[0] / n_blocks))
         block_indices = np.arange(len_block)

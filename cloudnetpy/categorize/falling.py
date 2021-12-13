@@ -1,6 +1,5 @@
 """Module to find falling hydrometeors from data."""
 import numpy as np
-from cloudnetpy import utils
 from cloudnetpy.categorize import atmos
 from cloudnetpy.constants import T0
 from cloudnetpy.categorize.containers import ClassData
