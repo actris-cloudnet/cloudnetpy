@@ -70,7 +70,7 @@ _CLABEL = {
          ("Aerosols", _COLORS['lightbrown']),
          ("Insects", _COLORS['shockred']),
          ("Aerosols & insects", _COLORS['pink']),
-         ("Undefined", _COLORS['mask'])),
+         ("No data", _COLORS['mask'])),
 
     'detection_status':
         (("_Clear sky", _COLORS['white']),
