@@ -47,13 +47,35 @@ def generate_categorize(input_files: dict,
 
     """
 
-    def _interpolate_to_cloudnet_grid():
+    def _interpolate_to_cloudnet_grid() -> list:
         wl_band = utils.get_wl_band(data['radar'].radar_frequency)
         data['model'].interpolate_to_common_height(wl_band)
         data['model'].interpolate_to_grid(time, height)
         data['mwr'].rebin_to_grid(time)
-        data['radar'].rebin_to_grid(time)
-        data['lidar'].interpolate_to_grid(time, height)
+        radar_data_gap_indices = data['radar'].rebin_to_grid(time)
+        lidar_data_gap_indices = data['lidar'].interpolate_to_grid(time, height)
+        bad_time_indices = list(set(radar_data_gap_indices + lidar_data_gap_indices))
+        valid_ind = [ind for ind in range(len(time)) if ind not in bad_time_indices]
+        return valid_ind
+
+    def _screen_bad_time_indices(valid_indices: list) -> None:
+        n_time_full = len(time)
+        data['radar'].time = time[valid_indices]
+        for var in ('radar', 'lidar', 'mwr', 'model'):
+            for key, item in data[var].data.items():
+                if utils.isscalar(item.data):
+                    continue
+                array = item[:]
+                if array.shape[0] == n_time_full:
+                    if array.ndim == 1:
+                        array = array[valid_indices]
+                    elif array.ndim == 2:
+                        array = array[valid_indices, :]
+                    else:
+                        continue
+                    data[var].data[key].data = array
+        for key, item in data['model'].data_dense.items():
+            data['model'].data_dense[key] = item[valid_indices, :]
 
     def _prepare_output() -> dict:
         data['radar'].add_meta()
@@ -83,7 +105,8 @@ def generate_categorize(input_files: dict,
     }
     data['model'] = Model(input_files['model'], data['radar'].altitude)
     time, height = _define_dense_grid()
-    _interpolate_to_cloudnet_grid()
+    valid_ind = _interpolate_to_cloudnet_grid()
+    _screen_bad_time_indices(valid_ind)
     if 'rpg' in data['radar'].type.lower() or 'basta' in data['radar'].type.lower():
         data['radar'].filter_speckle_noise()
         data['radar'].filter_1st_gate_artifact()
@@ -220,8 +243,7 @@ DEFINITIONS = {
          'Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n'
          '       using the microwave radiometer measurements of liquid water path\n'
          '       and the lidar estimation of the location of liquid water cloud;\n'
-         '       be aware that errors in reflectivity may result.\n'
-         'Bit 6: Missing radar or lidar profile. Target classification can not be performed.'),
+         '       be aware that errors in reflectivity may result.\n')
 }
 
 CATEGORIZE_ATTRIBUTES = {

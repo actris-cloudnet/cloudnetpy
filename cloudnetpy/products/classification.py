@@ -55,18 +55,17 @@ def _get_target_classification(categorize_bits: CategorizeBits) -> ma.MaskedArra
     bits = categorize_bits.category_bits
     clutter = categorize_bits.quality_bits['clutter']
     classification = ma.zeros(bits['cold'].shape, dtype=int)
-    classification[bits['droplet'] & ~bits['falling']] = 1
-    classification[~bits['droplet'] & bits['falling']] = 2
-    classification[bits['droplet'] & bits['falling']] = 3
-    classification[~bits['droplet'] & bits['falling'] & bits['cold']] = 4
-    classification[bits['droplet'] & bits['falling'] & bits['cold']] = 5
-    classification[bits['melting']] = 6
-    classification[bits['melting'] & bits['droplet']] = 7
-    classification[bits['aerosol']] = 8
-    classification[bits['insect'] & ~clutter] = 9
-    classification[bits['aerosol'] & bits['insect'] & ~clutter] = 10
+    classification[bits['droplet'] & ~bits['falling']] = 1  # Cloud droplets
+    classification[~bits['droplet'] & bits['falling']] = 2  # Drizzle or rain
+    classification[bits['droplet'] & bits['falling']] = 3   # Drizzle or rain and droplets
+    classification[~bits['droplet'] & bits['falling'] & bits['cold']] = 4  # ice
+    classification[bits['droplet'] & bits['falling'] & bits['cold']] = 5  # ice + supercooled
+    classification[bits['melting']] = 6  # melting layer
+    classification[bits['melting'] & bits['droplet']] = 7  # melting + droplets
+    classification[bits['aerosol']] = 8  # aerosols
+    classification[bits['insect'] & ~clutter] = 9  # insects
+    classification[bits['aerosol'] & bits['insect'] & ~clutter] = 10  # insects + aerosols
     classification[clutter & ~bits['aerosol']] = 0
-    classification[categorize_bits.quality_bits['missing']] = ma.masked
     return classification
 
 

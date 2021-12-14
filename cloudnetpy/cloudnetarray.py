@@ -52,21 +52,23 @@ class CloudnetArray:
 
     def rebin_data(self,
                    time: np.ndarray,
-                   time_new: np.ndarray,
-                   missing_value: Optional[float] = ma.masked) -> None:
+                   time_new: np.ndarray) -> list:
         """Rebins `data` in time.
 
         Args:
             time: 1D time array.
             time_new: 1D new time array.
-            missing_value: Optional missing value for profiles without data. Default is to mask
-                these.
+
+        Returns:
+            Time indices without data.
 
         """
         if self.data.ndim == 1:
             self.data = utils.rebin_1d(time, self.data, time_new)
+            bad_indices = np.where(self.data == ma.masked)[0]
         else:
-            self.data = utils.rebin_2d(time, self.data, time_new, missing_value=missing_value)
+            self.data, bad_indices = utils.rebin_2d(time, self.data, time_new)
+        return bad_indices
 
     def fetch_attributes(self) -> list:
         """Returns list of user-defined attributes."""
@@ -140,7 +142,7 @@ class RadarArray(CloudnetArray):
             The result is masked if the bin contains masked values.
 
         """
-        self.data = utils.rebin_2d(time, self.data.astype(float), time_new, 'std')
+        self.data, _ = utils.rebin_2d(time, self.data.astype(float), time_new, 'std')
 
     def rebin_velocity(self,
                        time: np.ndarray,
@@ -175,7 +177,7 @@ class RadarArray(CloudnetArray):
         data_scaled = _scale_by_vfold(self.data, np.multiply)
         vel_x = np.cos(data_scaled)
         vel_y = np.sin(data_scaled)
-        vel_x_mean = utils.rebin_2d(time, vel_x, time_new)
-        vel_y_mean = utils.rebin_2d(time, vel_y, time_new)
+        vel_x_mean, _ = utils.rebin_2d(time, vel_x, time_new)
+        vel_y_mean, _ = utils.rebin_2d(time, vel_y, time_new)
         mean_vel_scaled = np.arctan2(vel_y_mean, vel_x_mean)
         self.data = _scale_by_vfold(mean_vel_scaled, np.divide)

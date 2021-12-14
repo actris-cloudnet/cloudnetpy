@@ -266,7 +266,7 @@ class CloudAdjustor:
 
     def _mask_rain(self) -> None:
         is_rain = self.lwc_source.is_rain.astype(bool)
-        self.status[is_rain, :] = 4
+        self.status[is_rain, :] = 6
 
 
 class LwcError:
@@ -345,8 +345,7 @@ COMMENTS = {
          'the microwave radiometer, the cloud top is extended until the adiabatic\n'
          'integrated liquid water content agrees with the value measured by the\n'
          'microwave radiometer. Missing values indicate that either\n'
-         '1) a liquid water layer was diagnosed but no microwave radiometer data was\n'
-         '   available,\n'
+         '1) a liquid water layer was diagnosed but no microwave radiometer data was available,\n'
          '2) a liquid water layer was diagnosed but the microwave radiometer data\n'
          '   was unreliable; this may be because a melting layer was present in the\n'
          '   profile, or because the retrieved lwp was unphysical (values of zero\n'
@@ -359,9 +358,15 @@ COMMENTS = {
          'due to the uncertainty in the microwave radiometer liquid water path\n'
          'retrieval and the uncertainty in cloud base and/or cloud top height.'),
 
-    'lwc_retrieval_status':
-        ('This variable describes whether a retrieval was performed for each\n'
-         'pixel, and its associated quality.')
+    'lwc_retrieval_status': ("This variable describes whether a retrieval was performed for each pixel, and its associated quality, in the form of 6 different classes.\n"
+			"The classes are defined in the definition attribute. The most reliable retrieval is that when both radar and lidar detect the liquid layer, and\n"
+			"microwave radiometer data is present, indicated by the value 1. The next most reliable is when microwave radiometer data is used to adjust the cloud depth when\n"
+			"the radar does not detect the liquid layer, indicated by the value 2, with a value of 3 indicating the cloud pixels that have been added at cloud top to avoid the\n"
+			"profile becoming superadiabatic. A value of 4 indicates that microwave radiometer data were not available or not reliable (melting level present or unphysical values)\n"
+			"but the liquid layers were well defined.  If cloud top was not well defined then this is indicated by a value of 5.\n"
+			"The full retrieval of liquid water content, which requires reliable liquid water path from the microwave radiometer, was only performed for classes 1-3.\n"
+			"No attempt is made to retrieve liquid water content when rain is present; this is indicated by the value 6.")
+
 }
 
 DEFINITIONS = {
@@ -369,13 +374,16 @@ DEFINITIONS = {
         ('\n'
          'Value 0: No liquid water detected.\n'
          'Value 1: Reliable retrieval.\n'
-         'Value 2: Cloud pixel whose top has been adjusted so that the theoretical\n'
-         '         liquid water path would match observation.\n'
-         'Value 3: New cloud pixel introduced so that the theoretical liquid\n'
-         '         water path would match observation.\n'
-         'Value 4: Rain present: cloud extent is difficult to ascertain and liquid\n'
-         '         water path also uncertain.'),
+         'Value 2: Adiabatic retrieval where cloud top has been adjusted to match liquid water path\n'
+         '         from microwave radiometer because layer is not detected by radar.\n'
+         'Value 3: Adiabatic retrieval: new cloud pixels where cloud top has been adjusted to match liquid water path\n'
+         '         from microwave radiometer because layer is not detected by radar.\n'
+         'Value 4: No retrieval: either no liquid water path is available or liquid water path is uncertain.\n'
+         'Value 5: No retrieval: liquid water layer detected only by the lidar and liquid water path is unavailable or uncertain:\n'
+         '         cloud top may be higher than diagnosed cloud top since lidar signal has been attenuated.\n'
+         'Value 6: Rain present: cloud extent is difficult to ascertain and liquid water path also uncertain.')
 }
+
 
 LWC_ATTRIBUTES = {
     'lwc': MetaData(

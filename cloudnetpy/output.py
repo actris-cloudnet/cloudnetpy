@@ -7,7 +7,6 @@ import netCDF4
 from cloudnetpy import utils, version
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.instruments.instruments import Instrument
-from cloudnetpy.constants import MISSING_VALUE
 
 
 def save_level1b(obj: any,
@@ -257,8 +256,6 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
 
         if ma.isMaskedArray(obj.data):
             fill_value = netCDF4.default_fillvals[obj.data_type]
-            ind = np.where(obj.data == MISSING_VALUE)
-            obj.data[ind] = ma.masked
         else:
             fill_value = False
 

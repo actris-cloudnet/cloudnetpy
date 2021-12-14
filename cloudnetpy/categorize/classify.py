@@ -8,7 +8,6 @@ from cloudnetpy import utils
 from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize import melting, insects, falling, freezing
 from cloudnetpy.categorize.containers import ClassData, ClassificationResult
-from cloudnetpy.constants import MISSING_VALUE
 
 
 def classify_measurements(data: dict) -> ClassificationResult:
@@ -43,11 +42,12 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
     bits[5] = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
-    bits = _filter_falling(bits)
+    bits, filtered_ice = _filter_falling(bits)
     for _ in range(5):
         bits[3] = _fix_undetected_melting_layer(bits)
         bits = _filter_insects(bits)
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
+    bits[4][filtered_ice] = False
     return ClassificationResult(_bits_to_integer(bits),
                                 obs.is_rain,
                                 obs.is_clutter,
@@ -79,15 +79,10 @@ def fetch_quality(data: dict, classification: ClassificationResult, attenuations
     radar_echo = data['radar'].data['Z'][:]
     lidar_echo = data['lidar'].data['beta'][:]
     bits[0] = ~radar_echo.mask
-    bits[0][radar_echo == MISSING_VALUE] = False
     bits[1] = ~data['lidar'].data['beta'][:].mask
-    bits[1][lidar_echo == MISSING_VALUE] = False
     bits[2] = classification.is_clutter
     bits[4] = attenuations['liquid_corrected'] | attenuations['liquid_uncorrected']
     bits[5] = attenuations['liquid_corrected']
-    bits[6] = np.zeros(bits[0].shape, dtype=bool)
-    bits[6][radar_echo >= MISSING_VALUE] = True
-    bits[6][lidar_echo == MISSING_VALUE] = True
     qbits = _bits_to_integer(bits)
     return {'quality_bits': qbits}
 
@@ -108,9 +103,8 @@ def _find_aerosols(obs: ClassData,
         2-D boolean array containing aerosols.
 
     """
-    missing_data = obs.beta == MISSING_VALUE
     is_beta = ~obs.beta.mask
-    return is_beta & ~is_falling & ~is_liquid & ~missing_data
+    return is_beta & ~is_falling & ~is_liquid
 
 
 def _fix_undetected_melting_layer(bits: list) -> np.ndarray:
@@ -201,17 +195,17 @@ def _filter_insects(bits: list) -> list:
     return bits
 
 
-def _filter_falling(bits: list) -> list:
+def _filter_falling(bits: list) -> tuple:
     # filter falling ice speckle noise
     is_freezing = bits[2]
     is_falling = bits[1]
     is_falling_filtered = skimage.morphology.remove_small_objects(is_falling, 10, connectivity=1)
     is_filtered = is_falling & ~np.array(is_falling_filtered)
-    ind = np.where(is_freezing & is_filtered)
-    is_falling[ind] = False
+    ice_ind = np.where(is_freezing & is_filtered)
+    is_falling[ice_ind] = False
     # in warm these are (probably) insects
-    ind = np.where(~is_freezing & is_filtered)
-    is_falling[ind] = False
+    insect_ind = np.where(~is_freezing & is_filtered)
+    is_falling[insect_ind] = False
     bits[1] = is_falling
-    bits[5][ind] = True
-    return bits
+    bits[5][insect_ind] = True
+    return bits, ice_ind

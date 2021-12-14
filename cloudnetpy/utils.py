@@ -1,7 +1,7 @@
 """ This module contains general helper functions. """
 import logging
 import os
-from typing import Union, Optional, Iterator
+from typing import Union, Optional, Iterator, Tuple
 import uuid
 import datetime
 import re
@@ -119,8 +119,7 @@ def rebin_2d(x_in: np.ndarray,
              array: ma.MaskedArray,
              x_new: np.ndarray,
              statistic: Optional[str] = 'mean',
-             n_min: Optional[int] = 1,
-             missing_value: Optional[float] = ma.masked) -> ma.MaskedArray:
+             n_min: Optional[int] = 1) -> Tuple[ma.MaskedArray, list]:
     """Rebins 2-D data in one dimension.
 
     Args:
@@ -130,10 +129,9 @@ def rebin_2d(x_in: np.ndarray,
         statistic: Statistic to be calculated. Possible statistics are 'mean', 'std'.
             Default is 'mean'.
         n_min: Minimum number of points to have good statistics in a bin. Default is 1.
-        missing_value: Optional missing value for profiles without data. Default is to mask these.
 
     Returns:
-        Rebinned data with shape (N, m).
+        tuple: Rebinned data with shape (N, m) and indices of bins without enough data.
 
     Notes:
         0-values are masked in the returned array.
@@ -153,16 +151,16 @@ def rebin_2d(x_in: np.ndarray,
     result = ma.masked_equal(result, 0)
 
     # Fill bins with not enough profiles
-    n_empty = 0
+    empty_indices = []
     for ind in range(len(edges)-1):
         is_data = np.where((x_in > edges[ind]) & (x_in < edges[ind+1]))[0]
         if len(is_data) < n_min:
-            result[ind, :] = missing_value
-            n_empty += 1
-    if n_empty > 0:
-        logging.info(f'No radar data in {n_empty} bins')
+            result[ind, :] = ma.masked
+            empty_indices.append(ind)
+    if len(empty_indices) > 0:
+        logging.info(f'No radar data in {len(empty_indices)} bins')
 
-    return result
+    return result, empty_indices
 
 
 def rebin_1d(x_in: np.ndarray,

@@ -7,7 +7,6 @@ from scipy import constants
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.categorize.classify import ClassificationResult
 from cloudnetpy import utils
-from cloudnetpy.constants import MISSING_VALUE
 import logging
 
 
@@ -44,24 +43,18 @@ class Radar(DataSource):
         self._init_sigma_v()
         self._get_folding_velocity_full()
 
-    def rebin_to_grid(self, time_new: np.ndarray) -> None:
+    def rebin_to_grid(self, time_new: np.ndarray) -> list:
         """Rebins radar data in time using mean.
 
         Args:
             time_new: Target time array as fraction hour. Updates *time* attribute.
 
         """
-        # Store info about missing profiles in Z using missing_value
-        key = 'Z'
-        self.data[key].db2lin()
-        self.data[key].rebin_data(self.time, time_new, missing_value=MISSING_VALUE)
-        mask = np.where(self.data[key][:] == MISSING_VALUE)
-        self.data[key].lin2db()
-        self.data[key][:][mask] = MISSING_VALUE
+        bad_time_indices = []
         for key in self.data:
-            if key in ('ldr', 'sldr'):
+            if key in ('ldr', 'sldr', 'Z'):
                 self.data[key].db2lin()
-                self.data[key].rebin_data(self.time, time_new)
+                bad_time_indices = self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
             elif key == 'v':
                 self.data[key].rebin_velocity(self.time, time_new,
@@ -73,9 +66,7 @@ class Radar(DataSource):
                 self.data[key].rebin_data(self.time, time_new)
             else:
                 continue
-            if self.data[key][:].ndim == 2:
-                self.data[key][:][mask] = MISSING_VALUE
-        self.time = time_new
+        return bad_time_indices
 
     def remove_incomplete_pixels(self) -> None:
         """Mask radar pixels where one or more required quantities are missing.
@@ -118,7 +109,6 @@ class Radar(DataSource):
         if variable not in self.data:
             return
         data = ma.copy(self.data[variable][:])
-        data[data == MISSING_VALUE] = ma.masked
         n_points_in_profiles = ma.count(data, axis=1)
         n_profiles_with_data = np.count_nonzero(n_points_in_profiles)
         if n_profiles_with_data < 300:
@@ -142,8 +132,6 @@ class Radar(DataSource):
             echo = self.data['Z'][:].T
         else:
             echo = self.data['Z'][:]
-        echo = ma.copy(echo)
-        echo[echo == MISSING_VALUE] = ma.masked
 
         len_block = int(np.floor(data.shape[0] / n_blocks))
         block_indices = np.arange(len_block)
@@ -188,11 +176,9 @@ class Radar(DataSource):
             and the original Cloudnet Matlab implementation.
 
         """
-        missing_values = np.where(self.data['Z'][:] == MISSING_VALUE)
         z_corrected = self.data['Z'][:] + attenuations['radar_gas_atten']
         ind = ma.where(attenuations['radar_liquid_atten'])
         z_corrected[ind] += attenuations['radar_liquid_atten'][ind]
-        z_corrected[missing_values] = MISSING_VALUE
         self.append_data(z_corrected, 'Z')
 
     def calc_errors(self, attenuations: dict, classification: ClassificationResult) -> None:
