@@ -64,6 +64,10 @@ def generate_figure(nc_file: str,
             _plot_instrument_data(ax, field, name, source, time, unit)
             continue
         ax_value = _read_ax_values(nc_file)
+
+        time_new, field = _mark_gaps(ax_value[0], field)
+        ax_value = (time_new, ax_value[1])
+
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
         _set_ax(ax, max_y)
         if plot_type == 'bar':
@@ -77,6 +81,45 @@ def generate_figure(nc_file: str,
             _plot_colormesh_data(ax, field, name, ax_value)
     case_date = _set_labels(fig, axes[-1], nc_file, sub_title)
     _handle_saving(image_name, save_path, show, dpi, case_date, valid_names)
+
+
+def _mark_gaps(time: np.ndarray,
+               data: ma.MaskedArray,
+               max_allowed_gap: Optional[float] = 1) -> tuple:
+    assert time[0] > 0
+    assert time[-1] < 24
+    max_gap = max_allowed_gap / 60
+    if not ma.is_masked(data):
+        mask_new = np.zeros(data.shape)
+    elif ma.all(data.mask) is ma.masked:
+        mask_new = np.ones(data.shape)
+    else:
+        mask_new = np.copy(data.mask)
+    data_new = ma.copy(data)
+    time_new = np.copy(time)
+    gap_indices = np.where(np.diff(time) > max_gap)[0]
+    temp_array = np.zeros((2, data.shape[1]))
+    temp_mask = np.ones((2, data.shape[1]))
+    time_delta = 0.001
+    for ind in np.sort(gap_indices)[::-1]:
+        ind += 1
+        data_new = np.insert(data_new, ind, temp_array, axis=0)
+        mask_new = np.insert(mask_new, ind, temp_mask, axis=0)
+        time_new = np.insert(time_new, ind, time[ind] - time_delta)
+        time_new = np.insert(time_new, ind, time[ind-1] + time_delta)
+    if (time[0] - 0) > max_gap:
+        data_new = np.insert(data_new, 0, temp_array, axis=0)
+        mask_new = np.insert(mask_new, 0, temp_mask, axis=0)
+        time_new = np.insert(time_new, 0, time[0] - time_delta)
+        time_new = np.insert(time_new, 0, time_delta)
+    if (24 - time[-1]) > max_gap:
+        ind = mask_new.shape[0]
+        data_new = np.insert(data_new, ind, temp_array, axis=0)
+        mask_new = np.insert(mask_new, ind, temp_mask, axis=0)
+        time_new = np.insert(time_new, ind, 24 - time_delta)
+        time_new = np.insert(time_new, ind, time[-1] + time_delta)
+    data_new.mask = mask_new
+    return time_new, data_new
 
 
 def _handle_saving(image_name: str, save_path: str, show: bool, dpi: int,

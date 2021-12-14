@@ -1,8 +1,9 @@
 from scipy.signal import filtfilt
 import numpy as np
+import numpy.ma as ma
 import pytest
 import numpy.testing as testing
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 from cloudnetpy.plotting import plotting
 from datetime import date
 
@@ -133,3 +134,45 @@ class TestReadAxValues:
 
     def test_2(self, nc_file, test_array):
         assert_array_equal(plotting._read_ax_values(nc_file)[1], test_array/1000)
+
+
+def test_mark_gaps():
+    time = np.array([1.0, 2, 3, 10, 11, 20, 21, 22])
+    data = ma.ones((len(time), 3))
+    data.mask = np.zeros(data.shape)
+    time_new, data_new = plotting._mark_gaps(time, data, max_allowed_gap=60)
+    expected_mask = np.array([[0, 0, 0],
+                              [0, 0, 0],
+                              [0, 0, 0],
+                              [1, 1, 1],
+                              [1, 1, 1],
+                              [0, 0, 0],
+                              [0, 0, 0],
+                              [1, 1, 1],
+                              [1, 1, 1],
+                              [0, 0, 0],
+                              [0, 0, 0],
+                              [0, 0, 0],
+                              [1, 1, 1],
+                              [1, 1, 1],
+                              ])
+    expected_data = np.array([[1, 1, 1],
+                              [1, 1, 1],
+                              [1, 1, 1],
+                              [0, 0, 0],
+                              [0, 0, 0],
+                              [1, 1, 1],
+                              [1, 1, 1],
+                              [0, 0, 0],
+                              [0, 0, 0],
+                              [1, 1, 1],
+                              [1, 1, 1],
+                              [1, 1, 1],
+                              [0, 0, 0],
+                              [0, 0, 0],
+                              ])
+    expected_time = np.array([1, 2, 3, 3.001, 9.999, 10, 11, 11.001, 19.999, 20, 21, 22,
+                              22.001, 23.999])
+    assert_array_equal(data_new.data, expected_data)
+    assert_array_equal(data_new.mask, expected_mask)
+    assert_array_almost_equal(expected_time, time_new)

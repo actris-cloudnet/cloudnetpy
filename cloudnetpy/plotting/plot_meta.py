@@ -82,7 +82,8 @@ _CLABEL = {
          ("_No radar but known atten.", _COLORS['orange']),
          ("Corrected atten.", _COLORS['skyblue']),
          ("Clutter", _COLORS['shockred']),
-         ("_Lidar molecular scattering", _COLORS['pink'])),
+         ("_Lidar molecular scattering", _COLORS['pink']),
+         ("No data", _COLORS['mask'])),
 
     'iwc_retrieval_status':
         (("_No ice", _COLORS['white']),
