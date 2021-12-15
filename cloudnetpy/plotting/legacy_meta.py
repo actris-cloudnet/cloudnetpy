@@ -13,27 +13,11 @@ FIELDS = ('hidden',
 PlotMeta = namedtuple('PlotMeta', FIELDS)
 PlotMeta.__new__.__defaults__ = (None,) * len(FIELDS)
 
-_HIDDEN = {
-    'lwc_retrieval_status':
-        ("No liquid water",
-         "Reliable retrieval",
-         "Adiabatic retrieval: cloud top adjusted",
-         "Adiabatic retrieval: new cloud pixel",
-         "_Unreliable lwp",
-         "_Unreliable lwp/cloud boundaries",
-         "Rain present: no retrieval")
-}
 
 ATTRIBUTES = {
     'specific_humidity': PlotMeta(
         rename='q'
     ),
-    'iwc_retrieval_status': PlotMeta(
-        swapped=[(2, 3)]
-    ),
-    'lwc_retrieval_status': PlotMeta(
-        hidden=_HIDDEN['lwc_retrieval_status']
-    )
 }
 
 

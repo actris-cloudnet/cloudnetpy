@@ -77,7 +77,6 @@ def fetch_quality(data: dict, classification: ClassificationResult, attenuations
     """
     bits = [np.ndarray([])]*7
     radar_echo = data['radar'].data['Z'][:]
-    lidar_echo = data['lidar'].data['beta'][:]
     bits[0] = ~radar_echo.mask
     bits[1] = ~data['lidar'].data['beta'][:].mask
     bits[2] = classification.is_clutter

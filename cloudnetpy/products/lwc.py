@@ -51,7 +51,7 @@ def generate_lwc(categorize_file: str,
     attributes = output.add_time_attribute(LWC_ATTRIBUTES, date)
     output.update_attributes(lwc_source.data, attributes)
     uuid = output.save_product_file('lwc', lwc_source, output_file, uuid,
-                                    copy_from_cat=('lwp', 'lwp_error'))
+                                    copy_from_cat=('lwp', 'lwp_error',))
     lwc_source.close()
     return uuid
 
@@ -78,6 +78,7 @@ class LwcSource(DataSource):
     def __init__(self, categorize_file: str):
         super().__init__(categorize_file)
         self.lwp = self.getvar('lwp')
+        self.lwp[self.lwp < 0] = 0
         self.lwp_error = self.getvar('lwp_error')
         self.is_rain = get_is_rain(categorize_file)
         self.dheight = utils.mdiff(self.getvar('height'))
@@ -167,6 +168,7 @@ class CloudAdjustor:
         self.status = self._init_status()
         self._adjust_cloud_tops(self._find_adjustable_clouds())
         self._mask_rain()
+        self._mask_missing()
 
     def _get_echo(self) -> dict:
         quality_bits = self.lwc_source.categorize_bits.quality_bits
@@ -266,7 +268,11 @@ class CloudAdjustor:
 
     def _mask_rain(self) -> None:
         is_rain = self.lwc_source.is_rain.astype(bool)
-        self.status[is_rain, :] = 6
+        self.status[is_rain, :] = 4
+
+    def _mask_missing(self) -> None:
+        is_missing = np.where(self.lwc_source.lwp == ma.masked)
+        self.status[is_missing, :] = 4
 
 
 class LwcError:
@@ -399,6 +405,7 @@ LWC_ATTRIBUTES = {
     'lwc_retrieval_status': MetaData(
         long_name='Liquid water content retrieval status',
         comment=COMMENTS['lwc_retrieval_status'],
-        definition=DEFINITIONS['lwc_retrieval_status']
+        definition=DEFINITIONS['lwc_retrieval_status'],
+        units='1'
     ),
 }

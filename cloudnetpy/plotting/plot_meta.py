@@ -96,11 +96,14 @@ _CLABEL = {
          ("Temperature above freezing", _COLORS['gray'])),
 
     'lwc_retrieval_status':
-        (("_No liquid water", _COLORS['white']),
-         ("Reliable retrieval", _COLORS['green']),
-         ("Adiabatic retrieval: cloud top adjusted", _COLORS['lightgreen']),
-         ("Adiabatic retrieval: new cloud pixel", _COLORS['yellow']),
-         ("Rain present: no retrieval", _COLORS['lightgray'])),
+        (("No liquid", _COLORS['white']),
+         ("Reliable", _COLORS['green']),
+         ("Adjusted", _COLORS['lightgreen']),
+         ("New pixel", _COLORS['yellow']),
+         ("Invalid LWP", _COLORS['seaweed_roll']),
+         ("_Invalid LWP2", _COLORS['shockred']),
+         ("_Measured rain", _COLORS['orange']),
+         ("No data", _COLORS['mask'])),
 
     'drizzle_retrieval_status':
         (("_No drizzle", _COLORS['white']),
