@@ -71,27 +71,32 @@ class TestRebin2D:
     data = np.array([range(1, 8), range(1, 8)]).T
 
     def test_rebin_2d(self):
-        data_i = utils.rebin_2d(self.x, self.data, self.xnew)
-        result = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
-        assert_array_almost_equal(data_i, result)
+        data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew)
+        expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
+        assert_array_almost_equal(data_i.data, expected_data)
+        assert bool(data_i.mask) is False
+        assert empty_ind == []
 
     def test_rebin_2d_n_min(self):
-        data_i = utils.rebin_2d(self.x, self.data, self.xnew, n_min=2)
-        result = np.array([2, 4.5, 6.5])
-        result = np.array([result, result]).T
-        assert_array_almost_equal(data_i, result)
+        data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew, n_min=2)
+        expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]). T
+        assert_array_almost_equal(data_i.data, expected_data)
+        assert empty_ind == []
 
     def test_rebin_2d_n_min_2(self):
-        data_i = utils.rebin_2d(self.x, self.data, self.xnew, n_min=3)
-        result = np.array([False, True, True])
-        result = np.array([result, result]).T
-        assert_array_almost_equal(data_i.mask, result)
+        data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew, n_min=3)
+        expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
+        expected_mask = np.array([[0, 1, 1], [0, 1, 1]]).T
+        assert_array_almost_equal(data_i.data, expected_data)
+        assert_array_almost_equal(data_i.mask, expected_mask)
+        assert empty_ind == [1, 2]
 
     def test_rebin_2d_std(self):
-        data_i = utils.rebin_2d(self.x, self.data, self.xnew, 'std')
+        data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew, 'std')
         result = np.array([np.std([1, 2, 3]), np.std([4, 5]), np.std([6, 7])])
         result = np.array([result, result]).T
         assert_array_almost_equal(data_i, result)
+        assert empty_ind == []
 
 
 def test_filter_isolated_pixels():

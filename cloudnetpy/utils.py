@@ -153,7 +153,7 @@ def rebin_2d(x_in: np.ndarray,
     # Fill bins with not enough profiles
     empty_indices = []
     for ind in range(len(edges)-1):
-        is_data = np.where((x_in > edges[ind]) & (x_in < edges[ind+1]))[0]
+        is_data = np.where((x_in > edges[ind]) & (x_in <= edges[ind+1]))[0]
         if len(is_data) < n_min:
             result[ind, :] = ma.masked
             empty_indices.append(ind)

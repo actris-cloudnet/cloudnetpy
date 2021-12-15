@@ -49,8 +49,9 @@ def test_init(fake_lidar_file):
 def test_rebin(fake_lidar_file):
     obj = Lidar(fake_lidar_file)
     time_new = np.array([1.1, 2.1])
-    height_new = np.array([500, 1500])
-    obj.rebin_to_grid(time_new, height_new)
-    result = np.array([[1.5, 2.5],
-                       [1.5, 2.5]])
+    height_new = np.array([505, 1501])
+    ind = obj.interpolate_to_grid(time_new, height_new)
+    result = np.array([[2, 3],
+                       [2, 3]])
     assert_array_equal(obj.data['beta'].data, result)
+    assert ind == [0, 1]

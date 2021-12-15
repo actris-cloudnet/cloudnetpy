@@ -132,9 +132,7 @@ class TestCloudnetArrayWithNc:
         obj = CloudnetArray(test_var, 'test_name')
         time = np.array([1, 2, 3, 4, 5])
         time_new = np.array([2.1, 4.1])
-        height = np.array([1, 2, 3, 4])
-        height_new = np.array([2.1, 4.1])
-        obj.rebin_data(time, time_new, height, height_new)
-        result = np.array([[2.5, 1],
-                           [4.5, 1]])
+        obj.rebin_data(time, time_new)
+        result = np.array([[2.5, 2.5, 2.5, 1],
+                           [4.5, 4.5, 4.5, 1]])
         assert_array_equal(obj.data, result)

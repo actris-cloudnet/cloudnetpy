@@ -43,8 +43,8 @@ def _find_falling_from_radar(obs: ClassData, is_insects: np.ndarray) -> np.ndarr
 
 
 def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
-    """Lidar signals which are in colder than the threshold temperature and
-    have gap below in the profile are probably ice.
+    """Lidar signals which are in colder than the threshold temperature are assumed ice.
+       This method should be improved in the future if possible.
     """
     cold_aerosols = np.zeros(is_liquid.shape, dtype=bool)
     temperature_limit = T0 - 15
