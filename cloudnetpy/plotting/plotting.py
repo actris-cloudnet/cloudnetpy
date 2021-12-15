@@ -65,7 +65,7 @@ def generate_figure(nc_file: str,
             continue
         ax_value = _read_ax_values(nc_file)
 
-        if plot_type != 'bar':
+        if plot_type not in ('bar', 'model'):
             time_new, field = _mark_gaps(ax_value[0], field)
             ax_value = (time_new, ax_value[1])
 
@@ -87,8 +87,8 @@ def generate_figure(nc_file: str,
 def _mark_gaps(time: np.ndarray,
                data: ma.MaskedArray,
                max_allowed_gap: Optional[float] = 1) -> tuple:
-    assert time[0] > 0
-    assert time[-1] < 24
+    assert time[0] >= 0
+    assert time[-1] <= 24
     max_gap = max_allowed_gap / 60
     if not ma.is_masked(data):
         mask_new = np.zeros(data.shape)
