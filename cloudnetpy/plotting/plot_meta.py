@@ -87,13 +87,14 @@ _CLABEL = {
 
     'iwc_retrieval_status':
         (("_No ice", _COLORS['white']),
-         ("Reliable retrieval", _COLORS['green']),
-         ("Corrected liquid attenuation", _COLORS['lightgreen']),
-         ("Uncorrected liquid attenuation", _COLORS['orange']),
-         ("Ice detected only by lidar", _COLORS['yellow']),
+         ("Reliable", _COLORS['green']),
+         ("Uncorrected", _COLORS['orange']),
+         ("Corrected", _COLORS['lightgreen']),
+         ("Ice from lidar", _COLORS['yellow']),
          ("Ice above rain", _COLORS['darksky']),
-         ("Clear sky above rain", _COLORS['skyblue']),
-         ("Temperature above freezing", _COLORS['gray'])),
+         ("Clear above rain", _COLORS['skyblue']),
+         ("Positive temp.", _COLORS['seaweed']),
+         ("No data", _COLORS['mask'])),
 
     'lwc_retrieval_status':
         (("No liquid", _COLORS['white']),

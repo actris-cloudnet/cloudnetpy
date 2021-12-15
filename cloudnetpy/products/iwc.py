@@ -170,8 +170,8 @@ class IwcSource(DataSource):
         retrieval_status = np.zeros(iwc.shape, dtype=int)
         is_iwc = ~iwc.mask
         retrieval_status[is_iwc] = 1
-        retrieval_status[is_iwc & ice_classification.corrected_ice] = 2
-        retrieval_status[is_iwc & ice_classification.uncorrected_ice] = 3
+        retrieval_status[is_iwc & ice_classification.corrected_ice] = 3
+        retrieval_status[is_iwc & ice_classification.uncorrected_ice] = 2
         retrieval_status[~is_iwc & ice_classification.is_ice] = 4
         retrieval_status[ice_classification.cold_above_rain] = 6
         retrieval_status[ice_classification.ice_above_rain] = 5
@@ -265,7 +265,7 @@ COMMENTS = {
         ('This variable is the same as iwc but it also contains iwc values\n'
          'above rain. The iwc values above rain have been severely affected\n'
          'by attenuation and should be used when the effect of attenuation\n'
-         'is being studied.'),
+         'is being studied.')
 }
 
 DEFINITIONS = {
@@ -273,16 +273,17 @@ DEFINITIONS = {
     ('\n'
      'Value 0: No ice present.\n'
      'Value 1: Reliable retrieval.\n'
-     'Value 2: Unreliable retrieval: Radar corrected using liquid water path\n'
-     '         data which can be inaccurate.\n'
-     'Value 3: Unreliable retrieval: Uncorrected liquid attenuation due to\n'
-     '         missing liquid water path data.\n'
-     'Value 4: No retrieval: Ice detected only by the lidar.\n'
-     'Value 5: No retrieval: Rain below the detected ice leads to large uncertainties.\n'
+     'Value 2: Unreliable retrieval due to uncorrected attenuation from liquid water below the\n'
+     '         ice (no liquid water path measurement available).\n'
+     'Value 3: Retrieval performed but radar corrected for liquid attenuation using radiometer\n'
+     '         liquid water path which is not always accurate.\n'
+     'Value 4: Ice detected only by the lidar.\n'
+     'Value 5: Ice detected by radar but rain below so no retrieval performed due to very\n'
+     '         uncertain attenuation.\n'
      'Value 6: Clear sky above rain and wet-bulb temperature less than 0degC:\n'
      '         if rain attenuation is strong, ice could be present but undetected.\n'
-     'Value 7: Drizzle or rain that would have been classified as ice if the\n'
-     '         wet-bulb temperature were less than 0degC.')
+     'Value 7: Drizzle or rain that would have been classified as ice if the wet-bulb\n'
+     '         temperature were less than 0degC: may be ice if temperature is in error')
 }
 
 IWC_ATTRIBUTES = {
