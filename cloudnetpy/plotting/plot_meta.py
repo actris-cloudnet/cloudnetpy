@@ -108,11 +108,12 @@ _CLABEL = {
 
     'drizzle_retrieval_status':
         (("_No drizzle", _COLORS['white']),
-         ("Reliable retrieval", _COLORS['green']),
-         ("Retrieval below melting layer", _COLORS['lightgreen']),
-         ("Drizzle present but no retrieval possible", _COLORS['red']),
-         ("Warm drizzle-free liquid water cloud", _COLORS['orange']),
-         ("Rain present: no retrieval", _COLORS['lightgray']))
+         ("Reliable", _COLORS['green']),
+         ("Below melting", _COLORS['lightgreen']),
+         ("Unfeasible", _COLORS['red']),
+         ("Drizzle-free", _COLORS['orange']),
+         ("Rain", _COLORS['seaweed']),
+         ("No data", _COLORS['mask'])),
 }
 
 _CBAR = {

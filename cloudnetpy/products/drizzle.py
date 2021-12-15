@@ -430,7 +430,8 @@ def _screen_rain(results, classification):
 def _append_data(drizzle_data, results):
     """Save retrieved fields to the drizzle_data object."""
     for key, value in results.items():
-        value = ma.masked_where(value == 0, value)
+        if key != 'drizzle_retrieval_status':
+            value = ma.masked_where(value == 0, value)
         drizzle_data.append_data(value, key)
 
 
@@ -438,11 +439,15 @@ DRIZZLE_ATTRIBUTES = {
     'drizzle_N': MetaData(
         long_name='Drizzle number concentration',
         units='m-3',
-        ancillary_variables='drizzle_N_error'
+        ancillary_variables='drizzle_N_error drizzle_N_bias'
     ),
     'drizzle_N_error': MetaData(
         long_name='Random error in drizzle number concentration',
         units='dB'
+    ),
+    'drizzle_N_bias': MetaData(
+        long_name='Possible bias in drizzle number concentration',
+        units='dB',
     ),
     'drizzle_lwc': MetaData(
         long_name='Drizzle liquid water content',
@@ -473,18 +478,22 @@ DRIZZLE_ATTRIBUTES = {
     'v_drizzle': MetaData(
         long_name='Drizzle droplet fall velocity',  # TODO: should it include 'terminal' ?
         units='m s-1',
-        ancillary_variables='v_drizzle_error',
-        positive='down'
+        ancillary_variables='v_drizzle_error v_drizzle_bias',
+        comment='Positive values are towards the ground.'
     ),
     'v_drizzle_error': MetaData(
         long_name='Random error in drizzle droplet fall velocity',
         units='dB'
     ),
+    'v_drizzle_bias': MetaData(
+        long_name='Possible bias in drizzle droplet fall velocity',
+        units='dB',
+    ),
     'v_air': MetaData(
         long_name='Vertical air velocity',
         units='m s-1',
         ancillary_variables='v_air_error',
-        positive='up',
+        comment='Positive values are towards the sky.'
     ),
     'v_air_error': MetaData(
         long_name='Random error in vertical air velocity',
@@ -505,7 +514,8 @@ DRIZZLE_ATTRIBUTES = {
     ),
     'mu': MetaData(
         long_name='Drizzle droplet size distribution shape parameter',
-        ancillary_variables='mu_error'
+        ancillary_variables='mu_error',
+        units='1'
     ),
     'mu_error': MetaData(
         long_name='Random error in drizzle droplet size distribution shape parameter',
@@ -513,7 +523,8 @@ DRIZZLE_ATTRIBUTES = {
     ),
     'S': MetaData(
         long_name='Lidar backscatter-to-extinction ratio',
-        ancillary_variables='S_error'
+        ancillary_variables='S_error',
+        units='sr'
     ),
     'S_error': MetaData(
         long_name='Random error in lidar backscatter-to-extinction ratio',
@@ -521,8 +532,10 @@ DRIZZLE_ATTRIBUTES = {
     ),
     'beta_corr': MetaData(
         long_name='Lidar backscatter correction factor',
+        units='1'
     ),
     'drizzle_retrieval_status': MetaData(
         long_name='Drizzle parameter retrieval status',
+        units='1'
     )
 }
