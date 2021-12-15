@@ -65,8 +65,9 @@ def generate_figure(nc_file: str,
             continue
         ax_value = _read_ax_values(nc_file)
 
-        time_new, field = _mark_gaps(ax_value[0], field)
-        ax_value = (time_new, ax_value[1])
+        if plot_type != 'bar':
+            time_new, field = _mark_gaps(ax_value[0], field)
+            ax_value = (time_new, ax_value[1])
 
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
         _set_ax(ax, max_y)
