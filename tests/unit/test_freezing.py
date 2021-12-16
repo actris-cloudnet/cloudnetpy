@@ -31,7 +31,7 @@ class Obs:
     def __init__(self):
 
         self.time = np.linspace(0, 24, 13)  # 2h resolution
-        self.height = np.linspace(0, 5, 6)
+        self.height = np.linspace(0, 5, 6) * 100
 
         self.tw = ma.array([[290, 280, 270, 260, 250, 240],
                             [290, 280, 270, 260, 250, 240],
@@ -53,7 +53,7 @@ def test_find_mean_melting_alt():
     obs.time = np.arange(2)
     is_melting = np.array([[0, 0, 1, 1, 0, 0],
                            [0, 0, 1, 1, 1, 0]], dtype=bool)
-    result = np.array([2.5, 3])
+    result = np.array([250, 300])
     assert_array_equal(freezing._find_mean_melting_alt(obs, is_melting), result)
 
 
@@ -73,18 +73,19 @@ def test_find_freezing_region():
                            [0, 0, 0, 0, 0, 0],
                            [0, 0, 0, 0, 0, 0]], dtype=bool)
 
-    result = np.array([[0, 0, 0, 1, 1, 1],
-                       [0, 0, 0, 1, 1, 1],
-                       [0, 0, 0, 0, 1, 1],
-                       [0, 0, 0, 0, 0, 1],
-                       [0, 1, 1, 1, 1, 1],
-                       [0, 1, 1, 1, 1, 1],
-                       [0, 0, 1, 1, 1, 1],
-                       [0, 0, 1, 1, 1, 1],
-                       [0, 0, 1, 1, 1, 1],
-                       [0, 0, 1, 1, 1, 1],
-                       [0, 0, 1, 1, 1, 1],
-                       [0, 0, 1, 1, 1, 1],
-                       [0, 0, 0, 1, 1, 1]], dtype=bool)
+    expected = np.array([[0, 0, 1, 1, 1, 1],
+                         [0, 0, 1, 1, 1, 1],
+                         [0, 0, 0, 1, 1, 1],
+                         [0, 0, 0, 0, 1, 1],
+                         [1, 1, 1, 1, 1, 1],
+                         [0, 1, 1, 1, 1, 1],
+                         [0, 0, 1, 1, 1, 1],
+                         [0, 0, 1, 1, 1, 1],
+                         [0, 0, 1, 1, 1, 1],
+                         [0, 0, 1, 1, 1, 1],
+                         [0, 0, 1, 1, 1, 1],
+                         [0, 0, 1, 1, 1, 1],
+                         [0, 0, 0, 1, 1, 1]], dtype=bool)
 
-    assert_array_equal(freezing.find_freezing_region(obs, is_melting), result)
+    result = freezing.find_freezing_region(obs, is_melting)
+    assert_array_equal(result, expected)

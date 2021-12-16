@@ -50,7 +50,8 @@ def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarra
             freezing_alt[n+mid_win] = t0_alt[n+mid_win]
     ind = ~freezing_alt.mask
     f = interp1d(obs.time[ind], freezing_alt[ind])
-    for ii, alt in enumerate(f(obs.time)):
+    freezing_alt_interpolated = f(obs.time) - 1
+    for ii, alt in enumerate(freezing_alt_interpolated):
         is_freezing[ii, obs.height > alt] = True
     return is_freezing
 
