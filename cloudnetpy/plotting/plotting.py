@@ -501,7 +501,7 @@ def _create_save_name(save_path: str, case_date: date,
 
 
 def plot_2d(data: ndarray, cbar: bool = True, cmap: str = 'viridis',
-            ncolors: int = 50, clim: tuple = None):
+            ncolors: int = 50, clim: tuple = None, ylim: tuple = None, xlim: tuple = None):
     """Simple plot of 2d variable."""
     plt.close()
     if cbar:
@@ -512,6 +512,10 @@ def plot_2d(data: ndarray, cbar: bool = True, cmap: str = 'viridis',
         plt.imshow(ma.masked_equal(data, 0).T, aspect='auto', origin='lower')
     if clim:
         plt.clim(clim)
+    if ylim is not None:
+        plt.ylim(ylim)
+    if xlim is not None:
+        plt.xlim(xlim)
     plt.show()
 
 
