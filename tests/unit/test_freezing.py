@@ -3,6 +3,7 @@ import numpy.ma as ma
 from numpy.testing import assert_array_equal
 from cloudnetpy.categorize import freezing
 from cloudnetpy.constants import T0
+import pytest
 
 
 def test_find_t0_alt():
@@ -13,6 +14,17 @@ def test_find_t0_alt():
     res = [30, 25, 10]
     cnet = freezing._find_t0_alt(temperature, height)
     assert_array_equal(cnet, res)
+
+
+@pytest.mark.parametrize("mean_melting_alt, t0_alt, height, expected_result", [
+    (ma.array([1, 2, 3], mask=[1, 1, 1]), np.array([1, 1]), np.array([1, 2]), True),
+    (ma.array([1, 2, 3], mask=[1, 0, 1]), np.array([1, 1]), np.array([1, 2]), False),
+    (ma.array([1, 2, 3], mask=[1, 1, 1]), np.array([1.2, 1]), np.array([1, 2]), False),
+    (ma.array([1, 2, 3], mask=[0, 1, 1]), np.array([1.2, 1]), np.array([1, 2]), False),
+])
+def test_is_all_freezing(mean_melting_alt, t0_alt, height, expected_result):
+    result = freezing._is_all_freezing(mean_melting_alt, t0_alt, height)
+    assert result == expected_result
 
 
 class Obs:

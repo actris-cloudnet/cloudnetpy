@@ -1,4 +1,5 @@
 """Module to find freezing region from data."""
+import logging
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import interp1d
@@ -33,7 +34,13 @@ def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarra
     is_freezing = np.zeros(obs.tw.shape, dtype=bool)
     t0_alt = _find_t0_alt(obs.tw, obs.height)
     mean_melting_alt = _find_mean_melting_alt(obs, melting_layer)
+
+    if _is_all_freezing(mean_melting_alt, t0_alt, obs.height):
+        logging.info('All temperatures below freezing and no detected melting layer')
+        return np.ones(obs.tw.shape, dtype=bool)
+
     freezing_alt = ma.copy(mean_melting_alt)
+
     for ind in (0, -1):
         freezing_alt[ind] = mean_melting_alt[ind] or t0_alt[ind]
     win = utils.n_elements(obs.time, 240, 'time')  # 4h window
@@ -46,6 +53,12 @@ def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarra
     for ii, alt in enumerate(f(obs.time)):
         is_freezing[ii, obs.height > alt] = True
     return is_freezing
+
+
+def _is_all_freezing(mean_melting_alt: np.ndarray, t0_alt: np.ndarray, height: np.ndarray) -> bool:
+    no_detected_melting = mean_melting_alt.all() is ma.masked
+    all_temperatures_below_freezing = (t0_alt <= height[0]).all()
+    return no_detected_melting and all_temperatures_below_freezing
 
 
 def _find_mean_melting_alt(obs: ClassData, melting_layer: np.ndarray) -> np.ndarray:
