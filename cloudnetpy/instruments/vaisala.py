@@ -198,6 +198,24 @@ class ClCeilo(VaisalaCeilo):
         self.data['beta_raw'] *= self.data['calibration_factor']
         self.data['zenith_angle'] = np.median(self.metadata['zenith_angle'])
         self._store_ceilometer_info()
+        self._sort_time()
+
+    def _sort_time(self):
+        """Sorts timestamps and removes duplicates."""
+        time = np.copy(self.data['time'][:])
+        ind_sorted = np.argsort(time)
+        ind_valid = []
+        for ind in ind_sorted:
+            if time[ind] not in time[ind_valid]:
+                ind_valid.append(ind)
+        n_time = len(time)
+        for key, array in self.data.items():
+            if not hasattr(array, 'shape'):
+                continue
+            if array.ndim == 1 and array.shape[0] == n_time:
+                self.data[key] = self.data[key][ind_valid]
+            if array.ndim == 2 and array.shape[0] == n_time:
+                self.data[key] = self.data[key][ind_valid, :]
 
     def _store_ceilometer_info(self):
         n_gates = self.data['beta_raw'].shape[1]

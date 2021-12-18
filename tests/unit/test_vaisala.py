@@ -159,7 +159,7 @@ class TestCL31:
         input = f'{SCRIPT_PATH}/data/vaisala/cl31_badtime.DAT'
         ceilo2nc(input, output, site_meta, date='2020-04-10')
         nc = netCDF4.Dataset(output)
-        assert len(nc.variables['time']) == 3
+        assert len(nc.variables['time']) == 2
         assert nc.year == '2020'
         assert nc.month == '04'
         assert nc.day == '10'
