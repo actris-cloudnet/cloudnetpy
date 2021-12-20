@@ -59,6 +59,7 @@ def hatpro2nc(path_to_lwp_files: str,
     hatpro.sort_timestamps()
     hatpro.convert_time_to_fraction_hour('float64')
     general.add_site_geolocation(hatpro)
+    hatpro.remove_duplicate_timestamps()
     attributes = output.add_time_attribute(ATTRIBUTES, hatpro.date)
     output.update_attributes(hatpro.data, attributes)
     uuid = output.save_level1b(hatpro, output_file, uuid)

@@ -251,6 +251,14 @@ class Hatpro(Rpg):
         self.data['time'].data[:] = time[ind]
         self.data[key].data[:] = array[ind]
 
+    def remove_duplicate_timestamps(self):
+        time = self.data['time'].data[:]
+        n_time = len(time)
+        _, ind = np.unique(time, return_index=True)
+        for key, array in self.data.items():
+            if not utils.isscalar(array.data) and len(array.data) == n_time:
+                self.data[key].data = array.data[ind]
+
 
 DEFINITIONS = {
     'model_number':
