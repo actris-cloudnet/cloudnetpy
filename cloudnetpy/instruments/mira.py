@@ -76,6 +76,8 @@ def mira2nc(raw_mira: str,
     if date is not None:
         mira.screen_by_date(date)
         mira.date = date.split('-')
+    mira.sort_timestamps()
+    mira.remove_duplicate_timestamps()
     general.linear_to_db(mira, ('Zh', 'ldr', 'SNR'))
     mira.screen_by_snr()
     mira.mask_invalid_data()
@@ -118,6 +120,25 @@ class Mira(NcRadar):
         if not valid_indices:
             raise ValidTimeStampError
         general.screen_time_indices(self, valid_indices)
+
+    def sort_timestamps(self):
+        """Sorts data by timestamps."""
+        ind = self.time.argsort()
+        self._screen_by_ind(ind)
+
+    def remove_duplicate_timestamps(self):
+        """Removes duplicate timestamps."""
+        _, ind = np.unique(self.time, return_index=True)
+        self._screen_by_ind(ind)
+
+    def _screen_by_ind(self, ind: np.ndarray):
+        n_time = len(self.time)
+        for key, array in self.data.items():
+            if array.data.ndim == 1 and array.data.shape[0] == n_time:
+                self.data[key].data = array.data[ind]
+            if array.data.ndim == 2 and array.data.shape[0] == n_time:
+                self.data[key].data = array.data[ind, :]
+        self.time = self.time[ind]
 
     def screen_by_snr(self, snr_limit: Optional[float] = -17) -> None:
         """Screens by SNR."""
