@@ -5,6 +5,7 @@ from scipy.interpolate import interp1d
 from cloudnetpy import CloudnetArray
 from cloudnetpy.categorize import DataSource, atmos
 from cloudnetpy import utils
+from cloudnetpy.exceptions import ModelDataError
 
 
 class Model(DataSource):
@@ -79,7 +80,7 @@ class Model(DataSource):
             array = self.data_sparse[key][:]
             valid_profiles = _find_number_of_valid_profiles(array)
             if valid_profiles < 2:
-                raise RuntimeError('Bad model file: too few proper profiles')
+                raise ModelDataError
             self.data_dense[key] = utils.interpolate_2d_mask(self.time,
                                                              self.mean_height,
                                                              array,

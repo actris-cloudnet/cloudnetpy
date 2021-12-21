@@ -15,6 +15,13 @@ class DisdrometerDataError(Exception):
         super().__init__(self.message)
 
 
+class ModelDataError(Exception):
+    """Internal exception class."""
+    def __init__(self, msg: Optional[str] = 'Invalid model file: not enough proper profiles'):
+        self.message = msg
+        super().__init__(self.message)
+
+
 class ValidTimeStampError(Exception):
     """Internal exception class."""
     def __init__(self, msg: Optional[str] = 'No valid timestamps found'):
