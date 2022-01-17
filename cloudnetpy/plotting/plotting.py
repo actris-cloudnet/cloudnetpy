@@ -7,13 +7,48 @@ from numpy import ndarray
 import netCDF4
 from scipy.signal import filtfilt
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 from matplotlib.colors import ListedColormap
+from matplotlib.transforms import Affine2D, Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from cloudnetpy import utils
 from cloudnetpy.plotting import legacy_meta
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
+
+
+class Dimensions:
+    """Dimensions of a generated figure in pixels."""
+
+    width: int
+    height: int
+    margin_top: int
+    margin_right: int
+    margin_bottom: int
+    margin_left: int
+
+    def __init__(self, fig, axes, pad_inches: Optional[float] = None):
+        if pad_inches is None:
+            pad_inches = rcParams['savefig.pad_inches']
+
+        tightbbox = (
+            fig.get_tightbbox(fig.canvas.get_renderer())
+            .padded(pad_inches)
+            .transformed(Affine2D().scale(fig.dpi))
+        )
+        self.width = int(tightbbox.width)
+        self.height = int(tightbbox.height)
+
+        x0, y0, x1, y1 = (
+            Bbox.union([ax.get_window_extent() for ax in axes])
+            .translated(-tightbbox.x0, -tightbbox.y0)
+            .extents.round()
+        )
+        self.margin_top = int(self.height - y1)
+        self.margin_right = int(self.width - x1 - 1)
+        self.margin_bottom = int(y0 - 1)
+        self.margin_left = int(x0)
 
 
 def generate_figure(nc_file: str,
@@ -24,7 +59,7 @@ def generate_figure(nc_file: str,
                     dpi: Optional[int] = 200,
                     image_name: Optional[str] = None,
                     sub_title: Optional[bool] = True,
-                    title: Optional[bool] = True):
+                    title: Optional[bool] = True) -> Dimensions:
     """Generates a Cloudnet figure.
 
     Args:
@@ -41,6 +76,9 @@ def generate_figure(nc_file: str,
         sub_title (bool, optional): Add subtitle to image. Default is True.
         title (bool, optional): Add title to image. Default is True.
 
+    Returns:
+        Dimensions of the generated figure in pixels.
+
     Examples:
         >>> from cloudnetpy.plotting import generate_figure
         >>> generate_figure('categorize_file.nc', ['Z', 'v', 'width', 'ldr', 'beta', 'lwp'])
@@ -51,7 +89,7 @@ def generate_figure(nc_file: str,
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
     is_height = _is_height_dimension(nc_file)
-    fig, axes = _initialize_figure(len(valid_fields))
+    fig, axes = _initialize_figure(len(valid_fields), dpi)
 
     for ax, field, name in zip(axes, valid_fields, valid_names):
         plot_type = ATTRIBUTES[name].plot_type
@@ -81,7 +119,8 @@ def generate_figure(nc_file: str,
         else:
             _plot_colormesh_data(ax, field, name, ax_value)
     case_date = _set_labels(fig, axes[-1], nc_file, sub_title)
-    _handle_saving(image_name, save_path, show, dpi, case_date, valid_names)
+    _handle_saving(image_name, save_path, show, case_date, valid_names)
+    return Dimensions(fig, axes)
 
 
 def _mark_gaps(time: np.ndarray,
@@ -123,13 +162,13 @@ def _mark_gaps(time: np.ndarray,
     return time_new, data_new
 
 
-def _handle_saving(image_name: str, save_path: str, show: bool, dpi: int,
+def _handle_saving(image_name: str, save_path: str, show: bool,
                    case_date: date, field_names: list, fix: str = ""):
     if image_name:
-        plt.savefig(image_name, bbox_inches='tight', dpi=dpi)
+        plt.savefig(image_name, bbox_inches='tight')
     elif save_path:
         file_name = _create_save_name(save_path, case_date, field_names, fix)
-        plt.savefig(file_name, bbox_inches='tight', dpi=dpi)
+        plt.savefig(file_name, bbox_inches='tight')
     if show:
         plt.show()
     plt.close()
@@ -192,9 +231,9 @@ def _get_variable_unit(full_path: str, name: str) -> str:
     return unit
 
 
-def _initialize_figure(n_subplots: int) -> tuple:
+def _initialize_figure(n_subplots: int, dpi) -> tuple:
     """Creates an empty figure according to the number of subplots."""
-    fig, axes = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8))
+    fig, axes = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots-1)*4.8), dpi=dpi)
     fig.subplots_adjust(left=0.06, right=0.73)
     if n_subplots == 1:
         axes = [axes]
@@ -532,6 +571,7 @@ def _plot_relative_error(ax, error: ndarray, ax_values: tuple):
 def _lin2log(*args: ndarray) -> list:
     return [ma.log10(x) for x in args]
 
+
 # LEGACY DATA PLOTTING ROUTINES:
 
 
@@ -542,7 +582,7 @@ def generate_legacy_figure(full_path: str,
                            save_path: str = None,
                            max_y: int = 12,
                            dpi: int = 200,
-                           image_name: str = None) -> None:
+                           image_name: str = None) -> Dimensions:
     """ Plots one particular field from Cloudnet legacy product file.
 
     Args:
@@ -557,10 +597,13 @@ def generate_legacy_figure(full_path: str,
         image_name (str, optional): Name (and full path) of the output image.
             Overrides the *save_path* option. Default is None.
 
+    Returns:
+        Dimensions of the generated figure in pixels.
+
     """
     plot_type = ATTRIBUTES[field_name].plot_type
     field = _find_valid_fields(full_path, [field_name])[0][0]
-    fig, ax = _initialize_figure(1)
+    fig, ax = _initialize_figure(1, dpi)
     ax = ax[0]
     ax_values = _read_ax_values(full_path, product)
     field, ax_value = _screen_high_altitudes(field, ax_values, max_y)
@@ -574,7 +617,8 @@ def generate_legacy_figure(full_path: str,
     else:
         _plot_colormesh_data(ax, field, field_name, ax_value)
     case_date = _set_labels(fig, ax, full_path, False)
-    _handle_saving(image_name, save_path, show, dpi, case_date, [field_name])
+    _handle_saving(image_name, save_path, show, case_date, [field_name])
+    return Dimensions(fig, [ax])
 
 
 def compare_files(nc_files: list,
@@ -584,7 +628,7 @@ def compare_files(nc_files: list,
                   save_path: str = None,
                   max_y: int = 12,
                   dpi: int = 200,
-                  image_name: str = None):
+                  image_name: str = None) -> Dimensions:
     """ Plots one particular field from old and new cloudnet files.
 
     Args:
@@ -602,11 +646,14 @@ def compare_files(nc_files: list,
         image_name (str, optional): Name (and full path) of the output image.
             Overrides the *save_path* option. Default is None.
 
+    Returns:
+        Dimensions of the generated figure in pixels.
+
     """
 
     def _init_figure():
         n_subs = 3 if relative_err else 2
-        return _initialize_figure(n_subs)
+        return _initialize_figure(n_subs, dpi)
 
     plot_type = ATTRIBUTES[field_name].plot_type
     fields = [_find_valid_fields(file, [field_name])[0][0] for file in nc_files]
@@ -642,5 +689,6 @@ def compare_files(nc_files: list,
                 _plot_relative_error(axes[-1], error, ax_value)
 
     case_date = _set_labels(fig, axes[-1], nc_files[0])
-    _handle_saving(image_name, save_path, show, dpi, case_date, [field_name],
+    _handle_saving(image_name, save_path, show, case_date, [field_name],
                    '_comparison')
+    return Dimensions(fig, axes)
