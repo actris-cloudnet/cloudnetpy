@@ -240,11 +240,10 @@ def _initialize_figure(n_subplots: int, dpi) -> tuple:
     return fig, axes
 
 
-def _read_ax_values(full_path: str, file_type: str = None) -> Tuple[ndarray, ndarray]:
+def _read_ax_values(full_path: str) -> Tuple[ndarray, ndarray]:
     """Returns time and height arrays."""
+    file_type = utils.get_file_type(full_path)
     nc = netCDF4.Dataset(full_path)
-    if not file_type:
-        file_type = nc.cloudnet_file_type
     is_height = True if 'height' in nc.variables else False
     nc.close()
     if is_height is not True:
@@ -348,7 +347,7 @@ def _plot_segment_data(ax, data: ndarray, name: str, axes: tuple):
     original_mask = np.copy(data.mask)
     data, cbar, clabel = _hide_segments(data)
     cmap = ListedColormap(cbar)
-    data[original_mask] = 999
+    data[original_mask] = 99
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5, vmax=len(cbar) - 0.5)
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(len(clabel)))
@@ -460,16 +459,16 @@ def _find_time_gap_indices(time: ndarray) -> ndarray:
 
 
 def _get_constants_for_noise_filter_and_linewidth(data: ndarray) -> Tuple[int, float]:
-    # Get constants for visualizations depending of number of measurement of dataset
+    # Get constants for visualizations depending on number of measurement of dataset
     length = len(data)
     n = np.rint(np.nextafter((length / 10000), (length / 10000)+1))
     if length < 10000:
         linewidth = 0.9
-    if 10000 <= length < 38000:
+    elif 10000 <= length < 38000:
         linewidth = 0.7
-    if 38000 <= length < 55000:
+    elif 38000 <= length < 55000:
         linewidth = 0.3
-    if 55000 <= length:
+    else:
         linewidth = 0.25
     return int(n), linewidth
 
@@ -505,7 +504,7 @@ def _generate_log_cbar_ticklabel_list(vmin: float, vmax: float) -> list:
 
 
 def _read_location(nc_file: str) -> str:
-    """Returns measurement date string."""
+    """Returns site name."""
     nc = netCDF4.Dataset(nc_file)
     site_name = nc.location
     nc.close()
@@ -513,7 +512,7 @@ def _read_location(nc_file: str) -> str:
 
 
 def _read_date(nc_file: str) -> date:
-    """Returns measurement date string."""
+    """Returns measurement date."""
     nc = netCDF4.Dataset(nc_file)
     case_date = date(int(nc.year), int(nc.month), int(nc.day))
     nc.close()
@@ -539,6 +538,22 @@ def _create_save_name(save_path: str, case_date: date,
     return f"{save_path}{date_string}_{'_'.join(field_names)}{fix}.png"
 
 
+def _plot_relative_error(ax, error: ndarray, ax_values: tuple):
+    pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap='RdBu', vmin=-30,
+                       vmax=30)
+    colorbar = _init_colorbar(pl, ax)
+    colorbar.set_label("%", fontsize=13)
+    median_error = ma.median(error.compressed())
+    median_error = "%.3f" % median_error
+    ax.set_title(f"Median relative error: {median_error} %", fontsize=14)
+
+
+def _lin2log(*args: ndarray) -> list:
+    return [ma.log10(x) for x in args]
+
+
+# Misc plotting routines:
+
 def plot_2d(data: ndarray, cbar: bool = True, cmap: str = 'viridis',
             ncolors: int = 50, clim: tuple = None, ylim: tuple = None, xlim: tuple = None):
     """Simple plot of 2d variable."""
@@ -556,69 +571,6 @@ def plot_2d(data: ndarray, cbar: bool = True, cmap: str = 'viridis',
     if xlim is not None:
         plt.xlim(xlim)
     plt.show()
-
-
-def _plot_relative_error(ax, error: ndarray, ax_values: tuple):
-    pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap='RdBu', vmin=-30,
-                       vmax=30)
-    colorbar = _init_colorbar(pl, ax)
-    colorbar.set_label("%", fontsize=13)
-    median_error = ma.median(error.compressed())
-    median_error = "%.3f" % median_error
-    ax.set_title(f"Median relative error: {median_error} %", fontsize=14)
-
-
-def _lin2log(*args: ndarray) -> list:
-    return [ma.log10(x) for x in args]
-
-
-# LEGACY DATA PLOTTING ROUTINES:
-
-
-def generate_legacy_figure(full_path: str,
-                           product: str,
-                           field_name: str,
-                           show: bool = False,
-                           save_path: str = None,
-                           max_y: int = 12,
-                           dpi: int = 200,
-                           image_name: str = None) -> Dimensions:
-    """ Plots one particular field from Cloudnet legacy product file.
-
-    Args:
-        full_path (str): Full path of a legacy Cloudnet file.
-        product (str): Cloudnet file type.
-        field_name (str): Name of variable to be plotted.
-        show (bool, optional): If True, shows the plot. Default is False.
-        save_path (str, optional): If defined, saves the image to this path.
-            Default is None.
-        max_y (int, optional): Upper limit of images (km). Default is 12.
-        dpi (int, optional): Quality of plots. Default is 200.
-        image_name (str, optional): Name (and full path) of the output image.
-            Overrides the *save_path* option. Default is None.
-
-    Returns:
-        Dimensions of the generated figure in pixels.
-
-    """
-    plot_type = ATTRIBUTES[field_name].plot_type
-    field = _find_valid_fields(full_path, [field_name])[0][0]
-    fig, ax = _initialize_figure(1, dpi)
-    ax = ax[0]
-    ax_values = _read_ax_values(full_path, product)
-    field, ax_value = _screen_high_altitudes(field, ax_values, max_y)
-    _set_ax(ax, max_y)
-    if plot_type == 'bar':
-        _plot_bar_data(ax, field, ax_value[0])
-        _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
-    elif plot_type == 'segment':
-        field, field_name = legacy_meta.fix_legacy_data(field, field_name)
-        _plot_segment_data(ax, field, field_name, ax_value)
-    else:
-        _plot_colormesh_data(ax, field, field_name, ax_value)
-    case_date = _set_labels(fig, ax, full_path, False)
-    _handle_saving(image_name, save_path, show, case_date, [field_name])
-    return Dimensions(fig, [ax])
 
 
 def compare_files(nc_files: list,
@@ -658,9 +610,8 @@ def compare_files(nc_files: list,
     plot_type = ATTRIBUTES[field_name].plot_type
     fields = [_find_valid_fields(file, [field_name])[0][0] for file in nc_files]
     nc = netCDF4.Dataset(nc_files[0])
-    file_type = nc.cloudnet_file_type
     nc.close()
-    ax_values = [_read_ax_values(nc_file, file_type=file_type) for nc_file in nc_files]
+    ax_values = [_read_ax_values(nc_file) for nc_file in nc_files]
     subtitle = (" from CloudnetPy", " from Cloudnet")
     fig, axes = _init_figure()
 
