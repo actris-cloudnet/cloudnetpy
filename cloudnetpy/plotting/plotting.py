@@ -1,4 +1,5 @@
 """Misc. plotting routines for Cloudnet products."""
+import os.path
 from typing import Optional, Tuple
 from datetime import date
 import numpy as np
@@ -12,7 +13,6 @@ from matplotlib.colors import ListedColormap
 from matplotlib.transforms import Affine2D, Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from cloudnetpy import utils
-from cloudnetpy.plotting import legacy_meta
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES
 from cloudnetpy.products.product_tools import CategorizeBits
@@ -56,7 +56,7 @@ def generate_figure(nc_file: str,
                     show: bool = True,
                     save_path: str = None,
                     max_y: Optional[int] = 12,
-                    dpi: Optional[int] = 200,
+                    dpi: Optional[int] = 120,
                     image_name: Optional[str] = None,
                     sub_title: Optional[bool] = True,
                     title: Optional[bool] = True) -> Dimensions:
@@ -70,7 +70,7 @@ def generate_figure(nc_file: str,
             given path). Default is None, when the figure is not saved.
         max_y (int, optional): Upper limit in the plots (km). Default is 12.
         dpi (int, optional): Figure quality (if saved). Higher value means
-            more pixels, i.e., better image quality. Default is 200.
+            more pixels, i.e., better image quality. Default is 120.
         image_name (str, optional): Name (and full path) of the output image.
             Overrides the *save_path* option. Default is None.
         sub_title (bool, optional): Add subtitle to image. Default is True.
@@ -267,8 +267,7 @@ def _read_time_vector(nc_file: str) -> ndarray:
     return utils.seconds2hours(time)
 
 
-def _screen_high_altitudes(data_field: ndarray, ax_values: tuple,
-                           max_y: int) -> tuple:
+def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) -> tuple:
     """Removes altitudes from 2D data that are not visible in the figure.
 
     Bug in pcolorfast causing effect to axis not noticing limitation while
@@ -306,7 +305,7 @@ def _get_standard_time_ticks(resolution: int = 4) -> list:
             for i in np.arange(0, 24.01, resolution)]
 
 
-def _plot_bar_data(ax, data: ndarray, time: ndarray):
+def _plot_bar_data(ax, data: ma.MaskedArray, time: ndarray):
     """Plots 1D variable as bar plot.
 
     Args:
@@ -322,7 +321,7 @@ def _plot_bar_data(ax, data: ndarray, time: ndarray):
     ax.set_position([pos.x0, pos.y0, pos.width*0.965, pos.height])
 
 
-def _plot_segment_data(ax, data: ndarray, name: str, axes: tuple):
+def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
     """Plots categorical 2D variable.
 
     Args:
@@ -394,7 +393,7 @@ def _plot_colormesh_data(ax,  data: ndarray, name: str, axes: tuple):
         colorbar.ax.set_yticklabels(tick_labels)
 
 
-def _plot_instrument_data(ax, data: ndarray, name: str, product: str,
+def _plot_instrument_data(ax, data: ma.MaskedArray, name: str, product: str,
                           time: ndarray, unit: str):
     if product == 'mwr':
         _plot_mwr(ax, data, name, time, unit)
@@ -417,15 +416,15 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
         _set_ax(ax, ylim, '')
 
 
-def _plot_mwr(ax, data: ndarray, name: str, time: ndarray, unit: str):
+def _plot_mwr(ax, data: ma.MaskedArray, name: str, time: ndarray, unit: str):
     data, time = _select_none_masked_values(data, time)
-    data = _change_unit2kg(data, unit)
+    data = _g_to_kg(data, unit)
     rolling_mean, width = _calculate_rolling_mean(time, data)
     gaps = _find_time_gap_indices(time)
-    n, linewidth = _get_constants_for_noise_filter_and_linewidth(data)
+    n, line_width = _get_plot_parameters(data)
     data_filtered = _filter_noise(data, n)
     time[gaps] = np.nan
-    ax.plot(time, data_filtered, color='royalblue', lw=linewidth)
+    ax.plot(time, data_filtered, color='royalblue', lw=line_width)
     ax.axhline(linewidth=0.8, color='k')
     ax.plot(time[int(width / 2 - 1):int(-width / 2)], rolling_mean,
             color='sienna', linewidth=2.0)
@@ -435,7 +434,7 @@ def _plot_mwr(ax, data: ndarray, name: str, time: ndarray, unit: str):
             min_y=round(np.min(data), 3) - 0.0005)
 
 
-def _select_none_masked_values(data: ndarray, time: ndarray) -> tuple:
+def _select_none_masked_values(data: ma.MaskedArray, time: ndarray) -> tuple:
     good_values = ~data.mask
     try:
         if good_values:
@@ -444,33 +443,32 @@ def _select_none_masked_values(data: ndarray, time: ndarray) -> tuple:
         return data[good_values], time[good_values]
 
 
-def _change_unit2kg(data, unit):
+def _g_to_kg(data: ma.MaskedArray, unit: str) -> ma.MaskedArray:
     if 'kg' in unit:
         return data
     return data / 1000
 
 
 def _find_time_gap_indices(time: ndarray) -> ndarray:
-    # Find time gaps bigger than 5min
+    """Finds time gaps bigger than 5min."""
     time_diff = np.diff(time)
     dec_hour_5min = 0.085
     gaps = np.where(time_diff > dec_hour_5min)[0]
     return gaps
 
 
-def _get_constants_for_noise_filter_and_linewidth(data: ndarray) -> Tuple[int, float]:
-    # Get constants for visualizations depending on number of measurement of dataset
+def _get_plot_parameters(data: ndarray) -> Tuple[int, float]:
     length = len(data)
     n = np.rint(np.nextafter((length / 10000), (length / 10000)+1))
     if length < 10000:
-        linewidth = 0.9
+        line_width = 0.9
     elif 10000 <= length < 38000:
-        linewidth = 0.7
+        line_width = 0.7
     elif 38000 <= length < 55000:
-        linewidth = 0.3
+        line_width = 0.3
     else:
-        linewidth = 0.25
-    return int(n), linewidth
+        line_width = 0.25
+    return int(n), line_width
 
 
 def _calculate_rolling_mean(time: ndarray, data: ndarray) -> Tuple[ndarray, int]:
@@ -531,16 +529,14 @@ def _get_subtitle_text(case_date: date, site_name: str) -> str:
     return f"{site_name}, {case_date.strftime('%-d %b %Y')}"
 
 
-def _create_save_name(save_path: str, case_date: date,
-                      field_names: list, fix: str = '') -> str:
+def _create_save_name(save_path: str, case_date: date, field_names: list, fix: str = '') -> str:
     """Creates file name for saved images."""
     date_string = case_date.strftime("%Y%m%d")
     return f"{save_path}{date_string}_{'_'.join(field_names)}{fix}.png"
 
 
-def _plot_relative_error(ax, error: ndarray, ax_values: tuple):
-    pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap='RdBu', vmin=-30,
-                       vmax=30)
+def _plot_relative_error(ax, error: ma.MaskedArray, ax_values: tuple):
+    pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap='RdBu', vmin=-30, vmax=30)
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
     median_error = ma.median(error.compressed())
@@ -554,8 +550,13 @@ def _lin2log(*args: ndarray) -> list:
 
 # Misc plotting routines:
 
-def plot_2d(data: ndarray, cbar: bool = True, cmap: str = 'viridis',
-            ncolors: int = 50, clim: tuple = None, ylim: tuple = None, xlim: tuple = None):
+def plot_2d(data: ma.MaskedArray,
+            cbar: bool = True,
+            cmap: str = 'viridis',
+            ncolors: int = 50,
+            clim: tuple = None,
+            ylim: tuple = None,
+            xlim: tuple = None):
     """Simple plot of 2d variable."""
     plt.close()
     if cbar:
@@ -579,14 +580,12 @@ def compare_files(nc_files: list,
                   relative_err: bool = False,
                   save_path: str = None,
                   max_y: int = 12,
-                  dpi: int = 200,
+                  dpi: int = 120,
                   image_name: str = None) -> Dimensions:
-    """ Plots one particular field from old and new cloudnet files.
+    """ Plots one particular field from two Cloudnet files.
 
     Args:
-        nc_files (tuple): Tuple of strings of the two files to compare
-                         [0] = CloudnetPy file
-                         [1] = legacy Cloudnet file
+        nc_files (tuple): Filenames of the two files to be compared.
         field_name (str): Name of variable to be plotted.
         show (bool, optional): If True, shows the plot.
         relative_err (bool, optional): If True, plots also relative error. Makes
@@ -594,7 +593,7 @@ def compare_files(nc_files: list,
         save_path (str, optional): If defined, saves the image to this path.
             Default is None.
         max_y (int, optional): Upper limit of images (km). Default is 12.
-        dpi (int, optional): Quality of plots. Default is 200.
+        dpi (int, optional): Quality of plots. Default is 120.
         image_name (str, optional): Name (and full path) of the output image.
             Overrides the *save_path* option. Default is None.
 
@@ -602,44 +601,34 @@ def compare_files(nc_files: list,
         Dimensions of the generated figure in pixels.
 
     """
-
-    def _init_figure():
-        n_subs = 3 if relative_err else 2
-        return _initialize_figure(n_subs, dpi)
-
     plot_type = ATTRIBUTES[field_name].plot_type
     fields = [_find_valid_fields(file, [field_name])[0][0] for file in nc_files]
     nc = netCDF4.Dataset(nc_files[0])
     nc.close()
     ax_values = [_read_ax_values(nc_file) for nc_file in nc_files]
-    subtitle = (" from CloudnetPy", " from Cloudnet")
-    fig, axes = _init_figure()
+    subtitle = (f" - {os.path.basename(nc_files[0])}", f" - {os.path.basename(nc_files[0])}")
+    n_subs = 3 if relative_err is True else 2
+    fig, axes = _initialize_figure(n_subs, dpi)
 
     for ii, ax in enumerate(axes[:2]):
-        field, ax_value = _screen_high_altitudes(fields[ii], ax_values[ii],
-                                                 max_y)
+        field, ax_value = _screen_high_altitudes(fields[ii], ax_values[ii], max_y)
         _set_ax(ax, max_y)
         _set_title(ax, field_name, subtitle[ii])
 
         if plot_type == 'model':
             _plot_colormesh_data(ax, field, field_name, ax_value)
         elif plot_type == 'bar':
-            if field_name == 'lwp' and ii == 1:
-                field *= 1000
             _plot_bar_data(ax, field, ax_value[0])
             _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
         elif plot_type == 'segment':
-            if ii == 1:
-                field, field_name = legacy_meta.fix_legacy_data(field, field_name)
             _plot_segment_data(ax, field, field_name, ax_value)
         else:
             _plot_colormesh_data(ax, field, field_name, ax_value)
-            if relative_err and ii == 1:
+            if relative_err is True and ii == 1:
                 _set_ax(axes[-1], max_y)
                 error, ax_value = _get_relative_error(fields, ax_values, max_y)
                 _plot_relative_error(axes[-1], error, ax_value)
 
-    case_date = _set_labels(fig, axes[-1], nc_files[0])
-    _handle_saving(image_name, save_path, show, case_date, [field_name],
-                   '_comparison')
+    case_date = _set_labels(fig, axes[-1], nc_files[0], sub_title=False)
+    _handle_saving(image_name, save_path, show, case_date, [field_name], '_comparison')
     return Dimensions(fig, axes)

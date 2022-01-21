@@ -61,7 +61,7 @@ def test_create_save_name(file_metadata):
     (75000, 8, 0.25)])
 def test_get_filter_linewidth_constants(data, x, y):
     data = np.linspace(1, 1, data)
-    n, lw = plotting._get_constants_for_noise_filter_and_linewidth(data)
+    n, lw = plotting._get_plot_parameters(data)
     assert n == x
     assert lw == y
 
@@ -113,7 +113,7 @@ def test_select_none_masked_values_bool():
 def test_change_unit2kg():
     data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     unit = 'g m-2'
-    x = plotting._change_unit2kg(data, unit)
+    x = plotting._g_to_kg(data, unit)
     expected = np.array([0.001, 0.002, 0.003, 0.004, 0.005, 0.006,
                         0.007, 0.008, 0.009])
     testing.assert_array_almost_equal(x, expected)
@@ -122,7 +122,7 @@ def test_change_unit2kg():
 def test_keep_unit_kg():
     data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     unit = 'kg m-2'
-    x = plotting._change_unit2kg(data, unit)
+    x = plotting._g_to_kg(data, unit)
     expected = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     testing.assert_array_almost_equal(x, expected)
 
