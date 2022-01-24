@@ -8,6 +8,7 @@ import re
 import warnings
 import numpy as np
 import numpy.ma as ma
+import netCDF4
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline, griddata, RegularGridInterpolator
 import pytz
@@ -887,3 +888,19 @@ def edges2mid(data: np.ndarray, reference: str) -> np.ndarray:
         return data + gaps
     gaps = np.insert(gaps, 0, gaps[0])
     return data - gaps
+
+
+def get_file_type(filename: str) -> str:
+    """Returns cloudnet file type from new and legacy files."""
+    nc = netCDF4.Dataset(filename)
+    if hasattr(nc, 'cloudnet_file_type'):
+        file_type = nc.cloudnet_file_type
+        nc.close()
+        return file_type
+    nc.close()
+    product = filename.split('_')[-1][:-3]
+    if product in ('categorize', 'classification', 'drizzle'):
+        return product
+    if product[:3] in ('lwc', 'iwc'):
+        return product[:3]
+    raise ValueError('Unknown file type')
