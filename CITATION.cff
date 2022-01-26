@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you wish to acknowledge CloudnetPy in your publication, please cite it as below."
+title: CloudnetPy
+authors:
+- family-names: "Tukiainen"
+  given-names: "Simo"
+- family-names: "O'Connor"
+  given-names: "Ewan"
+- family-names: "Anniina"
+  given-names: "Korpinen"
+url: "https://github.com/actris-cloudnet/cloudnetpy"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Tukiainen"
+    given-names: "Simo"
+  - family-names: "O'Connor"
+    given-names: "Ewan"
+  - family-names: "Anniina"
+    given-names: "Korpinen"
+  doi: "10.21105/joss.02123"
+  journal: "Journal of Open Source Software"
+  start: 2123
+  end: 2123
+  title: "CloudnetPy: A Python package for processing cloud remote sensing data"
+  issue: 53
+  volume: 5
+  year: 2020
