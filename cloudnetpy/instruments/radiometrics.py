@@ -77,16 +77,18 @@ class Radiometrics:
 
     def screen_time(self, expected_date: str = None):
         """Screens timestamps."""
-        expected_date = expected_date.split('-')
         dates = [row[1].split()[0] for row in self.raw_data]
         if expected_date is None:
             self.date = self._convert_date(dates[0])
             return
+        expected_date = expected_date.split('-')
         self.date = expected_date
         valid_ind = []
-        for ind, d in enumerate(dates):
-            if self._convert_date(d) == expected_date:
+        valid_timestamps = []
+        for ind, (d, timestamp) in enumerate(zip(dates, self.data['time'])):
+            if self._convert_date(d) == expected_date and timestamp not in valid_timestamps:
                 valid_ind.append(ind)
+                valid_timestamps.append(timestamp)
         if len(valid_ind) == 0:
             raise ValidTimeStampError
         for key, array in self.data.items():
