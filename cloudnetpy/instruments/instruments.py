@@ -89,3 +89,10 @@ HATPRO = Instrument(
     category='microwave radiometer',
     model='HATPRO',
 )
+
+RADIOMETRICS = Instrument(
+    manufacturer='Radiometrics',
+    domain='mwr',
+    category='microwave radiometer',
+    model='MP3014',
+)
