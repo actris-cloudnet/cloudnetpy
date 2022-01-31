@@ -1,4 +1,4 @@
-"""Module for reading and processing Vaisala / Lufft ceilometers."""
+"""Module for reading Radiometrics MP3014 microwave radiometer data."""
 from typing import Optional
 from cloudnetpy import output
 import csv
@@ -29,7 +29,7 @@ def radiometrics2nc(full_path: str,
     Examples:
         >>> from cloudnetpy.instruments import radiometrics2nc
         >>> site_meta = {'name': 'Soverato', 'altitude': 21}
-        >>> ceilo2nc('radiometrics.csv', 'radiometrics.nc', site_meta)
+        >>> radiometrics2nc('radiometrics.csv', 'radiometrics.nc', site_meta)
 
     """
     radiometrics = Radiometrics(full_path, site_meta)
@@ -39,7 +39,7 @@ def radiometrics2nc(full_path: str,
     radiometrics.screen_time(date)
     radiometrics.data_to_cloudnet_arrays()
     radiometrics.add_meta()
-    attributes = output.add_time_attribute(ATTRIBUTES, radiometrics.date)
+    attributes = output.add_time_attribute({}, radiometrics.date)
     output.update_attributes(radiometrics.data, attributes)
     uuid = output.save_level1b(radiometrics, output_file, uuid)
     return uuid
@@ -56,11 +56,12 @@ class Radiometrics:
         self.instrument = instruments.RADIOMETRICS
 
     def read_raw_data(self):
+        """Reads radiometrics raw data."""
         with open(self.filename, mode='r') as infile:
             reader = csv.reader(infile)
             for x in reader:
                 self.raw_data.append(x)
-        self.raw_data = self.raw_data[1:]
+        self.raw_data = self.raw_data[1:]  # First row is header
 
     def read_lwp(self):
         """Reads LWP values."""
@@ -72,7 +73,7 @@ class Radiometrics:
         time = [row[1].split()[1] for row in self.raw_data]
         for t in time:
             hour, minute, sec = t.split(':')
-            fraction_hour.append(float(hour) + (float(minute)*60+float(sec)) / 3600)
+            fraction_hour.append(float(hour) + (float(minute)*60 + float(sec)) / 3600)
         self.data['time'] = np.array(fraction_hour)
 
     def screen_time(self, expected_date: str = None):
@@ -95,10 +96,12 @@ class Radiometrics:
             self.data[key] = array[valid_ind]
 
     def data_to_cloudnet_arrays(self):
+        """Converts arrays to CloudnetArrays."""
         for key, array in self.data.items():
             self.data[key] = CloudnetArray(array, key)
 
     def add_meta(self):
+        """Adds some metadata."""
         valid_keys = ('latitude', 'longitude', 'altitude')
         for key, value in self.site_meta.items():
             key = key.lower()
@@ -110,6 +113,3 @@ class Radiometrics:
         month, day, year = date.split('/')
         year = f'20{year}'
         return [year, month, day]
-
-
-ATTRIBUTES = {}
