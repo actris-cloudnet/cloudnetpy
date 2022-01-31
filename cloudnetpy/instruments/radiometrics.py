@@ -73,7 +73,7 @@ class Radiometrics:
         time = [row[1].split()[1] for row in self.raw_data]
         for t in time:
             hour, minute, sec = t.split(':')
-            fraction_hour.append(float(hour) + (float(minute)*60 + float(sec)) / 3600)
+            fraction_hour.append(int(hour) + int(minute) / 60 + int(sec) / 3600)
         self.data['time'] = np.array(fraction_hour)
 
     def screen_time(self, expected_date: str = None):
