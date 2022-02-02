@@ -96,3 +96,10 @@ RADIOMETRICS = Instrument(
     category='microwave radiometer',
     model='MP3014',
 )
+
+HALO = Instrument(
+    manufacturer='HALO Photonics',
+    domain='lidar',
+    category='Doppler lidar',
+    model='StreamLine',
+)
