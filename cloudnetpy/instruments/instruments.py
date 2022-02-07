@@ -53,6 +53,13 @@ CHM15K = Instrument(
     model='CHM15k',
     wavelength=1064.0)
 
+CHM15KX = Instrument(
+    manufacturer='Lufft',
+    domain='lidar',
+    category='ceilometer',
+    model='CHM15kx',
+    wavelength=1064.0)
+
 MIRA35 = Instrument(
     manufacturer='METEK',
     domain='radar',
