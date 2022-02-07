@@ -16,7 +16,7 @@ class LufftCeilo(NcLidar):
         self.file_name = file_name
         self.site_meta = site_meta
         self.expected_date = expected_date
-        self.instrument = instruments.CHM15K
+        self.instrument = self._get_chm_model()
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""
@@ -67,3 +67,11 @@ class LufftCeilo(NcLidar):
             if arg in self.dataset.variables:
                 var = self.dataset.variables[arg]
                 return var[0] if utils.isscalar(var) else var[:]
+
+    def _get_chm_model(self):
+        nc = netCDF4.Dataset(self.file_name)
+        source = getattr(nc, 'source', '')[:3].lower()
+        nc.close()
+        if source == 'chx':
+            return instruments.CHM15KX
+        return instruments.CHM15K
