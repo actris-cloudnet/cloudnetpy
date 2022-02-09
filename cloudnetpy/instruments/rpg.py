@@ -57,6 +57,7 @@ def rpg2nc(path_to_l1_files: str,
     fmcw = Fmcw(one_day_of_data, site_meta)
     fmcw.convert_time_to_fraction_hour()
     fmcw.mask_invalid_ldr()
+    fmcw.mask_invalid_width()
     general.linear_to_db(fmcw, ('Zh', 'antenna_gain'))
     general.add_site_geolocation(fmcw)
     fmcw.add_solar_angles()
@@ -212,6 +213,17 @@ class Fmcw(Rpg):
         threshold = -35
         if 'ldr' in self.data:
             self.data['ldr'].data = ma.masked_less_equal(self.data['ldr'].data, threshold)
+
+    def mask_invalid_width(self) -> None:
+        """Removes very low width values.
+
+        Simplified method. Threshold value should depend on the radar settings and vary at each chirp.
+        """
+        threshold = 0.005
+        ind = np.where(self.data['width'].data < threshold)
+        for key in ('Zh', 'v', 'ldr', 'width', 'sldr'):
+            if key in self.data:
+                self.data[key].data[ind] = ma.masked
 
     def add_solar_angles(self) -> list:
         """Adds solar zenith and azimuth angles and returns valid time indices."""
