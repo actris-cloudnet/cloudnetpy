@@ -140,7 +140,7 @@ class Mira(NcRadar):
                 self.data[key].data = array.data[ind, :]
         self.time = self.time[ind]
 
-    def screen_by_snr(self, snr_limit: Optional[float] = -17) -> None:
+    def screen_by_snr(self, snr_limit: float = -17) -> None:
         """Screens by SNR."""
         ind = np.where(self.data['SNR'][:] < snr_limit)
         for cloudnet_array in self.data.values():

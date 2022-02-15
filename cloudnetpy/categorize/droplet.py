@@ -11,7 +11,7 @@ from cloudnetpy.categorize.containers import ClassData
 def correct_liquid_top(obs: ClassData,
                        liquid: dict,
                        is_freezing: np.ndarray,
-                       limit: Optional[float] = 200) -> np.ndarray:
+                       limit: float = 200) -> np.ndarray:
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
@@ -46,12 +46,12 @@ def _find_ind_above_top(is_freezing_from_peak: np.ndarray, top_above: int) -> in
 
 
 def find_liquid(obs: ClassData,
-                peak_amp: Optional[float] = 1e-6,
-                max_width: Optional[float] = 300,
-                min_points: Optional[int] = 3,
-                min_top_der: Optional[float] = 1e-7,
-                min_lwp: Optional[float] = 0,
-                min_alt: Optional[float] = 100) -> dict:
+                peak_amp: float = 1e-6,
+                max_width: float = 300,
+                min_points: int = 3,
+                min_top_der: float = 1e-7,
+                min_lwp: float = 0,
+                min_alt: float = 100) -> dict:
     """ Estimate liquid layers from SNR-screened attenuated backscatter.
 
     Args:

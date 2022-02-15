@@ -35,7 +35,7 @@ def save_product_file(short_id: str,
                       obj,
                       file_name: str,
                       uuid: Optional[str] = None,
-                      copy_from_cat: Optional[tuple] = ()) -> str:
+                      copy_from_cat: tuple = ()) -> str:
     """Saves a standard Cloudnet product file.
 
     Args:
@@ -202,7 +202,7 @@ def copy_global(source: netCDF4.Dataset,
             setattr(target, attr, source.getncattr(attr))
 
 
-def add_time_attribute(attributes: dict, date: list, key: Optional[str] = 'time') -> dict:
+def add_time_attribute(attributes: dict, date: list, key: str = 'time') -> dict:
     """"Adds time attribute with correct units."""
     date = '-'.join(date)
     units = f'hours since {date} 00:00:00 +00:00'

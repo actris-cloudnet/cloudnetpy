@@ -37,7 +37,7 @@ def update_nc(old_file: str, new_file: str) -> int:
 
 def concatenate_files(filenames: list,
                       output_file: str,
-                      concat_dimension: Optional[str] = 'time',
+                      concat_dimension: str = 'time',
                       variables: Optional[list] = None,
                       new_attributes: Optional[dict] = None) -> None:
     """Concatenate netCDF files in one dimension.
@@ -66,7 +66,7 @@ class Concat:
     def __init__(self,
                  filenames: list,
                  output_file: str,
-                 concat_dimension: Optional[str] = 'time'):
+                 concat_dimension: str = 'time'):
         self.filenames = sorted(filenames)
         self.concat_dimension = concat_dimension
         self.first_file = netCDF4.Dataset(self.filenames[0])

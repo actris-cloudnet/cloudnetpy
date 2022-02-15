@@ -65,7 +65,7 @@ class ClassData:
 
 def _find_rain_from_radar_echo(z: np.ndarray,
                                time: np.ndarray,
-                               time_buffer: Optional[int] = 5) -> np.ndarray:
+                               time_buffer: int = 5) -> np.ndarray:
     """Find profiles affected by rain.
 
     Rain is present in such profiles where the radar echo in
@@ -107,8 +107,8 @@ def _find_rain_rate(is_rain: np.ndarray, radar) -> np.ndarray:
 
 def _find_clutter(v: np.ndarray,
                   is_rain: np.ndarray,
-                  n_gates: Optional[int] = 10,
-                  v_lim: Optional[float] = 0.05) -> np.ndarray:
+                  n_gates: int = 10,
+                  v_lim: float = 0.05) -> np.ndarray:
     """Estimates clutter from doppler velocity.
 
         Args:

@@ -169,7 +169,7 @@ class Disdrometer:
             seconds.append(int(hour)*3600 + int(minute)*60 + int(sec))
         return CloudnetArray(utils.seconds2hours(np.array(seconds)), 'time')
 
-    def _convert_data(self, keys: tuple, value: float, method: Optional[str] = 'divide'):
+    def _convert_data(self, keys: tuple, value: float, method: str = 'divide'):
         for key in keys:
             if key in self.data:
                 if method == 'divide':
@@ -187,7 +187,7 @@ class Disdrometer:
         self.data['data_raw'] = CloudnetArray(array, 'data_raw', dimensions=('time', 'diameter',
                                                                              'velocity'))
 
-    def _store_vectors(self, n_values: list, spreads: list, name: str, start: Optional[float] = 0):
+    def _store_vectors(self, n_values: list, spreads: list, name: str, start: float = 0):
         mid, bounds, spread = self._create_vectors(n_values, spreads, start)
         self.data[name] = CloudnetArray(mid, name, dimensions=(name,))
         key = f'{name}_spread'

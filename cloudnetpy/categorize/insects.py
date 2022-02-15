@@ -11,7 +11,7 @@ from cloudnetpy.categorize.containers import ClassData
 def find_insects(obs: ClassData,
                  melting_layer: np.ndarray,
                  liquid_layers: np.ndarray,
-                 prob_lim: Optional[float] = 0.8) -> np.ndarray:
+                 prob_lim: float = 0.8) -> np.ndarray:
     """Returns insect probability and boolean array of insect presence.
 
     Insects are classified by estimating heuristic probability
@@ -73,7 +73,7 @@ def _get_probabilities(obs: ClassData) -> dict:
 
 
 def _get_smoothed_v(obs: ClassData,
-                    sigma: Optional[Tuple[float, float]] = (5, 5)) -> np.ndarray:
+                    sigma: Tuple[float, float] = (5, 5)) -> np.ndarray:
     smoothed_v = gaussian_filter(obs.v, sigma)
     smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
     return smoothed_v

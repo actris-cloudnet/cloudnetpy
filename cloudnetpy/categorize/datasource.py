@@ -24,7 +24,7 @@ class DataSource:
         data (dict): Dictionary containing :class:`CloudnetArray` instances.
 
     """
-    def __init__(self, full_path: str, radar: Optional[bool] = False):
+    def __init__(self, full_path: str, radar: bool = False):
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
         self.source = getattr(self.dataset, 'source', '')
@@ -152,7 +152,7 @@ class DataSource:
                                             possible_names: tuple,
                                             key: str,
                                             units: Optional[str] = None,
-                                            ignore_mask: Optional[bool] = False):
+                                            ignore_mask: bool = False):
         """Transforms single netCDF4 variable into CloudnetArray.
 
         Args:

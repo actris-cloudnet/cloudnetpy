@@ -30,8 +30,8 @@ class Ceilometer:
 
     def calc_screened_product(self,
                               array: np.ndarray,
-                              snr_limit: Optional[int] = 5,
-                              range_corrected: Optional[bool] = True) -> np.ndarray:
+                              snr_limit: int = 5,
+                              range_corrected: bool = True) -> np.ndarray:
         """Screens noise from lidar variable."""
         noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
         array_screened = noisy_data.screen_data(array, snr_limit=snr_limit)
@@ -39,8 +39,8 @@ class Ceilometer:
 
     def calc_beta_smooth(self,
                          beta: np.ndarray,
-                         snr_limit: Optional[int] = 5,
-                         range_corrected: Optional[bool] = True) -> np.ndarray:
+                         snr_limit: int = 5,
+                         range_corrected: bool = True) -> np.ndarray:
         noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
         beta_raw = ma.copy(self.data['beta_raw'])
         cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
@@ -94,19 +94,19 @@ class Ceilometer:
 class NoisyData:
     def __init__(self, data: dict,
                  noise_param: NoiseParam,
-                 range_corrected: Optional[bool] = True):
+                 range_corrected: bool = True):
         self.data = data
         self.noise_param = noise_param
         self.range_corrected = range_corrected
 
     def screen_data(self,
                     data_in: np.array,
-                    snr_limit: Optional[float] = 5,
-                    is_smoothed: Optional[bool] = False,
-                    keep_negative: Optional[bool] = False,
-                    filter_fog: Optional[bool] = True,
-                    filter_negatives: Optional[bool] = True,
-                    filter_snr: Optional[bool] = True) -> np.ndarray:
+                    snr_limit: float = 5,
+                    is_smoothed: bool = False,
+                    keep_negative: bool = False,
+                    filter_fog: bool = True,
+                    filter_negatives: bool = True,
+                    filter_snr: bool = True) -> np.ndarray:
         data = ma.copy(data_in)
         self._calc_range_uncorrected(data)
         noise = _estimate_background_noise(data)
@@ -148,9 +148,9 @@ class NoisyData:
         return cleaned_time_indices
 
     def _find_fog_profiles(self,
-                           n_gates_for_signal_sum: Optional[int] = 20,
-                           signal_sum_threshold: Optional[float] = 1e-3,
-                           variance_threshold: Optional[float] = 1e-15) -> np.ndarray:
+                           n_gates_for_signal_sum: int = 20,
+                           signal_sum_threshold: float = 1e-3,
+                           variance_threshold: float = 1e-15) -> np.ndarray:
         """Finds saturated (usually fog) profiles from beta_raw."""
         signal_sum = ma.sum(ma.abs(self.data['beta_raw'][:, :n_gates_for_signal_sum]), axis=1)
         variance = _calc_var_from_top_gates(self.data['beta_raw'])
@@ -200,7 +200,7 @@ class NoisyData:
     @staticmethod
     def _clean_fog_profiles(data: np.ndarray,
                             is_fog: np.ndarray,
-                            threshold: Optional[float] = 2e-6) -> None:
+                            threshold: float = 2e-6) -> None:
         """Removes values in saturated (e.g. fog) profiles above peak."""
         for time_ind in np.where(is_fog)[0]:
             profile = data[time_ind, :]
