@@ -10,8 +10,8 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 class NoiseParam:
     """Noise parameters. Values are weakly instrument-dependent."""
     def __init__(self,
-                 noise_min: Optional[float] = 1e-9,
-                 noise_smooth_min: Optional[float] = 4e-9):
+                 noise_min: float = 1e-9,
+                 noise_smooth_min: float = 4e-9):
         self.noise_min = noise_min
         self.noise_smooth_min = noise_smooth_min
 
@@ -132,10 +132,10 @@ class NoisyData:
 
     @staticmethod
     def _mask_low_values_above_consequent_negatives(data: np.ndarray,
-                                                    n_negatives: Optional[int] = 5,
-                                                    threshold: Optional[float] = 8e-6,
-                                                    n_gates: Optional[int] = 95,
-                                                    n_skip_lowest: Optional[int] = 5) -> np.ndarray:
+                                                    n_negatives: int = 5,
+                                                    threshold: float = 8e-6,
+                                                    n_gates: int = 95,
+                                                    n_skip_lowest: int = 5) -> np.ndarray:
         negative_data = data[:, n_skip_lowest:n_gates + n_skip_lowest] < 0
         n_consequent_negatives = utils.cumsumr(negative_data, axis=1)
         time_indices, alt_indices = np.where(n_consequent_negatives > n_negatives)

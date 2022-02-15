@@ -1,7 +1,7 @@
 """ This module contains general helper functions. """
 import logging
 import os
-from typing import Union, Optional, Iterator, Tuple
+from typing import Union, Optional, Iterator, Tuple, List
 import uuid
 import datetime
 import re
@@ -15,6 +15,9 @@ import pytz
 import requests
 from cloudnetpy.exceptions import ValidTimeStampError
 
+
+
+Epoch = Tuple[int, int, int]
 
 SECONDS_PER_MINUTE = 60
 SECONDS_PER_HOUR = 3600
@@ -59,7 +62,7 @@ def seconds2time(time_in_seconds: float) -> list:
     return [str(t).zfill(2) for t in time]
 
 
-def seconds2date(time_in_seconds: float, epoch: Optional[tuple] = (2001, 1, 1)) -> list:
+def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
     """Converts seconds since some epoch to datetime (UTC).
 
     Args:
@@ -75,7 +78,7 @@ def seconds2date(time_in_seconds: float, epoch: Optional[tuple] = (2001, 1, 1)) 
     return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y %m %d %H %M %S').split()
 
 
-def time_grid(time_step: Optional[int] = 30) -> np.ndarray:
+def time_grid(time_step: int = 30) -> np.ndarray:
     """Returns decimal hour array between 0 and 24.
 
     Computes fraction hour time vector 0-24 with user-given
@@ -119,8 +122,8 @@ def binvec(x: Union[np.ndarray, list]) -> np.ndarray:
 def rebin_2d(x_in: np.ndarray,
              array: ma.MaskedArray,
              x_new: np.ndarray,
-             statistic: Optional[str] = 'mean',
-             n_min: Optional[int] = 1) -> Tuple[ma.MaskedArray, list]:
+             statistic: str = 'mean',
+             n_min: int = 1) -> Tuple[ma.MaskedArray, list]:
     """Rebins 2-D data in one dimension.
 
     Args:
@@ -167,7 +170,7 @@ def rebin_2d(x_in: np.ndarray,
 def rebin_1d(x_in: np.ndarray,
              array: ma.MaskedArray,
              x_new: np.ndarray,
-             statistic: Optional[str] = 'mean') -> ma.MaskedArray:
+             statistic: str = 'mean') -> ma.MaskedArray:
     """Rebins 1D array.
 
     Args:
@@ -403,7 +406,7 @@ def calc_relative_error(reference: np.ndarray, array: np.ndarray) -> np.ndarray:
     return ((array - reference) / reference) * 100
 
 
-def db2lin(array: Union[float, np.ndarray], scale: Optional[int] = 10) -> np.ndarray:
+def db2lin(array: Union[float, np.ndarray], scale: int = 10) -> np.ndarray:
     """dB to linear conversion."""
     data = array / scale
     with warnings.catch_warnings():
@@ -413,7 +416,7 @@ def db2lin(array: Union[float, np.ndarray], scale: Optional[int] = 10) -> np.nda
         return np.power(10, data)
 
 
-def lin2db(array: np.ndarray, scale: Optional[int] = 10) -> np.ndarray:
+def lin2db(array: np.ndarray, scale: int = 10) -> np.ndarray:
     """Linear to dB conversion."""
     if ma.isMaskedArray(array):
         return scale*ma.log10(array)
@@ -425,7 +428,7 @@ def mdiff(array: np.ndarray) -> float:
     return ma.median(ma.diff(array))
 
 
-def l2norm(*args: any) -> ma.MaskedArray:
+def l2norm(*args) -> ma.MaskedArray:
     """Returns l2 norm.
 
     Args:
@@ -469,7 +472,7 @@ def l2norm_weighted(values: tuple, overall_scale: float, term_weights: tuple) ->
     return overall_scale * l2norm(*weighted_values)
 
 
-def cumsumr(array: np.ndarray, axis: Optional[int] = 0) -> np.ndarray:
+def cumsumr(array: np.ndarray, axis: int = 0) -> np.ndarray:
     """Finds cumulative sum that resets on 0.
 
     Args:
@@ -489,7 +492,7 @@ def cumsumr(array: np.ndarray, axis: Optional[int] = 0) -> np.ndarray:
     return cums - np.maximum.accumulate(cums * (array == 0), axis=axis)  # pylint: disable=E1101
 
 
-def ffill(array: np.ndarray, value: Optional[int] = 0) -> np.ndarray:
+def ffill(array: np.ndarray, value: int = 0) -> np.ndarray:
     """Forward fills an array.
 
     Args:
@@ -519,8 +522,8 @@ def ffill(array: np.ndarray, value: Optional[int] = 0) -> np.ndarray:
 
 def init(n_vars: int,
          shape: tuple,
-         dtype: Optional[type] = float,
-         masked: Optional[bool] = True) -> Iterator[Union[np.ndarray, ma.MaskedArray]]:
+         dtype: type = float,
+         masked: bool = True) -> Iterator[Union[np.ndarray, ma.MaskedArray]]:
     """Initializes several numpy arrays.
 
     Args:
@@ -587,7 +590,7 @@ def n_elements(array: np.ndarray, dist: float, var: Optional[str] = None) -> int
     return int(np.round(n))
 
 
-def isscalar(array: any) -> bool:
+def isscalar(array) -> bool:
     """Tests if input is scalar.
 
     By "scalar" we mean that array has a single value.
@@ -672,7 +675,7 @@ def del_dict_keys(data: dict, keys: Union[tuple, list]) -> dict:
 def array_to_probability(array: ma.MaskedArray,
                          loc: float,
                          scale: float,
-                         invert: Optional[bool] = False) -> np.ndarray:
+                         invert: bool = False) -> np.ndarray:
     """Converts continuous variable into 0-1 probability.
 
     Args:
@@ -766,7 +769,7 @@ def fetch_cloudnet_model_types() -> list:
     return list(set(model_types))
 
 
-def get_epoch(units: str) -> tuple:
+def get_epoch(units: str) -> Epoch:
     """Finds epoch from units string."""
     fallback = (2001, 1, 1)
     try:
@@ -784,11 +787,11 @@ def get_epoch(units: str) -> tuple:
     year, month, day = date_components
     current_year = datetime.datetime.today().year
     if (1900 < year <= current_year) and (0 < month < 13) and (0 < day < 32):
-        return tuple(date_components)
+        return (year, month, day)
     return fallback
 
 
-def screen_by_time(data_in: dict, epoch: tuple, expected_date: str) -> dict:
+def screen_by_time(data_in: dict, epoch: Epoch, expected_date: str) -> dict:
     """"Screen data by time.
 
     Args:
@@ -821,7 +824,7 @@ def screen_by_time(data_in: dict, epoch: tuple, expected_date: str) -> dict:
     return data
 
 
-def find_valid_time_indices(time: np.ndarray, epoch: tuple, expected_date: str) -> list:
+def find_valid_time_indices(time: np.ndarray, epoch: Epoch, expected_date: str) -> list:
     """Finds valid time array indices for the given date.
 
     Args:
@@ -842,7 +845,7 @@ def find_valid_time_indices(time: np.ndarray, epoch: tuple, expected_date: str) 
 
     """
     ind_sorted = np.argsort(time)
-    ind_valid = []
+    ind_valid: List[int] = []
     for ind in ind_sorted:
         date_str = '-'.join(seconds2date(time[ind], epoch=epoch)[:3])
         if date_str == expected_date and time[ind] not in time[ind_valid]:

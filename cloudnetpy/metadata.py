@@ -1,21 +1,20 @@
 """Initial Metadata of Cloudnet variables for NetCDF file writing."""
 
-from collections import namedtuple
+from typing import NamedTuple, Optional
 
-FIELDS = (
-    'long_name',
-    'standard_name',
-    'units',
-    'comment',
-    'definition',
-    'references',
-    'ancillary_variables',
-    'positive',
-    'axis',
-    'calendar',
-    'source')
 
-MetaData = namedtuple('MetaData', FIELDS, defaults=(None,) * len(FIELDS))
+class MetaData(NamedTuple):
+    long_name: Optional[str] = None
+    standard_name: Optional[str] = None
+    units: Optional[str] = None
+    comment: Optional[str] = None
+    definition: Optional[str] = None
+    references: Optional[str] = None
+    ancillary_variables: Optional[str] = None
+    positive: Optional[str] = None
+    axis: Optional[str] = None
+    calendar: Optional[str] = None
+    source: Optional[str] = None
 
 
 COMMON_ATTRIBUTES = {

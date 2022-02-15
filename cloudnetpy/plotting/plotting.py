@@ -14,7 +14,7 @@ from matplotlib.transforms import Affine2D, Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from cloudnetpy import utils
 import cloudnetpy.products.product_tools as ptools
-from cloudnetpy.plotting.plot_meta import ATTRIBUTES
+from cloudnetpy.plotting.plot_meta import ATTRIBUTES, Scale
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
@@ -55,11 +55,11 @@ def generate_figure(nc_file: str,
                     field_names: list,
                     show: bool = True,
                     save_path: str = None,
-                    max_y: Optional[int] = 12,
-                    dpi: Optional[int] = 120,
+                    max_y: int = 12,
+                    dpi: int = 120,
                     image_name: Optional[str] = None,
-                    sub_title: Optional[bool] = True,
-                    title: Optional[bool] = True) -> Dimensions:
+                    sub_title: bool = True,
+                    title: bool = True) -> Dimensions:
     """Generates a Cloudnet figure.
 
     Args:
@@ -125,7 +125,7 @@ def generate_figure(nc_file: str,
 
 def _mark_gaps(time: np.ndarray,
                data: ma.MaskedArray,
-               max_allowed_gap: Optional[float] = 1) -> tuple:
+               max_allowed_gap: float = 1) -> tuple:
     assert time[0] >= 0
     assert time[-1] <= 24
     max_gap = max_allowed_gap / 60
@@ -162,7 +162,7 @@ def _mark_gaps(time: np.ndarray,
     return time_new, data_new
 
 
-def _handle_saving(image_name: str, save_path: str, show: bool,
+def _handle_saving(image_name: Optional[str], save_path: Optional[str], show: bool,
                    case_date: date, field_names: list, fix: str = ""):
     if image_name:
         plt.savefig(image_name, bbox_inches='tight')
@@ -353,7 +353,7 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
     colorbar.ax.set_yticklabels(clabel, fontsize=13)
 
 
-def _plot_colormesh_data(ax,  data: ndarray, name: str, axes: tuple):
+def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
     """Plots continuous 2D variable.
 
     Creates only one plot, so can be used both one plot and subplot type of figs.
@@ -378,7 +378,7 @@ def _plot_colormesh_data(ax,  data: ndarray, name: str, axes: tuple):
 
     vmin, vmax = variables.plot_range
 
-    if variables.plot_scale == 'logarithmic':
+    if variables.plot_scale == Scale.LOGARITHMIC:
         data, vmin, vmax = _lin2log(data, vmin, vmax)
 
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
@@ -387,7 +387,7 @@ def _plot_colormesh_data(ax,  data: ndarray, name: str, axes: tuple):
         colorbar = _init_colorbar(pl, ax)
         colorbar.set_label(variables.clabel, fontsize=13)
 
-    if variables.plot_scale == 'logarithmic':
+    if variables.plot_scale == Scale.LOGARITHMIC:
         tick_labels = _generate_log_cbar_ticklabel_list(vmin, vmax)
         colorbar.set_ticks(np.arange(vmin, vmax+1))
         colorbar.ax.set_yticklabels(tick_labels)
