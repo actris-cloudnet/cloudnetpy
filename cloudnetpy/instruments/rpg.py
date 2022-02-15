@@ -229,6 +229,9 @@ class Fmcw(Rpg):
         """Adds solar zenith and azimuth angles and returns valid time indices."""
         elevation = self.data['elevation'].data
         zenith = 90 - elevation
+        if elevation.mask.all():
+            zenith[:] = 0
+            logging.warning('Can not determine zenith angle, assuming 0 degrees')
         is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
         n_removed = len(is_stable_zenith) - np.count_nonzero(is_stable_zenith)
         if n_removed > 0:
