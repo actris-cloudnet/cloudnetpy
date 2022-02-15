@@ -58,6 +58,8 @@ def rpg2nc(path_to_l1_files: str,
     fmcw.convert_time_to_fraction_hour()
     fmcw.mask_invalid_ldr()
     fmcw.mask_invalid_width()
+    fmcw.sort_timestamps()
+    fmcw.remove_duplicate_timestamps()
     general.linear_to_db(fmcw, ('Zh', 'antenna_gain'))
     general.add_site_geolocation(fmcw)
     fmcw.add_solar_angles()
@@ -186,6 +188,29 @@ class Rpg:
         fraction_hour = utils.seconds2hours(self.raw_data[key])
         self.data[key] = CloudnetArray(np.array(fraction_hour), key, data_type=data_type)
 
+    def sort_timestamps(self):
+        """Sorts timestamps."""
+        time = self.data['time'].data[:]
+        ind = time.argsort()
+        self._screen(ind)
+
+    def remove_duplicate_timestamps(self):
+        """Removes duplicate timestamps."""
+        time = self.data['time'].data[:]
+        _, ind = np.unique(time, return_index=True)
+        self._screen(ind)
+
+    def _screen(self, ind: np.ndarray):
+        n_time = len(self.data['time'].data)
+        for key, array in self.data.items():
+            data = array.data
+            if data.ndim > 0 and data.shape[0] == n_time:
+                if data.ndim == 1:
+                    screened_data = data[ind]
+                else:
+                    screened_data = data[ind, :]
+                self.data[key].data = screened_data
+
     def _get_date(self) -> list:
         time_first = self.raw_data['time'][0]
         time_last = self.raw_data['time'][-1]
@@ -255,24 +280,6 @@ class Hatpro(Rpg):
     def __init__(self, raw_data: dict, site_properties: dict):
         super().__init__(raw_data, site_properties)
         self.instrument = instruments.HATPRO
-
-    def sort_timestamps(self):
-        key = 'lwp'
-        if key not in self.data:
-            logging.warning('No lwp vector, unable to sort')
-        time = self.data['time'].data[:]
-        array = self.data[key].data[:]
-        ind = time.argsort()
-        self.data['time'].data[:] = time[ind]
-        self.data[key].data[:] = array[ind]
-
-    def remove_duplicate_timestamps(self):
-        time = self.data['time'].data[:]
-        n_time = len(time)
-        _, ind = np.unique(time, return_index=True)
-        for key, array in self.data.items():
-            if not utils.isscalar(array.data) and len(array.data) == n_time:
-                self.data[key].data = array.data[ind]
 
 
 DEFINITIONS = {
