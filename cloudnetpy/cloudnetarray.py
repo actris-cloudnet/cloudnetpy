@@ -126,7 +126,7 @@ class RadarArray(CloudnetArray):
         """Filters vertical artifacts from radar data."""
         self._filter(utils.filter_x_pixels)
 
-    def _filter(self, fun: any) -> None:
+    def _filter(self, fun) -> None:
         is_data = (~self.data.mask).astype(int)
         is_data_filtered = fun(is_data)
         self.data[is_data_filtered == 0] = ma.masked

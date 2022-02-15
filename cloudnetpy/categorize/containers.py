@@ -93,7 +93,7 @@ def _find_rain_from_radar_echo(z: np.ndarray,
     return is_rain
 
 
-def _find_rain_rate(is_rain: np.ndarray, radar: any) -> np.ndarray:
+def _find_rain_rate(is_rain: np.ndarray, radar) -> np.ndarray:
     rain_rate = ma.zeros(len(is_rain))
     rain_rate[is_rain] = ma.masked
     if 'rain_rate' in radar.data:

@@ -9,7 +9,7 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.instruments.instruments import Instrument
 
 
-def save_level1b(obj: any,
+def save_level1b(obj,
                  output_file: str,
                  uuid: Optional[str] = None) -> str:
     """Saves Cloudnet Level 1b file."""
@@ -32,7 +32,7 @@ def save_level1b(obj: any,
 
 
 def save_product_file(short_id: str,
-                      obj: any,
+                      obj,
                       file_name: str,
                       uuid: Optional[str] = None,
                       copy_from_cat: Optional[tuple] = ()) -> str:
