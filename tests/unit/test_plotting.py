@@ -2,7 +2,6 @@ from scipy.signal import filtfilt
 import numpy as np
 import numpy.ma as ma
 import pytest
-import numpy.testing as testing
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from cloudnetpy.plotting import plotting
 from datetime import date
@@ -70,7 +69,7 @@ def test_find_time_gap_indices():
     time = np.array([0.01, 0.02, 0.04, 0.13, 0.14, 0.23, 0.24])
     indices = (2, 4)
     gaps = plotting._find_time_gap_indices(time)
-    testing.assert_array_almost_equal(gaps, indices)
+    assert_array_almost_equal(gaps, indices)
 
 
 def test_calculate_rolling_mean():
@@ -79,7 +78,7 @@ def test_calculate_rolling_mean():
     r_window = np.blackman(4)
     r_mean = np.convolve(data, r_window, 'valid') / np.sum(r_window)
     x, y = plotting._calculate_rolling_mean(time, data)
-    testing.assert_array_almost_equal(x, r_mean)
+    assert_array_almost_equal(x, r_mean)
 
 
 def test_filter_noise():
@@ -87,27 +86,27 @@ def test_filter_noise():
     x = plotting._filter_noise(data, 3)
     b = [1.0 / 3] * 3
     data = filtfilt(b, 1, data)
-    testing.assert_array_almost_equal(x, data)
+    assert_array_almost_equal(x, data)
 
 
-def test_select_none_masked_values_array():
-    data = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    mask = [0, 3, 7]
-    data[mask] = np.ma.masked
-    time = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    expected = np.array([2, 3, 5, 6, 7, 9])
-    x, y = plotting._select_none_masked_values(data, time)
-    testing.assert_array_almost_equal(x, expected)
-    testing.assert_array_almost_equal(y, expected)
+def test_get_unmasked_values1():
+    data = ma.array(
+        [1, 2, 3, 4, 5, 6, 7, 8, 9], mask=
+        [1, 0, 0, 1, 0, 0, 0, 0, 0])
+    time = ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9], mask=False)
+    expected = ma.array([2, 3, 5, 6, 7, 8, 9], mask=False)
+    x, y = plotting._get_unmasked_values(data, time)
+    assert_array_almost_equal(x, expected)
+    assert_array_almost_equal(y, expected)
 
 
-def test_select_none_masked_values_bool():
-    data = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    time = np.ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    expected = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    x, y = plotting._select_none_masked_values(data, time)
-    testing.assert_array_almost_equal(x, expected)
-    testing.assert_array_almost_equal(y, expected)
+def test_get_unmasked_values2():
+    data = ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9], mask=False)
+    time = ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9], mask=False)
+    expected = ma.array([1, 2, 3, 4, 5, 6, 7, 8, 9], mask=False)
+    x, y = plotting._get_unmasked_values(data, time)
+    assert_array_almost_equal(x, expected)
+    assert_array_almost_equal(y, expected)
 
 
 def test_change_unit2kg():
@@ -116,7 +115,7 @@ def test_change_unit2kg():
     x = plotting._g_to_kg(data, unit)
     expected = np.array([0.001, 0.002, 0.003, 0.004, 0.005, 0.006,
                         0.007, 0.008, 0.009])
-    testing.assert_array_almost_equal(x, expected)
+    assert_array_almost_equal(x, expected)
 
 
 def test_keep_unit_kg():
@@ -124,7 +123,7 @@ def test_keep_unit_kg():
     unit = 'kg m-2'
     x = plotting._g_to_kg(data, unit)
     expected = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
-    testing.assert_array_almost_equal(x, expected)
+    assert_array_almost_equal(x, expected)
 
 
 class TestReadAxValues:

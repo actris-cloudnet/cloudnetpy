@@ -20,9 +20,9 @@ class VaisalaCeilo(Ceilometer):
         self.full_path = full_path
         self.site_meta = site_meta
         self.expected_date = expected_date
-        self._backscatter_scale_factor = 1
-        self._hex_conversion_params = (1, 1, 1)
-        self._message_number = None
+        self._backscatter_scale_factor = 1.0
+        self._hex_conversion_params: Tuple[int, int, int] = (1, 1, 1)
+        self._message_number: int
 
     def _is_ct25k(self) -> bool:
         if self.instrument is not None:
@@ -56,7 +56,7 @@ class VaisalaCeilo(Ceilometer):
                 profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
             except ValueError:
                 logging.warning('Bad value in raw ceilometer data')
-        ind = np.where(profiles & self._hex_conversion_params[1] != 0)
+        ind = profiles & self._hex_conversion_params[1] != 0
         profiles[ind] -= self._hex_conversion_params[2]
         return profiles.astype(float) / self._backscatter_scale_factor
 
@@ -73,6 +73,7 @@ class VaisalaCeilo(Ceilometer):
             for i, line in enumerate(data[timestamp_line_number:]):
                 if utils.is_empty_line(line):
                     return i
+            raise RuntimeError('Can not parse number of data lines')
 
         def _parse_data_lines(starting_indices: list) -> list:
             return [[data[n + line_number] for n in starting_indices
@@ -282,9 +283,8 @@ class Ct25k(VaisalaCeilo):
                 'window_contamination', 'zenith_angle', 'background_light',
                 'measurement_parameters', 'backscatter_sum')
         values = [line.split() for line in lines]
-        if len(values[0]) == 10:
-            keys = ('scale',) + keys
-        return values_to_dict(keys, values)
+        keys_out = ('scale',) + keys if len(values[0]) == 10 else keys
+        return values_to_dict(keys_out, values)
 
 
 def split_string(string: str, indices: list) -> list:

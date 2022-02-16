@@ -20,8 +20,8 @@ class Lidar(DataSource):
 
     def interpolate_to_grid(self, time_new: np.ndarray, height_new: np.ndarray) -> list:
         """Interpolate beta using nearest neighbor."""
-        max_height = 100  # m
-        max_time = 1  # min
+        max_height = 100.0  # m
+        max_time = 1.0  # min
 
         # Remove completely masked profiles from the interpolation
         beta = self.data['beta'][:]
@@ -29,6 +29,7 @@ class Lidar(DataSource):
         for ind, b in enumerate(beta):
             if not ma.all(b) is ma.masked:
                 indices.append(ind)
+        assert self.height is not None
         beta_interpolated = interpolate_2d_nearest(self.time[indices], self.height,
                                                    beta[indices, :], time_new, height_new)
 

@@ -47,14 +47,16 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
     """
     melting_layer = np.zeros(obs.tw.shape, dtype=bool)
 
-    ldr_prof = None
-    ldr_dprof = None
-    ldr_diff = None
+    ldr_prof: Union[np.ndarray, None] = None
+    ldr_dprof: Union[np.ndarray, None] = None
+    ldr_diff: Union[np.ndarray, None] = None
     width_prof = None
 
     if hasattr(obs, 'ldr'):
         # Required for peak detection
-        ldr_diff = np.diff(obs.ldr, axis=1).filled(0)
+        diffu = np.diff(obs.ldr, axis=1)
+        assert isinstance(diffu, ma.MaskedArray)
+        ldr_diff = diffu.filled(0)
 
     t_range = _find_model_temperature_range(obs.model_type)
 
@@ -70,6 +72,7 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
 
         if ma.count(ldr_prof) > 3 or ma.count(v_prof) > 3:
             try:
+                assert ldr_prof is not None and ldr_dprof is not None
                 indices = _find_melting_layer_from_ldr(ldr_prof, ldr_dprof, v_prof, z_prof)
             except (ValueError, IndexError):
                 height = obs.height[temp_indices]
@@ -121,14 +124,14 @@ def _find_melting_layer_from_v(v_prof: np.ndarray,
     except IndexError:
         return None
     if width_prof is not None:
-        conditions = (width_prof[base] - width_prof[top] > 0.2,
+        conditions = [width_prof[base] - width_prof[top] > 0.2,
                       v_prof[top] - v_prof[base] > 0.5,
                       50 < (height[top] - height[base]) < 1000,
-                      v_prof[base] < -2)
+                      v_prof[base] < -2]
     else:
-        conditions = (v_prof[top] - v_prof[base] > 2,
+        conditions = [v_prof[top] - v_prof[base] > 2,
                       50 < (height[top] - height[base]) < 1000,
-                      v_prof[base] < -2)
+                      v_prof[base] < -2]
     if all(conditions):
         base = int(round(top - (top-base)/2))
         return np.arange(base, top)

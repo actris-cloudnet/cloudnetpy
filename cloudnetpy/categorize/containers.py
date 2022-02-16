@@ -105,7 +105,7 @@ def _find_rain_rate(is_rain: np.ndarray, radar) -> np.ndarray:
     return rain_rate
 
 
-def _find_clutter(v: np.ndarray,
+def _find_clutter(v: np.ma.MaskedArray,
                   is_rain: np.ndarray,
                   n_gates: int = 10,
                   v_lim: float = 0.05) -> np.ndarray:

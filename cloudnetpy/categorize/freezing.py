@@ -62,7 +62,7 @@ def _is_all_freezing(mean_melting_alt: np.ndarray, t0_alt: np.ndarray, height: n
     return no_detected_melting and all_temperatures_below_freezing
 
 
-def _find_mean_melting_alt(obs: ClassData, melting_layer: np.ndarray) -> np.ndarray:
+def _find_mean_melting_alt(obs: ClassData, melting_layer: np.ndarray) -> ma.MaskedArray:
     assert melting_layer.dtype == bool
     alt_array = np.tile(obs.height, (len(obs.time), 1))
     melting_alts = ma.array(alt_array, mask=~melting_layer)
@@ -80,7 +80,7 @@ def _find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
         1-D array denoting altitudes where the temperature drops below 0 deg C.
 
     """
-    alt = np.array([])
+    alt: np.ndarray = np.array([])
     for prof in temperature:
         ind = np.where(prof < T0)[0][0]
         if ind == 0:

@@ -73,7 +73,7 @@ def _get_probabilities(obs: ClassData) -> dict:
 
 
 def _get_smoothed_v(obs: ClassData,
-                    sigma: Tuple[float, float] = (5, 5)) -> np.ndarray:
+                    sigma: Tuple[float, float] = (5, 5)) -> ma.MaskedArray:
     smoothed_v = gaussian_filter(obs.v, sigma)
     smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
     return smoothed_v

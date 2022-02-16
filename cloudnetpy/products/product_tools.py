@@ -1,5 +1,5 @@
 """General helper classes and functions for all products."""
-from typing import Union
+from typing import Union, Dict
 import numpy as np
 import numpy.ma as ma
 import netCDF4
@@ -64,6 +64,7 @@ class ProductClassification(CategorizeBits):
 def get_is_rain(filename: str) -> np.ndarray:
     rain_rate = read_nc_fields(filename, 'rain_rate')
     is_rain = rain_rate != 0
+    assert isinstance(is_rain, ma.MaskedArray)
     is_rain[is_rain.mask] = True
     return np.array(is_rain)
 
@@ -87,7 +88,7 @@ def read_nc_fields(nc_file: str, names: Union[str, list]) -> Union[ma.MaskedArra
     return data[0] if len(data) == 1 else data
 
 
-def interpolate_model(cat_file: str, names: Union[str, list]) -> Union[list, np.ndarray]:
+def interpolate_model(cat_file: str, names: Union[str, list]) -> Dict[str, np.ndarray]:
     """Interpolates 2D model field into dense Cloudnet grid.
 
     Args:
@@ -95,14 +96,12 @@ def interpolate_model(cat_file: str, names: Union[str, list]) -> Union[list, np.
         names: Model variable to be interpolated, e.g. 'temperature' or ['temperature', 'pressure'].
 
     Returns:
-        ndarray/list: Array in case of one variable passed as a string. List of arrays otherwise.
+        dict: Interpolated variables.
 
     """
-    def _interp_field(var_name):
-        values = read_nc_fields(cat_file, ['model_time', 'model_height', var_name,
-                                           'time', 'height'])
+    def _interp_field(var_name: str) -> np.ndarray:
+        values = read_nc_fields(cat_file, ['model_time', 'model_height', var_name, 'time', 'height'])
         return utils.interpolate_2d(*values)
 
     names = [names] if isinstance(names, str) else names
-    data = [_interp_field(name) for name in names]
-    return data[0] if len(data) == 1 else data
+    return {name: _interp_field(name) for name in names}

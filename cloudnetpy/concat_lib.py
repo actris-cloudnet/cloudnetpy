@@ -138,15 +138,15 @@ class Concat:
         """Returns tuple of dimension names, e.g., ('time', 'range') that match the array size."""
         if utils.isscalar(array):
             return ()
-        variable_size = ()
+        variable_size = []
         file_dims = self.concatenated_file.dimensions
         for length in array.shape:
             try:
                 dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
             except IndexError:
                 dim = self.concat_dimension
-            variable_size += (dim,)
-        return variable_size
+            variable_size.append(dim)
+        return tuple(variable_size)
 
     def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
         data_model = 'NETCDF4' if self.first_file.data_model == 'NETCDF4' else 'NETCDF4_CLASSIC'

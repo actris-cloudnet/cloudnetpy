@@ -1,5 +1,5 @@
 """Module for reading Radiometrics MP3014 microwave radiometer data."""
-from typing import Optional
+from typing import Optional, List
 from cloudnetpy import output
 import csv
 import numpy as np
@@ -50,9 +50,9 @@ class Radiometrics:
     def __init__(self, filename: str, site_meta: dict):
         self.filename = filename
         self.site_meta = site_meta
-        self.raw_data = []
-        self.data = {}
-        self.date = None
+        self.raw_data: list = []
+        self.data: dict = {}
+        self.date: List[str] = []
         self.instrument = instruments.RADIOMETRICS
 
     def read_raw_data(self):
@@ -82,12 +82,12 @@ class Radiometrics:
         if expected_date is None:
             self.date = self._convert_date(dates[0])
             return
-        expected_date = expected_date.split('-')
-        self.date = expected_date
+        date_components = expected_date.split('-')
+        self.date = date_components
         valid_ind = []
         valid_timestamps = []
         for ind, (d, timestamp) in enumerate(zip(dates, self.data['time'])):
-            if self._convert_date(d) == expected_date and timestamp not in valid_timestamps:
+            if self._convert_date(d) == date_components and timestamp not in valid_timestamps:
                 valid_ind.append(ind)
                 valid_timestamps.append(timestamp)
         if len(valid_ind) == 0:

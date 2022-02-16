@@ -16,8 +16,8 @@ import requests
 from cloudnetpy.exceptions import ValidTimeStampError
 
 
-
 Epoch = Tuple[int, int, int]
+Date = Tuple[str, str, str]
 
 SECONDS_PER_MINUTE = 60
 SECONDS_PER_HOUR = 3600
@@ -152,23 +152,23 @@ def rebin_2d(x_in: np.ndarray,
                                                                statistic=statistic,
                                                                bins=edges)
     result[~np.isfinite(result)] = 0
-    result = ma.masked_equal(result, 0)
+    masked_result = ma.masked_equal(result, 0)
 
     # Fill bins with not enough profiles
     empty_indices = []
     for ind in range(len(edges)-1):
         is_data = np.where((x_in > edges[ind]) & (x_in <= edges[ind+1]))[0]
         if len(is_data) < n_min:
-            result[ind, :] = ma.masked
+            masked_result[ind, :] = ma.masked
             empty_indices.append(ind)
     if len(empty_indices) > 0:
         logging.info(f'No radar data in {len(empty_indices)} bins')
 
-    return result, empty_indices
+    return masked_result, empty_indices
 
 
 def rebin_1d(x_in: np.ndarray,
-             array: ma.MaskedArray,
+             array: Union[np.ndarray, ma.MaskedArray],
              x_new: np.ndarray,
              statistic: str = 'mean') -> ma.MaskedArray:
     """Rebins 1D array.
@@ -278,8 +278,8 @@ def isbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
     return array & mask > 0
 
 
-def setbit(array: np.ndarray, nth_bit: int) -> int:
-    """Sets nth bit (0, 1, 2..) on number.
+def setbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
+    """Sets nth bit (0, 1, 2, ...) on number.
 
     Args:
         array: Integer array.
@@ -425,7 +425,7 @@ def lin2db(array: np.ndarray, scale: int = 10) -> np.ndarray:
 
 def mdiff(array: np.ndarray) -> float:
     """Returns median difference of 1-D array."""
-    return ma.median(ma.diff(array))
+    return float(ma.median(ma.diff(array)))
 
 
 def l2norm(*args) -> ma.MaskedArray:
@@ -546,9 +546,11 @@ def init(n_vars: int,
               fill_value=1e+20)
 
     """
-    fun = ma.zeros if masked else np.zeros
     for _ in range(n_vars):
-        yield fun(shape, dtype=dtype)
+        if masked is True:
+            yield ma.zeros(shape, dtype=dtype)
+        else:
+            yield np.zeros(shape, dtype=dtype)
 
 
 def n_elements(array: np.ndarray, dist: float, var: Optional[str] = None) -> int:
@@ -672,14 +674,14 @@ def del_dict_keys(data: dict, keys: Union[tuple, list]) -> dict:
     return temp_dict
 
 
-def array_to_probability(array: ma.MaskedArray,
+def array_to_probability(array: np.ndarray,
                          loc: float,
                          scale: float,
                          invert: bool = False) -> np.ndarray:
     """Converts continuous variable into 0-1 probability.
 
     Args:
-        array: Masked numpy array.
+        array: Numpy array.
         loc: Center of the distribution. Values smaller than this will have small probability.
             Values greater than this will have large probability.
         scale: Width of the distribution, i.e., how fast the probability drops or increases from

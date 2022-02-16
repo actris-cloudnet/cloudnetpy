@@ -89,11 +89,12 @@ def find_liquid(obs: ClassData,
     beta = ma.copy(obs.beta)
     height = obs.height
 
-    is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,
-                                                    masked=False)
+    is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool, masked=False)
     base_below_peak = utils.n_elements(height, 200)
     top_above_peak = utils.n_elements(height, 150)
-    beta_diff = np.diff(beta, axis=1).filled(0)
+    difference = np.diff(beta, axis=1)
+    assert isinstance(difference, ma.MaskedArray)
+    beta_diff = difference.filled(0)
     beta = beta.filled(0)
     peak_indices = _find_strong_peaks(beta, peak_amp)
 
@@ -232,7 +233,7 @@ def interpolate_lwp(obs: ClassData) -> np.ndarray:
     return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
 
 
-def _find_strong_peaks(data: np.ndarray, threshold: float) -> np.ndarray:
+def _find_strong_peaks(data: np.ndarray, threshold: float) -> tuple:
     """Finds local maximums from data (greater than *threshold*)."""
     peaks = scipy.signal.argrelextrema(data, np.greater, order=4, axis=1)
     strong_peaks = np.where(data[peaks] > threshold)

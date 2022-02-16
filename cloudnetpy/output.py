@@ -17,7 +17,7 @@ def save_level1b(obj,
     if 'chirp_start_indices' in obj.data:
         dimensions['chirp_sequence'] = len(obj.data['chirp_start_indices'][:])
     nc = init_file(output_file, dimensions, obj.data, uuid)
-    uuid = nc.file_uuid
+    file_uuid = nc.file_uuid
     fix_attribute_name(nc)
     location = obj.site_meta['name']
     nc.cloudnet_file_type = obj.instrument.domain
@@ -28,7 +28,7 @@ def save_level1b(obj,
     nc.source = get_l1b_source(obj.instrument)
     nc.references = get_references()
     nc.close()
-    return uuid
+    return file_uuid
 
 
 def save_product_file(short_id: str,
@@ -50,7 +50,7 @@ def save_product_file(short_id: str,
     dimensions = {'time': len(obj.time),
                   'height': len(obj.dataset.variables['height'])}
     nc = init_file(file_name, dimensions, obj.data, uuid)
-    uuid = nc.file_uuid
+    file_uuid = nc.file_uuid
     nc.cloudnet_file_type = short_id
     vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
     copy_variables(obj.dataset, nc, vars_from_source)
@@ -60,7 +60,7 @@ def save_product_file(short_id: str,
     merge_history(nc, human_readable_file_type, {'categorize': obj})
     nc.references = get_references(short_id)
     nc.close()
-    return uuid
+    return file_uuid
 
 
 def get_l1b_source(instrument: Instrument) -> str:
@@ -131,8 +131,8 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
             histories.append(history)
     histories.sort(reverse=True)
     old_history = [f'\n{history}' for history in histories]
-    old_history = ''.join(old_history)
-    nc.history = f"{new_record}{old_history}"
+    old_history_str = ''.join(old_history)
+    nc.history = f"{new_record}{old_history_str}"
 
 
 def add_source_instruments(nc: netCDF4.Dataset, data: dict) -> None:
@@ -203,9 +203,9 @@ def copy_global(source: netCDF4.Dataset,
 
 
 def add_time_attribute(attributes: dict, date: list, key: str = 'time') -> dict:
-    """"Adds time attribute with correct units."""
-    date = '-'.join(date)
-    units = f'hours since {date} 00:00:00 +00:00'
+    """Adds time attribute with correct units."""
+    date_str = '-'.join(date)
+    units = f'hours since {date_str} 00:00:00 +00:00'
     if key not in attributes:
         attributes[key] = MetaData(units=units)
     else:
@@ -271,13 +271,13 @@ def _get_dimensions(nc: netCDF4.Dataset, data: np.ndarray) -> tuple:
     """Finds correct dimensions for a variable."""
     if utils.isscalar(data):
         return ()
-    variable_size = ()
+    variable_size: list = []
     file_dims = nc.dimensions
     array_dims = data.shape
     for length in array_dims:
         dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
-        variable_size = variable_size + (dim,)
-    return variable_size
+        variable_size = variable_size + [dim]
+    return tuple(variable_size)
 
 
 def _get_identifier(short_id: str) -> str:

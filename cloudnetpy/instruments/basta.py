@@ -1,5 +1,5 @@
 """Module for reading / converting BASTA radar data."""
-from typing import Optional
+from typing import Optional, List
 import numpy as np
 from cloudnetpy import output
 from cloudnetpy.instruments.nc_radar import NcRadar
@@ -71,7 +71,7 @@ class Basta(NcRadar):
     """
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, site_meta)
-        self.date = self.get_date()
+        self.date: List[str] = self.get_date()
         self.instrument = instruments.BASTA
 
     def screen_data(self, keymap: dict) -> None:

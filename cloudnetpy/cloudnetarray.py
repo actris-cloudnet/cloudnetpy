@@ -65,8 +65,9 @@ class CloudnetArray:
         """
         if self.data.ndim == 1:
             self.data = utils.rebin_1d(time, self.data, time_new)
-            bad_indices = np.where(self.data == ma.masked)[0]
+            bad_indices = list(np.where(self.data == ma.masked)[0])
         else:
+            assert isinstance(self.data, ma.MaskedArray)
             self.data, bad_indices = utils.rebin_2d(time, self.data, time_new)
         return bad_indices
 
@@ -127,6 +128,7 @@ class RadarArray(CloudnetArray):
         self._filter(utils.filter_x_pixels)
 
     def _filter(self, fun) -> None:
+        assert isinstance(self.data, ma.MaskedArray)
         is_data = (~self.data.mask).astype(int)
         is_data_filtered = fun(is_data)
         self.data[is_data_filtered == 0] = ma.masked
@@ -141,13 +143,15 @@ class RadarArray(CloudnetArray):
         Notes:
             The result is masked if the bin contains masked values.
 
-        """
-        self.data, _ = utils.rebin_2d(time, self.data.astype(float), time_new, 'std')
+"""
+        data_as_float = self.data.astype(float)
+        assert isinstance(data_as_float, ma.MaskedArray)
+        self.data, _ = utils.rebin_2d(time, data_as_float, time_new, 'std')
 
     def rebin_velocity(self,
                        time: np.ndarray,
                        time_new: np.ndarray,
-                       folding_velocity: Union[float, list],
+                       folding_velocity: Union[float, np.ndarray],
                        sequence_indices: list) -> None:
         """Rebins Doppler velocity in polar coordinates.
 
@@ -155,19 +159,19 @@ class RadarArray(CloudnetArray):
             time: 1D time array.
             time_new: 1D new time array.
             folding_velocity: Folding velocity (m/s). Can be float when it's the same for all
-                altitudes, or list when it matches difference altitude regions
+                altitudes, or np.ndarray when it matches difference altitude regions
                 (defined in `sequence_indices`).
             sequence_indices: List containing indices of different folding regions,
                 e.g. [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10]].
 
         """
-        def _get_scaled_vfold() -> Union[float, list]:
+        def _get_scaled_vfold() -> np.ndarray:
             vfold_scaled = math.pi / folding_velocity
             if isinstance(vfold_scaled, float):
-                vfold_scaled = [vfold_scaled]
+                vfold_scaled = np.array([float(vfold_scaled)])
             return vfold_scaled
 
-        def _scale_by_vfold(data_in: np.array, fun) -> np.array:
+        def _scale_by_vfold(data_in: np.ndarray, fun) -> np.ndarray:
             data_out = ma.copy(data_in)
             for i, ind in enumerate(sequence_indices):
                 data_out[:, ind] = fun(data_in[:, ind], folding_velocity_scaled[i])
@@ -175,8 +179,8 @@ class RadarArray(CloudnetArray):
 
         folding_velocity_scaled = _get_scaled_vfold()
         data_scaled = _scale_by_vfold(self.data, np.multiply)
-        vel_x = np.cos(data_scaled)
-        vel_y = np.sin(data_scaled)
+        vel_x = ma.cos(data_scaled)
+        vel_y = ma.sin(data_scaled)
         vel_x_mean, _ = utils.rebin_2d(time, vel_x, time_new)
         vel_y_mean, _ = utils.rebin_2d(time, vel_y, time_new)
         mean_vel_scaled = np.arctan2(vel_y_mean, vel_x_mean)

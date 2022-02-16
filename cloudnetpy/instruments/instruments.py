@@ -4,10 +4,10 @@ from typing import Optional
 
 @dataclass
 class Instrument:
+    domain: str
+    category: str
+    model: str
     manufacturer: Optional[str] = None
-    domain: Optional[str] = None
-    category: Optional[str] = None
-    model: Optional[str] = None
     wavelength: Optional[float] = None
     frequency: Optional[float] = None
 

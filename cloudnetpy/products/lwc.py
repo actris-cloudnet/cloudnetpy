@@ -70,8 +70,7 @@ class LwcSource(DataSource):
         lwp_error (ndarray): 1D error of liquid water path.
         is_rain (ndarray): 1D array denoting presence of rain.
         dheight (float): Median difference in height vector.
-        atmosphere (dict): Dictionary containing interpolated fields `temperature`
-            and `pressure`.
+        atmosphere (dict): Dictionary containing interpolated fields `temperature` and `pressure`.
         categorize_bits (CategorizeBits): The :class:`CategorizeBits` instance.
 
     """
@@ -96,7 +95,8 @@ class LwcSource(DataSource):
     @staticmethod
     def _get_atmosphere(categorize_file: str) -> Tuple[np.ndarray, np.ndarray]:
         fields = ['temperature', 'pressure']
-        return p_tools.interpolate_model(categorize_file, fields)
+        atmosphere = p_tools.interpolate_model(categorize_file, fields)
+        return atmosphere['temperature'], atmosphere['pressure']
 
 
 class Lwc:
@@ -306,6 +306,7 @@ class LwcError:
         return self._limit_error(error, 5)
 
     def _calc_lwc_gradient(self) -> np.ndarray:
+        assert isinstance(self.lwc, ma.MaskedArray)
         gradient_elements = np.gradient(self.lwc.filled(0))
         return utils.l2norm(*gradient_elements)
 

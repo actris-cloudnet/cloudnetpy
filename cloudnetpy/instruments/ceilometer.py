@@ -1,10 +1,12 @@
 import logging
-from typing import Tuple, Optional
+from typing import Tuple, List, Union
 import numpy as np
 import numpy.ma as ma
 import scipy.ndimage
 from cloudnetpy import utils
+from cloudnetpy.utils import Epoch
 from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.instruments.instruments import Instrument
 
 
 class NoiseParam:
@@ -19,14 +21,14 @@ class NoiseParam:
 class Ceilometer:
     """Base class for all types of ceilometers and pollyxt."""
 
-    def __init__(self, noise_param: Optional[NoiseParam] = NoiseParam()):
+    def __init__(self, noise_param: NoiseParam = NoiseParam()):
         self.noise_param = noise_param
-        self.data = {}          # Need to contain 'beta_raw', 'range' and 'time'
-        self.metadata = {}      # Need to contain 'date' as ('yyyy', 'mm', 'dd')
-        self.expected_date = None
-        self.site_meta = {}
-        self.date = None
-        self.instrument = None
+        self.data: dict = {}          # Need to contain 'beta_raw', 'range' and 'time'
+        self.metadata: dict = {}      # Need to contain 'date' as ('yyyy', 'mm', 'dd')
+        self.expected_date: Union[str, None] = None
+        self.site_meta: dict = {}
+        self.date: List[str] = []
+        self.instrument: Union[Instrument, None] = None
 
     def calc_screened_product(self,
                               array: np.ndarray,
@@ -63,7 +65,7 @@ class Ceilometer:
             if key in self.site_meta:
                 self.data[key] = float(self.site_meta[key])
 
-    def get_date_and_time(self, epoch: tuple) -> None:
+    def get_date_and_time(self, epoch: Epoch) -> None:
         if self.expected_date is not None:
             self.data = utils.screen_by_time(self.data, epoch, self.expected_date)
         self.date = utils.seconds2date(self.data['time'][0], epoch=epoch)[:3]
@@ -100,7 +102,7 @@ class NoisyData:
         self.range_corrected = range_corrected
 
     def screen_data(self,
-                    data_in: np.array,
+                    data_in: np.ndarray,
                     snr_limit: float = 5,
                     is_smoothed: bool = False,
                     keep_negative: bool = False,
@@ -162,7 +164,7 @@ class NoisyData:
                       array: np.ndarray,
                       noise: np.ndarray,
                       keep_negative: bool,
-                      snr_limit: float) -> ma.MaskedArray:
+                      snr_limit: float) -> np.ndarray:
         snr = array / utils.transpose(noise)
         if self.range_corrected is False:
             snr_scale_factor = 6
@@ -184,9 +186,9 @@ class NoisyData:
         ind = self._get_altitude_ind()
         data[:, ind] = data[:, ind] * self._get_range_squared()[ind]
 
-    def _get_altitude_ind(self) -> np.ndarray:
+    def _get_altitude_ind(self) -> tuple:
         if self.range_corrected is False:
-            alt_limit = 2400
+            alt_limit = 2400.0
             logging.warning(f'Raw data not range-corrected, correcting below {alt_limit} m')
         else:
             alt_limit = 1e12
@@ -204,7 +206,7 @@ class NoisyData:
         """Removes values in saturated (e.g. fog) profiles above peak."""
         for time_ind in np.where(is_fog)[0]:
             profile = data[time_ind, :]
-            peak_ind = np.argmax(profile)
+            peak_ind = int(np.argmax(profile))
             profile[peak_ind:][profile[peak_ind:] < threshold] = ma.masked
 
 
@@ -219,7 +221,7 @@ def _calc_var_from_top_gates(data: np.ndarray) -> np.ndarray:
     return ma.var(data[:, -n_gates:], axis=1)
 
 
-def calc_sigma_units(time_vector: np.array, range_los: np.array) -> Tuple[float, float]:
+def calc_sigma_units(time_vector: np.ndarray, range_los: np.ndarray) -> Tuple[float, float]:
     """Calculates Gaussian peak std parameters.
 
     The amount of smoothing is hard coded. This function calculates
@@ -246,7 +248,7 @@ def calc_sigma_units(time_vector: np.array, range_los: np.array) -> Tuple[float,
     return x_std, y_std
 
 
-def _estimate_clouds_from_beta(beta: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
+def _estimate_clouds_from_beta(beta: np.ndarray) -> Tuple[tuple, np.ndarray, float]:
     """Naively finds strong clouds from ceilometer backscatter."""
     cloud_limit = 1e-6
     cloud_ind = np.where(beta > cloud_limit)

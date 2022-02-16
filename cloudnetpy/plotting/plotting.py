@@ -175,7 +175,9 @@ def _handle_saving(image_name: Optional[str], save_path: Optional[str], show: bo
 
 
 def _get_relative_error(fields: list, ax_values: list, max_y: int) -> tuple:
-    old_data_interp = utils.interpolate_2d_mask(*ax_values[0], fields[0], *ax_values[1])
+    x, y = ax_values[0]
+    x_new, y_new = ax_values[1]
+    old_data_interp = utils.interpolate_2d_mask(x, y, fields[0], x_new, y_new)
     error = utils.calc_relative_error(old_data_interp, fields[1])
     return _screen_high_altitudes(error, ax_values[1], max_y)
 
@@ -281,7 +283,7 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) ->
     """
     alt = ax_values[-1]
     if data_field.ndim > 1:
-        ind = (np.argmax(alt > max_y) or len(alt)) + 1
+        ind = int((np.argmax(alt > max_y) or len(alt)) + 1)
         data_field = data_field[:, :ind]
         alt = alt[:ind]
     return data_field, (ax_values[0], alt)
@@ -331,7 +333,8 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
         axes (tuple): Time and height 1D arrays.
 
     """
-    def _hide_segments(data_in: ndarray) -> Tuple[ndarray, list, list]:
+    def _hide_segments(data_in: ma.MaskedArray) -> Tuple[ma.MaskedArray, list, list]:
+        assert variables.clabel is not None
         labels = [x[0] for x in variables.clabel]
         colors = [x[1] for x in variables.clabel]
         segments_to_hide = np.char.startswith(labels, '_')
@@ -365,6 +368,7 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
         axes (tuple): Time and height 1D arrays.
     """
     variables = ATTRIBUTES[name]
+    assert variables.plot_range is not None
 
     if name == 'cloud_fraction':
         data[data < 0.1] = ma.masked
@@ -393,8 +397,7 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
         colorbar.ax.set_yticklabels(tick_labels)
 
 
-def _plot_instrument_data(ax, data: ma.MaskedArray, name: str, product: str,
-                          time: ndarray, unit: str):
+def _plot_instrument_data(ax, data: ma.MaskedArray, name: str, product: Optional[str], time: ndarray, unit: str):
     if product == 'mwr':
         _plot_mwr(ax, data, name, time, unit)
     if product == 'disdrometer':
@@ -416,8 +419,8 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
         _set_ax(ax, ylim, '')
 
 
-def _plot_mwr(ax, data: ma.MaskedArray, name: str, time: ndarray, unit: str):
-    data, time = _select_none_masked_values(data, time)
+def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
+    data, time = _get_unmasked_values(data_in, time)
     data = _g_to_kg(data, unit)
     rolling_mean, width = _calculate_rolling_mean(time, data)
     gaps = _find_time_gap_indices(time)
@@ -434,16 +437,12 @@ def _plot_mwr(ax, data: ma.MaskedArray, name: str, time: ndarray, unit: str):
             min_y=round(np.min(data), 3) - 0.0005)
 
 
-def _select_none_masked_values(data: ma.MaskedArray, time: ndarray) -> tuple:
+def _get_unmasked_values(data: ma.MaskedArray, time: ndarray) -> Tuple[np.ndarray, np.ndarray]:
     good_values = ~data.mask
-    try:
-        if good_values:
-            return data, time
-    except ValueError:
-        return data[good_values], time[good_values]
+    return data[good_values], time[good_values]
 
 
-def _g_to_kg(data: ma.MaskedArray, unit: str) -> ma.MaskedArray:
+def _g_to_kg(data: np.ndarray, unit: str) -> np.ndarray:
     if 'kg' in unit:
         return data
     return data / 1000
@@ -544,7 +543,7 @@ def _plot_relative_error(ax, error: ma.MaskedArray, ax_values: tuple):
     ax.set_title(f"Median relative error: {median_error} %", fontsize=14)
 
 
-def _lin2log(*args: ndarray) -> list:
+def _lin2log(*args) -> list:
     return [ma.log10(x) for x in args]
 
 

@@ -1,5 +1,5 @@
 """Module for reading / converting disdrometer data."""
-from typing import Optional, Union
+from typing import Optional, Union, List, Tuple
 import numpy as np
 import numpy.ma as ma
 from cloudnetpy import output
@@ -41,6 +41,7 @@ def disdrometer2nc(disdrometer_file: str,
         >>> uuid = disdrometer2nc('thies-lnm.log', 'thies-lnm.nc', site_meta)
 
     """
+    disdrometer: Union[Thies, Parsivel]
     try:
         disdrometer = Parsivel(disdrometer_file, site_meta)
     except ValueError:
@@ -65,11 +66,11 @@ class Disdrometer:
         self.filename = filename
         self.site_meta = site_meta
         self.source = source
-        self.date = None
+        self.date: List[str] = []
         self.sensor_id = None
-        self.n_diameter = None
-        self.n_velocity = None
-        self.data = {}
+        self.n_diameter: int = 0
+        self.n_velocity: int = 0
+        self.data: dict = {}
         self._file_data = self._read_file()
 
     def convert_units(self):
@@ -113,7 +114,7 @@ class Disdrometer:
                 data.data[:] = data.data[ind]
 
     def _read_file(self) -> dict:
-        data = {
+        data: dict = {
             'scalars': [],
             'vectors': [],
             'spectra': []
@@ -187,7 +188,7 @@ class Disdrometer:
         self.data['data_raw'] = CloudnetArray(array, 'data_raw', dimensions=('time', 'diameter',
                                                                              'velocity'))
 
-    def _store_vectors(self, n_values: list, spreads: list, name: str, start: float = 0):
+    def _store_vectors(self, n_values: list, spreads: list, name: str, start: float = 0.0):
         mid, bounds, spread = self._create_vectors(n_values, spreads, start)
         self.data[name] = CloudnetArray(mid, name, dimensions=(name,))
         key = f'{name}_spread'
@@ -196,8 +197,12 @@ class Disdrometer:
         self.data[key] = CloudnetArray(bounds, key, dimensions=(name, 'nv'))
 
     @staticmethod
-    def _create_vectors(n_values: list, spreads: list, start: float) -> tuple:
-        mid_value, lower_limit, upper_limit = [], [], []
+    def _create_vectors(n_values: List[int],
+                        spreads: List[float],
+                        start: float) -> tuple:
+        mid_value: np.ndarray = np.array([])
+        lower_limit: np.ndarray = np.array([])
+        upper_limit: np.ndarray = np.array([])
         for spread, n in zip(spreads, n_values):
             lower = np.linspace(start, start + (n-1)*spread, n)
             upper = lower + spread
