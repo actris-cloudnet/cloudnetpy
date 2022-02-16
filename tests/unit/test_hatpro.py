@@ -49,7 +49,7 @@ class TestHatpro2nc:
     def test_default_processing(self):
         uuid, files = hatpro.hatpro2nc(file_path, self.temp_file.name, site_meta)
         assert len(files) == 4
-        assert len(uuid) == 32
+        assert len(uuid) == 36
 
     def test_processing_of_several_files(self):
         test_uuid = 'abc'

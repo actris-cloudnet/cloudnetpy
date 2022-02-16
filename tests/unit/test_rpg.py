@@ -113,7 +113,7 @@ class TestRPG2nc94GHz:
         for file in files:
             print(file)
         assert len(files) == 3
-        assert len(uuid) == 32
+        assert len(uuid) == 36
 
     def test_date_validation(self):
         uuid, files = rpg2nc(filepath, self.output2, site_meta, date=self.date)

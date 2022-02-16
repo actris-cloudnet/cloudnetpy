@@ -388,7 +388,7 @@ def test_transpose_2(index, result):
 def test_get_uuid():
     x = utils.get_uuid()
     assert isinstance(x, str)
-    assert len(x) == 32
+    assert len(x) == 36
 
 
 def test_get_time():

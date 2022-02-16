@@ -623,7 +623,7 @@ def date_range(start_date: datetime.date,
 
 def get_uuid() -> str:
     """Returns unique identifier."""
-    return uuid.uuid4().hex
+    return str(uuid.uuid4())
 
 
 def get_wl_band(radar_frequency: float) -> int:
