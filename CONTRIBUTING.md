@@ -14,11 +14,11 @@ Proposing code improvements
 
 If you have a good idea how to improve the code without changing the actual outcome
 of the processing, you can directly create a [pull request](https://github.com/actris-cloudnet/cloudnetpy/pulls) (PR). 
-Examples of these kind of changes are, for example, better 
+Examples of these kinds of changes are, for example, better
 
-* unit tests
 * implementations of the helper functions
-* docstrings
+* docstrings, type hints, variable names etc.
+* unit tests
 
 Try to keep your pull requests small. This will increase the chance to be accepted.
 
@@ -32,5 +32,5 @@ reviewed and tested before accepting. Examples include, for example, modificatio
 * threshold values used in different functions / methods
 * constant values
 
-Also for these sort of proposals, you can open a new [issue](https://github.com/actris-cloudnet/cloudnetpy/issues)
+Also, for these kinds of proposals, you can open a new [issue](https://github.com/actris-cloudnet/cloudnetpy/issues)
 where the idea can be discussed before (possible) implementation.
