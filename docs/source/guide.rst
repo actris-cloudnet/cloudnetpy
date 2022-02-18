@@ -26,14 +26,15 @@ clone the whole repository from `GitHub
 Testing environment
 ...................
 
-Now, create a virtual environment and install pytest and CloudnetPy:
+Create a virtual environment and install:
 
 .. code-block:: console
 
     $ cd cloudnetpy
     $ python3 -m venv venv
     $ source venv/bin/activate
-    (venv) $ pip3 install pytest .
+    (venv) $ pip3 install --upgrade pip
+    (venv) $ pip3 install .[test]
 
 Unit tests
 ..........
@@ -47,14 +48,14 @@ End-to-end test
 
 .. code-block:: console
 
-    (venv) $ python3 tetsts/e2e_test.py
+    (venv) $ python3 tests/e2e_test.py
 
 .. note::
 
    Cloudnetpy performs relatively complicated scientific processing, converting
    noisy measurement data into higher level products. Most of the
    Cloudnetpy's low-level functions are unit tested, but it is
-   difficult to write unambiguous tests for the high-level API calls.
+   difficult to write unambiguous tests for the high-level API functions.
    However, the quality of the processed files can be at least roughly
    checked using CloudnetPy's quality control functions.
 

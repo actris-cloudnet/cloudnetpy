@@ -5,8 +5,8 @@ Overview
 Cloudnet processing scheme
 --------------------------
 
-CloudnetPy is a Python package implementing the so-called Cloudnet processing scheme
-(`Tukiainen 2020`_). The Cloudnet processing produces vertical profiles of cloud properties
+CloudnetPy (`Tukiainen 2020`_) is a Python package implementing the so-called Cloudnet processing scheme
+(`Illingworth 2007`_). Cloudnet processing produces vertical profiles of cloud properties
 from the ground-based remote sensing measurements. Cloud radar, optical lidar, microwave radiometer
 and thermodynamical (model or radiosonde) data are combined to accurately characterize
 clouds up to 15 km with high temporal and vertical resolution.

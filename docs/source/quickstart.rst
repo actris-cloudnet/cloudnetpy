@@ -2,9 +2,10 @@
 Quickstart
 ==========
 
-Processing is easy using CloudnetPy's high level APIs. You only need some
-measurement data from your instruments. And if you don't have it, you can
-always try `these example files <http://lake.fmi.fi/cloudnet-public/cloudnetpy_test_input_files.zip>`_.
+Processing is easy using CloudnetPy's high level APIs.
+First, download some raw data from the
+`Cloudnet data portal API <https://docs.cloudnet.fmi.fi/api/data-portal.html#get-apiraw-files--upload>`_
+or try these `example files <http://lake.fmi.fi/cloudnet-public/cloudnetpy_test_input_files.zip>`_.
 
 Radar processing
 ----------------
@@ -23,8 +24,8 @@ For more information, see `API reference <api.html#instruments.mira2nc>`__ for t
 Lidar processing
 ----------------
 
-Next we convert a raw Jenoptik CHM15k ceilometer (lidar) file into Cloudnet netCDF file
-and process the signal-to-noise screened backscatter. Also this converted lidar
+Next we convert a raw Lufft CHM15k ceilometer (lidar) file into Cloudnet netCDF file
+and process the signal-to-noise screened backscatter coefficient. Also this converted lidar
 file will be needed later.
 
 .. code-block:: python
@@ -39,14 +40,13 @@ MWR processing
 --------------
 
 Processing of multi-channel HATPRO microwave radiometer (MWR) data is not part of CloudnetPy.
-Thus, site operators need to run custom processing software to retrieve integrated liquid
-water path (LWP) from raw HATPRO measurements.
+Thus, site operators need to run third-party processing software to retrieve integrated liquid
+water path (LWP) from raw HATPRO brightness temperature measurements.
 
-However, with a 94 GHz RPG cloud radar, a separate MWR instrument is not necessarely
-required. RPG radars contain single MWR channel providing a rough estimate
-of LWP, which can be used in CloudnetPy. Nevertheless, it is always
-recommended to equip a measurement site with a dedicated multi-channel
-radiometer if possible.
+However, with a 94 GHz RPG cloud radar, a separate MWR instrument is not necessarily
+required. RPG radars contain single MWR channel providing LWP measurements, which can be
+used in CloudnetPy. Nevertheless, it is always recommended to equip a measurement site
+with a dedicated multi-channel radiometer if possible.
 
 Model data
 ----------
