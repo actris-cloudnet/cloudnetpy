@@ -1,7 +1,7 @@
 """Module to find freezing region from data."""
 import logging
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from scipy.interpolate import interp1d
 from cloudnetpy.constants import T0
 from cloudnetpy import utils

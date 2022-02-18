@@ -1,6 +1,6 @@
 """Model module, containing the :class:`Model` class."""
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from scipy.interpolate import interp1d
 from cloudnetpy import CloudnetArray
 from cloudnetpy.categorize import DataSource, atmos

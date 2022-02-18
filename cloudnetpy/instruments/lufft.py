@@ -1,7 +1,7 @@
 """Module with a class for Lufft chm15k ceilometer."""
 from typing import Optional
 import logging
-import numpy.ma as ma
+from numpy import ma
 import netCDF4
 from cloudnetpy.instruments.nc_lidar import NcLidar
 from cloudnetpy import utils
@@ -67,6 +67,7 @@ class LufftCeilo(NcLidar):
             if arg in self.dataset.variables:
                 var = self.dataset.variables[arg]
                 return var[0] if utils.isscalar(var) else var[:]
+        raise ValueError('Unknown variable')
 
     def _get_chm_model(self):
         nc = netCDF4.Dataset(self.file_name)

@@ -2,7 +2,7 @@
 import math
 from typing import Optional, Union
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 import netCDF4
 from cloudnetpy import utils
 from cloudnetpy.metadata import MetaData

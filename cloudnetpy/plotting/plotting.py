@@ -3,7 +3,7 @@ import os.path
 from typing import Optional, Tuple
 from datetime import date
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from numpy import ndarray
 import netCDF4
 from scipy.signal import filtfilt

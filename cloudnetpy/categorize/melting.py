@@ -1,7 +1,7 @@
 """Functions to find melting layer from data."""
-from typing import Optional, Tuple, Union
+from typing import Tuple, Union
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from scipy.ndimage.filters import gaussian_filter
 from cloudnetpy.constants import T0
 from cloudnetpy.categorize import droplet

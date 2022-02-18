@@ -2,7 +2,7 @@
 import logging
 from typing import Optional
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 import netCDF4
 from cloudnetpy import utils, version
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData

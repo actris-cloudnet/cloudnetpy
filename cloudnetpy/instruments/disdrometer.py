@@ -1,7 +1,7 @@
 """Module for reading / converting disdrometer data."""
-from typing import Optional, Union, List, Tuple
+from typing import Optional, Union, List
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from cloudnetpy import output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.vaisala import values_to_dict

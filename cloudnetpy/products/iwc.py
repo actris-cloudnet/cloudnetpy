@@ -2,7 +2,7 @@
 from typing import Optional
 from collections import namedtuple
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos
 from cloudnetpy.metadata import MetaData

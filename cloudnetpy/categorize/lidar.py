@@ -1,7 +1,7 @@
 """Lidar module, containing the :class:`Lidar` class."""
 import logging
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from cloudnetpy.categorize.datasource import DataSource
 from cloudnetpy.utils import interpolate_2d_nearest
 

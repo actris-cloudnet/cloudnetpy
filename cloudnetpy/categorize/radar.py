@@ -1,13 +1,13 @@
 """Radar module, containing the :class:`Radar` class."""
 import math
 from typing import Union
+import logging
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from scipy import constants
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.categorize.classify import ClassificationResult
 from cloudnetpy import utils
-import logging
 
 
 class Radar(DataSource):

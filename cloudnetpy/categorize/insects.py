@@ -1,7 +1,7 @@
 """Module to find insects from data."""
-from typing import Optional, Tuple
+from typing import Tuple
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from scipy.ndimage.filters import gaussian_filter
 from cloudnetpy import utils
 from cloudnetpy.categorize import droplet

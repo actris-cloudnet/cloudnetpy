@@ -1,7 +1,7 @@
 import logging
 from typing import Tuple, List, Union
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 import scipy.ndimage
 from cloudnetpy import utils
 from cloudnetpy.utils import Epoch

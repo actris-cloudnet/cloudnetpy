@@ -1,7 +1,7 @@
 """Module for creating Cloudnet liquid water content file using scaled-adiabatic method."""
 from typing import Optional, Tuple
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from cloudnetpy import utils, output
 from cloudnetpy.categorize import atmos, DataSource
 from cloudnetpy.products import product_tools as p_tools

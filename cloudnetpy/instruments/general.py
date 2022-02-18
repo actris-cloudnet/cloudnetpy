@@ -1,10 +1,10 @@
 """General helper functions for instrument processing."""
 import logging
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
+import netCDF4
 from cloudnetpy import CloudnetArray
 from cloudnetpy import utils
-import netCDF4
 
 
 def add_site_geolocation(obj):
@@ -70,7 +70,7 @@ def get_files_with_common_range(files: list) -> list:
 
 def screen_time_indices(obj, valid_indices: list) -> None:
     n_time = len(obj.time)
-    for key, cloudnet_array in obj.data.items():
+    for cloudnet_array in obj.data.values():
         array = cloudnet_array.data
         if not utils.isscalar(array) and array.shape[0] == n_time:
             if array.ndim == 1:

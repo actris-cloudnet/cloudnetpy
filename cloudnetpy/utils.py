@@ -7,7 +7,7 @@ import datetime
 import re
 import warnings
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 import netCDF4
 from scipy import stats, ndimage
 from scipy.interpolate import RectBivariateSpline, griddata, RegularGridInterpolator
@@ -147,10 +147,10 @@ def rebin_2d(x_in: np.ndarray,
     for ind, values in enumerate(array_screened.T):
         mask = ~values.mask
         if ma.any(values[mask]):
-            result[:, ind], _, bin_no = stats.binned_statistic(x_in[mask],
-                                                               values[mask],
-                                                               statistic=statistic,
-                                                               bins=edges)
+            result[:, ind], _, _ = stats.binned_statistic(x_in[mask],
+                                                          values[mask],
+                                                          statistic=statistic,
+                                                          bins=edges)
     result[~np.isfinite(result)] = 0
     masked_result = ma.masked_equal(result, 0)
 
@@ -764,7 +764,7 @@ def str_to_numeric(value: str) -> Union[int, float]:
 
 def fetch_cloudnet_model_types() -> list:
     """Finds different model types."""
-    url = f"https://cloudnet.fmi.fi/api/models"
+    url = "https://cloudnet.fmi.fi/api/models"
     data = requests.get(url=url).json()
     models = [model['id'] for model in data]
     model_types = [model.split('-')[0] for model in models]

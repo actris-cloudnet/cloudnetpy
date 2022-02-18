@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 import netCDF4
-from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
+from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy import utils
 
 

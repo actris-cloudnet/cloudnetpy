@@ -1,9 +1,9 @@
 """General helper classes and functions for all products."""
 from typing import Union, Dict
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 import netCDF4
-import cloudnetpy.utils as utils
+from cloudnetpy import utils
 
 
 class CategorizeBits:

@@ -4,7 +4,7 @@ import logging
 from typing import List, Optional
 from tempfile import NamedTemporaryFile
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from cloudnetpy import output, utils
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData

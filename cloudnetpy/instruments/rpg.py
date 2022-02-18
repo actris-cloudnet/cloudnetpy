@@ -3,7 +3,7 @@ from typing import Union, Tuple, Optional, List
 import logging
 import math
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin

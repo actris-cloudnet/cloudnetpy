@@ -1,9 +1,8 @@
 """Datasource module, containing the :class:`DataSource class.`"""
-from typing import Callable
+from typing import Callable, Optional, Union
 import logging
 import os
 from datetime import datetime
-from typing import Optional, Union
 import numpy as np
 import netCDF4
 from cloudnetpy import RadarArray, CloudnetArray, utils
@@ -147,7 +146,7 @@ class DataSource:
         """Returns height array above mean sea level (m)."""
         if 'height' in self.dataset.variables:
             return self.km2m(self.dataset.variables['height'])
-        elif 'range' in self.dataset.variables and self.altitude is not None:
+        if 'range' in self.dataset.variables and self.altitude is not None:
             range_instrument = self.km2m(self.dataset.variables['range'])
             return np.array(range_instrument + self.altitude)
         return None
