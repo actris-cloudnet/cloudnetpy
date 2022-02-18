@@ -2,7 +2,7 @@ import logging
 from typing import Tuple, List, Union
 import numpy as np
 from numpy import ma
-import scipy.ndimage
+from scipy.ndimage import gaussian_filter
 from cloudnetpy import utils
 from cloudnetpy.utils import Epoch
 from cloudnetpy.cloudnetarray import CloudnetArray
@@ -48,7 +48,7 @@ class Ceilometer:
         cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
         beta_raw[cloud_ind] = cloud_limit
         sigma = calc_sigma_units(self.data['time'], self.data['range'])
-        beta_raw_smooth = scipy.ndimage.filters.gaussian_filter(beta_raw, sigma)
+        beta_raw_smooth = gaussian_filter(beta_raw, sigma)
         beta_raw_smooth[cloud_ind] = cloud_values
         beta_smooth = noisy_data.screen_data(beta_raw_smooth, is_smoothed=True, snr_limit=snr_limit)
         return beta_smooth

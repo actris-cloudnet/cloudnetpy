@@ -2,7 +2,7 @@
 from typing import Tuple, Union
 import numpy as np
 from numpy import ma
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 from cloudnetpy.constants import T0
 from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize.containers import ClassData
