@@ -1,8 +1,8 @@
 """Datasource module, containing the :class:`DataSource class.`"""
+from typing import Callable, Optional, Union
 import logging
 import os
 from datetime import datetime
-from typing import Optional, Union
 import numpy as np
 import netCDF4
 from cloudnetpy import RadarArray, CloudnetArray, utils
@@ -24,14 +24,31 @@ class DataSource:
         data (dict): Dictionary containing :class:`CloudnetArray` instances.
 
     """
-    def __init__(self, full_path: str, radar: Optional[bool] = False):
+    calc_wet_bulb: Callable
+    add_meta: Callable
+    rebin_to_grid: Callable
+    interpolate_to_grid: Callable
+    interpolate_to_common_height: Callable
+    filter_stripes: Callable
+    calc_errors: Callable
+    remove_incomplete_pixels: Callable
+    filter_1st_gate_artifact: Callable
+    screen_sparse_fields: Callable
+    filter_speckle_noise: Callable
+    correct_atten: Callable
+    radar_frequency: float
+    data_dense: dict
+    data_sparse: dict
+    type: str
+
+    def __init__(self, full_path: str, radar: bool = False):
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
         self.source = getattr(self.dataset, 'source', '')
         self.time = self._init_time()
         self.altitude = self._init_altitude()
         self.height = self._init_height()
-        self.data = {}
+        self.data: dict = {}
         self._is_radar = radar
 
     def getvar(self, *args) -> np.ndarray:
@@ -96,7 +113,7 @@ class DataSource:
         self.dataset.close()
 
     @staticmethod
-    def km2m(var) -> float:
+    def km2m(var: netCDF4.Variable) -> np.ndarray:
         """Converts km to m."""
         alt = var[:]
         if var.units == 'km':
@@ -104,7 +121,7 @@ class DataSource:
         return alt
 
     @staticmethod
-    def m2km(var) -> float:
+    def m2km(var: netCDF4.Variable) -> np.ndarray:
         """Converts m to km."""
         alt = var[:]
         if var.units == 'm':
@@ -125,11 +142,11 @@ class DataSource:
             return float(np.mean(altitude_above_sea))
         return None
 
-    def _init_height(self) -> Union[np.array, None]:
+    def _init_height(self) -> Union[np.ndarray, None]:
         """Returns height array above mean sea level (m)."""
         if 'height' in self.dataset.variables:
             return self.km2m(self.dataset.variables['height'])
-        elif 'range' in self.dataset.variables and self.altitude is not None:
+        if 'range' in self.dataset.variables and self.altitude is not None:
             range_instrument = self.km2m(self.dataset.variables['range'])
             return np.array(range_instrument + self.altitude)
         return None
@@ -152,7 +169,7 @@ class DataSource:
                                             possible_names: tuple,
                                             key: str,
                                             units: Optional[str] = None,
-                                            ignore_mask: Optional[bool] = False):
+                                            ignore_mask: bool = False):
         """Transforms single netCDF4 variable into CloudnetArray.
 
         Args:

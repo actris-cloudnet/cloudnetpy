@@ -1,7 +1,7 @@
 """Module for creating classification file."""
 from typing import Tuple, Optional
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from cloudnetpy import output
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.metadata import MetaData

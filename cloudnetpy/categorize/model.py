@@ -1,6 +1,6 @@
 """Model module, containing the :class:`Model` class."""
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from scipy.interpolate import interp1d
 from cloudnetpy import CloudnetArray
 from cloudnetpy.categorize import DataSource, atmos
@@ -37,9 +37,9 @@ class Model(DataSource):
         self.type = _find_model_type(model_file)
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = _calc_mean_height(self.model_heights)
-        self.height = None
-        self.data_sparse = {}
-        self.data_dense = {}
+        self.height: np.ndarray
+        self.data_sparse: dict = {}
+        self.data_dense: dict = {}
         self._append_grid()
 
     def interpolate_to_common_height(self, wl_band: int) -> None:

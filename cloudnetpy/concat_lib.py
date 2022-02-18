@@ -1,7 +1,7 @@
 """Module for concatenating netCDF files."""
 from typing import Union, Optional
-import numpy as np
 import logging
+import numpy as np
 import netCDF4
 from cloudnetpy import utils
 
@@ -37,7 +37,7 @@ def update_nc(old_file: str, new_file: str) -> int:
 
 def concatenate_files(filenames: list,
                       output_file: str,
-                      concat_dimension: Optional[str] = 'time',
+                      concat_dimension: str = 'time',
                       variables: Optional[list] = None,
                       new_attributes: Optional[dict] = None) -> None:
     """Concatenate netCDF files in one dimension.
@@ -66,7 +66,7 @@ class Concat:
     def __init__(self,
                  filenames: list,
                  output_file: str,
-                 concat_dimension: Optional[str] = 'time'):
+                 concat_dimension: str = 'time'):
         self.filenames = sorted(filenames)
         self.concat_dimension = concat_dimension
         self.first_file = netCDF4.Dataset(self.filenames[0])
@@ -138,15 +138,15 @@ class Concat:
         """Returns tuple of dimension names, e.g., ('time', 'range') that match the array size."""
         if utils.isscalar(array):
             return ()
-        variable_size = ()
+        variable_size = []
         file_dims = self.concatenated_file.dimensions
         for length in array.shape:
             try:
                 dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
             except IndexError:
                 dim = self.concat_dimension
-            variable_size += (dim,)
-        return variable_size
+            variable_size.append(dim)
+        return tuple(variable_size)
 
     def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
         data_model = 'NETCDF4' if self.first_file.data_model == 'NETCDF4' else 'NETCDF4_CLASSIC'

@@ -1,4 +1,3 @@
-import logging
 from collections import namedtuple
 import numpy as np
 from cloudnetpy import utils
@@ -239,7 +238,7 @@ class HatproBin:
         file = open(self.filename, 'rb')
         file.seek(self._file_position)
 
-        data = {
+        data: dict = {
             'time': np.zeros(self.header['_n_samples'], dtype=np.int32),
             'quality_flag': np.zeros(self.header['_n_samples'], dtype=np.int32),
             'lwp': np.zeros(self.header['_n_samples']),

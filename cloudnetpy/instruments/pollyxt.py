@@ -1,9 +1,8 @@
 """Module for reading / converting pollyxt data."""
 import glob
 from typing import Optional, Union
-import logging
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 import netCDF4
 from numpy.testing import assert_array_equal
 from cloudnetpy.metadata import MetaData
@@ -11,6 +10,7 @@ from cloudnetpy import output
 from cloudnetpy import utils
 from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy.instruments import instruments
+from cloudnetpy.utils import Epoch
 
 
 def pollyxt2nc(input_folder: str,
@@ -62,7 +62,7 @@ def pollyxt2nc(input_folder: str,
 
 class PollyXt(Ceilometer):
 
-    def __init__(self, site_meta: dict, expected_date: Optional[str] = None):
+    def __init__(self, site_meta: dict, expected_date: Union[str, None]):
         super().__init__()
         self.site_meta = site_meta
         self.expected_date = expected_date
@@ -85,21 +85,18 @@ class PollyXt(Ceilometer):
         default = 5
         self.data['zenith_angle'] = float(self.metadata.get('zenith_angle', default))
 
-    def fetch_data(self, input_folder: str) -> Union[tuple, None]:
+    def fetch_data(self, input_folder: str) -> Epoch:
         """Read input data."""
         bsc_files = glob.glob(f'{input_folder}/*[0-9]_att*.nc')
         depol_files = glob.glob(f'{input_folder}/*[0-9]_vol*.nc')
         bsc_files.sort()
         depol_files.sort()
         if not bsc_files:
-            logging.info('No pollyxt files found')
-            return
+            raise RuntimeError('No pollyxt files found')
         if len(bsc_files) != len(depol_files):
-            logging.info('Inconsistent number of pollyxt bsc / depol files')
-            return
+            raise RuntimeError('Inconsistent number of pollyxt bsc / depol files')
         self.data['range'] = _read_array_from_multiple_files(bsc_files, depol_files, 'height')
-        calibration_factors = []
-        epoch = ()
+        calibration_factors: np.ndarray = np.array([])
         bsc_key = 'attenuated_backscatter_1064nm'
         for (bsc_file, depol_file) in zip(bsc_files, depol_files):
             nc_bsc = netCDF4.Dataset(bsc_file, 'r')
@@ -126,7 +123,7 @@ class PollyXt(Ceilometer):
 
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
-    array = np.array([])
+    array: np.ndarray = np.array([])
     for ind, (file1, file2) in enumerate(zip(files1, files2)):
         nc1 = netCDF4.Dataset(file1, 'r')
         nc2 = netCDF4.Dataset(file2, 'r')

@@ -1,17 +1,17 @@
 """Module with a class for Lufft chm15k ceilometer."""
 import logging
-from typing import Optional
 import numpy as np
-from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
+import netCDF4
+from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy import utils
 
 
 class NcLidar(Ceilometer):
     """Class for all lidars using netCDF files."""
 
-    def __init__(self, noise_param: Optional[NoiseParam] = NoiseParam()):
-        super().__init__(noise_param)
-        self.dataset = None
+    def __init__(self):
+        super().__init__()
+        self.dataset: netCDF4.Dataset = None
 
     def _fetch_range(self, reference: str) -> None:
         range_instrument = self.dataset.variables['range'][:]
@@ -23,7 +23,7 @@ class NcLidar(Ceilometer):
         epoch = utils.get_epoch(time.units)
         self.get_date_and_time(epoch)
 
-    def _fetch_zenith_angle(self, key: str, default: Optional[float] = 3.0) -> None:
+    def _fetch_zenith_angle(self, key: str, default: float = 3.0) -> None:
         if key in self.dataset.variables:
             zenith_angle = self.dataset.variables[key][:]
         else:

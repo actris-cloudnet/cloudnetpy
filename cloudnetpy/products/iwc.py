@@ -2,7 +2,7 @@
 from typing import Optional
 from collections import namedtuple
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos
 from cloudnetpy.metadata import MetaData
@@ -113,7 +113,7 @@ class IwcSource(DataSource):
     """Data container for ice water content calculations."""
     def __init__(self, categorize_file: str):
         super().__init__(categorize_file)
-        self.wl_band = utils.get_wl_band(self.getvar('radar_frequency'))
+        self.wl_band = utils.get_wl_band(float(self.getvar('radar_frequency')))
         self.coeffs = self._get_iwc_coeffs()
         self.z_factor = self._get_z_factor()
         self.temperature = self._get_temperature(categorize_file)
@@ -195,8 +195,8 @@ class IwcSource(DataSource):
     @staticmethod
     def _get_temperature(categorize_file: str) -> np.ndarray:
         """Returns interpolated temperatures in Celsius."""
-        temperature = product_tools.interpolate_model(categorize_file, 'temperature')
-        return atmos.k2c(temperature)
+        atmosphere = product_tools.interpolate_model(categorize_file, 'temperature')
+        return atmos.k2c(atmosphere['temperature'])
 
     def _z_to_iwc(self, z_variable: str) -> np.ndarray:
         """Calculates temperature weighted z, i.e. ice water content (kg m-3)."""

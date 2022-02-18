@@ -1,20 +1,20 @@
 """Metadata for plotting module."""
-from collections import namedtuple
+from typing import NamedTuple, Optional, Tuple, Union, Sequence
+from enum import Enum
 
-FIELDS = ('name',
-          'cbar',
-          'clabel',
-          'ylabel',
-          'plot_range',
-          'plot_scale',
-          'plot_type',
-          'source')
+class Scale(Enum):
+    LOGARITHMIC = 'logarithmic'
+    LINEAR = 'linear'
 
-PlotMeta = namedtuple('PlotMeta', FIELDS)
-PlotMeta.__new__.__defaults__ = (None,) * len(FIELDS)
-
-_LOG = 'logarithmic'
-_LIN = 'linear'
+class PlotMeta(NamedTuple):
+    name: str
+    cbar: Optional[Union[str, Sequence[str]]] = None
+    clabel: Optional[Union[str, Sequence[Tuple[str, str]]]] = None
+    ylabel: Optional[str] = None
+    plot_range: Optional[Tuple[float, float]] = None
+    plot_scale: Optional[Scale] = None
+    plot_type: Optional[str] = None
+    source: Optional[str] = None
 
 _M3 = '$m^{-3}$'
 _MS1 = 'm s$^{-1}$'
@@ -128,7 +128,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='m',
         plot_range=(1e-6, 1e-3),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'Do_error': PlotMeta(
@@ -136,7 +136,7 @@ ATTRIBUTES = {
         cbar='RdYlGn_r',
         clabel=_DB,
         plot_range=(0.1, 0.5),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'mu': PlotMeta(
@@ -144,7 +144,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='',
         plot_range=(0, 10),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'S': PlotMeta(
@@ -152,7 +152,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='',
         plot_range=(0, 25),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'S_error': PlotMeta(
@@ -160,7 +160,7 @@ ATTRIBUTES = {
         cbar='RdYlGn_r',
         clabel=_DB,
         plot_range=(0.1, 0.5),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'drizzle_N': PlotMeta(
@@ -168,7 +168,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_M3,
         plot_range=(1e4, 1e9),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'drizzle_N_error': PlotMeta(
@@ -176,7 +176,7 @@ ATTRIBUTES = {
         cbar='RdYlGn_r',
         clabel=_DB,
         plot_range=(0.1, 0.5),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'drizzle_lwc': PlotMeta(
@@ -184,7 +184,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_KGM3,
         plot_range=(1e-8, 1e-3),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'drizzle_lwc_error': PlotMeta(
@@ -192,7 +192,7 @@ ATTRIBUTES = {
         cbar='RdYlGn_r',
         clabel=_DB,
         plot_range=(0.3, 1),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'drizzle_lwf': PlotMeta(
@@ -200,7 +200,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_KGM2S1,
         plot_range=(1e-8, 1e-5),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'drizzle_lwf_error': PlotMeta(
@@ -208,7 +208,7 @@ ATTRIBUTES = {
         cbar='RdYlGn_r',
         clabel=_DB,
         plot_range=(0.3, 1),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'v_drizzle': PlotMeta(
@@ -216,7 +216,7 @@ ATTRIBUTES = {
         cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-2, 2),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'v_drizzle_error': PlotMeta(
@@ -224,11 +224,11 @@ ATTRIBUTES = {
         cbar='RdYlGn_r',
         clabel=_DB,
         plot_range=(0.3, 1),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'drizzle_retrieval_status': PlotMeta(
-        'Drizzle parameter retrieval status',
+        name='Drizzle parameter retrieval status',
         clabel=_CLABEL['drizzle_retrieval_status'],
         plot_type='segment'
     ),
@@ -237,7 +237,7 @@ ATTRIBUTES = {
         cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-2, 2),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'uwind': PlotMeta(
@@ -245,7 +245,7 @@ ATTRIBUTES = {
         cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-50, 50),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='model'
     ),
     'vwind': PlotMeta(
@@ -253,7 +253,7 @@ ATTRIBUTES = {
         cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-50, 50),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='model'
     ),
     'temperature': PlotMeta(
@@ -261,7 +261,7 @@ ATTRIBUTES = {
         cbar='RdBu_r',
         clabel='K',
         plot_range=(223.15, 323.15),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='model'
     ),
     'cloud_fraction': PlotMeta(
@@ -269,7 +269,7 @@ ATTRIBUTES = {
         cbar='Blues',
         clabel='',
         plot_range=(0, 1),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='model'
     ),
     'Tw': PlotMeta(
@@ -277,7 +277,7 @@ ATTRIBUTES = {
         cbar='RdBu_r',
         clabel='K',
         plot_range=(223.15, 323.15),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'specific_humidity': PlotMeta(
@@ -285,7 +285,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='',
         plot_range=(1e-5, 1e-2),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='model'
     ),
     'q': PlotMeta(
@@ -293,7 +293,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='',
         plot_range=(1e-5, 1e-2),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='model'
     ),
     'pressure': PlotMeta(
@@ -301,7 +301,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='Pa',
         plot_range=(1e4, 1.5e5),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='model'
     ),
     'beta': PlotMeta(
@@ -309,7 +309,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_SR1M1,
         plot_range=(1e-7, 1e-4),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
      ),
     'beta_raw': PlotMeta(
@@ -317,7 +317,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_SR1M1,
         plot_range=(1e-7, 1e-4),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
      ),
     'beta_smooth': PlotMeta(
@@ -325,7 +325,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_SR1M1,
         plot_range=(1e-7, 1e-4),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'depolarisation_raw': PlotMeta(
@@ -333,7 +333,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='',
         plot_range=(1e-3, 1),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'depolarisation': PlotMeta(
@@ -341,7 +341,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='',
         plot_range=(1e-3, 1),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'depolarisation_smooth': PlotMeta(
@@ -349,7 +349,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='',
         plot_range=(1e-3, 1),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'Z': PlotMeta(
@@ -357,7 +357,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DBZ,
         plot_range=(-40, 15),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
      ),
     'Z_error': PlotMeta(
@@ -365,7 +365,7 @@ ATTRIBUTES = {
         cbar='RdYlGn_r',
         clabel=_DB,
         plot_range=(0, 3),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
      ),
     'Zh': PlotMeta(
@@ -373,7 +373,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DBZ,
         plot_range=(-40, 15),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
      ),
     'ldr': PlotMeta(
@@ -381,7 +381,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(-30, -5),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
      ),
     'sldr': PlotMeta(
@@ -389,7 +389,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(-30, -5),  # TODO: check
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'zdr': PlotMeta(
@@ -397,7 +397,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(-30, -5),  # TODO: check
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'width': PlotMeta(
@@ -405,7 +405,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_MS1,
         plot_range=(1e-2, 1e0),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
      ),
     'v': PlotMeta(
@@ -413,7 +413,7 @@ ATTRIBUTES = {
         cbar='RdBu_r',
         clabel=_MS1,
         plot_range=(-4, 4),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
      ),
     'skewness': PlotMeta(
@@ -421,7 +421,7 @@ ATTRIBUTES = {
         cbar='RdBu_r',
         clabel='',
         plot_range=(-1, 1),  # TODO: check
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'kurtosis': PlotMeta(
@@ -429,7 +429,7 @@ ATTRIBUTES = {
         cbar='RdBu_r',
         clabel='',
         plot_range=(-1, 1),  # TODO: check
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'rho_cx': PlotMeta(
@@ -437,7 +437,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='',
         plot_range=(1e-2, 1e0),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'srho_hv': PlotMeta(
@@ -445,7 +445,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='',
         plot_range=(0, 1),  # TODO: check
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'phi_cx': PlotMeta(
@@ -453,7 +453,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='rad',
         plot_range=(0, 1),  # TODO: check
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'phi_dp': PlotMeta(
@@ -461,7 +461,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='rad',
         plot_range=(0, 1),  # TODO: check
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'kdp': PlotMeta(
@@ -469,7 +469,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='rad km-1',
         plot_range=(0, 6.2),  # TODO: check
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'differential_attenuation': PlotMeta(
@@ -477,7 +477,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel='dB km-1',
         plot_range=(-10, 10),  # TODO
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'v_sigma': PlotMeta(
@@ -485,7 +485,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_MS1,
         plot_range=(1e-2, 1e0),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'insect_prob': PlotMeta(
@@ -493,7 +493,7 @@ ATTRIBUTES = {
         cbar='viridius',
         clabel=_SR1M1,
         plot_range=(0, 1),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
      ),
     'radar_liquid_atten': PlotMeta(
@@ -501,7 +501,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(0, 5),
-        plot_scale=_LIN,     # already logarithmic
+        plot_scale=Scale.LINEAR,     # already logarithmic
         plot_type='mesh'
      ),
     'radar_gas_atten': PlotMeta(
@@ -509,7 +509,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_DB,
         plot_range=(0, 1),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
      ),
     'lwp': PlotMeta(
@@ -517,7 +517,7 @@ ATTRIBUTES = {
         cbar='Blues',
         ylabel=_KGM2,
         plot_range=(0, 1),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='bar',
         source='mwr'
     ),
@@ -546,7 +546,7 @@ ATTRIBUTES = {
         cbar='viridis',
         clabel=_KGM3,
         plot_range=(1e-7, 1e-3),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'iwc_inc_rain': PlotMeta(
@@ -554,7 +554,7 @@ ATTRIBUTES = {
         cbar='Blues',
         clabel=_KGM3,
         plot_range=(1e-7, 1e-4),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'iwc_error': PlotMeta(
@@ -562,7 +562,7 @@ ATTRIBUTES = {
         cbar='RdYlGn_r',
         clabel=_DB,
         plot_range=(0, 5),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'iwc_retrieval_status': PlotMeta(
@@ -575,7 +575,7 @@ ATTRIBUTES = {
         cbar='Blues',
         clabel=_KGM3,
         plot_range=(1e-5, 1e-2),
-        plot_scale=_LOG,
+        plot_scale=Scale.LOGARITHMIC,
         plot_type='mesh'
     ),
     'lwc_error': PlotMeta(
@@ -583,82 +583,82 @@ ATTRIBUTES = {
         cbar='RdYlGn_r',
         clabel=_DB,
         plot_range=(0, 2),
-        plot_scale=_LIN,
+        plot_scale=Scale.LINEAR,
         plot_type='mesh'
     ),
     'lwc_retrieval_status': PlotMeta(
-        'Liquid water content retrieval status',
+        name='Liquid water content retrieval status',
         clabel=_CLABEL['lwc_retrieval_status'],
         plot_type='segment'
     ),
     'droplet': PlotMeta(
-        'Droplet bit',
+        name='Droplet bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'falling': PlotMeta(
-        'Falling bit',
+        name='Falling bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'cold': PlotMeta(
-        'Cold bit',
+        name='Cold bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'melting': PlotMeta(
-        'Melting bit',
+        name='Melting bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'aerosol': PlotMeta(
-        'Aerosol bit',
+        name='Aerosol bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'insect': PlotMeta(
-        'Insect bit',
+        name='Insect bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'radar': PlotMeta(
-        'Radar bit',
+        name='Radar bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'lidar': PlotMeta(
-        'Lidar bit',
+        name='Lidar bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'clutter': PlotMeta(
-        'Clutter bit',
+        name='Clutter bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'molecular': PlotMeta(
-        'Molecular bit',
+        name='Molecular bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'attenuated': PlotMeta(
-        'Attenuated bit',
+        name='Attenuated bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'
     ),
     'corrected': PlotMeta(
-        'Corrected bit',
+        name='Corrected bit',
         cbar=_CBAR['bit'],
         plot_range=(0, 1),
         plot_type='bit'

@@ -1,13 +1,13 @@
 """General helper functions for instrument processing."""
 import logging
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
+import netCDF4
 from cloudnetpy import CloudnetArray
 from cloudnetpy import utils
-import netCDF4
 
 
-def add_site_geolocation(obj: any):
+def add_site_geolocation(obj):
     """Adds site geolocation."""
     for key in ('latitude', 'longitude', 'altitude'):
         value = None
@@ -25,7 +25,7 @@ def add_site_geolocation(obj: any):
             obj.data[key] = CloudnetArray(value, key)
 
 
-def add_radar_specific_variables(obj: any):
+def add_radar_specific_variables(obj):
     """Adds radar specific variables."""
     key = 'radar_frequency'
     obj.data[key] = CloudnetArray(obj.instrument.frequency, key)
@@ -35,7 +35,7 @@ def add_radar_specific_variables(obj: any):
     obj.data[key] = CloudnetArray(np.array(data), key)
 
 
-def add_height(obj: any):
+def add_height(obj):
     try:
         zenith_angle = ma.median(obj.data['zenith_angle'].data)
     except RuntimeError:
@@ -68,9 +68,9 @@ def get_files_with_common_range(files: list) -> list:
     return [file for i, file in enumerate(files) if i in ind]
 
 
-def screen_time_indices(obj: any, valid_indices: list) -> None:
+def screen_time_indices(obj, valid_indices: list) -> None:
     n_time = len(obj.time)
-    for key, cloudnet_array in obj.data.items():
+    for cloudnet_array in obj.data.values():
         array = cloudnet_array.data
         if not utils.isscalar(array) and array.shape[0] == n_time:
             if array.ndim == 1:

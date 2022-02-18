@@ -4,7 +4,7 @@ import os
 from bisect import bisect_left
 from typing import Optional
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from scipy.special import gamma
 import netCDF4
 from cloudnetpy import utils, output
@@ -225,7 +225,9 @@ class SpectralWidth:
             ndarray: Horizontal wind (m s-1).
 
         """
-        u_wind, v_wind = p_tools.interpolate_model(self.cat_file, ['uwind', 'vwind'])
+        atmosphere = p_tools.interpolate_model(self.cat_file, ['uwind', 'vwind'])
+        u_wind = atmosphere['uwind']
+        v_wind = atmosphere['vwind']
         return utils.l2norm(u_wind, v_wind)
 
 

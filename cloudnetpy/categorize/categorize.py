@@ -103,6 +103,7 @@ def generate_categorize(input_files: dict,
         'lidar': Lidar(input_files['lidar']),
         'mwr': Mwr(input_files['mwr'])
     }
+    assert data['radar'].altitude is not None
     data['model'] = Model(input_files['model'], data['radar'].altitude)
     time, height = _define_dense_grid()
     valid_ind = _interpolate_to_cloudnet_grid()
@@ -143,7 +144,7 @@ def _save_cat(full_path: str,
 
     file_type = 'categorize'
     nc = output.init_file(full_path, dims, cloudnet_arrays, uuid)
-    uuid = nc.file_uuid
+    uuid_out = nc.file_uuid
     nc.cloudnet_file_type = file_type
     output.copy_global(data_obs['radar'].dataset, nc, ('year', 'month', 'day', 'location'))
     nc.title = f"Cloud categorization products from {data_obs['radar'].location}"
@@ -152,7 +153,7 @@ def _save_cat(full_path: str,
     output.add_source_instruments(nc, data_obs)
     output.merge_history(nc, file_type, data_obs)
     nc.close()
-    return uuid
+    return uuid_out
 
 
 COMMENTS = {

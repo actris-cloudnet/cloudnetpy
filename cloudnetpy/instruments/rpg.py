@@ -3,12 +3,13 @@ from typing import Union, Tuple, Optional, List
 import logging
 import math
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from cloudnetpy import utils, output, CloudnetArray
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments, general
+from cloudnetpy.instruments.instruments import Instrument
 
 
 def rpg2nc(path_to_l1_files: str,
@@ -104,7 +105,8 @@ def _stack_rpg_data(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -> Tuple[dic
         for name, value in source.items():
             if not name.startswith('_'):
                 target[name] = (fun((target[name], value)) if name in target else value)
-    data, header = {}, {}
+    data: dict = {}
+    header: dict = {}
     for rpg in rpg_objects:
         _stack(rpg.data, data, np.concatenate)
         _stack(rpg.header, header, np.vstack)
@@ -180,7 +182,7 @@ class Rpg:
         self.site_meta = site_meta
         self.date = self._get_date()
         self.data = self._init_data()
-        self.instrument = None
+        self.instrument: Instrument
 
     def convert_time_to_fraction_hour(self, data_type: Optional[str] = None) -> None:
         """Converts time to fraction hour."""

@@ -1,8 +1,7 @@
 """ This module has functions for liquid layer detection.
 """
-from typing import Optional
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 import scipy.signal
 from cloudnetpy import utils
 from cloudnetpy.categorize.containers import ClassData
@@ -11,7 +10,7 @@ from cloudnetpy.categorize.containers import ClassData
 def correct_liquid_top(obs: ClassData,
                        liquid: dict,
                        is_freezing: np.ndarray,
-                       limit: Optional[float] = 200) -> np.ndarray:
+                       limit: float = 200) -> np.ndarray:
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
@@ -46,12 +45,12 @@ def _find_ind_above_top(is_freezing_from_peak: np.ndarray, top_above: int) -> in
 
 
 def find_liquid(obs: ClassData,
-                peak_amp: Optional[float] = 1e-6,
-                max_width: Optional[float] = 300,
-                min_points: Optional[int] = 3,
-                min_top_der: Optional[float] = 1e-7,
-                min_lwp: Optional[float] = 0,
-                min_alt: Optional[float] = 100) -> dict:
+                peak_amp: float = 1e-6,
+                max_width: float = 300,
+                min_points: int = 3,
+                min_top_der: float = 1e-7,
+                min_lwp: float = 0,
+                min_alt: float = 100) -> dict:
     """ Estimate liquid layers from SNR-screened attenuated backscatter.
 
     Args:
@@ -89,11 +88,12 @@ def find_liquid(obs: ClassData,
     beta = ma.copy(obs.beta)
     height = obs.height
 
-    is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool,
-                                                    masked=False)
+    is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool, masked=False)
     base_below_peak = utils.n_elements(height, 200)
     top_above_peak = utils.n_elements(height, 150)
-    beta_diff = np.diff(beta, axis=1).filled(0)
+    difference = np.diff(beta, axis=1)
+    assert isinstance(difference, ma.MaskedArray)
+    beta_diff = difference.filled(0)
     beta = beta.filled(0)
     peak_indices = _find_strong_peaks(beta, peak_amp)
 
@@ -232,7 +232,7 @@ def interpolate_lwp(obs: ClassData) -> np.ndarray:
     return np.interp(obs.time, obs.time[ind], obs.lwp[ind])
 
 
-def _find_strong_peaks(data: np.ndarray, threshold: float) -> np.ndarray:
+def _find_strong_peaks(data: np.ndarray, threshold: float) -> tuple:
     """Finds local maximums from data (greater than *threshold*)."""
     peaks = scipy.signal.argrelextrema(data, np.greater, order=4, axis=1)
     strong_peaks = np.where(data[peaks] > threshold)

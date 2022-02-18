@@ -2,7 +2,7 @@
 various atmospheric parameters.
 """
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 import scipy.constants
 from cloudnetpy import constants as con
 from cloudnetpy import utils
@@ -284,7 +284,7 @@ class LiquidAttenuation(Attenuation):
         atmosphere = (self._model['temperature'], self._model['pressure'])
         return fill_clouds_with_lwc_dz(atmosphere, self._liquid_in_pixel)
 
-    def _get_liquid_atten(self) -> np.ndarray:
+    def _get_liquid_atten(self) -> ma.MaskedArray:
         """Finds radar liquid attenuation."""
         lwp = ma.copy(self._mwr['lwp'][:])
         lwp[lwp < 0] = 0
@@ -292,13 +292,13 @@ class LiquidAttenuation(Attenuation):
         lwc_scaled = distribute_lwp_to_liquid_clouds(lwc, lwp)
         return self._calc_attenuation(lwc_scaled)
 
-    def _get_liquid_atten_err(self) -> np.ndarray:
+    def _get_liquid_atten_err(self) -> ma.MaskedArray:
         """Finds radar liquid attenuation error."""
         lwc_err_scaled = distribute_lwp_to_liquid_clouds(self._lwc_dz_err,
                                                          self._mwr['lwp_error'][:])
         return self._calc_attenuation(lwc_err_scaled)
 
-    def _calc_attenuation(self, lwc_scaled: np.ndarray) -> np.ndarray:
+    def _calc_attenuation(self, lwc_scaled: np.ndarray) -> ma.MaskedArray:
         """Calculates liquid attenuation (dB)."""
         liquid_attenuation = ma.zeros(lwc_scaled.shape)
         spec_liq = self._model['specific_liquid_atten']
@@ -315,7 +315,9 @@ class LiquidAttenuation(Attenuation):
         return hard_to_correct
 
     def _find_corrected_pixels(self) -> np.ndarray:
-        return (self.atten > 0).filled(False) & ~self.uncorrected
+        proper_values = self.atten > 0
+        assert isinstance(proper_values, ma.MaskedArray)
+        return proper_values.filled(False) & ~self.uncorrected
 
     def _mask_uncorrected_attenuation(self) -> None:
         self.atten[self.uncorrected] = ma.masked

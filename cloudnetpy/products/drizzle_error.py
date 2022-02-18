@@ -1,6 +1,6 @@
 import numpy as np
-import numpy.ma as ma
-import cloudnetpy.utils as utils
+from numpy import ma
+from cloudnetpy import utils
 
 
 def _get_drizzle_indices(diameter):

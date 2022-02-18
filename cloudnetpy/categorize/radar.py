@@ -1,13 +1,13 @@
 """Radar module, containing the :class:`Radar` class."""
 import math
 from typing import Union
+import logging
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 from scipy import constants
 from cloudnetpy.categorize import DataSource
 from cloudnetpy.categorize.classify import ClassificationResult
 from cloudnetpy import utils
-import logging
 
 
 class Radar(DataSource):
@@ -147,9 +147,9 @@ class Radar(DataSource):
                 continue
             threshold = distance * (q3 - q1) + q3
 
-            ind = np.where((n_values > threshold) & (n_values > (min_coverage * data.shape[1])))[0]
-            true_ind = [int(x) for x in (block_number * len_block + ind)]
-            n_removed = len(ind)
+            indices = np.where((n_values > threshold) & (n_values > (min_coverage * data.shape[1])))[0]
+            true_ind = [int(x) for x in (block_number * len_block + indices)]
+            n_removed = len(indices)
 
             if n_removed > 5:
                 continue
@@ -158,8 +158,8 @@ class Radar(DataSource):
                 n_removed_total += n_removed
                 for ind in true_ind:
                     ind2 = np.where(echo[ind, :] < z_limit)
-                    indices = (ind, ind2) if axis == 1 else (ind2, ind)
-                    self.data['v'][:][indices] = ma.masked
+                    bad_indices = (ind, ind2) if axis == 1 else (ind2, ind)
+                    self.data['v'][:][bad_indices] = ma.masked
             block_indices += len_block
 
         return n_removed_total
@@ -204,7 +204,7 @@ class Radar(DataSource):
             z_sensitivity[~zc.mask] = zc[~zc.mask]
             return z_sensitivity
 
-        def _calc_error() -> np.ndarray:
+        def _calc_error() -> Union[np.ndarray, float]:
             if 'width' not in self.data:
                 return 0.3
             z_precision = 4.343 * (1 / np.sqrt(_number_of_independent_pulses())
@@ -258,6 +258,7 @@ class Radar(DataSource):
     def _get_sequence_indices(self) -> list:
         """Mira has only one sequence and one folding velocity. RPG has
         several sequences with different folding velocities."""
+        assert self.height is not None
         all_indices = np.arange(len(self.height))
         if not utils.isscalar(self.folding_velocity):
             starting_indices = self.getvar('chirp_start_indices')

@@ -1,14 +1,15 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
 class Instrument:
-    manufacturer: str = None
-    domain: str = None
-    category: str = None
-    model: str = None
-    wavelength: float = None
-    frequency: float = None
+    domain: str
+    category: str
+    model: str
+    manufacturer: Optional[str] = None
+    wavelength: Optional[float] = None
+    frequency: Optional[float] = None
 
 
 POLLYXT = Instrument(
