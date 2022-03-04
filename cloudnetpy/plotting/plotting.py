@@ -438,6 +438,8 @@ def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
 
 
 def _get_unmasked_values(data: ma.MaskedArray, time: ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    if ma.is_masked(data) is False:
+        return data, time
     good_values = ~data.mask
     return data[good_values], time[good_values]
 
