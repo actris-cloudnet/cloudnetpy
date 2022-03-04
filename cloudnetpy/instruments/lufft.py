@@ -40,7 +40,7 @@ class LufftCeilo(NcLidar):
             beta_raw *= utils.transpose(data_std / normalised_apd)
             beta_raw *= self.data['range'] ** 2
         beta_raw *= calibration_factor
-        self.data['calibration_factor'] = calibration_factor
+        self.data['calibration_factor'] = float(calibration_factor)
         self.data['beta_raw'] = beta_raw
 
     def _get_old_software_version(self):
