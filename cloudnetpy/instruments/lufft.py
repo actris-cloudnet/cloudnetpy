@@ -31,7 +31,7 @@ class LufftCeilo(NcLidar):
         if calibration_factor is None:
             logging.warning('Using default calibration factor')
             calibration_factor = 3e-12
-        beta_raw = self._getvar('beta_raw')
+        beta_raw = self._getvar('beta_raw', 'beta_att')
         old_version = self._get_old_software_version()
         if old_version is not None:
             logging.warning(f'Software version {old_version}. Assuming data not range corrected.')
