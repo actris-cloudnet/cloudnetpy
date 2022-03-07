@@ -74,7 +74,7 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
             try:
                 assert ldr_prof is not None and ldr_dprof is not None
                 indices = _find_melting_layer_from_ldr(ldr_prof, ldr_dprof, v_prof, z_prof)
-            except (ValueError, IndexError):
+            except (ValueError, IndexError, AssertionError):
                 height = obs.height[temp_indices]
                 if hasattr(obs, 'width'):
                     width_prof = obs.width[ind, temp_indices]
