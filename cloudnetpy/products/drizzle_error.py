@@ -1,31 +1,22 @@
 import numpy as np
 from numpy import ma
 from cloudnetpy import utils
-
-
-def _get_drizzle_indices(diameter):
-    return {'drizzle': diameter > 0,
-            'small': np.logical_and(diameter <= 1e-4, diameter > 1e-5),
-            'tiny': np.logical_and(diameter <= 1e-5, diameter > 0)}
-
-
-def _read_input_uncertainty(categorize, uncertainty_type):
-    return tuple(db2lin(categorize.getvar(f'{key}_{uncertainty_type}')) for key in ('Z', 'beta'))
+from cloudnetpy.products.drizzle_tools import DrizzleSource, DrizzleSolver
 
 
 MU_ERROR = 0.07
 MU_ERROR_SMALL = 0.25
 
 
-def get_drizzle_error(categorize, drizzle_parameters):
+def get_drizzle_error(categorize: DrizzleSource, drizzle_parameters: DrizzleSolver):
     """ Estimates error and bias for drizzle classification.
 
     Args:
-        categorize (DrizzleSource): The :class:`DrizzleSource` instance.
-        drizzle_parameters (DrizzleSolving): The :class:`DrizzleSolving` instance.
+        categorize: The :class:`DrizzleSource` instance.
+        drizzle_parameters: The :class:`DrizzleSolver` instance.
 
     Returns:
-        errors (dict): Dictionary containing information of estimated error and bias for drizzle
+        dict: Dictionary containing information of estimated error and bias for drizzle
 
     """
     parameters = drizzle_parameters.params
@@ -38,6 +29,16 @@ def get_drizzle_error(categorize, drizzle_parameters):
     bias_input = _read_input_uncertainty(categorize, 'bias')
     errors = _calc_errors(drizzle_indices, error_input, bias_input)
     return errors
+
+
+def _get_drizzle_indices(diameter):
+    return {'drizzle': diameter > 0,
+            'small': np.logical_and(diameter <= 1e-4, diameter > 1e-5),
+            'tiny': np.logical_and(diameter <= 1e-5, diameter > 0)}
+
+
+def _read_input_uncertainty(categorize, uncertainty_type):
+    return tuple(db2lin(categorize.getvar(f'{key}_{uncertainty_type}')) for key in ('Z', 'beta'))
 
 
 def _calc_errors(drizzle_indices, error_input, bias_input):
