@@ -448,7 +448,7 @@ def l2norm(*args) -> ma.MaskedArray:
     return ma.sqrt(ss)
 
 
-def l2norm_weighted(values: tuple, overall_scale: float, term_weights: tuple) -> float:
+def l2norm_weighted(values: tuple, overall_scale: float, term_weights: tuple) -> ma.MaskedArray:
     """Calculates scaled and weighted Euclidean distance.
 
     Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)

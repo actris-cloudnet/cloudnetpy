@@ -1,5 +1,6 @@
 import os
 import logging
+from typing import Union, Tuple
 from bisect import bisect_left
 import numpy as np
 import netCDF4
@@ -204,52 +205,22 @@ class DrizzleSolver:
         self._beta_z_ratio = self._calc_beta_z_ratio()
         self._solve_drizzle(self._dia_init)
 
-    def _init_variables(self):
+    def _init_variables(self) -> Tuple[dict, np.ndarray]:
         shape = self._data.z.shape
         res = {'Do': np.zeros(shape), 'mu': np.zeros(shape),
                'S': np.zeros(shape), 'beta_corr': np.ones(shape)}
         return res, np.zeros(shape)
 
-    def _calc_beta_z_ratio(self):
+    def _calc_beta_z_ratio(self) -> np.ndarray:
         return 2 / np.pi * self._data.beta / self._data.z
 
-    def _find_lut_indices(self, ind, dia_init, n_dia, n_widths):
+    def _find_lut_indices(self, ind, dia_init, n_dia, n_widths) -> Tuple[int, int]:
         ind_dia = bisect_left(self._data.mie['Do'], dia_init[ind], hi=n_dia - 1)
         ind_width = bisect_left(self._width_lut[:, ind_dia], -self._width_ht[ind],
                                 hi=n_widths-1)
         return ind_width, ind_dia
 
-    def _update_result_tables(self, ind, dia, lut_ind):
-        self.params['Do'][ind] = dia
-        self.params['mu'][ind] = self._data.mie['mu'][lut_ind[0]]
-        self.params['S'][ind] = self._data.mie['S'][lut_ind]
-
-    @staticmethod
-    def _is_converged(ind, dia, dia_init):
-        threshold = 1e-3
-        return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold
-
-    @staticmethod
-    def _calc_dia(beta_z_ratio, mu=0, ray=1, k=1):
-        """ Drizzle diameter calculation.
-
-        Args:
-            beta_z_ratio (ndarray): Beta to z ratio, multiplied by (2 / pi).
-            mu (ndarray, optional): Shape parameter for gamma calculations. Default is 0.
-            ray (ndarray, optional): Mie to Rayleigh ratio for z. Default is 1.
-            k (ndarray, optional): Alpha to beta ratio . Default is 1.
-
-        Returns:
-            ndarray: Drizzle diameter.
-
-        References:
-            https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
-
-        """
-        const = ray * k * beta_z_ratio
-        return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1 / 4)
-
-    def _solve_drizzle(self, dia_init):
+    def _solve_drizzle(self, dia_init: np.ndarray):
         drizzle_ind = np.where(self._drizzle_class.drizzle == 1)
         dia_init[drizzle_ind] = self._calc_dia(self._beta_z_ratio[drizzle_ind], k=18.8)
         n_widths, n_dia = self._width_lut.shape[0], len(self._data.mie['Do'])
@@ -265,6 +236,36 @@ class DrizzleSolver:
                 if self._is_converged(ind, dia, dia_init):
                     break
                 self._dia_init[ind] = dia
-            beta_factor = np.exp(2 * self.params['S'][ind] * self._data.beta[ind] *
-                                 self._data.dheight)
+            beta_factor = np.exp(2 * self.params['S'][ind] * self._data.beta[ind] * self._data.dheight)
             self.params['beta_corr'][ind[0], (ind[-1]+1):] *= beta_factor
+
+    def _update_result_tables(self, ind: tuple, dia: Union[np.ndarray, float], lut_ind: tuple):
+        self.params['Do'][ind] = dia
+        self.params['mu'][ind] = self._data.mie['mu'][lut_ind[0]]
+        self.params['S'][ind] = self._data.mie['S'][lut_ind]
+
+    @staticmethod
+    def _calc_dia(beta_z_ratio: Union[np.ndarray, float], mu: float = 0.0,
+                  ray: float = 1.0, k: float = 1.0) -> Union[np.ndarray, float]:
+        """ Drizzle diameter calculation.
+
+        Args:
+            beta_z_ratio: Beta to z ratio, multiplied by (2 / pi).
+            mu: Shape parameter for gamma calculations. Default is 0.
+            ray: Mie to Rayleigh ratio for z. Default is 1.
+            k: Alpha to beta ratio . Default is 1.
+
+        Returns:
+            ndarray: Drizzle diameter.
+
+        References:
+            https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
+
+        """
+        const = ray * k * beta_z_ratio
+        return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1 / 4)
+
+    @staticmethod
+    def _is_converged(ind: tuple, dia: Union[np.ndarray, float], dia_init: np.ndarray) -> bool:
+        threshold = 1e-3
+        return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold
