@@ -1,5 +1,6 @@
 """Module for creating Cloudnet drizzle product.
 """
+import logging
 import os
 from bisect import bisect_left
 from typing import Optional
@@ -199,10 +200,12 @@ class SpectralWidth:
         self.width_ht = self._calculate_spectral_width()
 
     def _calculate_spectral_width(self):
+        v_sigma = p_tools.read_nc_fields(self.cat_file, 'v_sigma')
         try:
-            width, v_sigma = p_tools.read_nc_fields(self.cat_file, ['width', 'v_sigma'])
+            width = p_tools.read_nc_fields(self.cat_file, 'width')
         except KeyError:
-            raise NotImplementedError('Unable to create drizzle product without spectral width')
+            width = 0
+            logging.warning(f'No spectral width, assuming width = {width}')
         sigma_factor = self._calc_v_sigma_factor()
         return width - sigma_factor * v_sigma
 
