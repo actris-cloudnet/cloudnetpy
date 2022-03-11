@@ -10,8 +10,7 @@ def _get_drizzle_indices(diameter):
 
 
 def _read_input_uncertainty(categorize, uncertainty_type):
-    return tuple(db2lin(categorize.getvar(f'{key}_{uncertainty_type}'))
-                 for key in ('Z', 'beta'))
+    return tuple(db2lin(categorize.getvar(f'{key}_{uncertainty_type}')) for key in ('Z', 'beta'))
 
 
 MU_ERROR = 0.07
@@ -32,6 +31,10 @@ def get_drizzle_error(categorize, drizzle_parameters):
     parameters = drizzle_parameters.params
     drizzle_indices = _get_drizzle_indices(parameters['Do'])
     error_input = _read_input_uncertainty(categorize, 'error')
+    if utils.isscalar(error_input[0]) is True:  # Constant Z error
+        z_error, bias_error = error_input
+        z_error = np.full(categorize.z.shape, z_error)
+        error_input = z_error, bias_error
     bias_input = _read_input_uncertainty(categorize, 'bias')
     errors = _calc_errors(drizzle_indices, error_input, bias_input)
     return errors
