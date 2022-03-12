@@ -165,6 +165,8 @@ class Mira(NcRadar):
         is_stable_azimuth = np.isclose(azimuth_vel, 0, atol=1e-6)
         is_stable_profile = is_stable_zenith & is_stable_azimuth
         n_removed = len(is_stable_profile) - np.count_nonzero(is_stable_profile)
+        if n_removed == len(zenith):
+            raise ValidTimeStampError('No profiles with valid zenith / azimuth angles')
         if n_removed > 0:
             logging.warning(f'Filtering {n_removed} profiles due to varying zenith / azimuth angle')
         self.append_data(zenith, 'zenith_angle')
