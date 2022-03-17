@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+import subprocess
+import argparse
+
+VERSION_FILE = 'cloudnetpy/version.py'
+
+
+def main(component: str):
+    current_branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode("utf-8").strip()
+    assert current_branch == 'master', 'FATAL: Not in master branch'
+    old_version = _read_version()
+    _update_version_number_component(component)
+    if component == 'major':
+        _update_version_number_component('minor', reset=True)
+    if component != 'patch':
+        _update_version_number_component('patch', reset=True)
+    new_version = _read_version()
+    action = input(f'Updating cloudnetPy version {old_version} -> {new_version}. Continue? y/n [y]')
+    if action.lower() in ('y', ''):
+        _commit_and_push()
+    else:
+        subprocess.run(['git', 'checkout', VERSION_FILE])
+
+
+def _update_version_number_component(component: str, reset: bool = False):
+    with open(VERSION_FILE, 'r') as file:
+        data = file.readlines()
+    for ind, line in enumerate(data):
+        try:
+            name, _, value = line.split(' ')
+            if name.lower() == component:
+                new_value = '0' if reset is True else str(int(value) + 1)
+                data[ind] = f'{component.upper()} = {new_value}\n'
+                break
+        except ValueError:
+            continue
+    with open(VERSION_FILE, 'w') as file:
+        file.writelines(data)
+
+
+def _commit_and_push():
+    git_commands = [
+        ['add', VERSION_FILE],
+        ['commit', '-m', 'Bump version'],
+        ['push'],
+        ['push', '--tags']
+    ]
+    for command in git_commands:
+        subprocess.run(['git'] + command)
+
+
+def _read_version() -> str:
+    version = {}
+    with open(VERSION_FILE) as file:
+        exec(file.read(), version)
+    return version['__version__']
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Bump CloudnetPy version number.')
+    parser.add_argument('component',
+                        choices=['major', 'minor', 'patch'],
+                        type=str,
+                        help='Version number component to be updated.')
+    args = parser.parse_args()
+    try:
+        main(args.component)
+    except AssertionError as err:
+        print(err)
