@@ -86,10 +86,7 @@ def create_one_day_data_record(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -
     """Concatenates all RPG data from one day."""
     rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
     if len(rpg_objects) > 1:
-        try:
-            rpg_header = _reduce_header(rpg_header)
-        except AssertionError as err:
-            raise InconsistentDataError(f'{err}')
+        rpg_header = _reduce_header(rpg_header)
     rpg_raw_data = _mask_invalid_data(rpg_raw_data)
     return {**rpg_header, **rpg_raw_data}
 
@@ -115,12 +112,18 @@ def _stack_rpg_data(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -> Tuple[dic
 
 def _reduce_header(header: dict) -> dict:
     """Removes duplicate header data."""
-    header_out = header.copy()
-    for name in header:
-        first_row = header[name][0]
-        assert np.isclose(header[name], first_row, rtol=1e-2).all(), f"Inconsistent header: {name}"
-        header_out[name] = first_row
-    return header_out
+    reduced_header = {}
+    for key, data in header.items():
+        first_profile_value = data[0]
+        is_identical_value = bool(np.isclose(data, first_profile_value, rtol=1e-2).all())
+        if is_identical_value is False:
+            msg = f'Inconsistent header: {key}'
+            if key in ('latitude', 'longitude'):
+                logging.warning(msg)
+            else:
+                raise InconsistentDataError(msg)
+        reduced_header[key] = first_profile_value
+    return reduced_header
 
 
 def _mask_invalid_data(data_in: dict) -> dict:
