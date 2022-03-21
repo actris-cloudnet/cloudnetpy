@@ -17,7 +17,7 @@ def main(component: str):
     new_version = _read_version()
     action = input(f'Updating cloudnetPy version {old_version} -> {new_version}. Continue? y/n [y]')
     if action.lower() in ('y', ''):
-        _commit_and_push()
+        _commit_and_push(new_version)
     else:
         subprocess.run(['git', 'checkout', VERSION_FILE])
 
@@ -38,11 +38,12 @@ def _update_version_number_component(component: str, reset: bool = False):
         file.writelines(data)
 
 
-def _commit_and_push():
+def _commit_and_push(tag: str):
     git_commands = [
         ['add', VERSION_FILE],
         ['commit', '-m', 'Bump version'],
         ['push'],
+        ['tag', tag],
         ['push', '--tags']
     ]
     for command in git_commands:
@@ -53,7 +54,7 @@ def _read_version() -> str:
     version = {}
     with open(VERSION_FILE) as file:
         exec(file.read(), version)
-    return version['__version__']
+    return f'v{version["__version__"]}'
 
 
 if __name__ == "__main__":
