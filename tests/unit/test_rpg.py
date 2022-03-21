@@ -12,7 +12,7 @@ from cloudnetpy.instruments import rpg2nc
 from cloudnetpy.instruments import rpg
 from distutils.dir_util import copy_tree
 from cloudnetpy_qc import Quality
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import ValidTimeStampError, InconsistentDataError
 
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
@@ -38,7 +38,7 @@ class TestReduceHeader:
 
     def test_2(self):
         self.header['a'][50] = 10
-        with pytest.raises(AssertionError):
+        with pytest.raises(InconsistentDataError):
             assert_array_equal(rpg._reduce_header(self.header), {'a': 1, 'b': 2, 'c': 3})
 
 
