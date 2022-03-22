@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.31.1
+
+- Allow `rpg-fmcw-94` latitude and longitude values to vary
+- Raise error if only one valid `mira` timestamp
+
 ## 1.31.0
 
 - Drizzle without spectral width
