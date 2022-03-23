@@ -88,7 +88,7 @@ class Disdrometer:
         for key, value in self.site_meta.items():
             key = key.lower()
             if key in valid_keys:
-                self.data[key] = CloudnetArray(value, key)
+                self.data[key] = CloudnetArray(float(value), key)
 
     def validate_date(self, expected_date: str) -> None:
         valid_ind = []

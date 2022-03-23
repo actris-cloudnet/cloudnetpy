@@ -3,6 +3,7 @@ from cloudnetpy.instruments import disdrometer
 import pytest
 from tempfile import NamedTemporaryFile
 import netCDF4
+from cloudnetpy_qc import Quality
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -12,17 +13,11 @@ def test_format_time():
 
 
 class TestParsivel:
-    file_path = f'{SCRIPT_PATH}/data/parsivel/'
-    site_meta = {'name': 'Kumpula'}
     temp_file = NamedTemporaryFile()
-
-    @pytest.fixture(autouse=True)
-    def init_tests(self):
-        self.file = f'{self.file_path}juelich.log'
-        self.uuid = disdrometer.disdrometer2nc(self.file, self.temp_file.name, self.site_meta)
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
+    site_meta = {'name': 'Kumpula'}
+    filename = f'{SCRIPT_PATH}/data/parsivel/juelich.log'
+    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta)
+    nc = netCDF4.Dataset(temp_file.name)
 
     def test_global_attributes(self):
         assert 'Parsivel' in self.nc.source
@@ -38,50 +33,65 @@ class TestParsivel:
         assert self.nc.dimensions['velocity'].size == 32
         assert self.nc.dimensions['diameter'].size == 32
 
+    def test_qc(self):
+        check_qc(self.temp_file.name)
+
+    def test_cleanup(self):
+        self.nc.close()
+
 
 class TestParsivel2:
-    file = f'{SCRIPT_PATH}/data/parsivel/norunda.log'
+    temp_file = NamedTemporaryFile()
+    filename = f'{SCRIPT_PATH}/data/parsivel/norunda.log'
     site_meta = {'name': 'Norunda'}
 
     def test_date_validation(self):
-        temp_file = NamedTemporaryFile()
-        disdrometer.disdrometer2nc(self.file, temp_file.name, self.site_meta, date='2019-11-09')
+        disdrometer.disdrometer2nc(self.filename, self.temp_file.name, self.site_meta, date='2019-11-09')
 
     def test_date_validation_fail(self):
         temp_file = NamedTemporaryFile()
         with pytest.raises(ValueError):
-            disdrometer.disdrometer2nc(self.file, temp_file.name, self.site_meta, date='2022-04-05')
+            disdrometer.disdrometer2nc(self.filename, temp_file.name, self.site_meta, date='2022-04-05')
+
+    def test_qc(self):
+        check_qc(self.temp_file.name)
 
 
 class TestParsivel3:
-    file = f'{SCRIPT_PATH}/data/parsivel/ny-alesund.log'
+    temp_file = NamedTemporaryFile()
+    filename = f'{SCRIPT_PATH}/data/parsivel/ny-alesund.log'
     site_meta = {'name': 'Ny Alesund'}
+    disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date='2021-04-16')
 
-    def test_date_validation(self):
-        temp_file = NamedTemporaryFile()
-        disdrometer.disdrometer2nc(self.file, temp_file.name, self.site_meta, date='2021-04-16')
+    def test_qc(self):
+        check_qc(self.temp_file.name)
 
 
 class TestThies:
-
-    file_path = f'{SCRIPT_PATH}/data/thies-lnm/'
     temp_file = NamedTemporaryFile()
-    site_meta = {'name': 'Lindenberg', 'latitude': 34.6}
-
-    @pytest.fixture(autouse=True)
-    def init_tests(self):
-        self.file = f'{self.file_path}2021091507.txt'
-        self.uuid = disdrometer.disdrometer2nc(self.file, self.temp_file.name, self.site_meta)
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
+    filename = f'{SCRIPT_PATH}/data/thies-lnm/2021091507.txt'
+    site_meta = {'name': 'Lindenberg', 'latitude': 34.6, 'altitude': 20}
+    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date='2021-09-15')
+    nc = netCDF4.Dataset(temp_file.name)
 
     def test_processing(self):
-        temp_file = NamedTemporaryFile()
-        disdrometer.disdrometer2nc(self.file, temp_file.name, self.site_meta, date='2021-09-15')
         assert self.nc.title == 'Disdrometer file from Lindenberg'
         assert self.nc.year == '2021'
         assert self.nc.month == '09'
         assert self.nc.day == '15'
         assert self.nc.location == 'Lindenberg'
         assert self.nc.cloudnet_file_type == 'disdrometer'
+
+    def test_qc(self):
+        check_qc(self.temp_file.name)
+
+    def test_cleanup(self):
+        self.nc.close()
+
+
+def check_qc(filename: str):
+    quality = Quality(filename)
+    res_data = quality.check_data()
+    res_metadata = quality.check_metadata()
+    assert quality.n_metadata_test_failures == 0, res_metadata
+    assert quality.n_data_test_failures == 0, res_data
