@@ -125,7 +125,8 @@ class Radar(DataSource):
                 min_coverage: float,
                 z_limit: float,
                 distance: float,
-                n_blocks: int) -> int:
+                n_blocks: int,
+                diff_to_median: int = 50) -> int:
 
         if axis == 0:
             data = data.T
@@ -138,6 +139,7 @@ class Radar(DataSource):
         n_removed_total = 0
 
         for block_number in range(n_blocks):
+
             data_block = data[block_indices, :]
             n_values = ma.count(data_block, axis=1)
             try:
@@ -147,7 +149,11 @@ class Radar(DataSource):
                 continue
             threshold = distance * (q3 - q1) + q3
 
-            indices = np.where((n_values > threshold) & (n_values > (min_coverage * data.shape[1])))[0]
+            indices = np.where(
+                (n_values > threshold) &
+                (n_values > (min_coverage * data.shape[1])) &
+                (n_values > ma.median(n_values) + diff_to_median)
+            )[0]
             true_ind = [int(x) for x in (block_number * len_block + indices)]
             n_removed = len(indices)
 
