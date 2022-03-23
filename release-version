@@ -48,7 +48,7 @@ def _confirm(msg: str) -> bool:
 def _commit_and_push(version: Version):
     git_commands = [
         ['add', VERSION_FILE, CHANGELOG_FILE],
-        ['commit', '-m', 'Bump version'],
+        ['commit', '-m', f'Release version {version}'],
         ['push'],
         ['tag', f'v{version}'],
         ['push', '--tags']
