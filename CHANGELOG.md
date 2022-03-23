@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.31.2
+
+- Cast `parsivel` metadata to floats
+
 ## 1.31.1
 
 - Allow `rpg-fmcw-94` latitude and longitude values to vary
