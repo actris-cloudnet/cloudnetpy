@@ -1,14 +1,26 @@
 name: Upload Python Package
 
 on:
-  release:
-    types: [created]
+  push:
+    tags:
+      - "v*.*.*"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Generate changelog
+      run: |
+        version=${GITHUB_REF#refs/tags/v}
+        sed "0,/^## ${version//./\\.}/d;/^## /,\$d" CHANGELOG.md > ${{ github.workspace }}-CHANGELOG.txt
+        echo "::set-output name=name::CloudnetPy $version"
+      id: changelog
+    - name: Create release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: ${{ steps.changelog.outputs.name }}
+        body_path: ${{ github.workspace }}-CHANGELOG.txt
     - name: Set up Python
       uses: actions/setup-python@v1
       with:

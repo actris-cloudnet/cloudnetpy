@@ -1,60 +1,109 @@
 #!/usr/bin/env python
 import subprocess
 import argparse
+import sys
+import re
+from pathlib import Path
+from dataclasses import dataclass
 
 VERSION_FILE = 'cloudnetpy/version.py'
+CHANGELOG_FILE = 'CHANGELOG.md'
 
 
 def main(component: str):
     current_branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD']).decode("utf-8").strip()
     assert current_branch == 'master', 'FATAL: Not in master branch'
     old_version = _read_version()
-    _update_version_number_component(component)
     if component == 'major':
-        _update_version_number_component('minor', reset=True)
-    if component != 'patch':
-        _update_version_number_component('patch', reset=True)
-    new_version = _read_version()
-    action = input(f'Updating cloudnetPy version {old_version} -> {new_version}. Continue? y/n [y]')
-    if action.lower() in ('y', ''):
-        _commit_and_push(new_version)
-    else:
-        subprocess.run(['git', 'checkout', VERSION_FILE])
+        new_version = Version(old_version.major + 1, 0, 0)
+    elif component == 'minor':
+        new_version = Version(old_version.major, old_version.minor + 1, 0)
+    elif component == 'patch':
+        new_version = Version(old_version.major, old_version.minor, old_version.patch + 1)
+    entry = _read_changelog()
+    if not _confirm(f'Updating cloudnetPy version {old_version} -> {new_version}. Continue?'):
+        return
+    print(f"\nCurrent changelog entry:\n\n{entry}\n")
+    if not _confirm('Use this for the release?'):
+        return
+    _update_changelog(new_version)
+    _write_version(new_version)
+    _commit_and_push(new_version)
 
 
-def _update_version_number_component(component: str, reset: bool = False):
-    with open(VERSION_FILE, 'r') as file:
-        data = file.readlines()
-    for ind, line in enumerate(data):
-        try:
-            name, _, value = line.split(' ')
-            if name.lower() == component:
-                new_value = '0' if reset is True else str(int(value) + 1)
-                data[ind] = f'{component.upper()} = {new_value}\n'
-                break
-        except ValueError:
-            continue
-    with open(VERSION_FILE, 'w') as file:
-        file.writelines(data)
+@dataclass
+class Version:
+    major: int
+    minor: int
+    patch: int
+
+    def __str__(self):
+        return f'{self.major}.{self.minor}.{self.patch}'
 
 
-def _commit_and_push(tag: str):
+def _confirm(msg: str) -> bool:
+    return input(f'{msg} y/n [y] ').lower() in ('y', '')
+
+
+def _commit_and_push(version: Version):
     git_commands = [
-        ['add', VERSION_FILE],
+        ['add', VERSION_FILE, CHANGELOG_FILE],
         ['commit', '-m', 'Bump version'],
         ['push'],
-        ['tag', tag],
+        ['tag', f'v{version}'],
         ['push', '--tags']
     ]
     for command in git_commands:
         subprocess.run(['git'] + command)
 
 
-def _read_version() -> str:
-    version = {}
-    with open(VERSION_FILE) as file:
-        exec(file.read(), version)
-    return f'v{version["__version__"]}'
+def _read_int(text: str, key: str) -> int:
+    return int(re.search(f'^{key} = (\d+)$', text, flags=re.M)[1])
+
+
+def _write_int(text: str, key: str, value: int) -> str:
+    return re.sub(f'^{key} = \d+$', f'{key} = {value}', text, flags=re.M)
+
+
+def _read_version() -> Version:
+    text = Path(VERSION_FILE).read_text()
+    return Version(major=_read_int(text, 'MAJOR'),
+                   minor=_read_int(text, 'MINOR'),
+                   patch=_read_int(text, 'PATCH'))
+
+
+def _write_version(version: Version):
+    p = Path(VERSION_FILE)
+    text = p.read_text()
+    text = _write_int(text, 'MAJOR', version.major)
+    text = _write_int(text, 'MINOR', version.minor)
+    text = _write_int(text, 'PATCH', version.patch)
+    p.write_text(text)
+
+
+def _read_changelog():
+    path = Path(CHANGELOG_FILE)
+    old_content = path.read_text()
+    entry_start = re.search(r'^## Unpublished$', old_content, re.M)
+    if entry_start is None:
+        print(f'ERROR: No changelog entry found! Please specify your changes in "Unpublished" section of {CHANGELOG_FILE}', file=sys.stderr)
+        new_content = re.sub('^##[^#]', '## Unpublished\n\n\n## ', old_content, count=1, flags=re.M)
+        path.write_text(new_content)
+        sys.exit(1)
+    entry_end = re.search(r'^##[^#]', old_content[entry_start.end():], re.M)
+    entry = old_content[entry_start.end():entry_start.end()+entry_end.start()].strip()
+    if not entry:
+        print(f'ERROR: Changelog entry is empty! Please specify your changes in "Unpublished" section of {CHANGELOG_FILE}', file=sys.stderr)
+        sys.exit(1)
+    return entry
+
+
+def _update_changelog(version: Version):
+    p = Path(CHANGELOG_FILE)
+    old_content = p.read_text()
+    new_content = re.sub('^## Unpublished$', f'## {version}', old_content, flags=re.M)
+    assert new_content != old_content, f'Failed to update {CHANGELOG_FILE}'
+    p.write_text(new_content)
 
 
 if __name__ == "__main__":
