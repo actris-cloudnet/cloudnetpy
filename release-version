@@ -20,7 +20,7 @@ def main(component: str):
         new_version = Version(old_version.major, old_version.minor + 1, 0)
     elif component == 'patch':
         new_version = Version(old_version.major, old_version.minor, old_version.patch + 1)
-    entry = _read_changelog()
+    entry = _read_changelog(old_version)
     if not _confirm(f'Updating cloudnetPy version {old_version} -> {new_version}. Continue?'):
         return
     print(f"\nCurrent changelog entry in {CHANGELOG_FILE}:\n\n{entry}\n")
@@ -81,18 +81,16 @@ def _write_version(version: Version):
     p.write_text(text)
 
 
-def _read_changelog():
+def _read_changelog(old_version: Version) -> str:
     path = Path(CHANGELOG_FILE)
     old_content = path.read_text()
     entry_start = re.search(r'^## Unpublished$', old_content, re.M)
     if entry_start is None:
-        print(f'ERROR: No changelog entry found! Updating {CHANGELOG_FILE} based on git commits:\n', file=sys.stderr)
-        m = re.search(r'^## (\d+\.\d+\.\d+)$', old_content, flags=re.M)
-        assert m is not None, f'Failed to get previous version from {CHANGELOG_FILE}'
-        previous_version = m[1]
-        git_log = subprocess.run(['git', 'log', '--pretty=format:- %s', f'v{previous_version}..'], check=True, capture_output=True, text=True).stdout
+        old_tag = f'v{old_version}'
+        print(f'ERROR: No changelog entry found! Updating {CHANGELOG_FILE} with commits since {old_tag}:\n', file=sys.stderr)
+        git_log = subprocess.run(['git', 'log', '--pretty=format:- %s', f'{old_tag}..'], check=True, capture_output=True, text=True).stdout
         print(f'{git_log}\n\nPlease edit {CHANGELOG_FILE} to your liking and try again.', file=sys.stderr)
-        new_content = old_content[:m.start()] + '## Unpublished\n\n' + git_log + '\n\n' + old_content[m.start():]
+        new_content = re.sub('^##[^#]', f'## Unpublished\n\n{git_log}\n\n## ', old_content, count=1, flags=re.M)
         path.write_text(new_content)
         sys.exit(1)
     entry_end = re.search(r'^##[^#]', old_content[entry_start.end():], re.M)
