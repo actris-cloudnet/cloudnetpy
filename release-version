@@ -23,7 +23,7 @@ def main(component: str):
     entry = _read_changelog()
     if not _confirm(f'Updating cloudnetPy version {old_version} -> {new_version}. Continue?'):
         return
-    print(f"\nCurrent changelog entry:\n\n{entry}\n")
+    print(f"\nCurrent changelog entry in {CHANGELOG_FILE}:\n\n{entry}\n")
     if not _confirm('Use this for the release?'):
         return
     _update_changelog(new_version)
@@ -54,7 +54,7 @@ def _commit_and_push(version: Version):
         ['push', '--tags']
     ]
     for command in git_commands:
-        subprocess.run(['git'] + command)
+        subprocess.run(['git'] + command, check=True)
 
 
 def _read_int(text: str, key: str) -> int:
@@ -86,8 +86,13 @@ def _read_changelog():
     old_content = path.read_text()
     entry_start = re.search(r'^## Unpublished$', old_content, re.M)
     if entry_start is None:
-        print(f'ERROR: No changelog entry found! Please specify your changes in "Unpublished" section of {CHANGELOG_FILE}', file=sys.stderr)
-        new_content = re.sub('^##[^#]', '## Unpublished\n\n\n## ', old_content, count=1, flags=re.M)
+        print(f'ERROR: No changelog entry found! Updating {CHANGELOG_FILE} based on git commits:\n', file=sys.stderr)
+        m = re.search(r'^## (\d+\.\d+\.\d+)$', old_content, flags=re.M)
+        assert m is not None, f'Failed to get previous version from {CHANGELOG_FILE}'
+        previous_version = m[1]
+        git_log = subprocess.run(['git', 'log', '--pretty=format:- %s', f'v{previous_version}..'], check=True, capture_output=True, text=True).stdout
+        print(f'{git_log}\n\nPlease edit {CHANGELOG_FILE} to your liking and try again.', file=sys.stderr)
+        new_content = old_content[:m.start()] + '## Unpublished\n\n' + git_log + '\n\n' + old_content[m.start():]
         path.write_text(new_content)
         sys.exit(1)
     entry_end = re.search(r'^##[^#]', old_content[entry_start.end():], re.M)
