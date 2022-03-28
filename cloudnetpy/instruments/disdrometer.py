@@ -448,12 +448,8 @@ ATTRIBUTES = {
         long_name="Precipitation rate",
         units="m s-1",
     ),
-    "synop_WaWa": MetaData(
-        long_name="Synop code WaWa",
-    ),
-    "synop_WW": MetaData(
-        long_name="Synop code WW",
-    ),
+    "synop_WaWa": MetaData(long_name="Synop code WaWa", units="1"),
+    "synop_WW": MetaData(long_name="Synop code WW", units="1"),
     "radar_reflectivity": MetaData(
         long_name="Equivalent radar reflectivity factor",
         units="dBZ",
@@ -462,15 +458,9 @@ ATTRIBUTES = {
         long_name="Visibility range in precipitation after MOR",
         units="m",
     ),
-    "interval": MetaData(
-        long_name="Length of measurement interval",
-    ),
-    "sig_laser": MetaData(
-        long_name="Signal amplitude of the laser",
-    ),
-    "n_particles": MetaData(
-        long_name="Number of particles in time interval",
-    ),
+    "interval": MetaData(long_name="Length of measurement interval", units="1"),
+    "sig_laser": MetaData(long_name="Signal amplitude of the laser", units="1"),
+    "n_particles": MetaData(long_name="Number of particles in time interval", units="1"),
     "T_sensor": MetaData(
         long_name="Temperature in the sensor",
         units="K",
@@ -484,11 +474,11 @@ ATTRIBUTES = {
         units="V",
     ),
     "state_sensor": MetaData(
-        long_name="State of the sensor", comment="0 = OK, 1 = Dirty, 2 = No measurement possible."
+        long_name="State of the sensor",
+        comment="0 = OK, 1 = Dirty, 2 = No measurement possible.",
+        units="1",
     ),
-    "error_code": MetaData(
-        long_name="Error code",
-    ),
+    "error_code": MetaData(long_name="Error code", units="1"),
     "number_concentration": MetaData(
         long_name="Number of particles per diameter class",
         units="log10(m-3 mm-1)",
@@ -498,55 +488,55 @@ ATTRIBUTES = {
         units="m s-1",
     ),
     "data_raw": MetaData(
-        long_name="Raw Data as a function of particle diameter and velocity.",
+        long_name="Raw Data as a function of particle diameter and velocity", units="1"
     ),
-    "kinetic_energy": MetaData(
-        long_name="Kinetic energy",
-    ),
+    "kinetic_energy": MetaData(long_name="Kinetic energy", units="1"),
     # Thies-specific:
     "T_ambient": MetaData(long_name="Ambient temperature", units="C"),
     "T_interior": MetaData(long_name="Interior temperature", units="C"),
     "status_T_laser_analogue": MetaData(
-        long_name="Status of laser temperature (analogue)", comment="0 = OK , 1 = Error"
+        long_name="Status of laser temperature (analogue)", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_T_laser_digital": MetaData(
-        long_name="Status of laser temperature (digital)", comment="0 = OK , 1 = Error"
+        long_name="Status of laser temperature (digital)", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_I_laser_analogue": MetaData(
-        long_name="Status of laser current (analogue)", comment="0 = OK , 1 = Error"
+        long_name="Status of laser current (analogue)", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_I_laser_digital": MetaData(
-        long_name="Status of laser current (digital)", comment="0 = OK , 1 = Error"
+        long_name="Status of laser current (digital)", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_sensor_supply": MetaData(
-        long_name="Status of sensor supply", comment="0 = OK , 1 = Error"
+        long_name="Status of sensor supply", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_laser_heating": MetaData(
-        long_name="Status of laser heating", comment="0 = OK , 1 = Error"
+        long_name="Status of laser heating", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_receiver_heating": MetaData(
-        long_name="Status of receiver heating", comment="0 = OK , 1 = Error"
+        long_name="Status of receiver heating", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_temperature_sensor": MetaData(
-        long_name="Status of temperature sensor", comment="0 = OK , 1 = Error"
+        long_name="Status of temperature sensor", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_heating_supply": MetaData(
-        long_name="Status of heating supply", comment="0 = OK , 1 = Error"
+        long_name="Status of heating supply", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_heating_housing": MetaData(
-        long_name="Status of heating housing", comment="0 = OK , 1 = Error"
+        long_name="Status of heating housing", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_heating_heads": MetaData(
-        long_name="Status of heating heads", comment="0 = OK , 1 = Error"
+        long_name="Status of heating heads", comment="0 = OK , 1 = Error", units="1"
     ),
     "status_heating_carriers": MetaData(
-        long_name="Status of heating carriers", comment="0 = OK , 1 = Error"
+        long_name="Status of heating carriers", comment="0 = OK , 1 = Error", units="1"
     ),
-    "status_laser_power": MetaData(long_name="Status of laser power", comment="0 = OK , 1 = Error"),
-    "status_laser": MetaData(long_name="Status of laser", comment="0 = OK/on , 1 = Off"),
+    "status_laser_power": MetaData(
+        long_name="Status of laser power", comment="0 = OK , 1 = Error", units="1"
+    ),
+    "status_laser": MetaData(long_name="Status of laser", comment="0 = OK/on , 1 = Off", units="1"),
     "measurement_quality": MetaData(long_name="Measurement quality", units="%"),
     "maximum_hail_diameter": MetaData(long_name="Maximum hail diameter", units="mm"),
-    "static_signal": MetaData(long_name="Static signal", comment="0 = OK, 1 = ERROR"),
+    "static_signal": MetaData(long_name="Static signal", comment="0 = OK, 1 = ERROR", units="1"),
     "T_laser_driver": MetaData(long_name="Temperature of laser driver", units="C"),
     "I_mean_laser": MetaData(long_name="Mean value of laser current", units="mA"),
     "V_control": MetaData(
