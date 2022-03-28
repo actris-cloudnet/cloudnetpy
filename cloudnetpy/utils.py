@@ -441,6 +441,8 @@ def l2norm(*args) -> ma.MaskedArray:
     ss = 0
     for arg in args:
         if isinstance(arg, ma.MaskedArray):
+            # Raise only non-masked values, not sure if this is needed...
+            arg = ma.copy(arg)
             arg[~arg.mask] = arg[~arg.mask] ** 2
         else:
             arg = arg ** 2
