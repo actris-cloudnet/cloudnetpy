@@ -32,13 +32,14 @@ class Radar(DataSource):
         :func:`instruments.rpg2nc()`, :func:`instruments.mira2nc()`
 
     """
+
     def __init__(self, full_path: str):
         super().__init__(full_path, radar=True)
-        self.radar_frequency = float(self.getvar('radar_frequency'))
+        self.radar_frequency = float(self.getvar("radar_frequency"))
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
-        self.location = getattr(self.dataset, 'location', '')
-        self.type = getattr(self.dataset, 'source', '')
+        self.location = getattr(self.dataset, "location", "")
+        self.type = getattr(self.dataset, "source", "")
         self._init_data()
         self._init_sigma_v()
         self._get_folding_velocity_full()
@@ -52,17 +53,17 @@ class Radar(DataSource):
         """
         bad_time_indices = []
         for key in self.data:
-            if key in ('ldr', 'sldr', 'Z'):
+            if key in ("ldr", "sldr", "Z"):
                 self.data[key].db2lin()
                 bad_time_indices = self.data[key].rebin_data(self.time, time_new)
                 self.data[key].lin2db()
-            elif key == 'v':
-                self.data[key].rebin_velocity(self.time, time_new,
-                                              self.folding_velocity,
-                                              self.sequence_indices)
-            elif key == 'v_sigma':
+            elif key == "v":
+                self.data[key].rebin_velocity(
+                    self.time, time_new, self.folding_velocity, self.sequence_indices
+                )
+            elif key == "v_sigma":
                 self.data[key].calc_linear_std(self.time, time_new)
-            elif key in ('width', 'rain_rate'):
+            elif key in ("width", "rain_rate"):
                 self.data[key].rebin_data(self.time, time_new)
             else:
                 continue
@@ -76,11 +77,10 @@ class Radar(DataSource):
         data and the pixel should not be used in any further analysis.
 
         """
-        good_ind = (~ma.getmaskarray(self.data['Z'][:])
-                    & ~ma.getmaskarray(self.data['v'][:]))
+        good_ind = ~ma.getmaskarray(self.data["Z"][:]) & ~ma.getmaskarray(self.data["v"][:])
 
-        if 'width' in self.data.keys():
-            good_ind = good_ind & ~ma.getmaskarray(self.data['width'][:])
+        if "width" in self.data.keys():
+            good_ind = good_ind & ~ma.getmaskarray(self.data["width"][:])
 
         for array in self.data.values():
             if array.data.ndim == 2:
@@ -94,15 +94,15 @@ class Radar(DataSource):
         more sophisticated method could be implemented here later.
 
         """
-        for key in ('Z', 'v', 'width', 'ldr', 'v_sigma'):
+        for key in ("Z", "v", "width", "ldr", "v_sigma"):
             if key in self.data.keys():
                 self.data[key].filter_vertical_stripes()
 
     def filter_1st_gate_artifact(self) -> None:
         """Removes 1st range gate velocity artifact."""
         velocity_limit = 4
-        ind = np.where(self.data['v'][:, 0] > velocity_limit)
-        self.data['v'][:][ind, 0] = ma.masked
+        ind = np.where(self.data["v"][:, 0] > velocity_limit)
+        self.data["v"][:][ind, 0] = ma.masked
 
     def filter_stripes(self, variable: str) -> None:
         """Filters vertical and horizontal stripe-shaped artifacts from radar data."""
@@ -116,22 +116,26 @@ class Radar(DataSource):
         n_vertical = self._filter(data, 1, min_coverage=0.5, z_limit=10, distance=4, n_blocks=100)
         n_horizontal = self._filter(data, 0, min_coverage=0.3, z_limit=-30, distance=3, n_blocks=20)
         if n_vertical > 0 or n_horizontal > 0:
-            logging.info(f'Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes '
-                         f'from radar data using {variable}')
+            logging.info(
+                f"Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes "
+                f"from radar data using {variable}"
+            )
 
-    def _filter(self,
-                data: np.ndarray,
-                axis: int,
-                min_coverage: float,
-                z_limit: float,
-                distance: float,
-                n_blocks: int) -> int:
+    def _filter(
+        self,
+        data: np.ndarray,
+        axis: int,
+        min_coverage: float,
+        z_limit: float,
+        distance: float,
+        n_blocks: int,
+    ) -> int:
 
         if axis == 0:
             data = data.T
-            echo = self.data['Z'][:].T
+            echo = self.data["Z"][:].T
         else:
-            echo = self.data['Z'][:]
+            echo = self.data["Z"][:]
 
         len_block = int(np.floor(data.shape[0] / n_blocks))
         block_indices = np.arange(len_block)
@@ -147,7 +151,9 @@ class Radar(DataSource):
                 continue
             threshold = distance * (q3 - q1) + q3
 
-            indices = np.where((n_values > threshold) & (n_values > (min_coverage * data.shape[1])))[0]
+            indices = np.where(
+                (n_values > threshold) & (n_values > (min_coverage * data.shape[1]))
+            )[0]
             true_ind = [int(x) for x in (block_number * len_block + indices)]
             n_removed = len(indices)
 
@@ -159,7 +165,7 @@ class Radar(DataSource):
                 for ind in true_ind:
                     ind2 = np.where(echo[ind, :] < z_limit)
                     bad_indices = (ind, ind2) if axis == 1 else (ind2, ind)
-                    self.data['v'][:][bad_indices] = ma.masked
+                    self.data["v"][:][bad_indices] = ma.masked
             block_indices += len_block
 
         return n_removed_total
@@ -176,10 +182,10 @@ class Radar(DataSource):
             and the original Cloudnet Matlab implementation.
 
         """
-        z_corrected = self.data['Z'][:] + attenuations['radar_gas_atten']
-        ind = ma.where(attenuations['radar_liquid_atten'])
-        z_corrected[ind] += attenuations['radar_liquid_atten'][ind]
-        self.append_data(z_corrected, 'Z')
+        z_corrected = self.data["Z"][:] + attenuations["radar_gas_atten"]
+        ind = ma.where(attenuations["radar_liquid_atten"])
+        z_corrected[ind] += attenuations["radar_liquid_atten"][ind]
+        self.append_data(z_corrected, "Z")
 
     def calc_errors(self, attenuations: dict, classification: ClassificationResult) -> None:
         """Calculates uncertainties of radar echo.
@@ -196,55 +202,65 @@ class Radar(DataSource):
             and the original Cloudnet Matlab implementation.
 
         """
+
         def _calc_sensitivity() -> np.ndarray:
             """Returns sensitivity of radar as function of altitude."""
-            mean_gas_atten = ma.mean(attenuations['radar_gas_atten'], axis=0)
+            mean_gas_atten = ma.mean(attenuations["radar_gas_atten"], axis=0)
             z_sensitivity = z_power_min + log_range + mean_gas_atten
             zc = ma.median(ma.array(z, mask=~classification.is_clutter), axis=0)
             z_sensitivity[~zc.mask] = zc[~zc.mask]
             return z_sensitivity
 
         def _calc_error() -> Union[np.ndarray, float]:
-            if 'width' not in self.data:
+            if "width" not in self.data:
                 return 0.3
-            z_precision = 4.343 * (1 / np.sqrt(_number_of_independent_pulses())
-                                   + utils.db2lin(z_power_min - z_power) / 3)
-            gas_error = attenuations['radar_gas_atten'] * 0.1
-            liq_error = attenuations['liquid_atten_err'].filled(0)
+            z_precision = 4.343 * (
+                1 / np.sqrt(_number_of_independent_pulses())
+                + utils.db2lin(z_power_min - z_power) / 3
+            )
+            gas_error = attenuations["radar_gas_atten"] * 0.1
+            liq_error = attenuations["liquid_atten_err"].filled(0)
             z_error = utils.l2norm(gas_error, liq_error, z_precision)
-            z_error[attenuations['liquid_uncorrected']] = ma.masked
+            z_error[attenuations["liquid_uncorrected"]] = ma.masked
             return z_error
 
         def _number_of_independent_pulses() -> float:
             seconds_in_hour = 3600
             dwell_time = utils.mdiff(self.time) * seconds_in_hour
-            return (dwell_time * self.radar_frequency * 1e9 * 4
-                    * np.sqrt(math.pi) * self.data['width'][:] / 3e8)
+            return (
+                dwell_time
+                * self.radar_frequency
+                * 1e9
+                * 4
+                * np.sqrt(math.pi)
+                * self.data["width"][:]
+                / 3e8
+            )
 
         def _calc_z_power_min() -> float:
             if ma.all(z_power.mask):
                 return 0
             return np.percentile(z_power.compressed(), 0.1)
 
-        z = self.data['Z'][:]
-        radar_range = self.km2m(self.dataset.variables['range'])
+        z = self.data["Z"][:]
+        radar_range = self.km2m(self.dataset.variables["range"])
         log_range = utils.lin2db(radar_range, scale=20)
         z_power = z - log_range
         z_power_min = _calc_z_power_min()
-        self.append_data(_calc_error(), 'Z_error')
-        self.append_data(_calc_sensitivity(), 'Z_sensitivity')
-        self.append_data(1.0, 'Z_bias')
+        self.append_data(_calc_error(), "Z_error")
+        self.append_data(_calc_sensitivity(), "Z_sensitivity")
+        self.append_data(1.0, "Z_bias")
 
     def add_meta(self) -> None:
         """Copies misc. metadata from the input file."""
-        for key in ('latitude', 'longitude', 'altitude'):
+        for key in ("latitude", "longitude", "altitude"):
             self.append_data(np.array(self.getvar(key)), key)
-        for key in ('time', 'height', 'radar_frequency'):
+        for key in ("time", "height", "radar_frequency"):
             self.append_data(np.array(getattr(self, key)), key)
 
     def _init_data(self):
-        self.append_data(self.getvar('Zh'), 'Z', units='dBZ')
-        for key in ('v', 'ldr', 'width', 'sldr', 'rain_rate'):
+        self.append_data(self.getvar("Zh"), "Z", units="dBZ")
+        for key in ("v", "ldr", "width", "sldr", "rain_rate"):
             try:
                 self._variables_to_cloudnet_arrays((key,))
             except KeyError:
@@ -253,7 +269,7 @@ class Radar(DataSource):
     def _init_sigma_v(self) -> None:
         """Initializes std of the velocity field. The std will be calculated
         later when re-binning the data."""
-        self.append_data(self.getvar('v'), 'v_sigma')
+        self.append_data(self.getvar("v"), "v_sigma")
 
     def _get_sequence_indices(self) -> list:
         """Mira has only one sequence and one folding velocity. RPG has
@@ -261,17 +277,17 @@ class Radar(DataSource):
         assert self.height is not None
         all_indices = np.arange(len(self.height))
         if not utils.isscalar(self.folding_velocity):
-            starting_indices = self.getvar('chirp_start_indices')
+            starting_indices = self.getvar("chirp_start_indices")
             return np.split(all_indices, starting_indices[1:])
         return [all_indices]
 
     def _get_folding_velocity(self) -> Union[np.ndarray, float]:
-        if 'nyquist_velocity' in self.dataset.variables:
-            return self.getvar('nyquist_velocity')
-        if 'prf' in self.dataset.variables:
-            prf = self.getvar('prf')
+        if "nyquist_velocity" in self.dataset.variables:
+            return self.getvar("nyquist_velocity")
+        if "prf" in self.dataset.variables:
+            prf = self.getvar("prf")
             return _prf_to_folding_velocity(prf, self.radar_frequency)
-        raise RuntimeError('Unable to determine folding velocity')
+        raise RuntimeError("Unable to determine folding velocity")
 
     def _get_folding_velocity_full(self):
         folding_velocity = []
@@ -281,9 +297,9 @@ class Radar(DataSource):
             for indices, velocity in zip(self.sequence_indices, self.folding_velocity):
                 folding_velocity.append(np.repeat(velocity, len(indices)))
             folding_velocity = np.hstack(folding_velocity)
-        self.append_data(folding_velocity, 'nyquist_velocity')
+        self.append_data(folding_velocity, "nyquist_velocity")
 
 
 def _prf_to_folding_velocity(prf: np.ndarray, radar_frequency: float) -> float:
     ghz_to_hz = 1e9
-    return float(prf * constants.c / (4*radar_frequency*ghz_to_hz))
+    return float(prf * constants.c / (4 * radar_frequency * ghz_to_hz))

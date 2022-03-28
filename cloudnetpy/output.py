@@ -9,17 +9,15 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.instruments.instruments import Instrument
 
 
-def save_level1b(obj,
-                 output_file: str,
-                 uuid: Optional[str] = None) -> str:
+def save_level1b(obj, output_file: str, uuid: Optional[str] = None) -> str:
     """Saves Cloudnet Level 1b file."""
-    dimensions = {key: len(obj.data[key][:]) for key in ('time', 'range') if key in obj.data}
-    if 'chirp_start_indices' in obj.data:
-        dimensions['chirp_sequence'] = len(obj.data['chirp_start_indices'][:])
+    dimensions = {key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data}
+    if "chirp_start_indices" in obj.data:
+        dimensions["chirp_sequence"] = len(obj.data["chirp_start_indices"][:])
     nc = init_file(output_file, dimensions, obj.data, uuid)
     file_uuid = nc.file_uuid
     fix_attribute_name(nc)
-    location = obj.site_meta['name']
+    location = obj.site_meta["name"]
     nc.cloudnet_file_type = obj.instrument.domain
     nc.title = get_l1b_title(obj.instrument, location)
     nc.year, nc.month, nc.day = obj.date
@@ -31,11 +29,9 @@ def save_level1b(obj,
     return file_uuid
 
 
-def save_product_file(short_id: str,
-                      obj,
-                      file_name: str,
-                      uuid: Optional[str] = None,
-                      copy_from_cat: tuple = ()) -> str:
+def save_product_file(
+    short_id: str, obj, file_name: str, uuid: Optional[str] = None, copy_from_cat: tuple = ()
+) -> str:
     """Saves a standard Cloudnet product file.
 
     Args:
@@ -47,17 +43,16 @@ def save_product_file(short_id: str,
 
     """
     human_readable_file_type = _get_identifier(short_id)
-    dimensions = {'time': len(obj.time),
-                  'height': len(obj.dataset.variables['height'])}
+    dimensions = {"time": len(obj.time), "height": len(obj.dataset.variables["height"])}
     nc = init_file(file_name, dimensions, obj.data, uuid)
     file_uuid = nc.file_uuid
     nc.cloudnet_file_type = short_id
-    vars_from_source = ('altitude', 'latitude', 'longitude', 'time', 'height') + copy_from_cat
+    vars_from_source = ("altitude", "latitude", "longitude", "time", "height") + copy_from_cat
     copy_variables(obj.dataset, nc, vars_from_source)
     nc.title = f"{human_readable_file_type.capitalize()} products from {obj.dataset.location}"
     nc.source_file_uuids = get_source_uuids(nc, obj)
-    copy_global(obj.dataset, nc, ('location', 'day', 'month', 'year', 'source'))
-    merge_history(nc, human_readable_file_type, {'categorize': obj})
+    copy_global(obj.dataset, nc, ("location", "day", "month", "year", "source"))
+    merge_history(nc, human_readable_file_type, {"categorize": obj})
     nc.references = get_references(short_id)
     nc.close()
     return file_uuid
@@ -65,8 +60,8 @@ def save_product_file(short_id: str,
 
 def get_l1b_source(instrument: Instrument) -> str:
     """Returns level 1b file source."""
-    prefix = f'{instrument.manufacturer} ' if instrument.manufacturer else ''
-    return f'{prefix}{instrument.model}'
+    prefix = f"{instrument.manufacturer} " if instrument.manufacturer else ""
+    return f"{prefix}{instrument.model}"
 
 
 def get_l1b_history(instrument: Instrument) -> str:
@@ -80,20 +75,20 @@ def get_l1b_title(instrument: Instrument, location: str) -> str:
 
 
 def get_references(identifier: Optional[str] = None) -> str:
-    """"Returns references.
+    """ "Returns references.
 
     Args:
         identifier: Cloudnet file type, e.g., 'iwc'.
 
     """
-    references = 'https://doi.org/10.21105/joss.02123'
+    references = "https://doi.org/10.21105/joss.02123"
     if identifier:
-        if identifier in ('lwc', 'categorize'):
-            references += ', https://doi.org/10.1175/BAMS-88-6-883'
-        if identifier == 'iwc':
-            references += ', https://doi.org/10.1175/JAM2340.1'
-        if identifier == 'drizzle':
-            references += ', https://doi.org/10.1175/JAM-2181.1'
+        if identifier in ("lwc", "categorize"):
+            references += ", https://doi.org/10.1175/BAMS-88-6-883"
+        if identifier == "iwc":
+            references += ", https://doi.org/10.1175/JAM2340.1"
+        if identifier == "drizzle":
+            references += ", https://doi.org/10.1175/JAM-2181.1"
     return references
 
 
@@ -107,10 +102,13 @@ def get_source_uuids(*sources) -> str:
         str: UUIDs separated by comma.
 
     """
-    uuids = [source.dataset.file_uuid for source in sources if hasattr(source, 'dataset')
-             and hasattr(source.dataset, 'file_uuid')]
+    uuids = [
+        source.dataset.file_uuid
+        for source in sources
+        if hasattr(source, "dataset") and hasattr(source.dataset, "file_uuid")
+    ]
     unique_uuids = list(set(uuids))
-    return ', '.join(unique_uuids)
+    return ", ".join(unique_uuids)
 
 
 def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
@@ -125,27 +123,26 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
     new_record = f"{utils.get_time()} - {file_type} file created"
     histories = []
     for key, obj in data.items():
-        if hasattr(obj.dataset, 'history'):
+        if hasattr(obj.dataset, "history"):
             history = obj.dataset.history
-            history = history.split('\n')[-1] if key == 'model' else history
+            history = history.split("\n")[-1] if key == "model" else history
             histories.append(history)
     histories.sort(reverse=True)
-    old_history = [f'\n{history}' for history in histories]
-    old_history_str = ''.join(old_history)
+    old_history = [f"\n{history}" for history in histories]
+    old_history_str = "".join(old_history)
     nc.history = f"{new_record}{old_history_str}"
 
 
 def add_source_instruments(nc: netCDF4.Dataset, data: dict) -> None:
     """Adds source attribute to categorize file."""
-    sources = [obj.source for obj in data.values() if hasattr(obj, 'source')]
-    sources = [sources[0]] + [f'\n{source}' for source in sources[1:]]
-    nc.source = ''.join(sources)
+    sources = [obj.source for obj in data.values() if hasattr(obj, "source")]
+    sources = [sources[0]] + [f"\n{source}" for source in sources[1:]]
+    nc.source = "".join(sources)
 
 
-def init_file(file_name: str,
-              dimensions: dict,
-              cloudnet_arrays: dict,
-              uuid: Optional[str] = None) -> netCDF4.Dataset:
+def init_file(
+    file_name: str, dimensions: dict, cloudnet_arrays: dict, uuid: Optional[str] = None
+) -> netCDF4.Dataset:
     """Initializes a Cloudnet file for writing.
 
     Args:
@@ -155,7 +152,7 @@ def init_file(file_name: str,
         uuid: Set specific UUID for the file.
 
     """
-    nc = netCDF4.Dataset(file_name, 'w', format='NETCDF4_CLASSIC')
+    nc = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     for key, dimension in dimensions.items():
         nc.createDimension(key, dimension)
     _write_vars2nc(nc, cloudnet_arrays)
@@ -163,9 +160,7 @@ def init_file(file_name: str,
     return nc
 
 
-def copy_variables(source: netCDF4.Dataset,
-                   target: netCDF4.Dataset,
-                   keys: tuple) -> None:
+def copy_variables(source: netCDF4.Dataset, target: netCDF4.Dataset, keys: tuple) -> None:
     """Copies variables (and their attributes) from one file to another.
 
     Args:
@@ -176,18 +171,18 @@ def copy_variables(source: netCDF4.Dataset,
     """
     for key in keys:
         if key in source.variables:
-            fill_value = getattr(source.variables[key], '_FillValue', False)
+            fill_value = getattr(source.variables[key], "_FillValue", False)
             variable = source.variables[key]
-            var_out = target.createVariable(key, variable.datatype, variable.dimensions,
-                                            fill_value=fill_value)
-            var_out.setncatts({k: variable.getncattr(k) for k in variable.ncattrs()
-                               if k != '_FillValue'})
+            var_out = target.createVariable(
+                key, variable.datatype, variable.dimensions, fill_value=fill_value
+            )
+            var_out.setncatts(
+                {k: variable.getncattr(k) for k in variable.ncattrs() if k != "_FillValue"}
+            )
             var_out[:] = variable[:]
 
 
-def copy_global(source: netCDF4.Dataset,
-                target: netCDF4.Dataset,
-                attributes: tuple) -> None:
+def copy_global(source: netCDF4.Dataset, target: netCDF4.Dataset, attributes: tuple) -> None:
     """Copies global attributes from one file to another.
 
     Args:
@@ -202,10 +197,10 @@ def copy_global(source: netCDF4.Dataset,
             setattr(target, attr, source.getncattr(attr))
 
 
-def add_time_attribute(attributes: dict, date: list, key: str = 'time') -> dict:
+def add_time_attribute(attributes: dict, date: list, key: str = "time") -> dict:
     """Adds time attribute with correct units."""
-    date_str = '-'.join(date)
-    units = f'hours since {date_str} 00:00:00 +00:00'
+    date_str = "-".join(date)
+    units = f"hours since {date_str} 00:00:00 +00:00"
     if key not in attributes:
         attributes[key] = MetaData(units=units)
     else:
@@ -216,11 +211,21 @@ def add_time_attribute(attributes: dict, date: list, key: str = 'time') -> dict:
 def add_source_attribute(attributes: dict, data: dict):
     """Adds source attribute."""
     variables = {
-        'radar': ('v', 'width', 'v_sigma', 'ldr', 'Z', 'zdr', 'sldr', 'radar_frequency',
-                  'nyquist_velocity', 'rain_rate'),
-        'lidar': ('beta', 'lidar_wavelength'),
-        'mwr': ('lwp',),
-        'model': ('uwind', 'vwind', 'Tw', 'q', 'pressure', 'temperature')
+        "radar": (
+            "v",
+            "width",
+            "v_sigma",
+            "ldr",
+            "Z",
+            "zdr",
+            "sldr",
+            "radar_frequency",
+            "nyquist_velocity",
+            "rain_rate",
+        ),
+        "lidar": ("beta", "lidar_wavelength"),
+        "mwr": ("lwp",),
+        "model": ("uwind", "vwind", "Tw", "q", "pressure", "temperature"),
     }
     for instrument, keys in variables.items():
         source = data[instrument].dataset.source
@@ -260,8 +265,9 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
             fill_value = False
 
         size = obj.dimensions or _get_dimensions(nc, obj.data)
-        nc_variable = nc.createVariable(obj.name, obj.data_type, size, zlib=True,
-                                        fill_value=fill_value)
+        nc_variable = nc.createVariable(
+            obj.name, obj.data_type, size, zlib=True, fill_value=fill_value
+        )
         nc_variable[:] = obj.data
         for attr in obj.fetch_attributes():
             setattr(nc_variable, attr, getattr(obj, attr))
@@ -281,19 +287,18 @@ def _get_dimensions(nc: netCDF4.Dataset, data: np.ndarray) -> tuple:
 
 
 def _get_identifier(short_id: str) -> str:
-    valid_ids = ('lwc', 'iwc', 'drizzle', 'classification')
+    valid_ids = ("lwc", "iwc", "drizzle", "classification")
     if short_id not in valid_ids:
-        raise ValueError('Invalid product id.')
-    if short_id == 'iwc':
-        return 'ice water content'
-    if short_id == 'lwc':
-        return 'liquid water content'
+        raise ValueError("Invalid product id.")
+    if short_id == "iwc":
+        return "ice water content"
+    if short_id == "lwc":
+        return "liquid water content"
     return short_id
 
 
-def _add_standard_global_attributes(nc: netCDF4.Dataset,
-                                    uuid: Optional[str] = None) -> None:
-    nc.Conventions = 'CF-1.8'
+def _add_standard_global_attributes(nc: netCDF4.Dataset, uuid: Optional[str] = None) -> None:
+    nc.Conventions = "CF-1.8"
     nc.cloudnetpy_version = version.__version__
     nc.file_uuid = uuid or utils.get_uuid()
 
@@ -305,7 +310,7 @@ def fix_attribute_name(nc: netCDF4.Dataset) -> None:
 
     """
     for var in nc.variables:
-        if 'unit' in nc[var].ncattrs():
+        if "unit" in nc[var].ncattrs():
             logging.info('Renaming "unit" attribute into "units"')
-            nc[var].setncattr('units', nc[var].unit)
-            nc[var].delncattr('unit')
+            nc[var].setncattr("units", nc[var].unit)
+            nc[var].delncattr("unit")

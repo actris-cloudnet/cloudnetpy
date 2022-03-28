@@ -36,18 +36,18 @@ def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarra
     mean_melting_alt = _find_mean_melting_alt(obs, melting_layer)
 
     if _is_all_freezing(mean_melting_alt, t0_alt, obs.height):
-        logging.info('All temperatures below freezing and no detected melting layer')
+        logging.info("All temperatures below freezing and no detected melting layer")
         return np.ones(obs.tw.shape, dtype=bool)
 
     freezing_alt = ma.copy(mean_melting_alt)
 
     for ind in (0, -1):
         freezing_alt[ind] = mean_melting_alt[ind] or t0_alt[ind]
-    win = utils.n_elements(obs.time, 240, 'time')  # 4h window
-    mid_win = int(win/2)
-    for n in range(len(obs.time)-win):
-        if mean_melting_alt[n:n+win].mask.all():
-            freezing_alt[n+mid_win] = t0_alt[n+mid_win]
+    win = utils.n_elements(obs.time, 240, "time")  # 4h window
+    mid_win = int(win / 2)
+    for n in range(len(obs.time) - win):
+        if mean_melting_alt[n : n + win].mask.all():
+            freezing_alt[n + mid_win] = t0_alt[n + mid_win]
     ind = ~freezing_alt.mask
     f = interp1d(obs.time[ind], freezing_alt[ind])
     freezing_alt_interpolated = f(obs.time) - 1
@@ -70,7 +70,7 @@ def _find_mean_melting_alt(obs: ClassData, melting_layer: np.ndarray) -> ma.Mask
 
 
 def _find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
-    """ Interpolates altitudes where temperature goes below freezing.
+    """Interpolates altitudes where temperature goes below freezing.
 
     Args:
         temperature: 2-D temperature (K).
@@ -86,8 +86,8 @@ def _find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
         if ind == 0:
             alt = np.append(alt, height[0])
         else:
-            x = prof[ind-1:ind+1]
-            y = height[ind-1:ind+1]
+            x = prof[ind - 1 : ind + 1]
+            y = height[ind - 1 : ind + 1]
             x, y = zip(*sorted(zip(x, y)))
             alt = np.append(alt, np.interp(T0, x, y))
     return alt

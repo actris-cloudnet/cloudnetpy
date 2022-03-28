@@ -9,11 +9,13 @@ from cloudnetpy.instruments import general
 from cloudnetpy.exceptions import ValidTimeStampError
 
 
-def hatpro2nc(path_to_lwp_files: str,
-              output_file: str,
-              site_meta: dict,
-              uuid: Optional[str] = None,
-              date: Optional[str] = None) -> Tuple[str, list]:
+def hatpro2nc(
+    path_to_lwp_files: str,
+    output_file: str,
+    site_meta: dict,
+    uuid: Optional[str] = None,
+    date: Optional[str] = None,
+) -> Tuple[str, list]:
     """Converts RPG HATPRO microwave radiometer data (LWP) into Cloudnet Level 1b netCDF file.
 
     This function reads one day of RPG HATPRO .LWP binary files,
@@ -50,14 +52,14 @@ def hatpro2nc(path_to_lwp_files: str,
         >>> hatpro2nc('/path/to/files/', 'hatpro.nc', site_meta)
 
     """
-    all_files = utils.get_sorted_filenames(path_to_lwp_files, '.LWP')
+    all_files = utils.get_sorted_filenames(path_to_lwp_files, ".LWP")
     hatpro_objects, valid_files = _get_hatpro_objects(all_files, date)
     if not valid_files:
         raise ValidTimeStampError
     one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
     hatpro = rpg.Hatpro(one_day_of_data, site_meta)
     hatpro.sort_timestamps()
-    hatpro.convert_time_to_fraction_hour('float64')
+    hatpro.convert_time_to_fraction_hour("float64")
     general.add_site_geolocation(hatpro)
     hatpro.remove_duplicate_timestamps()
     attributes = output.add_time_attribute(ATTRIBUTES, hatpro.date)
@@ -85,52 +87,47 @@ def _get_hatpro_objects(files: list, expected_date: Union[str, None]) -> Tuple[l
 
 
 def _validate_date(obj, expected_date: str):
-    if obj.header['_time_reference'] == 0:
-        raise ValueError('Ignoring a file (can not validate non-UTC dates)')
+    if obj.header["_time_reference"] == 0:
+        raise ValueError("Ignoring a file (can not validate non-UTC dates)")
     inds = []
-    for ind, timestamp in enumerate(obj.data['time'][:]):
-        date = '-'.join(utils.seconds2date(timestamp)[:3])
+    for ind, timestamp in enumerate(obj.data["time"][:]):
+        date = "-".join(utils.seconds2date(timestamp)[:3])
         if date == expected_date:
             inds.append(ind)
     if not inds:
-        raise ValueError('Ignoring a file (time stamps not what expected)')
+        raise ValueError("Ignoring a file (time stamps not what expected)")
     for key in obj.data.keys():
         obj.data[key] = obj.data[key][inds]
     return obj
 
 
 DEFINITIONS = {
-    'retrieval_method':
-        ('\n'
-         'Value 0: Linear Regression\n'
-         'Value 1: Quadratic Regression\n'
-         'Value 2: Neural Network'),
-    'quality_flag':
-        ('\n'
-         'Bit 0: Rain information (0=no rain, 1=raining)\n'
-         'Bit 1/2: Quality level (0=Not evaluated, 1=high, 2=medium, 3=low)\n'
-         'Bit 3/4: Reason for reduced quality'),
+    "retrieval_method": (
+        "\n"
+        "Value 0: Linear Regression\n"
+        "Value 1: Quadratic Regression\n"
+        "Value 2: Neural Network"
+    ),
+    "quality_flag": (
+        "\n"
+        "Bit 0: Rain information (0=no rain, 1=raining)\n"
+        "Bit 1/2: Quality level (0=Not evaluated, 1=high, 2=medium, 3=low)\n"
+        "Bit 3/4: Reason for reduced quality"
+    ),
 }
 
 ATTRIBUTES = {
-    'file_code': MetaData(
-        long_name='File code',
-        comment='RPG HATPRO software version.',
-        units="1"
+    "file_code": MetaData(long_name="File code", comment="RPG HATPRO software version.", units="1"),
+    "program_number": MetaData(
+        long_name="Program number",
     ),
-    'program_number': MetaData(
-        long_name='Program number',
+    "retrieval_method": MetaData(
+        long_name="Retrieval method", definition=DEFINITIONS["retrieval_method"], units="1"
     ),
-    'retrieval_method': MetaData(
-        long_name='Retrieval method',
-        definition=DEFINITIONS['retrieval_method'],
-        units='1'
+    "quality_flag": MetaData(
+        long_name="Quality flag",
+        definition=DEFINITIONS["quality_flag"],
+        units="1",
+        comment="Quality information as an 8 bit array. See RPG HATPRO manual for more information.",
     ),
-    'quality_flag': MetaData(
-        long_name='Quality flag',
-        definition=DEFINITIONS['quality_flag'],
-        units='1',
-        comment='Quality information as an 8 bit array. See RPG HATPRO manual for more information.'
-    )
-
 }

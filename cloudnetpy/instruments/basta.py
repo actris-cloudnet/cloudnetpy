@@ -8,11 +8,13 @@ from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.metadata import MetaData
 
 
-def basta2nc(basta_file: str,
-             output_file: str,
-             site_meta: dict,
-             uuid: Optional[str] = None,
-             date: Optional[str] = None) -> str:
+def basta2nc(
+    basta_file: str,
+    output_file: str,
+    site_meta: dict,
+    uuid: Optional[str] = None,
+    date: Optional[str] = None,
+) -> str:
     """Converts BASTA cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function converts daily BASTA file into a much smaller file that
@@ -38,11 +40,13 @@ def basta2nc(basta_file: str,
           >>> basta2nc('basta_file.nc', 'radar.nc', site_meta)
 
     """
-    keymap = {'reflectivity': 'Zh',
-              'velocity': 'v',
-              'radar_pitch': 'radar_pitch',
-              'radar_yaw': 'radar_yaw',
-              'radar_roll': 'radar_roll'}
+    keymap = {
+        "reflectivity": "Zh",
+        "velocity": "v",
+        "radar_pitch": "radar_pitch",
+        "radar_yaw": "radar_yaw",
+        "radar_roll": "radar_roll",
+    }
 
     basta = Basta(basta_file, site_meta)
     basta.init_data(keymap)
@@ -69,6 +73,7 @@ class Basta(NcRadar):
         site_meta: Site properties in a dictionary. Required key is `name`.
 
     """
+
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, site_meta)
         self.date: List[str] = self.get_date()
@@ -76,40 +81,33 @@ class Basta(NcRadar):
 
     def screen_data(self, keymap: dict) -> None:
         """Saves only valid pixels."""
-        mask = self.getvar('background_mask')
+        mask = self.getvar("background_mask")
         for key in keymap.values():
             if self.data[key].data.ndim == mask.ndim:
                 self.data[key].mask_indices(np.where(mask != 1))
 
     def validate_date(self, expected_date: str) -> None:
         """Validates expected data."""
-        date_units = self.dataset.variables['time'].units
+        date_units = self.dataset.variables["time"].units
         date = date_units.split()[2]
         if expected_date != date:
             raise ValidTimeStampError
 
     def add_zenith_angle(self) -> None:
         """Adds solar zenith and azimuth angles and returns valid time indices."""
-        elevation = self.getvar('elevation')
+        elevation = self.getvar("elevation")
         zenith = 90 - elevation
-        self.append_data(zenith, 'zenith_angle')
+        self.append_data(zenith, "zenith_angle")
 
 
 ATTRIBUTES = {
-    'radar_pitch': MetaData(
-        long_name='Radar pitch angle',
-        units='degree',
-        standard_name='platform_roll'
+    "radar_pitch": MetaData(
+        long_name="Radar pitch angle", units="degree", standard_name="platform_roll"
     ),
-    'radar_yaw': MetaData(
-        long_name='Radar yaw angle',
-        units="degree",
-        standard_name="platform_yaw"
+    "radar_yaw": MetaData(
+        long_name="Radar yaw angle", units="degree", standard_name="platform_yaw"
     ),
-    'radar_roll': MetaData(
-        long_name='Radar roll angle',
-        units="degree",
-        standard_name="platform_roll"
-    )
+    "radar_roll": MetaData(
+        long_name="Radar roll angle", units="degree", standard_name="platform_roll"
+    ),
 }
-

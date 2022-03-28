@@ -7,38 +7,34 @@ from cloudnetpy.products.lwc import LwcSource, Lwc, CloudAdjustor, LwcError
 from cloudnetpy.categorize import atmos
 
 
-DIMENSIONS = ('time', 'height', 'model_time', 'model_height')
+DIMENSIONS = ("time", "height", "model_time", "model_height")
 TEST_ARRAY = np.arange(3)
-CategorizeBits = namedtuple('CategorizeBits', ['category_bits', 'quality_bits'])
+CategorizeBits = namedtuple("CategorizeBits", ["category_bits", "quality_bits"])
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def lwc_source_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     _create_dimensions(root_grp)
     _create_dimension_variables(root_grp)
-    var = root_grp.createVariable('altitude', 'f8')
+    var = root_grp.createVariable("altitude", "f8")
     var[:] = 1
-    var.units = 'km'
-    var = root_grp.createVariable('lwp', 'f8', 'time')
+    var.units = "km"
+    var = root_grp.createVariable("lwp", "f8", "time")
     var[:] = [1, 1, 0.5]
-    var = root_grp.createVariable('lwp_error', 'f8', 'time')
+    var = root_grp.createVariable("lwp_error", "f8", "time")
     var[:] = [0.2, 0.2, 0.1]
-    var = root_grp.createVariable('rain_rate', 'i4', 'time')
+    var = root_grp.createVariable("rain_rate", "i4", "time")
     var[:] = [0, 1, 1]
-    var = root_grp.createVariable('category_bits', 'i4', 'time')
+    var = root_grp.createVariable("category_bits", "i4", "time")
     var[:] = [0, 1, 2]
-    var = root_grp.createVariable('quality_bits', 'i4', 'time')
+    var = root_grp.createVariable("quality_bits", "i4", "time")
     var[:] = [8, 16, 32]
-    var = root_grp.createVariable('temperature', 'f8', ('time', 'height'))
-    var[:] = np.array([[282, 280, 278],
-                       [286, 284, 282],
-                       [284, 282, 280]])
-    var = root_grp.createVariable('pressure', 'f8', ('time', 'height'))
-    var[:] = np.array([[1010, 1000, 990],
-                       [1020, 1010, 1000],
-                       [1030, 1020, 1010]])
+    var = root_grp.createVariable("temperature", "f8", ("time", "height"))
+    var[:] = np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
+    var = root_grp.createVariable("pressure", "f8", ("time", "height"))
+    var[:] = np.array([[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]])
     root_grp.close()
     return file_name
 
@@ -51,41 +47,38 @@ def _create_dimensions(root_grp):
 
 def _create_dimension_variables(root_grp):
     for dim_name in DIMENSIONS:
-        x = root_grp.createVariable(dim_name, 'f8', (dim_name,))
+        x = root_grp.createVariable(dim_name, "f8", (dim_name,))
         x[:] = TEST_ARRAY
-        if dim_name == 'height':
-            x.units = 'm'
+        if dim_name == "height":
+            x.units = "m"
 
 
 def test_get_atmosphere_t(lwc_source_file):
     obj = LwcSource(lwc_source_file)
-    expected = np.array([[282, 280, 278],
-                         [286, 284, 282],
-                         [284, 282, 280]])
+    expected = np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
     assert_array_equal(obj.atmosphere[0], expected)
 
 
 def test_get_atmosphere_p(lwc_source_file):
     obj = LwcSource(lwc_source_file)
-    expected = np.array([[1010, 1000, 990],
-                         [1020, 1010, 1000],
-                         [1030, 1020, 1010]])
+    expected = np.array([[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]])
     assert_array_equal(obj.atmosphere[-1], expected)
 
 
 class LwcSourceObj:
     def __init__(self):
         self.dheight = 10
-        self.categorize_bits = CategorizeBits(category_bits={'droplet': np.asarray([[1, 0, 1],
-                                                                                    [0, 1, 1]], dtype=bool)},
-                                              quality_bits={'radar': np.asarray([[1, 0, 1],
-                                                                                 [0, 1, 1]], dtype=bool),
-                                                            'lidar': np.asarray([[1, 0, 1],
-                                                                                 [0, 1, 1]], dtype=bool)})
-        self.atmosphere = (np.array([[282, 281, 280],
-                                     [280, 279, 278]]),
-                           np.array([[101000, 100500, 100000],
-                                     [100000, 99500, 99000]]))
+        self.categorize_bits = CategorizeBits(
+            category_bits={"droplet": np.asarray([[1, 0, 1], [0, 1, 1]], dtype=bool)},
+            quality_bits={
+                "radar": np.asarray([[1, 0, 1], [0, 1, 1]], dtype=bool),
+                "lidar": np.asarray([[1, 0, 1], [0, 1, 1]], dtype=bool),
+            },
+        )
+        self.atmosphere = (
+            np.array([[282, 281, 280], [280, 279, 278]]),
+            np.array([[101000, 100500, 100000], [100000, 99500, 99000]]),
+        )
         self.lwp = np.array([2, 0])
         self.lwp_error = np.array([0.1, 0.2])
         self.is_rain = np.array([0, 1])
@@ -121,7 +114,7 @@ def test_init_status(value):
     assert value in STATUS_OBJ._init_status()
 
 
-@pytest.mark.parametrize("key", ['radar', 'lidar'])
+@pytest.mark.parametrize("key", ["radar", "lidar"])
 def test_get_echo(key):
     assert key in STATUS_OBJ.echo.keys()
 
@@ -162,8 +155,8 @@ def test_find_topmost_clouds():
 
 
 def test_find_echo_combinations_in_liquid():
-    STATUS_OBJ.echo['lidar'] = np.array([[0, 1, 0], [1, 1, 0]])
-    STATUS_OBJ.echo['radar'] = np.array([[0, 0, 0], [0, 1, 1]])
+    STATUS_OBJ.echo["lidar"] = np.array([[0, 1, 0], [1, 1, 0]])
+    STATUS_OBJ.echo["radar"] = np.array([[0, 0, 0], [0, 1, 1]])
     STATUS_OBJ.is_liquid = np.array([[1, 1, 1], [0, 1, 1]])
     expected = np.array([[0, 1, 0], [0, 3, 2]])
     assert_array_equal(STATUS_OBJ._find_echo_combinations_in_liquid(), expected)
@@ -205,16 +198,16 @@ def test_limit_error():
 
 def test_calc_lwc_gradient():
     from cloudnetpy.utils import l2norm
-    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.3],
-                                 [0.1, 0.3, 0.6]])
+
+    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.3], [0.1, 0.3, 0.6]])
     expected = l2norm(*np.gradient(ERROR_OBJ.lwc))
     assert_array_almost_equal(ERROR_OBJ._calc_lwc_gradient(), expected)
 
 
 def test_calc_lwc_relative_error():
     from cloudnetpy.utils import l2norm
-    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.3],
-                                 [0.1, 0.3, 0.6]])
+
+    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.3], [0.1, 0.3, 0.6]])
     x = l2norm(*np.gradient(ERROR_OBJ.lwc))
     expected = x / ERROR_OBJ.lwc / 2
     expected[expected > 5] = 5
@@ -231,6 +224,7 @@ def test_calc_lwp_relative_error():
 
 def test_calc_combined_error():
     from cloudnetpy.utils import transpose, l2norm
+
     err_2d = np.array([[0, 0.1, 0.1], [0.2, 0.4, 0.15]])
     err_1d = np.array([0.3, 0.2])
     expected = l2norm(err_2d, transpose(err_1d))
@@ -238,23 +232,16 @@ def test_calc_combined_error():
 
 
 def test_fill_error_array():
-    error_in = np.array([[0, 0.1, 0.1],
-                         [0.2, 0.4, 0.15]])
-    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.1],
-                                 [0.1, 0.2, 0.2]], mask=[[0, 1, 0],
-                                                         [1, 0, 0]])
-    expected = np.ma.array([[0, 0, 0],
-                            [0, 0, 0]], mask=[[0, 1, 0],
-                                              [1, 0, 0]])
+    error_in = np.array([[0, 0.1, 0.1], [0.2, 0.4, 0.15]])
+    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.1], [0.1, 0.2, 0.2]], mask=[[0, 1, 0], [1, 0, 0]])
+    expected = np.ma.array([[0, 0, 0], [0, 0, 0]], mask=[[0, 1, 0], [1, 0, 0]])
     ERROR_OBJ._fill_error_array(error_in)
     error = ERROR_OBJ._fill_error_array(error_in)
     assert_array_almost_equal(error.mask, expected.mask)
 
 
 def test_screen_rain_error():
-    expected = np.ma.array([[0.709, 0, 0.709],
-                           [0, 0, 0]], mask=[[0, 1, 0],
-                                             [1, 1, 1]])
+    expected = np.ma.array([[0.709, 0, 0.709], [0, 0, 0]], mask=[[0, 1, 0], [1, 1, 1]])
     assert_array_equal(ERROR_OBJ.error.mask, expected.mask)
 
 

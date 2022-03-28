@@ -11,12 +11,12 @@ def fake_categorize_file(tmpdir_factory):
     file_name = tmpdir_factory.mktemp("data").join("categorize.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     n_points = 7
-    root_grp.createDimension('time', n_points)
-    var = root_grp.createVariable('time', 'f8', 'time')
+    root_grp.createDimension("time", n_points)
+    var = root_grp.createVariable("time", "f8", "time")
     var[:] = np.arange(n_points)
-    var = root_grp.createVariable('category_bits', 'i4', 'time')
+    var = root_grp.createVariable("category_bits", "i4", "time")
     var[:] = [0, 1, 2, 4, 8, 16, 32]
-    var = root_grp.createVariable('quality_bits', 'i4', 'time')
+    var = root_grp.createVariable("quality_bits", "i4", "time")
     var[:] = [0, 1, 2, 4, 8, 16, 32]
     root_grp.close()
     return file_name
@@ -35,4 +35,4 @@ def test_quality_bits(fake_categorize_file):
 
 
 def test_read_nc_fields(fake_categorize_file):
-    assert_array_equal(product_tools.read_nc_fields(fake_categorize_file, 'time'), np.arange(7))
+    assert_array_equal(product_tools.read_nc_fields(fake_categorize_file, "time"), np.arange(7))

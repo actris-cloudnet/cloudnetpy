@@ -9,8 +9,9 @@ from cloudnetpy.categorize import containers
 
 class Obs:
     def __init__(self):
-        self.beta = ma.array([[1, 1], [1, 1], [1, 1], [1, 1]],
-                             mask=[[0, 0], [0, 0], [1, 1], [1, 1]])
+        self.beta = ma.array(
+            [[1, 1], [1, 1], [1, 1], [1, 1]], mask=[[0, 0], [0, 0], [1, 1], [1, 1]]
+        )
 
 
 def test_find_aerosols():
@@ -22,17 +23,12 @@ def test_find_aerosols():
 
 
 def test_bits_to_integer():
-    b0 = [[1, 0, 0, 0, 1, 1, 1, 1, 0, 1],
-          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
-    b1 = [[0, 1, 0, 0, 1, 1, 1, 0, 1, 0],
-          [1, 0, 1, 0, 0, 0, 0, 0, 0, 0]]
-    b2 = [[0, 0, 1, 0, 0, 1, 1, 1, 0, 0],
-          [1, 1, 1, 0, 0, 0, 0, 0, 0, 0]]
-    b3 = [[0, 0, 0, 1, 0, 0, 1, 0, 1, 1],
-          [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]]
+    b0 = [[1, 0, 0, 0, 1, 1, 1, 1, 0, 1], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
+    b1 = [[0, 1, 0, 0, 1, 1, 1, 0, 1, 0], [1, 0, 1, 0, 0, 0, 0, 0, 0, 0]]
+    b2 = [[0, 0, 1, 0, 0, 1, 1, 1, 0, 0], [1, 1, 1, 0, 0, 0, 0, 0, 0, 0]]
+    b3 = [[0, 0, 0, 1, 0, 0, 1, 0, 1, 1], [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]]
     bits = [b0, b1, b2, b3]
-    re = [[1, 2, 4, 8, 3, 7, 15, 5, 10, 9],
-          [6, 12, 14, 0, 0, 0, 0, 0, 0, 0]]
+    re = [[1, 2, 4, 8, 3, 7, 15, 5, 10, 9], [6, 12, 14, 0, 0, 0, 0, 0, 0, 0]]
     assert_array_equal(classify._bits_to_integer(bits), re)
 
 
@@ -56,15 +52,17 @@ class TestFindRain:
     def test_hot_pixel_removal(self):
         self.z[5, 3] = 0.1
         result = np.zeros(len(self.time))
-        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time,
-                                                                 time_buffer=1), result)
+        assert_array_equal(
+            containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1), result
+        )
 
     def test_rain_spreading(self):
         self.z[10:12, 3] = 0.1
         result = np.zeros(len(self.time))
         result[8:14] = 1
-        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time,
-                                                                 time_buffer=1), result)
+        assert_array_equal(
+            containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1), result
+        )
 
 
 def test_find_clutter():
@@ -78,19 +76,15 @@ def test_find_clutter():
 
 
 def test_find_drizzle_and_falling():
-    is_liquid = np.array([[0, 0, 1, 1, 0, 0],
-                          [0, 0, 1, 0, 0, 0]], dtype=bool)
+    is_liquid = np.array([[0, 0, 1, 1, 0, 0], [0, 0, 1, 0, 0, 0]], dtype=bool)
 
-    is_falling = np.array([[0, 1, 1, 1, 1, 0],
-                           [0, 0, 1, 1, 1, 1]], dtype=bool)
+    is_falling = np.array([[0, 1, 1, 1, 1, 0], [0, 0, 1, 1, 1, 1]], dtype=bool)
 
-    is_freezing = np.array([[0, 0, 0, 1, 1, 1],
-                            [0, 0, 0, 0, 1, 1]], dtype=bool)
+    is_freezing = np.array([[0, 0, 0, 1, 1, 1], [0, 0, 0, 0, 1, 1]], dtype=bool)
 
-    expected = ma.array([[0, 2, 0, 1, 1, 0],
-                         [0, 0, 0, 2, 1, 1]],
-                        mask=[[1, 0, 1, 0, 0, 1],
-                              [1, 1, 1, 0, 0, 0]])
+    expected = ma.array(
+        [[0, 2, 0, 1, 1, 0], [0, 0, 0, 2, 1, 1]], mask=[[1, 0, 1, 0, 0, 1], [1, 1, 1, 0, 0, 0]]
+    )
 
     result = classify._find_drizzle_and_falling(is_liquid, is_falling, is_freezing)
     assert_array_equal(expected.data, result.data)
@@ -98,32 +92,26 @@ def test_find_drizzle_and_falling():
 
 
 def test_fix_undetected_melting_layer():
-    is_liquid = np.array([[0, 0, 1, 1, 0, 0],
-                          [0, 0, 1, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0]], dtype=bool)
+    is_liquid = np.array(
+        [[0, 0, 1, 1, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool
+    )
 
-    is_falling = np.array([[0, 1, 1, 1, 1, 0],
-                           [0, 0, 1, 1, 1, 1],
-                           [1, 1, 1, 1, 1, 1],
-                           [1, 1, 1, 1, 1, 1]], dtype=bool)
+    is_falling = np.array(
+        [[0, 1, 1, 1, 1, 0], [0, 0, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]], dtype=bool
+    )
 
-    is_freezing = np.array([[0, 0, 0, 1, 1, 1],
-                            [0, 0, 0, 0, 1, 1],
-                            [0, 0, 0, 1, 1, 1],
-                            [0, 0, 0, 0, 0, 0]], dtype=bool)
+    is_freezing = np.array(
+        [[0, 0, 0, 1, 1, 1], [0, 0, 0, 0, 1, 1], [0, 0, 0, 1, 1, 1], [0, 0, 0, 0, 0, 0]], dtype=bool
+    )
 
-    is_melting = np.array([[0, 0, 0, 1, 0, 0],
-                           [0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0],
-                           [0, 0, 0, 0, 0, 0]], dtype=bool)
+    is_melting = np.array(
+        [[0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool
+    )
 
-    expected = np.array([[0, 0, 0, 1, 0, 0],
-                         [0, 0, 0, 0, 1, 0],
-                         [0, 0, 0, 1, 0, 0],
-                         [0, 0, 0, 0, 0, 0]], dtype=bool)
+    expected = np.array(
+        [[0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool
+    )
 
     bits = [is_liquid, is_falling, is_freezing, is_melting]
     result = classify._fix_undetected_melting_layer(bits)
     assert_array_equal(expected.data, result.data)
-

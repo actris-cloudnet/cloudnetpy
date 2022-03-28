@@ -40,9 +40,10 @@ def calc_lwc_change_rate(temperature: np.ndarray, pressure: np.ndarray) -> np.nd
     kelvin_per_kg = calc_psychrometric_constant(temperature)
     pressure_difference = pressure - svp
     f1 = kelvin_per_kg - 1
-    f2 = 1 / (kelvin_per_kg + (con.LATENT_HEAT * svp_mixing_ratio
-                               * air_density / pressure_difference))
-    f3 = con.MW_RATIO * svp * pressure_difference ** -2
+    f2 = 1 / (
+        kelvin_per_kg + (con.LATENT_HEAT * svp_mixing_ratio * air_density / pressure_difference)
+    )
+    f3 = con.MW_RATIO * svp * pressure_difference**-2
     dqs_dp = f1 * f2 * f3
     dqs_dz = dqs_dp * air_density**2 * -scipy.constants.g
     return dqs_dz * KG_TO_G
@@ -60,11 +61,16 @@ def calc_saturation_vapor_pressure(temperature: np.ndarray) -> np.ndarray:
     """
     ratio = con.T0 / temperature
     inv_ratio = ratio**-1
-    return (10 ** (10.79574 * (1-ratio)
-                   - 5.028 * np.log10(inv_ratio)
-                   + 1.50475e-4 * (1 - (10 ** (-8.2969 * (inv_ratio-1))))
-                   + 0.42873e-3 * (10 ** (4.76955 * (1-ratio)) - 1)
-                   + 0.78614)) * HPA_TO_P
+    return (
+        10
+        ** (
+            10.79574 * (1 - ratio)
+            - 5.028 * np.log10(inv_ratio)
+            + 1.50475e-4 * (1 - (10 ** (-8.2969 * (inv_ratio - 1))))
+            + 0.42873e-3 * (10 ** (4.76955 * (1 - ratio)) - 1)
+            + 0.78614
+        )
+    ) * HPA_TO_P
 
 
 def calc_mixing_ratio(svp: np.ndarray, pressure: np.ndarray) -> np.ndarray:
@@ -81,9 +87,9 @@ def calc_mixing_ratio(svp: np.ndarray, pressure: np.ndarray) -> np.ndarray:
     return con.MW_RATIO * svp / (pressure - svp)
 
 
-def calc_air_density(pressure: np.ndarray,
-                     temperature: np.ndarray,
-                     svp_mixing_ratio: np.ndarray) -> np.ndarray:
+def calc_air_density(
+    pressure: np.ndarray, temperature: np.ndarray, svp_mixing_ratio: np.ndarray
+) -> np.ndarray:
     """Calculates air density (kg m-3).
 
     Args:
@@ -132,8 +138,9 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
         temperatures by modifying the psychrometric formula.
 
     """
+
     def _screen_rh() -> np.ndarray:
-        rh = model_data['rh']
+        rh = model_data["rh"]
         rh_min = 1e-5
         rh[rh < rh_min] = rh_min
         return rh
@@ -141,28 +148,30 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
     def _vapor_derivatives() -> tuple:
         m = 17.269
         tn = 35.86
-        f1 = m*(tn - con.T0)
+        f1 = m * (tn - con.T0)
         f2 = dew_point - tn
-        first = -vapor_pressure*f1/(f2**2)
-        second = vapor_pressure*((f1/(f2**2))**2 + 2*f1/(f2**3))
+        first = -vapor_pressure * f1 / (f2**2)
+        second = vapor_pressure * ((f1 / (f2**2)) ** 2 + 2 * f1 / (f2**3))
         return first, second
 
     relative_humidity = _screen_rh()
-    saturation_pressure = calc_saturation_vapor_pressure(model_data['temperature'])
+    saturation_pressure = calc_saturation_vapor_pressure(model_data["temperature"])
     vapor_pressure = saturation_pressure * relative_humidity
     dew_point = calc_dew_point_temperature(vapor_pressure)
-    psychrometric_constant = calc_psychrometric_constant(model_data['pressure'])
+    psychrometric_constant = calc_psychrometric_constant(model_data["pressure"])
     first_der, second_der = _vapor_derivatives()
-    a = 0.5*second_der
-    b = first_der + psychrometric_constant - dew_point*second_der
-    c = (-model_data['temperature']*psychrometric_constant
-         - dew_point*first_der
-         + 0.5*dew_point**2*second_der)
-    return (-b+ma.sqrt(b*b-4*a*c))/(2*a)
+    a = 0.5 * second_der
+    b = first_der + psychrometric_constant - dew_point * second_der
+    c = (
+        -model_data["temperature"] * psychrometric_constant
+        - dew_point * first_der
+        + 0.5 * dew_point**2 * second_der
+    )
+    return (-b + ma.sqrt(b * b - 4 * a * c)) / (2 * a)
 
 
 def calc_dew_point_temperature(vapor_pressure: np.ndarray) -> np.ndarray:
-    """ Returns dew point temperature.
+    """Returns dew point temperature.
 
     Args:
         vapor_pressure: Water vapor pressure (Pa).
@@ -176,7 +185,7 @@ def calc_dew_point_temperature(vapor_pressure: np.ndarray) -> np.ndarray:
     """
     vaisala_parameters_over_water = (6.116441, 7.591386, 240.7263)
     a, m, tn = vaisala_parameters_over_water
-    dew_point_celsius = tn / ((m/np.log10(vapor_pressure*P_TO_HPA/a))-1)
+    dew_point_celsius = tn / ((m / np.log10(vapor_pressure * P_TO_HPA / a)) - 1)
     return c2k(dew_point_celsius)
 
 
@@ -195,12 +204,12 @@ def get_attenuations(data: dict, classification: ClassificationResult) -> dict:
     gas = GasAttenuation(data, classification)
     liquid = LiquidAttenuation(data, classification)
     return {
-        'radar_gas_atten': gas.atten,
-        'radar_liquid_atten': liquid.atten,
-        'liquid_atten_err': liquid.atten_err,
-        'liquid_corrected': liquid.corrected,
-        'liquid_uncorrected': liquid.uncorrected
-        }
+        "radar_gas_atten": gas.atten,
+        "radar_liquid_atten": liquid.atten,
+        "liquid_atten_err": liquid.atten_err,
+        "liquid_corrected": liquid.corrected,
+        "liquid_uncorrected": liquid.uncorrected,
+    }
 
 
 class Attenuation:
@@ -214,6 +223,7 @@ class Attenuation:
         classification (ClassificationResult): The :class:`ClassificationResult` instance.
 
     """
+
     def __init__(self, model: Model, classification: ClassificationResult):
         self._dheight = utils.mdiff(model.height)
         self._model = model.data_dense
@@ -232,23 +242,24 @@ class GasAttenuation(Attenuation):
         atten (ndarray): Gas attenuation (dB).
 
     """
+
     def __init__(self, data: dict, classification: ClassificationResult):
-        super().__init__(data['model'], classification)
+        super().__init__(data["model"], classification)
         self.atten = self._calc_gas_atten()
 
     def _calc_gas_atten(self) -> np.ndarray:
-        specific_atten = ma.copy(self._model['specific_gas_atten'])
+        specific_atten = ma.copy(self._model["specific_gas_atten"])
         specific_atten_corrected = self._fix_atten_in_liquid(specific_atten)
         gas_atten = self._specific_to_gas_atten(specific_atten_corrected)
         return gas_atten
 
     def _fix_atten_in_liquid(self, atten: np.ndarray) -> np.ndarray:
-        saturated_atten = self._model['specific_saturated_gas_atten']
+        saturated_atten = self._model["specific_saturated_gas_atten"]
         atten[self._liquid_in_pixel] = saturated_atten[self._liquid_in_pixel]
         return atten
 
     def _specific_to_gas_atten(self, specific_atten: np.ndarray) -> np.ndarray:
-        layer1_atten = self._model['gas_atten'][:, 0]
+        layer1_atten = self._model["gas_atten"][:, 0]
         atten_cumsum = ma.cumsum(specific_atten, axis=1)
         atten = TWO_WAY * atten_cumsum * self._dheight * M_TO_KM
         atten += utils.transpose(layer1_atten)
@@ -270,9 +281,10 @@ class LiquidAttenuation(Attenuation):
         corrected (ndarray): Boolean array denoting corrected pixels.
 
     """
+
     def __init__(self, data: dict, classification: ClassificationResult):
-        super().__init__(data['model'], classification)
-        self._mwr = data['mwr'].data
+        super().__init__(data["model"], classification)
+        self._mwr = data["mwr"].data
         self._lwc_dz_err = self._get_lwc_change_rate_error()
         self.atten = self._get_liquid_atten()
         self.atten_err = self._get_liquid_atten_err()
@@ -281,12 +293,12 @@ class LiquidAttenuation(Attenuation):
         self._mask_uncorrected_attenuation()
 
     def _get_lwc_change_rate_error(self) -> np.ndarray:
-        atmosphere = (self._model['temperature'], self._model['pressure'])
+        atmosphere = (self._model["temperature"], self._model["pressure"])
         return fill_clouds_with_lwc_dz(atmosphere, self._liquid_in_pixel)
 
     def _get_liquid_atten(self) -> ma.MaskedArray:
         """Finds radar liquid attenuation."""
-        lwp = ma.copy(self._mwr['lwp'][:])
+        lwp = ma.copy(self._mwr["lwp"][:])
         lwp[lwp < 0] = 0
         lwc = calc_adiabatic_lwc(self._lwc_dz_err, self._dheight)
         lwc_scaled = distribute_lwp_to_liquid_clouds(lwc, lwp)
@@ -294,14 +306,15 @@ class LiquidAttenuation(Attenuation):
 
     def _get_liquid_atten_err(self) -> ma.MaskedArray:
         """Finds radar liquid attenuation error."""
-        lwc_err_scaled = distribute_lwp_to_liquid_clouds(self._lwc_dz_err,
-                                                         self._mwr['lwp_error'][:])
+        lwc_err_scaled = distribute_lwp_to_liquid_clouds(
+            self._lwc_dz_err, self._mwr["lwp_error"][:]
+        )
         return self._calc_attenuation(lwc_err_scaled)
 
     def _calc_attenuation(self, lwc_scaled: np.ndarray) -> ma.MaskedArray:
         """Calculates liquid attenuation (dB)."""
         liquid_attenuation = ma.zeros(lwc_scaled.shape)
-        spec_liq = self._model['specific_liquid_atten']
+        spec_liq = self._model["specific_liquid_atten"]
         lwp_cumsum = ma.cumsum(lwc_scaled[:, :-1] * spec_liq[:, :-1], axis=1)
         liquid_attenuation[:, 1:] = TWO_WAY * lwp_cumsum * M_TO_KM
         return liquid_attenuation
@@ -357,8 +370,9 @@ def get_lwc_change_rate_at_bases(atmosphere: tuple, is_liquid: np.ndarray) -> np
     """
     liquid_bases = find_cloud_bases(is_liquid)
     lwc_dz = ma.zeros(liquid_bases.shape)
-    lwc_dz[liquid_bases] = calc_lwc_change_rate(atmosphere[0][liquid_bases],
-                                                atmosphere[1][liquid_bases])
+    lwc_dz[liquid_bases] = calc_lwc_change_rate(
+        atmosphere[0][liquid_bases], atmosphere[1][liquid_bases]
+    )
     return lwc_dz
 
 

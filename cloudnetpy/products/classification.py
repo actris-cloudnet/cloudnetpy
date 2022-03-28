@@ -9,9 +9,9 @@ from cloudnetpy.products.product_tools import CategorizeBits
 from cloudnetpy.categorize import atmos
 
 
-def generate_classification(categorize_file: str,
-                            output_file: str,
-                            uuid: Optional[str] = None) -> str:
+def generate_classification(
+    categorize_file: str, output_file: str, uuid: Optional[str] = None
+) -> str:
     """Generates Cloudnet classification product.
 
     This function reads the initial classification masks from a
@@ -35,58 +35,59 @@ def generate_classification(categorize_file: str,
     product_container = DataSource(categorize_file)
     categorize_bits = CategorizeBits(categorize_file)
     classification = _get_target_classification(categorize_bits)
-    product_container.append_data(classification, 'target_classification')
+    product_container.append_data(classification, "target_classification")
     status = _get_detection_status(categorize_bits)
-    product_container.append_data(status, 'detection_status')
+    product_container.append_data(status, "detection_status")
     bases, tops = _get_cloud_base_and_top_heights(classification, product_container)
-    product_container.append_data(bases, 'cloud_base_height_amsl')
-    product_container.append_data(tops, 'cloud_top_height_amsl')
-    product_container.append_data(bases - product_container.altitude, 'cloud_base_height_agl')
-    product_container.append_data(tops - product_container.altitude, 'cloud_top_height_agl')
+    product_container.append_data(bases, "cloud_base_height_amsl")
+    product_container.append_data(tops, "cloud_top_height_amsl")
+    product_container.append_data(bases - product_container.altitude, "cloud_base_height_agl")
+    product_container.append_data(tops - product_container.altitude, "cloud_top_height_agl")
     date = product_container.get_date()
     attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
     output.update_attributes(product_container.data, attributes)
-    uuid = output.save_product_file('classification', product_container, output_file, uuid)
+    uuid = output.save_product_file("classification", product_container, output_file, uuid)
     product_container.close()
     return uuid
 
 
 def _get_target_classification(categorize_bits: CategorizeBits) -> ma.MaskedArray:
     bits = categorize_bits.category_bits
-    clutter = categorize_bits.quality_bits['clutter']
-    classification = ma.zeros(bits['cold'].shape, dtype=int)
-    classification[bits['droplet'] & ~bits['falling']] = 1  # Cloud droplets
-    classification[~bits['droplet'] & bits['falling']] = 2  # Drizzle or rain
-    classification[bits['droplet'] & bits['falling']] = 3   # Drizzle or rain and droplets
-    classification[~bits['droplet'] & bits['falling'] & bits['cold']] = 4  # ice
-    classification[bits['droplet'] & bits['falling'] & bits['cold']] = 5  # ice + supercooled
-    classification[bits['melting']] = 6  # melting layer
-    classification[bits['melting'] & bits['droplet']] = 7  # melting + droplets
-    classification[bits['aerosol']] = 8  # aerosols
-    classification[bits['insect'] & ~clutter] = 9  # insects
-    classification[bits['aerosol'] & bits['insect'] & ~clutter] = 10  # insects + aerosols
-    classification[clutter & ~bits['aerosol']] = 0
+    clutter = categorize_bits.quality_bits["clutter"]
+    classification = ma.zeros(bits["cold"].shape, dtype=int)
+    classification[bits["droplet"] & ~bits["falling"]] = 1  # Cloud droplets
+    classification[~bits["droplet"] & bits["falling"]] = 2  # Drizzle or rain
+    classification[bits["droplet"] & bits["falling"]] = 3  # Drizzle or rain and droplets
+    classification[~bits["droplet"] & bits["falling"] & bits["cold"]] = 4  # ice
+    classification[bits["droplet"] & bits["falling"] & bits["cold"]] = 5  # ice + supercooled
+    classification[bits["melting"]] = 6  # melting layer
+    classification[bits["melting"] & bits["droplet"]] = 7  # melting + droplets
+    classification[bits["aerosol"]] = 8  # aerosols
+    classification[bits["insect"] & ~clutter] = 9  # insects
+    classification[bits["aerosol"] & bits["insect"] & ~clutter] = 10  # insects + aerosols
+    classification[clutter & ~bits["aerosol"]] = 0
     return classification
 
 
 def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
     bits = categorize_bits.quality_bits
-    status = np.zeros(bits['radar'].shape, dtype=int)
-    status[bits['lidar'] & ~bits['radar']] = 1
-    status[bits['radar'] & bits['lidar']] = 3
-    status[~bits['radar'] & bits['attenuated'] & ~bits['corrected']] = 4
-    status[bits['radar'] & ~bits['lidar'] & ~bits['attenuated']] = 5
-    status[~bits['radar'] & bits['attenuated'] & bits['corrected']] = 6
-    status[bits['radar'] & bits['corrected']] = 7
-    status[bits['radar'] & bits['attenuated'] & ~bits['corrected']] = 2
-    status[bits['clutter']] = 8
-    status[bits['molecular'] & ~bits['radar']] = 9
+    status = np.zeros(bits["radar"].shape, dtype=int)
+    status[bits["lidar"] & ~bits["radar"]] = 1
+    status[bits["radar"] & bits["lidar"]] = 3
+    status[~bits["radar"] & bits["attenuated"] & ~bits["corrected"]] = 4
+    status[bits["radar"] & ~bits["lidar"] & ~bits["attenuated"]] = 5
+    status[~bits["radar"] & bits["attenuated"] & bits["corrected"]] = 6
+    status[bits["radar"] & bits["corrected"]] = 7
+    status[bits["radar"] & bits["attenuated"] & ~bits["corrected"]] = 2
+    status[bits["clutter"]] = 8
+    status[bits["molecular"] & ~bits["radar"]] = 9
     return status
 
 
-def _get_cloud_base_and_top_heights(classification: np.ndarray,
-                                    product_container: DataSource) -> Tuple[np.ndarray, np.ndarray]:
-    height = product_container.getvar('height')
+def _get_cloud_base_and_top_heights(
+    classification: np.ndarray, product_container: DataSource
+) -> Tuple[np.ndarray, np.ndarray]:
+    height = product_container.getvar("height")
     cloud_mask = _find_cloud_mask(classification)
     if not cloud_mask.any():
         return ma.masked_all(cloud_mask.shape[0]), ma.masked_all(cloud_mask.shape[0])
@@ -104,71 +105,73 @@ def _find_cloud_mask(classification: np.ndarray) -> np.ndarray:
 
 
 COMMENTS = {
-    'target_classification':
-        ('This variable provides the main atmospheric target classifications\n'
-         'that can be distinguished by radar and lidar.'),
-
-    'detection_status':
-        ('This variable reports on the reliability of the radar and lidar data\n'
-         'used to perform the classification.')
+    "target_classification": (
+        "This variable provides the main atmospheric target classifications\n"
+        "that can be distinguished by radar and lidar."
+    ),
+    "detection_status": (
+        "This variable reports on the reliability of the radar and lidar data\n"
+        "used to perform the classification."
+    ),
 }
 
 DEFINITIONS = {
-    'target_classification':
-        ('\n'
-         'Value 0: Clear sky.\n'
-         'Value 1: Cloud liquid droplets only.\n'
-         'Value 2: Drizzle or rain.\n'
-         'Value 3: Drizzle or rain coexisting with cloud liquid droplets.\n'
-         'Value 4: Ice particles.\n'
-         'Value 5: Ice coexisting with supercooled liquid droplets.\n'
-         'Value 6: Melting ice particles.\n'
-         'Value 7: Melting ice particles coexisting with cloud liquid droplets.\n'
-         'Value 8: Aerosol particles, no cloud or precipitation.\n'
-         'Value 9: Insects, no cloud or precipitation.\n'
-         'Value 10: Aerosol coexisting with insects, no cloud or precipitation.'),
-
-    'detection_status':
-        ('\n'
-         'Value 0: Clear sky.\n'
-         'Value 1: Lidar echo only.\n'
-         'Value 2: Radar echo but reflectivity may be unreliable as attenuation by rain, melting ice or liquid cloud has not been corrected.\n'
-         'Value 3: Good radar and lidar echos.\n'
-         'Value 4: No radar echo but rain or liquid cloud beneath mean that attenuation that would be experienced is unknown.\n'
-         'Value 5: Good radar echo only.\n'
-         'Value 6: No radar echo but known attenuation.\n'
-         'Value 7: Radar echo corrected for liquid attenuation using microwave radiometer data.\n'
-         'Value 8: Radar ground clutter.\n'
-         'Value 9: Lidar clear-air molecular scattering.'),
+    "target_classification": (
+        "\n"
+        "Value 0: Clear sky.\n"
+        "Value 1: Cloud liquid droplets only.\n"
+        "Value 2: Drizzle or rain.\n"
+        "Value 3: Drizzle or rain coexisting with cloud liquid droplets.\n"
+        "Value 4: Ice particles.\n"
+        "Value 5: Ice coexisting with supercooled liquid droplets.\n"
+        "Value 6: Melting ice particles.\n"
+        "Value 7: Melting ice particles coexisting with cloud liquid droplets.\n"
+        "Value 8: Aerosol particles, no cloud or precipitation.\n"
+        "Value 9: Insects, no cloud or precipitation.\n"
+        "Value 10: Aerosol coexisting with insects, no cloud or precipitation."
+    ),
+    "detection_status": (
+        "\n"
+        "Value 0: Clear sky.\n"
+        "Value 1: Lidar echo only.\n"
+        "Value 2: Radar echo but reflectivity may be unreliable as attenuation by rain, melting ice or liquid cloud has not been corrected.\n"
+        "Value 3: Good radar and lidar echos.\n"
+        "Value 4: No radar echo but rain or liquid cloud beneath mean that attenuation that would be experienced is unknown.\n"
+        "Value 5: Good radar echo only.\n"
+        "Value 6: No radar echo but known attenuation.\n"
+        "Value 7: Radar echo corrected for liquid attenuation using microwave radiometer data.\n"
+        "Value 8: Radar ground clutter.\n"
+        "Value 9: Lidar clear-air molecular scattering."
+    ),
 }
 
 CLASSIFICATION_ATTRIBUTES = {
-    'target_classification': MetaData(
-        long_name='Target classification',
-        comment=COMMENTS['target_classification'],
-        definition=DEFINITIONS['target_classification'],
-        units='1'
+    "target_classification": MetaData(
+        long_name="Target classification",
+        comment=COMMENTS["target_classification"],
+        definition=DEFINITIONS["target_classification"],
+        units="1",
     ),
-    'detection_status': MetaData(
-        long_name='Radar and lidar detection status',
-        comment=COMMENTS['detection_status'],
-        definition=DEFINITIONS['detection_status'],
-        units='1'
+    "detection_status": MetaData(
+        long_name="Radar and lidar detection status",
+        comment=COMMENTS["detection_status"],
+        definition=DEFINITIONS["detection_status"],
+        units="1",
     ),
-    'cloud_top_height_amsl': MetaData(
-        long_name='Height of cloud top above mean sea level',
-        units='m',
+    "cloud_top_height_amsl": MetaData(
+        long_name="Height of cloud top above mean sea level",
+        units="m",
     ),
-    'cloud_base_height_amsl': MetaData(
-        long_name='Height of cloud base above mean sea level',
-        units='m',
+    "cloud_base_height_amsl": MetaData(
+        long_name="Height of cloud base above mean sea level",
+        units="m",
     ),
-    'cloud_top_height_agl': MetaData(
-        long_name='Height of cloud top above ground level',
-        units='m',
+    "cloud_top_height_agl": MetaData(
+        long_name="Height of cloud top above ground level",
+        units="m",
     ),
-    'cloud_base_height_agl': MetaData(
-        long_name='Height of cloud base above ground level',
-        units='m',
+    "cloud_base_height_agl": MetaData(
+        long_name="Height of cloud base above ground level",
+        units="m",
     ),
 }

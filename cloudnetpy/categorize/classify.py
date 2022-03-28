@@ -49,11 +49,9 @@ def classify_measurements(data: dict) -> ClassificationResult:
         bits = _filter_insects(bits)
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
     bits[4][filtered_ice] = False
-    return ClassificationResult(_bits_to_integer(bits),
-                                obs.is_rain,
-                                obs.is_clutter,
-                                liquid['bases'],
-                                obs.rain_rate)
+    return ClassificationResult(
+        _bits_to_integer(bits), obs.is_rain, obs.is_clutter, liquid["bases"], obs.rain_rate
+    )
 
 
 def fetch_quality(data: dict, classification: ClassificationResult, attenuations: dict) -> dict:
@@ -76,20 +74,18 @@ def fetch_quality(data: dict, classification: ClassificationResult, attenuations
             - bit 6: Data gap in radar or lidar data
 
     """
-    bits: List[np.ndarray] = [np.ndarray([])]*7
-    radar_echo = data['radar'].data['Z'][:]
+    bits: List[np.ndarray] = [np.ndarray([])] * 7
+    radar_echo = data["radar"].data["Z"][:]
     bits[0] = ~radar_echo.mask
-    bits[1] = ~data['lidar'].data['beta'][:].mask
+    bits[1] = ~data["lidar"].data["beta"][:].mask
     bits[2] = classification.is_clutter
-    bits[4] = attenuations['liquid_corrected'] | attenuations['liquid_uncorrected']
-    bits[5] = attenuations['liquid_corrected']
+    bits[4] = attenuations["liquid_corrected"] | attenuations["liquid_uncorrected"]
+    bits[5] = attenuations["liquid_corrected"]
     qbits = _bits_to_integer(bits)
-    return {'quality_bits': qbits}
+    return {"quality_bits": qbits}
 
 
-def _find_aerosols(obs: ClassData,
-                   is_falling: np.ndarray,
-                   is_liquid: np.ndarray) -> np.ndarray:
+def _find_aerosols(obs: ClassData, is_falling: np.ndarray, is_liquid: np.ndarray) -> np.ndarray:
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
@@ -115,9 +111,9 @@ def _fix_undetected_melting_layer(bits: list) -> np.ndarray:
     return melting_layer
 
 
-def _find_drizzle_and_falling(is_liquid: np.ndarray,
-                              is_falling: np.ndarray,
-                              is_freezing: np.ndarray) -> np.ndarray:
+def _find_drizzle_and_falling(
+    is_liquid: np.ndarray, is_falling: np.ndarray, is_freezing: np.ndarray
+) -> np.ndarray:
     """Classifies pixels as falling, drizzle and others.
 
     Args:
@@ -175,7 +171,7 @@ def _filter_insects(bits: list) -> list:
     for x, y in zip(*np.where(is_melting_layer)):
         try:
             # change insects to drizzle below melting layer pixel
-            ind1 = np.arange(y-n_gates, y)
+            ind1 = np.arange(y - n_gates, y)
             ind11 = np.where(original_insects[x, ind1])[0]
             n_drizzle = sum(is_falling[x, :y])
             if n_drizzle > 5:
@@ -184,10 +180,10 @@ def _filter_insects(bits: list) -> list:
             else:
                 continue
             # change insects on the right and left of melting layer pixel to drizzle
-            ind1 = np.arange(x-n_gates, x+n_gates+1)
+            ind1 = np.arange(x - n_gates, x + n_gates + 1)
             ind11 = np.where(original_insects[ind1, y])[0]
-            is_falling[ind1[ind11], y-1:y+2] = True
-            is_insects[ind1[ind11], y-1:y+2] = False
+            is_falling[ind1[ind11], y - 1 : y + 2] = True
+            is_insects[ind1[ind11], y - 1 : y + 2] = False
         except IndexError:
             continue
     bits[1] = is_falling

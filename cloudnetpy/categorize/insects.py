@@ -8,10 +8,9 @@ from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize.containers import ClassData
 
 
-def find_insects(obs: ClassData,
-                 melting_layer: np.ndarray,
-                 liquid_layers: np.ndarray,
-                 prob_lim: float = 0.8) -> np.ndarray:
+def find_insects(
+    obs: ClassData, melting_layer: np.ndarray, liquid_layers: np.ndarray, prob_lim: float = 0.8
+) -> np.ndarray:
     """Returns insect probability and boolean array of insect presence.
 
     Insects are classified by estimating heuristic probability
@@ -61,19 +60,19 @@ def _get_probabilities(obs: ClassData) -> dict:
     lwp_interp = droplet.interpolate_lwp(obs)
     fun = utils.array_to_probability
     return {
-        'width': fun(obs.width, 1, 0.3, True) if hasattr(obs, 'width') else 1,
-        'z_strong': fun(obs.z, 0, 8, True),
-        'z_weak': fun(obs.z, -20, 8, True),
-        'ldr': fun(obs.ldr, -25, 5) if hasattr(obs, 'ldr') else None,
-        'temp_loose': fun(obs.tw, 268, 2),
-        'temp_strict': fun(obs.tw, 274, 1),
-        'v': fun(smooth_v, -3.5, 2),
-        'lwp': utils.transpose(fun(lwp_interp, 150, 50, invert=True)),
-        'v_sigma': fun(obs.v_sigma, 0.01, 0.1)}
+        "width": fun(obs.width, 1, 0.3, True) if hasattr(obs, "width") else 1,
+        "z_strong": fun(obs.z, 0, 8, True),
+        "z_weak": fun(obs.z, -20, 8, True),
+        "ldr": fun(obs.ldr, -25, 5) if hasattr(obs, "ldr") else None,
+        "temp_loose": fun(obs.tw, 268, 2),
+        "temp_strict": fun(obs.tw, 274, 1),
+        "v": fun(smooth_v, -3.5, 2),
+        "lwp": utils.transpose(fun(lwp_interp, 150, 50, invert=True)),
+        "v_sigma": fun(obs.v_sigma, 0.01, 0.1),
+    }
 
 
-def _get_smoothed_v(obs: ClassData,
-                    sigma: Tuple[float, float] = (5, 5)) -> ma.MaskedArray:
+def _get_smoothed_v(obs: ClassData, sigma: Tuple[float, float] = (5, 5)) -> ma.MaskedArray:
     smoothed_v = gaussian_filter(obs.v, sigma)
     smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
     return smoothed_v
@@ -81,37 +80,32 @@ def _get_smoothed_v(obs: ClassData,
 
 def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
     """This is the most reliable proxy for insects."""
-    if prob['ldr'] is None:
-        return np.zeros(prob['z_strong'].shape)
-    return prob['ldr'] * prob['temp_loose']
+    if prob["ldr"] is None:
+        return np.zeros(prob["z_strong"].shape)
+    return prob["ldr"] * prob["temp_loose"]
 
 
 def _calc_prob_from_all(prob: dict) -> np.ndarray:
     """This can be tried when LDR is not available. To detect insects without LDR unambiguously is
     difficult and might result in many false positives and/or false negatives."""
-    return prob['z_weak'] * prob['temp_strict'] * prob['width'] * prob['v']
+    return prob["z_weak"] * prob["temp_strict"] * prob["width"] * prob["v"]
 
 
-def _adjust_for_radar(obs: ClassData,
-                      prob: dict,
-                      prob_from_others: np.ndarray) -> np.ndarray:
+def _adjust_for_radar(obs: ClassData, prob: dict, prob_from_others: np.ndarray) -> np.ndarray:
     """Adds radar-specific weighting to insect probabilities."""
-    if 'mira' in obs.radar_type.lower():
-        prob_from_others *= prob['lwp']
+    if "mira" in obs.radar_type.lower():
+        prob_from_others *= prob["lwp"]
     return prob_from_others
 
 
-def _fill_missing_pixels(prob_from_ldr: np.ndarray,
-                         prob_from_others: np.ndarray) -> np.ndarray:
+def _fill_missing_pixels(prob_from_ldr: np.ndarray, prob_from_others: np.ndarray) -> np.ndarray:
     prob_combined = np.copy(prob_from_ldr)
     no_ldr = np.where(prob_from_ldr == 0)
     prob_combined[no_ldr] = prob_from_others[no_ldr]
     return prob_combined
 
 
-def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer,
-                    liquid_layers, obs):
-
+def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers, obs):
     def _screen_liquid_layers():
         prob[liquid_layers == 1] = 0
 

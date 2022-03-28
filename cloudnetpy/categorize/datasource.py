@@ -24,6 +24,7 @@ class DataSource:
         data (dict): Dictionary containing :class:`CloudnetArray` instances.
 
     """
+
     calc_wet_bulb: Callable
     add_meta: Callable
     rebin_to_grid: Callable
@@ -44,7 +45,7 @@ class DataSource:
     def __init__(self, full_path: str, radar: bool = False):
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
-        self.source = getattr(self.dataset, 'source', '')
+        self.source = getattr(self.dataset, "source", "")
         self.time = self._init_time()
         self.altitude = self._init_altitude()
         self.height = self._init_height()
@@ -70,13 +71,15 @@ class DataSource:
         for arg in args:
             if arg in self.dataset.variables:
                 return self.dataset.variables[arg][:]
-        raise RuntimeError('Missing variable in the input file.')
+        raise RuntimeError("Missing variable in the input file.")
 
-    def append_data(self,
-                    variable: Union[netCDF4.Variable, np.ndarray, float, int],
-                    key: str,
-                    name: Optional[str] = None,
-                    units: Optional[str] = None):
+    def append_data(
+        self,
+        variable: Union[netCDF4.Variable, np.ndarray, float, int],
+        key: str,
+        name: Optional[str] = None,
+        units: Optional[str] = None,
+    ):
         """Adds new CloudnetVariable or RadarVariable into `data` attribute.
 
         Args:
@@ -103,9 +106,9 @@ class DataSource:
             year = str(self.dataset.year)
             month = str(self.dataset.month).zfill(2)
             day = str(self.dataset.day).zfill(2)
-            datetime.strptime(f'{year}{month}{day}', '%Y%m%d')
+            datetime.strptime(f"{year}{month}{day}", "%Y%m%d")
         except (AttributeError, ValueError):
-            raise RuntimeError('Missing or invalid date in global attributes.')
+            raise RuntimeError("Missing or invalid date in global attributes.")
         return [year, month, day]
 
     def close(self) -> None:
@@ -116,7 +119,7 @@ class DataSource:
     def km2m(var: netCDF4.Variable) -> np.ndarray:
         """Converts km to m."""
         alt = var[:]
-        if var.units == 'km':
+        if var.units == "km":
             alt *= 1000
         return alt
 
@@ -124,30 +127,30 @@ class DataSource:
     def m2km(var: netCDF4.Variable) -> np.ndarray:
         """Converts m to km."""
         alt = var[:]
-        if var.units == 'm':
+        if var.units == "m":
             alt /= 1000
         return alt
 
     def _init_time(self) -> np.ndarray:
-        time = self.getvar('time')
+        time = self.getvar("time")
         if max(time) > 25:
-            logging.warning('Assuming time as seconds, converting to fraction hour')
+            logging.warning("Assuming time as seconds, converting to fraction hour")
             time = utils.seconds2hours(time)
         return time
 
     def _init_altitude(self) -> Union[float, None]:
         """Returns altitude of the instrument (m)."""
-        if 'altitude' in self.dataset.variables:
-            altitude_above_sea = self.km2m(self.dataset.variables['altitude'])
+        if "altitude" in self.dataset.variables:
+            altitude_above_sea = self.km2m(self.dataset.variables["altitude"])
             return float(np.mean(altitude_above_sea))
         return None
 
     def _init_height(self) -> Union[np.ndarray, None]:
         """Returns height array above mean sea level (m)."""
-        if 'height' in self.dataset.variables:
-            return self.km2m(self.dataset.variables['height'])
-        if 'range' in self.dataset.variables and self.altitude is not None:
-            range_instrument = self.km2m(self.dataset.variables['range'])
+        if "height" in self.dataset.variables:
+            return self.km2m(self.dataset.variables["height"])
+        if "range" in self.dataset.variables and self.altitude is not None:
+            range_instrument = self.km2m(self.dataset.variables["range"])
             return np.array(range_instrument + self.altitude)
         return None
 
@@ -165,11 +168,13 @@ class DataSource:
         for key in keys:
             self.append_data(self.dataset.variables[key], key)
 
-    def _unknown_variable_to_cloudnet_array(self,
-                                            possible_names: tuple,
-                                            key: str,
-                                            units: Optional[str] = None,
-                                            ignore_mask: bool = False):
+    def _unknown_variable_to_cloudnet_array(
+        self,
+        possible_names: tuple,
+        key: str,
+        units: Optional[str] = None,
+        ignore_mask: bool = False,
+    ):
         """Transforms single netCDF4 variable into CloudnetArray.
 
         Args:
@@ -190,4 +195,4 @@ class DataSource:
                     array = np.array(array)
                 self.append_data(array, key, units=units)
                 return
-        raise RuntimeError('Missing variable in the input file.')
+        raise RuntimeError("Missing variable in the input file.")

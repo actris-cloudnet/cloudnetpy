@@ -9,11 +9,13 @@ from cloudnetpy import utils, output
 from cloudnetpy.metadata import MetaData
 
 
-def ceilo2nc(full_path: str,
-             output_file: str,
-             site_meta: dict,
-             uuid: Optional[str] = None,
-             date: Optional[str] = None) -> str:
+def ceilo2nc(
+    full_path: str,
+    output_file: str,
+    site_meta: dict,
+    uuid: Optional[str] = None,
+    date: Optional[str] = None,
+) -> str:
     """Converts Vaisala / Lufft ceilometer data into Cloudnet Level 1b netCDF file.
 
     This function reads raw Vaisala (CT25k, CL31, CL51, CL61-D) and Lufft (CHM15k, CHM15kx)
@@ -57,37 +59,39 @@ def ceilo2nc(full_path: str,
     """
     snr_limit = 5
     ceilo_obj = _initialize_ceilo(full_path, site_meta, date)
-    calibration_factor = site_meta.get('calibration_factor', None)
-    range_corrected = site_meta.get('range_corrected', True)
+    calibration_factor = site_meta.get("calibration_factor", None)
+    range_corrected = site_meta.get("range_corrected", True)
     ceilo_obj.read_ceilometer_file(calibration_factor)
-    ceilo_obj.data['beta'] = ceilo_obj.calc_screened_product(ceilo_obj.data['beta_raw'],
-                                                             snr_limit, range_corrected)
-    ceilo_obj.data['beta_smooth'] = ceilo_obj.calc_beta_smooth(ceilo_obj.data['beta'],
-                                                               snr_limit, range_corrected)
-    assert ceilo_obj.instrument is not None and hasattr(ceilo_obj.instrument, 'model')
-    if 'cl61' in ceilo_obj.instrument.model.lower():
-        ceilo_obj.data['depolarisation'].mask = ceilo_obj.data['beta'].mask
+    ceilo_obj.data["beta"] = ceilo_obj.calc_screened_product(
+        ceilo_obj.data["beta_raw"], snr_limit, range_corrected
+    )
+    ceilo_obj.data["beta_smooth"] = ceilo_obj.calc_beta_smooth(
+        ceilo_obj.data["beta"], snr_limit, range_corrected
+    )
+    assert ceilo_obj.instrument is not None and hasattr(ceilo_obj.instrument, "model")
+    if "cl61" in ceilo_obj.instrument.model.lower():
+        ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
         ceilo_obj.remove_raw_data()
     ceilo_obj.screen_depol()
     ceilo_obj.prepare_data()
     ceilo_obj.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.date)
     output.update_attributes(ceilo_obj.data, attributes)
-    for key in ('beta', 'beta_smooth'):
+    for key in ("beta", "beta_smooth"):
         ceilo_obj.add_snr_info(key, snr_limit)
     uuid = output.save_level1b(ceilo_obj, output_file, uuid)
     return uuid
 
 
-def _initialize_ceilo(full_path: str,
-                      site_meta: dict,
-                      date: Optional[str] = None) -> Union[ClCeilo, Ct25k, LufftCeilo, Cl61d]:
+def _initialize_ceilo(
+    full_path: str, site_meta: dict, date: Optional[str] = None
+) -> Union[ClCeilo, Ct25k, LufftCeilo, Cl61d]:
     model = _find_ceilo_model(full_path)
-    if model == 'cl31_or_cl51':
+    if model == "cl31_or_cl51":
         return ClCeilo(full_path, site_meta, date)
-    if model == 'ct25k':
+    if model == "ct25k":
         return Ct25k(full_path, site_meta, date)
-    if model == 'cl61d':
+    if model == "cl61d":
         return Cl61d(full_path, site_meta, date)
     return LufftCeilo(full_path, site_meta, date)
 
@@ -97,12 +101,12 @@ def _find_ceilo_model(full_path: str) -> str:
         nc = netCDF4.Dataset(full_path)
         title = nc.title
         nc.close()
-        for identifier in ['cl61d', 'cl61-d']:
+        for identifier in ["cl61d", "cl61-d"]:
             if identifier in title.lower() or identifier in full_path.lower():
-                return 'cl61d'
-        return 'chm15k'
+                return "cl61d"
+        return "chm15k"
     except OSError:
-        line = ''
+        line = ""
         first_empty_line = utils.find_first_empty_line(full_path)
         max_number_of_empty_lines = 10
         for n in range(1, max_number_of_empty_lines):
@@ -110,100 +114,94 @@ def _find_ceilo_model(full_path: str) -> str:
             if not utils.is_empty_line(line):
                 line = linecache.getline(full_path, first_empty_line + n + 1)
                 break
-        if 'CL' in line:
-            return 'cl31_or_cl51'
-        if 'CT' in line:
-            return 'ct25k'
-    raise RuntimeError('Error: Unknown ceilo model.')
+        if "CL" in line:
+            return "cl31_or_cl51"
+        if "CT" in line:
+            return "ct25k"
+    raise RuntimeError("Error: Unknown ceilo model.")
 
 
 ATTRIBUTES = {
-    'depolarisation': MetaData(
-        long_name='Lidar volume linear depolarisation ratio',
-        units='1',
-        comment='SNR-screened lidar volume linear depolarisation ratio at 910.55 nm.'
+    "depolarisation": MetaData(
+        long_name="Lidar volume linear depolarisation ratio",
+        units="1",
+        comment="SNR-screened lidar volume linear depolarisation ratio at 910.55 nm.",
     ),
-    'scale': MetaData(
-        long_name='Scale',
-        units='%',
-        comment='100 (%) is normal.'
+    "scale": MetaData(long_name="Scale", units="%", comment="100 (%) is normal."),
+    "software_level": MetaData(
+        long_name="Software level ID",
+        units="1",
     ),
-    'software_level': MetaData(
-        long_name='Software level ID',
-        units='1',
+    "laser_temperature": MetaData(
+        long_name="Laser temperature",
+        units="C",
     ),
-    'laser_temperature': MetaData(
-        long_name='Laser temperature',
-        units='C',
+    "window_transmission": MetaData(
+        long_name="Window transmission estimate",
+        units="%",
     ),
-    'window_transmission': MetaData(
-        long_name='Window transmission estimate',
-        units='%',
+    "laser_energy": MetaData(
+        long_name="Laser pulse energy",
+        units="%",
     ),
-    'laser_energy': MetaData(
-        long_name='Laser pulse energy',
-        units='%',
+    "background_light": MetaData(
+        long_name="Background light", units="mV", comment="Measured at internal ADC input."
     ),
-    'background_light': MetaData(
-        long_name='Background light',
-        units='mV',
-        comment='Measured at internal ADC input.'
+    "backscatter_sum": MetaData(
+        long_name="Sum of detected and normalized backscatter",
+        units="sr-1",
+        comment="Multiplied by scaling factor times 1e4.",
     ),
-    'backscatter_sum': MetaData(
-        long_name='Sum of detected and normalized backscatter',
-        units='sr-1',
-        comment='Multiplied by scaling factor times 1e4.',
+    "range_resolution": MetaData(
+        long_name="Range resolution",
+        units="m",
     ),
-    'range_resolution': MetaData(
-        long_name='Range resolution',
-        units='m',
+    "number_of_gates": MetaData(
+        long_name="Number of range gates in profile",
+        units="1",
     ),
-    'number_of_gates': MetaData(
-        long_name='Number of range gates in profile',
-        units='1',
+    "unit_id": MetaData(
+        long_name="Ceilometer unit number",
+        units="1",
     ),
-    'unit_id': MetaData(
-        long_name='Ceilometer unit number',
-        units='1',
+    "message_number": MetaData(
+        long_name="Message number",
+        units="1",
     ),
-    'message_number': MetaData(
-        long_name='Message number',
-        units='1',
+    "message_subclass": MetaData(
+        long_name="Message subclass number",
+        units="1",
     ),
-    'message_subclass': MetaData(
-        long_name='Message subclass number',
-        units='1',
+    "detection_status": MetaData(
+        long_name="Detection status",
+        units="1",
+        comment="From the internal software of the instrument.",
     ),
-    'detection_status': MetaData(
-        long_name='Detection status',
-        units='1',
-        comment='From the internal software of the instrument.'
+    "warning": MetaData(
+        long_name="Warning and Alarm flag",
+        units="1",
+        definition=(
+            "\n"
+            "Value 0: Self-check OK\n"
+            "Value W: At least one warning on\n"
+            "Value A: At least one error active."
+        ),
     ),
-    'warning': MetaData(
-        long_name='Warning and Alarm flag',
-        units='1',
-        definition=('\n'
-                    'Value 0: Self-check OK\n'
-                    'Value W: At least one warning on\n'
-                    'Value A: At least one error active.')
+    "warning_flags": MetaData(
+        long_name="Warning flags",
+        units="1",
     ),
-    'warning_flags': MetaData(
-        long_name='Warning flags',
-        units='1',
+    "receiver_sensitivity": MetaData(
+        long_name="Receiver sensitivity",
+        units="%",
+        comment="Expressed as % of nominal factory setting.",
     ),
-    'receiver_sensitivity': MetaData(
-        long_name='Receiver sensitivity',
-        units='%',
-        comment='Expressed as % of nominal factory setting.'
+    "window_contamination": MetaData(
+        long_name="Window contamination", units="mV", comment="Measured at internal ADC input."
     ),
-    'window_contamination': MetaData(
-        long_name='Window contamination',
-        units='mV',
-        comment='Measured at internal ADC input.'
-    ),
-    'calibration_factor': MetaData(
-        long_name='Attenuated backscatter calibration factor',
-        units='1',
-        comment='Calibration factor applied.'
+    "calibration_factor": MetaData(
+        long_name="Attenuated backscatter calibration factor",
+        units="1",
+        comment="Calibration factor applied.",
     ),
 }

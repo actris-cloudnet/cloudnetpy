@@ -6,9 +6,9 @@ from cloudnetpy.constants import T0
 from cloudnetpy.categorize.containers import ClassData
 
 
-def find_falling_hydrometeors(obs: ClassData,
-                              is_liquid: np.ndarray,
-                              is_insects: np.ndarray) -> np.ndarray:
+def find_falling_hydrometeors(
+    obs: ClassData, is_liquid: np.ndarray, is_insects: np.ndarray
+) -> np.ndarray:
     """Finds falling hydrometeors.
 
     Falling hydrometeors are radar signals that are
@@ -45,7 +45,7 @@ def _find_falling_from_radar(obs: ClassData, is_insects: np.ndarray) -> np.ndarr
 
 def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
     """Lidar signals which are in colder than the threshold temperature are assumed ice.
-       This method should be improved in the future if possible.
+    This method should be improved in the future if possible.
     """
     cold_aerosols = np.zeros(is_liquid.shape, dtype=bool)
     temperature_limit = T0 - 15
@@ -55,9 +55,9 @@ def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
     return cold_aerosols
 
 
-def _fix_liquid_dominated_radar(obs: ClassData,
-                                falling_from_radar: np.ndarray,
-                                is_liquid: np.ndarray) -> np.ndarray:
+def _fix_liquid_dominated_radar(
+    obs: ClassData, falling_from_radar: np.ndarray, is_liquid: np.ndarray
+) -> np.ndarray:
     """Radar signals inside liquid clouds are NOT ice if Z is
     increasing in height inside the cloud.
     """
@@ -69,7 +69,7 @@ def _fix_liquid_dominated_radar(obs: ClassData,
     for n, base, _, top in zip(*base_indices, *top_indices):
         z_prof = obs.z[n, :]
         if _is_z_missing_above_liquid(z_prof, top) and _is_z_increasing(z_prof, base, top):
-            falling_from_radar[n, base:top+1] = False
+            falling_from_radar[n, base : top + 1] = False
 
     return falling_from_radar
 
@@ -78,12 +78,12 @@ def _is_z_missing_above_liquid(z: ma.MaskedArray, ind_top: int) -> bool:
     """Checks is z is masked right above the liquid layer top."""
     if ind_top == len(z) - 1:
         return False
-    return z.mask[ind_top+1]
+    return z.mask[ind_top + 1]
 
 
 def _is_z_increasing(z: ma.MaskedArray, ind_base: int, ind_top: int) -> bool:
     """Checks is z is increasing inside the liquid cloud."""
-    z = z[ind_base:ind_top+1].compressed()
+    z = z[ind_base : ind_top + 1].compressed()
     if len(z) > 1:
         return z[-1] > z[0]
     return False

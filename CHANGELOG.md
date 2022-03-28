@@ -61,7 +61,7 @@ Return dimensions of generated images
 
 ## 1.27.7
 
-- Adds timestamp sorting and duplicate removal for `mira` 
+- Adds timestamp sorting and duplicate removal for `mira`
 
 ## 1.27.6
 
@@ -73,7 +73,7 @@ Return dimensions of generated images
 
 ## 1.27.4
 
-- Sort and remove duplicates from Vaisala cl31/51 data 
+- Sort and remove duplicates from Vaisala cl31/51 data
 
 ## 1.27.3
 
@@ -372,4 +372,3 @@ Version `1.1.0` adds bug fixes and minor changes to high-level API functions:
 ## 1.0.7
 
 This is the first CloudnetPy release under actris-cloudnet organization account. The commit history has been truncated. The original repository, which is no longer updated, contains full (and messy) commit history and can be accessed on https://github.com/tukiains/cloudnetpy-legacy.
-

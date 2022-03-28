@@ -13,11 +13,13 @@ from cloudnetpy.instruments import instruments
 from cloudnetpy.utils import Epoch
 
 
-def pollyxt2nc(input_folder: str,
-               output_file: str,
-               site_meta: dict,
-               uuid: Optional[str] = None,
-               date: Optional[str] = None) -> str:
+def pollyxt2nc(
+    input_folder: str,
+    output_file: str,
+    site_meta: dict,
+    uuid: Optional[str] = None,
+    date: Optional[str] = None,
+) -> str:
     """
     Converts PollyXT Raman lidar data into Cloudnet Level 1b netCDF file.
 
@@ -44,7 +46,7 @@ def pollyxt2nc(input_folder: str,
         >>> pollyxt2nc('/path/to/files/', 'pollyxt.nc', site_meta)
 
     """
-    snr_limit = site_meta.get('snr_limit', 2)
+    snr_limit = site_meta.get("snr_limit", 2)
     polly = PollyXt(site_meta, date)
     epoch = polly.fetch_data(input_folder)
     polly.get_date_and_time(epoch)
@@ -55,13 +57,12 @@ def pollyxt2nc(input_folder: str,
     polly.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
-    polly.add_snr_info('beta', snr_limit)
+    polly.add_snr_info("beta", snr_limit)
     uuid = output.save_level1b(polly, output_file, uuid)
     return uuid
 
 
 class PollyXt(Ceilometer):
-
     def __init__(self, site_meta: dict, expected_date: Union[str, None]):
         super().__init__()
         self.site_meta = site_meta
@@ -70,63 +71,63 @@ class PollyXt(Ceilometer):
 
     def mask_nan_values(self):
         for array in self.data.values():
-            if getattr(array, 'ndim', 0) > 0:
+            if getattr(array, "ndim", 0) > 0:
                 array[np.isnan(array)] = ma.masked
 
     def calc_screened_products(self, snr_limit: float = 5.0):
-        keys = ('beta', 'depolarisation')
+        keys = ("beta", "depolarisation")
         for key in keys:
-            self.data[key] = ma.masked_where(self.data['snr'] < snr_limit, self.data[f'{key}_raw'])
-        self.data['depolarisation'][self.data['depolarisation'] > 1] = ma.masked
-        self.data['depolarisation'][self.data['depolarisation'] < 0] = ma.masked
-        del self.data['snr']
+            self.data[key] = ma.masked_where(self.data["snr"] < snr_limit, self.data[f"{key}_raw"])
+        self.data["depolarisation"][self.data["depolarisation"] > 1] = ma.masked
+        self.data["depolarisation"][self.data["depolarisation"] < 0] = ma.masked
+        del self.data["snr"]
 
     def fetch_zenith_angle(self) -> None:
         default = 5
-        self.data['zenith_angle'] = float(self.metadata.get('zenith_angle', default))
+        self.data["zenith_angle"] = float(self.metadata.get("zenith_angle", default))
 
     def fetch_data(self, input_folder: str) -> Epoch:
         """Read input data."""
-        bsc_files = glob.glob(f'{input_folder}/*[0-9]_att*.nc')
-        depol_files = glob.glob(f'{input_folder}/*[0-9]_vol*.nc')
+        bsc_files = glob.glob(f"{input_folder}/*[0-9]_att*.nc")
+        depol_files = glob.glob(f"{input_folder}/*[0-9]_vol*.nc")
         bsc_files.sort()
         depol_files.sort()
         if not bsc_files:
-            raise RuntimeError('No pollyxt files found')
+            raise RuntimeError("No pollyxt files found")
         if len(bsc_files) != len(depol_files):
-            raise RuntimeError('Inconsistent number of pollyxt bsc / depol files')
-        self.data['range'] = _read_array_from_multiple_files(bsc_files, depol_files, 'height')
+            raise RuntimeError("Inconsistent number of pollyxt bsc / depol files")
+        self.data["range"] = _read_array_from_multiple_files(bsc_files, depol_files, "height")
         calibration_factors: np.ndarray = np.array([])
-        bsc_key = 'attenuated_backscatter_1064nm'
+        bsc_key = "attenuated_backscatter_1064nm"
         for (bsc_file, depol_file) in zip(bsc_files, depol_files):
-            nc_bsc = netCDF4.Dataset(bsc_file, 'r')
-            nc_depol = netCDF4.Dataset(depol_file, 'r')
-            epoch = utils.get_epoch(nc_bsc['time'].unit)
+            nc_bsc = netCDF4.Dataset(bsc_file, "r")
+            nc_depol = netCDF4.Dataset(depol_file, "r")
+            epoch = utils.get_epoch(nc_bsc["time"].unit)
             try:
-                time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, 'time'))
+                time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, "time"))
             except AssertionError:
                 _close(nc_bsc, nc_depol)
                 continue
             beta_raw = nc_bsc.variables[bsc_key][:]
-            depol_raw = nc_depol.variables['volume_depolarization_ratio_532nm'][:]
-            snr = nc_bsc.variables['SNR_1064nm'][:]
-            for array, key in zip([beta_raw, depol_raw, time, snr], ['beta_raw',
-                                                                     'depolarisation_raw',
-                                                                     'time', 'snr']):
+            depol_raw = nc_depol.variables["volume_depolarization_ratio_532nm"][:]
+            snr = nc_bsc.variables["SNR_1064nm"][:]
+            for array, key in zip(
+                [beta_raw, depol_raw, time, snr], ["beta_raw", "depolarisation_raw", "time", "snr"]
+            ):
                 self.data = utils.append_data(self.data, key, array)
             calibration_factor = nc_bsc.variables[bsc_key].Lidar_calibration_constant_used
             calibration_factor = np.repeat(calibration_factor, len(time))
             calibration_factors = np.concatenate([calibration_factors, calibration_factor])
             _close(nc_bsc, nc_depol)
-        self.data['calibration_factor'] = calibration_factors
+        self.data["calibration_factor"] = calibration_factors
         return epoch
 
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
     array: np.ndarray = np.array([])
     for ind, (file1, file2) in enumerate(zip(files1, files2)):
-        nc1 = netCDF4.Dataset(file1, 'r')
-        nc2 = netCDF4.Dataset(file2, 'r')
+        nc1 = netCDF4.Dataset(file1, "r")
+        nc2 = netCDF4.Dataset(file2, "r")
         array1 = _read_array_from_file_pair(nc1, nc2, key)
         if ind == 0:
             array = array1
@@ -135,9 +136,9 @@ def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarr
     return np.array(array)
 
 
-def _read_array_from_file_pair(nc_file1: netCDF4.Dataset,
-                               nc_file2: netCDF4.Dataset,
-                               key: str) -> np.ndarray:
+def _read_array_from_file_pair(
+    nc_file1: netCDF4.Dataset, nc_file2: netCDF4.Dataset, key: str
+) -> np.ndarray:
     array1 = nc_file1.variables[key][:]
     array2 = nc_file2.variables[key][:]
     assert_array_equal(array1, array2)
@@ -150,19 +151,19 @@ def _close(*args) -> None:
 
 
 ATTRIBUTES = {
-    'depolarisation': MetaData(
-        long_name='Lidar volume linear depolarisation ratio',
-        units='1',
-        comment='SNR-screened lidar volume linear depolarisation ratio at 532 nm.'
+    "depolarisation": MetaData(
+        long_name="Lidar volume linear depolarisation ratio",
+        units="1",
+        comment="SNR-screened lidar volume linear depolarisation ratio at 532 nm.",
     ),
-    'depolarisation_raw': MetaData(
-        long_name='Lidar volume linear depolarisation ratio',
-        units='1',
-        comment='Non-screened lidar volume linear depolarisation ratio at 532 nm.'
+    "depolarisation_raw": MetaData(
+        long_name="Lidar volume linear depolarisation ratio",
+        units="1",
+        comment="Non-screened lidar volume linear depolarisation ratio at 532 nm.",
     ),
-    'calibration_factor': MetaData(
-        long_name='Attenuated backscatter calibration factor',
-        units='1',
-        comment='Calibration factor applied.'
+    "calibration_factor": MetaData(
+        long_name="Attenuated backscatter calibration factor",
+        units="1",
+        comment="Calibration factor applied.",
     ),
 }

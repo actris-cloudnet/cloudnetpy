@@ -8,11 +8,13 @@ from cloudnetpy import CloudnetArray
 from cloudnetpy.instruments import instruments
 
 
-def radiometrics2nc(full_path: str,
-                    output_file: str,
-                    site_meta: dict,
-                    uuid: Optional[str] = None,
-                    date: Optional[str] = None) -> str:
+def radiometrics2nc(
+    full_path: str,
+    output_file: str,
+    site_meta: dict,
+    uuid: Optional[str] = None,
+    date: Optional[str] = None,
+) -> str:
     """Converts Radiometrics .csv file into Cloudnet Level 1b netCDF file.
 
     Args:
@@ -46,7 +48,6 @@ def radiometrics2nc(full_path: str,
 
 
 class Radiometrics:
-
     def __init__(self, filename: str, site_meta: dict):
         self.filename = filename
         self.site_meta = site_meta
@@ -57,7 +58,7 @@ class Radiometrics:
 
     def read_raw_data(self):
         """Reads radiometrics raw data."""
-        with open(self.filename, mode='r') as infile:
+        with open(self.filename, mode="r") as infile:
             reader = csv.reader(infile)
             for x in reader:
                 self.raw_data.append(x)
@@ -65,16 +66,16 @@ class Radiometrics:
 
     def read_lwp(self):
         """Reads LWP values."""
-        self.data['lwp'] = np.array([row[9] for row in self.raw_data], dtype=float) * 1000  # g / m2
+        self.data["lwp"] = np.array([row[9] for row in self.raw_data], dtype=float) * 1000  # g / m2
 
     def read_timestamps(self):
         """Reads timestamps."""
         fraction_hour = []
         time = [row[1].split()[1] for row in self.raw_data]
         for t in time:
-            hour, minute, sec = t.split(':')
+            hour, minute, sec = t.split(":")
             fraction_hour.append(int(hour) + int(minute) / 60 + int(sec) / 3600)
-        self.data['time'] = np.array(fraction_hour)
+        self.data["time"] = np.array(fraction_hour)
 
     def screen_time(self, expected_date: str = None):
         """Screens timestamps."""
@@ -82,11 +83,11 @@ class Radiometrics:
         if expected_date is None:
             self.date = self._convert_date(dates[0])
             return
-        date_components = expected_date.split('-')
+        date_components = expected_date.split("-")
         self.date = date_components
         valid_ind = []
         valid_timestamps = []
-        for ind, (d, timestamp) in enumerate(zip(dates, self.data['time'])):
+        for ind, (d, timestamp) in enumerate(zip(dates, self.data["time"])):
             if self._convert_date(d) == date_components and timestamp not in valid_timestamps:
                 valid_ind.append(ind)
                 valid_timestamps.append(timestamp)
@@ -102,7 +103,7 @@ class Radiometrics:
 
     def add_meta(self):
         """Adds some metadata."""
-        valid_keys = ('latitude', 'longitude', 'altitude')
+        valid_keys = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():
             key = key.lower()
             if key in valid_keys:
@@ -110,6 +111,6 @@ class Radiometrics:
 
     @staticmethod
     def _convert_date(date: str) -> list:
-        month, day, year = date.split('/')
-        year = f'20{year}'
+        month, day, year = date.split("/")
+        year = f"20{year}"
         return [year, month, day]

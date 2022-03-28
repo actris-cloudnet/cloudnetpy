@@ -7,12 +7,15 @@ from scipy.special import gamma
 from cloudnetpy import utils, output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.drizzle_error import get_drizzle_error
-from cloudnetpy.products.drizzle_tools import DrizzleClassification, DrizzleSource, SpectralWidth, DrizzleSolver
+from cloudnetpy.products.drizzle_tools import (
+    DrizzleClassification,
+    DrizzleSource,
+    SpectralWidth,
+    DrizzleSolver,
+)
 
 
-def generate_drizzle(categorize_file: str,
-                     output_file: str,
-                     uuid: Optional[str] = None) -> str:
+def generate_drizzle(categorize_file: str, output_file: str, uuid: Optional[str] = None) -> str:
     """Generates Cloudnet drizzle product.
 
     This function calculates different drizzle properties from
@@ -45,12 +48,12 @@ def generate_drizzle(categorize_file: str,
     retrieval_status = RetrievalStatus(drizzle_class)
     results = {**drizzle_solver.params, **derived_products.derived_products, **errors}
     results = _screen_rain(results, drizzle_class)
-    results['drizzle_retrieval_status'] = retrieval_status.retrieval_status
+    results["drizzle_retrieval_status"] = retrieval_status.retrieval_status
     _append_data(drizzle_source, results)
     date = drizzle_source.get_date()
     attributes = output.add_time_attribute(DRIZZLE_ATTRIBUTES, date)
     output.update_attributes(drizzle_source.data, attributes)
-    uuid = output.save_product_file('drizzle', drizzle_source, output_file, uuid)
+    uuid = output.save_product_file("drizzle", drizzle_source, output_file, uuid)
     drizzle_source.close()
     return uuid
 
@@ -67,6 +70,7 @@ class DrizzleProducts:
             'drizzle_N', 'drizzle_lwc', 'drizzle_lwf', 'v_drizzle', 'v_air'.
 
     """
+
     def __init__(self, drizzle_source: DrizzleSource, drizzle_solver: DrizzleSolver):
         self._data = drizzle_source
         self._params = drizzle_solver.params
@@ -74,10 +78,10 @@ class DrizzleProducts:
         self.derived_products = self._calc_derived_products()
 
     def _find_indices(self):
-        drizzle_ind = np.where(self._params['Do'])
-        ind_mu = np.searchsorted(self._data.mie['mu'], self._params['mu'][drizzle_ind])
-        ind_dia = np.searchsorted(self._data.mie['Do'], self._params['Do'][drizzle_ind])
-        n_widths, n_dia = len(self._data.mie['mu']), len(self._data.mie['Do'])
+        drizzle_ind = np.where(self._params["Do"])
+        ind_mu = np.searchsorted(self._data.mie["mu"], self._params["mu"][drizzle_ind])
+        ind_dia = np.searchsorted(self._data.mie["Do"], self._params["Do"][drizzle_ind])
+        n_widths, n_dia = len(self._data.mie["mu"]), len(self._data.mie["Do"])
         ind_mu[ind_mu >= n_widths] = n_widths - 1
         ind_dia[ind_dia >= n_dia] = n_dia - 1
         return drizzle_ind, (ind_mu, ind_dia)
@@ -88,33 +92,39 @@ class DrizzleProducts:
         lwf = self._calc_lwf(lwc)
         v_drizzle = self._calc_fall_velocity()
         v_air = self._calc_v_air(v_drizzle)
-        return {'drizzle_N': density, 'drizzle_lwc': lwc, 'drizzle_lwf': lwf,
-                'v_drizzle': v_drizzle, 'v_air': v_air}
+        return {
+            "drizzle_N": density,
+            "drizzle_lwc": lwc,
+            "drizzle_lwf": lwf,
+            "v_drizzle": v_drizzle,
+            "v_air": v_air,
+        }
 
     def _calc_density(self):
         """Calculates drizzle number density (m-3)."""
-        a = self._data.z * 3.67 ** 6
-        b = self._params['Do'] ** 6
+        a = self._data.z * 3.67**6
+        b = self._params["Do"] ** 6
         return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
 
     def _calc_lwc(self):
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
-        dia, mu, s = [self._params.get(key) for key in ('Do', 'mu', 'S')]
+        dia, mu, s = [self._params.get(key) for key in ("Do", "mu", "S")]
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
         return rho_water / 3 * self._data.beta * s * dia * gamma_ratio
 
     def _calc_lwf(self, lwc_in):
         """Calculates drizzle liquid water flux."""
         flux = ma.copy(lwc_in)
-        flux[self._ind_drizzle] *= (self._data.mie['lwf'][self._ind_lut]
-                                    * self._data.mie['termv'][self._ind_lut[1]])
+        flux[self._ind_drizzle] *= (
+            self._data.mie["lwf"][self._ind_lut] * self._data.mie["termv"][self._ind_lut[1]]
+        )
         return flux
 
     def _calc_fall_velocity(self):
         """Calculates drizzle droplet fall velocity (m s-1)."""
-        velocity = np.zeros_like(self._params['Do'])
-        velocity[self._ind_drizzle] = -self._data.mie['v'][self._ind_lut]
+        velocity = np.zeros_like(self._params["Do"])
+        velocity[self._ind_drizzle] = -self._data.mie["v"][self._ind_lut]
         return velocity
 
     def _calc_v_air(self, droplet_velocity):
@@ -134,6 +144,7 @@ class RetrievalStatus:
         drizzle_class: The :class:`DrizzleClassification` instance.
         retrieval_status (ndarray): 2D array containing drizzle retrieval status information.
     """
+
     def __init__(self, drizzle_class: DrizzleClassification):
         self.drizzle_class = drizzle_class
         self.retrieval_status = None
@@ -167,112 +178,96 @@ def _screen_rain(results: dict, classification: DrizzleClassification):
 def _append_data(drizzle_data: DrizzleSource, results: dict):
     """Save retrieved fields to the drizzle_data object."""
     for key, value in results.items():
-        if key != 'drizzle_retrieval_status':
+        if key != "drizzle_retrieval_status":
             value = ma.masked_where(value == 0, value)
         drizzle_data.append_data(value, key)
 
 
 DRIZZLE_ATTRIBUTES = {
-    'drizzle_N': MetaData(
-        long_name='Drizzle number concentration',
-        units='m-3',
-        ancillary_variables='drizzle_N_error drizzle_N_bias'
+    "drizzle_N": MetaData(
+        long_name="Drizzle number concentration",
+        units="m-3",
+        ancillary_variables="drizzle_N_error drizzle_N_bias",
     ),
-    'drizzle_N_error': MetaData(
-        long_name='Random error in drizzle number concentration',
-        units='dB'
+    "drizzle_N_error": MetaData(
+        long_name="Random error in drizzle number concentration", units="dB"
     ),
-    'drizzle_N_bias': MetaData(
-        long_name='Possible bias in drizzle number concentration',
-        units='dB',
+    "drizzle_N_bias": MetaData(
+        long_name="Possible bias in drizzle number concentration",
+        units="dB",
     ),
-    'drizzle_lwc': MetaData(
-        long_name='Drizzle liquid water content',
-        units='kg m-3',
-        ancillary_variables='drizzle_lwc_error drizzle_lwc_bias'
+    "drizzle_lwc": MetaData(
+        long_name="Drizzle liquid water content",
+        units="kg m-3",
+        ancillary_variables="drizzle_lwc_error drizzle_lwc_bias",
     ),
-    'drizzle_lwc_error': MetaData(
-        long_name='Random error in drizzle liquid water content',
-        units='dB',
+    "drizzle_lwc_error": MetaData(
+        long_name="Random error in drizzle liquid water content",
+        units="dB",
     ),
-    'drizzle_lwc_bias': MetaData(
-        long_name='Possible bias in drizzle liquid water content',
-        units='dB',
+    "drizzle_lwc_bias": MetaData(
+        long_name="Possible bias in drizzle liquid water content",
+        units="dB",
     ),
-    'drizzle_lwf': MetaData(
-        long_name='Drizzle liquid water flux',
-        units='kg m-2 s-1',
-        ancillary_variables='drizzle_lwf_error drizzle_lwf_bias'
+    "drizzle_lwf": MetaData(
+        long_name="Drizzle liquid water flux",
+        units="kg m-2 s-1",
+        ancillary_variables="drizzle_lwf_error drizzle_lwf_bias",
     ),
-    'drizzle_lwf_error': MetaData(
-        long_name='Random error in drizzle liquid water flux',
-        units='dB',
+    "drizzle_lwf_error": MetaData(
+        long_name="Random error in drizzle liquid water flux",
+        units="dB",
     ),
-    'drizzle_lwf_bias': MetaData(
-        long_name='Possible bias in drizzle liquid water flux',
-        units='dB',
+    "drizzle_lwf_bias": MetaData(
+        long_name="Possible bias in drizzle liquid water flux",
+        units="dB",
     ),
-    'v_drizzle': MetaData(
-        long_name='Drizzle droplet fall velocity',  # TODO: should it include 'terminal' ?
-        units='m s-1',
-        ancillary_variables='v_drizzle_error v_drizzle_bias',
-        comment='Positive values are towards the ground.'
+    "v_drizzle": MetaData(
+        long_name="Drizzle droplet fall velocity",  # TODO: should it include 'terminal' ?
+        units="m s-1",
+        ancillary_variables="v_drizzle_error v_drizzle_bias",
+        comment="Positive values are towards the ground.",
     ),
-    'v_drizzle_error': MetaData(
-        long_name='Random error in drizzle droplet fall velocity',
-        units='dB'
+    "v_drizzle_error": MetaData(
+        long_name="Random error in drizzle droplet fall velocity", units="dB"
     ),
-    'v_drizzle_bias': MetaData(
-        long_name='Possible bias in drizzle droplet fall velocity',
-        units='dB',
+    "v_drizzle_bias": MetaData(
+        long_name="Possible bias in drizzle droplet fall velocity",
+        units="dB",
     ),
-    'v_air': MetaData(
-        long_name='Vertical air velocity',
-        units='m s-1',
-        ancillary_variables='v_air_error',
-        comment='Positive values are towards the sky.'
+    "v_air": MetaData(
+        long_name="Vertical air velocity",
+        units="m s-1",
+        ancillary_variables="v_air_error",
+        comment="Positive values are towards the sky.",
     ),
-    'v_air_error': MetaData(
-        long_name='Random error in vertical air velocity',
-        units='dB'
+    "v_air_error": MetaData(long_name="Random error in vertical air velocity", units="dB"),
+    "Do": MetaData(
+        long_name="Drizzle median diameter", units="m", ancillary_variables="Do_error Do_bias"
     ),
-    'Do': MetaData(
-        long_name='Drizzle median diameter',
-        units='m',
-        ancillary_variables='Do_error Do_bias'
+    "Do_error": MetaData(
+        long_name="Random error in drizzle median diameter",
+        units="dB",
     ),
-    'Do_error': MetaData(
-        long_name='Random error in drizzle median diameter',
-        units='dB',
+    "Do_bias": MetaData(
+        long_name="Possible bias in drizzle median diameter",
+        units="dB",
     ),
-    'Do_bias': MetaData(
-        long_name='Possible bias in drizzle median diameter',
-        units='dB',
+    "mu": MetaData(
+        long_name="Drizzle droplet size distribution shape parameter",
+        ancillary_variables="mu_error",
+        units="1",
     ),
-    'mu': MetaData(
-        long_name='Drizzle droplet size distribution shape parameter',
-        ancillary_variables='mu_error',
-        units='1'
+    "mu_error": MetaData(
+        long_name="Random error in drizzle droplet size distribution shape parameter",
+        units="dB",
     ),
-    'mu_error': MetaData(
-        long_name='Random error in drizzle droplet size distribution shape parameter',
-        units='dB',
+    "S": MetaData(
+        long_name="Lidar backscatter-to-extinction ratio", ancillary_variables="S_error", units="sr"
     ),
-    'S': MetaData(
-        long_name='Lidar backscatter-to-extinction ratio',
-        ancillary_variables='S_error',
-        units='sr'
+    "S_error": MetaData(
+        long_name="Random error in lidar backscatter-to-extinction ratio", units="dB"
     ),
-    'S_error': MetaData(
-        long_name='Random error in lidar backscatter-to-extinction ratio',
-        units='dB'
-    ),
-    'beta_corr': MetaData(
-        long_name='Lidar backscatter correction factor',
-        units='1'
-    ),
-    'drizzle_retrieval_status': MetaData(
-        long_name='Drizzle parameter retrieval status',
-        units='1'
-    )
+    "beta_corr": MetaData(long_name="Lidar backscatter correction factor", units="1"),
+    "drizzle_retrieval_status": MetaData(long_name="Drizzle parameter retrieval status", units="1"),
 }

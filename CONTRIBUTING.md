@@ -13,7 +13,7 @@ Proposing code improvements
 ---------------------------
 
 If you have a good idea how to improve the code without changing the actual outcome
-of the processing, you can directly create a [pull request](https://github.com/actris-cloudnet/cloudnetpy/pulls) (PR). 
+of the processing, you can directly create a [pull request](https://github.com/actris-cloudnet/cloudnetpy/pulls) (PR).
 Examples of these kinds of changes are, for example, better
 
 * implementations of the helper functions

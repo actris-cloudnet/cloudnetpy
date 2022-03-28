@@ -14,12 +14,12 @@ class NcLidar(Ceilometer):
         self.dataset: netCDF4.Dataset = None
 
     def _fetch_range(self, reference: str) -> None:
-        range_instrument = self.dataset.variables['range'][:]
-        self.data['range'] = utils.edges2mid(range_instrument, reference)
+        range_instrument = self.dataset.variables["range"][:]
+        self.data["range"] = utils.edges2mid(range_instrument, reference)
 
     def _fetch_time_and_date(self) -> None:
-        time = self.dataset.variables['time']
-        self.data['time'] = time[:]
+        time = self.dataset.variables["time"]
+        self.data["time"] = time[:]
         epoch = utils.get_epoch(time.units)
         self.get_date_and_time(epoch)
 
@@ -28,7 +28,7 @@ class NcLidar(Ceilometer):
             zenith_angle = self.dataset.variables[key][:]
         else:
             zenith_angle = float(default)
-            logging.warning(f'No zenith angle found, assuming {zenith_angle} degrees')
+            logging.warning(f"No zenith angle found, assuming {zenith_angle} degrees")
         if zenith_angle == 0:
-            logging.warning(f'Zenith angle 0 degrees - risk of specular reflection')
-        self.data['zenith_angle'] = np.array(zenith_angle)
+            logging.warning(f"Zenith angle 0 degrees - risk of specular reflection")
+        self.data["zenith_angle"] = np.array(zenith_angle)

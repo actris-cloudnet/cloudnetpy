@@ -38,7 +38,7 @@ def seconds2hours(time_in_seconds: np.ndarray) -> np.ndarray:
 
     """
     seconds_since_midnight = np.mod(time_in_seconds, SECONDS_PER_DAY)
-    fraction_hour = seconds_since_midnight/SECONDS_PER_HOUR
+    fraction_hour = seconds_since_midnight / SECONDS_PER_HOUR
     if fraction_hour[-1] == 0:
         fraction_hour[-1] = 24
     return fraction_hour
@@ -75,7 +75,7 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
     """
     epoch_in_seconds = datetime.datetime.timestamp(datetime.datetime(*epoch, tzinfo=pytz.utc))
     timestamp = time_in_seconds + epoch_in_seconds
-    return datetime.datetime.utcfromtimestamp(timestamp).strftime('%Y %m %d %H %M %S').split()
+    return datetime.datetime.utcfromtimestamp(timestamp).strftime("%Y %m %d %H %M %S").split()
 
 
 def time_grid(time_step: int = 30) -> np.ndarray:
@@ -95,9 +95,9 @@ def time_grid(time_step: int = 30) -> np.ndarray:
 
     """
     if time_step < 1:
-        raise ValueError('Time resolution should be >= 1 seconds')
-    half_step = time_step/SECONDS_PER_HOUR/2
-    return np.arange(half_step, 24+half_step, half_step*2)
+        raise ValueError("Time resolution should be >= 1 seconds")
+    half_step = time_step / SECONDS_PER_HOUR / 2
+    return np.arange(half_step, 24 + half_step, half_step * 2)
 
 
 def binvec(x: Union[np.ndarray, list]) -> np.ndarray:
@@ -114,16 +114,18 @@ def binvec(x: Union[np.ndarray, list]) -> np.ndarray:
             [0.5, 1.5, 2.5, 3.5]
 
     """
-    edge1 = x[0] - (x[1]-x[0])/2
-    edge2 = x[-1] + (x[-1]-x[-2])/2
-    return np.linspace(edge1, edge2, len(x)+1)
+    edge1 = x[0] - (x[1] - x[0]) / 2
+    edge2 = x[-1] + (x[-1] - x[-2]) / 2
+    return np.linspace(edge1, edge2, len(x) + 1)
 
 
-def rebin_2d(x_in: np.ndarray,
-             array: ma.MaskedArray,
-             x_new: np.ndarray,
-             statistic: str = 'mean',
-             n_min: int = 1) -> Tuple[ma.MaskedArray, list]:
+def rebin_2d(
+    x_in: np.ndarray,
+    array: ma.MaskedArray,
+    x_new: np.ndarray,
+    statistic: str = "mean",
+    n_min: int = 1,
+) -> Tuple[ma.MaskedArray, list]:
     """Rebins 2-D data in one dimension.
 
     Args:
@@ -147,30 +149,31 @@ def rebin_2d(x_in: np.ndarray,
     for ind, values in enumerate(array_screened.T):
         mask = ~values.mask
         if ma.any(values[mask]):
-            result[:, ind], _, _ = stats.binned_statistic(x_in[mask],
-                                                          values[mask],
-                                                          statistic=statistic,
-                                                          bins=edges)
+            result[:, ind], _, _ = stats.binned_statistic(
+                x_in[mask], values[mask], statistic=statistic, bins=edges
+            )
     result[~np.isfinite(result)] = 0
     masked_result = ma.masked_equal(result, 0)
 
     # Fill bins with not enough profiles
     empty_indices = []
-    for ind in range(len(edges)-1):
-        is_data = np.where((x_in > edges[ind]) & (x_in <= edges[ind+1]))[0]
+    for ind in range(len(edges) - 1):
+        is_data = np.where((x_in > edges[ind]) & (x_in <= edges[ind + 1]))[0]
         if len(is_data) < n_min:
             masked_result[ind, :] = ma.masked
             empty_indices.append(ind)
     if len(empty_indices) > 0:
-        logging.info(f'No radar data in {len(empty_indices)} bins')
+        logging.info(f"No radar data in {len(empty_indices)} bins")
 
     return masked_result, empty_indices
 
 
-def rebin_1d(x_in: np.ndarray,
-             array: Union[np.ndarray, ma.MaskedArray],
-             x_new: np.ndarray,
-             statistic: str = 'mean') -> ma.MaskedArray:
+def rebin_1d(
+    x_in: np.ndarray,
+    array: Union[np.ndarray, ma.MaskedArray],
+    x_new: np.ndarray,
+    statistic: str = "mean",
+) -> ma.MaskedArray:
     """Rebins 1D array.
 
     Args:
@@ -189,10 +192,9 @@ def rebin_1d(x_in: np.ndarray,
     array_screened = ma.masked_invalid(array, copy=True)  # data may contain nan-values
     mask = ~array_screened.mask  # pylint: disable=E1101
     if ma.any(array_screened[mask]):
-        result, _, _ = stats.binned_statistic(x_in[mask],
-                                              array_screened[mask],
-                                              statistic=statistic,
-                                              bins=edges)
+        result, _, _ = stats.binned_statistic(
+            x_in[mask], array_screened[mask], statistic=statistic, bins=edges
+        )
     result[~np.isfinite(result)] = 0
     return ma.masked_equal(result, 0)
 
@@ -273,7 +275,7 @@ def isbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
 
     """
     if nth_bit < 0:
-        raise ValueError('Negative bit number')
+        raise ValueError("Negative bit number")
     mask = 1 << nth_bit
     return array & mask > 0
 
@@ -302,17 +304,15 @@ def setbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
 
     """
     if nth_bit < 0:
-        raise ValueError('Negative bit number')
+        raise ValueError("Negative bit number")
     mask = 1 << nth_bit
     array |= mask
     return array
 
 
-def interpolate_2d(x: np.ndarray,
-                   y: np.ndarray,
-                   z: np.ndarray,
-                   x_new: np.ndarray,
-                   y_new: np.ndarray) -> np.ndarray:
+def interpolate_2d(
+    x: np.ndarray, y: np.ndarray, z: np.ndarray, x_new: np.ndarray, y_new: np.ndarray
+) -> np.ndarray:
     """Linear interpolation of gridded 2d data.
 
     Args:
@@ -333,11 +333,9 @@ def interpolate_2d(x: np.ndarray,
     return fun(x_new, y_new)
 
 
-def interpolate_2d_mask(x: np.ndarray,
-                        y: np.ndarray,
-                        z: ma.MaskedArray,
-                        x_new: np.ndarray,
-                        y_new: np.ndarray) -> ma.MaskedArray:
+def interpolate_2d_mask(
+    x: np.ndarray, y: np.ndarray, z: ma.MaskedArray, x_new: np.ndarray, y_new: np.ndarray
+) -> ma.MaskedArray:
     """2D linear interpolation preserving the mask.
 
     Args:
@@ -363,7 +361,7 @@ def interpolate_2d_mask(x: np.ndarray,
     y_valid = yy[valid_points]
     z_valid = z[valid_points]
     xx_new, yy_new = np.meshgrid(y_new, x_new)
-    data = griddata((x_valid, y_valid), z_valid.ravel(), (xx_new, yy_new), method='linear')
+    data = griddata((x_valid, y_valid), z_valid.ravel(), (xx_new, yy_new), method="linear")
     # Preserve mask:
     mask_fun = RectBivariateSpline(x, y, z.mask[:], kx=1, ky=1)
     mask = mask_fun(x_new, y_new)
@@ -373,11 +371,9 @@ def interpolate_2d_mask(x: np.ndarray,
     return masked_array
 
 
-def interpolate_2d_nearest(x: np.ndarray,
-                           y: np.ndarray,
-                           z: np.ndarray,
-                           x_new: np.ndarray,
-                           y_new: np.ndarray) -> ma.MaskedArray:
+def interpolate_2d_nearest(
+    x: np.ndarray, y: np.ndarray, z: np.ndarray, x_new: np.ndarray, y_new: np.ndarray
+) -> ma.MaskedArray:
     """2D nearest neighbor interpolation preserving mask.
 
     Args:
@@ -395,8 +391,9 @@ def interpolate_2d_nearest(x: np.ndarray,
 
     """
     data = ma.copy(z)
-    fun = RegularGridInterpolator((x, y), data, method='nearest', bounds_error=False,
-                                  fill_value=ma.masked)
+    fun = RegularGridInterpolator(
+        (x, y), data, method="nearest", bounds_error=False, fill_value=ma.masked
+    )
     xx, yy = np.meshgrid(x_new, y_new)
     return fun((xx, yy)).T
 
@@ -410,7 +407,7 @@ def db2lin(array: Union[float, np.ndarray], scale: int = 10) -> np.ndarray:
     """dB to linear conversion."""
     data = array / scale
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=RuntimeWarning)
+        warnings.simplefilter("ignore", category=RuntimeWarning)
         if ma.isMaskedArray(data):
             return ma.power(10, data)
         return np.power(10, data)
@@ -419,8 +416,8 @@ def db2lin(array: Union[float, np.ndarray], scale: int = 10) -> np.ndarray:
 def lin2db(array: np.ndarray, scale: int = 10) -> np.ndarray:
     """Linear to dB conversion."""
     if ma.isMaskedArray(array):
-        return scale*ma.log10(array)
-    return scale*np.log10(array)
+        return scale * ma.log10(array)
+    return scale * np.log10(array)
 
 
 def mdiff(array: np.ndarray) -> float:
@@ -445,7 +442,7 @@ def l2norm(*args) -> ma.MaskedArray:
             arg = ma.copy(arg)
             arg[~arg.mask] = arg[~arg.mask] ** 2
         else:
-            arg = arg ** 2
+            arg = arg**2
         ss = ss + arg
     return ma.sqrt(ss)
 
@@ -516,16 +513,15 @@ def ffill(array: np.ndarray, value: int = 0) -> np.ndarray:
     ndims = len(array.shape)
     ran = np.arange(array.shape[ndims - 1])
     idx = np.where((array != value), ran, 0)
-    idx = np.maximum.accumulate(idx, axis=ndims-1)  # pylint: disable=E1101
+    idx = np.maximum.accumulate(idx, axis=ndims - 1)  # pylint: disable=E1101
     if ndims == 2:
         return array[np.arange(idx.shape[0])[:, None], idx]
     return array[idx]
 
 
-def init(n_vars: int,
-         shape: tuple,
-         dtype: type = float,
-         masked: bool = True) -> Iterator[Union[np.ndarray, ma.MaskedArray]]:
+def init(
+    n_vars: int, shape: tuple, dtype: type = float, masked: bool = True
+) -> Iterator[Union[np.ndarray, ma.MaskedArray]]:
     """Initializes several numpy arrays.
 
     Args:
@@ -588,9 +584,9 @@ def n_elements(array: np.ndarray, dist: float, var: Optional[str] = None) -> int
             10
 
     """
-    n = dist/mdiff(array)
-    if var == 'time':
-        n = n/60
+    n = dist / mdiff(array)
+    if var == "time":
+        n = n / 60
     return int(np.round(n))
 
 
@@ -611,7 +607,7 @@ def isscalar(array) -> bool:
 
     """
     arr = ma.array(array)
-    if not hasattr(arr, '__len__') or arr.shape == () or len(arr) == 1:
+    if not hasattr(arr, "__len__") or arr.shape == () or len(arr) == 1:
         return True
     return False
 
@@ -621,8 +617,7 @@ def get_time() -> str:
     return f"{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} +00:00"
 
 
-def date_range(start_date: datetime.date,
-               end_date: datetime.date) -> Iterator[datetime.date]:
+def date_range(start_date: datetime.date, end_date: datetime.date) -> Iterator[datetime.date]:
     """Returns range between two dates (datetimes)."""
     for n in range(int((end_date - start_date).days)):
         yield start_date + datetime.timedelta(n)
@@ -648,13 +643,13 @@ def get_wl_band(radar_frequency: float) -> int:
 
 def get_frequency(wl_band: int) -> str:
     """Returns radar frequency string corresponding to wl band."""
-    return '35.5' if wl_band == 0 else '94'
+    return "35.5" if wl_band == 0 else "94"
 
 
 def transpose(data: np.ndarray) -> np.ndarray:
     """Transposes numpy array of (n, ) to (n, 1)."""
     if data.ndim != 1 or len(data) <= 1:
-        raise ValueError('Invalid input array shape')
+        raise ValueError("Invalid input array shape")
     return data[:, np.newaxis]
 
 
@@ -676,10 +671,9 @@ def del_dict_keys(data: dict, keys: Union[tuple, list]) -> dict:
     return temp_dict
 
 
-def array_to_probability(array: np.ndarray,
-                         loc: float,
-                         scale: float,
-                         invert: bool = False) -> np.ndarray:
+def array_to_probability(
+    array: np.ndarray, loc: float, scale: float, invert: bool = False
+) -> np.ndarray:
     """Converts continuous variable into 0-1 probability.
 
     Args:
@@ -734,14 +728,14 @@ def find_first_empty_line(file_name: str) -> int:
 
 def is_empty_line(line: str) -> bool:
     """Tests if a line (of a text file) is empty."""
-    if line in ('\n', '\r\n'):
+    if line in ("\n", "\r\n"):
         return True
     return False
 
 
 def is_timestamp(timestamp: str) -> bool:
     """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss"""
-    reg_exp = re.compile(r'-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}')
+    reg_exp = re.compile(r"-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
     if reg_exp.match(timestamp) is not None:
         return True
     return False
@@ -751,7 +745,7 @@ def get_sorted_filenames(file_path: str, extension: str) -> list:
     """Returns full paths of files with some extension, sorted by filename."""
     extension = extension.lower()
     all_files = os.listdir(file_path)
-    files = ['/'.join((file_path, file)) for file in all_files if file.lower().endswith(extension)]
+    files = ["/".join((file_path, file)) for file in all_files if file.lower().endswith(extension)]
     files.sort()
     return files
 
@@ -768,8 +762,8 @@ def fetch_cloudnet_model_types() -> list:
     """Finds different model types."""
     url = "https://cloudnet.fmi.fi/api/models"
     data = requests.get(url=url).json()
-    models = [model['id'] for model in data]
-    model_types = [model.split('-')[0] for model in models]
+    models = [model["id"] for model in data]
+    model_types = [model.split("-")[0] for model in models]
     return list(set(model_types))
 
 
@@ -780,12 +774,12 @@ def get_epoch(units: str) -> Epoch:
         date = units.split()[2]
     except IndexError:
         return fallback
-    date = date.replace(',', '')
+    date = date.replace(",", "")
     try:
-        date_components = [int(x) for x in date.split('-')]
+        date_components = [int(x) for x in date.split("-")]
     except ValueError:
         try:
-            date_components = [int(x) for x in date.split('.')]
+            date_components = [int(x) for x in date.split(".")]
         except ValueError:
             return fallback
     year, month, day = date_components
@@ -796,7 +790,7 @@ def get_epoch(units: str) -> Epoch:
 
 
 def screen_by_time(data_in: dict, epoch: Epoch, expected_date: str) -> dict:
-    """"Screen data by time.
+    """ "Screen data by time.
 
     Args:
         data_in: Dictionary containing at least 'time' key and other numpy arrays.
@@ -813,8 +807,8 @@ def screen_by_time(data_in: dict, epoch: Epoch, expected_date: str) -> dict:
 
     """
     data = data_in.copy()
-    valid_ind = find_valid_time_indices(data['time'], epoch, expected_date)
-    n_time = len(data['time'])
+    valid_ind = find_valid_time_indices(data["time"], epoch, expected_date)
+    n_time = len(data["time"])
     for key, array in data.items():
         if isinstance(array, list) and len(array) > 1:
             raise ValueError
@@ -851,7 +845,7 @@ def find_valid_time_indices(time: np.ndarray, epoch: Epoch, expected_date: str) 
     ind_sorted = np.argsort(time)
     ind_valid: List[int] = []
     for ind in ind_sorted:
-        date_str = '-'.join(seconds2date(time[ind], epoch=epoch)[:3])
+        date_str = "-".join(seconds2date(time[ind], epoch=epoch)[:3])
         if date_str == expected_date and time[ind] not in time[ind_valid]:
             ind_valid.append(ind)
     if not ind_valid:
@@ -887,10 +881,10 @@ def edges2mid(data: np.ndarray, reference: str) -> np.ndarray:
         Shifted values.
 
     """
-    if reference not in ('lower', 'upper'):
+    if reference not in ("lower", "upper"):
         raise ValueError
     gaps = (data[1:] - data[0:-1]) / 2
-    if reference == 'lower':
+    if reference == "lower":
         gaps = np.append(gaps, gaps[-1])
         return data + gaps
     gaps = np.insert(gaps, 0, gaps[0])
@@ -900,14 +894,14 @@ def edges2mid(data: np.ndarray, reference: str) -> np.ndarray:
 def get_file_type(filename: str) -> str:
     """Returns cloudnet file type from new and legacy files."""
     nc = netCDF4.Dataset(filename)
-    if hasattr(nc, 'cloudnet_file_type'):
+    if hasattr(nc, "cloudnet_file_type"):
         file_type = nc.cloudnet_file_type
         nc.close()
         return file_type
     nc.close()
-    product = filename.split('_')[-1][:-3]
-    if product in ('categorize', 'classification', 'drizzle'):
+    product = filename.split("_")[-1][:-3]
+    if product in ("categorize", "classification", "drizzle"):
         return product
-    if product[:3] in ('lwc', 'iwc'):
+    if product[:3] in ("lwc", "iwc"):
         return product[:3]
-    raise ValueError('Unknown file type')
+    raise ValueError("Unknown file type")

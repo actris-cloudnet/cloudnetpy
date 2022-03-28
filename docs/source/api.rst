@@ -231,4 +231,3 @@ output
 
 .. automodule:: output
    :members:
-

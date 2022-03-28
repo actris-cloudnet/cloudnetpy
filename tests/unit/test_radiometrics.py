@@ -13,19 +13,14 @@ sys.path.append(SCRIPT_PATH)
 from all_products_fun import AllProductsFun
 
 
-file = f'{SCRIPT_PATH}/data/radiometrics/2021-07-18_00-00-00_lv2.csv'
-site_meta = {
-    'name': 'the_station',
-    'altitude': 50,
-    'latitude': 23.0,
-    'longitude': 123
-}
+file = f"{SCRIPT_PATH}/data/radiometrics/2021-07-18_00-00-00_lv2.csv"
+site_meta = {"name": "the_station", "altitude": 50, "latitude": 23.0, "longitude": 123}
 
 
 class TestHatpro2nc:
 
-    date = '2021-07-18'
-    output = 'dummy_radiometrics_output_file.nc'
+    date = "2021-07-18"
+    output = "dummy_radiometrics_output_file.nc"
     uuid = radiometrics2nc(file, output, site_meta, date=date)
     quality = Quality(output)
     res_data = quality.check_data()
@@ -36,7 +31,7 @@ class TestHatpro2nc:
 
     def test_common(self):
         for name, method in AllProductsFun.__dict__.items():
-            if 'test_' in name:
+            if "test_" in name:
                 getattr(self.all_fun, name)()
 
     def test_qc(self):
@@ -51,7 +46,7 @@ class TestHatpro2nc:
 
     def test_processing_of_no_files(self):
         with pytest.raises(ValidTimeStampError):
-            radiometrics2nc(file, self.temp_file.name, site_meta, date='2021-07-19')
+            radiometrics2nc(file, self.temp_file.name, site_meta, date="2021-07-19")
 
     def test_cleanup(self):
         os.remove(self.output)

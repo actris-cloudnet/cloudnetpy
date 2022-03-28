@@ -15,6 +15,7 @@ SECONDS_IN_HOUR = 3600
 
 class VaisalaCeilo(Ceilometer):
     """Base class for Vaisala ceilometers."""
+
     def __init__(self, full_path: str, site_meta: dict, expected_date: Optional[str] = None):
         super().__init__(self.noise_param)
         self.full_path = full_path
@@ -26,7 +27,7 @@ class VaisalaCeilo(Ceilometer):
 
     def _is_ct25k(self) -> bool:
         if self.instrument is not None:
-            return 'CT25k' in self.instrument.model
+            return "CT25k" in self.instrument.model
         return False
 
     def _fetch_data_lines(self) -> list:
@@ -41,21 +42,21 @@ class VaisalaCeilo(Ceilometer):
             range_resolution = 30
             n_gates = 256
         else:
-            n_gates = int(self.metadata['number_of_gates'])
-            range_resolution = int(self.metadata['range_resolution'])
-        return np.arange(n_gates)*range_resolution + range_resolution/2
+            n_gates = int(self.metadata["number_of_gates"])
+            range_resolution = int(self.metadata["range_resolution"])
+        return np.arange(n_gates) * range_resolution + range_resolution / 2
 
     def _read_backscatter(self, lines: list) -> np.ndarray:
         """Converts backscatter profile from 2-complement hex to floats."""
         n_chars = self._hex_conversion_params[0]
-        n_gates = int(len(lines[0])/n_chars)
+        n_gates = int(len(lines[0]) / n_chars)
         profiles = np.zeros((len(lines), n_gates), dtype=int)
-        ran = range(0, n_gates*n_chars, n_chars)
+        ran = range(0, n_gates * n_chars, n_chars)
         for ind, line in enumerate(lines):
             try:
-                profiles[ind, :] = [int(line[i:i+n_chars], 16) for i in ran]
+                profiles[ind, :] = [int(line[i : i + n_chars], 16) for i in ran]
             except ValueError:
-                logging.warning('Bad value in raw ceilometer data')
+                logging.warning("Bad value in raw ceilometer data")
         ind = profiles & self._hex_conversion_params[1] != 0
         profiles[ind] -= self._hex_conversion_params[2]
         return profiles.astype(float) / self._backscatter_scale_factor
@@ -67,18 +68,19 @@ class VaisalaCeilo(Ceilometer):
             return [n for n, _ in enumerate(data) if utils.is_timestamp(data[n])]
 
         def _find_correct_dates(line_numbers: list) -> list:
-            return [n for n in line_numbers if data[n].strip('-')[:10] == self.expected_date]
+            return [n for n in line_numbers if data[n].strip("-")[:10] == self.expected_date]
 
         def _find_number_of_data_lines(timestamp_line_number: int) -> int:
             for i, line in enumerate(data[timestamp_line_number:]):
                 if utils.is_empty_line(line):
                     return i
-            raise RuntimeError('Can not parse number of data lines')
+            raise RuntimeError("Can not parse number of data lines")
 
         def _parse_data_lines(starting_indices: list) -> list:
-            return [[data[n + line_number] for n in starting_indices
-                     if (n + line_number) < len(data)]
-                    for line_number in range(number_of_data_lines)]
+            return [
+                [data[n + line_number] for n in starting_indices if (n + line_number) < len(data)]
+                for line_number in range(number_of_data_lines)
+            ]
 
         timestamp_line_numbers = _find_timestamp_line_numbers()
         if self.expected_date is not None:
@@ -91,8 +93,8 @@ class VaisalaCeilo(Ceilometer):
 
     @staticmethod
     def _get_message_number(header_line_1: dict) -> int:
-        msg_no = header_line_1['message_number']
-        assert len(np.unique(msg_no)) == 1, 'Error: inconsistent message numbers.'
+        msg_no = header_line_1["message_number"]
+        assert len(np.unique(msg_no)) == 1, "Error: inconsistent message numbers."
         return int(msg_no[0])
 
     @staticmethod
@@ -104,7 +106,7 @@ class VaisalaCeilo(Ceilometer):
     @staticmethod
     def _calc_date(time_lines) -> list:
         """Returns the date [yyyy, mm, dd]"""
-        return time_lines[0].split()[0].strip('-').split('-')
+        return time_lines[0].split()[0].strip("-").split("-")
 
     @classmethod
     def _handle_metadata(cls, header: list) -> dict:
@@ -129,7 +131,7 @@ class VaisalaCeilo(Ceilometer):
 
     @staticmethod
     def _convert_meta_strings(meta: dict) -> dict:
-        strings = ('cloud_base_data', 'measurement_parameters', 'cloud_amount_data')
+        strings = ("cloud_base_data", "measurement_parameters", "cloud_amount_data")
         for field in meta:
             if field in strings:
                 continue
@@ -152,7 +154,7 @@ class VaisalaCeilo(Ceilometer):
     def _read_common_header_part(self) -> Tuple[list, list]:
         header = []
         data_lines = self._fetch_data_lines()
-        self.data['time'] = self._calc_time(data_lines[0])
+        self.data["time"] = self._calc_time(data_lines[0])
         self.date = self._calc_date(data_lines[0])
         header.append(self._read_header_line_1(data_lines[1]))
         self._message_number = self._get_message_number(header[0])
@@ -161,7 +163,7 @@ class VaisalaCeilo(Ceilometer):
 
     def _read_header_line_1(self, lines: list) -> dict:
         """Reads all first header lines from CT25k and CL ceilometers."""
-        fields = ('model_id', 'unit_id', 'software_level', 'message_number', 'message_subclass')
+        fields = ("model_id", "unit_id", "software_level", "message_number", "message_subclass")
         if self._is_ct25k():
             indices = [1, 3, 4, 6, 7, 8]
         else:
@@ -172,7 +174,7 @@ class VaisalaCeilo(Ceilometer):
     @staticmethod
     def _read_header_line_2(lines: list) -> dict:
         """Reads the second header line."""
-        fields = ('detection_status', 'warning', 'cloud_base_data', 'warning_flags')
+        fields = ("detection_status", "warning", "cloud_base_data", "warning_flags")
         values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
         return values_to_dict(fields, values)
 
@@ -180,8 +182,7 @@ class VaisalaCeilo(Ceilometer):
 class ClCeilo(VaisalaCeilo):
     """Base class for Vaisala CL31/CL51 ceilometers."""
 
-    noise_param = NoiseParam(noise_min=3.1e-8,
-                             noise_smooth_min=1.1e-8)
+    noise_param = NoiseParam(noise_min=3.1e-8, noise_smooth_min=1.1e-8)
 
     def __init__(self, full_path: str, site_meta: dict, expected_date: Optional[str] = None):
         super().__init__(full_path, site_meta, expected_date)
@@ -193,17 +194,17 @@ class ClCeilo(VaisalaCeilo):
         header, data_lines = self._read_common_header_part()
         header.append(self._read_header_line_4(data_lines[-3]))
         self.metadata = self._handle_metadata(header)
-        self.data['range'] = self._calc_range()
-        self.data['beta_raw'] = self._read_backscatter(data_lines[-2])
-        self.data['calibration_factor'] = calibration_factor or 1.0
-        self.data['beta_raw'] *= self.data['calibration_factor']
-        self.data['zenith_angle'] = np.median(self.metadata['zenith_angle'])
+        self.data["range"] = self._calc_range()
+        self.data["beta_raw"] = self._read_backscatter(data_lines[-2])
+        self.data["calibration_factor"] = calibration_factor or 1.0
+        self.data["beta_raw"] *= self.data["calibration_factor"]
+        self.data["zenith_angle"] = np.median(self.metadata["zenith_angle"])
         self._store_ceilometer_info()
         self._sort_time()
 
     def _sort_time(self):
         """Sorts timestamps and removes duplicates."""
-        time = np.copy(self.data['time'][:])
+        time = np.copy(self.data["time"][:])
         ind_sorted = np.argsort(time)
         ind_valid = []
         for ind in ind_sorted:
@@ -211,7 +212,7 @@ class ClCeilo(VaisalaCeilo):
                 ind_valid.append(ind)
         n_time = len(time)
         for key, array in self.data.items():
-            if not hasattr(array, 'shape'):
+            if not hasattr(array, "shape"):
                 continue
             if array.ndim == 1 and array.shape[0] == n_time:
                 self.data[key] = self.data[key][ind_valid]
@@ -219,7 +220,7 @@ class ClCeilo(VaisalaCeilo):
                 self.data[key] = self.data[key][ind_valid, :]
 
     def _store_ceilometer_info(self):
-        n_gates = self.data['beta_raw'].shape[1]
+        n_gates = self.data["beta_raw"].shape[1]
         if n_gates < 1000:
             self.instrument = instruments.CL31
         else:
@@ -227,16 +228,25 @@ class ClCeilo(VaisalaCeilo):
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number != 2:
-            raise RuntimeError('Unsupported message number.')
-        keys = ('cloud_detection_status', 'cloud_amount_data')
+            raise RuntimeError("Unsupported message number.")
+        keys = ("cloud_detection_status", "cloud_amount_data")
         values = [[line[0:3], line[3:].strip()] for line in lines]
         return values_to_dict(keys, values)
 
     @staticmethod
     def _read_header_line_4(lines: list) -> dict:
-        keys = ('scale', 'range_resolution', 'number_of_gates', 'laser_energy',
-                'laser_temperature', 'window_transmission', 'zenith_angle',
-                'background_light', 'measurement_parameters', 'backscatter_sum')
+        keys = (
+            "scale",
+            "range_resolution",
+            "number_of_gates",
+            "laser_energy",
+            "laser_temperature",
+            "window_transmission",
+            "zenith_angle",
+            "background_light",
+            "measurement_parameters",
+            "backscatter_sum",
+        )
         values = [line.split() for line in lines]
         return values_to_dict(keys, values)
 
@@ -248,8 +258,8 @@ class Ct25k(VaisalaCeilo):
         https://www.manualslib.com/manual/1414094/Vaisala-Ct25k.html
 
     """
-    noise_param = NoiseParam(noise_min=6e-7,
-                             noise_smooth_min=1e-7)
+
+    noise_param = NoiseParam(noise_min=6e-7, noise_smooth_min=1e-7)
 
     def __init__(self, input_file: str, site_meta: dict, expected_date: Optional[str] = None):
         super().__init__(input_file, site_meta, expected_date)
@@ -262,28 +272,35 @@ class Ct25k(VaisalaCeilo):
         header, data_lines = self._read_common_header_part()
         header.append(self._read_header_line_3(data_lines[3]))
         self.metadata = self._handle_metadata(header)
-        self.data['range'] = self._calc_range()
+        self.data["range"] = self._calc_range()
         hex_profiles = self._parse_hex_profiles(data_lines[4:20])
-        self.data['beta_raw'] = self._read_backscatter(hex_profiles)
-        self.data['calibration_factor'] = calibration_factor or 1.0
-        self.data['beta_raw'] *= self.data['calibration_factor']
-        self.data['zenith_angle'] = np.median(self.metadata['zenith_angle'])
+        self.data["beta_raw"] = self._read_backscatter(hex_profiles)
+        self.data["calibration_factor"] = calibration_factor or 1.0
+        self.data["beta_raw"] *= self.data["calibration_factor"]
+        self.data["zenith_angle"] = np.median(self.metadata["zenith_angle"])
 
     @staticmethod
     def _parse_hex_profiles(lines: list) -> list:
         """Collects ct25k profiles into list (one profile / element)."""
         n_profiles = len(lines[0])
-        return [''.join([lines[m][n][3:].strip() for m in range(16)]) for n in range(n_profiles)]
+        return ["".join([lines[m][n][3:].strip() for m in range(16)]) for n in range(n_profiles)]
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number in (1, 3, 6):
-            raise RuntimeError(f'Unsupported message number: {self._message_number}')
-        keys = ('measurement_mode', 'laser_energy',
-                'laser_temperature', 'receiver_sensitivity',
-                'window_contamination', 'zenith_angle', 'background_light',
-                'measurement_parameters', 'backscatter_sum')
+            raise RuntimeError(f"Unsupported message number: {self._message_number}")
+        keys = (
+            "measurement_mode",
+            "laser_energy",
+            "laser_temperature",
+            "receiver_sensitivity",
+            "window_contamination",
+            "zenith_angle",
+            "background_light",
+            "measurement_parameters",
+            "backscatter_sum",
+        )
         values = [line.split() for line in lines]
-        keys_out = ('scale',) + keys if len(values[0]) == 10 else keys
+        keys_out = ("scale",) + keys if len(values[0]) == 10 else keys
         return values_to_dict(keys_out, values)
 
 
@@ -321,6 +338,6 @@ def values_to_dict(keys: tuple, values: list) -> dict:
 
 
 def time_to_fraction_hour(time: str) -> float:
-    """Returns time (hh:mm:ss) as fraction hour """
-    hour, minute, sec = time.split(':')
+    """Returns time (hh:mm:ss) as fraction hour"""
+    hour, minute, sec = time.split(":")
     return int(hour) + (int(minute) * SECONDS_IN_MINUTE + int(sec)) / SECONDS_IN_HOUR

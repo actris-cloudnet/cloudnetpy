@@ -17,6 +17,7 @@ class NcRadar(DataSource):
     Notes:
         Used with BASTA and MIRA radars.
     """
+
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path)
         self.site_meta = site_meta
@@ -34,7 +35,7 @@ class NcRadar(DataSource):
 
     def add_time_and_range(self) -> None:
         """Adds time and range."""
-        range_instru = np.array(self.getvar('range'))
+        range_instru = np.array(self.getvar("range"))
         time = np.array(self.time)
-        self.append_data(range_instru, 'range')
-        self.append_data(time, 'time')
+        self.append_data(range_instru, "range")
+        self.append_data(time, "time")

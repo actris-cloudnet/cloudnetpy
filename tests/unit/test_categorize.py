@@ -12,34 +12,29 @@ from all_products_fun import AllProductsFun
 from radar_fun import RadarFun
 from lidar_fun import LidarFun
 
-site_meta = {
-    'name': 'Munich',
-    'altitude': 538,
-    'latitude': 48.5,
-    'longitude': 11.5
-}
-filepath = f'{SCRIPT_PATH}/../source_data/'
-date = '2021-11-20'
+site_meta = {"name": "Munich", "altitude": 538, "latitude": 48.5, "longitude": 11.5}
+filepath = f"{SCRIPT_PATH}/../source_data/"
+date = "2021-11-20"
 
 
 class TestCategorize:
 
-    radar_file = 'dummy_radar_file_for_cat.nc'
-    lidar_file = 'dummy_lidar_file_for_cat.nc'
+    radar_file = "dummy_radar_file_for_cat.nc"
+    lidar_file = "dummy_lidar_file_for_cat.nc"
 
-    uuid_radar = mira2nc(f'{filepath}raw_mira_radar.mmclx', radar_file, site_meta)
-    uuid_lidar = ceilo2nc(f'{filepath}raw_chm15k_lidar.nc', lidar_file, site_meta)
+    uuid_radar = mira2nc(f"{filepath}raw_mira_radar.mmclx", radar_file, site_meta)
+    uuid_lidar = ceilo2nc(f"{filepath}raw_chm15k_lidar.nc", lidar_file, site_meta)
 
     input_files = {
-        'radar': radar_file,
-        'lidar': lidar_file,
-        'mwr': f'{filepath}hatpro_mwr.nc',
-        'model': f'{filepath}ecmwf_model.nc'
+        "radar": radar_file,
+        "lidar": lidar_file,
+        "mwr": f"{filepath}hatpro_mwr.nc",
+        "model": f"{filepath}ecmwf_model.nc",
     }
 
-    output = 'dummy_categorize_file'
+    output = "dummy_categorize_file"
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=DeprecationWarning)
+        warnings.simplefilter("ignore", category=DeprecationWarning)
         uuid = generate_categorize(input_files, output)
     nc = netCDF4.Dataset(output)
     all_fun = AllProductsFun(nc, site_meta, date, uuid)
@@ -51,11 +46,11 @@ class TestCategorize:
 
     def test_common(self):
         for name, method in AllProductsFun.__dict__.items():
-            if 'test_' in name:
+            if "test_" in name:
                 getattr(self.all_fun, name)()
 
     def test_global_attributes(self):
-        assert self.nc.title == 'Cloud categorization products from Munich'
+        assert self.nc.title == "Cloud categorization products from Munich"
 
     def test_qc(self):
         assert self.quality.n_metadata_test_failures == 0, self.res_metadata

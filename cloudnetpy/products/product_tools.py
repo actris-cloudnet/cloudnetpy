@@ -20,19 +20,18 @@ class CategorizeBits:
             `lidar`, `clutter`, `molecular`, `attenuated` and `corrected`.
 
     """
-    category_keys = ('droplet', 'falling', 'cold', 'melting', 'aerosol',
-                     'insect')
 
-    quality_keys = ('radar', 'lidar', 'clutter', 'molecular', 'attenuated',
-                    'corrected')
+    category_keys = ("droplet", "falling", "cold", "melting", "aerosol", "insect")
+
+    quality_keys = ("radar", "lidar", "clutter", "molecular", "attenuated", "corrected")
 
     def __init__(self, categorize_file: str):
         self._categorize_file = categorize_file
-        self.category_bits = self._read_bits('category')
-        self.quality_bits = self._read_bits('quality')
+        self.category_bits = self._read_bits("category")
+        self.quality_bits = self._read_bits("quality")
 
     def _read_bits(self, bit_type: str) -> dict:
-        """ Converts bitfield into dictionary."""
+        """Converts bitfield into dictionary."""
         nc = netCDF4.Dataset(self._categorize_file)
         try:
             bitfield = nc.variables[f"{bit_type}_bits"][:]
@@ -56,13 +55,14 @@ class ProductClassification(CategorizeBits):
         is_rain (ndarray): 1D array denoting rainy profiles.
 
     """
+
     def __init__(self, categorize_file: str):
         super().__init__(categorize_file)
         self.is_rain = get_is_rain(categorize_file)
 
 
 def get_is_rain(filename: str) -> np.ndarray:
-    rain_rate = read_nc_fields(filename, 'rain_rate')
+    rain_rate = read_nc_fields(filename, "rain_rate")
     is_rain = rain_rate != 0
     assert isinstance(is_rain, ma.MaskedArray)
     is_rain[is_rain.mask] = True
@@ -99,8 +99,11 @@ def interpolate_model(cat_file: str, names: Union[str, list]) -> Dict[str, np.nd
         dict: Interpolated variables.
 
     """
+
     def _interp_field(var_name: str) -> np.ndarray:
-        values = read_nc_fields(cat_file, ['model_time', 'model_height', var_name, 'time', 'height'])
+        values = read_nc_fields(
+            cat_file, ["model_time", "model_height", var_name, "time", "height"]
+        )
         return utils.interpolate_2d(*values)
 
     names = [names] if isinstance(names, str) else names

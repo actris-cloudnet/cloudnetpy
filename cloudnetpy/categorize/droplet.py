@@ -7,10 +7,9 @@ from cloudnetpy import utils
 from cloudnetpy.categorize.containers import ClassData
 
 
-def correct_liquid_top(obs: ClassData,
-                       liquid: dict,
-                       is_freezing: np.ndarray,
-                       limit: float = 200) -> np.ndarray:
+def correct_liquid_top(
+    obs: ClassData, liquid: dict, is_freezing: np.ndarray, limit: float = 200
+) -> np.ndarray:
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
@@ -27,31 +26,33 @@ def correct_liquid_top(obs: ClassData,
         Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ.
 
     """
-    is_liquid_corrected = np.copy(liquid['presence'])
+    is_liquid_corrected = np.copy(liquid["presence"])
     top_above = utils.n_elements(obs.height, limit)
-    for prof, top in zip(*np.where(liquid['tops'])):
+    for prof, top in zip(*np.where(liquid["tops"])):
         ind = _find_ind_above_top(is_freezing[prof, top:], top_above)
-        rad = obs.z[prof, top:top+ind+1]
+        rad = obs.z[prof, top : top + ind + 1]
         if not (rad.mask.all() or ~rad.mask.any()):
             first_masked = ma.where(rad.mask)[0][0]
-            is_liquid_corrected[prof, top:top+first_masked] = True
+            is_liquid_corrected[prof, top : top + first_masked] = True
     return is_liquid_corrected
 
 
 def _find_ind_above_top(is_freezing_from_peak: np.ndarray, top_above: int) -> int:
     first_point_below_zero = np.where(is_freezing_from_peak)[0][0]
     ind = first_point_below_zero + top_above
-    return min(len(is_freezing_from_peak)-1, ind)
+    return min(len(is_freezing_from_peak) - 1, ind)
 
 
-def find_liquid(obs: ClassData,
-                peak_amp: float = 1e-6,
-                max_width: float = 300,
-                min_points: int = 3,
-                min_top_der: float = 1e-7,
-                min_lwp: float = 0,
-                min_alt: float = 100) -> dict:
-    """ Estimate liquid layers from SNR-screened attenuated backscatter.
+def find_liquid(
+    obs: ClassData,
+    peak_amp: float = 1e-6,
+    max_width: float = 300,
+    min_points: int = 3,
+    min_top_der: float = 1e-7,
+    min_lwp: float = 0,
+    min_alt: float = 100,
+) -> dict:
+    """Estimate liquid layers from SNR-screened attenuated backscatter.
 
     Args:
         obs: The :class:`ClassData` instance.
@@ -71,16 +72,19 @@ def find_liquid(obs: ClassData,
         https://acp.copernicus.org/articles/19/1985/2019/.
 
     """
+
     def _is_proper_peak():
-        conditions = (npoints >= min_points,
-                      peak_width < max_width,
-                      top_der > min_top_der,
-                      is_positive_lwp,
-                      peak_alt > min_alt)
+        conditions = (
+            npoints >= min_points,
+            peak_width < max_width,
+            top_der > min_top_der,
+            is_positive_lwp,
+            peak_alt > min_alt,
+        )
         return all(conditions)
 
     def _save_peak_position():
-        is_liquid[n, base:top + 1] = True
+        is_liquid[n, base : top + 1] = True
         liquid_top[n, top] = True
         liquid_base[n, base] = True
 
@@ -105,7 +109,7 @@ def find_liquid(obs: ClassData,
             top = ind_top(dprof, peak, height.shape[0], top_above_peak, 4)
         except IndexError:
             continue
-        npoints = np.count_nonzero(lprof[base:top+1])
+        npoints = np.count_nonzero(lprof[base : top + 1])
         peak_width = height[top] - height[base]
         peak_alt = height[peak] - height[0]
         top_der = (lprof[peak] - lprof[top]) / (height[top] - height[peak])
@@ -113,9 +117,7 @@ def find_liquid(obs: ClassData,
         if _is_proper_peak():
             _save_peak_position()
 
-    return {'presence': is_liquid,
-            'bases': liquid_base,
-            'tops': liquid_top}
+    return {"presence": is_liquid, "bases": liquid_base, "tops": liquid_top}
 
 
 def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
@@ -177,7 +179,7 @@ def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
     start = max(ind_peak - dist, 0)  # should not be negative
     diffs = dprof[start:ind_peak]
     mind = np.argmax(diffs)
-    return start + np.where(diffs > diffs[mind]/lim)[0][0]
+    return start + np.where(diffs > diffs[mind] / lim)[0][0]
 
 
 def ind_top(dprof: np.ndarray, ind_peak: int, nprof: int, dist: int, lim: float) -> int:
