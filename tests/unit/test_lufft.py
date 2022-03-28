@@ -10,6 +10,7 @@ from cloudnetpy import concat_lib
 import sys
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy_qc import Quality
+from tempfile import NamedTemporaryFile
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -78,16 +79,16 @@ date = "2020-10-22"
 
 class TestWithRealData:
 
-    output = "dummy_lufft_output_file.nc"
-    daily_file = "dummy_lufft_daily_file.nc"
-    concat_lib.concatenate_files(files, daily_file)
-    uuid = ceilo2nc(daily_file, output, site_meta)
-    nc = netCDF4.Dataset(output)
-    lidar_fun = LidarFun(nc, site_meta, date, uuid)
-    all_fun = AllProductsFun(nc, site_meta, date, uuid)
-    quality = Quality(output)
-    res_data = quality.check_data()
-    res_metadata = quality.check_metadata()
+    daily_temp_file = NamedTemporaryFile()
+    temp_file = NamedTemporaryFile()
+    concat_lib.concatenate_files(files, daily_temp_file.name)
+    uuid = ceilo2nc(daily_temp_file.name, temp_file.name, site_meta)
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
 
     def test_variable_names(self):
         keys = {
@@ -107,18 +108,23 @@ class TestWithRealData:
         assert set(self.nc.variables.keys()) == keys
 
     def test_common(self):
+        all_fun = AllProductsFun(self.nc, site_meta, date, self.uuid)
         for name, method in AllProductsFun.__dict__.items():
             if "test_" in name:
-                getattr(self.all_fun, name)()
+                getattr(all_fun, name)()
 
     def test_common_lidar(self):
+        lidar_fun = LidarFun(self.nc, site_meta, date, self.uuid)
         for name, method in LidarFun.__dict__.items():
             if "test_" in name:
-                getattr(self.lidar_fun, name)()
+                getattr(lidar_fun, name)()
 
     def test_qc(self):
-        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
-        assert self.quality.n_data_test_failures == 0, self.res_data
+        quality = Quality(self.temp_file.name)
+        res_data = quality.check_data()
+        res_metadata = quality.check_metadata()
+        assert quality.n_metadata_test_failures == 0, res_metadata
+        assert quality.n_data_test_failures == 0, res_data
 
     def test_variable_values(self):
         assert self.nc.variables["wavelength"][:] == 1064
@@ -134,7 +140,7 @@ class TestWithRealData:
 
     def test_date_argument(self):
         output = "asfadfadf"
-        ceilo2nc(self.daily_file, output, site_meta, date="2020-10-22")
+        ceilo2nc(self.daily_temp_file.name, output, site_meta, date="2020-10-22")
         nc = netCDF4.Dataset(output)
         assert len(nc.variables["time"]) == 20
         assert nc.year == "2020"
@@ -142,10 +148,5 @@ class TestWithRealData:
         assert nc.day == "22"
         nc.close()
         with pytest.raises(ValidTimeStampError):
-            ceilo2nc(self.daily_file, self.output, site_meta, date="2020-10-23")
+            ceilo2nc(self.daily_temp_file.name, self.temp_file.name, site_meta, date="2020-10-23")
         os.remove(output)
-
-    def test_tear_down(self):
-        os.remove(self.output)
-        os.remove(self.daily_file)
-        self.nc.close()

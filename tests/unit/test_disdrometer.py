@@ -1,9 +1,9 @@
 import os
 from cloudnetpy.instruments import disdrometer
 import pytest
-from tempfile import NamedTemporaryFile
 import netCDF4
 from cloudnetpy_qc import Quality
+from tempfile import NamedTemporaryFile
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -17,7 +17,12 @@ class TestParsivel:
     site_meta = {"name": "Kumpula"}
     filename = f"{SCRIPT_PATH}/data/parsivel/juelich.log"
     uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta)
-    nc = netCDF4.Dataset(temp_file.name)
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
 
     def test_global_attributes(self):
         assert "Parsivel" in self.nc.source
@@ -35,9 +40,6 @@ class TestParsivel:
 
     def test_qc(self):
         check_qc(self.temp_file.name)
-
-    def test_cleanup(self):
-        self.nc.close()
 
 
 class TestParsivel2:
@@ -76,7 +78,12 @@ class TestThies:
     filename = f"{SCRIPT_PATH}/data/thies-lnm/2021091507.txt"
     site_meta = {"name": "Lindenberg", "latitude": 34.6, "altitude": 20}
     uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date="2021-09-15")
-    nc = netCDF4.Dataset(temp_file.name)
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
 
     def test_processing(self):
         assert self.nc.title == "Disdrometer file from Lindenberg"
@@ -88,9 +95,6 @@ class TestThies:
 
     def test_qc(self):
         check_qc(self.temp_file.name)
-
-    def test_cleanup(self):
-        self.nc.close()
 
 
 def check_qc(filename: str):

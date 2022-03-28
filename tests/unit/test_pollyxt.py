@@ -5,6 +5,7 @@ import netCDF4
 import numpy as np
 import numpy.ma as ma
 import sys
+from tempfile import NamedTemporaryFile
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy_qc import Quality
 
@@ -20,14 +21,14 @@ date = "2021-09-17"
 
 class TestPolly:
 
-    output = "dummy_output_file.nc"
-    uuid = pollyxt2nc(filepath, output, site_meta)
-    nc = netCDF4.Dataset(output)
-    lidar_fun = LidarFun(nc, site_meta, date, uuid)
-    all_fun = AllProductsFun(nc, site_meta, date, uuid)
-    quality = Quality(output)
-    res_data = quality.check_data()
-    res_metadata = quality.check_metadata()
+    temp_file = NamedTemporaryFile()
+    uuid = pollyxt2nc(filepath, temp_file.name, site_meta)
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
 
     def test_variable_names(self):
         keys = {
@@ -48,14 +49,16 @@ class TestPolly:
         assert set(self.nc.variables.keys()) == keys
 
     def test_common(self):
+        all_fun = AllProductsFun(self.nc, site_meta, date, self.uuid)
         for name, method in AllProductsFun.__dict__.items():
             if "test_" in name:
-                getattr(self.all_fun, name)()
+                getattr(all_fun, name)()
 
     def test_common_lidar(self):
+        lidar_fun = LidarFun(self.nc, site_meta, date, self.uuid)
         for name, method in LidarFun.__dict__.items():
             if "test_" in name:
-                getattr(self.lidar_fun, name)()
+                getattr(lidar_fun, name)()
 
     def test_variable_values(self):
         assert self.nc.variables["wavelength"][:] == 1064.0
@@ -72,12 +75,11 @@ class TestPolly:
         assert self.nc.title == f"PollyXT Raman lidar from {site_meta['name']}"
 
     def test_qc(self):
-        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
-        assert self.quality.n_data_test_failures == 0, self.res_data
-
-    def test_tear_down(self):
-        os.remove(self.output)
-        self.nc.close()
+        quality = Quality(self.temp_file.name)
+        res_data = quality.check_data()
+        res_metadata = quality.check_metadata()
+        assert quality.n_metadata_test_failures == 0, res_metadata
+        assert quality.n_data_test_failures == 0, res_data
 
 
 class TestPolly2:

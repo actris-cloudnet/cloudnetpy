@@ -1,5 +1,6 @@
 import os
 import glob
+import pytest
 from cloudnetpy import concat_lib
 from cloudnetpy.instruments import ceilo2nc
 import netCDF4
@@ -7,6 +8,7 @@ import numpy as np
 import numpy.ma as ma
 import sys
 from cloudnetpy_qc import Quality
+from tempfile import NamedTemporaryFile
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -29,14 +31,17 @@ date = "2021-08-29"
 
 class TestCl61d:
 
-    output = "dummy_cl61_output_file.nc"
-    uuid = ceilo2nc(daily_file, output, site_meta, date=date)
-    nc = netCDF4.Dataset(output)
-    lidar_fun = LidarFun(nc, site_meta, date, uuid)
-    all_fun = AllProductsFun(nc, site_meta, date, uuid)
-    quality = Quality(output)
+    temp_file = NamedTemporaryFile()
+    uuid = ceilo2nc(daily_file, temp_file.name, site_meta, date=date)
+    quality = Quality(temp_file.name)
     res_data = quality.check_data()
     res_metadata = quality.check_metadata()
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
 
     def test_variable_names(self):
         keys = {
@@ -56,14 +61,16 @@ class TestCl61d:
         assert set(self.nc.variables.keys()) == keys
 
     def test_common(self):
+        all_fun = AllProductsFun(self.nc, site_meta, date, self.uuid)
         for name, method in AllProductsFun.__dict__.items():
             if "test_" in name:
-                getattr(self.all_fun, name)()
+                getattr(all_fun, name)()
 
     def test_common_lidar(self):
+        lidar_fun = LidarFun(self.nc, site_meta, date, self.uuid)
         for name, method in LidarFun.__dict__.items():
             if "test_" in name:
-                getattr(self.lidar_fun, name)()
+                getattr(lidar_fun, name)()
 
     def test_qc(self):
         assert self.quality.n_metadata_test_failures == 0, self.res_metadata
@@ -81,11 +88,6 @@ class TestCl61d:
     def test_global_attributes(self):
         assert self.nc.source == "Vaisala CL61d"
         assert self.nc.title == f'CL61d ceilometer from {site_meta["name"]}'
-
-    def test_tear_down(self):
-        os.remove(self.output)
-        os.remove(daily_file)
-        self.nc.close()
 
 
 def test_date_argument():

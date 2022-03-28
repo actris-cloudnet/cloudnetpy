@@ -30,7 +30,15 @@ setup(
         "scikit-image",
     ],
     extras_require={
-        "test": ["pytest", "pytest-cov", "pylint", "mypy", "types-requests", "types-pytz", "pytest-flakefinder"]
+        "test": [
+            "pytest",
+            "pytest-cov",
+            "pylint",
+            "mypy",
+            "types-requests",
+            "types-pytz",
+            "pytest-flakefinder",
+        ]
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",

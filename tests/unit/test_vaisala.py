@@ -8,6 +8,7 @@ import netCDF4
 import sys
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy_qc import Quality
+from tempfile import NamedTemporaryFile
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
@@ -59,14 +60,14 @@ site_meta = {"name": "Kumpula", "altitude": 123, "latitude": 45.0, "longitude": 
 class TestCL51:
     date = "2020-11-15"
     input = f"{SCRIPT_PATH}/data/vaisala/cl51.DAT"
-    output = "dummy_cl51_file.nc"
-    uuid = ceilo2nc(input, output, site_meta)
-    nc = netCDF4.Dataset(output)
-    lidar_fun = LidarFun(nc, site_meta, date, uuid)
-    all_fun = AllProductsFun(nc, site_meta, date, uuid)
-    quality = Quality(output)
-    res_data = quality.check_data()
-    res_metadata = quality.check_metadata()
+    temp_file = NamedTemporaryFile()
+    uuid = ceilo2nc(input, temp_file.name, site_meta)
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
 
     def test_variable_names(self):
         keys = {
@@ -86,18 +87,23 @@ class TestCL51:
         assert set(self.nc.variables.keys()) == keys
 
     def test_common(self):
+        all_fun = AllProductsFun(self.nc, site_meta, self.date, self.uuid)
         for name, method in AllProductsFun.__dict__.items():
             if "test_" in name:
-                getattr(self.all_fun, name)()
+                getattr(all_fun, name)()
 
     def test_common_lidar(self):
+        lidar_fun = LidarFun(self.nc, site_meta, self.date, self.uuid)
         for name, method in LidarFun.__dict__.items():
             if "test_" in name:
-                getattr(self.lidar_fun, name)()
+                getattr(lidar_fun, name)()
 
     def test_qc(self):
-        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
-        assert self.quality.n_data_test_failures == 0, self.res_data
+        quality = Quality(self.temp_file.name)
+        res_data = quality.check_data()
+        res_metadata = quality.check_metadata()
+        assert quality.n_metadata_test_failures == 0, res_metadata
+        assert quality.n_data_test_failures == 0, res_data
 
     def test_variable_values(self):
         assert self.nc.variables["wavelength"][:] == 910.0
@@ -125,22 +131,18 @@ class TestCL51:
             ceilo2nc(self.input, output, site_meta, date="2021-09-15")
         os.remove(output)
 
-    def test_cleanup(self):
-        os.remove(self.output)
-        self.nc.close()
-
 
 class TestCL31:
     date = "2020-04-10"
     input = f"{SCRIPT_PATH}/data/vaisala/cl31.DAT"
-    output = "dummy_cl31_file.nc"
-    uuid = ceilo2nc(input, output, site_meta)
-    nc = netCDF4.Dataset(output)
-    lidar_fun = LidarFun(nc, site_meta, date, uuid)
-    all_fun = AllProductsFun(nc, site_meta, date, uuid)
-    quality = Quality(output)
-    res_data = quality.check_data()
-    res_metadata = quality.check_metadata()
+    temp_file = NamedTemporaryFile()
+    uuid = ceilo2nc(input, temp_file.name, site_meta)
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
 
     def test_variable_names(self):
         keys = {
@@ -160,18 +162,23 @@ class TestCL31:
         assert set(self.nc.variables.keys()) == keys
 
     def test_common(self):
+        all_fun = AllProductsFun(self.nc, site_meta, self.date, self.uuid)
         for name, method in AllProductsFun.__dict__.items():
             if "test_" in name:
-                getattr(self.all_fun, name)()
+                getattr(all_fun, name)()
 
     def test_common_lidar(self):
+        lidar_fun = LidarFun(self.nc, site_meta, self.date, self.uuid)
         for name, method in LidarFun.__dict__.items():
             if "test_" in name:
-                getattr(self.lidar_fun, name)()
+                getattr(lidar_fun, name)()
 
     def test_qc(self):
-        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
-        assert self.quality.n_data_test_failures == 0, self.res_data
+        quality = Quality(self.temp_file.name)
+        res_data = quality.check_data()
+        res_metadata = quality.check_metadata()
+        assert quality.n_metadata_test_failures == 0, res_metadata
+        assert quality.n_data_test_failures == 0, res_data
 
     def test_variable_values(self):
         assert self.nc.variables["wavelength"][:] == 910.0
@@ -206,22 +213,21 @@ class TestCL31:
             ceilo2nc(input, output, site_meta, date="2020-04-12")
         os.remove(output)
 
-    def test_cleanup(self):
-        os.remove(self.output)
-        self.nc.close()
-
 
 class TestCT25k:
     date = "2020-10-29"
     input = f"{SCRIPT_PATH}/data/vaisala/ct25k.dat"
-    output = "dummy_ct25k_file.nc"
-    uuid = ceilo2nc(input, output, site_meta)
-    nc = netCDF4.Dataset(output)
-    lidar_fun = LidarFun(nc, site_meta, date, uuid)
-    all_fun = AllProductsFun(nc, site_meta, date, uuid)
-    quality = Quality(output)
+    temp_file = NamedTemporaryFile()
+    uuid = ceilo2nc(input, temp_file.name, site_meta)
+    quality = Quality(temp_file.name)
     res_data = quality.check_data()
     res_metadata = quality.check_metadata()
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
 
     def test_variable_names(self):
         keys = {
@@ -241,14 +247,16 @@ class TestCT25k:
         assert set(self.nc.variables.keys()) == keys
 
     def test_common(self):
+        all_fun = AllProductsFun(self.nc, site_meta, self.date, self.uuid)
         for name, method in AllProductsFun.__dict__.items():
             if "test_" in name:
-                getattr(self.all_fun, name)()
+                getattr(all_fun, name)()
 
     def test_common_lidar(self):
+        lidar_fun = LidarFun(self.nc, site_meta, self.date, self.uuid)
         for name, method in LidarFun.__dict__.items():
             if "test_" in name:
-                getattr(self.lidar_fun, name)()
+                getattr(lidar_fun, name)()
 
     def test_qc(self):
         assert self.quality.n_metadata_test_failures == 0, self.res_metadata
@@ -278,7 +286,3 @@ class TestCT25k:
         with pytest.raises(ValidTimeStampError):
             ceilo2nc(self.input, output, site_meta, date="2021-09-15")
         os.remove(output)
-
-    def test_cleanup(self):
-        os.remove(self.output)
-        self.nc.close()

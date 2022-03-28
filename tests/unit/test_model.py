@@ -139,14 +139,10 @@ def test_interpolate_to_grid(fake_model_file):
 
 class TestEcmwf:
     filename = f"{SCRIPT_PATH}/../source_data/ecmwf_model.nc"
-    nc = netCDF4.Dataset(filename)
-    quality = Quality(filename)
-    res_data = quality.check_data()
-    res_metadata = quality.check_metadata()
 
     def test_qc(self):
-        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
-        assert self.quality.n_data_test_failures == 0, self.res_data
-
-    def test_tear_down(self):
-        self.nc.close()
+        quality = Quality(self.filename)
+        res_data = quality.check_data()
+        res_metadata = quality.check_metadata()
+        assert quality.n_metadata_test_failures == 0, res_metadata
+        assert quality.n_data_test_failures == 0, res_data

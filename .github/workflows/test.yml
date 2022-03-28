@@ -26,16 +26,13 @@ jobs:
     - name: Lint with pylint
       run: |
         pylint cloudnetpy/**/*.py --errors-only
-   - name: Typecheck with mypy
+    - name: Typecheck with mypy
       run: |
-        mypy --ignore-missing-import cloudnetpy
-    - name: Test with pytest
+        mypy --ignore-missing-imports cloudnetpy/
+    - name: Test with pytest-flakefinder
       run: |
-        pytest --cov=cloudnetpy tests/unit/
+        pytest --flake-finder tests/unit/ --flake-runs=2
     - name: Run e2e-test
       run: |
         cd tests/
         python3 e2e_test.py
-    - name: Test with pytest-flakefinder
-      run: |
-        pytest --flake-finder tests/unit/ --flake-runs=10
