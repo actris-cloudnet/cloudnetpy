@@ -1,6 +1,5 @@
 import numpy as np
 from os import path
-import os
 import pytest
 from cloudnetpy import concat_lib
 from tempfile import NamedTemporaryFile
@@ -16,49 +15,46 @@ class TestUpdateNc:
     files = glob.glob(f"{SCRIPT_PATH}/data/cl61d/*.nc")
     files.sort()
 
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.filename = "dummy_test_file.nc"
-        yield
-        if os.path.isfile(self.filename):
-            os.remove(self.filename)
-
     def test_does_append_to_end(self):
-        concat_lib.concatenate_files(self.files[:2], self.filename, concat_dimension="profile")
-        succ = concat_lib.update_nc(self.filename, self.files[2])
+        temp_file = NamedTemporaryFile()
+        concat_lib.concatenate_files(self.files[:2], temp_file.name, concat_dimension="profile")
+        succ = concat_lib.update_nc(temp_file.name, self.files[2])
         assert succ == 1
-        nc = netCDF4.Dataset(self.filename)
+        nc = netCDF4.Dataset(temp_file.name)
         time = nc.variables["time"][:]
         assert len(time) == 3 * 12
         for ind, timestamp in enumerate(time[:-1]):
             assert timestamp < time[ind + 1]
 
     def test_does_not_append_to_beginning(self):
-        concat_lib.concatenate_files(self.files[1:3], self.filename, concat_dimension="profile")
-        succ = concat_lib.update_nc(self.filename, self.files[0])
+        temp_file = NamedTemporaryFile()
+        concat_lib.concatenate_files(self.files[1:3], temp_file.name, concat_dimension="profile")
+        succ = concat_lib.update_nc(temp_file.name, self.files[0])
         assert succ == 0
-        nc = netCDF4.Dataset(self.filename)
+        nc = netCDF4.Dataset(temp_file.name)
         time = nc.variables["time"][:]
         assert len(time) == 2 * 12
         for ind, timestamp in enumerate(time[:-1]):
             assert timestamp < time[ind + 1]
 
     def test_does_not_append_to_middle(self):
+        temp_file = NamedTemporaryFile()
         files = [self.files[0], self.files[2]]
-        concat_lib.concatenate_files(files, self.filename, concat_dimension="profile")
-        succ = concat_lib.update_nc(self.filename, self.files[1])
+        concat_lib.concatenate_files(files, temp_file.name, concat_dimension="profile")
+        succ = concat_lib.update_nc(temp_file.name, self.files[1])
         assert succ == 0
-        nc = netCDF4.Dataset(self.filename)
+        nc = netCDF4.Dataset(temp_file.name)
         time = nc.variables["time"][:]
         assert len(time) == 2 * 12
         for ind, timestamp in enumerate(time[:-1]):
             assert timestamp < time[ind + 1]
 
     def test_does_not_append_with_invalid_file(self):
+        temp_file = NamedTemporaryFile()
         non_nc_file = f"{SCRIPT_PATH}/data/vaisala/cl51.DAT"
         files = [self.files[0], self.files[2]]
-        concat_lib.concatenate_files(files, self.filename, concat_dimension="profile")
-        succ = concat_lib.update_nc(self.filename, non_nc_file)
+        concat_lib.concatenate_files(files, temp_file.name, concat_dimension="profile")
+        succ = concat_lib.update_nc(temp_file.name, non_nc_file)
         assert succ == 0
 
 

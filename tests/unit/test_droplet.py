@@ -7,9 +7,11 @@ from cloudnetpy.categorize import droplet
 
 class TestIndBase:
 
-    x = np.array([0, 0.5, 1, -99, 4, 8, 5])
-    mx = ma.masked_array(x, mask=[0, 0, 0, 1, 0, 0, 0])
-    dx = ma.diff(mx).filled(0)
+    x = ma.array([0, 0.5, 1, -99, 4, 8, 5])
+    mx: ma.MaskedArray = ma.masked_array(x, mask=[0, 0, 0, 1, 0, 0, 0])
+    diffu = np.diff(mx)
+    assert isinstance(diffu, ma.MaskedArray)
+    dx = diffu.filled(0)
     peak_position = 5
     search_range = 4
     threshold = 2
@@ -41,8 +43,10 @@ class TestIndBase:
 class TestIndTop:
 
     x = np.array([1, 3, 8, 4, -99, 1, 0.5, 0])
-    mx = ma.masked_array(x, mask=[0, 0, 0, 0, 1, 0, 0, 0])
-    dx = ma.diff(mx).filled(0)
+    mx: ma.MaskedArray = ma.masked_array(x, mask=[0, 0, 0, 0, 1, 0, 0, 0])
+    diffu = np.diff(mx)
+    assert isinstance(diffu, ma.MaskedArray)
+    dx = diffu.filled(0)
     peak_position = 2
     n_prof = x.shape[0]
     search_range = 5

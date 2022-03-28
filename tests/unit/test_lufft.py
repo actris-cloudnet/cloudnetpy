@@ -9,13 +9,14 @@ import glob
 from cloudnetpy import concat_lib
 import sys
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy_qc import Quality
 from tempfile import NamedTemporaryFile
+from all_products_fun import Check
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from lidar_fun import LidarFun
-from all_products_fun import AllProductsFun
+
+SITE_META = {"name": "Bucharest", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
 
 
 @pytest.fixture
@@ -50,7 +51,7 @@ class TestCHM15k:
     @pytest.fixture(autouse=True)
     def init_tests(self, fake_jenoptik_file):
         self.file = fake_jenoptik_file
-        self.obj = lufft.LufftCeilo(fake_jenoptik_file, site_meta, self.date)
+        self.obj = lufft.LufftCeilo(fake_jenoptik_file, SITE_META, self.date)
         self.obj.read_ceilometer_file()
 
     def test_calc_range(self):
@@ -67,28 +68,19 @@ class TestCHM15k:
         assert self.obj.data["zenith_angle"] == 2
 
     def test_convert_time_error(self):
-        obj = lufft.LufftCeilo(self.file, site_meta, "2122-01-01")
+        obj = lufft.LufftCeilo(self.file, SITE_META, "2122-01-01")
         with pytest.raises(ValidTimeStampError):
             obj.read_ceilometer_file()
 
 
-site_meta = {"name": "Bucharest", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
-files = glob.glob(f"{SCRIPT_PATH}/data/chm15k/*.nc")
-date = "2020-10-22"
-
-
-class TestWithRealData:
-
+class TestWithRealData(Check):
+    files = glob.glob(f"{SCRIPT_PATH}/data/chm15k/*.nc")
+    date = "2020-10-22"
+    site_meta = SITE_META
     daily_temp_file = NamedTemporaryFile()
     temp_file = NamedTemporaryFile()
     concat_lib.concatenate_files(files, daily_temp_file.name)
     uuid = ceilo2nc(daily_temp_file.name, temp_file.name, site_meta)
-
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
 
     def test_variable_names(self):
         keys = {
@@ -107,24 +99,11 @@ class TestWithRealData:
         }
         assert set(self.nc.variables.keys()) == keys
 
-    def test_common(self):
-        all_fun = AllProductsFun(self.nc, site_meta, date, self.uuid)
-        for name, method in AllProductsFun.__dict__.items():
-            if "test_" in name:
-                getattr(all_fun, name)()
-
     def test_common_lidar(self):
-        lidar_fun = LidarFun(self.nc, site_meta, date, self.uuid)
+        lidar_fun = LidarFun(self.nc, self.site_meta, self.date, self.uuid)
         for name, method in LidarFun.__dict__.items():
             if "test_" in name:
                 getattr(lidar_fun, name)()
-
-    def test_qc(self):
-        quality = Quality(self.temp_file.name)
-        res_data = quality.check_data()
-        res_metadata = quality.check_metadata()
-        assert quality.n_metadata_test_failures == 0, res_metadata
-        assert quality.n_data_test_failures == 0, res_data
 
     def test_variable_values(self):
         assert self.nc.variables["wavelength"][:] == 1064
@@ -136,17 +115,18 @@ class TestWithRealData:
 
     def test_global_attributes(self):
         assert self.nc.source == "Lufft CHM15k"
-        assert self.nc.title == f'CHM15k ceilometer from {site_meta["name"]}'
+        assert self.nc.title == f'CHM15k ceilometer from {self.site_meta["name"]}'
 
     def test_date_argument(self):
-        output = "asfadfadf"
-        ceilo2nc(self.daily_temp_file.name, output, site_meta, date="2020-10-22")
-        nc = netCDF4.Dataset(output)
+        temp_file = NamedTemporaryFile()
+        ceilo2nc(self.daily_temp_file.name, temp_file.name, self.site_meta, date="2020-10-22")
+        nc = netCDF4.Dataset(temp_file.name)
         assert len(nc.variables["time"]) == 20
         assert nc.year == "2020"
         assert nc.month == "10"
         assert nc.day == "22"
         nc.close()
         with pytest.raises(ValidTimeStampError):
-            ceilo2nc(self.daily_temp_file.name, self.temp_file.name, site_meta, date="2020-10-23")
-        os.remove(output)
+            ceilo2nc(
+                self.daily_temp_file.name, self.temp_file.name, self.site_meta, date="2020-10-23"
+            )

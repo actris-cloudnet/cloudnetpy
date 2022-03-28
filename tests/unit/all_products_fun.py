@@ -1,5 +1,38 @@
 import netCDF4
 import numpy as np
+from cloudnetpy_qc import Quality
+import pytest
+from tempfile import _TemporaryFileWrapper
+
+SITE_META = {"name": "Kumpula", "altitude": 50, "latitude": 23, "longitude": 34.0}
+
+
+class Check:
+
+    temp_file: _TemporaryFileWrapper
+    nc: netCDF4.Dataset
+    date: str
+    site_meta: dict
+    uuid: str
+
+    @pytest.fixture(autouse=True)
+    def run_before_and_after_tests(self):
+        self.nc = netCDF4.Dataset(self.temp_file.name)
+        yield
+        self.nc.close()
+
+    def test_qc(self):
+        quality = Quality(self.temp_file.name)
+        res_data = quality.check_data()
+        res_metadata = quality.check_metadata()
+        assert quality.n_metadata_test_failures == 0, res_metadata
+        assert quality.n_data_test_failures == 0, res_data
+
+    def test_common(self):
+        all_fun = AllProductsFun(self.nc, self.site_meta, self.date, self.uuid)
+        for name, method in AllProductsFun.__dict__.items():
+            if "test_" in name:
+                getattr(all_fun, name)()
 
 
 class AllProductsFun:
@@ -10,6 +43,7 @@ class AllProductsFun:
         self.site_meta = site_meta
         self.date = date
         self.uuid = uuid
+        self.temp_file = None
 
     def test_variable_names(self):
         keys = {"time", "latitude", "longitude", "altitude"}

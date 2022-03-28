@@ -7,28 +7,21 @@ import numpy.ma as ma
 import sys
 from tempfile import NamedTemporaryFile
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy_qc import Quality
+from all_products_fun import Check, SITE_META
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from lidar_fun import LidarFun
-from all_products_fun import AllProductsFun
 
-site_meta = {"name": "Mindelo", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
+
 filepath = f"{SCRIPT_PATH}/data/pollyxt/"
-date = "2021-09-17"
 
 
-class TestPolly:
-
+class TestPolly(Check):
+    date = "2021-09-17"
+    site_meta = SITE_META
     temp_file = NamedTemporaryFile()
     uuid = pollyxt2nc(filepath, temp_file.name, site_meta)
-
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
 
     def test_variable_names(self):
         keys = {
@@ -48,14 +41,8 @@ class TestPolly:
         }
         assert set(self.nc.variables.keys()) == keys
 
-    def test_common(self):
-        all_fun = AllProductsFun(self.nc, site_meta, date, self.uuid)
-        for name, method in AllProductsFun.__dict__.items():
-            if "test_" in name:
-                getattr(all_fun, name)()
-
     def test_common_lidar(self):
-        lidar_fun = LidarFun(self.nc, site_meta, date, self.uuid)
+        lidar_fun = LidarFun(self.nc, self.site_meta, self.date, self.uuid)
         for name, method in LidarFun.__dict__.items():
             if "test_" in name:
                 getattr(lidar_fun, name)()
@@ -72,46 +59,36 @@ class TestPolly:
 
     def test_global_attributes(self):
         assert self.nc.source == "TROPOS PollyXT"
-        assert self.nc.title == f"PollyXT Raman lidar from {site_meta['name']}"
-
-    def test_qc(self):
-        quality = Quality(self.temp_file.name)
-        res_data = quality.check_data()
-        res_metadata = quality.check_metadata()
-        assert quality.n_metadata_test_failures == 0, res_metadata
-        assert quality.n_data_test_failures == 0, res_data
+        assert self.nc.title == f"PollyXT Raman lidar from {self.site_meta['name']}"
 
 
 class TestPolly2:
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.output2 = "dummy_pollyx_file.nc"
-        yield
-        os.remove(self.output2)
-
     def test_date_argument(self):
-        pollyxt2nc(filepath, self.output2, site_meta, date="2021-09-17")
-        nc = netCDF4.Dataset(self.output2)
+        temp_file = NamedTemporaryFile()
+        pollyxt2nc(filepath, temp_file.name, SITE_META, date="2021-09-17")
+        nc = netCDF4.Dataset(temp_file.name)
         assert len(nc.variables["time"]) == 80
         assert nc.year == "2021"
         assert nc.month == "09"
         assert nc.day == "17"
         nc.close()
         with pytest.raises(ValidTimeStampError):
-            pollyxt2nc(filepath, self.output2, site_meta, date="2021-09-15")
+            pollyxt2nc(filepath, temp_file.name, SITE_META, date="2021-09-15")
 
     def test_snr_limit(self):
-        meta = site_meta.copy()
+        temp_file = NamedTemporaryFile()
+        meta = SITE_META.copy()
         meta["snr_limit"] = 3.2
-        pollyxt2nc(filepath, self.output2, meta, date="2021-09-17")
-        nc = netCDF4.Dataset(self.output2)
+        pollyxt2nc(filepath, temp_file.name, meta, date="2021-09-17")
+        nc = netCDF4.Dataset(temp_file.name)
         assert "SNR threshold applied: 3.2" in nc.variables["beta"].comment
         nc.close()
 
     def test_site_meta(self):
+        temp_file = NamedTemporaryFile()
         meta = {"name": "Mindelo", "altitude": 123, "kissa": 34}
-        pollyxt2nc(filepath, self.output2, meta, date="2021-09-17")
-        nc = netCDF4.Dataset(self.output2)
+        pollyxt2nc(filepath, temp_file.name, meta, date="2021-09-17")
+        nc = netCDF4.Dataset(temp_file.name)
         assert "altitude" in nc.variables
         for key in ("latitude", "longitude", "kissa"):
             assert key not in nc.variables

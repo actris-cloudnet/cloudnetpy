@@ -1,47 +1,37 @@
 import os
 import glob
-import pytest
 from cloudnetpy import concat_lib
 from cloudnetpy.instruments import ceilo2nc
 import netCDF4
 import numpy as np
 import numpy.ma as ma
 import sys
-from cloudnetpy_qc import Quality
 from tempfile import NamedTemporaryFile
+from all_products_fun import Check
+from lidar_fun import LidarFun
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
-from lidar_fun import LidarFun
-from all_products_fun import AllProductsFun
 
-site_meta = {
+FILES = glob.glob(f"{SCRIPT_PATH}/data/cl61d/*.nc")
+FILES.sort()
+
+SITE_META = {
     "name": "Hyytiälä",
     "altitude": 123,
     "calibration_factor": 2.0,
     "latitude": 45.0,
     "longitude": 22.0,
 }
-files = glob.glob(f"{SCRIPT_PATH}/data/cl61d/*.nc")
-files.sort()
-daily_file = "dummy_cl61_daily_file.nc"
-concat_lib.concatenate_files(files, daily_file, concat_dimension="profile")
-date = "2021-08-29"
 
 
-class TestCl61d:
-
+class TestCl61d(Check):
+    site_meta = SITE_META
+    date = "2021-08-29"
+    daily_file = NamedTemporaryFile()
+    concat_lib.concatenate_files(FILES, daily_file.name, concat_dimension="profile")
     temp_file = NamedTemporaryFile()
-    uuid = ceilo2nc(daily_file, temp_file.name, site_meta, date=date)
-    quality = Quality(temp_file.name)
-    res_data = quality.check_data()
-    res_metadata = quality.check_metadata()
-
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
+    uuid = ceilo2nc(daily_file.name, temp_file.name, site_meta, date=date)
 
     def test_variable_names(self):
         keys = {
@@ -60,21 +50,11 @@ class TestCl61d:
         }
         assert set(self.nc.variables.keys()) == keys
 
-    def test_common(self):
-        all_fun = AllProductsFun(self.nc, site_meta, date, self.uuid)
-        for name, method in AllProductsFun.__dict__.items():
-            if "test_" in name:
-                getattr(all_fun, name)()
-
     def test_common_lidar(self):
-        lidar_fun = LidarFun(self.nc, site_meta, date, self.uuid)
+        lidar_fun = LidarFun(self.nc, self.site_meta, self.date, self.uuid)
         for name, method in LidarFun.__dict__.items():
             if "test_" in name:
                 getattr(lidar_fun, name)()
-
-    def test_qc(self):
-        assert self.quality.n_metadata_test_failures == 0, self.res_metadata
-        assert self.quality.n_data_test_failures == 0, self.res_data
 
     def test_variable_values(self):
         assert abs(self.nc.variables["wavelength"][:] - 910.55) < 0.001
@@ -87,19 +67,18 @@ class TestCl61d:
 
     def test_global_attributes(self):
         assert self.nc.source == "Vaisala CL61d"
-        assert self.nc.title == f'CL61d ceilometer from {site_meta["name"]}'
+        assert self.nc.title == f'CL61d ceilometer from {self.site_meta["name"]}'
 
 
 def test_date_argument():
-    output = "dummy_asdfasdfa_output_file.nc"
-    concat_lib.concatenate_files(files, daily_file, concat_dimension="profile")
-    ceilo2nc(daily_file, output, site_meta, date="2021-08-30")
-    nc = netCDF4.Dataset(output)
+    daily_file = NamedTemporaryFile()
+    temp_file = NamedTemporaryFile()
+    concat_lib.concatenate_files(FILES, daily_file.name, concat_dimension="profile")
+    ceilo2nc(daily_file.name, temp_file.name, SITE_META, date="2021-08-30")
+    nc = netCDF4.Dataset(temp_file.name)
     assert len(nc.variables["time"]) == 12
     assert np.all(np.diff(nc.variables["time"][:]) > 0)
     assert nc.year == "2021"
     assert nc.month == "08"
     assert nc.day == "30"
     nc.close()
-    os.remove(output)
-    os.remove(daily_file)

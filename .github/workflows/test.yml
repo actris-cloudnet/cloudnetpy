@@ -28,7 +28,7 @@ jobs:
         pylint cloudnetpy/**/*.py --errors-only
     - name: Typecheck with mypy
       run: |
-        mypy --ignore-missing-imports cloudnetpy/
+        mypy --ignore-missing-imports cloudnetpy/ tests/
     - name: Test with pytest-flakefinder
       run: |
         pytest --flake-finder tests/unit/ --flake-runs=2

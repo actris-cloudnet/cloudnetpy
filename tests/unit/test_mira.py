@@ -4,16 +4,15 @@ import pytest
 from cloudnetpy.instruments import mira
 import netCDF4
 import numpy as np
-from cloudnetpy_qc import Quality
 from cloudnetpy.exceptions import ValidTimeStampError
 from tempfile import NamedTemporaryFile
+from all_products_fun import Check
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from radar_fun import RadarFun
-from all_products_fun import AllProductsFun
 
-site_meta = {"name": "Punta Arenas", "latitude": 50, "longitude": 104.5, "altitude": 50}
+
 filepath = f"{SCRIPT_PATH}/data/mira/"
 
 
@@ -34,18 +33,13 @@ class TestMeasurementDate:
             self.raw_radar.screen_by_date("2020-05-23")
 
 
-class TestMIRA2nc:
+class TestMIRA2nc(Check):
+    site_meta = {"name": "Punta Arenas", "latitude": 50, "longitude": 104.5, "altitude": 50}
     date = "2021-01-02"
     n_time1 = 146
     n_time2 = 145
     temp_file = NamedTemporaryFile()
     uuid = mira.mira2nc(f"{filepath}/20210102_0000.mmclx", temp_file.name, site_meta)
-
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
 
     def test_variable_names(self):
         keys = {
@@ -75,24 +69,11 @@ class TestMIRA2nc:
         assert self.nc.variables["radar_frequency"][:].data == 35.5  # Hard coded
         assert np.all(self.nc.variables["zenith_angle"][:].data) == 0
 
-    def test_common(self):
-        all_fun = AllProductsFun(self.nc, site_meta, self.date, self.uuid)
-        for name, method in AllProductsFun.__dict__.items():
-            if "test_" in name:
-                getattr(all_fun, name)()
-
     def test_common_radar(self):
-        radar_fun = RadarFun(self.nc, site_meta, self.date, self.uuid)
+        radar_fun = RadarFun(self.nc, self.site_meta, self.date, self.uuid)
         for name, method in RadarFun.__dict__.items():
             if "test_" in name:
                 getattr(radar_fun, name)()
-
-    def test_qc(self):
-        quality = Quality(self.temp_file.name)
-        res_data = quality.check_data()
-        res_metadata = quality.check_metadata()
-        assert quality.n_metadata_test_failures == 0, res_metadata
-        assert quality.n_data_test_failures == 0, res_data
 
     def test_long_names(self):
         data = [
@@ -112,11 +93,11 @@ class TestMIRA2nc:
 
     def test_global_attributes(self):
         assert self.nc.source == "METEK MIRA-35"
-        assert self.nc.title == f'MIRA-35 cloud radar from {site_meta["name"]}'
+        assert self.nc.title == f'MIRA-35 cloud radar from {self.site_meta["name"]}'
 
     def test_processing_of_several_nc_files(self):
         temp_file = NamedTemporaryFile()
-        mira.mira2nc(filepath, temp_file.name, site_meta)
+        mira.mira2nc(filepath, temp_file.name, self.site_meta)
         nc = netCDF4.Dataset(temp_file.name)
         assert len(nc.variables["time"][:]) == self.n_time1 + self.n_time2
         nc.close()
@@ -124,21 +105,21 @@ class TestMIRA2nc:
     def test_correct_date_validation(self):
         temp_file = NamedTemporaryFile()
         mira.mira2nc(
-            f"{filepath}/20210102_0000.mmclx", temp_file.name, site_meta, date="2021-01-02"
+            f"{filepath}/20210102_0000.mmclx", temp_file.name, self.site_meta, date="2021-01-02"
         )
 
     def test_wrong_date_validation(self):
         temp_file = NamedTemporaryFile()
         with pytest.raises(ValidTimeStampError):
             mira.mira2nc(
-                f"{filepath}/20210102_0000.mmclx", temp_file.name, site_meta, date="2021-01-03"
+                f"{filepath}/20210102_0000.mmclx", temp_file.name, self.site_meta, date="2021-01-03"
             )
 
     def test_uuid_from_user(self):
         temp_file = NamedTemporaryFile()
         uuid_from_user = "kissa"
         uuid = mira.mira2nc(
-            f"{filepath}/20210102_0000.mmclx", temp_file.name, site_meta, uuid=uuid_from_user
+            f"{filepath}/20210102_0000.mmclx", temp_file.name, self.site_meta, uuid=uuid_from_user
         )
         nc = netCDF4.Dataset(temp_file.name)
         assert nc.file_uuid == uuid_from_user

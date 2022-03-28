@@ -1,28 +1,24 @@
 import os
 from cloudnetpy.instruments import disdrometer
 import pytest
-import netCDF4
-from cloudnetpy_qc import Quality
 from tempfile import NamedTemporaryFile
+from all_products_fun import Check
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
+
+SITE_META = {"name": "Kumpula", "latitude": 50, "longitude": 104.5, "altitude": 50}
 
 
 def test_format_time():
     assert disdrometer._format_thies_date("3.10.20") == "2020-10-03"
 
 
-class TestParsivel:
+class TestParsivel(Check):
+    date = "2021-03-18"
     temp_file = NamedTemporaryFile()
-    site_meta = {"name": "Kumpula"}
+    site_meta = SITE_META
     filename = f"{SCRIPT_PATH}/data/parsivel/juelich.log"
     uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta)
-
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
 
     def test_global_attributes(self):
         assert "Parsivel" in self.nc.source
@@ -38,19 +34,13 @@ class TestParsivel:
         assert self.nc.dimensions["velocity"].size == 32
         assert self.nc.dimensions["diameter"].size == 32
 
-    def test_qc(self):
-        check_qc(self.temp_file.name)
 
-
-class TestParsivel2:
+class TestParsivel2(Check):
+    date = "2019-11-09"
     temp_file = NamedTemporaryFile()
     filename = f"{SCRIPT_PATH}/data/parsivel/norunda.log"
-    site_meta = {"name": "Norunda"}
-
-    def test_date_validation(self):
-        disdrometer.disdrometer2nc(
-            self.filename, self.temp_file.name, self.site_meta, date="2019-11-09"
-        )
+    site_meta = SITE_META
+    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date=date)
 
     def test_date_validation_fail(self):
         temp_file = NamedTemporaryFile()
@@ -59,47 +49,26 @@ class TestParsivel2:
                 self.filename, temp_file.name, self.site_meta, date="2022-04-05"
             )
 
-    def test_qc(self):
-        check_qc(self.temp_file.name)
 
-
-class TestParsivel3:
+class TestParsivel3(Check):
+    date = "2021-04-16"
     temp_file = NamedTemporaryFile()
     filename = f"{SCRIPT_PATH}/data/parsivel/ny-alesund.log"
-    site_meta = {"name": "Ny Alesund"}
-    disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date="2021-04-16")
-
-    def test_qc(self):
-        check_qc(self.temp_file.name)
+    site_meta = SITE_META
+    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date=date)
 
 
-class TestThies:
+class TestThies(Check):
+    date = "2021-09-15"
     temp_file = NamedTemporaryFile()
     filename = f"{SCRIPT_PATH}/data/thies-lnm/2021091507.txt"
-    site_meta = {"name": "Lindenberg", "latitude": 34.6, "altitude": 20}
-    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date="2021-09-15")
-
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
+    site_meta = SITE_META
+    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date=date)
 
     def test_processing(self):
-        assert self.nc.title == "Disdrometer file from Lindenberg"
+        assert self.nc.title == "Disdrometer file from Kumpula"
         assert self.nc.year == "2021"
         assert self.nc.month == "09"
         assert self.nc.day == "15"
-        assert self.nc.location == "Lindenberg"
+        assert self.nc.location == "Kumpula"
         assert self.nc.cloudnet_file_type == "disdrometer"
-
-    def test_qc(self):
-        check_qc(self.temp_file.name)
-
-
-def check_qc(filename: str):
-    quality = Quality(filename)
-    res_data = quality.check_data()
-    res_metadata = quality.check_metadata()
-    assert quality.n_metadata_test_failures == 0, res_metadata
-    assert quality.n_data_test_failures == 0, res_data

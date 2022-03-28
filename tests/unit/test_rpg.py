@@ -10,17 +10,15 @@ import netCDF4
 from cloudnetpy.instruments import rpg2nc
 from cloudnetpy.instruments import rpg
 from distutils.dir_util import copy_tree
-from cloudnetpy_qc import Quality
 from cloudnetpy.exceptions import ValidTimeStampError, InconsistentDataError
 
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from radar_fun import RadarFun
-from all_products_fun import AllProductsFun
+from all_products_fun import Check, SITE_META
 
-site_meta = {"name": "the_station", "altitude": 50, "latitude": 23, "longitude": 34.0}
-filepath = f"{SCRIPT_PATH}/data/rpg-fmcw-94"
+FILEPATH = f"{SCRIPT_PATH}/data/rpg-fmcw-94"
 
 
 class TestReduceHeader:
@@ -36,17 +34,11 @@ class TestReduceHeader:
             assert_array_equal(rpg._reduce_header(self.header), {"a": 1, "b": 2, "c": 3})
 
 
-class TestRPG2nc94GHz:
-
+class TestRPG2nc94GHz(Check):
+    site_meta = SITE_META
     date = "2020-10-22"
     temp_file = NamedTemporaryFile()
-    uuid, valid_files = rpg2nc(filepath, temp_file.name, site_meta, date=date)
-
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
+    uuid, valid_files = rpg2nc(FILEPATH, temp_file.name, site_meta, date=date)
 
     def test_variable_names(self):
         mandatory_variables = (
@@ -96,12 +88,6 @@ class TestRPG2nc94GHz:
                 value = self.nc.variables[key].long_name
                 assert value == expected, f"{value} != {expected}"
 
-    def test_common(self):
-        all_fun = AllProductsFun(self.nc, site_meta, self.date, self.uuid)
-        for name, method in AllProductsFun.__dict__.items():
-            if "test_" in name:
-                getattr(all_fun, name)()
-
     def test_variables(self):
         assert math.isclose(self.nc.variables["radar_frequency"][:].data, 94.0, abs_tol=0.1)
         assert np.all(self.nc.variables["zenith_angle"][:].data) == 0
@@ -116,64 +102,56 @@ class TestRPG2nc94GHz:
 
     def test_global_attributes(self):
         assert self.nc.source == "RPG-Radiometer Physics RPG-FMCW-94"
-        assert self.nc.title == f'RPG-FMCW-94 cloud radar from {site_meta["name"]}'
+        assert self.nc.title == f'RPG-FMCW-94 cloud radar from {self.site_meta["name"]}'
 
     def test_common_radar(self):
-        radar_fun = RadarFun(self.nc, site_meta, self.date, self.uuid)
+        radar_fun = RadarFun(self.nc, self.site_meta, self.date, self.uuid)
         for name, method in RadarFun.__dict__.items():
             if "test_" in name:
                 getattr(radar_fun, name)()
 
-    def test_qc(self):
-        quality = Quality(self.temp_file.name)
-        res_data = quality.check_data()
-        res_metadata = quality.check_metadata()
-        assert quality.n_metadata_test_failures == 0, res_metadata
-        assert quality.n_data_test_failures == 0, res_data
-
     def test_default_processing(self):
         temp_file = NamedTemporaryFile()
-        uuid, files = rpg2nc(filepath, temp_file.name, site_meta)
-        print("")
-        for file in files:
-            print(file)
+        uuid, files = rpg2nc(FILEPATH, temp_file.name, self.site_meta)
         assert len(files) == 3
         assert len(uuid) == 36
 
     def test_date_validation(self):
         temp_file = NamedTemporaryFile()
-        uuid, files = rpg2nc(filepath, temp_file.name, site_meta, date=self.date)
+        uuid, files = rpg2nc(FILEPATH, temp_file.name, self.site_meta, date=self.date)
         assert len(files) == 2
 
     def test_processing_of_one_file(self):
         temp_file = NamedTemporaryFile()
-        uuid, files = rpg2nc(filepath, temp_file.name, site_meta, date="2020-10-23")
+        uuid, files = rpg2nc(FILEPATH, temp_file.name, self.site_meta, date="2020-10-23")
         assert len(files) == 1
 
     def test_incorrect_date_processing(self):
         temp_file = NamedTemporaryFile()
         with pytest.raises(ValidTimeStampError):
-            rpg2nc(filepath, temp_file.name, site_meta, date="2010-10-24")
+            rpg2nc(FILEPATH, temp_file.name, self.site_meta, date="2010-10-24")
 
     def test_uuid_from_user(self):
         temp_file = NamedTemporaryFile()
         test_uuid = "abc"
-        uuid, _ = rpg.rpg2nc(filepath, temp_file.name, site_meta, date="2020-10-23", uuid=test_uuid)
+        uuid, _ = rpg.rpg2nc(
+            FILEPATH, temp_file.name, self.site_meta, date="2020-10-23", uuid=test_uuid
+        )
         assert uuid == test_uuid
 
     def test_handling_of_corrupted_files(self):
         temp_dir = TemporaryDirectory()
         temp_file = NamedTemporaryFile()
-        copy_tree(filepath, temp_dir.name)
+        copy_tree(FILEPATH, temp_dir.name)
         with open(f"{temp_dir.name}/foo.LV1", "w") as f:
             f.write("kissa")
-        _, files = rpg.rpg2nc(temp_dir.name, temp_file.name, site_meta, date="2020-10-22")
+        _, files = rpg.rpg2nc(temp_dir.name, temp_file.name, self.site_meta, date="2020-10-22")
         assert len(files) == 2
 
     def test_geolocation_from_source_file(self):
         temp_file = NamedTemporaryFile()
         meta_without_geolocation = {"name": "Kumpula", "altitude": 34}
-        rpg.rpg2nc(filepath, temp_file.name, meta_without_geolocation)
+        rpg.rpg2nc(FILEPATH, temp_file.name, meta_without_geolocation)
         nc = netCDF4.Dataset(temp_file.name)
         for key in ("latitude", "longitude"):
             assert key in nc.variables
@@ -181,17 +159,11 @@ class TestRPG2nc94GHz:
         nc.close()
 
 
-class TestRPG2ncSTSR35GHz:
-
+class TestRPG2ncSTSR35GHz(Check):
+    site_meta = SITE_META
     date = "2021-09-13"
     temp_file = NamedTemporaryFile()
-    uuid, valid_files = rpg2nc(filepath, temp_file.name, site_meta, date=date)
-
-    @pytest.fixture(autouse=True)
-    def run_before_and_after_tests(self):
-        self.nc = netCDF4.Dataset(self.temp_file.name)
-        yield
-        self.nc.close()
+    uuid, valid_files = rpg2nc(FILEPATH, temp_file.name, site_meta, date=date)
 
     def test_variable_names(self):
         mandatory_variables = (
@@ -246,14 +218,8 @@ class TestRPG2ncSTSR35GHz:
                 value = self.nc.variables[key].long_name
                 assert value == expected, f"{value} != {expected}"
 
-    def test_common(self):
-        all_fun = AllProductsFun(self.nc, site_meta, self.date, self.uuid)
-        for name, method in AllProductsFun.__dict__.items():
-            if "test_" in name:
-                getattr(all_fun, name)()
-
     def test_common_radar(self):
-        radar_fun = RadarFun(self.nc, site_meta, self.date, self.uuid)
+        radar_fun = RadarFun(self.nc, self.site_meta, self.date, self.uuid)
         for name, method in RadarFun.__dict__.items():
             if "test_" in name:
                 getattr(radar_fun, name)()
@@ -272,11 +238,4 @@ class TestRPG2ncSTSR35GHz:
 
     def test_global_attributes(self):
         assert self.nc.source == "RPG-Radiometer Physics RPG-FMCW-35"
-        assert self.nc.title == f'RPG-FMCW-35 cloud radar from {site_meta["name"]}'
-
-    def test_qc(self):
-        quality = Quality(self.temp_file.name)
-        res_data = quality.check_data()
-        res_metadata = quality.check_metadata()
-        assert quality.n_metadata_test_failures == 0, res_metadata
-        assert quality.n_data_test_failures == 0, res_data
+        assert self.nc.title == f'RPG-FMCW-35 cloud radar from {self.site_meta["name"]}'

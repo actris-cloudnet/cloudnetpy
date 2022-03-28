@@ -65,7 +65,7 @@ def test_get_atmosphere_p(lwc_source_file):
     assert_array_equal(obj.atmosphere[-1], expected)
 
 
-class LwcSourceObj:
+class LwcSourceObj(LwcSource):
     def __init__(self):
         self.dheight = 10
         self.categorize_bits = CategorizeBits(
