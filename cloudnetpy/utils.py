@@ -354,9 +354,9 @@ def interpolate_2d_mask(
         Input data may contain nan-values.
 
     """
-    z = ma.masked_invalid(z, copy=True)
+    z = ma.array(ma.masked_invalid(z, copy=True))  # ma.array() to avoid pylint nag
     # Interpolate ignoring masked values:
-    valid_points = ~z.mask
+    valid_points = np.logical_not(z.mask)  # ~z.mask causes pylint nag
     xx, yy = np.meshgrid(y, x)
     x_valid = xx[valid_points]
     y_valid = yy[valid_points]

@@ -210,7 +210,8 @@ class Radar(DataSource):
             mean_gas_atten = ma.mean(attenuations["radar_gas_atten"], axis=0)
             z_sensitivity = z_power_min + log_range + mean_gas_atten
             zc = ma.median(ma.array(z, mask=~classification.is_clutter), axis=0)
-            z_sensitivity[~zc.mask] = zc[~zc.mask]
+            valid_values = np.logical_not(zc.mask)
+            z_sensitivity[valid_values] = zc[valid_values]
             return z_sensitivity
 
         def _calc_error() -> Union[np.ndarray, float]:

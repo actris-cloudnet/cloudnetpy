@@ -85,10 +85,10 @@ def test_merge_history():
     source2 = RootGrp()
     source2.dataset.history = "21:00 some history y"
     output.merge_history(root, file_type, {"a": source1, "b": source2})
-    assert utils.is_timestamp(f"-{root.history[:19]}") is True
+    history = str(root.history)
+    assert utils.is_timestamp(f"-{history[:19]}") is True
     assert (
-        root.history[19:]
-        == " +00:00 - dummy file created\n21:00 some history y\n20:00 some history x"
+        history[19:] == " +00:00 - dummy file created\n21:00 some history y\n20:00 some history x"
     )
 
 

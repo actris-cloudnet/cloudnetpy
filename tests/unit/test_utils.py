@@ -94,7 +94,7 @@ class TestRebin2D:
         data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew)
         expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
         assert_array_almost_equal(data_i.data, expected_data)
-        assert bool(data_i.mask) is False
+        assert bool(data_i.mask) is False  # pylint: disable=E1101
         assert empty_ind == []
 
     def test_rebin_2d_n_min(self):
@@ -108,7 +108,7 @@ class TestRebin2D:
         expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
         expected_mask = np.array([[0, 1, 1], [0, 1, 1]]).T
         assert_array_almost_equal(data_i.data, expected_data)
-        assert_array_almost_equal(data_i.mask, expected_mask)
+        assert_array_almost_equal(data_i.mask, expected_mask)  # pylint: disable=E1101
         assert empty_ind == [1, 2]
 
     def test_rebin_2d_std(self):
@@ -262,7 +262,7 @@ def test_interp_2d(x_new, y_new, result):
         ([1, 2], [9, 30], ma.array([[np.nan, 1.5], [np.nan, 1.5]], mask=[[1, 0], [1, 0]])),
     ],
 )
-def test_interpolate_2d_mask_edge(x_new, y_new, expected):
+def test_interpolate_2d_mask_edge(x_new, y_new, expected: ma.MaskedArray):
     x = np.array([1.0, 2, 3])
     y = np.array([10.0, 20, 30])
     z = ma.array(
@@ -270,7 +270,7 @@ def test_interpolate_2d_mask_edge(x_new, y_new, expected):
     )
     result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
     assert_array_almost_equal(result.data, expected.data)
-    assert_array_almost_equal(result.mask, expected.mask)
+    assert_array_almost_equal(result.mask, expected.mask)  # pylint: disable=E1101
 
 
 @pytest.mark.parametrize(
@@ -290,7 +290,7 @@ def test_interpolate_2d_mask_middle(x_new, y_new, expected):
     )
     result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
     assert_array_almost_equal(result.data, expected.data)
-    assert_array_almost_equal(result.mask, expected.mask)
+    assert_array_almost_equal(result.mask, expected.mask)  # pylint: disable=E1101
 
 
 @pytest.mark.parametrize(
@@ -477,28 +477,28 @@ def test_lin2db_arrays(input, expected):
 
 
 @pytest.mark.parametrize(
-    "input, result",
+    "data, result",
     [
         ((-100,), 1e-10),
         ((-10, 1), 1e-10),
     ],
 )
-def test_db2lin(input, result):
-    assert utils.db2lin(*input) == result
+def test_db2lin(data, result):
+    assert utils.db2lin(*data) == result
 
 
 @pytest.mark.parametrize(
-    "input, expected",
+    "data, expected",
     [
         (np.array([-100.0, -100.0]), np.array([1e-10, 1e-10])),
         (ma.array([-100.0, -100.0], mask=[0, 1]), ma.array([1e-10, 1e-10], mask=[0, 1])),
     ],
 )
-def test_db2lin_arrays(input, expected):
-    converted = utils.db2lin(input)
+def test_db2lin_arrays(data, expected):
+    converted = utils.db2lin(data)
     assert_array_equal(converted, expected)
-    if ma.isMaskedArray(input):
-        assert_array_equal(converted.mask, expected.mask)
+    if ma.isMaskedArray(data):
+        assert_array_equal(converted.mask, expected.mask)  # pylint: disable=E1101
 
 
 def test_time_grid():
