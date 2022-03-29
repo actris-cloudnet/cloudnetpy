@@ -1,14 +1,15 @@
 import sys
 from os import path
 from tempfile import NamedTemporaryFile
+
 import pytest
-from cloudnetpy.instruments import radiometrics2nc
+
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments import radiometrics2nc
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from all_products_fun import Check
-
 
 file = f"{SCRIPT_PATH}/data/radiometrics/2021-07-18_00-00-00_lv2.csv"
 

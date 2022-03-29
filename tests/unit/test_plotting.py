@@ -1,10 +1,12 @@
-from scipy.signal import filtfilt
+from datetime import date
+
 import numpy as np
 import numpy.ma as ma
 import pytest
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+from scipy.signal import filtfilt
+
 from cloudnetpy.plotting import plotting
-from datetime import date
 
 
 @pytest.mark.parametrize(

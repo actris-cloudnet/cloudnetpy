@@ -1,11 +1,13 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
 import linecache
-from typing import Union, Optional
+from typing import Optional, Union
+
 import netCDF4
-from cloudnetpy.instruments.lufft import LufftCeilo
+
+from cloudnetpy import output, utils
 from cloudnetpy.instruments.cl61d import Cl61d
+from cloudnetpy.instruments.lufft import LufftCeilo
 from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
-from cloudnetpy import utils, output
 from cloudnetpy.metadata import MetaData
 
 

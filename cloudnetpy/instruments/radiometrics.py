@@ -1,10 +1,11 @@
 """Module for reading Radiometrics MP3014 microwave radiometer data."""
-from typing import Optional, List
 import csv
+from typing import List, Optional
+
 import numpy as np
-from cloudnetpy import output
+
+from cloudnetpy import CloudnetArray, output
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy import CloudnetArray
 from cloudnetpy.instruments import instruments
 
 

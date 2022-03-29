@@ -1,11 +1,13 @@
 import sys
 from os import path
-import pytest
-from cloudnetpy.instruments import basta2nc
-import netCDF4
-from cloudnetpy.exceptions import ValidTimeStampError
 from tempfile import NamedTemporaryFile
+
+import netCDF4
+import pytest
 from all_products_fun import Check
+
+from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments import basta2nc
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)

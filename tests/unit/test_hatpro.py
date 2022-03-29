@@ -1,12 +1,14 @@
 import sys
+from distutils.dir_util import copy_tree
 from os import path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-import pytest
-from distutils.dir_util import copy_tree
+
 import netCDF4
-from cloudnetpy.instruments import hatpro
-from cloudnetpy.exceptions import ValidTimeStampError
+import pytest
 from all_products_fun import Check
+
+from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments import hatpro
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)

@@ -1,14 +1,16 @@
 """ This module contains unit tests for ceilo-module. """
 import os
-from cloudnetpy.instruments import vaisala, ceilo2nc
-import pytest
-import numpy as np
-from numpy.testing import assert_equal
-import netCDF4
 import sys
-from cloudnetpy.exceptions import ValidTimeStampError
 from tempfile import NamedTemporaryFile
+
+import netCDF4
+import numpy as np
+import pytest
 from all_products_fun import Check
+from numpy.testing import assert_equal
+
+from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments import ceilo2nc, vaisala
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)

@@ -1,12 +1,13 @@
-from numpy.testing import assert_array_equal
-from cloudnetpy.categorize import datasource
 import pytest
+from numpy.testing import assert_array_equal
+
+from cloudnetpy.datasource import DataSource
 
 
 class TestDataSource:
     @pytest.fixture(autouse=True)
     def init_tests(self, nc_file):
-        self.obj = datasource.DataSource(nc_file)
+        self.obj = DataSource(nc_file)
 
     def test_init_altitude(self, file_metadata):
         assert self.obj.altitude == file_metadata["altitude_km"] * 1000

@@ -2,13 +2,14 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from uuid import UUID
 import importlib
-from cloudnetpy.instruments import mira2nc
-from cloudnetpy.instruments import ceilo2nc
-from cloudnetpy.categorize import generate_categorize
-from cloudnetpy_qc import Quality
+from uuid import UUID
+
 import netCDF4
+from cloudnetpy_qc import Quality
+
+from cloudnetpy.categorize import generate_categorize
+from cloudnetpy.instruments import ceilo2nc, mira2nc
 
 
 def _process_product_file(product_type: str, path: str, categorize_file: str) -> tuple:

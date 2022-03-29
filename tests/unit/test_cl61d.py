@@ -1,14 +1,16 @@
-import os
 import glob
-from cloudnetpy import concat_lib
-from cloudnetpy.instruments import ceilo2nc
+import os
+import sys
+from tempfile import NamedTemporaryFile
+
 import netCDF4
 import numpy as np
 import numpy.ma as ma
-import sys
-from tempfile import NamedTemporaryFile
 from all_products_fun import Check
 from lidar_fun import LidarFun
+
+from cloudnetpy import concat_lib
+from cloudnetpy.instruments import ceilo2nc
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)

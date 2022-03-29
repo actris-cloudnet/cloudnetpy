@@ -1,6 +1,6 @@
 """Metadata for plotting module."""
-from typing import NamedTuple, Optional, Tuple, Union, Sequence
 from enum import Enum
+from typing import NamedTuple, Optional, Sequence, Tuple, Union
 
 
 class Scale(Enum):

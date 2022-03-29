@@ -1,11 +1,12 @@
+import netCDF4
 import numpy as np
 import numpy.ma as ma
-from numpy.testing import assert_array_equal
 import pytest
-import netCDF4
+from numpy.testing import assert_array_equal
+from scipy import constants
+
 from cloudnetpy.categorize import radar
 from cloudnetpy.categorize.radar import Radar
-from scipy import constants
 
 FOLDING_VELOCITY = 8.7
 EMPTY_ARRAY = ma.array(

@@ -1,15 +1,16 @@
 """Module for reading / converting pollyxt data."""
 import glob
 from typing import Optional, Union
+
+import netCDF4
 import numpy as np
 from numpy import ma
-import netCDF4
 from numpy.testing import assert_array_equal
-from cloudnetpy.metadata import MetaData
-from cloudnetpy import output
-from cloudnetpy import utils
-from cloudnetpy.instruments.ceilometer import Ceilometer
+
+from cloudnetpy import output, utils
 from cloudnetpy.instruments import instruments
+from cloudnetpy.instruments.ceilometer import Ceilometer
+from cloudnetpy.metadata import MetaData
 from cloudnetpy.utils import Epoch
 
 

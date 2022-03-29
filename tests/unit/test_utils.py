@@ -1,10 +1,12 @@
 """ This module contains unit tests for utils-module. """
+import datetime
+import re
+
 import numpy as np
 import numpy.ma as ma
-from numpy.testing import assert_array_almost_equal, assert_array_equal
 import pytest
-import re
-import datetime
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+
 from cloudnetpy import utils
 
 

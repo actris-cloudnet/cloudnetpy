@@ -1,10 +1,11 @@
 """General helper functions for instrument processing."""
 import logging
+
+import netCDF4
 import numpy as np
 from numpy import ma
-import netCDF4
-from cloudnetpy import CloudnetArray
-from cloudnetpy import utils
+
+from cloudnetpy import CloudnetArray, utils
 
 
 def add_site_geolocation(obj):

@@ -1,12 +1,14 @@
 import logging
-from typing import Tuple, List, Union
+from typing import List, Tuple, Union
+
 import numpy as np
 from numpy import ma
 from scipy.ndimage import gaussian_filter
+
 from cloudnetpy import utils
-from cloudnetpy.utils import Epoch
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.instruments.instruments import Instrument
+from cloudnetpy.utils import Epoch
 
 
 class NoiseParam:

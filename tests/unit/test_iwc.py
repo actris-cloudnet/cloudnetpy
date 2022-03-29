@@ -1,10 +1,11 @@
+import netCDF4
 import numpy as np
 import numpy.ma as ma
+import pytest
 from numpy import testing
 from numpy.testing import assert_array_equal
-import pytest
-import netCDF4
-from cloudnetpy.products.iwc import IwcSource, IceClassification
+
+from cloudnetpy.products.iwc import IceClassification, IwcSource
 
 
 @pytest.fixture(scope="session")

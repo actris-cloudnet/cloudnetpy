@@ -1,11 +1,12 @@
 """ This module contains unit tests for ceilo-module. """
-from cloudnetpy.instruments import ceilo
-import pytest
 from os import path
 from tempfile import NamedTemporaryFile
+
 import netCDF4
+import pytest
 from numpy.testing import assert_almost_equal
 
+from cloudnetpy.instruments import ceilo
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 

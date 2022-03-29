@@ -1,7 +1,7 @@
-from cloudnetpy import output
-import pytest
 import netCDF4
-from cloudnetpy import utils
+import pytest
+
+from cloudnetpy import output, utils
 from cloudnetpy.metadata import MetaData
 
 

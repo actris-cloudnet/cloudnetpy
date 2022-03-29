@@ -1,8 +1,8 @@
 import numpy as np
 from numpy import ma
-from cloudnetpy import utils
-from cloudnetpy.products.drizzle_tools import DrizzleSource, DrizzleSolver
 
+from cloudnetpy import utils
+from cloudnetpy.products.drizzle_tools import DrizzleSolver, DrizzleSource
 
 MU_ERROR = 0.07
 MU_ERROR_SMALL = 0.25

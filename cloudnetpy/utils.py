@@ -1,20 +1,21 @@
 """ This module contains general helper functions. """
+import datetime
 import logging
 import os
-from typing import Union, Optional, Iterator, Tuple, List
-import uuid
-import datetime
 import re
+import uuid
 import warnings
-import numpy as np
-from numpy import ma
+from typing import Iterator, List, Optional, Tuple, Union
+
 import netCDF4
-from scipy import stats, ndimage
-from scipy.interpolate import RectBivariateSpline, griddata, RegularGridInterpolator
+import numpy as np
 import pytz
 import requests
-from cloudnetpy.exceptions import ValidTimeStampError
+from numpy import ma
+from scipy import ndimage, stats
+from scipy.interpolate import RectBivariateSpline, RegularGridInterpolator, griddata
 
+from cloudnetpy.exceptions import ValidTimeStampError
 
 Epoch = Tuple[int, int, int]
 Date = Tuple[str, str, str]

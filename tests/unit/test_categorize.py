@@ -1,11 +1,13 @@
 import os
 import sys
-from tempfile import NamedTemporaryFile
 import warnings
+from tempfile import NamedTemporaryFile
+
 import netCDF4
-from cloudnetpy.instruments import ceilo2nc, mira2nc
-from cloudnetpy.categorize import generate_categorize
 from all_products_fun import Check
+
+from cloudnetpy.categorize import generate_categorize
+from cloudnetpy.instruments import ceilo2nc, mira2nc
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)

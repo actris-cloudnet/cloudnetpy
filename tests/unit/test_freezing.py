@@ -1,9 +1,10 @@
 import numpy as np
 import numpy.ma as ma
+import pytest
 from numpy.testing import assert_array_equal
+
 from cloudnetpy.categorize import freezing
 from cloudnetpy.constants import T0
-import pytest
 
 
 def test_find_t0_alt():

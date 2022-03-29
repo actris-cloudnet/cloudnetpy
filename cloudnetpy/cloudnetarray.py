@@ -1,9 +1,11 @@
 """CloudnetArray class."""
 import math
 from typing import Optional, Union
+
+import netCDF4
 import numpy as np
 from numpy import ma
-import netCDF4
+
 from cloudnetpy import utils
 from cloudnetpy.metadata import MetaData
 

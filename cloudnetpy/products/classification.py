@@ -1,12 +1,14 @@
 """Module for creating classification file."""
-from typing import Tuple, Optional
+from typing import Optional, Tuple
+
 import numpy as np
 from numpy import ma
+
 from cloudnetpy import output
-from cloudnetpy.categorize import DataSource
+from cloudnetpy.categorize import atmos
+from cloudnetpy.datasource import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
-from cloudnetpy.categorize import atmos
 
 
 def generate_classification(

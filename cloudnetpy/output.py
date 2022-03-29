@@ -1,12 +1,14 @@
 """ Functions for file writing."""
 import logging
 from typing import Optional
+
+import netCDF4
 import numpy as np
 from numpy import ma
-import netCDF4
+
 from cloudnetpy import utils, version
-from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 from cloudnetpy.instruments.instruments import Instrument
+from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
 def save_level1b(obj, output_file: str, uuid: Optional[str] = None) -> str:

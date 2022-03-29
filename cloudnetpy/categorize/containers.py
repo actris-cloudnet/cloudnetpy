@@ -1,8 +1,10 @@
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
+
 import numpy as np
-from numpy import ma
 import skimage
+from numpy import ma
+
 from cloudnetpy import utils
 
 

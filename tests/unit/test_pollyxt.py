@@ -1,18 +1,19 @@
 import os
-from cloudnetpy.instruments import pollyxt2nc
-import pytest
+import sys
+from tempfile import NamedTemporaryFile
+
 import netCDF4
 import numpy as np
 import numpy.ma as ma
-import sys
-from tempfile import NamedTemporaryFile
+import pytest
+from all_products_fun import SITE_META, Check
+
 from cloudnetpy.exceptions import ValidTimeStampError
-from all_products_fun import Check, SITE_META
+from cloudnetpy.instruments import pollyxt2nc
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from lidar_fun import LidarFun
-
 
 filepath = f"{SCRIPT_PATH}/data/pollyxt/"
 

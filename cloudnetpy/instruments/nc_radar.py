@@ -1,9 +1,11 @@
 """Module for reading raw cloud radar data."""
-from typing import Union, List
+from typing import List, Union
+
 import numpy as np
 from numpy import ma
+
 from cloudnetpy import utils
-from cloudnetpy.categorize import DataSource
+from cloudnetpy.datasource import DataSource
 from cloudnetpy.instruments.instruments import Instrument
 
 

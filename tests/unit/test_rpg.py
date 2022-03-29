@@ -1,22 +1,22 @@
-import sys
-from os import path
 import math
-from tempfile import TemporaryDirectory, NamedTemporaryFile
-import pytest
+import sys
+from distutils.dir_util import copy_tree
+from os import path
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+
+import netCDF4
 import numpy as np
 import numpy.ma as ma
+import pytest
 from numpy.testing import assert_array_equal
-import netCDF4
-from cloudnetpy.instruments import rpg2nc
-from cloudnetpy.instruments import rpg
-from distutils.dir_util import copy_tree
-from cloudnetpy.exceptions import ValidTimeStampError, InconsistentDataError
 
+from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
+from cloudnetpy.instruments import rpg, rpg2nc
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
+from all_products_fun import SITE_META, Check
 from radar_fun import RadarFun
-from all_products_fun import Check, SITE_META
 
 FILEPATH = f"{SCRIPT_PATH}/data/rpg-fmcw-94"
 

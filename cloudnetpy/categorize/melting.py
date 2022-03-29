@@ -1,12 +1,14 @@
 """Functions to find melting layer from data."""
 from typing import Tuple, Union
+
 import numpy as np
 from numpy import ma
 from scipy.ndimage import gaussian_filter
-from cloudnetpy.constants import T0
+
+from cloudnetpy import utils
 from cloudnetpy.categorize import droplet
 from cloudnetpy.categorize.containers import ClassData
-from cloudnetpy import utils
+from cloudnetpy.constants import T0
 
 
 def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:

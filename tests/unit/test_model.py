@@ -1,12 +1,13 @@
-import numpy as np
-import numpy.ma as ma
-from numpy.testing import assert_array_equal
-import pytest
-import netCDF4
-from cloudnetpy.categorize import model
-from cloudnetpy_qc import Quality
 import os
 
+import netCDF4
+import numpy as np
+import numpy.ma as ma
+import pytest
+from cloudnetpy_qc import Quality
+from numpy.testing import assert_array_equal
+
+from cloudnetpy.categorize import model
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 

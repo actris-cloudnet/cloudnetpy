@@ -1,15 +1,17 @@
 """This module contains RPG Cloud Radar related functions."""
-from typing import Union, Tuple, Optional, List
 import logging
 import math
+from typing import List, Optional, Tuple, Union
+
 import numpy as np
 from numpy import ma
-from cloudnetpy import utils, output, CloudnetArray
-from cloudnetpy.metadata import MetaData
-from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
+
+from cloudnetpy import CloudnetArray, output, utils
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
-from cloudnetpy.instruments import instruments, general
+from cloudnetpy.instruments import general, instruments
 from cloudnetpy.instruments.instruments import Instrument
+from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
+from cloudnetpy.metadata import MetaData
 
 
 def rpg2nc(

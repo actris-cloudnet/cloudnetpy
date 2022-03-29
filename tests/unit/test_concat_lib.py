@@ -1,11 +1,12 @@
-import numpy as np
-from os import path
-import pytest
-from cloudnetpy import concat_lib
-from tempfile import NamedTemporaryFile
-import netCDF4
 import glob
+from os import path
+from tempfile import NamedTemporaryFile
 
+import netCDF4
+import numpy as np
+import pytest
+
+from cloudnetpy import concat_lib
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 

@@ -1,1 +1,1 @@
-from .plotting import plot_2d, compare_files, generate_figure
+from .plotting import compare_files, generate_figure, plot_2d

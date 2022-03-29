@@ -1,8 +1,9 @@
 """ This module has functions for liquid layer detection.
 """
 import numpy as np
-from numpy import ma
 import scipy.signal
+from numpy import ma
+
 from cloudnetpy import utils
 from cloudnetpy.categorize.containers import ClassData
 

@@ -1,12 +1,13 @@
 """Module with classes for Vaisala ceilometers."""
-from typing import Tuple, Optional
 import logging
+from typing import Optional, Tuple
+
 import numpy as np
-from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
+
 from cloudnetpy import utils
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
-
+from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
 
 M2KM = 0.001
 SECONDS_IN_MINUTE = 60

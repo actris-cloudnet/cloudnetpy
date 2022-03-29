@@ -1,13 +1,15 @@
 """Module for creating Cloudnet ice water content file using Z-T method."""
-from typing import Optional
 from collections import namedtuple
+from typing import Optional
+
 import numpy as np
 from numpy import ma
+
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos
+from cloudnetpy.datasource import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools
-from cloudnetpy.categorize import DataSource
 from cloudnetpy.products.product_tools import ProductClassification
 
 G_TO_KG = 0.001

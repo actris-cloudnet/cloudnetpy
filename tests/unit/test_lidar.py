@@ -1,8 +1,9 @@
+import netCDF4
 import numpy as np
 import numpy.ma as ma
-from numpy.testing import assert_array_equal
 import pytest
-import netCDF4
+from numpy.testing import assert_array_equal
+
 from cloudnetpy.categorize.lidar import Lidar
 
 WAVELENGTH = 900.0

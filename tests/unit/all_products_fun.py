@@ -1,8 +1,9 @@
+from tempfile import _TemporaryFileWrapper
+
 import netCDF4
 import numpy as np
-from cloudnetpy_qc import Quality
 import pytest
-from tempfile import _TemporaryFileWrapper
+from cloudnetpy_qc import Quality
 
 SITE_META = {"name": "Kumpula", "altitude": 50, "latitude": 23, "longitude": 34.0}
 

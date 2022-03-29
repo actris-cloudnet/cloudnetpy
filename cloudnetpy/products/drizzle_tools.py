@@ -1,13 +1,15 @@
-import os
 import logging
-from typing import Union, Tuple
+import os
 from bisect import bisect_left
-import numpy as np
+from typing import Tuple, Union
+
 import netCDF4
+import numpy as np
 from scipy.special import gamma
+
 from cloudnetpy import utils
+from cloudnetpy.datasource import DataSource
 from cloudnetpy.products import product_tools
-from cloudnetpy.categorize import DataSource
 from cloudnetpy.products.product_tools import ProductClassification
 
 

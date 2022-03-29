@@ -79,13 +79,6 @@ Categorize is CloudnetPy's subpackage. It contains
 several modules that are used when creating the Cloudnet
 categorize file.
 
-
-datasource
-..........
-
-.. automodule:: categorize.datasource
-   :members:
-
 radar
 .....
 
@@ -223,6 +216,13 @@ cloudnetarray
 .............
 
 .. automodule:: cloudnetarray
+   :members:
+
+
+datasource
+..........
+
+.. automodule:: datasource
    :members:
 
 

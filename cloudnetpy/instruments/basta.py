@@ -1,10 +1,12 @@
 """Module for reading / converting BASTA radar data."""
-from typing import Optional, List
+from typing import List, Optional
+
 import numpy as np
+
 from cloudnetpy import output
-from cloudnetpy.instruments.nc_radar import NcRadar
-from cloudnetpy.instruments import instruments, general
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments import general, instruments
+from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
 
 

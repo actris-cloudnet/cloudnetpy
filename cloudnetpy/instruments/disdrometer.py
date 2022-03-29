@@ -1,13 +1,13 @@
 """Module for reading / converting disdrometer data."""
-from typing import Optional, Union, List
+from typing import List, Optional, Union
+
 import numpy as np
 from numpy import ma
-from cloudnetpy import output
-from cloudnetpy.metadata import MetaData
-from cloudnetpy.instruments.vaisala import values_to_dict
-from cloudnetpy import CloudnetArray, utils
-from cloudnetpy.exceptions import DisdrometerDataError
 
+from cloudnetpy import CloudnetArray, output, utils
+from cloudnetpy.exceptions import DisdrometerDataError
+from cloudnetpy.instruments.vaisala import values_to_dict
+from cloudnetpy.metadata import MetaData
 
 PARSIVEL = "OTT Parsivel-2"
 THIES = "Thies-LNM"

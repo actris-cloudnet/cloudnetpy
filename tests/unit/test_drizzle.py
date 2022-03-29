@@ -1,10 +1,12 @@
-import numpy as np
-from numpy import testing
-import pytest
-import netCDF4
 from bisect import bisect_left
-from cloudnetpy import utils
+
+import netCDF4
+import numpy as np
+import pytest
+from numpy import testing
+
 import cloudnetpy.products.drizzle as drizzle
+from cloudnetpy import utils
 from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 DIMENSIONS_X = ("time", "model_time")

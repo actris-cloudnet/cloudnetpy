@@ -1,8 +1,10 @@
 """Module for concatenating netCDF files."""
-from typing import Union, Optional
 import logging
-import numpy as np
+from typing import Optional, Union
+
 import netCDF4
+import numpy as np
+
 from cloudnetpy import utils
 
 

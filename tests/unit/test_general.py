@@ -1,6 +1,8 @@
-import netCDF4
-from cloudnetpy.instruments import general
 from tempfile import NamedTemporaryFile
+
+import netCDF4
+
+from cloudnetpy.instruments import general
 
 
 def test_get_files_with_common_range():

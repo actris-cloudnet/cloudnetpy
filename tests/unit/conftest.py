@@ -1,8 +1,8 @@
-import pytest
-import numpy as np
-import netCDF4
 from datetime import date
 
+import netCDF4
+import numpy as np
+import pytest
 
 DIMENSIONS = ("time", "height", "model_time", "model_height")
 TEST_ARRAY = np.arange(5)  # Simple array for all dimension and variables

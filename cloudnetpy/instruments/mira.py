@@ -1,17 +1,18 @@
 """Module for reading raw cloud radar data."""
-import os
 import logging
-from typing import List, Optional
+import os
 from tempfile import NamedTemporaryFile
+from typing import List, Optional
+
 import numpy as np
 from numpy import ma
-from cloudnetpy import output, utils
+
+from cloudnetpy import concat_lib, output, utils
+from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments import general
+from cloudnetpy.instruments.instruments import MIRA35
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
-from cloudnetpy import concat_lib
-from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.instruments.instruments import MIRA35
-from cloudnetpy.instruments import general
 
 
 def mira2nc(

@@ -1,12 +1,13 @@
 """Module that generates Cloudnet categorize file."""
-from typing import Union, Optional
+from typing import Optional, Union
+
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos, classify
-from cloudnetpy.metadata import MetaData
-from cloudnetpy.categorize.radar import Radar
+from cloudnetpy.categorize.lidar import Lidar
 from cloudnetpy.categorize.model import Model
 from cloudnetpy.categorize.mwr import Mwr
-from cloudnetpy.categorize.lidar import Lidar
+from cloudnetpy.categorize.radar import Radar
+from cloudnetpy.metadata import MetaData
 
 
 def generate_categorize(input_files: dict, output_file: str, uuid: Optional[str] = None) -> str:

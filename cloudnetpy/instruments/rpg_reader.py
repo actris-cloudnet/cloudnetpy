@@ -1,5 +1,7 @@
 from collections import namedtuple
+
 import numpy as np
+
 from cloudnetpy import utils
 
 

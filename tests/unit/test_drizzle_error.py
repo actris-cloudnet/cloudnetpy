@@ -1,8 +1,8 @@
 import numpy as np
 import numpy.testing as testing
 import pytest
-from cloudnetpy.products import drizzle_error as de
 
+from cloudnetpy.products import drizzle_error as de
 
 DRIZZLE_PARAMETERS = {"Do": np.array([[0.0001, 0.01, 0.000001], [0.001, 0.000001, 0.0001]])}
 DRIZZLE_INDICES = {

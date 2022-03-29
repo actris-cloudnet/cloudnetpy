@@ -1,11 +1,13 @@
 """Datasource module, containing the :class:`DataSource class.`"""
-from typing import Callable, Optional, Union
 import logging
 import os
 from datetime import datetime
-import numpy as np
+from typing import Callable, Optional, Union
+
 import netCDF4
-from cloudnetpy import RadarArray, CloudnetArray, utils
+import numpy as np
+
+from cloudnetpy import CloudnetArray, RadarArray, utils
 
 
 class DataSource:

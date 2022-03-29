@@ -1,19 +1,20 @@
 """Misc. plotting routines for Cloudnet products."""
 import os.path
-from typing import Optional, Tuple
 from datetime import date
-import numpy as np
-from numpy import ma
-from numpy import ndarray
-import netCDF4
-from scipy.signal import filtfilt
+from typing import Optional, Tuple
+
 import matplotlib.pyplot as plt
+import netCDF4
+import numpy as np
 from matplotlib import rcParams
 from matplotlib.colors import ListedColormap
 from matplotlib.transforms import Affine2D, Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from cloudnetpy import utils
+from numpy import ma, ndarray
+from scipy.signal import filtfilt
+
 import cloudnetpy.products.product_tools as ptools
+from cloudnetpy import utils
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, Scale
 from cloudnetpy.products.product_tools import CategorizeBits
 

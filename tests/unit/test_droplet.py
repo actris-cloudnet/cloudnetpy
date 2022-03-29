@@ -2,6 +2,7 @@ import numpy as np
 import numpy.ma as ma
 import pytest
 from numpy.testing import assert_array_equal
+
 from cloudnetpy.categorize import droplet
 
 

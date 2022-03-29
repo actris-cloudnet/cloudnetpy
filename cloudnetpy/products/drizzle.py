@@ -1,17 +1,19 @@
 """Module for creating Cloudnet drizzle product.
 """
 from typing import Optional
+
 import numpy as np
 from numpy import ma
 from scipy.special import gamma
-from cloudnetpy import utils, output
+
+from cloudnetpy import output, utils
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.drizzle_error import get_drizzle_error
 from cloudnetpy.products.drizzle_tools import (
     DrizzleClassification,
+    DrizzleSolver,
     DrizzleSource,
     SpectralWidth,
-    DrizzleSolver,
 )
 
 

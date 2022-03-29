@@ -2,9 +2,10 @@
 import numpy as np
 from numpy import ma
 from scipy.interpolate import interp1d
-from cloudnetpy import CloudnetArray
-from cloudnetpy.categorize import DataSource, atmos
-from cloudnetpy import utils
+
+from cloudnetpy import CloudnetArray, utils
+from cloudnetpy.categorize import atmos
+from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ModelDataError
 
 

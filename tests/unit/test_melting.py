@@ -1,7 +1,8 @@
 import numpy as np
 import numpy.ma as ma
-from numpy.testing import assert_array_equal
 import pytest
+from numpy.testing import assert_array_equal
+
 from cloudnetpy.categorize import melting
 
 

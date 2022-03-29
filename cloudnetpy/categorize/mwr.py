@@ -1,7 +1,8 @@
 """Mwr module, containing the :class:`Mwr` class."""
 import numpy as np
-from cloudnetpy.categorize import DataSource
+
 from cloudnetpy import utils
+from cloudnetpy.datasource import DataSource
 
 
 class Mwr(DataSource):

@@ -2,13 +2,13 @@
 various atmospheric parameters.
 """
 import numpy as np
-from numpy import ma
 import scipy.constants
+from numpy import ma
+
 from cloudnetpy import constants as con
 from cloudnetpy import utils
 from cloudnetpy.categorize.containers import ClassificationResult
 from cloudnetpy.categorize.model import Model
-
 
 HPA_TO_P = 100
 P_TO_HPA = 0.01

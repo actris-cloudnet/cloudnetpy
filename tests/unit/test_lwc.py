@@ -1,11 +1,12 @@
-import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
 from collections import namedtuple
-import pytest
-import netCDF4
-from cloudnetpy.products.lwc import LwcSource, Lwc, CloudAdjustor, LwcError
-from cloudnetpy.categorize import atmos
 
+import netCDF4
+import numpy as np
+import pytest
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+
+from cloudnetpy.categorize import atmos
+from cloudnetpy.products.lwc import CloudAdjustor, Lwc, LwcError, LwcSource
 
 DIMENSIONS = ("time", "height", "model_time", "model_height")
 TEST_ARRAY = np.arange(3)
@@ -223,7 +224,7 @@ def test_calc_lwp_relative_error():
 
 
 def test_calc_combined_error():
-    from cloudnetpy.utils import transpose, l2norm
+    from cloudnetpy.utils import l2norm, transpose
 
     err_2d = np.array([[0, 0.1, 0.1], [0.2, 0.4, 0.15]])
     err_1d = np.array([0.3, 0.2])

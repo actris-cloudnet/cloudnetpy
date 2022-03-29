@@ -1,8 +1,10 @@
 import os
-from cloudnetpy.instruments import disdrometer
-import pytest
 from tempfile import NamedTemporaryFile
+
+import pytest
 from all_products_fun import Check
+
+from cloudnetpy.instruments import disdrometer
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 

@@ -1,8 +1,10 @@
 """General helper classes and functions for all products."""
-from typing import Union, Dict
+from typing import Dict, Union
+
+import netCDF4
 import numpy as np
 from numpy import ma
-import netCDF4
+
 from cloudnetpy import utils
 
 

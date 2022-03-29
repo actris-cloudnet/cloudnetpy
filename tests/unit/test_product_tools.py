@@ -1,8 +1,9 @@
+import netCDF4
 import numpy as np
 import pytest
-import netCDF4
-from cloudnetpy.products import product_tools
 from numpy.testing import assert_array_equal
+
+from cloudnetpy.products import product_tools
 
 
 @pytest.fixture

@@ -1,10 +1,11 @@
+import netCDF4
 import numpy as np
 import numpy.ma as ma
-from numpy.testing import assert_array_equal
-import netCDF4
 import pytest
-from cloudnetpy.cloudnetarray import CloudnetArray
+from numpy.testing import assert_array_equal
+
 from cloudnetpy import utils
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.metadata import MetaData
 
 

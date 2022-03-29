@@ -1,11 +1,13 @@
 """Module to find freezing region from data."""
 import logging
+
 import numpy as np
 from numpy import ma
 from scipy.interpolate import interp1d
-from cloudnetpy.constants import T0
+
 from cloudnetpy import utils
 from cloudnetpy.categorize.containers import ClassData
+from cloudnetpy.constants import T0
 
 
 def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarray:

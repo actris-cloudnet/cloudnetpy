@@ -2,12 +2,13 @@
 radar / lidar measurements.
 """
 from typing import List
+
 import numpy as np
-from numpy import ma
 import skimage
+from numpy import ma
+
 from cloudnetpy import utils
-from cloudnetpy.categorize import droplet
-from cloudnetpy.categorize import melting, insects, falling, freezing
+from cloudnetpy.categorize import droplet, falling, freezing, insects, melting
 from cloudnetpy.categorize.containers import ClassData, ClassificationResult
 
 

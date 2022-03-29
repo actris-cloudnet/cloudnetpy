@@ -1,17 +1,18 @@
 import sys
 from os import path
-import pytest
-from cloudnetpy.instruments import mira
+from tempfile import NamedTemporaryFile
+
 import netCDF4
 import numpy as np
-from cloudnetpy.exceptions import ValidTimeStampError
-from tempfile import NamedTemporaryFile
+import pytest
 from all_products_fun import Check
+
+from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments import mira
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from radar_fun import RadarFun
-
 
 filepath = f"{SCRIPT_PATH}/data/mira/"
 

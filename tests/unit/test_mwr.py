@@ -1,7 +1,8 @@
-import numpy as np
-from numpy.testing import assert_array_equal
 import netCDF4
+import numpy as np
 import pytest
+from numpy.testing import assert_array_equal
+
 from cloudnetpy.categorize.mwr import Mwr
 
 
