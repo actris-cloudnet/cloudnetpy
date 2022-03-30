@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-version = {}
+version: dict = {}
 with open("cloudnetpy/version.py") as f:
     exec(f.read(), version)
 

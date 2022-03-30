@@ -62,7 +62,10 @@ def _commit_and_push(version: Version):
 
 
 def _read_int(text: str, key: str) -> int:
-    return int(re.search(f"^{key} = (\d+)$", text, flags=re.M)[1])
+    m = re.search(f"^{key} = (\d+)$", text, flags=re.M)
+    if m is None:
+        raise ValueError
+    return int(m[1])
 
 
 def _write_int(text: str, key: str, value: int) -> str:
@@ -113,6 +116,8 @@ def _read_changelog(old_version: Version) -> str:
         path.write_text(new_content)
         sys.exit(1)
     entry_end = re.search(r"^##[^#]", old_content[entry_start.end() :], re.M)
+    if entry_end is None:
+        raise ValueError
     entry = old_content[entry_start.end() : entry_start.end() + entry_end.start()].strip()
     if not entry:
         print(
