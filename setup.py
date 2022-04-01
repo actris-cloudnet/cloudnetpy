@@ -20,6 +20,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.8",
+    setup_requires=["wheel"],
     install_requires=[
         "scipy",
         "netCDF4",
@@ -32,13 +33,13 @@ setup(
     extras_require={
         "test": [
             "pytest",
-            "pytest-cov",
+            "pytest-flakefinder",
             "pylint",
             "mypy",
             "types-requests",
             "types-pytz",
-            "pytest-flakefinder",
-        ]
+        ],
+        "dev": ["pre-commit"],
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
