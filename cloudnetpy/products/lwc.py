@@ -349,7 +349,6 @@ class LwcError:
 
 COMMENTS = {
     "lwc": (
-        "\n"
         "This variable was calculated for the profiles where the categorization data has\n"
         "diagnosed that liquid water is present and liquid water path is available from\n"
         "a coincident microwave radiometer. The model temperature and pressure were used\n"
@@ -372,13 +371,11 @@ COMMENTS = {
         "   liquid layers is difficult to ascertain."
     ),
     "lwc_error": (
-        "\n"
         "This variable is an estimate of the random error in liquid water content\n"
         "due to the uncertainty in the microwave radiometer liquid water path\n"
         "retrieval and the uncertainty in cloud base and/or cloud top height."
     ),
     "lwc_retrieval_status": (
-        "\n"
         "This variable describes whether a retrieval was performed for each pixel, and\n"
         "its associated quality, in the form of 6 different classes.  The classes are\n"
         "defined in the definition attribute. The most reliable retrieval is that when\n"

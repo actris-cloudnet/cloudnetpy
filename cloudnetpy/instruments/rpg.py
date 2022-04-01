@@ -255,7 +255,8 @@ class Fmcw(Rpg):
     def mask_invalid_width(self) -> None:
         """Removes very low width values.
 
-        Simplified method. Threshold value should depend on the radar settings and vary at each chirp.
+        Simplified method. Threshold value should depend on the radar settings and vary at each
+        chirp.
         """
         threshold = 0.005
         ind = np.where(self.data["width"].data < threshold)
@@ -297,14 +298,13 @@ class Hatpro(Rpg):
 
 
 DEFINITIONS = {
-    "model_number": ("\n" "0: Single polarisation radar.\n" "1: Dual polarisation radar."),
+    "model_number": "\n" "0: Single polarisation radar.\n" "1: Dual polarisation radar.",
     "dual_polarization": (
         "\n"
         "Value 0: Single polarisation radar.\n"
-        "Value 1: Dual polarisation radar in linear depolarisation ratio (LDR)\n"
-        "         mode.\n"
-        "Value 2: Dual polarisation radar in simultaneous transmission\n"
-        "         simultaneous reception (STSR) mode."
+        "Value 1: Dual polarisation radar in linear depolarisation ratio (LDR) mode.\n"
+        "Value 2: Dual polarisation radar in simultaneous transmission simultaneous\n"
+        "reception (STSR) mode."
     ),
     "FFT_window": (
         "\n"
