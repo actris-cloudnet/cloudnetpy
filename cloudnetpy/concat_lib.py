@@ -86,7 +86,7 @@ class Concat:
         for key, value in self.first_file.variables.items():
             try:
                 dims = self._get_dim(value[:])
-            except np.core._exceptions.UFuncTypeError:
+            except np.core._exceptions.UFuncTypeError:  # pylint: disable=W0212
                 logging.warning(f"Problem with reading {key} - skipping it")
                 continue
             if self.concat_dimension not in dims:

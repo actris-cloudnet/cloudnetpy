@@ -214,14 +214,14 @@ class Rpg:
 
     def _screen(self, ind: np.ndarray):
         n_time = len(self.data["time"].data)
-        for key, array in self.data.items():
+        for array in self.data.values():
             data = array.data
             if data.ndim > 0 and data.shape[0] == n_time:
                 if data.ndim == 1:
                     screened_data = data[ind]
                 else:
                     screened_data = data[ind, :]
-                self.data[key].data = screened_data
+                array.data = screened_data
 
     def _get_date(self) -> list:
         time_first = self.raw_data["time"][0]
@@ -284,7 +284,7 @@ class Fmcw(Rpg):
         frequency = data["radar_frequency"]
         if math.isclose(frequency, 35, abs_tol=0.1):
             return instruments.FMCW35
-        elif math.isclose(frequency, 94, abs_tol=0.1):
+        if math.isclose(frequency, 94, abs_tol=0.1):
             return instruments.FMCW94
         raise RuntimeError(f"Unknown RPG cloud radar frequency: {frequency}")
 

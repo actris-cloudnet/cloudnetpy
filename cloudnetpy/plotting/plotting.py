@@ -227,7 +227,7 @@ def _find_valid_fields(nc_file: str, names: list) -> Tuple[list, list]:
 
 def _is_height_dimension(full_path: str) -> bool:
     nc = netCDF4.Dataset(full_path)
-    is_height = any([key in nc.variables for key in ("height", "range")])
+    is_height = any(key in nc.variables for key in ("height", "range"))
     nc.close()
     return is_height
 
@@ -253,7 +253,7 @@ def _read_ax_values(full_path: str) -> Tuple[ndarray, ndarray]:
     """Returns time and height arrays."""
     file_type = utils.get_file_type(full_path)
     nc = netCDF4.Dataset(full_path)
-    is_height = True if "height" in nc.variables else False
+    is_height = "height" in nc.variables
     nc.close()
     if is_height is not True:
         fields = ["time", "range"]
@@ -510,7 +510,7 @@ def _init_colorbar(plot, axis):
 
 def _generate_log_cbar_ticklabel_list(vmin: float, vmax: float) -> list:
     """Create list of log format colorbar label ticks as string"""
-    return ["10$^{%s}$" % int(i) for i in np.arange(vmin, vmax + 1)]
+    return ["10$^{%s}$" % int(i) for i in np.arange(vmin, vmax + 1)]  # pylint: disable=C0209
 
 
 def _read_location(nc_file: str) -> str:
@@ -553,7 +553,7 @@ def _plot_relative_error(ax, error: ma.MaskedArray, ax_values: tuple):
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
     median_error = ma.median(error.compressed())
-    median_error = "%.3f" % median_error
+    median_error = np.round(median_error, 3)
     ax.set_title(f"Median relative error: {median_error} %", fontsize=14)
 
 

@@ -49,6 +49,8 @@ def radiometrics2nc(
 
 
 class Radiometrics:
+    """Class for Radiometrics MWR"""
+
     def __init__(self, filename: str, site_meta: dict):
         self.filename = filename
         self.site_meta = site_meta
@@ -59,7 +61,7 @@ class Radiometrics:
 
     def read_raw_data(self):
         """Reads radiometrics raw data."""
-        with open(self.filename, mode="r") as infile:
+        with open(self.filename, mode="r", encoding="utf8") as infile:
             reader = csv.reader(infile)
             for x in reader:
                 self.raw_data.append(x)

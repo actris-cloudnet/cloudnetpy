@@ -1,10 +1,10 @@
 from setuptools import find_packages, setup
 
 version: dict = {}
-with open("cloudnetpy/version.py") as f:
-    exec(f.read(), version)
+with open("cloudnetpy/version.py", encoding="utf8") as f:
+    exec(f.read(), version)  # pylint: disable=W0122
 
-with open("README.md") as f:
+with open("README.md", encoding="utf8") as f:
     readme = f.read()
 
 setup(

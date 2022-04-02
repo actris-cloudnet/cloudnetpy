@@ -33,7 +33,7 @@ class VaisalaCeilo(Ceilometer):
 
     def _fetch_data_lines(self) -> list:
         """Finds data lines (header + backscatter) from ceilometer file."""
-        with open(self.full_path) as file:
+        with open(self.full_path, encoding="utf8") as file:
             all_lines = file.readlines()
         return self._screen_invalid_lines(all_lines)
 

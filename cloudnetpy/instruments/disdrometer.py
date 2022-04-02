@@ -49,8 +49,8 @@ def disdrometer2nc(
     except ValueError:
         try:
             disdrometer = Thies(disdrometer_file, site_meta)
-        except (ValueError, IndexError):
-            raise DisdrometerDataError("Can not read disdrometer file")
+        except (ValueError, IndexError) as err:
+            raise DisdrometerDataError("Can not read disdrometer file") from err
     if date is not None:
         disdrometer.validate_date(date)
     disdrometer.init_data()

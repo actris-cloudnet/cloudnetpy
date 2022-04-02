@@ -25,8 +25,8 @@ class Mwr(DataSource):
             time_grid: 1D target time grid.
 
         """
-        for key in self.data:
-            self.data[key].rebin_data(self.time, time_grid)
+        for array in self.data.values():
+            array.rebin_data(self.time, time_grid)
 
     def _init_lwp_data(self) -> None:
         lwp = self.dataset.variables["lwp"][:]

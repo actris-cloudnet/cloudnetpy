@@ -37,9 +37,9 @@ class CategorizeBits:
         nc = netCDF4.Dataset(self._categorize_file)
         try:
             bitfield = nc.variables[f"{bit_type}_bits"][:]
-        except KeyError:
+        except KeyError as err:
             nc.close()
-            raise KeyError
+            raise KeyError from err
         keys = getattr(CategorizeBits, f"{bit_type}_keys")
         bits = {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
         nc.close()

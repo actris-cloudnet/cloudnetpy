@@ -66,7 +66,7 @@ def mira2nc(
     }
 
     if os.path.isdir(raw_mira):
-        temp_file = NamedTemporaryFile()
+        temp_file = NamedTemporaryFile()  # pylint: disable=R1732
         mmclx_filename = temp_file.name
         valid_filenames = utils.get_sorted_filenames(raw_mira, ".mmclx")
         valid_filenames = general.get_files_with_common_range(valid_filenames)
@@ -138,11 +138,11 @@ class Mira(NcRadar):
 
     def _screen_by_ind(self, ind: np.ndarray):
         n_time = len(self.time)
-        for key, array in self.data.items():
+        for array in self.data.values():
             if array.data.ndim == 1 and array.data.shape[0] == n_time:
-                self.data[key].data = array.data[ind]
+                array.data = array.data[ind]
             if array.data.ndim == 2 and array.data.shape[0] == n_time:
-                self.data[key].data = array.data[ind, :]
+                array.data = array.data[ind, :]
         self.time = self.time[ind]
 
     def screen_by_snr(self, snr_limit: float = -17) -> None:

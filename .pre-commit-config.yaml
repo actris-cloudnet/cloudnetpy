@@ -30,7 +30,8 @@ repos:
         language: system
         types: [python]
         require_serial: true
-        args: ["--errors-only", "--jobs=4"]
+        args: ["--jobs=4"]
+        exclude: ^(tests/|docs/)
   - repo: local
     hooks:
       - id: mypy
