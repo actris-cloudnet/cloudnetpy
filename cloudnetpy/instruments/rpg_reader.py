@@ -23,7 +23,7 @@ class Fmcw94Bin:
                 header[name] = np.fromfile(file, dtype, int(n_values))
 
         header = {}
-        file = open(self.filename, "rb")
+        file = open(self.filename, "rb")  # pylint: disable=R1732
         append(("file_code", "_header_length"), np.int32)
         append(("_start_time", "_stop_time"), np.uint32)
         append(("program_number",))
@@ -190,7 +190,7 @@ class Fmcw94Bin:
             block_two = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
             return block_one, block_two
 
-        file = open(self.filename, "rb")
+        file = open(self.filename, "rb")  # pylint: disable=R1732
         file.seek(self._file_position)
         dims = _create_dimensions()
         aux, block1, block2 = _create_variables()
@@ -233,12 +233,12 @@ class HatproBin:
         for ind, flag in enumerate(self.data["quality_flag"]):
             if not (utils.isbit(flag, 1) and utils.isbit(flag, 2)):
                 good_ind.append(ind)
-        for key in self.data.keys():
+        for key in self.data:
             self.data[key] = self.data[key][good_ind]
 
     def read_header(self) -> dict:
         """Reads the header."""
-        file = open(self.filename, "rb")
+        file = open(self.filename, "rb")  # pylint: disable=R1732
         header = {
             "file_code": np.fromfile(file, np.int32, 1),
             "_n_samples": np.fromfile(file, np.int32, 1),
@@ -252,7 +252,7 @@ class HatproBin:
 
     def read_data(self) -> dict:
         """Reads the data."""
-        file = open(self.filename, "rb")
+        file = open(self.filename, "rb")  # pylint: disable=R1732
         file.seek(self._file_position)
 
         data: dict = {

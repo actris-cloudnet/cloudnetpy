@@ -25,8 +25,8 @@ class Mwr(DataSource):
             time_grid: 1D target time grid.
 
         """
-        for key in self.data:
-            self.data[key].rebin_data(self.time, time_grid)
+        for array in self.data.values():
+            array.rebin_data(self.time, time_grid)
 
     def _init_lwp_data(self) -> None:
         lwp = self.dataset.variables["lwp"][:]
@@ -38,7 +38,8 @@ class Mwr(DataSource):
         self.append_data(lwp_error, "lwp_error", units="g m-2")
         self.data["lwp_error"].comment = (
             (
-                f"This variable is a rough estimate of the one-standard-deviation error in liquid water path, calculated as a\n"
-                f"combination of a {bias} g m-2 linear error and a {round(random_error*100)} % fractional error."
+                f"This variable is a rough estimate of the one-standard-deviation error in liquid\n"
+                f"water path, calculated as a combination of a {bias} g m-2 linear error and a\n"
+                f"{round(random_error*100)} % fractional error."
             ),
         )

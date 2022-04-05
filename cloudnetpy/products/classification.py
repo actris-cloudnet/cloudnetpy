@@ -108,10 +108,12 @@ def _find_cloud_mask(classification: np.ndarray) -> np.ndarray:
 
 COMMENTS = {
     "target_classification": (
+        "\n"
         "This variable provides the main atmospheric target classifications\n"
         "that can be distinguished by radar and lidar."
     ),
     "detection_status": (
+        "\n"
         "This variable reports on the reliability of the radar and lidar data\n"
         "used to perform the classification."
     ),
@@ -136,9 +138,11 @@ DEFINITIONS = {
         "\n"
         "Value 0: Clear sky.\n"
         "Value 1: Lidar echo only.\n"
-        "Value 2: Radar echo but reflectivity may be unreliable as attenuation by rain, melting ice or liquid cloud has not been corrected.\n"
+        "Value 2: Radar echo but reflectivity may be unreliable as attenuation by rain, melting\n"
+        "         ice or liquid cloud has not been corrected.\n"
         "Value 3: Good radar and lidar echos.\n"
-        "Value 4: No radar echo but rain or liquid cloud beneath mean that attenuation that would be experienced is unknown.\n"
+        "Value 4: No radar echo but rain or liquid cloud beneath mean that attenuation that would\n"
+        "         be experienced is unknown.\n"
         "Value 5: Good radar echo only.\n"
         "Value 6: No radar echo but known attenuation.\n"
         "Value 7: Radar echo corrected for liquid attenuation using microwave radiometer data.\n"

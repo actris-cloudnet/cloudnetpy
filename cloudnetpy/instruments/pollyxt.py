@@ -43,7 +43,7 @@ def pollyxt2nc(
 
     Examples:
         >>> from cloudnetpy.instruments import pollyxt2nc
-        >>> site_meta = {'name': 'Mindelo', 'altitude': 13, 'latitude': 16.9, 'zenith_angle': 6, 'snr_limit': 3}
+        >>> site_meta = {'name': 'Mindelo', 'altitude': 13, 'zenith_angle': 6, 'snr_limit': 3}
         >>> pollyxt2nc('/path/to/files/', 'pollyxt.nc', site_meta)
 
     """

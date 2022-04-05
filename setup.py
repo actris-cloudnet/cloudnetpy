@@ -1,10 +1,10 @@
 from setuptools import find_packages, setup
 
-version = {}
-with open("cloudnetpy/version.py") as f:
-    exec(f.read(), version)
+version: dict = {}
+with open("cloudnetpy/version.py", encoding="utf8") as f:
+    exec(f.read(), version)  # pylint: disable=W0122
 
-with open("README.md") as f:
+with open("README.md", encoding="utf8") as f:
     readme = f.read()
 
 setup(
@@ -20,6 +20,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     python_requires=">=3.8",
+    setup_requires=["wheel"],
     install_requires=[
         "scipy",
         "netCDF4",
@@ -32,13 +33,13 @@ setup(
     extras_require={
         "test": [
             "pytest",
-            "pytest-cov",
+            "pytest-flakefinder",
             "pylint",
             "mypy",
             "types-requests",
             "types-pytz",
-            "pytest-flakefinder",
-        ]
+        ],
+        "dev": ["pre-commit"],
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",

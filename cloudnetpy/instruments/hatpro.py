@@ -128,6 +128,7 @@ ATTRIBUTES = {
         long_name="Quality flag",
         definition=DEFINITIONS["quality_flag"],
         units="1",
-        comment="Quality information as an 8 bit array. See RPG HATPRO manual for more information.",
+        comment="Quality information as an 8 bit array. See RPG HATPRO manual for more\n"
+        "information.",
     ),
 }

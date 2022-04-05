@@ -54,19 +54,19 @@ class Radar(DataSource):
 
         """
         bad_time_indices = []
-        for key in self.data:
+        for key, array in self.data.items():
             if key in ("ldr", "sldr", "Z"):
-                self.data[key].db2lin()
-                bad_time_indices = self.data[key].rebin_data(self.time, time_new)
-                self.data[key].lin2db()
+                array.db2lin()
+                bad_time_indices = array.rebin_data(self.time, time_new)
+                array.lin2db()
             elif key == "v":
-                self.data[key].rebin_velocity(
+                array.rebin_velocity(
                     self.time, time_new, self.folding_velocity, self.sequence_indices
                 )
             elif key == "v_sigma":
-                self.data[key].calc_linear_std(self.time, time_new)
+                array.calc_linear_std(self.time, time_new)
             elif key in ("width", "rain_rate"):
-                self.data[key].rebin_data(self.time, time_new)
+                array.rebin_data(self.time, time_new)
             else:
                 continue
         return bad_time_indices
@@ -81,7 +81,7 @@ class Radar(DataSource):
         """
         good_ind = ~ma.getmaskarray(self.data["Z"][:]) & ~ma.getmaskarray(self.data["v"][:])
 
-        if "width" in self.data.keys():
+        if "width" in self.data:
             good_ind = good_ind & ~ma.getmaskarray(self.data["width"][:])
 
         for array in self.data.values():
@@ -97,7 +97,7 @@ class Radar(DataSource):
 
         """
         for key in ("Z", "v", "width", "ldr", "v_sigma"):
-            if key in self.data.keys():
+            if key in self.data:
                 self.data[key].filter_vertical_stripes()
 
     def filter_1st_gate_artifact(self) -> None:

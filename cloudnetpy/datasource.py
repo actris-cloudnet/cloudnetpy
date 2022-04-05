@@ -109,8 +109,8 @@ class DataSource:
             month = str(self.dataset.month).zfill(2)
             day = str(self.dataset.day).zfill(2)
             datetime.strptime(f"{year}{month}{day}", "%Y%m%d")
-        except (AttributeError, ValueError):
-            raise RuntimeError("Missing or invalid date in global attributes.")
+        except (AttributeError, ValueError) as read_error:
+            raise RuntimeError("Missing or invalid date in global attributes.") from read_error
         return [year, month, day]
 
     def close(self) -> None:

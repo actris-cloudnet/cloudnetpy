@@ -183,8 +183,8 @@ COMMENTS = {
         "liquid water attenuation has been performed."
     ),
     "radar_gas_atten": (
-        "This variable was calculated from the model temperature, pressure and humidity, but forcing\n"
-        "pixels containing liquid cloud to saturation with respect to liquid water.\n"
+        "This variable was calculated from the model temperature, pressure and humidity,\n"
+        "but forcing pixels containing liquid cloud to saturation with respect to liquid water.\n"
         "It has been used to correct Z."
     ),
     "Tw": "This variable was derived from model temperature, pressure and relative humidity.",
@@ -207,10 +207,10 @@ COMMENTS = {
         "This variable has been corrected for attenuation by gaseous attenuation (using the\n"
         "thermodynamic variables from a forecast model; see the radar_gas_atten variable) and\n"
         "liquid attenuation (using liquid water path from a microwave radiometer; see the\n"
-        "radar_liquid_atten variable) but rain and melting-layer attenuation has not been corrected.\n"
-        "Calibration convention: in the absence of attenuation, a cloud at 273 K containing\n"
-        "one million 100-micron droplets per cubic metre will have a reflectivity of 0 dBZ\n"
-        "at all frequencies."
+        "radar_liquid_atten variable) but rain and melting-layer attenuation has not been\n"
+        "corrected. Calibration convention: in the absence of attenuation, a cloud at 273 K\n"
+        "containing one million 100-micron droplets per cubic metre will have a reflectivity\n"
+        "of 0 dBZ at all frequencies."
     ),
     "bias": "This variable is an estimate of the one-standard-deviation calibration error.",
 }

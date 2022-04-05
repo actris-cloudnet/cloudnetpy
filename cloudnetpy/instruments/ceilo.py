@@ -35,7 +35,8 @@ def ceilo2nc(
         2. SNR-screened depolarisation with smoothed weak background, `depolarisation_smooth`
 
     Args:
-        full_path: Ceilometer file name. For Vaisala it is a text file, for CHM15k(x) it is a netCDF file.
+        full_path: Ceilometer file name. For Vaisala it is a text file, for CHM15k(x) it is
+        a netCDF file.
         output_file: Output file name, e.g. 'ceilo.nc'.
         site_meta: Dictionary containing information about the site and instrument.
             Required key value pairs are `name` and `altitude` (metres above mean sea level).
