@@ -31,6 +31,8 @@ all supported instrument combinations.
 
 .. autofunction:: instruments.hatpro2nc
 
+.. autofunction:: instruments.radiometrics2nc
+
 .. autofunction:: instruments.disdrometer2nc
 
 
