@@ -117,6 +117,13 @@ _CLABEL = {
         ("Rain", _COLORS["seaweed"]),
         ("No data", _COLORS["mask"]),
     ),
+    "reff_Frisch_retrieval_status": (
+        ("_Clear sky", _COLORS["white"]),
+        ("Reliable", _COLORS["green"]),
+        ("Mixed-phase", _COLORS["lightgreen"]),
+        ("Unfeasible", _COLORS["red"]),
+        ("Surrounding-ice", _COLORS["mask"]),
+    ),
 }
 
 _CBAR = {"bit": (_COLORS["white"], _COLORS["steelblue"])}
@@ -137,6 +144,43 @@ ATTRIBUTES = {
         plot_range=(0.1, 0.5),
         plot_scale=Scale.LINEAR,
         plot_type="mesh",
+    ),
+    "reff_Frisch": PlotMeta(
+        name="Droplet effective radius",
+        cbar="coolwarm",
+        clabel="m",
+        plot_range=(1.0e-6, 1.0e-4),
+        plot_scale=Scale.LOGARITHMIC,
+        plot_type="mesh",
+    ),
+    "reff_error_Frisch": PlotMeta(
+        name="Absolute error in effective radius",
+        cbar="coolwarm",
+        clabel="m",
+        plot_range=(1.0e-6, 1.0e-4),
+        plot_scale=Scale.LOGARITHMIC,
+        plot_type="mesh",
+    ),
+    "reff_scaled_Frisch": PlotMeta(
+        name="Droplet effective radius (scaled to LWP)",
+        cbar="coolwarm",
+        clabel="m",
+        plot_range=(1.0e-6, 1.0e-4),
+        plot_scale=Scale.LOGARITHMIC,
+        plot_type="mesh",
+    ),
+    "reff_scaled_error_Frisch": PlotMeta(
+        name="Absolute error in effective radius (scaled to LWP)",
+        cbar="coolwarm",
+        clabel="m",
+        plot_range=(1.0e-6, 1.0e-4),
+        plot_scale=Scale.LOGARITHMIC,
+        plot_type="mesh",
+    ),
+    "reff_Frisch_retrieval_status": PlotMeta(
+        name="Effective radius retrieval status",
+        clabel=_CLABEL["reff_Frisch_retrieval_status"],
+        plot_type="segment",
     ),
     "mu": PlotMeta(
         name="Drizzle droplet size distribution shape parameter",
