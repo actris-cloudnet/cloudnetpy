@@ -24,7 +24,7 @@ jobs:
         pip install .[test]
     - name: Lint with pylint
       run: |
-        pylint cloudnetpy/**/*.py --errors-only
+        pylint cloudnetpy --errors-only
     - name: Typecheck with mypy
       run: |
         mypy --ignore-missing-imports cloudnetpy/ tests/
