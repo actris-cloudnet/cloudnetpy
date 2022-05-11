@@ -1,6 +1,6 @@
 import sys
 from os import path
-from tempfile import NamedTemporaryFile
+from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -17,18 +17,19 @@ file = f"{SCRIPT_PATH}/data/radiometrics/2021-07-18_00-00-00_lv2.csv"
 class TestHatpro2nc(Check):
     site_meta = {"name": "the_station", "altitude": 50, "latitude": 23.0, "longitude": 123}
     date = "2021-07-18"
-    temp_file = NamedTemporaryFile()
-    uuid = radiometrics2nc(file, temp_file.name, site_meta, date=date)
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/radiometrics.nc"
+    uuid = radiometrics2nc(file, temp_path, site_meta, date=date)
 
-    def test_default_processing(self):
-        temp_file = NamedTemporaryFile()
-        radiometrics2nc(file, temp_file.name, self.site_meta)
+    def test_default_processing(self, tmp_path):
+        test_path = tmp_path / "default.nc"
+        radiometrics2nc(file, test_path, self.site_meta)
 
-    def test_processing_of_one_file(self):
-        temp_file = NamedTemporaryFile()
-        radiometrics2nc(file, temp_file.name, self.site_meta, date=self.date)
+    def test_processing_of_one_file(self, tmp_path):
+        test_path = tmp_path / "one.nc"
+        radiometrics2nc(file, test_path, self.site_meta, date=self.date)
 
-    def test_processing_of_no_files(self):
-        temp_file = NamedTemporaryFile()
+    def test_processing_of_no_files(self, tmp_path):
+        test_path = tmp_path / "no.nc"
         with pytest.raises(ValidTimeStampError):
-            radiometrics2nc(file, temp_file.name, self.site_meta, date="2021-07-19")
+            radiometrics2nc(file, test_path, self.site_meta, date="2021-07-19")

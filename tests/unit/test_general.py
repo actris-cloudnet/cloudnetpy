@@ -1,28 +1,23 @@
-from tempfile import NamedTemporaryFile
-
 import netCDF4
 
 from cloudnetpy.instruments import general
 
 
-def test_get_files_with_common_range():
-    file1 = NamedTemporaryFile()
-    nc = netCDF4.Dataset(file1.name, "w", format="NETCDF4_CLASSIC")
-    nc.createDimension("range", 100)
-    nc.createVariable("range", dimensions="range", datatype="f8")
-    nc.close()
-    file2 = NamedTemporaryFile()
-    nc = netCDF4.Dataset(file2.name, "w", format="NETCDF4_CLASSIC")
-    nc.createDimension("range", 99)
-    nc.createVariable("range", dimensions="range", datatype="f8")
-    nc.close()
-    file3 = NamedTemporaryFile()
-    nc = netCDF4.Dataset(file3.name, "w", format="NETCDF4_CLASSIC")
-    nc.createDimension("range", 100)
-    nc.createVariable("range", dimensions="range", datatype="f8")
-    nc.close()
-    files = general.get_files_with_common_range([file1.name, file2.name, file3.name])
+def test_get_files_with_common_range(tmp_path):
+    path1 = tmp_path / "file1.nc"
+    with netCDF4.Dataset(path1, "w", format="NETCDF4_CLASSIC") as nc:
+        nc.createDimension("range", 100)
+        nc.createVariable("range", dimensions="range", datatype="f8")
+    path2 = tmp_path / "file2.nc"
+    with netCDF4.Dataset(path2, "w", format="NETCDF4_CLASSIC") as nc:
+        nc.createDimension("range", 99)
+        nc.createVariable("range", dimensions="range", datatype="f8")
+    path3 = tmp_path / "file3.nc"
+    with netCDF4.Dataset(path3, "w", format="NETCDF4_CLASSIC") as nc:
+        nc.createDimension("range", 100)
+        nc.createVariable("range", dimensions="range", datatype="f8")
+    files = general.get_files_with_common_range([path1, path2, path3])
     assert len(files) == 2
-    assert file1.name in files
-    assert file3.name in files
-    assert file2.name not in files
+    assert path1 in files
+    assert path3 in files
+    assert path2 not in files

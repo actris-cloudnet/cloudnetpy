@@ -1,4 +1,4 @@
-from tempfile import _TemporaryFileWrapper
+from pathlib import Path
 
 import netCDF4
 import numpy as np
@@ -10,7 +10,7 @@ SITE_META = {"name": "Kumpula", "altitude": 50, "latitude": 23, "longitude": 34.
 
 class Check:
 
-    temp_file: _TemporaryFileWrapper
+    temp_path: str
     nc: netCDF4.Dataset
     date: str
     site_meta: dict
@@ -18,12 +18,12 @@ class Check:
 
     @pytest.fixture(autouse=True)
     def run_before_and_after_tests(self):
-        self.nc = netCDF4.Dataset(self.temp_file.name)
+        self.nc = netCDF4.Dataset(self.temp_path)
         yield
         self.nc.close()
 
     def test_qc(self):
-        quality = Quality(self.temp_file.name)
+        quality = Quality(self.temp_path)
         res_data = quality.check_data()
         res_metadata = quality.check_metadata()
         assert quality.n_metadata_test_failures == 0, res_metadata
@@ -44,7 +44,6 @@ class AllProductsFun:
         self.site_meta = site_meta
         self.date = date
         self.uuid = uuid
-        self.temp_file = None
 
     def test_variable_names(self):
         keys = {"time", "latitude", "longitude", "altitude"}

@@ -2,7 +2,8 @@ import math
 import sys
 from distutils.dir_util import copy_tree
 from os import path
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from shutil import copytree
+from tempfile import TemporaryDirectory
 
 import netCDF4
 import numpy as np
@@ -37,8 +38,9 @@ class TestReduceHeader:
 class TestRPG2nc94GHz(Check):
     site_meta = SITE_META
     date = "2020-10-22"
-    temp_file = NamedTemporaryFile()
-    uuid, valid_files = rpg2nc(FILEPATH, temp_file.name, site_meta, date=date)
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/rpg.nc"
+    uuid, valid_files = rpg2nc(FILEPATH, temp_path, site_meta, date=date)
 
     def test_variable_names(self):
         mandatory_variables = (
@@ -110,60 +112,57 @@ class TestRPG2nc94GHz(Check):
             if "test_" in name:
                 getattr(radar_fun, name)()
 
-    def test_default_processing(self):
-        temp_file = NamedTemporaryFile()
-        uuid, files = rpg2nc(FILEPATH, temp_file.name, self.site_meta)
+    def test_default_processing(self, tmp_path):
+        test_path = tmp_path / "default.nc"
+        uuid, files = rpg2nc(FILEPATH, test_path, self.site_meta)
         assert len(files) == 3
         assert len(uuid) == 36
 
-    def test_date_validation(self):
-        temp_file = NamedTemporaryFile()
-        uuid, files = rpg2nc(FILEPATH, temp_file.name, self.site_meta, date=self.date)
+    def test_date_validation(self, tmp_path):
+        test_path = tmp_path / "date.nc"
+        uuid, files = rpg2nc(FILEPATH, test_path, self.site_meta, date=self.date)
         assert len(files) == 2
 
-    def test_processing_of_one_file(self):
-        temp_file = NamedTemporaryFile()
-        uuid, files = rpg2nc(FILEPATH, temp_file.name, self.site_meta, date="2020-10-23")
+    def test_processing_of_one_file(self, tmp_path):
+        test_path = tmp_path / "one.nc"
+        uuid, files = rpg2nc(FILEPATH, test_path, self.site_meta, date="2020-10-23")
         assert len(files) == 1
 
-    def test_incorrect_date_processing(self):
-        temp_file = NamedTemporaryFile()
+    def test_incorrect_date_processing(self, tmp_path):
+        test_path = tmp_path / "invalid.nc"
         with pytest.raises(ValidTimeStampError):
-            rpg2nc(FILEPATH, temp_file.name, self.site_meta, date="2010-10-24")
+            rpg2nc(FILEPATH, test_path, self.site_meta, date="2010-10-24")
 
-    def test_uuid_from_user(self):
-        temp_file = NamedTemporaryFile()
+    def test_uuid_from_user(self, tmp_path):
+        test_path = tmp_path / "uuid.nc"
         test_uuid = "abc"
-        uuid, _ = rpg.rpg2nc(
-            FILEPATH, temp_file.name, self.site_meta, date="2020-10-23", uuid=test_uuid
-        )
+        uuid, _ = rpg.rpg2nc(FILEPATH, test_path, self.site_meta, date="2020-10-23", uuid=test_uuid)
         assert uuid == test_uuid
 
-    def test_handling_of_corrupted_files(self):
-        temp_dir = TemporaryDirectory()
-        temp_file = NamedTemporaryFile()
-        copy_tree(FILEPATH, temp_dir.name)
-        with open(f"{temp_dir.name}/foo.LV1", "w") as f:
-            f.write("kissa")
-        _, files = rpg.rpg2nc(temp_dir.name, temp_file.name, self.site_meta, date="2020-10-22")
+    def test_handling_of_corrupted_files(self, tmp_path, tmp_path_factory):
+        temp_dir = tmp_path_factory.mktemp("corrupt")
+        test_path = tmp_path / "corrupt.nc"
+        copytree(FILEPATH, temp_dir, dirs_exist_ok=True)
+        (temp_dir / "foo.LV1").write_text("kissa")
+        _, files = rpg.rpg2nc(str(temp_dir), test_path, self.site_meta, date="2020-10-22")
         assert len(files) == 2
 
-    def test_geolocation_from_source_file(self):
-        temp_file = NamedTemporaryFile()
+    def test_geolocation_from_source_file(self, tmp_path):
+        test_path = tmp_path / "geo.nc"
         meta_without_geolocation = {"name": "Kumpula", "altitude": 34}
-        rpg.rpg2nc(FILEPATH, temp_file.name, meta_without_geolocation)
-        nc = netCDF4.Dataset(temp_file.name)
-        for key in ("latitude", "longitude"):
-            assert key in nc.variables
-            assert nc.variables[key][:] > 0
-        nc.close()
+        rpg.rpg2nc(FILEPATH, test_path, meta_without_geolocation)
+        with netCDF4.Dataset(test_path) as nc:
+            for key in ("latitude", "longitude"):
+                assert key in nc.variables
+                assert nc.variables[key][:] > 0
 
 
 class TestRPG2ncSTSR35GHz(Check):
     site_meta = SITE_META
     date = "2021-09-13"
-    temp_file = NamedTemporaryFile()
-    uuid, valid_files = rpg2nc(FILEPATH, temp_file.name, site_meta, date=date)
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/rpg.nc"
+    uuid, valid_files = rpg2nc(FILEPATH, temp_path, site_meta, date=date)
 
     def test_variable_names(self):
         mandatory_variables = (

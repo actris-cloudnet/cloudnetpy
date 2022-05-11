@@ -1,5 +1,5 @@
 import os
-from tempfile import NamedTemporaryFile
+from tempfile import TemporaryDirectory
 
 import pytest
 from all_products_fun import Check
@@ -17,10 +17,11 @@ def test_format_time():
 
 class TestParsivel(Check):
     date = "2021-03-18"
-    temp_file = NamedTemporaryFile()
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
     site_meta = SITE_META
     filename = f"{SCRIPT_PATH}/data/parsivel/juelich.log"
-    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta)
+    uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta)
 
     def test_global_attributes(self):
         assert "Parsivel" in self.nc.source
@@ -39,33 +40,35 @@ class TestParsivel(Check):
 
 class TestParsivel2(Check):
     date = "2019-11-09"
-    temp_file = NamedTemporaryFile()
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
     filename = f"{SCRIPT_PATH}/data/parsivel/norunda.log"
     site_meta = SITE_META
-    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date=date)
+    uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta, date=date)
 
-    def test_date_validation_fail(self):
-        temp_file = NamedTemporaryFile()
+    def test_date_validation_fail(self, tmp_path):
         with pytest.raises(ValueError):
             disdrometer.disdrometer2nc(
-                self.filename, temp_file.name, self.site_meta, date="2022-04-05"
+                self.filename, tmp_path / "invalid.nc", self.site_meta, date="2022-04-05"
             )
 
 
 class TestParsivel3(Check):
     date = "2021-04-16"
-    temp_file = NamedTemporaryFile()
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
     filename = f"{SCRIPT_PATH}/data/parsivel/ny-alesund.log"
     site_meta = SITE_META
-    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date=date)
+    uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta, date=date)
 
 
 class TestThies(Check):
     date = "2021-09-15"
-    temp_file = NamedTemporaryFile()
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
     filename = f"{SCRIPT_PATH}/data/thies-lnm/2021091507.txt"
     site_meta = SITE_META
-    uuid = disdrometer.disdrometer2nc(filename, temp_file.name, site_meta, date=date)
+    uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta, date=date)
 
     def test_processing(self):
         assert self.nc.title == "Disdrometer file from Kumpula"
