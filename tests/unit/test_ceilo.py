@@ -1,6 +1,5 @@
 """ This module contains unit tests for ceilo-module. """
 from os import path
-from tempfile import NamedTemporaryFile
 
 import netCDF4
 import pytest
@@ -40,28 +39,26 @@ def test_find_ceilo_model_vaisala(fix, result, tmpdir):
     assert ceilo._find_ceilo_model(str(file_name)) == result
 
 
-def test_cl51_reading():
-    output_file = NamedTemporaryFile()
+def test_cl51_reading(tmp_path):
+    output_file = tmp_path / "cl51.nc"
     file = f"{SCRIPT_PATH}/data/vaisala/cl51.DAT"
-    ceilo.ceilo2nc(file, output_file.name, {"name": "Norunda", "altitude": 100})
-    nc = netCDF4.Dataset(output_file.name)
-    assert nc.source == "Vaisala CL51"
-    assert nc.cloudnet_file_type == "lidar"
-    assert nc.location == "Norunda"
-    assert nc.year == "2020"
-    assert nc.month == "11"
-    assert nc.day == "15"
-    assert nc.variables["time"].shape == (2,)
-    assert nc.variables["zenith_angle"][:].all() < 5
-    assert_almost_equal(nc.variables["altitude"][:], 100)
-    nc.close()
+    ceilo.ceilo2nc(file, output_file, {"name": "Norunda", "altitude": 100})
+    with netCDF4.Dataset(output_file) as nc:
+        assert nc.source == "Vaisala CL51"
+        assert nc.cloudnet_file_type == "lidar"
+        assert nc.location == "Norunda"
+        assert nc.year == "2020"
+        assert nc.month == "11"
+        assert nc.day == "15"
+        assert nc.variables["time"].shape == (2,)
+        assert nc.variables["zenith_angle"][:].all() < 5
+        assert_almost_equal(nc.variables["altitude"][:], 100)
 
 
-def test_cl31_reading():
-    output_file = NamedTemporaryFile()
+def test_cl31_reading(tmp_path):
+    output_file = tmp_path / "cl31.nc"
     file = f"{SCRIPT_PATH}/data/vaisala/cl31.DAT"
-    ceilo.ceilo2nc(file, output_file.name, {"name": "Norunda", "altitude": 100})
-    nc = netCDF4.Dataset(output_file.name)
-    assert nc.source == "Vaisala CL31"
-    assert_almost_equal(nc.variables["wavelength"][:], 910)
-    nc.close()
+    ceilo.ceilo2nc(file, output_file, {"name": "Norunda", "altitude": 100})
+    with netCDF4.Dataset(output_file) as nc:
+        assert nc.source == "Vaisala CL31"
+        assert_almost_equal(nc.variables["wavelength"][:], 910)

@@ -2,7 +2,7 @@
 import glob
 import os
 import sys
-from tempfile import NamedTemporaryFile
+from tempfile import TemporaryDirectory
 
 import netCDF4
 import numpy as np
@@ -79,10 +79,12 @@ class TestWithRealData(Check):
     files = glob.glob(f"{SCRIPT_PATH}/data/chm15k/*.nc")
     date = "2020-10-22"
     site_meta = SITE_META
-    daily_temp_file = NamedTemporaryFile()
-    temp_file = NamedTemporaryFile()
-    concat_lib.concatenate_files(files, daily_temp_file.name)
-    uuid = ceilo2nc(daily_temp_file.name, temp_file.name, site_meta)
+    temp_dir = TemporaryDirectory()
+    daily_temp_path = temp_dir.name + "/daily.nc"
+    temp_path = temp_dir.name + "/test.nc"
+
+    concat_lib.concatenate_files(files, daily_temp_path)
+    uuid = ceilo2nc(daily_temp_path, temp_path, site_meta)
 
     def test_variable_names(self):
         keys = {
@@ -119,16 +121,13 @@ class TestWithRealData(Check):
         assert self.nc.source == "Lufft CHM15k"
         assert self.nc.title == f'CHM15k ceilometer from {self.site_meta["name"]}'
 
-    def test_date_argument(self):
-        temp_file = NamedTemporaryFile()
-        ceilo2nc(self.daily_temp_file.name, temp_file.name, self.site_meta, date="2020-10-22")
-        nc = netCDF4.Dataset(temp_file.name)
-        assert len(nc.variables["time"]) == 20
-        assert nc.year == "2020"
-        assert nc.month == "10"
-        assert nc.day == "22"
-        nc.close()
+    def test_date_argument(self, tmp_path):
+        test_path = tmp_path / "date.nc"
+        ceilo2nc(self.daily_temp_path, test_path, self.site_meta, date="2020-10-22")
+        with netCDF4.Dataset(test_path) as nc:
+            assert len(nc.variables["time"]) == 20
+            assert nc.year == "2020"
+            assert nc.month == "10"
+            assert nc.day == "22"
         with pytest.raises(ValidTimeStampError):
-            ceilo2nc(
-                self.daily_temp_file.name, self.temp_file.name, self.site_meta, date="2020-10-23"
-            )
+            ceilo2nc(self.daily_temp_path, test_path, self.site_meta, date="2020-10-23")

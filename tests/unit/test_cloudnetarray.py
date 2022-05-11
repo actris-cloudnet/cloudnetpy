@@ -13,19 +13,18 @@ from cloudnetpy.metadata import MetaData
 def fake_nc_file(tmpdir_factory):
     """Creates a simple categorize for testing."""
     file_name = tmpdir_factory.mktemp("data").join("nc_file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    n_time, n_height = 5, 4
-    root_grp.createDimension("time", n_time)
-    root_grp.createDimension("height", n_height)
-    var = root_grp.createVariable("time", "f8", "time")
-    var[:] = np.arange(n_time)
-    var = root_grp.createVariable("height", "f8", "height")
-    var[:] = np.arange(n_height)
-    var = root_grp.createVariable("var_float_scalar", "f8")
-    var[:] = 1.0
-    var = root_grp.createVariable("2d_array", "f8", ("time", "height"))
-    var[:] = np.array([[1, 1, 1, 1], [2, 2, 2, 1], [3, 3, 3, 1], [4, 4, 4, 1], [5, 5, 5, 1]])
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        n_time, n_height = 5, 4
+        root_grp.createDimension("time", n_time)
+        root_grp.createDimension("height", n_height)
+        var = root_grp.createVariable("time", "f8", "time")
+        var[:] = np.arange(n_time)
+        var = root_grp.createVariable("height", "f8", "height")
+        var[:] = np.arange(n_height)
+        var = root_grp.createVariable("var_float_scalar", "f8")
+        var[:] = 1.0
+        var = root_grp.createVariable("2d_array", "f8", ("time", "height"))
+        var[:] = np.array([[1, 1, 1, 1], [2, 2, 2, 1], [3, 3, 3, 1], [4, 4, 4, 1], [5, 5, 5, 1]])
     return file_name
 
 

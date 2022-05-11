@@ -11,32 +11,35 @@ from cloudnetpy.products.iwc import IceClassification, IwcSource
 @pytest.fixture(scope="session")
 def categorize_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
-    nc = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    dimensions = {"time": 3, "height": 2, "model_time": 3, "model_height": 2}
-    for name, value in dimensions.items():
-        nc.createDimension(name, value)
-        var = nc.createVariable(name, "f8", name)
-        var[:] = np.arange(value)
-        if name == "height":
-            var.units = "m"
-    var = nc.createVariable("altitude", "f8")
-    var[:] = 1
-    var.units = "km"
-    nc.createVariable("Z_bias", "f8")[:] = 0.5
-    nc.createVariable("radar_frequency", "f8")[:] = 35.5
-    nc.createVariable("Z", "f8", ("time", "height"))[:] = np.array([[10, 20], [10, 20], [10, 20]])
-    nc.createVariable("Z_error", "f8", ("time", "height"))[:] = np.array([[1, 2], [1, 2], [2, 3]])
-    nc.createVariable("category_bits", "i4", ("time", "height"))[:] = np.array(
-        [[0, 1], [2, 3], [4, 8]]
-    )
-    nc.createVariable("quality_bits", "i4", ("time", "height"))[:] = np.array(
-        [[0, 1], [2, 3], [4, 8]]
-    )
-    temperature = np.array([[280, 290], [280, 290], [280, 290]])
-    nc.createVariable("temperature", "f8", ("model_time", "model_height"))[:] = temperature
-    nc.createVariable("Z_sensitivity", "f8", "height")[:] = 2.0
-    nc.createVariable("rain_rate", "i4", "time")[:] = [0, 1, 0]
-    nc.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as nc:
+        dimensions = {"time": 3, "height": 2, "model_time": 3, "model_height": 2}
+        for name, value in dimensions.items():
+            nc.createDimension(name, value)
+            var = nc.createVariable(name, "f8", name)
+            var[:] = np.arange(value)
+            if name == "height":
+                var.units = "m"
+        var = nc.createVariable("altitude", "f8")
+        var[:] = 1
+        var.units = "km"
+        nc.createVariable("Z_bias", "f8")[:] = 0.5
+        nc.createVariable("radar_frequency", "f8")[:] = 35.5
+        nc.createVariable("Z", "f8", ("time", "height"))[:] = np.array(
+            [[10, 20], [10, 20], [10, 20]]
+        )
+        nc.createVariable("Z_error", "f8", ("time", "height"))[:] = np.array(
+            [[1, 2], [1, 2], [2, 3]]
+        )
+        nc.createVariable("category_bits", "i4", ("time", "height"))[:] = np.array(
+            [[0, 1], [2, 3], [4, 8]]
+        )
+        nc.createVariable("quality_bits", "i4", ("time", "height"))[:] = np.array(
+            [[0, 1], [2, 3], [4, 8]]
+        )
+        temperature = np.array([[280, 290], [280, 290], [280, 290]])
+        nc.createVariable("temperature", "f8", ("model_time", "model_height"))[:] = temperature
+        nc.createVariable("Z_sensitivity", "f8", "height")[:] = 2.0
+        nc.createVariable("rain_rate", "i4", "time")[:] = [0, 1, 0]
     return file_name
 
 

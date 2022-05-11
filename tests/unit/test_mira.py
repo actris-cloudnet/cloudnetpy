@@ -1,6 +1,6 @@
 import sys
 from os import path
-from tempfile import NamedTemporaryFile
+from tempfile import TemporaryDirectory
 
 import netCDF4
 import numpy as np
@@ -39,8 +39,9 @@ class TestMIRA2nc(Check):
     date = "2021-01-02"
     n_time1 = 146
     n_time2 = 145
-    temp_file = NamedTemporaryFile()
-    uuid = mira.mira2nc(f"{filepath}/20210102_0000.mmclx", temp_file.name, site_meta)
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/mira.nc"
+    uuid = mira.mira2nc(f"{filepath}/20210102_0000.mmclx", temp_path, site_meta)
 
     def test_variable_names(self):
         keys = {
@@ -96,43 +97,40 @@ class TestMIRA2nc(Check):
         assert self.nc.source == "METEK MIRA-35"
         assert self.nc.title == f'MIRA-35 cloud radar from {self.site_meta["name"]}'
 
-    def test_processing_of_several_nc_files(self):
-        temp_file = NamedTemporaryFile()
-        mira.mira2nc(filepath, temp_file.name, self.site_meta)
-        nc = netCDF4.Dataset(temp_file.name)
-        assert len(nc.variables["time"][:]) == self.n_time1 + self.n_time2
-        nc.close()
+    def test_processing_of_several_nc_files(self, tmp_path):
+        test_path = tmp_path / "several.nc"
+        mira.mira2nc(filepath, test_path, self.site_meta)
+        with netCDF4.Dataset(test_path) as nc:
+            assert len(nc.variables["time"][:]) == self.n_time1 + self.n_time2
 
-    def test_correct_date_validation(self):
-        temp_file = NamedTemporaryFile()
+    def test_correct_date_validation(self, tmp_path):
+        test_path = tmp_path / "date.nc"
         mira.mira2nc(
-            f"{filepath}/20210102_0000.mmclx", temp_file.name, self.site_meta, date="2021-01-02"
+            f"{filepath}/20210102_0000.mmclx", test_path, self.site_meta, date="2021-01-02"
         )
 
-    def test_wrong_date_validation(self):
-        temp_file = NamedTemporaryFile()
+    def test_wrong_date_validation(self, tmp_path):
+        test_path = tmp_path / "invalid.nc"
         with pytest.raises(ValidTimeStampError):
             mira.mira2nc(
-                f"{filepath}/20210102_0000.mmclx", temp_file.name, self.site_meta, date="2021-01-03"
+                f"{filepath}/20210102_0000.mmclx", test_path, self.site_meta, date="2021-01-03"
             )
 
-    def test_uuid_from_user(self):
-        temp_file = NamedTemporaryFile()
+    def test_uuid_from_user(self, tmp_path):
+        test_path = tmp_path / "uuid.nc"
         uuid_from_user = "kissa"
         uuid = mira.mira2nc(
-            f"{filepath}/20210102_0000.mmclx", temp_file.name, self.site_meta, uuid=uuid_from_user
+            f"{filepath}/20210102_0000.mmclx", test_path, self.site_meta, uuid=uuid_from_user
         )
-        nc = netCDF4.Dataset(temp_file.name)
-        assert nc.file_uuid == uuid_from_user
-        assert uuid == uuid_from_user
-        nc.close()
+        with netCDF4.Dataset(test_path) as nc:
+            assert nc.file_uuid == uuid_from_user
+            assert uuid == uuid_from_user
 
-    def test_geolocation_from_source_file(self):
-        temp_file = NamedTemporaryFile()
+    def test_geolocation_from_source_file(self, tmp_path):
+        test_path = tmp_path / "geo.nc"
         meta_without_geolocation = {"name": "Kumpula"}
-        mira.mira2nc(f"{filepath}/20210102_0000.mmclx", temp_file.name, meta_without_geolocation)
-        nc = netCDF4.Dataset(temp_file.name)
-        for key in ("latitude", "longitude", "altitude"):
-            assert key in nc.variables
-            assert nc.variables[key][:] > 0
-        nc.close()
+        mira.mira2nc(f"{filepath}/20210102_0000.mmclx", test_path, meta_without_geolocation)
+        with netCDF4.Dataset(test_path) as nc:
+            for key in ("latitude", "longitude", "altitude"):
+                assert key in nc.variables
+                assert nc.variables[key][:] > 0

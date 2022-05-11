@@ -1,7 +1,7 @@
 """ This module contains unit tests for ceilo-module. """
 import os
 import sys
-from tempfile import NamedTemporaryFile
+from tempfile import TemporaryDirectory
 
 import netCDF4
 import numpy as np
@@ -59,8 +59,9 @@ class TestCL51(Check):
     site_meta = {"name": "Kumpula", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
     date = "2020-11-15"
     input = f"{SCRIPT_PATH}/data/vaisala/cl51.DAT"
-    temp_file = NamedTemporaryFile()
-    uuid = ceilo2nc(input, temp_file.name, site_meta)
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/cl51.nc"
+    uuid = ceilo2nc(input, temp_path, site_meta)
 
     def test_variable_names(self):
         keys = {
@@ -98,25 +99,25 @@ class TestCL51(Check):
         assert self.nc.source == "Vaisala CL51"
         assert self.nc.title == f'CL51 ceilometer from {self.site_meta["name"]}'
 
-    def test_date_argument(self):
-        temp_file = NamedTemporaryFile()
-        ceilo2nc(self.input, temp_file.name, self.site_meta, date="2020-11-15")
-        nc = netCDF4.Dataset(temp_file.name)
-        assert len(nc.variables["time"]) == 2
-        assert nc.year == "2020"
-        assert nc.month == "11"
-        assert nc.day == "15"
-        nc.close()
+    def test_date_argument(self, tmp_path):
+        test_path = tmp_path / "date.nc"
+        ceilo2nc(self.input, test_path, self.site_meta, date="2020-11-15")
+        with netCDF4.Dataset(test_path) as nc:
+            assert len(nc.variables["time"]) == 2
+            assert nc.year == "2020"
+            assert nc.month == "11"
+            assert nc.day == "15"
         with pytest.raises(ValidTimeStampError):
-            ceilo2nc(self.input, temp_file.name, self.site_meta, date="2021-09-15")
+            ceilo2nc(self.input, test_path, self.site_meta, date="2021-09-15")
 
 
 class TestCL31(Check):
     site_meta = {"name": "Kumpula", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
     date = "2020-04-10"
     input = f"{SCRIPT_PATH}/data/vaisala/cl31.DAT"
-    temp_file = NamedTemporaryFile()
-    uuid = ceilo2nc(input, temp_file.name, site_meta)
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/cl32.nc"
+    uuid = ceilo2nc(input, temp_path, site_meta)
 
     def test_variable_names(self):
         keys = {
@@ -153,33 +154,32 @@ class TestCL31(Check):
         assert self.nc.source == "Vaisala CL31"
         assert self.nc.title == f'CL31 ceilometer from {self.site_meta["name"]}'
 
-    def test_date_argument(self):
-        temp_file = NamedTemporaryFile()
+    def test_date_argument(self, tmp_path):
+        test_path = tmp_path / "date.nc"
         input = f"{SCRIPT_PATH}/data/vaisala/cl31_badtime.DAT"
-        ceilo2nc(input, temp_file.name, self.site_meta, date="2020-04-10")
-        nc = netCDF4.Dataset(temp_file.name)
-        assert len(nc.variables["time"]) == 2
-        assert nc.year == "2020"
-        assert nc.month == "04"
-        assert nc.day == "10"
-        nc.close()
-        ceilo2nc(input, temp_file.name, self.site_meta, date="2020-04-11")
-        nc = netCDF4.Dataset(temp_file.name)
-        assert len(nc.variables["time"]) == 2
-        assert nc.year == "2020"
-        assert nc.month == "04"
-        assert nc.day == "11"
-        nc.close()
+        ceilo2nc(input, test_path, self.site_meta, date="2020-04-10")
+        with netCDF4.Dataset(test_path) as nc:
+            assert len(nc.variables["time"]) == 2
+            assert nc.year == "2020"
+            assert nc.month == "04"
+            assert nc.day == "10"
+        ceilo2nc(input, test_path, self.site_meta, date="2020-04-11")
+        with netCDF4.Dataset(test_path) as nc:
+            assert len(nc.variables["time"]) == 2
+            assert nc.year == "2020"
+            assert nc.month == "04"
+            assert nc.day == "11"
         with pytest.raises(ValidTimeStampError):
-            ceilo2nc(input, temp_file.name, self.site_meta, date="2020-04-12")
+            ceilo2nc(input, test_path, self.site_meta, date="2020-04-12")
 
 
 class TestCT25k(Check):
     site_meta = {"name": "Kumpula", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
     date = "2020-10-29"
     input = f"{SCRIPT_PATH}/data/vaisala/ct25k.dat"
-    temp_file = NamedTemporaryFile()
-    uuid = ceilo2nc(input, temp_file.name, site_meta)
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/ct25k.nc"
+    uuid = ceilo2nc(input, temp_path, site_meta)
 
     def test_variable_names(self):
         keys = {
@@ -216,14 +216,13 @@ class TestCT25k(Check):
         assert self.nc.source == "Vaisala CT25k"
         assert self.nc.title == f'CT25k ceilometer from {self.site_meta["name"]}'
 
-    def test_date_argument(self):
-        temp_file = NamedTemporaryFile()
-        ceilo2nc(self.input, temp_file.name, self.site_meta, date="2020-10-29")
-        nc = netCDF4.Dataset(temp_file.name)
-        assert len(nc.variables["time"]) == 3
-        assert nc.year == "2020"
-        assert nc.month == "10"
-        assert nc.day == "29"
-        nc.close()
+    def test_date_argument(self, tmp_path):
+        test_path = tmp_path / "date.nc"
+        ceilo2nc(self.input, test_path, self.site_meta, date="2020-10-29")
+        with netCDF4.Dataset(test_path) as nc:
+            assert len(nc.variables["time"]) == 3
+            assert nc.year == "2020"
+            assert nc.month == "10"
+            assert nc.day == "29"
         with pytest.raises(ValidTimeStampError):
-            ceilo2nc(self.input, temp_file.name, self.site_meta, date="2021-09-15")
+            ceilo2nc(self.input, test_path, self.site_meta, date="2021-09-15")
