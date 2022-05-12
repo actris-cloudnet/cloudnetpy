@@ -209,34 +209,31 @@ def _find_valid_fields(nc_file: str, names: list) -> Tuple[list, list]:
         bits = CategorizeBits(nc_file)
     except KeyError:
         bits = None
-    nc = netCDF4.Dataset(nc_file)
-    for name in names:
-        if name in nc.variables:
-            valid_data.append(nc.variables[name][:])
-        elif bits and name in CategorizeBits.category_keys:
-            valid_data.append(bits.category_bits[name])
-        elif bits and name in CategorizeBits.quality_keys:
-            valid_data.append(bits.quality_bits[name])
-        else:
-            valid_names.remove(name)
-    nc.close()
+    with netCDF4.Dataset(nc_file) as nc:
+        for name in names:
+            if name in nc.variables:
+                valid_data.append(nc.variables[name][:])
+            elif bits and name in CategorizeBits.category_keys:
+                valid_data.append(bits.category_bits[name])
+            elif bits and name in CategorizeBits.quality_keys:
+                valid_data.append(bits.quality_bits[name])
+            else:
+                valid_names.remove(name)
     if not valid_names:
         raise ValueError("No fields to be plotted")
     return valid_data, valid_names
 
 
 def _is_height_dimension(full_path: str) -> bool:
-    nc = netCDF4.Dataset(full_path)
-    is_height = any(key in nc.variables for key in ("height", "range"))
-    nc.close()
+    with netCDF4.Dataset(full_path) as nc:
+        is_height = any(key in nc.variables for key in ("height", "range"))
     return is_height
 
 
 def _get_variable_unit(full_path: str, name: str) -> str:
-    nc = netCDF4.Dataset(full_path)
-    var = nc.variables[name]
-    unit = var.units
-    nc.close()
+    with netCDF4.Dataset(full_path) as nc:
+        var = nc.variables[name]
+        unit = var.units
     return unit
 
 
@@ -252,9 +249,8 @@ def _initialize_figure(n_subplots: int, dpi) -> tuple:
 def _read_ax_values(full_path: str) -> Tuple[ndarray, ndarray]:
     """Returns time and height arrays."""
     file_type = utils.get_file_type(full_path)
-    nc = netCDF4.Dataset(full_path)
-    is_height = "height" in nc.variables
-    nc.close()
+    with netCDF4.Dataset(full_path) as nc:
+        is_height = "height" in nc.variables
     if is_height is not True:
         fields = ["time", "range"]
     else:
@@ -268,9 +264,8 @@ def _read_ax_values(full_path: str) -> Tuple[ndarray, ndarray]:
 
 def _read_time_vector(nc_file: str) -> ndarray:
     """Converts time vector to fraction hour."""
-    nc = netCDF4.Dataset(nc_file)
-    time = nc.variables["time"][:]
-    nc.close()
+    with netCDF4.Dataset(nc_file) as nc:
+        time = nc.variables["time"][:]
     if max(time) < 24:
         return time
     return utils.seconds2hours(time)
@@ -515,17 +510,15 @@ def _generate_log_cbar_ticklabel_list(vmin: float, vmax: float) -> list:
 
 def _read_location(nc_file: str) -> str:
     """Returns site name."""
-    nc = netCDF4.Dataset(nc_file)
-    site_name = nc.location
-    nc.close()
+    with netCDF4.Dataset(nc_file) as nc:
+        site_name = nc.location
     return site_name
 
 
 def _read_date(nc_file: str) -> date:
     """Returns measurement date."""
-    nc = netCDF4.Dataset(nc_file)
-    case_date = date(int(nc.year), int(nc.month), int(nc.day))
-    nc.close()
+    with netCDF4.Dataset(nc_file) as nc:
+        case_date = date(int(nc.year), int(nc.month), int(nc.day))
     return case_date
 
 

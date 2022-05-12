@@ -39,42 +39,38 @@ class History:
 def fake_nc_file(tmpdir_factory):
     """Creates a simple categorize for testing."""
     file_name = tmpdir_factory.mktemp("data").join("nc_file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    root_grp.a = 1
-    root_grp.b = 2
-    root_grp.c = 3
-    root_grp.file_uuid = "abcde"
-    var = root_grp.createVariable("a", "f8")
-    var[:] = 1.0
-    var = root_grp.createVariable("b", "f8")
-    var[:] = 2.0
-    var = root_grp.createVariable("c", "i4")
-    var[:] = 3
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        root_grp.a = 1
+        root_grp.b = 2
+        root_grp.c = 3
+        root_grp.file_uuid = "abcde"
+        var = root_grp.createVariable("a", "f8")
+        var[:] = 1.0
+        var = root_grp.createVariable("b", "f8")
+        var[:] = 2.0
+        var = root_grp.createVariable("c", "i4")
+        var[:] = 3
     return file_name
 
 
 def test_copy_global(tmpdir_factory, fake_nc_file):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
-    root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
-    attr_list = ("a", "b", "c")
-    source = netCDF4.Dataset(fake_nc_file)
-    output.copy_global(source, root_grp, attr_list)
-    for attr in attr_list:
-        assert getattr(root_grp, attr) == getattr(source, attr)
-    root_grp.close()
-    source.close()
+    with netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC") as root_grp:
+        attr_list = ("a", "b", "c")
+        with netCDF4.Dataset(fake_nc_file) as source:
+            output.copy_global(source, root_grp, attr_list)
+            for attr in attr_list:
+                assert getattr(root_grp, attr) == getattr(source, attr)
 
 
 def test_copy_variables(tmpdir_factory, fake_nc_file):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
-    root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
-    var_list = ("a", "b", "c")
-    source = netCDF4.Dataset(fake_nc_file)
-    output.copy_variables(source, root_grp, var_list)
-    for var in var_list:
-        assert source.variables[var][:] == root_grp.variables[var][:]
-    root_grp.close()
+    with netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC") as root_grp:
+        var_list = ("a", "b", "c")
+        with netCDF4.Dataset(fake_nc_file) as source:
+            output.copy_variables(source, root_grp, var_list)
+            for var in var_list:
+                assert source.variables[var][:] == root_grp.variables[var][:]
 
 
 def test_merge_history():
@@ -106,13 +102,12 @@ def test_get_source_uuids():
 
 def test_add_standard_global_attributes(tmpdir_factory):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
-    root_grp = netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC")
-    output._add_standard_global_attributes(root_grp, "abcd")
-    assert root_grp.file_uuid == "abcd"
-    assert root_grp.Conventions == "CF-1.8"
-    output._add_standard_global_attributes(root_grp)
-    assert root_grp.file_uuid != "abcd"
-    root_grp.close()
+    with netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC") as root_grp:
+        output._add_standard_global_attributes(root_grp, "abcd")
+        assert root_grp.file_uuid == "abcd"
+        assert root_grp.Conventions == "CF-1.8"
+        output._add_standard_global_attributes(root_grp)
+        assert root_grp.file_uuid != "abcd"
 
 
 def test_add_time_attribute():

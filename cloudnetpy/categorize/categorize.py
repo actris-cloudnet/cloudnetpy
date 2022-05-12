@@ -99,37 +99,39 @@ def generate_categorize(input_files: dict, output_file: str, uuid: Optional[str]
         for obj in data.values():
             obj.close()
 
-    data = {
-        "radar": Radar(input_files["radar"]),
-        "lidar": Lidar(input_files["lidar"]),
-        "mwr": Mwr(input_files["mwr"]),
-    }
-    assert data["radar"].altitude is not None
-    data["model"] = Model(input_files["model"], data["radar"].altitude)
-    time, height = _define_dense_grid()
-    valid_ind = _interpolate_to_cloudnet_grid()
-    _screen_bad_time_indices(valid_ind)
-    if "rpg" in data["radar"].type.lower() or "basta" in data["radar"].type.lower():
-        data["radar"].filter_speckle_noise()
-        data["radar"].filter_1st_gate_artifact()
-    for variable in ("v", "v_sigma", "ldr"):
-        data["radar"].filter_stripes(variable)
-    data["radar"].remove_incomplete_pixels()
-    data["model"].calc_wet_bulb()
-    classification = classify.classify_measurements(data)
-    attenuations = atmos.get_attenuations(data, classification)
-    data["radar"].correct_atten(attenuations)
-    data["radar"].calc_errors(attenuations, classification)
-    quality = classify.fetch_quality(data, classification, attenuations)
-    cloudnet_arrays = _prepare_output()
-    date = data["radar"].get_date()
-    attributes = output.add_time_attribute(CATEGORIZE_ATTRIBUTES, date)
-    attributes = output.add_time_attribute(attributes, date, "model_time")
-    attributes = output.add_source_attribute(attributes, data)
-    output.update_attributes(cloudnet_arrays, attributes)
-    uuid = _save_cat(output_file, data, cloudnet_arrays, uuid)
-    _close_all()
-    return uuid
+    try:
+        data = {
+            "radar": Radar(input_files["radar"]),
+            "lidar": Lidar(input_files["lidar"]),
+            "mwr": Mwr(input_files["mwr"]),
+        }
+        assert data["radar"].altitude is not None
+        data["model"] = Model(input_files["model"], data["radar"].altitude)
+        time, height = _define_dense_grid()
+        valid_ind = _interpolate_to_cloudnet_grid()
+        _screen_bad_time_indices(valid_ind)
+        if "rpg" in data["radar"].type.lower() or "basta" in data["radar"].type.lower():
+            data["radar"].filter_speckle_noise()
+            data["radar"].filter_1st_gate_artifact()
+        for variable in ("v", "v_sigma", "ldr"):
+            data["radar"].filter_stripes(variable)
+        data["radar"].remove_incomplete_pixels()
+        data["model"].calc_wet_bulb()
+        classification = classify.classify_measurements(data)
+        attenuations = atmos.get_attenuations(data, classification)
+        data["radar"].correct_atten(attenuations)
+        data["radar"].calc_errors(attenuations, classification)
+        quality = classify.fetch_quality(data, classification, attenuations)
+        cloudnet_arrays = _prepare_output()
+        date = data["radar"].get_date()
+        attributes = output.add_time_attribute(CATEGORIZE_ATTRIBUTES, date)
+        attributes = output.add_time_attribute(attributes, date, "model_time")
+        attributes = output.add_source_attribute(attributes, data)
+        output.update_attributes(cloudnet_arrays, attributes)
+        uuid = _save_cat(output_file, data, cloudnet_arrays, uuid)
+        return uuid
+    finally:
+        _close_all()
 
 
 def _save_cat(full_path: str, data_obs: dict, cloudnet_arrays: dict, uuid: Union[str, None]) -> str:
@@ -143,16 +145,15 @@ def _save_cat(full_path: str, data_obs: dict, cloudnet_arrays: dict, uuid: Union
     }
 
     file_type = "categorize"
-    nc = output.init_file(full_path, dims, cloudnet_arrays, uuid)
-    uuid_out = nc.file_uuid
-    nc.cloudnet_file_type = file_type
-    output.copy_global(data_obs["radar"].dataset, nc, ("year", "month", "day", "location"))
-    nc.title = f"Cloud categorization products from {data_obs['radar'].location}"
-    nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
-    nc.references = output.get_references(file_type)
-    output.add_source_instruments(nc, data_obs)
-    output.merge_history(nc, file_type, data_obs)
-    nc.close()
+    with output.init_file(full_path, dims, cloudnet_arrays, uuid) as nc:
+        uuid_out = nc.file_uuid
+        nc.cloudnet_file_type = file_type
+        output.copy_global(data_obs["radar"].dataset, nc, ("year", "month", "day", "location"))
+        nc.title = f"Cloud categorization products from {data_obs['radar'].location}"
+        nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
+        nc.references = output.get_references(file_type)
+        output.add_source_instruments(nc, data_obs)
+        output.merge_history(nc, file_type, data_obs)
     return uuid_out
 
 

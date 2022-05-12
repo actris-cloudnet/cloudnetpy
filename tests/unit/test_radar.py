@@ -22,30 +22,29 @@ MASKED_ONE[0, 0] = ma.masked
 def fake_radar_file(tmpdir_factory):
     """Creates a simple radar file for testing."""
     file_name = tmpdir_factory.mktemp("data").join("radar_file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    n_time, n_height = 3, 4
-    root_grp.createDimension("time", n_time)
-    root_grp.createDimension("height", n_height)
-    root_grp.createVariable("time", "f8", "time")[:] = np.arange(n_time)
-    var = root_grp.createVariable("height", "f8", "height")
-    var[:] = np.arange(n_height)
-    var.units = "km"
-    root_grp.createVariable("radar_frequency", "f8")[:] = 35.5
-    root_grp.createVariable("nyquist_velocity", "f8")[:] = FOLDING_VELOCITY
-    root_grp.createVariable("latitude", "f8")[:] = 60.43
-    root_grp.createVariable("longitude", "f8")[:] = 25.4
-    var = root_grp.createVariable("altitude", "f8")
-    var[:] = 120.3
-    var.units = "m"
-    var = root_grp.createVariable("v", "f8", ("time", "height"))
-    var[:] = EMPTY_ARRAY
-    var = root_grp.createVariable("width", "f8", ("time", "height"))
-    var[:] = MASKED_ONE
-    var = root_grp.createVariable("ldr", "f8", ("time", "height"))
-    var[:] = EMPTY_ARRAY
-    var = root_grp.createVariable("Zh", "f8", ("time", "height"))
-    var[:] = EMPTY_ARRAY
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        n_time, n_height = 3, 4
+        root_grp.createDimension("time", n_time)
+        root_grp.createDimension("height", n_height)
+        root_grp.createVariable("time", "f8", "time")[:] = np.arange(n_time)
+        var = root_grp.createVariable("height", "f8", "height")
+        var[:] = np.arange(n_height)
+        var.units = "km"
+        root_grp.createVariable("radar_frequency", "f8")[:] = 35.5
+        root_grp.createVariable("nyquist_velocity", "f8")[:] = FOLDING_VELOCITY
+        root_grp.createVariable("latitude", "f8")[:] = 60.43
+        root_grp.createVariable("longitude", "f8")[:] = 25.4
+        var = root_grp.createVariable("altitude", "f8")
+        var[:] = 120.3
+        var.units = "m"
+        var = root_grp.createVariable("v", "f8", ("time", "height"))
+        var[:] = EMPTY_ARRAY
+        var = root_grp.createVariable("width", "f8", ("time", "height"))
+        var[:] = MASKED_ONE
+        var = root_grp.createVariable("ldr", "f8", ("time", "height"))
+        var[:] = EMPTY_ARRAY
+        var = root_grp.createVariable("Zh", "f8", ("time", "height"))
+        var[:] = EMPTY_ARRAY
     return file_name
 
 

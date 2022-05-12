@@ -198,3 +198,9 @@ class DataSource:
                 self.append_data(array, key, units=units)
                 return
         raise RuntimeError("Missing variable in the input file.")
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()

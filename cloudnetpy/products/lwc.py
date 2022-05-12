@@ -43,25 +43,24 @@ def generate_lwc(categorize_file: str, output_file: str, uuid: Optional[str] = N
         Bull. Amer. Meteor. Soc., 88, 883–898, https://doi.org/10.1175/BAMS-88-6-883
 
     """
-    lwc_source = LwcSource(categorize_file)
-    lwc = Lwc(lwc_source)
-    clouds = CloudAdjustor(lwc_source, lwc)
-    lwc_error = LwcError(lwc_source, lwc)
-    lwc_source.append_results(lwc.lwc, clouds.status, lwc_error.error)
-    date = lwc_source.get_date()
-    attributes = output.add_time_attribute(LWC_ATTRIBUTES, date)
-    output.update_attributes(lwc_source.data, attributes)
-    uuid = output.save_product_file(
-        "lwc",
-        lwc_source,
-        output_file,
-        uuid,
-        copy_from_cat=(
-            "lwp",
-            "lwp_error",
-        ),
-    )
-    lwc_source.close()
+    with LwcSource(categorize_file) as lwc_source:
+        lwc = Lwc(lwc_source)
+        clouds = CloudAdjustor(lwc_source, lwc)
+        lwc_error = LwcError(lwc_source, lwc)
+        lwc_source.append_results(lwc.lwc, clouds.status, lwc_error.error)
+        date = lwc_source.get_date()
+        attributes = output.add_time_attribute(LWC_ATTRIBUTES, date)
+        output.update_attributes(lwc_source.data, attributes)
+        uuid = output.save_product_file(
+            "lwc",
+            lwc_source,
+            output_file,
+            uuid,
+            copy_from_cat=(
+                "lwp",
+                "lwp_error",
+            ),
+        )
     return uuid
 
 

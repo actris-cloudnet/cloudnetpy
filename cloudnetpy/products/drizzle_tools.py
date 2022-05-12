@@ -45,24 +45,23 @@ class DrizzleSource(DataSource):
     def _read_mie_lut(self):
         """Reads mie scattering look-up table."""
         mie_file = self._get_mie_file()
-        nc = netCDF4.Dataset(mie_file)
-        mie = nc.variables
-        lut = {
-            "Do": mie["lu_medianD"][:],
-            "mu": mie["lu_u"][:],
-            "S": mie["lu_k"][:],
-            "lwf": mie["lu_LWF"][:],
-            "termv": mie["lu_termv"][:],
-        }
-        band = self._get_wl_band()
-        lut.update(
-            {
-                "width": mie[f"lu_width_{band}"][:],
-                "ray": mie[f"lu_mie_ray_{band}"][:],
-                "v": mie[f"lu_v_{band}"][:],
+        with netCDF4.Dataset(mie_file) as nc:
+            mie = nc.variables
+            lut = {
+                "Do": mie["lu_medianD"][:],
+                "mu": mie["lu_u"][:],
+                "S": mie["lu_k"][:],
+                "lwf": mie["lu_LWF"][:],
+                "termv": mie["lu_termv"][:],
             }
-        )
-        nc.close()
+            band = self._get_wl_band()
+            lut.update(
+                {
+                    "width": mie[f"lu_width_{band}"][:],
+                    "ray": mie[f"lu_mie_ray_{band}"][:],
+                    "v": mie[f"lu_v_{band}"][:],
+                }
+            )
         return lut
 
     @staticmethod

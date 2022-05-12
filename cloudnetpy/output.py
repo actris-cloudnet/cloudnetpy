@@ -16,18 +16,17 @@ def save_level1b(obj, output_file: str, uuid: Optional[str] = None) -> str:
     dimensions = {key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data}
     if "chirp_start_indices" in obj.data:
         dimensions["chirp_sequence"] = len(obj.data["chirp_start_indices"][:])
-    nc = init_file(output_file, dimensions, obj.data, uuid)
-    file_uuid = nc.file_uuid
-    fix_attribute_name(nc)
-    location = obj.site_meta["name"]
-    nc.cloudnet_file_type = obj.instrument.domain
-    nc.title = get_l1b_title(obj.instrument, location)
-    nc.year, nc.month, nc.day = obj.date
-    nc.location = location
-    nc.history = get_l1b_history(obj.instrument)
-    nc.source = get_l1b_source(obj.instrument)
-    nc.references = get_references()
-    nc.close()
+    with init_file(output_file, dimensions, obj.data, uuid) as nc:
+        file_uuid = nc.file_uuid
+        fix_attribute_name(nc)
+        location = obj.site_meta["name"]
+        nc.cloudnet_file_type = obj.instrument.domain
+        nc.title = get_l1b_title(obj.instrument, location)
+        nc.year, nc.month, nc.day = obj.date
+        nc.location = location
+        nc.history = get_l1b_history(obj.instrument)
+        nc.source = get_l1b_source(obj.instrument)
+        nc.references = get_references()
     return file_uuid
 
 
@@ -46,17 +45,16 @@ def save_product_file(
     """
     human_readable_file_type = _get_identifier(short_id)
     dimensions = {"time": len(obj.time), "height": len(obj.dataset.variables["height"])}
-    nc = init_file(file_name, dimensions, obj.data, uuid)
-    file_uuid = nc.file_uuid
-    nc.cloudnet_file_type = short_id
-    vars_from_source = ("altitude", "latitude", "longitude", "time", "height") + copy_from_cat
-    copy_variables(obj.dataset, nc, vars_from_source)
-    nc.title = f"{human_readable_file_type.capitalize()} products from {obj.dataset.location}"
-    nc.source_file_uuids = get_source_uuids(nc, obj)
-    copy_global(obj.dataset, nc, ("location", "day", "month", "year", "source"))
-    merge_history(nc, human_readable_file_type, {"categorize": obj})
-    nc.references = get_references(short_id)
-    nc.close()
+    with init_file(file_name, dimensions, obj.data, uuid) as nc:
+        file_uuid = nc.file_uuid
+        nc.cloudnet_file_type = short_id
+        vars_from_source = ("altitude", "latitude", "longitude", "time", "height") + copy_from_cat
+        copy_variables(obj.dataset, nc, vars_from_source)
+        nc.title = f"{human_readable_file_type.capitalize()} products from {obj.dataset.location}"
+        nc.source_file_uuids = get_source_uuids(nc, obj)
+        copy_global(obj.dataset, nc, ("location", "day", "month", "year", "source"))
+        merge_history(nc, human_readable_file_type, {"categorize": obj})
+        nc.references = get_references(short_id)
     return file_uuid
 
 

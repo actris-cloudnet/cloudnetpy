@@ -46,31 +46,30 @@ ALT_SITE = 123
 def fake_model_file(tmpdir_factory):
     """Creates a simple radar file for testing."""
     file_name = tmpdir_factory.mktemp("data").join("ecmwf_file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    n_time, n_height = 3, 4
-    root_grp.createDimension("time", n_time)
-    root_grp.createDimension("height", n_height)
-    root_grp.createDimension("wl", 2)
-    root_grp.createVariable("time", "f8", "time")[:] = np.arange(n_time)
-    var = root_grp.createVariable("height", "f8", ("time", "height"))
-    var[:] = np.array(
-        [[1000, 2000, 3000, 4000], [1000, 2000, 3000, 4000], [1000, 2000, 3000, 4000]]
-    )
-    var.units = "m"
-    _create_var(root_grp, "temperature")
-    _create_var(root_grp, "pressure")
-    _create_var(root_grp, "uwind")
-    _create_var(root_grp, "vwind")
-    _create_var(root_grp, "q")
-    _create_var(root_grp, "rh")
-    _create_var(root_grp, "gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
-    _create_var(root_grp, "specific_gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
-    _create_var(
-        root_grp, "specific_saturated_gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height")
-    )
-    _create_var(root_grp, "liquid_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
-    _create_var(root_grp, "specific_liquid_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        n_time, n_height = 3, 4
+        root_grp.createDimension("time", n_time)
+        root_grp.createDimension("height", n_height)
+        root_grp.createDimension("wl", 2)
+        root_grp.createVariable("time", "f8", "time")[:] = np.arange(n_time)
+        var = root_grp.createVariable("height", "f8", ("time", "height"))
+        var[:] = np.array(
+            [[1000, 2000, 3000, 4000], [1000, 2000, 3000, 4000], [1000, 2000, 3000, 4000]]
+        )
+        var.units = "m"
+        _create_var(root_grp, "temperature")
+        _create_var(root_grp, "pressure")
+        _create_var(root_grp, "uwind")
+        _create_var(root_grp, "vwind")
+        _create_var(root_grp, "q")
+        _create_var(root_grp, "rh")
+        _create_var(root_grp, "gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
+        _create_var(root_grp, "specific_gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
+        _create_var(
+            root_grp, "specific_saturated_gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height")
+        )
+        _create_var(root_grp, "liquid_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
+        _create_var(root_grp, "specific_liquid_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
     return file_name
 
 

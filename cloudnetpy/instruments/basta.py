@@ -50,17 +50,16 @@ def basta2nc(
         "radar_roll": "radar_roll",
     }
 
-    basta = Basta(basta_file, site_meta)
-    basta.init_data(keymap)
-    if date is not None:
-        basta.validate_date(date)
-    basta.screen_data(keymap)
-    basta.add_time_and_range()
-    general.add_site_geolocation(basta)
-    basta.add_zenith_angle()
-    general.add_radar_specific_variables(basta)
-    general.add_height(basta)
-    basta.close()
+    with Basta(basta_file, site_meta) as basta:
+        basta.init_data(keymap)
+        if date is not None:
+            basta.validate_date(date)
+        basta.screen_data(keymap)
+        basta.add_time_and_range()
+        general.add_site_geolocation(basta)
+        basta.add_zenith_angle()
+        general.add_radar_specific_variables(basta)
+        general.add_height(basta)
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
     uuid = output.save_level1b(basta, output_file, uuid)

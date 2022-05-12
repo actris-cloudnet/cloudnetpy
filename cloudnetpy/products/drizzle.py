@@ -41,22 +41,21 @@ def generate_drizzle(categorize_file: str, output_file: str, uuid: Optional[str]
         J. Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
 
     """
-    drizzle_source = DrizzleSource(categorize_file)
-    drizzle_class = DrizzleClassification(categorize_file)
-    spectral_width = SpectralWidth(categorize_file)
-    drizzle_solver = DrizzleSolver(drizzle_source, drizzle_class, spectral_width)
-    derived_products = DrizzleProducts(drizzle_source, drizzle_solver)
-    errors = get_drizzle_error(drizzle_source, drizzle_solver)
-    retrieval_status = RetrievalStatus(drizzle_class)
-    results = {**drizzle_solver.params, **derived_products.derived_products, **errors}
-    results = _screen_rain(results, drizzle_class)
-    results["drizzle_retrieval_status"] = retrieval_status.retrieval_status
-    _append_data(drizzle_source, results)
-    date = drizzle_source.get_date()
-    attributes = output.add_time_attribute(DRIZZLE_ATTRIBUTES, date)
-    output.update_attributes(drizzle_source.data, attributes)
-    uuid = output.save_product_file("drizzle", drizzle_source, output_file, uuid)
-    drizzle_source.close()
+    with DrizzleSource(categorize_file) as drizzle_source:
+        drizzle_class = DrizzleClassification(categorize_file)
+        spectral_width = SpectralWidth(categorize_file)
+        drizzle_solver = DrizzleSolver(drizzle_source, drizzle_class, spectral_width)
+        derived_products = DrizzleProducts(drizzle_source, drizzle_solver)
+        errors = get_drizzle_error(drizzle_source, drizzle_solver)
+        retrieval_status = RetrievalStatus(drizzle_class)
+        results = {**drizzle_solver.params, **derived_products.derived_products, **errors}
+        results = _screen_rain(results, drizzle_class)
+        results["drizzle_retrieval_status"] = retrieval_status.retrieval_status
+        _append_data(drizzle_source, results)
+        date = drizzle_source.get_date()
+        attributes = output.add_time_attribute(DRIZZLE_ATTRIBUTES, date)
+        output.update_attributes(drizzle_source.data, attributes)
+        uuid = output.save_product_file("drizzle", drizzle_source, output_file, uuid)
     return uuid
 
 

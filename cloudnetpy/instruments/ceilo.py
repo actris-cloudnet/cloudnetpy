@@ -101,9 +101,8 @@ def _initialize_ceilo(
 
 def _find_ceilo_model(full_path: str) -> str:
     try:
-        nc = netCDF4.Dataset(full_path)
-        title = nc.title
-        nc.close()
+        with netCDF4.Dataset(full_path) as nc:
+            title = nc.title
         for identifier in ["cl61d", "cl61-d"]:
             if identifier in title.lower() or identifier in full_path.lower():
                 return "cl61d"

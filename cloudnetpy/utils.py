@@ -883,12 +883,10 @@ def edges2mid(data: np.ndarray, reference: str) -> np.ndarray:
 
 def get_file_type(filename: str) -> str:
     """Returns cloudnet file type from new and legacy files."""
-    nc = netCDF4.Dataset(filename)
-    if hasattr(nc, "cloudnet_file_type"):
-        file_type = nc.cloudnet_file_type
-        nc.close()
-        return file_type
-    nc.close()
+    with netCDF4.Dataset(filename) as nc:
+        if hasattr(nc, "cloudnet_file_type"):
+            file_type = nc.cloudnet_file_type
+            return file_type
     product = filename.split("_")[-1][:-3]
     if product in ("categorize", "classification", "drizzle"):
         return product

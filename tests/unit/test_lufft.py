@@ -24,25 +24,24 @@ SITE_META = {"name": "Bucharest", "altitude": 123, "latitude": 45.0, "longitude"
 @pytest.fixture
 def fake_jenoptik_file(tmpdir):
     file_name = tmpdir.join("jenoptik.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    n_time, n_height = 5, 4
-    root_grp.createDimension("time", n_time)
-    root_grp.createDimension("range", n_height)
-    var = root_grp.createVariable("time", "f8", "time")
-    var[:] = [3696730788, 3696728448, 3696728447, 3696728450, 3696896790]
-    var.units = "seconds since 1904-01-01 00:00:00.000 00:00"
-    var = root_grp.createVariable("range", "f8", "range")
-    var[:] = np.array([2000, 3000, 4000, 5000])
-    var.units = "m"
-    var = root_grp.createVariable("beta_raw", "f8", ("time", "range"))
-    var[:] = np.random.rand(5, 4)
-    var.units = "sr-1 m-1"
-    root_grp.createVariable("zenith", "f8")[:] = 2
-    root_grp.year = "2021"
-    root_grp.month = "2"
-    root_grp.day = "21"
-    root_grp.software_version = "12.12.1 2.13 1.040 0"
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        n_time, n_height = 5, 4
+        root_grp.createDimension("time", n_time)
+        root_grp.createDimension("range", n_height)
+        var = root_grp.createVariable("time", "f8", "time")
+        var[:] = [3696730788, 3696728448, 3696728447, 3696728450, 3696896790]
+        var.units = "seconds since 1904-01-01 00:00:00.000 00:00"
+        var = root_grp.createVariable("range", "f8", "range")
+        var[:] = np.array([2000, 3000, 4000, 5000])
+        var.units = "m"
+        var = root_grp.createVariable("beta_raw", "f8", ("time", "range"))
+        var[:] = np.random.rand(5, 4)
+        var.units = "sr-1 m-1"
+        root_grp.createVariable("zenith", "f8")[:] = 2
+        root_grp.year = "2021"
+        root_grp.month = "2"
+        root_grp.day = "21"
+        root_grp.software_version = "12.12.1 2.13 1.040 0"
     return file_name
 
 

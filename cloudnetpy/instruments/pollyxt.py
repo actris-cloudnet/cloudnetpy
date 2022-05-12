@@ -101,25 +101,25 @@ class PollyXt(Ceilometer):
         calibration_factors: np.ndarray = np.array([])
         bsc_key = "attenuated_backscatter_1064nm"
         for (bsc_file, depol_file) in zip(bsc_files, depol_files):
-            nc_bsc = netCDF4.Dataset(bsc_file, "r")
-            nc_depol = netCDF4.Dataset(depol_file, "r")
-            epoch = utils.get_epoch(nc_bsc["time"].unit)
-            try:
-                time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, "time"))
-            except AssertionError:
-                _close(nc_bsc, nc_depol)
-                continue
-            beta_raw = nc_bsc.variables[bsc_key][:]
-            depol_raw = nc_depol.variables["volume_depolarization_ratio_532nm"][:]
-            snr = nc_bsc.variables["SNR_1064nm"][:]
-            for array, key in zip(
-                [beta_raw, depol_raw, time, snr], ["beta_raw", "depolarisation_raw", "time", "snr"]
-            ):
-                self.data = utils.append_data(self.data, key, array)
-            calibration_factor = nc_bsc.variables[bsc_key].Lidar_calibration_constant_used
-            calibration_factor = np.repeat(calibration_factor, len(time))
-            calibration_factors = np.concatenate([calibration_factors, calibration_factor])
-            _close(nc_bsc, nc_depol)
+            with netCDF4.Dataset(bsc_file, "r") as nc_bsc, netCDF4.Dataset(
+                depol_file, "r"
+            ) as nc_depol:
+                epoch = utils.get_epoch(nc_bsc["time"].unit)
+                try:
+                    time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, "time"))
+                except AssertionError:
+                    continue
+                beta_raw = nc_bsc.variables[bsc_key][:]
+                depol_raw = nc_depol.variables["volume_depolarization_ratio_532nm"][:]
+                snr = nc_bsc.variables["SNR_1064nm"][:]
+                for array, key in zip(
+                    [beta_raw, depol_raw, time, snr],
+                    ["beta_raw", "depolarisation_raw", "time", "snr"],
+                ):
+                    self.data = utils.append_data(self.data, key, array)
+                calibration_factor = nc_bsc.variables[bsc_key].Lidar_calibration_constant_used
+                calibration_factor = np.repeat(calibration_factor, len(time))
+                calibration_factors = np.concatenate([calibration_factors, calibration_factor])
         self.data["calibration_factor"] = calibration_factors
         return epoch
 
@@ -127,12 +127,10 @@ class PollyXt(Ceilometer):
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
     array: np.ndarray = np.array([])
     for ind, (file1, file2) in enumerate(zip(files1, files2)):
-        nc1 = netCDF4.Dataset(file1, "r")
-        nc2 = netCDF4.Dataset(file2, "r")
-        array1 = _read_array_from_file_pair(nc1, nc2, key)
-        if ind == 0:
-            array = array1
-        _close(nc1, nc2)
+        with netCDF4.Dataset(file1, "r") as nc1, netCDF4.Dataset(file2, "r") as nc2:
+            array1 = _read_array_from_file_pair(nc1, nc2, key)
+            if ind == 0:
+                array = array1
         assert_array_equal(array, array1)
     return np.array(array)
 
@@ -144,11 +142,6 @@ def _read_array_from_file_pair(
     array2 = nc_file2.variables[key][:]
     assert_array_equal(array1, array2)
     return array1
-
-
-def _close(*args) -> None:
-    for arg in args:
-        arg.close()
 
 
 ATTRIBUTES = {

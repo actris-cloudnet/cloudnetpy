@@ -22,12 +22,13 @@ class LufftCeilo(NcLidar):
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""
-        self.dataset = netCDF4.Dataset(self.file_name)
-        self._fetch_range(reference="upper")
-        self._fetch_beta_raw(calibration_factor)
-        self._fetch_time_and_date()
-        self._fetch_zenith_angle("zenith")
-        self.dataset.close()
+        with netCDF4.Dataset(self.file_name) as dataset:
+            self.dataset = dataset
+            self._fetch_range(reference="upper")
+            self._fetch_beta_raw(calibration_factor)
+            self._fetch_time_and_date()
+            self._fetch_zenith_angle("zenith")
+            self.dataset = None
 
     def _fetch_beta_raw(self, calibration_factor: Optional[float] = None) -> None:
         if calibration_factor is None:
@@ -72,9 +73,8 @@ class LufftCeilo(NcLidar):
         raise ValueError("Unknown variable")
 
     def _get_chm_model(self):
-        nc = netCDF4.Dataset(self.file_name)
-        source = getattr(nc, "source", "")[:3].lower()
-        nc.close()
-        if source == "chx":
-            return instruments.CHM15KX
+        with netCDF4.Dataset(self.file_name) as nc:
+            source = getattr(nc, "source", "")[:3].lower()
+            if source == "chx":
+                return instruments.CHM15KX
         return instruments.CHM15K

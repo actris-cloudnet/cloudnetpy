@@ -22,19 +22,15 @@ def update_nc(old_file: str, new_file: str) -> int:
         Requires 'time' variable with unlimited dimension.
 
     """
-    success = 0
     try:
-        nc_new = netCDF4.Dataset(new_file)
+        with netCDF4.Dataset(old_file, "a") as nc_old, netCDF4.Dataset(new_file) as nc_new:
+            valid_ind = _find_valid_time_indices(nc_old, nc_new)
+            if len(valid_ind) > 0:
+                _update_fields(nc_old, nc_new, valid_ind)
+                return 1
+            return 0
     except OSError:
         return 0
-    nc_old = netCDF4.Dataset(old_file, "a")
-    valid_ind = _find_valid_time_indices(nc_old, nc_new)
-    if len(valid_ind) > 0:
-        _update_fields(nc_old, nc_new, valid_ind)
-        success = 1
-    nc_new.close()
-    nc_old.close()
-    return success
 
 
 def concatenate_files(
@@ -59,11 +55,10 @@ def concatenate_files(
         the first file. Groups, possibly present in a NETCDF4 formatted file, are ignored.
 
     """
-    concat = Concat(filenames, output_file, concat_dimension)
-    concat.get_constants()
-    concat.create_global_attributes(new_attributes)
-    concat.concat_data(variables)
-    concat.close()
+    with Concat(filenames, output_file, concat_dimension) as concat:
+        concat.get_constants()
+        concat.create_global_attributes(new_attributes)
+        concat.concat_data(variables)
 
 
 class Concat:
@@ -96,6 +91,12 @@ class Concat:
         """Closes open files."""
         self.first_file.close()
         self.concatenated_file.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
 
     def concat_data(self, variables: Optional[list] = None):
         """Concatenates data arrays."""
@@ -201,29 +202,30 @@ def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int):
     """Truncates netcdf file in 'time' dimension taking only n_profiles.
     Useful for creating small files for tests.
     """
-    nc = netCDF4.Dataset(filename, "r")
-    nc_new = netCDF4.Dataset(output_file, "w", format=nc.data_model)
-    for dim in nc.dimensions.keys():
-        dim_len = None if dim == "time" else nc.dimensions[dim].size
-        nc_new.createDimension(dim, dim_len)
-    for attr in nc.ncattrs():
-        value = getattr(nc, attr)
-        setattr(nc_new, attr, value)
-    for key in nc.variables:
-        array = nc.variables[key][:]
-        dimensions = nc.variables[key].dimensions
-        fill_value = getattr(nc.variables[key], "_FillValue", None)
-        var = nc_new.createVariable(key, array.dtype, dimensions, zlib=True, fill_value=fill_value)
-        if dimensions and "time" in dimensions[0]:
-            if array.ndim == 1:
-                var[:] = array[:n_profiles]
-            if array.ndim == 2:
-                var[:] = array[:n_profiles, :]
-        else:
-            var[:] = array
-        for attr in nc.variables[key].ncattrs():
-            if attr != "_FillValue":
-                value = getattr(nc.variables[key], attr)
-                setattr(var, attr, value)
-    nc.close()
-    nc_new.close()
+    with netCDF4.Dataset(filename, "r") as nc, netCDF4.Dataset(
+        output_file, "w", format=nc.data_model
+    ) as nc_new:
+        for dim in nc.dimensions.keys():
+            dim_len = None if dim == "time" else nc.dimensions[dim].size
+            nc_new.createDimension(dim, dim_len)
+        for attr in nc.ncattrs():
+            value = getattr(nc, attr)
+            setattr(nc_new, attr, value)
+        for key in nc.variables:
+            array = nc.variables[key][:]
+            dimensions = nc.variables[key].dimensions
+            fill_value = getattr(nc.variables[key], "_FillValue", None)
+            var = nc_new.createVariable(
+                key, array.dtype, dimensions, zlib=True, fill_value=fill_value
+            )
+            if dimensions and "time" in dimensions[0]:
+                if array.ndim == 1:
+                    var[:] = array[:n_profiles]
+                if array.ndim == 2:
+                    var[:] = array[:n_profiles, :]
+            else:
+                var[:] = array
+            for attr in nc.variables[key].ncattrs():
+                if attr != "_FillValue":
+                    value = getattr(nc.variables[key], attr)
+                    setattr(var, attr, value)
