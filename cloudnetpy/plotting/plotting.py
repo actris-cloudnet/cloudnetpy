@@ -540,7 +540,7 @@ def _add_subtitle(fig, case_date: date, site_name: str):
 
 def _get_subtitle_text(case_date: date, site_name: str) -> str:
     site_name = site_name.replace("-", " ")
-    return f"{site_name}, {case_date.strftime('%-d %b %Y')}"
+    return f"{site_name}, {case_date.strftime('%d %b %Y').lstrip('0')}"
 
 
 def _create_save_name(save_path: str, case_date: date, field_names: list, fix: str = "") -> str:
