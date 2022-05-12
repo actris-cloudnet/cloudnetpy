@@ -16,27 +16,26 @@ CategorizeBits = namedtuple("CategorizeBits", ["category_bits", "quality_bits"])
 @pytest.fixture(scope="session")
 def lwc_source_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    _create_dimensions(root_grp)
-    _create_dimension_variables(root_grp)
-    var = root_grp.createVariable("altitude", "f8")
-    var[:] = 1
-    var.units = "km"
-    var = root_grp.createVariable("lwp", "f8", "time")
-    var[:] = [1, 1, 0.5]
-    var = root_grp.createVariable("lwp_error", "f8", "time")
-    var[:] = [0.2, 0.2, 0.1]
-    var = root_grp.createVariable("rain_rate", "i4", "time")
-    var[:] = [0, 1, 1]
-    var = root_grp.createVariable("category_bits", "i4", "time")
-    var[:] = [0, 1, 2]
-    var = root_grp.createVariable("quality_bits", "i4", "time")
-    var[:] = [8, 16, 32]
-    var = root_grp.createVariable("temperature", "f8", ("time", "height"))
-    var[:] = np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
-    var = root_grp.createVariable("pressure", "f8", ("time", "height"))
-    var[:] = np.array([[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]])
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        _create_dimensions(root_grp)
+        _create_dimension_variables(root_grp)
+        var = root_grp.createVariable("altitude", "f8")
+        var[:] = 1
+        var.units = "km"
+        var = root_grp.createVariable("lwp", "f8", "time")
+        var[:] = [1, 1, 0.5]
+        var = root_grp.createVariable("lwp_error", "f8", "time")
+        var[:] = [0.2, 0.2, 0.1]
+        var = root_grp.createVariable("rain_rate", "i4", "time")
+        var[:] = [0, 1, 1]
+        var = root_grp.createVariable("category_bits", "i4", "time")
+        var[:] = [0, 1, 2]
+        var = root_grp.createVariable("quality_bits", "i4", "time")
+        var[:] = [8, 16, 32]
+        var = root_grp.createVariable("temperature", "f8", ("time", "height"))
+        var[:] = np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
+        var = root_grp.createVariable("pressure", "f8", ("time", "height"))
+        var[:] = np.array([[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]])
     return file_name
 
 

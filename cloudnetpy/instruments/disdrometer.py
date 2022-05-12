@@ -370,18 +370,17 @@ def save_disdrometer(
         "nv": 2,
     }
     file_type = "disdrometer"
-    rootgrp = output.init_file(output_file, dims, disdrometer.data, uuid)
-    file_uuid = rootgrp.file_uuid
-    rootgrp.cloudnet_file_type = file_type
-    rootgrp.title = f"{file_type.capitalize()} file from {disdrometer.site_meta['name']}"
-    rootgrp.year, rootgrp.month, rootgrp.day = disdrometer.date
-    rootgrp.location = disdrometer.site_meta["name"]
-    rootgrp.history = f"{utils.get_time()} - {file_type} file created"
-    rootgrp.source = disdrometer.source
-    if disdrometer.sensor_id is not None:
-        rootgrp.sensor_id = disdrometer.sensor_id
-    rootgrp.references = output.get_references()
-    rootgrp.close()
+    with output.init_file(output_file, dims, disdrometer.data, uuid) as rootgrp:
+        file_uuid = rootgrp.file_uuid
+        rootgrp.cloudnet_file_type = file_type
+        rootgrp.title = f"{file_type.capitalize()} file from {disdrometer.site_meta['name']}"
+        rootgrp.year, rootgrp.month, rootgrp.day = disdrometer.date
+        rootgrp.location = disdrometer.site_meta["name"]
+        rootgrp.history = f"{utils.get_time()} - {file_type} file created"
+        rootgrp.source = disdrometer.source
+        if disdrometer.sensor_id is not None:
+            rootgrp.sensor_id = disdrometer.sensor_id
+        rootgrp.references = output.get_references()
     return file_uuid
 
 

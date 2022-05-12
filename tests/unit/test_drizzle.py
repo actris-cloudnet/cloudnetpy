@@ -18,35 +18,34 @@ TEST_ARRAY_Y = np.arange(3)
 @pytest.fixture(scope="session")
 def drizzle_source_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    _create_dimensions(root_grp, TEST_ARRAY_X, DIMENSIONS_X)
-    _create_dimension_variables(root_grp, TEST_ARRAY_X, DIMENSIONS_X)
-    _create_dimensions(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
-    _create_dimension_variables(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
-    var = root_grp.createVariable("altitude", "f8")
-    var[:] = 1
-    var.units = "km"
-    var = root_grp.createVariable("beta", "f8", ("time", "height"))
-    var[:] = [[0.1, 0.1, 0.1], [1, 0.2, 3]]
-    var = root_grp.createVariable("beta_error", "f8")
-    var[:] = 0.1
-    var = root_grp.createVariable("beta_bias", "f8")
-    var[:] = 0.1
-    var = root_grp.createVariable("v", "f8", ("time", "height"))
-    var[:] = [[1, 2, 3], [1, 2, 3]]
-    var = root_grp.createVariable("Z", "f8", ("time", "height"))
-    var[:] = [[1, 0.1, 0.2], [0.3, 2, 0.1]]
-    var = root_grp.createVariable("Z_error", "f8", ("time", "height"))
-    var[:] = [[0.01, 0.1, 0.2], [0.3, 0.2, 0.1]]
-    var = root_grp.createVariable("Z_bias", "f8")
-    var[:] = 0.1
-    var = root_grp.createVariable("category_bits", "i4", ("time", "height"))
-    var[:] = [[0, 1, 2], [4, 8, 16]]
-    var = root_grp.createVariable("quality_bits", "i4", ("time", "height"))
-    var[:] = [[0, 1, 2], [4, 8, 16]]
-    var = root_grp.createVariable("radar_frequency", "f8")
-    var[:] = 35.5
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        _create_dimensions(root_grp, TEST_ARRAY_X, DIMENSIONS_X)
+        _create_dimension_variables(root_grp, TEST_ARRAY_X, DIMENSIONS_X)
+        _create_dimensions(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
+        _create_dimension_variables(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
+        var = root_grp.createVariable("altitude", "f8")
+        var[:] = 1
+        var.units = "km"
+        var = root_grp.createVariable("beta", "f8", ("time", "height"))
+        var[:] = [[0.1, 0.1, 0.1], [1, 0.2, 3]]
+        var = root_grp.createVariable("beta_error", "f8")
+        var[:] = 0.1
+        var = root_grp.createVariable("beta_bias", "f8")
+        var[:] = 0.1
+        var = root_grp.createVariable("v", "f8", ("time", "height"))
+        var[:] = [[1, 2, 3], [1, 2, 3]]
+        var = root_grp.createVariable("Z", "f8", ("time", "height"))
+        var[:] = [[1, 0.1, 0.2], [0.3, 2, 0.1]]
+        var = root_grp.createVariable("Z_error", "f8", ("time", "height"))
+        var[:] = [[0.01, 0.1, 0.2], [0.3, 0.2, 0.1]]
+        var = root_grp.createVariable("Z_bias", "f8")
+        var[:] = 0.1
+        var = root_grp.createVariable("category_bits", "i4", ("time", "height"))
+        var[:] = [[0, 1, 2], [4, 8, 16]]
+        var = root_grp.createVariable("quality_bits", "i4", ("time", "height"))
+        var[:] = [[0, 1, 2], [4, 8, 16]]
+        var = root_grp.createVariable("radar_frequency", "f8")
+        var[:] = 35.5
     return file_name
 
 
@@ -86,28 +85,27 @@ def test_get_wl_band(drizzle_source_file):
 @pytest.fixture(scope="session")
 def drizzle_cat_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    _create_dimensions(root_grp, TEST_ARRAY_X, DIMENSIONS_X)
-    _create_dimension_variables(root_grp, TEST_ARRAY_X, DIMENSIONS_X)
-    _create_dimensions(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
-    _create_dimension_variables(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
-    var = root_grp.createVariable("dheight", "f8")
-    var[:] = 10
-    var = root_grp.createVariable("uwind", "f8", ("model_time", "model_height"))
-    var[:] = [[2, 2, 1], [1, 3, 5]]
-    var = root_grp.createVariable("vwind", "f8", ("model_time", "model_height"))
-    var[:] = [[-2, -2, 1], [1, -3, 0]]
-    var = root_grp.createVariable("category_bits", "i4", ("time", "height"))
-    var[:] = [[0, 1, 2], [4, 8, 16]]
-    var = root_grp.createVariable("quality_bits", "i4", ("time", "height"))
-    var[:] = [[0, 1, 2], [4, 8, 16]]
-    var = root_grp.createVariable("rain_rate", "i4", "time")
-    var[:] = [0, 0]
-    var = root_grp.createVariable("v_sigma", "f8", ("time", "height"))
-    var[:] = [[-2, np.nan, 2], [1, -1, 0]]
-    var = root_grp.createVariable("width", "f8", ("time", "height"))
-    var[:] = [[2, 0, 1], [1, 3, 0]]
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        _create_dimensions(root_grp, TEST_ARRAY_X, DIMENSIONS_X)
+        _create_dimension_variables(root_grp, TEST_ARRAY_X, DIMENSIONS_X)
+        _create_dimensions(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
+        _create_dimension_variables(root_grp, TEST_ARRAY_Y, DIMENSIONS_Y)
+        var = root_grp.createVariable("dheight", "f8")
+        var[:] = 10
+        var = root_grp.createVariable("uwind", "f8", ("model_time", "model_height"))
+        var[:] = [[2, 2, 1], [1, 3, 5]]
+        var = root_grp.createVariable("vwind", "f8", ("model_time", "model_height"))
+        var[:] = [[-2, -2, 1], [1, -3, 0]]
+        var = root_grp.createVariable("category_bits", "i4", ("time", "height"))
+        var[:] = [[0, 1, 2], [4, 8, 16]]
+        var = root_grp.createVariable("quality_bits", "i4", ("time", "height"))
+        var[:] = [[0, 1, 2], [4, 8, 16]]
+        var = root_grp.createVariable("rain_rate", "i4", "time")
+        var[:] = [0, 0]
+        var = root_grp.createVariable("v_sigma", "f8", ("time", "height"))
+        var[:] = [[-2, np.nan, 2], [1, -1, 0]]
+        var = root_grp.createVariable("width", "f8", ("time", "height"))
+        var[:] = [[2, 0, 1], [1, 3, 0]]
     return file_name
 
 

@@ -28,6 +28,7 @@ class Check:
         res_metadata = quality.check_metadata()
         assert quality.n_metadata_test_failures == 0, res_metadata
         assert quality.n_data_test_failures == 0, res_data
+        quality.close()
 
     def test_common(self):
         all_fun = AllProductsFun(self.nc, self.site_meta, self.date, self.uuid)

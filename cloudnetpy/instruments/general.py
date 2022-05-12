@@ -58,9 +58,8 @@ def get_files_with_common_range(files: list) -> list:
     """Returns files with the same (most common) number of range gates."""
     n_range = []
     for file in files:
-        nc = netCDF4.Dataset(file)
-        n_range.append(len(nc.variables["range"]))
-        nc.close()
+        with netCDF4.Dataset(file) as nc:
+            n_range.append(len(nc.variables["range"]))
     most_common = np.bincount(n_range).argmax()
     n_removed = len([n for n in n_range if n != most_common])
     if n_removed > 0:

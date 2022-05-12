@@ -10,16 +10,15 @@ from cloudnetpy.products import product_tools
 def fake_categorize_file(tmpdir_factory):
     """Creates a simple categorize for testing."""
     file_name = tmpdir_factory.mktemp("data").join("categorize.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    n_points = 7
-    root_grp.createDimension("time", n_points)
-    var = root_grp.createVariable("time", "f8", "time")
-    var[:] = np.arange(n_points)
-    var = root_grp.createVariable("category_bits", "i4", "time")
-    var[:] = [0, 1, 2, 4, 8, 16, 32]
-    var = root_grp.createVariable("quality_bits", "i4", "time")
-    var[:] = [0, 1, 2, 4, 8, 16, 32]
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        n_points = 7
+        root_grp.createDimension("time", n_points)
+        var = root_grp.createVariable("time", "f8", "time")
+        var[:] = np.arange(n_points)
+        var = root_grp.createVariable("category_bits", "i4", "time")
+        var[:] = [0, 1, 2, 4, 8, 16, 32]
+        var = root_grp.createVariable("quality_bits", "i4", "time")
+        var[:] = [0, 1, 2, 4, 8, 16, 32]
     return file_name
 
 

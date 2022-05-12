@@ -34,22 +34,21 @@ def generate_classification(
         >>> generate_classification('categorize.nc', 'classification.nc')
 
     """
-    product_container = DataSource(categorize_file)
-    categorize_bits = CategorizeBits(categorize_file)
-    classification = _get_target_classification(categorize_bits)
-    product_container.append_data(classification, "target_classification")
-    status = _get_detection_status(categorize_bits)
-    product_container.append_data(status, "detection_status")
-    bases, tops = _get_cloud_base_and_top_heights(classification, product_container)
-    product_container.append_data(bases, "cloud_base_height_amsl")
-    product_container.append_data(tops, "cloud_top_height_amsl")
-    product_container.append_data(bases - product_container.altitude, "cloud_base_height_agl")
-    product_container.append_data(tops - product_container.altitude, "cloud_top_height_agl")
-    date = product_container.get_date()
-    attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
-    output.update_attributes(product_container.data, attributes)
-    uuid = output.save_product_file("classification", product_container, output_file, uuid)
-    product_container.close()
+    with DataSource(categorize_file) as product_container:
+        categorize_bits = CategorizeBits(categorize_file)
+        classification = _get_target_classification(categorize_bits)
+        product_container.append_data(classification, "target_classification")
+        status = _get_detection_status(categorize_bits)
+        product_container.append_data(status, "detection_status")
+        bases, tops = _get_cloud_base_and_top_heights(classification, product_container)
+        product_container.append_data(bases, "cloud_base_height_amsl")
+        product_container.append_data(tops, "cloud_top_height_amsl")
+        product_container.append_data(bases - product_container.altitude, "cloud_base_height_agl")
+        product_container.append_data(tops - product_container.altitude, "cloud_top_height_agl")
+        date = product_container.get_date()
+        attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
+        output.update_attributes(product_container.data, attributes)
+        uuid = output.save_product_file("classification", product_container, output_file, uuid)
     return uuid
 
 

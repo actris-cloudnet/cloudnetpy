@@ -72,13 +72,12 @@ def _run_tests(filename: str):
 
 
 def _check_source_file_uuids(file: str, expected_uuids: tuple):
-    nc = netCDF4.Dataset(file)
-    source_uuids = nc.source_file_uuids.replace(",", "").split(" ")
-    for uuid in expected_uuids:
-        assert uuid in source_uuids
-    for uuid in source_uuids:
-        assert uuid in expected_uuids
-    nc.close()
+    with netCDF4.Dataset(file) as nc:
+        source_uuids = nc.source_file_uuids.replace(",", "").split(" ")
+        for uuid in expected_uuids:
+            assert uuid in source_uuids
+        for uuid in source_uuids:
+            assert uuid in expected_uuids
 
 
 def _check_is_valid_uuid(uuid):
@@ -89,18 +88,15 @@ def _check_is_valid_uuid(uuid):
 
 
 def _check_attributes(full_path: str, metadata: dict):
-    nc = netCDF4.Dataset(full_path)
-    assert nc.variables["altitude"][:] == metadata["altitude"]
-    nc.close()
+    with netCDF4.Dataset(full_path) as nc:
+        assert nc.variables["altitude"][:] == metadata["altitude"]
 
 
 def _get_uuids(data: dict) -> tuple:
-    nc = netCDF4.Dataset(data["model"])
-    uuid_model = nc.file_uuid
-    nc.close()
-    nc = netCDF4.Dataset(data["mwr"])
-    uuid_mwr = nc.file_uuid
-    nc.close()
+    with netCDF4.Dataset(data["model"]) as nc:
+        uuid_model = nc.file_uuid
+    with netCDF4.Dataset(data["mwr"]) as nc:
+        uuid_mwr = nc.file_uuid
     return uuid_model, uuid_mwr
 
 

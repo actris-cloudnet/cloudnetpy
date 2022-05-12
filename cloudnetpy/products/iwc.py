@@ -44,21 +44,20 @@ def generate_iwc(categorize_file: str, output_file: str, uuid: Optional[str] = N
         J. Appl. Meteor. Climatol., 45, 301–317, https://doi.org/10.1175/JAM2340.1
 
     """
-    iwc_source = IwcSource(categorize_file)
-    ice_classification = IceClassification(categorize_file)
-    iwc_source.append_iwc_including_rain(ice_classification)
-    iwc_source.append_iwc(ice_classification)
-    iwc_source.append_bias()
-    iwc_source.append_sensitivity()
-    lwp_prior, bias = iwc_source.append_error(ice_classification)
-    iwc_source.append_status(ice_classification)
-    date = iwc_source.get_date()
-    attributes = output.add_time_attribute(IWC_ATTRIBUTES, date)
-    attributes = _add_iwc_comment(attributes, iwc_source)
-    attributes = _add_iwc_error_comment(attributes, lwp_prior, bias)
-    output.update_attributes(iwc_source.data, attributes)
-    uuid = output.save_product_file("iwc", iwc_source, output_file, uuid)
-    iwc_source.close()
+    with IwcSource(categorize_file) as iwc_source:
+        ice_classification = IceClassification(categorize_file)
+        iwc_source.append_iwc_including_rain(ice_classification)
+        iwc_source.append_iwc(ice_classification)
+        iwc_source.append_bias()
+        iwc_source.append_sensitivity()
+        lwp_prior, bias = iwc_source.append_error(ice_classification)
+        iwc_source.append_status(ice_classification)
+        date = iwc_source.get_date()
+        attributes = output.add_time_attribute(IWC_ATTRIBUTES, date)
+        attributes = _add_iwc_comment(attributes, iwc_source)
+        attributes = _add_iwc_error_comment(attributes, lwp_prior, bias)
+        output.update_attributes(iwc_source.data, attributes)
+        uuid = output.save_product_file("iwc", iwc_source, output_file, uuid)
     return uuid
 
 

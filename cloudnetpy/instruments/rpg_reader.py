@@ -23,67 +23,68 @@ class Fmcw94Bin:
                 header[name] = np.fromfile(file, dtype, int(n_values))
 
         header = {}
-        file = open(self.filename, "rb")  # pylint: disable=R1732
-        append(("file_code", "_header_length"), np.int32)
-        append(("_start_time", "_stop_time"), np.uint32)
-        append(("program_number",))
-        append(("model_number",))  # 0 = single polarization, 1 = dual pol.
-        header["_program_name"] = self.read_string(file)
-        header["_customer_name"] = self.read_string(file)
-        append(
-            (
-                "radar_frequency",
-                "antenna_separation",
-                "antenna_diameter",
-                "antenna_gain",  # linear
-                "half_power_beam_width",
-            ),
-            np.float32,
-        )
-        append(("dual_polarization",), np.int8)  # 0 = single pol, 1 = LDR, 2 = STSR
-        append(("sample_duration",), np.float32)
-        append(("latitude", "longitude"), np.float32)
-        append(
-            (
-                "calibration_interval",
-                "_number_of_range_gates",
-                "_number_of_temperature_levels",
-                "_number_of_humidity_levels",
-                "_number_of_chirp_sequences",
+        with open(self.filename, "rb") as file:
+            append(("file_code", "_header_length"), np.int32)
+            append(("_start_time", "_stop_time"), np.uint32)
+            append(("program_number",))
+            append(("model_number",))  # 0 = single polarization, 1 = dual pol.
+            header["_program_name"] = self.read_string(file)
+            header["_customer_name"] = self.read_string(file)
+            append(
+                (
+                    "radar_frequency",
+                    "antenna_separation",
+                    "antenna_diameter",
+                    "antenna_gain",  # linear
+                    "half_power_beam_width",
+                ),
+                np.float32,
             )
-        )
-        append(("range",), np.float32, int(header["_number_of_range_gates"]))
-        append(("_temperature_levels",), np.float32, int(header["_number_of_temperature_levels"]))
-        append(("_humidity_levels",), np.float32, int(header["_number_of_humidity_levels"]))
-        append(
-            ("number_of_spectral_samples", "chirp_start_indices", "number_of_averaged_chirps"),
-            n_values=int(header["_number_of_chirp_sequences"]),
-        )
-        append(
-            ("integration_time", "range_resolution", "nyquist_velocity"),
-            np.float32,
-            int(header["_number_of_chirp_sequences"]),
-        )
-        append(
-            (
-                "_is_power_levelling",
-                "_is_spike_filter",
-                "_is_phase_correction",
-                "_is_relative_power_correction",
-            ),
-            np.int8,
-        )
-        append(
-            ("FFT_window",), np.int8
-        )  # 0=square, 1=parzen, 2=blackman, 3=welch, 4=slepian2, 5=slepian3
-        append(("input_voltage_range",))
-        append(("noise_threshold",), np.float32)
-        # Fix for Level 1 version 4 files:
-        if int(header["file_code"]) >= 889348:
-            _ = np.fromfile(file, np.int32, 25)
-            _ = np.fromfile(file, np.uint32, 10000)
-        self._file_position = file.tell()
-        file.close()
+            append(("dual_polarization",), np.int8)  # 0 = single pol, 1 = LDR, 2 = STSR
+            append(("sample_duration",), np.float32)
+            append(("latitude", "longitude"), np.float32)
+            append(
+                (
+                    "calibration_interval",
+                    "_number_of_range_gates",
+                    "_number_of_temperature_levels",
+                    "_number_of_humidity_levels",
+                    "_number_of_chirp_sequences",
+                )
+            )
+            append(("range",), np.float32, int(header["_number_of_range_gates"]))
+            append(
+                ("_temperature_levels",), np.float32, int(header["_number_of_temperature_levels"])
+            )
+            append(("_humidity_levels",), np.float32, int(header["_number_of_humidity_levels"]))
+            append(
+                ("number_of_spectral_samples", "chirp_start_indices", "number_of_averaged_chirps"),
+                n_values=int(header["_number_of_chirp_sequences"]),
+            )
+            append(
+                ("integration_time", "range_resolution", "nyquist_velocity"),
+                np.float32,
+                int(header["_number_of_chirp_sequences"]),
+            )
+            append(
+                (
+                    "_is_power_levelling",
+                    "_is_spike_filter",
+                    "_is_phase_correction",
+                    "_is_relative_power_correction",
+                ),
+                np.int8,
+            )
+            append(
+                ("FFT_window",), np.int8
+            )  # 0=square, 1=parzen, 2=blackman, 3=welch, 4=slepian2, 5=slepian3
+            append(("input_voltage_range",))
+            append(("noise_threshold",), np.float32)
+            # Fix for Level 1 version 4 files:
+            if int(header["file_code"]) >= 889348:
+                _ = np.fromfile(file, np.int32, 25)
+                _ = np.fromfile(file, np.uint32, 10000)
+            self._file_position = file.tell()
         return header
 
     @staticmethod
@@ -190,27 +191,26 @@ class Fmcw94Bin:
             block_two = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
             return block_one, block_two
 
-        file = open(self.filename, "rb")  # pylint: disable=R1732
-        file.seek(self._file_position)
-        dims = _create_dimensions()
-        aux, block1, block2 = _create_variables()
-        n_dummy = _get_length_of_dummy_data()
-        n_sens = _get_length_of_sensitivity_data()
-        n_floats1, n_floats2 = _get_float_block_lengths()
-        float_block1, float_block2 = _init_float_blocks()
+        with open(self.filename, "rb") as file:
+            file.seek(self._file_position)
+            dims = _create_dimensions()
+            aux, block1, block2 = _create_variables()
+            n_dummy = _get_length_of_dummy_data()
+            n_sens = _get_length_of_sensitivity_data()
+            n_floats1, n_floats2 = _get_float_block_lengths()
+            float_block1, float_block2 = _init_float_blocks()
 
-        for sample in range(dims.n_samples):
-            aux["_sample_length"][sample] = np.fromfile(file, np.int32, 1)
-            aux["time"][sample] = np.fromfile(file, np.uint32, 1)
-            aux["time_ms"][sample] = np.fromfile(file, np.int32, 1)
-            aux["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
-            float_block1[sample, :] = np.fromfile(file, np.float32, n_floats1)
-            is_data = np.fromfile(file, np.int8, dims.n_gates)
-            is_data_ind = np.where(is_data)[0]
-            n_valid = len(is_data_ind)
-            values = np.fromfile(file, np.float32, n_floats2 * n_valid)
-            float_block2[sample, is_data_ind, :] = values.reshape(n_valid, n_floats2)
-        file.close()
+            for sample in range(dims.n_samples):
+                aux["_sample_length"][sample] = np.fromfile(file, np.int32, 1)
+                aux["time"][sample] = np.fromfile(file, np.uint32, 1)
+                aux["time_ms"][sample] = np.fromfile(file, np.int32, 1)
+                aux["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
+                float_block1[sample, :] = np.fromfile(file, np.float32, n_floats1)
+                is_data = np.fromfile(file, np.int8, dims.n_gates)
+                is_data_ind = np.where(is_data)[0]
+                n_valid = len(is_data_ind)
+                values = np.fromfile(file, np.float32, n_floats2 * n_valid)
+                float_block2[sample, is_data_ind, :] = values.reshape(n_valid, n_floats2)
         for n, name in enumerate(block1):
             block1[name] = float_block1[:, n]
         _add_sensitivities()
@@ -238,43 +238,41 @@ class HatproBin:
 
     def read_header(self) -> dict:
         """Reads the header."""
-        file = open(self.filename, "rb")  # pylint: disable=R1732
-        header = {
-            "file_code": np.fromfile(file, np.int32, 1),
-            "_n_samples": np.fromfile(file, np.int32, 1),
-            "_lwp_min_max": np.fromfile(file, np.float32, 2),
-            "_time_reference": np.fromfile(file, np.int32, 1),
-            "retrieval_method": np.fromfile(file, np.int32, 1),
-        }
-        self._file_position = file.tell()
-        file.close()
+        with open(self.filename, "rb") as file:
+            header = {
+                "file_code": np.fromfile(file, np.int32, 1),
+                "_n_samples": np.fromfile(file, np.int32, 1),
+                "_lwp_min_max": np.fromfile(file, np.float32, 2),
+                "_time_reference": np.fromfile(file, np.int32, 1),
+                "retrieval_method": np.fromfile(file, np.int32, 1),
+            }
+            self._file_position = file.tell()
         return header
 
     def read_data(self) -> dict:
         """Reads the data."""
-        file = open(self.filename, "rb")  # pylint: disable=R1732
-        file.seek(self._file_position)
+        with open(self.filename, "rb") as file:
+            file.seek(self._file_position)
 
-        data: dict = {
-            "time": np.zeros(self.header["_n_samples"], dtype=np.int32),
-            "quality_flag": np.zeros(self.header["_n_samples"], dtype=np.int32),
-            "lwp": np.zeros(self.header["_n_samples"]),
-            "zenith_angle": np.zeros(self.header["_n_samples"], dtype=np.float32),
-        }
+            data: dict = {
+                "time": np.zeros(self.header["_n_samples"], dtype=np.int32),
+                "quality_flag": np.zeros(self.header["_n_samples"], dtype=np.int32),
+                "lwp": np.zeros(self.header["_n_samples"]),
+                "zenith_angle": np.zeros(self.header["_n_samples"], dtype=np.float32),
+            }
 
-        version = self._get_hatpro_version()
-        angle_dtype = np.float32 if version == 1 else np.int32
-        data["_instrument_angles"] = np.zeros(self.header["_n_samples"], dtype=angle_dtype)
+            version = self._get_hatpro_version()
+            angle_dtype = np.float32 if version == 1 else np.int32
+            data["_instrument_angles"] = np.zeros(self.header["_n_samples"], dtype=angle_dtype)
 
-        for sample in range(self.header["_n_samples"][0]):
-            data["time"][sample] = np.fromfile(file, np.int32, 1)
-            data["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
-            data["lwp"][sample] = np.fromfile(file, np.float32, 1)
-            data["_instrument_angles"][sample] = np.fromfile(file, angle_dtype, 1)
+            for sample in range(self.header["_n_samples"][0]):
+                data["time"][sample] = np.fromfile(file, np.int32, 1)
+                data["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
+                data["lwp"][sample] = np.fromfile(file, np.float32, 1)
+                data["_instrument_angles"][sample] = np.fromfile(file, angle_dtype, 1)
 
-        data = self._add_zenith(version, data)
+            data = self._add_zenith(version, data)
 
-        file.close()
         return data
 
     def _get_hatpro_version(self) -> int:

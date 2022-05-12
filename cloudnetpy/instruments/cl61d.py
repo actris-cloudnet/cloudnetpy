@@ -20,12 +20,13 @@ class Cl61d(NcLidar):
 
     def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
         """Reads data and metadata from concatenated Vaisala CL61d netCDF file."""
-        self.dataset = netCDF4.Dataset(self.file_name)
-        self._fetch_zenith_angle("zenith", default=3.0)
-        self._fetch_range(reference="lower")
-        self._fetch_lidar_variables(calibration_factor)
-        self._fetch_time_and_date()
-        self.dataset.close()
+        with netCDF4.Dataset(self.file_name) as dataset:
+            self.dataset = dataset
+            self._fetch_zenith_angle("zenith", default=3.0)
+            self._fetch_range(reference="lower")
+            self._fetch_lidar_variables(calibration_factor)
+            self._fetch_time_and_date()
+            self.dataset = None
 
     def _fetch_lidar_variables(self, calibration_factor: Optional[float] = None) -> None:
         beta_raw = self.dataset.variables["beta_att"][:]

@@ -10,15 +10,14 @@ from cloudnetpy.categorize.mwr import Mwr
 def fake_mwr_file(tmpdir_factory):
     """Creates a simple mwr for testing."""
     file_name = tmpdir_factory.mktemp("data").join("mwr_file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    n_time = 5
-    root_grp.createDimension("time", n_time)
-    var = root_grp.createVariable("time", "f8", "time")
-    var[:] = np.arange(n_time)
-    var = root_grp.createVariable("lwp", "f8", "time")
-    var[:] = np.array([0.1, 2.5, -0.1, 0.2, 0.0])
-    var.units = "g / m^2"
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        n_time = 5
+        root_grp.createDimension("time", n_time)
+        var = root_grp.createVariable("time", "f8", "time")
+        var[:] = np.arange(n_time)
+        var = root_grp.createVariable("lwp", "f8", "time")
+        var[:] = np.array([0.1, 2.5, -0.1, 0.2, 0.0])
+        var.units = "g / m^2"
     return file_name
 
 
@@ -34,11 +33,10 @@ def test_rebin_to_grid(fake_mwr_file):
 def bad_mwr_file(tmpdir_factory):
     """Creates invalid mwr file for testing."""
     file_name = tmpdir_factory.mktemp("data").join("mwr_file.nc")
-    root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
-    root_grp.createDimension("time", 5)
-    var = root_grp.createVariable("xxx", "f8", "time")
-    var[:] = np.array([0.1, 2.5, -0.1, 0.2, 0.0])
-    root_grp.close()
+    with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:
+        root_grp.createDimension("time", 5)
+        var = root_grp.createVariable("xxx", "f8", "time")
+        var[:] = np.array([0.1, 2.5, -0.1, 0.2, 0.0])
     return file_name
 
 

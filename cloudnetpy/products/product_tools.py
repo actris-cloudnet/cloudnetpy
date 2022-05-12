@@ -34,15 +34,13 @@ class CategorizeBits:
 
     def _read_bits(self, bit_type: str) -> dict:
         """Converts bitfield into dictionary."""
-        nc = netCDF4.Dataset(self._categorize_file)
-        try:
-            bitfield = nc.variables[f"{bit_type}_bits"][:]
-        except KeyError as err:
-            nc.close()
-            raise KeyError from err
-        keys = getattr(CategorizeBits, f"{bit_type}_keys")
-        bits = {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
-        nc.close()
+        with netCDF4.Dataset(self._categorize_file) as nc:
+            try:
+                bitfield = nc.variables[f"{bit_type}_bits"][:]
+            except KeyError as err:
+                raise KeyError from err
+            keys = getattr(CategorizeBits, f"{bit_type}_keys")
+            bits = {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
         return bits
 
 
@@ -84,9 +82,8 @@ def read_nc_fields(nc_file: str, names: Union[str, list]) -> Union[ma.MaskedArra
 
     """
     names = [names] if isinstance(names, str) else names
-    nc = netCDF4.Dataset(nc_file)
-    data = [nc.variables[name][:] for name in names]
-    nc.close()
+    with netCDF4.Dataset(nc_file) as nc:
+        data = [nc.variables[name][:] for name in names]
     return data[0] if len(data) == 1 else data
 
 

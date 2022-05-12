@@ -1,6 +1,5 @@
 import math
 import sys
-from distutils.dir_util import copy_tree
 from os import path
 from shutil import copytree
 from tempfile import TemporaryDirectory
