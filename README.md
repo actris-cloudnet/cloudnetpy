@@ -24,17 +24,19 @@ CloudnetPy is a rewritten version of the original Cloudnet Matlab code. Cloudnet
 
 ### From PyPI
 ```
-$ python3 -m pip install cloudnetpy
+python3 -m pip install cloudnetpy
 ```
 
 ### From the source
+```sh
+git clone https://github.com/actris-cloudnet/cloudnetpy
+cd cloudnetpy/
+python3 -m venv venv
+source venv/bin/activate
+python3 -m pip install --upgrade pip
+python3 -m pip install .
 ```
-$ git clone https://github.com/actris-cloudnet/cloudnetpy
-$ cd cloudnetpy/
-$ python3 -m venv venv
-$ source venv/bin/activate
-(venv) $ python3 -m pip install .
-```
+
 ## Citing
 If you wish to acknowledge CloudnetPy in your publication, please cite:
 >Tukiainen et al., (2020). CloudnetPy: A Python package for processing cloud remote sensing data. Journal of Open Source Software, 5(53), 2123, https://doi.org/10.21105/joss.02123
@@ -43,5 +45,29 @@ If you wish to acknowledge CloudnetPy in your publication, please cite:
 
 We encourage you to contribute to CloudnetPy! Please check out the [contribution guidelines](CONTRIBUTING.md) about how to proceed.
 
+## Development
+
+Follow the installation instructions from the source above but instead of `pip install .` install with the test-dependencies and [pre-commit](https://pre-commit.com/) hooks:
+```sh
+python3 -m pip install -e .[test,dev]
+pre-commit install
+```
+
+Run unit tests:
+```sh
+pytest
+```
+
+Run end-to-end tests:
+```sh
+python3 tests/e2e_test.py
+```
+
+Force `pre-commit` checks of all files:
+```sh
+pre-commit run --all
+```
+
 ## License
+
 MIT
