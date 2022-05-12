@@ -1,10 +1,10 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
-import linecache
+from itertools import islice
 from typing import Optional, Union
 
 import netCDF4
 
-from cloudnetpy import output, utils
+from cloudnetpy import output
 from cloudnetpy.instruments.cl61d import Cl61d
 from cloudnetpy.instruments.lufft import LufftCeilo
 from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
@@ -109,18 +109,12 @@ def _find_ceilo_model(full_path: str) -> str:
                 return "cl61d"
         return "chm15k"
     except OSError:
-        line = ""
-        first_empty_line = utils.find_first_empty_line(full_path)
-        max_number_of_empty_lines = 10
-        for n in range(1, max_number_of_empty_lines):
-            line = linecache.getline(full_path, first_empty_line + n)
-            if not utils.is_empty_line(line):
-                line = linecache.getline(full_path, first_empty_line + n + 1)
-                break
-        if "CL" in line:
-            return "cl31_or_cl51"
-        if "CT" in line:
-            return "ct25k"
+        with open(full_path, "rb") as file:
+            for line in islice(file, 100):
+                if line.startswith(b"\x01CL"):
+                    return "cl31_or_cl51"
+                if line.startswith(b"\x01CT"):
+                    return "ct25k"
     raise RuntimeError("Error: Unknown ceilo model.")
 
 

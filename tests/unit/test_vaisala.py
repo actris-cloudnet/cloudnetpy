@@ -111,6 +111,15 @@ class TestCL51(Check):
             ceilo2nc(self.input, test_path, self.site_meta, date="2021-09-15")
 
 
+def test_cl51_corrupted_profile(tmp_path):
+    site_meta = {"name": "Ny Ålesund", "altitude": 25, "latitude": 78.924, "longitude": 22.0}
+    input_path = f"{SCRIPT_PATH}/data/vaisala/cl51-corrupted-profile.cl"
+    output_path = tmp_path / "cl51-corrupted-profile.nc"
+    ceilo2nc(input_path, output_path, site_meta, date="2022-05-06")
+    with netCDF4.Dataset(output_path) as nc:
+        assert_equal(nc.variables["beta"][:].mask.all(axis=1), [False, True, False])
+
+
 class TestCL31(Check):
     site_meta = {"name": "Kumpula", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
     date = "2020-04-10"

@@ -559,18 +559,6 @@ def test_is_empty_line(input, result):
     assert utils.is_empty_line(input) == result
 
 
-def test_find_first_empty_line(tmpdir):
-    file_name = "/".join((str(tmpdir), "file.txt"))
-    f = open(file_name, "w")
-    f.write("row\n")
-    f.write("row\n")
-    f.write("row\n")
-    f.write("\n")
-    f.write("row\n")
-    f.close()
-    assert utils.find_first_empty_line(file_name) == 4
-
-
 @pytest.mark.parametrize(
     "input, result",
     [
