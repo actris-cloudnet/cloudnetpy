@@ -618,7 +618,7 @@ def test_seconds2date(input, result, epoch):
 
 @pytest.fixture
 def example_files(tmpdir):
-    file_names = ["f.LV1", "f.txt", "f.LV0", "f.lv1", "g.LV1"]
+    file_names = ["f.LV1", "f.txt", "f.LV0", "f2.lv1", "g.LV1"]
     folder = tmpdir.mkdir("data/")
     for name in file_names:
         with open(folder.join(name), "wb") as f:
@@ -628,7 +628,7 @@ def example_files(tmpdir):
 
 def test_get_sorted_filenames(example_files):
     dir_name = example_files.dirname + "/data"
-    result = ["/".join((dir_name, x)) for x in ("f.LV1", "f.lv1", "g.LV1")]
+    result = ["/".join((dir_name, x)) for x in ("f.LV1", "f2.lv1", "g.LV1")]
     assert utils.get_sorted_filenames(dir_name, ".LV1") == result
 
 
