@@ -33,7 +33,7 @@ class VaisalaCeilo(Ceilometer):
 
     def _fetch_data_lines(self) -> list:
         """Finds data lines (header + backscatter) from ceilometer file."""
-        with open(self.full_path, encoding="utf8") as file:
+        with open(self.full_path, "rb") as file:
             all_lines = file.readlines()
         return self._screen_invalid_lines(all_lines)
 
@@ -65,31 +65,41 @@ class VaisalaCeilo(Ceilometer):
     def _screen_invalid_lines(self, data: list) -> list:
         """Removes empty (and other weird) lines from the list of data."""
 
-        def _find_timestamp_line_numbers() -> list:
+        def _filter_lines(data: list) -> list:
+            output = []
+            for line in data:
+                try:
+                    output.append(line.decode("utf8"))
+                except UnicodeDecodeError:
+                    continue
+            return output
+
+        def _find_timestamp_line_numbers(data: list) -> list:
             return [n for n, _ in enumerate(data) if utils.is_timestamp(data[n])]
 
-        def _find_correct_dates(line_numbers: list) -> list:
+        def _find_correct_dates(data: list, line_numbers: list) -> list:
             return [n for n in line_numbers if data[n].strip("-")[:10] == self.expected_date]
 
-        def _find_number_of_data_lines(timestamp_line_number: int) -> int:
+        def _find_number_of_data_lines(data: list, timestamp_line_number: int) -> int:
             for i, line in enumerate(data[timestamp_line_number:]):
                 if utils.is_empty_line(line):
                     return i
             raise RuntimeError("Can not parse number of data lines")
 
-        def _parse_data_lines(starting_indices: list) -> list:
+        def _parse_data_lines(data: list, starting_indices: list) -> list:
             return [
                 [data[n + line_number] for n in starting_indices if (n + line_number) < len(data)]
                 for line_number in range(number_of_data_lines)
             ]
 
-        timestamp_line_numbers = _find_timestamp_line_numbers()
+        valid_lines = _filter_lines(data)
+        timestamp_line_numbers = _find_timestamp_line_numbers(valid_lines)
         if self.expected_date is not None:
-            timestamp_line_numbers = _find_correct_dates(timestamp_line_numbers)
+            timestamp_line_numbers = _find_correct_dates(valid_lines, timestamp_line_numbers)
             if not timestamp_line_numbers:
                 raise ValidTimeStampError
-        number_of_data_lines = _find_number_of_data_lines(timestamp_line_numbers[0])
-        data_lines = _parse_data_lines(timestamp_line_numbers)
+        number_of_data_lines = _find_number_of_data_lines(valid_lines, timestamp_line_numbers[0])
+        data_lines = _parse_data_lines(valid_lines, timestamp_line_numbers)
         return data_lines
 
     @staticmethod

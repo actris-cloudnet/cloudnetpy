@@ -33,8 +33,8 @@ def test_find_ceilo_model_vaisala(fix, result, tmpdir):
     f = open(file_name, "w")
     f.write("row\n")
     f.write("\n")
-    f.write("row\n")
-    f.write(f"-{fix}\n")
+    f.write("-2020-04-10 00:00:58\n")
+    f.write(f"\x01{fix}\n")
     f.close()
     assert ceilo._find_ceilo_model(str(file_name)) == result
 

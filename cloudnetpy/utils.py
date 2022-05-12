@@ -716,17 +716,6 @@ def range_to_height(range_los: np.ndarray, tilt_angle: float) -> np.ndarray:
     return range_los * np.cos(np.deg2rad(tilt_angle))
 
 
-def find_first_empty_line(file_name: str) -> int:
-    """Finds first text file line that is empty."""
-    line_number = 1
-    with open(file_name, encoding="utf8") as file:
-        for line in file:
-            if is_empty_line(line):
-                break
-            line_number += 1
-    return line_number
-
-
 def is_empty_line(line: str) -> bool:
     """Tests if a line (of a text file) is empty."""
     if line in ("\n", "\r\n"):
