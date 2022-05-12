@@ -1,7 +1,7 @@
 """Module for reading raw cloud radar data."""
 import logging
 import os
-from tempfile import NamedTemporaryFile
+from tempfile import TemporaryDirectory
 from typing import List, Optional
 
 import numpy as np
@@ -65,37 +65,37 @@ def mira2nc(
         "rg0": "rg0",
     }
 
-    if os.path.isdir(raw_mira):
-        temp_file = NamedTemporaryFile()  # pylint: disable=R1732
-        mmclx_filename = temp_file.name
-        valid_filenames = utils.get_sorted_filenames(raw_mira, ".mmclx")
-        valid_filenames = general.get_files_with_common_range(valid_filenames)
-        variables = list(keymap.keys())
-        concat_lib.concatenate_files(valid_filenames, mmclx_filename, variables=variables)
-    else:
-        mmclx_filename = raw_mira
+    with TemporaryDirectory() as temp_dir:
+        if os.path.isdir(raw_mira):
+            mmclx_filename = f"{temp_dir}/tmp.mmclx"
+            valid_filenames = utils.get_sorted_filenames(raw_mira, ".mmclx")
+            valid_filenames = general.get_files_with_common_range(valid_filenames)
+            variables = list(keymap.keys())
+            concat_lib.concatenate_files(valid_filenames, mmclx_filename, variables=variables)
+        else:
+            mmclx_filename = raw_mira
 
-    mira = Mira(mmclx_filename, site_meta)
-    mira.init_data(keymap)
-    if date is not None:
-        mira.screen_by_date(date)
-        mira.date = date.split("-")
-    mira.sort_timestamps()
-    mira.remove_duplicate_timestamps()
-    general.linear_to_db(mira, ("Zh", "ldr", "SNR"))
-    mira.screen_by_snr()
-    mira.mask_invalid_data()
-    mira.add_time_and_range()
-    general.add_site_geolocation(mira)
-    general.add_radar_specific_variables(mira)
-    valid_indices = mira.add_solar_angles()
-    general.screen_time_indices(mira, valid_indices)
-    general.add_height(mira)
-    mira.close()
-    attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
-    output.update_attributes(mira.data, attributes)
-    uuid = output.save_level1b(mira, output_file, uuid)
-    return uuid
+        mira = Mira(mmclx_filename, site_meta)
+        mira.init_data(keymap)
+        if date is not None:
+            mira.screen_by_date(date)
+            mira.date = date.split("-")
+        mira.sort_timestamps()
+        mira.remove_duplicate_timestamps()
+        general.linear_to_db(mira, ("Zh", "ldr", "SNR"))
+        mira.screen_by_snr()
+        mira.mask_invalid_data()
+        mira.add_time_and_range()
+        general.add_site_geolocation(mira)
+        general.add_radar_specific_variables(mira)
+        valid_indices = mira.add_solar_angles()
+        general.screen_time_indices(mira, valid_indices)
+        general.add_height(mira)
+        mira.close()
+        attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
+        output.update_attributes(mira.data, attributes)
+        uuid = output.save_level1b(mira, output_file, uuid)
+        return uuid
 
 
 class Mira(NcRadar):
