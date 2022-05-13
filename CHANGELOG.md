@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.32.0 – 2022-05-13
+
+- Skip corrupted profiles in CL51 files
+- Add missing units
+- Test Windows and macOS
+- Test Python 3.10 support
+- Fix code formatting
+
 ## 1.31.2 - 2022-03-23
 
 - Cast `parsivel` metadata to floats
