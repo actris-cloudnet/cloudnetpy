@@ -3,17 +3,27 @@ from collections import namedtuple
 from typing import Optional, Tuple
 
 import numpy as np
+from numpy import ma
+
 from cloudnetpy import output, utils
+from cloudnetpy.categorize.atmos import find_cloud_bases, find_cloud_tops
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.metadata import MetaData
-from cloudnetpy.products.product_tools import ProductClassification, get_is_rain, CategorizeBits
-from cloudnetpy.categorize.atmos import find_cloud_bases, find_cloud_tops
-from numpy import ma
+from cloudnetpy.products.product_tools import (
+    CategorizeBits,
+    ProductClassification,
+    get_is_rain,
+)
 
 Parameters = namedtuple("Parameters", "ddBZ N dN sigma_x dsigma_x dQ")
 
 
-def generate_def_Frisch(categorize_file: str, output_file: str, uuid: Optional[str] = None, parameter: Optional[Tuple] = None) -> str:
+def generate_def_Frisch(
+    categorize_file: str,
+    output_file: str,
+    uuid: Optional[str] = None,
+    parameter: Optional[Tuple] = None,
+) -> str:
     """Generates Cloudnet effective radius of liquid water droplets product acording to Frisch et al. 2002.
 
     This function calculates liquid droplet effective radius def using the Frisch method.
@@ -71,10 +81,7 @@ class DropletClassification(ProductClassification):
         return self.category_bits["droplet"]
 
     def _find_mixed(self) -> np.ndarray:
-        return (
-                self.category_bits["falling"]
-                & self.category_bits["droplet"]
-        )
+        return self.category_bits["falling"] & self.category_bits["droplet"]
 
     def _find_ice(self) -> np.ndarray:
         return (
@@ -84,6 +91,7 @@ class DropletClassification(ProductClassification):
             & ~self.category_bits["droplet"]
             & ~self.category_bits["insect"]
         )
+
 
 class DefSource(DataSource):
 
@@ -102,31 +110,28 @@ class DefSource(DataSource):
         self.categorize_bits = CategorizeBits(categorize_file)
 
     def append_parameter(self, parameter):
-        """ Define constant parameters for the Frisch method.
+        """Define constant parameters for the Frisch method.
 
         Returns:
             Parameters for droplet effective radius computation.
         """
 
         # Default fixed parameters from Frisch et al. 2002
-        self.params = Parameters(2.0, 200.e6, 200.e6, 0.35, 0.1, 5.e-3)
+        self.params = Parameters(2.0, 200.0e6, 200.0e6, 0.35, 0.1, 5.0e-3)
 
         if parameter is not None:
             self.params = Parameters(*parameter)
 
-
     def append_def_Frisch(self):
 
-        """ Estimate liquid droplet effective radius using Frisch et al. 2002.
-
-        """
+        """Estimate liquid droplet effective radius using Frisch et al. 2002."""
 
         params = self.params
         var_x = params.sigma_x * params.sigma_x
 
         ntime, nrange = self.Z.shape
 
-        is_droplet = self.categorize_bits.category_bits['droplet']
+        is_droplet = self.categorize_bits.category_bits["droplet"]
         is_some_liquid = np.any(is_droplet, axis=1)
 
         # density of liquid water(kg m-3)
@@ -139,7 +144,7 @@ class DefSource(DataSource):
 
         lwp = self.lwp
         lwp_error = self.lwp_error
-        lwp *= 1.0e-3   # convert to kg m-2
+        lwp *= 1.0e-3  # convert to kg m-2
         lwp_error *= 1.0e-3
 
         liquid_bases = find_cloud_bases(is_droplet)
@@ -157,7 +162,9 @@ class DefSource(DataSource):
             if not is_some_liquid[ind_t]:
                 continue
 
-            for base, top in zip(zip(*np.where(liquid_bases[ind_t, :])), zip(*np.where(liquid_tops[ind_t, :]))):
+            for base, top in zip(
+                zip(*np.where(liquid_bases[ind_t, :])), zip(*np.where(liquid_tops[ind_t, :]))
+            ):
                 idx_layer = np.arange(base[0], top[0] + 1)
 
                 # if all values of Z between base and top are NAN, contine
@@ -167,34 +174,40 @@ class DefSource(DataSource):
                 integral = ma.sum(ma.sqrt(Z[ind_t, idx_layer])) * self.dheight
 
                 # def_Frisch formula (5)
-                A = (Z[ind_t, idx_layer] / params.N) ** (1/6)
+                A = (Z[ind_t, idx_layer] / params.N) ** (1 / 6)
                 B = ma.exp(-0.5 * var_x)
                 def_Frisch[ind_t, idx_layer] = 0.5 * A * B
 
                 # def_Frisch error formula (7)
-                A = params.dN / (6*params.N)
+                A = params.dN / (6 * params.N)
                 B = params.sigma_x * params.dsigma_x
                 C = dZ[ind_t, idx_layer] / (6 * Z[ind_t, idx_layer])
-                def_error[ind_t, idx_layer] = def_Frisch[ind_t, idx_layer] * ma.sqrt(A*A + B*B + C*C)
+                def_error[ind_t, idx_layer] = def_Frisch[ind_t, idx_layer] * ma.sqrt(
+                    A * A + B * B + C * C
+                )
 
                 # def_Frisch scaled formula (6)
-                A = Z[ind_t, idx_layer] ** (1/6) / (2 * lwp[ind_t] ** (1/3))
+                A = Z[ind_t, idx_layer] ** (1 / 6) / (2 * lwp[ind_t] ** (1 / 3))
                 B = (pi * rho_l / 6) ** (1 / 3)
-                C = integral ** (1 / 3) * ma.exp(- 2 * var_x)
+                C = integral ** (1 / 3) * ma.exp(-2 * var_x)
                 def_scaled[ind_t, idx_layer] = 1.0e-3 * A * B * C
 
                 # def_Frisch scaled formula (9)
-                N_scaled[ind_t, idx_layer] = Z[ind_t, idx_layer] / (((2 * def_scaled[ind_t, idx_layer]) / (ma.exp(-0.5 * var_x))) ** 6)
-                A = dZ[ind_t, idx_layer] / (6*Z[ind_t, idx_layer])
-                B = 4*params.sigma_x * params.dsigma_x
-                C = params.dQ / (3*lwp[ind_t])
-                def_scaled_error[ind_t, idx_layer] = def_scaled[ind_t, idx_layer] * ma.sqrt(A*A + B*B + C*C)
+                N_scaled[ind_t, idx_layer] = Z[ind_t, idx_layer] / (
+                    ((2 * def_scaled[ind_t, idx_layer]) / (ma.exp(-0.5 * var_x))) ** 6
+                )
+                A = dZ[ind_t, idx_layer] / (6 * Z[ind_t, idx_layer])
+                B = 4 * params.sigma_x * params.dsigma_x
+                C = params.dQ / (3 * lwp[ind_t])
+                def_scaled_error[ind_t, idx_layer] = def_scaled[ind_t, idx_layer] * ma.sqrt(
+                    A * A + B * B + C * C
+                )
 
         N_scaled = ma.masked_less_equal(ma.masked_invalid(N_scaled), 0.0) * 1.0e-6
-        def_Frisch = ma.masked_less_equal(ma.masked_invalid(def_Frisch), 0.0)* 1.0e-3
-        def_error = ma.masked_less_equal(ma.masked_invalid(def_error), 0.0)* 1.0e-3
-        def_scaled = ma.masked_less_equal(ma.masked_invalid(def_scaled), 0.0)* 1.0e-3
-        def_scaled_error = ma.masked_less_equal(ma.masked_invalid(def_scaled_error), 0.0)* 1.0e-3
+        def_Frisch = ma.masked_less_equal(ma.masked_invalid(def_Frisch), 0.0) * 1.0e-3
+        def_error = ma.masked_less_equal(ma.masked_invalid(def_error), 0.0) * 1.0e-3
+        def_scaled = ma.masked_less_equal(ma.masked_invalid(def_scaled), 0.0) * 1.0e-3
+        def_scaled_error = ma.masked_less_equal(ma.masked_invalid(def_scaled_error), 0.0) * 1.0e-3
 
         self.append_data(N_scaled, "N_scaled_Frisch")
         self.append_data(def_Frisch, "def_Frisch")
@@ -215,8 +228,6 @@ class DefSource(DataSource):
         retrieval_status[is_mixed * is_retrieved] = 2
         retrieval_status[is_rain * is_retrieved] = 3
         self.append_data(retrieval_status, "def_Frisch_retrieval_status")
-
-
 
 
 DEFINITIONS = {
@@ -276,7 +287,6 @@ COMMENTS = {
 
 REFF_ATTRIBUTES = {
     "comment": COMMENTS["general"],
-
     "def_Frisch": MetaData(
         long_name="Effective radius",
         units="m",
@@ -310,5 +320,4 @@ REFF_ATTRIBUTES = {
         definition=DEFINITIONS["def_Frisch_retrieval_status"],
         units="1",
     ),
-
 }

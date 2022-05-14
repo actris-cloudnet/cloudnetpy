@@ -3,8 +3,9 @@ from collections import namedtuple
 import netCDF4
 import numpy as np
 import pytest
-from cloudnetpy.products.def_Frisch import DropletClassification, DefSource
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+
+from cloudnetpy.products.def_Frisch import DefSource, DropletClassification
 
 DIMENSIONS = ("time", "height", "model_time", "model_height")
 TEST_ARRAY = np.arange(3)
@@ -30,11 +31,21 @@ def categorize_file(tmpdir_factory, file_metadata):
     nc.createVariable("lwp", "f8", "time")[:] = [1, 1, 0.5]
     nc.createVariable("lwp_error", "f8", "time")[:] = [0.1, 0.1, 0.01]
     nc.createVariable("rain_rate", "i4", "time")[:] = [0, 1, 1]
-    nc.createVariable("category_bits", "i4", ("time", "height"))[:] = np.array([[0, 1, 0], [2, 3, 4], [4, 8, 2]])
-    nc.createVariable("quality_bits", "i4", ("time", "height"))[:] = np.array([[0, 1, 1], [2, 3, 4], [4, 8, 1]])
-    nc.createVariable("temperature", "f8", ("model_time", "model_height"))[:] = np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
-    nc.createVariable("pressure", "f8", ("model_time", "model_height"))[:] = np.array([[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]])
-    nc.createVariable("Z", "f8", ("time", "height"))[:] = np.array([[10, 20, -10], [10, 20, -10], [10, 20, -10]])
+    nc.createVariable("category_bits", "i4", ("time", "height"))[:] = np.array(
+        [[0, 1, 0], [2, 3, 4], [4, 8, 2]]
+    )
+    nc.createVariable("quality_bits", "i4", ("time", "height"))[:] = np.array(
+        [[0, 1, 1], [2, 3, 4], [4, 8, 1]]
+    )
+    nc.createVariable("temperature", "f8", ("model_time", "model_height"))[:] = np.array(
+        [[282, 280, 278], [286, 284, 282], [284, 282, 280]]
+    )
+    nc.createVariable("pressure", "f8", ("model_time", "model_height"))[:] = np.array(
+        [[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]]
+    )
+    nc.createVariable("Z", "f8", ("time", "height"))[:] = np.array(
+        [[10, 20, -10], [10, 20, -10], [10, 20, -10]]
+    )
 
     nc.close()
     return file_name
@@ -52,6 +63,7 @@ def _create_dimension_variables(root_grp):
         x[:] = TEST_ARRAY
         if dim_name == "height":
             x.units = "m"
+
 
 class TestDropletClassification:
     @pytest.fixture(autouse=True)
@@ -77,6 +89,7 @@ class TestDropletClassification:
         expected = [[0, 1, 0], [0, 1, 1], [0, 1, 0]]
         assert_array_equal(self.obj._find_mixed(), expected)
 
+
 class TestAppending:
     @pytest.fixture(autouse=True)
     def run_before_tests(self, categorize_file):
@@ -85,7 +98,7 @@ class TestAppending:
 
     def test_append_def_Frisch(self):
         self.def_source.is_droplet = np.array([0, 0, 0, 1, 1], dtype=bool)
-        self.def_source.params = Parameters(2.0, 200.e6, 200.e6, 0.35, 0.1, 5.e-3)
+        self.def_source.params = Parameters(2.0, 200.0e6, 200.0e6, 0.35, 0.1, 5.0e-3)
 
         self.def_source.append_def_Frisch()
         print(self.def_source.data["def_Frisch"][:])
