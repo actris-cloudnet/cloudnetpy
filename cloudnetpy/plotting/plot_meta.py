@@ -117,7 +117,7 @@ _CLABEL = {
         ("Rain", _COLORS["seaweed"]),
         ("No data", _COLORS["mask"]),
     ),
-    "reff_Frisch_retrieval_status": (
+    "def_Frisch_retrieval_status": (
         ("_Clear sky", _COLORS["white"]),
         ("Reliable", _COLORS["green"]),
         ("Mixed-phase", _COLORS["lightgreen"]),
@@ -145,7 +145,7 @@ ATTRIBUTES = {
         plot_scale=Scale.LINEAR,
         plot_type="mesh",
     ),
-    "reff_Frisch": PlotMeta(
+    "def_Frisch": PlotMeta(
         name="Droplet effective radius",
         cbar="coolwarm",
         clabel="m",
@@ -153,7 +153,7 @@ ATTRIBUTES = {
         plot_scale=Scale.LOGARITHMIC,
         plot_type="mesh",
     ),
-    "reff_error_Frisch": PlotMeta(
+    "def_error_Frisch": PlotMeta(
         name="Absolute error in effective radius",
         cbar="coolwarm",
         clabel="m",
@@ -161,7 +161,7 @@ ATTRIBUTES = {
         plot_scale=Scale.LOGARITHMIC,
         plot_type="mesh",
     ),
-    "reff_scaled_Frisch": PlotMeta(
+    "def_scaled_Frisch": PlotMeta(
         name="Droplet effective radius (scaled to LWP)",
         cbar="coolwarm",
         clabel="m",
@@ -169,7 +169,7 @@ ATTRIBUTES = {
         plot_scale=Scale.LOGARITHMIC,
         plot_type="mesh",
     ),
-    "reff_scaled_error_Frisch": PlotMeta(
+    "def_scaled_error_Frisch": PlotMeta(
         name="Absolute error in effective radius (scaled to LWP)",
         cbar="coolwarm",
         clabel="m",
@@ -177,9 +177,9 @@ ATTRIBUTES = {
         plot_scale=Scale.LOGARITHMIC,
         plot_type="mesh",
     ),
-    "reff_Frisch_retrieval_status": PlotMeta(
+    "def_Frisch_retrieval_status": PlotMeta(
         name="Effective radius retrieval status",
-        clabel=_CLABEL["reff_Frisch_retrieval_status"],
+        clabel=_CLABEL["def_Frisch_retrieval_status"],
         plot_type="segment",
     ),
     "mu": PlotMeta(
