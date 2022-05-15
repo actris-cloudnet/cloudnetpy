@@ -89,7 +89,7 @@ def generate_figure(
         >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error', 'lwc_retrieval_status'], max_y=4)
         >>> generate_figure('classification_file.nc', ['target_classification', 'detection_status'])
         >>> generate_figure('drizzle_file.nc', ['Do', 'mu', 'S'], max_y=3)
-        >>> generate_figure('def_Frisch_file.nc', ['def_Frisch', 'def_scaled_Frisch'], max_y=12)
+        >>> generate_figure('der.nc', ['der', 'der_scaled'], max_y=12)
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
     is_height = _is_height_dimension(nc_file)

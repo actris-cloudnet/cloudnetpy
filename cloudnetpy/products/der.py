@@ -18,7 +18,7 @@ from cloudnetpy.products.product_tools import (
 Parameters = namedtuple("Parameters", "ddBZ N dN sigma_x dsigma_x dQ")
 
 
-def generate_def_Frisch(
+def generate_der(
     categorize_file: str,
     output_file: str,
     uuid: Optional[str] = None,
@@ -40,8 +40,8 @@ def generate_def_Frisch(
         UUID of the generated file.
 
     Examples:
-        >>> from cloudnetpy.products import generate_def_Frisch
-        >>> generate_def_Frisch('categorize.nc', 'def_Frisch.nc')
+        >>> from cloudnetpy.products import generate_der
+        >>> generate_der('categorize.nc', 'der.nc')
 
     References:
         Frisch, S., Shupe, M., Djalalova, I., Feingold, G., & Poellot, M. (2002).
@@ -50,19 +50,19 @@ def generate_def_Frisch(
         Retrieved May 10, 2022, from https://doi.org/10.1175/1520-0426(2002)019%3C0835:TROSCD%3E2.0.CO;2
 
     """
-    def_source = DefSource(categorize_file)
+    der_source = DefSource(categorize_file)
     droplet_classification = DropletClassification(categorize_file)
 
-    def_source.append_parameter(parameter)
-    def_source.append_def_Frisch()
-    def_source.append_retrieval_status(droplet_classification)
+    der_source.append_parameter(parameter)
+    der_source.append_der()
+    der_source.append_retrieval_status(droplet_classification)
 
-    date = def_source.get_date()
+    date = der_source.get_date()
     attributes = output.add_time_attribute(REFF_ATTRIBUTES, date)
 
-    output.update_attributes(def_source.data, attributes)
-    uuid = output.save_product_file("def_Frisch", def_source, output_file, uuid)
-    def_source.close()
+    output.update_attributes(der_source.data, attributes)
+    uuid = output.save_product_file("der", der_source, output_file, uuid)
+    der_source.close()
     return uuid
 
 
@@ -122,7 +122,7 @@ class DefSource(DataSource):
         if parameter is not None:
             self.params = Parameters(*parameter)
 
-    def append_def_Frisch(self):
+    def append_der(self):
 
         """Estimate liquid droplet effective radius using Frisch et al. 2002."""
 
@@ -150,10 +150,10 @@ class DefSource(DataSource):
         liquid_bases = find_cloud_bases(is_droplet)
         liquid_tops = find_cloud_tops(is_droplet)
 
-        def_Frisch = np.zeros((ntime, nrange))
-        def_error = np.zeros((ntime, nrange))
-        def_scaled = np.zeros((ntime, nrange))
-        def_scaled_error = np.zeros((ntime, nrange))
+        der = np.zeros((ntime, nrange))
+        der_error = np.zeros((ntime, nrange))
+        der_scaled = np.zeros((ntime, nrange))
+        der_scaled_error = np.zeros((ntime, nrange))
         N_scaled = np.zeros((ntime, nrange))
 
         # loop over all profiles
@@ -173,51 +173,51 @@ class DefSource(DataSource):
 
                 integral = ma.sum(ma.sqrt(Z[ind_t, idx_layer])) * self.dheight
 
-                # def_Frisch formula (5)
+                # der formula (5)
                 A = (Z[ind_t, idx_layer] / params.N) ** (1 / 6)
                 B = ma.exp(-0.5 * var_x)
-                def_Frisch[ind_t, idx_layer] = 0.5 * A * B
+                der[ind_t, idx_layer] = 0.5 * A * B
 
-                # def_Frisch error formula (7)
+                # der error formula (7)
                 A = params.dN / (6 * params.N)
                 B = params.sigma_x * params.dsigma_x
                 C = dZ[ind_t, idx_layer] / (6 * Z[ind_t, idx_layer])
-                def_error[ind_t, idx_layer] = def_Frisch[ind_t, idx_layer] * ma.sqrt(
+                der_error[ind_t, idx_layer] = der[ind_t, idx_layer] * ma.sqrt(
                     A * A + B * B + C * C
                 )
 
-                # def_Frisch scaled formula (6)
+                # der scaled formula (6)
                 A = Z[ind_t, idx_layer] ** (1 / 6) / (2 * lwp[ind_t] ** (1 / 3))
                 B = (pi * rho_l / 6) ** (1 / 3)
                 C = integral ** (1 / 3) * ma.exp(-2 * var_x)
-                def_scaled[ind_t, idx_layer] = 1.0e-3 * A * B * C
+                der_scaled[ind_t, idx_layer] = 1.0e-3 * A * B * C
 
-                # def_Frisch scaled formula (9)
+                # der scaled formula (9)
                 N_scaled[ind_t, idx_layer] = Z[ind_t, idx_layer] / (
-                    ((2 * def_scaled[ind_t, idx_layer]) / (ma.exp(-0.5 * var_x))) ** 6
+                    ((2 * der_scaled[ind_t, idx_layer]) / (ma.exp(-0.5 * var_x))) ** 6
                 )
                 A = dZ[ind_t, idx_layer] / (6 * Z[ind_t, idx_layer])
                 B = 4 * params.sigma_x * params.dsigma_x
                 C = params.dQ / (3 * lwp[ind_t])
-                def_scaled_error[ind_t, idx_layer] = def_scaled[ind_t, idx_layer] * ma.sqrt(
+                der_scaled_error[ind_t, idx_layer] = der_scaled[ind_t, idx_layer] * ma.sqrt(
                     A * A + B * B + C * C
                 )
 
         N_scaled = ma.masked_less_equal(ma.masked_invalid(N_scaled), 0.0) * 1.0e-6
-        def_Frisch = ma.masked_less_equal(ma.masked_invalid(def_Frisch), 0.0) * 1.0e-3
-        def_error = ma.masked_less_equal(ma.masked_invalid(def_error), 0.0) * 1.0e-3
-        def_scaled = ma.masked_less_equal(ma.masked_invalid(def_scaled), 0.0) * 1.0e-3
-        def_scaled_error = ma.masked_less_equal(ma.masked_invalid(def_scaled_error), 0.0) * 1.0e-3
+        der = ma.masked_less_equal(ma.masked_invalid(der), 0.0) * 1.0e-3
+        der_error = ma.masked_less_equal(ma.masked_invalid(der_error), 0.0) * 1.0e-3
+        der_scaled = ma.masked_less_equal(ma.masked_invalid(der_scaled), 0.0) * 1.0e-3
+        der_scaled_error = ma.masked_less_equal(ma.masked_invalid(der_scaled_error), 0.0) * 1.0e-3
 
-        self.append_data(N_scaled, "N_scaled_Frisch")
-        self.append_data(def_Frisch, "def_Frisch")
-        self.append_data(def_scaled, "def_scaled_Frisch")
-        self.append_data(def_error, "def_error_Frisch")
-        self.append_data(def_scaled_error, "def_scaled_error_Frisch")
+        self.append_data(N_scaled, "N_scaled")
+        self.append_data(der, "der")
+        self.append_data(der_scaled, "der_scaled")
+        self.append_data(der_error, "der_error")
+        self.append_data(der_scaled_error, "der_scaled_error")
 
     def append_retrieval_status(self, droplet_classification: DropletClassification) -> None:
-        """Returns information about the status of def_Frisch retrieval."""
-        is_retrieved = ~self.data["def_Frisch"][:].mask
+        """Returns information about the status of der retrieval."""
+        is_retrieved = ~self.data["der"][:].mask
         is_mixed = droplet_classification.is_mixed
         is_ice = droplet_classification.is_ice
         is_rain = np.tile(self.is_rain, (is_retrieved.shape[1], 1)).T
@@ -227,11 +227,11 @@ class DefSource(DataSource):
         retrieval_status[is_retrieved] = 1
         retrieval_status[is_mixed * is_retrieved] = 2
         retrieval_status[is_rain * is_retrieved] = 3
-        self.append_data(retrieval_status, "def_Frisch_retrieval_status")
+        self.append_data(retrieval_status, "der_retrieval_status")
 
 
 DEFINITIONS = {
-    "def_Frisch_retrieval_status": (
+    "der_retrieval_status": (
         "\n"
         "Value 0: No data: No cloud observed.\n"
         "Value 1: Reliable retrieval.\n"
@@ -263,12 +263,12 @@ COMMENTS = {
         "lognormal size distribution its width and the number \n"
         "concentration of the cloud droplets."
     ),
-    "def_error": (
+    "der_error": (
         "This variable is an estimate of the random error in effective \n"
         "radius assuming an error in Z of ddBZ = 2.0 in N of dN = 200.0e6 \n"
         "and in the spectral width dsigma_x = 0.1 and in the LWP Q of 5e-3 kg m-3."
     ),
-    "def_scaled": (
+    "der_scaled": (
         "This variable was calculated for the profiles where the \n"
         "categorization data has diagnosed that liquid water is present \n"
         "the cloud droplet effective radius is calculated after \n"
@@ -277,7 +277,7 @@ COMMENTS = {
         "to represent the size distribution is derived by scaling the LWP \n "
         "measured with microwave radiometer over the observed (single) cloud layer."
     ),
-    "def_scaled_error": (
+    "der_scaled_error": (
         "This variable was calculated for the profiles where the categorization data"
     ),
     "N_scaled": (
@@ -287,37 +287,37 @@ COMMENTS = {
 
 REFF_ATTRIBUTES = {
     "comment": COMMENTS["general"],
-    "def_Frisch": MetaData(
+    "der": MetaData(
         long_name="Effective radius",
         units="m",
-        ancillary_variables="def_error",
+        ancillary_variables="der_error",
         comment=COMMENTS["def"],
     ),
-    "def_error_Frisch": MetaData(
+    "der_error": MetaData(
         long_name="Absolute error in effective radius",
         units="m",
-        comment=COMMENTS["def_error"],
+        comment=COMMENTS["der_error"],
     ),
-    "def_scaled_Frisch": MetaData(
+    "der_scaled": MetaData(
         long_name="Effective radius (scaled to LWP)",
         units="m",
-        ancillary_variables="def_scaled_error",
-        comment=COMMENTS["def_scaled"],
+        ancillary_variables="der_scaled_error",
+        comment=COMMENTS["der_scaled"],
     ),
-    "def_scaled_error_Frisch": MetaData(
+    "der_scaled_error": MetaData(
         long_name="Absolute error in effective radius (scaled to LWP)",
         units="m",
-        comment=COMMENTS["def_scaled_error"],
+        comment=COMMENTS["der_scaled_error"],
     ),
-    "N_scaled_Frisch": MetaData(
+    "N_scaled": MetaData(
         long_name="Cloud droplet number concentration",
         units="1",
-        ancillary_variables="def_error def_scaled def_scaled_error",
+        ancillary_variables="der_error der_scaled der_scaled_error",
         comment=COMMENTS["N_scaled"],
     ),
-    "def_Frisch_retrieval_status": MetaData(
+    "der_retrieval_status": MetaData(
         long_name="Droplet effective radius retrieval status",
-        definition=DEFINITIONS["def_Frisch_retrieval_status"],
+        definition=DEFINITIONS["der_retrieval_status"],
         units="1",
     ),
 }
