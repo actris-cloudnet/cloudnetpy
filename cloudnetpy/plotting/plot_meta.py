@@ -136,6 +136,17 @@ _CLABEL = {
         ("Unfeasible", _COLORS["red"]),
         ("Surrounding-ice", _COLORS["mask"]),
     ),
+    "ier_retrieval_status": (
+        ("_No ice", _COLORS["white"]),
+        ("Reliable", _COLORS["green"]),
+        ("Uncorrected atten.", _COLORS["orange"]),
+        ("Corrected atten.", _COLORS["lightgreen"]),
+        ("Ice from lidar", _COLORS["yellow"]),
+        ("Ice above rain", _COLORS["darksky"]),
+        ("Clear above rain", _COLORS["skyblue"]),
+        ("Positive temp.", _COLORS["seaweed"]),
+        ("No data", _COLORS["mask"]),
+    ),
 }
 
 _CBAR = {"bit": (_COLORS["white"], _COLORS["steelblue"])}
