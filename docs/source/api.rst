@@ -59,6 +59,7 @@ generated.
 
 .. autofunction:: products.generate_drizzle
 
+.. autofunction:: products.generate_der
 
 Visualizing results
 ...................
@@ -184,6 +185,13 @@ drizzle
 .......
 
 .. automodule:: products.drizzle
+   :members:
+
+
+der
+...
+
+.. automodule:: products.der
    :members:
 
 
