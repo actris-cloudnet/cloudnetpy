@@ -153,6 +153,14 @@ ATTRIBUTES = {
         plot_scale=Scale.LOGARITHMIC,
         plot_type="mesh",
     ),
+    "N_scaled": PlotMeta(
+        name="Cloud droplet number concentration",
+        cbar="viridis",
+        clabel="",
+        plot_range=(1.0e0, 1e3),
+        plot_scale=Scale.LOGARITHMIC,
+        plot_type="mesh",
+    ),
     "der_error": PlotMeta(
         name="Absolute error in effective radius",
         cbar="coolwarm",
