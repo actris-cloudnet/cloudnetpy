@@ -1,6 +1,6 @@
 # CloudnetPy
 
-![](https://github.com/actris-cloudnet/cloudnetpy/workflows/CloudnetPy%20CI/badge.svg)
+[![CloudnetPy CI](https://github.com/actris-cloudnet/cloudnetpy/actions/workflows/test.yml/badge.svg)](https://github.com/actris-cloudnet/cloudnetpy/actions/workflows/test.yml)
 [![Documentation Status](https://readthedocs.org/projects/cloudnetpy/badge/?version=latest)](https://cloudnetpy.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/cloudnetpy.svg)](https://badge.fury.io/py/cloudnetpy)
 [![DOI](https://zenodo.org/badge/233602651.svg)](https://zenodo.org/badge/latestdoi/233602651)
