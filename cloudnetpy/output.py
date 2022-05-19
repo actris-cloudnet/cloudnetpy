@@ -298,10 +298,6 @@ def _get_identifier(short_id: str) -> str:
         return "ice effective radius"
     if short_id == "der":
         return "droplet effective radius"
-    if short_id == "ier":
-        return "ice effective radius"
-    if short_id == "der":
-        return "droplet effective radius"
     return short_id
 
 
