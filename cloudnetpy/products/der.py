@@ -213,7 +213,7 @@ class DefSource(DataSource):
         is_ice = droplet_classification.is_ice
         is_rain = np.tile(self.is_rain, (is_retrieved.shape[1], 1)).T
 
-        retrieval_status = np.zeros(is_retrieved.shape)
+        retrieval_status = np.zeros(is_retrieved.shape, dtype=int)
         retrieval_status[is_ice] = 4
         retrieval_status[is_retrieved] = 1
         retrieval_status[is_mixed * is_retrieved] = 2
