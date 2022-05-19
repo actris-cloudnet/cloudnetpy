@@ -147,6 +147,13 @@ _CLABEL = {
         ("Positive temp.", _COLORS["seaweed"]),
         ("No data", _COLORS["mask"]),
     ),
+    "der_retrieval_status": (
+        ("_Clear sky", _COLORS["white"]),
+        ("Reliable", _COLORS["green"]),
+        ("Mixed-phase", _COLORS["lightgreen"]),
+        ("Unfeasible", _COLORS["red"]),
+        ("Surrounding-ice", _COLORS["mask"]),
+    ),
 }
 
 _CBAR = {"bit": (_COLORS["white"], _COLORS["steelblue"])}

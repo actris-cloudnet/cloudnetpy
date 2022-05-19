@@ -92,6 +92,7 @@ def generate_figure(
         >>> generate_figure('ier_file.nc', ['ier', 'ier_error', 'ier_retrieval_status'], max_y=3)
         >>> generate_figure('der.nc', ['der', 'der_scaled'], max_y=12)
         >>> generate_figure('ier_file.nc', ['ier', 'ier_error', 'ier_retrieval_status'], max_y=3)
+        >>> generate_figure('der.nc', ['der', 'der_scaled'], max_y=12)
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
     is_height = _is_height_dimension(nc_file)
