@@ -8,4 +8,5 @@ docs/doctrees/
 build/
 dist/
 scripts/
+.eggs/
 *~

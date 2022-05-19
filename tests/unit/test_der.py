@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from cloudnetpy.products.der import DefSource, DropletClassification
+from cloudnetpy.products.der import DerSource, DropletClassification
 
 DIMENSIONS = ("time", "height", "model_time", "model_height")
 TEST_ARRAY = np.arange(3)
@@ -92,7 +92,7 @@ class TestAppending:
     @pytest.fixture(autouse=True)
     def run_before_tests(self, categorize_file):
         self.ice_class = DropletClassification(categorize_file)
-        self.def_source = DefSource(categorize_file)
+        self.def_source = DerSource(categorize_file)
 
     def test_append_der(self):
         self.def_source.is_droplet = np.array([0, 0, 0, 1, 1], dtype=bool)
