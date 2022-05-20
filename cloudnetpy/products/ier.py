@@ -263,13 +263,14 @@ COMMENTS = {
         "This variable describes whether a retrieval was performed for each\n"
         "pixel, and its associated quality, in the form of 8 different classes.\n"
         "The classes are defined in the definition and long_definition attributes. \n"
-        "The most reliable retrieval is that without any rain or liquid\n",
+        "The most reliable retrieval is that without any rain or liquid\n"
         "cloud beneath, indicated by the value 1, then the next most reliable \n"
         "is when liquid water attenuation has been corrected using a microwave\n"
         "radiometer, indicated by the value 3, while a value 2 indicates that \n"
         "liquid water cloud was present but microwave radiometer data were not\n"
         "available so no correction was performed. No attempt is made to retrieve \n"
         "ice water content when rain is present below the ice; this is\n"
+        "indicated by the value 5."
     ),
     "ier_error": (
         "Error in effective radius of ice particles due to error propagation, \n"
