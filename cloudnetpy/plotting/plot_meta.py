@@ -19,6 +19,7 @@ class PlotMeta(NamedTuple):
     source: Optional[str] = None
 
 
+_MUM = "$\\mu m$"
 _M3 = "$m^{-3}$"
 _MS1 = "m s$^{-1}$"
 _SR1M1 = "sr$^{-1}$ m$^{-1}$"
@@ -124,11 +125,51 @@ _CLABEL = {
         ("Unfeasible", _COLORS["red"]),
         ("Surrounding-ice", _COLORS["mask"]),
     ),
+    "ier_retrieval_status": (
+        ("_No ice", _COLORS["white"]),
+        ("Reliable", _COLORS["green"]),
+        ("Uncorrected atten.", _COLORS["orange"]),
+        ("Corrected atten.", _COLORS["lightgreen"]),
+        ("Ice from lidar", _COLORS["yellow"]),
+        ("Ice above rain", _COLORS["darksky"]),
+        ("Clear above rain", _COLORS["skyblue"]),
+        ("Positive temp.", _COLORS["seaweed"]),
+        ("No data", _COLORS["mask"]),
+    ),
 }
 
 _CBAR = {"bit": (_COLORS["white"], _COLORS["steelblue"])}
 
 ATTRIBUTES = {
+    "ier": PlotMeta(
+        name="Ice effective radius",
+        cbar="viridis",
+        clabel=_MUM,
+        plot_range=(20, 60),
+        plot_scale=Scale.LINEAR,
+        plot_type="mesh",
+    ),
+    "ier_inc_rain": PlotMeta(
+        name="Ice effective radius (including rain)",
+        cbar="Blues",
+        clabel=_MUM,
+        plot_range=(20, 60),
+        plot_scale=Scale.LINEAR,
+        plot_type="mesh",
+    ),
+    "ier_error": PlotMeta(
+        name="Ice effective radius error",
+        cbar="RdYlGn_r",
+        clabel=_MUM,
+        plot_range=(10, 50),
+        plot_scale=Scale.LINEAR,
+        plot_type="mesh",
+    ),
+    "ier_retrieval_status": PlotMeta(
+        name="Ice effective radius retrieval status",
+        clabel=_CLABEL["ier_retrieval_status"],
+        plot_type="segment",
+    ),
     "Do": PlotMeta(
         name="Drizzle median diameter",
         cbar="viridis",

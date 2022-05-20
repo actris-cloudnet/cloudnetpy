@@ -287,13 +287,15 @@ def _get_dimensions(nc: netCDF4.Dataset, data: np.ndarray) -> tuple:
 
 
 def _get_identifier(short_id: str) -> str:
-    valid_ids = ("lwc", "iwc", "drizzle", "classification", "der")
+    valid_ids = ("lwc", "iwc", "drizzle", "classification", "der", "ier")
     if short_id not in valid_ids:
         raise ValueError("Invalid product id.")
     if short_id == "iwc":
         return "ice water content"
     if short_id == "lwc":
         return "liquid water content"
+    if short_id == "ier":
+        return "ice effective radius"
     if short_id == "der":
         return "droplet effective radius"
     return short_id
