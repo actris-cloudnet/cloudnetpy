@@ -50,14 +50,13 @@ def categorize_file(tmpdir_factory, file_metadata):
 
 @pytest.mark.parametrize("result", ["K2liquid0", "ZT", "T", "Z", "c"])
 def test_ier_coeffs(result, categorize_file):
-    obj = IerSource(categorize_file)
-    assert result in obj.coeffs._fields
-    assert obj.coeffs == (0.878, -0.000205, -0.0015, 0.0016, -1.52)
+    obj = IerSource(categorize_file, "ier")
+    assert result in obj.coefficients._fields
+    assert obj.coefficients == (0.878, -0.000205, -0.0015, 0.0016, -1.52)
 
 
 def test_ier_temperature(categorize_file):
-    obj = IerSource(categorize_file)
-    print(obj.temperature)
+    obj = IerSource(categorize_file, "ier")
     expected = [[8.85, 6.85, 4.85], [12.85, 10.85, 8.85], [10.85, 8.85, 6.85]]
     assert_array_almost_equal(obj.temperature, expected)
 
@@ -129,18 +128,18 @@ class TestAppending:
     @pytest.fixture(autouse=True)
     def run_before_tests(self, categorize_file):
         self.ice_class = IceClassification(categorize_file)
-        self.ier_source = IerSource(categorize_file)
+        self.ier_source = IerSource(categorize_file, "ier")
 
     def test_append_ier_including_rain(self):
         self.ice_class.is_ice = np.array([[0, 1, 1], [1, 1, 0], [0, 0, 1]], dtype=bool)
-        self.ier_source.append_ier_including_rain(self.ice_class)
+        self.ier_source.append_main_variable_including_rain(self.ice_class)
         expected_mask = [[1, 0, 0], [0, 0, 1], [1, 1, 0]]
         assert_array_equal(self.ier_source.data["ier_inc_rain"][:].mask, expected_mask)
 
     def test_append_ier(self):
         self.ice_class.ice_above_rain = np.array([0, 0, 0, 1, 1], dtype=bool)
         self.ier_source.data["ier_inc_rain"] = np.ma.array([1, 2, 3, 4, 5], mask=[1, 0, 1, 0, 1])
-        self.ier_source.append_ier(self.ice_class)
+        self.ier_source.append_main_variable(self.ice_class)
         expected_mask = [1, 0, 1, 1, 1]
         assert_array_equal(self.ier_source.data["ier"][:].mask, expected_mask)
 

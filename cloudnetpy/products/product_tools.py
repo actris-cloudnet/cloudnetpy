@@ -1,11 +1,16 @@
 """General helper classes and functions for all products."""
+from collections import namedtuple
 from typing import Dict, Union
 
 import netCDF4
 import numpy as np
 from numpy import ma
 
-from cloudnetpy import utils
+from cloudnetpy import constants, utils
+from cloudnetpy.categorize import atmos
+from cloudnetpy.datasource import DataSource
+
+IceCoefficients = namedtuple("IceCoefficients", "K2liquid0 ZT T Z c")
 
 
 class CategorizeBits:
@@ -61,6 +66,128 @@ class ProductClassification(CategorizeBits):
         self.is_rain = get_is_rain(categorize_file)
 
 
+class IceClassification(ProductClassification):
+    """Class storing the information about different ice types.
+    Child of ProductClassification().
+    """
+
+    def __init__(self, categorize_file: str):
+        super().__init__(categorize_file)
+        self.is_ice = self._find_ice()
+        self.would_be_ice = self._find_would_be_ice()
+        self.corrected_ice = self._find_corrected_ice()
+        self.uncorrected_ice = self._find_uncorrected_ice()
+        self.ice_above_rain = self._find_ice_above_rain()
+        self.cold_above_rain = self._find_cold_above_rain()
+
+    def _find_ice(self) -> np.ndarray:
+        return (
+            self.category_bits["falling"]
+            & self.category_bits["cold"]
+            & ~self.category_bits["melting"]
+            & ~self.category_bits["insect"]
+        )
+
+    def _find_would_be_ice(self) -> np.ndarray:
+        warm_falling = (
+            self.category_bits["falling"]
+            & ~self.category_bits["cold"]
+            & ~self.category_bits["insect"]
+        )
+        return warm_falling | self.category_bits["melting"]
+
+    def _find_corrected_ice(self) -> np.ndarray:
+        return self.is_ice & self.quality_bits["attenuated"] & self.quality_bits["corrected"]
+
+    def _find_uncorrected_ice(self) -> np.ndarray:
+        return self.is_ice & self.quality_bits["attenuated"] & ~self.quality_bits["corrected"]
+
+    def _find_ice_above_rain(self) -> np.ndarray:
+        is_rain = utils.transpose(self.is_rain)
+        return (self.is_ice * is_rain) == 1
+
+    def _find_cold_above_rain(self) -> np.ndarray:
+        is_cold = self.category_bits["cold"]
+        is_rain = utils.transpose(self.is_rain)
+        is_cold_rain = (is_cold * is_rain) == 1
+        return is_cold_rain & ~self.category_bits["melting"]
+
+
+class IceSource(DataSource):
+    """Base class for different ice products."""
+
+    def __init__(self, categorize_file: str, product: str):
+        super().__init__(categorize_file)
+        self.wl_band = utils.get_wl_band(float(self.getvar("radar_frequency")))
+        self.temperature = get_temperature(categorize_file)
+        self.product = product
+        self.coefficients = self._get_coefficients()
+
+    def append_main_variable_including_rain(self, ice_classification: IceClassification) -> None:
+        """Adds the main variable (including ice above rain)."""
+        data_including_rain = self._convert_z()
+        data_including_rain[~ice_classification.is_ice] = ma.masked
+        self.append_data(data_including_rain, f"{self.product}_inc_rain")
+
+    def append_main_variable(self, ice_classification: IceClassification) -> None:
+        """Adds the main variable (excluding rain)."""
+        data = ma.copy(self.data[f"{self.product}_inc_rain"][:])
+        data[ice_classification.ice_above_rain] = ma.masked
+        self.append_data(data, self.product)
+
+    def append_status(self, ice_classification: IceClassification) -> None:
+        """Adds the status of retrieval."""
+        data = self.data[self.product][:]
+        retrieval_status = np.zeros(data.shape, dtype=int)
+        is_data = ~data.mask
+        retrieval_status[is_data] = 1
+        retrieval_status[is_data & ice_classification.corrected_ice] = 3
+        retrieval_status[is_data & ice_classification.uncorrected_ice] = 2
+        retrieval_status[~is_data & ice_classification.is_ice] = 4
+        retrieval_status[ice_classification.cold_above_rain] = 6
+        retrieval_status[ice_classification.ice_above_rain] = 5
+        retrieval_status[ice_classification.would_be_ice & (retrieval_status == 0)] = 7
+        self.append_data(retrieval_status, f"{self.product}_retrieval_status")
+
+    def _get_coefficients(self) -> IceCoefficients:
+        """Returns coefficients for ice effective radius retrieval.
+
+        References:
+            Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
+        """
+        if self.product == "ier":
+            if self.wl_band == 0:
+                return IceCoefficients(0.878, -0.000205, -0.0015, 0.0016, -1.52)
+            return IceCoefficients(0.669, -0.000296, -0.00193, -0.000, -1.502)
+        if self.wl_band == 0:
+            return IceCoefficients(0.878, 0.000242, -0.0186, 0.0699, -1.63)
+        return IceCoefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
+
+    def _convert_z(self, z_variable: str = "Z") -> np.ndarray:
+        """Calculates temperature weighted z, i.e. ice effective radius [m]."""
+        assert self.product in ("iwc", "ier")
+        assert z_variable in ("Z", "Z_sensitivity")
+        temperature = self.temperature if z_variable == "Z" else ma.mean(self.temperature, axis=0)
+        z_scaled = self.getvar(z_variable) + self._get_z_factor()
+        g_to_kg = 0.001
+        m_to_mu = 1e6
+        scale = g_to_kg if self.product == "iwc" else 3 / (2 * constants.RHO_ICE) * m_to_mu
+        return (
+            10
+            ** (
+                self.coefficients.ZT * z_scaled * temperature
+                + self.coefficients.T * temperature
+                + self.coefficients.Z * z_scaled
+                + self.coefficients.c
+            )
+            * scale
+        )
+
+    def _get_z_factor(self) -> float:
+        """Returns empirical scaling factor for radar echo."""
+        return float(utils.lin2db(self.coefficients.K2liquid0 / 0.93))
+
+
 def get_is_rain(filename: str) -> np.ndarray:
     rain_rate = read_nc_fields(filename, "rain_rate")
     is_rain = rain_rate != 0
@@ -107,3 +234,9 @@ def interpolate_model(cat_file: str, names: Union[str, list]) -> Dict[str, np.nd
 
     names = [names] if isinstance(names, str) else names
     return {name: _interp_field(name) for name in names}
+
+
+def get_temperature(categorize_file: str) -> np.ndarray:
+    """Returns interpolated temperatures in Celsius."""
+    atmosphere = interpolate_model(categorize_file, "temperature")
+    return atmos.k2c(atmosphere["temperature"])

@@ -19,7 +19,7 @@ class PlotMeta(NamedTuple):
     source: Optional[str] = None
 
 
-_MUM = "$\\mu m$"
+_MUM = "$\\mu$m"
 _M3 = "$m^{-3}$"
 _MS1 = "m s$^{-1}$"
 _SR1M1 = "sr$^{-1}$ m$^{-1}$"
@@ -88,7 +88,7 @@ _CLABEL = {
         ("_Lidar molecular scattering", _COLORS["pink"]),
         ("No data", _COLORS["mask"]),
     ),
-    "iwc_retrieval_status": (
+    "ice_retrieval_status": (
         ("_No ice", _COLORS["white"]),
         ("Reliable", _COLORS["green"]),
         ("Uncorrected", _COLORS["orange"]),
@@ -125,17 +125,6 @@ _CLABEL = {
         ("Unfeasible", _COLORS["red"]),
         ("Surrounding-ice", _COLORS["mask"]),
     ),
-    "ier_retrieval_status": (
-        ("_No ice", _COLORS["white"]),
-        ("Reliable", _COLORS["green"]),
-        ("Uncorrected atten.", _COLORS["orange"]),
-        ("Corrected atten.", _COLORS["lightgreen"]),
-        ("Ice from lidar", _COLORS["yellow"]),
-        ("Ice above rain", _COLORS["darksky"]),
-        ("Clear above rain", _COLORS["skyblue"]),
-        ("Positive temp.", _COLORS["seaweed"]),
-        ("No data", _COLORS["mask"]),
-    ),
 }
 
 _CBAR = {"bit": (_COLORS["white"], _COLORS["steelblue"])}
@@ -167,7 +156,7 @@ ATTRIBUTES = {
     ),
     "ier_retrieval_status": PlotMeta(
         name="Ice effective radius retrieval status",
-        clabel=_CLABEL["ier_retrieval_status"],
+        clabel=_CLABEL["ice_retrieval_status"],
         plot_type="segment",
     ),
     "Do": PlotMeta(
@@ -649,7 +638,7 @@ ATTRIBUTES = {
     ),
     "iwc_retrieval_status": PlotMeta(
         name="Ice water content retrieval status",
-        clabel=_CLABEL["iwc_retrieval_status"],
+        clabel=_CLABEL["ice_retrieval_status"],
         plot_type="segment",
     ),
     "lwc": PlotMeta(

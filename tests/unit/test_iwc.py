@@ -44,19 +44,19 @@ def categorize_file(tmpdir_factory, file_metadata):
 
 
 def test_iwc_wl_band(categorize_file):
-    obj = IwcSource(categorize_file)
+    obj = IwcSource(categorize_file, "iwc")
     assert obj.wl_band == 0
 
 
 @pytest.mark.parametrize("result", ["K2liquid0", "ZT", "T", "Z", "c"])
 def test_iwc_coeffs(result, categorize_file):
-    obj = IwcSource(categorize_file)
-    assert result in obj.coeffs._fields
-    assert obj.coeffs == (0.878, 0.000242, -0.0186, 0.0699, -1.63)
+    obj = IwcSource(categorize_file, "iwc")
+    assert result in obj.coefficients._fields
+    assert obj.coefficients == (0.878, 0.000242, -0.0186, 0.0699, -1.63)
 
 
 def test_iwc_temperature(categorize_file):
-    obj = IwcSource(categorize_file)
+    obj = IwcSource(categorize_file, "iwc")
     expected = [[6.85, 16.85], [6.85, 16.85], [6.85, 16.85]]
     testing.assert_almost_equal(obj.temperature, expected)
 
@@ -114,18 +114,18 @@ class TestAppending:
     @pytest.fixture(autouse=True)
     def run_before_tests(self, categorize_file):
         self.ice_class = IceClassification(categorize_file)
-        self.iwc_source = IwcSource(categorize_file)
+        self.iwc_source = IwcSource(categorize_file, "iwc")
 
     def test_append_iwc_including_rain(self):
         self.ice_class.is_ice = np.array([[0, 1], [1, 1], [0, 0]], dtype=bool)
-        self.iwc_source.append_iwc_including_rain(self.ice_class)
+        self.iwc_source.append_main_variable_including_rain(self.ice_class)
         expected_mask = [[1, 0], [0, 0], [1, 1]]
         assert_array_equal(self.iwc_source.data["iwc_inc_rain"][:].mask, expected_mask)
 
     def test_append_iwc(self):
         self.ice_class.ice_above_rain = np.array([0, 0, 0, 1, 1], dtype=bool)
         self.iwc_source.data["iwc_inc_rain"] = ma.array([1, 2, 3, 4, 5], mask=[1, 0, 1, 0, 1])
-        self.iwc_source.append_iwc(self.ice_class)
+        self.iwc_source.append_main_variable(self.ice_class)
         expected_mask = [1, 0, 1, 1, 1]
         assert_array_equal(self.iwc_source.data["iwc"][:].mask, expected_mask)
 
@@ -146,7 +146,7 @@ class TestAppending:
 
 
 def test_append_iwc_status(categorize_file):
-    iwc_source = IwcSource(categorize_file)
+    iwc_source = IwcSource(categorize_file, "iwc")
     ice_class = IceClassification(categorize_file)
     iwc_source.data["iwc"] = ma.array(
         [[1, 1], [1, 1], [1, 1]], dtype=float, mask=[[1, 0], [0, 0], [0, 0]]
