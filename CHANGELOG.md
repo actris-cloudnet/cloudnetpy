@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.33.0 – 2022-05-24
+
+- Add ice effective radius product (#51)
+- Add droplet effective radius product (#50)
+- Run tests on pull request
+
 ## 1.32.0 – 2022-05-13
 
 - Skip corrupted profiles in CL51 files
@@ -65,7 +71,7 @@
 
 ## 1.28.0 - 2022-01-17
 
-Return dimensions of generated images
+- Return dimensions of generated images
 
 ## 1.27.7 - 2021-12-21
 
@@ -285,7 +291,7 @@ Fixes `ct25k` processing
 
 ## 1.9.1 - 2021-02-18
 
-Fixes a bug that prevented file to be closed properly.
+- Fixes a bug that prevented file to be closed properly.
 
 ## 1.9.0 - 2021-02-18
 
@@ -299,7 +305,7 @@ This Release:
 
 ## 1.8.2 - 2021-02-05
 
-Better fix for the MIRA timestamp issue
+- Better fix for the MIRA timestamp issue
 
 ## 1.8.1 - 2021-02-04
 
@@ -352,15 +358,15 @@ This release adds support for RPG Level 1 V4 files
 
 ## 1.2.4 - 2020-09-02
 
-This release fixes a bug that causes rpg2nc reader to fail with Python 3.8.
+- This release fixes a bug that causes rpg2nc reader to fail with Python 3.8.
 
 ## 1.2.3 - 2020-09-02
 
-This release adds the required modifications and updates from the JOSS review process.
+- This release adds the required modifications and updates from the JOSS review process.
 
 ## 1.2.2 - 2020-08-10
 
-This release fixes the bug https://github.com/actris-cloudnet/cloudnetpy/issues/9
+- This release fixes the bug https://github.com/actris-cloudnet/cloudnetpy/issues/9
 
 ## 1.2.1 - 2020-06-03
 
@@ -368,7 +374,7 @@ This release fixes the bug https://github.com/actris-cloudnet/cloudnetpy/issues/
 
 ## 1.2.0 - 2020-06-02
 
-This version adds option to omit title from plotted figures.
+- This version adds option to omit title from plotted figures.
 
 ## 1.1.0 - 2020-05-11
 
