@@ -61,6 +61,8 @@ generated.
 
 .. autofunction:: products.generate_der
 
+.. autofunction:: products.generate_ier
+
 Visualizing results
 ...................
 
@@ -192,6 +194,13 @@ der
 ...
 
 .. automodule:: products.der
+   :members:
+
+
+ier
+...
+
+.. automodule:: products.ier
    :members:
 
 
