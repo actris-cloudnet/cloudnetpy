@@ -79,7 +79,9 @@ class Disdrometer:
         mm_to_m = 1e3
         mmh_to_ms = 3600 * mm_to_m
         c_to_k = 273.15
+        self._convert_data(("rainfall_rate_1min_total",), mmh_to_ms)
         self._convert_data(("rainfall_rate",), mmh_to_ms)
+        self._convert_data(("rainfall_rate_1min_solid",), mmh_to_ms)
         self._convert_data(("diameter", "diameter_spread", "diameter_bnds"), mm_to_m)
         self._convert_data(("T_sensor",), c_to_k, method="add")
         self._convert_data(("V_sensor_supply",), 10)
@@ -301,9 +303,9 @@ class Thies(Disdrometer):
             (9, "synop_WW"),  # 1min
             (10, "synop_WaWa"),  # 1min
             (11, "_metar_1_min_4678"),
-            (12, "_rainfall_rate_1min_total"),
+            (12, "rainfall_rate_1min_total"),
             (13, "rainfall_rate"),  # liquid, mm h-1
-            (14, "_rainfall_rate_1min_solid"),
+            (14, "rainfall_rate_1min_solid"),
             (15, "_precipition_amount"),  # mm
             (16, "visibility"),
             (17, "radar_reflectivity"),
@@ -443,8 +445,16 @@ ATTRIBUTES = {
         units="m",
         comment="Upper and lower bounds of diameter interval.",
     ),
+    "rainfall_rate_1min_total": MetaData(
+        long_name="Total precipitation rate",
+        units="m s-1",
+    ),
     "rainfall_rate": MetaData(
         long_name="Precipitation rate",
+        units="m s-1",
+    ),
+    "rainfall_rate_1min_solid": MetaData(
+        long_name="Solid precipitation rate",
         units="m s-1",
     ),
     "synop_WaWa": MetaData(long_name="Synop code WaWa", units="1"),
