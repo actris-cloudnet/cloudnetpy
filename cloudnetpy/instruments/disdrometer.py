@@ -446,7 +446,7 @@ ATTRIBUTES = {
         comment="Upper and lower bounds of diameter interval.",
     ),
     "rainfall_rate_1min_total": MetaData(
-        long_name="Precipitation rate",
+        long_name="Total precipitation rate",
         units="m s-1",
     ),
     "rainfall_rate": MetaData(
@@ -454,7 +454,7 @@ ATTRIBUTES = {
         units="m s-1",
     ),
     "rainfall_rate_1min_solid": MetaData(
-        long_name="Precipitation rate",
+        long_name="Solid precipitation rate",
         units="m s-1",
     ),
     "synop_WaWa": MetaData(long_name="Synop code WaWa", units="1"),
