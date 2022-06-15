@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.33.2 – 2022-06-15
+
+- Add sorting of `basta` timesteps
+
 ## 1.33.1 – 2022-06-06
 
 - Add solid and total rainfall rate (#53)
