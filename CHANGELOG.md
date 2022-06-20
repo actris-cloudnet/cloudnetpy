@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.34.0 – 2022-06-20
+
+- Use fallback pollyXT backscatter channel
+
 ## 1.33.2 – 2022-06-15
 
 - Add sorting of `basta` timesteps
