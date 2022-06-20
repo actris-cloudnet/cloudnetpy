@@ -1,5 +1,6 @@
 """Module for reading / converting pollyxt data."""
 import glob
+import logging
 from typing import Optional, Union
 
 import netCDF4
@@ -99,7 +100,8 @@ class PollyXt(Ceilometer):
             raise RuntimeError("Inconsistent number of pollyxt bsc / depol files")
         self.data["range"] = _read_array_from_multiple_files(bsc_files, depol_files, "height")
         calibration_factors: np.ndarray = np.array([])
-        bsc_key = "attenuated_backscatter_1064nm"
+        beta_channel = self._get_valid_beta_channel(bsc_files)
+        bsc_key = f"attenuated_backscatter_{beta_channel}nm"
         for (bsc_file, depol_file) in zip(bsc_files, depol_files):
             with netCDF4.Dataset(bsc_file, "r") as nc_bsc, netCDF4.Dataset(
                 depol_file, "r"
@@ -111,7 +113,7 @@ class PollyXt(Ceilometer):
                     continue
                 beta_raw = nc_bsc.variables[bsc_key][:]
                 depol_raw = nc_depol.variables["volume_depolarization_ratio_532nm"][:]
-                snr = nc_bsc.variables["SNR_1064nm"][:]
+                snr = nc_bsc.variables[f"SNR_{beta_channel}nm"][:]
                 for array, key in zip(
                     [beta_raw, depol_raw, time, snr],
                     ["beta_raw", "depolarisation_raw", "time", "snr"],
@@ -122,6 +124,19 @@ class PollyXt(Ceilometer):
                 calibration_factors = np.concatenate([calibration_factors, calibration_factor])
         self.data["calibration_factor"] = calibration_factors
         return epoch
+
+    def _get_valid_beta_channel(self, files: list) -> str:
+        polly_channels = ("1064", "532", "355")
+        for channel in polly_channels:
+            for file in files:
+                with netCDF4.Dataset(file, "r") as nc:
+                    beta = nc.variables[f"attenuated_backscatter_{channel}nm"][:]
+                    if not _only_zeros_or_masked(beta):
+                        if channel != polly_channels[0]:
+                            logging.warning(f"Using {channel}nm pollyXT channel for backscatter")
+                            self.instrument.wavelength = float(channel)  # type: ignore
+                        return channel
+        raise RuntimeError("No functional pollyXT backscatter channels found")
 
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
@@ -142,6 +157,10 @@ def _read_array_from_file_pair(
     array2 = nc_file2.variables[key][:]
     assert_array_equal(array1, array2)
     return array1
+
+
+def _only_zeros_or_masked(data: ma.MaskedArray) -> bool:
+    return ma.sum(data) == 0 or data.mask.all()
 
 
 ATTRIBUTES = {

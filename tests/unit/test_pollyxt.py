@@ -8,6 +8,7 @@ import numpy.ma as ma
 import pytest
 from all_products_fun import SITE_META, Check
 
+import cloudnetpy.instruments.pollyxt
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import pollyxt2nc
 
@@ -92,3 +93,25 @@ class TestPolly2:
             assert "altitude" in nc.variables
             for key in ("latitude", "longitude", "kissa"):
                 assert key not in nc.variables
+
+
+def test_broken_channel():
+    filepath = f"{SCRIPT_PATH}/data/pollyxt/broken_1064_channel"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/polly.nc"
+    pollyxt2nc(filepath, temp_path, SITE_META, date="2022-06-16")
+    with netCDF4.Dataset(temp_path) as nc:
+        assert nc.variables["wavelength"][:] == 532
+
+
+@pytest.mark.parametrize(
+    "data, output",
+    [
+        (ma.array([1, 2, 3], mask=[1, 1, 1]), True),
+        (ma.array([1, 2, 3], mask=[1, 1, 0]), False),
+        (ma.array([0, 0, 0], mask=[0, 0, 0]), True),
+        (ma.array([0, 2, 0], mask=[0, 0, 0]), False),
+    ],
+)
+def test_is_zeros_or_masked(data, output):
+    assert cloudnetpy.instruments.pollyxt._only_zeros_or_masked(data) == output
