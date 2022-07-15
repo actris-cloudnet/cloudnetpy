@@ -84,7 +84,12 @@ def _find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
     """
     alt: np.ndarray = np.array([])
     for prof in temperature:
-        ind = np.where(prof < T0)[0][0]
+        ind = np.where(prof < T0)[0]
+        ind_Tliq = np.where(prof[ind[0]:] > T0)[0]
+        if len(ind_Tliq)>0:
+            ind = ind[ind>np.nanmax(ind_Tliq)][0]
+        else:
+            ind = ind[0]
         if ind == 0:
             alt = np.append(alt, height[0])
         else:
