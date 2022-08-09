@@ -84,7 +84,7 @@ def test_stack_errors():
     [(-1000, -1), (-100, -0.99999), (-10, -0.9), (1000, np.exp(100 / 10 * np.log(10)) - 1)],
 )
 def test_db2lin(x, result):
-    testing.assert_array_almost_equal(de.db2lin(x), result, decimal=5)
+    testing.assert_array_almost_equal(de.db2lin(x), result, decimal=3)
 
 
 @pytest.mark.parametrize("x, result", [(1e6, 60), (1e5, 50), (1e4, 40), (-100.0, -10)])

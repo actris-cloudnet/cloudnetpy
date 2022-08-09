@@ -31,7 +31,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
         proprietary Matlab implementation.
 
     Notes:
-        Some of the individual classification methods are changed in this Python
+        Some individual classification methods are changed in this Python
         implementation compared to the original Cloudnet methodology.
         Especially methods classifying insects, melting layer and liquid droplets.
 
@@ -42,7 +42,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[3] = melting.find_melting_layer(obs)
     bits[2] = freezing.find_freezing_region(obs, bits[3])
     bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
-    bits[5] = insects.find_insects(obs, bits[3], bits[0])
+    bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
     bits, filtered_ice = _filter_falling(bits)
     for _ in range(5):
@@ -51,7 +51,12 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
     bits[4][filtered_ice] = False
     return ClassificationResult(
-        _bits_to_integer(bits), obs.is_rain, obs.is_clutter, liquid["bases"], obs.rain_rate
+        _bits_to_integer(bits),
+        obs.is_rain,
+        obs.is_clutter,
+        liquid["bases"],
+        obs.rain_rate,
+        insect_prob,
     )
 
 
