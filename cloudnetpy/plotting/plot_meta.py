@@ -571,8 +571,8 @@ ATTRIBUTES = {
     ),
     "insect_prob": PlotMeta(
         name="Insect probability",
-        cbar="viridius",
-        clabel=_SR1M1,
+        cbar="viridis",
+        clabel="",
         plot_range=(0, 1),
         plot_scale=Scale.LINEAR,
         plot_type="mesh",

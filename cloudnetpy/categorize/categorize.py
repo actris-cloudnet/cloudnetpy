@@ -79,7 +79,7 @@ def generate_categorize(input_files: dict, output_file: str, uuid: Optional[str]
     def _prepare_output() -> dict:
         data["radar"].add_meta()
         data["model"].screen_sparse_fields()
-        for key in ("category_bits", "rain_rate"):
+        for key in ("category_bits", "rain_rate", "insect_prob"):
             data["radar"].append_data(getattr(classification, key), key)
         for key in ("radar_liquid_atten", "radar_gas_atten"):
             data["radar"].append_data(attenuations[key], key)
@@ -214,6 +214,7 @@ COMMENTS = {
         "of 0 dBZ at all frequencies."
     ),
     "bias": "This variable is an estimate of the one-standard-deviation calibration error.",
+    "insect_prob": "Ad-hoc estimation of the probability that the pixel contains insects.",
 }
 
 DEFINITIONS = {
@@ -332,5 +333,10 @@ CATEGORIZE_ATTRIBUTES = {
         units="dB",
         comment=COMMENTS["radar_gas_atten"],
         references="Liebe (1985, Radio Sci. 20(5), 1069-1089)",
+    ),
+    "insect_prob": MetaData(
+        long_name="Insect probability",
+        units="1",
+        comment=COMMENTS["insect_prob"],
     ),
 }
