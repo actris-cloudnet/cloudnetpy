@@ -1,8 +1,8 @@
 from collections import namedtuple
+from typing import BinaryIO, Literal, Tuple
 
 import numpy as np
-
-from cloudnetpy import utils
+from numpy import ma
 
 
 class Fmcw94Bin:
@@ -219,74 +219,156 @@ class Fmcw94Bin:
         return {**aux, **block1, **block2}
 
 
+def _decode_angles(x: np.ndarray, version: Literal[1, 2]) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    Decode elevation and azimuth angles.
+
+    >>> _decode_angles(np.array([1267438.5]), version=1)
+    (array([138.5]), array([267.4]))
+    >>> _decode_angles(np.array([1453031045, -900001232]), version=2)
+    (array([145.3, -90. ]), array([310.45,  12.32]))
+
+    Based on `interpret_angle` from mwr_raw2l1 licensed under BSD 3-Clause:
+    https://github.com/MeteoSwiss/mwr_raw2l1/blob/0738490d22f77138cdf9329bf102f319c78be584/mwr_raw2l1/readers/reader_rpg_helpers.py#L30
+    """
+
+    if version == 1:
+        # Description in the manual is quite unclear so here's an improved one:
+        # Ang=sign(El)*(|El|+1000*Az), -90°<=El<100°, 0°<=Az<360°. If El>=100°
+        # (i.e. requires 3 digits), the value 1000.000 is added to Ang and El in
+        # the formula is El-100°. For decoding to make sense, Az and El must be
+        # stored in precision of 0.1 degrees.
+
+        ele_offset = np.zeros(x.shape)
+        ind_offset_corr = x >= 1e6
+        ele_offset[ind_offset_corr] = 100
+        x = np.copy(x)
+        x[ind_offset_corr] -= 1e6
+
+        azi = (np.abs(x) // 100) / 10
+        ele = x - np.sign(x) * azi * 1000 + ele_offset
+    elif version == 2:
+        # First 5 decimal digits is azimuth*100, last 5 decimal digits is
+        # elevation*100, sign of Ang is sign of elevation.
+        ele = np.sign(x) * (np.abs(x) // 1e5) / 100
+        azi = (np.abs(x) - np.abs(ele) * 1e7) / 100
+    else:
+        raise NotImplementedError(
+            f"Known versions for angle encoding are 1 and 2, but received {version}"
+        )
+
+    return ele, azi
+
+
 class HatproBin:
-    """HATPRO binary file reader."""
+    """HATPRO binary file reader.
+
+    References:
+        Radiometer Physics (2014): Instrument Operation and Software Guide
+        Operation Principles and Software Description for RPG standard single
+        polarization radiometers (G5 series).
+        https://www.radiometer-physics.de/download/PDF/Radiometers/HATPRO/RPG_MWR_STD_Software_Manual%20G5.pdf
+    """
+
+    header: dict
+    data: dict
+    version: Literal[1, 2]
+    variable: str
+
+    QUALITY_NA = 0
+    QUALITY_HIGH = 1
+    QUALITY_MEDIUM = 2
+    QUALITY_LOW = 3
 
     def __init__(self, filename):
         self.filename = filename
-        self._file_position = 0
-        self.header = self.read_header()
-        self.data = self.read_data()
-
-    def screen_bad_profiles(self):
-        good_ind = []
-        for ind, flag in enumerate(self.data["quality_flag"]):
-            if not (utils.isbit(flag, 1) and utils.isbit(flag, 2)):
-                good_ind.append(ind)
-        for key in self.data:
-            self.data[key] = self.data[key][good_ind]
-
-    def read_header(self) -> dict:
-        """Reads the header."""
         with open(self.filename, "rb") as file:
-            header = {
-                "file_code": np.fromfile(file, np.int32, 1),
-                "_n_samples": np.fromfile(file, np.int32, 1),
-                "_lwp_min_max": np.fromfile(file, np.float32, 2),
-                "_time_reference": np.fromfile(file, np.int32, 1),
-                "retrieval_method": np.fromfile(file, np.int32, 1),
-            }
-            self._file_position = file.tell()
-        return header
+            self._read_header(file)
+            self._read_data(file)
+        self._add_zenith_angle()
 
-    def read_data(self) -> dict:
-        """Reads the data."""
-        with open(self.filename, "rb") as file:
-            file.seek(self._file_position)
+    def mask_bad_profiles(self):
+        self.data[self.variable] = ma.masked_array(
+            self.data[self.variable],
+            mask=self.data["quality_flag"] & 0b110 == self.QUALITY_LOW << 1,
+        )
 
-            data: dict = {
-                "time": np.zeros(self.header["_n_samples"], dtype=np.int32),
-                "quality_flag": np.zeros(self.header["_n_samples"], dtype=np.int32),
-                "lwp": np.zeros(self.header["_n_samples"]),
-                "zenith_angle": np.zeros(self.header["_n_samples"], dtype=np.float32),
-            }
+    def _read_header(self, file: BinaryIO):
+        raise NotImplementedError()
 
-            version = self._get_hatpro_version()
-            angle_dtype = np.float32 if version == 1 else np.int32
-            data["_instrument_angles"] = np.zeros(self.header["_n_samples"], dtype=angle_dtype)
+    def _read_data(self, file: BinaryIO):
+        raise NotImplementedError()
 
-            for sample in range(self.header["_n_samples"][0]):
-                data["time"][sample] = np.fromfile(file, np.int32, 1)
-                data["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
-                data["lwp"][sample] = np.fromfile(file, np.float32, 1)
-                data["_instrument_angles"][sample] = np.fromfile(file, angle_dtype, 1)
+    def _add_zenith_angle(self):
+        ele, _azi = _decode_angles(self.data["_instrument_angles"], self.version)
+        self.data["zenith_angle"] = 90 - ele
 
-            data = self._add_zenith(version, data)
 
-        return data
+class HatproBinLwp(HatproBin):
+    """HATPRO *.LWP (Liquid Water Path) binary file reader."""
 
-    def _get_hatpro_version(self) -> int:
+    variable = "lwp"
+
+    def _read_header(self, file):
+        self.header = {
+            "file_code": np.fromfile(file, np.int32, 1),
+            "_n_samples": np.fromfile(file, np.int32, 1),
+            "_lwp_min_max": np.fromfile(file, np.float32, 2),
+            "_time_reference": np.fromfile(file, np.int32, 1),
+            "retrieval_method": np.fromfile(file, np.int32, 1),
+        }
         if self.header["file_code"][0] == 934501978:
-            return 1
-        if self.header["file_code"][0] == 934501000:
-            return 2
-        raise ValueError(f'Unknown HATPRO version. {self.header["file_code"][0]}')
-
-    @staticmethod
-    def _add_zenith(version: int, data: dict) -> dict:
-        if version == 1:
-            del data["zenith_angle"]  # Impossible to understand how zenith is decoded in the values
+            self.version = 1
+        elif self.header["file_code"][0] == 934501000:
+            self.version = 2
         else:
-            elevation_angle = [int(str(x)[:4]) / 100 for x in data["_instrument_angles"]]
-            data["zenith_angle"] = 90 - np.array(elevation_angle)
-        return data
+            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"][0]}')
+
+    def _read_data(self, file):
+        angle_dtype = np.float32 if self.version == 1 else np.int32
+        self.data = {
+            "time": np.zeros(self.header["_n_samples"], dtype=np.int32),
+            "quality_flag": np.zeros(self.header["_n_samples"], dtype=np.int32),
+            "lwp": np.zeros(self.header["_n_samples"]),
+            "_instrument_angles": np.zeros(self.header["_n_samples"], dtype=angle_dtype),
+        }
+        for sample in range(self.header["_n_samples"][0]):
+            self.data["time"][sample] = np.fromfile(file, np.int32, 1)
+            self.data["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
+            self.data["lwp"][sample] = np.fromfile(file, np.float32, 1)
+            self.data["_instrument_angles"][sample] = np.fromfile(file, angle_dtype, 1)
+
+
+class HatproBinIwv(HatproBin):
+    """HATPRO *.IWV (Integrated Water Vapour) binary file reader."""
+
+    variable = "iwv"
+
+    def _read_header(self, file):
+        self.header = {
+            "file_code": np.fromfile(file, np.int32, 1),
+            "_n_samples": np.fromfile(file, np.int32, 1),
+            "_iwv_min_max": np.fromfile(file, np.float32, 2),
+            "_time_reference": np.fromfile(file, np.int32, 1),
+            "retrieval_method": np.fromfile(file, np.int32, 1),
+        }
+        if self.header["file_code"][0] == 594811068:
+            self.version = 1
+        elif self.header["file_code"][0] == 594811000:
+            self.version = 2
+        else:
+            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"][0]}')
+
+    def _read_data(self, file):
+        angle_dtype = np.float32 if self.version == 1 else np.int32
+        self.data = {
+            "time": np.zeros(self.header["_n_samples"], dtype=np.int32),
+            "quality_flag": np.zeros(self.header["_n_samples"], dtype=np.int32),
+            "iwv": np.zeros(self.header["_n_samples"], dtype=np.float32),
+            "_instrument_angles": np.zeros(self.header["_n_samples"], dtype=angle_dtype),
+        }
+        for sample in range(self.header["_n_samples"][0]):
+            self.data["time"][sample] = np.fromfile(file, np.int32, 1)
+            self.data["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
+            self.data["iwv"][sample] = np.fromfile(file, np.float32, 1)
+            self.data["_instrument_angles"][sample] = np.fromfile(file, angle_dtype, 1)

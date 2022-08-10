@@ -14,7 +14,7 @@ SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 
 
-file_path = f"{SCRIPT_PATH}/data/hatpro/"
+file_path = f"{SCRIPT_PATH}/data/hatpro-lwp/"
 
 
 class TestHatpro2nc(Check):
@@ -44,6 +44,7 @@ class TestHatpro2nc(Check):
             assert max(time[:]) < 24
             for ind, t in enumerate(time[:-1]):
                 assert time[ind + 1] > t
+            assert "zenith_angle" in nc.variables
             assert "lwp" in nc.variables
             assert "g m-2" in nc.variables["lwp"].units
 
@@ -65,3 +66,21 @@ class TestHatpro2nc(Check):
         test_path = tmp_path / "corrupt.nc"
         _, files = hatpro.hatpro2nc(str(temp_dir), test_path, self.site_meta, date="2021-01-23")
         assert len(files) == 2
+
+    def test_lwp_iwv(self, tmp_path):
+        file_path = f"{SCRIPT_PATH}/data/hatpro-lwp-iwv/"
+        test_path = tmp_path / "full.nc"
+        uuid, files = hatpro.hatpro2nc(file_path, test_path, self.site_meta)
+        assert len(files) == 4
+        assert len(uuid) == 36
+        with netCDF4.Dataset(test_path) as nc:
+            time = nc.variables["time"]
+            assert "hours since" in time.units
+            assert max(time[:]) < 24
+            for ind, t in enumerate(time[:-1]):
+                assert time[ind + 1] > t
+            assert "zenith_angle" in nc.variables
+            assert "lwp" in nc.variables
+            assert "g m-2" in nc.variables["lwp"].units
+            assert "iwv" in nc.variables
+            assert "kg m-2" in nc.variables["iwv"].units
