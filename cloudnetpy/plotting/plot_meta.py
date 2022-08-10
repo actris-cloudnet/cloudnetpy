@@ -469,15 +469,15 @@ ATTRIBUTES = {
         name="Slanted linear depolarisation ratio",
         cbar="viridis",
         clabel=_DB,
-        plot_range=(-30, -5),  # TODO: check
+        plot_range=(-30, -5),
         plot_scale=Scale.LINEAR,
         plot_type="mesh",
     ),
     "zdr": PlotMeta(
         name="Differential reflectivity",
-        cbar="viridis",
+        cbar="RdBu_r",
         clabel=_DB,
-        plot_range=(-30, -5),  # TODO: check
+        plot_range=(-1, 1),
         plot_scale=Scale.LINEAR,
         plot_type="mesh",
     ),
@@ -501,15 +501,31 @@ ATTRIBUTES = {
         name="Skewness",
         cbar="RdBu_r",
         clabel="",
-        plot_range=(-1, 1),  # TODO: check
+        plot_range=(-1, 1),
         plot_scale=Scale.LINEAR,
         plot_type="mesh",
     ),
     "kurtosis": PlotMeta(
         name="Kurtosis",
-        cbar="RdBu_r",
+        cbar="viridis",
         clabel="",
-        plot_range=(-1, 1),  # TODO: check
+        plot_range=(1, 5),
+        plot_scale=Scale.LINEAR,
+        plot_type="mesh",
+    ),
+    "phi_cx": PlotMeta(
+        name="Co-cross-channel differential phase",
+        cbar="RdBu_r",
+        clabel="rad",
+        plot_range=(-2, 2),
+        plot_scale=Scale.LINEAR,
+        plot_type="mesh",
+    ),
+    "differential_attenuation": PlotMeta(
+        name="Differential attenuation",
+        cbar="viridis",
+        clabel="dB km-1",
+        plot_range=(0, 1),  # TODO: Check
         plot_scale=Scale.LINEAR,
         plot_type="mesh",
     ),
@@ -521,43 +537,35 @@ ATTRIBUTES = {
         plot_scale=Scale.LOGARITHMIC,
         plot_type="mesh",
     ),
+    "rho_hv": PlotMeta(
+        name="Correlation coefficient",
+        cbar="viridis",
+        clabel="",
+        plot_range=(0.8, 1),
+        plot_scale=Scale.LINEAR,
+        plot_type="mesh",
+    ),
     "srho_hv": PlotMeta(
         name="Slanted correlation coefficient",
         cbar="viridis",
         clabel="",
-        plot_range=(0, 1),  # TODO: check
-        plot_scale=Scale.LINEAR,
-        plot_type="mesh",
-    ),
-    "phi_cx": PlotMeta(
-        name="Co-cross-channel differential phase",
-        cbar="viridis",
-        clabel="rad",
-        plot_range=(0, 1),  # TODO: check
+        plot_range=(0, 0.5),
         plot_scale=Scale.LINEAR,
         plot_type="mesh",
     ),
     "phi_dp": PlotMeta(
         name="Differential phase",
-        cbar="viridis",
+        cbar="RdBu_r",
         clabel="rad",
-        plot_range=(0, 1),  # TODO: check
+        plot_range=(-0.1, 0.1),
         plot_scale=Scale.LINEAR,
         plot_type="mesh",
     ),
     "kdp": PlotMeta(
         name="Specific differential phase shift",
-        cbar="viridis",
+        cbar="RdBu_r",
         clabel="rad km-1",
-        plot_range=(0, 6.2),  # TODO: check
-        plot_scale=Scale.LINEAR,
-        plot_type="mesh",
-    ),
-    "differential_attenuation": PlotMeta(
-        name="Differential attenuation",
-        cbar="viridis",
-        clabel="dB km-1",
-        plot_range=(-10, 10),  # TODO
+        plot_range=(-0.1, 0.1),
         plot_scale=Scale.LINEAR,
         plot_type="mesh",
     ),
