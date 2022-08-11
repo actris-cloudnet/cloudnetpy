@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import BinaryIO, Dict, List, Literal, Tuple
+from typing import Any, BinaryIO, Dict, List, Literal, Tuple
 
 import numpy as np
 
@@ -218,6 +218,16 @@ class Fmcw94Bin:
         return {**aux, **block1, **block2}
 
 
+def _read_from_file(
+    file: BinaryIO, fields: List[Tuple[str, str]], count: int = 1
+) -> Dict[str, Any]:
+    """Wrapper for `np.fromfile` that returns data by column names."""
+    arr = np.fromfile(file, np.dtype(fields), count)
+    if count == 1:
+        return {field: arr[field][0] for field, type in fields}
+    return {field: arr[field] for field, type in fields}
+
+
 def _decode_angles(x: np.ndarray, version: Literal[1, 2]) -> Tuple[np.ndarray, np.ndarray]:
     """
     Decode elevation and azimuth angles.
@@ -260,7 +270,7 @@ def _decode_angles(x: np.ndarray, version: Literal[1, 2]) -> Tuple[np.ndarray, n
 
 
 class HatproBin:
-    """HATPRO binary file reader.
+    """HATPRO binary file reader. Byte order is assumed to be little endian.
 
     References:
         Radiometer Physics (2014): Instrument Operation and Software Guide
@@ -307,33 +317,35 @@ class HatproBinLwp(HatproBin):
     variable = "lwp"
 
     def _read_header(self, file):
-        self.header = {
-            "file_code": np.fromfile(file, np.int32, 1),
-            "_n_samples": np.fromfile(file, np.int32, 1),
-            "_lwp_min_max": np.fromfile(file, np.float32, 2),
-            "_time_reference": np.fromfile(file, np.int32, 1),
-            "retrieval_method": np.fromfile(file, np.int32, 1),
-        }
-        if self.header["file_code"][0] == 934501978:
+        self.header = _read_from_file(
+            file,
+            [
+                ("file_code", "<i4"),
+                ("_n_samples", "<i4"),
+                ("_lwp_min", "<f"),
+                ("_lwp_max", "<f"),
+                ("_time_reference", "<i4"),
+                ("retrieval_method", "<i4"),
+            ],
+        )
+        if self.header["file_code"] == 934501978:
             self.version = 1
-        elif self.header["file_code"][0] == 934501000:
+        elif self.header["file_code"] == 934501000:
             self.version = 2
         else:
-            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"][0]}')
+            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"]}')
 
     def _read_data(self, file):
-        angle_dtype = np.float32 if self.version == 1 else np.int32
-        self.data = {
-            "time": np.zeros(self.header["_n_samples"], dtype=np.int32),
-            "quality_flag": np.zeros(self.header["_n_samples"], dtype=np.int32),
-            "lwp": np.zeros(self.header["_n_samples"]),
-            "_instrument_angles": np.zeros(self.header["_n_samples"], dtype=angle_dtype),
-        }
-        for sample in range(self.header["_n_samples"][0]):
-            self.data["time"][sample] = np.fromfile(file, np.int32, 1)
-            self.data["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
-            self.data["lwp"][sample] = np.fromfile(file, np.float32, 1)
-            self.data["_instrument_angles"][sample] = np.fromfile(file, angle_dtype, 1)
+        self.data = _read_from_file(
+            file,
+            [
+                ("time", "<i4"),
+                ("quality_flag", "b"),
+                ("lwp", "<f"),
+                ("_instrument_angles", "<f" if self.version == 1 else "<i4"),
+            ],
+            self.header["_n_samples"],
+        )
 
 
 class HatproBinIwv(HatproBin):
@@ -342,33 +354,35 @@ class HatproBinIwv(HatproBin):
     variable = "iwv"
 
     def _read_header(self, file):
-        self.header = {
-            "file_code": np.fromfile(file, np.int32, 1),
-            "_n_samples": np.fromfile(file, np.int32, 1),
-            "_iwv_min_max": np.fromfile(file, np.float32, 2),
-            "_time_reference": np.fromfile(file, np.int32, 1),
-            "retrieval_method": np.fromfile(file, np.int32, 1),
-        }
-        if self.header["file_code"][0] == 594811068:
+        self.header = _read_from_file(
+            file,
+            [
+                ("file_code", "<i4"),
+                ("_n_samples", "<i4"),
+                ("_iwv_min", "<f"),
+                ("_iwv_max", "<f"),
+                ("_time_reference", "<i4"),
+                ("retrieval_method", "<i4"),
+            ],
+        )
+        if self.header["file_code"] == 594811068:
             self.version = 1
-        elif self.header["file_code"][0] == 594811000:
+        elif self.header["file_code"] == 594811000:
             self.version = 2
         else:
-            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"][0]}')
+            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"]}')
 
     def _read_data(self, file):
-        angle_dtype = np.float32 if self.version == 1 else np.int32
-        self.data = {
-            "time": np.zeros(self.header["_n_samples"], dtype=np.int32),
-            "quality_flag": np.zeros(self.header["_n_samples"], dtype=np.int32),
-            "iwv": np.zeros(self.header["_n_samples"], dtype=np.float32),
-            "_instrument_angles": np.zeros(self.header["_n_samples"], dtype=angle_dtype),
-        }
-        for sample in range(self.header["_n_samples"][0]):
-            self.data["time"][sample] = np.fromfile(file, np.int32, 1)
-            self.data["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
-            self.data["iwv"][sample] = np.fromfile(file, np.float32, 1)
-            self.data["_instrument_angles"][sample] = np.fromfile(file, angle_dtype, 1)
+        self.data = _read_from_file(
+            file,
+            [
+                ("time", "<i4"),
+                ("quality_flag", "b"),
+                ("iwv", "<f"),
+                ("_instrument_angles", "<f" if self.version == 1 else "<i4"),
+            ],
+            self.header["_n_samples"],
+        )
 
 
 class HatproBinCombined:
