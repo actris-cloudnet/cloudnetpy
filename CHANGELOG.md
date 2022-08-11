@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.35.0 – 2022-08-11
+
+- Support HATPRO \*.IWV files
+- Adjust plotting parameters of RPG radar
+- Restore insect probability
+
 ## 1.34.0 – 2022-06-20
 
 - Use fallback pollyXT backscatter channel
