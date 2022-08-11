@@ -2,7 +2,6 @@ from collections import namedtuple
 from typing import BinaryIO, Dict, List, Literal, Tuple
 
 import numpy as np
-from numpy import ma
 
 
 class Fmcw94Bin:
@@ -287,11 +286,9 @@ class HatproBin:
             self._read_data(file)
         self._add_zenith_angle()
 
-    def mask_bad_profiles(self):
-        self.data[self.variable] = ma.masked_array(
-            self.data[self.variable],
-            mask=self.data["quality_flag"] & 0b110 == self.QUALITY_LOW << 1,
-        )
+    def screen_bad_profiles(self):
+        is_bad = self.data["quality_flag"] & 0b110 == self.QUALITY_LOW << 1
+        self.data[self.variable][is_bad] = 0
 
     def _read_header(self, file: BinaryIO):
         raise NotImplementedError()

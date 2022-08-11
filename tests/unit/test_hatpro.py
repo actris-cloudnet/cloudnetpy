@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 import netCDF4
 import pytest
 from all_products_fun import Check
+from numpy import ma
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import hatpro
@@ -82,5 +83,9 @@ class TestHatpro2nc(Check):
             assert "zenith_angle" in nc.variables
             assert "lwp" in nc.variables
             assert "g m-2" in nc.variables["lwp"].units
+            assert nc.variables["lwp"][:].mask[0] == True
+            assert ma.count_masked(nc.variables["lwp"][:]) == 1
             assert "iwv" in nc.variables
             assert "kg m-2" in nc.variables["iwv"].units
+            assert nc.variables["iwv"][:].mask[1] == True
+            assert ma.count_masked(nc.variables["iwv"][:]) == 1

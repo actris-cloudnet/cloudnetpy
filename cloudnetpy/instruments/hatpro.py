@@ -89,7 +89,7 @@ def _get_hatpro_objects(
                 obj = HatproBinIwv(filename)
             else:
                 continue
-            obj.mask_bad_profiles()
+            obj.screen_bad_profiles()
             if expected_date is not None:
                 obj = _validate_date(obj, expected_date)
             objects[filename.stem].append(obj)
