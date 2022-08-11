@@ -1,5 +1,5 @@
 from collections import namedtuple
-from typing import BinaryIO, Literal, Tuple
+from typing import BinaryIO, Dict, List, Literal, Tuple
 
 import numpy as np
 from numpy import ma
@@ -270,8 +270,8 @@ class HatproBin:
         https://www.radiometer-physics.de/download/PDF/Radiometers/HATPRO/RPG_MWR_STD_Software_Manual%20G5.pdf
     """
 
-    header: dict
-    data: dict
+    header: Dict[str, np.ndarray]
+    data: Dict[str, np.ndarray]
     version: Literal[1, 2]
     variable: str
 
@@ -372,3 +372,30 @@ class HatproBinIwv(HatproBin):
             self.data["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
             self.data["iwv"][sample] = np.fromfile(file, np.float32, 1)
             self.data["_instrument_angles"][sample] = np.fromfile(file, angle_dtype, 1)
+
+
+class HatproBinCombined:
+    """Combine HATPRO objects that share values of the given dimensions."""
+
+    header: Dict[str, np.ndarray]
+    data: Dict[str, np.ndarray]
+
+    def __init__(self, dimensions: List[str], files: List[HatproBin]):
+        self.header = {}
+        self.data = {}
+        for dim in dimensions:
+            self.data[dim] = _check_dimension(files, dim)
+        for file in files:
+            self.data[file.variable] = file.data[file.variable]
+
+
+def _check_dimension(objs: List[HatproBin], dimension: str) -> np.ndarray:
+    ref_data = objs[0].data[dimension]
+    ref_filename = objs[0].filename
+    for obj in objs[1:]:
+        if not np.array_equal(ref_data, obj.data[dimension]):
+            raise ValueError(
+                f"Inconsistency found in dimension '{dimension}' between files "
+                + f"'{ref_filename}' and '{obj.filename}'"
+            )
+    return ref_data

@@ -4,12 +4,15 @@ from collections import defaultdict
 from pathlib import Path
 from typing import List, Optional, Tuple, Union
 
-import numpy as np
-
 from cloudnetpy import output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import general, rpg
-from cloudnetpy.instruments.rpg_reader import HatproBin, HatproBinIwv, HatproBinLwp
+from cloudnetpy.instruments.rpg_reader import (
+    HatproBin,
+    HatproBinCombined,
+    HatproBinIwv,
+    HatproBinLwp,
+)
 
 
 def hatpro2nc(
@@ -56,14 +59,7 @@ def hatpro2nc(
         >>> hatpro2nc('/path/to/files/', 'hatpro.nc', site_meta)
 
     """
-    object_groups = _get_hatpro_objects(Path(path_to_files), date)
-    if not object_groups:
-        raise ValidTimeStampError
-    hatpro_objects = []
-    valid_files = []
-    for objs in object_groups:
-        hatpro_objects.append(_HatproBinCombined(["time", "zenith_angle"], objs))
-        valid_files += [str(obj.filename) for obj in objs]
+    hatpro_objects, valid_files = _get_hatpro_objects(Path(path_to_files), date)
     if not valid_files:
         raise ValidTimeStampError
     one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
@@ -78,8 +74,11 @@ def hatpro2nc(
     return uuid, valid_files
 
 
-def _get_hatpro_objects(directory: Path, expected_date: Union[str, None]) -> List[List[HatproBin]]:
+def _get_hatpro_objects(
+    directory: Path, expected_date: Union[str, None]
+) -> Tuple[List[HatproBinCombined], List[str]]:
     objects = defaultdict(list)
+    valid_files = []
     for filename in directory.iterdir():
         try:
             obj: HatproBin
@@ -94,10 +93,15 @@ def _get_hatpro_objects(directory: Path, expected_date: Union[str, None]) -> Lis
             if expected_date is not None:
                 obj = _validate_date(obj, expected_date)
             objects[filename.stem].append(obj)
+            valid_files.append(str(filename))
         except (TypeError, ValueError) as err:
             logging.warning(err)
             continue
-    return [value for key, value in sorted(objects.items())]
+
+    combined_objs = [
+        HatproBinCombined(["time", "zenith_angle"], objs) for stem, objs in sorted(objects.items())
+    ]
+    return combined_objs, valid_files
 
 
 def _validate_date(obj: HatproBin, expected_date: str):
@@ -113,24 +117,3 @@ def _validate_date(obj: HatproBin, expected_date: str):
     for key in obj.data.keys():
         obj.data[key] = obj.data[key][inds]
     return obj
-
-
-class _HatproBinCombined(HatproBin):
-    # pylint: disable=abstract-method, super-init-not-called
-    def __init__(self, dimensions: List[str], files: List[HatproBin]):
-        self.header = {}
-        self.data = {}
-        for dim in dimensions:
-            self.data[dim] = _check_dimension(files, dim)
-        for file in files:
-            self.data[file.variable] = file.data[file.variable]
-
-
-def _check_dimension(objs: List[HatproBin], dimension: str) -> np.ndarray:
-    for obj in objs[1:]:
-        if not np.array_equal(objs[0].data[dimension], obj.data[dimension]):
-            raise ValueError(
-                f"Inconsistency found in dimension '{dimension}' between files "
-                + f"'{objs[0].filename}' and '{obj.filename}'"
-            )
-    return objs[0].data[dimension]

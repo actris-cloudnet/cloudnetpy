@@ -10,7 +10,7 @@ from cloudnetpy import CloudnetArray, output, utils
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import general, instruments
 from cloudnetpy.instruments.instruments import Instrument
-from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
+from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBinCombined
 from cloudnetpy.metadata import MetaData
 
 
@@ -86,7 +86,7 @@ def print_info(data: dict) -> None:
     logging.info(f"RPG cloud radar in {mode} mode")
 
 
-RpgObjects = Union[Sequence[Fmcw94Bin], Sequence[HatproBin]]
+RpgObjects = Union[Sequence[Fmcw94Bin], Sequence[HatproBinCombined]]
 
 
 def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
