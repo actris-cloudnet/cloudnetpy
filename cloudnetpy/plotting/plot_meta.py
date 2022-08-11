@@ -610,6 +610,15 @@ ATTRIBUTES = {
         plot_type="bar",
         source="mwr",
     ),
+    "iwv": PlotMeta(
+        name="Integrated water vapour",
+        cbar="Blues",
+        ylabel=_KGM2,
+        plot_range=(0, 1),
+        plot_scale=Scale.LINEAR,
+        plot_type="bar",
+        source="mwr",
+    ),
     "rainfall_rate": PlotMeta(name="Rainfall rate", plot_type="bar", source="disdrometer"),
     "n_particles": PlotMeta(name="Number of particles", plot_type="bar", source="disdrometer"),
     "target_classification": PlotMeta(

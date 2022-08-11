@@ -1,7 +1,7 @@
 """This module contains RPG Cloud Radar related functions."""
 import logging
 import math
-from typing import List, Optional, Tuple, Union
+from typing import Optional, Sequence, Tuple, Union
 
 import numpy as np
 from numpy import ma
@@ -10,7 +10,7 @@ from cloudnetpy import CloudnetArray, output, utils
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import general, instruments
 from cloudnetpy.instruments.instruments import Instrument
-from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBin
+from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBinCombined
 from cloudnetpy.metadata import MetaData
 
 
@@ -86,7 +86,10 @@ def print_info(data: dict) -> None:
     logging.info(f"RPG cloud radar in {mode} mode")
 
 
-def create_one_day_data_record(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -> dict:
+RpgObjects = Union[Sequence[Fmcw94Bin], Sequence[HatproBinCombined]]
+
+
+def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
     """Concatenates all RPG data from one day."""
     rpg_raw_data, rpg_header = _stack_rpg_data(rpg_objects)
     if len(rpg_objects) > 1:
@@ -95,7 +98,7 @@ def create_one_day_data_record(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -
     return {**rpg_header, **rpg_raw_data}
 
 
-def _stack_rpg_data(rpg_objects: List[Union[Fmcw94Bin, HatproBin]]) -> Tuple[dict, dict]:
+def _stack_rpg_data(rpg_objects: RpgObjects) -> Tuple[dict, dict]:
     """Combines data from hourly RPG objects.
 
     Notes:
