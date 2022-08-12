@@ -119,4 +119,8 @@ COMMON_ATTRIBUTES = {
         long_name="Pressure",
         units="Pa",
     ),
+    "SNR": MetaData(
+        long_name="Signal-to-noise ratio",
+        units="dB",
+    ),
 }

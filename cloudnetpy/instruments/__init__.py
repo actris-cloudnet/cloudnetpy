@@ -1,5 +1,6 @@
 from .basta import basta2nc
 from .ceilo import ceilo2nc
+from .copernicus import copernicus2nc
 from .disdrometer import disdrometer2nc
 from .hatpro import hatpro2nc
 from .mira import mira2nc

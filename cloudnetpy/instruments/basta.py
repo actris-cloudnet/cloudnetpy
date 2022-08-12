@@ -60,7 +60,7 @@ def basta2nc(
         basta.add_zenith_angle()
         general.add_radar_specific_variables(basta)
         general.add_height(basta)
-        basta.sort_time()
+        basta.sort_timestamps()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
     uuid = output.save_level1b(basta, output_file, uuid)
@@ -94,12 +94,6 @@ class Basta(NcRadar):
         date = date_units.split()[2]
         if expected_date != date:
             raise ValidTimeStampError
-
-    def sort_time(self):
-        """Sorts timestamps."""
-        time = self.data["time"].data[:]
-        ind = time.argsort()
-        general.screen_time_indices(self, ind)
 
     def add_zenith_angle(self) -> None:
         """Adds solar zenith and azimuth angles and returns valid time indices."""

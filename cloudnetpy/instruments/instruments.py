@@ -48,6 +48,14 @@ MIRA35 = Instrument(
     manufacturer="METEK", domain="radar", category="cloud radar", model="MIRA-35", frequency=35.5
 )
 
+COPERNICUS = Instrument(
+    manufacturer="RAL Space",
+    domain="radar",
+    category="cloud radar",
+    model="Copernicus",
+    frequency=34.960,
+)
+
 FMCW94 = Instrument(
     manufacturer="RPG-Radiometer Physics",
     domain="radar",

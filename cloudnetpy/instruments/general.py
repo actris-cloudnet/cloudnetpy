@@ -30,10 +30,13 @@ def add_radar_specific_variables(obj):
     """Adds radar specific variables."""
     key = "radar_frequency"
     obj.data[key] = CloudnetArray(obj.instrument.frequency, key)
-    possible_nyquist_names = ("ambiguous_velocity", "NyquistVelocity")
-    data = obj.getvar(*possible_nyquist_names)
-    key = "nyquist_velocity"
-    obj.data[key] = CloudnetArray(np.array(data), key)
+    try:
+        possible_nyquist_names = ("ambiguous_velocity", "NyquistVelocity")
+        data = obj.getvar(*possible_nyquist_names)
+        key = "nyquist_velocity"
+        obj.data[key] = CloudnetArray(np.array(data), key)
+    except RuntimeError:
+        logging.warning("Unable to find nyquist_velocity")
 
 
 def add_height(obj):
