@@ -81,7 +81,7 @@ def copernicus2nc(
             general.add_radar_specific_variables(copernicus)
             copernicus.add_nyquist_velocity(keymap)
             general.add_site_geolocation(copernicus)
-            valid_indices = copernicus.add_solar_angles()
+            valid_indices = copernicus.add_zenith_and_azimuth_angles()
             general.screen_time_indices(copernicus, valid_indices)
             general.add_height(copernicus)
         attributes = output.add_time_attribute(ATTRIBUTES, copernicus.date)

@@ -108,8 +108,9 @@ COMMON_ATTRIBUTES = {
     ),
     "azimuth_angle": MetaData(
         long_name="Azimuth angle",
-        standard_name="solar_azimuth_angle",
+        standard_name="sensor_azimuth_angle",
         units="degree",
+        comment="Angle between North and the line of sight, measured clockwise.",
     ),
     "temperature": MetaData(
         long_name="Temperature",

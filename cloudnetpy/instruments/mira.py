@@ -84,7 +84,7 @@ def mira2nc(
             mira.add_time_and_range()
             general.add_site_geolocation(mira)
             general.add_radar_specific_variables(mira)
-            valid_indices = mira.add_solar_angles()
+            valid_indices = mira.add_zenith_and_azimuth_angles()
             general.screen_time_indices(mira, valid_indices)
             general.add_height(mira)
         attributes = output.add_time_attribute(ATTRIBUTES, mira.date)

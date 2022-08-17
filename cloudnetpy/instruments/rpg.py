@@ -67,7 +67,7 @@ def rpg2nc(
     fmcw.remove_duplicate_timestamps()
     general.linear_to_db(fmcw, ("Zh", "antenna_gain"))
     general.add_site_geolocation(fmcw)
-    fmcw.add_solar_angles()
+    fmcw.add_zenith_angle()
     general.add_height(fmcw)
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
     output.update_attributes(fmcw.data, attributes)
@@ -267,8 +267,8 @@ class Fmcw(Rpg):
             if key in self.data:
                 self.data[key].data[ind] = ma.masked
 
-    def add_solar_angles(self) -> list:
-        """Adds solar zenith and azimuth angles and returns valid time indices."""
+    def add_zenith_angle(self) -> list:
+        """Adds zenith angle and returns time indices where zenith angle is stable."""
         elevation = self.data["elevation"].data
         zenith = 90 - elevation
         if elevation.mask.all():

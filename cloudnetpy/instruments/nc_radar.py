@@ -79,8 +79,8 @@ class NcRadar(DataSource):
                 cloudnet_array.mask_indices(z_mask)
                 cloudnet_array.mask_indices(v_mask)
 
-    def add_solar_angles(self) -> list:
-        """Adds solar zenith and azimuth angles and returns valid time indices."""
+    def add_zenith_and_azimuth_angles(self) -> list:
+        """Adds non-varying instrument zenith and azimuth angles and returns valid time indices."""
         if "azimuth_velocity" in self.data:
             azimuth = self.data["azimuth_velocity"].data
             azimuth_reference = 0
