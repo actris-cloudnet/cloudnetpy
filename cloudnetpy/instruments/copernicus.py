@@ -26,7 +26,7 @@ def copernicus2nc(
         raw_files: Input file name or folder containing multiple input files.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key value pair
-            is `name`. Optional is 'calibration_factor'.
+            is `name`. Optional is 'calibration_offset'.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -109,13 +109,18 @@ class Copernicus(NcRadar):
             raise ValidTimeStampError
 
     def calibrate_reflectivity(self):
-        default_calibration_factor = -146.8
-        calibration_factor = self.site_meta.get("calibration_factor", default_calibration_factor)
+        default_offset = -146.8  # TODO: check this value
+        calibration_factor = self.site_meta.get("calibration_offset", default_offset)
         self.data["Zh"].data[:] += calibration_factor
-        self.append_data(np.array(calibration_factor), "radar_calibration_factor")
+        self.append_data(np.array(calibration_factor), "calibration_offset")
 
     def mask_corrupted_values(self):
-        """Experimental masking of corrupted Copernicus data."""
+        """Experimental masking of corrupted Copernicus data.
+
+        Notes:
+            This method is based on a few days of test data only. Should be improved and tested
+            more carefully in the future.
+        """
         thresholds = {"width": 5, "v": 9}
         for key, value in thresholds.items():
             ind = np.where(np.abs(self.data[key][:]) > value)
@@ -132,10 +137,10 @@ class Copernicus(NcRadar):
 
 
 ATTRIBUTES = {
-    "radar_calibration_factor": MetaData(
-        long_name="Radar reflectivity calibration factor",
+    "calibration_offset": MetaData(
+        long_name="Radar reflectivity calibration offset",
         units="1",
-        comment="Calibration factor applied.",
+        comment="Calibration offset applied.",
     ),
     "antenna_diameter": MetaData(long_name="Antenna diameter", units="m"),
     "beamwidthV": MetaData(long_name="Vertical angular beamwidth", units="degree"),

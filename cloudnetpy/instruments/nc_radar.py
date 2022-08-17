@@ -95,9 +95,9 @@ class NcRadar(DataSource):
         is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
         is_stable_azimuth = np.isclose(azimuth, azimuth_reference, atol=azimuth_tolerance)
         is_stable_profile = is_stable_zenith & is_stable_azimuth
-        n_removed = len(is_stable_profile) - np.count_nonzero(is_stable_profile)
+        n_removed = np.count_nonzero(~is_stable_profile)
         if n_removed >= len(zenith) - 1:
-            raise ValidTimeStampError("No profiles with valid zenith / azimuth angles")
+            raise ValidTimeStampError("Less than two profiles with valid zenith / azimuth angles")
         if n_removed > 0:
             logging.warning(f"Filtering {n_removed} profiles due to varying zenith / azimuth angle")
         self.append_data(zenith, "zenith_angle")

@@ -277,7 +277,7 @@ class Fmcw(Rpg):
         is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
         n_removed = len(is_stable_zenith) - np.count_nonzero(is_stable_zenith)
         if n_removed > 0:
-            logging.warning(f"Filtering {n_removed} profiles due to varying zenith / azimuth angle")
+            logging.warning(f"Filtering {n_removed} profiles due to varying zenith angle")
         self.data["zenith_angle"] = CloudnetArray(zenith, "zenith_angle")
         del self.data["elevation"]
         return list(is_stable_zenith)

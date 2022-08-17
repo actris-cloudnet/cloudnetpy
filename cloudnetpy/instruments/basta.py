@@ -96,7 +96,6 @@ class Basta(NcRadar):
             raise ValidTimeStampError
 
     def add_zenith_angle(self) -> None:
-        """Adds solar zenith and azimuth angles and returns valid time indices."""
         elevation = self.getvar("elevation")
         zenith = 90 - elevation
         self.append_data(zenith, "zenith_angle")

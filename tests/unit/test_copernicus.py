@@ -41,7 +41,7 @@ class TestCopernicus2nc(Check):
             "zenith_angle",
             "azimuth_angle",
             "height",
-            "radar_calibration_factor",
+            "calibration_offset",
             "beamwidthH",
             "beamwidthV",
             "antenna_diameter",
