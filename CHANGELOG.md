@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.36.0 – 2022-08-17
+
+- Change `solar_azimuth_angle` to `sensor_azimuth_angle`
+- Add support for Copernicus cloud radar
+- Optimize HATPRO binary file reading speed
+
 ## 1.35.0 – 2022-08-11
 
 - Support HATPRO \*.IWV files
