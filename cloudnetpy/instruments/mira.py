@@ -1,11 +1,7 @@
 """Module for reading raw cloud radar data."""
-import logging
 import os
 from tempfile import TemporaryDirectory
 from typing import List, Optional
-
-import numpy as np
-from numpy import ma
 
 from cloudnetpy import concat_lib, output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -88,7 +84,7 @@ def mira2nc(
             mira.add_time_and_range()
             general.add_site_geolocation(mira)
             general.add_radar_specific_variables(mira)
-            valid_indices = mira.add_solar_angles()
+            valid_indices = mira.add_zenith_and_azimuth_angles()
             general.screen_time_indices(mira, valid_indices)
             general.add_height(mira)
         attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
@@ -125,69 +121,12 @@ class Mira(NcRadar):
             raise ValidTimeStampError
         general.screen_time_indices(self, valid_indices)
 
-    def sort_timestamps(self):
-        """Sorts data by timestamps."""
-        ind = self.time.argsort()
-        self._screen_by_ind(ind)
-
-    def remove_duplicate_timestamps(self):
-        """Removes duplicate timestamps."""
-        _, ind = np.unique(self.time, return_index=True)
-        self._screen_by_ind(ind)
-
-    def _screen_by_ind(self, ind: np.ndarray):
-        n_time = len(self.time)
-        for array in self.data.values():
-            if array.data.ndim == 1 and array.data.shape[0] == n_time:
-                array.data = array.data[ind]
-            if array.data.ndim == 2 and array.data.shape[0] == n_time:
-                array.data = array.data[ind, :]
-        self.time = self.time[ind]
-
-    def screen_by_snr(self, snr_limit: float = -17) -> None:
-        """Screens by SNR."""
-        ind = np.where(self.data["SNR"][:] < snr_limit)
-        for cloudnet_array in self.data.values():
-            if cloudnet_array.data.ndim == 2:
-                cloudnet_array.mask_indices(ind)
-
-    def mask_invalid_data(self) -> None:
-        """Makes sure Z and v masks are also in other 2d variables."""
-        z_mask = self.data["Zh"][:].mask
-        v_mask = self.data["v"][:].mask
-        for cloudnet_array in self.data.values():
-            if cloudnet_array.data.ndim == 2:
-                cloudnet_array.mask_indices(z_mask)
-                cloudnet_array.mask_indices(v_mask)
-
-    def add_solar_angles(self) -> list:
-        """Adds solar zenith and azimuth angles and returns valid time indices."""
-        elevation = self.data["elevation"].data
-        azimuth_vel = self.data["azimuth_velocity"].data
-        zenith = 90 - elevation
-        is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
-        is_stable_azimuth = np.isclose(azimuth_vel, 0, atol=1e-6)
-        is_stable_profile = is_stable_zenith & is_stable_azimuth
-        n_removed = len(is_stable_profile) - np.count_nonzero(is_stable_profile)
-        if n_removed >= len(zenith) - 1:
-            raise ValidTimeStampError("No profiles with valid zenith / azimuth angles")
-        if n_removed > 0:
-            logging.warning(f"Filtering {n_removed} profiles due to varying zenith / azimuth angle")
-        self.append_data(zenith, "zenith_angle")
-        for key in ("elevation", "azimuth_velocity"):
-            del self.data[key]
-        return list(is_stable_profile)
-
     def _init_mira_date(self) -> List[str]:
         time_stamps = self.getvar("time")
         return utils.seconds2date(time_stamps[0], self.epoch)[:3]
 
 
 ATTRIBUTES = {
-    "SNR": MetaData(
-        long_name="Signal-to-noise ratio",
-        units="dB",
-    ),
     "nfft": MetaData(
         long_name="Number of FFT points",
         units="1",
