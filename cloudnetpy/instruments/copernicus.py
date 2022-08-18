@@ -121,7 +121,7 @@ class Copernicus(NcRadar):
             This method is based on a few days of test data only. Should be improved and tested
             more carefully in the future.
         """
-        thresholds = {"width": 5, "v": 9}
+        thresholds = {"width": 3, "v": 9}
         for key, value in thresholds.items():
             ind = np.where(np.abs(self.data[key][:]) > value)
             self.data["v"].mask_indices(ind)
