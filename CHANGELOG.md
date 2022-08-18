@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.36.1 – 2022-08-18
+
+- Adjust copernicus outlier screening
+
 ## 1.36.0 – 2022-08-17
 
 - Change `solar_azimuth_angle` to `sensor_azimuth_angle`
