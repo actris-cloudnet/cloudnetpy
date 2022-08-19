@@ -73,6 +73,7 @@ COMMON_ATTRIBUTES = {
     "iwv": MetaData(
         long_name="Integrated water vapour",
         units="kg m-2",
+        standard_name="atmosphere_mass_content_of_water_vapor",
     ),
     "kurtosis": MetaData(
         long_name="Kurtosis of spectra",
