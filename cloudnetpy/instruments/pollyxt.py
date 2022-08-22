@@ -109,7 +109,8 @@ class PollyXt(Ceilometer):
                 epoch = utils.get_epoch(nc_bsc["time"].unit)
                 try:
                     time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, "time"))
-                except AssertionError:
+                except AssertionError as err:
+                    logging.warning(f"Ignoring files '{nc_bsc}' and '{nc_depol}': {err}")
                     continue
                 beta_raw = nc_bsc.variables[bsc_key][:]
                 depol_raw = nc_depol.variables["volume_depolarization_ratio_532nm"][:]
@@ -146,7 +147,7 @@ def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarr
             array1 = _read_array_from_file_pair(nc1, nc2, key)
             if ind == 0:
                 array = array1
-        assert_array_equal(array, array1)
+        assert_array_equal(array, array1, f"Inconsistent variable '{key}'")
     return np.array(array)
 
 
@@ -155,7 +156,7 @@ def _read_array_from_file_pair(
 ) -> np.ndarray:
     array1 = nc_file1.variables[key][:]
     array2 = nc_file2.variables[key][:]
-    assert_array_equal(array1, array2)
+    assert_array_equal(array1, array2, f"Inconsistent variable '{key}'")
     return array1
 
 
