@@ -1,7 +1,9 @@
 from collections import namedtuple
-from typing import Any, BinaryIO, Dict, List, Literal, Tuple
+from typing import BinaryIO, Dict, List, Literal, Tuple
 
 import numpy as np
+from numpy import ma
+from numpy.lib import recfunctions as rfn
 
 
 class Fmcw94Bin:
@@ -218,14 +220,11 @@ class Fmcw94Bin:
         return {**aux, **block1, **block2}
 
 
-def _read_from_file(
-    file: BinaryIO, fields: List[Tuple[str, str]], count: int = 1
-) -> Dict[str, Any]:
-    """Wrapper for `np.fromfile` that returns data by column names."""
+def _read_from_file(file: BinaryIO, fields: List[Tuple[str, str]], count: int = 1) -> np.ndarray:
     arr = np.fromfile(file, np.dtype(fields), count)
     if count == 1:
-        return {field: arr[field][0] for field, type in fields}
-    return {field: arr[field] for field, type in fields}
+        return arr[0]
+    return arr
 
 
 def _decode_angles(x: np.ndarray, version: Literal[1, 2]) -> Tuple[np.ndarray, np.ndarray]:
@@ -279,8 +278,8 @@ class HatproBin:
         https://www.radiometer-physics.de/download/PDF/Radiometers/HATPRO/RPG_MWR_STD_Software_Manual%20G5.pdf
     """
 
-    header: Dict[str, np.ndarray]
-    data: Dict[str, np.ndarray]
+    header: ma.MaskedArray
+    data: ma.MaskedArray
     version: Literal[1, 2]
     variable: str
 
@@ -297,8 +296,8 @@ class HatproBin:
         self._add_zenith_angle()
 
     def screen_bad_profiles(self):
-        is_bad = self.data["quality_flag"] & 0b110 == self.QUALITY_LOW << 1
-        self.data[self.variable][is_bad] = 0
+        is_bad = self.data["_quality_flag"] & 0b110 == self.QUALITY_LOW << 1
+        self.data[self.variable][is_bad] = ma.masked
 
     def _read_header(self, file: BinaryIO):
         raise NotImplementedError()
@@ -308,7 +307,7 @@ class HatproBin:
 
     def _add_zenith_angle(self):
         ele, _azi = _decode_angles(self.data["_instrument_angles"], self.version)
-        self.data["zenith_angle"] = 90 - ele
+        self.data = rfn.append_fields(self.data, "zenith_angle", 90 - ele)
 
 
 class HatproBinLwp(HatproBin):
@@ -340,7 +339,7 @@ class HatproBinLwp(HatproBin):
             file,
             [
                 ("time", "<i4"),
-                ("quality_flag", "b"),
+                ("_quality_flag", "b"),
                 ("lwp", "<f"),
                 ("_instrument_angles", "<f" if self.version == 1 else "<i4"),
             ],
@@ -377,7 +376,7 @@ class HatproBinIwv(HatproBin):
             file,
             [
                 ("time", "<i4"),
-                ("quality_flag", "b"),
+                ("_quality_flag", "b"),
                 ("iwv", "<f"),
                 ("_instrument_angles", "<f" if self.version == 1 else "<i4"),
             ],
@@ -391,22 +390,25 @@ class HatproBinCombined:
     header: Dict[str, np.ndarray]
     data: Dict[str, np.ndarray]
 
-    def __init__(self, dimensions: List[str], files: List[HatproBin]):
+    def __init__(self, files: List[HatproBin]):
         self.header = {}
-        self.data = {}
-        for dim in dimensions:
-            self.data[dim] = _check_dimension(files, dim)
-        for file in files:
-            self.data[file.variable] = file.data[file.variable]
-
-
-def _check_dimension(objs: List[HatproBin], dimension: str) -> np.ndarray:
-    ref_data = objs[0].data[dimension]
-    ref_filename = objs[0].filename
-    for obj in objs[1:]:
-        if not np.array_equal(ref_data, obj.data[dimension]):
-            raise ValueError(
-                f"Inconsistency found in dimension '{dimension}' between files "
-                + f"'{ref_filename}' and '{obj.filename}'"
+        if len(files) == 1:
+            arr = files[0].data
+        elif len(files) == 2:
+            f1, f2 = files
+            arr = rfn.join_by("time", f1.data, f2.data, "outer")
+            arr = rfn.append_fields(
+                arr, "zenith_angle", _combine_values(arr["zenith_angle1"], arr["zenith_angle2"])
             )
-    return ref_data
+            # Workaround because rfn.drop_fields seems to incorrectly drop mask...
+            # arr = rfn.drop_fields(arr, ["zenith_angle1", "zenith_angle2"])
+            arr = rfn.rename_fields(arr, {"zenith_angle1": "_tmp1", "zenith_angle2": "_tmp2"})
+        else:
+            raise NotImplementedError("Only implemented up to 2 files")
+        self.data = {field: arr[field] for field in arr.dtype.fields}
+
+
+def _combine_values(arr1: ma.MaskedArray, arr2: ma.MaskedArray) -> ma.MaskedArray:
+    if not ma.allequal(arr1, arr2):
+        raise ValueError("Inconsistent values")
+    return ma.where(~arr1.mask, arr1, arr2)

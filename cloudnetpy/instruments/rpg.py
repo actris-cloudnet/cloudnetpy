@@ -114,8 +114,8 @@ def _stack_rpg_data(rpg_objects: RpgObjects) -> Tuple[dict, dict]:
     data: dict = {}
     header: dict = {}
     for rpg in rpg_objects:
-        _stack(rpg.data, data, np.concatenate)
-        _stack(rpg.header, header, np.vstack)
+        _stack(rpg.data, data, ma.concatenate)
+        _stack(rpg.header, header, ma.vstack)
     return data, header
 
 

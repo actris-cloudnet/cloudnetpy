@@ -98,9 +98,7 @@ def _get_hatpro_objects(
             logging.warning(err)
             continue
 
-    combined_objs = [
-        HatproBinCombined(["time", "zenith_angle"], objs) for stem, objs in sorted(objects.items())
-    ]
+    combined_objs = [HatproBinCombined(objs) for stem, objs in sorted(objects.items())]
     return combined_objs, valid_files
 
 
@@ -114,6 +112,5 @@ def _validate_date(obj: HatproBin, expected_date: str):
             inds.append(ind)
     if not inds:
         raise ValueError(f"Ignoring file '{obj.filename}' (timestamps not what expected)")
-    for key in obj.data.keys():
-        obj.data[key] = obj.data[key][inds]
+    obj.data = obj.data[:][inds]
     return obj
