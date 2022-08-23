@@ -220,11 +220,14 @@ class Fmcw94Bin:
         return {**aux, **block1, **block2}
 
 
-def _read_from_file(file: BinaryIO, fields: List[Tuple[str, str]], count: int = 1) -> np.ndarray:
+def _read_from_file(
+    file: BinaryIO, fields: List[Tuple[str, str]], count: int = 1
+) -> ma.MaskedArray:
     arr = np.fromfile(file, np.dtype(fields), count)
+    masked_arr = ma.array(arr)
     if count == 1:
-        return arr[0]
-    return arr
+        return masked_arr[0]
+    return masked_arr
 
 
 def _decode_angles(x: np.ndarray, version: Literal[1, 2]) -> Tuple[np.ndarray, np.ndarray]:

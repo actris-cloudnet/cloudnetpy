@@ -103,7 +103,7 @@ def _get_hatpro_objects(
             combined_objs.append(HatproBinCombined(objs))
             valid_files.extend(str(obj.filename) for obj in objs)
         except (TypeError, ValueError) as err:
-            files = "'" + "', '".join(obj.filename for obj in objs) + "'"
+            files = "'" + "', '".join(str(obj.filename) for obj in objs) + "'"
             logging.warning(f"Ignoring files {files}: {err}")
             continue
 
