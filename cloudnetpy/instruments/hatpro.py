@@ -78,7 +78,6 @@ def _get_hatpro_objects(
     directory: Path, expected_date: Union[str, None]
 ) -> Tuple[List[HatproBinCombined], List[str]]:
     objects = defaultdict(list)
-    valid_files = []
     for filename in directory.iterdir():
         try:
             obj: HatproBin
@@ -93,27 +92,33 @@ def _get_hatpro_objects(
             if expected_date is not None:
                 obj = _validate_date(obj, expected_date)
             objects[filename.stem].append(obj)
-            valid_files.append(str(filename))
         except (TypeError, ValueError) as err:
-            logging.warning(err)
+            logging.warning(f"Ignoring file '{filename}': {err}")
             continue
 
-    combined_objs = [
-        HatproBinCombined(["time", "zenith_angle"], objs) for stem, objs in sorted(objects.items())
-    ]
+    valid_files: List[str] = []
+    combined_objs = []
+    for _stem, objs in sorted(objects.items()):
+        try:
+            combined_objs.append(HatproBinCombined(objs))
+            valid_files.extend(str(obj.filename) for obj in objs)
+        except (TypeError, ValueError) as err:
+            files = "'" + "', '".join(str(obj.filename) for obj in objs) + "'"
+            logging.warning(f"Ignoring files {files}: {err}")
+            continue
+
     return combined_objs, valid_files
 
 
 def _validate_date(obj: HatproBin, expected_date: str):
     if obj.header["_time_reference"] != 1:
-        raise ValueError(f"Ignoring file '{obj.filename}' (can not validate non-UTC dates)")
+        raise ValueError("Can not validate non-UTC dates")
     inds = []
     for ind, timestamp in enumerate(obj.data["time"][:]):
         date = "-".join(utils.seconds2date(timestamp)[:3])
         if date == expected_date:
             inds.append(ind)
     if not inds:
-        raise ValueError(f"Ignoring file '{obj.filename}' (timestamps not what expected)")
-    for key in obj.data.keys():
-        obj.data[key] = obj.data[key][inds]
+        raise ValueError("Timestamps not what expected")
+    obj.data = obj.data[:][inds]
     return obj

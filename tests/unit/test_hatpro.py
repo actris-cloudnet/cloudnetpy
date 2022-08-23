@@ -80,6 +80,7 @@ class TestHatpro2nc(Check):
             assert max(time[:]) < 24
             for ind, t in enumerate(time[:-1]):
                 assert time[ind + 1] > t
+            assert time.shape == (2036 + 1999,)
             assert "zenith_angle" in nc.variables
             assert "lwp" in nc.variables
             assert "g m-2" in nc.variables["lwp"].units
@@ -88,4 +89,5 @@ class TestHatpro2nc(Check):
             assert "iwv" in nc.variables
             assert "kg m-2" in nc.variables["iwv"].units
             assert nc.variables["iwv"][:].mask[1] == True
-            assert ma.count_masked(nc.variables["iwv"][:]) == 1
+            assert nc.variables["iwv"][:].mask[-2] == True
+            assert ma.count_masked(nc.variables["iwv"][:]) == 2
