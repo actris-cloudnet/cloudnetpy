@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.36.2 – 2022-08-23
+
+- Support inconsistent time vector in HATPRO files
+- Improve HATPRO and PollyXT error handling
+- Add standard name for IWV
+
 ## 1.36.1 – 2022-08-18
 
 - Adjust copernicus outlier screening
