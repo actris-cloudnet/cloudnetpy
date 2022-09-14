@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.36.3 – 2022-09-14
+
+- Fix error when no overlapping timestamps in categorize
+
 ## 1.36.2 – 2022-08-23
 
 - Support inconsistent time vector in HATPRO files
