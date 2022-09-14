@@ -7,6 +7,7 @@ from cloudnetpy.categorize.lidar import Lidar
 from cloudnetpy.categorize.model import Model
 from cloudnetpy.categorize.mwr import Mwr
 from cloudnetpy.categorize.radar import Radar
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.metadata import MetaData
 
 
@@ -109,6 +110,8 @@ def generate_categorize(input_files: dict, output_file: str, uuid: Optional[str]
         data["model"] = Model(input_files["model"], data["radar"].altitude)
         time, height = _define_dense_grid()
         valid_ind = _interpolate_to_cloudnet_grid()
+        if not valid_ind:
+            raise ValidTimeStampError("No overlapping radar and lidar timestamps found")
         _screen_bad_time_indices(valid_ind)
         if "rpg" in data["radar"].type.lower() or "basta" in data["radar"].type.lower():
             data["radar"].filter_speckle_noise()
