@@ -27,7 +27,7 @@ setup(
         "matplotlib",
         "requests",
         "pytz",
-        "cloudnetpy_qc>=0.2.0",
+        "cloudnetpy_qc>=1.0.2",
         "scikit-image",
     ],
     extras_require={

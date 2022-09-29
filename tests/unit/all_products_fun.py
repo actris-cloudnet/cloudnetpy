@@ -3,7 +3,7 @@ from pathlib import Path
 import netCDF4
 import numpy as np
 import pytest
-from cloudnetpy_qc import Quality
+from cloudnetpy_qc import quality
 
 SITE_META = {"name": "Kumpula", "altitude": 50, "latitude": 23, "longitude": 34.0}
 
@@ -23,12 +23,14 @@ class Check:
         self.nc.close()
 
     def test_qc(self):
-        quality = Quality(self.temp_path)
-        res_data = quality.check_data()
-        res_metadata = quality.check_metadata()
-        assert quality.n_metadata_test_failures == 0, res_metadata
-        assert quality.n_data_test_failures == 0, res_data
-        quality.close()
+        n = 0
+        report = quality.run_tests(Path(self.temp_path))
+        keys = ("TestUnits", "TestLongNames", "TestStandardNames")
+        for test in report["tests"]:
+            if test["testId"] in keys:
+                assert not test["exceptions"]
+                n += 1
+        assert n == len(keys)
 
     def test_common(self):
         all_fun = AllProductsFun(self.nc, self.site_meta, self.date, self.uuid)

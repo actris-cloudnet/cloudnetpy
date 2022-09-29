@@ -1,10 +1,11 @@
 import os
+from pathlib import Path
 
 import netCDF4
 import numpy as np
 import numpy.ma as ma
 import pytest
-from cloudnetpy_qc import Quality
+from cloudnetpy_qc import quality
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.categorize import model
@@ -141,8 +142,11 @@ class TestEcmwf:
     filename = f"{SCRIPT_PATH}/../source_data/ecmwf_model.nc"
 
     def test_qc(self):
-        quality = Quality(self.filename)
-        res_data = quality.check_data()
-        res_metadata = quality.check_metadata()
-        assert quality.n_metadata_test_failures == 0, res_metadata
-        assert quality.n_data_test_failures == 0, res_data
+        n = 0
+        report = quality.run_tests(Path(self.filename))
+        keys = ("TestUnits",)
+        for test in report["tests"]:
+            if test["testId"] in keys:
+                assert not test["exceptions"]
+                n += 1
+        assert n == len(keys)

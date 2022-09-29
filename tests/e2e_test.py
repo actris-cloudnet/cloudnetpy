@@ -6,7 +6,7 @@ import importlib
 from uuid import UUID
 
 import netCDF4
-from cloudnetpy_qc import Quality
+from cloudnetpy_qc import quality
 
 from cloudnetpy.categorize import generate_categorize
 from cloudnetpy.instruments import ceilo2nc, mira2nc
@@ -64,11 +64,14 @@ def main():
 
 
 def _run_tests(filename: str):
-    quality = Quality(filename)
-    res_quality = quality.check_data()
-    res_metadata = quality.check_metadata()
-    assert quality.n_metadata_test_failures == 0, f"{filename} - {res_metadata}"
-    assert quality.n_data_test_failures == 0, f"{filename} - {res_quality}"
+    n = 0
+    report = quality.run_tests(Path(filename))
+    keys = ("TestUnits", "TestLongNames", "TestStandardNames")
+    for test in report["tests"]:
+        if test["testId"] in keys:
+            assert not test["exceptions"]
+            n += 1
+    assert n == len(keys)
 
 
 def _check_source_file_uuids(file: str, expected_uuids: tuple):
