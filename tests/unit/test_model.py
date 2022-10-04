@@ -143,7 +143,7 @@ class TestEcmwf:
 
     def test_qc(self):
         n = 0
-        report = quality.run_tests(Path(self.filename))
+        report = quality.run_tests(Path(self.filename), ignore_tests=["TestCFConvention"])
         keys = ("TestUnits",)
         for test in report["tests"]:
             if test["testId"] in keys:

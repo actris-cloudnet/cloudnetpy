@@ -65,7 +65,7 @@ def main():
 
 def _run_tests(filename: str):
     n = 0
-    report = quality.run_tests(Path(filename))
+    report = quality.run_tests(Path(filename), ignore_tests=["TestCFConvention"])
     keys = ("TestUnits", "TestLongNames", "TestStandardNames")
     for test in report["tests"]:
         if test["testId"] in keys:
