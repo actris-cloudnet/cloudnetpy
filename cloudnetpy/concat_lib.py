@@ -1,11 +1,8 @@
 """Module for concatenating netCDF files."""
-import logging
 from typing import Optional, Union
 
 import netCDF4
 import numpy as np
-
-from cloudnetpy import utils
 
 
 def update_nc(old_file: str, new_file: str) -> int:
@@ -79,12 +76,7 @@ class Concat:
     def get_constants(self):
         """Finds constants, i.e. arrays that have no concat_dimension and are not concatenated."""
         for key, value in self.first_file.variables.items():
-            try:
-                dims = self._get_dim(value[:])
-            except np.core._exceptions.UFuncTypeError:  # pylint: disable=W0212
-                logging.warning(f"Problem with reading {key} - skipping it")
-                continue
-            if self.concat_dimension not in dims:
+            if self.concat_dimension not in value.dimensions:
                 self.constants += (key,)
 
     def close(self):
@@ -116,7 +108,7 @@ class Concat:
                 continue
             self.first_file[key].set_auto_scale(False)
             array = self.first_file[key][:]
-            dimensions = self._get_dim(array)
+            dimensions = self.first_file[key].dimensions
             fill_value = getattr(self.first_file[key], "_FillValue", None)
             var = self.concatenated_file.createVariable(
                 key,
@@ -145,20 +137,6 @@ class Concat:
             else:
                 self.concatenated_file.variables[key][ind0:ind1, :] = array
         file.close()
-
-    def _get_dim(self, array: np.ndarray) -> tuple:
-        """Returns tuple of dimension names, e.g., ('time', 'range') that match the array size."""
-        if utils.isscalar(array):
-            return ()
-        variable_size = []
-        file_dims = self.concatenated_file.dimensions
-        for length in array.shape:
-            try:
-                dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
-            except IndexError:
-                dim = self.concat_dimension
-            variable_size.append(dim)
-        return tuple(variable_size)
 
     def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
         data_model = "NETCDF4" if self.first_file.data_model == "NETCDF4" else "NETCDF4_CLASSIC"

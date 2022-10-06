@@ -78,18 +78,6 @@ class TestConcat:
         yield
         self.concat.close()
 
-    @pytest.mark.parametrize(
-        "size, result",
-        [
-            (np.zeros((n_time, n_range)), ("time", "range")),
-            (np.zeros((n_range, n_time)), ("range", "time")),
-            (np.zeros((n_range,)), ("range",)),
-            (np.zeros((n_time,)), ("time",)),
-        ],
-    )
-    def test_get_dim(self, size, result, nc_file):
-        assert self.concat._get_dim(size) == result
-
     def test_sorting_input_files(self):
         assert self.concat.filenames[0] == self.files[1]
         assert self.concat.filenames[1] == self.files[0]
