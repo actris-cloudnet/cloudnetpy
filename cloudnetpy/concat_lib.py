@@ -1,5 +1,5 @@
 """Module for concatenating netCDF files."""
-from typing import Optional, Union
+from typing import Optional, Set, Union
 
 import netCDF4
 import numpy as np
@@ -53,18 +53,21 @@ def concatenate_files(
 
     """
     with Concat(filenames, output_file, concat_dimension) as concat:
-        concat.get_constants()
+        concat.get_common_variables()
         concat.create_global_attributes(new_attributes)
         concat.concat_data(variables)
 
 
 class Concat:
+    common_variables: Set[str]
+
     def __init__(self, filenames: list, output_file: str, concat_dimension: str = "time"):
         self.filenames = sorted(filenames)
         self.concat_dimension = concat_dimension
-        self.first_file = netCDF4.Dataset(self.filenames[0])
+        self.first_filename = self.filenames[0]
+        self.first_file = netCDF4.Dataset(self.first_filename)
         self.concatenated_file = self._init_output_file(output_file)
-        self.constants = ()
+        self.common_variables = set()
 
     def create_global_attributes(self, new_attributes: Union[dict, None]) -> None:
         """Copies global attributes from one of the source files."""
@@ -73,11 +76,11 @@ class Concat:
             for key, value in new_attributes.items():
                 setattr(self.concatenated_file, key, value)
 
-    def get_constants(self):
-        """Finds constants, i.e. arrays that have no concat_dimension and are not concatenated."""
+    def get_common_variables(self):
+        """Finds variables which should have the same values in all files."""
         for key, value in self.first_file.variables.items():
             if self.concat_dimension not in value.dimensions:
-                self.constants += (key,)
+                self.common_variables.add(key)
 
     def close(self):
         """Closes open files."""
@@ -102,7 +105,7 @@ class Concat:
             if (
                 variables is not None
                 and key not in variables
-                and key not in self.constants
+                and key not in self.common_variables
                 and key != self.concat_dimension
             ):
                 continue
@@ -130,7 +133,14 @@ class Concat:
         ind1 = ind0 + len(file.variables[self.concat_dimension])
         for key in self.concatenated_file.variables.keys():
             array = file[key][:]
-            if array.ndim == 0 or key in self.constants:
+            if key in self.common_variables:
+                if not np.array_equal(self.first_file[key][:], array):
+                    raise Exception(
+                        f"Inconsistent values in variable '{key}' between "
+                        f"files '{self.first_filename}' and '{filename}'"
+                    )
+                continue
+            if array.ndim == 0:
                 continue
             if array.ndim == 1:
                 self.concatenated_file.variables[key][ind0:ind1] = array
