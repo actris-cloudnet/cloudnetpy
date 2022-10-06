@@ -127,26 +127,25 @@ class Concat:
             _copy_attributes(self.first_file[key], var)
 
     def _append_data(self, filename: str) -> None:
-        file = netCDF4.Dataset(filename)
-        file.set_auto_scale(False)
-        ind0 = len(self.concatenated_file.variables[self.concat_dimension])
-        ind1 = ind0 + len(file.variables[self.concat_dimension])
-        for key in self.concatenated_file.variables.keys():
-            array = file[key][:]
-            if key in self.common_variables:
-                if not np.array_equal(self.first_file[key][:], array):
-                    raise Exception(
-                        f"Inconsistent values in variable '{key}' between "
-                        f"files '{self.first_filename}' and '{filename}'"
-                    )
-                continue
-            if array.ndim == 0:
-                continue
-            if array.ndim == 1:
-                self.concatenated_file.variables[key][ind0:ind1] = array
-            else:
-                self.concatenated_file.variables[key][ind0:ind1, :] = array
-        file.close()
+        with netCDF4.Dataset(filename) as file:
+            file.set_auto_scale(False)
+            ind0 = len(self.concatenated_file.variables[self.concat_dimension])
+            ind1 = ind0 + len(file.variables[self.concat_dimension])
+            for key in self.concatenated_file.variables.keys():
+                array = file[key][:]
+                if key in self.common_variables:
+                    if not np.array_equal(self.first_file[key][:], array):
+                        raise Exception(
+                            f"Inconsistent values in variable '{key}' between "
+                            f"files '{self.first_filename}' and '{filename}'"
+                        )
+                    continue
+                if array.ndim == 0:
+                    continue
+                if array.ndim == 1:
+                    self.concatenated_file.variables[key][ind0:ind1] = array
+                else:
+                    self.concatenated_file.variables[key][ind0:ind1, :] = array
 
     def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
         data_model = "NETCDF4" if self.first_file.data_model == "NETCDF4" else "NETCDF4_CLASSIC"
