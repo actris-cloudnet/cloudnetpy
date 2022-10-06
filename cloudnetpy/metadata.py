@@ -65,6 +65,7 @@ COMMON_ATTRIBUTES = {
         units="dB",
         comment="This parameter is the ratio of cross-polar to co-polar reflectivity.",
     ),
+    "sldr": MetaData(long_name="Slanted linear depolarisation ratio", units="dB"),
     "lwp": MetaData(
         long_name="Liquid water path",
         units="g m-2",

@@ -335,7 +335,6 @@ RPG_ATTRIBUTES = {
     "zdr": MetaData(long_name="Differential reflectivity", units="dB"),
     "rho_hv": MetaData(long_name="Correlation coefficient", units="1"),
     "phi_dp": MetaData(long_name="Differential phase", units="rad"),
-    "sldr": MetaData(long_name="Slanted linear depolarisation ratio", units="dB"),
     "srho_hv": MetaData(long_name="Slanted correlation coefficient", units="1"),
     "kdp": MetaData(long_name="Specific differential phase shift", units="rad km-1"),
     "differential_attenuation": MetaData(long_name="Differential attenuation", units="dB km-1"),
