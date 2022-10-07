@@ -4,6 +4,8 @@ from typing import Optional, Set, Union
 import netCDF4
 import numpy as np
 
+from cloudnetpy.exceptions import InconsistentDataError
+
 
 def update_nc(old_file: str, new_file: str) -> int:
     """Appends data to existing netCDF file.
@@ -135,7 +137,7 @@ class Concat:
                 array = file[key][:]
                 if key in self.common_variables:
                     if not np.array_equal(self.first_file[key][:], array):
-                        raise Exception(
+                        raise InconsistentDataError(
                             f"Inconsistent values in variable '{key}' between "
                             f"files '{self.first_filename}' and '{filename}'"
                         )
