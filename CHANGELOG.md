@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.36.4 – 2022-10-07
+
+- Check that files to concatenate have same values in variables
+- Write SLDR `long_name` attribute to categorize file
+- Test with Python 3.10
+
 ## 1.36.3 – 2022-09-14
 
 - Fix error when no overlapping timestamps in categorize
