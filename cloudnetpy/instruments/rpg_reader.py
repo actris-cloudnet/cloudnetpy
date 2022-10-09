@@ -1,9 +1,9 @@
-from collections import namedtuple
 from typing import BinaryIO, Dict, List, Literal, Tuple
 
 import numpy as np
 from numpy import ma
 from numpy.lib import recfunctions as rfn
+from rpgpy import read_rpg
 
 
 class Fmcw94Bin:
@@ -11,213 +11,97 @@ class Fmcw94Bin:
 
     def __init__(self, filename):
         self.filename = filename
-        self._file_position = 0
-        self.header = self.read_rpg_header()
-        self.data = self.read_rpg_data()
+        self.header, self.data = read_rpg(filename)
 
-    def read_rpg_header(self):
-        """Reads the header or rpg binary file."""
+        is_strs_mode = self.header.get("DualPol") == 2
 
-        def append(names, dtype=np.int32, n_values=1):
-            """Updates header dictionary."""
-            for name in names:
-                header[name] = np.fromfile(file, dtype, int(n_values))
+        header_keymap = {
+            "StartTime": "_start_time",
+            "StopTime": "_stop_time",
+            "SupPowLev": "_is_power_levelling",
+            "SpkFilEna": "_is_spike_filter",
+            "PhaseCorr": "_is_phase_correction",
+            "RelPowCorr": "_is_relative_power_correction",
+            "FFTWindow": "FFT_window",
+            "FFTInputRng": "input_voltage_range",
+            "SWVersion": "_software_version",
+            "NoiseFilt": "noise_threshold",
+            "FileCode": "file_code",
+            "HeaderLen": "_HeaderLen",
+            "CGProg": "program_number",
+            "ModelNo": "model_number",
+            "ProgName": "_program_name",
+            "CustName": "_customer_name",
+            "Freq": "radar_frequency",
+            "AntSep": "antenna_separation",
+            "AntDia": "antenna_diameter",
+            "AntG": "antenna_gain",
+            "HPBW": "half_power_beam_width",
+            "DualPol": "dual_polarization",
+            "SampDur": "sample_duration",
+            "GPSLat": "latitude",
+            "GPSLong": "longitude",
+            "CalInt": "calibration_interval",
+            "RAltN": "_number_of_range_gates",
+            "TAltN": "_number_of_temperature_levels",
+            "HAltN": "_number_of_humidity_levels",
+            "SequN": "_number_of_chirp_sequences",
+            "RAlts": "range",
+            "TAlts": "_temperature_levels",
+            "HAlts": "_humidity_levels",
+            "SpecN": "number_of_spectral_samples",
+            "RngOffs": "chirp_start_indices",
+            "ChirpReps": "number_of_averaged_chirps",
+            "SeqIntTime": "integration_time",
+            "dR": "range_resolution",
+            "MaxVel": "nyquist_velocity",
+            "InstCalPar": "_calibration_period",
+        }
 
-        header = {}
-        with open(self.filename, "rb") as file:
-            append(("file_code", "_header_length"), np.int32)
-            append(("_start_time", "_stop_time"), np.uint32)
-            append(("program_number",))
-            append(("model_number",))  # 0 = single polarization, 1 = dual pol.
-            header["_program_name"] = self.read_string(file)
-            header["_customer_name"] = self.read_string(file)
-            append(
-                (
-                    "radar_frequency",
-                    "antenna_separation",
-                    "antenna_diameter",
-                    "antenna_gain",  # linear
-                    "half_power_beam_width",
-                ),
-                np.float32,
-            )
-            append(("dual_polarization",), np.int8)  # 0 = single pol, 1 = LDR, 2 = STSR
-            append(("sample_duration",), np.float32)
-            append(("latitude", "longitude"), np.float32)
-            append(
-                (
-                    "calibration_interval",
-                    "_number_of_range_gates",
-                    "_number_of_temperature_levels",
-                    "_number_of_humidity_levels",
-                    "_number_of_chirp_sequences",
-                )
-            )
-            append(("range",), np.float32, int(header["_number_of_range_gates"]))
-            append(
-                ("_temperature_levels",), np.float32, int(header["_number_of_temperature_levels"])
-            )
-            append(("_humidity_levels",), np.float32, int(header["_number_of_humidity_levels"]))
-            append(
-                ("number_of_spectral_samples", "chirp_start_indices", "number_of_averaged_chirps"),
-                n_values=int(header["_number_of_chirp_sequences"]),
-            )
-            append(
-                ("integration_time", "range_resolution", "nyquist_velocity"),
-                np.float32,
-                int(header["_number_of_chirp_sequences"]),
-            )
-            append(
-                (
-                    "_is_power_levelling",
-                    "_is_spike_filter",
-                    "_is_phase_correction",
-                    "_is_relative_power_correction",
-                ),
-                np.int8,
-            )
-            append(
-                ("FFT_window",), np.int8
-            )  # 0=square, 1=parzen, 2=blackman, 3=welch, 4=slepian2, 5=slepian3
-            append(("input_voltage_range",))
-            append(("noise_threshold",), np.float32)
-            # Fix for Level 1 version 4 files:
-            if int(header["file_code"]) >= 889348:
-                _ = np.fromfile(file, np.int32, 25)
-                _ = np.fromfile(file, np.uint32, 10000)
-            self._file_position = file.tell()
-        return header
+        data_keymap = {
+            "RefRat": "zdr" if is_strs_mode else "ldr",
+            "CorrCoeff": "rho_hv" if is_strs_mode else "rho_cx",
+            "DiffPh": "phi_dp" if is_strs_mode else "phi_cx",
+            "Time": "time",
+            "MSec": "time_ms",
+            "QF": "quality_flag",
+            "RR": "rain_rate",
+            "RelHum": "relative_humidity",
+            "EnvTemp": "temperature",
+            "BaroP": "pressure",
+            "WS": "wind_speed",
+            "WD": "wind_direction",
+            "DDVolt": "voltage",
+            "DDTb": "brightness_temperature",
+            "LWP": "lwp",
+            "PowIF": "if_power",
+            "Elev": "elevation",
+            "Azi": "azimuth_angle",
+            "Status": "status_flag",
+            "TransPow": "transmitted_power",
+            "TransT": "transmitter_temperature",
+            "RecT": "receiver_temperature",
+            "PCT": "pc_temperature",
+            "Ze": "Zh",
+            "MeanVel": "v",
+            "SpecWidth": "width",
+            "Skewn": "skewness",
+            "Kurt": "kurtosis",
+            "SLDR": "sldr",
+            "SCorrCoeff": "srho_hv",
+            "KDP": "kdp",
+            "DiffAtt": "differential_attenuation",
+        }
+
+        self.replace_keys(self.header, header_keymap)
+        self.replace_keys(self.data, data_keymap)
 
     @staticmethod
-    def read_string(file_id):
-        """Read characters from binary data until whitespace."""
-        str_out = ""
-        while True:
-            c = np.fromfile(file_id, np.int8, 1)
-            if len(c) == 1 and c[0] < 0:
-                c = [63]
-            if len(c) == 0 or c[0] == 0:
-                break
-            str_out += chr(c[0])
-        return str_out
-
-    def read_rpg_data(self):
-        """Reads the actual data from rpg binary file."""
-        Dimensions = namedtuple("Dimensions", ["n_samples", "n_gates", "n_layers_t", "n_layers_h"])
-
-        def _create_dimensions():
-            """Returns possible lengths of the data arrays."""
-            n_samples = np.fromfile(file, np.int32, 1)
-            return Dimensions(
-                int(n_samples),
-                int(self.header["_number_of_range_gates"]),
-                int(self.header["_number_of_temperature_levels"]),
-                int(self.header["_number_of_humidity_levels"]),
-            )
-
-        def _create_variables():
-            """Initializes dictionaries for data arrays."""
-            vrs = {
-                "_sample_length": np.zeros(dims.n_samples, int),
-                "time": np.zeros(dims.n_samples, int),
-                "time_ms": np.zeros(dims.n_samples, int),
-                "quality_flag": np.zeros(dims.n_samples, int),
-            }
-
-            block1_vars = dict.fromkeys(
-                (
-                    "rain_rate",
-                    "relative_humidity",
-                    "temperature",
-                    "pressure",
-                    "wind_speed",
-                    "wind_direction",
-                    "voltage",
-                    "brightness_temperature",
-                    "lwp",
-                    "if_power",
-                    "elevation",
-                    "azimuth_angle",
-                    "status_flag",
-                    "transmitted_power",
-                    "transmitter_temperature",
-                    "receiver_temperature",
-                    "pc_temperature",
-                )
-            )
-
-            block2_vars = dict.fromkeys(("Zh", "v", "width", "skewness", "kurtosis"))
-
-            if int(self.header["dual_polarization"][0]) == 1:
-                block2_vars.update(dict.fromkeys(("ldr", "rho_cx", "phi_cx")))
-            elif int(self.header["dual_polarization"][0]) == 2:
-                block2_vars.update(
-                    dict.fromkeys(
-                        (
-                            "zdr",
-                            "rho_hv",
-                            "phi_dp",
-                            "_",
-                            "sldr",
-                            "srho_hv",
-                            "kdp",
-                            "differential_attenuation",
-                        )
-                    )
-                )
-            return vrs, block1_vars, block2_vars
-
-        def _add_sensitivities():
-            ind0 = len(block1) + n_dummy
-            ind1 = ind0 + dims.n_gates
-            block1["_sensitivity_limit_v"] = float_block1[:, ind0:ind1]
-            if int(self.header["dual_polarization"][0]) > 0:
-                block1["_sensitivity_limit_h"] = float_block1[:, ind1:]
-
-        def _get_length_of_dummy_data():
-            return 3 + dims.n_layers_t + 2 * dims.n_layers_h
-
-        def _get_length_of_sensitivity_data():
-            if int(self.header["dual_polarization"][0]) > 0:
-                return 2 * dims.n_gates
-            return dims.n_gates
-
-        def _get_float_block_lengths():
-            block_one_length = len(block1) + n_dummy + n_sens
-            block_two_length = len(block2)
-            return block_one_length, block_two_length
-
-        def _init_float_blocks():
-            block_one = np.zeros((dims.n_samples, n_floats1))
-            block_two = np.zeros((dims.n_samples, dims.n_gates, n_floats2))
-            return block_one, block_two
-
-        with open(self.filename, "rb") as file:
-            file.seek(self._file_position)
-            dims = _create_dimensions()
-            aux, block1, block2 = _create_variables()
-            n_dummy = _get_length_of_dummy_data()
-            n_sens = _get_length_of_sensitivity_data()
-            n_floats1, n_floats2 = _get_float_block_lengths()
-            float_block1, float_block2 = _init_float_blocks()
-
-            for sample in range(dims.n_samples):
-                aux["_sample_length"][sample] = np.fromfile(file, np.int32, 1)
-                aux["time"][sample] = np.fromfile(file, np.uint32, 1)
-                aux["time_ms"][sample] = np.fromfile(file, np.int32, 1)
-                aux["quality_flag"][sample] = np.fromfile(file, np.int8, 1)
-                float_block1[sample, :] = np.fromfile(file, np.float32, n_floats1)
-                is_data = np.fromfile(file, np.int8, dims.n_gates)
-                is_data_ind = np.where(is_data)[0]
-                n_valid = len(is_data_ind)
-                values = np.fromfile(file, np.float32, n_floats2 * n_valid)
-                float_block2[sample, is_data_ind, :] = values.reshape(n_valid, n_floats2)
-        for n, name in enumerate(block1):
-            block1[name] = float_block1[:, n]
-        _add_sensitivities()
-        for n, name in enumerate(block2):
-            block2[name] = float_block2[:, :, n]
-        return {**aux, **block1, **block2}
+    def replace_keys(d: dict, keymap: dict):
+        for key in d.copy():
+            if key in keymap:
+                new_key = keymap[key]
+                d[new_key] = d.pop(key)
 
 
 def _read_from_file(

@@ -157,7 +157,7 @@ def _get_fmcw94_objects(files: list, expected_date: Union[str, None]) -> Tuple[l
             obj = Fmcw94Bin(file)
             if expected_date is not None:
                 _validate_date(obj, expected_date)
-        except (TypeError, ValueError) as err:
+        except (TypeError, ValueError, IndexError) as err:
             logging.warning(err)
             continue
         objects.append(obj)
