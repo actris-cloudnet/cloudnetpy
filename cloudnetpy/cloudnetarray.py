@@ -89,11 +89,14 @@ class CloudnetArray:
                 setattr(self, key, data)
 
     def _init_data(self) -> np.ndarray:
+
         if isinstance(self.variable, netCDF4.Variable):
             return self.variable[:]
         if isinstance(self.variable, np.ndarray):
             return self.variable
-        if isinstance(self.variable, (int, float)):
+        if isinstance(
+            self.variable, (int, float, np.float32, np.int8, np.float64, np.int32, np.uint16)
+        ):
             return np.array(self.variable)
         if isinstance(self.variable, str):
             try:

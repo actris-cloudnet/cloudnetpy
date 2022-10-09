@@ -29,6 +29,7 @@ setup(
         "pytz",
         "cloudnetpy_qc>=1.1.1",
         "scikit-image",
+        "rpgpy>=0.12.1",
     ],
     extras_require={
         "test": [
