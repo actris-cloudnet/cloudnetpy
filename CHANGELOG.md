@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.37.0 – 2022-10-12
+
+- Use `rpgpy` to read `rpg-fmcw-94` files
+
 ## 1.36.4 – 2022-10-07
 
 - Check that files to concatenate have same values in variables
