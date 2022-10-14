@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.37.1 – 2022-10-14
+
+- Allow sample_duration to vary
+
 ## 1.37.0 – 2022-10-12
 
 - Use `rpgpy` to read `rpg-fmcw-94` files
