@@ -120,15 +120,15 @@ def _stack_rpg_data(rpg_objects: RpgObjects) -> Tuple[dict, dict]:
 
 
 def _reduce_header(header: dict) -> dict:
-    """Removes duplicate header data."""
+    """Removes duplicate header data. Otherwise, we would need n_files dimension."""
     reduced_header = {}
     for key, data in header.items():
         first_profile_value = data[0]
         is_identical_value = bool(np.isclose(data, first_profile_value, rtol=1e-2).all())
         if is_identical_value is False:
             msg = f"Inconsistent header: {key}"
-            if key in ("latitude", "longitude"):
-                logging.warning(msg)
+            if key in ("latitude", "longitude", "sample_duration"):
+                logging.warning(f"{msg}: {data}")
             else:
                 raise InconsistentDataError(msg)
         reduced_header[key] = first_profile_value
