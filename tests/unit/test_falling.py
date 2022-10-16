@@ -23,6 +23,10 @@ class Obs:
 
         self.tw = ma.array([[250, 250, 250, 250, 250, 250], [250, 250, 250, 250, 250, 270]])
 
+        self.height = np.array([1999, 2002, 3000, 4000, 5000, 6000])
+
+        self.altitude = 0
+
 
 def test_find_falling_from_radar():
     obs = Obs()
@@ -33,7 +37,7 @@ def test_find_falling_from_radar():
 
 def test_find_cold_aerosols():
     obs = Obs()
-    result = np.array([[1, 0, 0, 0, 1, 1], [1, 0, 0, 0, 1, 0]])
+    result = np.array([[0, 0, 0, 0, 1, 1], [0, 0, 0, 0, 1, 0]])
     is_liquid = np.array([[0, 1, 1, 0, 0, 0], [0, 1, 0, 1, 0, 0]])
     assert_array_equal(falling._find_cold_aerosols(obs, is_liquid), result)
 

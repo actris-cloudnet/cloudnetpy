@@ -42,6 +42,7 @@ class ClassData:
         is_rain (ndarray): 2D boolean array denoting rain.
         is_clutter (ndarray): 2D boolean array denoting clutter.
         rain_rate: 1D rain rate.
+        altitude: site altitude.
 
     """
 
@@ -65,6 +66,7 @@ class ClassData:
         self.is_rain = _find_rain_from_radar_echo(self.z, self.time)
         self.rain_rate = _find_rain_rate(self.is_rain, data["radar"])
         self.is_clutter = _find_clutter(self.v, self.is_rain)
+        self.altitude = data["radar"].altitude
 
 
 def _find_rain_from_radar_echo(z: np.ndarray, time: np.ndarray, time_buffer: int = 5) -> np.ndarray:
