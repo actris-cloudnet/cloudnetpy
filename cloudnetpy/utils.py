@@ -751,7 +751,7 @@ def str_to_numeric(value: str) -> Union[int, float]:
 def fetch_cloudnet_model_types() -> list:
     """Finds different model types."""
     url = "https://cloudnet.fmi.fi/api/models"
-    data = requests.get(url=url).json()
+    data = requests.get(url=url, timeout=60).json()
     models = [model["id"] for model in data]
     model_types = [model.split("-")[0] for model in models]
     return list(set(model_types))
