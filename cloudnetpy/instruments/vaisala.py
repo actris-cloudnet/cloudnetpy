@@ -62,7 +62,7 @@ class VaisalaCeilo(Ceilometer):
         profiles[ind] -= self._hex_conversion_params[2]
         return profiles.astype(float) / self._backscatter_scale_factor
 
-    def _screen_invalid_lines(self, data: list) -> list:
+    def _screen_invalid_lines(self, data_in: list) -> list:
         """Removes empty (and other weird) lines from the list of data."""
 
         def _filter_lines(data: list) -> list:
@@ -92,7 +92,7 @@ class VaisalaCeilo(Ceilometer):
                 for line_number in range(number_of_data_lines)
             ]
 
-        valid_lines = _filter_lines(data)
+        valid_lines = _filter_lines(data_in)
         timestamp_line_numbers = _find_timestamp_line_numbers(valid_lines)
         if self.expected_date is not None:
             timestamp_line_numbers = _find_correct_dates(valid_lines, timestamp_line_numbers)
