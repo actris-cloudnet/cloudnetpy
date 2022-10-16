@@ -75,7 +75,7 @@ class VaisalaCeilo(Ceilometer):
             return output
 
         def _find_timestamp_line_numbers(data: list) -> list:
-            return [n for n, _ in enumerate(data) if utils.is_timestamp(data[n])]
+            return [n for n, value in enumerate(data) if utils.is_timestamp(value)]
 
         def _find_correct_dates(data: list, line_numbers: list) -> list:
             return [n for n in line_numbers if data[n].strip("-")[:10] == self.expected_date]
