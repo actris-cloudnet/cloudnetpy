@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.38.0 – 2022-10-16
+
+- Avoid classifying lidar-only signals as ice close to surface
+
 ## 1.37.1 – 2022-10-14
 
 - Allow sample_duration to vary
