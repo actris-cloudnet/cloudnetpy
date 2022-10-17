@@ -38,6 +38,7 @@ def concatenate_files(
     concat_dimension: str = "time",
     variables: Optional[list] = None,
     new_attributes: Optional[dict] = None,
+    ignore: Optional[list] = None,
 ) -> None:
     """Concatenate netCDF files in one dimension.
 
@@ -48,6 +49,7 @@ def concatenate_files(
         variables: List of variables with the 'concat_dimension' to be concatenated.
             Default is None when all variables with 'concat_dimension' will be saved.
         new_attributes: Optional new global attributes as {'attribute_name': value}.
+        ignore: List of variables to be ignored.
 
     Notes:
         Arrays without 'concat_dimension', scalars, and global attributes will be taken from
@@ -57,7 +59,7 @@ def concatenate_files(
     with Concat(filenames, output_file, concat_dimension) as concat:
         concat.get_common_variables()
         concat.create_global_attributes(new_attributes)
-        concat.concat_data(variables)
+        concat.concat_data(variables, ignore)
 
 
 class Concat:
@@ -95,14 +97,14 @@ class Concat:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def concat_data(self, variables: Optional[list] = None):
+    def concat_data(self, variables: Optional[list] = None, ignore: Optional[list] = None):
         """Concatenates data arrays."""
-        self._write_initial_data(variables)
+        self._write_initial_data(variables, ignore)
         if len(self.filenames) > 1:
             for filename in self.filenames[1:]:
                 self._append_data(filename)
 
-    def _write_initial_data(self, variables: Union[list, None]) -> None:
+    def _write_initial_data(self, variables: Union[list, None], ignore: Union[list, None]) -> None:
         for key in self.first_file.variables.keys():
             if (
                 variables is not None
@@ -111,6 +113,9 @@ class Concat:
                 and key != self.concat_dimension
             ):
                 continue
+            if ignore and key in ignore:
+                continue
+
             self.first_file[key].set_auto_scale(False)
             array = self.first_file[key][:]
             dimensions = self.first_file[key].dimensions
