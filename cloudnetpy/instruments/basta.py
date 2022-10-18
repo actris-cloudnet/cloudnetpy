@@ -85,7 +85,7 @@ class Basta(NcRadar):
         """Saves only valid pixels."""
         mask = self.getvar("background_mask")
         for key in keymap.values():
-            if self.data[key].data.ndim == mask.ndim:
+            if key in self.data and self.data[key].data.ndim == mask.ndim:
                 self.data[key].mask_indices(np.where(mask != 1))
 
     def validate_date(self, expected_date: str) -> None:

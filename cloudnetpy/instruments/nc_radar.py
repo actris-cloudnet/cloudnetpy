@@ -32,14 +32,18 @@ class NcRadar(DataSource):
         """Reads selected fields and fixes the names."""
         for key in keymap:
             name = keymap[key]
-            array = self.getvar(key)
+            try:
+                array = self.getvar(key)
+            except RuntimeError:
+                logging.warning(f"Can not find variable {key} from the input file")
+                continue
             array = np.array(array) if utils.isscalar(array) else array
             array[~np.isfinite(array)] = ma.masked
             self.append_data(array, name)
 
     def add_time_and_range(self) -> None:
         """Adds time and range."""
-        range_instru = np.array(self.getvar("range"))
+        range_instru = np.array(self.getvar("range", "height"))  # "height" in old BASTA files
         time = np.array(self.time)
         self.append_data(range_instru, "range")
         self.append_data(time, "time")
