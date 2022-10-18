@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.39.0 – 2022-10-18
+
+- Add option to ignore variables from the concatenation
+- Fix to work with older BASTA files
+
 ## 1.38.0 – 2022-10-16
 
 - Avoid classifying lidar-only signals as ice close to surface
