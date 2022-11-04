@@ -1,4 +1,2 @@
 recursive-exclude tests *
 include cloudnetpy/products/mie_lu_tables.nc
-include cloudnetpy/quality/data_quality_config.ini
-include cloudnetpy/quality/metadata_config.ini
