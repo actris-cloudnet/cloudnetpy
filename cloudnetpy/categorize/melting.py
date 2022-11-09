@@ -154,10 +154,8 @@ def _basetop(dprof: np.ndarray, pind: int) -> Tuple[int, int]:
 
 def _get_temp_indices(t_prof: np.ndarray, t_range: tuple) -> np.ndarray:
     """Finds indices of temperature profile covering the given range."""
-    bottom_point = np.where(t_prof < (T0 - t_range[0]))[0][0]
-    top_point = np.where(t_prof > (T0 + t_range[0]))[0]
-    top_point = top_point[-1] if top_point.size > 0 else 0
-    return np.arange(bottom_point, top_point + 1)
+    ind = np.where((t_prof > min(t_range) + T0) & (t_prof < max(t_range) + T0))[0]
+    return np.array([]) if len(ind) == 0 else np.arange(min(ind), max(ind) + 1)
 
 
 def _find_model_temperature_range(model_type: str) -> Tuple[float, float]:
