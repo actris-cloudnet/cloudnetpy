@@ -1,6 +1,6 @@
 """Module with a class for Lufft chm15k ceilometer."""
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 import netCDF4
 from numpy import ma
@@ -28,9 +28,9 @@ class LufftCeilo(NcLidar):
             self._fetch_beta_raw(calibration_factor)
             self._fetch_time_and_date()
             self._fetch_zenith_angle("zenith")
-            self.dataset = None
 
     def _fetch_beta_raw(self, calibration_factor: Optional[float] = None) -> None:
+        assert self.dataset is not None
         if calibration_factor is None:
             logging.warning("Using default calibration factor")
             calibration_factor = 3e-12
@@ -46,7 +46,8 @@ class LufftCeilo(NcLidar):
         self.data["calibration_factor"] = float(calibration_factor)
         self.data["beta_raw"] = beta_raw
 
-    def _get_old_software_version(self):
+    def _get_old_software_version(self) -> Union[str, None]:
+        assert self.dataset is not None
         version = self.dataset.software_version
         if len(str(version)) > 4:
             return None
@@ -66,6 +67,7 @@ class LufftCeilo(NcLidar):
         return step_factor ** (-(nn1 - reference) / scale)
 
     def _getvar(self, *args):
+        assert self.dataset is not None
         for arg in args:
             if arg in self.dataset.variables:
                 var = self.dataset.variables[arg]
