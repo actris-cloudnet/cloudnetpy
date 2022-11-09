@@ -1,6 +1,6 @@
 """Module with classes for Vaisala ceilometers."""
 import logging
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -217,7 +217,7 @@ class ClCeilo(VaisalaCeilo):
         """Sorts timestamps and removes duplicates."""
         time = np.copy(self.data["time"][:])
         ind_sorted = np.argsort(time)
-        ind_valid = []
+        ind_valid: List[int] = []
         for ind in ind_sorted:
             if time[ind] not in time[ind_valid]:
                 ind_valid.append(ind)

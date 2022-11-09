@@ -1,7 +1,7 @@
 """Radar module, containing the :class:`Radar` class."""
 import logging
 import math
-from typing import Union
+from typing import List, Union
 
 import numpy as np
 from numpy import ma
@@ -293,10 +293,12 @@ class Radar(DataSource):
         raise RuntimeError("Unable to determine folding velocity")
 
     def _get_folding_velocity_full(self):
-        folding_velocity = []
+        folding_velocity: Union[List, np.ndarray] = []
         if utils.isscalar(self.folding_velocity):
             folding_velocity = np.repeat(self.folding_velocity, len(self.sequence_indices[0]))
         else:
+            assert isinstance(folding_velocity, list)
+            assert isinstance(self.folding_velocity, np.ndarray)
             for indices, velocity in zip(self.sequence_indices, self.folding_velocity):
                 folding_velocity.append(np.repeat(velocity, len(indices)))
             folding_velocity = np.hstack(folding_velocity)

@@ -29,6 +29,7 @@ class Cl61d(NcLidar):
             self.dataset = None
 
     def _fetch_lidar_variables(self, calibration_factor: Optional[float] = None) -> None:
+        assert self.dataset is not None
         beta_raw = self.dataset.variables["beta_att"][:]
         if calibration_factor is None:
             logging.warning("Using default calibration factor")
