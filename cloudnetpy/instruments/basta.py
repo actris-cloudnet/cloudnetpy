@@ -59,7 +59,7 @@ def basta2nc(
         general.add_site_geolocation(basta)
         basta.add_zenith_angle()
         general.add_radar_specific_variables(basta)
-        general.add_height(basta)
+        basta.add_height()
         basta.sort_timestamps()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)

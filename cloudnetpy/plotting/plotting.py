@@ -1,7 +1,7 @@
 """Misc. plotting routines for Cloudnet products."""
 import os.path
 from datetime import date
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import netCDF4
@@ -56,7 +56,7 @@ def generate_figure(
     nc_file: str,
     field_names: list,
     show: bool = True,
-    save_path: str = None,
+    save_path: Optional[str] = None,
     max_y: int = 12,
     dpi: int = 120,
     image_name: Optional[str] = None,
@@ -113,7 +113,7 @@ def generate_figure(
             ax_value = (time_new, ax_value[1])
 
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
-        _set_ax(ax, max_y)
+        _set_ax(ax, max_y, ylabel=None)
         if plot_type == "bar":
             _plot_bar_data(ax, field, ax_value[0])
             _set_ax(ax, 2, ATTRIBUTES[name].ylabel)
@@ -293,7 +293,7 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) ->
     return data_field, (ax_values[0], alt)
 
 
-def _set_ax(ax, max_y: float, ylabel: str = None, min_y: float = 0.0):
+def _set_ax(ax, max_y: float, ylabel: Union[str, None], min_y: float = 0.0):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
     ax.set_ylim(min_y, max_y)
@@ -564,9 +564,9 @@ def plot_2d(
     cbar: bool = True,
     cmap: str = "viridis",
     ncolors: int = 50,
-    clim: tuple = None,
-    ylim: tuple = None,
-    xlim: tuple = None,
+    clim: Optional[tuple] = None,
+    ylim: Optional[tuple] = None,
+    xlim: Optional[tuple] = None,
 ):
     """Simple plot of 2d variable."""
     plt.close()
@@ -590,10 +590,10 @@ def compare_files(
     field_name: str,
     show: bool = True,
     relative_err: bool = False,
-    save_path: str = None,
+    save_path: Optional[str] = None,
     max_y: int = 12,
     dpi: int = 120,
-    image_name: str = None,
+    image_name: Optional[str] = None,
 ) -> Dimensions:
     """Plots one particular field from two Cloudnet files.
 
@@ -625,7 +625,7 @@ def compare_files(
 
     for ii, ax in enumerate(axes[:2]):
         field, ax_value = _screen_high_altitudes(fields[ii], ax_values[ii], max_y)
-        _set_ax(ax, max_y)
+        _set_ax(ax, max_y, ylabel=None)
         _set_title(ax, field_name, subtitle[ii])
 
         if plot_type == "model":
@@ -638,7 +638,7 @@ def compare_files(
         else:
             _plot_colormesh_data(ax, field, field_name, ax_value)
             if relative_err is True and ii == 1:
-                _set_ax(axes[-1], max_y)
+                _set_ax(axes[-1], max_y, ylabel=None)
                 error, ax_value = _get_relative_error(fields, ax_values, max_y)
                 _plot_relative_error(axes[-1], error, ax_value)
 

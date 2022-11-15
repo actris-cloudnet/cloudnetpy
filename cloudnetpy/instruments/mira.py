@@ -85,8 +85,8 @@ def mira2nc(
             general.add_site_geolocation(mira)
             general.add_radar_specific_variables(mira)
             valid_indices = mira.add_zenith_and_azimuth_angles()
-            general.screen_time_indices(mira, valid_indices)
-            general.add_height(mira)
+            mira.screen_time_indices(valid_indices)
+            mira.add_height()
         attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
         output.update_attributes(mira.data, attributes)
         uuid = output.save_level1b(mira, output_file, uuid)
@@ -119,7 +119,7 @@ class Mira(NcRadar):
                 valid_indices.append(ind)
         if not valid_indices:
             raise ValidTimeStampError
-        general.screen_time_indices(self, valid_indices)
+        self.screen_time_indices(valid_indices)
 
     def _init_mira_date(self) -> List[str]:
         time_stamps = self.getvar("time")

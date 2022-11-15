@@ -5,7 +5,7 @@ import netCDF4
 import numpy as np
 from numpy import ma
 
-from cloudnetpy import CloudnetArray, utils
+from cloudnetpy import CloudnetArray
 
 
 def add_site_geolocation(obj):
@@ -39,18 +39,6 @@ def add_radar_specific_variables(obj):
         logging.warning("Unable to find nyquist_velocity")
 
 
-def add_height(obj):
-    try:
-        zenith_angle = ma.median(obj.data["zenith_angle"].data)
-    except RuntimeError:
-        logging.warning("Assuming 0 deg zenith_angle")
-        zenith_angle = 0
-    height = utils.range_to_height(obj.data["range"].data, zenith_angle)
-    height += obj.data["altitude"].data
-    height = np.array(height)
-    obj.data["height"] = CloudnetArray(height, "height")
-
-
 def linear_to_db(obj, variables_to_log: tuple) -> None:
     """Changes linear units to logarithmic."""
     for name in variables_to_log:
@@ -69,15 +57,3 @@ def get_files_with_common_range(files: list) -> list:
         logging.warning(f"Removing {n_removed} MIRA files due to inconsistent height vector")
     ind = np.where(n_range == most_common)[0]
     return [file for i, file in enumerate(files) if i in ind]
-
-
-def screen_time_indices(obj, valid_indices: list) -> None:
-    n_time = len(obj.time)
-    for cloudnet_array in obj.data.values():
-        array = cloudnet_array.data
-        if not utils.isscalar(array) and array.shape[0] == n_time:
-            if array.ndim == 1:
-                cloudnet_array.data = array[valid_indices]
-            elif array.ndim == 2:
-                cloudnet_array.data = array[valid_indices, :]
-    obj.time = obj.time[valid_indices]

@@ -6,6 +6,7 @@ from numpy import ma
 
 from cloudnetpy import CloudnetArray, output, utils
 from cloudnetpy.exceptions import DisdrometerDataError
+from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.vaisala import values_to_dict
 from cloudnetpy.metadata import MetaData
 
@@ -55,7 +56,8 @@ def disdrometer2nc(
         disdrometer.validate_date(date)
     disdrometer.init_data()
     if date is not None:
-        disdrometer.sort_time()
+        disdrometer.sort_timestamps()
+        disdrometer.remove_duplicate_timestamps()
     disdrometer.add_meta()
     disdrometer.convert_units()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
@@ -63,7 +65,7 @@ def disdrometer2nc(
     return save_disdrometer(disdrometer, output_file, uuid)
 
 
-class Disdrometer:
+class Disdrometer(CloudnetInstrument):
     def __init__(self, filename: str, site_meta: dict, source: str):
         self.filename = filename
         self.site_meta = site_meta

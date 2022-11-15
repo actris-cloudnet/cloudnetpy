@@ -69,6 +69,7 @@ def copernicus2nc(
 
         with Copernicus(nc_filename, site_meta) as copernicus:
             copernicus.init_data(keymap)
+            copernicus.add_time_and_range()
             if date is not None:
                 copernicus.check_date(date)
             copernicus.sort_timestamps()
@@ -82,8 +83,8 @@ def copernicus2nc(
             copernicus.add_nyquist_velocity(keymap)
             general.add_site_geolocation(copernicus)
             valid_indices = copernicus.add_zenith_and_azimuth_angles()
-            general.screen_time_indices(copernicus, valid_indices)
-            general.add_height(copernicus)
+            copernicus.screen_time_indices(valid_indices)
+            copernicus.add_height()
         attributes = output.add_time_attribute(ATTRIBUTES, copernicus.date)
         output.update_attributes(copernicus.data, attributes)
         uuid = output.save_level1b(copernicus, output_file, uuid)

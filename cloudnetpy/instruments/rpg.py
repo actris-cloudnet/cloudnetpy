@@ -9,6 +9,7 @@ from numpy import ma
 from cloudnetpy import CloudnetArray, output, utils
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import general, instruments
+from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBinCombined
 from cloudnetpy.metadata import MetaData
@@ -68,7 +69,7 @@ def rpg2nc(
     general.linear_to_db(fmcw, ("Zh", "antenna_gain"))
     general.add_site_geolocation(fmcw)
     fmcw.add_zenith_angle()
-    general.add_height(fmcw)
+    fmcw.add_height()
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
     output.update_attributes(fmcw.data, attributes)
     uuid = output.save_level1b(fmcw, output_file, uuid)
@@ -187,7 +188,7 @@ def _validate_date(obj, expected_date: str) -> None:
             raise ValueError("Ignoring a file (time stamps not what expected)")
 
 
-class Rpg:
+class Rpg(CloudnetInstrument):
     """Base class for RPG FMCW-94 cloud radar and HATPRO mwr."""
 
     def __init__(self, raw_data: dict, site_meta: dict):
@@ -202,29 +203,6 @@ class Rpg:
         key = "time"
         fraction_hour = utils.seconds2hours(self.raw_data[key])
         self.data[key] = CloudnetArray(np.array(fraction_hour), key, data_type=data_type)
-
-    def sort_timestamps(self):
-        """Sorts timestamps."""
-        time = self.data["time"].data[:]
-        ind = time.argsort()
-        self._screen(ind)
-
-    def remove_duplicate_timestamps(self):
-        """Removes duplicate timestamps."""
-        time = self.data["time"].data[:]
-        _, ind = np.unique(time, return_index=True)
-        self._screen(ind)
-
-    def _screen(self, ind: np.ndarray):
-        n_time = len(self.data["time"].data)
-        for array in self.data.values():
-            data = array.data
-            if data.ndim > 0 and data.shape[0] == n_time:
-                if data.ndim == 1:
-                    screened_data = data[ind]
-                else:
-                    screened_data = data[ind, :]
-                array.data = screened_data
 
     def _get_date(self) -> list:
         time_first = self.raw_data["time"][0]

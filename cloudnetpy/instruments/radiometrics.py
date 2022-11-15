@@ -1,6 +1,6 @@
 """Module for reading Radiometrics MP3014 microwave radiometer data."""
 import csv
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import numpy as np
 
@@ -80,7 +80,7 @@ class Radiometrics:
             fraction_hour.append(int(hour) + int(minute) / 60 + int(sec) / 3600)
         self.data["time"] = np.array(fraction_hour)
 
-    def screen_time(self, expected_date: str = None):
+    def screen_time(self, expected_date: Union[str, None]):
         """Screens timestamps."""
         dates = [row[1].split()[0] for row in self.raw_data]
         if expected_date is None:

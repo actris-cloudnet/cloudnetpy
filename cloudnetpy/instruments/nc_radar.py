@@ -8,10 +8,11 @@ from numpy import ma
 from cloudnetpy import utils
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.instruments import Instrument
 
 
-class NcRadar(DataSource):
+class NcRadar(DataSource, CloudnetInstrument):
     """Class for radars providing netCDF files. Child of DataSource().
 
     Args:
@@ -54,25 +55,6 @@ class NcRadar(DataSource):
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(ind)
-
-    def sort_timestamps(self):
-        """Sorts data by timestamps."""
-        ind = self.time.argsort()
-        self._screen_by_ind(ind)
-
-    def remove_duplicate_timestamps(self):
-        """Removes duplicate timestamps."""
-        _, ind = np.unique(self.time, return_index=True)
-        self._screen_by_ind(ind)
-
-    def _screen_by_ind(self, ind: np.ndarray):
-        n_time = len(self.time)
-        for cloudnet_array in self.data.values():
-            if cloudnet_array.data.ndim == 1 and cloudnet_array.data.shape[0] == n_time:
-                cloudnet_array.data = cloudnet_array.data[ind]
-            if cloudnet_array.data.ndim == 2 and cloudnet_array.data.shape[0] == n_time:
-                cloudnet_array.data = cloudnet_array.data[ind, :]
-        self.time = self.time[ind]
 
     def mask_invalid_data(self) -> None:
         """Makes sure Z and v masks are also in other 2d variables."""
