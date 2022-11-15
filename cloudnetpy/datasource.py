@@ -7,7 +7,7 @@ from typing import Callable, Optional, Union
 import netCDF4
 import numpy as np
 
-from cloudnetpy import CloudnetArray, RadarArray, utils
+from cloudnetpy import CloudnetArray, utils
 
 
 class DataSource:
@@ -91,8 +91,7 @@ class DataSource:
             units: CloudnetArray.units attribute.
 
         """
-        array_type = RadarArray if self._is_radar else CloudnetArray
-        self.data[key] = array_type(variable, name or key, units)
+        self.data[key] = CloudnetArray(variable, name or key, units)
 
     def get_date(self) -> list:
         """Returns date components.

@@ -117,14 +117,6 @@ class CloudnetArray:
     def __getitem__(self, ind: tuple) -> np.ndarray:
         return self.data[ind]
 
-
-class RadarArray(CloudnetArray):
-    """The :class:`RadarArray` class, child of :class:`CloudnetArray`.
-
-    This class contains additional, cloud radar -specific methods.
-
-    """
-
     def filter_isolated_pixels(self) -> None:
         """Filters hot pixels from radar data."""
         self._filter(utils.filter_isolated_pixels)
