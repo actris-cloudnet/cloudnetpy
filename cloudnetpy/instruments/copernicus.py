@@ -7,7 +7,6 @@ import numpy as np
 
 from cloudnetpy import concat_lib, output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.instruments import general
 from cloudnetpy.instruments.instruments import COPERNICUS
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
@@ -61,7 +60,7 @@ def copernicus2nc(
         if os.path.isdir(raw_files):
             nc_filename = f"{temp_dir}/tmp.nc"
             valid_filenames = utils.get_sorted_filenames(raw_files, ".nc")
-            valid_filenames = general.get_files_with_common_range(valid_filenames)
+            valid_filenames = utils.get_files_with_common_range(valid_filenames)
             variables = list(keymap.keys())
             concat_lib.concatenate_files(valid_filenames, nc_filename, variables=variables)
         else:
@@ -79,9 +78,9 @@ def copernicus2nc(
             copernicus.mask_corrupted_values()
             copernicus.mask_invalid_data()
             copernicus.add_time_and_range()
-            general.add_radar_specific_variables(copernicus)
+            copernicus.add_radar_specific_variables()
             copernicus.add_nyquist_velocity(keymap)
-            general.add_site_geolocation(copernicus)
+            copernicus.add_site_geolocation()
             valid_indices = copernicus.add_zenith_and_azimuth_angles()
             copernicus.screen_time_indices(valid_indices)
             copernicus.add_height()

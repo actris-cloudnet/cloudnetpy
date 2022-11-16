@@ -893,3 +893,17 @@ def get_file_type(filename: str) -> str:
     if product[:3] in ("lwc", "iwc"):
         return product[:3]
     raise ValueError("Unknown file type")
+
+
+def get_files_with_common_range(files: list) -> list:
+    """Returns files with the same (most common) number of range gates."""
+    n_range = []
+    for file in files:
+        with netCDF4.Dataset(file) as nc:
+            n_range.append(len(nc.variables["range"]))
+    most_common = np.bincount(n_range).argmax()
+    n_removed = len([n for n in n_range if n != most_common])
+    if n_removed > 0:
+        logging.warning(f"Removing {n_removed} files due to inconsistent height vector")
+    ind = np.where(n_range == most_common)[0]
+    return [file for i, file in enumerate(files) if i in ind]

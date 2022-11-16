@@ -8,7 +8,7 @@ from numpy import ma
 
 from cloudnetpy import CloudnetArray, output, utils
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
-from cloudnetpy.instruments import general, instruments
+from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBinCombined
@@ -66,8 +66,8 @@ def rpg2nc(
     fmcw.mask_invalid_width()
     fmcw.sort_timestamps()
     fmcw.remove_duplicate_timestamps()
-    general.linear_to_db(fmcw, ("Zh", "antenna_gain"))
-    general.add_site_geolocation(fmcw)
+    fmcw.linear_to_db(("Zh", "antenna_gain"))
+    fmcw.add_site_geolocation()
     fmcw.add_zenith_angle()
     fmcw.add_height()
     attributes = output.add_time_attribute(RPG_ATTRIBUTES, fmcw.date)
@@ -192,6 +192,7 @@ class Rpg(CloudnetInstrument):
     """Base class for RPG FMCW-94 cloud radar and HATPRO mwr."""
 
     def __init__(self, raw_data: dict, site_meta: dict):
+        super().__init__()
         self.raw_data = raw_data
         self.site_meta = site_meta
         self.date = self._get_date()

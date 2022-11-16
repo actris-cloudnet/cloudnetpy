@@ -5,7 +5,7 @@ import numpy as np
 
 from cloudnetpy import output
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.instruments import general, instruments
+from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
 
@@ -56,9 +56,9 @@ def basta2nc(
             basta.validate_date(date)
         basta.screen_data(keymap)
         basta.add_time_and_range()
-        general.add_site_geolocation(basta)
+        basta.add_site_geolocation()
         basta.add_zenith_angle()
-        general.add_radar_specific_variables(basta)
+        basta.add_radar_specific_variables()
         basta.add_height()
         basta.sort_timestamps()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)

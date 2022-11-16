@@ -5,7 +5,6 @@ from typing import List, Optional
 
 from cloudnetpy import concat_lib, output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.instruments import general
 from cloudnetpy.instruments.instruments import MIRA35
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
@@ -65,7 +64,7 @@ def mira2nc(
         if os.path.isdir(raw_mira):
             mmclx_filename = f"{temp_dir}/tmp.mmclx"
             valid_filenames = utils.get_sorted_filenames(raw_mira, ".mmclx")
-            valid_filenames = general.get_files_with_common_range(valid_filenames)
+            valid_filenames = utils.get_files_with_common_range(valid_filenames)
             variables = list(keymap.keys())
             concat_lib.concatenate_files(valid_filenames, mmclx_filename, variables=variables)
         else:
@@ -78,12 +77,12 @@ def mira2nc(
                 mira.date = date.split("-")
             mira.sort_timestamps()
             mira.remove_duplicate_timestamps()
-            general.linear_to_db(mira, ("Zh", "ldr", "SNR"))
+            mira.linear_to_db(("Zh", "ldr", "SNR"))
             mira.screen_by_snr()
             mira.mask_invalid_data()
             mira.add_time_and_range()
-            general.add_site_geolocation(mira)
-            general.add_radar_specific_variables(mira)
+            mira.add_site_geolocation()
+            mira.add_radar_specific_variables()
             valid_indices = mira.add_zenith_and_azimuth_angles()
             mira.screen_time_indices(valid_indices)
             mira.add_height()

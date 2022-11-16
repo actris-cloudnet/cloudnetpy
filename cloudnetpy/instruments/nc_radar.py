@@ -5,7 +5,7 @@ from typing import List, Union
 import numpy as np
 from numpy import ma
 
-from cloudnetpy import utils
+from cloudnetpy import CloudnetArray, utils
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
@@ -91,3 +91,15 @@ class NcRadar(DataSource, CloudnetInstrument):
             if key in self.data:
                 del self.data[key]
         return list(is_stable_profile)
+
+    def add_radar_specific_variables(self):
+        """Adds radar specific variables."""
+        key = "radar_frequency"
+        self.data[key] = CloudnetArray(self.instrument.frequency, key)
+        try:
+            possible_nyquist_names = ("ambiguous_velocity", "NyquistVelocity")
+            data = self.getvar(*possible_nyquist_names)
+            key = "nyquist_velocity"
+            self.data[key] = CloudnetArray(np.array(data), key)
+        except RuntimeError:
+            logging.warning("Unable to find nyquist_velocity")

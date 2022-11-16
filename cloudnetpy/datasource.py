@@ -48,7 +48,7 @@ class DataSource:
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
         self.source = getattr(self.dataset, "source", "")
-        self.time = self._init_time()
+        self.time: np.ndarray = self._init_time()
         self.altitude = self._init_altitude()
         self.height = self._init_height()
         self.data: dict = {}

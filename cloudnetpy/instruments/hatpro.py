@@ -6,7 +6,7 @@ from typing import List, Optional, Tuple, Union
 
 from cloudnetpy import output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.instruments import general, rpg
+from cloudnetpy.instruments import rpg
 from cloudnetpy.instruments.rpg_reader import (
     HatproBin,
     HatproBinCombined,
@@ -66,7 +66,7 @@ def hatpro2nc(
     hatpro = rpg.Hatpro(one_day_of_data, site_meta)
     hatpro.sort_timestamps()
     hatpro.convert_time_to_fraction_hour("float64")
-    general.add_site_geolocation(hatpro)
+    hatpro.add_site_geolocation()
     hatpro.remove_duplicate_timestamps()
     attributes = output.add_time_attribute({}, hatpro.date)
     output.update_attributes(hatpro.data, attributes)

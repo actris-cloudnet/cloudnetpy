@@ -67,6 +67,7 @@ def disdrometer2nc(
 
 class Disdrometer(CloudnetInstrument):
     def __init__(self, filename: str, site_meta: dict, source: str):
+        super().__init__()
         self.filename = filename
         self.site_meta = site_meta
         self.source = source
@@ -74,7 +75,6 @@ class Disdrometer(CloudnetInstrument):
         self.sensor_id = None
         self.n_diameter: int = 0
         self.n_velocity: int = 0
-        self.data: dict = {}
         self._file_data = self._read_file()
 
     def convert_units(self):
