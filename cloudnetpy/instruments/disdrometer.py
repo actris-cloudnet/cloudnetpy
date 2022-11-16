@@ -5,7 +5,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import CloudnetArray, output, utils
-from cloudnetpy.exceptions import DisdrometerDataError
+from cloudnetpy.exceptions import DisdrometerDataError, ValidTimeStampError
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.vaisala import values_to_dict
 from cloudnetpy.metadata import MetaData
@@ -106,7 +106,7 @@ class Disdrometer(CloudnetInstrument):
             if date == expected_date:
                 valid_ind.append(ind)
         if not valid_ind:
-            raise ValueError("No measurements from expected date")
+            raise ValidTimeStampError
         for key, value in self._file_data.items():
             if value:
                 self._file_data[key] = [self._file_data[key][ind] for ind in valid_ind]

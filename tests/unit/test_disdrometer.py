@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 import pytest
 from all_products_fun import Check
 
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import disdrometer
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -47,7 +48,7 @@ class TestParsivel2(Check):
     uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta, date=date)
 
     def test_date_validation_fail(self, tmp_path):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValidTimeStampError):
             disdrometer.disdrometer2nc(
                 self.filename, tmp_path / "invalid.nc", self.site_meta, date="2022-04-05"
             )
