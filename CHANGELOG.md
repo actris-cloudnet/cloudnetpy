@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.40.0 – 2022-11-17
+
+- Raise ValidTimeStampError from disdrometer processing
+- Remove duplicate timestamps from disdrometer data
+- Adjust potential melting layer temperature range calculation
+- Deprecate general.py module and RadarArray class
+
 ## 1.39.0 – 2022-10-18
 
 - Add option to ignore variables from the concatenation
