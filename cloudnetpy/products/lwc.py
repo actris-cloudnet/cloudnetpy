@@ -194,7 +194,7 @@ class CloudAdjustor:
             self._update_status(time_index)
             self._adjust_lwc(time_index, base_index)
 
-    def _update_status(self, time_ind: int) -> None:
+    def _update_status(self, time_ind: np.ndarray) -> None:
         alt_indices = np.where(self.is_liquid[time_ind, :])[0]
         self.status[time_ind, alt_indices] = 2
 
@@ -335,7 +335,7 @@ class LwcError:
         error_1d_transposed = utils.transpose(error_1d)
         return utils.l2norm(error_2d, error_1d_transposed)
 
-    def _fill_error_array(self, error_in: np.ndarray) -> np.ndarray:
+    def _fill_error_array(self, error_in: np.ndarray) -> ma.MaskedArray:
         lwc_error = ma.masked_all(self.lwc.shape)
         ind = ma.where(self.lwc)
         lwc_error[ind] = error_in[ind]

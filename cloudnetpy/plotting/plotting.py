@@ -113,18 +113,18 @@ def generate_figure(
             ax_value = (time_new, ax_value[1])
 
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
-        _set_ax(ax, max_y, ylabel=None)
+        set_ax(ax, max_y, ylabel=None)
         if plot_type == "bar":
             _plot_bar_data(ax, field, ax_value[0])
-            _set_ax(ax, 2, ATTRIBUTES[name].ylabel)
+            set_ax(ax, 2, ATTRIBUTES[name].ylabel)
 
         elif plot_type == "segment":
             _plot_segment_data(ax, field, name, ax_value)
 
         else:
             _plot_colormesh_data(ax, field, name, ax_value)
-    case_date = _set_labels(fig, axes[-1], nc_file, sub_title)
-    _handle_saving(image_name, save_path, show, case_date, valid_names)
+    case_date = set_labels(fig, axes[-1], nc_file, sub_title)
+    handle_saving(image_name, save_path, show, case_date, valid_names)
     return Dimensions(fig, axes)
 
 
@@ -165,7 +165,7 @@ def _mark_gaps(time: np.ndarray, data: ma.MaskedArray, max_allowed_gap: float = 
     return time_new, data_new
 
 
-def _handle_saving(
+def handle_saving(
     image_name: Optional[str],
     save_path: Optional[str],
     show: bool,
@@ -191,12 +191,12 @@ def _get_relative_error(fields: list, ax_values: list, max_y: int) -> tuple:
     return _screen_high_altitudes(error, ax_values[1], max_y)
 
 
-def _set_labels(fig, ax, nc_file: str, sub_title: bool = True) -> date:
+def set_labels(fig, ax, nc_file: str, sub_title: bool = True) -> date:
     ax.set_xlabel("Time (UTC)", fontsize=13)
-    case_date = _read_date(nc_file)
-    site_name = _read_location(nc_file)
+    case_date = read_date(nc_file)
+    site_name = read_location(nc_file)
     if sub_title:
-        _add_subtitle(fig, case_date, site_name)
+        add_subtitle(fig, case_date, site_name)
     return case_date
 
 
@@ -293,7 +293,7 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) ->
     return data_field, (ax_values[0], alt)
 
 
-def _set_ax(ax, max_y: float, ylabel: Union[str, None], min_y: float = 0.0):
+def set_ax(ax, max_y: float, ylabel: Union[str, None], min_y: float = 0.0):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
     ax.set_ylim(min_y, max_y)
@@ -387,7 +387,7 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
     vmin, vmax = variables.plot_range
 
     if variables.plot_scale == Scale.LOGARITHMIC:
-        data, vmin, vmax = _lin2log(data, vmin, vmax)
+        data, vmin, vmax = lin2log(data, vmin, vmax)
 
     pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
 
@@ -396,7 +396,7 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
         colorbar.set_label(variables.clabel, fontsize=13)
 
     if variables.plot_scale == Scale.LOGARITHMIC:
-        tick_labels = _generate_log_cbar_ticklabel_list(vmin, vmax)
+        tick_labels = generate_log_cbar_ticklabel_list(vmin, vmax)
         colorbar.set_ticks(np.arange(vmin, vmax + 1))
         colorbar.ax.set_yticklabels(tick_labels)
 
@@ -418,11 +418,11 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
             data *= 1000 * 3600
         ax.plot(time, data, color="royalblue")
         ylim = max((np.max(data) * 1.05, 0.1))
-        _set_ax(ax, ylim, "mm h-1")
+        set_ax(ax, ylim, "mm h-1")
     if name == "n_particles":
         ax.plot(time, data, color="royalblue")
         ylim = max((np.max(data) * 1.05, 1))
-        _set_ax(ax, ylim, "")
+        set_ax(ax, ylim, "")
 
 
 def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
@@ -437,7 +437,7 @@ def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
     ax.axhline(linewidth=0.8, color="k")
     ax.plot(time[int(width / 2 - 1) : int(-width / 2)], rolling_mean, color="sienna", linewidth=2.0)
     ax.plot(time[int(width / 2 - 1) : int(-width / 2)], rolling_mean, color="wheat", linewidth=0.6)
-    _set_ax(
+    set_ax(
         ax,
         round(np.max(data), 3) + 0.0005,
         ATTRIBUTES[name].ylabel,
@@ -505,26 +505,26 @@ def _init_colorbar(plot, axis):
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
 
 
-def _generate_log_cbar_ticklabel_list(vmin: float, vmax: float) -> list:
+def generate_log_cbar_ticklabel_list(vmin: float, vmax: float) -> list:
     """Create list of log format colorbar label ticks as string"""
     return ["10$^{%s}$" % int(i) for i in np.arange(vmin, vmax + 1)]  # pylint: disable=C0209
 
 
-def _read_location(nc_file: str) -> str:
+def read_location(nc_file: str) -> str:
     """Returns site name."""
     with netCDF4.Dataset(nc_file) as nc:
         site_name = nc.location
     return site_name
 
 
-def _read_date(nc_file: str) -> date:
+def read_date(nc_file: str) -> date:
     """Returns measurement date."""
     with netCDF4.Dataset(nc_file) as nc:
         case_date = date(int(nc.year), int(nc.month), int(nc.day))
     return case_date
 
 
-def _add_subtitle(fig, case_date: date, site_name: str):
+def add_subtitle(fig, case_date: date, site_name: str):
     """Adds subtitle into figure."""
     text = _get_subtitle_text(case_date, site_name)
     fig.suptitle(
@@ -552,7 +552,7 @@ def _plot_relative_error(ax, error: ma.MaskedArray, ax_values: tuple):
     ax.set_title(f"Median relative error: {median_error} %", fontsize=14)
 
 
-def _lin2log(*args) -> list:
+def lin2log(*args) -> list:
     return [ma.log10(x) for x in args]
 
 
@@ -625,23 +625,23 @@ def compare_files(
 
     for ii, ax in enumerate(axes[:2]):
         field, ax_value = _screen_high_altitudes(fields[ii], ax_values[ii], max_y)
-        _set_ax(ax, max_y, ylabel=None)
+        set_ax(ax, max_y, ylabel=None)
         _set_title(ax, field_name, subtitle[ii])
 
         if plot_type == "model":
             _plot_colormesh_data(ax, field, field_name, ax_value)
         elif plot_type == "bar":
             _plot_bar_data(ax, field, ax_value[0])
-            _set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
+            set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
         elif plot_type == "segment":
             _plot_segment_data(ax, field, field_name, ax_value)
         else:
             _plot_colormesh_data(ax, field, field_name, ax_value)
             if relative_err is True and ii == 1:
-                _set_ax(axes[-1], max_y, ylabel=None)
+                set_ax(axes[-1], max_y, ylabel=None)
                 error, ax_value = _get_relative_error(fields, ax_values, max_y)
                 _plot_relative_error(axes[-1], error, ax_value)
 
-    case_date = _set_labels(fig, axes[-1], nc_files[0], sub_title=False)
-    _handle_saving(image_name, save_path, show, case_date, [field_name], "_comparison")
+    case_date = set_labels(fig, axes[-1], nc_files[0], sub_title=False)
+    handle_saving(image_name, save_path, show, case_date, [field_name], "_comparison")
     return Dimensions(fig, axes)

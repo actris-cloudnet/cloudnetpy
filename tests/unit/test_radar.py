@@ -88,7 +88,7 @@ def test_add_meta(fake_radar_file):
 
 
 def test_prf_to_folding_velocity():
-    prf = 1
+    prf = np.array([1])
     radar_frequency = 10
     assert radar._prf_to_folding_velocity(prf, radar_frequency) == constants.c / 40e9
 

@@ -4,6 +4,8 @@ ignored-modules	= numpy, netCDF4, scipy
 [MESSAGES CONTROL]
 disable = C0103,C0116,W1203,R0914,C0114,C0115,R0903,R0913,W0511,R0902,R0915,R0801,R0401
 
-
 [format]
 max-line-length = 100
+
+[MASTER]
+ignore-paths=^cloudnetpy/model_evaluation/tests/.*$,

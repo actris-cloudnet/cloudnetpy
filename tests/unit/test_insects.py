@@ -28,7 +28,7 @@ def test_adjust_for_radar():
     prob_from_others = np.array([1.0, 1.0, 1.0, 1.0])
     obs = Obs()
     assert_array_equal(
-        insects._adjust_for_radar(obs, prob, prob_from_others), np.array([0.5, 0.5, 0.5, 0.5])
+        insects._adjust_for_radar(obs, prob, prob_from_others), np.array([0.5, 0.5, 0.5, 0.5])  # type: ignore
     )
 
 
@@ -46,7 +46,7 @@ def test_fill_missing_pixels():
 def test_get_smoothed_v():
     obs = Obs()
     result = ma.array([[0, 1, 1, 0], [0, 1, -99, 0]], mask=[[0, 0, 0, 0], [1, 0, 1, 0]])
-    assert_array_equal(insects._get_smoothed_v(obs, sigma=(0, 0)), result)
+    assert_array_equal(insects._get_smoothed_v(obs, sigma=(0, 0)), result)  # type: ignore
 
 
 def test_screen_insets():

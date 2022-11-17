@@ -61,6 +61,6 @@ class Obs:
 
 def test_find_melting_layer():
     obs = Obs()
-    layer = melting.find_melting_layer(obs, smooth=False)
+    layer = melting.find_melting_layer(obs, smooth=False)  # type: ignore
     result = np.array([[0, 0, 0, 1, 1, 0, 0, 0, 0, 0], [0, 0, 0, 1, 1, 0, 0, 0, 0, 0]])
     assert_array_equal(layer, result)

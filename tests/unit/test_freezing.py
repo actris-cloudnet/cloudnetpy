@@ -58,10 +58,10 @@ class Obs:
 
 def test_find_mean_melting_alt():
     obs = Obs()
-    obs.time = np.arange(2)
+    obs.time = np.array([0.0, 1.0])
     is_melting = np.array([[0, 0, 1, 1, 0, 0], [0, 0, 1, 1, 1, 0]], dtype=bool)
     result = np.array([250, 300])
-    assert_array_equal(freezing._find_mean_melting_alt(obs, is_melting), result)
+    assert_array_equal(freezing._find_mean_melting_alt(obs, is_melting), result)  # type: ignore
 
 
 def test_find_freezing_region():
@@ -104,5 +104,5 @@ def test_find_freezing_region():
         dtype=bool,
     )
 
-    result = freezing.find_freezing_region(obs, is_melting)
+    result = freezing.find_freezing_region(obs, is_melting)  # type: ignore
     assert_array_equal(result, expected)

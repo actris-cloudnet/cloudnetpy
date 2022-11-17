@@ -152,7 +152,7 @@ class RetrievalStatus:
 
     def __init__(self, drizzle_class: DrizzleClassification):
         self.drizzle_class = drizzle_class
-        self.retrieval_status = np.array([])
+        self.retrieval_status: np.ndarray = np.array([])
         self._get_retrieval_status()
 
     def _get_retrieval_status(self):

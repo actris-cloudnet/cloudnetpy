@@ -26,14 +26,14 @@ class CategorizeBits:
 
 def test_get_target_classification():
     bits = CategorizeBits()
-    target_classification = classification._get_target_classification(bits)
+    target_classification = classification._get_target_classification(bits)  # type: ignore
     expected = np.array([[8, 9, 8, 0, 3, 1], [6, 7, 9, 5, 2, 4]])
     assert_array_equal(target_classification, expected)
 
 
 def test_get_detection_status():
     bits = CategorizeBits()
-    detection_status = classification._get_detection_status(bits)
+    detection_status = classification._get_detection_status(bits)  # type: ignore
     expected = np.array([[9, 4, 8, 8, 5, 2], [7, 9, 4, 3, 3, 5]])
     assert_array_equal(detection_status, expected)
 

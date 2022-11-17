@@ -17,7 +17,7 @@ from cloudnetpy.plotting import plotting
     ],
 )
 def test_lin2log(numbers, result):
-    assert plotting._lin2log(*numbers) == result
+    assert plotting.lin2log(*numbers) == result
 
 
 @pytest.mark.parametrize(
@@ -55,7 +55,7 @@ def test_get_standard_time_ticks(reso, result):
     ],
 )
 def test__generate_log_cbar_ticklabel_list(vmin, vmax, result):
-    assert plotting._generate_log_cbar_ticklabel_list(vmin, vmax) == result
+    assert plotting.generate_log_cbar_ticklabel_list(vmin, vmax) == result
 
 
 def test_get_subtitle_text():
@@ -65,11 +65,11 @@ def test_get_subtitle_text():
 
 
 def test_read_location(nc_file):
-    assert plotting._read_location(nc_file) == "Kumpula"
+    assert plotting.read_location(nc_file) == "Kumpula"
 
 
 def test_read_data(nc_file):
-    assert plotting._read_date(nc_file) == date(2019, 5, 23)
+    assert plotting.read_date(nc_file) == date(2019, 5, 23)
 
 
 def test_create_save_name(file_metadata):

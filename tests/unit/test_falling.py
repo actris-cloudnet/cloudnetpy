@@ -32,14 +32,14 @@ def test_find_falling_from_radar():
     obs = Obs()
     is_insects = np.array([[0, 1, 0, 1, 0, 0], [0, 0, 1, 1, 0, 0]])
     result = np.array([[0, 0, 1, 0, 1, 1], [0, 0, 0, 0, 1, 1]])
-    assert_array_equal(falling._find_falling_from_radar(obs, is_insects), result)
+    assert_array_equal(falling._find_falling_from_radar(obs, is_insects), result)  # type: ignore
 
 
 def test_find_cold_aerosols():
     obs = Obs()
     result = np.array([[0, 0, 0, 0, 1, 1], [0, 0, 0, 0, 1, 0]])
     is_liquid = np.array([[0, 1, 1, 0, 0, 0], [0, 1, 0, 1, 0, 0]])
-    assert_array_equal(falling._find_cold_aerosols(obs, is_liquid), result)
+    assert_array_equal(falling._find_cold_aerosols(obs, is_liquid), result)  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -79,6 +79,6 @@ def test_fix_liquid_dominated_radar():
 
     result = np.array([[0, 0, 0, 0, 1, 1], [0, 0, 0, 0, 1, 1]])
 
-    fixed = falling._fix_liquid_dominated_radar(obs, falling_from_radar, is_liquid)
+    fixed = falling._fix_liquid_dominated_radar(obs, falling_from_radar, is_liquid)  # type: ignore
 
     assert_array_equal(fixed, result)

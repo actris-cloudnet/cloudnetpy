@@ -35,8 +35,10 @@ class TestIndBase:
         )
 
     def test_ind_base_4(self):
-        mx = ma.masked_array(self.x, mask=[1, 0, 1, 1, 1, 0, 0])
-        dx = ma.diff(mx).filled(0)
+        mx: ma.MaskedArray = ma.masked_array(self.x, mask=[1, 0, 1, 1, 1, 0, 0])
+        diffu = ma.diff(mx)
+        assert isinstance(diffu, ma.MaskedArray)
+        dx = diffu.filled(0)
         with pytest.raises(IndexError):
             droplet.ind_base(dx, self.peak_position, self.search_range, self.threshold)
 
@@ -87,8 +89,10 @@ class TestIndTop:
         )
 
     def test_ind_top_4(self):
-        mx = ma.masked_array(self.x, mask=[1, 0, 1, 0, 1, 0, 1, 0])
-        dx = ma.diff(mx).filled(0)
+        mx: ma.MaskedArray = ma.masked_array(self.x, mask=[1, 0, 1, 0, 1, 0, 1, 0])
+        diffu = ma.diff(mx)
+        assert isinstance(diffu, ma.MaskedArray)
+        dx = diffu.filled(0)
         with pytest.raises(IndexError):
             droplet.ind_top(dx, self.peak_position, self.n_prof, self.search_range, self.threshold)
 
@@ -108,7 +112,7 @@ def test_interpolate_lwp():
             self.lwp = ma.masked_where(self.lwp_orig % 2 == 0, self.lwp_orig)
 
     obs = Obs()
-    lwp_interpolated = droplet.interpolate_lwp(obs)
+    lwp_interpolated = droplet.interpolate_lwp(obs)  # type: ignore
     assert_array_equal(obs.lwp_orig, lwp_interpolated)
 
 
@@ -119,7 +123,7 @@ def test_interpolate_lwp_masked():
             self.lwp = ma.array([1, 2, 3, 4, 5], mask=True)
 
     obs = Obs()
-    lwp_interpolated = droplet.interpolate_lwp(obs)
+    lwp_interpolated = droplet.interpolate_lwp(obs)  # type: ignore
     assert_array_equal(
         np.zeros(
             5,
@@ -144,7 +148,7 @@ def test_correct_liquid_top():
     class Obs:
         def __init__(self):
             self.height = np.arange(11)
-            self.z = ma.masked_array(np.random.random((3, 10)))
+            self.z: ma.MaskedArray = ma.masked_array(np.random.random((3, 10)))
             self.z.mask = [
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -179,13 +183,13 @@ def test_correct_liquid_top():
     }
 
     obs = Obs()
-    corrected = droplet.correct_liquid_top(obs, liquid, is_freezing, limit=100)
+    corrected = droplet.correct_liquid_top(obs, liquid, is_freezing, limit=100)  # type: ignore
     liquid["presence"][2, :] = [0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
     assert_array_equal(corrected, liquid["presence"])
 
 
 def test_find_liquid():
-    class Obs:
+    class ClassData:
         def __init__(self):
             self.height = np.arange(6) * 100
             self.time = np.arange(3)
@@ -205,8 +209,8 @@ def test_find_liquid():
 
     is_liquid = np.array([[0, 0, 1, 1, 1, 0], [0, 0, 1, 1, 1, 0], [0, 0, 1, 1, 1, 0]])
 
-    obs = Obs()
-    result = droplet.find_liquid(obs)
+    obs = ClassData()
+    result = droplet.find_liquid(obs)  # type: ignore
     assert_array_equal(bases, result["bases"])
     assert_array_equal(tops, result["tops"])
     assert_array_equal(is_liquid, result["presence"])

@@ -19,6 +19,7 @@ class TestNoisyData:
         array = ma.array([[1, 2, 3], [1, 2, 3]], mask=False)
         expected = ma.array([[1, 2, 3], [1, 2, 3]], mask=[[1, 0, 0], [1, 0, 0]])
         screened_array = self.noisy_data._remove_noise(array, noise, True, snr_limit=1)
+        assert isinstance(screened_array, ma.MaskedArray)
         assert_array_equal(screened_array.mask, expected.mask)
 
     def test_remove_low_values_above_consequent_negatives(self):

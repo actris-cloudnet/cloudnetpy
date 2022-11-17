@@ -19,7 +19,7 @@ def test_find_aerosols():
     is_falling = np.array([[1, 0], [1, 0], [1, 0], [1, 0]])
     is_liquid = np.array([[1, 0], [0, 1], [1, 0], [0, 1]])
     result = np.array([[0, 1], [0, 0], [0, 0], [0, 0]])
-    assert_array_equal(classify._find_aerosols(obs, is_falling, is_liquid), result)
+    assert_array_equal(classify._find_aerosols(obs, is_falling, is_liquid), result)  # type: ignore
 
 
 def test_bits_to_integer():
@@ -68,11 +68,11 @@ class TestFindRain:
 def test_find_clutter():
     is_rain = np.array([0, 0, 0, 1, 1], dtype=bool)
     v = np.ones((5, 12)) * 0.1
-    v = ma.array(v)
-    v[:, 5] = 0.04
-    result = np.zeros(v.shape)
+    vm = ma.array(v)
+    vm[:, 5] = 0.04
+    result = np.zeros(vm.shape)
     result[:3, 5] = 1
-    assert_array_equal(containers._find_clutter(v, is_rain), result)
+    assert_array_equal(containers._find_clutter(vm, is_rain), result)
 
 
 def test_find_drizzle_and_falling():
@@ -88,6 +88,7 @@ def test_find_drizzle_and_falling():
 
     result = classify._find_drizzle_and_falling(is_liquid, is_falling, is_freezing)
     assert_array_equal(expected.data, result.data)
+    assert isinstance(result, ma.MaskedArray)
     assert_array_equal(expected.mask, result.mask)
 
 
