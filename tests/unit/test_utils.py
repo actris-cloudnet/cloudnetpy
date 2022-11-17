@@ -89,7 +89,7 @@ def test_l2_norm(a, b, result):
 class TestRebin2D:
     x = np.array([1.01, 2, 2.99, 4.01, 4.99, 6.01, 7])
     xnew = np.array([2, 4, 6])
-    data = np.array([range(1, 8), range(1, 8)]).T
+    data = ma.array([range(1, 8), range(1, 8)]).T
 
     def test_rebin_2d(self):
         data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew)
@@ -464,16 +464,17 @@ def test_lin2db(input, result):
 
 
 @pytest.mark.parametrize(
-    "input, expected",
+    "input_array, expected",
     [
-        (np.array([1e-10, 1e-10]), np.array([-100.0, -100.0])),
+        (np.array([1e-10, 1e-10]), ma.array([-100.0, -100.0], mask=[0, 0])),
         (ma.array([1e-10, 1e-10], mask=[0, 1]), ma.array([-100.0, -100.0], mask=[0, 1])),
     ],
 )
-def test_lin2db_arrays(input, expected):
-    converted = utils.lin2db(input)
+def test_lin2db_arrays(input_array: np.ndarray, expected: ma.MaskedArray):
+    converted = utils.lin2db(input_array)
     assert_array_equal(converted, expected)
-    if ma.isMaskedArray(input):
+    if ma.isMaskedArray(input_array):
+        assert isinstance(converted, ma.MaskedArray)
         assert_array_equal(converted.mask, expected.mask)
 
 
@@ -491,14 +492,15 @@ def test_db2lin(data, result):
 @pytest.mark.parametrize(
     "data, expected",
     [
-        (np.array([-100.0, -100.0]), np.array([1e-10, 1e-10])),
+        (np.array([-100.0, -100.0]), ma.array([1e-10, 1e-10], mask=[0, 0])),
         (ma.array([-100.0, -100.0], mask=[0, 1]), ma.array([1e-10, 1e-10], mask=[0, 1])),
     ],
 )
-def test_db2lin_arrays(data, expected):
+def test_db2lin_arrays(data: np.ndarray, expected: ma.MaskedArray):
     converted = utils.db2lin(data)
     assert_array_equal(converted, expected)
     if ma.isMaskedArray(data):
+        assert isinstance(converted, ma.MaskedArray)
         assert_array_equal(converted.mask, expected.mask)  # pylint: disable=E1101
 
 

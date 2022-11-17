@@ -58,7 +58,6 @@ def test_masked_array():
     data = ma.array([1.0, 2.0, 3.0], mask=[1, 0, 0])
     obj = CloudnetArray(data, "test")
     assert_array_equal(obj.data.data, data.data)
-    assert_array_equal(obj.data.mask, data.mask)
     assert obj.data_type == "f4"
 
 
@@ -97,13 +96,12 @@ class TestCloudnetArrayWithNc:
         obj.mask_indices([0, 1])
         result = ma.array([0, 1, 2, 3, 4], mask=[1, 1, 0, 0, 0])
         assert_array_equal(obj.data.data, result.data)
-        assert_array_equal(obj.data.mask, result.mask)
 
     def test_fetch_attributes(self):
         obj = CloudnetArray(self.time, "test_name")
-        obj.attr1 = "a"
-        obj.attr2 = "b"
-        obj.attr3 = "c"
+        obj.attr1 = "a"  # type: ignore
+        obj.attr2 = "b"  # type: ignore
+        obj.attr3 = "c"  # type: ignore
         result = ["units", "attr1", "attr2", "attr3"]
         assert obj.fetch_attributes() == result
 

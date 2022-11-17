@@ -3,6 +3,7 @@ from collections import namedtuple
 import netCDF4
 import numpy as np
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from cloudnetpy.categorize import atmos
@@ -74,7 +75,7 @@ class LwcSourceObj(LwcSource):
                 "radar": np.asarray([[1, 0, 1], [0, 1, 1]], dtype=bool),
                 "lidar": np.asarray([[1, 0, 1], [0, 1, 1]], dtype=bool),
             },
-        )
+        )  # type: ignore
         self.atmosphere = (
             np.array([[282, 281, 280], [280, 279, 278]]),
             np.array([[101000, 100500, 100000], [100000, 99500, 99000]]),
@@ -105,7 +106,8 @@ def test_init_lwc_adiabatic():
 
 
 def test_screen_rain_lwc():
-    expected = np.ma.array([[5, 1, 2], [3, 6, 0]], mask=[[0, 0, 0], [1, 1, 1]])
+    expected = ma.array([[5, 1, 2], [3, 6, 0]], mask=[[0, 0, 0], [1, 1, 1]])
+    assert isinstance(LWC_OBJ.lwc, ma.MaskedArray)
     assert_array_equal(expected.mask, LWC_OBJ.lwc.mask)
 
 
@@ -130,7 +132,7 @@ def test_update_status(value):
 def test_adjust_lwc(value):
     time = 0
     base = 0
-    STATUS_OBJ.status = np.array([[1, 0, 2], [0, 0, 2]])
+    STATUS_OBJ.status = ma.array([[1, 0, 2], [0, 0, 2]])
     STATUS_OBJ._adjust_lwc(time, base)
     assert value in STATUS_OBJ.status
 
@@ -184,7 +186,7 @@ def test_find_lwp_difference():
 @pytest.mark.parametrize("value", [0, 1, 2, 3, 4])
 def test_screen_rain_status(value):
     STATUS_OBJ.lwc_source.is_rain = np.array([0, 1])
-    STATUS_OBJ.status = np.array([[0, 2, 2, 3, 1], [1, 3, 0, 2, 2]])
+    STATUS_OBJ.status = ma.array([[0, 2, 2, 3, 1], [1, 3, 0, 2, 2]])
     STATUS_OBJ._mask_rain()
     assert value in STATUS_OBJ.status
 
@@ -199,7 +201,7 @@ def test_limit_error():
 def test_calc_lwc_gradient():
     from cloudnetpy.utils import l2norm
 
-    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.3], [0.1, 0.3, 0.6]])
+    ERROR_OBJ.lwc = ma.array([[0.1, 0.2, 0.3], [0.1, 0.3, 0.6]])
     expected = l2norm(*np.gradient(ERROR_OBJ.lwc))
     assert_array_almost_equal(ERROR_OBJ._calc_lwc_gradient(), expected)
 
@@ -207,7 +209,7 @@ def test_calc_lwc_gradient():
 def test_calc_lwc_relative_error():
     from cloudnetpy.utils import l2norm
 
-    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.3], [0.1, 0.3, 0.6]])
+    ERROR_OBJ.lwc = ma.array([[0.1, 0.2, 0.3], [0.1, 0.3, 0.6]])
     x = l2norm(*np.gradient(ERROR_OBJ.lwc))
     expected = x / ERROR_OBJ.lwc / 2
     expected[expected > 5] = 5
@@ -233,15 +235,16 @@ def test_calc_combined_error():
 
 def test_fill_error_array():
     error_in = np.array([[0, 0.1, 0.1], [0.2, 0.4, 0.15]])
-    ERROR_OBJ.lwc = np.ma.array([[0.1, 0.2, 0.1], [0.1, 0.2, 0.2]], mask=[[0, 1, 0], [1, 0, 0]])
-    expected = np.ma.array([[0, 0, 0], [0, 0, 0]], mask=[[0, 1, 0], [1, 0, 0]])
+    ERROR_OBJ.lwc = ma.array([[0.1, 0.2, 0.1], [0.1, 0.2, 0.2]], mask=[[0, 1, 0], [1, 0, 0]])
+    expected = ma.array([[0, 0, 0], [0, 0, 0]], mask=[[0, 1, 0], [1, 0, 0]])
     ERROR_OBJ._fill_error_array(error_in)
     error = ERROR_OBJ._fill_error_array(error_in)
     assert_array_almost_equal(error.mask, expected.mask)
 
 
 def test_screen_rain_error():
-    expected = np.ma.array([[0.709, 0, 0.709], [0, 0, 0]], mask=[[0, 1, 0], [1, 1, 1]])
+    expected = ma.array([[0.709, 0, 0.709], [0, 0, 0]], mask=[[0, 1, 0], [1, 1, 1]])
+    assert isinstance(ERROR_OBJ.error, ma.MaskedArray)
     assert_array_equal(ERROR_OBJ.error.mask, expected.mask)
 
 

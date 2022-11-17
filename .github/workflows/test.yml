@@ -32,7 +32,10 @@ jobs:
     - name: Test with pytest-flakefinder
       run: |
         pytest --flake-finder tests/unit/ --flake-runs=2
+        pytest --flake-finder cloudnetpy/model_evaluation/tests/unit/ --flake-runs=2
     - name: Run e2e-test
       run: |
-        cd tests/
-        python3 e2e_test.py
+        python3 tests/e2e_test.py
+        python3 cloudnetpy/model_evaluation/tests/e2e/process_cf/main.py
+        python3 cloudnetpy/model_evaluation/tests/e2e/process_iwc/main.py
+        python3 cloudnetpy/model_evaluation/tests/e2e/process_lwc/main.py

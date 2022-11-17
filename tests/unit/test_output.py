@@ -91,9 +91,9 @@ def test_merge_history():
 def test_get_source_uuids():
     uuid1, uuid2 = "simorules", "abcdefg"
     source1, source2, source3, source4 = RootGrp(), RootGrp(), RootGrp(), RootGrp()
-    source1.dataset.file_uuid = uuid1
-    source2.dataset.file_uuid = uuid2
-    source3.dataset.file_uuid = uuid2
+    source1.dataset.file_uuid = uuid1  # type: ignore
+    source2.dataset.file_uuid = uuid2  # type: ignore
+    source3.dataset.file_uuid = uuid2  # type: ignore
     res = output.get_source_uuids(source1, source2, source3, source4)
     for value in (uuid1, uuid2, ", "):
         assert value in res

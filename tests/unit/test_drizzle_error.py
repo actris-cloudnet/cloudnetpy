@@ -68,8 +68,8 @@ def test_add_supplementary_biases(results, key):
 def test_calc_error():
     from cloudnetpy.utils import l2norm_weighted
 
-    expected = l2norm_weighted(ERROR_INPUT, 1, 1)
-    testing.assert_almost_equal(de._calc_error(1, 1, ERROR_INPUT), expected)
+    expected = l2norm_weighted(ERROR_INPUT, 1, (1,))
+    testing.assert_almost_equal(de._calc_error(1, (1,), ERROR_INPUT), expected)
 
 
 def test_stack_errors():

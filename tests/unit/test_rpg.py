@@ -8,7 +8,7 @@ import netCDF4
 import numpy as np
 import numpy.ma as ma
 import pytest
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_equal
 
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import rpg, rpg2nc
@@ -26,12 +26,12 @@ class TestReduceHeader:
     header = {"a": n_points * [1], "b": n_points * [2], "c": n_points * [3]}
 
     def test_1(self):
-        assert_array_equal(rpg._reduce_header(self.header), {"a": 1, "b": 2, "c": 3})
+        assert_equal(rpg._reduce_header(self.header), {"a": 1, "b": 2, "c": 3})
 
     def test_2(self):
         self.header["a"][50] = 10
         with pytest.raises(InconsistentDataError):
-            assert_array_equal(rpg._reduce_header(self.header), {"a": 1, "b": 2, "c": 3})
+            assert_equal(rpg._reduce_header(self.header), {"a": 1, "b": 2, "c": 3})
 
 
 class TestRPG2nc94GHz(Check):

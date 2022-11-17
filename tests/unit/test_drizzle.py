@@ -352,7 +352,12 @@ def test_calc_lwc(class_objects, params_objects):
     d_source, _, _ = class_objects
     obj = drizzle.DrizzleProducts(d_source, params_objects)
     dia, mu, s = [obj._params.get(key) for key in ("Do", "mu", "S")]
+    assert mu is not None
+    assert obj._data.beta is not None
+    assert s is not None
+    assert dia is not None
     gamma_ratio = drizzle.gamma(4 + mu) / drizzle.gamma(3 + mu) / (3.67 + mu)
+    assert gamma_ratio is not None
     expected = 1000 / 3 * obj._data.beta * s * dia * gamma_ratio
     testing.assert_array_almost_equal(obj._calc_lwc(), expected)
 

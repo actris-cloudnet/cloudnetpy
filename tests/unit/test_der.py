@@ -92,13 +92,9 @@ class TestAppending:
     @pytest.fixture(autouse=True)
     def run_before_tests(self, categorize_file):
         self.ice_class = DropletClassification(categorize_file)
-        self.def_source = DerSource(categorize_file)
+        self.der_source = DerSource(categorize_file)
 
     def test_append_der(self):
-        self.def_source.is_droplet = np.array([0, 0, 0, 1, 1], dtype=bool)
-        self.def_source.params = Parameters(2.0, 200.0e6, 200.0e6, 0.35, 0.1, 5.0e-3)
-
-        self.def_source.append_der()
-        print(self.def_source.data["der"][:])
-        expected_mask = [[0, 4.19e-05, 0], [0, 4.19e-05, 0], [0, 0, 0]]
-        assert_array_almost_equal(self.def_source.data["der"][:], expected_mask)
+        self.der_source.append_der()
+        expected_mask = np.array([[0, 4.19e-05, 0], [0, 4.19e-05, 0], [0, 0, 0]])
+        assert_array_almost_equal(self.der_source.data["der"][:], expected_mask)

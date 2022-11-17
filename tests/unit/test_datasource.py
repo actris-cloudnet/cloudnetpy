@@ -39,4 +39,5 @@ class TestDataSource:
         assert_array_equal(self.obj.m2km(alt), test_array / 1000)
 
     def test_get_height_m(self, test_array):
+        assert self.obj.height is not None
         assert_array_equal(self.obj.height, test_array)
