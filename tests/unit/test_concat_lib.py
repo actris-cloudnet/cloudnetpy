@@ -20,8 +20,8 @@ class TestUpdateNc:
 
     def test_does_append_to_end(self, tmp_path):
         temp_path = tmp_path / "end.nc"
-        concat_lib.concatenate_files(self.files[:2], temp_path, concat_dimension="profile")
-        succ = concat_lib.update_nc(temp_path, self.files[2])
+        concat_lib.concatenate_files(self.files[:2], str(temp_path), concat_dimension="profile")
+        succ = concat_lib.update_nc(str(temp_path), self.files[2])
         assert succ == 1
         with netCDF4.Dataset(temp_path) as nc:
             time = nc.variables["time"][:]
@@ -31,8 +31,8 @@ class TestUpdateNc:
 
     def test_does_not_append_to_beginning(self, tmp_path):
         temp_path = tmp_path / "beginning.nc"
-        concat_lib.concatenate_files(self.files[1:3], temp_path, concat_dimension="profile")
-        succ = concat_lib.update_nc(temp_path, self.files[0])
+        concat_lib.concatenate_files(self.files[1:3], str(temp_path), concat_dimension="profile")
+        succ = concat_lib.update_nc(str(temp_path), self.files[0])
         assert succ == 0
         with netCDF4.Dataset(temp_path) as nc:
             time = nc.variables["time"][:]
@@ -43,8 +43,8 @@ class TestUpdateNc:
     def test_does_not_append_to_middle(self, tmp_path):
         temp_path = tmp_path / "middle.nc"
         files = [self.files[0], self.files[2]]
-        concat_lib.concatenate_files(files, temp_path, concat_dimension="profile")
-        succ = concat_lib.update_nc(temp_path, self.files[1])
+        concat_lib.concatenate_files(files, str(temp_path), concat_dimension="profile")
+        succ = concat_lib.update_nc(str(temp_path), self.files[1])
         assert succ == 0
         with netCDF4.Dataset(temp_path) as nc:
             time = nc.variables["time"][:]
@@ -56,8 +56,8 @@ class TestUpdateNc:
         temp_path = tmp_path / "invalid.nc"
         non_nc_file = f"{SCRIPT_PATH}/data/vaisala/cl51.DAT"
         files = [self.files[0], self.files[2]]
-        concat_lib.concatenate_files(files, temp_path, concat_dimension="profile")
-        succ = concat_lib.update_nc(temp_path, non_nc_file)
+        concat_lib.concatenate_files(files, str(temp_path), concat_dimension="profile")
+        succ = concat_lib.update_nc(str(temp_path), non_nc_file)
         assert succ == 0
 
 
@@ -76,10 +76,10 @@ class TestConcat:
     @pytest.fixture(autouse=True)
     def run_before_and_after_tests(self, tmp_path):
         output_path = tmp_path / "concat.nc"
-        self.concat = concat_lib.Concat(self.files, output_path)
+        self.concat = concat_lib._Concat(self.files, str(output_path))
         self.file = self.concat.concatenated_file
         yield
-        self.concat.close()
+        self.concat._close()
 
     def test_sorting_input_files(self):
         assert self.concat.filenames[0] == self.files[1]
@@ -105,7 +105,7 @@ class TestConcat:
 
     def test_concat_data(self):
         self.concat.get_common_variables()
-        self.concat.concat_data()
+        self.concat.concat_data(variables=None, ignore=None, allow_vary=None)
         assert len(self.file.variables["time"]) == 2 * self.n_time
         assert len(self.file.variables["range"]) == self.n_range
         assert len(self.file.variables["layer"]) == self.n_layer
@@ -113,7 +113,7 @@ class TestConcat:
     def test_concat_only_some_variables_data(self):
         self.concat.get_common_variables()
         variables = ["cbh", "sci"]
-        self.concat.concat_data(variables)
+        self.concat.concat_data(variables, ignore=None, allow_vary=None)
         assert len(self.file.variables["time"]) == 2 * self.n_time
         assert len(self.file.variables["range"]) == self.n_range
         for var in variables:
@@ -147,17 +147,17 @@ class TestCommonVariables:
     def _write_array(self, file, key, value):
         with netCDF4.Dataset(file, "r+") as nc:
             nc.createDimension(key, len(value))
-            var = nc.createVariable(key, "i4", (key))
+            var = nc.createVariable(key, "i4", key)
             var[:] = value
 
     def test_consistent_scalars(self):
         self._write_scalar(self.file1, "kissa", 1)
         self._write_scalar(self.file2, "kissa", 1)
 
-        with concat_lib.Concat(self.files, self.output) as concat:
+        with concat_lib._Concat(self.files, str(self.output)) as concat:
             concat.get_common_variables()
             assert "kissa" in concat.common_variables
-            concat.concat_data()
+            concat.concat_data(variables=None, ignore=None, allow_vary=None)
             assert len(concat.concatenated_file["time"]) == 2 * self.n_time
             assert len(concat.concatenated_file["range"]) == self.n_range
             assert len(concat.concatenated_file["layer"]) == self.n_layer
@@ -167,11 +167,11 @@ class TestCommonVariables:
         self._write_scalar(self.file1, "kissa", 1)
         self._write_scalar(self.file2, "kissa", 2)
 
-        with concat_lib.Concat(self.files, self.output) as concat:
+        with concat_lib._Concat(self.files, str(self.output)) as concat:
             concat.get_common_variables()
             assert "kissa" in concat.common_variables
             with pytest.raises(InconsistentDataError) as excinfo:
-                concat.concat_data()
+                concat.concat_data(variables=None, ignore=None, allow_vary=None)
             assert (
                 f"Inconsistent values in variable 'kissa' between files '{self.file1}' and '{self.file2}'"
                 in str(excinfo.value)
@@ -181,10 +181,10 @@ class TestCommonVariables:
         self._write_array(self.file1, "kissa", [1, 2])
         self._write_array(self.file2, "kissa", [1, 2])
 
-        with concat_lib.Concat(self.files, self.output) as concat:
+        with concat_lib._Concat(self.files, str(self.output)) as concat:
             concat.get_common_variables()
             assert "kissa" in concat.common_variables
-            concat.concat_data()
+            concat.concat_data(variables=None, ignore=None, allow_vary=None)
             assert len(concat.concatenated_file["time"]) == 2 * self.n_time
             assert len(concat.concatenated_file["range"]) == self.n_range
             assert len(concat.concatenated_file["layer"]) == self.n_layer
@@ -194,11 +194,11 @@ class TestCommonVariables:
         self._write_array(self.file1, "kissa", [1, 2])
         self._write_array(self.file2, "kissa", [2, 1])
 
-        with concat_lib.Concat(self.files, self.output) as concat:
+        with concat_lib._Concat(self.files, str(self.output)) as concat:
             concat.get_common_variables()
             assert "kissa" in concat.common_variables
             with pytest.raises(InconsistentDataError) as excinfo:
-                concat.concat_data()
+                concat.concat_data(variables=None, ignore=None, allow_vary=None)
             assert (
                 f"Inconsistent values in variable 'kissa' between files '{self.file1}' and '{self.file2}'"
                 in str(excinfo.value)
@@ -208,10 +208,10 @@ class TestCommonVariables:
         self._write_array(self.file1, "kissa", ma.masked_array([1, 2, 3], mask=[1, 0, 1]))
         self._write_array(self.file2, "kissa", ma.masked_array([3, 2, 1], mask=[1, 0, 1]))
 
-        with concat_lib.Concat(self.files, self.output) as concat:
+        with concat_lib._Concat(self.files, str(self.output)) as concat:
             concat.get_common_variables()
             assert "kissa" in concat.common_variables
-            concat.concat_data()
+            concat.concat_data(variables=None, ignore=None, allow_vary=None)
             assert len(concat.concatenated_file["time"]) == 2 * self.n_time
             assert len(concat.concatenated_file["range"]) == self.n_range
             assert len(concat.concatenated_file["layer"]) == self.n_layer
@@ -223,11 +223,11 @@ class TestCommonVariables:
         self._write_array(self.file1, "kissa", ma.masked_array([1, 2, 3], mask=[1, 0, 1]))
         self._write_array(self.file2, "kissa", ma.masked_array([2, 3, 4], mask=[1, 0, 1]))
 
-        with concat_lib.Concat(self.files, self.output) as concat:
+        with concat_lib._Concat(self.files, str(self.output)) as concat:
             concat.get_common_variables()
             assert "kissa" in concat.common_variables
             with pytest.raises(InconsistentDataError) as excinfo:
-                concat.concat_data()
+                concat.concat_data(variables=None, ignore=None, allow_vary=None)
             assert (
                 f"Inconsistent values in variable 'kissa' between files '{self.file1}' and '{self.file2}'"
                 in str(excinfo.value)
@@ -242,7 +242,7 @@ def test_concatenate_files_with_mira(tmp_path):
     output_file = tmp_path / "mira.nc"
     variables = ["microsec", "SNRCorFaCo"]
     concat_lib.concatenate_files(
-        files, output_file, variables=variables, new_attributes={"kissa": 50}
+        files, str(output_file), variables=variables, new_attributes={"kissa": 50}
     )
     with netCDF4.Dataset(output_file) as nc:
         assert len(nc.variables["time"]) == 145 + 146

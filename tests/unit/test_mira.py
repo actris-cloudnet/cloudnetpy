@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 from all_products_fun import Check
 
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import mira
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
@@ -134,3 +134,12 @@ class TestMIRA2nc(Check):
             for key in ("latitude", "longitude", "altitude"):
                 assert key in nc.variables
                 assert nc.variables[key][:] > 0
+
+
+def test_allow_vary_option():
+    site_meta = {"name": "Juelich", "latitude": 50, "longitude": 104.5, "altitude": 50}
+    temp_dir = TemporaryDirectory()
+    temp_path = f"{temp_dir.name}/mira.nc"
+    date = "2021-11-24"
+    filepath = f"{SCRIPT_PATH}/data/mira_inconsistent/"
+    _ = mira.mira2nc(filepath, temp_path, site_meta=site_meta, date=date)
