@@ -492,7 +492,8 @@ ATTRIBUTES = {
     "error_code": MetaData(long_name="Error code", units="1"),
     "number_concentration": MetaData(
         long_name="Number of particles per diameter class",
-        units="log10(m-3 mm-1)",
+        comment="Unit is actually logarithmic log10(m-3 mm-1).",
+        units="m-3 mm-1",
     ),
     "fall_velocity": MetaData(
         long_name="Average velocity of each diameter class",
