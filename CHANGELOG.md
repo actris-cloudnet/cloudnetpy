@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.41.1 – 2022-11-18
+
+- Fix parsivel `number_concentration` units to pass cfchecks
+
 ## 1.41.0 – 2022-11-18
 
 - Migrate model-evalution to cloudnetpy
