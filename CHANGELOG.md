@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.41.0 – 2022-11-18
+
+- Migrate model-evalution to cloudnetpy
+
 ## 1.40.0 – 2022-11-17
 
 - Raise ValidTimeStampError from disdrometer processing
