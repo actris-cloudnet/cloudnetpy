@@ -31,8 +31,7 @@ jobs:
         mypy --ignore-missing-imports tests/
     - name: Test with pytest-flakefinder
       run: |
-        pytest --flake-finder tests/unit/ --flake-runs=2
-        pytest --flake-finder cloudnetpy/model_evaluation/tests/unit/ --flake-runs=2
+        pytest --flake-finder --flake-runs=2
     - name: Run e2e-test
       run: |
         python3 tests/e2e_test.py

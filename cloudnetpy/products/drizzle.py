@@ -111,7 +111,6 @@ class DrizzleProducts:
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
         dia, mu, s = [self._params.get(key) for key in ("Do", "mu", "S")]
-        print(dia, mu, s)
         assert isinstance(mu, np.ndarray)
         assert isinstance(s, np.ndarray)
         assert isinstance(dia, np.ndarray)

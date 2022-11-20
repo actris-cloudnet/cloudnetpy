@@ -47,7 +47,7 @@ We encourage you to contribute to CloudnetPy! Please check out the [contribution
 
 ## Development
 
-Follow the installation instructions from the source above but instead of `pip install .` install with the test-dependencies and [pre-commit](https://pre-commit.com/) hooks:
+Follow the installation instructions from the source above but install with the test-dependencies and [pre-commit](https://pre-commit.com/) hooks:
 ```sh
 python3 -m pip install -e .[test,dev]
 pre-commit install
@@ -55,15 +55,18 @@ pre-commit install
 
 Run unit tests:
 ```sh
-pytest
+pytest --flake-finder --flake-runs=2
 ```
 
 Run end-to-end tests:
 ```sh
 python3 tests/e2e_test.py
 ```
+```sh
+for f in cloudnetpy/model_evaluation/tests/e2e/*/main.py; do $f; done
+```
 
-Force `pre-commit` checks of all files:
+Force `pre-commit` checks (`pylint`, `mypy`, etc.) for all files:
 ```sh
 pre-commit run --all
 ```
