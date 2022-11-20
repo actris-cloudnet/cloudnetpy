@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.41.2 – 2022-11-20
+
+- Allow scalar variable `nave` values to change between concatenated `mira` files
+
 ## 1.41.1 – 2022-11-18
 
 - Fix parsivel `number_concentration` units to pass cfchecks
