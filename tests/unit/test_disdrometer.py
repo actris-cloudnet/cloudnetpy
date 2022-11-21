@@ -78,3 +78,10 @@ class TestThies(Check):
         assert self.nc.day == "15"
         assert self.nc.location == "Kumpula"
         assert self.nc.cloudnet_file_type == "disdrometer"
+
+
+def test_invalid_characters():
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/parsivel/parsivel_bad.log"
+    disdrometer.disdrometer2nc(filename, temp_path, SITE_META, date="2019-04-10")
