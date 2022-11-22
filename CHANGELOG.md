@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.42.0 – 2022-11-22
+
+- Use `sldr` for insect detection
+- Mask invalid parsivel data values (#68)
+- Fix bug causing IndexError in melting layer detection
+
 ## 1.41.2 – 2022-11-20
 
 - Allow scalar variable `nave` values to change between concatenated `mira` files
