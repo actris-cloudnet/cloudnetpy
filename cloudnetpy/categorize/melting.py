@@ -71,6 +71,7 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
         v_prof = obs.v[ind, temp_indices]
 
         if ldr_diff is not None:
+            assert hasattr(obs, "ldr")
             ldr_prof = obs.ldr[ind, temp_indices]
             ldr_dprof = ldr_diff[ind, temp_indices]
 

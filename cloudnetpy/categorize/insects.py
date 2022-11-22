@@ -67,6 +67,7 @@ def _get_probabilities(obs: ClassData) -> dict:
         "z_strong": fun(obs.z, 0, 8, True),
         "z_weak": fun(obs.z, -20, 8, True),
         "ldr": fun(obs.ldr, -25, 5) if hasattr(obs, "ldr") else None,
+        "sldr": fun(obs.sldr, -25, 5) if hasattr(obs, "sldr") else None,
         "temp_loose": fun(obs.tw, 268, 2),
         "temp_strict": fun(obs.tw, 274, 1),
         "v": fun(smooth_v, -3.5, 2),
@@ -83,9 +84,15 @@ def _get_smoothed_v(obs: ClassData, sigma: Tuple[float, float] = (5, 5)) -> ma.M
 
 def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
     """This is the most reliable proxy for insects."""
-    if prob["ldr"] is None:
-        return np.zeros(prob["z_strong"].shape)
-    return prob["ldr"] * prob["temp_loose"]
+    if prob["ldr"] is not None:
+        return prob["ldr"] * prob["temp_loose"]
+    if (
+        prob["sldr"] is not None
+    ):  # Strong SLDR values are probably insects, weak CAN be but not necessarily
+        p = prob["sldr"]
+        p[p < 0.9] = ma.masked
+        return p * prob["temp_loose"]
+    return np.zeros(prob["z_strong"].shape)
 
 
 def _calc_prob_from_all(prob: dict) -> np.ndarray:
