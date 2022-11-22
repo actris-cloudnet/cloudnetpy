@@ -50,12 +50,9 @@ class ClassData:
         self.z = data["radar"].data["Z"][:]
         self.v = data["radar"].data["v"][:]
         self.v_sigma = data["radar"].data["v_sigma"][:]
-        if "width" in data["radar"].data.keys():
-            self.width = data["radar"].data["width"][:]
-        if "ldr" in data["radar"].data.keys():
-            self.ldr = data["radar"].data["ldr"][:]
-        elif "slrd" in data["radar"].data.keys():
-            self.ldr = data["radar"].data["sldr"][:]
+        for key in ("width", "ldr", "sldr"):
+            if key in data["radar"].data.keys():
+                setattr(self, key, data["radar"].data[key][:])
         self.time = data["radar"].time
         self.height = data["radar"].height
         self.radar_type = data["radar"].type
