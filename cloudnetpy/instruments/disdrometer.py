@@ -1,4 +1,5 @@
 """Module for reading / converting disdrometer data."""
+import logging
 from typing import List, Optional, Union
 
 import numpy as np
@@ -149,7 +150,15 @@ class Disdrometer(CloudnetInstrument):
         for key in keys:
             if key.startswith("_"):
                 continue
-            float_array = np.array([float(value) for value in data_dict[key]])
+            invalid_value = -9999.0
+            float_array = ma.array([])
+            for value_str in data_dict[key]:
+                try:
+                    float_array = ma.append(float_array, float(value_str))
+                except ValueError:
+                    logging.warning(f"Invalid character: {value_str}, masking a data point")
+                    float_array = ma.append(float_array, invalid_value)
+            float_array[float_array == invalid_value] = ma.masked
             self.data[key] = CloudnetArray(float_array, key)
         self.data["time"] = self._convert_time(data_dict)
         if "_sensor_id" in data_dict:
