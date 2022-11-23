@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.42.2 – 2022-11-23
+
+- Improve disdrometer product writing
+
 ## 1.42.1 – 2022-11-23
 
 - Check for empty time vector
