@@ -16,6 +16,10 @@ def save_level1b(obj, output_file: str, uuid: Optional[str] = None) -> str:
     dimensions = {key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data}
     if "chirp_start_indices" in obj.data:
         dimensions["chirp_sequence"] = len(obj.data["chirp_start_indices"][:])
+    if hasattr(obj, "n_diameter") and hasattr(obj, "n_velocity"):
+        dimensions["diameter"] = obj.n_diameter
+        dimensions["velocity"] = obj.n_velocity
+        dimensions["nv"] = 2
     with init_file(output_file, dimensions, obj.data, uuid) as nc:
         file_uuid = nc.file_uuid
         fix_attribute_name(nc)

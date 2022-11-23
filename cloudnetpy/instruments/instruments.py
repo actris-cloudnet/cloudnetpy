@@ -94,3 +94,17 @@ HALO = Instrument(
     category="Doppler lidar",
     model="StreamLine",
 )
+
+PARSIVEL2 = Instrument(
+    manufacturer="OTT HydroMet",
+    domain="disdrometer",
+    category="disdrometer",
+    model="Parsivel2",
+)
+
+THIES = Instrument(
+    manufacturer="Thies Clima",
+    domain="disdrometer",
+    category="disdrometer",
+    model="LNM",
+)
