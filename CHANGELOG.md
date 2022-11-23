@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.42.1 – 2022-11-23
+
+- Check for empty time vector
+
 ## 1.42.0 – 2022-11-22
 
 - Use `sldr` for insect detection
