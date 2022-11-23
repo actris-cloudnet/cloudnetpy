@@ -8,6 +8,7 @@ import netCDF4
 import numpy as np
 
 from cloudnetpy import CloudnetArray, utils
+from cloudnetpy.exceptions import ValidTimeStampError
 
 
 class DataSource:
@@ -134,6 +135,8 @@ class DataSource:
 
     def _init_time(self) -> np.ndarray:
         time = self.getvar("time")
+        if len(time) == 0:
+            raise ValidTimeStampError("Empty time vector")
         if max(time) > 25:
             logging.warning("Assuming time as seconds, converting to fraction hour")
             time = utils.seconds2hours(time)
