@@ -88,9 +88,12 @@ class Disdrometer(CloudnetInstrument):
         self._convert_data(("rainfall_rate",), mmh_to_ms)
         self._convert_data(("rainfall_rate_1min_solid",), mmh_to_ms)
         self._convert_data(("diameter", "diameter_spread", "diameter_bnds"), mm_to_m)
-        self._convert_data(("T_sensor",), c_to_k, method="add")
         self._convert_data(("V_sensor_supply",), 10)
         self._convert_data(("I_mean_laser",), 100)
+        self._convert_data(("T_sensor",), c_to_k, method="add")
+        self._convert_data(("T_interior",), c_to_k, method="add")
+        self._convert_data(("T_ambient",), c_to_k, method="add")
+        self._convert_data(("T_laser_driver",), c_to_k, method="add")
 
     def add_meta(self):
         valid_keys = ("latitude", "longitude", "altitude")
@@ -161,7 +164,20 @@ class Disdrometer(CloudnetInstrument):
                     logging.warning(f"Invalid character: {value_str}, masking a data point")
                     float_array = ma.append(float_array, invalid_value)
             float_array[float_array == invalid_value] = ma.masked
-            self.data[key] = CloudnetArray(float_array, key)
+            if key in (
+                "rainfall_rate",
+                "radar_reflectivity",
+                "T_sensor",
+                "I_heating",
+                "V_power_supply",
+                "T_interior",
+                "T_ambient",
+                "T_laser_driver",
+            ):
+                data_type = "f4"
+            else:
+                data_type = "i4"
+            self.data[key] = CloudnetArray(float_array, key, data_type=data_type)
         self.data["time"] = self._convert_time(data_dict)
         if "_sensor_id" in data_dict:
             self.sensor_id = data_dict["_sensor_id"][0]
@@ -257,7 +273,7 @@ class Parsivel(Disdrometer):
             (9, "T_sensor"),
             (10, "_sensor_id"),  # to global attributes
             (12, "I_heating"),
-            (13, "V_sensor"),
+            (13, "V_power_supply"),
             (14, "state_sensor"),
             (15, "_station_name"),
             (16, "_rain_amount_absolute"),
@@ -440,8 +456,7 @@ ATTRIBUTES = {
         units="m s-1",
     ),
     "rainfall_rate": MetaData(
-        long_name="Precipitation rate",
-        units="m s-1",
+        long_name="Rainfall rate", units="m s-1", standard_name="rainfall_rate"
     ),
     "rainfall_rate_1min_solid": MetaData(
         long_name="Solid precipitation rate",
@@ -452,24 +467,30 @@ ATTRIBUTES = {
     "radar_reflectivity": MetaData(
         long_name="Equivalent radar reflectivity factor",
         units="dBZ",
+        standard_name="equivalent_reflectivity_factor",
     ),
     "visibility": MetaData(
         long_name="Visibility range in precipitation after MOR",
         units="m",
+        standard_name="visibility_in_air",
     ),
-    "interval": MetaData(long_name="Length of measurement interval", units="1"),
-    "sig_laser": MetaData(long_name="Signal amplitude of the laser", units="1"),
+    "interval": MetaData(long_name="Length of measurement interval", units="s"),
+    "sig_laser": MetaData(long_name="Signal amplitude of the laser strip", units="1"),
     "n_particles": MetaData(long_name="Number of particles in time interval", units="1"),
     "T_sensor": MetaData(
-        long_name="Temperature in the sensor",
+        long_name="Temperature in the sensor housing",
         units="K",
     ),
     "I_heating": MetaData(
         long_name="Heating current",
         units="A",
     ),
-    "V_sensor": MetaData(
-        long_name="Sensor voltage",
+    "V_sensor_supply": MetaData(
+        long_name="Sensor supply voltage",
+        units="V",
+    ),
+    "V_power_supply": MetaData(
+        long_name="Power supply voltage",
         units="V",
     ),
     "state_sensor": MetaData(
@@ -488,12 +509,12 @@ ATTRIBUTES = {
         units="m s-1",
     ),
     "data_raw": MetaData(
-        long_name="Raw Data as a function of particle diameter and velocity", units="1"
+        long_name="Raw data as a function of particle diameter and velocity", units="1"
     ),
     "kinetic_energy": MetaData(long_name="Kinetic energy", units="1"),
     # Thies-specific:
-    "T_ambient": MetaData(long_name="Ambient temperature", units="C"),
-    "T_interior": MetaData(long_name="Interior temperature", units="C"),
+    "T_ambient": MetaData(long_name="Ambient temperature", units="K"),
+    "T_interior": MetaData(long_name="Interior temperature", units="K"),
     "status_T_laser_analogue": MetaData(
         long_name="Status of laser temperature (analogue)", comment="0 = OK , 1 = Error", units="1"
     ),
@@ -537,7 +558,7 @@ ATTRIBUTES = {
     "measurement_quality": MetaData(long_name="Measurement quality", units="%"),
     "maximum_hail_diameter": MetaData(long_name="Maximum hail diameter", units="mm"),
     "static_signal": MetaData(long_name="Static signal", comment="0 = OK, 1 = ERROR", units="1"),
-    "T_laser_driver": MetaData(long_name="Temperature of laser driver", units="C"),
+    "T_laser_driver": MetaData(long_name="Temperature of laser driver", units="K"),
     "I_mean_laser": MetaData(long_name="Mean value of laser current", units="mA"),
     "V_control": MetaData(
         long_name="Control voltage", units="mV", comment="Reference value: 4010+-5"
@@ -545,10 +566,6 @@ ATTRIBUTES = {
     "V_optical_output": MetaData(
         long_name="Voltage of optical control output",
         units="mV",
-    ),
-    "V_sensor_supply": MetaData(
-        long_name="Voltage of sensor supply",
-        units="V",
     ),
     "I_heating_laser_head": MetaData(
         long_name="Laser head heating current",
