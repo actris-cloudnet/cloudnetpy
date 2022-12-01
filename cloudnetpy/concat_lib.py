@@ -9,9 +9,10 @@ def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int):
     """Truncates netcdf file in 'time' dimension taking only n_profiles.
     Useful for creating small files for tests.
     """
-    with netCDF4.Dataset(filename, "r") as nc, netCDF4.Dataset(
-        output_file, "w", format=nc.data_model
-    ) as nc_new:
+    with (
+        netCDF4.Dataset(filename, "r") as nc,
+        netCDF4.Dataset(output_file, "w", format=nc.data_model) as nc_new,
+    ):
         for dim in nc.dimensions.keys():
             dim_len = None if dim == "time" else nc.dimensions[dim].size
             nc_new.createDimension(dim, dim_len)
@@ -53,7 +54,7 @@ def update_nc(old_file: str, new_file: str) -> int:
 
     """
     try:
-        with netCDF4.Dataset(old_file, "a") as nc_old, netCDF4.Dataset(new_file) as nc_new:
+        with (netCDF4.Dataset(old_file, "a") as nc_old, netCDF4.Dataset(new_file) as nc_new):
             valid_ind = _find_valid_time_indices(nc_old, nc_new)
             if len(valid_ind) > 0:
                 _update_fields(nc_old, nc_new, valid_ind)

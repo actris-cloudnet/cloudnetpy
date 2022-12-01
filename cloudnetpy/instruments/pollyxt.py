@@ -102,9 +102,10 @@ class PollyXt(Ceilometer):
         beta_channel = self._get_valid_beta_channel(bsc_files)
         bsc_key = f"attenuated_backscatter_{beta_channel}nm"
         for (bsc_file, depol_file) in zip(bsc_files, depol_files):
-            with netCDF4.Dataset(bsc_file, "r") as nc_bsc, netCDF4.Dataset(
-                depol_file, "r"
-            ) as nc_depol:
+            with (
+                netCDF4.Dataset(bsc_file, "r") as nc_bsc,
+                netCDF4.Dataset(depol_file, "r") as nc_depol,
+            ):
                 epoch = utils.get_epoch(nc_bsc["time"].unit)
                 try:
                     time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, "time"))
