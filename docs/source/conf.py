@@ -45,7 +45,7 @@ extensions = [
     "sphinx.ext.doctest",
     "sphinx.ext.imgmath",
     "sphinx.ext.viewcode",
-    "sphinx.ext.napoleon",
+    # "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.autosummary",
     "sphinx.ext.autosectionlabel",
