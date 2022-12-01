@@ -85,12 +85,12 @@ def get_references(identifier: str | None = None) -> str:
 
     """
     references = "https://doi.org/10.21105/joss.02123"
-    if identifier:
-        if identifier in ("lwc", "categorize"):
+    match identifier:
+        case "lwc" | "categorize":
             references += ", https://doi.org/10.1175/BAMS-88-6-883"
-        if identifier == "iwc":
+        case "iwc":
             references += ", https://doi.org/10.1175/JAM2340.1"
-        if identifier == "drizzle":
+        case "drizzle":
             references += ", https://doi.org/10.1175/JAM-2181.1"
     return references
 

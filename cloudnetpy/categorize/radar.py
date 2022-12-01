@@ -54,20 +54,21 @@ class Radar(DataSource):
         """
         bad_time_indices = []
         for key, array in self.data.items():
-            if key in ("ldr", "sldr", "Z"):
-                array.db2lin()
-                bad_time_indices = array.rebin_data(self.time, time_new)
-                array.lin2db()
-            elif key == "v":
-                array.rebin_velocity(
-                    self.time, time_new, self.folding_velocity, self.sequence_indices
-                )
-            elif key == "v_sigma":
-                array.calc_linear_std(self.time, time_new)
-            elif key in ("width", "rain_rate"):
-                array.rebin_data(self.time, time_new)
-            else:
-                continue
+            match key:
+                case "ldr" | "sldr" | "Z":
+                    array.db2lin()
+                    bad_time_indices = array.rebin_data(self.time, time_new)
+                    array.lin2db()
+                case "v":
+                    array.rebin_velocity(
+                        self.time, time_new, self.folding_velocity, self.sequence_indices
+                    )
+                case "v_sigma":
+                    array.calc_linear_std(self.time, time_new)
+                case "width" | "rain_rate":
+                    array.rebin_data(self.time, time_new)
+                case _:
+                    continue
         return bad_time_indices
 
     def remove_incomplete_pixels(self) -> None:

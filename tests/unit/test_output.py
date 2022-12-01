@@ -129,3 +129,21 @@ def test_fix_attribute_name(tmpdir_factory):
     assert hasattr(nc.variables["a"], "units") is True
     assert hasattr(nc.variables["a"], "unit") is False
     assert nc.variables["a"].units == "m"
+
+
+@pytest.mark.parametrize(
+    "identifier, result",
+    [
+        ("lwc", "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/BAMS-88-6-883"),
+        (
+            "categorize",
+            "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/BAMS-88-6-883",
+        ),
+        ("iwc", "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/JAM2340.1"),
+        ("drizzle", "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/JAM-2181.1"),
+        ("classification", "https://doi.org/10.21105/joss.02123"),
+        (None, "https://doi.org/10.21105/joss.02123"),
+    ],
+)
+def test_get_references(identifier, result):
+    assert output.get_references(identifier) == result
