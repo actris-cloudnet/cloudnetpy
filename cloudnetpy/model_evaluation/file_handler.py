@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from typing import Tuple, Union
 
 import netCDF4
 
@@ -67,7 +66,7 @@ def save_downsampled_file(
     file_name: str,
     objects: tuple,
     files: tuple,
-    uuid: Union[str, None],
+    uuid: str | None,
 ):
     """Saves a standard downsampled day product file.
 
@@ -115,7 +114,7 @@ def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
         """Finds correct dimensions for a variable."""
         if utils.isscalar(array):
             return ()
-        variable_size: Tuple = ()
+        variable_size: tuple = ()
         file_dims = rootgrp.dimensions
         array_dims = array.shape
         for length in array_dims:

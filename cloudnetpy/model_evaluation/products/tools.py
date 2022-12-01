@@ -1,7 +1,6 @@
 import datetime
 import logging
 from datetime import timedelta
-from typing import Optional, Union
 
 import numpy as np
 from numpy import ma
@@ -48,23 +47,21 @@ def calculate_advection_time(resolution: int, wind: ma.MaskedArray, sampling: in
     return np.asarray([[timedelta(hours=float(t)) for t in time] for time in t_adv])
 
 
-def get_1d_indices(window: tuple, data: np.ndarray, mask: Optional[np.ndarray] = None):
+def get_1d_indices(window: tuple, data: np.ndarray, mask: np.ndarray | None = None):
     indices = (window[0] <= data) & (data < window[-1])
     if mask is not None:
         indices[mask] = ma.masked
     return indices
 
 
-def get_adv_indices(
-    model_t: int, adv_t: float, data: np.ndarray, mask: Optional[np.ndarray] = None
-):
+def get_adv_indices(model_t: int, adv_t: float, data: np.ndarray, mask: np.ndarray | None = None):
     adv_indices = ((model_t - adv_t / 2) <= data) & (data < (model_t + adv_t / 2))
     if mask is not None:
         adv_indices[mask] = ma.masked
     return adv_indices
 
 
-def get_obs_window_size(ind_x: np.ndarray, ind_y: np.ndarray) -> Union[tuple, None]:
+def get_obs_window_size(ind_x: np.ndarray, ind_y: np.ndarray) -> tuple | None:
     """Returns shape (tuple) of window area, where values are True"""
     x = np.where(ind_x)[0]
     y = np.where(ind_y)[0]

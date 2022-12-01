@@ -1,6 +1,4 @@
 """Functions to find melting layer from data."""
-from typing import Tuple, Union
-
 import numpy as np
 from numpy import ma
 from scipy.ndimage import gaussian_filter
@@ -49,9 +47,9 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
     """
     melting_layer = np.zeros(obs.tw.shape, dtype=bool)
 
-    ldr_prof: Union[np.ndarray, None] = None
-    ldr_dprof: Union[np.ndarray, None] = None
-    ldr_diff: Union[np.ndarray, None] = None
+    ldr_prof: np.ndarray | None = None
+    ldr_dprof: np.ndarray | None = None
+    ldr_diff: np.ndarray | None = None
     width_prof = None
 
     if hasattr(obs, "ldr"):
@@ -96,7 +94,7 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
 
 def _find_melting_layer_from_ldr(
     ldr_prof: np.ndarray, ldr_dprof: np.ndarray, v_prof: np.ndarray, z_prof: np.ndarray
-) -> Union[np.ndarray, None]:
+) -> np.ndarray | None:
     if ldr_prof is None:
         raise ValueError
 
@@ -117,8 +115,8 @@ def _find_melting_layer_from_ldr(
 
 
 def _find_melting_layer_from_v(
-    v_prof: np.ndarray, width_prof: Union[np.ndarray, None], height: np.ndarray
-) -> Union[np.ndarray, None]:
+    v_prof: np.ndarray, width_prof: np.ndarray | None, height: np.ndarray
+) -> np.ndarray | None:
     v = np.copy(v_prof[:-1])
     v_diff = np.diff(v_prof)
     v[v_diff < 0] = 0
@@ -148,7 +146,7 @@ def _find_melting_layer_from_v(
     return None
 
 
-def _basetop(dprof: np.ndarray, pind: int) -> Tuple[int, int]:
+def _basetop(dprof: np.ndarray, pind: int) -> tuple[int, int]:
     """Finds the base and top of ldr peak."""
     top = droplet.ind_top(dprof, pind, len(dprof), 10, 2)
     base = droplet.ind_base(dprof, pind, 10, 2)
@@ -161,7 +159,7 @@ def _get_temp_indices(t_prof: np.ndarray, t_range: tuple) -> np.ndarray:
     return np.array([]) if len(ind) == 0 else np.arange(min(ind), max(ind) + 1)
 
 
-def _find_model_temperature_range(model_type: str) -> Tuple[float, float]:
+def _find_model_temperature_range(model_type: str) -> tuple[float, float]:
     """Returns temperature range around 0C for given model type."""
     if "gdas1" in model_type.lower():
         return -8, 6

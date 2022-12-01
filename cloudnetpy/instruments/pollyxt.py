@@ -1,7 +1,6 @@
 """Module for reading / converting pollyxt data."""
 import glob
 import logging
-from typing import Optional, Union
 
 import netCDF4
 import numpy as np
@@ -19,8 +18,8 @@ def pollyxt2nc(
     input_folder: str,
     output_file: str,
     site_meta: dict,
-    uuid: Optional[str] = None,
-    date: Optional[str] = None,
+    uuid: str | None = None,
+    date: str | None = None,
 ) -> str:
     """
     Converts PollyXT Raman lidar data into Cloudnet Level 1b netCDF file.
@@ -65,7 +64,7 @@ def pollyxt2nc(
 
 
 class PollyXt(Ceilometer):
-    def __init__(self, site_meta: dict, expected_date: Union[str, None]):
+    def __init__(self, site_meta: dict, expected_date: str | None):
         super().__init__()
         self.site_meta = site_meta
         self.expected_date = expected_date

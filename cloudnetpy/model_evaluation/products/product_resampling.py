@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import cloudnetpy.model_evaluation.products.tools as tl
 from cloudnetpy.model_evaluation.file_handler import (
@@ -21,7 +20,7 @@ def process_L3_day_product(
     model_files: list,
     product_file: str,
     output_file: str,
-    uuid: Optional[str] = None,
+    uuid: str | None = None,
     overwrite: bool = False,
 ):
     """Main function to generate downsample of observations to match model grid.

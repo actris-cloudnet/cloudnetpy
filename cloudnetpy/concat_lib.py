@@ -1,6 +1,4 @@
 """Module for concatenating netCDF files."""
-from typing import Optional, Set, Union
-
 import netCDF4
 import numpy as np
 
@@ -69,10 +67,10 @@ def concatenate_files(
     filenames: list,
     output_file: str,
     concat_dimension: str = "time",
-    variables: Optional[list] = None,
-    new_attributes: Optional[dict] = None,
-    ignore: Optional[list] = None,
-    allow_difference: Optional[list] = None,
+    variables: list | None = None,
+    new_attributes: dict | None = None,
+    ignore: list | None = None,
+    allow_difference: list | None = None,
 ) -> None:
     """Concatenate netCDF files in one dimension.
 
@@ -99,7 +97,7 @@ def concatenate_files(
 
 
 class _Concat:
-    common_variables: Set[str]
+    common_variables: set[str]
 
     def __init__(self, filenames: list, output_file: str, concat_dimension: str = "time"):
         self.filenames = sorted(filenames)
@@ -115,23 +113,21 @@ class _Concat:
             if self.concat_dimension not in value.dimensions:
                 self.common_variables.add(key)
 
-    def create_global_attributes(self, new_attributes: Union[dict, None]) -> None:
+    def create_global_attributes(self, new_attributes: dict | None) -> None:
         """Copies global attributes from one of the source files."""
         _copy_attributes(self.first_file, self.concatenated_file)
         if new_attributes is not None:
             for key, value in new_attributes.items():
                 setattr(self.concatenated_file, key, value)
 
-    def concat_data(
-        self, variables: Union[list, None], ignore: Union[list, None], allow_vary: Union[list, None]
-    ):
+    def concat_data(self, variables: list | None, ignore: list | None, allow_vary: list | None):
         """Concatenates data arrays."""
         self._write_initial_data(variables, ignore)
         if len(self.filenames) > 1:
             for filename in self.filenames[1:]:
                 self._append_data(filename, allow_vary)
 
-    def _write_initial_data(self, variables: Union[list, None], ignore: Union[list, None]) -> None:
+    def _write_initial_data(self, variables: list | None, ignore: list | None) -> None:
         for key in self.first_file.variables.keys():
             if (
                 variables is not None
@@ -160,7 +156,7 @@ class _Concat:
             var[:] = array
             _copy_attributes(self.first_file[key], var)
 
-    def _append_data(self, filename: str, allow_vary: Union[list, None]) -> None:
+    def _append_data(self, filename: str, allow_vary: list | None) -> None:
         with netCDF4.Dataset(filename) as file:
             file.set_auto_scale(False)
             ind0 = len(self.concatenated_file.variables[self.concat_dimension])

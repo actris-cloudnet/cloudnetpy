@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import Union
 
 import numpy as np
 from numpy import ma
@@ -40,13 +39,13 @@ class ObservationManager(DataSource):
             int(self.dataset.year), int(self.dataset.month), int(self.dataset.day), 0, 0, 0
         )
 
-    def _get_radar_frequency(self) -> Union[np.ndarray, None]:
+    def _get_radar_frequency(self) -> np.ndarray | None:
         try:
             return self.getvar("radar_frequency")
         except (KeyError, RuntimeError):
             return None
 
-    def _get_z_sensitivity(self) -> Union[np.ndarray, None]:
+    def _get_z_sensitivity(self) -> np.ndarray | None:
         try:
             return self.getvar("Z_sensitivity")
         except (KeyError, RuntimeError):

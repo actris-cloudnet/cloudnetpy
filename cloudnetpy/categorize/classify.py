@@ -1,8 +1,6 @@
 """Module containing low-level functions to classify gridded
 radar / lidar measurements.
 """
-from typing import List
-
 import numpy as np
 import skimage
 from numpy import ma
@@ -37,7 +35,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
 
     """
     obs = ClassData(data)
-    bits: List[np.ndarray] = [np.array([])] * 6
+    bits: list[np.ndarray] = [np.array([])] * 6
     liquid = droplet.find_liquid(obs)
     bits[3] = melting.find_melting_layer(obs)
     bits[2] = freezing.find_freezing_region(obs, bits[3])
@@ -80,7 +78,7 @@ def fetch_quality(data: dict, classification: ClassificationResult, attenuations
             - bit 6: Data gap in radar or lidar data
 
     """
-    bits: List[np.ndarray] = [np.ndarray([])] * 7
+    bits: list[np.ndarray] = [np.ndarray([])] * 7
     radar_echo = data["radar"].data["Z"][:]
     bits[0] = ~radar_echo.mask
     bits[1] = ~data["lidar"].data["beta"][:].mask

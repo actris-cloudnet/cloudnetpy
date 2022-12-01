@@ -2,7 +2,6 @@
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
 
 from cloudnetpy import output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -19,9 +18,9 @@ def hatpro2nc(
     path_to_files: str,
     output_file: str,
     site_meta: dict,
-    uuid: Optional[str] = None,
-    date: Optional[str] = None,
-) -> Tuple[str, list]:
+    uuid: str | None = None,
+    date: str | None = None,
+) -> tuple[str, list]:
     """Converts RPG HATPRO microwave radiometer data into Cloudnet Level 1b
     netCDF file.
 
@@ -75,8 +74,8 @@ def hatpro2nc(
 
 
 def _get_hatpro_objects(
-    directory: Path, expected_date: Union[str, None]
-) -> Tuple[List[HatproBinCombined], List[str]]:
+    directory: Path, expected_date: str | None
+) -> tuple[list[HatproBinCombined], list[str]]:
     objects = defaultdict(list)
     for filename in directory.iterdir():
         try:
@@ -96,7 +95,7 @@ def _get_hatpro_objects(
             logging.warning(f"Ignoring file '{filename}': {err}")
             continue
 
-    valid_files: List[str] = []
+    valid_files: list[str] = []
     combined_objs = []
     for _stem, objs in sorted(objects.items()):
         try:

@@ -1,4 +1,4 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 
 class PlotMeta(NamedTuple):
@@ -7,11 +7,11 @@ class PlotMeta(NamedTuple):
     plot_range: tuple
     plot_scale: str
     plot_type: str
-    clabel: Optional[str] = None
-    hist_bin: Optional[int] = None
-    x_title: Optional[str] = None
-    ylabel: Optional[str] = None
-    hist_limits: Optional[tuple] = None
+    clabel: str | None = None
+    hist_bin: int | None = None
+    x_title: str | None = None
+    ylabel: str | None = None
+    hist_limits: tuple | None = None
 
 
 _LOG = "logarithmic"

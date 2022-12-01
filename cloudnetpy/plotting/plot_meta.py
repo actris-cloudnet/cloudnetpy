@@ -1,6 +1,6 @@
 """Metadata for plotting module."""
 from enum import Enum
-from typing import NamedTuple, Optional, Sequence, Tuple, Union
+from typing import NamedTuple, Sequence
 
 
 class Scale(Enum):
@@ -10,13 +10,13 @@ class Scale(Enum):
 
 class PlotMeta(NamedTuple):
     name: str
-    cbar: Optional[Union[str, Sequence[str]]] = None
-    clabel: Optional[Union[str, Sequence[Tuple[str, str]]]] = None
-    ylabel: Optional[str] = None
-    plot_range: Optional[Tuple[float, float]] = None
-    plot_scale: Optional[Scale] = None
-    plot_type: Optional[str] = None
-    source: Optional[str] = None
+    cbar: str | Sequence[str] | None = None
+    clabel: str | Sequence[tuple[str, str]] | None = None
+    ylabel: str | None = None
+    plot_range: tuple[float, float] | None = None
+    plot_scale: Scale | None = None
+    plot_type: str | None = None
+    source: str | None = None
 
 
 _MUM = "$\\mu$m"

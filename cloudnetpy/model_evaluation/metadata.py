@@ -1,13 +1,13 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 
 class MetaData(NamedTuple):
     long_name: str
     units: str
-    comment: Optional[str] = None
-    standard_name: Optional[str] = None
-    axis: Optional[str] = None
-    positive: Optional[str] = None
+    comment: str | None = None
+    standard_name: str | None = None
+    axis: str | None = None
+    positive: str | None = None
 
 
 MODEL_ATTRIBUTES = {

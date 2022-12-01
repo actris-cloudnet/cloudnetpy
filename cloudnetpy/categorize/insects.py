@@ -1,6 +1,4 @@
 """Module to find insects from data."""
-from typing import Tuple
-
 import numpy as np
 from numpy import ma
 from scipy.ndimage import gaussian_filter
@@ -12,7 +10,7 @@ from cloudnetpy.categorize.containers import ClassData
 
 def find_insects(
     obs: ClassData, melting_layer: np.ndarray, liquid_layers: np.ndarray, prob_lim: float = 0.8
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Returns insect probability and boolean array of insect presence.
 
     Insects are classified by estimating heuristic probability
@@ -49,7 +47,7 @@ def find_insects(
     return is_insects, ma.masked_where(insect_prob == 0, insect_prob)
 
 
-def _insect_probability(obs: ClassData) -> Tuple[np.ndarray, np.ndarray]:
+def _insect_probability(obs: ClassData) -> tuple[np.ndarray, np.ndarray]:
     prob = _get_probabilities(obs)
     prob_from_ldr = _calc_prob_from_ldr(prob)
     prob_from_others = _calc_prob_from_all(prob)
@@ -76,7 +74,7 @@ def _get_probabilities(obs: ClassData) -> dict:
     }
 
 
-def _get_smoothed_v(obs: ClassData, sigma: Tuple[float, float] = (5, 5)) -> ma.MaskedArray:
+def _get_smoothed_v(obs: ClassData, sigma: tuple[float, float] = (5, 5)) -> ma.MaskedArray:
     smoothed_v = gaussian_filter(obs.v, sigma)
     smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
     return smoothed_v

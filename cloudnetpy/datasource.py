@@ -2,7 +2,7 @@
 import logging
 import os
 from datetime import datetime
-from typing import Callable, Optional, Union
+from typing import Callable
 
 import netCDF4
 import numpy as np
@@ -78,10 +78,10 @@ class DataSource:
 
     def append_data(
         self,
-        variable: Union[netCDF4.Variable, np.ndarray, float, int],
+        variable: netCDF4.Variable | np.ndarray | float | int,
         key: str,
-        name: Optional[str] = None,
-        units: Optional[str] = None,
+        name: str | None = None,
+        units: str | None = None,
     ):
         """Adds new CloudnetVariable or RadarVariable into `data` attribute.
 
@@ -142,14 +142,14 @@ class DataSource:
             time = utils.seconds2hours(time)
         return time
 
-    def _init_altitude(self) -> Union[float, None]:
+    def _init_altitude(self) -> float | None:
         """Returns altitude of the instrument (m)."""
         if "altitude" in self.dataset.variables:
             altitude_above_sea = self.km2m(self.dataset.variables["altitude"])
             return float(np.mean(altitude_above_sea))
         return None
 
-    def _init_height(self) -> Union[np.ndarray, None]:
+    def _init_height(self) -> np.ndarray | None:
         """Returns height array above mean sea level (m)."""
         if "height" in self.dataset.variables:
             return self.km2m(self.dataset.variables["height"])
@@ -176,7 +176,7 @@ class DataSource:
         self,
         possible_names: tuple,
         key: str,
-        units: Optional[str] = None,
+        units: str | None = None,
         ignore_mask: bool = False,
     ):
         """Transforms single netCDF4 variable into CloudnetArray.

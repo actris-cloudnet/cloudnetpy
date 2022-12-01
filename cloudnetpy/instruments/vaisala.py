@@ -1,6 +1,5 @@
 """Module with classes for Vaisala ceilometers."""
 import logging
-from typing import List, Optional, Tuple
 
 import numpy as np
 
@@ -17,13 +16,13 @@ SECONDS_IN_HOUR = 3600
 class VaisalaCeilo(Ceilometer):
     """Base class for Vaisala ceilometers."""
 
-    def __init__(self, full_path: str, site_meta: dict, expected_date: Optional[str] = None):
+    def __init__(self, full_path: str, site_meta: dict, expected_date: str | None = None):
         super().__init__(self.noise_param)
         self.full_path = full_path
         self.site_meta = site_meta
         self.expected_date = expected_date
         self._backscatter_scale_factor = 1.0
-        self._hex_conversion_params: Tuple[int, int, int] = (1, 1, 1)
+        self._hex_conversion_params: tuple[int, int, int] = (1, 1, 1)
         self._message_number: int
 
     def _is_ct25k(self) -> bool:
@@ -162,7 +161,7 @@ class VaisalaCeilo(Ceilometer):
                 meta[field] = np.array(meta[field])
         return meta
 
-    def _read_common_header_part(self) -> Tuple[list, list]:
+    def _read_common_header_part(self) -> tuple[list, list]:
         header = []
         data_lines = self._fetch_data_lines()
         self.data["time"] = self._calc_time(data_lines[0])
@@ -195,12 +194,12 @@ class ClCeilo(VaisalaCeilo):
 
     noise_param = NoiseParam(noise_min=3.1e-8, noise_smooth_min=1.1e-8)
 
-    def __init__(self, full_path: str, site_meta: dict, expected_date: Optional[str] = None):
+    def __init__(self, full_path: str, site_meta: dict, expected_date: str | None = None):
         super().__init__(full_path, site_meta, expected_date)
         self._hex_conversion_params = (5, 524288, 1048576)
         self._backscatter_scale_factor = 1e8
 
-    def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
+    def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
         """Read all lines of data from the file."""
         header, data_lines = self._read_common_header_part()
         header.append(self._read_header_line_4(data_lines[-3]))
@@ -217,7 +216,7 @@ class ClCeilo(VaisalaCeilo):
         """Sorts timestamps and removes duplicates."""
         time = np.copy(self.data["time"][:])
         ind_sorted = np.argsort(time)
-        ind_valid: List[int] = []
+        ind_valid: list[int] = []
         for ind in ind_sorted:
             if time[ind] not in time[ind_valid]:
                 ind_valid.append(ind)
@@ -272,13 +271,13 @@ class Ct25k(VaisalaCeilo):
 
     noise_param = NoiseParam(noise_min=6e-7, noise_smooth_min=1e-7)
 
-    def __init__(self, input_file: str, site_meta: dict, expected_date: Optional[str] = None):
+    def __init__(self, input_file: str, site_meta: dict, expected_date: str | None = None):
         super().__init__(input_file, site_meta, expected_date)
         self._hex_conversion_params = (4, 32768, 65536)
         self._backscatter_scale_factor = 1e7
         self.instrument = instruments.CT25K
 
-    def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
+    def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
         """Read all lines of data from the file."""
         header, data_lines = self._read_common_header_part()
         header.append(self._read_header_line_3(data_lines[3]))

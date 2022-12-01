@@ -1,6 +1,4 @@
 """Module for reading / converting BASTA radar data."""
-from typing import List, Optional
-
 import numpy as np
 
 from cloudnetpy import output
@@ -14,8 +12,8 @@ def basta2nc(
     basta_file: str,
     output_file: str,
     site_meta: dict,
-    uuid: Optional[str] = None,
-    date: Optional[str] = None,
+    uuid: str | None = None,
+    date: str | None = None,
 ) -> str:
     """Converts BASTA cloud radar data into Cloudnet Level 1b netCDF file.
 
@@ -78,7 +76,7 @@ class Basta(NcRadar):
 
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, site_meta)
-        self.date: List[str] = self.get_date()
+        self.date: list[str] = self.get_date()
         self.instrument = instruments.BASTA
 
     def screen_data(self, keymap: dict) -> None:

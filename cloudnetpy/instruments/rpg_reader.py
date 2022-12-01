@@ -1,4 +1,4 @@
-from typing import BinaryIO, Dict, List, Literal, Tuple
+from typing import BinaryIO, Literal
 
 import numpy as np
 from numpy import ma
@@ -105,7 +105,7 @@ class Fmcw94Bin:
 
 
 def _read_from_file(
-    file: BinaryIO, fields: List[Tuple[str, str]], count: int = 1
+    file: BinaryIO, fields: list[tuple[str, str]], count: int = 1
 ) -> ma.MaskedArray:
     arr = np.fromfile(file, np.dtype(fields), count)
     masked_arr = ma.array(arr)
@@ -114,7 +114,7 @@ def _read_from_file(
     return masked_arr
 
 
-def _decode_angles(x: np.ndarray, version: Literal[1, 2]) -> Tuple[np.ndarray, np.ndarray]:
+def _decode_angles(x: np.ndarray, version: Literal[1, 2]) -> tuple[np.ndarray, np.ndarray]:
     """
     Decode elevation and azimuth angles.
 
@@ -274,10 +274,10 @@ class HatproBinIwv(HatproBin):
 class HatproBinCombined:
     """Combine HATPRO objects that share values of the given dimensions."""
 
-    header: Dict[str, np.ndarray]
-    data: Dict[str, np.ndarray]
+    header: dict[str, np.ndarray]
+    data: dict[str, np.ndarray]
 
-    def __init__(self, files: List[HatproBin]):
+    def __init__(self, files: list[HatproBin]):
         self.header = {}
         if len(files) == 1:
             arr = files[0].data

@@ -6,7 +6,7 @@ from cloudnetpy.model_evaluation.plotting import plot_tools as plt
 
 def test_parse_wanted_names(regrid_file):
     """nc_file: str, name: str, model: str,
-    vars: Union[list, None] = None,
+    vars: list | None = None,
     advance: bool = False"""
     compare = ["ecmwf_cf", "cf_ecmwf"]
     x, _ = plt.parse_wanted_names(regrid_file, "cf", "ecmwf")

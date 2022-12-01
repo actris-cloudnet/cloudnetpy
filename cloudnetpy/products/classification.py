@@ -1,6 +1,4 @@
 """Module for creating classification file."""
-from typing import Optional, Tuple
-
 import numpy as np
 from numpy import ma
 
@@ -11,9 +9,7 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
-def generate_classification(
-    categorize_file: str, output_file: str, uuid: Optional[str] = None
-) -> str:
+def generate_classification(categorize_file: str, output_file: str, uuid: str | None = None) -> str:
     """Generates Cloudnet classification product.
 
     This function reads the initial classification masks from a
@@ -87,7 +83,7 @@ def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
 
 def _get_cloud_base_and_top_heights(
     classification: np.ndarray, product_container: DataSource
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     height = product_container.getvar("height")
     cloud_mask = _find_cloud_mask(classification)
     if not cloud_mask.any():

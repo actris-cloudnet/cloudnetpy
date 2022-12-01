@@ -1,7 +1,6 @@
 """Module for reading raw cloud radar data."""
 import os
 from tempfile import TemporaryDirectory
-from typing import List, Optional
 
 from cloudnetpy import concat_lib, output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -14,8 +13,8 @@ def mira2nc(
     raw_mira: str,
     output_file: str,
     site_meta: dict,
-    uuid: Optional[str] = None,
-    date: Optional[str] = None,
+    uuid: str | None = None,
+    date: str | None = None,
 ) -> str:
     """Converts METEK MIRA-35 cloud radar data into Cloudnet Level 1b netCDF file.
 
@@ -122,7 +121,7 @@ class Mira(NcRadar):
             raise ValidTimeStampError
         self.screen_time_indices(valid_indices)
 
-    def _init_mira_date(self) -> List[str]:
+    def _init_mira_date(self) -> list[str]:
         time_stamps = self.getvar("time")
         return utils.seconds2date(time_stamps[0], self.epoch)[:3]
 

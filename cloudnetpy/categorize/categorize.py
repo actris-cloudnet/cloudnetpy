@@ -1,6 +1,4 @@
 """Module that generates Cloudnet categorize file."""
-from typing import Optional, Union
-
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos, classify
 from cloudnetpy.categorize.lidar import Lidar
@@ -11,7 +9,7 @@ from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.metadata import MetaData
 
 
-def generate_categorize(input_files: dict, output_file: str, uuid: Optional[str] = None) -> str:
+def generate_categorize(input_files: dict, output_file: str, uuid: str | None = None) -> str:
     """Generates Cloudnet Level 1c categorize file.
 
     The measurements are rebinned into a common height / time grid,
@@ -137,7 +135,7 @@ def generate_categorize(input_files: dict, output_file: str, uuid: Optional[str]
         _close_all()
 
 
-def _save_cat(full_path: str, data_obs: dict, cloudnet_arrays: dict, uuid: Union[str, None]) -> str:
+def _save_cat(full_path: str, data_obs: dict, cloudnet_arrays: dict, uuid: str | None) -> str:
     """Creates a categorize netCDF4 file and saves all data into it."""
 
     dims = {

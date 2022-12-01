@@ -1,6 +1,4 @@
 """Module for creating Cloudnet ice water content file using Z-T method."""
-from typing import Optional
-
 import numpy as np
 from numpy import ma
 
@@ -9,7 +7,7 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import IceClassification, IceSource
 
 
-def generate_iwc(categorize_file: str, output_file: str, uuid: Optional[str] = None) -> str:
+def generate_iwc(categorize_file: str, output_file: str, uuid: str | None = None) -> str:
     """Generates Cloudnet ice water content product.
 
     This function calculates ice water content using the so-called Z-T method.

@@ -1,6 +1,5 @@
 """Module for creating Cloudnet droplet effective radius using the Frisch et al. 2002 method."""
 from collections import namedtuple
-from typing import Optional
 
 import numpy as np
 from numpy import ma
@@ -21,8 +20,8 @@ Parameters = namedtuple("Parameters", "ddBZ N dN sigma_x dsigma_x dQ")
 def generate_der(
     categorize_file: str,
     output_file: str,
-    uuid: Optional[str] = None,
-    parameters: Optional[Parameters] = None,
+    uuid: str | None = None,
+    parameters: Parameters | None = None,
 ) -> str:
     """Generates Cloudnet effective radius of liquid water droplets product acording
     to Frisch et al. 2002.
@@ -100,7 +99,7 @@ class DropletClassification(ProductClassification):
 class DerSource(DataSource):
     """Data container for effective radius calculations."""
 
-    def __init__(self, categorize_file: str, parameters: Optional[Parameters] = None):
+    def __init__(self, categorize_file: str, parameters: Parameters | None = None):
         super().__init__(categorize_file)
         self.is_rain = get_is_rain(categorize_file)
         self.categorize_bits = CategorizeBits(categorize_file)

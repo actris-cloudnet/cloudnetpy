@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-from typing import Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -23,12 +22,12 @@ def generate_L3_day_plots(
     product: str,
     model: str,
     title: bool = True,
-    var_list: Optional[list] = None,
-    fig_type: Optional[str] = "group",
-    stats: Optional[tuple] = ("error", "area", "hist", "vertical"),
-    save_path: Optional[str] = None,
-    image_name: Optional[str] = None,
-    show: Optional[bool] = False,
+    var_list: list | None = None,
+    fig_type: str | None = "group",
+    stats: tuple | None = ("error", "area", "hist", "vertical"),
+    save_path: str | None = None,
+    image_name: str | None = None,
+    show: bool | None = False,
 ):
     """Generate visualizations for level 3 dayscale products.
     With figure type visualizations can be subplot in group, pair, single or
@@ -550,7 +549,7 @@ def plot_vertical_profile(ax, day_stat: DayStatistics, axes: tuple, variable_inf
     ax.xaxis.grid(True, "major")
 
 
-def initialize_figure(n_subplots: int, stat: str = "") -> Tuple:
+def initialize_figure(n_subplots: int, stat: str = "") -> tuple:
     """Set up fig and ax object, if subplot"""
     if n_subplots <= 0:
         n_subplots = 1

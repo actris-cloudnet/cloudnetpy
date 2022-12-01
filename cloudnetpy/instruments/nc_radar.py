@@ -1,6 +1,5 @@
 """Module for reading raw cloud radar data."""
 import logging
-from typing import List, Union
 
 import numpy as np
 from numpy import ma
@@ -26,8 +25,8 @@ class NcRadar(DataSource, CloudnetInstrument):
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path)
         self.site_meta = site_meta
-        self.date: List[str]
-        self.instrument: Union[Instrument, None] = None
+        self.date: list[str]
+        self.instrument: Instrument | None = None
 
     def init_data(self, keymap: dict) -> None:
         """Reads selected fields and fixes the names."""

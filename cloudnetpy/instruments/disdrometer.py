@@ -1,6 +1,5 @@
 """Module for reading / converting disdrometer data."""
 import logging
-from typing import List, Optional, Union
 
 import numpy as np
 from numpy import ma
@@ -20,8 +19,8 @@ def disdrometer2nc(
     disdrometer_file: str,
     output_file: str,
     site_meta: dict,
-    uuid: Optional[str] = None,
-    date: Optional[str] = None,
+    uuid: str | None = None,
+    date: str | None = None,
 ) -> str:
     """Converts disdrometer data into Cloudnet Level 1b netCDF file. Accepts measurements from
     OTT Parsivel-2 and Thies-LNM disdrometers.
@@ -46,7 +45,7 @@ def disdrometer2nc(
         >>> uuid = disdrometer2nc('thies-lnm.log', 'thies-lnm.nc', site_meta)
 
     """
-    disdrometer: Union[Thies, Parsivel]
+    disdrometer: Thies | Parsivel
     try:
         disdrometer = Parsivel(disdrometer_file, site_meta)
     except ValueError:
@@ -74,7 +73,7 @@ class Disdrometer(CloudnetInstrument):
         self.filename = filename
         self.site_meta = site_meta
         self.source = source
-        self.date: List[str] = []
+        self.date: list[str] = []
         self.sensor_id = None
         self.n_diameter: int = 0
         self.n_velocity: int = 0
@@ -227,7 +226,7 @@ class Disdrometer(CloudnetInstrument):
         self.data[key] = CloudnetArray(bounds, key, dimensions=(name, "nv"))
 
     @staticmethod
-    def _create_vectors(n_values: List[int], spreads: List[float], start: float) -> tuple:
+    def _create_vectors(n_values: list[int], spreads: list[float], start: float) -> tuple:
         mid_value: np.ndarray = np.array([])
         lower_limit: np.ndarray = np.array([])
         upper_limit: np.ndarray = np.array([])

@@ -1,7 +1,6 @@
 """Module for reading raw cloud radar data."""
 import os
 from tempfile import TemporaryDirectory
-from typing import List, Optional
 
 import numpy as np
 
@@ -16,8 +15,8 @@ def copernicus2nc(
     raw_files: str,
     output_file: str,
     site_meta: dict,
-    uuid: Optional[str] = None,
-    date: Optional[str] = None,
+    uuid: str | None = None,
+    date: str | None = None,
 ) -> str:
     """Converts 'Copernicus' cloud radar data into Cloudnet Level 1b netCDF file.
 
@@ -131,7 +130,7 @@ class Copernicus(NcRadar):
         folding_velocity = self.dataset.variables[key].folding_velocity
         self.append_data(np.array(folding_velocity), "nyquist_velocity")
 
-    def _init_date(self) -> List[str]:
+    def _init_date(self) -> list[str]:
         epoch = utils.get_epoch(self.dataset["time"].units)
         return [str(x).zfill(2) for x in epoch]
 

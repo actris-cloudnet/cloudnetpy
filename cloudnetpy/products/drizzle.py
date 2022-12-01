@@ -1,7 +1,5 @@
 """Module for creating Cloudnet drizzle product.
 """
-from typing import Optional
-
 import numpy as np
 from numpy import ma
 from scipy.special import gamma
@@ -17,7 +15,7 @@ from cloudnetpy.products.drizzle_tools import (
 )
 
 
-def generate_drizzle(categorize_file: str, output_file: str, uuid: Optional[str] = None) -> str:
+def generate_drizzle(categorize_file: str, output_file: str, uuid: str | None = None) -> str:
     """Generates Cloudnet drizzle product.
 
     This function calculates different drizzle properties from

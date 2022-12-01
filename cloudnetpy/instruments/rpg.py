@@ -1,7 +1,7 @@
 """This module contains RPG Cloud Radar related functions."""
 import logging
 import math
-from typing import Optional, Sequence, Tuple, Union
+from typing import Sequence
 
 import numpy as np
 from numpy import ma
@@ -19,9 +19,9 @@ def rpg2nc(
     path_to_l1_files: str,
     output_file: str,
     site_meta: dict,
-    uuid: Optional[str] = None,
-    date: Optional[str] = None,
-) -> Tuple[str, list]:
+    uuid: str | None = None,
+    date: str | None = None,
+) -> tuple[str, list]:
     """Converts RPG-FMCW-94 cloud radar data into Cloudnet Level 1b netCDF file.
 
     This function reads one day of RPG Level 1 cloud radar binary files,
@@ -87,7 +87,7 @@ def print_info(data: dict) -> None:
     logging.info(f"RPG cloud radar in {mode} mode")
 
 
-RpgObjects = Union[Sequence[Fmcw94Bin], Sequence[HatproBinCombined]]
+RpgObjects = Sequence[Fmcw94Bin] | Sequence[HatproBinCombined]
 
 
 def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
@@ -99,7 +99,7 @@ def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
     return {**rpg_header, **rpg_raw_data}
 
 
-def _stack_rpg_data(rpg_objects: RpgObjects) -> Tuple[dict, dict]:
+def _stack_rpg_data(rpg_objects: RpgObjects) -> tuple[dict, dict]:
     """Combines data from hourly RPG objects.
 
     Notes:
@@ -149,7 +149,7 @@ def _mask_invalid_data(data_in: dict) -> dict:
     return data
 
 
-def _get_fmcw94_objects(files: list, expected_date: Union[str, None]) -> Tuple[list, list]:
+def _get_fmcw94_objects(files: list, expected_date: str | None) -> tuple[list, list]:
     """Creates a list of Rpg() objects from the file names."""
     objects = []
     valid_files = []
@@ -170,7 +170,7 @@ def _get_fmcw94_objects(files: list, expected_date: Union[str, None]) -> Tuple[l
     return objects, valid_files
 
 
-def _remove_files_with_bad_height(objects: list, files: list) -> Tuple[list, list]:
+def _remove_files_with_bad_height(objects: list, files: list) -> tuple[list, list]:
     lengths = [obj.data["Zh"].shape[1] for obj in objects]
     most_common = np.bincount(lengths).argmax()
     files = [file for file, obj, length in zip(files, objects, lengths) if length == most_common]
@@ -199,7 +199,7 @@ class Rpg(CloudnetInstrument):
         self.data = self._init_data()
         self.instrument: Instrument
 
-    def convert_time_to_fraction_hour(self, data_type: Optional[str] = None) -> None:
+    def convert_time_to_fraction_hour(self, data_type: str | None = None) -> None:
         """Converts time to fraction hour."""
         key = "time"
         fraction_hour = utils.seconds2hours(self.raw_data[key])

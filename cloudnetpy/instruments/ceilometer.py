@@ -1,5 +1,4 @@
 import logging
-from typing import List, Tuple, Union
 
 import numpy as np
 from numpy import ma
@@ -26,10 +25,10 @@ class Ceilometer:
         self.noise_param = noise_param
         self.data: dict = {}  # Need to contain 'beta_raw', 'range' and 'time'
         self.metadata: dict = {}  # Need to contain 'date' as ('yyyy', 'mm', 'dd')
-        self.expected_date: Union[str, None] = None
+        self.expected_date: str | None = None
         self.site_meta: dict = {}
-        self.date: List[str] = []
-        self.instrument: Union[Instrument, None] = None
+        self.date: list[str] = []
+        self.instrument: Instrument | None = None
 
     def calc_screened_product(
         self, array: np.ndarray, snr_limit: int = 5, range_corrected: bool = True
@@ -225,7 +224,7 @@ def _calc_var_from_top_gates(data: np.ndarray) -> np.ndarray:
     return ma.var(data[:, -n_gates:], axis=1)
 
 
-def calc_sigma_units(time_vector: np.ndarray, range_los: np.ndarray) -> Tuple[float, float]:
+def calc_sigma_units(time_vector: np.ndarray, range_los: np.ndarray) -> tuple[float, float]:
     """Calculates Gaussian peak std parameters.
 
     The amount of smoothing is hard coded. This function calculates
@@ -252,7 +251,7 @@ def calc_sigma_units(time_vector: np.ndarray, range_los: np.ndarray) -> Tuple[fl
     return x_std, y_std
 
 
-def _estimate_clouds_from_beta(beta: np.ndarray) -> Tuple[tuple, np.ndarray, float]:
+def _estimate_clouds_from_beta(beta: np.ndarray) -> tuple[tuple, np.ndarray, float]:
     """Naively finds strong clouds from ceilometer backscatter."""
     cloud_limit = 1e-6
     cloud_ind = np.where(beta > cloud_limit)

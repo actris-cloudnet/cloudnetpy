@@ -6,7 +6,7 @@ import re
 import uuid
 import warnings
 from datetime import timezone
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Iterator
 
 import netCDF4
 import numpy as np
@@ -17,8 +17,8 @@ from scipy.interpolate import RectBivariateSpline, RegularGridInterpolator, grid
 
 from cloudnetpy.exceptions import ValidTimeStampError
 
-Epoch = Tuple[int, int, int]
-Date = Tuple[str, str, str]
+Epoch = tuple[int, int, int]
+Date = tuple[str, str, str]
 
 SECONDS_PER_MINUTE = 60
 SECONDS_PER_HOUR = 3600
@@ -101,7 +101,7 @@ def time_grid(time_step: int = 30) -> np.ndarray:
     return np.arange(half_step, 24 + half_step, half_step * 2)
 
 
-def binvec(x: Union[np.ndarray, list]) -> np.ndarray:
+def binvec(x: np.ndarray | list) -> np.ndarray:
     """Converts 1-D center points to bins with even spacing.
 
     Args:
@@ -126,7 +126,7 @@ def rebin_2d(
     x_new: np.ndarray,
     statistic: str = "mean",
     n_min: int = 1,
-) -> Tuple[ma.MaskedArray, list]:
+) -> tuple[ma.MaskedArray, list]:
     """Rebins 2-D data in one dimension.
 
     Args:
@@ -171,7 +171,7 @@ def rebin_2d(
 
 def rebin_1d(
     x_in: np.ndarray,
-    array: Union[np.ndarray, ma.MaskedArray],
+    array: np.ndarray | ma.MaskedArray,
     x_new: np.ndarray,
     statistic: str = "mean",
 ) -> ma.MaskedArray:
@@ -404,7 +404,7 @@ def calc_relative_error(reference: np.ndarray, array: np.ndarray) -> np.ndarray:
     return ((array - reference) / reference) * 100
 
 
-def db2lin(array: Union[float, np.ndarray], scale: int = 10) -> np.ndarray:
+def db2lin(array: float | np.ndarray, scale: int = 10) -> np.ndarray:
     """dB to linear conversion."""
     data = array / scale
     with warnings.catch_warnings():
@@ -522,7 +522,7 @@ def ffill(array: np.ndarray, value: int = 0) -> np.ndarray:
 
 def init(
     n_vars: int, shape: tuple, dtype: type = float, masked: bool = True
-) -> Iterator[Union[np.ndarray, ma.MaskedArray]]:
+) -> Iterator[np.ndarray | ma.MaskedArray]:
     """Initializes several numpy arrays.
 
     Args:
@@ -552,7 +552,7 @@ def init(
             yield np.zeros(shape, dtype=dtype)
 
 
-def n_elements(array: np.ndarray, dist: float, var: Optional[str] = None) -> int:
+def n_elements(array: np.ndarray, dist: float, var: str | None = None) -> int:
     """Returns the number of elements that cover certain distance.
 
     Args:
@@ -654,7 +654,7 @@ def transpose(data: np.ndarray) -> np.ndarray:
     return data[:, np.newaxis]
 
 
-def del_dict_keys(data: dict, keys: Union[tuple, list]) -> dict:
+def del_dict_keys(data: dict, keys: tuple | list) -> dict:
     """Deletes multiple keys from dictionary.
 
     Args:
@@ -740,7 +740,7 @@ def get_sorted_filenames(file_path: str, extension: str) -> list:
     return files
 
 
-def str_to_numeric(value: str) -> Union[int, float]:
+def str_to_numeric(value: str) -> int | float:
     """Converts string to number (int or float)."""
     try:
         return int(value)
@@ -833,7 +833,7 @@ def find_valid_time_indices(time: np.ndarray, epoch: Epoch, expected_date: str) 
 
     """
     ind_sorted = np.argsort(time)
-    ind_valid: List[int] = []
+    ind_valid: list[int] = []
     for ind in ind_sorted:
         date_str = "-".join(seconds2date(time[ind], epoch=epoch)[:3])
         if date_str == expected_date and time[ind] not in time[ind_valid]:

@@ -1,6 +1,5 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
 from itertools import islice
-from typing import Optional, Union
 
 import netCDF4
 
@@ -15,8 +14,8 @@ def ceilo2nc(
     full_path: str,
     output_file: str,
     site_meta: dict,
-    uuid: Optional[str] = None,
-    date: Optional[str] = None,
+    uuid: str | None = None,
+    date: str | None = None,
 ) -> str:
     """Converts Vaisala / Lufft ceilometer data into Cloudnet Level 1b netCDF file.
 
@@ -87,8 +86,8 @@ def ceilo2nc(
 
 
 def _initialize_ceilo(
-    full_path: str, site_meta: dict, date: Optional[str] = None
-) -> Union[ClCeilo, Ct25k, LufftCeilo, Cl61d]:
+    full_path: str, site_meta: dict, date: str | None = None
+) -> ClCeilo | Ct25k | LufftCeilo | Cl61d:
     model = _find_ceilo_model(full_path)
     if model == "cl31_or_cl51":
         return ClCeilo(full_path, site_meta, date)

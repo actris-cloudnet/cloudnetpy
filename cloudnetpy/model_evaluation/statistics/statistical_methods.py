@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-from typing import Tuple, Union
 
 import numpy as np
 from numpy import ma
@@ -47,7 +46,7 @@ class DayStatistics:
         self.observation_data = observation
         self._generate_day_statistics()
 
-    def _get_method_attr(self) -> Tuple[str, tuple]:
+    def _get_method_attr(self) -> tuple[str, tuple]:
         full_name = ""
         params = (self.model_data, self.observation_data)
         if self.method == "error":
@@ -72,13 +71,13 @@ class DayStatistics:
             logging.error(f"Method {full_name} not found or missing: {error}")
 
 
-def relative_error(model: ma.MaskedArray, observation: ma.MaskedArray) -> Tuple[float, str]:
+def relative_error(model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple[float, str]:
     model, observation = combine_masked_indices(model, observation)
     error = ((model - observation) / observation) * 100
     return np.round(error, 2), ""
 
 
-def absolute_error(model: ma.MaskedArray, observation: ma.MaskedArray) -> Tuple[float, str]:
+def absolute_error(model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple[float, str]:
     model, observation = combine_masked_indices(model, observation)
     error = (observation - model) * 100
     return np.round(error, 2), ""
@@ -86,7 +85,7 @@ def absolute_error(model: ma.MaskedArray, observation: ma.MaskedArray) -> Tuple[
 
 def combine_masked_indices(
     model: ma.MaskedArray, observation: ma.MaskedArray
-) -> Tuple[ma.MaskedArray, ma.MaskedArray]:
+) -> tuple[ma.MaskedArray, ma.MaskedArray]:
     """Connects two array masked indices to one and add in two array same mask"""
     observation[np.where(np.isnan(observation))] = ma.masked
     model[model < np.min(observation)] = ma.masked
@@ -96,7 +95,7 @@ def combine_masked_indices(
     return model, observation
 
 
-def calc_common_area_sum(model: ma.MaskedArray, observation: ma.MaskedArray) -> Tuple[float, str]:
+def calc_common_area_sum(model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple[float, str]:
     def _indices_of_mask_sum():
         # Calculate percentage value of common area of indices from two arrays.
         # Results is total number of common indices with value
@@ -112,7 +111,7 @@ def calc_common_area_sum(model: ma.MaskedArray, observation: ma.MaskedArray) -> 
     return match, ""
 
 
-def histogram(product: list, model: ma.MaskedArray, observation: ma.MaskedArray) -> Tuple:
+def histogram(product: list, model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple:
     if "cf" in product:
         model = ma.round(model[~model.mask].data, decimals=1).flatten()
         observation = ma.round(observation[~observation.mask].data, decimals=1).flatten()
@@ -125,7 +124,7 @@ def histogram(product: list, model: ma.MaskedArray, observation: ma.MaskedArray)
     return model, observation
 
 
-def vertical_profile(model: ma.MaskedArray, observation: ma.MaskedArray) -> Tuple:
+def vertical_profile(model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple:
     if model.shape[0] > 25:
         model = model.T
         observation = observation.T
@@ -134,7 +133,7 @@ def vertical_profile(model: ma.MaskedArray, observation: ma.MaskedArray) -> Tupl
     return model_vertical, obs_vertical
 
 
-def day_stat_title(method: str, product: list) -> Union[str, Tuple[str, str]]:
+def day_stat_title(method: str, product: list) -> str | tuple[str, str]:
     if method in ("hist", "vertical"):
         return f"{product[1]}", f"{product[-1]}"
     return f"{product[-1]} vs {product[1]}"

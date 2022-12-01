@@ -1,5 +1,3 @@
-from typing import Tuple, Union
-
 import netCDF4
 import numpy as np
 from matplotlib import cm
@@ -10,8 +8,8 @@ from cloudnetpy.model_evaluation.model_metadata import MODELS
 
 
 def parse_wanted_names(
-    nc_file: str, name: str, model: str, variables: Union[list, None] = None, advance: bool = False
-) -> Tuple[list, list]:
+    nc_file: str, name: str, model: str, variables: list | None = None, advance: bool = False
+) -> tuple[list, list]:
     """Returns standard and advection lists of product types to plot"""
     if variables:
         names = variables
@@ -59,7 +57,7 @@ def sort_model2first_element(a: list, model: str) -> list:
     return a
 
 
-def sort_cycles(names: list, model: str) -> Tuple[list, list]:
+def sort_cycles(names: list, model: str) -> tuple[list, list]:
     model_info = MODELS[model]
     cycles = model_info.cycle
     if cycles is None:
@@ -72,7 +70,7 @@ def sort_cycles(names: list, model: str) -> Tuple[list, list]:
     return cycles_names, cycles_new
 
 
-def read_data_characters(nc_file: str, name: str, model: str) -> Tuple:
+def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
     """Gets dimensions and data for plotting"""
     nc = netCDF4.Dataset(nc_file)
     data = nc.variables[name][:]
@@ -114,7 +112,7 @@ def reshape_1d2nd(one_d: np.ndarray, two_d: np.ndarray) -> np.ndarray:
     return new_arr
 
 
-def create_segment_values(arrays: list) -> Tuple:
+def create_segment_values(arrays: list) -> tuple:
     # 0=no data, 1=model, 2=intersection, 3=observation
     new_array = np.zeros(arrays[0].shape, dtype=int)
     for i, array in enumerate(arrays):
@@ -145,7 +143,7 @@ def rolling_mean(data: ma.MaskedArray, n: int = 4) -> np.ndarray:
     return np.asarray(mmr)
 
 
-def change2one_dim_axes(x: ma.MaskedArray, y: ma.MaskedArray, data: np.ndarray) -> Tuple:
+def change2one_dim_axes(x: ma.MaskedArray, y: ma.MaskedArray, data: np.ndarray) -> tuple:
     # If any mask in x or y, change 2d to 1d axes values
     # Common shape need to match 2d data.
     for ax in [x, y]:

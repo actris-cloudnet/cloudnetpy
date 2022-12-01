@@ -1,6 +1,5 @@
 """ Functions for file writing."""
 import logging
-from typing import Optional
 
 import netCDF4
 import numpy as np
@@ -11,7 +10,7 @@ from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
-def save_level1b(obj, output_file: str, uuid: Optional[str] = None) -> str:
+def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
     """Saves Cloudnet Level 1b file."""
     dimensions = {key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data}
     if "chirp_start_indices" in obj.data:
@@ -35,7 +34,7 @@ def save_level1b(obj, output_file: str, uuid: Optional[str] = None) -> str:
 
 
 def save_product_file(
-    short_id: str, obj, file_name: str, uuid: Optional[str] = None, copy_from_cat: tuple = ()
+    short_id: str, obj, file_name: str, uuid: str | None = None, copy_from_cat: tuple = ()
 ) -> str:
     """Saves a standard Cloudnet product file.
 
@@ -78,7 +77,7 @@ def get_l1b_title(instrument: Instrument, location: str) -> str:
     return f"{instrument.model} {instrument.category} from {location}"
 
 
-def get_references(identifier: Optional[str] = None) -> str:
+def get_references(identifier: str | None = None) -> str:
     """ "Returns references.
 
     Args:
@@ -145,7 +144,7 @@ def add_source_instruments(nc: netCDF4.Dataset, data: dict) -> None:
 
 
 def init_file(
-    file_name: str, dimensions: dict, cloudnet_arrays: dict, uuid: Optional[str] = None
+    file_name: str, dimensions: dict, cloudnet_arrays: dict, uuid: str | None = None
 ) -> netCDF4.Dataset:
     """Initializes a Cloudnet file for writing.
 
@@ -305,7 +304,7 @@ def _get_identifier(short_id: str) -> str:
     return short_id
 
 
-def _add_standard_global_attributes(nc: netCDF4.Dataset, uuid: Optional[str] = None) -> None:
+def _add_standard_global_attributes(nc: netCDF4.Dataset, uuid: str | None = None) -> None:
     nc.Conventions = "CF-1.8"
     nc.cloudnetpy_version = version.__version__
     nc.file_uuid = uuid or utils.get_uuid()

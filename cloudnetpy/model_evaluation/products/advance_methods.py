@@ -1,6 +1,5 @@
 import importlib
 import logging
-from typing import Tuple
 
 import numpy as np
 from numpy import ma
@@ -80,7 +79,7 @@ class AdvanceProductMethods(DataSource):
     def remove_extra_levels(self, arg: np.ndarray) -> np.ndarray:
         return self._model_obj.cut_off_extra_levels(arg)
 
-    def set_frequency_parameters(self) -> Tuple:
+    def set_frequency_parameters(self) -> tuple:
         assert self._obs_obj.radar_freq is not None
         if 30 <= self._obs_obj.radar_freq <= 40:
             return 0.000242, -0.0186, 0.0699, -1.63
@@ -115,7 +114,7 @@ class AdvanceProductMethods(DataSource):
 
     def find_ice_in_clouds(
         self, cf_filtered: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
-    ) -> Tuple[np.ndarray, tuple]:
+    ) -> tuple[np.ndarray, tuple]:
         ice_ind = self.get_ice_indices(cf_filtered, iwc, lwc)
         cloud_iwc = iwc[ice_ind] / cf_filtered[ice_ind] * 1e3
         return cloud_iwc, ice_ind

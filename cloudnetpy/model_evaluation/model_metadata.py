@@ -1,13 +1,13 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 
 class ModelMetaData(NamedTuple):
-    long_name: Optional[str] = None
-    cycle_var: Optional[str] = None
-    common_var: Optional[str] = None
-    cycle: Optional[str] = None
-    level: Optional[int] = None
-    model_name: Optional[str] = None
+    long_name: str | None = None
+    cycle_var: str | None = None
+    common_var: str | None = None
+    cycle: str | None = None
+    level: int | None = None
+    model_name: str | None = None
 
 
 MODELS = {

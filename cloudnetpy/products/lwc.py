@@ -1,6 +1,4 @@
 """Module for creating Cloudnet liquid water content file using scaled-adiabatic method."""
-from typing import Optional, Tuple
-
 import numpy as np
 from numpy import ma
 
@@ -14,7 +12,7 @@ from cloudnetpy.products.product_tools import CategorizeBits, get_is_rain
 G_TO_KG = 0.001
 
 
-def generate_lwc(categorize_file: str, output_file: str, uuid: Optional[str] = None) -> str:
+def generate_lwc(categorize_file: str, output_file: str, uuid: str | None = None) -> str:
     """Generates Cloudnet liquid water content product.
 
     This function calculates cloud liquid water content using the so-called
@@ -99,7 +97,7 @@ class LwcSource(DataSource):
         self.append_data(error, "lwc_error", units="dB")
 
     @staticmethod
-    def _get_atmosphere(categorize_file: str) -> Tuple[np.ndarray, np.ndarray]:
+    def _get_atmosphere(categorize_file: str) -> tuple[np.ndarray, np.ndarray]:
         fields = ["temperature", "pressure"]
         atmosphere = p_tools.interpolate_model(categorize_file, fields)
         return atmosphere["temperature"], atmosphere["pressure"]

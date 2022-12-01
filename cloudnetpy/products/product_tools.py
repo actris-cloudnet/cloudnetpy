@@ -1,6 +1,5 @@
 """General helper classes and functions for all products."""
 from collections import namedtuple
-from typing import Dict, Union
 
 import netCDF4
 import numpy as np
@@ -196,7 +195,7 @@ def get_is_rain(filename: str) -> np.ndarray:
     return np.array(is_rain)
 
 
-def read_nc_fields(nc_file: str, names: Union[str, list]) -> Union[ma.MaskedArray, list]:
+def read_nc_fields(nc_file: str, names: str | list) -> ma.MaskedArray | list:
     """Reads selected variables from a netCDF file.
 
     Args:
@@ -214,7 +213,7 @@ def read_nc_fields(nc_file: str, names: Union[str, list]) -> Union[ma.MaskedArra
     return data[0] if len(data) == 1 else data
 
 
-def interpolate_model(cat_file: str, names: Union[str, list]) -> Dict[str, np.ndarray]:
+def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]:
     """Interpolates 2D model field into dense Cloudnet grid.
 
     Args:

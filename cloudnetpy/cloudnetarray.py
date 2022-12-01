@@ -1,6 +1,5 @@
 """CloudnetArray class."""
 import math
-from typing import Optional, Union
 
 import netCDF4
 import numpy as np
@@ -25,11 +24,11 @@ class CloudnetArray:
 
     def __init__(
         self,
-        variable: Union[netCDF4.Variable, np.ndarray, float, int],
+        variable: netCDF4.Variable | np.ndarray | float | int,
         name: str,
-        units_from_user: Optional[str] = None,
-        dimensions: Optional[tuple] = None,
-        data_type: Optional[str] = None,
+        units_from_user: str | None = None,
+        dimensions: tuple | None = None,
+        data_type: str | None = None,
     ):
         self.variable = variable
         self.name = name
@@ -149,7 +148,7 @@ class CloudnetArray:
         self,
         time: np.ndarray,
         time_new: np.ndarray,
-        folding_velocity: Union[float, np.ndarray],
+        folding_velocity: float | np.ndarray,
         sequence_indices: list,
     ) -> None:
         """Rebins Doppler velocity in polar coordinates.

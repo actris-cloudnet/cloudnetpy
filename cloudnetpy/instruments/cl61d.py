@@ -1,6 +1,5 @@
 """Module with a class for Lufft chm15k ceilometer."""
 import logging
-from typing import Optional
 
 import netCDF4
 
@@ -11,14 +10,14 @@ from cloudnetpy.instruments.nc_lidar import NcLidar
 class Cl61d(NcLidar):
     """Class for Vaisala CL61d ceilometer."""
 
-    def __init__(self, file_name: str, site_meta: dict, expected_date: Optional[str] = None):
+    def __init__(self, file_name: str, site_meta: dict, expected_date: str | None = None):
         super().__init__()
         self.file_name = file_name
         self.site_meta = site_meta
         self.expected_date = expected_date
         self.instrument = instruments.CL61D
 
-    def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
+    def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
         """Reads data and metadata from concatenated Vaisala CL61d netCDF file."""
         with netCDF4.Dataset(self.file_name) as dataset:
             self.dataset = dataset
@@ -28,7 +27,7 @@ class Cl61d(NcLidar):
             self._fetch_time_and_date()
             self.dataset = None
 
-    def _fetch_lidar_variables(self, calibration_factor: Optional[float] = None) -> None:
+    def _fetch_lidar_variables(self, calibration_factor: float | None = None) -> None:
         assert self.dataset is not None
         beta_raw = self.dataset.variables["beta_att"][:]
         if calibration_factor is None:

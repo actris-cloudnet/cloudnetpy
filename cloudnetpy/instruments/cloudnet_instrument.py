@@ -1,5 +1,4 @@
 import logging
-from typing import Optional, Union
 
 import netCDF4
 import numpy as np
@@ -10,7 +9,7 @@ from cloudnetpy import CloudnetArray, utils
 
 class CloudnetInstrument:
     def __init__(self):
-        self.dataset: Optional[netCDF4.Dataset] = None
+        self.dataset: netCDF4.Dataset | None = None
         self.time: np.ndarray = np.array([])
         self.site_meta: dict = {}
         self.data: dict = {}
@@ -59,7 +58,7 @@ class CloudnetInstrument:
         ind = time.argsort()
         self.screen_time_indices(ind)
 
-    def screen_time_indices(self, valid_indices: Union[list, np.ndarray]) -> None:
+    def screen_time_indices(self, valid_indices: list | np.ndarray) -> None:
         time = self._get_time()
         n_time = len(time)
         for cloudnet_array in self.data.values():

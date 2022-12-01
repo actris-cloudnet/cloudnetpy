@@ -1,7 +1,6 @@
 """Radar module, containing the :class:`Radar` class."""
 import logging
 import math
-from typing import List, Union
 
 import numpy as np
 from numpy import ma
@@ -214,7 +213,7 @@ class Radar(DataSource):
             z_sensitivity[valid_values] = zc[valid_values]
             return z_sensitivity
 
-        def _calc_error() -> Union[np.ndarray, float]:
+        def _calc_error() -> np.ndarray | float:
             if "width" not in self.data:
                 return 0.3
             z_precision = 4.343 * (
@@ -284,7 +283,7 @@ class Radar(DataSource):
             return np.split(all_indices, starting_indices[1:])
         return [all_indices]
 
-    def _get_folding_velocity(self) -> Union[np.ndarray, float]:
+    def _get_folding_velocity(self) -> np.ndarray | float:
         if "nyquist_velocity" in self.dataset.variables:
             return self.getvar("nyquist_velocity")
         if "prf" in self.dataset.variables:
@@ -293,7 +292,7 @@ class Radar(DataSource):
         raise RuntimeError("Unable to determine folding velocity")
 
     def _get_folding_velocity_full(self):
-        folding_velocity: Union[List, np.ndarray] = []
+        folding_velocity: list | np.ndarray = []
         if utils.isscalar(self.folding_velocity):
             folding_velocity = np.repeat(self.folding_velocity, len(self.sequence_indices[0]))
         else:

@@ -1,6 +1,4 @@
 """Module for creating Cloudnet ice effective radius file using Z-T method."""
-from typing import Optional
-
 import numpy as np
 from numpy import ma
 
@@ -9,7 +7,7 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import IceClassification, IceSource
 
 
-def generate_ier(categorize_file: str, output_file: str, uuid: Optional[str] = None) -> str:
+def generate_ier(categorize_file: str, output_file: str, uuid: str | None = None) -> str:
     """Generates Cloudnet ice effective radius product.
 
     This function calculates ice particle effective radius using the Grieche et al. 2020 method

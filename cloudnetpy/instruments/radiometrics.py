@@ -1,6 +1,5 @@
 """Module for reading Radiometrics MP3014 microwave radiometer data."""
 import csv
-from typing import List, Optional, Union
 
 import numpy as np
 
@@ -13,8 +12,8 @@ def radiometrics2nc(
     full_path: str,
     output_file: str,
     site_meta: dict,
-    uuid: Optional[str] = None,
-    date: Optional[str] = None,
+    uuid: str | None = None,
+    date: str | None = None,
 ) -> str:
     """Converts Radiometrics .csv file into Cloudnet Level 1b netCDF file.
 
@@ -56,7 +55,7 @@ class Radiometrics:
         self.site_meta = site_meta
         self.raw_data: list = []
         self.data: dict = {}
-        self.date: List[str] = []
+        self.date: list[str] = []
         self.instrument = instruments.RADIOMETRICS
 
     def read_raw_data(self):
@@ -80,7 +79,7 @@ class Radiometrics:
             fraction_hour.append(int(hour) + int(minute) / 60 + int(sec) / 3600)
         self.data["time"] = np.array(fraction_hour)
 
-    def screen_time(self, expected_date: Union[str, None]):
+    def screen_time(self, expected_date: str | None):
         """Screens timestamps."""
         dates = [row[1].split()[0] for row in self.raw_data]
         if expected_date is None:

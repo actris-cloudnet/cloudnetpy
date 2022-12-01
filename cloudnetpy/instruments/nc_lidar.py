@@ -1,6 +1,5 @@
 """Module with a class for Lufft chm15k ceilometer."""
 import logging
-from typing import Union
 
 import netCDF4
 import numpy as np
@@ -14,7 +13,7 @@ class NcLidar(Ceilometer):
 
     def __init__(self):
         super().__init__()
-        self.dataset: Union[netCDF4.Dataset, None] = None
+        self.dataset: netCDF4.Dataset | None = None
 
     def _fetch_range(self, reference: str) -> None:
         assert self.dataset is not None

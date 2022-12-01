@@ -1,6 +1,5 @@
 import importlib
 import logging
-from typing import Dict, List
 
 import numpy as np
 from numpy import ma
@@ -39,12 +38,12 @@ class ModelManager(DataSource):
         self.model_info = MODELS[model]
         self.model_vars = VARIABLES["variables"]
         self._product = product
-        self.keys: Dict = {}
+        self.keys: dict = {}
         self._is_file = file_exists(output_file) if check_file else False
         self.cycle = self._read_cycle_name(model_file)
         self._add_variables()
         self._generate_products()
-        self.date: List = []
+        self.date: list = []
         self.wind = self._calculate_wind_speed()
         self.resolution_h = self._get_horizontal_resolution()
 

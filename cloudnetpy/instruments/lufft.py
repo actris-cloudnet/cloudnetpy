@@ -1,6 +1,5 @@
 """Module with a class for Lufft chm15k ceilometer."""
 import logging
-from typing import Optional, Union
 
 import netCDF4
 from numpy import ma
@@ -13,14 +12,14 @@ from cloudnetpy.instruments.nc_lidar import NcLidar
 class LufftCeilo(NcLidar):
     """Class for Lufft chm15k ceilometer."""
 
-    def __init__(self, file_name: str, site_meta: dict, expected_date: Optional[str] = None):
+    def __init__(self, file_name: str, site_meta: dict, expected_date: str | None = None):
         super().__init__()
         self.file_name = file_name
         self.site_meta = site_meta
         self.expected_date = expected_date
         self.instrument = self._get_chm_model()
 
-    def read_ceilometer_file(self, calibration_factor: Optional[float] = None) -> None:
+    def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""
         with netCDF4.Dataset(self.file_name) as dataset:
             self.dataset = dataset
@@ -29,7 +28,7 @@ class LufftCeilo(NcLidar):
             self._fetch_time_and_date()
             self._fetch_zenith_angle("zenith")
 
-    def _fetch_beta_raw(self, calibration_factor: Optional[float] = None) -> None:
+    def _fetch_beta_raw(self, calibration_factor: float | None = None) -> None:
         assert self.dataset is not None
         if calibration_factor is None:
             logging.warning("Using default calibration factor")
@@ -46,7 +45,7 @@ class LufftCeilo(NcLidar):
         self.data["calibration_factor"] = float(calibration_factor)
         self.data["beta_raw"] = beta_raw
 
-    def _get_old_software_version(self) -> Union[str, None]:
+    def _get_old_software_version(self) -> str | None:
         assert self.dataset is not None
         version = self.dataset.software_version
         if len(str(version)) > 4:

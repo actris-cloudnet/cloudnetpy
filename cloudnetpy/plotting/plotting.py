@@ -1,7 +1,6 @@
 """Misc. plotting routines for Cloudnet products."""
 import os.path
 from datetime import date
-from typing import Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import netCDF4
@@ -29,7 +28,7 @@ class Dimensions:
     margin_bottom: int
     margin_left: int
 
-    def __init__(self, fig, axes, pad_inches: Optional[float] = None):
+    def __init__(self, fig, axes, pad_inches: float | None = None):
         if pad_inches is None:
             pad_inches = rcParams["savefig.pad_inches"]
 
@@ -56,10 +55,10 @@ def generate_figure(
     nc_file: str,
     field_names: list,
     show: bool = True,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
     max_y: int = 12,
     dpi: int = 120,
-    image_name: Optional[str] = None,
+    image_name: str | None = None,
     sub_title: bool = True,
     title: bool = True,
 ) -> Dimensions:
@@ -166,8 +165,8 @@ def _mark_gaps(time: np.ndarray, data: ma.MaskedArray, max_allowed_gap: float = 
 
 
 def handle_saving(
-    image_name: Optional[str],
-    save_path: Optional[str],
+    image_name: str | None,
+    save_path: str | None,
     show: bool,
     case_date: date,
     field_names: list,
@@ -204,7 +203,7 @@ def _set_title(ax, field_name: str, identifier: str = " from CloudnetPy"):
     ax.set_title(f"{ATTRIBUTES[field_name].name}{identifier}", fontsize=14)
 
 
-def _find_valid_fields(nc_file: str, names: list) -> Tuple[list, list]:
+def _find_valid_fields(nc_file: str, names: list) -> tuple[list, list]:
     """Returns valid field names and corresponding data."""
     valid_names, valid_data = names[:], []
     try:
@@ -248,7 +247,7 @@ def _initialize_figure(n_subplots: int, dpi) -> tuple:
     return fig, axes
 
 
-def _read_ax_values(full_path: str) -> Tuple[ndarray, ndarray]:
+def _read_ax_values(full_path: str) -> tuple[ndarray, ndarray]:
     """Returns time and height arrays."""
     file_type = utils.get_file_type(full_path)
     with netCDF4.Dataset(full_path) as nc:
@@ -293,7 +292,7 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) ->
     return data_field, (ax_values[0], alt)
 
 
-def set_ax(ax, max_y: float, ylabel: Union[str, None], min_y: float = 0.0):
+def set_ax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0):
     """Sets ticks and tick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks()
     ax.set_ylim(min_y, max_y)
@@ -337,7 +336,7 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
 
     """
 
-    def _hide_segments(data_in: ma.MaskedArray) -> Tuple[ma.MaskedArray, list, list]:
+    def _hide_segments(data_in: ma.MaskedArray) -> tuple[ma.MaskedArray, list, list]:
         assert variables.clabel is not None
         labels = [x[0] for x in variables.clabel]
         colors = [x[1] for x in variables.clabel]
@@ -402,7 +401,7 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
 
 
 def _plot_instrument_data(
-    ax, data: ma.MaskedArray, name: str, product: Optional[str], time: ndarray, unit: str
+    ax, data: ma.MaskedArray, name: str, product: str | None, time: ndarray, unit: str
 ):
     if product == "mwr":
         _plot_mwr(ax, data, name, time, unit)
@@ -445,7 +444,7 @@ def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
     )
 
 
-def _get_unmasked_values(data: ma.MaskedArray, time: ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def _get_unmasked_values(data: ma.MaskedArray, time: ndarray) -> tuple[np.ndarray, np.ndarray]:
     if ma.is_masked(data) is False:
         return data, time
     good_values = ~data.mask
@@ -466,7 +465,7 @@ def _find_time_gap_indices(time: ndarray) -> ndarray:
     return gaps
 
 
-def _get_plot_parameters(data: ndarray) -> Tuple[int, float]:
+def _get_plot_parameters(data: ndarray) -> tuple[int, float]:
     length = len(data)
     n = np.rint(np.nextafter((length / 10000), (length / 10000) + 1))
     if length < 10000:
@@ -480,7 +479,7 @@ def _get_plot_parameters(data: ndarray) -> Tuple[int, float]:
     return int(n), line_width
 
 
-def _calculate_rolling_mean(time: ndarray, data: ndarray) -> Tuple[ndarray, int]:
+def _calculate_rolling_mean(time: ndarray, data: ndarray) -> tuple[ndarray, int]:
     width = len(time[time <= time[0] + 0.3])
     if (width % 2) != 0:
         width = width + 1
@@ -564,9 +563,9 @@ def plot_2d(
     cbar: bool = True,
     cmap: str = "viridis",
     ncolors: int = 50,
-    clim: Optional[tuple] = None,
-    ylim: Optional[tuple] = None,
-    xlim: Optional[tuple] = None,
+    clim: tuple | None = None,
+    ylim: tuple | None = None,
+    xlim: tuple | None = None,
 ):
     """Simple plot of 2d variable."""
     plt.close()
@@ -590,10 +589,10 @@ def compare_files(
     field_name: str,
     show: bool = True,
     relative_err: bool = False,
-    save_path: Optional[str] = None,
+    save_path: str | None = None,
     max_y: int = 12,
     dpi: int = 120,
-    image_name: Optional[str] = None,
+    image_name: str | None = None,
 ) -> Dimensions:
     """Plots one particular field from two Cloudnet files.
 
