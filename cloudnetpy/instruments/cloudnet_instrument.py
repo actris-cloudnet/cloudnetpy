@@ -64,12 +64,13 @@ class CloudnetInstrument:
         for cloudnet_array in self.data.values():
             array = cloudnet_array.data
             if not utils.isscalar(array) and array.shape[0] == n_time:
-                if array.ndim == 1:
-                    cloudnet_array.data = array[valid_indices]
-                elif array.ndim == 2:
-                    cloudnet_array.data = array[valid_indices, :]
-                elif array.ndim == 3:
-                    cloudnet_array.data = array[valid_indices, :]
+                match array.ndim:
+                    case 1:
+                        cloudnet_array.data = array[valid_indices]
+                    case 2:
+                        cloudnet_array.data = array[valid_indices, :]
+                    case 3:
+                        cloudnet_array.data = array[valid_indices, :]
         if self.time.size > 0:
             self.time = self.time[valid_indices]
 

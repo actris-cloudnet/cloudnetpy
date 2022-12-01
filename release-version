@@ -19,12 +19,13 @@ def main(component: str):
     )
     assert current_branch == "master", "FATAL: Not in master branch"
     old_version = _read_version()
-    if component == "major":
-        new_version = Version(old_version.major + 1, 0, 0)
-    elif component == "minor":
-        new_version = Version(old_version.major, old_version.minor + 1, 0)
-    elif component == "patch":
-        new_version = Version(old_version.major, old_version.minor, old_version.patch + 1)
+    match component:
+        case "major":
+            new_version = Version(old_version.major + 1, 0, 0)
+        case "minor":
+            new_version = Version(old_version.major, old_version.minor + 1, 0)
+        case "patch":
+            new_version = Version(old_version.major, old_version.minor, old_version.patch + 1)
     entry = _read_changelog(old_version)
     if not _confirm(f"Updating cloudnetPy version {old_version} -> {new_version}. Continue?"):
         return
