@@ -6,10 +6,10 @@ import re
 import uuid
 import warnings
 from typing import Iterator, List, Optional, Tuple, Union
+from zoneinfo import ZoneInfo
 
 import netCDF4
 import numpy as np
-import pytz
 import requests
 from numpy import ma
 from scipy import ndimage, stats
@@ -74,7 +74,9 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
         [year, month, day, hours, minutes, seconds] formatted as '05' etc (UTC).
 
     """
-    epoch_in_seconds = datetime.datetime.timestamp(datetime.datetime(*epoch, tzinfo=pytz.utc))
+    epoch_in_seconds = datetime.datetime.timestamp(
+        datetime.datetime(*epoch, tzinfo=ZoneInfo("UTC"))
+    )
     timestamp = time_in_seconds + epoch_in_seconds
     return datetime.datetime.utcfromtimestamp(timestamp).strftime("%Y %m %d %H %M %S").split()
 
