@@ -70,7 +70,7 @@ class CloudnetInstrument:
                     case 2:
                         cloudnet_array.data = array[valid_indices, :]
                     case 3:
-                        cloudnet_array.data = array[valid_indices, :]
+                        cloudnet_array.data = array[valid_indices, :, :]
         if self.time.size > 0:
             self.time = self.time[valid_indices]
 
