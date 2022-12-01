@@ -26,7 +26,7 @@ setup(
         "netCDF4",
         "matplotlib",
         "requests",
-        "cloudnetpy_qc>=1.4.0",
+        "cloudnetpy_qc>=1.4.1",
         "scikit-image",
         "rpgpy>=0.12.1",
     ],
