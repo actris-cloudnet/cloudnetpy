@@ -19,7 +19,7 @@ setup(
     license="MIT License",
     packages=find_packages(),
     include_package_data=True,
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     setup_requires=["wheel"],
     install_requires=[
         "scipy",
@@ -42,8 +42,6 @@ setup(
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
