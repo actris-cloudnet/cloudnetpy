@@ -5,6 +5,7 @@ import numpy as np
 import skimage
 from numpy import ma
 
+import cloudnetpy.categorize.atmos
 from cloudnetpy import utils
 from cloudnetpy.categorize import droplet, falling, freezing, insects, melting
 from cloudnetpy.categorize.containers import ClassData, ClassificationResult
@@ -39,7 +40,16 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[3] = melting.find_melting_layer(obs)
     bits[2] = freezing.find_freezing_region(obs, bits[3])
     liquid_from_lidar = droplet.find_liquid(obs)
-    bits[0] = droplet.correct_liquid_top(obs, liquid_from_lidar, bits[2], limit=500)
+    if obs.lv0_files is not None and len(obs.lv0_files) > 0:
+        import voodoonet  # pylint: disable=import-outside-toplevel
+
+        target_time = voodoonet.utils.decimal_hour2unix(obs.date, obs.time)
+        p_liquid = voodoonet.run(obs.lv0_files, target_time=target_time)
+        liquid_from_radar = p_liquid > 0.55
+        liquid_from_radar = _remove_false_radar_liquid(liquid_from_radar, liquid_from_lidar)
+        bits[0] = liquid_from_radar | liquid_from_lidar
+    else:
+        bits[0] = droplet.correct_liquid_top(obs, liquid_from_lidar, bits[2], limit=500)
     bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
     bits, filtered_ice = _filter_falling(bits)
@@ -55,6 +65,16 @@ def classify_measurements(data: dict) -> ClassificationResult:
         obs.rain_rate,
         insect_prob,
     )
+
+
+def _remove_false_radar_liquid(
+    liquid_from_radar: np.ndarray, liquid_from_lidar: np.ndarray
+) -> np.ndarray:
+    """Removes radar-liquid below lidar-detected liquid bases."""
+    lidar_liquid_bases = cloudnetpy.categorize.atmos.find_cloud_bases(liquid_from_lidar)
+    for prof, base in zip(*np.where(lidar_liquid_bases)):
+        liquid_from_radar[prof, 0:base] = 0
+    return liquid_from_radar
 
 
 def fetch_quality(data: dict, classification: ClassificationResult, attenuations: dict) -> dict:

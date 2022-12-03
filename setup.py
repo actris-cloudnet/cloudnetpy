@@ -29,16 +29,12 @@ setup(
         "cloudnetpy_qc>=1.4.1",
         "scikit-image",
         "rpgpy>=0.12.1",
+        "toml",
     ],
     extras_require={
-        "test": [
-            "pytest",
-            "pytest-flakefinder",
-            "pylint",
-            "mypy",
-            "types-requests",
-        ],
+        "test": ["pytest", "pytest-flakefinder", "pylint", "mypy", "types-requests", "types-toml"],
         "dev": ["pre-commit"],
+        "extras": ["voodoonet"],
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",

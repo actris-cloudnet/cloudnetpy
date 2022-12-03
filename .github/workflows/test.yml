@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install --upgrade pip
-        pip install .[test]
+        pip install .[test,extras]
     - name: Lint with pylint
       run: |
         pylint cloudnetpy --errors-only
