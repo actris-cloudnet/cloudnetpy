@@ -63,6 +63,8 @@ class ClassData:
         self.rain_rate = _find_rain_rate(self.is_rain, data["radar"])
         self.is_clutter = _find_clutter(self.v, self.is_rain)
         self.altitude = data["radar"].altitude
+        self.lv0_files = data["lv0_files"]
+        self.date = data["radar"].get_date()
 
 
 def _find_rain_from_radar_echo(z: np.ndarray, time: np.ndarray, time_buffer: int = 5) -> np.ndarray:

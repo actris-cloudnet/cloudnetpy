@@ -126,7 +126,7 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
     new_record = f"{utils.get_time()} - {file_type} file created"
     histories = []
     for key, obj in data.items():
-        if hasattr(obj.dataset, "history"):
+        if not isinstance(obj, (str, list)) and obj is not None and hasattr(obj.dataset, "history"):
             history = obj.dataset.history
             history = history.split("\n")[-1] if key == "model" else history
             histories.append(history)

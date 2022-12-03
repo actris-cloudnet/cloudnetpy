@@ -116,3 +116,36 @@ def test_fix_undetected_melting_layer():
     bits = [is_liquid, is_falling, is_freezing, is_melting]
     result = classify._fix_undetected_melting_layer(bits)
     assert_array_equal(expected.data, result.data)
+
+
+def test_remove_false_radar_liquid():
+    liquid_from_lidar = np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 0, 0],
+            [0, 0, 0, 1, 1, 0, 0],
+            [1, 1, 0, 1, 1, 0, 0],
+            [0, 1, 0, 0, 1, 0, 1],
+        ]
+    )
+    liquid_from_radar = np.array(
+        [
+            [0, 0, 0, 1, 1, 0, 0],
+            [0, 0, 1, 1, 1, 0, 0],
+            [0, 0, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1],
+        ]
+    )
+    result = np.array(
+        [
+            [0, 0, 0, 1, 1, 0, 0],
+            [0, 0, 0, 1, 1, 0, 0],
+            [0, 0, 0, 1, 1, 1, 1],
+            [0, 0, 0, 1, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0, 1],
+        ]
+    )
+    assert_array_equal(
+        classify._remove_false_radar_liquid(liquid_from_radar, liquid_from_lidar), result
+    )

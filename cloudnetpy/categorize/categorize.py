@@ -96,13 +96,15 @@ def generate_categorize(input_files: dict, output_file: str, uuid: str | None = 
 
     def _close_all():
         for obj in data.values():
-            obj.close()
+            if isinstance(obj, Radar | Lidar | Mwr | Model):
+                obj.close()
 
     try:
         data = {
             "radar": Radar(input_files["radar"]),
             "lidar": Lidar(input_files["lidar"]),
             "mwr": Mwr(input_files["mwr"]),
+            "lv0_files": input_files.get("lv0_files", None),
         }
         assert data["radar"].altitude is not None
         data["model"] = Model(input_files["model"], data["radar"].altitude)
