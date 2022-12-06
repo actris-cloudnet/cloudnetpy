@@ -15,7 +15,6 @@ class ClassificationResult:
     category_bits: np.ndarray
     is_rain: np.ndarray
     is_clutter: np.ndarray
-    liquid_bases: np.ndarray
     rain_rate: np.ndarray
     insect_prob: np.ndarray
 
