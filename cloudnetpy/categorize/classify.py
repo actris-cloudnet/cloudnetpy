@@ -36,10 +36,10 @@ def classify_measurements(data: dict) -> ClassificationResult:
     """
     obs = ClassData(data)
     bits: list[np.ndarray] = [np.array([])] * 6
-    liquid = droplet.find_liquid(obs)
     bits[3] = melting.find_melting_layer(obs)
     bits[2] = freezing.find_freezing_region(obs, bits[3])
-    bits[0] = droplet.correct_liquid_top(obs, liquid, bits[2], limit=500)
+    liquid_from_lidar = droplet.find_liquid(obs)
+    bits[0] = droplet.correct_liquid_top(obs, liquid_from_lidar, bits[2], limit=500)
     bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
     bits, filtered_ice = _filter_falling(bits)

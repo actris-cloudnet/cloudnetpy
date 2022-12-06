@@ -163,29 +163,19 @@ def test_correct_liquid_top():
         ]
     )
 
-    liquid = {
-        "tops": np.array(
-            [
-                [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-                [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-            ],
-            dtype=int,
-        ),
-        "presence": np.array(
-            [
-                [0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
-                [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-                [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-            ],
-            dtype=bool,
-        ),
-    }
+    liquid = np.array(
+        [
+            [0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+        ],
+        dtype=bool,
+    )
 
     obs = Obs()
     corrected = droplet.correct_liquid_top(obs, liquid, is_freezing, limit=100)  # type: ignore
-    liquid["presence"][2, :] = [0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
-    assert_array_equal(corrected, liquid["presence"])
+    liquid[2, :] = [0, 0, 0, 1, 1, 1, 1, 1, 0, 0]
+    assert_array_equal(corrected, liquid)
 
 
 def test_find_liquid():
@@ -203,14 +193,7 @@ def test_find_liquid():
                 mask=[[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]],
             )
 
-    bases = np.array([[0, 0, 1, 0, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 1, 0, 0, 0]])
-
-    tops = np.array([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 0]])
-
     is_liquid = np.array([[0, 0, 1, 1, 1, 0], [0, 0, 1, 1, 1, 0], [0, 0, 1, 1, 1, 0]])
 
     obs = ClassData()
-    result = droplet.find_liquid(obs)  # type: ignore
-    assert_array_equal(bases, result["bases"])
-    assert_array_equal(tops, result["tops"])
-    assert_array_equal(is_liquid, result["presence"])
+    assert_array_equal(is_liquid, droplet.find_liquid(obs))  # type: ignore

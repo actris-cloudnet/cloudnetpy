@@ -4,18 +4,19 @@ import numpy as np
 import scipy.signal
 from numpy import ma
 
+import cloudnetpy.categorize.atmos
 from cloudnetpy import utils
 from cloudnetpy.categorize.containers import ClassData
 
 
 def correct_liquid_top(
-    obs: ClassData, liquid: dict, is_freezing: np.ndarray, limit: float = 200
+    obs: ClassData, is_liquid: np.ndarray, is_freezing: np.ndarray, limit: float = 200
 ) -> np.ndarray:
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
         obs: The :class:`ClassData` instance.
-        liquid: Dictionary about liquid clouds including `tops` and `presence`.
+        is_liquid: 2-D boolean array denoting liquid clouds from lidar data.
         is_freezing: 2-D boolean array of sub-zero temperature, derived from the model
             temperature and melting layer based on radar data.
         limit: The maximum correction distance (m) above liquid cloud top.
@@ -27,9 +28,10 @@ def correct_liquid_top(
         Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ.
 
     """
-    is_liquid_corrected = np.copy(liquid["presence"])
+    is_liquid_corrected = np.copy(is_liquid)
+    liquid_tops = cloudnetpy.categorize.atmos.find_cloud_tops(is_liquid)
     top_above = utils.n_elements(obs.height, limit)
-    for prof, top in zip(*np.where(liquid["tops"])):
+    for prof, top in zip(*np.where(liquid_tops)):
         ind = _find_ind_above_top(is_freezing[prof, top:], top_above)
         rad = obs.z[prof, top : top + ind + 1]
         if not (rad.mask.all() or ~rad.mask.any()):
@@ -52,7 +54,7 @@ def find_liquid(
     min_top_der: float = 1e-7,
     min_lwp: float = 0,
     min_alt: float = 100,
-) -> dict:
+) -> np.ndarray:
     """Estimate liquid layers from SNR-screened attenuated backscatter.
 
     Args:
@@ -66,7 +68,7 @@ def find_liquid(
         min_alt: Minimum altitude of the peak from the ground. Default is 100 (m).
 
     Returns:
-        Dict containing `presence`, `bases` and `tops`.
+        2-D boolean array denoting liquid layers.
 
     References:
         The method is based on Tuononen, M. et.al, 2019,
@@ -84,16 +86,11 @@ def find_liquid(
         )
         return all(conditions)
 
-    def _save_peak_position():
-        is_liquid[n, base : top + 1] = True
-        liquid_top[n, top] = True
-        liquid_base[n, base] = True
-
     lwp_int = interpolate_lwp(obs)
     beta = ma.copy(obs.beta)
     height = obs.height
 
-    is_liquid, liquid_top, liquid_base = utils.init(3, beta.shape, dtype=bool, masked=False)
+    is_liquid = np.zeros(beta.shape, dtype=bool)
     base_below_peak = utils.n_elements(height, 200)
     top_above_peak = utils.n_elements(height, 150)
     difference = np.diff(beta, axis=1)
@@ -116,9 +113,9 @@ def find_liquid(
         top_der = (lprof[peak] - lprof[top]) / (height[top] - height[peak])
         is_positive_lwp = lwp_int[n] > min_lwp
         if _is_proper_peak():
-            _save_peak_position()
+            is_liquid[n, base : top + 1] = True
 
-    return {"presence": is_liquid, "bases": liquid_base, "tops": liquid_top}
+    return is_liquid
 
 
 def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
