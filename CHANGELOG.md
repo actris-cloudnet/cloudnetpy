@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.43.0 – 2022-12-13
+
+- Use `voodoonet` for improving liquid detection
+- Simplify `find_liquid` function
+- Fix bug in screening function with 3d data
+- Fix disdrometer metadata
+- Use Python3.10 features
+- Update Python requirement to 3.10
+- Remove pytz
+
 ## 1.42.2 – 2022-11-23
 
 - Improve disdrometer product writing
