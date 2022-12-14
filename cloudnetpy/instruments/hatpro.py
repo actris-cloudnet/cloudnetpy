@@ -3,6 +3,8 @@ import logging
 from collections import defaultdict
 from pathlib import Path
 
+from numpy import ma
+
 from cloudnetpy import output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import rpg
@@ -59,8 +61,12 @@ def hatpro2nc(
 
     """
     hatpro_objects, valid_files = _get_hatpro_objects(Path(path_to_files), date)
-    if not valid_files:
+    is_lwp_files = any(f.endswith(".LWP") for f in valid_files)
+    is_iwv_files = any(f.endswith(".IWV") for f in valid_files)
+    if not is_lwp_files:
         raise ValidTimeStampError
+    if is_iwv_files:
+        _add_missing_variables(hatpro_objects, ("lwp", "iwv"))
     one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
     hatpro = rpg.Hatpro(one_day_of_data, site_meta)
     hatpro.sort_timestamps()
@@ -121,3 +127,13 @@ def _validate_date(obj: HatproBin, expected_date: str):
         raise ValueError("Timestamps not what expected")
     obj.data = obj.data[:][inds]
     return obj
+
+
+def _add_missing_variables(
+    hatpro_objects: list[HatproBinCombined], keys: tuple
+) -> list[HatproBinCombined]:
+    for obj in hatpro_objects:
+        for key in keys:
+            if key not in obj.data:
+                obj.data[key] = ma.masked_all((len(obj.data["time"]),))
+    return hatpro_objects
