@@ -20,7 +20,7 @@ def generate_categorize(input_files: dict, output_file: str, uuid: str | None = 
 
     Args:
         input_files: dict containing file names for calibrated `radar`, `lidar`, `model` and
-            `mwr` files.
+            `mwr` files. Optionally also `lv0_files`, a list of RPG level 0 files.
         output_file: Full path of the output file.
         uuid: Set specific UUID for the file.
 
@@ -35,6 +35,9 @@ def generate_categorize(input_files: dict, output_file: str, uuid: str | None = 
         measures liquid water path. Then, the radar file can be used as
         a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
 
+        If RPG L0 files are provided as an additional input, Voodoo method is used
+        to detect liquid droplets.
+
     Examples:
         >>> from cloudnetpy.categorize import generate_categorize
         >>> input_files = {'radar': 'radar.nc',
@@ -42,6 +45,9 @@ def generate_categorize(input_files: dict, output_file: str, uuid: str | None = 
                            'model': 'model.nc',
                            'mwr': 'mwr.nc'}
         >>> generate_categorize(input_files, 'output.nc')
+
+        >>> input_files["lv0_files"] = ["file1.LV0", "file2.LV0"]  # Add some RGP LV0 files
+        >>> generate_categorize(input_files, 'output.nc')  # Now using the Voodoo method for liquid
 
     """
 
@@ -80,6 +86,8 @@ def generate_categorize(input_files: dict, output_file: str, uuid: str | None = 
         data["model"].screen_sparse_fields()
         for key in ("category_bits", "rain_rate", "insect_prob"):
             data["radar"].append_data(getattr(classification, key), key)
+        if classification.liquid_prob is not None:
+            data["radar"].append_data(classification.liquid_prob, "liquid_prob")
         for key in ("radar_liquid_atten", "radar_gas_atten"):
             data["radar"].append_data(attenuations[key], key)
         data["radar"].append_data(quality["quality_bits"], "quality_bits")
@@ -218,6 +226,7 @@ COMMENTS = {
     ),
     "bias": "This variable is an estimate of the one-standard-deviation calibration error.",
     "insect_prob": "Ad-hoc estimation of the probability that the pixel contains insects.",
+    "liquid_prob": "Probability derived from the radar data that the pixel contains liquid.",
 }
 
 DEFINITIONS = {
@@ -341,5 +350,10 @@ CATEGORIZE_ATTRIBUTES = {
         long_name="Insect probability",
         units="1",
         comment=COMMENTS["insect_prob"],
+    ),
+    "liquid_prob": MetaData(
+        long_name="Liquid probability",
+        units="1",
+        comment=COMMENTS["liquid_prob"],
     ),
 }

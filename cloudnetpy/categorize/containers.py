@@ -17,6 +17,7 @@ class ClassificationResult:
     is_clutter: np.ndarray
     rain_rate: np.ndarray
     insect_prob: np.ndarray
+    liquid_prob: np.ndarray | None
 
 
 class ClassData:

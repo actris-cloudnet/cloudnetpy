@@ -44,12 +44,13 @@ def classify_measurements(data: dict) -> ClassificationResult:
         import voodoonet  # pylint: disable=import-outside-toplevel
 
         target_time = voodoonet.utils.decimal_hour2unix(obs.date, obs.time)
-        p_liquid = voodoonet.run(obs.lv0_files, target_time=target_time)
-        liquid_from_radar = p_liquid > 0.55
+        liquid_prob = voodoonet.run(obs.lv0_files, target_time=target_time)
+        liquid_from_radar = liquid_prob > 0.55
         liquid_from_radar = _remove_false_radar_liquid(liquid_from_radar, liquid_from_lidar)
         bits[0] = liquid_from_radar | liquid_from_lidar
     else:
         bits[0] = droplet.correct_liquid_top(obs, liquid_from_lidar, bits[2], limit=500)
+        liquid_prob = None
     bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
     bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
     bits, filtered_ice = _filter_falling(bits)
@@ -64,6 +65,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
         obs.is_clutter,
         obs.rain_rate,
         insect_prob,
+        liquid_prob,
     )
 
 
