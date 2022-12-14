@@ -61,9 +61,12 @@ def hatpro2nc(
 
     """
     hatpro_objects, valid_files = _get_hatpro_objects(Path(path_to_files), date)
-    if not valid_files:
+    is_lwp_files = any(f.endswith(".LWP") for f in valid_files)
+    is_iwv_files = any(f.endswith(".IWV") for f in valid_files)
+    if not is_lwp_files:
         raise ValidTimeStampError
-    _add_missing_variables(hatpro_objects, ("lwp", "iwv"))
+    if is_iwv_files:
+        _add_missing_variables(hatpro_objects, ("lwp", "iwv"))
     one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
     hatpro = rpg.Hatpro(one_day_of_data, site_meta)
     hatpro.sort_timestamps()
