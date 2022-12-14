@@ -91,3 +91,22 @@ class TestHatpro2nc(Check):
             assert nc.variables["iwv"][:].mask[1] == True
             assert nc.variables["iwv"][:].mask[-2] == True
             assert ma.count_masked(nc.variables["iwv"][:]) == 2
+
+    def test_lwp_iwv_different_number_of_files(self, tmp_path):
+        file_path = f"{SCRIPT_PATH}/data/hatpro-lwp-iwv-2/"
+        test_path = tmp_path / "full.nc"
+        uuid, files = hatpro.hatpro2nc(file_path, test_path, self.site_meta)
+        assert len(files) == 3
+        with netCDF4.Dataset(test_path) as nc:
+            time = nc.variables["time"]
+            assert "hours since" in time.units
+            assert max(time[:]) < 24
+            for ind, t in enumerate(time[:-1]):
+                assert time[ind + 1] > t
+            assert "zenith_angle" in nc.variables
+            for key in ("lwp", "iwv"):
+                assert key in nc.variables
+            assert "g m-2" in nc.variables["lwp"].units
+            assert "kg m-2" in nc.variables["iwv"].units
+            assert ma.count_masked(nc.variables["iwv"][:]) == 2034
+            assert ma.count_masked(nc.variables["lwp"][:]) == 0
