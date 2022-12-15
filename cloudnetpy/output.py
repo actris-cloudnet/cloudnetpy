@@ -77,7 +77,7 @@ def get_l1b_title(instrument: Instrument, location: str) -> str:
     return f"{instrument.model} {instrument.category} from {location}"
 
 
-def get_references(identifier: str | None = None) -> str:
+def get_references(identifier: str | None = None, extra: list | None = None) -> str:
     """ "Returns references.
 
     Args:
@@ -92,6 +92,9 @@ def get_references(identifier: str | None = None) -> str:
             references += ", https://doi.org/10.1175/JAM2340.1"
         case "drizzle":
             references += ", https://doi.org/10.1175/JAM-2181.1"
+    if extra is not None:
+        for reference in extra:
+            references += f", {reference}"
     return references
 
 

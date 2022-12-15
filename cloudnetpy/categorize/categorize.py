@@ -162,7 +162,12 @@ def _save_cat(full_path: str, data_obs: dict, cloudnet_arrays: dict, uuid: str |
         output.copy_global(data_obs["radar"].dataset, nc, ("year", "month", "day", "location"))
         nc.title = f"Cloud categorization products from {data_obs['radar'].location}"
         nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
-        nc.references = output.get_references(file_type)
+        extra_references = (
+            ["https://doi.org/10.5194/amt-15-5343-2022"]
+            if "liquid_prob" in cloudnet_arrays
+            else None
+        )
+        nc.references = output.get_references(identifier=file_type, extra=extra_references)
         output.add_source_instruments(nc, data_obs)
         output.merge_history(nc, file_type, data_obs)
     return uuid_out

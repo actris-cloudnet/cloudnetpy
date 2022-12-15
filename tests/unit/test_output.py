@@ -147,3 +147,9 @@ def test_fix_attribute_name(tmpdir_factory):
 )
 def test_get_references(identifier, result):
     assert output.get_references(identifier) == result
+
+
+def test_get_references2():
+    extra = ["https://doi.org/kissa", "https://doi.org/koira"]
+    result = f"https://doi.org/10.21105/joss.02123, {extra[0]}, {extra[1]}"
+    assert output.get_references(extra=extra) == result
