@@ -1,4 +1,5 @@
 """Module for creating classification file."""
+import netCDF4
 import numpy as np
 from numpy import ma
 
@@ -44,8 +45,18 @@ def generate_classification(categorize_file: str, output_file: str, uuid: str | 
         date = product_container.get_date()
         attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
         output.update_attributes(product_container.data, attributes)
-        uuid = output.save_product_file("classification", product_container, output_file, uuid)
+        references = _get_extra_references(categorize_file)
+        uuid = output.save_product_file(
+            "classification", product_container, output_file, uuid, references=references
+        )
     return uuid
+
+
+def _get_extra_references(categorize_file: str) -> list | None:
+    with netCDF4.Dataset(categorize_file) as nc:
+        return (
+            ["https://doi.org/10.5194/amt-15-5343-2022"] if "liquid_prob" in nc.variables else None
+        )
 
 
 def _get_target_classification(categorize_bits: CategorizeBits) -> ma.MaskedArray:

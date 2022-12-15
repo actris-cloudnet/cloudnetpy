@@ -10,7 +10,9 @@ from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
-def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
+def save_level1b(
+    obj, output_file: str, uuid: str | None = None, references: list | None = None
+) -> str:
     """Saves Cloudnet Level 1b file."""
     dimensions = {key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data}
     if "chirp_start_indices" in obj.data:
@@ -29,12 +31,17 @@ def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
         nc.location = location
         nc.history = get_l1b_history(obj.instrument)
         nc.source = get_l1b_source(obj.instrument)
-        nc.references = get_references()
+        nc.references = get_references(extra=references)
     return file_uuid
 
 
 def save_product_file(
-    short_id: str, obj, file_name: str, uuid: str | None = None, copy_from_cat: tuple = ()
+    short_id: str,
+    obj,
+    file_name: str,
+    uuid: str | None = None,
+    copy_from_cat: tuple = (),
+    references: list | None = None,
 ) -> str:
     """Saves a standard Cloudnet product file.
 
@@ -44,6 +51,7 @@ def save_product_file(
         file_name: Name of the output file to be generated.
         uuid: Set specific UUID for the file.
         copy_from_cat: Variables to be copied from the categorize file.
+        references: Extra references.
 
     """
     human_readable_file_type = _get_identifier(short_id)
@@ -57,7 +65,7 @@ def save_product_file(
         nc.source_file_uuids = get_source_uuids(nc, obj)
         copy_global(obj.dataset, nc, ("location", "day", "month", "year", "source"))
         merge_history(nc, human_readable_file_type, {"categorize": obj})
-        nc.references = get_references(short_id)
+        nc.references = get_references(identifier=short_id, extra=references)
     return file_uuid
 
 
