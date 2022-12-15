@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.43.1 – 2022-12-15
+
+- Avoid crashing when different number of hatpro `.LWP` and `.IWV` files
+
 ## 1.43.0 – 2022-12-13
 
 - Use `voodoonet` for improving liquid detection
