@@ -26,15 +26,14 @@ setup(
         "netCDF4",
         "matplotlib",
         "requests",
-        "cloudnetpy_qc>=1.4.1",
+        "cloudnetpy_qc>=1.4.2",
         "scikit-image",
         "rpgpy>=0.12.1",
-        "toml",
     ],
     extras_require={
-        "test": ["pytest", "pytest-flakefinder", "pylint", "mypy", "types-requests", "types-toml"],
+        "test": ["pytest", "pytest-flakefinder", "pylint", "mypy", "types-requests"],
         "dev": ["pre-commit"],
-        "extras": ["voodoonet"],
+        "extras": ["voodoonet>=0.1.1"],
     },
     classifiers=[
         "Development Status :: 5 - Production/Stable",

@@ -22,7 +22,7 @@ jobs:
         name: ${{ steps.changelog.outputs.name }}
         body_path: ${{ github.workspace }}-CHANGELOG.txt
     - name: Set up Python
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: '3.8'
     - name: Install dependencies
