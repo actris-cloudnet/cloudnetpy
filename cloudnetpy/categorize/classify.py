@@ -44,7 +44,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
         import voodoonet  # pylint: disable=import-outside-toplevel
 
         target_time = voodoonet.utils.decimal_hour2unix(obs.date, obs.time)
-        liquid_prob = voodoonet.run(obs.lv0_files, target_time=target_time)
+        liquid_prob = voodoonet.infer(obs.lv0_files, target_time=target_time)
         liquid_from_radar = liquid_prob > 0.55
         liquid_from_radar = _remove_false_radar_liquid(liquid_from_radar, liquid_from_lidar)
         bits[0] = liquid_from_radar | liquid_from_lidar
