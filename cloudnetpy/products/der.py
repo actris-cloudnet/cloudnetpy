@@ -177,6 +177,9 @@ class DerSource(DataSource):
         der_error = ma.masked_less_equal(ma.masked_invalid(der_error), 0.0) * 1.0e-3
         der_scaled = ma.masked_less_equal(ma.masked_invalid(der_scaled), 0.0) * 1.0e-3
         der_scaled_error = ma.masked_less_equal(ma.masked_invalid(der_scaled_error), 0.0) * 1.0e-3
+        if isinstance(lwp, ma.MaskedArray):
+            for var in (der_scaled, der_scaled_error, N_scaled):
+                var[lwp.mask] = ma.masked
 
         self.append_data(N_scaled, "N_scaled")
         self.append_data(der, "der")
