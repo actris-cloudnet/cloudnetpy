@@ -4,7 +4,7 @@ from numpy import ma
 from scipy.interpolate import interp1d
 
 from cloudnetpy import CloudnetArray, utils
-from cloudnetpy.categorize import atmos
+from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ModelDataError
 
@@ -96,7 +96,7 @@ class Model(DataSource):
 
     def calc_wet_bulb(self) -> None:
         """Calculates wet-bulb temperature in dense grid."""
-        wet_bulb_temp = atmos.calc_wet_bulb_temperature(self.data_dense)
+        wet_bulb_temp = atmos_utils.calc_wet_bulb_temperature(self.data_dense)
         self.append_data(wet_bulb_temp, "Tw", units="K")
 
     def screen_sparse_fields(self) -> None:

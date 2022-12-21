@@ -775,7 +775,7 @@ def get_epoch(units: str) -> Epoch:
     year, month, day = date_components
     current_year = datetime.datetime.today().year
     if (1900 < year <= current_year) and (0 < month < 13) and (0 < day < 32):
-        return (year, month, day)
+        return year, month, day
     return fallback
 
 

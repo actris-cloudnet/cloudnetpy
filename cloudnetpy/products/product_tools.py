@@ -6,7 +6,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import constants, utils
-from cloudnetpy.categorize import atmos
+from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.datasource import DataSource
 
 IceCoefficients = namedtuple("IceCoefficients", "K2liquid0 ZT T Z c")
@@ -238,4 +238,4 @@ def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]
 def get_temperature(categorize_file: str) -> np.ndarray:
     """Returns interpolated temperatures in Celsius."""
     atmosphere = interpolate_model(categorize_file, "temperature")
-    return atmos.k2c(atmosphere["temperature"])
+    return atmos_utils.k2c(atmosphere["temperature"])
