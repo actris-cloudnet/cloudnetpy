@@ -2,7 +2,20 @@
 ignored-modules	= numpy, netCDF4, scipy, torch
 
 [MESSAGES CONTROL]
-disable = C0103,C0116,W1203,R0914,C0114,C0115,R0903,R0913,W0511,R0902,R0915,R0801,R0401
+disable =
+  missing-module-docstring,
+  missing-function-docstring,
+  missing-class-docstring,
+  logging-fstring-interpolation,
+  invalid-name,
+  too-few-public-methods,
+  too-many-statements,
+  too-many-arguments,
+  too-many-locals,
+  too-many-instance-attributes,
+  fixme,
+  duplicate-code,
+
 
 [format]
 max-line-length = 100
