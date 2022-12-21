@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.44.0 – 2022-12-21
+
+- Fix mask in scaled `der` variables
+- Change `ier` unit to m
+- Write `liquid_prob` to categorize file
+- Add references to `categorize`, `ier` and `der` files
+
 ## 1.43.1 – 2022-12-15
 
 - Avoid crashing when different number of hatpro `.LWP` and `.IWV` files
