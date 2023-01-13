@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.44.1 – 2023-01-13
+
+- Update `cloudnetpy-qc` version requirement
+- Add rv-polarstern pollyxt variables
+- Update LICENSE
+- Add `atmos_utils.py` to get rid of cyclic import
+- Use human-readable `pylint` problem names
+
 ## 1.44.0 – 2022-12-21
 
 - Fix mask in scaled `der` variables
