@@ -8,6 +8,7 @@ from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy import output, utils
+from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.ceilometer import Ceilometer
 from cloudnetpy.metadata import MetaData
@@ -96,7 +97,7 @@ class PollyXt(Ceilometer):
         if not bsc_files:
             raise RuntimeError("No pollyxt files found")
         if len(bsc_files) != len(depol_files):
-            raise RuntimeError("Inconsistent number of pollyxt bsc / depol files")
+            raise InconsistentDataError("Inconsistent number of pollyxt bsc / depol files")
         self.data["range"] = _read_array_from_multiple_files(bsc_files, depol_files, "height")
         calibration_factors: np.ndarray = np.array([])
         beta_channel = self._get_valid_beta_channel(bsc_files)
@@ -137,7 +138,7 @@ class PollyXt(Ceilometer):
                             logging.warning(f"Using {channel}nm pollyXT channel for backscatter")
                             self.instrument.wavelength = float(channel)  # type: ignore
                         return channel
-        raise RuntimeError("No functional pollyXT backscatter channels found")
+        raise ValidTimeStampError("No functional pollyXT backscatter channels found")
 
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
