@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.44.2 – 2023-02-07
+
+- Use more specific exceptions in PollyXT handling
+
 ## 1.44.1 – 2023-01-13
 
 - Update `cloudnetpy-qc` version requirement
