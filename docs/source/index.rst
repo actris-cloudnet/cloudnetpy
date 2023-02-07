@@ -19,6 +19,7 @@ implementation of the Cloudnet processing scheme.
    quickstart
    api
    fileformat
+   model-evaluation/overview
    guide
 
 
