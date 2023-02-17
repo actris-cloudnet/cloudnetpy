@@ -23,8 +23,8 @@ def copernicus2nc(
     Args:
         raw_files: Input file name or folder containing multiple input files.
         output_file: Output filename.
-        site_meta: Dictionary containing information about the site. Required key value pair
-            is `name`. Optional is 'calibration_offset'.
+        site_meta: Dictionary containing information about the site. Required key
+            value pair is `name`. Optional is 'calibration_offset'.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -61,7 +61,9 @@ def copernicus2nc(
             valid_filenames = utils.get_sorted_filenames(raw_files, ".nc")
             valid_filenames = utils.get_files_with_common_range(valid_filenames)
             variables = list(keymap.keys())
-            concat_lib.concatenate_files(valid_filenames, nc_filename, variables=variables)
+            concat_lib.concatenate_files(
+                valid_filenames, nc_filename, variables=variables
+            )
         else:
             nc_filename = raw_files
 
@@ -117,8 +119,8 @@ class Copernicus(NcRadar):
         """Experimental masking of corrupted Copernicus data.
 
         Notes:
-            This method is based on a few days of test data only. Should be improved and tested
-            more carefully in the future.
+            This method is based on a few days of test data only. Should be improved
+            and tested more carefully in the future.
         """
         thresholds = {"width": 3, "v": 9}
         for key, value in thresholds.items():

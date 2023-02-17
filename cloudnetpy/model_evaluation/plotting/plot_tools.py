@@ -8,7 +8,11 @@ from cloudnetpy.model_evaluation.model_metadata import MODELS
 
 
 def parse_wanted_names(
-    nc_file: str, name: str, model: str, variables: list | None = None, advance: bool = False
+    nc_file: str,
+    name: str,
+    model: str,
+    variables: list | None = None,
+    advance: bool = False,
 ) -> tuple[list, list]:
     """Returns standard and advection lists of product types to plot"""
     if variables:
@@ -28,7 +32,9 @@ def parse_wanted_names(
     return standard_n, advection_n
 
 
-def parse_dataset_keys(nc_file: str, product: str, advance: bool, model: str = "") -> list:
+def parse_dataset_keys(
+    nc_file: str, product: str, advance: bool, model: str = ""
+) -> list:
     names = list(netCDF4.Dataset(nc_file).variables.keys())
     a_names = ["cirrus", "snow"]
     model_vars = []
@@ -143,7 +149,9 @@ def rolling_mean(data: ma.MaskedArray, n: int = 4) -> np.ndarray:
     return np.asarray(mmr)
 
 
-def change2one_dim_axes(x: ma.MaskedArray, y: ma.MaskedArray, data: np.ndarray) -> tuple:
+def change2one_dim_axes(
+    x: ma.MaskedArray, y: ma.MaskedArray, data: np.ndarray
+) -> tuple:
     # If any mask in x or y, change 2d to 1d axes values
     # Common shape need to match 2d data.
     for ax in [x, y]:

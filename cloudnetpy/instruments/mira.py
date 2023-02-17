@@ -23,11 +23,11 @@ def mira2nc(
     steps.
 
     Args:
-        raw_mira: Filename of a daily MIRA .mmclx file. Can be also a folder containing several
-            non-concatenated .mmclx files from one day.
+        raw_mira: Filename of a daily MIRA .mmclx file. Can be also a folder containing
+            several non-concatenated .mmclx files from one day.
         output_file: Output filename.
-        site_meta: Dictionary containing information about the site. Required key value pair
-            is `name`.
+        site_meta: Dictionary containing information about the site. Required key
+            value pair is `name`.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -66,7 +66,10 @@ def mira2nc(
             valid_filenames = utils.get_files_with_common_range(valid_filenames)
             variables = list(keymap.keys())
             concat_lib.concatenate_files(
-                valid_filenames, mmclx_filename, variables=variables, allow_difference=["nave"]
+                valid_filenames,
+                mmclx_filename,
+                variables=variables,
+                allow_difference=["nave"],
             )
         else:
             mmclx_filename = raw_mira

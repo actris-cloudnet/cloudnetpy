@@ -36,7 +36,9 @@ def nc_file(tmpdir_factory, file_metadata):
         _create_dimensions(root_grp)
         _create_dimension_variables(root_grp)
         _create_global_attributes(root_grp, file_metadata)
-        _create_variable(root_grp, "altitude", file_metadata["altitude_km"], "km", dim=[])
+        _create_variable(
+            root_grp, "altitude", file_metadata["altitude_km"], "km", dim=[]
+        )
         _create_variable(root_grp, "test_array", TEST_ARRAY, "m s-1")
         _create_variable(root_grp, "range", TEST_ARRAY, "km")
     return file_name
@@ -50,8 +52,19 @@ def raw_mira_file(tmpdir_factory, file_metadata):
         _create_dimensions(root_grp)
         _create_dimension_variables(root_grp)
         _create_variable(root_grp, "test_array", TEST_ARRAY, "m s-1")
-        _create_variable(root_grp, "range", [191.872, 230.2464, 268.6208, 306.9952, 345.3696], "m")
-        root_grp.variables["time"][:] = [1590278403, 1590278406, 1590278410, 1590278413, 1590278417]
+        _create_variable(
+            root_grp,
+            "range",
+            [191.872, 230.2464, 268.6208, 306.9952, 345.3696],
+            "m",
+        )
+        root_grp.variables["time"][:] = [
+            1590278403,
+            1590278406,
+            1590278410,
+            1590278413,
+            1590278417,
+        ]
         for var in ("Zg", "VELg", "RMSg", "LDRg", "SNRg"):
             _create_variable(root_grp, var, TEST_ARRAY, "m")
     return file_name

@@ -18,7 +18,12 @@ class MetaData(NamedTuple):
 
 
 COMMON_ATTRIBUTES = {
-    "time": MetaData(long_name="Time UTC", axis="T", standard_name="time", calendar="standard"),
+    "time": MetaData(
+        long_name="Time UTC",
+        axis="T",
+        standard_name="time",
+        calendar="standard",
+    ),
     "height": MetaData(
         long_name="Height above mean sea level",
         standard_name="height_above_mean_sea_level",
@@ -31,18 +36,24 @@ COMMON_ATTRIBUTES = {
         comment="Distance from instrument to centre of each range bin.",
     ),
     "latitude": MetaData(
-        long_name="Latitude of site", units="degree_north", standard_name="latitude"
+        long_name="Latitude of site",
+        units="degree_north",
+        standard_name="latitude",
     ),
     "longitude": MetaData(
-        long_name="Longitude of site", units="degree_east", standard_name="longitude"
+        long_name="Longitude of site",
+        units="degree_east",
+        standard_name="longitude",
     ),
-    "altitude": MetaData(long_name="Altitude of site", standard_name="altitude", units="m"),
+    "altitude": MetaData(
+        long_name="Altitude of site", standard_name="altitude", units="m"
+    ),
     "Zh": MetaData(
         long_name="Radar reflectivity factor",
         units="dBZ",
-        comment="Calibrated reflectivity. Calibration convention: in the absence of attenuation,\n"
-        "a cloud at 273 K containing one million 100-micron droplets per cubic metre will\n"
-        "have a reflectivity of 0 dBZ at all frequencies.",
+        comment="Calibrated reflectivity. Calibration convention: in the absence\n"
+        "of attenuation, a cloud at 273 K containing one million 100-micron droplets\n"
+        "per cubic metre will have a reflectivity of 0 dBZ at all frequencies.",
     ),
     "width": MetaData(
         long_name="Spectral width",

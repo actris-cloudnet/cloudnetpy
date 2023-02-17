@@ -22,13 +22,14 @@ def disdrometer2nc(
     uuid: str | None = None,
     date: str | None = None,
 ) -> str:
-    """Converts disdrometer data into Cloudnet Level 1b netCDF file. Accepts measurements from
-    OTT Parsivel-2 and Thies-LNM disdrometers.
+    """Converts disdrometer data into Cloudnet Level 1b netCDF file. Accepts
+    measurements from OTT Parsivel-2 and Thies-LNM disdrometers.
 
     Args:
         disdrometer_file: Filename of disdrometer .log file.
         output_file: Output filename.
-        site_meta: Dictionary containing information about the site. Required key is `name`.
+        site_meta: Dictionary containing information about the site. Required key
+            is `name`.
         uuid: Set specific UUID for the file.
         date: Expected date of the measurements as YYYY-MM-DD.
 
@@ -36,12 +37,13 @@ def disdrometer2nc(
         UUID of the generated file.
 
     Raises:
-        DisdrometerDataError: Timestamps do not match the expected date, or unable to read
-            the disdrometer file.
+        DisdrometerDataError: Timestamps do not match the expected date, or unable
+            to read the disdrometer file.
 
     Examples:
         >>> from cloudnetpy.instruments import disdrometer2nc
-        >>> site_meta = {'name': 'Lindenberg', 'altitude': 104, 'latitude': 52.2, 'longitude': 14.1}
+        >>> site_meta = {'name': 'Lindenberg', 'altitude': 104, 'latitude': 52.2,
+        'longitude': 14.1}
         >>> uuid = disdrometer2nc('thies-lnm.log', 'thies-lnm.nc', site_meta)
 
     """
@@ -160,7 +162,9 @@ class Disdrometer(CloudnetInstrument):
                 try:
                     float_array = ma.append(float_array, float(value_str))
                 except ValueError:
-                    logging.warning(f"Invalid character: {value_str}, masking a data point")
+                    logging.warning(
+                        f"Invalid character: {value_str}, masking a data point"
+                    )
                     float_array = ma.append(float_array, invalid_value)
             float_array[float_array == invalid_value] = ma.masked
             if key in (
@@ -209,15 +213,21 @@ class Disdrometer(CloudnetInstrument):
                     raise ValueError
 
     def _append_spectra(self):
-        array = ma.masked_all((len(self._file_data["scalars"]), self.n_diameter, self.n_velocity))
+        array = ma.masked_all(
+            (len(self._file_data["scalars"]), self.n_diameter, self.n_velocity)
+        )
         for time_ind, row in enumerate(self._file_data["spectra"]):
             values = _parse_int(row)
-            array[time_ind, :, :] = np.reshape(values, (self.n_diameter, self.n_velocity))
+            array[time_ind, :, :] = np.reshape(
+                values, (self.n_diameter, self.n_velocity)
+            )
         self.data["data_raw"] = CloudnetArray(
             array, "data_raw", dimensions=("time", "diameter", "velocity")
         )
 
-    def _store_vectors(self, n_values: list, spreads: list, name: str, start: float = 0.0):
+    def _store_vectors(
+        self, n_values: list, spreads: list, name: str, start: float = 0.0
+    ):
         mid, bounds, spread = self._create_vectors(n_values, spreads, start)
         self.data[name] = CloudnetArray(mid, name, dimensions=(name,))
         key = f"{name}_spread"
@@ -226,7 +236,9 @@ class Disdrometer(CloudnetInstrument):
         self.data[key] = CloudnetArray(bounds, key, dimensions=(name, "nv"))
 
     @staticmethod
-    def _create_vectors(n_values: list[int], spreads: list[float], start: float) -> tuple:
+    def _create_vectors(
+        n_values: list[int], spreads: list[float], start: float
+    ) -> tuple:
         mid_value: np.ndarray = np.array([])
         lower_limit: np.ndarray = np.array([])
         upper_limit: np.ndarray = np.array([])
@@ -255,9 +267,9 @@ class Parsivel(Disdrometer):
     def init_data(self):
         """
         Note:
-            This is a custom format submitted by Juelich, Norunda and Ny-Alesund to Cloudnet
-            data portal. It does not follow the order in the Parsivel2 manual
-            https://www.fondriest.com/pdf/ott_parsivel2_manual.pdf
+            This is a custom format submitted by Juelich, Norunda and Ny-Alesund
+            to Cloudnet data portal. It does not follow the order in the Parsivel2
+            manual https://www.fondriest.com/pdf/ott_parsivel2_manual.pdf
         """
         column_and_key = [
             (0, "_time"),
@@ -285,14 +297,17 @@ class Parsivel(Disdrometer):
     def _append_vector_data(self):
         keys = ("number_concentration", "fall_velocity")
         data = {
-            key: ma.masked_all((len(self._file_data["vectors"]), self.n_diameter)) for key in keys
+            key: ma.masked_all((len(self._file_data["vectors"]), self.n_diameter))
+            for key in keys
         }
         for time_ind, row in enumerate(self._file_data["vectors"]):
             values = _parse_int(row)
             for key, array in zip(keys, np.split(values, 2)):
                 data[key][time_ind, :] = array
         for key in keys:
-            self.data[key] = CloudnetArray(data[key], key, dimensions=("time", "diameter"))
+            self.data[key] = CloudnetArray(
+                data[key], key, dimensions=("time", "diameter")
+            )
 
     def _init_date(self) -> list:
         timestamp = self._file_data["scalars"][0][0]
@@ -320,7 +335,9 @@ class Thies(Disdrometer):
         self.instrument = instruments.THIES
 
     def init_data(self):
-        """According to https://www.biral.com/wp-content/uploads/2015/01/5.4110.xx_.xxx_.pdf"""
+        """According to
+        https://www.biral.com/wp-content/uploads/2015/01/5.4110.xx_.xxx_.pdf
+        """
         column_and_key = [
             (1, "_serial_number"),
             (2, "_software_version"),
@@ -475,7 +492,9 @@ ATTRIBUTES = {
     ),
     "interval": MetaData(long_name="Length of measurement interval", units="s"),
     "sig_laser": MetaData(long_name="Signal amplitude of the laser strip", units="1"),
-    "n_particles": MetaData(long_name="Number of particles in time interval", units="1"),
+    "n_particles": MetaData(
+        long_name="Number of particles in time interval", units="1"
+    ),
     "T_sensor": MetaData(
         long_name="Temperature in the sensor housing",
         units="K",
@@ -508,59 +527,92 @@ ATTRIBUTES = {
         units="m s-1",
     ),
     "data_raw": MetaData(
-        long_name="Raw data as a function of particle diameter and velocity", units="1"
+        long_name="Raw data as a function of particle diameter and velocity",
+        units="1",
     ),
     "kinetic_energy": MetaData(long_name="Kinetic energy", units="1"),
     # Thies-specific:
     "T_ambient": MetaData(long_name="Ambient temperature", units="K"),
     "T_interior": MetaData(long_name="Interior temperature", units="K"),
     "status_T_laser_analogue": MetaData(
-        long_name="Status of laser temperature (analogue)", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of laser temperature (analogue)",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_T_laser_digital": MetaData(
-        long_name="Status of laser temperature (digital)", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of laser temperature (digital)",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_I_laser_analogue": MetaData(
-        long_name="Status of laser current (analogue)", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of laser current (analogue)",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_I_laser_digital": MetaData(
-        long_name="Status of laser current (digital)", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of laser current (digital)",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_sensor_supply": MetaData(
-        long_name="Status of sensor supply", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of sensor supply",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_laser_heating": MetaData(
-        long_name="Status of laser heating", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of laser heating",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_receiver_heating": MetaData(
-        long_name="Status of receiver heating", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of receiver heating",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_temperature_sensor": MetaData(
-        long_name="Status of temperature sensor", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of temperature sensor",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_heating_supply": MetaData(
-        long_name="Status of heating supply", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of heating supply",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_heating_housing": MetaData(
-        long_name="Status of heating housing", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of heating housing",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_heating_heads": MetaData(
-        long_name="Status of heating heads", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of heating heads",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_heating_carriers": MetaData(
-        long_name="Status of heating carriers", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of heating carriers",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
     "status_laser_power": MetaData(
-        long_name="Status of laser power", comment="0 = OK , 1 = Error", units="1"
+        long_name="Status of laser power",
+        comment="0 = OK , 1 = Error",
+        units="1",
     ),
-    "status_laser": MetaData(long_name="Status of laser", comment="0 = OK/on , 1 = Off", units="1"),
+    "status_laser": MetaData(
+        long_name="Status of laser", comment="0 = OK/on , 1 = Off", units="1"
+    ),
     "measurement_quality": MetaData(long_name="Measurement quality", units="%"),
     "maximum_hail_diameter": MetaData(long_name="Maximum hail diameter", units="mm"),
-    "static_signal": MetaData(long_name="Static signal", comment="0 = OK, 1 = ERROR", units="1"),
+    "static_signal": MetaData(
+        long_name="Static signal", comment="0 = OK, 1 = ERROR", units="1"
+    ),
     "T_laser_driver": MetaData(long_name="Temperature of laser driver", units="K"),
     "I_mean_laser": MetaData(long_name="Mean value of laser current", units="mA"),
     "V_control": MetaData(
-        long_name="Control voltage", units="mV", comment="Reference value: 4010+-5"
+        long_name="Control voltage",
+        units="mV",
+        comment="Reference value: 4010+-5",
     ),
     "V_optical_output": MetaData(
         long_name="Voltage of optical control output",

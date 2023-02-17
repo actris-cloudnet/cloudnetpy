@@ -9,7 +9,9 @@ class Obs:
     def __init__(self):
         self.radar_type = "MIRA-35"
         self.lwp = np.array([1, 2, 3, 4])
-        self.v = ma.array([[0, 1, 1, 0], [0, 1, -99, 0]], mask=[[0, 0, 0, 0], [1, 0, 1, 0]])
+        self.v = ma.array(
+            [[0, 1, 1, 0], [0, 1, -99, 0]], mask=[[0, 0, 0, 0], [1, 0, 1, 0]]
+        )
         self.is_rain = np.array([0, 0, 1])
 
 
@@ -19,7 +21,13 @@ def test_calc_prob_from_ldr():
 
 
 def test_calc_prob_from_all():
-    prob = {"z": 0.5, "temp_strict": 0.5, "v": 0.5, "width": 0.5, "z_weak": 0.5}
+    prob = {
+        "z": 0.5,
+        "temp_strict": 0.5,
+        "v": 0.5,
+        "width": 0.5,
+        "z_weak": 0.5,
+    }
     assert insects._calc_prob_from_all(prob) == 0.5**4
 
 
@@ -34,13 +42,26 @@ def test_adjust_for_radar():
 
 def test_fill_missing_pixels():
     prob_from_ldr = np.array(
-        [[0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]]
+        [
+            [0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0],
+        ]
     )
     prob_from_others = np.array(
-        [[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5], [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]]
+        [
+            [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+            [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+        ]
     )
-    result = np.array([[0.5, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5], [0.5, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5]])
-    assert_array_equal(insects._fill_missing_pixels(prob_from_ldr, prob_from_others), result)
+    result = np.array(
+        [
+            [0.5, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5],
+            [0.5, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5],
+        ]
+    )
+    assert_array_equal(
+        insects._fill_missing_pixels(prob_from_ldr, prob_from_others), result
+    )
 
 
 def test_get_smoothed_v():

@@ -15,7 +15,12 @@ file = f"{SCRIPT_PATH}/data/radiometrics/2021-07-18_00-00-00_lv2.csv"
 
 
 class TestHatpro2nc(Check):
-    site_meta = {"name": "the_station", "altitude": 50, "latitude": 23.0, "longitude": 123}
+    site_meta = {
+        "name": "the_station",
+        "altitude": 50,
+        "latitude": 23.0,
+        "longitude": 123,
+    }
     date = "2021-07-18"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/radiometrics.nc"

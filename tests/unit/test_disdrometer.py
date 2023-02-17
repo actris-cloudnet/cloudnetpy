@@ -10,7 +10,12 @@ from cloudnetpy.instruments import disdrometer
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
-SITE_META = {"name": "Kumpula", "latitude": 50, "longitude": 104.5, "altitude": 50}
+SITE_META = {
+    "name": "Kumpula",
+    "latitude": 50,
+    "longitude": 104.5,
+    "altitude": 50,
+}
 
 
 def test_format_time():
@@ -51,7 +56,10 @@ class TestParsivel2(Check):
     def test_date_validation_fail(self, tmp_path):
         with pytest.raises(ValidTimeStampError):
             disdrometer.disdrometer2nc(
-                self.filename, tmp_path / "invalid.nc", self.site_meta, date="2022-04-05"
+                self.filename,
+                tmp_path / "invalid.nc",
+                self.site_meta,
+                date="2022-04-05",
             )
 
 

@@ -27,9 +27,23 @@ class CategorizeBits:
 
     """
 
-    category_keys = ("droplet", "falling", "cold", "melting", "aerosol", "insect")
+    category_keys = (
+        "droplet",
+        "falling",
+        "cold",
+        "melting",
+        "aerosol",
+        "insect",
+    )
 
-    quality_keys = ("radar", "lidar", "clutter", "molecular", "attenuated", "corrected")
+    quality_keys = (
+        "radar",
+        "lidar",
+        "clutter",
+        "molecular",
+        "attenuated",
+        "corrected",
+    )
 
     def __init__(self, categorize_file: str):
         self._categorize_file = categorize_file
@@ -96,10 +110,18 @@ class IceClassification(ProductClassification):
         return warm_falling | self.category_bits["melting"]
 
     def _find_corrected_ice(self) -> np.ndarray:
-        return self.is_ice & self.quality_bits["attenuated"] & self.quality_bits["corrected"]
+        return (
+            self.is_ice
+            & self.quality_bits["attenuated"]
+            & self.quality_bits["corrected"]
+        )
 
     def _find_uncorrected_ice(self) -> np.ndarray:
-        return self.is_ice & self.quality_bits["attenuated"] & ~self.quality_bits["corrected"]
+        return (
+            self.is_ice
+            & self.quality_bits["attenuated"]
+            & ~self.quality_bits["corrected"]
+        )
 
     def _find_ice_above_rain(self) -> np.ndarray:
         is_rain = utils.transpose(self.is_rain)
@@ -122,7 +144,9 @@ class IceSource(DataSource):
         self.product = product
         self.coefficients = self._get_coefficients()
 
-    def append_main_variable_including_rain(self, ice_classification: IceClassification) -> None:
+    def append_main_variable_including_rain(
+        self, ice_classification: IceClassification
+    ) -> None:
         """Adds the main variable (including ice above rain)."""
         data_including_rain = self._convert_z()
         data_including_rain[~ice_classification.is_ice] = ma.masked
@@ -166,11 +190,15 @@ class IceSource(DataSource):
         """Calculates temperature weighted z, i.e. ice effective radius [m]."""
         assert self.product in ("iwc", "ier")
         assert z_variable in ("Z", "Z_sensitivity")
-        temperature = self.temperature if z_variable == "Z" else ma.mean(self.temperature, axis=0)
+        temperature = (
+            self.temperature if z_variable == "Z" else ma.mean(self.temperature, axis=0)
+        )
         z_scaled = self.getvar(z_variable) + self._get_z_factor()
         g_to_kg = 0.001
         m_to_mu = 1e6
-        scale = g_to_kg if self.product == "iwc" else 3 / (2 * constants.RHO_ICE) * m_to_mu
+        scale = (
+            g_to_kg if self.product == "iwc" else 3 / (2 * constants.RHO_ICE) * m_to_mu
+        )
         return (
             10
             ** (
@@ -218,7 +246,8 @@ def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]
 
     Args:
         cat_file: Categorize file name.
-        names: Model variable to be interpolated, e.g. 'temperature' or ['temperature', 'pressure'].
+        names: Model variable to be interpolated, e.g. 'temperature' or ['temperature',
+            'pressure'].
 
     Returns:
         dict: Interpolated variables.
@@ -227,7 +256,8 @@ def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]
 
     def _interp_field(var_name: str) -> np.ndarray:
         values = read_nc_fields(
-            cat_file, ["model_time", "model_height", var_name, "time", "height"]
+            cat_file,
+            ["model_time", "model_height", var_name, "time", "height"],
         )
         return utils.interpolate_2d(*values)
 

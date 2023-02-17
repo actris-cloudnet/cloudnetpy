@@ -39,13 +39,17 @@ def process_L3_day_product(
         uuid (str): Set specific UUID for the file.
         overwrite (bool): If file exists, but still want to recreate it then True,
                           default False
+
     Raises:
         RuntimeError: Failed to create the L3 product file.
         ValueError (Warning): No ice clouds in model data
+
     Notes:
-        Model file(s) are given as a list to make all different cycles to be at same nc-file.
-        If list includes more than one model file, nc-file is created within the first round.
-        With rest of rounds, downsample observation and model data is added to same L3 day nc-file.
+        Model file(s) are given as a list to make all different cycles to be at same
+        nc-file. If list includes more than one model file, nc-file is created within
+        the first round. With rest of rounds, downsample observation and model data
+        is added to same L3 day nc-file.
+
     Examples:
         >>> from cloudnetpy.model_evaluation.products.product_resampling import \
         process_L3_day_product
@@ -54,12 +58,15 @@ def process_L3_day_product(
         >>> model_file = 'ecmwf.nc'
         >>> input_file = 220190517_mace-head_categorize.nchead_categorize.nc
         >>> output_file = 'cf_ecmwf.nc'
-        >>> process_L3_day_product(model, product, [model_file], input_file, output_file)
+        >>> process_L3_day_product(model, product, [model_file], input_file,
+        output_file)
     """
     product_obj = ObservationManager(obs, product_file)
     tl.check_model_file_list(model, model_files)
     for m_file in model_files:
-        model_obj = ModelManager(m_file, model, output_file, obs, check_file=not overwrite)
+        model_obj = ModelManager(
+            m_file, model, output_file, obs, check_file=not overwrite
+        )
         try:
             AdvanceProductMethods(model_obj, m_file, product_obj)
         except ValueError as e:

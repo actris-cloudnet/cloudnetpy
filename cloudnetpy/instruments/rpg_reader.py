@@ -114,7 +114,9 @@ def _read_from_file(
     return masked_arr
 
 
-def _decode_angles(x: np.ndarray, version: Literal[1, 2]) -> tuple[np.ndarray, np.ndarray]:
+def _decode_angles(
+    x: np.ndarray, version: Literal[1, 2]
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Decode elevation and azimuth angles.
 
@@ -285,11 +287,15 @@ class HatproBinCombined:
             f1, f2 = files
             arr = rfn.join_by("time", f1.data, f2.data, "outer")
             arr = rfn.append_fields(
-                arr, "zenith_angle", _combine_values(arr["zenith_angle1"], arr["zenith_angle2"])
+                arr,
+                "zenith_angle",
+                _combine_values(arr["zenith_angle1"], arr["zenith_angle2"]),
             )
             # Workaround because rfn.drop_fields seems to incorrectly drop mask...
             # arr = rfn.drop_fields(arr, ["zenith_angle1", "zenith_angle2"])
-            arr = rfn.rename_fields(arr, {"zenith_angle1": "_tmp1", "zenith_angle2": "_tmp2"})
+            arr = rfn.rename_fields(
+                arr, {"zenith_angle1": "_tmp1", "zenith_angle2": "_tmp2"}
+            )
         else:
             raise NotImplementedError("Only implemented up to 2 files")
         self.data = {field: arr[field] for field in arr.dtype.fields}

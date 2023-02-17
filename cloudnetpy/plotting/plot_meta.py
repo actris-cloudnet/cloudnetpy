@@ -747,10 +747,16 @@ ATTRIBUTES = {
         plot_type="bar",
         source="mwr",
     ),
-    "rainfall_rate": PlotMeta(name="Rainfall rate", plot_type="bar", source="disdrometer"),
-    "n_particles": PlotMeta(name="Number of particles", plot_type="bar", source="disdrometer"),
+    "rainfall_rate": PlotMeta(
+        name="Rainfall rate", plot_type="bar", source="disdrometer"
+    ),
+    "n_particles": PlotMeta(
+        name="Number of particles", plot_type="bar", source="disdrometer"
+    ),
     "target_classification": PlotMeta(
-        name="Target classification", clabel=_CLABEL["target_classification"], plot_type="segment"
+        name="Target classification",
+        clabel=_CLABEL["target_classification"],
+        plot_type="segment",
     ),
     "detection_status": PlotMeta(
         name="Radar and lidar detection status",
@@ -807,22 +813,67 @@ ATTRIBUTES = {
         clabel=_CLABEL["lwc_retrieval_status"],
         plot_type="segment",
     ),
-    "droplet": PlotMeta(name="Droplet bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"),
-    "falling": PlotMeta(name="Falling bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"),
-    "cold": PlotMeta(name="Cold bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"),
-    "melting": PlotMeta(name="Melting bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"),
-    "aerosol": PlotMeta(name="Aerosol bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"),
-    "insect": PlotMeta(name="Insect bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"),
-    "radar": PlotMeta(name="Radar bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"),
-    "lidar": PlotMeta(name="Lidar bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"),
-    "clutter": PlotMeta(name="Clutter bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"),
+    "droplet": PlotMeta(
+        name="Droplet bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
+    ),
+    "falling": PlotMeta(
+        name="Falling bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
+    ),
+    "cold": PlotMeta(
+        name="Cold bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"
+    ),
+    "melting": PlotMeta(
+        name="Melting bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
+    ),
+    "aerosol": PlotMeta(
+        name="Aerosol bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
+    ),
+    "insect": PlotMeta(
+        name="Insect bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
+    ),
+    "radar": PlotMeta(
+        name="Radar bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"
+    ),
+    "lidar": PlotMeta(
+        name="Lidar bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"
+    ),
+    "clutter": PlotMeta(
+        name="Clutter bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
+    ),
     "molecular": PlotMeta(
-        name="Molecular bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"
+        name="Molecular bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
     ),
     "attenuated": PlotMeta(
-        name="Attenuated bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"
+        name="Attenuated bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
     ),
     "corrected": PlotMeta(
-        name="Corrected bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"
+        name="Corrected bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
     ),
 }

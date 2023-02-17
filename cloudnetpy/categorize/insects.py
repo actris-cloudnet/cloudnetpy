@@ -9,7 +9,10 @@ from cloudnetpy.categorize.containers import ClassData
 
 
 def find_insects(
-    obs: ClassData, melting_layer: np.ndarray, liquid_layers: np.ndarray, prob_lim: float = 0.8
+    obs: ClassData,
+    melting_layer: np.ndarray,
+    liquid_layers: np.ndarray,
+    prob_lim: float = 0.8,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Returns insect probability and boolean array of insect presence.
 
@@ -29,7 +32,8 @@ def find_insects(
         obs: The :class:`ClassData` instance.
         melting_layer: 2D array denoting melting layer.
         liquid_layers: 2D array denoting liquid layers.
-        prob_lim: Probability higher than this will lead to positive detection. Default is 0.8.
+        prob_lim: Probability higher than this will lead to positive detection.
+            Default is 0.8.
 
     Returns:
         tuple: 2-element tuple containing
@@ -74,7 +78,9 @@ def _get_probabilities(obs: ClassData) -> dict:
     }
 
 
-def _get_smoothed_v(obs: ClassData, sigma: tuple[float, float] = (5, 5)) -> ma.MaskedArray:
+def _get_smoothed_v(
+    obs: ClassData, sigma: tuple[float, float] = (5, 5)
+) -> ma.MaskedArray:
     smoothed_v = gaussian_filter(obs.v, sigma)
     smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
     return smoothed_v
@@ -94,19 +100,24 @@ def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
 
 
 def _calc_prob_from_all(prob: dict) -> np.ndarray:
-    """This can be tried when LDR is not available. To detect insects without LDR unambiguously is
-    difficult and might result in many false positives and/or false negatives."""
+    """This can be tried when LDR is not available. To detect insects without LDR
+    unambiguously is difficult and might result in many false positives and/or false
+    negatives."""
     return prob["z_weak"] * prob["temp_strict"] * prob["width"] * prob["v"]
 
 
-def _adjust_for_radar(obs: ClassData, prob: dict, prob_from_others: np.ndarray) -> np.ndarray:
+def _adjust_for_radar(
+    obs: ClassData, prob: dict, prob_from_others: np.ndarray
+) -> np.ndarray:
     """Adds radar-specific weighting to insect probabilities."""
     if "mira" in obs.radar_type.lower():
         prob_from_others *= prob["lwp"]
     return prob_from_others
 
 
-def _fill_missing_pixels(prob_from_ldr: np.ndarray, prob_from_others: np.ndarray) -> np.ndarray:
+def _fill_missing_pixels(
+    prob_from_ldr: np.ndarray, prob_from_others: np.ndarray
+) -> np.ndarray:
     prob_combined = np.copy(prob_from_ldr)
     no_ldr = np.where(prob_from_ldr == 0)
     prob_combined[no_ldr] = prob_from_others[no_ldr]

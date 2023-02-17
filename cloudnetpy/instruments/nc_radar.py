@@ -43,7 +43,9 @@ class NcRadar(DataSource, CloudnetInstrument):
 
     def add_time_and_range(self) -> None:
         """Adds time and range."""
-        range_instru = np.array(self.getvar("range", "height"))  # "height" in old BASTA files
+        range_instru = np.array(
+            self.getvar("range", "height")
+        )  # "height" in old BASTA files
         time = np.array(self.time)
         self.append_data(range_instru, "range")
         self.append_data(time, "time")
@@ -65,7 +67,8 @@ class NcRadar(DataSource, CloudnetInstrument):
                 cloudnet_array.mask_indices(v_mask)
 
     def add_zenith_and_azimuth_angles(self) -> list:
-        """Adds non-varying instrument zenith and azimuth angles and returns valid time indices."""
+        """Adds non-varying instrument zenith and azimuth angles and returns valid
+        time indices."""
         if "azimuth_velocity" in self.data:
             azimuth = self.data["azimuth_velocity"].data
             azimuth_reference = 0
@@ -78,13 +81,19 @@ class NcRadar(DataSource, CloudnetInstrument):
         elevation = self.data["elevation"].data
         zenith = 90 - elevation
         is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
-        is_stable_azimuth = np.isclose(azimuth, azimuth_reference, atol=azimuth_tolerance)
+        is_stable_azimuth = np.isclose(
+            azimuth, azimuth_reference, atol=azimuth_tolerance
+        )
         is_stable_profile = is_stable_zenith & is_stable_azimuth
         n_removed = np.count_nonzero(~is_stable_profile)
         if n_removed >= len(zenith) - 1:
-            raise ValidTimeStampError("Less than two profiles with valid zenith / azimuth angles")
+            raise ValidTimeStampError(
+                "Less than two profiles with valid zenith / azimuth angles"
+            )
         if n_removed > 0:
-            logging.warning(f"Filtering {n_removed} profiles due to varying zenith / azimuth angle")
+            logging.warning(
+                f"Filtering {n_removed} profiles due to varying zenith / azimuth angle"
+            )
         self.append_data(zenith, "zenith_angle")
         for key in ("elevation", "azimuth_velocity"):
             if key in self.data:

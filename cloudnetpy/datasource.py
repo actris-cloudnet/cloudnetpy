@@ -58,8 +58,8 @@ class DataSource:
     def getvar(self, *args) -> np.ndarray:
         """Returns data array from the source file variables.
 
-        Returns just the data (and no attributes) from the original variables dictionary,
-        fetched from the input netCDF file.
+        Returns just the data (and no attributes) from the original
+            variables dictionary, fetched from the input netCDF file.
 
         Args:
             *args: possible names of the variable. The first match is returned.
@@ -87,7 +87,8 @@ class DataSource:
 
         Args:
             variable: netCDF variable or data array to be added.
-            key: Key used with *variable* when added to `data` attribute (dictionary).
+            key: Key used with *variable* when added to `data`
+                attribute (dictionary).
             name: CloudnetArray.name attribute. Default value is *key*.
             units: CloudnetArray.units attribute.
 
@@ -110,7 +111,9 @@ class DataSource:
             day = str(self.dataset.day).zfill(2)
             datetime.strptime(f"{year}{month}{day}", "%Y%m%d")
         except (AttributeError, ValueError) as read_error:
-            raise RuntimeError("Missing or invalid date in global attributes.") from read_error
+            raise RuntimeError(
+                "Missing or invalid date in global attributes."
+            ) from read_error
         return [year, month, day]
 
     def close(self) -> None:
@@ -162,8 +165,9 @@ class DataSource:
         """Transforms netCDF4-variables into CloudnetArrays.
 
         Args:
-            keys: netCDF4-variables to be converted. The results are saved in *self.data*
-                dictionary with *fields* strings as keys.
+            keys: netCDF4-variables to be converted. The results
+                are saved in *self.data* dictionary with *fields*
+                strings as keys.
 
         Notes:
             The attributes of the variables are not copied. Just the data.
@@ -182,9 +186,10 @@ class DataSource:
         """Transforms single netCDF4 variable into CloudnetArray.
 
         Args:
-            possible_names: Tuple of strings containing the possible names of the variable in the
-                input NetCDF file.
-            key: Key for self.data dictionary and name-attribute for the saved CloudnetArray object.
+            possible_names: Tuple of strings containing the possible
+                names of the variable in the input NetCDF file.
+            key: Key for self.data dictionary and name-attribute
+                for the saved CloudnetArray object.
             units: Units attribute for the CloudnetArray object.
             ignore_mask: If true, always writes an ordinary numpy array.
 

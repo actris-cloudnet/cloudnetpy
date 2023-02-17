@@ -12,7 +12,9 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
     """Saves Cloudnet Level 1b file."""
-    dimensions = {key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data}
+    dimensions = {
+        key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data
+    }
     if "chirp_start_indices" in obj.data:
         dimensions["chirp_sequence"] = len(obj.data["chirp_start_indices"][:])
     if hasattr(obj, "n_diameter") and hasattr(obj, "n_velocity"):
@@ -34,7 +36,11 @@ def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
 
 
 def save_product_file(
-    short_id: str, obj, file_name: str, uuid: str | None = None, copy_from_cat: tuple = ()
+    short_id: str,
+    obj,
+    file_name: str,
+    uuid: str | None = None,
+    copy_from_cat: tuple = (),
 ) -> str:
     """Saves a standard Cloudnet product file.
 
@@ -47,13 +53,25 @@ def save_product_file(
 
     """
     human_readable_file_type = _get_identifier(short_id)
-    dimensions = {"time": len(obj.time), "height": len(obj.dataset.variables["height"])}
+    dimensions = {
+        "time": len(obj.time),
+        "height": len(obj.dataset.variables["height"]),
+    }
     with init_file(file_name, dimensions, obj.data, uuid) as nc:
         file_uuid = nc.file_uuid
         nc.cloudnet_file_type = short_id
-        vars_from_source = ("altitude", "latitude", "longitude", "time", "height") + copy_from_cat
+        vars_from_source = (
+            "altitude",
+            "latitude",
+            "longitude",
+            "time",
+            "height",
+        ) + copy_from_cat
         copy_variables(obj.dataset, nc, vars_from_source)
-        nc.title = f"{human_readable_file_type.capitalize()} products from {obj.dataset.location}"
+        nc.title = (
+            f"{human_readable_file_type.capitalize()} products from"
+            f" {obj.dataset.location}"
+        )
         nc.source_file_uuids = get_source_uuids(nc, obj)
         copy_global(obj.dataset, nc, ("location", "day", "month", "year", "source"))
         merge_history(nc, human_readable_file_type, {"categorize": obj})
@@ -87,11 +105,14 @@ def get_references(identifier: str | None = None, extra: list | None = None) -> 
     references = "https://doi.org/10.21105/joss.02123"
     match identifier:
         case "der":
-            references += ", https://doi.org/10.1175/1520-0426(2002)019<0835:TROSCD>2.0.CO;2"
+            references += (
+                ", https://doi.org/10.1175/1520-0426(2002)019<0835:TROSCD>2.0.CO;2"
+            )
         case "ier":
             references += (
-                ", https://doi.org/10.1175/JAM2340.1, https://doi.org/10.1175/JAM2543.1, "
-                "https://doi.org/10.5194/amt-13-5335-2020"
+                ", https://doi.org/10.1175/JAM2340.1"
+                ", https://doi.org/10.1175/JAM2543.1"
+                ", https://doi.org/10.5194/amt-13-5335-2020"
             )
         case "lwc" | "categorize":
             references += ", https://doi.org/10.1175/BAMS-88-6-883"
@@ -136,7 +157,11 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
     new_record = f"{utils.get_time()} - {file_type} file created"
     histories = []
     for key, obj in data.items():
-        if not isinstance(obj, (str, list)) and obj is not None and hasattr(obj.dataset, "history"):
+        if (
+            not isinstance(obj, (str, list))
+            and obj is not None
+            and hasattr(obj.dataset, "history")
+        ):
             history = obj.dataset.history
             history = history.split("\n")[-1] if key == "model" else history
             histories.append(history)
@@ -154,7 +179,10 @@ def add_source_instruments(nc: netCDF4.Dataset, data: dict) -> None:
 
 
 def init_file(
-    file_name: str, dimensions: dict, cloudnet_arrays: dict, uuid: str | None = None
+    file_name: str,
+    dimensions: dict,
+    cloudnet_arrays: dict,
+    uuid: str | None = None,
 ) -> netCDF4.Dataset:
     """Initializes a Cloudnet file for writing.
 
@@ -173,7 +201,9 @@ def init_file(
     return nc
 
 
-def copy_variables(source: netCDF4.Dataset, target: netCDF4.Dataset, keys: tuple) -> None:
+def copy_variables(
+    source: netCDF4.Dataset, target: netCDF4.Dataset, keys: tuple
+) -> None:
     """Copies variables (and their attributes) from one file to another.
 
     Args:
@@ -187,15 +217,24 @@ def copy_variables(source: netCDF4.Dataset, target: netCDF4.Dataset, keys: tuple
             fill_value = getattr(source.variables[key], "_FillValue", False)
             variable = source.variables[key]
             var_out = target.createVariable(
-                key, variable.datatype, variable.dimensions, fill_value=fill_value
+                key,
+                variable.datatype,
+                variable.dimensions,
+                fill_value=fill_value,
             )
             var_out.setncatts(
-                {k: variable.getncattr(k) for k in variable.ncattrs() if k != "_FillValue"}
+                {
+                    k: variable.getncattr(k)
+                    for k in variable.ncattrs()
+                    if k != "_FillValue"
+                }
             )
             var_out[:] = variable[:]
 
 
-def copy_global(source: netCDF4.Dataset, target: netCDF4.Dataset, attributes: tuple) -> None:
+def copy_global(
+    source: netCDF4.Dataset, target: netCDF4.Dataset, attributes: tuple
+) -> None:
     """Copies global attributes from one file to another.
 
     Args:
@@ -314,7 +353,9 @@ def _get_identifier(short_id: str) -> str:
     return short_id
 
 
-def _add_standard_global_attributes(nc: netCDF4.Dataset, uuid: str | None = None) -> None:
+def _add_standard_global_attributes(
+    nc: netCDF4.Dataset, uuid: str | None = None
+) -> None:
     nc.Conventions = "CF-1.8"
     nc.cloudnetpy_version = version.__version__
     nc.file_uuid = uuid or utils.get_uuid()

@@ -125,7 +125,9 @@ def _reduce_header(header: dict) -> dict:
     reduced_header = {}
     for key, data in header.items():
         first_profile_value = data[0]
-        is_identical_value = bool(np.isclose(data, first_profile_value, rtol=1e-2).all())
+        is_identical_value = bool(
+            np.isclose(data, first_profile_value, rtol=1e-2).all()
+        )
         if is_identical_value is False:
             msg = f"Inconsistent header: {key}"
             if key in ("latitude", "longitude", "sample_duration"):
@@ -173,11 +175,17 @@ def _get_fmcw94_objects(files: list, expected_date: str | None) -> tuple[list, l
 def _remove_files_with_bad_height(objects: list, files: list) -> tuple[list, list]:
     lengths = [obj.data["Zh"].shape[1] for obj in objects]
     most_common = np.bincount(lengths).argmax()
-    files = [file for file, obj, length in zip(files, objects, lengths) if length == most_common]
+    files = [
+        file
+        for file, obj, length in zip(files, objects, lengths)
+        if length == most_common
+    ]
     objects = [obj for obj, length in zip(objects, lengths) if length == most_common]
     n_removed = len(lengths) - len(files)
     if n_removed > 0:
-        logging.warning(f"Removed {n_removed} RPG-FMCW-94 files due to inconsistent height vector")
+        logging.warning(
+            f"Removed {n_removed} RPG-FMCW-94 files due to inconsistent height vector"
+        )
     return objects, files
 
 
@@ -203,7 +211,9 @@ class Rpg(CloudnetInstrument):
         """Converts time to fraction hour."""
         key = "time"
         fraction_hour = utils.seconds2hours(self.raw_data[key])
-        self.data[key] = CloudnetArray(np.array(fraction_hour), key, data_type=data_type)
+        self.data[key] = CloudnetArray(
+            np.array(fraction_hour), key, data_type=data_type
+        )
 
     def _get_date(self) -> list:
         time_first = self.raw_data["time"][0]
@@ -232,13 +242,15 @@ class Fmcw(Rpg):
         """Removes ldr outliers."""
         threshold = -35
         if "ldr" in self.data:
-            self.data["ldr"].data = ma.masked_less_equal(self.data["ldr"].data, threshold)
+            self.data["ldr"].data = ma.masked_less_equal(
+                self.data["ldr"].data, threshold
+            )
 
     def mask_invalid_width(self) -> None:
         """Removes very low width values.
 
-        Simplified method. Threshold value should depend on the radar settings and vary at each
-        chirp.
+        Simplified method. Threshold value should depend on the radar
+            settings and vary at each chirp.
         """
         threshold = 0.005
         ind = np.where(self.data["width"].data < threshold)
@@ -256,7 +268,9 @@ class Fmcw(Rpg):
         is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
         n_removed = len(is_stable_zenith) - np.count_nonzero(is_stable_zenith)
         if n_removed > 0:
-            logging.warning(f"Filtering {n_removed} profiles due to varying zenith angle")
+            logging.warning(
+                f"Filtering {n_removed} profiles due to varying zenith angle"
+            )
         self.data["zenith_angle"] = CloudnetArray(zenith, "zenith_angle")
         del self.data["elevation"]
         return list(is_stable_zenith)
@@ -280,7 +294,9 @@ class Hatpro(Rpg):
 
 
 DEFINITIONS = {
-    "model_number": "\n" "0: Single polarisation radar.\n" "1: Dual polarisation radar.",
+    "model_number": "\n"
+    "0: Single polarisation radar.\n"
+    "1: Dual polarisation radar.",
     "dual_polarization": (
         "\n"
         "Value 0: Single polarisation radar.\n"
@@ -316,7 +332,9 @@ RPG_ATTRIBUTES = {
     "phi_dp": MetaData(long_name="Differential phase", units="rad"),
     "srho_hv": MetaData(long_name="Slanted correlation coefficient", units="1"),
     "kdp": MetaData(long_name="Specific differential phase shift", units="rad km-1"),
-    "differential_attenuation": MetaData(long_name="Differential attenuation", units="dB km-1"),
+    "differential_attenuation": MetaData(
+        long_name="Differential attenuation", units="dB km-1"
+    ),
     # All radars
     "file_code": MetaData(
         long_name="File code",
@@ -325,7 +343,9 @@ RPG_ATTRIBUTES = {
     ),
     "program_number": MetaData(long_name="Program number", units="1"),
     "model_number": MetaData(
-        long_name="Model number", units="1", definition=DEFINITIONS["model_number"]
+        long_name="Model number",
+        units="1",
+        definition=DEFINITIONS["model_number"],
     ),
     "antenna_separation": MetaData(
         long_name="Antenna separation",
@@ -344,7 +364,9 @@ RPG_ATTRIBUTES = {
         units="degrees",
     ),
     "dual_polarization": MetaData(
-        long_name="Dual polarisation type", units="1", definition=DEFINITIONS["dual_polarization"]
+        long_name="Dual polarisation type",
+        units="1",
+        definition=DEFINITIONS["dual_polarization"],
     ),
     "sample_duration": MetaData(long_name="Sample duration", units="s"),
     "calibration_interval": MetaData(
@@ -373,7 +395,9 @@ RPG_ATTRIBUTES = {
         units="m",
     ),
     "FFT_window": MetaData(
-        long_name="FFT window type", units="1", definition=DEFINITIONS["FFT_window"]
+        long_name="FFT window type",
+        units="1",
+        definition=DEFINITIONS["FFT_window"],
     ),
     "input_voltage_range": MetaData(
         long_name="ADC input voltage range (+/-)",

@@ -35,7 +35,12 @@ class TestMeasurementDate:
 
 
 class TestMIRA2nc(Check):
-    site_meta = {"name": "Punta Arenas", "latitude": 50, "longitude": 104.5, "altitude": 50}
+    site_meta = {
+        "name": "Punta Arenas",
+        "latitude": 50,
+        "longitude": 104.5,
+        "altitude": 50,
+    }
     date = "2021-01-02"
     n_time1 = 146
     n_time2 = 145
@@ -80,7 +85,10 @@ class TestMIRA2nc(Check):
     def test_long_names(self):
         data = [
             ("nfft", "Number of FFT points"),
-            ("nave", "Number of spectral averages (not accounting for overlapping FFTs)"),
+            (
+                "nave",
+                "Number of spectral averages (not accounting for overlapping FFTs)",
+            ),
             ("rg0", "Number of lowest range gates"),
             ("prf", "Pulse Repetition Frequency"),
             ("SNR", "Signal-to-noise ratio"),
@@ -106,21 +114,30 @@ class TestMIRA2nc(Check):
     def test_correct_date_validation(self, tmp_path):
         test_path = tmp_path / "date.nc"
         mira.mira2nc(
-            f"{filepath}/20210102_0000.mmclx", test_path, self.site_meta, date="2021-01-02"
+            f"{filepath}/20210102_0000.mmclx",
+            test_path,
+            self.site_meta,
+            date="2021-01-02",
         )
 
     def test_wrong_date_validation(self, tmp_path):
         test_path = tmp_path / "invalid.nc"
         with pytest.raises(ValidTimeStampError):
             mira.mira2nc(
-                f"{filepath}/20210102_0000.mmclx", test_path, self.site_meta, date="2021-01-03"
+                f"{filepath}/20210102_0000.mmclx",
+                test_path,
+                self.site_meta,
+                date="2021-01-03",
             )
 
     def test_uuid_from_user(self, tmp_path):
         test_path = tmp_path / "uuid.nc"
         uuid_from_user = "kissa"
         uuid = mira.mira2nc(
-            f"{filepath}/20210102_0000.mmclx", test_path, self.site_meta, uuid=uuid_from_user
+            f"{filepath}/20210102_0000.mmclx",
+            test_path,
+            self.site_meta,
+            uuid=uuid_from_user,
         )
         with netCDF4.Dataset(test_path) as nc:
             assert nc.file_uuid == uuid_from_user
@@ -129,7 +146,11 @@ class TestMIRA2nc(Check):
     def test_geolocation_from_source_file(self, tmp_path):
         test_path = tmp_path / "geo.nc"
         meta_without_geolocation = {"name": "Kumpula"}
-        mira.mira2nc(f"{filepath}/20210102_0000.mmclx", test_path, meta_without_geolocation)
+        mira.mira2nc(
+            f"{filepath}/20210102_0000.mmclx",
+            test_path,
+            meta_without_geolocation,
+        )
         with netCDF4.Dataset(test_path) as nc:
             for key in ("latitude", "longitude", "altitude"):
                 assert key in nc.variables
@@ -137,7 +158,12 @@ class TestMIRA2nc(Check):
 
 
 def test_allow_vary_option():
-    site_meta = {"name": "Juelich", "latitude": 50, "longitude": 104.5, "altitude": 50}
+    site_meta = {
+        "name": "Juelich",
+        "latitude": 50,
+        "longitude": 104.5,
+        "altitude": 50,
+    }
     temp_dir = TemporaryDirectory()
     temp_path = f"{temp_dir.name}/mira.nc"
     date = "2021-11-24"

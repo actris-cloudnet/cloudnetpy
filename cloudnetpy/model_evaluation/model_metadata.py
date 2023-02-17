@@ -12,7 +12,9 @@ class ModelMetaData(NamedTuple):
 
 MODELS = {
     "ecmwf": ModelMetaData(
-        model_name="ECMWF", long_name="European Centre for Medium-Range Weather Forecasts", level=88
+        model_name="ECMWF",
+        long_name="European Centre for Medium-Range Weather Forecasts",
+        level=88,
     ),
     "icon": ModelMetaData(
         model_name="ICON-Iglo",
@@ -21,7 +23,10 @@ MODELS = {
         cycle="12-23, 24-35, 36-47",
     ),
     "era5": ModelMetaData(
-        model_name="ERA5", long_name="Earth Re-Analysis System", level=88, cycle="1-12, 7-18"
+        model_name="ERA5",
+        long_name="Earth Re-Analysis System",
+        level=88,
+        cycle="1-12, 7-18",
     ),
     "harmonie": ModelMetaData(
         model_name="HARMONIE-AROME",

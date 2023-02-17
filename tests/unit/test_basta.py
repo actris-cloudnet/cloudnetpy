@@ -17,7 +17,12 @@ filename = f"{SCRIPT_PATH}/data/basta/basta_1a_cldradLz1R025m_v03_20210827_00000
 
 
 class TestBASTA(Check):
-    site_meta = {"name": "Palaiseau", "latitude": 50, "longitude": 104.5, "altitude": 50}
+    site_meta = {
+        "name": "Palaiseau",
+        "latitude": 50,
+        "longitude": 104.5,
+        "altitude": 50,
+    }
     date = "2021-08-27"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
@@ -66,7 +71,12 @@ class TestBASTA(Check):
 
     def test_wrong_date_validation(self, tmp_path):
         with pytest.raises(ValidTimeStampError):
-            basta2nc(filename, tmp_path / "invalid.nc", self.site_meta, date="2021-01-04")
+            basta2nc(
+                filename,
+                tmp_path / "invalid.nc",
+                self.site_meta,
+                date="2021-01-04",
+            )
 
     def test_uuid_from_user(self, tmp_path):
         test_path = tmp_path / "uuid.nc"

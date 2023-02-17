@@ -10,7 +10,9 @@ from cloudnetpy.instruments.nc_lidar import NcLidar
 class Cl61d(NcLidar):
     """Class for Vaisala CL61d ceilometer."""
 
-    def __init__(self, file_name: str, site_meta: dict, expected_date: str | None = None):
+    def __init__(
+        self, file_name: str, site_meta: dict, expected_date: str | None = None
+    ):
         super().__init__()
         self.file_name = file_name
         self.site_meta = site_meta

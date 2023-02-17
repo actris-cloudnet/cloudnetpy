@@ -31,7 +31,9 @@ def test_saturation_vapor_pressure(t, res):
 def test_dew_point_temperature(vapor_pressure, res):
     """Unit tests for atmos.dew_point()."""
     assert_array_almost_equal(
-        atmos_utils.calc_dew_point_temperature(np.array(vapor_pressure)), res, decimal=1
+        atmos_utils.calc_dew_point_temperature(np.array(vapor_pressure)),
+        res,
+        decimal=1,
     )
 
 
@@ -44,6 +46,10 @@ def test_dew_point_temperature(vapor_pressure, res):
 )
 def test_wet_bulb(t, p, rh, res):
     """Unit tests for atmos.wet_bulb()."""
-    model = {"temperature": np.array(t), "pressure": np.array(p), "rh": np.array(rh)}
+    model = {
+        "temperature": np.array(t),
+        "pressure": np.array(p),
+        "rh": np.array(rh),
+    }
     cnet = atmos_utils.calc_wet_bulb_temperature(model)
     assert_array_almost_equal(cnet / 10, res / 10, decimal=1)

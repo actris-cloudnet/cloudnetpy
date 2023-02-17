@@ -12,7 +12,12 @@ from cloudnetpy.products.iwc import IceClassification, IwcSource
 def categorize_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
     with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as nc:
-        dimensions = {"time": 3, "height": 2, "model_time": 3, "model_height": 2}
+        dimensions = {
+            "time": 3,
+            "height": 2,
+            "model_time": 3,
+            "model_height": 2,
+        }
         for name, value in dimensions.items():
             nc.createDimension(name, value)
             var = nc.createVariable(name, "f8", name)
@@ -37,7 +42,9 @@ def categorize_file(tmpdir_factory, file_metadata):
             [[0, 1], [2, 3], [4, 8]]
         )
         temperature = np.array([[280, 290], [280, 290], [280, 290]])
-        nc.createVariable("temperature", "f8", ("model_time", "model_height"))[:] = temperature
+        nc.createVariable("temperature", "f8", ("model_time", "model_height"))[
+            :
+        ] = temperature
         nc.createVariable("Z_sensitivity", "f8", "height")[:] = 2.0
         nc.createVariable("rain_rate", "i4", "time")[:] = [0, 1, 0]
     return file_name
@@ -124,7 +131,9 @@ class TestAppending:
 
     def test_append_iwc(self):
         self.ice_class.ice_above_rain = np.array([0, 0, 0, 1, 1], dtype=bool)
-        self.iwc_source.data["iwc_inc_rain"] = ma.array([1, 2, 3, 4, 5], mask=[1, 0, 1, 0, 1])
+        self.iwc_source.data["iwc_inc_rain"] = ma.array(
+            [1, 2, 3, 4, 5], mask=[1, 0, 1, 0, 1]
+        )
         self.iwc_source.append_main_variable(self.ice_class)
         expected_mask = [1, 0, 1, 1, 1]
         assert_array_equal(self.iwc_source.data["iwc"][:].mask, expected_mask)

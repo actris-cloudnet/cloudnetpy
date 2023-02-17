@@ -77,11 +77,15 @@ def test_create_save_name(file_metadata):
     case_date = file_metadata["case_date"]
     datestr = file_metadata["year"] + file_metadata["month"] + file_metadata["day"]
     fields = ["ldr", "z"]
-    assert plotting._create_save_name(path, case_date, fields) == f"/foo/bar/{datestr}_ldr_z.png"
+    assert (
+        plotting._create_save_name(path, case_date, fields)
+        == f"/foo/bar/{datestr}_ldr_z.png"
+    )
 
 
 @pytest.mark.parametrize(
-    "data, x, y", [(5000, 1, 0.9), (32000, 3, 0.7), (46000, 5, 0.3), (75000, 8, 0.25)]
+    "data, x, y",
+    [(5000, 1, 0.9), (32000, 3, 0.7), (46000, 5, 0.3), (75000, 8, 0.25)],
 )
 def test_get_filter_linewidth_constants(data, x, y):
     data = np.linspace(1, 1, data)
@@ -198,7 +202,22 @@ def test_mark_gaps():
         ]
     )
     expected_time = np.array(
-        [1, 2, 3, 3.001, 9.999, 10, 11, 11.001, 19.999, 20, 21, 22, 22.001, 23.999]
+        [
+            1,
+            2,
+            3,
+            3.001,
+            9.999,
+            10,
+            11,
+            11.001,
+            19.999,
+            20,
+            21,
+            22,
+            22.001,
+            23.999,
+        ]
     )
     assert_array_equal(data_new.data, expected_data)
     assert_array_equal(data_new.mask, expected_mask)

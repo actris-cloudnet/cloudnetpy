@@ -52,8 +52,12 @@ class ProductGrid:
                 )
             y_steps = tl.rebin_edges(self._model_height[i])
             for j in range(len(y_steps) - 1):
-                x_ind_adv = tl.get_adv_indices(model_t[i], self._time_adv[i, j], self._obs_time)
-                y_ind = tl.get_1d_indices((y_steps[j], y_steps[j + 1]), self._obs_height)
+                x_ind_adv = tl.get_adv_indices(
+                    model_t[i], self._time_adv[i, j], self._obs_time
+                )
+                y_ind = tl.get_1d_indices(
+                    (y_steps[j], y_steps[j + 1]), self._obs_height
+                )
                 ind = np.outer(x_ind, y_ind)
                 ind_avd = np.outer(x_ind_adv, y_ind)
                 if self._obs_obj.obs == "cf":
@@ -73,13 +77,17 @@ class ProductGrid:
                     )
                     ind_no_rain = np.outer(x_ind_no_rain, y_ind)
                     ind_no_rain_adv = np.outer(x_ind_no_rain_adv, y_ind)
-                    product_dict = self._regrid_iwc(product_dict, i, j, ind, ind_no_rain)
+                    product_dict = self._regrid_iwc(
+                        product_dict, i, j, ind, ind_no_rain
+                    )
                     product_adv_dict = self._regrid_iwc(
                         product_adv_dict, i, j, ind_avd, ind_no_rain_adv
                     )
                 else:
                     product_dict = self._regrid_product(product_dict, i, j, ind)
-                    product_adv_dict = self._regrid_product(product_adv_dict, i, j, ind_avd)
+                    product_adv_dict = self._regrid_product(
+                        product_adv_dict, i, j, ind_avd
+                    )
         self._append_data2object([product_dict, product_adv_dict])
 
     def _get_method_storage(self):
@@ -115,7 +123,9 @@ class ProductGrid:
 
     def _product_method_storage(self) -> tuple[dict, dict]:
         product_dict = {f"{self._obs_obj.obs}": np.zeros(self._model_height.shape)}
-        product_adv_dict = {f"{self._obs_obj.obs}_adv": np.zeros(self._model_height.shape)}
+        product_adv_dict = {
+            f"{self._obs_obj.obs}_adv": np.zeros(self._model_height.shape)
+        }
         return product_dict, product_adv_dict
 
     @staticmethod
@@ -141,7 +151,12 @@ class ProductGrid:
         return None
 
     def _regrid_iwc(
-        self, storage: dict, i: int, j: int, ind_rain: np.ndarray, ind_no_rain: np.ndarray
+        self,
+        storage: dict,
+        i: int,
+        j: int,
+        ind_rain: np.ndarray,
+        ind_no_rain: np.ndarray,
     ) -> dict:
         """Calculates average iwc value for grid point"""
         for key, downsample in storage.items():
@@ -175,5 +190,6 @@ class ProductGrid:
             for key in storage.keys():
                 down_sample = storage[key]
                 self.model_obj.append_data(
-                    down_sample, f"{key}_{self.model_obj.model}{self.model_obj.cycle}"
+                    down_sample,
+                    f"{key}_{self.model_obj.model}{self.model_obj.cycle}",
                 )

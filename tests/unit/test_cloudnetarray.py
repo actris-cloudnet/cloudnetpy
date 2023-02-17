@@ -24,7 +24,15 @@ def fake_nc_file(tmpdir_factory):
         var = root_grp.createVariable("var_float_scalar", "f8")
         var[:] = 1.0
         var = root_grp.createVariable("2d_array", "f8", ("time", "height"))
-        var[:] = np.array([[1, 1, 1, 1], [2, 2, 2, 1], [3, 3, 3, 1], [4, 4, 4, 1], [5, 5, 5, 1]])
+        var[:] = np.array(
+            [
+                [1, 1, 1, 1],
+                [2, 2, 2, 1],
+                [3, 3, 3, 1],
+                [4, 4, 4, 1],
+                [5, 5, 5, 1],
+            ]
+        )
     return file_name
 
 

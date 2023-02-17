@@ -88,7 +88,8 @@ def save_downsampled_file(
     uuid = root_group.file_uuid
     root_group.cloudnet_file_type = id_mark.split("-")[0]
     root_group.title = (
-        f"Downsampled {id_mark.capitalize().replace('_', ' of ')} from {obj.dataset.location}"
+        f"Downsampled {id_mark.capitalize().replace('_', ' of ')} "
+        f"from {obj.dataset.location}"
     )
     _add_source(root_group, objects, files)
     output.copy_global(obj.dataset, root_group, ("location", "day", "month", "year"))
@@ -126,7 +127,9 @@ def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
         obj = cloudnet_variables[key]
         size = _get_dimensions(obj.data)
         try:
-            nc_variable = rootgrp.createVariable(obj.name, obj.data_type, size, zlib=True)
+            nc_variable = rootgrp.createVariable(
+                obj.name, obj.data_type, size, zlib=True
+            )
             nc_variable[:] = obj.data
             for attr in obj.fetch_attributes():
                 setattr(nc_variable, attr, getattr(obj, attr))

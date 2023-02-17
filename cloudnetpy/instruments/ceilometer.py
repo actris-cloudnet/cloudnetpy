@@ -31,7 +31,10 @@ class Ceilometer:
         self.instrument: Instrument | None = None
 
     def calc_screened_product(
-        self, array: np.ndarray, snr_limit: int = 5, range_corrected: bool = True
+        self,
+        array: np.ndarray,
+        snr_limit: int = 5,
+        range_corrected: bool = True,
     ) -> np.ndarray:
         """Screens noise from lidar variable."""
         noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
@@ -39,7 +42,10 @@ class Ceilometer:
         return array_screened
 
     def calc_beta_smooth(
-        self, beta: np.ndarray, snr_limit: int = 5, range_corrected: bool = True
+        self,
+        beta: np.ndarray,
+        snr_limit: int = 5,
+        range_corrected: bool = True,
     ) -> np.ndarray:
         noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
         beta_raw = ma.copy(self.data["beta_raw"])
@@ -48,14 +54,17 @@ class Ceilometer:
         sigma = calc_sigma_units(self.data["time"], self.data["range"])
         beta_raw_smooth = gaussian_filter(beta_raw, sigma)
         beta_raw_smooth[cloud_ind] = cloud_values
-        beta_smooth = noisy_data.screen_data(beta_raw_smooth, is_smoothed=True, snr_limit=snr_limit)
+        beta_smooth = noisy_data.screen_data(
+            beta_raw_smooth, is_smoothed=True, snr_limit=snr_limit
+        )
         return beta_smooth
 
     def prepare_data(self):
         """Add common additional data / metadata and convert into CloudnetArrays."""
         zenith_angle = self.data["zenith_angle"]
         self.data["height"] = np.array(
-            self.site_meta["altitude"] + utils.range_to_height(self.data["range"], zenith_angle)
+            self.site_meta["altitude"]
+            + utils.range_to_height(self.data["range"], zenith_angle)
         )
         for key in ("time", "range"):
             self.data[key] = np.array(self.data[key])
@@ -95,7 +104,9 @@ class Ceilometer:
 
 
 class NoisyData:
-    def __init__(self, data: dict, noise_param: NoiseParam, range_corrected: bool = True):
+    def __init__(
+        self, data: dict, noise_param: NoiseParam, range_corrected: bool = True
+    ):
         self.data = data
         self.noise_param = noise_param
         self.range_corrected = range_corrected
@@ -128,7 +139,9 @@ class NoisyData:
 
     def _adjust_noise(self, noise: np.ndarray, is_smoothed: bool) -> np.ndarray:
         noise_min = (
-            self.noise_param.noise_smooth_min if is_smoothed is True else self.noise_param.noise_min
+            self.noise_param.noise_smooth_min
+            if is_smoothed is True
+            else self.noise_param.noise_min
         )
         noise_below_threshold = noise < noise_min
         logging.info(f"Adjusted noise of {sum(noise_below_threshold)} profiles")
@@ -151,7 +164,9 @@ class NoisyData:
             profile = data[time_ind, alt_ind:]
             profile[profile < threshold] = ma.masked
         cleaned_time_indices = np.unique(time_indices)
-        logging.info(f"Cleaned {len(cleaned_time_indices)} profiles with negative filter")
+        logging.info(
+            f"Cleaned {len(cleaned_time_indices)} profiles with negative filter"
+        )
         return cleaned_time_indices
 
     def _find_fog_profiles(
@@ -161,14 +176,20 @@ class NoisyData:
         variance_threshold: float = 1e-15,
     ) -> np.ndarray:
         """Finds saturated (usually fog) profiles from beta_raw."""
-        signal_sum = ma.sum(ma.abs(self.data["beta_raw"][:, :n_gates_for_signal_sum]), axis=1)
+        signal_sum = ma.sum(
+            ma.abs(self.data["beta_raw"][:, :n_gates_for_signal_sum]), axis=1
+        )
         variance = _calc_var_from_top_gates(self.data["beta_raw"])
         is_fog = (signal_sum > signal_sum_threshold) | (variance < variance_threshold)
         logging.info(f"Cleaned {sum(is_fog)} profiles with fog filter")
         return is_fog
 
     def _remove_noise(
-        self, array: np.ndarray, noise: np.ndarray, keep_negative: bool, snr_limit: float
+        self,
+        array: np.ndarray,
+        noise: np.ndarray,
+        keep_negative: bool,
+        snr_limit: float,
     ) -> np.ndarray:
         snr = array / utils.transpose(noise)
         if self.range_corrected is False:
@@ -194,7 +215,9 @@ class NoisyData:
     def _get_altitude_ind(self) -> tuple:
         if self.range_corrected is False:
             alt_limit = 2400.0
-            logging.warning(f"Raw data not range-corrected, correcting below {alt_limit} m")
+            logging.warning(
+                f"Raw data not range-corrected, correcting below {alt_limit} m"
+            )
         else:
             alt_limit = 1e12
         return np.where(self.data["range"] < alt_limit)
@@ -205,7 +228,9 @@ class NoisyData:
         return (self.data["range"] * m2km) ** 2
 
     @staticmethod
-    def _clean_fog_profiles(data: np.ndarray, is_fog: np.ndarray, threshold: float = 2e-6) -> None:
+    def _clean_fog_profiles(
+        data: np.ndarray, is_fog: np.ndarray, threshold: float = 2e-6
+    ) -> None:
         """Removes values in saturated (e.g. fog) profiles above peak."""
         for time_ind in np.where(is_fog)[0]:
             profile = data[time_ind, :]
@@ -224,7 +249,9 @@ def _calc_var_from_top_gates(data: np.ndarray) -> np.ndarray:
     return ma.var(data[:, -n_gates:], axis=1)
 
 
-def calc_sigma_units(time_vector: np.ndarray, range_los: np.ndarray) -> tuple[float, float]:
+def calc_sigma_units(
+    time_vector: np.ndarray, range_los: np.ndarray
+) -> tuple[float, float]:
     """Calculates Gaussian peak std parameters.
 
     The amount of smoothing is hard coded. This function calculates
@@ -235,8 +262,8 @@ def calc_sigma_units(time_vector: np.ndarray, range_los: np.ndarray) -> tuple[fl
         range_los: 1D vector (m).
 
     Returns:
-        tuple: Two element tuple containing number of steps in time and height to achieve wanted
-            smoothing.
+        tuple: Two element tuple containing number of steps in time and height to
+            achieve wanted smoothing.
 
     """
     if len(time_vector) == 0 or np.max(time_vector) > 24:
@@ -251,7 +278,9 @@ def calc_sigma_units(time_vector: np.ndarray, range_los: np.ndarray) -> tuple[fl
     return x_std, y_std
 
 
-def _estimate_clouds_from_beta(beta: np.ndarray) -> tuple[tuple, np.ndarray, float]:
+def _estimate_clouds_from_beta(
+    beta: np.ndarray,
+) -> tuple[tuple, np.ndarray, float]:
     """Naively finds strong clouds from ceilometer backscatter."""
     cloud_limit = 1e-6
     cloud_ind = np.where(beta > cloud_limit)

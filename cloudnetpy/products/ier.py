@@ -7,13 +7,16 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import IceClassification, IceSource
 
 
-def generate_ier(categorize_file: str, output_file: str, uuid: str | None = None) -> str:
+def generate_ier(
+    categorize_file: str, output_file: str, uuid: str | None = None
+) -> str:
     """Generates Cloudnet ice effective radius product.
 
-    This function calculates ice particle effective radius using the Grieche et al. 2020 method
-    which uses Hogan et al. 2006 to estimate ice water content and alpha from Delanoë et al. 2007.
-    In this method, effective radius of ice particles is calculated from attenuated-corrected
-    radar reflectivity and model temperature. The results are written in a netCDF file.
+    This function calculates ice particle effective radius using the Grieche
+    et al. 2020 method which uses Hogan et al. 2006 to estimate ice water content
+    and alpha from Delanoë et al. 2007. In this method, effective radius
+    of ice particles is calculated from attenuated-corrected radar reflectivity
+    and model temperature. The results are written in a netCDF file.
 
     Args:
         categorize_file: Categorize file name.
@@ -84,22 +87,25 @@ def _add_ier_comment(attributes: dict, ier: IerSource) -> dict:
     coeffs = ier.coefficients
     factor = np.round((coeffs[0] / 0.93), 3)
     attributes["ier"] = attributes["ier"]._replace(
-        comment=f"This variable was calculated from the {freq}-GHz radar reflectivity factor\n"
-        f"after correction for gaseous attenuation, and temperature taken from a forecast model,\n"
-        f"using the following empirical formula: log10(ier[m]) =\n"
-        f"({coeffs[1]} * Z[dBZ] * T[degC] + {coeffs[3]} * Z[dBZ]\n"
-        f"+ {coeffs[2]} * T[degC] + {coeffs[4]}) * 3 / (2 * {constants.RHO_ICE}[kg/m3]).\n"
-        "In this formula Z is taken to be defined such that all frequencies of radar would\n"
-        "measure the same Z in Rayleigh scattering ice. However, the radar is more likely to\n"
-        "have been calibrated such that all frequencies would measure the same Z in Rayleigh\n"
-        "scattering liquid cloud at 0 degrees C. The measured Z is therefore multiplied by\n"
-        f"|K(liquid,0degC,{freq}GHz)|^2/0.93 = {factor} before applying this formula.\n"
-        'The formula has been used where the "categorization" data has diagnosed that the radar\n"'
-        "echo is due to ice, but note that in some cases supercooled drizzle will erroneously be\n"
-        "identified as ice. Missing data indicates either that ice cloud was present but it was\n"
-        "only detected by the lidar so its ice water content could not be estimated, or than\n"
-        "there was rain below the ice associated with uncertain attenuation of the reflectivities\n"
-        "in the ice.\n"
+        comment=f"This variable was calculated from the {freq}-GHz radar\n"
+        f"reflectivity factor after correction for gaseous attenuation,\n"
+        f"and temperature taken from a forecast model, using the following\n"
+        f"empirical formula: log10(ier[m]) = ({coeffs[1]} * Z[dBZ] * T[degC]\n"
+        f"+ {coeffs[3]} * Z[dBZ] + {coeffs[2]} * T[degC] + {coeffs[4]})\n"
+        f"* 3 / (2 * {constants.RHO_ICE}[kg/m3]). In this formula Z is taken\n"
+        "to be defined such that all frequencies of radar would measure the\n"
+        "same Z in Rayleigh scattering ice. However, the radar is more likely\n"
+        "to have been calibrated such that all frequencies would measure\n"
+        "the same Z in Rayleigh scattering liquid cloud at 0 degrees C.\n"
+        "The measured Z is therefore multiplied by\n"
+        f" |K(liquid,0degC,{freq}GHz)|^2/0.93 = {factor} before applying\n"
+        'this formula. The formula has been used where the "categorization"\n"'
+        "data has diagnosed that the radar echo is due to ice, but note\n"
+        "that in some cases supercooled drizzle will erroneously be identified\n"
+        "as ice. Missing data indicates either that ice cloud was present but it was\n"
+        "only detected by the lidar so its ice water content could not be estimated,\n"
+        "or than there was rain below the ice associated with uncertain attenuation\n"
+        "of the reflectivities in the ice.\n"
     )
     return attributes
 
@@ -107,7 +113,8 @@ def _add_ier_comment(attributes: dict, ier: IerSource) -> dict:
 COMMENTS = {
     "ier_error": (
         "Error in effective radius of ice particles due to error propagation,\n"
-        "of ier = 3/(2 rho_i) IWC / alpha, using error for IWC and alpha as given in Hogan 2006."
+        "of ier = 3/(2 rho_i) IWC / alpha, using error for IWC and alpha as\n"
+        "given in Hogan 2006."
     ),
     "ier_retrieval_status": (
         "This variable describes whether a retrieval was performed\n"
@@ -134,9 +141,11 @@ DEFINITIONS = {
         "Value 5: Ice detected by radar but rain below so no retrieval performed\n"
         "         due to very uncertain attenuation.\n"
         "Value 6: Clear sky above rain wet-bulb temperature less than 0degC: if\n"
-        "         rain attenuation were strong then ice could be present but undetected.\n"
-        "Value 7: Drizzle or rain that would have been classified as ice if the wet-bulb\n"
-        "         temperature were less than 0degC: may be ice if temperature is in error."
+        "         rain attenuation were strong then ice could be present but\n"
+        "         undetected."
+        "Value 7: Drizzle or rain that would have been classified as ice if\n"
+        "          the wet-bulb temperature were less than 0degC: may be ice\n"
+        "          if temperature is in error."
     ),
 }
 

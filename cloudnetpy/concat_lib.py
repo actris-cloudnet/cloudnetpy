@@ -54,7 +54,10 @@ def update_nc(old_file: str, new_file: str) -> int:
 
     """
     try:
-        with (netCDF4.Dataset(old_file, "a") as nc_old, netCDF4.Dataset(new_file) as nc_new):
+        with (
+            netCDF4.Dataset(old_file, "a") as nc_old,
+            netCDF4.Dataset(new_file) as nc_new,
+        ):
             valid_ind = _find_valid_time_indices(nc_old, nc_new)
             if len(valid_ind) > 0:
                 _update_fields(nc_old, nc_new, valid_ind)
@@ -83,12 +86,13 @@ def concatenate_files(
             Default is None when all variables with 'concat_dimension' will be saved.
         new_attributes: Optional new global attributes as {'attribute_name': value}.
         ignore: List of variables to be ignored.
-        allow_difference: Names of scalar variables that can differ from one file to another
-        (value from the first file is saved).
+        allow_difference: Names of scalar variables that can differ from one file to
+            another (value from the first file is saved).
 
     Notes:
-        Arrays without 'concat_dimension', scalars, and global attributes will be taken from
-        the first file. Groups, possibly present in a NETCDF4 formatted file, are ignored.
+        Arrays without 'concat_dimension', scalars, and global attributes will be taken
+        from the first file. Groups, possibly present in a NETCDF4 formatted file,
+        are ignored.
 
     """
     with _Concat(filenames, output_file, concat_dimension) as concat:
@@ -100,7 +104,9 @@ def concatenate_files(
 class _Concat:
     common_variables: set[str]
 
-    def __init__(self, filenames: list, output_file: str, concat_dimension: str = "time"):
+    def __init__(
+        self, filenames: list, output_file: str, concat_dimension: str = "time"
+    ):
         self.filenames = sorted(filenames)
         self.concat_dimension = concat_dimension
         self.first_filename = self.filenames[0]
@@ -121,7 +127,12 @@ class _Concat:
             for key, value in new_attributes.items():
                 setattr(self.concatenated_file, key, value)
 
-    def concat_data(self, variables: list | None, ignore: list | None, allow_vary: list | None):
+    def concat_data(
+        self,
+        variables: list | None,
+        ignore: list | None,
+        allow_vary: list | None,
+    ):
         """Concatenates data arrays."""
         self._write_initial_data(variables, ignore)
         if len(self.filenames) > 1:
@@ -181,10 +192,16 @@ class _Concat:
                     self.concatenated_file.variables[key][ind0:ind1, :] = array
 
     def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
-        data_model = "NETCDF4" if self.first_file.data_model == "NETCDF4" else "NETCDF4_CLASSIC"
+        data_model = (
+            "NETCDF4" if self.first_file.data_model == "NETCDF4" else "NETCDF4_CLASSIC"
+        )
         nc = netCDF4.Dataset(output_file, "w", format=data_model)
         for dim in self.first_file.dimensions.keys():
-            dim_len = None if dim == self.concat_dimension else self.first_file.dimensions[dim].size
+            dim_len = (
+                None
+                if dim == self.concat_dimension
+                else self.first_file.dimensions[dim].size
+            )
             nc.createDimension(dim, dim_len)
         return nc
 

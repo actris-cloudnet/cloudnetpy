@@ -16,7 +16,9 @@ SECONDS_IN_HOUR = 3600
 class VaisalaCeilo(Ceilometer):
     """Base class for Vaisala ceilometers."""
 
-    def __init__(self, full_path: str, site_meta: dict, expected_date: str | None = None):
+    def __init__(
+        self, full_path: str, site_meta: dict, expected_date: str | None = None
+    ):
         super().__init__(self.noise_param)
         self.full_path = full_path
         self.site_meta = site_meta
@@ -77,7 +79,9 @@ class VaisalaCeilo(Ceilometer):
             return [n for n, value in enumerate(data) if utils.is_timestamp(value)]
 
         def _find_correct_dates(data: list, line_numbers: list) -> list:
-            return [n for n in line_numbers if data[n].strip("-")[:10] == self.expected_date]
+            return [
+                n for n in line_numbers if data[n].strip("-")[:10] == self.expected_date
+            ]
 
         def _find_number_of_data_lines(data: list, timestamp_line_number: int) -> int:
             for i, line in enumerate(data[timestamp_line_number:]):
@@ -87,17 +91,25 @@ class VaisalaCeilo(Ceilometer):
 
         def _parse_data_lines(data: list, starting_indices: list) -> list:
             return [
-                [data[n + line_number] for n in starting_indices if (n + line_number) < len(data)]
+                [
+                    data[n + line_number]
+                    for n in starting_indices
+                    if (n + line_number) < len(data)
+                ]
                 for line_number in range(number_of_data_lines)
             ]
 
         valid_lines = _filter_lines(data_in)
         timestamp_line_numbers = _find_timestamp_line_numbers(valid_lines)
         if self.expected_date is not None:
-            timestamp_line_numbers = _find_correct_dates(valid_lines, timestamp_line_numbers)
+            timestamp_line_numbers = _find_correct_dates(
+                valid_lines, timestamp_line_numbers
+            )
             if not timestamp_line_numbers:
                 raise ValidTimeStampError
-        number_of_data_lines = _find_number_of_data_lines(valid_lines, timestamp_line_numbers[0])
+        number_of_data_lines = _find_number_of_data_lines(
+            valid_lines, timestamp_line_numbers[0]
+        )
         data_lines = _parse_data_lines(valid_lines, timestamp_line_numbers)
         return data_lines
 
@@ -141,7 +153,11 @@ class VaisalaCeilo(Ceilometer):
 
     @staticmethod
     def _convert_meta_strings(meta: dict) -> dict:
-        strings = ("cloud_base_data", "measurement_parameters", "cloud_amount_data")
+        strings = (
+            "cloud_base_data",
+            "measurement_parameters",
+            "cloud_amount_data",
+        )
         for field in meta:
             if field in strings:
                 continue
@@ -173,7 +189,13 @@ class VaisalaCeilo(Ceilometer):
 
     def _read_header_line_1(self, lines: list) -> dict:
         """Reads all first header lines from CT25k and CL ceilometers."""
-        fields = ("model_id", "unit_id", "software_level", "message_number", "message_subclass")
+        fields = (
+            "model_id",
+            "unit_id",
+            "software_level",
+            "message_number",
+            "message_subclass",
+        )
         if self._is_ct25k():
             indices = [1, 3, 4, 6, 7, 8]
         else:
@@ -184,7 +206,12 @@ class VaisalaCeilo(Ceilometer):
     @staticmethod
     def _read_header_line_2(lines: list) -> dict:
         """Reads the second header line."""
-        fields = ("detection_status", "warning", "cloud_base_data", "warning_flags")
+        fields = (
+            "detection_status",
+            "warning",
+            "cloud_base_data",
+            "warning_flags",
+        )
         values = [[line[0], line[1], line[3:20], line[21:].strip()] for line in lines]
         return values_to_dict(fields, values)
 
@@ -194,7 +221,9 @@ class ClCeilo(VaisalaCeilo):
 
     noise_param = NoiseParam(noise_min=3.1e-8, noise_smooth_min=1.1e-8)
 
-    def __init__(self, full_path: str, site_meta: dict, expected_date: str | None = None):
+    def __init__(
+        self, full_path: str, site_meta: dict, expected_date: str | None = None
+    ):
         super().__init__(full_path, site_meta, expected_date)
         self._hex_conversion_params = (5, 524288, 1048576)
         self._backscatter_scale_factor = 1e8
@@ -271,7 +300,12 @@ class Ct25k(VaisalaCeilo):
 
     noise_param = NoiseParam(noise_min=6e-7, noise_smooth_min=1e-7)
 
-    def __init__(self, input_file: str, site_meta: dict, expected_date: str | None = None):
+    def __init__(
+        self,
+        input_file: str,
+        site_meta: dict,
+        expected_date: str | None = None,
+    ):
         super().__init__(input_file, site_meta, expected_date)
         self._hex_conversion_params = (4, 32768, 65536)
         self._backscatter_scale_factor = 1e7
@@ -293,7 +327,10 @@ class Ct25k(VaisalaCeilo):
     def _parse_hex_profiles(lines: list) -> list:
         """Collects ct25k profiles into list (one profile / element)."""
         n_profiles = len(lines[0])
-        return ["".join([lines[m][n][3:].strip() for m in range(16)]) for n in range(n_profiles)]
+        return [
+            "".join([lines[m][n][3:].strip() for m in range(16)])
+            for n in range(n_profiles)
+        ]
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number in (1, 3, 6):

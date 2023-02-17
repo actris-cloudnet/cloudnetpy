@@ -24,7 +24,8 @@ def basta2nc(
     Args:
         basta_file: Filename of a daily BASTA .nc file.
         output_file: Output filename.
-        site_meta: Dictionary containing information about the site. Required key is `name`.
+        site_meta: Dictionary containing information about the site. Required key
+            is `name`.
         uuid: Set specific UUID for the file.
         date: Expected date of the measurements as YYYY-MM-DD.
 
@@ -101,12 +102,18 @@ class Basta(NcRadar):
 
 ATTRIBUTES = {
     "radar_pitch": MetaData(
-        long_name="Radar pitch angle", units="degree", standard_name="platform_roll"
+        long_name="Radar pitch angle",
+        units="degree",
+        standard_name="platform_roll",
     ),
     "radar_yaw": MetaData(
-        long_name="Radar yaw angle", units="degree", standard_name="platform_yaw"
+        long_name="Radar yaw angle",
+        units="degree",
+        standard_name="platform_yaw",
     ),
     "radar_roll": MetaData(
-        long_name="Radar roll angle", units="degree", standard_name="platform_roll"
+        long_name="Radar roll angle",
+        units="degree",
+        standard_name="platform_roll",
     ),
 }

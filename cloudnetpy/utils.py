@@ -74,9 +74,15 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
         [year, month, day, hours, minutes, seconds] formatted as '05' etc (UTC).
 
     """
-    epoch_in_seconds = datetime.datetime.timestamp(datetime.datetime(*epoch, tzinfo=timezone.utc))
+    epoch_in_seconds = datetime.datetime.timestamp(
+        datetime.datetime(*epoch, tzinfo=timezone.utc)
+    )
     timestamp = time_in_seconds + epoch_in_seconds
-    return datetime.datetime.utcfromtimestamp(timestamp).strftime("%Y %m %d %H %M %S").split()
+    return (
+        datetime.datetime.utcfromtimestamp(timestamp)
+        .strftime("%Y %m %d %H %M %S")
+        .split()
+    )
 
 
 def time_grid(time_step: int = 30) -> np.ndarray:
@@ -312,7 +318,11 @@ def setbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
 
 
 def interpolate_2d(
-    x: np.ndarray, y: np.ndarray, z: np.ndarray, x_new: np.ndarray, y_new: np.ndarray
+    x: np.ndarray,
+    y: np.ndarray,
+    z: np.ndarray,
+    x_new: np.ndarray,
+    y_new: np.ndarray,
 ) -> np.ndarray:
     """Linear interpolation of gridded 2d data.
 
@@ -335,7 +345,11 @@ def interpolate_2d(
 
 
 def interpolate_2d_mask(
-    x: np.ndarray, y: np.ndarray, z: ma.MaskedArray, x_new: np.ndarray, y_new: np.ndarray
+    x: np.ndarray,
+    y: np.ndarray,
+    z: ma.MaskedArray,
+    x_new: np.ndarray,
+    y_new: np.ndarray,
 ) -> ma.MaskedArray:
     """2D linear interpolation preserving the mask.
 
@@ -350,8 +364,8 @@ def interpolate_2d_mask(
         Interpolated 2D masked array.
 
     Notes:
-        Points outside the original range will be nans (and masked). Uses linear interpolation.
-        Input data may contain nan-values.
+        Points outside the original range will be nans (and masked). Uses linear
+        interpolation. Input data may contain nan-values.
 
     """
     z = ma.array(ma.masked_invalid(z, copy=True))  # ma.array() to avoid pylint nag
@@ -362,7 +376,9 @@ def interpolate_2d_mask(
     y_valid = yy[valid_points]
     z_valid = z[valid_points]
     xx_new, yy_new = np.meshgrid(y_new, x_new)
-    data = griddata((x_valid, y_valid), z_valid.ravel(), (xx_new, yy_new), method="linear")
+    data = griddata(
+        (x_valid, y_valid), z_valid.ravel(), (xx_new, yy_new), method="linear"
+    )
     # Preserve mask:
     mask_fun = RectBivariateSpline(x, y, z.mask[:], kx=1, ky=1)
     mask = mask_fun(x_new, y_new)
@@ -373,7 +389,11 @@ def interpolate_2d_mask(
 
 
 def interpolate_2d_nearest(
-    x: np.ndarray, y: np.ndarray, z: np.ndarray, x_new: np.ndarray, y_new: np.ndarray
+    x: np.ndarray,
+    y: np.ndarray,
+    z: np.ndarray,
+    x_new: np.ndarray,
+    y_new: np.ndarray,
 ) -> ma.MaskedArray:
     """2D nearest neighbor interpolation preserving mask.
 
@@ -393,7 +413,11 @@ def interpolate_2d_nearest(
     """
     data = ma.copy(z)
     fun = RegularGridInterpolator(
-        (x, y), data, method="nearest", bounds_error=False, fill_value=ma.masked
+        (x, y),
+        data,
+        method="nearest",
+        bounds_error=False,
+        fill_value=ma.masked,
     )
     xx, yy = np.meshgrid(x_new, y_new)
     return fun((xx, yy)).T
@@ -448,7 +472,9 @@ def l2norm(*args) -> ma.MaskedArray:
     return ma.sqrt(ss)
 
 
-def l2norm_weighted(values: tuple, overall_scale: float, term_weights: tuple) -> ma.MaskedArray:
+def l2norm_weighted(
+    values: tuple, overall_scale: float, term_weights: tuple
+) -> ma.MaskedArray:
     """Calculates scaled and weighted Euclidean distance.
 
     Calculated distance is of form: scale * sqrt((a1*a)**2 + (b1*b)**2 + ...)
@@ -489,7 +515,9 @@ def cumsumr(array: np.ndarray, axis: int = 0) -> np.ndarray:
 
     """
     cums = array.cumsum(axis=axis)
-    return cums - np.maximum.accumulate(cums * (array == 0), axis=axis)  # pylint: disable=E1101
+    return cums - np.maximum.accumulate(
+        cums * (array == 0), axis=axis
+    )  # pylint: disable=E1101
 
 
 def ffill(array: np.ndarray, value: int = 0) -> np.ndarray:
@@ -556,12 +584,12 @@ def n_elements(array: np.ndarray, dist: float, var: str | None = None) -> int:
     """Returns the number of elements that cover certain distance.
 
     Args:
-        array: Input array with arbitrary units or time in fraction hour. *x* should be evenly
-            spaced or at least close to.
-        dist: Distance to be covered. If x is fraction time, *dist* is in minutes. Otherwise *x*
-            and *dist* should have the same units.
-        var: If 'time', input is fraction hour and distance in minutes, else inputs have the same
-            units. Default is None (same units).
+        array: Input array with arbitrary units or time in fraction hour. *x* should
+            be evenly spaced or at least close to.
+        dist: Distance to be covered. If x is fraction time, *dist* is in minutes.
+            Otherwise *x* and *dist* should have the same units.
+        var: If 'time', input is fraction hour and distance in minutes, else inputs
+            have the same units. Default is None (same units).
 
     Returns:
         Number of elements in the input array that cover *dist*.
@@ -618,7 +646,9 @@ def get_time() -> str:
     return f"{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} +00:00"
 
 
-def date_range(start_date: datetime.date, end_date: datetime.date) -> Iterator[datetime.date]:
+def date_range(
+    start_date: datetime.date, end_date: datetime.date
+) -> Iterator[datetime.date]:
     """Returns range between two dates (datetimes)."""
     for n in range(int((end_date - start_date).days)):
         yield start_date + datetime.timedelta(n)
@@ -679,11 +709,12 @@ def array_to_probability(
 
     Args:
         array: Numpy array.
-        loc: Center of the distribution. Values smaller than this will have small probability.
-            Values greater than this will have large probability.
-        scale: Width of the distribution, i.e., how fast the probability drops or increases from
-            the peak.
-        invert: If True, large values have small probability and vice versa. Default is False.
+        loc: Center of the distribution. Values smaller than this will have small
+            probability. Values greater than this will have large probability.
+        scale: Width of the distribution, i.e., how fast the probability drops or
+            increases from the peak.
+        invert: If True, large values have small probability and vice versa.
+            Default is False.
 
     Returns:
         Probability with the same shape as the input data.
@@ -735,7 +766,11 @@ def get_sorted_filenames(file_path: str, extension: str) -> list:
     """Returns full paths of files with some extension, sorted by filename."""
     extension = extension.lower()
     all_files = os.listdir(file_path)
-    files = ["/".join((file_path, file)) for file in all_files if file.lower().endswith(extension)]
+    files = [
+        "/".join((file_path, file))
+        for file in all_files
+        if file.lower().endswith(extension)
+    ]
     files.sort()
     return files
 
@@ -802,7 +837,11 @@ def screen_by_time(data_in: dict, epoch: Epoch, expected_date: str) -> dict:
     for key, array in data.items():
         if isinstance(array, list) and len(array) > 1:
             raise ValueError
-        if isinstance(array, np.ndarray) and array.ndim > 0 and array.shape[0] == n_time:
+        if (
+            isinstance(array, np.ndarray)
+            and array.ndim > 0
+            and array.shape[0] == n_time
+        ):
             if array.ndim == 1:
                 data[key] = data[key][valid_ind]
             if array.ndim == 2:

@@ -39,7 +39,8 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
 
     Args:
         obs: The :class:`ClassData` instance.
-        smooth: If True, apply a small Gaussian smoother to the melting layer. Default is True.
+        smooth: If True, apply a small Gaussian smoother to the
+            melting layer. Default is True.
 
     Returns:
         2-D boolean array denoting the melting layer.
@@ -76,7 +77,9 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
         if ma.count(ldr_prof) > 3 or ma.count(v_prof) > 3:
             try:
                 assert ldr_prof is not None and ldr_dprof is not None
-                indices = _find_melting_layer_from_ldr(ldr_prof, ldr_dprof, v_prof, z_prof)
+                indices = _find_melting_layer_from_ldr(
+                    ldr_prof, ldr_dprof, v_prof, z_prof
+                )
             except (ValueError, IndexError, AssertionError):
                 height = obs.height[temp_indices]
                 if hasattr(obs, "width"):
@@ -93,7 +96,10 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
 
 
 def _find_melting_layer_from_ldr(
-    ldr_prof: np.ndarray, ldr_dprof: np.ndarray, v_prof: np.ndarray, z_prof: np.ndarray
+    ldr_prof: np.ndarray,
+    ldr_dprof: np.ndarray,
+    v_prof: np.ndarray,
+    z_prof: np.ndarray,
 ) -> np.ndarray | None:
     if ldr_prof is None:
         raise ValueError

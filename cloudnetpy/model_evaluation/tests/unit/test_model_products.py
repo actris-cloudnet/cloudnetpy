@@ -11,7 +11,8 @@ PRODUCT = "iwc"
 
 
 @pytest.mark.parametrize(
-    "cycle, model, answer", [("test_file_12-23", "icon", "_12-23"), ("test_file", "ecmwf", "")]
+    "cycle, model, answer",
+    [("test_file_12-23", "icon", "_12-23"), ("test_file", "ecmwf", "")],
 )
 def test_read_cycle_name(cycle, model, answer, model_file):
     obj = ModelManager(str(model_file), model, OUTPUT_FILE, PRODUCT)
@@ -60,7 +61,9 @@ def test_calc_water_content(p, T, q, model_file):
     testing.assert_almost_equal(x, obj._calc_water_content(q, p, T))
 
 
-@pytest.mark.parametrize("key", ["time", "level", "horizontal_resolution", "latitude", "longitude"])
+@pytest.mark.parametrize(
+    "key", ["time", "level", "horizontal_resolution", "latitude", "longitude"]
+)
 def test_add_common_variables_false(key, model_file):
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj._is_file = False
@@ -68,7 +71,9 @@ def test_add_common_variables_false(key, model_file):
     assert key in obj.data.keys()
 
 
-@pytest.mark.parametrize("key", ["time", "level", "horizontal_resolution", "latitude", "longitude"])
+@pytest.mark.parametrize(
+    "key", ["time", "level", "horizontal_resolution", "latitude", "longitude"]
+)
 def test_add_common_variables_true(key, model_file, regrid_file):
     obj = ModelManager(str(model_file), MODEL, regrid_file, PRODUCT)
     obj._is_file = True

@@ -9,7 +9,10 @@ from cloudnetpy.instruments import ceilometer
 class TestNoisyData:
     @pytest.fixture(autouse=True)
     def run_before_and_after_tests(self):
-        data = {"beta_raw": np.array([[1, 2, 3], [1, 2, 3]]), "range": np.array([1000, 2000, 3000])}
+        data = {
+            "beta_raw": np.array([[1, 2, 3], [1, 2, 3]]),
+            "range": np.array([1000, 2000, 3000]),
+        }
         noise_params = ceilometer.NoiseParam()
         self.noisy_data = ceilometer.NoisyData(data, noise_params)
         yield
@@ -24,11 +27,24 @@ class TestNoisyData:
 
     def test_remove_low_values_above_consequent_negatives(self):
         data = ma.array(
-            [[2, 0, 0, 0, 0, 4, 0], [3, -1, -2, -3, 0.9, 1.1, 0], [1, 2, 1, 2, 0, 0, 0]], mask=False
+            [
+                [2, 0, 0, 0, 0, 4, 0],
+                [3, -1, -2, -3, 0.9, 1.1, 0],
+                [1, 2, 1, 2, 0, 0, 0],
+            ],
+            mask=False,
         )
         expected = ma.array(
-            [[2, 0, 0, 0, 0, 4, 0], [3, -1, -2, -3, 0.9, 1.1, 0], [1, 2, 1, 2, 0, 0, 0]],
-            mask=[[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 1, 1, 0, 1], [0, 0, 0, 0, 0, 0, 0]],
+            [
+                [2, 0, 0, 0, 0, 4, 0],
+                [3, -1, -2, -3, 0.9, 1.1, 0],
+                [1, 2, 1, 2, 0, 0, 0],
+            ],
+            mask=[
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 1, 0, 1],
+                [0, 0, 0, 0, 0, 0, 0],
+            ],
         )
 
         res = self.noisy_data._mask_low_values_above_consequent_negatives(
@@ -42,12 +58,24 @@ class TestNoisyData:
     def test_clean_fog_profiles(self):
         is_fog = np.array([1, 0, 1])
         data = ma.array(
-            [[1, 2, 5, 0, 0.8, 1.1, 0], [3, -1, -2, -3, 0.9, 1.1, 0], [10, 2, 0.2, 2, 0, 0, 0]],
+            [
+                [1, 2, 5, 0, 0.8, 1.1, 0],
+                [3, -1, -2, -3, 0.9, 1.1, 0],
+                [10, 2, 0.2, 2, 0, 0, 0],
+            ],
             mask=False,
         )
         expected = ma.array(
-            [[1, 2, 5, 0, 0.8, 1.1, 0], [3, -1, -2, -3, 0.9, 1.1, 0], [10, 2, 0.2, 2, 0, 0, 0]],
-            mask=[[0, 0, 0, 1, 1, 0, 1], [0, 0, 0, 0, 0, 0, 0], [0, 0, 1, 0, 1, 1, 1]],
+            [
+                [1, 2, 5, 0, 0.8, 1.1, 0],
+                [3, -1, -2, -3, 0.9, 1.1, 0],
+                [10, 2, 0.2, 2, 0, 0, 0],
+            ],
+            mask=[
+                [0, 0, 0, 1, 1, 0, 1],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 1, 1, 1],
+            ],
         )
         self.noisy_data._clean_fog_profiles(data, is_fog, threshold=1)
         assert_array_equal(data.data, expected.data)
@@ -68,10 +96,106 @@ class TestNoisyData:
     def test_find_fog_profiles(self):
         self.noisy_data.data["beta_raw"] = np.array(
             [
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 1.99],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1.1e-12, 1e-12, 1e-12],
-                [2e-3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 2.1, 1],
-                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 1, 20],
+                [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    10,
+                    1,
+                    1.99,
+                ],
+                [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1.1e-12,
+                    1e-12,
+                    1e-12,
+                ],
+                [
+                    2e-3,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    10,
+                    2.1,
+                    1,
+                ],
+                [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    10,
+                    1,
+                    20,
+                ],
             ]
         )
         result = [0, 1, 1, 0]

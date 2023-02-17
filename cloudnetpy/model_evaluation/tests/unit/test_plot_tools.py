@@ -66,7 +66,10 @@ def test_sort_model2first_element():
 def test_sort_cycles_vars():
     a = ["era5_cf_1-12", "era5_cf_7-18", "cf_era5_1-12", "cf_era5_7-18"]
     e = "era5"
-    compare = [["era5_cf_1-12", "cf_era5_1-12"], ["era5_cf_7-18", "cf_era5_7-18"]]
+    compare = [
+        ["era5_cf_1-12", "cf_era5_1-12"],
+        ["era5_cf_7-18", "cf_era5_7-18"],
+    ]
     x, _ = plt.sort_cycles(a, e)
     assert x == compare
 
@@ -82,7 +85,10 @@ def test_sort_cycles_simo():
 def test_sort_cycles_vars_missing():
     a = ["icon_cf_12-23", "icon_cf_36-47", "cf_icon_12-23", "cf_icon_36-47"]
     e = "icon"
-    compare = [["icon_cf_12-23", "cf_icon_12-23"], ["icon_cf_36-47", "cf_icon_36-47"]]
+    compare = [
+        ["icon_cf_12-23", "cf_icon_12-23"],
+        ["icon_cf_36-47", "cf_icon_36-47"],
+    ]
     x, _ = plt.sort_cycles(a, e)
     assert x == compare
 
@@ -210,10 +216,16 @@ def test_rolling_mean_all_mask():
 
 
 def test_change2one_dim_axes_maskY():
-    x = np.ma.array([[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]])
-    y = np.ma.array([[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]])
+    x = np.ma.array(
+        [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]]
+    )
+    y = np.ma.array(
+        [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]
+    )
     y[1] = np.ma.masked
-    data = np.ma.array([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
+    data = np.ma.array(
+        [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
+    )
     x, y, data = plt.change2one_dim_axes(x, y, data)
     compare_x = np.array([1, 2, 3, 4])
     compare_y = np.array([1, 2, 3, 4, 5])
@@ -222,10 +234,16 @@ def test_change2one_dim_axes_maskY():
 
 
 def test_change2one_dim_axes_maskX():
-    x = np.ma.array([[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]])
-    y = np.ma.array([[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]])
+    x = np.ma.array(
+        [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]]
+    )
+    y = np.ma.array(
+        [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]
+    )
     x[1] = np.ma.masked
-    data = np.ma.array([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
+    data = np.ma.array(
+        [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
+    )
     x, y, data = plt.change2one_dim_axes(x, y, data)
     compare_x = np.array([1, 2, 3, 4])
     compare_y = np.array([1, 2, 3, 4, 5])
@@ -234,11 +252,17 @@ def test_change2one_dim_axes_maskX():
 
 
 def test_change2one_dim_axes():
-    x = np.ma.array([[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]])
+    x = np.ma.array(
+        [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]]
+    )
     compare_x = np.copy(x)
-    y = np.ma.array([[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]])
+    y = np.ma.array(
+        [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]
+    )
     compare_y = np.copy(y)
-    data = np.ma.array([[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]])
+    data = np.ma.array(
+        [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
+    )
     x, y, data = plt.change2one_dim_axes(x, y, data)
     testing.assert_array_almost_equal(x, compare_x)
     testing.assert_array_almost_equal(y, compare_y)

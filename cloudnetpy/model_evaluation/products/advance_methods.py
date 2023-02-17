@@ -21,7 +21,12 @@ class AdvanceProductMethods(DataSource):
         obs_obj (object): The :class:'ObservationManager' object.
     """
 
-    def __init__(self, model_obj: ModelManager, model_file: str, obs_obj: ObservationManager):
+    def __init__(
+        self,
+        model_obj: ModelManager,
+        model_file: str,
+        obs_obj: ObservationManager,
+    ):
         super().__init__(model_file)
         self._obs_obj = obs_obj
         self.product = obs_obj.obs
@@ -63,12 +68,19 @@ class AdvanceProductMethods(DataSource):
                 cf_filtered[ind] = np.nan
                 continue
             obs_index = self.get_observation_index(
-                iwc_dist, tZT, tT, tZ, t, float(t_screened[ind]), float(z_sen[ind])
+                iwc_dist,
+                tZT,
+                tT,
+                tZ,
+                t,
+                float(t_screened[ind]),
+                float(z_sen[ind]),
             )
             cf_filtered[ind] = self.filter_cirrus(p_iwc, obs_index, cf_filtered[ind])
         cf_filtered[cf_filtered < 0.05] = ma.masked
         self._model_obj.append_data(
-            cf_filtered, f"{self._model_obj.model}{self._model_obj.cycle}_cf_cirrus"
+            cf_filtered,
+            f"{self._model_obj.model}{self._model_obj.cycle}_cf_cirrus",
         )
 
     def getvar_from_object(self, arg: str) -> np.ndarray:
@@ -105,7 +117,9 @@ class AdvanceProductMethods(DataSource):
         return cf_filtered
 
     @staticmethod
-    def mask_weird_indices(cf: np.ndarray, iwc: np.ndarray, lwc: np.ndarray) -> np.ndarray:
+    def mask_weird_indices(
+        cf: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+    ) -> np.ndarray:
         cf_filtered = np.copy(cf)
         weird_ind = (iwc / cf > 0.5e-3) & (cf < 0.001)
         weird_ind = weird_ind | (iwc == 0) & (lwc == 0) & (cf == 0)
@@ -120,7 +134,9 @@ class AdvanceProductMethods(DataSource):
         return cloud_iwc, ice_ind
 
     @staticmethod
-    def get_ice_indices(cf_filtered: np.ndarray, iwc: np.ndarray, lwc: np.ndarray) -> tuple:
+    def get_ice_indices(
+        cf_filtered: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+    ) -> tuple:
         return tuple(np.where((cf_filtered > 0) & (iwc > 0) & (lwc < iwc / 10)))
 
     def iwc_variance(self, height: np.ndarray, ice_ind: tuple) -> np.ndarray:
@@ -133,10 +149,16 @@ class AdvanceProductMethods(DataSource):
         return variance_iwc
 
     def calculate_variance_iwc(self, w_shear: np.ndarray, ice_ind: tuple) -> np.ndarray:
-        return 10 ** (0.3 * np.log10(self._model_obj.resolution_h) - 0.04 * w_shear[ice_ind] - 1.03)
+        return 10 ** (
+            0.3 * np.log10(self._model_obj.resolution_h)
+            - 0.04 * w_shear[ice_ind]
+            - 1.03
+        )
 
     @staticmethod
-    def calculate_wind_shear(wind, u: np.ndarray, v: np.ndarray, height: np.ndarray) -> np.ndarray:
+    def calculate_wind_shear(
+        wind, u: np.ndarray, v: np.ndarray, height: np.ndarray
+    ) -> np.ndarray:
         grand_winds = []
         for w in (wind, u, v):
             grad_w = np.zeros(w.shape)
@@ -153,7 +175,10 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def calculate_iwc_distribution(
-        cloud_iwc: float, f_variance_iwc: float, n_std: int = 5, n_dist: int = 250
+        cloud_iwc: float,
+        f_variance_iwc: float,
+        n_std: int = 5,
+        n_dist: int = 250,
     ) -> np.ndarray:
         finish = cloud_iwc + n_std * (np.sqrt(f_variance_iwc) * cloud_iwc)
         iwc_dist = np.arange(0, finish, finish / (n_dist - 1))
@@ -192,7 +217,9 @@ class AdvanceProductMethods(DataSource):
         z_sen: float,
     ) -> np.ndarray:
         def calculate_min_iwc():
-            min_iwc = 10 ** (tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t)
+            min_iwc = 10 ** (
+                tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t
+            )
             return min_iwc
 
         iwc_min = calculate_min_iwc()

@@ -19,7 +19,8 @@ def classify_measurements(data: dict) -> ClassificationResult:
     time / height grid before calling this function.
 
     Args:
-        data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model` and :class:`Mwr` instances.
+        data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model`
+            and :class:`Mwr` instances.
 
     Returns:
         A :class:`ClassificationResult` instance.
@@ -46,7 +47,9 @@ def classify_measurements(data: dict) -> ClassificationResult:
         target_time = voodoonet.utils.decimal_hour2unix(obs.date, obs.time)
         liquid_prob = voodoonet.infer(obs.lv0_files, target_time=target_time)
         liquid_from_radar = liquid_prob > 0.55
-        liquid_from_radar = _remove_false_radar_liquid(liquid_from_radar, liquid_from_lidar)
+        liquid_from_radar = _remove_false_radar_liquid(
+            liquid_from_radar, liquid_from_lidar
+        )
         bits[0] = liquid_from_radar | liquid_from_lidar
     else:
         bits[0] = droplet.correct_liquid_top(obs, liquid_from_lidar, bits[2], limit=500)
@@ -79,13 +82,16 @@ def _remove_false_radar_liquid(
     return liquid_from_radar
 
 
-def fetch_quality(data: dict, classification: ClassificationResult, attenuations: dict) -> dict:
+def fetch_quality(
+    data: dict, classification: ClassificationResult, attenuations: dict
+) -> dict:
     """Returns Cloudnet quality bits.
 
     Args:
         data: Containing :class:`Radar` and :class:`Lidar` instances.
         classification: A :class:`ClassificationResult` instance.
-        attenuations: Dictionary containing keys `liquid_corrected`, `liquid_uncorrected`.
+        attenuations: Dictionary containing keys `liquid_corrected`,
+            `liquid_uncorrected`.
 
     Returns:
         Dictionary containing `quality_bits`, an integer array with the bits:
@@ -110,7 +116,9 @@ def fetch_quality(data: dict, classification: ClassificationResult, attenuations
     return {"quality_bits": qbits}
 
 
-def _find_aerosols(obs: ClassData, is_falling: np.ndarray, is_liquid: np.ndarray) -> np.ndarray:
+def _find_aerosols(
+    obs: ClassData, is_falling: np.ndarray, is_liquid: np.ndarray
+) -> np.ndarray:
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
@@ -165,8 +173,8 @@ def _bits_to_integer(bits: list) -> np.ndarray:
     """Creates array of integers from individual boolean arrays.
 
     Args:
-        bits: List of bit fields (of similar sizes) to be saved in the resulting array of integers.
-            bits[0] is saved as bit 0, bits[1] as bit 1, etc.
+        bits: List of bit fields (of similar sizes) to be saved in the resulting
+            array of integers. bits[0] is saved as bit 0, bits[1] as bit 1, etc.
 
     Returns:
         Array of integers containing the information of the individual boolean arrays.
@@ -220,7 +228,9 @@ def _filter_falling(bits: list) -> tuple:
     # filter falling ice speckle noise
     is_freezing = bits[2]
     is_falling = bits[1]
-    is_falling_filtered = skimage.morphology.remove_small_objects(is_falling, 10, connectivity=1)
+    is_falling_filtered = skimage.morphology.remove_small_objects(
+        is_falling, 10, connectivity=1
+    )
     is_filtered = is_falling & ~np.array(is_falling_filtered)
     ice_ind = np.where(is_freezing & is_filtered)
     is_falling[ice_ind] = False

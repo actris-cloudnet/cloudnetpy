@@ -18,7 +18,7 @@ disable =
 
 
 [format]
-max-line-length = 100
+max-line-length = 88
 
 [MASTER]
 ignore-paths=^cloudnetpy/model_evaluation/tests/.*$,

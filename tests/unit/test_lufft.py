@@ -18,7 +18,12 @@ SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
 from lidar_fun import LidarFun
 
-SITE_META = {"name": "Bucharest", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
+SITE_META = {
+    "name": "Bucharest",
+    "altitude": 123,
+    "latitude": 45.0,
+    "longitude": 22.0,
+}
 
 
 @pytest.fixture
@@ -129,4 +134,9 @@ class TestWithRealData(Check):
             assert nc.month == "10"
             assert nc.day == "22"
         with pytest.raises(ValidTimeStampError):
-            ceilo2nc(self.daily_temp_path, test_path, self.site_meta, date="2020-10-23")
+            ceilo2nc(
+                self.daily_temp_path,
+                test_path,
+                self.site_meta,
+                date="2020-10-23",
+            )

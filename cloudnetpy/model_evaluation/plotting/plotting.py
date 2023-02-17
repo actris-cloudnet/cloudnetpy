@@ -43,18 +43,17 @@ def generate_L3_day_plots(
         product (str): Name of product wanted to plot
         model (str): Name of model which downsampling was done with
 
-        title (bool): Show title and additional labels. Operational processing sets this to False.
-                      Default is True.
+        title (bool): Show title and additional labels. Operational processing
+             sets this to False. Default is True.
         fig_type (str, optional): Type of figure wanted to produce. Options
-                                  are 'group', 'pair', 'single' and 'statistic'.
-                                  Default value is 'group'
+            are 'group', 'pair', 'single' and 'statistic'. Default value is 'group'
         stats (list, optional): List of statistical methods to visualize in
-                                'statistic' fig_type generation. Default is
-                                all types, but methods can be called individually.
+            'statistic' fig_type generation. Default is all types, but methods can
+            be called individually.
         var_list (list, optional): List of variables to be plotted. If None, all product
-                                variables in file will be plotted
+            variables in file will be plotted
         save_path (str, optional): If not None, visualization is saved
-                                   to run path location
+            to run path location
 
         image_name (str, optional): Saving name of generated fig
         show (bool, optional): If True, shows visualization
@@ -62,10 +61,11 @@ def generate_L3_day_plots(
         In case of 'group' and 'statistic' fig_type advection timegrid is
         separated from standard timegrid to their own figures.
         In case of model cycles, cycles are visualized in their on figures same
-        way as a individual model run would be visualized in its own in a group
+        way as an individual model run would be visualized in its own in a group
         figure.
     Examples:
-        >>> from cloudnetpy.model_evaluation.plotting.plotting import generate_L3_day_plots
+        >>> from cloudnetpy.model_evaluation.plotting.plotting
+        import generate_L3_day_plots
         >>> l3_day_file = 'cf_ecmwf.nc'
         >>> product = 'cf'
         >>> model = 'ecmwf'
@@ -191,7 +191,9 @@ def get_group_plots(
     if len(cycle) > 1:
         fig.text(0.64, 0.885, f"Cycle: {cycle}", fontsize=13)
         model_run = f"{model}_{cycle}"
-    cloud_plt.handle_saving(image_name, save_path, show, casedate, [product, model_run, "group"])
+    cloud_plt.handle_saving(
+        image_name, save_path, show, casedate, [product, model_run, "group"]
+    )
 
 
 def get_pair_plots(
@@ -316,10 +318,11 @@ def get_statistic_plots(
 ):
     """Statistical subplots for day scale products.
     Statistical analysis can be done by day scale with relative error ('error'),
-    total data area analysis ('area'), histogram ('hist') or vertical profiles ('vertical').
-    Each given stats are looped through and generated as one figure per statistical method
-    for a select product. All different downsampled method are in a same fig. Standard and
-    advection timegrids are separated to own figs as well as different cycle runs.
+    total data area analysis ('area'), histogram ('hist') or vertical profiles
+    ('vertical'). Each given stats are looped through and generated as one figure
+    per statistical method for a select product. All different downsampled method
+    are in a same fig. Standard and advection timegrids are separated to own figs
+    as well as different cycle runs.
     Args:
         product (str): Name of the product
         names (list): List of variables to be visualized to same fig
@@ -358,7 +361,9 @@ def get_statistic_plots(
                 if j > 0:
                     name = ""
                     name = _get_stat_titles(name, product, variable_info)
-                    day_stat = DayStatistics(stat, [product, model_name, name], model_data, data)
+                    day_stat = DayStatistics(
+                        stat, [product, model_name, name], model_data, data
+                    )
                     if "error" in stat:
                         if np.all(day_stat.model_stat.mask is True):
                             raise ValueError("No data to calculate relative error")
@@ -386,7 +391,9 @@ def get_statistic_plots(
         if len(cycle) > 1:
             fig.text(0.64, 0.885, f"Cycle: {cycle}", fontsize=13)
             model_run = f"{model}_{cycle}"
-        cloud_plt.handle_saving(image_name, save_path, show, casedate, [name, stat, model_run])
+        cloud_plt.handle_saving(
+            image_name, save_path, show, casedate, [name, stat, model_run]
+        )
 
 
 def initialize_statistic_plots(
@@ -420,16 +427,36 @@ def initialize_statistic_plots(
     if method == "hist":
         plot_histogram(ax, day_stat, variable_info)
         if j == max_len - 1 and (max_len % 2) == 0:
-            ax.legend(loc="lower left", ncol=2, fontsize=12, bbox_to_anchor=(-0.03, -0.13))
+            ax.legend(
+                loc="lower left",
+                ncol=2,
+                fontsize=12,
+                bbox_to_anchor=(-0.03, -0.13),
+            )
         if j == max_len - 1:
-            ax.legend(loc="lower left", ncol=4, fontsize=12, bbox_to_anchor=(-0.03, -0.24))
+            ax.legend(
+                loc="lower left",
+                ncol=4,
+                fontsize=12,
+                bbox_to_anchor=(-0.03, -0.24),
+            )
     if method == "vertical":
         plot_vertical_profile(ax, day_stat, args, variable_info)
         p_tools.set_yaxis(ax, 12)
         if j == max_len - 1 and (max_len % 2) == 0:
-            ax.legend(loc="lower left", ncol=2, fontsize=12, bbox_to_anchor=(-0.03, -0.13))
+            ax.legend(
+                loc="lower left",
+                ncol=2,
+                fontsize=12,
+                bbox_to_anchor=(-0.03, -0.13),
+            )
         if j == max_len - 1:
-            ax.legend(loc="lower left", ncol=4, fontsize=12, bbox_to_anchor=(-0.03, -0.2))
+            ax.legend(
+                loc="lower left",
+                ncol=4,
+                fontsize=12,
+                bbox_to_anchor=(-0.03, -0.2),
+            )
 
 
 def plot_relative_error(ax, error: ma.MaskedArray, axes: tuple, method: str):
@@ -502,7 +529,9 @@ def plot_histogram(ax, day_stat: DayStatistics, variable_info):
         label=f"Model: {day_stat.title[0]}",
     )
 
-    weights = np.ones_like(day_stat.observation_stat) / float(len(day_stat.observation_stat))
+    weights = np.ones_like(day_stat.observation_stat) / float(
+        len(day_stat.observation_stat)
+    )
     ax.hist(
         day_stat.observation_stat,
         weights=weights,
@@ -530,15 +559,32 @@ def plot_vertical_profile(ax, day_stat: DayStatistics, axes: tuple, variable_inf
     ax.plot(day_stat.model_stat, axes, "o", markersize=5.5, color="k")
     ax.plot(day_stat.observation_stat, axes, "o", markersize=5.5, color="k")
     ax.plot(
-        day_stat.model_stat, axes, "o", markersize=4.5, color="orange", label=f"{day_stat.title[0]}"
+        day_stat.model_stat,
+        axes,
+        "o",
+        markersize=4.5,
+        color="orange",
+        label=f"{day_stat.title[0]}",
     )
     ax.plot(
-        day_stat.observation_stat, axes, "o", markersize=4.5, color="green", label="Observation"
+        day_stat.observation_stat,
+        axes,
+        "o",
+        markersize=4.5,
+        color="green",
+        label="Observation",
     )
 
     ax.plot(mrm, axes, "-", color="k", lw=2.5)
     ax.plot(orm, axes, "-", color="k", lw=2.5)
-    ax.plot(mrm, axes, "-", color="orange", lw=2, label="Mean of {day_stat.title[0]}")
+    ax.plot(
+        mrm,
+        axes,
+        "-",
+        color="orange",
+        lw=2,
+        label="Mean of {day_stat.title[0]}",
+    )
     ax.plot(orm, axes, "-", color="green", lw=2, label="Mean of observation")
 
     ax.set_title(f"{day_stat.title[-1]}", fontsize=14)

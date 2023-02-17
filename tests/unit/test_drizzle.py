@@ -191,7 +191,15 @@ def test_find_drizzle(
     ],
 )
 def test_find_would_be_drizzle(
-    drizzle_cat_file, is_rain, warm, falling, melting, insect, radar, clutter, molecular
+    drizzle_cat_file,
+    is_rain,
+    warm,
+    falling,
+    melting,
+    insect,
+    radar,
+    clutter,
+    molecular,
 ):
     obj = drizzle.DrizzleClassification(drizzle_cat_file)
     obj.is_rain = is_rain
@@ -284,7 +292,9 @@ def test_find_lut_indices(class_objects):
     ind_d = bisect_left(obj._data.mie["Do"], dia_init[ind], hi=n_dia - 1)
     ind_w = bisect_left(obj._width_lut[:, ind_d], -obj._width_ht[ind], hi=n_width - 1)
     expected = (ind_w, ind_d)
-    testing.assert_almost_equal(obj._find_lut_indices(ind, dia_init, n_dia, n_width), expected)
+    testing.assert_almost_equal(
+        obj._find_lut_indices(ind, dia_init, n_dia, n_width), expected
+    )
 
 
 @pytest.mark.parametrize("key, value", [("Do", 10), ("mu", -1), ("S", 93.7247943)])
@@ -331,7 +341,9 @@ def test_find_indices(class_objects, params_objects):
     testing.assert_array_almost_equal(x, expected)
 
 
-@pytest.mark.parametrize("key", ["drizzle_N", "drizzle_lwc", "drizzle_lwf", "v_drizzle", "v_air"])
+@pytest.mark.parametrize(
+    "key", ["drizzle_N", "drizzle_lwc", "drizzle_lwf", "v_drizzle", "v_air"]
+)
 def test_calc_derived_products(class_objects, params_objects, key):
     d_source, d_class, s_width = class_objects
     obj = drizzle.DrizzleProducts(d_source, params_objects)

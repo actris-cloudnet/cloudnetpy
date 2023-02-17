@@ -83,12 +83,17 @@ def generate_figure(
 
     Examples:
         >>> from cloudnetpy.plotting import generate_figure
-        >>> generate_figure('categorize_file.nc', ['Z', 'v', 'width', 'ldr', 'beta', 'lwp'])
-        >>> generate_figure('iwc_file.nc', ['iwc', 'iwc_error', 'iwc_retrieval_status'])
-        >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error', 'lwc_retrieval_status'], max_y=4)
-        >>> generate_figure('classification_file.nc', ['target_classification', 'detection_status'])
+        >>> generate_figure('categorize_file.nc', ['Z', 'v', 'width', 'ldr',
+        'beta', 'lwp'])
+        >>> generate_figure('iwc_file.nc', ['iwc', 'iwc_error',
+        'iwc_retrieval_status'])
+        >>> generate_figure('lwc_file.nc', ['lwc', 'lwc_error',
+        'lwc_retrieval_status'], max_y=4)
+        >>> generate_figure('classification_file.nc', ['target_classification',
+        'detection_status'])
         >>> generate_figure('drizzle_file.nc', ['Do', 'mu', 'S'], max_y=3)
-        >>> generate_figure('ier.nc', ['ier', 'ier_error', 'ier_retrieval_status'], max_y=3)
+        >>> generate_figure('ier.nc', ['ier', 'ier_error', 'ier_retrieval_status'],
+        max_y=3)
         >>> generate_figure('der.nc', ['der', 'der_scaled'], max_y=12)
     """
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
@@ -127,7 +132,9 @@ def generate_figure(
     return Dimensions(fig, axes)
 
 
-def _mark_gaps(time: np.ndarray, data: ma.MaskedArray, max_allowed_gap: float = 1) -> tuple:
+def _mark_gaps(
+    time: np.ndarray, data: ma.MaskedArray, max_allowed_gap: float = 1
+) -> tuple:
     assert time[0] >= 0
     assert time[-1] <= 24
     max_gap = max_allowed_gap / 60
@@ -240,7 +247,9 @@ def _get_variable_unit(full_path: str, name: str) -> str:
 
 def _initialize_figure(n_subplots: int, dpi) -> tuple:
     """Creates an empty figure according to the number of subplots."""
-    fig, axes = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots - 1) * 4.8), dpi=dpi)
+    fig, axes = plt.subplots(
+        n_subplots, 1, figsize=(16, 4 + (n_subplots - 1) * 4.8), dpi=dpi
+    )
     fig.subplots_adjust(left=0.06, right=0.73)
     if n_subplots == 1:
         axes = [axes]
@@ -306,7 +315,10 @@ def set_ax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0):
 
 def _get_standard_time_ticks(resolution: int = 4) -> list:
     """Returns typical ticks / labels for a time vector between 0-24h."""
-    return [f"{int(i):02d}:00" if 24 > i > 0 else "" for i in np.arange(0, 24.01, resolution)]
+    return [
+        f"{int(i):02d}:00" if 24 > i > 0 else ""
+        for i in np.arange(0, 24.01, resolution)
+    ]
 
 
 def _plot_bar_data(ax, data: ma.MaskedArray, time: ndarray):
@@ -320,7 +332,14 @@ def _plot_bar_data(ax, data: ma.MaskedArray, time: ndarray):
     """
     # TODO: unit change somewhere else
     ax.plot(time, data / 1000, color="navy")
-    ax.bar(time, data.filled(0) / 1000, width=1 / 120, align="center", alpha=0.5, color="royalblue")
+    ax.bar(
+        time,
+        data.filled(0) / 1000,
+        width=1 / 120,
+        align="center",
+        alpha=0.5,
+        color="royalblue",
+    )
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
@@ -336,7 +355,9 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
 
     """
 
-    def _hide_segments(data_in: ma.MaskedArray) -> tuple[ma.MaskedArray, list, list]:
+    def _hide_segments(
+        data_in: ma.MaskedArray,
+    ) -> tuple[ma.MaskedArray, list, list]:
         assert variables.clabel is not None
         labels = [x[0] for x in variables.clabel]
         colors = [x[1] for x in variables.clabel]
@@ -353,7 +374,9 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
     data, cbar, clabel = _hide_segments(data)
     cmap = ListedColormap(cbar)
     data[original_mask] = 99
-    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5, vmax=len(cbar) - 0.5)
+    pl = ax.pcolorfast(
+        *axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5, vmax=len(cbar) - 0.5
+    )
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(len(clabel)))
     colorbar.ax.set_yticklabels(clabel, fontsize=13)
@@ -401,7 +424,12 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
 
 
 def _plot_instrument_data(
-    ax, data: ma.MaskedArray, name: str, product: str | None, time: ndarray, unit: str
+    ax,
+    data: ma.MaskedArray,
+    name: str,
+    product: str | None,
+    time: ndarray,
+    unit: str,
 ):
     if product == "mwr":
         _plot_mwr(ax, data, name, time, unit)
@@ -434,8 +462,18 @@ def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
     time[gaps] = np.nan
     ax.plot(time, data_filtered, color="royalblue", lw=line_width)
     ax.axhline(linewidth=0.8, color="k")
-    ax.plot(time[int(width / 2 - 1) : int(-width / 2)], rolling_mean, color="sienna", linewidth=2.0)
-    ax.plot(time[int(width / 2 - 1) : int(-width / 2)], rolling_mean, color="wheat", linewidth=0.6)
+    ax.plot(
+        time[int(width / 2 - 1) : int(-width / 2)],
+        rolling_mean,
+        color="sienna",
+        linewidth=2.0,
+    )
+    ax.plot(
+        time[int(width / 2 - 1) : int(-width / 2)],
+        rolling_mean,
+        color="wheat",
+        linewidth=0.6,
+    )
     set_ax(
         ax,
         round(np.max(data), 3) + 0.0005,
@@ -444,7 +482,9 @@ def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
     )
 
 
-def _get_unmasked_values(data: ma.MaskedArray, time: ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _get_unmasked_values(
+    data: ma.MaskedArray, time: ndarray
+) -> tuple[np.ndarray, np.ndarray]:
     if ma.is_masked(data) is False:
         return data, time
     good_values = ~data.mask
@@ -506,7 +546,7 @@ def _init_colorbar(plot, axis):
 
 def generate_log_cbar_ticklabel_list(vmin: float, vmax: float) -> list:
     """Create list of log format colorbar label ticks as string"""
-    return ["10$^{%s}$" % int(i) for i in np.arange(vmin, vmax + 1)]  # pylint: disable=C0209
+    return [f"10$^{{{int(i)}}}$" for i in np.arange(vmin, vmax + 1)]
 
 
 def read_location(nc_file: str) -> str:
@@ -527,7 +567,12 @@ def add_subtitle(fig, case_date: date, site_name: str):
     """Adds subtitle into figure."""
     text = _get_subtitle_text(case_date, site_name)
     fig.suptitle(
-        text, fontsize=13, y=0.885, x=0.07, horizontalalignment="left", verticalalignment="bottom"
+        text,
+        fontsize=13,
+        y=0.885,
+        x=0.07,
+        horizontalalignment="left",
+        verticalalignment="bottom",
     )
 
 
@@ -536,7 +581,9 @@ def _get_subtitle_text(case_date: date, site_name: str) -> str:
     return f"{site_name}, {case_date.strftime('%d %b %Y').lstrip('0')}"
 
 
-def _create_save_name(save_path: str, case_date: date, field_names: list, fix: str = "") -> str:
+def _create_save_name(
+    save_path: str, case_date: date, field_names: list, fix: str = ""
+) -> str:
     """Creates file name for saved images."""
     date_string = case_date.strftime("%Y%m%d")
     return f"{save_path}{date_string}_{'_'.join(field_names)}{fix}.png"
@@ -571,7 +618,12 @@ def plot_2d(
     plt.close()
     if cbar:
         cmap = plt.get_cmap(cmap, ncolors)
-        plt.imshow(ma.masked_equal(data, 0).T, aspect="auto", origin="lower", cmap=cmap)
+        plt.imshow(
+            ma.masked_equal(data, 0).T,
+            aspect="auto",
+            origin="lower",
+            cmap=cmap,
+        )
         plt.colorbar()
     else:
         plt.imshow(ma.masked_equal(data, 0).T, aspect="auto", origin="lower")
@@ -618,7 +670,10 @@ def compare_files(
     nc = netCDF4.Dataset(nc_files[0])
     nc.close()
     ax_values = [_read_ax_values(nc_file) for nc_file in nc_files]
-    subtitle = (f" - {os.path.basename(nc_files[0])}", f" - {os.path.basename(nc_files[0])}")
+    subtitle = (
+        f" - {os.path.basename(nc_files[0])}",
+        f" - {os.path.basename(nc_files[0])}",
+    )
     n_subs = 3 if relative_err is True else 2
     fig, axes = _initialize_figure(n_subs, dpi)
 

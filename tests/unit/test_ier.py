@@ -34,9 +34,9 @@ def categorize_file(tmpdir_factory, file_metadata):
     nc.createVariable("quality_bits", "i4", ("time", "height"))[:] = np.array(
         [[0, 1, 1], [2, 3, 4], [4, 8, 1]]
     )
-    nc.createVariable("temperature", "f8", ("model_time", "model_height"))[:] = np.array(
-        [[282, 280, 278], [286, 284, 282], [284, 282, 280]]
-    )
+    nc.createVariable("temperature", "f8", ("model_time", "model_height"))[
+        :
+    ] = np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
     nc.createVariable("pressure", "f8", ("model_time", "model_height"))[:] = np.array(
         [[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]]
     )
@@ -138,7 +138,9 @@ class TestAppending:
 
     def test_append_ier(self):
         self.ice_class.ice_above_rain = np.array([0, 0, 0, 1, 1], dtype=bool)
-        self.ier_source.data["ier_inc_rain"] = np.ma.array([1, 2, 3, 4, 5], mask=[1, 0, 1, 0, 1])
+        self.ier_source.data["ier_inc_rain"] = np.ma.array(
+            [1, 2, 3, 4, 5], mask=[1, 0, 1, 0, 1]
+        )
         self.ier_source.append_main_variable(self.ice_class)
         expected_mask = [1, 0, 1, 1, 1]
         assert_array_equal(self.ier_source.data["ier"][:].mask, expected_mask)

@@ -12,7 +12,9 @@ from cloudnetpy.instruments.nc_lidar import NcLidar
 class LufftCeilo(NcLidar):
     """Class for Lufft chm15k ceilometer."""
 
-    def __init__(self, file_name: str, site_meta: dict, expected_date: str | None = None):
+    def __init__(
+        self, file_name: str, site_meta: dict, expected_date: str | None = None
+    ):
         super().__init__()
         self.file_name = file_name
         self.site_meta = site_meta
@@ -36,7 +38,9 @@ class LufftCeilo(NcLidar):
         beta_raw = self._getvar("beta_raw", "beta_att")
         old_version = self._get_old_software_version()
         if old_version is not None:
-            logging.warning(f"Software version {old_version}. Assuming data not range corrected.")
+            logging.warning(
+                f"Software version {old_version}. Assuming data not range corrected."
+            )
             data_std = self._getvar("stddev")
             normalised_apd = self._get_nn()
             beta_raw *= utils.transpose(data_std / normalised_apd)

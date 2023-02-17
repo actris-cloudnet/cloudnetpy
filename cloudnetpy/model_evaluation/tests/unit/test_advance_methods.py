@@ -46,7 +46,10 @@ def test_getvar_from_object_None(obs_file, model_file, name):
 
 @pytest.mark.parametrize(
     "radar_f, values",
-    [(35, (0.000242, -0.0186, 0.0699, -1.63)), (95, (0.00058, -0.00706, 0.0923, -0.992))],
+    [
+        (35, (0.000242, -0.0186, 0.0699, -1.63)),
+        (95, (0.00058, -0.00706, 0.0923, -0.992)),
+    ],
 )
 def test_set_frequency_parameters(obs_file, model_file, radar_f, values):
     obs = ObservationManager(PRODUCT, str(obs_file))
@@ -258,7 +261,9 @@ def test_get_observation_index(obs_file, model_file):
     min_iwc = 10 ** (tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t)
     iwc_dist = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
     compare = iwc_dist > min_iwc
-    x = adv_pro.get_observation_index(iwc_dist, tZT, tT, tZ, np.array([t]), temperature, z_sen)
+    x = adv_pro.get_observation_index(
+        iwc_dist, tZT, tT, tZ, np.array([t]), temperature, z_sen
+    )
     testing.assert_array_almost_equal(x, compare)
 
 

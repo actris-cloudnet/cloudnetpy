@@ -150,7 +150,8 @@ class SpectralWidth:
 
     Attributes:
         categorize_file (str): Categorize file name.
-        width_ht (ndarray): Spectral width containing the correction for turbulence broadening.
+        width_ht (ndarray): Spectral width containing the correction for turbulence
+            broadening.
 
     """
 
@@ -202,7 +203,8 @@ class DrizzleSolver:
         spectral_width: The :class:`SpectralWidth` instance.
 
     Attributes:
-        params (dict): Dictionary of retrieved drizzle parameters 'Do', 'mu', 'S', 'beta_corr'.
+        params (dict): Dictionary of retrieved drizzle parameters 'Do', 'mu', 'S',
+            'beta_corr'.
 
     """
 
@@ -235,7 +237,9 @@ class DrizzleSolver:
 
     def _find_lut_indices(self, ind, dia_init, n_dia, n_widths) -> tuple[int, int]:
         ind_dia = bisect_left(self._data.mie["Do"], dia_init[ind], hi=n_dia - 1)
-        ind_width = bisect_left(self._width_lut[:, ind_dia], -self._width_ht[ind], hi=n_widths - 1)
+        ind_width = bisect_left(
+            self._width_lut[:, ind_dia], -self._width_ht[ind], hi=n_widths - 1
+        )
         return ind_width, ind_dia
 
     def _solve_drizzle(self, dia_init: np.ndarray):
@@ -261,14 +265,19 @@ class DrizzleSolver:
             )
             self.params["beta_corr"][ind[0], (ind[-1] + 1) :] *= beta_factor
 
-    def _update_result_tables(self, ind: tuple, dia: np.ndarray | float, lut_ind: tuple):
+    def _update_result_tables(
+        self, ind: tuple, dia: np.ndarray | float, lut_ind: tuple
+    ):
         self.params["Do"][ind] = dia
         self.params["mu"][ind] = self._data.mie["mu"][lut_ind[0]]
         self.params["S"][ind] = self._data.mie["S"][lut_ind]
 
     @staticmethod
     def _calc_dia(
-        beta_z_ratio: np.ndarray | float, mu: float = 0.0, ray: float = 1.0, k: float = 1.0
+        beta_z_ratio: np.ndarray | float,
+        mu: float = 0.0,
+        ray: float = 1.0,
+        k: float = 1.0,
     ) -> np.ndarray | float:
         """Drizzle diameter calculation.
 
@@ -289,6 +298,8 @@ class DrizzleSolver:
         return (gamma(3 + mu) / gamma(7 + mu) * (3.67 + mu) ** 4 / const) ** (1 / 4)
 
     @staticmethod
-    def _is_converged(ind: tuple, dia: np.ndarray | float, dia_init: np.ndarray) -> bool:
+    def _is_converged(
+        ind: tuple, dia: np.ndarray | float, dia_init: np.ndarray
+    ) -> bool:
         threshold = 1e-3
         return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold

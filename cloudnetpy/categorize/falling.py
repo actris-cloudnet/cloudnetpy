@@ -32,7 +32,9 @@ def find_falling_hydrometeors(
     """
 
     falling_from_radar = _find_falling_from_radar(obs, is_insects)
-    falling_from_radar_fixed = _fix_liquid_dominated_radar(obs, falling_from_radar, is_liquid)
+    falling_from_radar_fixed = _fix_liquid_dominated_radar(
+        obs, falling_from_radar, is_liquid
+    )
     cold_aerosols = _find_cold_aerosols(obs, is_liquid)
     return falling_from_radar_fixed | cold_aerosols
 
@@ -53,7 +55,9 @@ def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
     temperature_limit = T0 - 15
     range_limit = 2000
     is_beta = ~obs.beta.mask
-    lidar_ice_indices = np.where((obs.tw.data < temperature_limit) & is_beta & ~is_liquid)
+    lidar_ice_indices = np.where(
+        (obs.tw.data < temperature_limit) & is_beta & ~is_liquid
+    )
     cold_aerosols[lidar_ice_indices] = True
     low_range_indices = np.where(obs.height + obs.altitude < range_limit)
     if low_range_indices:
@@ -74,7 +78,9 @@ def _fix_liquid_dominated_radar(
 
     for n, base, _, top in zip(*base_indices, *top_indices):
         z_prof = obs.z[n, :]
-        if _is_z_missing_above_liquid(z_prof, top) and _is_z_increasing(z_prof, base, top):
+        if _is_z_missing_above_liquid(z_prof, top) and _is_z_increasing(
+            z_prof, base, top
+        ):
             falling_from_radar[n, base : top + 1] = False
 
     return falling_from_radar

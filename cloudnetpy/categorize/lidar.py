@@ -34,7 +34,11 @@ class Lidar(DataSource):
                 indices.append(ind)
         assert self.height is not None
         beta_interpolated = interpolate_2d_nearest(
-            self.time[indices], self.height, beta[indices, :], time_new, height_new
+            self.time[indices],
+            self.height,
+            beta[indices, :],
+            time_new,
+            height_new,
         )
 
         # Filter profiles and range gates having data gap
@@ -42,10 +46,14 @@ class Lidar(DataSource):
         bad_time_indices = _get_bad_indices(self.time[indices], time_new, max_time)
         bad_height_indices = _get_bad_indices(self.height, height_new, max_height)
         if bad_time_indices:
-            logging.warning(f"Unable to interpolate lidar for {len(bad_time_indices)} time steps")
+            logging.warning(
+                f"Unable to interpolate lidar for {len(bad_time_indices)} time steps"
+            )
         beta_interpolated[bad_time_indices, :] = ma.masked
         if bad_height_indices:
-            logging.warning(f"Unable to interpolate lidar for {len(bad_height_indices)} altitudes")
+            logging.warning(
+                f"Unable to interpolate lidar for {len(bad_height_indices)} altitudes"
+            )
         beta_interpolated[:, bad_height_indices] = ma.masked
         self.data["beta"].data = beta_interpolated
         return bad_time_indices
@@ -56,7 +64,9 @@ class Lidar(DataSource):
         self.append_data(3.0, "beta_bias")
 
 
-def _get_bad_indices(original_grid: np.ndarray, new_grid: np.ndarray, threshold: float) -> list:
+def _get_bad_indices(
+    original_grid: np.ndarray, new_grid: np.ndarray, threshold: float
+) -> list:
     indices = []
     for ind, value in enumerate(new_grid):
         diffu = np.abs(original_grid - value)

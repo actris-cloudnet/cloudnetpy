@@ -20,8 +20,8 @@ class Radar(DataSource):
     Attributes:
         radar_frequency (float): Radar frequency (GHz).
         folding_velocity (float): Radar's folding velocity (m/s).
-        location (str): Location of the radar, copied from the global attribute `location` of the
-            input file.
+        location (str): Location of the radar, copied from the global attribute
+            `location` of the input file.
         sequence_indices (list): Indices denoting the different altitude
             regimes of the radar.
         type (str): Type of the radar, copied from the global attribute
@@ -61,7 +61,10 @@ class Radar(DataSource):
                     array.lin2db()
                 case "v":
                     array.rebin_velocity(
-                        self.time, time_new, self.folding_velocity, self.sequence_indices
+                        self.time,
+                        time_new,
+                        self.folding_velocity,
+                        self.sequence_indices,
                     )
                 case "v_sigma":
                     array.calc_linear_std(self.time, time_new)
@@ -79,7 +82,9 @@ class Radar(DataSource):
         data and the pixel should not be used in any further analysis.
 
         """
-        good_ind = ~ma.getmaskarray(self.data["Z"][:]) & ~ma.getmaskarray(self.data["v"][:])
+        good_ind = ~ma.getmaskarray(self.data["Z"][:]) & ~ma.getmaskarray(
+            self.data["v"][:]
+        )
 
         if "width" in self.data:
             good_ind = good_ind & ~ma.getmaskarray(self.data["width"][:])
@@ -115,8 +120,12 @@ class Radar(DataSource):
         n_profiles_with_data = np.count_nonzero(n_points_in_profiles)
         if n_profiles_with_data < 300:
             return
-        n_vertical = self._filter(data, 1, min_coverage=0.5, z_limit=10, distance=4, n_blocks=100)
-        n_horizontal = self._filter(data, 0, min_coverage=0.3, z_limit=-30, distance=3, n_blocks=20)
+        n_vertical = self._filter(
+            data, 1, min_coverage=0.5, z_limit=10, distance=4, n_blocks=100
+        )
+        n_horizontal = self._filter(
+            data, 0, min_coverage=0.3, z_limit=-30, distance=3, n_blocks=20
+        )
         if n_vertical > 0 or n_horizontal > 0:
             logging.info(
                 f"Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes "
@@ -176,12 +185,12 @@ class Radar(DataSource):
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
-            attenuations: 2-D attenuations due to atmospheric gases and liquid: `radar_gas_atten`,
-                `radar_liquid_atten`.
+            attenuations: 2-D attenuations due to atmospheric gases and liquid:
+                `radar_gas_atten`, `radar_liquid_atten`.
 
         References:
-            The method is based on Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ
-            and the original Cloudnet Matlab implementation.
+            The method is based on Hogan R. and O'Connor E., 2004,
+            https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 
         """
         z_corrected = self.data["Z"][:] + attenuations["radar_gas_atten"]
@@ -189,19 +198,21 @@ class Radar(DataSource):
         z_corrected[ind] += attenuations["radar_liquid_atten"][ind]
         self.append_data(z_corrected, "Z")
 
-    def calc_errors(self, attenuations: dict, classification: ClassificationResult) -> None:
+    def calc_errors(
+        self, attenuations: dict, classification: ClassificationResult
+    ) -> None:
         """Calculates uncertainties of radar echo.
 
-        Calculates and adds `Z_error`, `Z_sensitivity` and `Z_bias` :class:`CloudnetArray`
-        instances to `data` attribute.
+        Calculates and adds `Z_error`, `Z_sensitivity` and `Z_bias`
+        :class:`CloudnetArray` instances to `data` attribute.
 
         Args:
             attenuations: 2-D attenuations due to atmospheric gases.
             classification: The :class:`ClassificationResult` instance.
 
         References:
-            The method is based on Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ
-            and the original Cloudnet Matlab implementation.
+            The method is based on Hogan R. and O'Connor E., 2004,
+            https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 
         """
 
@@ -295,7 +306,9 @@ class Radar(DataSource):
     def _get_folding_velocity_full(self):
         folding_velocity: list | np.ndarray = []
         if utils.isscalar(self.folding_velocity):
-            folding_velocity = np.repeat(self.folding_velocity, len(self.sequence_indices[0]))
+            folding_velocity = np.repeat(
+                self.folding_velocity, len(self.sequence_indices[0])
+            )
         else:
             assert isinstance(folding_velocity, list)
             assert isinstance(self.folding_velocity, np.ndarray)

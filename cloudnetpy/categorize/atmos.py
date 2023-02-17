@@ -43,7 +43,8 @@ def calc_lwc_change_rate(temperature: np.ndarray, pressure: np.ndarray) -> np.nd
     pressure_difference = pressure - svp
     f1 = kelvin_per_kg - 1
     f2 = 1 / (
-        kelvin_per_kg + (con.LATENT_HEAT * svp_mixing_ratio * air_density / pressure_difference)
+        kelvin_per_kg
+        + (con.LATENT_HEAT * svp_mixing_ratio * air_density / pressure_difference)
     )
     f3 = con.MW_RATIO * svp * pressure_difference**-2
     dqs_dp = f1 * f2 * f3
@@ -90,8 +91,8 @@ def get_attenuations(data: dict, classification: ClassificationResult) -> dict:
         classification: A :class:`ClassificationResult` instance.
 
     Returns:
-        Dictionary containing `radar_gas_atten`, `radar_liquid_atten`, `liquid_atten_err`,
-            `liquid_corrected` and `liquid_uncorrected` fields.
+        Dictionary containing `radar_gas_atten`, `radar_liquid_atten`,
+            `liquid_atten_err`, `liquid_corrected` and `liquid_uncorrected` fields.
 
     """
     gas = GasAttenuation(data, classification)
@@ -113,7 +114,8 @@ class Attenuation:
         classification: The :class:`ClassificationResult` instance.
 
     Attributes:
-        classification (ClassificationResult): The :class:`ClassificationResult` instance.
+        classification (ClassificationResult): The :class:`ClassificationResult`
+        instance.
 
     """
 
@@ -250,7 +252,9 @@ def fill_clouds_with_lwc_dz(atmosphere: tuple, is_liquid: np.ndarray) -> np.ndar
     return lwc_dz_filled
 
 
-def get_lwc_change_rate_at_bases(atmosphere: tuple, is_liquid: np.ndarray) -> np.ndarray:
+def get_lwc_change_rate_at_bases(
+    atmosphere: tuple, is_liquid: np.ndarray
+) -> np.ndarray:
     """Finds LWC change rate in liquid cloud bases.
 
     Args:
@@ -299,13 +303,17 @@ def find_cloud_tops(array: np.ndarray) -> np.ndarray:
     return np.fliplr(bases_of_flipped)
 
 
-def find_lowest_cloud_bases(cloud_mask: np.ndarray, height: np.ndarray) -> ma.MaskedArray:
+def find_lowest_cloud_bases(
+    cloud_mask: np.ndarray, height: np.ndarray
+) -> ma.MaskedArray:
     """Finds altitudes of cloud bases."""
     cloud_heights = cloud_mask * height
     return _find_lowest_heights(cloud_heights)
 
 
-def find_highest_cloud_tops(cloud_mask: np.ndarray, height: np.ndarray) -> ma.MaskedArray:
+def find_highest_cloud_tops(
+    cloud_mask: np.ndarray, height: np.ndarray
+) -> ma.MaskedArray:
     """Finds altitudes of cloud tops."""
     cloud_heights = cloud_mask * height
     cloud_heights_flipped = np.fliplr(cloud_heights)
@@ -322,8 +330,8 @@ def calc_adiabatic_lwc(lwc_change_rate: np.ndarray, dheight: float) -> np.ndarra
     """Calculates adiabatic liquid water content (g/m3).
 
     Args:
-        lwc_change_rate: Liquid water content change rate (g/m3/m) calculated at the base of each
-            cloud and filled to that cloud.
+        lwc_change_rate: Liquid water content change rate (g/m3/m) calculated at the
+            base of each cloud and filled to that cloud.
         dheight: Median difference of the height vector (m).
 
     Returns:

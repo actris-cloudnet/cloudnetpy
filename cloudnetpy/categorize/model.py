@@ -76,7 +76,9 @@ class Model(DataSource):
                 data = data[wl_band, :, :]
             self.data_sparse[key] = _interpolate_variable(data)
 
-    def interpolate_to_grid(self, time_grid: np.ndarray, height_grid: np.ndarray) -> None:
+    def interpolate_to_grid(
+        self, time_grid: np.ndarray, height_grid: np.ndarray
+    ) -> None:
         """Interpolates model variables to Cloudnet's dense time / height grid.
 
         Args:

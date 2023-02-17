@@ -17,9 +17,9 @@ class DayStatistics:
     Args:
         method (str): Name on statistical method to be calculated
         product_info (list): List of information of statistical analysis is
-                             done with. A list includes observed product name (str),
-                             model variable (str) name and a name of observation variable (str)
-                             Example: ['cf', 'ECMWF', 'Cloud fraction by volume']
+            done with. A list includes observed product name (str), model variable (str)
+            name and a name of observation variable (str). Example: ['cf', 'ECMWF',
+            'Cloud fraction by volume']
         model (np.ndarray): Ndarray of model simulation of product
         observation (np.ndarray): Ndrray of Downsampled observation of product
 
@@ -33,13 +33,20 @@ class DayStatistics:
         >>> from cloudnetpy.model_evaluation.products.product_resampling import \
         process_L3_day_product
         >>> method = 'error'
-        >>> product_info = ['cf', 'European Centre for Medium-Range Weather Forecasts', 'ecmwf']
+        >>> product_info = ['cf', 'European Centre for Medium-Range Weather Forecasts',
+        'ecmwf']
         >>> model_array = np.array([[1,1,1],[1,1,1],[1,1,1]])
         >>> obs_array = np.array([[1,1,1],[1,1,1],[1,1,1]])
         >>> day_stat = DayStatistics(method, product_info, model_array, obs_array)
     """
 
-    def __init__(self, method: str, product_info: list, model: np.ndarray, observation: np.ndarray):
+    def __init__(
+        self,
+        method: str,
+        product_info: list,
+        model: np.ndarray,
+        observation: np.ndarray,
+    ):
         self.method = method
         self.product = product_info
         self.model_data = model
@@ -56,7 +63,11 @@ class DayStatistics:
         if self.method == "area":
             full_name = "calc_common_area_sum"
         if self.method == "hist":
-            return "histogram", (self.product, self.model_data, self.observation_data)
+            return "histogram", (
+                self.product,
+                self.model_data,
+                self.observation_data,
+            )
         if self.method == "vertical":
             full_name = "vertical_profile"
         return full_name, params
@@ -65,19 +76,25 @@ class DayStatistics:
         full_name, params = self._get_method_attr()
         cls = __import__("statistical_methods")
         try:
-            self.model_stat, self.observation_stat = getattr(cls, f"{full_name}")(*params)
+            self.model_stat, self.observation_stat = getattr(cls, f"{full_name}")(
+                *params
+            )
             self.title = getattr(cls, "day_stat_title")(self.method, self.product)
         except RuntimeError as error:
             logging.error(f"Method {full_name} not found or missing: {error}")
 
 
-def relative_error(model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple[float, str]:
+def relative_error(
+    model: ma.MaskedArray, observation: ma.MaskedArray
+) -> tuple[float, str]:
     model, observation = combine_masked_indices(model, observation)
     error = ((model - observation) / observation) * 100
     return np.round(error, 2), ""
 
 
-def absolute_error(model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple[float, str]:
+def absolute_error(
+    model: ma.MaskedArray, observation: ma.MaskedArray
+) -> tuple[float, str]:
     model, observation = combine_masked_indices(model, observation)
     error = (observation - model) * 100
     return np.round(error, 2), ""
@@ -95,7 +112,9 @@ def combine_masked_indices(
     return model, observation
 
 
-def calc_common_area_sum(model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple[float, str]:
+def calc_common_area_sum(
+    model: ma.MaskedArray, observation: ma.MaskedArray
+) -> tuple[float, str]:
     def _indices_of_mask_sum():
         # Calculate percentage value of common area of indices from two arrays.
         # Results is total number of common indices with value
@@ -111,13 +130,19 @@ def calc_common_area_sum(model: ma.MaskedArray, observation: ma.MaskedArray) -> 
     return match, ""
 
 
-def histogram(product: list, model: ma.MaskedArray, observation: ma.MaskedArray) -> tuple:
+def histogram(
+    product: list, model: ma.MaskedArray, observation: ma.MaskedArray
+) -> tuple:
     if "cf" in product:
         model = ma.round(model[~model.mask].data, decimals=1).flatten()
-        observation = ma.round(observation[~observation.mask].data, decimals=1).flatten()
+        observation = ma.round(
+            observation[~observation.mask].data, decimals=1
+        ).flatten()
     else:
         model = ma.round(model[~model.mask].data, decimals=6).flatten()
-        observation = ma.round(observation[~observation.mask].data, decimals=6).flatten()
+        observation = ma.round(
+            observation[~observation.mask].data, decimals=6
+        ).flatten()
     observation = observation[~np.isnan(observation)]
     hist_bins = np.histogram(observation, density=True)[-1]
     model[model > hist_bins[-1]] = hist_bins[-1]

@@ -21,7 +21,8 @@ def radiometrics2nc(
         full_path: Input file name.
         output_file: Output file name, e.g. 'radiometrics.nc'.
         site_meta: Dictionary containing information about the site and instrument.
-            Required key value pairs are `name` and `altitude` (metres above mean sea level).
+            Required key value pairs are `name` and `altitude` (metres above mean
+            sea level).
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -68,7 +69,9 @@ class Radiometrics:
 
     def read_lwp(self):
         """Reads LWP values."""
-        self.data["lwp"] = np.array([row[9] for row in self.raw_data], dtype=float) * 1000  # g / m2
+        self.data["lwp"] = (
+            np.array([row[9] for row in self.raw_data], dtype=float) * 1000
+        )  # g / m2
 
     def read_timestamps(self):
         """Reads timestamps."""
@@ -90,7 +93,10 @@ class Radiometrics:
         valid_ind = []
         valid_timestamps = []
         for ind, (d, timestamp) in enumerate(zip(dates, self.data["time"])):
-            if self._convert_date(d) == date_components and timestamp not in valid_timestamps:
+            if (
+                self._convert_date(d) == date_components
+                and timestamp not in valid_timestamps
+            ):
                 valid_ind.append(ind)
                 valid_timestamps.append(timestamp)
         if len(valid_ind) == 0:

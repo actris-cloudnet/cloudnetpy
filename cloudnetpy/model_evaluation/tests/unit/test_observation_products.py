@@ -46,7 +46,14 @@ def test_generate_cf(obs_file):
     obj = ObservationManager("cf", str(obs_file))
     x = obj._generate_cf()
     compare = ma.array(
-        [[0, 1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 0, 1], [1, 0, 0, 0], [0, 0, 0, 0]]
+        [
+            [0, 1, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 0, 1],
+            [1, 0, 0, 0],
+            [0, 0, 0, 0],
+        ]
     )
     compare[~obj._rain_index(), :] = ma.masked
     testing.assert_array_almost_equal(compare, x)
@@ -57,7 +64,14 @@ def test_basic_cloud_mask(obs_file):
     obj = ObservationManager("cf", str(obs_file))
     x = obj._classify_basic_mask(cat.category_bits)
     compare = np.array(
-        [[0, 1, 2, 0], [2, 0, 0, 1], [1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 6, 6], [7, 2, 0, 7]]
+        [
+            [0, 1, 2, 0],
+            [2, 0, 0, 1],
+            [1, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 6, 6],
+            [7, 2, 0, 7],
+        ]
     )
     testing.assert_array_almost_equal(x, compare)
 
@@ -68,7 +82,14 @@ def test_mask_cloud_bits(obs_file):
     mask = obj._classify_basic_mask(cat.category_bits)
     compare = obj._mask_cloud_bits(mask)
     x = np.array(
-        [[0, 1, 0, 0], [0, 0, 0, 1], [1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 0, 0], [0, 0, 0, 0]]
+        [
+            [0, 1, 0, 0],
+            [0, 0, 0, 1],
+            [1, 0, 0, 0],
+            [0, 0, 0, 1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+        ]
     )
     testing.assert_array_almost_equal(x, compare)
 

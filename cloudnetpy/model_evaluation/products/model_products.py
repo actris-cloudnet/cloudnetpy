@@ -31,7 +31,12 @@ class ModelManager(DataSource):
     """
 
     def __init__(
-        self, model_file: str, model: str, output_file: str, product: str, check_file: bool = True
+        self,
+        model_file: str,
+        model: str,
+        output_file: str,
+        product: str,
+        check_file: bool = True,
     ):
         super().__init__(model_file)
         self.model = model

@@ -25,7 +25,13 @@ def test_find_model_type(input, result):
 
 
 def test_calc_mean_height():
-    height = np.array([[0, 1, 2, 3, 4], [0.2, 1.2, 2.2, 3.2, 4.2], [-0.2, 0.8, 1.8, 2.8, 3.8]])
+    height = np.array(
+        [
+            [0, 1, 2, 3, 4],
+            [0.2, 1.2, 2.2, 3.2, 4.2],
+            [-0.2, 0.8, 1.8, 2.8, 3.8],
+        ]
+    )
     result = np.array([0, 1, 2, 3, 4])
     assert_array_equal(model._calc_mean_height(height), result)
 
@@ -55,7 +61,11 @@ def fake_model_file(tmpdir_factory):
         root_grp.createVariable("time", "f8", "time")[:] = np.arange(n_time)
         var = root_grp.createVariable("height", "f8", ("time", "height"))
         var[:] = np.array(
-            [[1000, 2000, 3000, 4000], [1000, 2000, 3000, 4000], [1000, 2000, 3000, 4000]]
+            [
+                [1000, 2000, 3000, 4000],
+                [1000, 2000, 3000, 4000],
+                [1000, 2000, 3000, 4000],
+            ]
         )
         var.units = "m"
         _create_var(root_grp, "temperature")
@@ -65,12 +75,30 @@ def fake_model_file(tmpdir_factory):
         _create_var(root_grp, "q")
         _create_var(root_grp, "rh")
         _create_var(root_grp, "gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
-        _create_var(root_grp, "specific_gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
         _create_var(
-            root_grp, "specific_saturated_gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height")
+            root_grp,
+            "specific_gas_atten",
+            data=BIG_ARRAY,
+            dim=("wl", "time", "height"),
         )
-        _create_var(root_grp, "liquid_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
-        _create_var(root_grp, "specific_liquid_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
+        _create_var(
+            root_grp,
+            "specific_saturated_gas_atten",
+            data=BIG_ARRAY,
+            dim=("wl", "time", "height"),
+        )
+        _create_var(
+            root_grp,
+            "liquid_atten",
+            data=BIG_ARRAY,
+            dim=("wl", "time", "height"),
+        )
+        _create_var(
+            root_grp,
+            "specific_liquid_atten",
+            data=BIG_ARRAY,
+            dim=("wl", "time", "height"),
+        )
     return file_name
 
 
@@ -85,7 +113,13 @@ def test_get_model_heights(fake_model_file):
     assert_array_equal(
         obj.model_heights,
         ALT_SITE
-        + np.array([[1000, 2000, 3000, 4000], [1000, 2000, 3000, 4000], [1000, 2000, 3000, 4000]]),
+        + np.array(
+            [
+                [1000, 2000, 3000, 4000],
+                [1000, 2000, 3000, 4000],
+                [1000, 2000, 3000, 4000],
+            ]
+        ),
     )
 
 
@@ -116,7 +150,13 @@ def test_interpolate_to_common_height(fake_model_file):
 @pytest.mark.parametrize(
     "data, expected",
     [
-        (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=[[1, 1, 1, 0, 0, 0, 0, 1]]), 1),
+        (
+            ma.array(
+                [[1, 2], [1, 2], [1, 2], [1, 2]],
+                mask=[[1, 1, 1, 0, 0, 0, 0, 1]],
+            ),
+            1,
+        ),
         (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=False), 4),
         (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=False), 4),
         (ma.array([[1, 2], [1, 2], [1, 2], [1, 2]], mask=True), 0),
@@ -143,7 +183,9 @@ class TestEcmwf:
 
     def test_qc(self):
         n = 0
-        report = quality.run_tests(Path(self.filename), ignore_tests=["TestCFConvention"])
+        report = quality.run_tests(
+            Path(self.filename), ignore_tests=["TestCFConvention"]
+        )
         keys = ("TestUnits",)
         for test in report["tests"]:
             if test["testId"] in keys:

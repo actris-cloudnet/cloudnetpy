@@ -56,7 +56,12 @@ def test_split_string(string, indices, result):
 
 
 class TestCL51(Check):
-    site_meta = {"name": "Kumpula", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
+    site_meta = {
+        "name": "Kumpula",
+        "altitude": 123,
+        "latitude": 45.0,
+        "longitude": 22.0,
+    }
     date = "2020-11-15"
     input = f"{SCRIPT_PATH}/data/vaisala/cl51.DAT"
     temp_dir = TemporaryDirectory()
@@ -112,7 +117,12 @@ class TestCL51(Check):
 
 
 def test_cl51_corrupted_profile(tmp_path):
-    site_meta = {"name": "Ny Ålesund", "altitude": 25, "latitude": 78.924, "longitude": 22.0}
+    site_meta = {
+        "name": "Ny Ålesund",
+        "altitude": 25,
+        "latitude": 78.924,
+        "longitude": 22.0,
+    }
     input_path = f"{SCRIPT_PATH}/data/vaisala/cl51-corrupted-profile.cl"
     output_path = tmp_path / "cl51-corrupted-profile.nc"
     ceilo2nc(input_path, output_path, site_meta, date="2022-05-06")
@@ -121,7 +131,12 @@ def test_cl51_corrupted_profile(tmp_path):
 
 
 class TestCL31(Check):
-    site_meta = {"name": "Kumpula", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
+    site_meta = {
+        "name": "Kumpula",
+        "altitude": 123,
+        "latitude": 45.0,
+        "longitude": 22.0,
+    }
     date = "2020-04-10"
     input = f"{SCRIPT_PATH}/data/vaisala/cl31.DAT"
     temp_dir = TemporaryDirectory()
@@ -183,7 +198,12 @@ class TestCL31(Check):
 
 
 class TestCT25k(Check):
-    site_meta = {"name": "Kumpula", "altitude": 123, "latitude": 45.0, "longitude": 22.0}
+    site_meta = {
+        "name": "Kumpula",
+        "altitude": 123,
+        "latitude": 45.0,
+        "longitude": 22.0,
+    }
     date = "2020-10-29"
     input = f"{SCRIPT_PATH}/data/vaisala/ct25k.dat"
     temp_dir = TemporaryDirectory()

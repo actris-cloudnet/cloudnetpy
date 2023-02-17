@@ -9,7 +9,11 @@ from cloudnetpy.constants import T0
 
 def test_find_t0_alt():
     temperature = np.array(
-        [[290, 280, T0, 260], [320, T0 + 10, T0 - 10, 220], [240, 230, 220, 210]]
+        [
+            [290, 280, T0, 260],
+            [320, T0 + 10, T0 - 10, 220],
+            [240, 230, 220, 210],
+        ]
     )
     height = np.array([10, 20, 30, 40])
     res = [30, 25, 10]
@@ -20,10 +24,30 @@ def test_find_t0_alt():
 @pytest.mark.parametrize(
     "mean_melting_alt, t0_alt, height, expected_result",
     [
-        (ma.array([1, 2, 3], mask=[1, 1, 1]), np.array([1, 1]), np.array([1, 2]), True),
-        (ma.array([1, 2, 3], mask=[1, 0, 1]), np.array([1, 1]), np.array([1, 2]), False),
-        (ma.array([1, 2, 3], mask=[1, 1, 1]), np.array([1.2, 1]), np.array([1, 2]), False),
-        (ma.array([1, 2, 3], mask=[0, 1, 1]), np.array([1.2, 1]), np.array([1, 2]), False),
+        (
+            ma.array([1, 2, 3], mask=[1, 1, 1]),
+            np.array([1, 1]),
+            np.array([1, 2]),
+            True,
+        ),
+        (
+            ma.array([1, 2, 3], mask=[1, 0, 1]),
+            np.array([1, 1]),
+            np.array([1, 2]),
+            False,
+        ),
+        (
+            ma.array([1, 2, 3], mask=[1, 1, 1]),
+            np.array([1.2, 1]),
+            np.array([1, 2]),
+            False,
+        ),
+        (
+            ma.array([1, 2, 3], mask=[0, 1, 1]),
+            np.array([1.2, 1]),
+            np.array([1, 2]),
+            False,
+        ),
     ],
 )
 def test_is_all_freezing(mean_melting_alt, t0_alt, height, expected_result):

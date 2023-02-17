@@ -44,7 +44,8 @@ def pollyxt2nc(
 
     Examples:
         >>> from cloudnetpy.instruments import pollyxt2nc
-        >>> site_meta = {'name': 'Mindelo', 'altitude': 13, 'zenith_angle': 6, 'snr_limit': 3}
+        >>> site_meta = {'name': 'Mindelo', 'altitude': 13, 'zenith_angle': 6,
+        'snr_limit': 3}
         >>> pollyxt2nc('/path/to/files/', 'pollyxt.nc', site_meta)
 
     """
@@ -79,7 +80,9 @@ class PollyXt(Ceilometer):
     def calc_screened_products(self, snr_limit: float = 5.0):
         keys = ("beta", "depolarisation")
         for key in keys:
-            self.data[key] = ma.masked_where(self.data["snr"] < snr_limit, self.data[f"{key}_raw"])
+            self.data[key] = ma.masked_where(
+                self.data["snr"] < snr_limit, self.data[f"{key}_raw"]
+            )
         self.data["depolarisation"][self.data["depolarisation"] > 1] = ma.masked
         self.data["depolarisation"][self.data["depolarisation"] < 0] = ma.masked
         del self.data["snr"]
@@ -97,8 +100,12 @@ class PollyXt(Ceilometer):
         if not bsc_files:
             raise RuntimeError("No pollyxt files found")
         if len(bsc_files) != len(depol_files):
-            raise InconsistentDataError("Inconsistent number of pollyxt bsc / depol files")
-        self.data["range"] = _read_array_from_multiple_files(bsc_files, depol_files, "height")
+            raise InconsistentDataError(
+                "Inconsistent number of pollyxt bsc / depol files"
+            )
+        self.data["range"] = _read_array_from_multiple_files(
+            bsc_files, depol_files, "height"
+        )
         calibration_factors: np.ndarray = np.array([])
         beta_channel = self._get_valid_beta_channel(bsc_files)
         bsc_key = f"attenuated_backscatter_{beta_channel}nm"
@@ -109,9 +116,13 @@ class PollyXt(Ceilometer):
             ):
                 epoch = utils.get_epoch(nc_bsc["time"].unit)
                 try:
-                    time = np.array(_read_array_from_file_pair(nc_bsc, nc_depol, "time"))
+                    time = np.array(
+                        _read_array_from_file_pair(nc_bsc, nc_depol, "time")
+                    )
                 except AssertionError as err:
-                    logging.warning(f"Ignoring files '{nc_bsc}' and '{nc_depol}': {err}")
+                    logging.warning(
+                        f"Ignoring files '{nc_bsc}' and '{nc_depol}': {err}"
+                    )
                     continue
                 beta_raw = nc_bsc.variables[bsc_key][:]
                 depol_raw = nc_depol.variables["volume_depolarization_ratio_532nm"][:]
@@ -121,9 +132,13 @@ class PollyXt(Ceilometer):
                     ["beta_raw", "depolarisation_raw", "time", "snr"],
                 ):
                     self.data = utils.append_data(self.data, key, array)
-                calibration_factor = nc_bsc.variables[bsc_key].Lidar_calibration_constant_used
+                calibration_factor = nc_bsc.variables[
+                    bsc_key
+                ].Lidar_calibration_constant_used
                 calibration_factor = np.repeat(calibration_factor, len(time))
-                calibration_factors = np.concatenate([calibration_factors, calibration_factor])
+                calibration_factors = np.concatenate(
+                    [calibration_factors, calibration_factor]
+                )
         self.data["calibration_factor"] = calibration_factors
         return epoch
 
@@ -135,7 +150,9 @@ class PollyXt(Ceilometer):
                     beta = nc.variables[f"attenuated_backscatter_{channel}nm"][:]
                     if not _only_zeros_or_masked(beta):
                         if channel != polly_channels[0]:
-                            logging.warning(f"Using {channel}nm pollyXT channel for backscatter")
+                            logging.warning(
+                                f"Using {channel}nm pollyXT channel for backscatter"
+                            )
                             self.instrument.wavelength = float(channel)  # type: ignore
                         return channel
         raise ValidTimeStampError("No functional pollyXT backscatter channels found")

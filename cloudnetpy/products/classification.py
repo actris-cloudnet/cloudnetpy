@@ -9,7 +9,9 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
 
 
-def generate_classification(categorize_file: str, output_file: str, uuid: str | None = None) -> str:
+def generate_classification(
+    categorize_file: str, output_file: str, uuid: str | None = None
+) -> str:
     """Generates Cloudnet classification product.
 
     This function reads the initial classification masks from a
@@ -39,29 +41,43 @@ def generate_classification(categorize_file: str, output_file: str, uuid: str | 
         bases, tops = _get_cloud_base_and_top_heights(classification, product_container)
         product_container.append_data(bases, "cloud_base_height_amsl")
         product_container.append_data(tops, "cloud_top_height_amsl")
-        product_container.append_data(bases - product_container.altitude, "cloud_base_height_agl")
-        product_container.append_data(tops - product_container.altitude, "cloud_top_height_agl")
+        product_container.append_data(
+            bases - product_container.altitude, "cloud_base_height_agl"
+        )
+        product_container.append_data(
+            tops - product_container.altitude, "cloud_top_height_agl"
+        )
         date = product_container.get_date()
         attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
         output.update_attributes(product_container.data, attributes)
-        uuid = output.save_product_file("classification", product_container, output_file, uuid)
+        uuid = output.save_product_file(
+            "classification", product_container, output_file, uuid
+        )
     return uuid
 
 
-def _get_target_classification(categorize_bits: CategorizeBits) -> ma.MaskedArray:
+def _get_target_classification(
+    categorize_bits: CategorizeBits,
+) -> ma.MaskedArray:
     bits = categorize_bits.category_bits
     clutter = categorize_bits.quality_bits["clutter"]
     classification = ma.zeros(bits["cold"].shape, dtype=int)
     classification[bits["droplet"] & ~bits["falling"]] = 1  # Cloud droplets
     classification[~bits["droplet"] & bits["falling"]] = 2  # Drizzle or rain
-    classification[bits["droplet"] & bits["falling"]] = 3  # Drizzle or rain and droplets
+    classification[
+        bits["droplet"] & bits["falling"]
+    ] = 3  # Drizzle or rain and droplets
     classification[~bits["droplet"] & bits["falling"] & bits["cold"]] = 4  # ice
-    classification[bits["droplet"] & bits["falling"] & bits["cold"]] = 5  # ice + supercooled
+    classification[
+        bits["droplet"] & bits["falling"] & bits["cold"]
+    ] = 5  # ice + supercooled
     classification[bits["melting"]] = 6  # melting layer
     classification[bits["melting"] & bits["droplet"]] = 7  # melting + droplets
     classification[bits["aerosol"]] = 8  # aerosols
     classification[bits["insect"] & ~clutter] = 9  # insects
-    classification[bits["aerosol"] & bits["insect"] & ~clutter] = 10  # insects + aerosols
+    classification[
+        bits["aerosol"] & bits["insect"] & ~clutter
+    ] = 10  # insects + aerosols
     classification[clutter & ~bits["aerosol"]] = 0
     return classification
 
@@ -133,14 +149,15 @@ DEFINITIONS = {
         "\n"
         "Value 0: Clear sky.\n"
         "Value 1: Lidar echo only.\n"
-        "Value 2: Radar echo but reflectivity may be unreliable as attenuation by rain, melting\n"
-        "         ice or liquid cloud has not been corrected.\n"
+        "Value 2: Radar echo but reflectivity may be unreliable as attenuation\n"
+        "         by rain, melting ice or liquid cloud has not been corrected.\n"
         "Value 3: Good radar and lidar echos.\n"
-        "Value 4: No radar echo but rain or liquid cloud beneath mean that attenuation that would\n"
-        "         be experienced is unknown.\n"
+        "Value 4: No radar echo but rain or liquid cloud beneath mean that\n"
+        "         attenuation that would be experienced is unknown.\n"
         "Value 5: Good radar echo only.\n"
         "Value 6: No radar echo but known attenuation.\n"
-        "Value 7: Radar echo corrected for liquid attenuation using microwave radiometer data.\n"
+        "Value 7: Radar echo corrected for liquid attenuation using microwave\n"
+        "         radiometer data."
         "Value 8: Radar ground clutter.\n"
         "Value 9: Lidar clear-air molecular scattering."
     ),

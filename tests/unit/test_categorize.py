@@ -18,7 +18,12 @@ filepath = f"{SCRIPT_PATH}/../source_data"
 
 class TestCategorize(Check):
     date = "2021-11-20"
-    site_meta = {"name": "Munich", "altitude": 538, "latitude": 48.5, "longitude": 11.5}
+    site_meta = {
+        "name": "Munich",
+        "altitude": 538,
+        "latitude": 48.5,
+        "longitude": 11.5,
+    }
 
     temp_dir = TemporaryDirectory()
     radar_path = temp_dir.name + "/radar.nc"

@@ -18,7 +18,12 @@ def categorize_file(tmpdir_factory, file_metadata):
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
 
     with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as nc:
-        dimensions = {"time": 3, "height": 3, "model_time": 3, "model_height": 3}
+        dimensions = {
+            "time": 3,
+            "height": 3,
+            "model_time": 3,
+            "model_height": 3,
+        }
         for name, value in dimensions.items():
             nc.createDimension(name, value)
             var = nc.createVariable(name, "f8", name)
@@ -37,12 +42,12 @@ def categorize_file(tmpdir_factory, file_metadata):
         nc.createVariable("quality_bits", "i4", ("time", "height"))[:] = np.array(
             [[0, 1, 1], [2, 3, 4], [4, 8, 1]]
         )
-        nc.createVariable("temperature", "f8", ("model_time", "model_height"))[:] = np.array(
-            [[282, 280, 278], [286, 284, 282], [284, 282, 280]]
-        )
-        nc.createVariable("pressure", "f8", ("model_time", "model_height"))[:] = np.array(
-            [[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]]
-        )
+        nc.createVariable("temperature", "f8", ("model_time", "model_height"))[
+            :
+        ] = np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
+        nc.createVariable("pressure", "f8", ("model_time", "model_height"))[
+            :
+        ] = np.array([[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]])
         nc.createVariable("Z", "f8", ("time", "height"))[:] = np.array(
             [[10, 20, -10], [10, 20, -10], [10, 20, -10]]
         )

@@ -13,8 +13,8 @@ class CloudnetArray:
     """Stores netCDF4 variables, numpy arrays and scalars as CloudnetArrays.
 
     Args:
-        variable: The netCDF4 :class:`Variable` instance, numpy array (masked or regular),
-            or scalar (float, int).
+        variable: The netCDF4 :class:`Variable` instance,
+            numpy array (masked or regular), or scalar (float, int).
         name: Name of the variable.
         units_from_user: Explicit units, optional.
         dimensions: Explicit dimension names, optional.
@@ -76,7 +76,13 @@ class CloudnetArray:
         """Returns list of user-defined attributes."""
         attributes = []
         for attr in self.__dict__:
-            if attr not in ("variable", "name", "data", "data_type", "dimensions"):
+            if attr not in (
+                "variable",
+                "name",
+                "data",
+                "data_type",
+                "dimensions",
+            ):
                 attributes.append(attr)
         return attributes
 
@@ -94,7 +100,8 @@ class CloudnetArray:
         if isinstance(self.variable, np.ndarray):
             return self.variable
         if isinstance(
-            self.variable, (int, float, np.float32, np.int8, np.float64, np.int32, np.uint16)
+            self.variable,
+            (int, float, np.float32, np.int8, np.float64, np.int32, np.uint16),
         ):
             return np.array(self.variable)
         if isinstance(self.variable, str):
@@ -156,9 +163,9 @@ class CloudnetArray:
         Args:
             time: 1D time array.
             time_new: 1D new time array.
-            folding_velocity: Folding velocity (m/s). Can be float when it's the same for all
-                altitudes, or np.ndarray when it matches difference altitude regions
-                (defined in `sequence_indices`).
+            folding_velocity: Folding velocity (m/s). Can be a float when
+                it's the same for all altitudes, or np.ndarray when it
+                matches difference altitude regions (defined in `sequence_indices`).
             sequence_indices: List containing indices of different folding regions,
                 e.g. [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10]].
 

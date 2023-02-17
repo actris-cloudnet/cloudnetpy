@@ -84,13 +84,19 @@ def test_merge_history():
     history = str(root.history)
     assert utils.is_timestamp(f"-{history[:19]}") is True
     assert (
-        history[19:] == " +00:00 - dummy file created\n21:00 some history y\n20:00 some history x"
+        history[19:]
+        == " +00:00 - dummy file created\n21:00 some history y\n20:00 some history x"
     )
 
 
 def test_get_source_uuids():
     uuid1, uuid2 = "simorules", "abcdefg"
-    source1, source2, source3, source4 = RootGrp(), RootGrp(), RootGrp(), RootGrp()
+    source1, source2, source3, source4 = (
+        RootGrp(),
+        RootGrp(),
+        RootGrp(),
+        RootGrp(),
+    )
     source1.dataset.file_uuid = uuid1  # type: ignore
     source2.dataset.file_uuid = uuid2  # type: ignore
     source3.dataset.file_uuid = uuid2  # type: ignore
@@ -134,13 +140,22 @@ def test_fix_attribute_name(tmpdir_factory):
 @pytest.mark.parametrize(
     "identifier, result",
     [
-        ("lwc", "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/BAMS-88-6-883"),
+        (
+            "lwc",
+            "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/BAMS-88-6-883",
+        ),
         (
             "categorize",
             "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/BAMS-88-6-883",
         ),
-        ("iwc", "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/JAM2340.1"),
-        ("drizzle", "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/JAM-2181.1"),
+        (
+            "iwc",
+            "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/JAM2340.1",
+        ),
+        (
+            "drizzle",
+            "https://doi.org/10.21105/joss.02123, https://doi.org/10.1175/JAM-2181.1",
+        ),
         ("classification", "https://doi.org/10.21105/joss.02123"),
         (None, "https://doi.org/10.21105/joss.02123"),
     ],

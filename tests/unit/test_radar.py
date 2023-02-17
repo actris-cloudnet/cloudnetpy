@@ -83,7 +83,14 @@ def test_init_sigma(fake_radar_file):
 def test_add_meta(fake_radar_file):
     obj = Radar(fake_radar_file)
     obj.add_meta()
-    for key in ("time", "height", "altitude", "latitude", "longitude", "radar_frequency"):
+    for key in (
+        "time",
+        "height",
+        "altitude",
+        "latitude",
+        "longitude",
+        "radar_frequency",
+    ):
         assert key in obj.data
 
 
@@ -103,7 +110,8 @@ def test_remove_incomplete_pixels(fake_radar_file):
 def test_filter_1st_gate_artifact(fake_radar_file):
     obj = Radar(fake_radar_file)
     obj.data["v"] = ma.array(
-        [[4, 1, 2], [0, 6, 2], [5, 1, 2]], mask=[[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+        [[4, 1, 2], [0, 6, 2], [5, 1, 2]],
+        mask=[[0, 0, 0], [0, 0, 0], [0, 0, 0]],
     )
     obj.filter_1st_gate_artifact()
     assert_array_equal(obj.data["v"].mask, [[0, 0, 0], [0, 0, 0], [1, 0, 0]])

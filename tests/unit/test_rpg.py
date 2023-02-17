@@ -90,7 +90,9 @@ class TestRPG2nc94GHz(Check):
                 assert value == expected, f"{value} != {expected}"
 
     def test_variables(self):
-        assert math.isclose(self.nc.variables["radar_frequency"][:].data, 94.0, abs_tol=0.1)
+        assert math.isclose(
+            self.nc.variables["radar_frequency"][:].data, 94.0, abs_tol=0.1
+        )
         assert np.all(self.nc.variables["zenith_angle"][:].data) == 0
 
     def test_fill_values(self):
@@ -99,7 +101,9 @@ class TestRPG2nc94GHz(Check):
             for value in bad_values:
                 array = self.nc.variables[key][:]
                 if array.ndim > 1:
-                    assert not np.any(np.isclose(array, value)), f"{key} - {value}: {array}"
+                    assert not np.any(
+                        np.isclose(array, value)
+                    ), f"{key} - {value}: {array}"
 
     def test_global_attributes(self):
         assert self.nc.source == "RPG-Radiometer Physics RPG-FMCW-94"
@@ -135,7 +139,13 @@ class TestRPG2nc94GHz(Check):
     def test_uuid_from_user(self, tmp_path):
         test_path = tmp_path / "uuid.nc"
         test_uuid = "abc"
-        uuid, _ = rpg.rpg2nc(FILEPATH, test_path, self.site_meta, date="2020-10-23", uuid=test_uuid)
+        uuid, _ = rpg.rpg2nc(
+            FILEPATH,
+            test_path,
+            self.site_meta,
+            date="2020-10-23",
+            uuid=test_uuid,
+        )
         assert uuid == test_uuid
 
     def test_handling_of_corrupted_files(self, tmp_path, tmp_path_factory):
@@ -143,7 +153,9 @@ class TestRPG2nc94GHz(Check):
         test_path = tmp_path / "corrupt.nc"
         copytree(FILEPATH, temp_dir, dirs_exist_ok=True)
         (temp_dir / "foo.LV1").write_text("kissa")
-        _, files = rpg.rpg2nc(str(temp_dir), test_path, self.site_meta, date="2020-10-22")
+        _, files = rpg.rpg2nc(
+            str(temp_dir), test_path, self.site_meta, date="2020-10-22"
+        )
         assert len(files) == 2
 
     def test_geolocation_from_source_file(self, tmp_path):
@@ -223,8 +235,12 @@ class TestRPG2ncSTSR35GHz(Check):
                 getattr(radar_fun, name)()
 
     def test_variables(self):
-        assert math.isclose(self.nc.variables["radar_frequency"][:].data, 35.0, rel_tol=0.1)
-        assert math.isclose(ma.median(self.nc.variables["zenith_angle"][:].data), 15, abs_tol=1)
+        assert math.isclose(
+            self.nc.variables["radar_frequency"][:].data, 35.0, rel_tol=0.1
+        )
+        assert math.isclose(
+            ma.median(self.nc.variables["zenith_angle"][:].data), 15, abs_tol=1
+        )
 
     def test_fill_values(self):
         bad_values = (-999, 1e-10)
@@ -232,7 +248,9 @@ class TestRPG2ncSTSR35GHz(Check):
             for value in bad_values:
                 array = self.nc.variables[key][:]
                 if array.ndim > 1:
-                    assert not np.any(np.isclose(array, value)), f"{key} - {value}: {array}"
+                    assert not np.any(
+                        np.isclose(array, value)
+                    ), f"{key} - {value}: {array}"
 
     def test_global_attributes(self):
         assert self.nc.source == "RPG-Radiometer Physics RPG-FMCW-35"

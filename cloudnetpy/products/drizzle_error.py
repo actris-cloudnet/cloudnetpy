@@ -8,7 +8,9 @@ MU_ERROR = 0.07
 MU_ERROR_SMALL = 0.25
 
 
-def get_drizzle_error(categorize: DrizzleSource, drizzle_parameters: DrizzleSolver) -> dict:
+def get_drizzle_error(
+    categorize: DrizzleSource, drizzle_parameters: DrizzleSolver
+) -> dict:
     """Estimates error and bias for drizzle classification.
 
     Args:
@@ -40,7 +42,9 @@ def _get_drizzle_indices(diameter: np.ndarray) -> dict:
 
 
 def _read_input_uncertainty(categorize: DrizzleSource, uncertainty_type: str) -> tuple:
-    return tuple(db2lin(categorize.getvar(f"{key}_{uncertainty_type}")) for key in ("Z", "beta"))
+    return tuple(
+        db2lin(categorize.getvar(f"{key}_{uncertainty_type}")) for key in ("Z", "beta")
+    )
 
 
 def _calc_errors(drizzle_indices: dict, error_input: tuple, bias_input: tuple) -> dict:
@@ -88,10 +92,16 @@ def _calc_parameter_biases(bias_input: tuple) -> dict:
     dia_bias = _calc_bias(2 / 7, (1, 1))
     lwc_bias = _calc_bias(1 / 7, (1, 6))
     lwf_bias = _calc_bias(1 / 7, (3, 4))
-    return {"Do_bias": dia_bias, "drizzle_lwc_bias": lwc_bias, "drizzle_lwf_bias": lwf_bias}
+    return {
+        "Do_bias": dia_bias,
+        "drizzle_lwc_bias": lwc_bias,
+        "drizzle_lwf_bias": lwf_bias,
+    }
 
 
-def _add_supplementary_errors(results: dict, drizzle_indices: dict, error_input: tuple) -> dict:
+def _add_supplementary_errors(
+    results: dict, drizzle_indices: dict, error_input: tuple
+) -> dict:
     def _calc_n_error() -> ma.MaskedArray:
         z_error = error_input[0]
         dia_error = db2lin(results["Do_error"])
@@ -141,7 +151,10 @@ def _calc_error(
 
 
 def _stack_errors(
-    error_in: np.ndarray, drizzle_indices: dict, error_small=None, error_tiny=None
+    error_in: np.ndarray,
+    drizzle_indices: dict,
+    error_small=None,
+    error_tiny=None,
 ) -> ma.MaskedArray:
     def _add_error_component(source: np.ndarray, ind: tuple):
         error[ind] = source[ind]

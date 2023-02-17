@@ -5,7 +5,12 @@ import numpy as np
 import pytest
 from cloudnetpy_qc import quality
 
-SITE_META = {"name": "Kumpula", "altitude": 50, "latitude": 23, "longitude": 34.0}
+SITE_META = {
+    "name": "Kumpula",
+    "altitude": 50,
+    "latitude": 23,
+    "longitude": 34.0,
+}
 
 
 class Check:
@@ -24,7 +29,9 @@ class Check:
 
     def test_qc(self):
         n = 0
-        report = quality.run_tests(Path(self.temp_path), ignore_tests=["TestCFConvention"])
+        report = quality.run_tests(
+            Path(self.temp_path), ignore_tests=["TestCFConvention"]
+        )
         keys = ("TestUnits", "TestLongNames", "TestStandardNames")
         for test in report["tests"]:
             if test["testId"] in keys:

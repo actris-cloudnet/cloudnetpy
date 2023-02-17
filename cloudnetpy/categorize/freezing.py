@@ -58,7 +58,9 @@ def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarra
     return is_freezing
 
 
-def _is_all_freezing(mean_melting_alt: np.ndarray, t0_alt: np.ndarray, height: np.ndarray) -> bool:
+def _is_all_freezing(
+    mean_melting_alt: np.ndarray, t0_alt: np.ndarray, height: np.ndarray
+) -> bool:
     no_detected_melting = mean_melting_alt.all() is ma.masked
     all_temperatures_below_freezing = (t0_alt <= height[0]).all()
     return no_detected_melting and all_temperatures_below_freezing

@@ -36,7 +36,12 @@ class ObservationManager(DataSource):
     def _get_date(self) -> datetime:
         """Returns measurement date as datetime."""
         return datetime(
-            int(self.dataset.year), int(self.dataset.month), int(self.dataset.day), 0, 0, 0
+            int(self.dataset.year),
+            int(self.dataset.month),
+            int(self.dataset.day),
+            0,
+            0,
+            0,
         )
 
     def _get_radar_frequency(self) -> np.ndarray | None:
@@ -75,7 +80,9 @@ class ObservationManager(DataSource):
     @staticmethod
     def _classify_basic_mask(bits: dict) -> np.ndarray:
         cloud_mask = bits["droplet"] + bits["falling"] * 2
-        cloud_mask[bits["falling"] & bits["cold"]] = cloud_mask[bits["falling"] & bits["cold"]] + 2
+        cloud_mask[bits["falling"] & bits["cold"]] = (
+            cloud_mask[bits["falling"] & bits["cold"]] + 2
+        )
         cloud_mask[bits["aerosol"]] = 6
         cloud_mask[bits["insect"]] = 7
         cloud_mask[bits["aerosol"] & bits["insect"]] = 8

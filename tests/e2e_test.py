@@ -29,10 +29,20 @@ def main():
         "lidar": f"{source_path}raw_chm15k_lidar.nc",
     }
 
-    calibrated_files = {"radar": f"{source_path}radar.nc", "lidar": f"{source_path}lidar.nc"}
+    calibrated_files = {
+        "radar": f"{source_path}radar.nc",
+        "lidar": f"{source_path}lidar.nc",
+    }
 
-    site_meta = {"name": "Munich", "altitude": 538, "latitude": 48.148, "longitude": 11.573}
-    uuid_radar = mira2nc(raw_files["radar"], calibrated_files["radar"], site_meta, uuid="kissa")
+    site_meta = {
+        "name": "Munich",
+        "altitude": 538,
+        "latitude": 48.148,
+        "longitude": 11.573,
+    }
+    uuid_radar = mira2nc(
+        raw_files["radar"], calibrated_files["radar"], site_meta, uuid="kissa"
+    )
     assert uuid_radar == "kissa"
     lidar_meta = site_meta.copy()
     uuid_lidar = ceilo2nc(raw_files["lidar"], calibrated_files["lidar"], lidar_meta)
@@ -53,10 +63,21 @@ def main():
     uuid_categorize = generate_categorize(input_files, categorize_file)
     _run_tests(categorize_file)
     _check_is_valid_uuid(uuid_categorize)
-    _check_source_file_uuids(categorize_file, (uuid_lidar, uuid_radar, uuid_model, uuid_mwr))
-    product_file_types = ["classification", "iwc", "lwc", "drizzle", "der", "ier"]
+    _check_source_file_uuids(
+        categorize_file, (uuid_lidar, uuid_radar, uuid_model, uuid_mwr)
+    )
+    product_file_types = [
+        "classification",
+        "iwc",
+        "lwc",
+        "drizzle",
+        "der",
+        "ier",
+    ]
     for file in product_file_types:
-        product_file, uuid_product = _process_product_file(file, source_path, categorize_file)
+        product_file, uuid_product = _process_product_file(
+            file, source_path, categorize_file
+        )
         _run_tests(product_file)
         _check_is_valid_uuid(uuid_product)
         _check_attributes(product_file, site_meta)

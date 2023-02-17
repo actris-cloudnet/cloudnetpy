@@ -31,7 +31,13 @@ setup(
         "rpgpy>=0.12.1",
     ],
     extras_require={
-        "test": ["pytest", "pytest-flakefinder", "pylint", "mypy", "types-requests"],
+        "test": [
+            "pytest",
+            "pytest-flakefinder",
+            "pylint",
+            "mypy",
+            "types-requests",
+        ],
         "dev": ["pre-commit"],
         "extras": ["voodoonet>=0.1.1"],
     },

@@ -26,7 +26,10 @@ class CloudnetInstrument:
             ):
                 value = float(getattr(self.dataset, key.capitalize()).split()[0])
             # From source data (BASTA / RPG):
-            elif isinstance(self.dataset, netCDF4.Dataset) and key in self.dataset.variables:
+            elif (
+                isinstance(self.dataset, netCDF4.Dataset)
+                and key in self.dataset.variables
+            ):
                 value = self.dataset.variables[key][:]
             if value is not None:
                 value = float(ma.mean(value))

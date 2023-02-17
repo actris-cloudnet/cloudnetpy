@@ -29,7 +29,9 @@ def rebin_edges(arr: np.ndarray) -> np.ndarray:
     return np.array(new_arr)
 
 
-def calculate_advection_time(resolution: int, wind: ma.MaskedArray, sampling: int) -> np.ndarray:
+def calculate_advection_time(
+    resolution: int, wind: ma.MaskedArray, sampling: int
+) -> np.ndarray:
     """Calculates time which variable takes to go through the time window
 
     Notes:
@@ -54,7 +56,12 @@ def get_1d_indices(window: tuple, data: np.ndarray, mask: np.ndarray | None = No
     return indices
 
 
-def get_adv_indices(model_t: int, adv_t: float, data: np.ndarray, mask: np.ndarray | None = None):
+def get_adv_indices(
+    model_t: int,
+    adv_t: float,
+    data: np.ndarray,
+    mask: np.ndarray | None = None,
+):
     adv_indices = ((model_t - adv_t / 2) <= data) & (data < (model_t + adv_t / 2))
     if mask is not None:
         adv_indices[mask] = ma.masked

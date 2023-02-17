@@ -18,20 +18,36 @@ class TestIndBase:
     threshold = 2
 
     def test_ind_base_0(self):
-        assert droplet.ind_base(self.dx, self.peak_position, self.search_range, self.threshold) == 4
+        assert (
+            droplet.ind_base(
+                self.dx, self.peak_position, self.search_range, self.threshold
+            )
+            == 4
+        )
 
     def test_ind_base_1(self):
         search_range = 100
-        assert droplet.ind_base(self.dx, self.peak_position, search_range, self.threshold) == 4
+        assert (
+            droplet.ind_base(self.dx, self.peak_position, search_range, self.threshold)
+            == 4
+        )
 
     def test_ind_base_2(self):
         huge_threshold = 5000
-        assert droplet.ind_base(self.dx, self.peak_position, self.search_range, huge_threshold) == 1
+        assert (
+            droplet.ind_base(
+                self.dx, self.peak_position, self.search_range, huge_threshold
+            )
+            == 1
+        )
 
     def test_ind_base_3(self):
         small_threshold = 1.01
         assert (
-            droplet.ind_base(self.dx, self.peak_position, self.search_range, small_threshold) == 4
+            droplet.ind_base(
+                self.dx, self.peak_position, self.search_range, small_threshold
+            )
+            == 4
         )
 
     def test_ind_base_4(self):
@@ -58,7 +74,11 @@ class TestIndTop:
     def test_ind_top_0(self):
         assert (
             droplet.ind_top(
-                self.dx, self.peak_position, self.n_prof, self.search_range, self.threshold
+                self.dx,
+                self.peak_position,
+                self.n_prof,
+                self.search_range,
+                self.threshold,
             )
             == 3
         )
@@ -66,7 +86,13 @@ class TestIndTop:
     def test_ind_top_1(self):
         search_range = 100
         assert (
-            droplet.ind_top(self.dx, self.peak_position, self.n_prof, search_range, self.threshold)
+            droplet.ind_top(
+                self.dx,
+                self.peak_position,
+                self.n_prof,
+                search_range,
+                self.threshold,
+            )
             == 3
         )
 
@@ -74,7 +100,11 @@ class TestIndTop:
         huge_threshold = 5000
         assert (
             droplet.ind_top(
-                self.dx, self.peak_position, self.n_prof, self.search_range, huge_threshold
+                self.dx,
+                self.peak_position,
+                self.n_prof,
+                self.search_range,
+                huge_threshold,
             )
             == 7
         )
@@ -83,7 +113,11 @@ class TestIndTop:
         small_threshold = 1.01
         assert (
             droplet.ind_top(
-                self.dx, self.peak_position, self.n_prof, self.search_range, small_threshold
+                self.dx,
+                self.peak_position,
+                self.n_prof,
+                self.search_range,
+                small_threshold,
             )
             == 3
         )
@@ -94,7 +128,13 @@ class TestIndTop:
         assert isinstance(diffu, ma.MaskedArray)
         dx = diffu.filled(0)
         with pytest.raises(IndexError):
-            droplet.ind_top(dx, self.peak_position, self.n_prof, self.search_range, self.threshold)
+            droplet.ind_top(
+                dx,
+                self.peak_position,
+                self.n_prof,
+                self.search_range,
+                self.threshold,
+            )
 
 
 def test_find_strong_peaks():
@@ -190,7 +230,11 @@ def test_find_liquid():
                     [1e-8, 1e-8, 1e-5, 1e-3, 1e-5, 1e-8],
                     [1e-8, 1e-8, 1e-5, 1e-3, 1e-5, 1e-8],
                 ],
-                mask=[[0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]],
+                mask=[
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                ],
             )
 
     is_liquid = np.array([[0, 0, 1, 1, 1, 0], [0, 0, 1, 1, 1, 0], [0, 0, 1, 1, 1, 0]])

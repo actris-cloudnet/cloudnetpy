@@ -10,7 +10,10 @@ from cloudnetpy.categorize.containers import ClassData
 
 
 def correct_liquid_top(
-    obs: ClassData, is_liquid: np.ndarray, is_freezing: np.ndarray, limit: float = 200
+    obs: ClassData,
+    is_liquid: np.ndarray,
+    is_freezing: np.ndarray,
+    limit: float = 200,
 ) -> np.ndarray:
     """Corrects lidar detected liquid cloud top using radar data.
 
@@ -64,7 +67,8 @@ def find_liquid(
         min_points: Minimum number of valid points in peak. Default is 3.
         min_top_der: Minimum derivative above peak, defined as
             (beta_peak-beta_top) / (alt_top-alt_peak). Default is 1e-7.
-        min_lwp: Minimum value from linearly interpolated lwp measured by the mwr. Default is 0.
+        min_lwp: Minimum value from linearly interpolated lwp measured by the mwr.
+            Default is 0.
         min_alt: Minimum altitude of the peak from the ground. Default is 100 (m).
 
     Returns:
@@ -125,22 +129,25 @@ def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
     below the peak exceed a threshold value.
 
     Args:
-        dprof: 1-D array of 1st discrete difference. Masked values should be 0, e.g. dprof =
-            np.diff(masked_prof).filled(0)
-        ind_peak: Index of (possibly local) peak in the original profile. Note that the peak must
-            be found with some other method before calling this function.
-        dist: Number of elements investigated below *p*. If ( *p* - *dist*)<0, search starts from
-            index 0.
-        lim: Parameter for base index. Values greater than 1.0 are valid. Values close to 1 most
-            likely return the point right below the maximum 1st order difference (within *dist*
-            points below *p*). Values larger than 1 more likely accept some other point, lower in
-            the profile.
+        dprof: 1-D array of 1st discrete difference. Masked values should
+            be 0, e.g. dprof = np.diff(masked_prof).filled(0)
+        ind_peak: Index of (possibly local) peak in the original profile.
+            Note that the peak must be found with some other method before
+            calling this function.
+        dist: Number of elements investigated below *p*. If ( *p* - *dist*)<0,
+            search starts from index 0.
+        lim: Parameter for base index. Values greater than 1.0 are valid.
+            Values close to 1 most likely return the point right below the
+            maximum 1st order difference (within *dist* points below *p*).
+            Values larger than 1 more likely accept some other point, lower
+            in the profile.
 
     Returns:
         Base index of the peak.
 
     Raises:
-        IndexError: Can't find proper base index (probably too many masked values in the profile).
+        IndexError: Can't find proper base index (probably too many masked
+            values in the profile).
 
     Examples:
         Consider a profile
@@ -187,17 +194,17 @@ def ind_top(dprof: np.ndarray, ind_peak: int, nprof: int, dist: int, lim: float)
     above the peak exceed a threshold value.
 
     Args:
-        dprof: 1-D array of 1st discrete difference. Masked values should be 0, e.g. dprof =
-            np.diff(masked_prof).filled(0)
+        dprof: 1-D array of 1st discrete difference. Masked values should be 0, e.g.
+            dprof = np.diff(masked_prof).filled(0)
         nprof: Length of the profile. Top index can't be higher than this.
-        ind_peak: Index of (possibly local) peak in the profile. Note that the peak must be found
-            with some other method before calling this function.
-        dist: Number of elements investigated above *p*. If (*p* + *dist*) > *nprof*, search ends
-            to *nprof*.
-        lim: Parameter for top index. Values greater than 1.0 are valid. Values close to 1 most
-            likely return the point right above the maximum 1st order difference (within *dist*
-            points above *p*). Values larger than 1 more likely accept some other point, higher in
-            the profile.
+        ind_peak: Index of (possibly local) peak in the profile. Note that the peak
+            must be found with some other method before calling this function.
+        dist: Number of elements investigated above *p*. If (*p* + *dist*) > *nprof*,
+            search ends to *nprof*.
+        lim: Parameter for top index. Values greater than 1.0 are valid. Values close
+            to 1 most likely return the point right above the maximum 1st order
+            difference (within *dist* points above *p*). Values larger than 1 more
+            likely accept some other point, higher in the profile.
 
     Returns:
         Top index of the peak.

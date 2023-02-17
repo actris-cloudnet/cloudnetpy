@@ -4,7 +4,9 @@ import pytest
 
 from cloudnetpy.products import drizzle_error as de
 
-DRIZZLE_PARAMETERS = {"Do": np.array([[0.0001, 0.01, 0.000001], [0.001, 0.000001, 0.0001]])}
+DRIZZLE_PARAMETERS = {
+    "Do": np.array([[0.0001, 0.01, 0.000001], [0.001, 0.000001, 0.0001]])
+}
 DRIZZLE_INDICES = {
     "drizzle": np.array([[1, 1, 1], [1, 1, 1]], dtype=bool),
     "small": np.array([[1, 0, 0], [0, 0, 1]], dtype=bool),
@@ -28,7 +30,9 @@ def test_get_drizzle_indices(key, value):
     testing.assert_array_equal(d[key], value)
 
 
-@pytest.mark.parametrize("key", ["Do_error", "drizzle_lwc_error", "drizzle_lwf_error", "S_error"])
+@pytest.mark.parametrize(
+    "key", ["Do_error", "drizzle_lwc_error", "drizzle_lwf_error", "S_error"]
+)
 def test_calc_parameter_errors(key):
     x = de._calc_parameter_errors(DRIZZLE_INDICES, ERROR_INPUT)
     assert key in x.keys()
@@ -81,7 +85,12 @@ def test_stack_errors():
 
 @pytest.mark.parametrize(
     "x, result",
-    [(-1000, -1), (-100, -0.99999), (-10, -0.9), (1000, np.exp(100 / 10 * np.log(10)) - 1)],
+    [
+        (-1000, -1),
+        (-100, -0.99999),
+        (-10, -0.9),
+        (1000, np.exp(100 / 10 * np.log(10)) - 1),
+    ],
 )
 def test_db2lin(x, result):
     testing.assert_array_almost_equal(de.db2lin(x), result, decimal=3)

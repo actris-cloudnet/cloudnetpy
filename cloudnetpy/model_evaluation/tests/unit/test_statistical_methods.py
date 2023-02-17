@@ -22,7 +22,9 @@ def test_relative_error_mask():
     observation = ma.array([[1, 2, 5, 4], [4, 6, 8, 1]])
     observation.mask = np.array([[1, 0, 0, 1], [0, 0, 0, 1]])
     x, _ = sts.relative_error(model, observation)
-    compare = ma.array([[ma.masked, 0.0, -60.0, ma.masked], [-50.0, -83.33, 25.0, ma.masked]])
+    compare = ma.array(
+        [[ma.masked, 0.0, -60.0, ma.masked], [-50.0, -83.33, 25.0, ma.masked]]
+    )
     testing.assert_array_almost_equal(x, compare)
 
 
@@ -30,7 +32,9 @@ def test_relative_error_nan():
     model = ma.array([[1, 2, 2, 3], [2, 4, 10, 1]])
     observation = ma.array([[3, 2, 5, np.nan], [4, np.nan, 8, 4]])
     x, _ = sts.relative_error(model, observation)
-    compare = ma.array([[-66.67, 0.0, -60.0, ma.masked], [-50.0, ma.masked, 25.0, -75.0]])
+    compare = ma.array(
+        [[-66.67, 0.0, -60.0, ma.masked], [-50.0, ma.masked, 25.0, -75.0]]
+    )
     testing.assert_array_almost_equal(x, compare)
 
 
@@ -56,7 +60,9 @@ def test_absolute_error_mask():
     observation = ma.array([[0.2, 0.2, 0.1, 0.4], [0.4, 0.6, 0.8, 0.2]])
     observation.mask = np.array([[0, 0, 0, 0], [0, 1, 0, 0]])
     x, _ = sts.absolute_error(model, observation)
-    compare = ma.array([[10.0, 0.0, -10.0, ma.masked], [20.0, ma.masked, -20.0, ma.masked]])
+    compare = ma.array(
+        [[10.0, 0.0, -10.0, ma.masked], [20.0, ma.masked, -20.0, ma.masked]]
+    )
     testing.assert_array_almost_equal(x, compare)
 
 
@@ -86,8 +92,12 @@ def test_combine_masked_indices_mask():
     observation = ma.array([[3, 2, 1, 4], [4, 6, 8, 4]])
     observation.mask = ma.array([[0, 1, 1, 0], [1, 0, 0, 0]])
     x, y = sts.combine_masked_indices(model, observation)
-    model = ma.array([[ma.masked, ma.masked, ma.masked, 3], [ma.masked, 4, 10, ma.masked]])
-    observation = ma.array([[ma.masked, ma.masked, ma.masked, 4], [ma.masked, 6, 8, ma.masked]])
+    model = ma.array(
+        [[ma.masked, ma.masked, ma.masked, 3], [ma.masked, 4, 10, ma.masked]]
+    )
+    observation = ma.array(
+        [[ma.masked, ma.masked, ma.masked, 4], [ma.masked, 6, 8, ma.masked]]
+    )
     testing.assert_array_almost_equal(x, model)
     testing.assert_array_almost_equal(y, observation)
 
@@ -201,7 +211,10 @@ def test_vertical_profile_mask():
 
 @pytest.mark.parametrize(
     "method, title",
-    [("error", "Cloud fraction vs ECMWF"), ("vertical", ("ECMWF", "Cloud fraction"))],
+    [
+        ("error", "Cloud fraction vs ECMWF"),
+        ("vertical", ("ECMWF", "Cloud fraction")),
+    ],
 )
 def test_day_stat_title(method, title):
     x = sts.day_stat_title(method, PRODUCT_cf)

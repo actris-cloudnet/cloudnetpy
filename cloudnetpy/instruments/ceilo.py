@@ -19,9 +19,9 @@ def ceilo2nc(
 ) -> str:
     """Converts Vaisala / Lufft ceilometer data into Cloudnet Level 1b netCDF file.
 
-    This function reads raw Vaisala (CT25k, CL31, CL51, CL61-D) and Lufft (CHM15k, CHM15kx)
-    ceilometer files and writes the data into netCDF file. Three variants
-    of the attenuated backscatter are saved in the file:
+    This function reads raw Vaisala (CT25k, CL31, CL51, CL61-D) and Lufft
+    (CHM15k, CHM15kx) ceilometer files and writes the data into netCDF file.
+    Three variants of the attenuated backscatter are saved in the file:
 
         1. Raw backscatter, `beta_raw`
         2. Signal-to-noise screened backscatter, `beta`
@@ -31,17 +31,19 @@ def ceilo2nc(
     depolarisation parameters are saved:
 
         1. Signal-to-noise screened depolarisation, `depolarisation`
-        2. SNR-screened depolarisation with smoothed weak background, `depolarisation_smooth`
+        2. SNR-screened depolarisation with smoothed weak background,
+        `depolarisation_smooth`
 
     Args:
-        full_path: Ceilometer file name. For Vaisala it is a text file, for CHM15k(x) it is
-        a netCDF file.
+        full_path: Ceilometer file name. For Vaisala it is a text file, for CHM15k(x)
+        it is a netCDF file.
         output_file: Output file name, e.g. 'ceilo.nc'.
         site_meta: Dictionary containing information about the site and instrument.
-            Required key value pairs are `name` and `altitude` (metres above mean sea level).
-            Also 'calibration_factor' is recommended because the default value is probably
-            incorrect. If the backround noise is *not* range-corrected, you must define:
-            {'range_corrected': False}.
+            Required key value pairs are `name` and `altitude` (metres above mean
+            sea level).
+            Also 'calibration_factor' is recommended because the default value is
+            probably incorrect. If the backround noise is *not* range-corrected,
+            you must define: {'range_corrected': False}.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -55,7 +57,8 @@ def ceilo2nc(
         >>> from cloudnetpy.instruments import ceilo2nc
         >>> site_meta = {'name': 'Mace-Head', 'altitude': 5}
         >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc', site_meta)
-        >>> site_meta = {'name': 'Juelich', 'altitude': 108, 'calibration_factor': 2.3e-12}
+        >>> site_meta = {'name': 'Juelich', 'altitude': 108,
+        'calibration_factor': 2.3e-12}
         >>> ceilo2nc('chm15k_raw.nc', 'chm15k.nc', site_meta)
 
     """
@@ -140,7 +143,9 @@ ATTRIBUTES = {
         units="%",
     ),
     "background_light": MetaData(
-        long_name="Background light", units="mV", comment="Measured at internal ADC input."
+        long_name="Background light",
+        units="mV",
+        comment="Measured at internal ADC input.",
     ),
     "backscatter_sum": MetaData(
         long_name="Sum of detected and normalized backscatter",
@@ -192,7 +197,9 @@ ATTRIBUTES = {
         comment="Expressed as % of nominal factory setting.",
     ),
     "window_contamination": MetaData(
-        long_name="Window contamination", units="mV", comment="Measured at internal ADC input."
+        long_name="Window contamination",
+        units="mV",
+        comment="Measured at internal ADC input.",
     ),
     "calibration_factor": MetaData(
         long_name="Attenuated backscatter calibration factor",

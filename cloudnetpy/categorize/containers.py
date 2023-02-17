@@ -24,7 +24,8 @@ class ClassData:
     """Container for observations that are used in the classification.
 
     Args:
-        data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model` and :class:`Mwr` instances.
+        data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model`
+            and :class:`Mwr` instances.
 
     Attributes:
         z (ndarray): 2D radar echo.
@@ -68,7 +69,9 @@ class ClassData:
         self.date = data["radar"].get_date()
 
 
-def _find_rain_from_radar_echo(z: np.ndarray, time: np.ndarray, time_buffer: int = 5) -> np.ndarray:
+def _find_rain_from_radar_echo(
+    z: np.ndarray, time: np.ndarray, time_buffer: int = 5
+) -> np.ndarray:
     """Find profiles affected by rain.
 
     Rain is present in such profiles where the radar echo in
@@ -111,13 +114,16 @@ def _find_rain_rate(is_rain: np.ndarray, radar) -> np.ndarray:
 
 
 def _find_clutter(
-    v: np.ma.MaskedArray, is_rain: np.ndarray, n_gates: int = 10, v_lim: float = 0.05
+    v: np.ma.MaskedArray,
+    is_rain: np.ndarray,
+    n_gates: int = 10,
+    v_lim: float = 0.05,
 ) -> np.ndarray:
     """Estimates clutter from doppler velocity.
 
     Args:
-        n_gates: Number of range gates from the ground where clutter is expected to be found.
-            Default is 10.
+        n_gates: Number of range gates from the ground where clutter is expected
+            to be found. Default is 10.
         v_lim: Velocity threshold. Smaller values are classified as clutter.
             Default is 0.05 (m/s).
 

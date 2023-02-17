@@ -19,7 +19,12 @@ file_path = f"{SCRIPT_PATH}/data/hatpro-lwp/"
 
 
 class TestHatpro2nc(Check):
-    site_meta = {"name": "the_station", "altitude": 50, "latitude": 23.0, "longitude": 123}
+    site_meta = {
+        "name": "the_station",
+        "altitude": 50,
+        "latitude": 23.0,
+        "longitude": 123,
+    }
     date = "2020-07-23"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
@@ -35,7 +40,11 @@ class TestHatpro2nc(Check):
         test_uuid = "abc"
         test_path = tmp_path / "several.nc"
         uuid, files = hatpro.hatpro2nc(
-            file_path, test_path, self.site_meta, date="2021-01-23", uuid=test_uuid
+            file_path,
+            test_path,
+            self.site_meta,
+            date="2021-01-23",
+            uuid=test_uuid,
         )
         assert len(files) == 2
         assert uuid == test_uuid
@@ -66,7 +75,9 @@ class TestHatpro2nc(Check):
         copytree(file_path, temp_dir, dirs_exist_ok=True)
         (temp_dir / "foo.LV1").write_text("kissa")
         test_path = tmp_path / "corrupt.nc"
-        _, files = hatpro.hatpro2nc(str(temp_dir), test_path, self.site_meta, date="2021-01-23")
+        _, files = hatpro.hatpro2nc(
+            str(temp_dir), test_path, self.site_meta, date="2021-01-23"
+        )
         assert len(files) == 2
 
     def test_lwp_and_iwv(self, tmp_path):

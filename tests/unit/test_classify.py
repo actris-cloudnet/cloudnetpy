@@ -10,7 +10,8 @@ from cloudnetpy.categorize import classify, containers
 class Obs:
     def __init__(self):
         self.beta = ma.array(
-            [[1, 1], [1, 1], [1, 1], [1, 1]], mask=[[0, 0], [0, 0], [1, 1], [1, 1]]
+            [[1, 1], [1, 1], [1, 1], [1, 1]],
+            mask=[[0, 0], [0, 0], [1, 1], [1, 1]],
         )
 
 
@@ -42,18 +43,23 @@ class TestFindRain:
 
     def test_low_values(self):
         result = np.zeros(len(self.time))
-        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time), result)
+        assert_array_equal(
+            containers._find_rain_from_radar_echo(self.z, self.time), result
+        )
 
     def test_threshold_value(self):
         self.z[:, 3] = 0.1
         result = np.ones(len(self.time))
-        assert_array_equal(containers._find_rain_from_radar_echo(self.z, self.time), result)
+        assert_array_equal(
+            containers._find_rain_from_radar_echo(self.z, self.time), result
+        )
 
     def test_hot_pixel_removal(self):
         self.z[5, 3] = 0.1
         result = np.zeros(len(self.time))
         assert_array_equal(
-            containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1), result
+            containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1),
+            result,
         )
 
     def test_rain_spreading(self):
@@ -61,7 +67,8 @@ class TestFindRain:
         result = np.zeros(len(self.time))
         result[8:14] = 1
         assert_array_equal(
-            containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1), result
+            containers._find_rain_from_radar_echo(self.z, self.time, time_buffer=1),
+            result,
         )
 
 
@@ -83,7 +90,8 @@ def test_find_drizzle_and_falling():
     is_freezing = np.array([[0, 0, 0, 1, 1, 1], [0, 0, 0, 0, 1, 1]], dtype=bool)
 
     expected = ma.array(
-        [[0, 2, 0, 1, 1, 0], [0, 0, 0, 2, 1, 1]], mask=[[1, 0, 1, 0, 0, 1], [1, 1, 1, 0, 0, 0]]
+        [[0, 2, 0, 1, 1, 0], [0, 0, 0, 2, 1, 1]],
+        mask=[[1, 0, 1, 0, 0, 1], [1, 1, 1, 0, 0, 0]],
     )
 
     result = classify._find_drizzle_and_falling(is_liquid, is_falling, is_freezing)
@@ -94,23 +102,53 @@ def test_find_drizzle_and_falling():
 
 def test_fix_undetected_melting_layer():
     is_liquid = np.array(
-        [[0, 0, 1, 1, 0, 0], [0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool
+        [
+            [0, 0, 1, 1, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+        ],
+        dtype=bool,
     )
 
     is_falling = np.array(
-        [[0, 1, 1, 1, 1, 0], [0, 0, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1]], dtype=bool
+        [
+            [0, 1, 1, 1, 1, 0],
+            [0, 0, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1],
+        ],
+        dtype=bool,
     )
 
     is_freezing = np.array(
-        [[0, 0, 0, 1, 1, 1], [0, 0, 0, 0, 1, 1], [0, 0, 0, 1, 1, 1], [0, 0, 0, 0, 0, 0]], dtype=bool
+        [
+            [0, 0, 0, 1, 1, 1],
+            [0, 0, 0, 0, 1, 1],
+            [0, 0, 0, 1, 1, 1],
+            [0, 0, 0, 0, 0, 0],
+        ],
+        dtype=bool,
     )
 
     is_melting = np.array(
-        [[0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool
+        [
+            [0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+        ],
+        dtype=bool,
     )
 
     expected = np.array(
-        [[0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 1, 0], [0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool
+        [
+            [0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 1, 0],
+            [0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+        ],
+        dtype=bool,
     )
 
     bits = [is_liquid, is_falling, is_freezing, is_melting]
@@ -147,5 +185,6 @@ def test_remove_false_radar_liquid():
         ]
     )
     assert_array_equal(
-        classify._remove_false_radar_liquid(liquid_from_radar, liquid_from_lidar), result
+        classify._remove_false_radar_liquid(liquid_from_radar, liquid_from_lidar),
+        result,
     )

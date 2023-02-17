@@ -79,7 +79,11 @@ def test_mdiff(input, output):
         (np.array([2, 3]), np.array([3, 4]), np.sqrt([13, 25])),
         (np.array([2, 3]), ma.array([3, 4], mask=True), [2, 3]),
         (np.array([2, 3]), ma.array([3, 4], mask=[0, 1]), [np.sqrt(13), 3]),
-        (np.array([[2, 2], [2, 2]]), 3, [[np.sqrt(13), np.sqrt(13)], [np.sqrt(13), np.sqrt(13)]]),
+        (
+            np.array([[2, 2], [2, 2]]),
+            3,
+            [[np.sqrt(13), np.sqrt(13)], [np.sqrt(13), np.sqrt(13)]],
+        ),
     ],
 )
 def test_l2_norm(a, b, result):
@@ -130,8 +134,18 @@ def test_filter_isolated_pixels():
     "input, result",
     [
         (
-            [[0, 1, 1, 1, 1], [0, 0, 0, 1, 0], [1, 1, 1, 0, 0], [0, 1, 0, 1, 1]],
-            [[0, 0, 0, 1, 0], [0, 0, 0, 1, 0], [0, 1, 0, 0, 0], [0, 1, 0, 0, 0]],
+            [
+                [0, 1, 1, 1, 1],
+                [0, 0, 0, 1, 0],
+                [1, 1, 1, 0, 0],
+                [0, 1, 0, 1, 1],
+            ],
+            [
+                [0, 0, 0, 1, 0],
+                [0, 0, 0, 1, 0],
+                [0, 1, 0, 0, 0],
+                [0, 1, 0, 0, 0],
+            ],
         ),
     ],
 )
@@ -143,7 +157,10 @@ def test_filter_x_pixels(input, result):
     "input, result",
     [
         (np.array([0, 5, 0, 0, 2, 0]), np.array([0, 5, 5, 5, 2, 2])),
-        (np.array([[1, 0, 2, 0], [0, 5, 0, 0]]), np.array([[1, 1, 2, 2], [0, 5, 5, 5]])),
+        (
+            np.array([[1, 0, 2, 0], [0, 5, 0, 0]]),
+            np.array([[1, 1, 2, 2], [0, 5, 5, 5]]),
+        ),
     ],
 )
 def test_ffill(input, result):
@@ -243,7 +260,11 @@ def test_l2_norm_weighted(data, scale, weights, result):
         (np.array([1, 2]), np.array([5, 5]), np.array([[1, 1], [1, 1]])),
         (np.array([1, 2]), np.array([5, 10]), np.array([[1, 2], [1, 2]])),
         (np.array([1.5, 2.5]), np.array([5, 10]), np.array([[1, 2], [1, 2]])),
-        (np.array([1, 2]), np.array([7.5, 12.5]), np.array([[1.5, 2.5], [1.5, 2.5]])),
+        (
+            np.array([1, 2]),
+            np.array([7.5, 12.5]),
+            np.array([[1.5, 2.5], [1.5, 2.5]]),
+        ),
     ],
 )
 def test_interp_2d(x_new, y_new, result):
@@ -256,18 +277,39 @@ def test_interp_2d(x_new, y_new, result):
 @pytest.mark.parametrize(
     "x_new, y_new, expected",
     [
-        ([1.1, 1.9], [10.0, 20], ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 0]])),
-        ([1.0, 2.1], [15.0, 25], ma.array([[0.75, 1.25], [np.nan, np.nan]], mask=[[0, 0], [1, 1]])),
-        ([1.0, 10], [15.0, 25], ma.array([[0.75, 1.25], [np.nan, np.nan]], mask=[[0, 0], [1, 1]])),
-        ([1.5, 1.9], [10.0, 31], ma.array([[0.5, np.nan], [0.5, np.nan]], mask=[[0, 1], [0, 1]])),
-        ([1, 2], [9, 30], ma.array([[np.nan, 1.5], [np.nan, 1.5]], mask=[[1, 0], [1, 0]])),
+        (
+            [1.1, 1.9],
+            [10.0, 20],
+            ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 0]]),
+        ),
+        (
+            [1.0, 2.1],
+            [15.0, 25],
+            ma.array([[0.75, 1.25], [np.nan, np.nan]], mask=[[0, 0], [1, 1]]),
+        ),
+        (
+            [1.0, 10],
+            [15.0, 25],
+            ma.array([[0.75, 1.25], [np.nan, np.nan]], mask=[[0, 0], [1, 1]]),
+        ),
+        (
+            [1.5, 1.9],
+            [10.0, 31],
+            ma.array([[0.5, np.nan], [0.5, np.nan]], mask=[[0, 1], [0, 1]]),
+        ),
+        (
+            [1, 2],
+            [9, 30],
+            ma.array([[np.nan, 1.5], [np.nan, 1.5]], mask=[[1, 0], [1, 0]]),
+        ),
     ],
 )
 def test_interpolate_2d_mask_edge(x_new, y_new, expected: ma.MaskedArray):
     x = np.array([1.0, 2, 3])
     y = np.array([10.0, 20, 30])
     z = ma.array(
-        [[0.5, 1, 1.5], [0.5, 1, 1.5], [0.5, 1, 1.5]], mask=[[0, 0, 0], [0, 0, 0], [1, 1, 1]]
+        [[0.5, 1, 1.5], [0.5, 1, 1.5], [0.5, 1, 1.5]],
+        mask=[[0, 0, 0], [0, 0, 0], [1, 1, 1]],
     )
     result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
     assert_array_almost_equal(result.data, expected.data)
@@ -277,17 +319,34 @@ def test_interpolate_2d_mask_edge(x_new, y_new, expected: ma.MaskedArray):
 @pytest.mark.parametrize(
     "x_new, y_new, expected",
     [
-        ([1.1, 1.4], [10.0, 20], ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 0]])),
-        ([1.1, 1.6], [10.0, 20], ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 1]])),
-        ([1.1, 2.4], [9.0, 20], ma.array([[np.nan, 1], [np.nan, 1]], mask=[[1, 0], [1, 1]])),
-        ([1.7, 2.3], [12.0, 28], ma.array([[0.6, 1.4], [0.6, 1.4]], mask=[[0, 0], [0, 0]])),
+        (
+            [1.1, 1.4],
+            [10.0, 20],
+            ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 0]]),
+        ),
+        (
+            [1.1, 1.6],
+            [10.0, 20],
+            ma.array([[0.5, 1], [0.5, 1]], mask=[[0, 0], [0, 1]]),
+        ),
+        (
+            [1.1, 2.4],
+            [9.0, 20],
+            ma.array([[np.nan, 1], [np.nan, 1]], mask=[[1, 0], [1, 1]]),
+        ),
+        (
+            [1.7, 2.3],
+            [12.0, 28],
+            ma.array([[0.6, 1.4], [0.6, 1.4]], mask=[[0, 0], [0, 0]]),
+        ),
     ],
 )
 def test_interpolate_2d_mask_middle(x_new, y_new, expected):
     x = np.array([1.0, 2, 3])
     y = np.array([10.0, 20, 30])
     z = ma.array(
-        [[0.5, 1, 1.5], [0.5, 1e-5, 1.5], [0.5, 1, 1.5]], mask=[[0, 0, 0], [0, 1, 0], [0, 0, 0]]
+        [[0.5, 1, 1.5], [0.5, 1e-5, 1.5], [0.5, 1, 1.5]],
+        mask=[[0, 0, 0], [0, 1, 0], [0, 0, 0]],
     )
     result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
     assert_array_almost_equal(result.data, expected.data)
@@ -348,7 +407,8 @@ def test_interpolate_2d_nearest_2(x_new, y_new, expected):
     x = np.array([1, 2, 3, 4, 5])
     y = np.array([10, 20])
     z = ma.array(
-        [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]], mask=[[0, 0], [0, 0], [1, 1], [0, 0], [0, 0]]
+        [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10]],
+        mask=[[0, 0], [0, 0], [1, 1], [0, 0], [0, 0]],
     )
 
     result = utils.interpolate_2d_nearest(x, y, z, x_new, y_new)
@@ -467,7 +527,10 @@ def test_lin2db(input, result):
     "input_array, expected",
     [
         (np.array([1e-10, 1e-10]), ma.array([-100.0, -100.0], mask=[0, 0])),
-        (ma.array([1e-10, 1e-10], mask=[0, 1]), ma.array([-100.0, -100.0], mask=[0, 1])),
+        (
+            ma.array([1e-10, 1e-10], mask=[0, 1]),
+            ma.array([-100.0, -100.0], mask=[0, 1]),
+        ),
     ],
 )
 def test_lin2db_arrays(input_array: np.ndarray, expected: ma.MaskedArray):
@@ -493,7 +556,10 @@ def test_db2lin(data, result):
     "data, expected",
     [
         (np.array([-100.0, -100.0]), ma.array([1e-10, 1e-10], mask=[0, 0])),
-        (ma.array([-100.0, -100.0], mask=[0, 1]), ma.array([1e-10, 1e-10], mask=[0, 1])),
+        (
+            ma.array([-100.0, -100.0], mask=[0, 1]),
+            ma.array([1e-10, 1e-10], mask=[0, 1]),
+        ),
     ],
 )
 def test_db2lin_arrays(data: np.ndarray, expected: ma.MaskedArray):
@@ -591,8 +657,16 @@ def test_seconds2time(input, result):
     [
         (0, ["1970", "01", "01", "00", "00", "00"], (1970, 1, 1)),
         (0, ["2001", "01", "01", "00", "00", "00"], (2001, 1, 1)),
-        (24 * 60 * 60 * 10 + 1, ["2001", "01", "11", "00", "00", "01"], (2001, 1, 1)),
-        (24 * 60 * 60 - 1, ["2001", "01", "01", "23", "59", "59"], (2001, 1, 1)),
+        (
+            24 * 60 * 60 * 10 + 1,
+            ["2001", "01", "11", "00", "00", "01"],
+            (2001, 1, 1),
+        ),
+        (
+            24 * 60 * 60 - 1,
+            ["2001", "01", "01", "23", "59", "59"],
+            (2001, 1, 1),
+        ),
         (625107602, ["1989", "10", "23", "01", "00", "02"], (1970, 1, 1)),
         (625107602, ["1990", "10", "23", "01", "00", "02"], (1971, 1, 1)),
         (625107602, ["1995", "10", "23", "01", "00", "02"], (1976, 1, 1)),
@@ -644,7 +718,12 @@ def test_edges2mid(data, reference, expected):
     "d, key, array, expected",
     [
         ({}, "test", np.array([0.5, 1.5]), np.array([0.5, 1.5])),
-        ({"foo": np.array([1, 2])}, "foo", np.array([3, 4]), np.array([1, 2, 3, 4])),
+        (
+            {"foo": np.array([1, 2])},
+            "foo",
+            np.array([3, 4]),
+            np.array([1, 2, 3, 4]),
+        ),
         (
             {"foo": np.array([[1, 2], [1, 2], [1, 2]])},
             "foo",
@@ -661,9 +740,24 @@ def test_append_data(d, key, array, expected):
 @pytest.mark.parametrize(
     "time, epoch, date, expected",
     [
-        (np.array([1, 5, 1e6, 3]), (1970, 1, 1), "1970-01-01", np.array([0, 3, 1])),
-        (np.array([1, 5, 2, 1e6, 3]), (1970, 1, 1), "1970-01-01", np.array([0, 2, 4, 1])),
-        (np.array([1e8, 1.1, 2, 1e6, 3]), (1970, 1, 1), "1970-01-01", np.array([1, 2, 4])),
+        (
+            np.array([1, 5, 1e6, 3]),
+            (1970, 1, 1),
+            "1970-01-01",
+            np.array([0, 3, 1]),
+        ),
+        (
+            np.array([1, 5, 2, 1e6, 3]),
+            (1970, 1, 1),
+            "1970-01-01",
+            np.array([0, 2, 4, 1]),
+        ),
+        (
+            np.array([1e8, 1.1, 2, 1e6, 3]),
+            (1970, 1, 1),
+            "1970-01-01",
+            np.array([1, 2, 4]),
+        ),
     ],
 )
 def test_find_valid_time_indices(time, epoch, date, expected):
