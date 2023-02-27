@@ -748,10 +748,30 @@ ATTRIBUTES = {
         source="mwr",
     ),
     "rainfall_rate": PlotMeta(
-        name="Rainfall rate", plot_type="bar", source="disdrometer"
+        name="Rainfall rate",
+        plot_type="bar",
+        source="disdrometer",  # Also in weather-station
     ),
     "n_particles": PlotMeta(
         name="Number of particles", plot_type="bar", source="disdrometer"
+    ),
+    "air_temperature": PlotMeta(
+        name="Air temperature", plot_type="bar", source="weather-station"
+    ),
+    "wind_speed": PlotMeta(
+        name="Wind speed", plot_type="bar", source="weather-station"
+    ),
+    "wind_direction": PlotMeta(
+        name="Wind direction", plot_type="bar", source="weather-station"
+    ),
+    "relative_humidity": PlotMeta(
+        name="Relative humidity", plot_type="bar", source="weather-station"
+    ),
+    "air_pressure": PlotMeta(
+        name="Air pressure", plot_type="bar", source="weather-station"
+    ),
+    "rainfall_amount": PlotMeta(
+        name="Rainfall amount", plot_type="bar", source="weather-station"
     ),
     "target_classification": PlotMeta(
         name="Target classification",

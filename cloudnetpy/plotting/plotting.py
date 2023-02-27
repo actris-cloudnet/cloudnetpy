@@ -435,6 +435,8 @@ def _plot_instrument_data(
         _plot_mwr(ax, data, name, time, unit)
     if product == "disdrometer":
         _plot_disdrometer(ax, data, time, name, unit)
+    if product == "weather-station":
+        _plot_weather_station(ax, data, time, name)
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
@@ -450,6 +452,26 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
         ax.plot(time, data, color="royalblue")
         ylim = max((np.max(data) * 1.05, 1))
         set_ax(ax, ylim, "")
+
+
+def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
+    unit = "m s-1"
+    match name:
+        case "air_temperature":
+            unit = "K"
+        case "wind_direction":
+            unit = "degree"
+        case "relative_humidity":
+            data *= 100
+            unit = "%"
+        case "air_pressure":
+            data /= 1000
+            unit = "hPa"
+        case "rainfall_amount":
+            data *= 1000
+            unit = "mm"
+    ax.plot(time, data, color="royalblue")
+    set_ax(ax, min_y=np.min(data) - 1, max_y=np.max(data) + 1, ylabel=unit)
 
 
 def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
