@@ -92,7 +92,9 @@ def get_l1b_history(instrument: Instrument) -> str:
 
 def get_l1b_title(instrument: Instrument, location: str) -> str:
     """Returns level 1b file title."""
-    return f"{instrument.model} {instrument.category} from {location}"
+    return f"{instrument.model} {instrument.category} from {location}".replace(
+        "  ", " "
+    )
 
 
 def get_references(identifier: str | None = None, extra: list | None = None) -> str:

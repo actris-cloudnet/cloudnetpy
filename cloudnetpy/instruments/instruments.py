@@ -137,3 +137,10 @@ THIES = Instrument(
     category="disdrometer",
     model="LNM",
 )
+
+GENERIC_WEATHER_STATION = Instrument(
+    manufacturer="",
+    domain="weather-station",
+    category="",
+    model="Generic weather-station",
+)

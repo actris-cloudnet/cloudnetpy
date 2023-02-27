@@ -85,6 +85,16 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
     )
 
 
+def datetime2decimal_hours(data: np.ndarray) -> np.ndarray:
+    """Converts array of datetime to decimal_hours"""
+    output = []
+    for timestamp in data:
+        t = timestamp.time()
+        decimal_hours = t.hour + t.minute / 60 + t.second / 3600
+        output.append(decimal_hours)
+    return np.array(output)
+
+
 def time_grid(time_step: int = 30) -> np.ndarray:
     """Returns decimal hour array between 0 and 24.
 
