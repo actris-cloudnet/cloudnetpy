@@ -149,29 +149,10 @@ ATTRIBUTES = {
         standard_name="air_temperature",
         units="K",
     ),
-    "wind_speed": MetaData(
-        long_name="Wind speed",
-        standard_name="wind_speed",
-        units="m s-1",
-    ),
-    "wind_direction": MetaData(
-        long_name="Wind direction",
-        units="degree",
-    ),
-    "relative_humidity": MetaData(
-        long_name="Relative humidity",
-        standard_name="relative_humidity",
-        units="1",
-    ),
     "air_pressure": MetaData(
         long_name="Air pressure",
         standard_name="air_pressure",
         units="Pa",
-    ),
-    "rainfall_rate": MetaData(
-        long_name="Rainfall rate",
-        standard_name="rainfall_rate",
-        units="m s-1",
     ),
     "rainfall_amount": MetaData(
         long_name="Rainfall amount",
