@@ -137,4 +137,24 @@ COMMON_ATTRIBUTES = {
         long_name="Signal-to-noise ratio",
         units="dB",
     ),
+    "relative_humidity": MetaData(
+        long_name="Relative humidity",
+        standard_name="relative_humidity",
+        units="1",
+    ),
+    "wind_speed": MetaData(
+        long_name="Wind speed",
+        standard_name="wind_speed",
+        units="m s-1",
+    ),
+    "wind_direction": MetaData(
+        long_name="Wind direction",
+        standard_name="wind_from_direction",
+        units="degree",
+    ),
+    "rainfall_rate": MetaData(
+        long_name="Rainfall rate",
+        standard_name="rainfall_rate",
+        units="m s-1",
+    ),
 }

@@ -361,7 +361,7 @@ RPG_ATTRIBUTES = {
     ),
     "half_power_beam_width": MetaData(
         long_name="Half power beam width",
-        units="degrees",
+        units="degree",
     ),
     "dual_polarization": MetaData(
         long_name="Dual polarisation type",
@@ -460,21 +460,5 @@ RPG_ATTRIBUTES = {
     "correlation_coefficient": MetaData(
         long_name="Correlation coefficient",
         units="1",
-    ),
-    "wind_direction": MetaData(
-        long_name="Wind direction",
-        units="degrees",
-    ),
-    "wind_speed": MetaData(
-        long_name="Wind speed",
-        units="m s-1",
-    ),
-    "relative_humidity": MetaData(
-        long_name="Relative humidity",
-        units="%",
-    ),
-    "rain_rate": MetaData(
-        long_name="Rain rate",
-        units="mm h-1",
     ),
 }
