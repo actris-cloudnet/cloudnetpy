@@ -87,7 +87,7 @@ def generate_categorize(
     def _prepare_output() -> dict:
         data["radar"].add_meta()
         data["model"].screen_sparse_fields()
-        for key in ("category_bits", "rain_rate", "insect_prob"):
+        for key in ("category_bits", "rainfall_rate", "insect_prob"):
             data["radar"].append_data(getattr(classification, key), key)
         if classification.liquid_prob is not None:
             data["radar"].append_data(classification.liquid_prob, "liquid_prob")
@@ -367,9 +367,10 @@ CATEGORIZE_ATTRIBUTES = {
         definition=DEFINITIONS["quality_bits"],
         units="1",
     ),
-    "rain_rate": MetaData(
-        long_name="Rain rate",
-        units="mm h-1",
+    "rainfall_rate": MetaData(
+        long_name="Rainfall rate",
+        standard_name="rainfall_rate",
+        units="m s-1",
         comment="Fill values denote rain with undefined intensity.",
     ),
     "radar_liquid_atten": MetaData(

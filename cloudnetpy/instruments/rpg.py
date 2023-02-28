@@ -7,6 +7,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import CloudnetArray, output, utils
+from cloudnetpy.categorize.atmos_utils import mmh2ms
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
@@ -67,6 +68,7 @@ def rpg2nc(
     fmcw.sort_timestamps()
     fmcw.remove_duplicate_timestamps()
     fmcw.linear_to_db(("Zh", "antenna_gain"))
+    fmcw.convert_units()
     fmcw.add_site_geolocation()
     fmcw.add_zenith_angle()
     fmcw.add_height()
@@ -274,6 +276,10 @@ class Fmcw(Rpg):
         self.data["zenith_angle"] = CloudnetArray(zenith, "zenith_angle")
         del self.data["elevation"]
         return list(is_stable_zenith)
+
+    def convert_units(self):
+        """Converts units."""
+        self.data["rainfall_rate"].data = mmh2ms(self.data["rainfall_rate"].data)
 
     @staticmethod
     def _get_instrument(data: dict):

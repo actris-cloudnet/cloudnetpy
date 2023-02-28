@@ -46,7 +46,7 @@ def categorize_file(tmpdir_factory, file_metadata):
             :
         ] = temperature
         nc.createVariable("Z_sensitivity", "f8", "height")[:] = 2.0
-        nc.createVariable("rain_rate", "i4", "time")[:] = [0, 1, 0]
+        nc.createVariable("rainfall_rate", "i4", "time")[:] = [0, 1, 0]
     return file_name
 
 

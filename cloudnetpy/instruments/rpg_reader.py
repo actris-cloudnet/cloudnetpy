@@ -65,7 +65,7 @@ class Fmcw94Bin:
             "Time": "time",
             "MSec": "time_ms",
             "QF": "quality_flag",
-            "RR": "rain_rate",
+            "RR": "rainfall_rate",
             "RelHum": "relative_humidity",
             "EnvTemp": "temperature",
             "BaroP": "pressure",

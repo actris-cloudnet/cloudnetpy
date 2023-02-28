@@ -124,3 +124,8 @@ def c2k(temp: np.ndarray) -> np.ndarray:
 def k2c(temp: np.ndarray) -> np.ndarray:
     """Converts Kelvins to Celsius."""
     return ma.array(temp) - 273.15
+
+
+def mmh2ms(data: np.ndarray) -> np.ndarray:
+    """Converts mm h-1 to m s-1"""
+    return data / 3600_000
