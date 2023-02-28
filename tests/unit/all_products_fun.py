@@ -35,7 +35,7 @@ class Check:
         keys = ("TestUnits", "TestLongNames", "TestStandardNames")
         for test in report["tests"]:
             if test["testId"] in keys:
-                assert not test["exceptions"]
+                assert not test["exceptions"], test["exceptions"]
                 n += 1
         assert n == len(keys)
 
