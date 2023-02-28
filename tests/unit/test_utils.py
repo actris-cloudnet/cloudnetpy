@@ -783,3 +783,15 @@ def test_get_files_with_common_range(tmp_path):
     assert path1 in files
     assert path3 in files
     assert path2 not in files
+
+
+@pytest.mark.parametrize(
+    "data, result",
+    [
+        ([datetime.datetime(2023, 1, 1, hour=1, minute=0, second=0)], 1.0),
+        ([datetime.datetime(2023, 1, 1, hour=12, minute=15, second=0)], 12.25),
+        ([datetime.datetime(2023, 1, 1, hour=1, minute=0, second=30)], 1 + 30 / 3600),
+    ],
+)
+def test_time2decimal_hours(data, result):
+    assert utils.datetime2decimal_hours(data) == result
