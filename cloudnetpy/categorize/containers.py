@@ -15,7 +15,7 @@ class ClassificationResult:
     category_bits: np.ndarray
     is_rain: np.ndarray
     is_clutter: np.ndarray
-    rain_rate: np.ndarray
+    rainfall_rate: np.ndarray
     insect_prob: np.ndarray
     liquid_prob: np.ndarray | None
 
@@ -42,7 +42,7 @@ class ClassData:
         radar_type (str): Radar identifier.
         is_rain (ndarray): 2D boolean array denoting rain.
         is_clutter (ndarray): 2D boolean array denoting clutter.
-        rain_rate: 1D rain rate.
+        rainfall_rate: 1D rain rate.
         altitude: site altitude.
 
     """
@@ -62,7 +62,7 @@ class ClassData:
         self.beta = data["lidar"].data["beta"][:]
         self.lwp = data["mwr"].data["lwp"][:]
         self.is_rain = _find_rain_from_radar_echo(self.z, self.time)
-        self.rain_rate = _find_rain_rate(self.is_rain, data["radar"])
+        self.rainfall_rate = _find_rainfall_rate(self.is_rain, data["radar"])
         self.is_clutter = _find_clutter(self.v, self.is_rain)
         self.altitude = data["radar"].altitude
         self.lv0_files = data["lv0_files"]
@@ -101,16 +101,16 @@ def _find_rain_from_radar_echo(
     return is_rain
 
 
-def _find_rain_rate(is_rain: np.ndarray, radar) -> np.ndarray:
-    rain_rate = ma.zeros(len(is_rain))
-    rain_rate[is_rain] = ma.masked
-    if "rain_rate" in radar.data:
-        radar_rain_rate = radar.data["rain_rate"].data
-        ind = np.where(~radar_rain_rate.mask)
-        rain_rate[ind] = radar_rain_rate[ind]
+def _find_rainfall_rate(is_rain: np.ndarray, radar) -> np.ndarray:
+    rainfall_rate = ma.zeros(len(is_rain))
+    rainfall_rate[is_rain] = ma.masked
+    if "rainfall_rate" in radar.data:
+        radar_rainfall_rate = radar.data["rainfall_rate"].data
+        ind = np.where(~radar_rainfall_rate.mask)
+        rainfall_rate[ind] = radar_rainfall_rate[ind]
     else:
         logging.info("No measured rain rate available")
-    return rain_rate
+    return rainfall_rate
 
 
 def _find_clutter(

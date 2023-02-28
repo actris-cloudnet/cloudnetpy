@@ -35,7 +35,7 @@ def categorize_file(tmpdir_factory, file_metadata):
         var.units = "km"
         nc.createVariable("lwp", "f8", "time")[:] = [1, 1, 0.5]
         nc.createVariable("lwp_error", "f8", "time")[:] = [0.1, 0.1, 0.01]
-        nc.createVariable("rain_rate", "i4", "time")[:] = [0, 1, 1]
+        nc.createVariable("rainfall_rate", "i4", "time")[:] = [0, 1, 1]
         nc.createVariable("category_bits", "i4", ("time", "height"))[:] = np.array(
             [[0, 1, 0], [2, 3, 4], [4, 8, 2]]
         )

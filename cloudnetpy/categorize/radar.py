@@ -68,7 +68,7 @@ class Radar(DataSource):
                     )
                 case "v_sigma":
                     array.calc_linear_std(self.time, time_new)
-                case "width" | "rain_rate":
+                case "width" | "rainfall_rate":
                     array.rebin_data(self.time, time_new)
                 case _:
                     continue
@@ -274,7 +274,7 @@ class Radar(DataSource):
 
     def _init_data(self):
         self.append_data(self.getvar("Zh"), "Z", units="dBZ")
-        for key in ("v", "ldr", "width", "sldr", "rain_rate"):
+        for key in ("v", "ldr", "width", "sldr", "rainfall_rate"):
             try:
                 self._variables_to_cloudnet_arrays((key,))
             except KeyError:
