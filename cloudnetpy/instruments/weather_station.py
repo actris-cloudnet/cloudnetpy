@@ -1,6 +1,6 @@
 import datetime
 
-import numpy as np
+from numpy import ma
 
 from cloudnetpy import CloudnetArray, output
 from cloudnetpy.categorize import atmos_utils
@@ -131,7 +131,8 @@ class WS(CloudnetInstrument):
         )
         for ind, key in enumerate(keys):
             array = [row[ind + 1] for row in self._data["values"]]
-            self.data[key] = CloudnetArray(np.array(array), key)
+            array_masked = ma.masked_invalid(array)
+            self.data[key] = CloudnetArray(array_masked, key)
 
     def convert_units(self):
         temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
