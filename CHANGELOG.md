@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.45.0 – 2023-03-01
+
+- Add weather station processing
+- Replace `rain_rate` with `rainfall_rate`
+- Harmonize metadata definitions
+- Migrate model-evaluation documentation
+
 ## 1.44.2 – 2023-02-07
 
 - Use more specific exceptions in PollyXT handling
