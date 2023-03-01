@@ -35,6 +35,8 @@ all supported instrument combinations.
 
 .. autofunction:: instruments.disdrometer2nc
 
+.. autofunction:: instruments.ws2nc
+
 
 The categorize file
 ...................
