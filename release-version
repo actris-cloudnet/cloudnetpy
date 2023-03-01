@@ -17,7 +17,7 @@ def main(component: str):
         .decode("utf-8")
         .strip()
     )
-    assert current_branch == "master", "FATAL: Not in master branch"
+    assert current_branch == "main", "FATAL: Not in main branch"
     old_version = _read_version()
     match component:
         case "major":

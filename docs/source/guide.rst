@@ -10,7 +10,7 @@ tests and fixing bugs.
 How to contribute
 -----------------
 
-Instructions can be found from `CloudnetPy's Github page <https://github.com/actris-cloudnet/cloudnetpy/blob/master/CONTRIBUTING.md>`_.
+Instructions can be found from `CloudnetPy's Github page <https://github.com/actris-cloudnet/cloudnetpy/blob/main/CONTRIBUTING.md>`_.
 
 Testing
 -------
