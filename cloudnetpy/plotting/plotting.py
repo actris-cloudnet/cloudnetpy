@@ -471,7 +471,8 @@ def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
             data *= 1000
             unit = "mm"
     ax.plot(time, data, color="royalblue")
-    set_ax(ax, min_y=np.min(data) - 1, max_y=np.max(data) + 1, ylabel=unit)
+    y_min = 0 if name == "rainfall_amount" else np.min(data) - 1
+    set_ax(ax, min_y=y_min, max_y=np.max(data) + 1, ylabel=unit)
 
 
 def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
