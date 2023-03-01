@@ -79,10 +79,10 @@ class WS(CloudnetInstrument):
 
         # Simple validation for now:
         expected_identifiers = [
-            "DateTime",
-            "Windspeed",
-            "Winddirection",
-            "Airtemperature",
+            "DateTime(yyyy-mm-ddThh:mm:ssZ)",
+            "Windspeed(m/s)",
+            "Winddirection(degres)",
+            "Airtemperature(°C)",
             "Relativehumidity(%)",
             "Pressure(hPa)",
             "Precipitationrate(mm/min)",
@@ -137,7 +137,7 @@ class WS(CloudnetInstrument):
         temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
         self.data["air_temperature"].data = temperature_kelvins
         self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
-        self.data["air_pressure"].data = self.data["air_pressure"][:] * 1000
+        self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
         rainfall_rate = self.data["rainfall_rate"][:]
         self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
         self.data["rainfall_amount"].data = self.data["rainfall_amount"][:] / 1000

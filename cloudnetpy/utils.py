@@ -85,7 +85,7 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
     )
 
 
-def datetime2decimal_hours(data: np.ndarray) -> np.ndarray:
+def datetime2decimal_hours(data: np.ndarray | list) -> np.ndarray:
     """Converts array of datetime to decimal_hours"""
     output = []
     for timestamp in data:
