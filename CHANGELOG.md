@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.45.1 – 2023-03-01
+
+- Add fallback for `rainfall_rate`
+- Mask `nan` values in weather station data
+- Adjust `rainfall_amount` plot
+
 ## 1.45.0 – 2023-03-01
 
 - Add weather station processing
