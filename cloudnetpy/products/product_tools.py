@@ -216,7 +216,10 @@ class IceSource(DataSource):
 
 
 def get_is_rain(filename: str) -> np.ndarray:
-    rainfall_rate = read_nc_fields(filename, "rainfall_rate")
+    try:
+        rainfall_rate = read_nc_fields(filename, "rainfall_rate")
+    except KeyError:
+        rainfall_rate = read_nc_fields(filename, "rain_rate")
     is_rain = rainfall_rate != 0
     assert isinstance(is_rain, ma.MaskedArray)
     is_rain[is_rain.mask] = True
