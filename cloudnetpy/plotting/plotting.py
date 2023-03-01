@@ -447,7 +447,7 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
             data *= 1000 * 3600
         ax.plot(time, data, color="royalblue")
         ylim = max((np.max(data) * 1.05, 0.1))
-        set_ax(ax, ylim, "mm h-1")
+        set_ax(ax, ylim, "mm h$^{-1}$")
     if name == "n_particles":
         ax.plot(time, data, color="royalblue")
         ylim = max((np.max(data) * 1.05, 1))
@@ -455,7 +455,7 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
 
 
 def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
-    unit = "m s-1"
+    unit = "m s$^{-1}$"
     match name:
         case "air_temperature":
             unit = "K"
@@ -465,7 +465,7 @@ def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
             data *= 100
             unit = "%"
         case "air_pressure":
-            data /= 1000
+            data /= 100
             unit = "hPa"
         case "rainfall_amount":
             data *= 1000
