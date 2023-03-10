@@ -83,6 +83,14 @@ COPERNICUS = Instrument(
     frequency=34.960,
 )
 
+GALILEO = Instrument(
+    manufacturer="RAL Space",
+    domain="radar",
+    category="cloud radar",
+    model="Galileo",
+    frequency=94.0,
+)
+
 FMCW94 = Instrument(
     manufacturer="RPG-Radiometer Physics",
     domain="radar",
