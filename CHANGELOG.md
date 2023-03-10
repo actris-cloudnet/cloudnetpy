@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.46.0 – 2023-03-10
+
+- Add `galileo` cloud radar processing
+
 ## 1.45.1 – 2023-03-01
 
 - Add fallback for `rainfall_rate`
