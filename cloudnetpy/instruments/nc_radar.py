@@ -112,3 +112,25 @@ class NcRadar(DataSource, CloudnetInstrument):
             self.data[key] = CloudnetArray(np.array(data), key)
         except RuntimeError:
             logging.warning("Unable to find nyquist_velocity")
+
+
+class ChilboltonRadar(NcRadar):
+    """Class for Chilbolton cloud radars Galileo and Copernicus."""
+
+    def __init__(self, full_path: str, site_meta: dict):
+        super().__init__(full_path, site_meta)
+        self.date = self._init_date()
+
+    def add_nyquist_velocity(self, keymap: dict):
+        """Adds nyquist velocity."""
+        key = [key for key, value in keymap.items() if value == "v"][0]
+        folding_velocity = self.dataset.variables[key].folding_velocity
+        self.append_data(np.array(folding_velocity), "nyquist_velocity")
+
+    def check_date(self, date: str):
+        if self.date != date.split("-"):
+            raise ValidTimeStampError
+
+    def _init_date(self) -> list[str]:
+        epoch = utils.get_epoch(self.dataset["time"].units)
+        return [str(x).zfill(2) for x in epoch]

@@ -2,12 +2,9 @@
 import os
 from tempfile import TemporaryDirectory
 
-import numpy as np
-
 from cloudnetpy import concat_lib, output, utils
-from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import GALILEO
-from cloudnetpy.instruments.nc_radar import NcRadar
+from cloudnetpy.instruments.nc_radar import ChilboltonRadar
 from cloudnetpy.metadata import MetaData
 
 
@@ -91,8 +88,8 @@ def galileo2nc(
         return uuid
 
 
-class Galileo(NcRadar):
-    """Class for Galileo raw radar data. Child of NcRadar().
+class Galileo(ChilboltonRadar):
+    """Class for Galileo raw radar data. Child of ChilboltonRadar().
 
     Args:
         full_path: Filename of a daily Copernicus .nc NetCDF file.
@@ -104,19 +101,6 @@ class Galileo(NcRadar):
         super().__init__(full_path, site_meta)
         self.date = self._init_date()
         self.instrument = GALILEO
-
-    def check_date(self, date: str):
-        if self.date != date.split("-"):
-            raise ValidTimeStampError
-
-    def add_nyquist_velocity(self, keymap: dict):
-        key = [key for key, value in keymap.items() if value == "v"][0]
-        folding_velocity = self.dataset.variables[key].folding_velocity
-        self.append_data(np.array(folding_velocity), "nyquist_velocity")
-
-    def _init_date(self) -> list[str]:
-        epoch = utils.get_epoch(self.dataset["time"].units)
-        return [str(x).zfill(2) for x in epoch]
 
 
 ATTRIBUTES = {

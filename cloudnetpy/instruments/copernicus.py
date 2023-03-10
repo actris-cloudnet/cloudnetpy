@@ -5,9 +5,8 @@ from tempfile import TemporaryDirectory
 import numpy as np
 
 from cloudnetpy import concat_lib, output, utils
-from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import COPERNICUS
-from cloudnetpy.instruments.nc_radar import NcRadar
+from cloudnetpy.instruments.nc_radar import ChilboltonRadar
 from cloudnetpy.metadata import MetaData
 
 
@@ -91,8 +90,8 @@ def copernicus2nc(
         return uuid
 
 
-class Copernicus(NcRadar):
-    """Class for Copernicus raw radar data. Child of NcRadar().
+class Copernicus(ChilboltonRadar):
+    """Class for Copernicus raw radar data. Child of ChilboltonRadar().
 
     Args:
         full_path: Filename of a daily Copernicus .nc NetCDF file.
@@ -102,12 +101,7 @@ class Copernicus(NcRadar):
 
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, site_meta)
-        self.date = self._init_date()
         self.instrument = COPERNICUS
-
-    def check_date(self, date: str):
-        if self.date != date.split("-"):
-            raise ValidTimeStampError
 
     def calibrate_reflectivity(self):
         default_offset = -146.8  # TODO: check this value
@@ -126,15 +120,6 @@ class Copernicus(NcRadar):
         for key, value in thresholds.items():
             ind = np.where(np.abs(self.data[key][:]) > value)
             self.data["v"].mask_indices(ind)
-
-    def add_nyquist_velocity(self, keymap: dict):
-        key = [key for key, value in keymap.items() if value == "v"][0]
-        folding_velocity = self.dataset.variables[key].folding_velocity
-        self.append_data(np.array(folding_velocity), "nyquist_velocity")
-
-    def _init_date(self) -> list[str]:
-        epoch = utils.get_epoch(self.dataset["time"].units)
-        return [str(x).zfill(2) for x in epoch]
 
 
 ATTRIBUTES = {
