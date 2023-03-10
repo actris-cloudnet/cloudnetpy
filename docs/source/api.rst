@@ -25,6 +25,10 @@ all supported instrument combinations.
 
 .. autofunction:: instruments.basta2nc
 
+.. autofunction:: instruments.galileo2nc
+
+.. autofunction:: instruments.copernicus2nc
+
 .. autofunction:: instruments.ceilo2nc
 
 .. autofunction:: instruments.pollyxt2nc

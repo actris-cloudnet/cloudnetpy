@@ -22,7 +22,7 @@ def galileo2nc(
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
             value pair is `name`. Optional are `latitude`, `longitude`, `altitude` and
-            `snr_limit` (default=3).
+            `snr_limit` (default = 3).
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -33,7 +33,7 @@ def galileo2nc(
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
-          >>> from cloudnetpy.instruments import copernicus2nc
+          >>> from cloudnetpy.instruments import galileo2nc
           >>> site_meta = {'name': 'Chilbolton'}
           >>> galileo2nc('raw_radar.nc', 'radar.nc', site_meta)
           >>> galileo2nc('/one/day/of/galileo/files/', 'radar.nc', site_meta)
@@ -92,7 +92,7 @@ class Galileo(ChilboltonRadar):
     """Class for Galileo raw radar data. Child of ChilboltonRadar().
 
     Args:
-        full_path: Filename of a daily Copernicus .nc NetCDF file.
+        full_path: Filename of a daily Galileo .nc NetCDF file.
         site_meta: Site properties in a dictionary. Required keys are: `name`.
 
     """
