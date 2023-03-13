@@ -455,24 +455,48 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
 
 
 def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
-    unit = "m s$^{-1}$"
     match name:
         case "air_temperature":
             unit = "K"
+            min_y = np.min(data) - 1
+            max_y = np.max(data) + 1
+            ax.plot(time, data, color="royalblue")
+            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
+        case "wind_speed":
+            unit = "m s$^{-1}$"
+            min_y = np.min(data) - 1
+            max_y = np.max(data) + 1
+            ax.plot(time, data, color="royalblue")
+            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "wind_direction":
             unit = "degree"
+            ax.plot(
+                time, data, color="royalblue", marker=".", linewidth=0, markersize=3
+            )
+            set_ax(ax, min_y=0, max_y=360, ylabel=unit)
         case "relative_humidity":
             data *= 100
             unit = "%"
+            min_y = np.min(data) - 1
+            max_y = np.max(data) + 1
+            ax.plot(time, data, color="royalblue")
+            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "air_pressure":
             data /= 100
             unit = "hPa"
+            min_y = np.min(data) - 1
+            max_y = np.max(data) + 1
+            ax.plot(time, data, color="royalblue")
+            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "rainfall_amount":
             data *= 1000
             unit = "mm"
-    ax.plot(time, data, color="royalblue")
-    y_min = 0 if name == "rainfall_amount" else np.min(data) - 1
-    set_ax(ax, min_y=y_min, max_y=np.max(data) + 1, ylabel=unit)
+            min_y = 0
+            max_y = np.max(data) + 1
+            ax.plot(time, data, color="royalblue")
+            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
+        case unknown:
+            raise NotImplementedError(f"Not implemented for {unknown}")
 
 
 def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
