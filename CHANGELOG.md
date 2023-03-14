@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.46.1 – 2023-03-14
+
+- Plot wind direction with dots
+
 ## 1.46.0 – 2023-03-10
 
 - Add `galileo` cloud radar processing
