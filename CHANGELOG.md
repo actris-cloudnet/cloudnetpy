@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.46.2 – 2023-03-15
+
+- Add `galileo` clutter screening
+
 ## 1.46.1 – 2023-03-14
 
 - Plot wind direction with dots
