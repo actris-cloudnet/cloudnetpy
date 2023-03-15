@@ -2,6 +2,8 @@
 import os
 from tempfile import TemporaryDirectory
 
+import numpy as np
+
 from cloudnetpy import concat_lib, output, utils
 from cloudnetpy.instruments.instruments import GALILEO
 from cloudnetpy.instruments.nc_radar import ChilboltonRadar
@@ -74,6 +76,7 @@ def galileo2nc(
             galileo.remove_duplicate_timestamps()
             snr_limit = site_meta.get("snr_limit", 3)
             galileo.screen_by_snr(snr_limit=snr_limit)
+            galileo.mask_clutter()
             galileo.mask_invalid_data()
             galileo.add_time_and_range()
             galileo.add_radar_specific_variables()
@@ -101,6 +104,15 @@ class Galileo(ChilboltonRadar):
         super().__init__(full_path, site_meta)
         self.date = self._init_date()
         self.instrument = GALILEO
+
+    def mask_clutter(self):
+        """Masks clutter."""
+        # Only strong Z values are valid
+        n_low_gates = 15
+        ind = np.where(self.data["Zh"][:, :n_low_gates] < -15) and np.where(
+            self.data["ldr"][:, :n_low_gates] > -5
+        )
+        self.data["v"].mask_indices(ind)
 
 
 ATTRIBUTES = {
