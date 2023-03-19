@@ -20,7 +20,6 @@ def _process_product_file(product_type: str, path: str, categorize_file: str) ->
 
 
 def main():
-
     test_path = Path(__file__).parent
     source_path = f"{test_path}/source_data/"
 

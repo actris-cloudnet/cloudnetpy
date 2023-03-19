@@ -57,7 +57,6 @@ def test_is_all_freezing(mean_melting_alt, t0_alt, height, expected_result):
 
 class Obs:
     def __init__(self):
-
         self.time = np.linspace(0, 24, 13)  # 2h resolution
         self.height = np.linspace(0, 5, 6) * 100
 

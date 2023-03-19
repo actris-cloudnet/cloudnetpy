@@ -141,7 +141,6 @@ class Radar(DataSource):
         distance: float,
         n_blocks: int,
     ) -> int:
-
         if axis == 0:
             data = data.T
             echo = self.data["Z"][:].T

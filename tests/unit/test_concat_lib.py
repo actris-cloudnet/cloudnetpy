@@ -14,7 +14,6 @@ SCRIPT_PATH = path.dirname(path.realpath(__file__))
 
 
 class TestUpdateNc:
-
     files = glob.glob(f"{SCRIPT_PATH}/data/cl61d/*.nc")
     files.sort()
 
@@ -66,7 +65,6 @@ class TestUpdateNc:
 
 
 class TestConcat:
-
     files = [
         f"{SCRIPT_PATH}/data/chm15k/00100_A202010222015_CHM170137.nc",
         f"{SCRIPT_PATH}/data/chm15k/00100_A202010220005_CHM170137.nc",
@@ -129,7 +127,6 @@ class TestConcat:
 
 
 class TestCommonVariables:
-
     n_time = 10
     n_range = 1024
     n_range_hr = 32

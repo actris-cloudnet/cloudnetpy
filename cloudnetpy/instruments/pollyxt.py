@@ -109,7 +109,7 @@ class PollyXt(Ceilometer):
         calibration_factors: np.ndarray = np.array([])
         beta_channel = self._get_valid_beta_channel(bsc_files)
         bsc_key = f"attenuated_backscatter_{beta_channel}nm"
-        for (bsc_file, depol_file) in zip(bsc_files, depol_files):
+        for bsc_file, depol_file in zip(bsc_files, depol_files):
             with (
                 netCDF4.Dataset(bsc_file, "r") as nc_bsc,
                 netCDF4.Dataset(depol_file, "r") as nc_depol,

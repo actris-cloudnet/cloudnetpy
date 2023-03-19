@@ -62,7 +62,6 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
     t_range = _find_model_temperature_range(obs.model_type)
 
     for ind, t_prof in enumerate(obs.tw):
-
         temp_indices = _get_temp_indices(t_prof, t_range)
         if len(temp_indices) <= 1:
             continue

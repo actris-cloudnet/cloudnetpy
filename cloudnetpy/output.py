@@ -312,7 +312,6 @@ def update_attributes(cloudnet_variables: dict, attributes: dict) -> None:
 def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
     """Iterates over Cloudnet instances and write to netCDF file."""
     for obj in cloudnet_variables.values():
-
         if ma.isMaskedArray(obj.data):
             fill_value = netCDF4.default_fillvals[obj.data_type]
         else:

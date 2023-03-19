@@ -18,7 +18,6 @@ filepath = f"{SCRIPT_PATH}/data/mira/"
 
 
 class TestMeasurementDate:
-
     correct_date = ["2020", "05", "24"]
 
     @pytest.fixture(autouse=True)

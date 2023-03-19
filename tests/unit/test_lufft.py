@@ -51,7 +51,6 @@ def fake_jenoptik_file(tmpdir):
 
 
 class TestCHM15k:
-
     date = "2021-02-21"
 
     @pytest.fixture(autouse=True)

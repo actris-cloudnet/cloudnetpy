@@ -14,7 +14,6 @@ SITE_META = {
 
 
 class Check:
-
     temp_path: str
     nc: netCDF4.Dataset
     date: str
