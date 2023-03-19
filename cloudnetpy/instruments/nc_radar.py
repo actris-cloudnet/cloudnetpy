@@ -48,7 +48,7 @@ class NcRadar(DataSource, CloudnetInstrument):
         )  # "height" in old BASTA files
         time = np.array(self.time)
         self.append_data(range_instru, "range")
-        self.append_data(time, "time")
+        self.data["time"] = CloudnetArray(time, "time", data_type="f8")
 
     def screen_by_snr(self, snr_limit: float = -17) -> None:
         """Mask values where SNR smaller than threshold."""

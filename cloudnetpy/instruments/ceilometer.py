@@ -66,8 +66,8 @@ class Ceilometer:
             self.site_meta["altitude"]
             + utils.range_to_height(self.data["range"], zenith_angle)
         )
-        for key in ("time", "range"):
-            self.data[key] = np.array(self.data[key])
+        self.data["time"] = np.array(self.data["time"], dtype="f8")
+        self.data["range"] = np.array(self.data["range"])
         assert self.instrument is not None
         assert self.instrument.wavelength is not None
         self.data["wavelength"] = float(self.instrument.wavelength)
@@ -90,7 +90,8 @@ class Ceilometer:
 
     def data_to_cloudnet_arrays(self):
         for key, array in self.data.items():
-            self.data[key] = CloudnetArray(array, key)
+            data_type = "f8" if key == "time" else None
+            self.data[key] = CloudnetArray(array, key, data_type=data_type)
 
     def screen_depol(self):
         key = "depolarisation"

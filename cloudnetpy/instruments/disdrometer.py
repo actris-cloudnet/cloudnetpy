@@ -200,7 +200,9 @@ class Disdrometer(CloudnetInstrument):
             else:
                 hour, minute, sec = timestamp.split(":")
             seconds.append(int(hour) * 3600 + int(minute) * 60 + int(sec))
-        return CloudnetArray(utils.seconds2hours(np.array(seconds)), "time")
+        return CloudnetArray(
+            utils.seconds2hours(np.array(seconds)), "time", data_type="f8"
+        )
 
     def _convert_data(self, keys: tuple, value: float, method: str = "divide"):
         for key in keys:

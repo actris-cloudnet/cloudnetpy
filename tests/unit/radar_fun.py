@@ -42,3 +42,6 @@ class RadarFun:
 
     def test_global_attributes(self):
         assert self.nc.cloudnet_file_type == "radar"
+
+    def test_time_variable_data_type(self):
+        assert self.nc.variables["time"].dtype == "float64"

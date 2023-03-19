@@ -37,6 +37,9 @@ class TestWeatherStation(Check):
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 29
 
+    def test_time_variable_data_type(self):
+        assert self.nc.variables["time"].dtype == "float64"
+
 
 class TestDateArgument(Check):
     date = "2022-01-01"

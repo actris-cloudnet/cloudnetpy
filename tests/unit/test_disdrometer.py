@@ -44,6 +44,9 @@ class TestParsivel(Check):
         assert self.nc.dimensions["velocity"].size == 32
         assert self.nc.dimensions["diameter"].size == 32
 
+    def test_time_variable_data_type(self):
+        assert self.nc.variables["time"].dtype == "float64"
+
 
 class TestParsivel2(Check):
     date = "2019-11-09"

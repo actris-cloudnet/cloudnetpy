@@ -209,13 +209,11 @@ class Rpg(CloudnetInstrument):
         self.data = self._init_data()
         self.instrument: Instrument
 
-    def convert_time_to_fraction_hour(self, data_type: str | None = None) -> None:
+    def convert_time_to_fraction_hour(self) -> None:
         """Converts time to fraction hour."""
         key = "time"
         fraction_hour = utils.seconds2hours(self.raw_data[key])
-        self.data[key] = CloudnetArray(
-            np.array(fraction_hour), key, data_type=data_type
-        )
+        self.data[key] = CloudnetArray(np.array(fraction_hour), key, data_type="f8")
 
     def _get_date(self) -> list:
         time_first = self.raw_data["time"][0]

@@ -70,7 +70,7 @@ def hatpro2nc(
     one_day_of_data = rpg.create_one_day_data_record(hatpro_objects)
     hatpro = rpg.Hatpro(one_day_of_data, site_meta)
     hatpro.sort_timestamps()
-    hatpro.convert_time_to_fraction_hour("float64")
+    hatpro.convert_time_to_fraction_hour()
     hatpro.add_site_geolocation()
     hatpro.remove_duplicate_timestamps()
     attributes = output.add_time_attribute({}, hatpro.date)

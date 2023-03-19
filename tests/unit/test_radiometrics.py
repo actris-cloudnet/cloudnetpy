@@ -38,3 +38,6 @@ class TestHatpro2nc(Check):
         test_path = tmp_path / "no.nc"
         with pytest.raises(ValidTimeStampError):
             radiometrics2nc(file, test_path, self.site_meta, date="2021-07-19")
+
+    def test_time_variable_data_type(self):
+        assert self.nc.variables["time"].dtype == "float64"

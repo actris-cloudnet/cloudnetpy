@@ -107,7 +107,8 @@ class Radiometrics:
     def data_to_cloudnet_arrays(self):
         """Converts arrays to CloudnetArrays."""
         for key, array in self.data.items():
-            self.data[key] = CloudnetArray(array, key)
+            data_type = "f8" if key == "time" else None
+            self.data[key] = CloudnetArray(array, key, data_type=data_type)
 
     def add_meta(self):
         """Adds some metadata."""

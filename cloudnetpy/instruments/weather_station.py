@@ -99,7 +99,7 @@ class WS(CloudnetInstrument):
 
     def convert_time(self):
         decimal_hours = datetime2decimal_hours(self._data["timestamps"])
-        self.data["time"] = CloudnetArray(decimal_hours, "time")
+        self.data["time"] = CloudnetArray(decimal_hours, "time", data_type="f8")
 
     def screen_timestamps(self, date: str):
         dates = [str(d.date()) for d in self._data["timestamps"]]
