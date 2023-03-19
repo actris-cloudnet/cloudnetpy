@@ -69,7 +69,7 @@ def mira2nc(
                 valid_filenames,
                 mmclx_filename,
                 variables=variables,
-                allow_difference=["nave"],
+                allow_difference=["nave", "ovl"],
             )
         else:
             mmclx_filename = raw_mira
