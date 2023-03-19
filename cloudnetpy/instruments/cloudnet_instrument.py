@@ -24,7 +24,7 @@ class CloudnetInstrument:
             elif isinstance(self.dataset, netCDF4.Dataset) and hasattr(
                 self.dataset, key.capitalize()
             ):
-                value = float(getattr(self.dataset, key.capitalize()).split()[0])
+                value = self.parse_global_attribute_numeral(key.capitalize())
             # From source data (BASTA / RPG):
             elif (
                 isinstance(self.dataset, netCDF4.Dataset)
@@ -34,6 +34,13 @@ class CloudnetInstrument:
             if value is not None:
                 value = float(ma.mean(value))
                 self.data[key] = CloudnetArray(value, key)
+
+    def parse_global_attribute_numeral(self, key: str) -> float:
+        new_str = ""
+        for char in getattr(self.dataset, key):
+            if char.isdigit() or char == ".":
+                new_str += char
+        return float(new_str)
 
     def add_height(self) -> None:
         try:
