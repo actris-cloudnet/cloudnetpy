@@ -180,7 +180,7 @@ def rebin_2d(
             masked_result[ind, :] = ma.masked
             empty_indices.append(ind)
     if len(empty_indices) > 0:
-        logging.info(f"No radar data in {len(empty_indices)} bins")
+        logging.debug(f"No radar data in {len(empty_indices)} bins")
 
     return masked_result, empty_indices
 

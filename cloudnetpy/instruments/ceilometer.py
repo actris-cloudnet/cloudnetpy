@@ -144,7 +144,7 @@ class NoisyData:
             else self.noise_param.noise_min
         )
         noise_below_threshold = noise < noise_min
-        logging.info(f"Adjusted noise of {sum(noise_below_threshold)} profiles")
+        logging.debug(f"Adjusted noise of {sum(noise_below_threshold)} profiles")
         noise[noise_below_threshold] = noise_min
         return noise
 
@@ -164,7 +164,7 @@ class NoisyData:
             profile = data[time_ind, alt_ind:]
             profile[profile < threshold] = ma.masked
         cleaned_time_indices = np.unique(time_indices)
-        logging.info(
+        logging.debug(
             f"Cleaned {len(cleaned_time_indices)} profiles with negative filter"
         )
         return cleaned_time_indices
@@ -181,7 +181,7 @@ class NoisyData:
         )
         variance = _calc_var_from_top_gates(self.data["beta_raw"])
         is_fog = (signal_sum > signal_sum_threshold) | (variance < variance_threshold)
-        logging.info(f"Cleaned {sum(is_fog)} profiles with fog filter")
+        logging.debug(f"Cleaned {sum(is_fog)} profiles with fog filter")
         return is_fog
 
     def _remove_noise(
