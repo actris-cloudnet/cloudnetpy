@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.46.3 – 2023-03-19
+
+- Improve `mira` global attribute parsing
+- Allow inconsistent `ovl` in `mira` data
+
 ## 1.46.2 – 2023-03-15
 
 - Add `galileo` clutter screening
