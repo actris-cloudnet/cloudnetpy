@@ -37,6 +37,8 @@ class Ceilometer:
         range_corrected: bool = True,
     ) -> np.ndarray:
         """Screens noise from lidar variable."""
+        if not range_corrected:
+            logging.warning("Raw data not range-corrected")
         noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
         array_screened = noisy_data.screen_data(array, snr_limit=snr_limit)
         return array_screened
@@ -216,7 +218,7 @@ class NoisyData:
     def _get_altitude_ind(self) -> tuple:
         if self.range_corrected is False:
             alt_limit = 2400.0
-            logging.warning(
+            logging.debug(
                 f"Raw data not range-corrected, correcting below {alt_limit} m"
             )
         else:
