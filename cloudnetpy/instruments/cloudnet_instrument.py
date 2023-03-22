@@ -60,7 +60,7 @@ class CloudnetInstrument:
 
     def remove_duplicate_timestamps(self) -> None:
         time = self._get_time()
-        _, ind = np.unique(time, return_index=True)
+        ind = utils.unique_floats(time, abs_tol=1e-3)
         self.screen_time_indices(ind)
 
     def sort_timestamps(self) -> None:

@@ -795,3 +795,40 @@ def test_get_files_with_common_range(tmp_path):
 )
 def test_time2decimal_hours(data, result):
     assert utils.datetime2decimal_hours(data) == result
+
+
+@pytest.mark.parametrize(
+    "data, result",
+    [
+        (np.array([1.0, 2.0, 3.0]), np.array([1.0, 2.0, 3.0])),
+        (np.array([1.0, 2.0, 2.0]), np.array([1.0, 2.0])),
+        (np.array([1.0, 1.0, 1.0, 2.0, 2.0, 2.0]), np.array([1.0, 2.0])),
+        (np.array([0.9999999, 1.0, 2.0]), np.array([1.0, 2.0])),
+        (np.array([1.001, 1.002, 2.0]), np.array([1.001, 1.002, 2.0])),
+        (np.array([0.0]), np.array([0.0])),
+        (np.array([0.0, 0.0]), np.array([0.0])),
+    ],
+)
+def test_unique_floats(data, result):
+    assert np.array_equal(data[utils.unique_floats(data)], result)
+
+
+@pytest.mark.parametrize(
+    "data, tol, result",
+    [
+        (np.array([1.0, 2.0, 2.1]), 0.11, np.array([1.0, 2.0])),
+        (np.array([9.0, 10.0]), 0.09, np.array([9.0, 10.0])),
+        (np.array([9.0, 10.0]), 0.101, np.array([9.0])),
+        (np.array([11232, 11233]), 1e-5, np.array([11232, 11233])),
+        (np.array([11232.112, 11232.113]), 1e-6, np.array([11232.112])),
+    ],
+)
+def test_unique_floats_relative(data: np.ndarray, tol: float, result: np.ndarray):
+    ind = utils.unique_floats(data, rel_tol=tol)
+    assert np.array_equal(data[ind], result)
+
+
+def test_unique_floats_errors():
+    data = np.array([3.0, 2.0, 1.0])
+    with pytest.raises(ValueError):
+        utils.unique_floats(data)

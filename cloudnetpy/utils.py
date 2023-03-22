@@ -956,3 +956,24 @@ def get_files_with_common_range(files: list) -> list:
         logging.warning(f"Removing {n_removed} files due to inconsistent height vector")
     ind = np.where(n_range == most_common)[0]
     return [file for i, file in enumerate(files) if i in ind]
+
+
+def unique_floats(
+    data: np.ndarray, abs_tol: float = 1e-6, rel_tol: float | None = None
+) -> np.ndarray:
+    """Finds unique values from a sorted array."""
+    if len(data) == 1:
+        return np.array([0])
+    if not (np.diff(data) >= 0).all():
+        raise ValueError("Input data is not sorted")
+    try:
+        if rel_tol is not None:
+            ind_large_diff = np.where((np.diff(data) / data[1:]) > rel_tol)[0]
+        else:
+            ind_large_diff = np.where(np.diff(data) > abs_tol)[0]
+        if len(ind_large_diff) == 0:
+            return np.array([0])
+        ind_last = ind_large_diff[-1] + 1
+        return np.concatenate((ind_large_diff, np.array([ind_last])))
+    except ValueError:
+        return np.array([])

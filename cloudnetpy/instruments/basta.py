@@ -60,6 +60,7 @@ def basta2nc(
         basta.add_radar_specific_variables()
         basta.add_height()
         basta.sort_timestamps()
+        basta.remove_duplicate_timestamps()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
     uuid = output.save_level1b(basta, output_file, uuid)
