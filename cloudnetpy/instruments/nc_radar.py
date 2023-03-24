@@ -85,6 +85,8 @@ class NcRadar(DataSource, CloudnetInstrument):
             azimuth, azimuth_reference, atol=azimuth_tolerance
         )
         is_stable_profile = is_stable_zenith & is_stable_azimuth
+        if ma.isMaskedArray(is_stable_profile):
+            is_stable_profile[is_stable_profile.mask] = False
         n_removed = np.count_nonzero(~is_stable_profile)
         if n_removed >= len(zenith) - 1:
             raise ValidTimeStampError(
