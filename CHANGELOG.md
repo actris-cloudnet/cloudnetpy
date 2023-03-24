@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.46.4 – 2023-03-24
+
+- Accept nonzero but constant `azimuth_velocity`
+- Handle masked `zenith` and `azimuth` values
+
 ## 1.46.3 – 2023-03-19
 
 - Improve `mira` global attribute parsing
