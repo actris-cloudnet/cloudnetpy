@@ -825,7 +825,7 @@ def get_epoch(units: str) -> Epoch:
 
 
 def screen_by_time(data_in: dict, epoch: Epoch, expected_date: str) -> dict:
-    """ "Screen data by time.
+    """Screen data by time.
 
     Args:
         data_in: Dictionary containing at least 'time' key and other numpy arrays.
