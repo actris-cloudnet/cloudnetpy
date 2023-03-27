@@ -1,19 +1,88 @@
 """This module contains RPG Cloud Radar related functions."""
+import datetime
 import logging
 from collections import defaultdict
 from pathlib import Path
 
+import mwrpy
+import netCDF4
+import numpy as np
+from mwrpy.level1.lev1_meta_nc import ATTRIBUTES_1B01
 from numpy import ma
 
 from cloudnetpy import output, utils
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import rpg
+from cloudnetpy.instruments.instruments import HATPRO
 from cloudnetpy.instruments.rpg_reader import (
     HatproBin,
     HatproBinCombined,
     HatproBinIwv,
     HatproBinLwp,
 )
+
+
+def hatpro2l1c(
+    mwr_dir: str,
+    output_file: str,
+    site_meta: dict,
+    uuid: str | None = None,
+    date: str | None = None,
+) -> str:
+    """Converts RPG HATPRO microwave radiometer data into Cloudnet Level 1c netCDF file.
+
+    Args:
+        mwr_dir: Folder containing one day of HATPRO files.
+        output_file: Output file name.
+        site_meta: Dictionary containing information about the site
+        uuid: Set specific UUID for the file.
+        date: Expected date in the input files.
+
+    Returns:
+        UUID of the generated file.
+    """
+
+    hatpro_raw = mwrpy.lev1_to_nc(site_meta["coeffs_dir"], "1C01", mwr_dir)
+    hatpro = HatproL1c(hatpro_raw, site_meta)
+
+    timestamps = hatpro.data["time"][:]
+    if date is not None:
+        # Screen timestamps if these assertions start to fail
+        assert np.all(np.diff(timestamps) > 0)
+        dates = [str(datetime.datetime.utcfromtimestamp(t).date()) for t in timestamps]
+        assert len(set(dates)) == 1
+
+    decimal_hours = utils.seconds2hours(timestamps)
+    hatpro.data["time"] = CloudnetArray(decimal_hours, "time", data_type="f8")
+    hatpro.data.pop("time_bnds")
+    hatpro.data["t_amb"].dimensions = ("time", "t_amb_nb")
+
+    for key in ("elevation_angle", "ir_elevation_angle"):
+        zenith_angle = 90 - hatpro.data.pop(key)[:]
+        new_key = key.replace("elevation", "zenith")
+        hatpro.data[new_key] = CloudnetArray(zenith_angle, new_key)
+
+    for key in ("latitude", "longitude", "altitude"):
+        if key in site_meta:
+            hatpro.data[key] = CloudnetArray(site_meta[key], key, data_type="f4")
+
+    attributes = output.add_time_attribute(ATTRIBUTES_1B01, hatpro.date)
+    output.update_attributes(hatpro.data, attributes)
+    uuid = output.save_level1b(hatpro, output_file, uuid)
+    with netCDF4.Dataset(output_file, "a") as nc:
+        nc.cloudnet_file_type = "mwr-l1c"
+        nc.title = nc.title.replace("radiometer", "radiometer Level 1c")
+    return uuid
+
+
+class HatproL1c:
+    def __init__(self, hatpro: mwrpy.Rpg, site_meta: dict):
+        self.raw_data = hatpro.raw_data
+        self.data = hatpro.data
+        self.date = hatpro.date.split("-")
+        self.site_meta = site_meta
+        self.instrument = HATPRO
 
 
 def hatpro2nc(

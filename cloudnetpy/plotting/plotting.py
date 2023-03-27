@@ -96,19 +96,28 @@ def generate_figure(
         max_y=3)
         >>> generate_figure('der.nc', ['der', 'der_scaled'], max_y=12)
     """
+    indices = [name.split("_")[-1] for name in field_names]
+    with netCDF4.Dataset(nc_file) as nc:
+        cloudnet_file_type = nc.cloudnet_file_type
+    if cloudnet_file_type == "mwr-l1c":
+        field_names = [name.split("_")[0] for name in field_names]
     valid_fields, valid_names = _find_valid_fields(nc_file, field_names)
     is_height = _is_height_dimension(nc_file)
     fig, axes = _initialize_figure(len(valid_fields), dpi)
 
-    for ax, field, name in zip(axes, valid_fields, valid_names):
+    for ax, field, name, tb_ind in zip(axes, valid_fields, valid_names, indices):
         plot_type = ATTRIBUTES[name].plot_type
         if title:
             _set_title(ax, name, "")
-        if not is_height:
+        if not is_height or name in ("lwp", "iwv"):
             unit = _get_variable_unit(nc_file, name)
             source = ATTRIBUTES[name].source
             time = _read_time_vector(nc_file)
-            _plot_instrument_data(ax, field, name, source, time, unit)
+            try:
+                tb_ind = int(tb_ind)
+            except ValueError:
+                tb_ind = None
+            _plot_instrument_data(ax, field, name, source, time, unit, nc_file, tb_ind)
             continue
         ax_value = _read_ax_values(nc_file)
 
@@ -437,13 +446,22 @@ def _plot_instrument_data(
     product: str | None,
     time: ndarray,
     unit: str,
+    full_path: str | None = None,
+    tb_ind: int | None = None,
 ):
-    if product == "mwr":
+    if product in ("mwr", "mwr-single"):
         _plot_mwr(ax, data, name, time, unit)
     if product == "disdrometer":
         _plot_disdrometer(ax, data, time, name, unit)
     if product == "weather-station":
         _plot_weather_station(ax, data, time, name)
+    if full_path is not None and tb_ind is not None:
+        quality_flag_array = ptools.read_nc_fields(full_path, "quality_flag")
+        assert isinstance(quality_flag_array, ndarray)
+        quality_flag = quality_flag_array[:, tb_ind]
+        data = data[:, tb_ind]
+        data_dict = {"tb": data, "quality_flag": quality_flag, "time": time}
+        _plot_hatpro(ax, data_dict, full_path)
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
@@ -459,6 +477,50 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
         ax.plot(time, data, color="royalblue")
         ylim = max((np.max(data) * 1.05, 1))
         set_ax(ax, ylim, "")
+
+
+def _plot_hatpro(ax, data: dict, full_path: str):
+    tb = _pointing_filter(full_path, data["tb"])
+    time = _pointing_filter(full_path, data["time"])
+    ax.plot(time, tb, color="royalblue", linestyle="-", linewidth=1)
+    set_ax(
+        ax,
+        max_y=np.max(tb) + 0.5,
+        min_y=np.min(tb) - 0.5,
+        ylabel="Brightness temperature [K]",
+    )
+
+
+def _elevation_filter(full_path: str, data_field: ndarray, ele_range: tuple) -> ndarray:
+    """Filters data for specified range of elevation angles."""
+    with netCDF4.Dataset(full_path) as nc:
+        if "ele" in nc.variables:
+            elevation = ptools.read_nc_fields(full_path, "ele")
+            if data_field.ndim > 1:
+                data_field = data_field[
+                    (elevation >= ele_range[0]) & (elevation <= ele_range[1]), :
+                ]
+            else:
+                data_field = data_field[
+                    (elevation >= ele_range[0]) & (elevation <= ele_range[1])
+                ]
+    return data_field
+
+
+def _pointing_filter(
+    full_path: str, data_field: ndarray, ele_range: tuple = (0, 91), status: int = 0
+) -> ndarray:
+    """Filters data according to pointing flag."""
+    with netCDF4.Dataset(full_path) as nc:
+        if "pointing_flag" in nc.variables:
+            pointing = ptools.read_nc_fields(full_path, "pointing_flag")
+            assert isinstance(pointing, ndarray)
+            pointing_screened = _elevation_filter(full_path, pointing, ele_range)
+            if data_field.ndim > 1:
+                data_field = data_field[pointing_screened == status, :]
+            else:
+                data_field = data_field[pointing_screened == status]
+    return data_field
 
 
 def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):

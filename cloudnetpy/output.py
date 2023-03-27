@@ -13,15 +13,7 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
     """Saves Cloudnet Level 1b file."""
-    dimensions = {
-        key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data
-    }
-    if "chirp_start_indices" in obj.data:
-        dimensions["chirp_sequence"] = len(obj.data["chirp_start_indices"][:])
-    if hasattr(obj, "n_diameter") and hasattr(obj, "n_velocity"):
-        dimensions["diameter"] = obj.n_diameter
-        dimensions["velocity"] = obj.n_velocity
-        dimensions["nv"] = 2
+    dimensions = _get_netcdf_dimensions(obj)
     with init_file(output_file, dimensions, obj.data, uuid) as nc:
         file_uuid = nc.file_uuid
         fix_attribute_name(nc)
@@ -43,6 +35,29 @@ def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
             nc.serial_number = obj.serial_number
         nc.references = get_references()
     return file_uuid
+
+
+def _get_netcdf_dimensions(obj) -> dict:
+    dimensions = {
+        key: len(obj.data[key][:]) for key in ("time", "range") if key in obj.data
+    }
+    # RPG cloud radar
+    if "chirp_start_indices" in obj.data:
+        dimensions["chirp_sequence"] = len(obj.data["chirp_start_indices"][:])
+    # disdrometer
+    if hasattr(obj, "n_diameter") and hasattr(obj, "n_velocity"):
+        dimensions["diameter"] = obj.n_diameter
+        dimensions["velocity"] = obj.n_velocity
+        dimensions["nv"] = 2
+    # HATPRO l1c
+    if "tb" in obj.data:
+        dimensions["frequency"] = obj.data["tb"][:].shape[1]
+        dimensions["receiver_nb"] = len(obj.data["receiver_nb"][:])
+        dimensions["band"] = 2
+        dimensions["t_amb_nb"] = 2
+    if "irt" in obj.data:
+        dimensions["ir_channel"] = obj.data["irt"][:].shape[1]
+    return dimensions
 
 
 def save_product_file(
@@ -340,6 +355,7 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
             fill_value = False
 
         size = obj.dimensions or _get_dimensions(nc, obj.data)
+
         nc_variable = nc.createVariable(
             obj.name, obj.data_type, size, zlib=True, fill_value=fill_value
         )

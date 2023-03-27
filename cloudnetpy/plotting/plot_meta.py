@@ -738,6 +738,15 @@ ATTRIBUTES = {
         plot_type="bar",
         source="mwr",
     ),
+    "tb": PlotMeta(
+        name="Brightness temperature",
+        cbar="Blues",
+        ylabel=_KGM2,
+        plot_range=(0, 1),
+        plot_scale=Scale.LINEAR,
+        plot_type="bar",
+        source="mwr-l1c",
+    ),
     "iwv": PlotMeta(
         name="Integrated water vapour",
         cbar="Blues",
