@@ -15,19 +15,21 @@ retrieved in the further processing steps. See [Illingworth et. al. (2007)](http
 
 CloudnetPy is a rewritten version of the original Cloudnet Matlab code. CloudnetPy features several revised methods, extensive documentation, and more.
 
-* CloudnetPy documentation: https://cloudnetpy.readthedocs.io/en/latest/
-* Cloudnet data portal: https://cloudnet.fmi.fi
+- CloudnetPy documentation: https://cloudnetpy.readthedocs.io/en/latest/
+- Cloudnet data portal: https://cloudnet.fmi.fi
 
 ![CloudnetPy example output](https://raw.githubusercontent.com/actris-cloudnet/cloudnetpy/main/docs/source/_static/20190423_mace-head_classification.png)
 
 ## Installation
 
 ### From PyPI
+
 ```
 python3 -m pip install cloudnetpy
 ```
 
 ### From the source
+
 ```sh
 git clone https://github.com/actris-cloudnet/cloudnetpy
 cd cloudnetpy/
@@ -38,8 +40,10 @@ python3 -m pip install .
 ```
 
 ## Citing
+
 If you wish to acknowledge CloudnetPy in your publication, please cite:
->Tukiainen et al., (2020). CloudnetPy: A Python package for processing cloud remote sensing data. Journal of Open Source Software, 5(53), 2123, https://doi.org/10.21105/joss.02123
+
+> Tukiainen et al., (2020). CloudnetPy: A Python package for processing cloud remote sensing data. Journal of Open Source Software, 5(53), 2123, https://doi.org/10.21105/joss.02123
 
 ## Contributing
 
@@ -48,25 +52,30 @@ We encourage you to contribute to CloudnetPy! Please check out the [contribution
 ## Development
 
 Follow the installation instructions from the source above but install with the test-dependencies and [pre-commit](https://pre-commit.com/) hooks:
+
 ```sh
 python3 -m pip install -e .[test,dev]
 pre-commit install
 ```
 
 Run unit tests:
+
 ```sh
 pytest --flake-finder --flake-runs=2
 ```
 
 Run end-to-end tests:
+
 ```sh
 python3 tests/e2e_test.py
 ```
+
 ```sh
 for f in cloudnetpy/model_evaluation/tests/e2e/*/main.py; do $f; done
 ```
 
 Force `pre-commit` checks (`pylint`, `mypy`, etc.) for all files:
+
 ```sh
 pre-commit run --all
 ```

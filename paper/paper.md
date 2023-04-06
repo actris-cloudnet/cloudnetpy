@@ -1,5 +1,5 @@
 ---
-title: 'CloudnetPy: A Python package for processing cloud remote sensing data'
+title: "CloudnetPy: A Python package for processing cloud remote sensing data"
 tags:
   - Python
   - cloud radar
@@ -15,8 +15,8 @@ authors:
   - name: Anniina Korpinen
     affiliation: 1
 affiliations:
- - name: Finnish Meteorological Institute, Helsinki, Finland
-   index: 1
+  - name: Finnish Meteorological Institute, Helsinki, Finland
+    index: 1
 date: 13 February 2020
 bibliography: paper.bib
 ---
@@ -71,11 +71,10 @@ processing in ACTRIS, but it will be straightforward for site operators and the
 scientific community with access to the raw data to run the software, improve
 existing methods and develop new products.
 
-
 # Acknowledgements
 
 The research was supported by the European Union Framework Programme for Research and
-Innovation, Horizon 2020 (ACTRIS-2,  grant  no.  654109). The authors would like to
+Innovation, Horizon 2020 (ACTRIS-2, grant no. 654109). The authors would like to
 thank the Academy of Finland for supporting ACTRIS activities in Finland
 and Lauri Kangassalo for providing comments on the manuscript.
 

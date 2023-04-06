@@ -1,10 +1,9 @@
 name: CloudnetPy CI
 
-on: [push,pull_request]
+on: [push, pull_request]
 
 jobs:
   build:
-
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -12,28 +11,28 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install .[test,extras]
-    - name: Lint with pylint
-      run: |
-        pylint cloudnetpy --errors-only
-    - name: Typecheck with mypy
-      run: |
-        mypy --ignore-missing-imports --check-untyped-defs cloudnetpy/
-        mypy --ignore-missing-imports tests/
-    - name: Test with pytest-flakefinder
-      run: |
-        pytest --flake-finder --flake-runs=2
-    - name: Run e2e-test
-      run: |
-        python3 tests/e2e_test.py
-        python3 cloudnetpy/model_evaluation/tests/e2e/process_cf/main.py
-        python3 cloudnetpy/model_evaluation/tests/e2e/process_iwc/main.py
-        python3 cloudnetpy/model_evaluation/tests/e2e/process_lwc/main.py
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install .[test,extras]
+      - name: Lint with pylint
+        run: |
+          pylint cloudnetpy --errors-only
+      - name: Typecheck with mypy
+        run: |
+          mypy --ignore-missing-imports --check-untyped-defs cloudnetpy/
+          mypy --ignore-missing-imports tests/
+      - name: Test with pytest-flakefinder
+        run: |
+          pytest --flake-finder --flake-runs=2
+      - name: Run e2e-test
+        run: |
+          python3 tests/e2e_test.py
+          python3 cloudnetpy/model_evaluation/tests/e2e/process_cf/main.py
+          python3 cloudnetpy/model_evaluation/tests/e2e/process_iwc/main.py
+          python3 cloudnetpy/model_evaluation/tests/e2e/process_lwc/main.py

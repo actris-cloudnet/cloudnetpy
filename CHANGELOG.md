@@ -291,9 +291,9 @@
 
 - Uses Python 3.8 and newer. Older Python versions are not supported from now on.
 - Updates categorize file:
-    - Fixes netCDF metadata
-    - Interpolates lidar data using nearest neighbor
-    - Adds 1px melting layer when not detected from data
+  - Fixes netCDF metadata
+  - Interpolates lidar data using nearest neighbor
+  - Adds 1px melting layer when not detected from data
 
 ## 1.24.0 – 2021-11-22
 
@@ -311,7 +311,7 @@
 - `instruments.py` module
 - Minor fixes to global attributes
 - Improved tests
-- Deprecated `keep_uuid`  option
+- Deprecated `keep_uuid` option
 
 ## 1.22.4 – 2021-11-09
 
@@ -463,12 +463,12 @@ Fixes `ct25k` processing
 ## 1.9.0 – 2021-02-18
 
 This Release:
+
 - Adds support for BASTA cloud radar
 - Adds support for HATPRO binary .LWP files
 - Fixes `units` of `time` variable
 - Fixes several smallish issues and bugs
 - Adds loads of typehints and refactoring
-
 
 ## 1.8.2 – 2021-02-05
 
@@ -536,8 +536,6 @@ This release adds support for RPG Level 1 V4 files
 - This release fixes the bug https://github.com/actris-cloudnet/cloudnetpy/issues/9
 
 ## 1.2.1 – 2020-06-03
-
-
 
 ## 1.2.0 – 2020-06-02
 
