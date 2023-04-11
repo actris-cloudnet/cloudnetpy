@@ -6,15 +6,14 @@ from tempfile import TemporaryDirectory
 import netCDF4
 import numpy as np
 import pytest
-from all_products_fun import Check
 from numpy.testing import assert_equal
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import ceilo2nc, vaisala
+from tests.unit.all_products_fun import Check
+from tests.unit.lidar_fun import LidarFun
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(SCRIPT_PATH)
-from lidar_fun import LidarFun
 
 
 @pytest.mark.parametrize(

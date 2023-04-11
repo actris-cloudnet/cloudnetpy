@@ -4,15 +4,13 @@ from tempfile import TemporaryDirectory
 
 import netCDF4
 import pytest
-from all_products_fun import Check
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import basta2nc
+from tests.unit.all_products_fun import Check
+from tests.unit.radar_fun import RadarFun
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
-sys.path.append(SCRIPT_PATH)
-from radar_fun import RadarFun
-
 filename = f"{SCRIPT_PATH}/data/basta/basta_1a_cldradLz1R025m_v03_20210827_000000.nc"
 
 

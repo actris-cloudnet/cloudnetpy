@@ -4,7 +4,8 @@ import logging
 import numpy as np
 from numpy import ma
 
-from cloudnetpy import CloudnetArray, utils
+from cloudnetpy import utils
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument

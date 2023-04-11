@@ -12,12 +12,10 @@ from numpy.testing import assert_array_equal, assert_equal
 
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import rpg, rpg2nc
+from tests.unit.all_products_fun import SITE_META, Check
+from tests.unit.radar_fun import RadarFun
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
-sys.path.append(SCRIPT_PATH)
-from all_products_fun import SITE_META, Check
-from radar_fun import RadarFun
-
 FILEPATH = f"{SCRIPT_PATH}/data/rpg-fmcw-94"
 
 

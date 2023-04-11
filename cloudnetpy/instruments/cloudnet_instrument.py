@@ -4,7 +4,8 @@ import netCDF4
 import numpy as np
 from numpy import ma
 
-from cloudnetpy import CloudnetArray, utils
+from cloudnetpy import utils
+from cloudnetpy.cloudnetarray import CloudnetArray
 
 
 class CloudnetInstrument:

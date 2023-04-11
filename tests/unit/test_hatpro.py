@@ -5,16 +5,13 @@ from tempfile import TemporaryDirectory
 
 import netCDF4
 import pytest
-from all_products_fun import Check
 from numpy import ma
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import hatpro
+from tests.unit.all_products_fun import Check
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
-sys.path.append(SCRIPT_PATH)
-
-
 file_path = f"{SCRIPT_PATH}/data/hatpro-lwp/"
 
 

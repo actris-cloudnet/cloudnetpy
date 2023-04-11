@@ -6,8 +6,9 @@ from typing import Sequence
 import numpy as np
 from numpy import ma
 
-from cloudnetpy import CloudnetArray, output, utils
+from cloudnetpy import output, utils
 from cloudnetpy.categorize.atmos_utils import mmh2ms
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument

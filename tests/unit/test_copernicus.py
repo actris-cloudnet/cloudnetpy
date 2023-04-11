@@ -5,15 +5,13 @@ from tempfile import TemporaryDirectory
 import netCDF4
 import numpy as np
 import pytest
-from all_products_fun import Check
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import copernicus
+from tests.unit.all_products_fun import Check
+from tests.unit.radar_fun import RadarFun
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
-sys.path.append(SCRIPT_PATH)
-from radar_fun import RadarFun
-
 FILEPATH = f"{SCRIPT_PATH}/data/copernicus/"
 
 

@@ -7,10 +7,9 @@ from numpy.testing import assert_allclose, assert_array_equal
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import radiometrics2nc
+from tests.unit.all_products_fun import Check
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
-sys.path.append(SCRIPT_PATH)
-from all_products_fun import Check
 
 
 class TestRadiometrics2nc(Check):

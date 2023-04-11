@@ -7,7 +7,8 @@ from typing import Callable
 import netCDF4
 import numpy as np
 
-from cloudnetpy import CloudnetArray, utils
+from cloudnetpy import utils
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
 
 

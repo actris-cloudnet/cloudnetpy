@@ -10,6 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+      - name: Install dependencies
+        run: python -m pip install twine build
+      - name: Build package
+        run: python -m build
+      - name: Publish package
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWRD }}
+        run: twine upload dist/*
       - name: Generate changelog
         run: |
           version=${GITHUB_REF#refs/tags/v}
@@ -21,18 +34,3 @@ jobs:
         with:
           name: ${{ steps.changelog.outputs.name }}
           body_path: ${{ github.workspace }}-CHANGELOG.txt
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.8"
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install setuptools wheel twine
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWRD }}
-        run: |
-          python setup.py sdist bdist_wheel
-          twine upload dist/*

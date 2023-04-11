@@ -3,8 +3,9 @@ import numpy as np
 from numpy import ma
 from scipy.interpolate import interp1d
 
-from cloudnetpy import CloudnetArray, utils
+from cloudnetpy import utils
 from cloudnetpy.categorize import atmos_utils
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ModelDataError
 

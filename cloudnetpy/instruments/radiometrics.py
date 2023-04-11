@@ -8,7 +8,8 @@ from typing import Any, NamedTuple
 
 import numpy as np
 
-from cloudnetpy import CloudnetArray, output, utils
+from cloudnetpy import output, utils
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 
