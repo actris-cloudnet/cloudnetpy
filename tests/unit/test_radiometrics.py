@@ -10,7 +10,7 @@ from cloudnetpy.instruments import radiometrics2nc
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
-from all_products_fun import Check
+from tests.unit.all_products_fun import Check
 
 
 class TestRadiometrics2nc(Check):

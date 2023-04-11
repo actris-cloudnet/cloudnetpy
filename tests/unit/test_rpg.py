@@ -15,8 +15,8 @@ from cloudnetpy.instruments import rpg, rpg2nc
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
-from all_products_fun import SITE_META, Check
-from radar_fun import RadarFun
+from tests.unit.all_products_fun import SITE_META, Check
+from tests.unit.radar_fun import RadarFun
 
 FILEPATH = f"{SCRIPT_PATH}/data/rpg-fmcw-94"
 

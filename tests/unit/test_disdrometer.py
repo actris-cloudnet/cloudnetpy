@@ -2,11 +2,11 @@ import os
 from tempfile import TemporaryDirectory
 
 import pytest
-from all_products_fun import Check
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import disdrometer
+from tests.unit.all_products_fun import Check
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 

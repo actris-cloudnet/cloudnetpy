@@ -1,2 +1,1 @@
-from .cloudnetarray import CloudnetArray
-from .version import __version__
+from cloudnetpy.version import __version__

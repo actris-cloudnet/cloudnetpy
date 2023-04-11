@@ -1,0 +1,73 @@
+[project]
+name = "cloudnetpy"
+description = "Python package for Cloudnet processing"
+authors = [{name = "Simo Tukiainen"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python :: 3.10",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering",
+]
+
+dependencies = [
+  "scipy",
+  "netCDF4",
+  "matplotlib",
+  "requests",
+  "cloudnetpy_qc>=1.7.0",
+  "scikit-image",
+  "rpgpy>=0.12.1",
+]
+
+dynamic = ["version"]
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "pytest-flakefinder",
+  "pylint",
+  "mypy",
+  "types-requests",
+]
+dev = ["pre-commit"]
+extras = ["voodoonet>=0.1.1"]
+
+[project.urls]
+homepage = "https://github.com/actris-cloudnet/cloudnetpy"
+documentation = "https://cloudnetpy.readthedocs.io"
+repository = "https://github.com/actris-cloudnet/cloudnetpy"
+changelog = "https://github.com/actris-cloudnet/cloudnetpy/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages]
+find = {}
+
+[tool.setuptools.dynamic]
+version = {attr = "cloudnetpy.version.__version__"}
+
+[tool.mypy]
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "scipy.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "skimage.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "netCDF4.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "matplotlib.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "mpl_toolkits.*"
+ignore_missing_imports = true

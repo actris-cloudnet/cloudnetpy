@@ -4,10 +4,10 @@ import warnings
 from tempfile import TemporaryDirectory
 
 import netCDF4
-from all_products_fun import Check
 
 from cloudnetpy.categorize import generate_categorize
 from cloudnetpy.instruments import ceilo2nc, mira2nc
+from tests.unit.all_products_fun import Check
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)

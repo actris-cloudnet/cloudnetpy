@@ -6,11 +6,11 @@ from tempfile import TemporaryDirectory
 import netCDF4
 import numpy as np
 import numpy.ma as ma
-from all_products_fun import Check
-from lidar_fun import LidarFun
 
 from cloudnetpy import concat_lib
 from cloudnetpy.instruments import ceilo2nc
+from tests.unit.all_products_fun import Check
+from tests.unit.lidar_fun import LidarFun
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)

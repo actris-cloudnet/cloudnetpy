@@ -7,16 +7,16 @@ from tempfile import TemporaryDirectory
 import netCDF4
 import numpy as np
 import pytest
-from all_products_fun import Check
 from numpy.testing import assert_array_equal
 
 from cloudnetpy import concat_lib
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import ceilo2nc, lufft
+from tests.unit.all_products_fun import Check
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
-from lidar_fun import LidarFun
+from tests.unit.lidar_fun import LidarFun
 
 SITE_META = {
     "name": "Bucharest",

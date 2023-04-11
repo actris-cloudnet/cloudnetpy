@@ -2,8 +2,9 @@ import datetime
 
 from numpy import ma
 
-from cloudnetpy import CloudnetArray, output
+from cloudnetpy import output
 from cloudnetpy.categorize import atmos_utils
+from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument

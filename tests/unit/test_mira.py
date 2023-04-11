@@ -5,14 +5,14 @@ from tempfile import TemporaryDirectory
 import netCDF4
 import numpy as np
 import pytest
-from all_products_fun import Check
 
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import mira
+from tests.unit.all_products_fun import Check
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 sys.path.append(SCRIPT_PATH)
-from radar_fun import RadarFun
+from tests.unit.radar_fun import RadarFun
 
 filepath = f"{SCRIPT_PATH}/data/mira/"
 
