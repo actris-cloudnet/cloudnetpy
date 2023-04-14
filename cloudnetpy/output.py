@@ -1,4 +1,5 @@
 """ Functions for file writing."""
+import datetime
 import logging
 
 import netCDF4
@@ -27,7 +28,14 @@ def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
         location = obj.site_meta["name"]
         nc.cloudnet_file_type = obj.instrument.domain
         nc.title = get_l1b_title(obj.instrument, location)
-        nc.year, nc.month, nc.day = obj.date
+        if isinstance(obj.date, list):
+            nc.year, nc.month, nc.day = obj.date
+        elif isinstance(obj.date, datetime.date):
+            nc.year = str(obj.date.year)
+            nc.month = str(obj.date.month).zfill(2)
+            nc.day = str(obj.date.day).zfill(2)
+        else:
+            raise TypeError
         nc.location = location
         nc.history = get_l1b_history(obj.instrument)
         nc.source = get_l1b_source(obj.instrument)
@@ -251,9 +259,16 @@ def copy_global(
             setattr(target, attr, source.getncattr(attr))
 
 
-def add_time_attribute(attributes: dict, date: list, key: str = "time") -> dict:
+def add_time_attribute(
+    attributes: dict, date: list[str] | datetime.date, key: str = "time"
+) -> dict:
     """Adds time attribute with correct units."""
-    date_str = "-".join(date)
+    if isinstance(date, list):
+        date_str = "-".join(date)
+    elif isinstance(date, datetime.date):
+        date_str = date.isoformat()
+    else:
+        raise TypeError
     units = f"hours since {date_str} 00:00:00 +00:00"
     if key not in attributes:
         attributes[key] = MetaData(units=units)
