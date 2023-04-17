@@ -73,7 +73,7 @@ def ceilo2nc(
     ceilo_obj.data["beta_smooth"] = ceilo_obj.calc_beta_smooth(
         ceilo_obj.data["beta"], snr_limit, range_corrected
     )
-    assert ceilo_obj.instrument is not None and hasattr(ceilo_obj.instrument, "model")
+    assert ceilo_obj.instrument is not None and ceilo_obj.instrument.model is not None
     if "cl61" in ceilo_obj.instrument.model.lower():
         ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
         ceilo_obj.remove_raw_data()

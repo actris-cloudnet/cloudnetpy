@@ -32,6 +32,10 @@ class TestRadiometrics2nc(Check):
     def test_lwp(self):
         assert_array_equal(self.nc.variables["lwp"][:], [30, 30, 0])
 
+    def test_global_attributes(self):
+        assert self.nc.source == "Radiometrics"
+        assert self.nc.title == "Microwave radiometer from the_station"
+
     def test_default_processing(self, tmp_path):
         test_path = tmp_path / "default.nc"
         radiometrics2nc(self.test_input, test_path, self.site_meta)

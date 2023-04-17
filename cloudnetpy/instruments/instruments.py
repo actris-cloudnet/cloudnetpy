@@ -5,7 +5,7 @@ from dataclasses import dataclass
 class Instrument:
     domain: str
     category: str
-    model: str
+    model: str | None = None
     manufacturer: str | None = None
     wavelength: float | None = None
     frequency: float | None = None
@@ -122,7 +122,6 @@ RADIOMETRICS = Instrument(
     manufacturer="Radiometrics",
     domain="mwr",
     category="microwave radiometer",
-    model="MP3014",
 )
 
 HALO = Instrument(
@@ -147,8 +146,6 @@ THIES = Instrument(
 )
 
 GENERIC_WEATHER_STATION = Instrument(
-    manufacturer="",
     domain="weather-station",
-    category="",
-    model="Generic weather-station",
+    category="weather station",
 )

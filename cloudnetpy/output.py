@@ -89,8 +89,9 @@ def save_product_file(
 
 def get_l1b_source(instrument: Instrument) -> str:
     """Returns level 1b file source."""
-    prefix = f"{instrument.manufacturer} " if instrument.manufacturer else ""
-    return f"{prefix}{instrument.model}"
+    return " ".join(
+        item for item in [instrument.manufacturer, instrument.model] if item is not None
+    )
 
 
 def get_l1b_history(instrument: Instrument) -> str:
@@ -100,9 +101,13 @@ def get_l1b_history(instrument: Instrument) -> str:
 
 def get_l1b_title(instrument: Instrument, location: str) -> str:
     """Returns level 1b file title."""
-    return f"{instrument.model} {instrument.category} from {location}".replace(
-        "  ", " "
-    )
+    if instrument.model:
+        prefix = " ".join(
+            item for item in [instrument.model, instrument.category] if item is not None
+        )
+    else:
+        prefix = instrument.category.capitalize()
+    return f"{prefix} from {location}"
 
 
 def get_references(identifier: str | None = None, extra: list | None = None) -> str:
