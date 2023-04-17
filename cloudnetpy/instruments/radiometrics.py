@@ -2,12 +2,13 @@
 import csv
 import datetime
 import logging
+import os
 from operator import attrgetter
 from typing import Any, NamedTuple
 
 import numpy as np
 
-from cloudnetpy import CloudnetArray, output
+from cloudnetpy import CloudnetArray, output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 
@@ -22,7 +23,7 @@ def radiometrics2nc(
     """Converts Radiometrics .csv file into Cloudnet Level 1b netCDF file.
 
     Args:
-        full_path: Input file name.
+        full_path: Input file name or folder containing multiple input files.
         output_file: Output file name, e.g. 'radiometrics.nc'.
         site_meta: Dictionary containing information about the site and instrument.
             Required key value pairs are `name` and `altitude` (metres above mean
@@ -41,13 +42,25 @@ def radiometrics2nc(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
-    radiometrics = Radiometrics(full_path, site_meta)
-    radiometrics.read_raw_data()
-    radiometrics.read_data()
+
+    if os.path.isdir(full_path):
+        valid_filenames = utils.get_sorted_filenames(full_path, ".csv")
+    else:
+        valid_filenames = [full_path]
+
+    objs = []
+    for filename in valid_filenames:
+        obj = Radiometrics(filename)
+        obj.read_raw_data()
+        obj.read_data()
+        objs.append(obj)
+
+    radiometrics = RadiometricsCombined(objs, site_meta)
     radiometrics.screen_time(date)
     radiometrics.time_to_fractional_hours()
     radiometrics.data_to_cloudnet_arrays()
     radiometrics.add_meta()
+    assert radiometrics.date is not None
     attributes = output.add_time_attribute({}, radiometrics.date)
     output.update_attributes(radiometrics.data, attributes)
     uuid = output.save_level1b(radiometrics, output_file, uuid)
@@ -70,11 +83,8 @@ class Radiometrics:
         MP-1500A, MP-183A.
     """
 
-    date: datetime.date
-
-    def __init__(self, filename: str, site_meta: dict):
+    def __init__(self, filename: str):
         self.filename = filename
-        self.site_meta = site_meta
         self.raw_data: list[Record] = []
         self.data: dict = {}
         self.instrument = instruments.RADIOMETRICS
@@ -131,6 +141,22 @@ class Radiometrics:
             lwps.append(float(lwp) * 1000)  # g / m2
         self.data["time"] = np.array(times, dtype="datetime64[s]")
         self.data["lwp"] = np.array(lwps, dtype=float)
+
+
+class RadiometricsCombined:
+    site_meta: dict
+    data: dict
+    date: datetime.date | None
+    instrument: instruments.Instrument
+
+    def __init__(self, objs: list[Radiometrics], site_meta: dict):
+        self.site_meta = site_meta
+        self.data = {}
+        self.date = None
+        for obj in objs:
+            for key in obj.data:
+                self.data = utils.append_data(self.data, key, obj.data[key])
+        self.instrument = instruments.RADIOMETRICS
 
     def screen_time(self, expected_date: datetime.date | None):
         """Screens timestamps."""
