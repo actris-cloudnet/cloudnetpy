@@ -133,14 +133,20 @@ class Radiometrics:
         """Reads values."""
         times = []
         lwps = []
+        iwvs = []
         for record in self.raw_data:
             lwp = record.values.get("Lqint(mm)", record.values.get("Int. Liquid(mm)"))
-            if lwp is None:
+            iwv = record.values.get("Vint(cm)", record.values.get("Int. Vapor(cm)"))
+            if lwp is None and iwv is None:
                 continue
             times.append(record.timestamp)
-            lwps.append(float(lwp) * 1000)  # g / m2
+            if lwp is not None:
+                lwps.append(float(lwp) * 1000)  # g / m2
+            if iwv is not None:
+                iwvs.append(float(iwv) * 100)  # g / m2
         self.data["time"] = np.array(times, dtype="datetime64[s]")
         self.data["lwp"] = np.array(lwps, dtype=float)
+        self.data["iwv"] = np.array(iwvs, dtype=float)
 
 
 class RadiometricsCombined:
