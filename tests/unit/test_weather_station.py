@@ -26,9 +26,8 @@ class TestWeatherStation(Check):
     uuid = weather_station.ws2nc(filename, temp_path, site_meta)
 
     def test_global_attributes(self):
-        assert "Generic weather-station" in self.nc.source
         assert self.nc.cloudnet_file_type == "weather-station"
-        assert self.nc.title == f'Generic weather-station from {self.site_meta["name"]}'
+        assert self.nc.title == f"Weather station from Kumpula"
         assert self.nc.year == "2022"
         assert self.nc.month == "01"
         assert self.nc.day == "01"

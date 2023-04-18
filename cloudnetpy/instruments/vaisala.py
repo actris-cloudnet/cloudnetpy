@@ -28,7 +28,7 @@ class VaisalaCeilo(Ceilometer):
         self._message_number: int
 
     def _is_ct25k(self) -> bool:
-        if self.instrument is not None:
+        if self.instrument is not None and self.instrument.model is not None:
             return "CT25k" in self.instrument.model
         return False
 
