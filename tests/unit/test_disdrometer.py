@@ -6,6 +6,7 @@ from numpy.testing import assert_array_equal
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import disdrometer
+from cloudnetpy.instruments.disdrometer.common import _format_thies_date
 from tests.unit.all_products_fun import Check
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -19,7 +20,7 @@ SITE_META = {
 
 
 def test_format_time():
-    assert disdrometer._format_thies_date("3.10.20") == "2020-10-03"
+    assert _format_thies_date("3.10.20") == "2020-10-03"
 
 
 class TestParsivel(Check):
@@ -28,7 +29,7 @@ class TestParsivel(Check):
     temp_path = temp_dir.name + "/test.nc"
     site_meta = SITE_META
     filename = f"{SCRIPT_PATH}/data/parsivel/juelich.log"
-    uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta)
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta)
 
     def test_global_attributes(self):
         assert "Parsivel" in self.nc.source
@@ -51,11 +52,11 @@ class TestParsivel2(Check):
     temp_path = temp_dir.name + "/test.nc"
     filename = f"{SCRIPT_PATH}/data/parsivel/norunda.log"
     site_meta = SITE_META
-    uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta, date=date)
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date)
 
     def test_date_validation_fail(self, tmp_path):
         with pytest.raises(ValidTimeStampError):
-            disdrometer.disdrometer2nc(
+            disdrometer.parsivel2nc(
                 self.filename,
                 tmp_path / "invalid.nc",
                 self.site_meta,
@@ -69,7 +70,7 @@ class TestParsivel3(Check):
     temp_path = temp_dir.name + "/test.nc"
     filename = f"{SCRIPT_PATH}/data/parsivel/ny-alesund.log"
     site_meta = SITE_META
-    uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta, date=date)
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date)
 
 
 class TestThies(Check):
@@ -78,7 +79,7 @@ class TestThies(Check):
     temp_path = temp_dir.name + "/test.nc"
     filename = f"{SCRIPT_PATH}/data/thies-lnm/2021091507.txt"
     site_meta = SITE_META
-    uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta, date=date)
+    uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
 
     def test_processing(self):
         assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
@@ -95,7 +96,7 @@ class TestInvalidCharacters(Check):
     filename = f"{SCRIPT_PATH}/data/parsivel/parsivel_bad.log"
     site_meta = SITE_META
     date = "2019-04-10"
-    uuid = disdrometer.disdrometer2nc(filename, temp_path, site_meta, date=date)
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date)
 
     def test_masking(self):
         assert_array_equal(self.nc.variables["rainfall_rate"][:].mask, [0, 1, 0, 0, 0])
