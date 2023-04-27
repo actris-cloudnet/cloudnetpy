@@ -7,11 +7,15 @@ repos:
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
       - id: end-of-file-fixer
+        exclude: ^tests/unit/data/
       - id: fix-byte-order-marker
+        exclude: ^tests/unit/data/
       - id: mixed-line-ending
         args: ["--fix", "lf"]
+        exclude: ^tests/unit/data/
       - id: requirements-txt-fixer
       - id: trailing-whitespace
+        exclude: ^tests/unit/data/
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
