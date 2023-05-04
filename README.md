@@ -11,7 +11,7 @@ remote sensing measurements. The Cloudnet processing combines cloud radar, optic
 radiometer and model data. Measurements and model data are brought into common grid and
 classified as ice, liquid, aerosol, insects, and so on.
 Then, geophysical products such as ice water content can be
-retrieved in the further processing steps. See [Illingworth et. al. (2007)](https://doi.org/10.1175/BAMS-88-6-883) for more details about the concept.
+retrieved in the further processing steps. See [Illingworth et al. (2007)](https://doi.org/10.1175/BAMS-88-6-883) for more details about the concept.
 
 CloudnetPy is a rewritten version of the original Cloudnet Matlab code. CloudnetPy features several revised methods, extensive documentation, and more.
 
@@ -51,10 +51,10 @@ We encourage you to contribute to CloudnetPy! Please check out the [contribution
 
 ## Development
 
-Follow the installation instructions from the source above but install with the test-dependencies and [pre-commit](https://pre-commit.com/) hooks:
+Follow the installation instructions from the source above but install with the development dependencies and [pre-commit](https://pre-commit.com/) hooks:
 
 ```sh
-python3 -m pip install -e .[test,dev]
+python3 -m pip install -e .[dev,test]
 pre-commit install
 ```
 
