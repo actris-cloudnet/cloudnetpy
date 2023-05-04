@@ -18,7 +18,7 @@ dependencies = [
   "matplotlib",
   "netCDF4",
   "requests",
-  "rpgpy>=0.12.1",
+  "rpgpy>=0.14.1",
   "scikit-image",
   "scipy",
 ]
