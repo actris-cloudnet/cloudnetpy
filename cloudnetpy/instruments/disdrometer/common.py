@@ -53,9 +53,8 @@ class Disdrometer(CloudnetInstrument):
         valid_ind = []
         for ind, row in enumerate(self._file_data["scalars"]):
             if self.source == PARSIVEL:
-                date = "-".join(_parse_parsivel_timestamp(row[0])[:3])
-            else:
-                date = _format_thies_date(row[3])
+                raise NotImplementedError
+            date = _format_thies_date(row[3])
             if date == expected_date:
                 valid_ind.append(ind)
         if not valid_ind:
@@ -142,9 +141,8 @@ class Disdrometer(CloudnetInstrument):
         seconds = []
         for timestamp in data["_time"]:
             if self.source == PARSIVEL:
-                _, _, _, hour, minute, sec = _parse_parsivel_timestamp(timestamp)
-            else:
-                hour, minute, sec = timestamp.split(":")
+                raise NotImplementedError
+            hour, minute, sec = timestamp.split(":")
             seconds.append(int(hour) * 3600 + int(minute) * 60 + int(sec))
         return CloudnetArray(utils.seconds2hours(np.array(seconds)), "time")
 
@@ -171,15 +169,16 @@ class Disdrometer(CloudnetInstrument):
             array, "data_raw", dimensions=("time", "diameter", "velocity")
         )
 
-    def _store_vectors(
-        self, n_values: list, spreads: list, name: str, start: float = 0.0
+    @classmethod
+    def store_vectors(
+        cls, data, n_values: list, spreads: list, name: str, start: float = 0.0
     ):
-        mid, bounds, spread = self._create_vectors(n_values, spreads, start)
-        self.data[name] = CloudnetArray(mid, name, dimensions=(name,))
+        mid, bounds, spread = cls._create_vectors(n_values, spreads, start)
+        data[name] = CloudnetArray(mid, name, dimensions=(name,))
         key = f"{name}_spread"
-        self.data[key] = CloudnetArray(spread, key, dimensions=(name,))
+        data[key] = CloudnetArray(spread, key, dimensions=(name,))
         key = f"{name}_bnds"
-        self.data[key] = CloudnetArray(bounds, key, dimensions=(name, "nv"))
+        data[key] = CloudnetArray(bounds, key, dimensions=(name, "nv"))
 
     @staticmethod
     def _create_vectors(
@@ -198,16 +197,6 @@ class Disdrometer(CloudnetInstrument):
         bounds = np.stack((lower_limit, upper_limit)).T
         spread = bounds[:, 1] - bounds[:, 0]
         return mid_value, bounds, spread
-
-
-def _parse_parsivel_timestamp(timestamp: str) -> list:
-    year = timestamp[:4]
-    month = timestamp[4:6]
-    day = timestamp[6:8]
-    hour = timestamp[8:10]
-    minute = timestamp[10:12]
-    second = timestamp[12:14]
-    return [year, month, day, hour, minute, second]
 
 
 def _format_thies_date(date: str):
@@ -270,6 +259,11 @@ ATTRIBUTES = {
         long_name="Solid precipitation rate",
         units="m s-1",
     ),
+    "snowfall_rate": MetaData(
+        long_name="Snowfall rate",
+        units="m s-1",
+        comment="Snow depth intensity (volume equivalent)",
+    ),
     "synop_WaWa": MetaData(long_name="Synop code WaWa", units="1"),
     "synop_WW": MetaData(long_name="Synop code WW", units="1"),
     "radar_reflectivity": MetaData(
@@ -322,7 +316,9 @@ ATTRIBUTES = {
         long_name="Raw data as a function of particle diameter and velocity",
         units="1",
     ),
-    "kinetic_energy": MetaData(long_name="Kinetic energy", units="1"),
+    "kinetic_energy": MetaData(
+        long_name="Kinetic energy of the hydrometeors", units="J m-2 h-1"
+    ),
     # Thies-specific:
     "T_ambient": MetaData(long_name="Ambient temperature", units="K"),
     "T_interior": MetaData(long_name="Interior temperature", units="K"),

@@ -39,6 +39,8 @@ def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
         nc.location = location
         nc.history = get_l1b_history(obj.instrument)
         nc.source = get_l1b_source(obj.instrument)
+        if hasattr(obj, "serial_number") and obj.serial_number is not None:
+            nc.serial_number = obj.serial_number
         nc.references = get_references()
     return file_uuid
 

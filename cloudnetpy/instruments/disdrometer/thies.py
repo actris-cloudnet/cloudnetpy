@@ -130,9 +130,9 @@ class Thies(Disdrometer):
     def _create_velocity_vectors(self):
         n_values = [5, 6, 7, 1, 1]
         spreads = [0.2, 0.4, 0.8, 1, 10]
-        self._store_vectors(n_values, spreads, "velocity")
+        self.store_vectors(self.data, n_values, spreads, "velocity")
 
     def _create_diameter_vectors(self):
         n_values = [3, 6, 13]
         spreads = [0.125, 0.25, 0.5]
-        self._store_vectors(n_values, spreads, "diameter", start=0.125)
+        self.store_vectors(self.data, n_values, spreads, "diameter", start=0.125)
