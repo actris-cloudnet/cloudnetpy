@@ -11,6 +11,7 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Topic :: Scientific/Engineering",
 ]
 dependencies = [
@@ -18,7 +19,7 @@ dependencies = [
   "matplotlib",
   "netCDF4",
   "requests",
-  "rpgpy>=0.14.1",
+  "rpgpy>=0.14.2",
   "scikit-image",
   "scipy",
 ]
