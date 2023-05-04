@@ -142,6 +142,7 @@ class DerSource(DataSource):
         for base, top in zip(zip(*np.where(liquid_bases)), zip(*np.where(liquid_tops))):
             ind_t = base[0]
             idx_layer = np.arange(base[1], top[1] + 1)
+            idx_layer = idx_layer[~Z[ind_t, idx_layer].mask]
 
             if Z[ind_t, idx_layer].mask.all():
                 continue
