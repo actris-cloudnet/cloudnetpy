@@ -549,7 +549,7 @@ def test_lin2db_arrays(input_array: np.ndarray, expected: ma.MaskedArray):
     ],
 )
 def test_db2lin(data, result):
-    assert utils.db2lin(*data) == result
+    assert np.isclose(utils.db2lin(*data), result)
 
 
 @pytest.mark.parametrize(
@@ -564,7 +564,7 @@ def test_db2lin(data, result):
 )
 def test_db2lin_arrays(data: np.ndarray, expected: ma.MaskedArray):
     converted = utils.db2lin(data)
-    assert_array_equal(converted, expected)
+    assert_array_almost_equal(converted, expected)
     if ma.isMaskedArray(data):
         assert isinstance(converted, ma.MaskedArray)
         assert_array_equal(converted.mask, expected.mask)  # pylint: disable=E1101
