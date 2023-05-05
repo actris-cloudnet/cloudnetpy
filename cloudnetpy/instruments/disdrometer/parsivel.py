@@ -1,6 +1,6 @@
 import datetime
 import logging
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
 from typing import Any, Literal, TypeVar
 
@@ -21,7 +21,7 @@ def parsivel2nc(
     site_meta: dict,
     uuid: str | None = None,
     date: str | datetime.date | None = None,
-    telegram: list[int] | None = None,
+    telegram: Sequence[int | None] | None = None,
 ) -> str:
     """Converts OTT Parsivel-2 disdrometer data into Cloudnet Level 1b netCDF
     file.
@@ -34,8 +34,9 @@ def parsivel2nc(
         uuid: Set specific UUID for the file.
         date: Expected date of the measurements as YYYY-MM-DD.
         telegram: List of measured value numbers as specified in section 11.2 of
-            the instrument's operating instructions. Must be defined if the
-            input file doesn't contain a header.
+            the instrument's operating instructions. Unknown values are indicated
+            with None. Telegram is required if the input file doesn't contain a
+            header.
 
     Returns:
         UUID of the generated file.
@@ -69,7 +70,7 @@ class Parsivel(CloudnetInstrument):
         self,
         filename: Path | str | bytes,
         site_meta: dict,
-        telegram: list[int] | None = None,
+        telegram: Sequence[int | None] | None = None,
         expected_date: datetime.date | None = None,
     ):
         super().__init__()
@@ -204,6 +205,9 @@ TELEGRAM = {
     16: "I_heating",
     17: "V_power_supply",
     18: "state_sensor",
+    19: "_datetime",
+    20: "_time",
+    21: "_date",
     22: "_station_name",
     24: "_rain_amount_absolute",
     25: "error_code",
@@ -231,12 +235,19 @@ def _parse_int(tokens: Iterator[str]) -> int:
 
 
 def _parse_float(tokens: Iterator[str]) -> float:
-    return float(next(tokens))
+    token = next(tokens)
+    token = token.replace(",", ".")
+    return float(token)
 
 
 def _parse_date(tokens: Iterator[str]) -> datetime.date:
     token = next(tokens)
-    year, month, day = token.split("/")
+    if "/" in token:
+        year, month, day = token.split("/")
+    elif "." in token:
+        day, month, year = token.split(".")
+    else:
+        raise ValueError(f"Unsupported date: '{input}'")
     if len(year) != 4:
         raise ValueError(f"Unsupported date: '{input}'")
     return datetime.date(int(year), int(month), int(day))
@@ -260,8 +271,7 @@ def _parse_datetime(tokens: Iterator[str]) -> datetime.datetime:
 
 
 def _parse_vector(tokens: Iterator[str]) -> np.ndarray:
-    values = [float(x) for x in _take(tokens, 32)]
-    return np.array(values)
+    return np.array([_parse_float(tokens) for _i in range(32)])
 
 
 def _parse_spectrum(tokens: Iterator[str]) -> np.ndarray:
@@ -285,14 +295,8 @@ PARSERS: dict[str, Callable[[Iterator[str]], Any]] = {
     "T_sensor": _parse_int,
     "V_power_supply": _parse_float,
     "_date": _parse_date,
-    "_dsp_firmware_version": next,
-    "_iop_firmware_version": next,
-    "_metar": next,
-    "_nws": next,
     "_rain_accum": _parse_float,
     "_rain_amount_absolute": _parse_float,
-    "_sensor_id": next,
-    "_station_name": next,
     "_time": _parse_time,
     "error_code": _parse_int,
     "fall_velocity": _parse_vector,
@@ -300,7 +304,7 @@ PARSERS: dict[str, Callable[[Iterator[str]], Any]] = {
     "kinetic_energy": _parse_float,
     "n_particles": _parse_int,
     "number_concentration": _parse_vector,
-    "time": _parse_datetime,
+    "_datetime": _parse_datetime,
     "radar_reflectivity": _parse_float,
     "rainfall_rate": _parse_float,
     "sig_laser": _parse_int,
@@ -316,8 +320,11 @@ def _parse_headers(line: str) -> list[str]:
     return [HEADERS[header.strip()] for header in line.split(";")]
 
 
-def _parse_telegram(telegram: list[int]) -> list[str]:
-    return ["time"] + [TELEGRAM[header] for header in telegram]
+def _parse_telegram(telegram: Sequence[int | None]) -> list[str]:
+    return [
+        TELEGRAM[num] if num is not None else f"_unknown_{i}"
+        for i, num in enumerate(telegram)
+    ]
 
 
 def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
@@ -328,7 +335,7 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
             continue
         try:
             tokens = iter(row.removesuffix(";").split(";"))
-            parsed = [PARSERS[header](tokens) for header in headers]
+            parsed = [PARSERS.get(header, next)(tokens) for header in headers]
             unread_tokens = list(tokens)
             if unread_tokens:
                 raise ValueError("More values than expected")
@@ -345,7 +352,7 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
 
 
 def _read_parsivel(
-    filename: Path | str | bytes, telegram: list[int] | None = None
+    filename: Path | str | bytes, telegram: Sequence[int | None] | None = None
 ) -> dict[str, np.ndarray]:
     with open(filename, encoding="latin1", errors="ignore") as file:
         lines = file.read().splitlines()
@@ -354,17 +361,16 @@ def _read_parsivel(
     if "Date" in lines[0]:
         headers = _parse_headers(lines[0])
         data = _read_rows(headers, lines[1:])
-        data["time"] = [
-            datetime.datetime.combine(date, time)
-            for date, time in zip(data["_date"], data["_time"])
-        ]
-        del data["_date"]
-        del data["_time"]
     elif telegram is not None:
         headers = _parse_telegram(telegram)
         data = _read_rows(headers, lines)
     else:
         raise ValueError("telegram must be specified for files without header")
+    if "_datetime" not in data:
+        data["_datetime"] = [
+            datetime.datetime.combine(date, time)
+            for date, time in zip(data["_date"], data["_time"])
+        ]
     result = {key: np.array(value) for key, value in data.items()}
-    result["time"] = result["time"].astype("datetime64[s]")
+    result["time"] = result["_datetime"].astype("datetime64[s]")
     return result
