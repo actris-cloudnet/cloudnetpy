@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.47.0 – 2023-05-05
+
+- Mask unrealistic `der` values
+- Split `disdrometer2nc` into `parsivel2nc` and `thies2nc`
+- Support more Parsivel format variants
+- Support Python 3.11
+
 ## 1.46.5 – 2023-04-18
 
 - Make Radiometrics reader more flexible
