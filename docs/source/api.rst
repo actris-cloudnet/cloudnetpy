@@ -37,7 +37,9 @@ all supported instrument combinations.
 
 .. autofunction:: instruments.radiometrics2nc
 
-.. autofunction:: instruments.disdrometer2nc
+.. autofunction:: instruments.parsivel2nc
+
+.. autofunction:: instruments.thies2nc
 
 .. autofunction:: instruments.ws2nc
 

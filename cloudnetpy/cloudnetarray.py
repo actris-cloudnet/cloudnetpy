@@ -1,5 +1,6 @@
 """CloudnetArray class."""
 import math
+from collections.abc import Sequence
 
 import netCDF4
 import numpy as np
@@ -27,7 +28,7 @@ class CloudnetArray:
         variable: netCDF4.Variable | np.ndarray | float | int,
         name: str,
         units_from_user: str | None = None,
-        dimensions: tuple | None = None,
+        dimensions: Sequence[str] | None = None,
         data_type: str | None = None,
     ):
         self.variable = variable
@@ -117,6 +118,8 @@ class CloudnetArray:
     def _init_data_type(self) -> str:
         if self.data.dtype in (np.float32, np.float64):
             return "f4"
+        if self.data.dtype == np.int16:
+            return "i2"
         return "i4"
 
     def __getitem__(self, ind: tuple) -> np.ndarray:
