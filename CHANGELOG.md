@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.47.1 – 2023-05-05
+
+- Allow unknown values is Parsivel telegram
+
 ## 1.47.0 – 2023-05-05
 
 - Mask unrealistic `der` values
