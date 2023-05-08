@@ -46,6 +46,7 @@ def fake_jenoptik_file(tmpdir):
         root_grp.month = "2"
         root_grp.day = "21"
         root_grp.software_version = "12.12.1 2.13 1.040 0"
+        root_grp.source = root_grp.device_name = "CHM1234"
     return file_name
 
 
@@ -57,6 +58,9 @@ class TestCHM15k:
         self.file = fake_jenoptik_file
         self.obj = lufft.LufftCeilo(fake_jenoptik_file, SITE_META, self.date)
         self.obj.read_ceilometer_file()
+
+    def test_serial_number(self):
+        self.obj.serial_number = "CHM1234"
 
     def test_calc_range(self):
         assert_array_equal(self.obj.data["range"], [1500, 2500, 3500, 4500])
@@ -121,6 +125,7 @@ class TestWithRealData(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "Lufft CHM15k"
+        assert self.nc.serial_number == "CHM170137"
         assert self.nc.title == f'CHM15k ceilometer from {self.site_meta["name"]}'
 
     def test_date_argument(self, tmp_path):

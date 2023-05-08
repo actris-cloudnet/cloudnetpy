@@ -12,6 +12,8 @@ from cloudnetpy.instruments.nc_lidar import NcLidar
 class LufftCeilo(NcLidar):
     """Class for Lufft chm15k ceilometer."""
 
+    serial_number: str | None
+
     def __init__(
         self, file_name: str, site_meta: dict, expected_date: str | None = None
     ):
@@ -19,12 +21,13 @@ class LufftCeilo(NcLidar):
         self.file_name = file_name
         self.site_meta = site_meta
         self.expected_date = expected_date
-        self.instrument = self._get_chm_model()
+        self.serial_number = None
 
     def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""
         with netCDF4.Dataset(self.file_name) as dataset:
             self.dataset = dataset
+            self._fetch_attributes()
             self._fetch_range(reference="upper")
             self._fetch_beta_raw(calibration_factor)
             self._fetch_time_and_date()
@@ -77,9 +80,12 @@ class LufftCeilo(NcLidar):
                 return var[0] if utils.isscalar(var) else var[:]
         raise ValueError("Unknown variable")
 
-    def _get_chm_model(self):
-        with netCDF4.Dataset(self.file_name) as nc:
-            source = getattr(nc, "source", "")[:3].lower()
-            if source == "chx":
-                return instruments.CHM15KX
-        return instruments.CHM15K
+    def _fetch_attributes(self):
+        self.serial_number = getattr(self.dataset, "device_name", None)
+        if self.serial_number is None:
+            self.serial_number = getattr(self.dataset, "source")
+        self.instrument = (
+            instruments.CHM15KX
+            if self.serial_number.startswith("CHX")
+            else instruments.CHM15K
+        )
