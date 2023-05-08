@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.47.2 – 2023-05-08
+
+- Write CHM15k serial number to output file
+
 ## 1.47.1 – 2023-05-05
 
 - Allow unknown values is Parsivel telegram
