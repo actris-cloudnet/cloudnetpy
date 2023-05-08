@@ -46,23 +46,7 @@ changelog = "https://github.com/actris-cloudnet/cloudnetpy/blob/main/CHANGELOG.m
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = "scipy.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "skimage.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "netCDF4.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "matplotlib.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "mpl_toolkits.*"
+module = ["matplotlib.*", "mpl_toolkits.*", "netCDF4.*", "scipy.*", "skimage.*"]
 ignore_missing_imports = true
 
 [tool.setuptools.dynamic]
