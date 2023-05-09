@@ -11,8 +11,6 @@ from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import CategorizeBits, get_is_rain
 
-G_TO_KG = 0.001
-
 
 def generate_lwc(
     categorize_file: str, output_file: str, uuid: str | None = None
@@ -99,7 +97,7 @@ class LwcSource(DataSource):
     def append_results(
         self, lwc: np.ndarray, status: np.ndarray, error: np.ndarray
     ) -> None:
-        self.append_data(lwc * G_TO_KG, "lwc", units="kg m-3")
+        self.append_data(lwc, "lwc", units="kg m-3")
         self.append_data(status, "lwc_retrieval_status")
         self.append_data(error, "lwc_error", units="dB")
 
@@ -138,14 +136,14 @@ class Lwc:
         return category_bits["droplet"]
 
     def _init_lwc_adiabatic(self) -> np.ndarray:
-        """Returns theoretical adiabatic lwc in liquid clouds (g/m3)."""
+        """Returns theoretical adiabatic lwc in liquid clouds (kg/m3)."""
         lwc_dz = atmos.fill_clouds_with_lwc_dz(
             self.lwc_source.atmosphere, self.is_liquid
         )
         return atmos.calc_adiabatic_lwc(lwc_dz, self.dheight)
 
     def _adiabatic_lwc_to_lwc(self) -> np.ndarray:
-        """Initialises liquid water content (g/m3).
+        """Initialises liquid water content (kg/m3).
 
         Calculates LWC for ALL profiles (rain, lwp > theoretical, etc.),
         """

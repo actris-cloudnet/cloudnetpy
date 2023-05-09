@@ -281,6 +281,7 @@ class Fmcw(Rpg):
     def convert_units(self):
         """Converts units."""
         self.data["rainfall_rate"].data = mmh2ms(self.data["rainfall_rate"].data)
+        self.data["lwp"].data *= 1e-3  # g -> kg
 
     @staticmethod
     def _get_instrument(data: dict):

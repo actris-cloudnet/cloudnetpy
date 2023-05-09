@@ -119,7 +119,8 @@ def generate_figure(
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
         set_ax(ax, max_y, ylabel=None)
         if plot_type == "bar":
-            _plot_bar_data(ax, field, ax_value[0])
+            unit = _get_variable_unit(nc_file, name)
+            _plot_bar_data(ax, field, ax_value[0], unit)
             set_ax(ax, 2, ATTRIBUTES[name].ylabel)
 
         elif plot_type == "segment":
@@ -321,7 +322,7 @@ def _get_standard_time_ticks(resolution: int = 4) -> list:
     ]
 
 
-def _plot_bar_data(ax, data: ma.MaskedArray, time: ndarray):
+def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
     """Plots 1D variable as bar plot.
 
     Args:
@@ -330,11 +331,17 @@ def _plot_bar_data(ax, data: ma.MaskedArray, time: ndarray):
         time (ndarray): 1D time array.
 
     """
-    # TODO: unit change somewhere else
-    ax.plot(time, data / 1000, color="navy")
+    data = _g_to_kg(data, unit)
+    ax.plot(time, data, color="navy")
+
+    if isinstance(data, ma.MaskedArray):
+        data_filled = data.filled(0)
+    else:
+        data_filled = data
+
     ax.bar(
         time,
-        data.filled(0) / 1000,
+        data_filled,
         width=1 / 120,
         align="center",
         alpha=0.5,
@@ -732,7 +739,8 @@ def compare_files(
         if plot_type == "model":
             _plot_colormesh_data(ax, field, field_name, ax_value)
         elif plot_type == "bar":
-            _plot_bar_data(ax, field, ax_value[0])
+            unit = _get_variable_unit(nc_files[ii], field_name)
+            _plot_bar_data(ax, field, ax_value[0], unit)
             set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
         elif plot_type == "segment":
             _plot_segment_data(ax, field, field_name, ax_value)

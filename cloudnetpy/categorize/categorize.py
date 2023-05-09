@@ -334,7 +334,7 @@ CATEGORIZE_ATTRIBUTES = {
     # MWR variables
     "lwp_error": MetaData(
         long_name="Error in liquid water path",
-        units="g m-2",
+        units="kg m-2",
     ),
     "lwp": MetaData(ancillary_variables="lwp_error"),
     # Model variables

@@ -50,7 +50,7 @@ def test_init_lwp_error(fake_mwr_file):
     obj = Mwr(fake_mwr_file)
     lwp = obj.data["lwp"][:]
     lwp_error = obj.data["lwp_error"][:]
-    assert_array_equal(lwp_error, np.sqrt((0.25 * lwp) ** 2 + 20**2))
+    assert_array_equal(lwp_error, np.sqrt((0.25 * lwp) ** 2 + 0.02**2))
 
 
 def test_missing_variable(bad_mwr_file):

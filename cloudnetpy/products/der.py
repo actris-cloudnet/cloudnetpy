@@ -126,7 +126,7 @@ class DerSource(DataSource):
         Z = utils.db2lin(Z)
         dZ = ma.abs(utils.db2lin(params.ddBZ)) * Z
 
-        lwp = self.getvar("lwp") * 1.0e-3  # g -> kg
+        lwp = self.getvar("lwp")
         lwp[lwp < 0] = 0
 
         der = np.zeros(Z.shape)
