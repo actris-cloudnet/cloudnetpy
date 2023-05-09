@@ -79,7 +79,7 @@ COMMON_ATTRIBUTES = {
     "sldr": MetaData(long_name="Slanted linear depolarisation ratio", units="dB"),
     "lwp": MetaData(
         long_name="Liquid water path",
-        units="g m-2",
+        units="kg m-2",
         standard_name="atmosphere_cloud_liquid_water_content",
     ),
     "iwv": MetaData(

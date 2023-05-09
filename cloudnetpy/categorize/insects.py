@@ -73,7 +73,7 @@ def _get_probabilities(obs: ClassData) -> dict:
         "temp_loose": fun(obs.tw, 268, 2),
         "temp_strict": fun(obs.tw, 274, 1),
         "v": fun(smooth_v, -3.5, 2),
-        "lwp": utils.transpose(fun(lwp_interp, 150, 50, invert=True)),
+        "lwp": utils.transpose(fun(lwp_interp, 0.15, 0.05, invert=True)),
         "v_sigma": fun(obs.v_sigma, 0.01, 0.1),
     }
 

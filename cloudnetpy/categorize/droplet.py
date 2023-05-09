@@ -67,8 +67,8 @@ def find_liquid(
         min_points: Minimum number of valid points in peak. Default is 3.
         min_top_der: Minimum derivative above peak, defined as
             (beta_peak-beta_top) / (alt_top-alt_peak). Default is 1e-7.
-        min_lwp: Minimum value from linearly interpolated lwp measured by the mwr.
-            Default is 0.
+        min_lwp: Minimum value from linearly interpolated lwp (kg m-2)
+            measured by the mwr. Default is 0.
         min_alt: Minimum altitude of the peak from the ground. Default is 100 (m).
 
     Returns:

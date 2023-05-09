@@ -34,8 +34,9 @@ class Mwr(DataSource):
 
     def _init_lwp_error(self) -> None:
         random_error, bias = 0.25, 20
-        lwp_error = utils.l2norm(self.data["lwp"][:] * random_error, bias)
-        self.append_data(lwp_error, "lwp_error", units="g m-2")
+        g2kg = 1e-3
+        lwp_error = utils.l2norm(self.data["lwp"][:] * random_error, bias * g2kg)
+        self.append_data(lwp_error, "lwp_error", units="kg m-2")
         self.data["lwp_error"].comment = (
             "This variable is a rough estimate of the one-standard-deviation\n"
             f"error in liquid water path, calculated as a combination of\n"

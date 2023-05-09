@@ -15,7 +15,6 @@ from cloudnetpy.categorize.containers import ClassificationResult
 from cloudnetpy.categorize.model import Model
 
 M_TO_KM = 0.001
-KG_TO_G = 1000
 TWO_WAY = 2
 
 
@@ -30,7 +29,7 @@ def calc_lwc_change_rate(temperature: np.ndarray, pressure: np.ndarray) -> np.nd
         pressure: Pressure of cloud base (Pa).
 
     Returns:
-        dlwc/dz (g m-3 m-1)
+        dlwc/dz (kg m-3 m-1)
 
     References:
         Brenguier, 1991, https://bit.ly/2QCSJtb
@@ -49,7 +48,7 @@ def calc_lwc_change_rate(temperature: np.ndarray, pressure: np.ndarray) -> np.nd
     f3 = con.MW_RATIO * svp * pressure_difference**-2
     dqs_dp = f1 * f2 * f3
     dqs_dz = dqs_dp * air_density**2 * -scipy.constants.g
-    return dqs_dz * KG_TO_G
+    return dqs_dz
 
 
 def calc_mixing_ratio(svp: np.ndarray, pressure: np.ndarray) -> np.ndarray:
@@ -242,8 +241,8 @@ def fill_clouds_with_lwc_dz(atmosphere: tuple, is_liquid: np.ndarray) -> np.ndar
         is_liquid: Boolean array indicating presence of liquid clouds.
 
     Returns:
-        Liquid water content change rate (g/m3/m), so that for each cloud the base value
-        is filled for the whole cloud.
+        Liquid water content change rate (kg/m3/m), so that for each cloud the base
+        value is filled for the whole cloud.
 
     """
     lwc_dz = get_lwc_change_rate_at_bases(atmosphere, is_liquid)
@@ -327,15 +326,15 @@ def _find_lowest_heights(cloud_heights: np.ndarray) -> ma.MaskedArray:
 
 
 def calc_adiabatic_lwc(lwc_change_rate: np.ndarray, dheight: float) -> np.ndarray:
-    """Calculates adiabatic liquid water content (g/m3).
+    """Calculates adiabatic liquid water content (kg/m3).
 
     Args:
-        lwc_change_rate: Liquid water content change rate (g/m3/m) calculated at the
+        lwc_change_rate: Liquid water content change rate (kg/m3/m) calculated at the
             base of each cloud and filled to that cloud.
         dheight: Median difference of the height vector (m).
 
     Returns:
-        Liquid water content (g/m3).
+        Liquid water content (kg/m3).
 
     """
     is_liquid = lwc_change_rate != 0
@@ -351,11 +350,11 @@ def distribute_lwp_to_liquid_clouds(lwc: np.ndarray, lwp: np.ndarray) -> np.ndar
     theoretical proportion, i.e., sum(scaled LWC) = measured LWP.
 
     Args:
-        lwc: 2D liquid water content (g/m3).
-        lwp: 1D liquid water path (g/m2).
+        lwc: 2D liquid water content (kg/m3).
+        lwp: 1D liquid water path (kg/m2).
 
     Returns:
-        2D LWP-weighted, normalized LWC (g/m2).
+        2D LWP-weighted, normalized LWC (kg/m2).
 
     """
     lwc_sum = ma.sum(lwc, axis=1)

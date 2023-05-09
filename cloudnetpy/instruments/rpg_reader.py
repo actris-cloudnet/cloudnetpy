@@ -234,6 +234,7 @@ class HatproBinLwp(HatproBin):
             ],
             self.header["_n_samples"],
         )
+        self.data["lwp"] *= 1e-3  # Convert from g/m^2 to kg/m^2
 
 
 class HatproBinIwv(HatproBin):
