@@ -331,7 +331,7 @@ def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
         time (ndarray): 1D time array.
 
     """
-    data = _g_to_kg(data, unit)
+    data = _convert_to_kg(data, unit)
     ax.plot(time, data, color="navy")
 
     if isinstance(data, ma.MaskedArray):
@@ -508,7 +508,7 @@ def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
 
 def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
     data, time = _get_unmasked_values(data_in, time)
-    data = _g_to_kg(data, unit)
+    data = _convert_to_kg(data, unit)
     rolling_mean, width = _calculate_rolling_mean(time, data)
     gaps = _find_time_gap_indices(time)
     n, line_width = _get_plot_parameters(data)
@@ -545,7 +545,7 @@ def _get_unmasked_values(
     return data[good_values], time[good_values]
 
 
-def _g_to_kg(data: np.ndarray, unit: str) -> np.ndarray:
+def _convert_to_kg(data: np.ndarray, unit: str) -> np.ndarray:
     if "kg" in unit:
         return data
     return data / 1000
