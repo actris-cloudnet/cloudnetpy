@@ -139,7 +139,7 @@ def test_get_unmasked_values2():
 def test_change_unit2kg():
     data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     unit = "g m-2"
-    x = plotting._g_to_kg(data, unit)
+    x = plotting._convert_to_kg(data, unit)
     expected = np.array([0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009])
     assert_array_almost_equal(x, expected)
 
@@ -147,7 +147,7 @@ def test_change_unit2kg():
 def test_keep_unit_kg():
     data = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     unit = "kg m-2"
-    x = plotting._g_to_kg(data, unit)
+    x = plotting._convert_to_kg(data, unit)
     expected = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
     assert_array_almost_equal(x, expected)
 
