@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.48.0 – 2023-05-10
+
+- Change `lwp` unit to `kg m-2`
+
 ## 1.47.2 – 2023-05-08
 
 - Write CHM15k serial number to output file
