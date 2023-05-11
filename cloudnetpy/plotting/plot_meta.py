@@ -338,11 +338,19 @@ ATTRIBUTES = {
         plot_type="model",
     ),
     "temperature": PlotMeta(
-        name="Model temperature",
+        name="Temperature",
         cbar="RdBu_r",
         clabel="K",
         plot_range=(223.15, 323.15),
         plot_scale=Scale.LINEAR,
+        plot_type="model",
+    ),
+    "absolute_humidity": PlotMeta(
+        name="Absolute humidity",
+        cbar="viridis",
+        clabel="",
+        plot_range=(1e-5, 1e-2),
+        plot_scale=Scale.LOGARITHMIC,
         plot_type="model",
     ),
     "cloud_fraction": PlotMeta(
