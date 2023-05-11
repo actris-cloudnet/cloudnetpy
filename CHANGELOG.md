@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.49.0 – 2023-05-11
+
+- Implement mwrpy products
+- Support more values in Parsivel telegram
+
 ## 1.48.0 – 2023-05-10
 
 - Change `lwp` unit to `kg m-2`
