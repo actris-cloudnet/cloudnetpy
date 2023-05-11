@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.49.1 – 2023-05-11
+
+- Fix lwp plotting
+
 ## 1.49.0 – 2023-05-11
 
 - Implement mwrpy products
