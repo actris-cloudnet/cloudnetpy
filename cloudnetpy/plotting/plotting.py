@@ -109,7 +109,9 @@ def generate_figure(
         plot_type = ATTRIBUTES[name].plot_type
         if title:
             _set_title(ax, name, "")
-        if not is_height or name in ("lwp", "iwv"):
+        if not is_height or (
+            cloudnet_file_type == "mwr-single" and name in ("lwp", "iwv")
+        ):
             unit = _get_variable_unit(nc_file, name)
             source = ATTRIBUTES[name].source
             time = _read_time_vector(nc_file)
