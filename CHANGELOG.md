@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.49.3 – 2023-05-12
+
+- Re-release due to PyPI failure
+
 ## 1.49.2 – 2023-05-12
 
 - Add potential temperature plot meta
