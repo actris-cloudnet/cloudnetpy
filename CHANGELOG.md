@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.49.4 – 2023-05-12
+
+- Fix `mwr-multi` time units
+
 ## 1.49.3 – 2023-05-12
 
 - Re-release due to PyPI failure
