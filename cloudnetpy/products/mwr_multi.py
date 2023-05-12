@@ -85,5 +85,10 @@ def generate_mwr_multi(
             nc_output.variables["time"].standard_name = "time"
             nc_output.variables["time"].long_name = "Time UTC"
             nc_output.variables["time"].calendar = "standard"
+            nc_output.variables["time"].units = (
+                f"hours since "
+                f"{nc_output.year}-{nc_output.month}-{nc_output.day} "
+                f"00:00:00 +00:00"
+            )
 
     return file_uuid
