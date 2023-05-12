@@ -345,6 +345,14 @@ ATTRIBUTES = {
         plot_scale=Scale.LINEAR,
         plot_type="model",
     ),
+    "potential_temperature": PlotMeta(
+        name="Potential temperature",
+        cbar="RdBu_r",
+        clabel="K",
+        plot_range=(260, 330),
+        plot_scale=Scale.LINEAR,
+        plot_type="model",
+    ),
     "absolute_humidity": PlotMeta(
         name="Absolute humidity",
         cbar="viridis",
