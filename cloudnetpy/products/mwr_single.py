@@ -2,9 +2,14 @@ from tempfile import NamedTemporaryFile
 
 import netCDF4
 from mwrpy.process_mwrpy import process_product
+from mwrpy.version import __version__ as mwrpy_version
 
 from cloudnetpy import utils
-from cloudnetpy.output import copy_global, copy_variables
+from cloudnetpy.output import (
+    add_standard_global_attributes,
+    copy_global,
+    copy_variables,
+)
 
 
 def generate_mwr_single(
@@ -39,11 +44,10 @@ def generate_mwr_single(
             nc_output.createDimension("time", len(nc_lwp.variables["time"][:]))
 
             # Global attributes
-            copy_global(
-                nc_l1c, nc_output, ("year", "month", "day", "Conventions", "location")
-            )
+            copy_global(nc_l1c, nc_output, ("year", "month", "day", "location"))
             nc_output.title = f"MWR single-pointing from {nc_l1c.location}"
-            nc_output.file_uuid = file_uuid
+            add_standard_global_attributes(nc_output, file_uuid)
+            nc_output.mwrpy_version = mwrpy_version
             nc_output.cloudnet_file_type = "mwr-single"
 
             # History

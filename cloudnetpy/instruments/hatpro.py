@@ -8,6 +8,7 @@ import mwrpy
 import netCDF4
 import numpy as np
 from mwrpy.level1.lev1_meta_nc import ATTRIBUTES_1B01
+from mwrpy.version import __version__ as mwrpy_version
 from numpy import ma
 
 from cloudnetpy import output, utils
@@ -73,6 +74,8 @@ def hatpro2l1c(
     with netCDF4.Dataset(output_file, "a") as nc:
         nc.cloudnet_file_type = "mwr-l1c"
         nc.title = nc.title.replace("radiometer", "radiometer Level 1c")
+        nc.mwrpy_version = mwrpy_version
+
     return uuid
 
 

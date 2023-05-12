@@ -229,7 +229,7 @@ def init_file(
     for key, dimension in dimensions.items():
         nc.createDimension(key, dimension)
     _write_vars2nc(nc, cloudnet_arrays)
-    _add_standard_global_attributes(nc, uuid)
+    add_standard_global_attributes(nc, uuid)
     return nc
 
 
@@ -392,7 +392,7 @@ def _get_identifier(short_id: str) -> str:
     return short_id
 
 
-def _add_standard_global_attributes(
+def add_standard_global_attributes(
     nc: netCDF4.Dataset, uuid: str | None = None
 ) -> None:
     nc.Conventions = "CF-1.8"

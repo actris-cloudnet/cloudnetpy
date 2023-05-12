@@ -109,10 +109,10 @@ def test_get_source_uuids():
 def test_add_standard_global_attributes(tmpdir_factory):
     file = tmpdir_factory.mktemp("data").join("nc_file.nc")
     with netCDF4.Dataset(file, "w", format="NETCDF4_CLASSIC") as root_grp:
-        output._add_standard_global_attributes(root_grp, "abcd")
+        output.add_standard_global_attributes(root_grp, "abcd")
         assert root_grp.file_uuid == "abcd"
         assert root_grp.Conventions == "CF-1.8"
-        output._add_standard_global_attributes(root_grp)
+        output.add_standard_global_attributes(root_grp)
         assert root_grp.file_uuid != "abcd"
 
 
