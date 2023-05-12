@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.49.2 – 2023-05-12
+
+- Add potential temperature plot meta
+- Improve global attributes
+
 ## 1.49.1 – 2023-05-11
 
 - Fix lwp plotting
