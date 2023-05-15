@@ -4,12 +4,7 @@ import netCDF4
 from mwrpy.process_mwrpy import process_product
 from mwrpy.version import __version__ as mwrpy_version
 
-from cloudnetpy import utils
-from cloudnetpy.output import (
-    add_standard_global_attributes,
-    copy_global,
-    copy_variables,
-)
+from cloudnetpy import output, utils
 
 
 def generate_mwr_single(
@@ -25,12 +20,12 @@ def generate_mwr_single(
         NamedTemporaryFile() as t_prof_file,
         NamedTemporaryFile() as abs_hum_file,
     ):
-        process_product("2I01", coeffs, mwr_l1c_file, lwp_file.name)
-        process_product("2I02", coeffs, mwr_l1c_file, iwv_file.name)
-        process_product("2P01", coeffs, mwr_l1c_file, t_prof_file.name)
-        process_product("2P03", coeffs, mwr_l1c_file, abs_hum_file.name)
+        for prod, file in zip(
+            ("2I01", "2I02", "2P01", "2P03"),
+            (lwp_file, iwv_file, t_prof_file, abs_hum_file),
+        ):
+            process_product(prod, coeffs, mwr_l1c_file, file.name)
 
-        # Combine data
         with (
             netCDF4.Dataset(output_file, "w", format="NETCDF4_CLASSIC") as nc_output,
             netCDF4.Dataset(lwp_file.name, "r") as nc_lwp,
@@ -39,63 +34,42 @@ def generate_mwr_single(
             netCDF4.Dataset(t_prof_file.name, "r") as nc_t_prof,
             netCDF4.Dataset(mwr_l1c_file, "r") as nc_l1c,
         ):
-            # Dimensions
             nc_output.createDimension("height", len(nc_t_prof.variables["height"][:]))
             nc_output.createDimension("time", len(nc_lwp.variables["time"][:]))
 
-            # Global attributes
-            copy_global(nc_l1c, nc_output, ("year", "month", "day", "location"))
-            nc_output.title = f"MWR single-pointing from {nc_l1c.location}"
-            add_standard_global_attributes(nc_output, file_uuid)
-            nc_output.mwrpy_version = mwrpy_version
-            nc_output.cloudnet_file_type = "mwr-single"
+            for source, variables in (
+                (nc_iwv, ("iwv",)),
+                (nc_hum, ("absolute_humidity",)),
+                (nc_t_prof, ("temperature", "height")),
+                (nc_l1c, ("latitude", "longitude", "altitude")),
+                (
+                    nc_lwp,
+                    (
+                        "time",
+                        "lwp",
+                        "lwp_random_error",
+                        "lwp_offset",
+                        "lwp_systematic_error",
+                        "azimuth_angle",
+                    ),
+                ),
+            ):
+                output.copy_variables(source, nc_output, variables)
 
-            # History
-            new_history = (
+            output.add_standard_global_attributes(nc_output, file_uuid)
+            output.copy_global(nc_l1c, nc_output, ("year", "month", "day", "location"))
+            nc_output.title = f"MWR single-pointing from {nc_l1c.location}"
+            nc_output.cloudnet_file_type = "mwr-single"
+            nc_output.mwrpy_version = mwrpy_version
+            output.fix_time_attributes(nc_output)
+            output.replace_attribute_with_standard_value(
+                nc_output,
+                ("lwp", "iwv", "temperature", "azimuth_angle"),
+                ("units", "long_name", "standard_name"),
+            )
+            nc_output.history = (
                 f"{utils.get_time()} - MWR single-pointing product created \n"
                 f"{nc_l1c.history}"
             )
-            nc_output.history = new_history
-
-            # From Level 1c file
-            copy_variables(nc_l1c, nc_output, ("latitude", "longitude", "altitude"))
-
-            # From Level 2 files
-            copy_variables(
-                nc_lwp,
-                nc_output,
-                (
-                    "time",
-                    "lwp",
-                    "lwp_random_error",
-                    "lwp_offset",
-                    "lwp_systematic_error",
-                    "azimuth_angle",
-                ),
-            )
-            copy_variables(nc_iwv, nc_output, ("iwv",))
-            copy_variables(nc_t_prof, nc_output, ("temperature", "height"))
-            copy_variables(nc_hum, nc_output, ("absolute_humidity",))
-
-            # Fix some attributes
-            nc_output.variables["time"].standard_name = "time"
-            nc_output.variables["time"].long_name = "Time UTC"
-            nc_output.variables["time"].calendar = "standard"
-            nc_output.variables["time"].units = (
-                f"hours since "
-                f"{nc_output.year}-{nc_output.month}-{nc_output.day} "
-                f"00:00:00 +00:00"
-            )
-
-            nc_output.variables["lwp"].long_name = "Liquid water path"
-            nc_output.variables[
-                "lwp"
-            ].standard_name = "atmosphere_cloud_liquid_water_content"
-            nc_output.variables[
-                "iwv"
-            ].standard_name = "atmosphere_mass_content_of_water_vapor"
-            nc_output.variables["iwv"].long_name = "Integrated water vapour"
-            nc_output.variables["azimuth_angle"].long_name = "Azimuth angle"
-            nc_output.variables["temperature"].long_name = "Temperature"
 
     return file_uuid

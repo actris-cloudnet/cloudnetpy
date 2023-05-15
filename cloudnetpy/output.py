@@ -411,3 +411,22 @@ def fix_attribute_name(nc: netCDF4.Dataset) -> None:
             logging.info('Renaming "unit" attribute into "units"')
             nc[var].setncattr("units", nc[var].unit)
             nc[var].delncattr("unit")
+
+
+def fix_time_attributes(nc: netCDF4.Dataset) -> None:
+    nc.variables["time"].standard_name = "time"
+    nc.variables["time"].long_name = "Time UTC"
+    nc.variables["time"].calendar = "standard"
+    nc.variables["time"].units = (
+        f"hours since " f"{nc.year}-{nc.month}-{nc.day} " f"00:00:00 +00:00"
+    )
+
+
+def replace_attribute_with_standard_value(
+    nc: netCDF4.Dataset, variables: tuple, attributes: tuple
+):
+    for key in variables:
+        if key in COMMON_ATTRIBUTES and key in nc.variables:
+            for attr in attributes:
+                if (value := getattr(COMMON_ATTRIBUTES[key], attr)) is not None:
+                    setattr(nc.variables[key], attr, value)

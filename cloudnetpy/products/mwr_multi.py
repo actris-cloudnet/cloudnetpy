@@ -2,9 +2,9 @@ from tempfile import NamedTemporaryFile
 
 import netCDF4
 from mwrpy.process_mwrpy import process_product
+from mwrpy.version import __version__ as mwrpy_version
 
-from cloudnetpy import utils
-from cloudnetpy.output import copy_global, copy_variables
+from cloudnetpy import output, utils
 
 
 def generate_mwr_multi(
@@ -21,19 +21,17 @@ def generate_mwr_multi(
         NamedTemporaryFile() as t_pot_file,
         NamedTemporaryFile() as eq_temp_file,
     ):
-        process_product("2P02", coeffs, mwr_l1c_file, temp_file.name)
-        process_product("2P03", coeffs, mwr_l1c_file, abs_hum_file.name)
-
         for prod, file in zip(
-            ("2P04", "2P07", "2P08"), (rel_hum_file, t_pot_file, eq_temp_file)
+            ("2P02", "2P03", "2P04", "2P07", "2P08"),
+            (temp_file, abs_hum_file, rel_hum_file, t_pot_file, eq_temp_file),
         ):
             process_product(
                 prod,
                 coeffs,
                 mwr_l1c_file,
                 file.name,
-                temp_file=temp_file.name,
-                hum_file=abs_hum_file.name,
+                temp_file=temp_file.name if prod not in ("2P02", "2P03") else None,
+                hum_file=abs_hum_file.name if prod not in ("2P02", "2P03") else None,
             )
 
         with (
@@ -44,51 +42,27 @@ def generate_mwr_multi(
             netCDF4.Dataset(t_pot_file.name, "r") as nc_t_pot,
             netCDF4.Dataset(eq_temp_file.name, "r") as nc_eq_temp,
         ):
-            # Dimensions
             nc_output.createDimension("time", len(nc_temp.variables["time"][:]))
             nc_output.createDimension("height", len(nc_temp.variables["height"][:]))
-            nc_output.createDimension("bnds", 2)
 
-            # History
-            new_history = (
+            for source, variables in (
+                (nc_l1c, ("latitude", "longitude", "altitude")),
+                (nc_temp, ("time", "height", "temperature")),
+                (nc_rel_hum, ("relative_humidity",)),
+                (nc_t_pot, ("potential_temperature",)),
+                (nc_eq_temp, ("equivalent_potential_temperature",)),
+            ):
+                output.copy_variables(source, nc_output, variables)
+
+            output.add_standard_global_attributes(nc_output, file_uuid)
+            output.copy_global(nc_l1c, nc_output, ("year", "month", "day", "location"))
+            nc_output.title = f"MWR multiple-pointing from {nc_l1c.location}"
+            nc_output.cloudnet_file_type = "mwr-multi"
+            nc_output.mwrpy_version = mwrpy_version
+            output.fix_time_attributes(nc_output)
+            nc_output.history = (
                 f"{utils.get_time()} - MWR multiple-pointing product created \n"
                 f"{nc_l1c.history}"
-            )
-            nc_output.history = new_history
-
-            # From Level 1c file
-            copy_global(
-                nc_l1c, nc_output, ("year", "month", "day", "Conventions", "location")
-            )
-            copy_variables(nc_l1c, nc_output, ("latitude", "longitude", "altitude"))
-
-            # From Level 2 products
-            copy_variables(
-                nc_temp,
-                nc_output,
-                (
-                    "time",
-                    "height",
-                    "temperature",
-                ),
-            )
-            copy_variables(nc_rel_hum, nc_output, ("relative_humidity",))
-            copy_variables(nc_t_pot, nc_output, ("potential_temperature",))
-            copy_variables(nc_eq_temp, nc_output, ("equivalent_potential_temperature",))
-
-            # Global attributes
-            nc_output.file_uuid = file_uuid
-            nc_output.cloudnet_file_type = "mwr-multi"
-            nc_output.title = f"MWR multiple-pointing from {nc_l1c.location}"
-
-            # Fix some attributes
-            nc_output.variables["time"].standard_name = "time"
-            nc_output.variables["time"].long_name = "Time UTC"
-            nc_output.variables["time"].calendar = "standard"
-            nc_output.variables["time"].units = (
-                f"hours since "
-                f"{nc_output.year}-{nc_output.month}-{nc_output.day} "
-                f"00:00:00 +00:00"
             )
 
     return file_uuid
