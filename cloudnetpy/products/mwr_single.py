@@ -1,7 +1,7 @@
 from tempfile import NamedTemporaryFile
 
 import netCDF4
-from mwrpy.process_mwrpy import process_product
+from mwrpy.level2.write_lev2_nc import lev2_to_nc
 from mwrpy.version import __version__ as mwrpy_version
 
 from cloudnetpy import output, utils
@@ -24,7 +24,7 @@ def generate_mwr_single(
             ("2I01", "2I02", "2P01", "2P03"),
             (lwp_file, iwv_file, t_prof_file, abs_hum_file),
         ):
-            process_product(prod, coeffs, mwr_l1c_file, file.name)
+            lev2_to_nc(coeffs, prod, mwr_l1c_file, file.name)
 
         with (
             netCDF4.Dataset(output_file, "w", format="NETCDF4_CLASSIC") as nc_output,

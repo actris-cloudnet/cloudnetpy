@@ -1,7 +1,7 @@
 from tempfile import NamedTemporaryFile
 
 import netCDF4
-from mwrpy.process_mwrpy import process_product
+from mwrpy.level2.write_lev2_nc import lev2_to_nc
 from mwrpy.version import __version__ as mwrpy_version
 
 from cloudnetpy import output, utils
@@ -25,9 +25,9 @@ def generate_mwr_multi(
             ("2P02", "2P03", "2P04", "2P07", "2P08"),
             (temp_file, abs_hum_file, rel_hum_file, t_pot_file, eq_temp_file),
         ):
-            process_product(
-                prod,
+            lev2_to_nc(
                 coeffs,
+                prod,
                 mwr_l1c_file,
                 file.name,
                 temp_file=temp_file.name if prod not in ("2P02", "2P03") else None,
