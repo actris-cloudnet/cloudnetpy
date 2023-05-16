@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.49.5 – 2023-05-16
+
+- Extend mwrpy processing to all sites
+
 ## 1.49.4 – 2023-05-12
 
 - Fix `mwr-multi` time units
