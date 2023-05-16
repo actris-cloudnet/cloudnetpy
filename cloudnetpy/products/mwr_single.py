@@ -5,14 +5,14 @@ from mwrpy.process_mwrpy import process_product
 from mwrpy.version import __version__ as mwrpy_version
 
 from cloudnetpy import output, utils
+from cloudnetpy.products import product_tools
 
 
 def generate_mwr_single(
     mwr_l1c_file: str, output_file: str, uuid: str | None = None
 ) -> str:
     file_uuid = uuid if uuid is not None else utils.get_uuid()
-
-    coeffs = "hyytiala"
+    coeffs = product_tools.get_mwrpy_coeffs(mwr_l1c_file)
 
     with (
         NamedTemporaryFile() as lwp_file,

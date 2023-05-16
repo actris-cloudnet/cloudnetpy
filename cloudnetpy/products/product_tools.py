@@ -272,3 +272,8 @@ def get_temperature(categorize_file: str) -> np.ndarray:
     """Returns interpolated temperatures in Celsius."""
     atmosphere = interpolate_model(categorize_file, "temperature")
     return atmos_utils.k2c(atmosphere["temperature"])
+
+
+def get_mwrpy_coeffs(nc_file: str) -> str:
+    with netCDF4.Dataset(nc_file) as nc:
+        return nc.mwrpy_coefficients

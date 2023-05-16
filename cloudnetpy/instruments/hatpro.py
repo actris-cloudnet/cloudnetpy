@@ -75,6 +75,7 @@ def hatpro2l1c(
         nc.cloudnet_file_type = "mwr-l1c"
         nc.title = nc.title.replace("radiometer", "radiometer Level 1c")
         nc.mwrpy_version = mwrpy_version
+        nc.mwrpy_coefficients = site_meta["coeffs_dir"]
 
     return uuid
 
