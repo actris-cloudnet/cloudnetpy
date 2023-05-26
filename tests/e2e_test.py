@@ -1,8 +1,5 @@
-import sys
-from pathlib import Path
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import importlib
+from pathlib import Path
 from uuid import UUID
 
 import netCDF4
@@ -14,7 +11,7 @@ from cloudnetpy.instruments import ceilo2nc, mira2nc
 
 def _process_product_file(product_type: str, path: str, categorize_file: str) -> tuple:
     output_file = f"{path}{product_type}.nc"
-    module = importlib.import_module(f"cloudnetpy.products")
+    module = importlib.import_module("cloudnetpy.products")
     uuid = getattr(module, f"generate_{product_type}")(categorize_file, output_file)
     return output_file, uuid
 
@@ -106,8 +103,8 @@ def _check_source_file_uuids(file: str, expected_uuids: tuple):
 def _check_is_valid_uuid(uuid):
     try:
         UUID(uuid, version=4)
-    except (ValueError, TypeError):
-        raise AssertionError(f"{uuid} is not a valid UUID.")
+    except (ValueError, TypeError) as exc:
+        raise AssertionError(f"{uuid} is not a valid UUID.") from exc
 
 
 def _check_attributes(full_path: str, metadata: dict):

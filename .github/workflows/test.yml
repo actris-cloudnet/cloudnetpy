@@ -22,11 +22,10 @@ jobs:
           pip install .[test,extras]
       - name: Lint with pylint
         run: |
-          pylint cloudnetpy --errors-only
+          pylint cloudnetpy tests
       - name: Typecheck with mypy
         run: |
-          mypy cloudnetpy/
-          mypy tests/
+          mypy cloudnetpy tests
       - name: Test with pytest-flakefinder
         run: |
           pytest --flake-finder --flake-runs=2
