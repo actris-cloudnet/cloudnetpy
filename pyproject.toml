@@ -38,10 +38,10 @@ dev = ["pre-commit"]
 extras = ["voodoonet>=0.1.1"]
 
 [project.urls]
-homepage = "https://github.com/actris-cloudnet/cloudnetpy"
-documentation = "https://cloudnetpy.readthedocs.io"
-repository = "https://github.com/actris-cloudnet/cloudnetpy"
-changelog = "https://github.com/actris-cloudnet/cloudnetpy/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/actris-cloudnet/cloudnetpy"
+Documentation = "https://cloudnetpy.readthedocs.io"
+Repository = "https://github.com/actris-cloudnet/cloudnetpy"
+Changelog = "https://github.com/actris-cloudnet/cloudnetpy/blob/main/CHANGELOG.md"
 
 [tool.mypy]
 check_untyped_defs = true
