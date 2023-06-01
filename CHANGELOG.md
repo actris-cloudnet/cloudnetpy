@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.49.6 – 2023-06-01
+
+- Improve duplicate timestamp handling in HATPRO reader
+
 ## 1.49.5 – 2023-05-16
 
 - Extend mwrpy processing to all sites
