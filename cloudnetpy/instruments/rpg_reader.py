@@ -182,11 +182,16 @@ class HatproBin:
         with open(self.filename, "rb") as file:
             self._read_header(file)
             self._read_data(file)
+        self._remove_duplicate_timestamps()
         self._add_zenith_angle()
 
     def screen_bad_profiles(self):
         is_bad = self.data["_quality_flag"] & 0b110 == self.QUALITY_LOW << 1
         self.data[self.variable][is_bad] = ma.masked
+
+    def _remove_duplicate_timestamps(self):
+        _, ind = np.unique(self.data["time"], return_index=True)
+        self.data = self.data[ind]
 
     def _read_header(self, file: BinaryIO):
         raise NotImplementedError()
