@@ -61,7 +61,13 @@ pre-commit install
 Run unit tests:
 
 ```sh
-pytest --flake-finder --flake-runs=2
+python3 -m pytest --flake-finder --flake-runs=2
+```
+
+Run single unit test:
+
+```sh
+python3 -m pytest tests/unit/test_hatpro.py
 ```
 
 Run end-to-end tests:
