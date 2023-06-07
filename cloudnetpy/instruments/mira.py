@@ -10,7 +10,7 @@ from cloudnetpy.metadata import MetaData
 
 
 def mira2nc(
-    raw_mira: str,
+    raw_mira: str | list[str],
     output_file: str,
     site_meta: dict,
     uuid: str | None = None,
@@ -24,7 +24,7 @@ def mira2nc(
 
     Args:
         raw_mira: Filename of a daily MIRA .mmclx file. Can be also a folder containing
-            several non-concatenated .mmclx files from one day.
+            several non-concatenated .mmclx files from one day or list of files.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
             value pair is `name`.
@@ -60,9 +60,12 @@ def mira2nc(
     }
 
     with TemporaryDirectory() as temp_dir:
-        if os.path.isdir(raw_mira):
+        if type(raw_mira) is list or os.path.isdir(raw_mira):
             mmclx_filename = f"{temp_dir}/tmp.mmclx"
-            valid_filenames = utils.get_sorted_filenames(raw_mira, ".mmclx")
+            if type(raw_mira) is list:
+                valid_filenames = sorted(raw_mira)
+            else:
+                valid_filenames = utils.get_sorted_filenames(raw_mira, ".mmclx")
             valid_filenames = utils.get_files_with_common_range(valid_filenames)
             variables = list(keymap.keys())
             concat_lib.concatenate_files(
