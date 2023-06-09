@@ -60,9 +60,9 @@ def mira2nc(
     }
 
     with TemporaryDirectory() as temp_dir:
-        if type(raw_mira) is list or os.path.isdir(raw_mira):
+        if isinstance(raw_mira, list) or os.path.isdir(raw_mira):
             mmclx_filename = f"{temp_dir}/tmp.mmclx"
-            if type(raw_mira) is list:
+            if isinstance(raw_mira, list):
                 valid_filenames = sorted(raw_mira)
             else:
                 valid_filenames = utils.get_sorted_filenames(raw_mira, ".mmclx")
