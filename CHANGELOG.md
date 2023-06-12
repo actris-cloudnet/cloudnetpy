@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.49.8 – 2023-06-12
+
+- Fix reading of truncated lines in Parsivel
+
 ## 1.49.7 – 2023-06-09
 
 - Support input files as list in mira2nc (#81)
