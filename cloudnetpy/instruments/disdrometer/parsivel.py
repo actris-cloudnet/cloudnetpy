@@ -1,8 +1,9 @@
 import datetime
 import logging
 from collections.abc import Callable, Iterator, Sequence
+from itertools import islice
 from pathlib import Path
-from typing import Any, Literal, TypeVar
+from typing import Any, Literal
 
 import numpy as np
 
@@ -231,14 +232,6 @@ TELEGRAM = {
 }
 
 
-T = TypeVar("T")
-
-
-def _take(it: Iterator[T], n: int) -> Iterator[T]:
-    for _ in range(n):
-        yield next(it)  # pylint: disable=stop-iteration-return
-
-
 def _parse_int(tokens: Iterator[str]) -> int:
     return int(next(tokens))
 
@@ -289,13 +282,15 @@ def _parse_spectrum(tokens: Iterator[str]) -> np.ndarray:
         return np.zeros((32, 32), dtype="i2")
     if first.startswith("<SPECTRUM>"):
         raw = [first.removeprefix("<SPECTRUM>")]
-        raw.extend(_take(tokens, 1023))
+        raw.extend(islice(tokens, 1023))
         if next(tokens) != "</SPECTRUM>":
             raise ValueError("Invalid spectrum format")
         values = [int(x) if x != "" else 0 for x in raw]
     else:
         values = [int(first)]
-        values.extend(int(x) for x in _take(tokens, 1023))
+        values.extend(int(x) for x in islice(tokens, 1023))
+    if len(values) != 1024:
+        raise ValueError("Invalid length")
     return np.array(values, dtype="i2").reshape((32, 32))
 
 
