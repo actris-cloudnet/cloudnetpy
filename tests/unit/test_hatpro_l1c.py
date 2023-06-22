@@ -1,3 +1,4 @@
+import glob
 from os import path
 from tempfile import TemporaryDirectory
 
@@ -11,13 +12,17 @@ file_path = f"{SCRIPT_PATH}/data/hatpro-mwrpy/"
 
 
 class TestHatpro2nc(Check):
+    coeff_files = glob.glob(f"{SCRIPT_PATH}/data/hatpro-mwrpy-coeffs/*.ret")
+
     site_meta = {
-        "name": "the_station",
+        "name": "hyytiala",
         "altitude": 50,
         "latitude": 23.0,
         "longitude": 123,
-        "coeffs_dir": "hyytiala",
+        "coefficientFiles": coeff_files,
+        "coefficientLinks": coeff_files,
     }
+
     date = "2023-04-01"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"

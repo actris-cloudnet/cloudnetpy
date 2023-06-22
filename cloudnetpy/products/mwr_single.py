@@ -1,3 +1,4 @@
+import tempfile
 from tempfile import NamedTemporaryFile
 
 import netCDF4
@@ -12,19 +13,21 @@ def generate_mwr_single(
     mwr_l1c_file: str, output_file: str, uuid: str | None = None
 ) -> str:
     file_uuid = uuid if uuid is not None else utils.get_uuid()
-    coeffs = product_tools.get_mwrpy_coeffs(mwr_l1c_file)
 
     with (
         NamedTemporaryFile() as lwp_file,
         NamedTemporaryFile() as iwv_file,
         NamedTemporaryFile() as t_prof_file,
         NamedTemporaryFile() as abs_hum_file,
+        tempfile.TemporaryDirectory() as temp_dir,
     ):
+        coeffs = product_tools.get_read_mwrpy_coeffs(mwr_l1c_file, temp_dir)
+
         for prod, file in zip(
             ("2I01", "2I02", "2P01", "2P03"),
             (lwp_file, iwv_file, t_prof_file, abs_hum_file),
         ):
-            lev2_to_nc(coeffs, prod, mwr_l1c_file, file.name)
+            lev2_to_nc(prod, mwr_l1c_file, file.name, coeff_files=coeffs)
 
         with (
             netCDF4.Dataset(output_file, "w", format="NETCDF4_CLASSIC") as nc_output,

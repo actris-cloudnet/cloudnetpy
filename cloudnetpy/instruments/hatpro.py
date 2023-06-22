@@ -36,7 +36,7 @@ def hatpro2l1c(
     Args:
         mwr_dir: Folder containing one day of HATPRO files.
         output_file: Output file name.
-        site_meta: Dictionary containing information about the site
+        site_meta: Dictionary containing information about the site and instrument
         uuid: Set specific UUID for the file.
         date: Expected date in the input files.
 
@@ -44,7 +44,16 @@ def hatpro2l1c(
         UUID of the generated file.
     """
 
-    hatpro_raw = mwrpy.lev1_to_nc(site_meta["coeffs_dir"], "1C01", mwr_dir)
+    coeff_files = site_meta.get("coefficientFiles", None)
+
+    hatpro_raw = mwrpy.lev1_to_nc(
+        "1C01",
+        mwr_dir,
+        output_file=output_file,
+        coeff_files=coeff_files,
+        instrument_config=site_meta,
+    )
+
     hatpro = HatproL1c(hatpro_raw, site_meta)
 
     timestamps = hatpro.data["time"][:]
@@ -75,7 +84,7 @@ def hatpro2l1c(
         nc.cloudnet_file_type = "mwr-l1c"
         nc.title = nc.title.replace("radiometer", "radiometer Level 1c")
         nc.mwrpy_version = mwrpy_version
-        nc.mwrpy_coefficients = site_meta["coeffs_dir"]
+        nc.mwrpy_coefficients = ", ".join(site_meta["coefficientLinks"])
 
     return uuid
 

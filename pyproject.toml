@@ -17,7 +17,7 @@ classifiers = [
 dependencies = [
   "cloudnetpy_qc>=1.10.2",
   "matplotlib",
-  "mwrpy>=0.1.6",
+  "mwrpy>=0.4.1",
   "netCDF4",
   "requests",
   "rpgpy>=0.14.2",

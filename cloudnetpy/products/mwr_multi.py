@@ -1,3 +1,4 @@
+import tempfile
 from tempfile import NamedTemporaryFile
 
 import netCDF4
@@ -12,7 +13,6 @@ def generate_mwr_multi(
     mwr_l1c_file: str, output_file: str, uuid: str | None = None
 ) -> str:
     file_uuid = uuid if uuid is not None else utils.get_uuid()
-    coeffs = product_tools.get_mwrpy_coeffs(mwr_l1c_file)
 
     with (
         NamedTemporaryFile() as temp_file,
@@ -20,16 +20,19 @@ def generate_mwr_multi(
         NamedTemporaryFile() as rel_hum_file,
         NamedTemporaryFile() as t_pot_file,
         NamedTemporaryFile() as eq_temp_file,
+        tempfile.TemporaryDirectory() as temp_dir,
     ):
+        coeffs = product_tools.get_read_mwrpy_coeffs(mwr_l1c_file, temp_dir)
+
         for prod, file in zip(
             ("2P02", "2P03", "2P04", "2P07", "2P08"),
             (temp_file, abs_hum_file, rel_hum_file, t_pot_file, eq_temp_file),
         ):
             lev2_to_nc(
-                coeffs,
                 prod,
                 mwr_l1c_file,
                 file.name,
+                coeff_files=coeffs,
                 temp_file=temp_file.name if prod not in ("2P02", "2P03") else None,
                 hum_file=abs_hum_file.name if prod not in ("2P02", "2P03") else None,
             )

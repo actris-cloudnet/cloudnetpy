@@ -1,8 +1,10 @@
 """General helper classes and functions for all products."""
+import os
 from collections import namedtuple
 
 import netCDF4
 import numpy as np
+import requests
 from numpy import ma
 
 from cloudnetpy import constants, utils
@@ -276,4 +278,14 @@ def get_temperature(categorize_file: str) -> np.ndarray:
 
 def get_mwrpy_coeffs(nc_file: str) -> str:
     with netCDF4.Dataset(nc_file) as nc:
-        return nc.mwrpy_coefficients
+        return nc.mwrpy_coefficients.split(", ")
+
+
+def get_read_mwrpy_coeffs(mwr_l1c_file, folder: str) -> list:
+    coeffs = []
+    for link in get_mwrpy_coeffs(mwr_l1c_file):
+        full_path = os.path.join(folder, link.split("/")[-1])
+        with open(full_path, "wb") as f:
+            f.write(requests.get(link, timeout=10).content)
+        coeffs.append(full_path)
+    return coeffs
