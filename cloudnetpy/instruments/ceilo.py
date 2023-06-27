@@ -40,10 +40,11 @@ def ceilo2nc(
         output_file: Output file name, e.g. 'ceilo.nc'.
         site_meta: Dictionary containing information about the site and instrument.
             Required key value pairs are `name` and `altitude` (metres above mean
-            sea level).
-            Also 'calibration_factor' is recommended because the default value is
-            probably incorrect. If the backround noise is *not* range-corrected,
-            you must define: {'range_corrected': False}.
+            sea level). Also, 'calibration_factor' is recommended because the default
+            value is probably incorrect. If the backround noise is *not*
+            range-corrected, you must define: {'range_corrected': False}.
+            You can also explicitly set the instrument model with
+            e.g. {'model': 'cl61d'}.
         uuid: Set specific UUID for the file.
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
@@ -91,7 +92,15 @@ def ceilo2nc(
 def _initialize_ceilo(
     full_path: str, site_meta: dict, date: str | None = None
 ) -> ClCeilo | Ct25k | LufftCeilo | Cl61d:
-    model = _find_ceilo_model(full_path)
+    if "model" in site_meta:
+        if site_meta["model"] not in ("cl31", "cl51", "cl61d", "ct25k", "chm15k"):
+            raise ValueError(f"Invalid ceilometer model: {site_meta['model']}")
+        if site_meta["model"] in ("cl31", "cl51"):
+            model = "cl31_or_cl51"
+        else:
+            model = site_meta["model"]
+    else:
+        model = _find_ceilo_model(full_path)
     if model == "cl31_or_cl51":
         return ClCeilo(full_path, site_meta, date)
     if model == "ct25k":
