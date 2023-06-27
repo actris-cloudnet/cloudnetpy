@@ -35,6 +35,14 @@ CL31 = Instrument(
     wavelength=910.0,
 )
 
+CS135 = Instrument(
+    manufacturer="Campbell Scientific",
+    domain="lidar",
+    category="ceilometer",
+    model="CS135",
+    wavelength=905.0,
+)
+
 CT25K = Instrument(
     manufacturer="Vaisala",
     domain="lidar",

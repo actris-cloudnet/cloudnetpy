@@ -4,6 +4,7 @@ from itertools import islice
 import netCDF4
 
 from cloudnetpy import output
+from cloudnetpy.instruments.campbell_scientific import Cs135
 from cloudnetpy.instruments.cl61d import Cl61d
 from cloudnetpy.instruments.lufft import LufftCeilo
 from cloudnetpy.instruments.vaisala import ClCeilo, Ct25k
@@ -91,9 +92,16 @@ def ceilo2nc(
 
 def _initialize_ceilo(
     full_path: str, site_meta: dict, date: str | None = None
-) -> ClCeilo | Ct25k | LufftCeilo | Cl61d:
+) -> ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135:
     if "model" in site_meta:
-        if site_meta["model"] not in ("cl31", "cl51", "cl61d", "ct25k", "chm15k"):
+        if site_meta["model"] not in (
+            "cl31",
+            "cl51",
+            "cl61d",
+            "ct25k",
+            "chm15k",
+            "cs135",
+        ):
             raise ValueError(f"Invalid ceilometer model: {site_meta['model']}")
         if site_meta["model"] in ("cl31", "cl51"):
             model = "cl31_or_cl51"
@@ -107,6 +115,8 @@ def _initialize_ceilo(
         return Ct25k(full_path, site_meta, date)
     if model == "cl61d":
         return Cl61d(full_path, site_meta, date)
+    if model == "cs135":
+        return Cs135(full_path, site_meta, date)
     return LufftCeilo(full_path, site_meta, date)
 
 
