@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.49.9 – 2023-06-27
+
+- Add option to give ceilometer model to ceilo2nc
+- Update fileformat.rst
+
 ## 1.49.8 – 2023-06-12
 
 - Fix reading of truncated lines in Parsivel
