@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.50.0 – 2023-06-28
+
+- Add support for `cs135`
+
 ## 1.49.9 – 2023-06-27
 
 - Add option to give ceilometer model to ceilo2nc
