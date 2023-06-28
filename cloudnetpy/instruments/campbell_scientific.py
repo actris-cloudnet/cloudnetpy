@@ -79,7 +79,6 @@ class Cs135(Ceilometer):
     def _handle_large_values(array: np.ndarray) -> np.ndarray:
         ind = np.where(array > 524287)
         if ind[0].size > 0:
-            logging.info(f"{ind[0].size} profiles have negative values")
             array[ind] -= 1048576
         return array
 
