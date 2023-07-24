@@ -755,7 +755,7 @@ def plot_2d(
 
 
 def compare_files(
-    nc_files: list,
+    nc_files: tuple[str, str],
     field_name: str,
     show: bool = True,
     relative_err: bool = False,
