@@ -790,7 +790,7 @@ def compare_files(
     ax_values = [_read_ax_values(nc_file) for nc_file in nc_files]
     subtitle = (
         f" - {os.path.basename(nc_files[0])}",
-        f" - {os.path.basename(nc_files[0])}",
+        f" - {os.path.basename(nc_files[1])}",
     )
     n_subs = 3 if relative_err is True else 2
     fig, axes = _initialize_figure(n_subs, dpi)
