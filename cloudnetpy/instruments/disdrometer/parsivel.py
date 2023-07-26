@@ -1,5 +1,7 @@
+import csv
 import datetime
 import logging
+import re
 from collections.abc import Callable, Iterator, Sequence
 from itertools import islice
 from pathlib import Path
@@ -169,7 +171,7 @@ class Parsivel(CloudnetInstrument):
                 raise ValueError
 
 
-HEADERS = {
+CSV_HEADERS = {
     "Date": "_date",
     "Time": "_time",
     "Intensity of precipitation (mm/h)": "rainfall_rate",
@@ -188,6 +190,47 @@ HEADERS = {
     "Weather code NWS": "_nws",
     "Optics status": "state_sensor",
     "Spectrum": "spectrum",
+}
+
+TOA5_HEADERS = {
+    "TIMESTAMP": "_datetime",
+    "rainIntensity": "rainfall_rate",
+    "rain_intensity": "rainfall_rate",
+    "snowIntensity": "snowfall_rate",
+    "snow_intensity": "snowfall_rate",
+    "accPrec": "_rain_accum",
+    "precipitation": "_rain_accum",
+    "weatherCodeWaWa": "synop_WaWa",
+    "weather_code_wawa": "synop_WaWa",
+    "radarReflectivity": "radar_reflectivity",
+    "radar_reflectivity": "radar_reflectivity",
+    "morVisibility": "visibility",
+    "mor_visibility": "visibility",
+    "kineticEnergy": "kinetic_energy",
+    "kinetic_energy": "kinetic_energy",
+    "signalAmplitude": "sig_laser",
+    "signal_amplitude": "sig_laser",
+    "sensorTemperature": "T_sensor",
+    "sensor_temperature": "T_sensor",
+    "pbcTemperature": "_T_pcb",
+    "pbc_temperature": "_T_pcb",
+    "rightTemperature": "_T_right",
+    "right_temperature": "_T_right",
+    "leftTemperature": "_T_left",
+    "left_temperature": "_T_left",
+    "heatingCurrent": "I_heating",
+    "heating_current": "I_heating",
+    "sensorVoltage": "V_power_supply",
+    "sensor_voltage": "V_power_supply",
+    "sensorStatus": "state_sensor",
+    "sensor_status": "state_sensor",
+    "errorCode": "error_code",
+    "error_code": "error_code",
+    "numberParticles": "n_particles",
+    "number_particles": "n_particles",
+    "N": "number_concentration",
+    "V": "fall_velocity",
+    "spectrum": "spectrum",
 }
 
 TELEGRAM = {
@@ -325,7 +368,7 @@ PARSERS: dict[str, Callable[[Iterator[str]], Any]] = {
 
 
 def _parse_headers(line: str) -> list[str]:
-    return [HEADERS[header.strip()] for header in line.split(";")]
+    return [CSV_HEADERS[header.strip()] for header in line.split(";")]
 
 
 def _parse_telegram(telegram: Sequence[int | None]) -> list[str]:
@@ -359,6 +402,71 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
     return result
 
 
+def _read_toa5(filename: Path | str | bytes) -> dict[str, list]:
+    """
+    Read ASCII data from Campbell Scientific datalogger such as CR1000.
+
+    References:
+        CR1000 Measurement and Control System.
+        https://s.campbellsci.com/documents/us/manuals/cr1000.pdf
+    """
+    # pylint: disable=too-many-branches,comparison-with-callable
+    with open(filename, encoding="latin1", errors="ignore") as file:
+        reader = csv.reader(file)
+        _origin_line = next(reader)
+        header_line = next(reader)
+        headers = [
+            TOA5_HEADERS.get(re.sub(r"\(.*", "", field)) for field in header_line
+        ]
+        _units_line = next(reader)
+        _process_line = next(reader)
+        data: dict[str, list] = {header: [] for header in headers if header is not None}
+        n_rows = 0
+        n_invalid_rows = 0
+        for data_line in reader:
+            n_rows += 1
+            scalars: dict[str, datetime.datetime | int | float] = {}
+            arrays: dict[str, list] = {
+                "number_concentration": [],
+                "fall_velocity": [],
+                "spectrum": [],
+            }
+            try:
+                for header, value in zip(headers, data_line):
+                    if header is None:
+                        continue
+                    if header == "_datetime":
+                        scalars[header] = datetime.datetime.strptime(
+                            value, "%Y-%m-%d %H:%M:%S"
+                        )
+                    elif header in ("number_concentration", "fall_velocity"):
+                        arrays[header].append(float(value))
+                    elif header == "spectrum":
+                        arrays[header].append(int(value))
+                    elif PARSERS.get(header) == _parse_int:
+                        scalars[header] = int(value)
+                    elif PARSERS.get(header) == _parse_float:
+                        scalars[header] = float(value)
+            except ValueError:
+                n_invalid_rows += 1
+                continue
+            for header, scalar in scalars.items():
+                data[header].append(scalar)
+            if "spectrum" in headers:
+                data["spectrum"].append(
+                    np.array(arrays["spectrum"], dtype="i2").reshape((32, 32))
+                )
+            if "number_concentration" in headers:
+                data["number_concentration"].append(arrays["number_concentration"])
+            if "fall_velocity" in headers:
+                data["fall_velocity"].append(arrays["fall_velocity"])
+        if n_invalid_rows == n_rows:
+            raise DisdrometerDataError("No valid data in file")
+        if n_invalid_rows > 0:
+            logging.info(f"Skipped {n_invalid_rows} invalid rows")
+        return data
+
+
 def _read_parsivel(
     filename: Path | str | bytes, telegram: Sequence[int | None] | None = None
 ) -> dict[str, np.ndarray]:
@@ -366,7 +474,9 @@ def _read_parsivel(
         lines = file.read().splitlines()
     if not lines:
         raise DisdrometerDataError("File is empty")
-    if "Date" in lines[0]:
+    if "TOA5" in lines[0]:
+        data = _read_toa5(filename)
+    elif "Date" in lines[0]:
         headers = _parse_headers(lines[0])
         data = _read_rows(headers, lines[1:])
     elif telegram is not None:
