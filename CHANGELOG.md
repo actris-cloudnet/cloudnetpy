@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.51.0 – 2023-07-26
+
+- Support Parsivel from Campbell Scientific CR1000 datalogger
+- Fix subtitle of the second plot in `compare_files` (#82)
+
 ## 1.50.0 – 2023-06-28
 
 - Add support for `cs135`
