@@ -1,11 +1,12 @@
-import logging
+import binascii
 import re
 from datetime import datetime
+from typing import NamedTuple
 
 import numpy as np
 
 from cloudnetpy import utils
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.ceilometer import Ceilometer
 
@@ -23,39 +24,40 @@ class Cs135(Ceilometer):
         self.instrument = instruments.CS135
 
     def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
-        with open(self.full_path, mode="r", encoding="utf-8") as f:
-            lines = f.readlines()
-        timestamps, profiles, scales, tilt_angles = [], [], [], []
-        range_resolution, n_gates = 0, 0
-        for i, line in enumerate(lines):
-            line_splat = line.strip().split(",")
-            if is_timestamp(line_splat[0]):
-                timestamp = datetime.strptime(line_splat[0], "%Y-%m-%dT%H:%M:%S.%f")
-                try:
-                    self._check_timestamp(timestamp)
-                except ValidTimeStampError:
-                    continue
-                timestamps.append(timestamp)
-                _line1 = line_splat[1]
-                if len(_line1) != 11:
-                    raise NotImplementedError("Unknown message number")
-                if (msg_no := _line1[-4:-1]) != "002":
-                    raise NotImplementedError(
-                        f"Message number {msg_no} not implemented"
-                    )
-                _line3 = lines[i + 2].strip().split(" ")
-                scale, range_resolution, n_gates, tilt_angle = [
-                    int(_line3[ind]) for ind in [0, 1, 2, 5]
-                ]
-                scales.append(scale)
-                tilt_angles.append(tilt_angle)
-                _line4 = lines[i + 3].strip()
-                profiles.append(_hex2backscatter(_line4, n_gates))
+        with open(self.full_path, mode="rb") as f:
+            content = f.read()
+        timestamps = []
+        profiles = []
+        tilt_angles = []
+        range_resolutions = []
+
+        parts = re.split(rb"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}),", content)
+        for i in range(1, len(parts), 2):
+            timestamp = datetime.strptime(parts[i].decode(), "%Y-%m-%dT%H:%M:%S.%f")
+            try:
+                self._check_timestamp(timestamp)
+            except ValidTimeStampError:
+                continue
+            try:
+                message = _read_message(parts[i + 1])
+            except InvalidMessageError:
+                continue
+            profile = (message.data[:-2] * 1e-8) * (message.scale / 100)
+            timestamps.append(timestamp)
+            profiles.append(profile)
+            tilt_angles.append(message.tilt_angle)
+            range_resolutions.append(message.range_resolution)
 
         if len(timestamps) == 0:
             raise ValidTimeStampError("No valid timestamps found in the file")
-        array = self._handle_large_values(np.array(profiles))
-        self.data["beta_raw"] = _scale_backscatter(array, scales)
+        range_resolution = range_resolutions[0]
+        n_gates = len(profiles[0])
+        if any(res != range_resolution for res in range_resolutions):
+            raise InconsistentDataError("Inconsistent range resolution")
+        if any(len(profile) != n_gates for profile in profiles):
+            raise InconsistentDataError("Inconsistent number of gates")
+
+        self.data["beta_raw"] = np.array(profiles)
         if calibration_factor is None:
             calibration_factor = 1.0
         self.data["beta_raw"] *= calibration_factor
@@ -75,36 +77,59 @@ class Cs135(Ceilometer):
             self.date = timestamp_components
         assert timestamp_components == self.date
 
-    @staticmethod
-    def _handle_large_values(array: np.ndarray) -> np.ndarray:
-        ind = np.where(array > 524287)
-        if ind[0].size > 0:
-            array[ind] -= 1048576
-        return array
+
+class Message(NamedTuple):
+    scale: int
+    range_resolution: int
+    laser_pulse_energy: int
+    laser_temperature: int
+    tilt_angle: int
+    background_light: int
+    pulse_quantity: int
+    sample_rate: int
+    data: np.ndarray
 
 
-def is_timestamp(timestamp: str) -> bool:
-    """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss"""
-    reg_exp = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}")
-    if reg_exp.match(timestamp) is not None:
-        return True
-    return False
+class InvalidMessageError(Exception):
+    pass
 
 
-def _hex2backscatter(data: str, n_gates: int):
-    """Converts hex string to backscatter values."""
+def _read_message(message: bytes) -> Message:
+    end_idx = message.index(3)
+    content = message[1 : end_idx + 1]
+    expected_checksum = int(message[end_idx + 1 : end_idx + 5], 16)
+    actual_checksum = _crc16(content)
+    if expected_checksum != actual_checksum:
+        raise InvalidMessageError(
+            "Invalid checksum: "
+            f"expected {expected_checksum:04x}, "
+            f"got {actual_checksum:04x}"
+        )
+    lines = message.splitlines()
+    if len(lines[0]) != 11:
+        raise NotImplementedError("Unknown message format")
+    if (msg_no := lines[0][-4:-1]) != b"002":
+        raise NotImplementedError(f"Message number {msg_no.decode()} not implemented")
+    if len(lines) != 5:
+        raise InvalidMessageError("Invalid line count")
+    scale, res, n, energy, lt, ti, bl, pulse, rate, _sum = map(int, lines[2].split())
+    data = _read_backscatter(lines[3].strip(), n)
+    return Message(scale, res, energy, lt, ti, bl, pulse, rate, data)
+
+
+def _read_backscatter(data: bytes, n_gates: int) -> np.ndarray:
+    """Read backscatter values from hex-encoded two's complement values."""
     n_chars = 5
-    return [
-        int(data[i : i + n_chars], 16) for i in range(0, n_gates * n_chars, n_chars)
-    ]
+    n_bits = n_chars * 4
+    limit = (1 << (n_bits - 1)) - 1
+    offset = 1 << n_bits
+    out = np.array(
+        [int(data[i : i + n_chars], 16) for i in range(0, n_gates * n_chars, n_chars)]
+    )
+    out[out > limit] -= offset
+    return out
 
 
-def _scale_backscatter(data: np.ndarray, scales: list) -> np.ndarray:
-    """Scales backscatter values."""
-    unit_conversion_factor = 1e-8
-    scales_array = np.array(scales)
-    ind = np.where(scales_array != 100)
-    if ind[0].size > 0:
-        logging.info(f"{ind[0].size} profiles have not 100% scaling")
-        data[ind, :] *= scales_array[ind] / 100
-    return data * unit_conversion_factor
+def _crc16(data: bytes) -> int:
+    """Compute checksum similar to CRC-16-CCITT."""
+    return binascii.crc_hqx(data, 0xFFFF) ^ 0xFFFF

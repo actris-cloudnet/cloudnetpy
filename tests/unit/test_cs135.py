@@ -2,7 +2,6 @@
 import os
 from tempfile import TemporaryDirectory
 
-import netCDF4
 import numpy as np
 import pytest
 from numpy.testing import assert_equal
@@ -68,3 +67,6 @@ class TestCS135(Check):
     def test_date_argument(self, tmp_path):
         with pytest.raises(ValidTimeStampError):
             ceilo2nc(self.input, "/tmp/foo.nc", self.site_meta, date="2021-09-15")
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 8
