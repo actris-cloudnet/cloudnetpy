@@ -21,6 +21,8 @@ class NoiseParam:
 class Ceilometer:
     """Base class for all types of ceilometers and pollyxt."""
 
+    serial_number: str | None
+
     def __init__(self, noise_param: NoiseParam = NoiseParam()):
         self.noise_param = noise_param
         self.data: dict = {}  # Need to contain 'beta_raw', 'range' and 'time'
@@ -29,6 +31,7 @@ class Ceilometer:
         self.site_meta: dict = {}
         self.date: list[str] = []
         self.instrument: Instrument | None = None
+        self.serial_number = None
 
     def calc_screened_product(
         self,

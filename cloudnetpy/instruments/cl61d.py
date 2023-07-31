@@ -23,6 +23,7 @@ class Cl61d(NcLidar):
         """Reads data and metadata from concatenated Vaisala CL61d netCDF file."""
         with netCDF4.Dataset(self.file_name) as dataset:
             self.dataset = dataset
+            self._fetch_attributes()
             self._fetch_zenith_angle("tilt_angle", default=3.0)
             self._fetch_range(reference="lower")
             self._fetch_lidar_variables(calibration_factor)
@@ -41,3 +42,6 @@ class Cl61d(NcLidar):
         self.data["depolarisation"] = (
             self.dataset.variables["x_pol"][:] / self.dataset.variables["p_pol"][:]
         )
+
+    def _fetch_attributes(self):
+        self.serial_number = getattr(self.dataset, "instrument_serial_number", None)

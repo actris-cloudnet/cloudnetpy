@@ -61,6 +61,7 @@ class TestPolly(Check):
     def test_global_attributes(self):
         assert self.nc.source == "TROPOS PollyXT"
         assert self.nc.title == f"PollyXT Raman lidar from {self.site_meta['name']}"
+        assert self.nc.serial_number == "pollyxt_cpv"
 
 
 class TestPolly2:

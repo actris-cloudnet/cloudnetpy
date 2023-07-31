@@ -88,6 +88,9 @@ class TestCl61d2(Check):
             if "test_" in name:
                 getattr(lidar_fun, name)()
 
+    def test_attributes(self):
+        assert self.nc.serial_number == "T2520357"
+
     def test_variable_values(self):
         assert abs(self.nc.variables["wavelength"][:] - 910.55) < 0.001
         assert abs(self.nc.variables["zenith_angle"][:] - 3.4) < 0.001

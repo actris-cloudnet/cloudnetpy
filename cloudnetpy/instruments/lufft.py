@@ -12,8 +12,6 @@ from cloudnetpy.instruments.nc_lidar import NcLidar
 class LufftCeilo(NcLidar):
     """Class for Lufft chm15k ceilometer."""
 
-    serial_number: str | None
-
     def __init__(
         self, file_name: str, site_meta: dict, expected_date: str | None = None
     ):
@@ -21,7 +19,6 @@ class LufftCeilo(NcLidar):
         self.file_name = file_name
         self.site_meta = site_meta
         self.expected_date = expected_date
-        self.serial_number = None
 
     def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""

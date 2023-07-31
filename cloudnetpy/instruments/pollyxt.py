@@ -103,6 +103,7 @@ class PollyXt(Ceilometer):
             raise InconsistentDataError(
                 "Inconsistent number of pollyxt bsc / depol files"
             )
+        self._fetch_attributes(bsc_files[0])
         self.data["range"] = _read_array_from_multiple_files(
             bsc_files, depol_files, "height"
         )
@@ -156,6 +157,11 @@ class PollyXt(Ceilometer):
                             self.instrument.wavelength = float(channel)  # type: ignore
                         return channel
         raise ValidTimeStampError("No functional pollyXT backscatter channels found")
+
+    def _fetch_attributes(self, file: str) -> None:
+        with netCDF4.Dataset(file, "r") as nc:
+            if hasattr(nc, "source"):
+                self.serial_number = nc.source.lower()
 
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
