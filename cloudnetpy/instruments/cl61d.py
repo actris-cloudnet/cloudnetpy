@@ -23,7 +23,7 @@ class Cl61d(NcLidar):
         """Reads data and metadata from concatenated Vaisala CL61d netCDF file."""
         with netCDF4.Dataset(self.file_name) as dataset:
             self.dataset = dataset
-            self._fetch_zenith_angle("zenith", default=3.0)
+            self._fetch_zenith_angle("tilt_angle", default=3.0)
             self._fetch_range(reference="lower")
             self._fetch_lidar_variables(calibration_factor)
             self._fetch_time_and_date()

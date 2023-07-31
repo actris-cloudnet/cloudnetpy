@@ -30,7 +30,7 @@ class NcLidar(Ceilometer):
     def _fetch_zenith_angle(self, key: str, default: float = 3.0) -> None:
         assert self.dataset is not None
         if key in self.dataset.variables:
-            zenith_angle = self.dataset.variables[key][:]
+            zenith_angle = np.median(self.dataset.variables[key][:])
         else:
             zenith_angle = float(default)
             logging.warning(f"No zenith angle found, assuming {zenith_angle} degrees")
