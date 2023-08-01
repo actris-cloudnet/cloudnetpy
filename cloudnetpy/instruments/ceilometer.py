@@ -1,4 +1,5 @@
 import logging
+from typing import NamedTuple
 
 import numpy as np
 from numpy import ma
@@ -10,18 +11,15 @@ from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.utils import Epoch
 
 
-class NoiseParam:
+class NoiseParam(NamedTuple):
     """Noise parameters. Values are weakly instrument-dependent."""
 
-    def __init__(self, noise_min: float = 1e-9, noise_smooth_min: float = 4e-9):
-        self.noise_min = noise_min
-        self.noise_smooth_min = noise_smooth_min
+    noise_min: float = 1e-9
+    noise_smooth_min: float = 4e-9
 
 
 class Ceilometer:
     """Base class for all types of ceilometers and pollyxt."""
-
-    serial_number: str | None
 
     def __init__(self, noise_param: NoiseParam = NoiseParam()):
         self.noise_param = noise_param
@@ -31,7 +29,7 @@ class Ceilometer:
         self.site_meta: dict = {}
         self.date: list[str] = []
         self.instrument: Instrument | None = None
-        self.serial_number = None
+        self.serial_number: str | None = None
 
     def calc_screened_product(
         self,
