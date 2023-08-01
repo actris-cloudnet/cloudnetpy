@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.51.1 – 2023-08-01
+
+- Support CL61d and PollyXT serial numbers
+- Fix CL61d zenith angle
+- Improve CS135 reader
+
 ## 1.51.0 – 2023-07-26
 
 - Support Parsivel from Campbell Scientific CR1000 datalogger
