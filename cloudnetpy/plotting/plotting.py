@@ -483,8 +483,7 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
 
 def _plot_hatpro(ax, data: dict, full_path: str):
     tb = _pointing_filter(full_path, data["tb"])
-    time = _pointing_filter(full_path, data["time"])
-    ax.plot(time, tb, color="royalblue", linestyle="-", linewidth=1)
+    ax.plot(data["time"], tb, color="royalblue", linestyle="-", linewidth=1)
     set_ax(
         ax,
         max_y=np.max(tb) + 0.5,
@@ -493,36 +492,21 @@ def _plot_hatpro(ax, data: dict, full_path: str):
     )
 
 
-def _elevation_filter(full_path: str, data_field: ndarray, ele_range: tuple) -> ndarray:
-    """Filters data for specified range of elevation angles."""
-    with netCDF4.Dataset(full_path) as nc:
-        if "ele" in nc.variables:
-            elevation = ptools.read_nc_fields(full_path, "ele")
-            if data_field.ndim > 1:
-                data_field = data_field[
-                    (elevation >= ele_range[0]) & (elevation <= ele_range[1]), :
-                ]
-            else:
-                data_field = data_field[
-                    (elevation >= ele_range[0]) & (elevation <= ele_range[1])
-                ]
-    return data_field
-
-
 def _pointing_filter(
-    full_path: str, data_field: ndarray, ele_range: tuple = (0, 91), status: int = 0
+    full_path: str, data: ndarray, zenith_limit=5, status: int = 0
 ) -> ndarray:
-    """Filters data according to pointing flag."""
+    """Filters data according to pointing flag and zenith angle."""
     with netCDF4.Dataset(full_path) as nc:
         if "pointing_flag" in nc.variables:
             pointing = ptools.read_nc_fields(full_path, "pointing_flag")
-            assert isinstance(pointing, ndarray)
-            pointing_screened = _elevation_filter(full_path, pointing, ele_range)
-            if data_field.ndim > 1:
-                data_field = data_field[pointing_screened == status, :]
+            zenith_angle = ptools.read_nc_fields(full_path, "zenith_angle")
+            if data.ndim > 1:
+                data[np.abs(zenith_angle) > zenith_limit, :] = ma.masked
+                data[pointing != status, :] = ma.masked
             else:
-                data_field = data_field[pointing_screened == status]
-    return data_field
+                data[np.abs(zenith_angle) > zenith_limit] = ma.masked
+                data[pointing != status] = ma.masked
+    return data
 
 
 def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
