@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.52.0 – 2023-08-11
+
+- Fix brightness temperature plotting
+- Use revised mwrpy functions
+
 ## 1.51.1 – 2023-08-01
 
 - Support CL61d and PollyXT serial numbers
