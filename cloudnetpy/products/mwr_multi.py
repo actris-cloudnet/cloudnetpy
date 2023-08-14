@@ -2,10 +2,11 @@ import tempfile
 from tempfile import NamedTemporaryFile
 
 import netCDF4
-from mwrpy.level2.write_lev2_nc import lev2_to_nc
+from mwrpy.level2.write_lev2_nc import MissingInputData, lev2_to_nc
 from mwrpy.version import __version__ as mwrpy_version
 
 from cloudnetpy import output, utils
+from cloudnetpy.exceptions import MissingInputFileError
 from cloudnetpy.products import product_tools
 
 
@@ -28,14 +29,19 @@ def generate_mwr_multi(
             ("2P02", "2P03", "2P04", "2P07", "2P08"),
             (temp_file, abs_hum_file, rel_hum_file, t_pot_file, eq_temp_file),
         ):
-            lev2_to_nc(
-                prod,
-                mwr_l1c_file,
-                file.name,
-                coeff_files=coeffs,
-                temp_file=temp_file.name if prod not in ("2P02", "2P03") else None,
-                hum_file=abs_hum_file.name if prod not in ("2P02", "2P03") else None,
-            )
+            try:
+                lev2_to_nc(
+                    prod,
+                    mwr_l1c_file,
+                    file.name,
+                    coeff_files=coeffs,
+                    temp_file=temp_file.name if prod not in ("2P02", "2P03") else None,
+                    hum_file=abs_hum_file.name
+                    if prod not in ("2P02", "2P03")
+                    else None,
+                )
+            except MissingInputData as err:
+                raise MissingInputFileError from err
 
         with (
             netCDF4.Dataset(output_file, "w", format="NETCDF4_CLASSIC") as nc_output,

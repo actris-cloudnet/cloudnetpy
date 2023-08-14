@@ -36,3 +36,11 @@ class ValidTimeStampError(Exception):
     def __init__(self, msg: str = "No valid timestamps found"):
         self.message = msg
         super().__init__(self.message)
+
+
+class MissingInputFileError(Exception):
+    """Internal exception class."""
+
+    def __init__(self, msg: str = "Missing required input files"):
+        self.message = msg
+        super().__init__(self.message)
