@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.52.1 – 2023-08-15
+
+- Catch mwrpy exception
+
 ## 1.52.0 – 2023-08-11
 
 - Fix brightness temperature plotting
