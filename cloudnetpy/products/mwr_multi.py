@@ -73,5 +73,6 @@ def generate_mwr_multi(
                 f"{utils.get_time()} - MWR multiple-pointing product created \n"
                 f"{nc_l1c.history}"
             )
+            nc_output.source_file_uuids = nc_l1c.file_uuid
 
     return file_uuid
