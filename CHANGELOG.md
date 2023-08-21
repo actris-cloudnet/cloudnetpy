@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.52.2 – 2023-08-21
+
+- Add `source_file_uuids` attribute to `mwr_single` and `mwr_multi`
+
 ## 1.52.1 – 2023-08-15
 
 - Catch mwrpy exception
