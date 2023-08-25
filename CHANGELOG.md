@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.52.3 – 2023-08-25
+
+- Add VoodooNet version to output file
+
 ## 1.52.2 – 2023-08-21
 
 - Add `source_file_uuids` attribute to `mwr_single` and `mwr_multi`
