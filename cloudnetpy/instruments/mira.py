@@ -1,5 +1,6 @@
 """Module for reading raw cloud radar data."""
 import os
+import logging
 from tempfile import TemporaryDirectory
 
 from cloudnetpy import concat_lib, output, utils
@@ -7,6 +8,111 @@ from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import MIRA35
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
+
+
+def _miraignorevar(filetype: str) -> dict:
+    """Returns the variables to ignore when concatting for the METEK MIRA-35 cloud radar.
+
+    This function return the nc variablenames that should be ignored when
+    concatting several files, a requirement needed when a path/list of files
+    can be passed in to mira2nc, at the moment (08.2023) only relevant for znc.
+
+    Args:
+        filetype: Either znc or mmclx
+
+    Returns:
+        Appropriate list of variables to ignore for the file type
+
+    Raises:
+        TypeError: Not a valid filetype given, must be string.
+        ValueError: Not a known filetype given, must be znc or mmclx
+
+    Examples:
+        not meant to be called directly by user
+
+    """
+    known_filetypes = ['znc', 'mmclx']
+    if type(filetype) != str:
+        raise TypeError('Filetype must be string')
+
+    if filetype.lower() not in known_filetypes:
+        raise ValueError(f'Filetype must be one of {known_filetypes}')
+
+    keymaps = {'znc': ['DropSize'],
+               'mmclx': None
+    }
+
+    return keymaps.get(filetype.lower(), 'mmclx')
+
+
+def _mirakeymap(filetype: str) -> dict:
+    """Returns the keymap (ncvariables to cloudnetpy variables) for the METEK MIRA-35 cloud radar.
+
+    This function return the approriate keymap (even for STSR polarimetric
+    config) for cloudnetpy to take the appropriate variables from the netCDF
+    whether mmclx (old format) or znc (new format).
+
+    Args:
+        filetype: Either znc or mmclx
+
+    Returns:
+        Appropriate keymap for the file type
+
+    Raises:
+        TypeError: Not a valid filetype given, must be string.
+        ValueError: Not a known filetype given, must be znc or mmclx
+
+    Examples:
+          not meant to be called directly by user
+
+    """
+    known_filetypes = ['znc', 'mmclx']
+    if type(filetype) != str:
+        raise TypeError('Filetype must be string')
+
+    if filetype.lower() not in known_filetypes:
+        raise ValueError(f'Filetype must be one of {known_filetypes}')
+
+    from collections import OrderedDict
+    # ordered dict here because that way the order is kept, which means
+    # we will get Zh2l over as Zh over Zg, which is relevant for the new
+    # znc files of an STSR radar
+    keymaps = {'znc': OrderedDict([
+        ("Zg", "Zh"),
+        ("Zh2l", "Zh"),
+        ("VELg", "v"),
+        ("VELh2l", "v"),
+        ("RMSg", "width"),
+        ("RMSh2l", "width"),
+        ("LDRg", "ldr"),
+        ("LDRh2l", "ldr"),
+        ("SNRg", "SNR"),
+        ("SNRh2l", "SNR"),
+        ("elv", "elevation"),
+        ("azi", "azimuth_angle"),
+        ("aziv", "azimuth_velocity"),
+        ("nfft", "nfft"),
+        ("nave", "nave"),
+        ("prf", "prf"),
+        ("rg0", "rg0"),
+    ]),
+        'mmclx': {
+        "Zg": "Zh",
+        "VELg": "v",
+        "RMSg": "width",
+        "LDRg": "ldr",
+        "SNRg": "SNR",
+        "elv": "elevation",
+        "azi": "azimuth_angle",
+        "aziv": "azimuth_velocity",
+        "nfft": "nfft",
+        "nave": "nave",
+        "prf": "prf",
+        "rg0": "rg0",
+    }
+    }
+
+    return keymaps.get(filetype.lower(), 'mmclx')
 
 
 def mira2nc(
@@ -24,7 +130,8 @@ def mira2nc(
 
     Args:
         raw_mira: Filename of a daily MIRA .mmclx file. Can be also a folder containing
-            several non-concatenated .mmclx files from one day or list of files.
+            several non-concatenated .mmclx or .znc files from one day or list of files.
+            znc files take precedence because they are the newer filetype
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
             value pair is `name`.
@@ -41,43 +148,63 @@ def mira2nc(
           >>> from cloudnetpy.instruments import mira2nc
           >>> site_meta = {'name': 'Vehmasmaki'}
           >>> mira2nc('raw_radar.mmclx', 'radar.nc', site_meta)
+          >>> mira2nc('raw_radar.znc', 'radar.nc', site_meta)
           >>> mira2nc('/one/day/of/mira/mmclx/files/', 'radar.nc', site_meta)
+          >>> mira2nc('/one/day/of/mira/znc/files/', 'radar.nc', site_meta)
 
     """
-    keymap = {
-        "Zg": "Zh",
-        "VELg": "v",
-        "RMSg": "width",
-        "LDRg": "ldr",
-        "SNRg": "SNR",
-        "elv": "elevation",
-        "azi": "azimuth_angle",
-        "aziv": "azimuth_velocity",
-        "nfft": "nfft",
-        "nave": "nave",
-        "prf": "prf",
-        "rg0": "rg0",
-    }
 
     with TemporaryDirectory() as temp_dir:
         if isinstance(raw_mira, list) or os.path.isdir(raw_mira):
-            mmclx_filename = f"{temp_dir}/tmp.mmclx"
+            # better naming would be concat_filename but to be directly comp-
+            # atible with the opening of the output we stick to input_filename
+            input_filename = f"{temp_dir}/tmp.mmclx"
+            # passed in is a list of files
             if isinstance(raw_mira, list):
-                valid_filenames = sorted(raw_mira)
+                valid_files = sorted(raw_mira)
             else:
-                valid_filenames = utils.get_sorted_filenames(raw_mira, ".mmclx")
-            valid_filenames = utils.get_files_with_common_range(valid_filenames)
+                # passed in is a path with potentially files
+                valid_files = utils.get_sorted_filenames(raw_mira, ".znc")
+                if valid_files:
+                    pass
+                else:
+                    logging.warning(f"No znc files found in {raw_mira},",
+                                    " looking for mmclx")
+                    valid_files = utils.get_sorted_filenames(raw_mira, ".mmclx")
+
+            if valid_files:
+                pass
+            else:
+                logging.error(f"Neither znc nor mmclx files in path" + \
+                              f"{raw_mira}. Please check your input.")
+                raise FileNotFoundError(f"Neither znc nor mmclx files found " + \
+                                        f"{raw_mira}. Please check your input.")
+
+            valid_files = utils.get_files_with_common_range(valid_files)
+
+            # get unique filetypes
+            filetypes = list(set([f.split('.')[-1].lower()
+                                  for f in valid_files]))
+
+            if len(filetypes) > 1:
+                raise TypeError('mira2nc only supports a singlefile type as input',
+                                'either mmclx or znc')
+
+            keymap = _mirakeymap(filetypes[0])
+
             variables = list(keymap.keys())
             concat_lib.concatenate_files(
-                valid_filenames,
-                mmclx_filename,
+                valid_files,
+                input_filename,
                 variables=variables,
+                ignore=_miraignorevar(filetypes[0]),
                 allow_difference=["nave", "ovl"],
             )
         else:
-            mmclx_filename = raw_mira
+            input_filename = raw_mira
+            keymap = _mirakeymap(input_filename.split('.')[-1])
 
-        with Mira(mmclx_filename, site_meta) as mira:
+        with Mira(input_filename, site_meta) as mira:
             mira.init_data(keymap)
             if date is not None:
                 mira.screen_by_date(date)
