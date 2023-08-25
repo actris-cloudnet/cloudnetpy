@@ -98,7 +98,11 @@ def save_product_file(
             f" {obj.dataset.location}"
         )
         nc.source_file_uuids = get_source_uuids(nc, obj)
-        copy_global(obj.dataset, nc, ("location", "day", "month", "year", "source"))
+        copy_global(
+            obj.dataset,
+            nc,
+            ("location", "day", "month", "year", "source", "voodoonet_version"),
+        )
         merge_history(nc, human_readable_file_type, {"categorize": obj})
         nc.references = get_references(short_id)
     return file_uuid

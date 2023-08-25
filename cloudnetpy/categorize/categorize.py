@@ -169,14 +169,17 @@ def _save_cat(
         )
         nc.title = f"Cloud categorization products from {data_obs['radar'].location}"
         nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
+        is_voodoo = "liquid_prob" in cloudnet_arrays
         extra_references = (
-            ["https://doi.org/10.5194/amt-15-5343-2022"]
-            if "liquid_prob" in cloudnet_arrays
-            else None
+            ["https://doi.org/10.5194/amt-15-5343-2022"] if is_voodoo else None
         )
         nc.references = output.get_references(
             identifier=file_type, extra=extra_references
         )
+        if is_voodoo:
+            import voodoonet.version  # pylint: disable=import-outside-toplevel
+
+            nc.voodoonet_version = voodoonet.version.__version__
         output.add_source_instruments(nc, data_obs)
         output.merge_history(nc, file_type, data_obs)
     return uuid_out
