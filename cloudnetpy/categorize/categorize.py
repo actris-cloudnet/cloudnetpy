@@ -177,7 +177,7 @@ def _save_cat(
             identifier=file_type, extra=extra_references
         )
         if is_voodoo:
-            import voodoonet.version  # pylint: disable=import-outside-toplevel
+            import voodoonet.version  # pylint: disable=import-outside-toplevel,import-error
 
             nc.voodoonet_version = voodoonet.version.__version__
         output.add_source_instruments(nc, data_obs)
