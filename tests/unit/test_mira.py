@@ -1,4 +1,3 @@
-import sys
 from os import path
 from tempfile import TemporaryDirectory
 
@@ -6,7 +5,7 @@ import netCDF4
 import numpy as np
 import pytest
 
-from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import mira
 from tests.unit.all_products_fun import Check
 from tests.unit.radar_fun import RadarFun
@@ -166,3 +165,88 @@ def test_allow_vary_option():
     date = "2021-11-24"
     filepath = f"{SCRIPT_PATH}/data/mira_inconsistent/"
     _ = mira.mira2nc(filepath, temp_path, site_meta=site_meta, date=date)
+
+
+class TestZncFiles(Check):
+    site_meta = {
+        "name": "Punta Arenas",
+        "latitude": 50,
+        "longitude": 104.5,
+        "altitude": 50,
+    }
+    date = "2023-02-01"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/mira.nc"
+    filepath = f"{SCRIPT_PATH}/data/mira_znc/"
+    uuid = mira.mira2nc(f"{filepath}20230201_0900_mbr5-trunc.znc", temp_path, site_meta)
+
+    def test_common_radar(self):
+        radar_fun = RadarFun(self.nc, self.site_meta, self.date, self.uuid)
+        for name, method in RadarFun.__dict__.items():
+            if "test_" in name:
+                getattr(radar_fun, name)()
+
+    def test_wrong_path(self):
+        filepath = f"{SCRIPT_PATH}/data/vaisala/"
+        with pytest.raises(FileNotFoundError):
+            mira.mira2nc(
+                filepath, self.temp_path, site_meta=self.site_meta, date=self.date
+            )
+
+    def test_if_both_types_of_files(self):
+        files = [
+            f"{self.filepath}20230201_0900_mbr5-trunc.znc",
+            f"{self.filepath}20230201_0900_mbr5-trunc.mmclx",
+        ]
+        with pytest.raises(TypeError):
+            mira.mira2nc(
+                files, self.temp_path, site_meta=self.site_meta, date=self.date
+            )
+
+    def test_wrong_kind_of_file(self):
+        input_file = f"{SCRIPT_PATH}/data/chm15k/00100_A202010222015_CHM170137.nc"
+        with pytest.raises(ValueError):
+            mira.mira2nc(
+                input_file, self.temp_path, site_meta=self.site_meta, date=self.date
+            )
+
+    def test_list_of_wrong_kind_of_files(self):
+        filepath = f"{SCRIPT_PATH}/data/chm15k/"
+        files = [
+            f"{filepath}00100_A202010222015_CHM170137.nc",
+            f"{filepath}00100_A202010220005_CHM170137.nc",
+        ]
+        with pytest.raises(ValueError):
+            mira.mira2nc(
+                files, self.temp_path, site_meta=self.site_meta, date=self.date
+            )
+
+    def test_takes_znc_as_default(self):
+        filepath = f"{SCRIPT_PATH}/data/mira_znc/"
+        temp_dir = TemporaryDirectory()
+        temp_path = f"{temp_dir.name}/mira.nc"
+        mira.mira2nc(filepath, temp_path, site_meta=self.site_meta, date=self.date)
+        with netCDF4.Dataset(temp_path) as nc:
+            assert len(nc.variables["time"][:]) == 5
+
+
+class TestSTSRFiles(Check):
+    site_meta = {
+        "name": "Punta Arenas",
+        "latitude": 50,
+        "longitude": 104.5,
+        "altitude": 50,
+    }
+    date = "2023-02-01"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/mira.nc"
+    filepath = f"{SCRIPT_PATH}/data/mira_stsr/"
+    uuid = mira.mira2nc(
+        f"{filepath}20230201_0900_mbr7_stsr-trunc.znc", temp_path, site_meta
+    )
+
+    def test_common_radar(self):
+        radar_fun = RadarFun(self.nc, self.site_meta, self.date, self.uuid)
+        for name, method in RadarFun.__dict__.items():
+            if "test_" in name:
+                getattr(radar_fun, name)()
