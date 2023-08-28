@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.53.0 – 2023-08-28
+
+- Support `.znc` input (and STSR) in `mira2nc` (#84)
+
 ## 1.52.3 – 2023-08-25
 
 - Add VoodooNet version to output file
