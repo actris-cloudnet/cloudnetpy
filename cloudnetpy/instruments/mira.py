@@ -97,10 +97,11 @@ def mira2nc(
                 # processing switched between different nffts without a hitch
                 # doppler is the third dimensions (other than time and height)
                 # that is relevant in znc files as they contain the spectra
+                # but it should be dropped rather than concatted
                 allow_difference=[
                     "nave",
                     "ovl",
-                    "doppler",
+                    # "doppler",
                     "nfft",
                 ],
             )
@@ -194,7 +195,7 @@ def _miraignorevar(filetype: str) -> list | None:
     # faster this way than previous patch as spectra are not being used in
     # cloudnetpy anyway and we therefore also do not need the Doppler dimension
     keymaps = {
-        "znc": ["DropSize", "SPCco", "SPCcx", "SPCcocxRe", "SPCcocxIm", "Doppler"],
+        "znc": ["DropSize", "SPCco", "SPCcx", "SPCcocxRe", "SPCcocxIm", "doppler"],
         "mmclx": None,
     }
 
