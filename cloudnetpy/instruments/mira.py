@@ -92,7 +92,17 @@ def mira2nc(
                 input_filename,
                 variables=variables,
                 ignore=_miraignorevar(filetypes[0]),
-                allow_difference=["nave", "ovl"],
+                # somewhat risky to allow varying nfft as the vel resolution
+                # will be different, but this allows for concatenating when
+                # processing switched between different nffts without a hitch
+                # doppler is the third dimensions (other than time and height)
+                # that is relevant in znc files as they contain the spectra
+                allow_difference=[
+                    "nave",
+                    "ovl",
+                    "doppler",
+                    "nfft",
+                ],
             )
         else:
             input_filename = raw_mira
@@ -181,7 +191,12 @@ def _miraignorevar(filetype: str) -> list | None:
     if filetype.lower() not in known_filetypes:
         raise ValueError(f"Filetype must be one of {known_filetypes}")
 
-    keymaps = {"znc": ["DropSize"], "mmclx": None}
+    # faster this way than previous patch as spectra are not being used in
+    # cloudnetpy anyway and we therefore also do not need the Doppler dimension
+    keymaps = {
+        "znc": ["DropSize", "SPCco", "SPCcx", "SPCcocxRe", "SPCcocxIm", "Doppler"],
+        "mmclx": None,
+    }
 
     return keymaps.get(filetype.lower(), keymaps.get("mmclx"))
 
