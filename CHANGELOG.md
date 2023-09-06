@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.53.1 – 2023-09-06
+
+- Speed up processing of .znc files by dropping spectra (#87)
+- Remove network call from model-related code
+
 ## 1.53.0 – 2023-08-28
 
 - Support `.znc` input (and STSR) in `mira2nc` (#84)
