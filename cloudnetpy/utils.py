@@ -10,7 +10,6 @@ from typing import Iterator
 
 import netCDF4
 import numpy as np
-import requests
 from numpy import ma
 from scipy import ndimage, stats
 from scipy.interpolate import RectBivariateSpline, RegularGridInterpolator, griddata
@@ -791,15 +790,6 @@ def str_to_numeric(value: str) -> int | float:
         return int(value)
     except ValueError:
         return float(value)
-
-
-def fetch_cloudnet_model_types() -> list:
-    """Finds different model types."""
-    url = "https://cloudnet.fmi.fi/api/models"
-    data = requests.get(url=url, timeout=60).json()
-    models = [model["id"] for model in data]
-    model_types = [model.split("-")[0] for model in models]
-    return list(set(model_types))
 
 
 def get_epoch(units: str) -> Epoch:

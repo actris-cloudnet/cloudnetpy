@@ -697,12 +697,6 @@ def test_get_sorted_filenames(example_files):
     assert utils.get_sorted_filenames(dir_name, ".LV1") == result
 
 
-def test_fetch_cloudnet_model_types():
-    model_types = utils.fetch_cloudnet_model_types()
-    for model_type in ("icon", "harmonie", "ecmwf", "era5"):
-        assert model_type in model_types
-
-
 @pytest.mark.parametrize(
     "data, reference, expected",
     [

@@ -124,7 +124,7 @@ def _calc_mean_height(model_heights: np.ndarray) -> np.ndarray:
 
 def _find_model_type(file_name: str) -> str:
     """Finds model type from the model filename."""
-    possible_keys = utils.fetch_cloudnet_model_types()
+    possible_keys = ("gdas1", "icon", "ecmwf", "harmonie", "era5")
     for key in possible_keys:
         if key in file_name:
             return key
