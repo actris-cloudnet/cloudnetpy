@@ -25,9 +25,9 @@ For example, row `1,,3` has missing value in second column.
 | `air_temperature`              | optional   | K      |                                                                                                                                                                                                   |
 | `relative_humidity`            | optional   | 1      |                                                                                                                                                                                                   |
 | `wind_from_direction`          | optional   | degree | The direction from which the wind is blowing. The direction increases clockwise such that a northerly wind is 0°, an easterly wind is 90°, a southerly wind is 180°, and a westerly wind is 270°. |
-| `air_pressure`                 | optional   | hPa    |                                                                                                                                                                                                   |
+| `air_pressure`                 | optional   | Pa     |                                                                                                                                                                                                   |
 | `rainfall_rate`                | optional   | m s-1  |                                                                                                                                                                                                   |
-| `thickness_of_rainfall_amount` | optional   | mm     | Cumulated rainfall since 00:00:00 UTC.                                                                                                                                                            |
+| `thickness_of_rainfall_amount` | optional   | m      | Cumulated rainfall since 00:00:00 UTC.                                                                                                                                                            |
 
 Column name MUST be followed by measurement height in parentheses in meters above ground level, for example `wind_speed(2m)`.
 It's possible to have same measurement at different heights, for example: `wind_speed(2m)`, `wind_speed(10m)` and `wind_speed(20m)`.
