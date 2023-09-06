@@ -29,15 +29,15 @@ For example, row `1,,3` has missing value in second column.
 | `rainfall_rate`                | optional   | m s-1  |                                                                                                                                                                                                   |
 | `thickness_of_rainfall_amount` | optional   | mm     | Cumulated rainfall since 00:00:00 UTC.                                                                                                                                                            |
 
-Multiple measurements at different heights are indicated with multiple columns in format: variable name followed by meters above ground in parentheses.
-For instance, wind speed measurements at three different heights would have columns `wind_speed(2m)`, `wind_speed(10m)` and `wind_speed(20m)`.
+Column name MUST be followed by measurement height in parentheses in meters above ground level, for example `wind_speed(2m)`.
+It's possible to have same measurement at different heights, for example: `wind_speed(2m)`, `wind_speed(10m)` and `wind_speed(20m)`.
 
 ## Examples
 
-Weather station at ground level with various measurements:
+Weather station with various measurements:
 
 ```csv
-year,month,day,hour,minute,second,wind_speed,wind_from_direction,air_temperature,relative_humidity,air_pressure,rainfall_rate,thickness_of_rainfall_amount
+year,month,day,hour,minute,second,wind_speed(10m),wind_from_direction(10m),air_temperature(2m),relative_humidity(2m),air_pressure(2m),rainfall_rate(2m),thickness_of_rainfall_amount(2m)
 2019,4,11,0,0,0,1.22,32.75,279.11,76.93,999.40,0.00,0.00
 2019,4,11,0,1,0,0.81,321.58,279.06,77.08,999.41,0.00,0.00
 2019,4,11,0,2,0,0.52,324.31,279.03,77.17,999.52,0.00,0.00
@@ -46,7 +46,7 @@ year,month,day,hour,minute,second,wind_speed,wind_from_direction,air_temperature
 Temperature missing in two out of three measurements:
 
 ```csv
-year,month,day,hour,minute,second,wind_speed,wind_from_direction,air_temperature,relative_humidity,air_pressure,rainfall_rate,thickness_of_rainfall_amount
+year,month,day,hour,minute,second,wind_speed(10m),wind_from_direction(10m),air_temperature(2m),relative_humidity(2m),air_pressure(2m),rainfall_rate(2m),thickness_of_rainfall_amount(2m)
 2019,4,11,0,0,0,1.22,32.75,,76.93,999.40,0.00,0.00
 2019,4,11,0,1,0,0.81,321.58,279.06,77.08,999.41,0.00,0.00
 2019,4,11,0,2,0,0.52,324.31,,77.17,999.52,0.00,0.00
