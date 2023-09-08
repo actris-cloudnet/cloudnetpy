@@ -105,11 +105,11 @@ class Fmcw94Bin:
 
 
 def _read_from_file(
-    file: BinaryIO, fields: list[tuple[str, str]], count: int = 1
+    file: BinaryIO, fields: list[tuple[str, str]], count: int | None = None
 ) -> ma.MaskedArray:
-    arr = np.fromfile(file, np.dtype(fields), count)
+    arr = np.fromfile(file, np.dtype(fields), 1 if count is None else count)
     masked_arr = ma.array(arr)
-    if count == 1:
+    if count is None:
         return masked_arr[0]
     return masked_arr
 
