@@ -30,13 +30,13 @@ class TestDataSource:
         self.obj.close()
         assert self.obj.dataset.isopen() is False
 
-    def test_km2m(self, test_array):
+    def test_to_m(self, test_array):
         alt = self.obj.dataset.variables["range"]
-        assert_array_equal(self.obj.km2m(alt), test_array * 1000)
+        assert_array_equal(self.obj.to_m(alt), test_array * 1000)
 
-    def test_m2km(self, test_array):
+    def test_to_km(self, test_array):
         alt = self.obj.dataset.variables["height"]
-        assert_array_equal(self.obj.m2km(alt), test_array / 1000)
+        assert_array_equal(self.obj.to_km(alt), test_array / 1000)
 
     def test_get_height_m(self, test_array):
         assert self.obj.height is not None
