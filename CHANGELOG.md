@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.53.2 – 2023-09-08
+
+- Fix crash on HATPRO files with one profile
+
 ## 1.53.1 – 2023-09-06
 
 - Speed up processing of .znc files by dropping spectra (#87)
