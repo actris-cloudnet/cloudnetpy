@@ -1,6 +1,6 @@
 """Misc. plotting routines for Cloudnet products."""
 import os.path
-from datetime import date
+from datetime import date, datetime
 
 import matplotlib.pyplot as plt
 import netCDF4
@@ -61,6 +61,10 @@ def generate_figure(
     image_name: str | None = None,
     sub_title: bool = True,
     title: bool = True,
+    addsources: bool = False,
+    addwatermark: bool = False,
+    watermarktext: str = "\u00A9 CLOUDNET, cloudnet.fmi.fi",
+    watermarkaddcreationtime: bool = True,
 ) -> Dimensions:
     """Generates a Cloudnet figure.
 
@@ -77,6 +81,15 @@ def generate_figure(
             Overrides the *save_path* option. Default is None.
         sub_title (bool, optional): Add subtitle to image. Default is True.
         title (bool, optional): Add title to image. Default is True.
+        addsources (bool, optional): Add the data source to the image if
+            available, otherwise global source. Default is False.
+        addwatermark (bool, optional): Add watermark to image,
+            putting the watermarktext in the bottom left. Default is False.
+        watermarktext (bool, optional): The text that will be added if
+            addwatermark is True.
+            Default is '\u00A9 CLOUDNET, cloudnet.fmi.fi' (copyright symbol).
+        watermarkaddcreationtime (bool, optional): Add the creation time
+            after the watermarktext (datetime.datetime.utcnow()
 
     Returns:
         Dimensions of the generated figure in pixels.
@@ -109,6 +122,11 @@ def generate_figure(
         plot_type = ATTRIBUTES[name].plot_type
         if title:
             _set_title(ax, name, "")
+
+        if addsources:
+            sources = read_sources(nc_file, name)
+            display_datasources(ax, sources)
+
         if not is_height or (
             cloudnet_file_type == "mwr-single" and name in ("lwp", "iwv")
         ):
@@ -140,6 +158,10 @@ def generate_figure(
         else:
             _plot_colormesh_data(ax, field, name, ax_value)
     case_date = set_labels(fig, axes[-1], nc_file, sub_title)
+    #    if addsources:
+    #        display_datasources(fig, axes[-1], nc_file)
+    if addwatermark:
+        display_watermark(fig, axes[-1], watermarktext, watermarkaddcreationtime)
     handle_saving(image_name, save_path, show, case_date, valid_names)
     return Dimensions(fig, axes)
 
@@ -216,6 +238,43 @@ def set_labels(fig, ax, nc_file: str, sub_title: bool = True) -> date:
     if sub_title:
         add_subtitle(fig, case_date, site_name)
     return case_date
+
+
+def display_watermark(
+    fig,
+    watermarktext,
+    watermarkaddcreationtime,
+    ypos: float = -0.05,
+    fontsize: int = 7,
+) -> None:
+    if watermarkaddcreationtime:
+        now = datetime.utcnow().isoformat().split(".")[0].split("T")
+        watermarktext += " / Created on " + " ".join(now) + " UTC"
+    # similar to add_subtitle
+    fig.text(
+        0.05,
+        ypos + len(fig.get_axes()) / 50,
+        watermarktext,
+        fontsize=fontsize,
+        ha="left",
+        va="bottom",
+        # transform=ax.transAxes,
+    )
+
+
+def display_datasources(
+    ax, source: str, xpos: float = 0.01, ypos: float = 0.99, fontsize: int = 7, **kwargs
+) -> None:
+    ax.text(
+        xpos,
+        ypos,
+        "Device(s):\n" + source,
+        ha="left",
+        va="top",
+        fontsize=fontsize,
+        transform=ax.transAxes,
+        **kwargs,
+    )
 
 
 def _set_title(ax, field_name: str, identifier: str = " from CloudnetPy"):
@@ -663,6 +722,24 @@ def read_date(nc_file: str) -> date:
     with netCDF4.Dataset(nc_file) as nc:
         case_date = date(int(nc.year), int(nc.month), int(nc.day))
     return case_date
+
+
+def read_sources(nc_file: str, name: str | list) -> str:
+    """Returns site name."""
+    if isinstance(name, str):
+        name = [name]
+    sources = ""
+    with netCDF4.Dataset(nc_file) as nc:
+        for _name in name:
+            if (
+                _name in nc.variables.keys()
+                and "source" in nc.variables[_name].ncattrs()
+            ):
+                sources += nc.variables[_name].source + "\n"
+            else:
+                sources += nc.source
+    sources = sources.rstrip("\n")
+    return sources
 
 
 def add_subtitle(fig, case_date: date, site_name: str):
