@@ -124,7 +124,7 @@ def generate_figure(
             _set_title(ax, name, "")
 
         if addsources:
-            sources = read_sources(nc_file, name)
+            sources = read_source(nc_file, name)
             display_datasources(ax, sources)
 
         if not is_height or (
@@ -724,22 +724,26 @@ def read_date(nc_file: str) -> date:
     return case_date
 
 
-def read_sources(nc_file: str, name: str | list) -> str:
+def read_source(nc_file: str, name: str, includeSN: bool = True) -> str:
     """Returns site name."""
-    if isinstance(name, str):
-        name = [name]
-    sources = ""
     with netCDF4.Dataset(nc_file) as nc:
-        for _name in name:
-            if (
-                _name in nc.variables.keys()
-                and "source" in nc.variables[_name].ncattrs()
-            ):
-                sources += nc.variables[_name].source + "\n"
-            else:
-                sources += nc.source
-    sources = sources.rstrip("\n")
-    return sources
+        if name in nc.variables.keys() and "source" in nc.variables[name].ncattrs():
+            # single device has available src attr and maybe SN
+            source = nc.variables[name].source
+            if includeSN and "source_serial_number" in nc.variables[name].ncattrs():
+                source += f" (SN: {nc.variables[name].source_serial_number})"
+        else:
+            # global src, a \n sep string-list
+            source = nc.source
+            # who knows whether the cloudnet nc file actually has the SNs
+            # so better check
+            if includeSN and "source_serial_number" in nc.ncattrs():
+                source = source.split("\n")
+                SN = nc.source_serial_number.split("\n")
+                source = [_source + f" (SN: {_SN})" for _source, _SN in zip(source, SN)]
+                source = "\n".join(source)
+    source = source.rstrip("\n")
+    return source
 
 
 def add_subtitle(fig, case_date: date, site_name: str):
