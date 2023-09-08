@@ -256,7 +256,7 @@ class Radar(DataSource):
             return np.percentile(z_power.compressed(), 0.1)
 
         z = self.data["Z"][:]
-        radar_range = self.km2m(self.dataset.variables["range"])
+        radar_range = self.to_m(self.dataset.variables["range"])
         log_range = utils.lin2db(radar_range, scale=20)
         z_power = z - log_range
         z_power_min = _calc_z_power_min()
