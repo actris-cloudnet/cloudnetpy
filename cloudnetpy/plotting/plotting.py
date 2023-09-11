@@ -161,7 +161,7 @@ def generate_figure(
     #    if addsources:
     #        display_datasources(fig, axes[-1], nc_file)
     if addwatermark:
-        display_watermark(fig, axes[-1], watermarktext, watermarkaddcreationtime)
+        display_watermark(fig, watermarktext, watermarkaddcreationtime)
     handle_saving(image_name, save_path, show, case_date, valid_names)
     return Dimensions(fig, axes)
 
@@ -731,15 +731,23 @@ def read_source(nc_file: str, name: str, includeSN: bool = True) -> str:
             # single device has available src attr and maybe SN
             source = nc.variables[name].source
             if includeSN and "source_serial_number" in nc.variables[name].ncattrs():
-                source += f" (SN: {nc.variables[name].source_serial_number})"
+                sno = nc.variables[name].source_serial_number
+                if sno:
+                    pass
+                else:
+                    sno = "NA"
+                print(sno)
+                source += f" (SN: {sno})"
         else:
             # global src, a \n sep string-list
             source = nc.source
             # who knows whether the cloudnet nc file actually has the SNs
             # so better check
-            if includeSN and "source_serial_number" in nc.ncattrs():
+            if includeSN and "source_serial_numbers" in nc.ncattrs():
                 source = source.split("\n")
-                SN = nc.source_serial_number.split("\n")
+                SN = nc.source_serial_numbers.split("\n")
+                SN = [i if i else "NA" for i in SN]
+                print(SN)
                 source = [_source + f" (SN: {_SN})" for _source, _SN in zip(source, SN)]
                 source = "\n".join(source)
     source = source.rstrip("\n")
