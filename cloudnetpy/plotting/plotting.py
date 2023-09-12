@@ -86,6 +86,8 @@ def generate_figure(
             Overrides the *save_path* option. Default is None.
         sub_title (bool, optional): Add subtitle to image. Default is True.
         title (bool, optional): Add title to image. Default is True.
+        addgrid (bool, optional): Whether to include a grid in the figure
+            to facilitate orientation of the viewer. Designed to be non-intrusive
         addsources (bool, optional): Add the data source to the image if
             available, otherwise global source. Default is False.
         includeSN (bool, optional): Add the serial number for the plot if
@@ -98,7 +100,7 @@ def generate_figure(
         addwatermark (bool, optional): Add watermark to image,
             putting the watermarktext in the bottom left. Default is False.
         watermarktext (bool, optional): The text that will be added if
-            addwatermark is True.
+            addwatermark is True. Should be adjusted for any non-ACTRIS/FMI site
             Default is '\u00A9 CLOUDNET, cloudnet.fmi.fi' (copyright symbol).
         watermarkaddcreationtime (bool, optional): Add the creation time
             after the watermarktext (datetime.datetime.utcnow()
