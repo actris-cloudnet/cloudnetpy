@@ -1,6 +1,8 @@
 """ Functions for file writing."""
 import datetime
 import logging
+from os import PathLike
+from uuid import UUID
 
 import netCDF4
 import numpy as np
@@ -11,7 +13,9 @@ from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
-def save_level1b(obj, output_file: str, uuid: str | None = None) -> str:
+def save_level1b(
+    obj, output_file: PathLike | str, uuid: UUID | str | None = None
+) -> str:
     """Saves Cloudnet Level 1b file."""
     dimensions = _get_netcdf_dimensions(obj)
     with init_file(output_file, dimensions, obj.data, uuid) as nc:
@@ -215,10 +219,10 @@ def add_source_instruments(nc: netCDF4.Dataset, data: dict) -> None:
 
 
 def init_file(
-    file_name: str,
+    file_name: PathLike | str,
     dimensions: dict,
     cloudnet_arrays: dict,
-    uuid: str | None = None,
+    uuid: UUID | str | None = None,
 ) -> netCDF4.Dataset:
     """Initializes a Cloudnet file for writing.
 
@@ -397,11 +401,11 @@ def _get_identifier(short_id: str) -> str:
 
 
 def add_standard_global_attributes(
-    nc: netCDF4.Dataset, uuid: str | None = None
+    nc: netCDF4.Dataset, uuid: UUID | str | None = None
 ) -> None:
     nc.Conventions = "CF-1.8"
     nc.cloudnetpy_version = version.__version__
-    nc.file_uuid = uuid or utils.get_uuid()
+    nc.file_uuid = str(uuid) if uuid is not None else utils.get_uuid()
 
 
 def fix_attribute_name(nc: netCDF4.Dataset) -> None:
