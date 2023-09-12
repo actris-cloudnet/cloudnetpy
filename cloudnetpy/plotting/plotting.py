@@ -7,6 +7,7 @@ import netCDF4
 import numpy as np
 from matplotlib import rcParams
 from matplotlib.colors import ListedColormap
+from matplotlib.ticker import AutoMinorLocator
 from matplotlib.transforms import Affine2D, Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma, ndarray
@@ -16,6 +17,8 @@ import cloudnetpy.products.product_tools as ptools
 from cloudnetpy import utils
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, Scale
 from cloudnetpy.products.product_tools import CategorizeBits
+
+_ZORDER = 42
 
 
 class Dimensions:
@@ -61,7 +64,9 @@ def generate_figure(
     image_name: str | None = None,
     sub_title: bool = True,
     title: bool = True,
+    addgrid: bool = False,
     addsources: bool = False,
+    includeSN: bool = False,
     addwatermark: bool = False,
     watermarktext: str = "\u00A9 CLOUDNET, cloudnet.fmi.fi",
     watermarkaddcreationtime: bool = True,
@@ -83,6 +88,13 @@ def generate_figure(
         title (bool, optional): Add title to image. Default is True.
         addsources (bool, optional): Add the data source to the image if
             available, otherwise global source. Default is False.
+        includeSN (bool, optional): Add the serial number for the plot if
+            available. If the source attr is available for a field_name
+            the source_serial_number attr is checked for the serial number
+            (which may not exist, leading to no serial number). If no
+            source attr is available, the global source attr and global
+            source_serial_number is checked. In either case, the length
+            of both source and source_serial_number has to agree.
         addwatermark (bool, optional): Add watermark to image,
             putting the watermarktext in the bottom left. Default is False.
         watermarktext (bool, optional): The text that will be added if
@@ -123,8 +135,14 @@ def generate_figure(
         if title:
             _set_title(ax, name, "")
 
+        if addgrid:
+            ax.xaxis.set_minor_locator(AutoMinorLocator(4))
+            ax.grid(which="major", axis="x", color="k", lw=0.2, zorder=0)
+            ax.grid(which="minor", axis="x", lw=0.1, color="k", ls=":", zorder=0)
+            ax.grid(which="major", axis="y", lw=0.1, color="k", ls=":", zorder=0)
+
         if addsources:
-            sources = read_source(nc_file, name)
+            sources = read_source(nc_file, name, includeSN=includeSN)
             display_datasources(ax, sources)
 
         if not is_height or (
@@ -387,7 +405,7 @@ def set_ax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0):
 def _get_standard_time_ticks(resolution: int = 4) -> list:
     """Returns typical ticks / labels for a time vector between 0-24h."""
     return [
-        f"{int(i):02d}:00" if 24 > i > 0 else ""
+        f"{int(i):02d}:00" if 24 >= i >= 0 else ""
         for i in np.arange(0, 24.01, resolution)
     ]
 
@@ -402,7 +420,7 @@ def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
 
     """
     data = _convert_to_kg(data, unit)
-    ax.plot(time, data, color="navy")
+    ax.plot(time, data, color="navy", zorder=_ZORDER)
 
     if isinstance(data, ma.MaskedArray):
         data_filled = data.filled(0)
@@ -416,6 +434,7 @@ def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
         align="center",
         alpha=0.5,
         color="royalblue",
+        zorder=_ZORDER,
     )
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
@@ -452,7 +471,12 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
     cmap = ListedColormap(cbar)
     data[original_mask] = 99
     pl = ax.pcolorfast(
-        *axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5, vmax=len(cbar) - 0.5
+        *axes,
+        data[:-1, :-1].T,
+        cmap=cmap,
+        vmin=-0.5,
+        vmax=len(cbar) - 0.5,
+        zorder=_ZORDER,
     )
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(len(clabel)))
@@ -488,7 +512,9 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
     if variables.plot_scale == Scale.LOGARITHMIC:
         data, vmin, vmax = lin2log(data, vmin, vmax)
 
-    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
+    pl = ax.pcolorfast(
+        *axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap, zorder=_ZORDER
+    )
 
     if variables.plot_type != "bit":
         colorbar = _init_colorbar(pl, ax)
@@ -531,18 +557,20 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
     if name == "rainfall_rate":
         if unit == "m s-1":
             data *= 1000 * 3600
-        ax.plot(time, data, color="royalblue")
+        ax.plot(time, data, color="royalblue", zorder=_ZORDER)
         ylim = max((np.max(data) * 1.05, 0.1))
         set_ax(ax, ylim, "mm h$^{-1}$")
     if name == "n_particles":
-        ax.plot(time, data, color="royalblue")
+        ax.plot(time, data, color="royalblue", zorder=_ZORDER)
         ylim = max((np.max(data) * 1.05, 1))
         set_ax(ax, ylim, "")
 
 
 def _plot_hatpro(ax, data: dict, full_path: str):
     tb = _pointing_filter(full_path, data["tb"])
-    ax.plot(data["time"], tb, color="royalblue", linestyle="-", linewidth=1)
+    ax.plot(
+        data["time"], tb, color="royalblue", linestyle="-", linewidth=1, zorder=_ZORDER
+    )
     set_ax(
         ax,
         max_y=np.max(tb) + 0.5,
@@ -574,18 +602,24 @@ def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
             unit = "K"
             min_y = np.min(data) - 1
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
             set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "wind_speed":
             unit = "m s$^{-1}$"
             min_y = np.min(data) - 1
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
             set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "wind_direction":
             unit = "degree"
             ax.plot(
-                time, data, color="royalblue", marker=".", linewidth=0, markersize=3
+                time,
+                data,
+                color="royalblue",
+                marker=".",
+                linewidth=0,
+                markersize=3,
+                zorder=_ZORDER,
             )
             set_ax(ax, min_y=0, max_y=360, ylabel=unit)
         case "relative_humidity":
@@ -593,21 +627,21 @@ def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
             unit = "%"
             min_y = np.min(data) - 1
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
             set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "air_pressure":
             data /= 100
             unit = "hPa"
             min_y = np.min(data) - 1
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
             set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "rainfall_amount":
             data *= 1000
             unit = "mm"
             min_y = 0
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
             set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case unknown:
             raise NotImplementedError(f"Not implemented for {unknown}")
@@ -621,19 +655,21 @@ def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
     n, line_width = _get_plot_parameters(data)
     data_filtered = _filter_noise(data, n)
     time[gaps] = np.nan
-    ax.plot(time, data_filtered, color="royalblue", lw=line_width)
+    ax.plot(time, data_filtered, color="royalblue", lw=line_width, zorder=_ZORDER)
     ax.axhline(linewidth=0.8, color="k")
     ax.plot(
         time[int(width / 2 - 1) : int(-width / 2)],
         rolling_mean,
         color="sienna",
         linewidth=2.0,
+        zorder=_ZORDER,
     )
     ax.plot(
         time[int(width / 2 - 1) : int(-width / 2)],
         rolling_mean,
         color="wheat",
         linewidth=0.6,
+        zorder=_ZORDER,
     )
     set_ax(
         ax,
@@ -730,14 +766,21 @@ def read_source(nc_file: str, name: str, includeSN: bool = True) -> str:
         if name in nc.variables.keys() and "source" in nc.variables[name].ncattrs():
             # single device has available src attr and maybe SN
             source = nc.variables[name].source
+            # even if the attr is source_serial_number, it is possible that
+            # the variable comes from more than one device, e.g. Do for drizzle
+            # for which we need to account
             if includeSN and "source_serial_number" in nc.variables[name].ncattrs():
                 sno = nc.variables[name].source_serial_number
                 if sno:
                     pass
                 else:
-                    sno = "NA"
-                print(sno)
-                source += f" (SN: {sno})"
+                    sno = ""
+                source, sno = source.split("\n"), sno.split("\n")
+                source = [
+                    f"{_source} (SN: {_sno})" if _sno else f"{_source}"
+                    for _source, _sno in zip(source, sno)
+                ]
+                source = "\n".join(source)
         else:
             # global src, a \n sep string-list
             source = nc.source
@@ -745,10 +788,12 @@ def read_source(nc_file: str, name: str, includeSN: bool = True) -> str:
             # so better check
             if includeSN and "source_serial_numbers" in nc.ncattrs():
                 source = source.split("\n")
-                SN = nc.source_serial_numbers.split("\n")
-                SN = [i if i else "NA" for i in SN]
-                print(SN)
-                source = [_source + f" (SN: {_SN})" for _source, _SN in zip(source, SN)]
+                sno = nc.source_serial_numbers.split("\n")
+                sno = [i if i else "" for i in sno]
+                source = [
+                    f"{_source} (SN: {_sno})" if _sno else f"{_source}"
+                    for _source, _sno in zip(source, sno)
+                ]
                 source = "\n".join(source)
     source = source.rstrip("\n")
     return source
@@ -781,7 +826,9 @@ def _create_save_name(
 
 
 def _plot_relative_error(ax, error: ma.MaskedArray, ax_values: tuple):
-    pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap="RdBu", vmin=-30, vmax=30)
+    pl = ax.pcolorfast(
+        *ax_values, error[:-1, :-1].T, cmap="RdBu", vmin=-30, vmax=30, zorder=_ZORDER
+    )
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
     median_error = ma.median(error.compressed())
