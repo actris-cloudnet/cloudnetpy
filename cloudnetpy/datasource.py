@@ -46,7 +46,7 @@ class DataSource:
     data_sparse: dict
     type: str
 
-    def __init__(self, full_path: str, radar: bool = False):
+    def __init__(self, full_path: os.PathLike | str, radar: bool = False):
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
         self.source = getattr(self.dataset, "source", "")
@@ -127,7 +127,7 @@ class DataSource:
         alt = var[:]
         if var.units == "km":
             alt *= 1000
-        elif var.units != "m":
+        elif var.units not in ("m", "meters"):
             raise ValueError(f"Unexpected unit: {var.units}")
         return alt
 
@@ -154,7 +154,11 @@ class DataSource:
         """Returns altitude of the instrument (m)."""
         if "altitude" in self.dataset.variables:
             altitude_above_sea = self.to_m(self.dataset.variables["altitude"])
-            return float(np.mean(altitude_above_sea))
+            return float(
+                altitude_above_sea
+                if utils.isscalar(altitude_above_sea)
+                else np.mean(altitude_above_sea)
+            )
         return None
 
     def _init_height(self) -> np.ndarray | None:

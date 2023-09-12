@@ -14,6 +14,7 @@ class CloudnetInstrument:
         self.time: np.ndarray = np.array([])
         self.site_meta: dict = {}
         self.data: dict = {}
+        self.serial_number: str | None = None
 
     def add_site_geolocation(self) -> None:
         for key in ("latitude", "longitude", "altitude"):

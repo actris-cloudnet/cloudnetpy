@@ -157,3 +157,11 @@ GENERIC_WEATHER_STATION = Instrument(
     domain="weather-station",
     category="weather station",
 )
+
+MRR_PRO = Instrument(
+    manufacturer="METEK",
+    domain="rain-radar",
+    category="rain radar",
+    model="MRR-PRO",
+    frequency=24.23,
+)
