@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.54.1 – 2023-09-13
+
+- Skip invalid MRR-PRO input files
+
 ## 1.54.0 – 2023-09-13
 
 - Add initial support for MRR-PRO
