@@ -1,10 +1,13 @@
 import datetime
+import logging
 import re
 from collections.abc import Iterable
 from os import PathLike
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from uuid import UUID
+
+import netCDF4
 
 from cloudnetpy import concat_lib, output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -61,11 +64,20 @@ def mrr2nc(
         "PIA": "pia",
     }
 
+    def valid_nc_files(files: Iterable[PathLike | str]) -> Iterable[PathLike | str]:
+        for file in files:
+            try:
+                with netCDF4.Dataset(file):
+                    yield file
+            except OSError:
+                logging.warning(f"Skipping invalid file: {file}")
+
     def concat_files(temp_dir: str, files: Iterable[PathLike | str]) -> str:
         tmp_filename = f"{temp_dir}/tmp.nc"
         variables = list(keymap.keys()) + ["elevation"]
+        valid_files = list(valid_nc_files(files))
         concat_lib.concatenate_files(
-            list(files),
+            valid_files,
             tmp_filename,
             variables=variables,
             ignore=["time_coverage_start", "time_coverage_end"],
