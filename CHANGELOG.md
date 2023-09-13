@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.54.0 – 2023-09-13
+
+- Add initial support for MRR-PRO
+- Fix the bug in the code that distinguishes cl31 from cl51
+
 ## 1.53.2 – 2023-09-08
 
 - Fix crash on HATPRO files with one profile
