@@ -114,7 +114,7 @@ class Model(DataSource):
     def _get_model_heights(self, alt_site: float) -> np.ndarray:
         """Returns model heights for each time step."""
         model_heights = self.dataset.variables["height"]
-        return self.km2m(model_heights) + alt_site
+        return self.to_m(model_heights) + alt_site
 
 
 def _calc_mean_height(model_heights: np.ndarray) -> np.ndarray:

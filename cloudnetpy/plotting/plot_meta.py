@@ -775,7 +775,7 @@ ATTRIBUTES = {
     "rainfall_rate": PlotMeta(
         name="Rainfall rate",
         plot_type="bar",
-        source="disdrometer",  # Also in weather-station
+        source="disdrometer",  # Also in weather-station and rain-radar
     ),
     "n_particles": PlotMeta(
         name="Number of particles", plot_type="bar", source="disdrometer"
@@ -920,5 +920,10 @@ ATTRIBUTES = {
         cbar=_CBAR["bit"],
         plot_range=(0, 1),
         plot_type="bit",
+    ),
+    "pia": PlotMeta(
+        name="Path integrated rain attenuation",
+        plot_range=(0, 3),
+        clabel=_DB,
     ),
 }

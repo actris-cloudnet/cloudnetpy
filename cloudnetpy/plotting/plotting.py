@@ -15,7 +15,7 @@ from scipy.signal import filtfilt
 
 import cloudnetpy.products.product_tools as ptools
 from cloudnetpy import utils
-from cloudnetpy.plotting.plot_meta import ATTRIBUTES, Scale
+from cloudnetpy.plotting.plot_meta import _MS1, ATTRIBUTES, PlotMeta, Scale
 from cloudnetpy.products.product_tools import CategorizeBits
 
 _ZORDER = 42
@@ -133,6 +133,16 @@ def generate_figure(
     fig, axes = _initialize_figure(len(valid_fields), dpi)
 
     for ax, field, name, tb_ind in zip(axes, valid_fields, valid_names, indices):
+        original_attrib = None  # monkey patch
+        if cloudnet_file_type == "rain-radar" and name == "rainfall_rate":
+            original_attrib = ATTRIBUTES[name]
+            ATTRIBUTES[name] = PlotMeta(
+                name="Rainfall rate",
+                cbar="Blues",
+                clabel=_MS1,
+                plot_range=(0, 50 / 3600000),
+                plot_type="mesh",
+            )
         plot_type = ATTRIBUTES[name].plot_type
         if title:
             _set_title(ax, name, "")
@@ -177,6 +187,8 @@ def generate_figure(
 
         else:
             _plot_colormesh_data(ax, field, name, ax_value)
+        if original_attrib is not None:
+            ATTRIBUTES[name] = original_attrib
     case_date = set_labels(fig, axes[-1], nc_file, sub_title)
     #    if addsources:
     #        display_datasources(fig, axes[-1], nc_file)

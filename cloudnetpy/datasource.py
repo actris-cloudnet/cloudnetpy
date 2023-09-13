@@ -46,7 +46,7 @@ class DataSource:
     data_sparse: dict
     type: str
 
-    def __init__(self, full_path: str, radar: bool = False):
+    def __init__(self, full_path: os.PathLike | str, radar: bool = False):
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
         self.source = getattr(self.dataset, "source", "")
@@ -122,19 +122,23 @@ class DataSource:
         self.dataset.close()
 
     @staticmethod
-    def km2m(var: netCDF4.Variable) -> np.ndarray:
+    def to_m(var: netCDF4.Variable) -> np.ndarray:
         """Converts km to m."""
         alt = var[:]
         if var.units == "km":
             alt *= 1000
+        elif var.units not in ("m", "meters"):
+            raise ValueError(f"Unexpected unit: {var.units}")
         return alt
 
     @staticmethod
-    def m2km(var: netCDF4.Variable) -> np.ndarray:
+    def to_km(var: netCDF4.Variable) -> np.ndarray:
         """Converts m to km."""
         alt = var[:]
         if var.units == "m":
             alt /= 1000
+        elif var.units != "km":
+            raise ValueError(f"Unexpected unit: {var.units}")
         return alt
 
     def _init_time(self) -> np.ndarray:
@@ -149,16 +153,20 @@ class DataSource:
     def _init_altitude(self) -> float | None:
         """Returns altitude of the instrument (m)."""
         if "altitude" in self.dataset.variables:
-            altitude_above_sea = self.km2m(self.dataset.variables["altitude"])
-            return float(np.mean(altitude_above_sea))
+            altitude_above_sea = self.to_m(self.dataset.variables["altitude"])
+            return float(
+                altitude_above_sea
+                if utils.isscalar(altitude_above_sea)
+                else np.mean(altitude_above_sea)
+            )
         return None
 
     def _init_height(self) -> np.ndarray | None:
         """Returns height array above mean sea level (m)."""
         if "height" in self.dataset.variables:
-            return self.km2m(self.dataset.variables["height"])
+            return self.to_m(self.dataset.variables["height"])
         if "range" in self.dataset.variables and self.altitude is not None:
-            range_instrument = self.km2m(self.dataset.variables["range"])
+            range_instrument = self.to_m(self.dataset.variables["range"])
             return np.array(range_instrument + self.altitude)
         return None
 

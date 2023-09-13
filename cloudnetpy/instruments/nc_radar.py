@@ -1,5 +1,6 @@
 """Module for reading raw cloud radar data."""
 import logging
+from os import PathLike
 
 import numpy as np
 from numpy import ma
@@ -23,7 +24,7 @@ class NcRadar(DataSource, CloudnetInstrument):
         Used with BASTA, MIRA and Copernicus radars.
     """
 
-    def __init__(self, full_path: str, site_meta: dict):
+    def __init__(self, full_path: PathLike | str, site_meta: dict):
         super().__init__(full_path)
         self.site_meta = site_meta
         self.date: list[str]

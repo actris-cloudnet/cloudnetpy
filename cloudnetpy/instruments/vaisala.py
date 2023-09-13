@@ -260,7 +260,7 @@ class ClCeilo(VaisalaCeilo):
 
     def _store_ceilometer_info(self):
         n_gates = self.data["beta_raw"].shape[1]
-        if n_gates < 1000:
+        if n_gates < 1540:
             self.instrument = instruments.CL31
         else:
             self.instrument = instruments.CL51

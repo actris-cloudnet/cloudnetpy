@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.54.1 – 2023-09-13
+
+- Skip invalid MRR-PRO input files
+
+## 1.54.0 – 2023-09-13
+
+- Add initial support for MRR-PRO
+- Fix the bug in the code that distinguishes cl31 from cl51
+
+## 1.53.2 – 2023-09-08
+
+- Fix crash on HATPRO files with one profile
+
+## 1.53.1 – 2023-09-06
+
+- Speed up processing of .znc files by dropping spectra (#87)
+- Remove network call from model-related code
+
 ## 1.53.0 – 2023-08-28
 
 - Support `.znc` input (and STSR) in `mira2nc` (#84)
