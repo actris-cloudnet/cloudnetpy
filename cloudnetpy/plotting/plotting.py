@@ -147,8 +147,8 @@ def generate_figure(
                 plot_type="mesh",
             )
         plot_type = ATTRIBUTES[name].plot_type
-        
-        set_xax(include_xlimits=include_xlimits)
+
+        set_xax(ax, include_xlimits=include_xlimits)
 
         if title:
             _set_title(ax, name, "")
@@ -302,7 +302,7 @@ def display_watermark(
 def display_datasources(
     ax, source: str, xpos: float = 0.01, ypos: float = 0.99, fontsize: int = 7, **kwargs
 ) -> None:
-    _ = 's' if '\n' in source else ''
+    _ = "s" if "\n" in source else ""
     ax.text(
         xpos,
         ypos,
@@ -409,6 +409,7 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) ->
         alt = alt[:ind]
     return data_field, (ax_values[0], alt)
 
+
 def set_xax(ax, include_xlimits: bool = False):
     """Sets xticks and xtick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks(include_xlimits=include_xlimits)
@@ -425,18 +426,20 @@ def set_yax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0):
         ax.set_ylabel(ylabel, fontsize=13)
 
 
-def _get_standard_time_ticks(resolution: int = 4, include_xlimits: bool = False) -> list:
+def _get_standard_time_ticks(
+    resolution: int = 4, include_xlimits: bool = False
+) -> list:
     """Returns typical ticks / labels for a time vector between 0-24h."""
     if include_xlimits:
         return [
-                f"{int(i):02d}:00" if 24 >= i >= 0 else ""
-                for i in np.arange(0, 24.01, resolution)
+            f"{int(i):02d}:00" if 24 >= i >= 0 else ""
+            for i in np.arange(0, 24.01, resolution)
         ]
-    else:
-        return [
-                f"{int(i):02d}:00" if 24 >= i >= 0 else ""
-                for i in np.arange(0, 24.01, resolution)
-                ]
+    return [
+        f"{int(i):02d}:00" if 24 > i > 0 else ""
+        for i in np.arange(0, 24.01, resolution)
+    ]
+
 
 def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
     """Plots 1D variable as bar plot.
@@ -789,7 +792,7 @@ def read_date(nc_file: str) -> date:
 
 
 def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
-    """Returns source attr of field with name or global source and maybe serial number ."""
+    """Returns source attr of field name or global one and maybe serial number ."""
     with netCDF4.Dataset(nc_file) as nc:
         if name in nc.variables.keys() and "source" in nc.variables[name].ncattrs():
             # single device has available src attr and maybe SN
@@ -797,7 +800,10 @@ def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
             # even if the attr is source_serial_number, it is possible that
             # the variable comes from more than one device, e.g. Do for drizzle
             # for which we need to account
-            if add_serial_number and "source_serial_number" in nc.variables[name].ncattrs():
+            if (
+                add_serial_number
+                and "source_serial_number" in nc.variables[name].ncattrs()
+            ):
                 sno = nc.variables[name].source_serial_number
                 source, sno = source.split("\n"), sno.split("\n")
                 source = [
@@ -807,20 +813,19 @@ def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
                 source = "\n".join(source)
         else:
             # global src, a \n sep string-list
-            if 'source' in nc.ncattrs():
+            if "source" in nc.ncattrs():
                 source = nc.source
             else:
                 # empty list means that the zip below runs for 0 times as
-                #the assumption is if we do not have any sources we can't
+                # the assumption is if we do not have any sources we can't
                 # have any serial numbers, i.e. no instrument type means
                 # to instrument serial number. If this would be the case
-                # something somewhere else is wrong and should not be 
+                # something somewhere else is wrong and should not be
                 # fixed here.
                 source = []
             # who knows whether the cloudnet nc file actually has the SNs
             # so better check beforehand
             if add_serial_number and "source_serial_numbers" in nc.ncattrs():
-                
                 sno = nc.source_serial_numbers.split("\n")
                 sno = [i if i else "" for i in sno]
                 if source:

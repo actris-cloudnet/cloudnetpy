@@ -155,6 +155,7 @@ def get_group_plots(
     show: bool,
     cycle: str = "",
     title: bool = True,
+    include_xlimits: bool = False,
 ):
     """Group subplot visualization for both standard and advection downsampling.
     Generates group subplot figure for product with model and all different
@@ -178,7 +179,8 @@ def get_group_plots(
     j = 0
     for j, name in enumerate(names):
         variable_info = ATTRIBUTES[product]
-        cloud_plt.set_ax(ax[j], 12, ylabel=None)
+        cloud_plt.set_yax(ax[j], 12, ylabel=None)
+        cloud_plt.set_xax(ax[j], include_xlimits=include_xlimits)
         if title:
             _set_title(ax[j], name, product, variable_info)
         if j == 0 and title:
@@ -207,6 +209,7 @@ def get_pair_plots(
     show: bool,
     cycle: str = "",
     title: bool = True,
+    include_xlimits: bool = False,
 ):
     """Pair subplots of model and product method.
     In upper subplot is model product and lower subplot one of the
@@ -230,8 +233,11 @@ def get_pair_plots(
         if i == 0:
             continue
         fig, ax = initialize_figure(2)
-        cloud_plt.set_ax(ax[0], 12, ylabel=None)
-        cloud_plt.set_ax(ax[-1], 12, ylabel=None)
+        cloud_plt.set_yax(ax[0], 12, ylabel=None)
+        cloud_plt.set_yax(ax[-1], 12, ylabel=None)
+        cloud_plt.set_xax(ax[0], include_xlimits=include_xlimits)
+        cloud_plt.set_xax(ax[-1], include_xlimits=include_xlimits)
+
         if title:
             _set_title(ax[0], model, product, variable_info, model_name)
             _set_title(ax[-1], name, product, variable_info)
@@ -256,6 +262,7 @@ def get_single_plots(
     show: bool,
     cycle: str = "",
     title: bool = True,
+    include_xlimits: bool = False,
 ):
     """Generates figures of each product variable from given file in loop.
     Args:
@@ -273,7 +280,9 @@ def get_single_plots(
     variable_info = ATTRIBUTES[product]
     for _, name in enumerate(names):
         fig, ax = initialize_figure(1)
-        cloud_plt.set_ax(ax[0], 12, ylabel=None)
+        cloud_plt.set_yax(ax[0], 12, ylabel=None)
+        cloud_plt.set_xax(ax[0], include_xlimits=include_xlimits)
+
         if title:
             _set_title(ax[0], name, product, variable_info)
         data, x, y = p_tools.read_data_characters(nc_file, name, model)
@@ -407,12 +416,15 @@ def initialize_statistic_plots(
     args: tuple,
     variable_info,
     title: bool = True,
+    include_xlimits: bool = False,
 ):
     if method in ("error", "aerror"):
         plot_relative_error(ax, day_stat.model_stat.T, args, method)
         if title:
             ax.set_title(day_stat.title, fontsize=14)
-        cloud_plt.set_ax(ax, 12, ylabel=None)
+        cloud_plt.set_yax(ax, 12, ylabel=None)
+        cloud_plt.set_xax(ax, include_xlimits=include_xlimits)
+
     if method == "area":
         plot_data_area(ax, day_stat, model, obs, args, title=title)
         ax.text(
@@ -423,7 +435,9 @@ def initialize_statistic_plots(
             ha="center",
             transform=ax.transAxes,
         )
-        cloud_plt.set_ax(ax, 12, ylabel=None)
+        cloud_plt.set_yax(ax, 12, ylabel=None)
+        cloud_plt.set_xax(ax, include_xlimits=include_xlimits)
+
     if method == "hist":
         plot_histogram(ax, day_stat, variable_info)
         if j == max_len - 1 and (max_len % 2) == 0:

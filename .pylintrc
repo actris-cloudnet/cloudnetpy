@@ -22,3 +22,4 @@ max-line-length = 88
 
 [MASTER]
 ignore-paths=^cloudnetpy/model_evaluation/tests/.*$,
+max-branches=15
