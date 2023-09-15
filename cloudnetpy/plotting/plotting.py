@@ -1,12 +1,13 @@
 """Misc. plotting routines for Cloudnet products."""
 import os.path
-from datetime import date
+from datetime import date, datetime
 
 import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
 from matplotlib import rcParams
 from matplotlib.colors import Colormap, ListedColormap
+from matplotlib.ticker import AutoMinorLocator
 from matplotlib.transforms import Affine2D, Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma, ndarray
@@ -16,6 +17,8 @@ import cloudnetpy.products.product_tools as ptools
 from cloudnetpy import utils
 from cloudnetpy.plotting.plot_meta import _MS1, ATTRIBUTES, PlotMeta, Scale
 from cloudnetpy.products.product_tools import CategorizeBits
+
+_ZORDER = 42
 
 
 class Dimensions:
@@ -61,6 +64,13 @@ def generate_figure(
     image_name: str | None = None,
     sub_title: bool = True,
     title: bool = True,
+    add_grid: bool = False,
+    include_xlimits: bool = False,
+    add_sources: bool = False,
+    add_serial_number: bool = False,
+    add_copyright: bool = False,
+    copyright_text: str = "\u00A9 CLOUDNET, cloudnet.fmi.fi",
+    add_creation_time: bool = True,
 ) -> Dimensions:
     """Generates a Cloudnet figure.
 
@@ -77,6 +87,26 @@ def generate_figure(
             Overrides the *save_path* option. Default is None.
         sub_title (bool, optional): Add subtitle to image. Default is True.
         title (bool, optional): Add title to image. Default is True.
+        add_grid (bool, optional): Whether to include a grid in the figure
+            to facilitate orientation of the viewer. Designed to be non-intrusive
+        include_xlimits (bool, optional): Whether the xticklabels should include
+            00:00 and 24:00 for completeness. Default is False.
+        add_sources (bool, optional): Add the data source to the image if
+            available, otherwise global source. Default is False.
+        add_serial_number (bool, optional): Add the serial number for the plot if
+            available. If the source attr is available for a field_name
+            the source_serial_number attr is checked for the serial number
+            (which may not exist, leading to no serial number). If no
+            source attr is available, the global source attr and global
+            source_serial_number is checked. In either case, the length
+            of both source and source_serial_number has to agree.
+        add_copyright (bool, optional): Add watermark to image,
+            putting the copyright_text in the bottom left. Default is False.
+        copyright_text (bool, optional): The text that will be added if
+            add_copyright is True. Should be adjusted for any non-ACTRIS/FMI site
+            Default is '\u00A9 CLOUDNET, cloudnet.fmi.fi' (copyright symbol).
+        add_creation_time (bool, optional): Add the creation time
+            after the copyright_text (datetime.datetime.utcnow()
 
     Returns:
         Dimensions of the generated figure in pixels.
@@ -117,8 +147,22 @@ def generate_figure(
                 plot_type="mesh",
             )
         plot_type = ATTRIBUTES[name].plot_type
+
+        set_xax(ax, include_xlimits=include_xlimits)
+
         if title:
             _set_title(ax, name, "")
+
+        if add_grid:
+            ax.xaxis.set_minor_locator(AutoMinorLocator(4))
+            ax.grid(which="major", axis="x", color="k", lw=0.2, zorder=0)
+            ax.grid(which="minor", axis="x", lw=0.1, color="k", ls=":", zorder=0)
+            ax.grid(which="major", axis="y", lw=0.1, color="k", ls=":", zorder=0)
+
+        if add_sources:
+            sources = read_source(nc_file, name, add_serial_number=add_serial_number)
+            display_datasources(ax, sources)
+
         if not is_height or (
             cloudnet_file_type == "mwr-single" and name in ("lwp", "iwv")
         ):
@@ -138,11 +182,11 @@ def generate_figure(
             ax_value = (time_new, ax_value[1])
 
         field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
-        set_ax(ax, max_y, ylabel=None)
+        set_yax(ax, max_y, ylabel=None)
         if plot_type == "bar":
             unit = _get_variable_unit(nc_file, name)
             _plot_bar_data(ax, field, ax_value[0], unit)
-            set_ax(ax, 2, ATTRIBUTES[name].ylabel)
+            set_yax(ax, 2, ATTRIBUTES[name].ylabel)
 
         elif plot_type == "segment":
             _plot_segment_data(ax, field, name, ax_value)
@@ -152,6 +196,9 @@ def generate_figure(
         if original_attrib is not None:
             ATTRIBUTES[name] = original_attrib
     case_date = set_labels(fig, axes[-1], nc_file, sub_title)
+
+    if add_copyright:
+        display_watermark(fig, copyright_text, add_creation_time)
     handle_saving(image_name, save_path, show, case_date, valid_names)
     return Dimensions(fig, axes)
 
@@ -228,6 +275,44 @@ def set_labels(fig, ax, nc_file: str, sub_title: bool = True) -> date:
     if sub_title:
         add_subtitle(fig, case_date, site_name)
     return case_date
+
+
+def display_watermark(
+    fig,
+    copyright_text,
+    add_creation_time,
+    ypos: float = -0.05,
+    fontsize: int = 7,
+) -> None:
+    if add_creation_time:
+        now = datetime.utcnow().isoformat().split(".")[0].split("T")
+        copyright_text += " / Created on " + " ".join(now) + " UTC"
+    # similar to add_subtitle
+    fig.text(
+        0.05,
+        ypos + len(fig.get_axes()) / 50,
+        copyright_text,
+        fontsize=fontsize,
+        ha="left",
+        va="bottom",
+        # transform=ax.transAxes,
+    )
+
+
+def display_datasources(
+    ax, source: str, xpos: float = 0.01, ypos: float = 0.99, fontsize: int = 7, **kwargs
+) -> None:
+    _ = "s" if "\n" in source else ""
+    ax.text(
+        xpos,
+        ypos,
+        "Instrument" + _ + ":\n" + source,
+        ha="left",
+        va="top",
+        fontsize=fontsize,
+        transform=ax.transAxes,
+        **kwargs,
+    )
 
 
 def _set_title(ax, field_name: str, identifier: str = " from CloudnetPy"):
@@ -325,20 +410,31 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) ->
     return data_field, (ax_values[0], alt)
 
 
-def set_ax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0):
-    """Sets ticks and tick labels for plt.imshow()."""
-    ticks_x_labels = _get_standard_time_ticks()
-    ax.set_ylim(min_y, max_y)
+def set_xax(ax, include_xlimits: bool = False):
+    """Sets xticks and xtick labels for plt.imshow()."""
+    ticks_x_labels = _get_standard_time_ticks(include_xlimits=include_xlimits)
     ax.set_xticks(np.arange(0, 25, 4, dtype=int))
     ax.set_xticklabels(ticks_x_labels, fontsize=12)
-    ax.set_ylabel("Height (km)", fontsize=13)
     ax.set_xlim(0, 24)
+
+
+def set_yax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0):
+    """Sets yticks, ylim and ylabel for yaxis of axis."""
+    ax.set_ylim(min_y, max_y)
+    ax.set_ylabel("Height (km)", fontsize=13)
     if ylabel is not None:
         ax.set_ylabel(ylabel, fontsize=13)
 
 
-def _get_standard_time_ticks(resolution: int = 4) -> list:
+def _get_standard_time_ticks(
+    resolution: int = 4, include_xlimits: bool = False
+) -> list:
     """Returns typical ticks / labels for a time vector between 0-24h."""
+    if include_xlimits:
+        return [
+            f"{int(i):02d}:00" if 24 >= i >= 0 else ""
+            for i in np.arange(0, 24.01, resolution)
+        ]
     return [
         f"{int(i):02d}:00" if 24 > i > 0 else ""
         for i in np.arange(0, 24.01, resolution)
@@ -355,7 +451,7 @@ def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
 
     """
     data = _convert_to_kg(data, unit)
-    ax.plot(time, data, color="navy")
+    ax.plot(time, data, color="navy", zorder=_ZORDER)
 
     if isinstance(data, ma.MaskedArray):
         data_filled = data.filled(0)
@@ -369,6 +465,7 @@ def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
         align="center",
         alpha=0.5,
         color="royalblue",
+        zorder=_ZORDER,
     )
     pos = ax.get_position()
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
@@ -405,7 +502,12 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
     cmap = ListedColormap(cbar)
     data[original_mask] = 99
     pl = ax.pcolorfast(
-        *axes, data[:-1, :-1].T, cmap=cmap, vmin=-0.5, vmax=len(cbar) - 0.5
+        *axes,
+        data[:-1, :-1].T,
+        cmap=cmap,
+        vmin=-0.5,
+        vmax=len(cbar) - 0.5,
+        zorder=_ZORDER,
     )
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_ticks(np.arange(len(clabel)))
@@ -441,7 +543,9 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
     if variables.plot_scale == Scale.LOGARITHMIC:
         data, vmin, vmax = lin2log(data, vmin, vmax)
 
-    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=color_map)
+    pl = ax.pcolorfast(
+        *axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=color_map, zorder=_ZORDER
+    )
 
     if variables.plot_type != "bit":
         colorbar = _init_colorbar(pl, ax)
@@ -484,19 +588,21 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
     if name == "rainfall_rate":
         if unit == "m s-1":
             data *= 1000 * 3600
-        ax.plot(time, data, color="royalblue")
+        ax.plot(time, data, color="royalblue", zorder=_ZORDER)
         ylim = max((np.max(data) * 1.05, 0.1))
-        set_ax(ax, ylim, "mm h$^{-1}$")
+        set_yax(ax, ylim, "mm h$^{-1}$")
     if name == "n_particles":
-        ax.plot(time, data, color="royalblue")
+        ax.plot(time, data, color="royalblue", zorder=_ZORDER)
         ylim = max((np.max(data) * 1.05, 1))
-        set_ax(ax, ylim, "")
+        set_yax(ax, ylim, "")
 
 
 def _plot_hatpro(ax, data: dict, full_path: str):
     tb = _pointing_filter(full_path, data["tb"])
-    ax.plot(data["time"], tb, color="royalblue", linestyle="-", linewidth=1)
-    set_ax(
+    ax.plot(
+        data["time"], tb, color="royalblue", linestyle="-", linewidth=1, zorder=_ZORDER
+    )
+    set_yax(
         ax,
         max_y=np.max(tb) + 0.5,
         min_y=np.min(tb) - 0.5,
@@ -527,41 +633,47 @@ def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
             unit = "K"
             min_y = np.min(data) - 1
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
-            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
+            set_yax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "wind_speed":
             unit = "m s$^{-1}$"
             min_y = np.min(data) - 1
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
-            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
+            set_yax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "wind_direction":
             unit = "degree"
             ax.plot(
-                time, data, color="royalblue", marker=".", linewidth=0, markersize=3
+                time,
+                data,
+                color="royalblue",
+                marker=".",
+                linewidth=0,
+                markersize=3,
+                zorder=_ZORDER,
             )
-            set_ax(ax, min_y=0, max_y=360, ylabel=unit)
+            set_yax(ax, min_y=0, max_y=360, ylabel=unit)
         case "relative_humidity":
             data *= 100
             unit = "%"
             min_y = np.min(data) - 1
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
-            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
+            set_yax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "air_pressure":
             data /= 100
             unit = "hPa"
             min_y = np.min(data) - 1
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
-            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
+            set_yax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case "rainfall_amount":
             data *= 1000
             unit = "mm"
             min_y = 0
             max_y = np.max(data) + 1
-            ax.plot(time, data, color="royalblue")
-            set_ax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
+            ax.plot(time, data, color="royalblue", zorder=_ZORDER)
+            set_yax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case unknown:
             raise NotImplementedError(f"Not implemented for {unknown}")
 
@@ -574,21 +686,23 @@ def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
     n, line_width = _get_plot_parameters(data)
     data_filtered = _filter_noise(data, n)
     time[gaps] = np.nan
-    ax.plot(time, data_filtered, color="royalblue", lw=line_width)
+    ax.plot(time, data_filtered, color="royalblue", lw=line_width, zorder=_ZORDER)
     ax.axhline(linewidth=0.8, color="k")
     ax.plot(
         time[int(width / 2 - 1) : int(-width / 2)],
         rolling_mean,
         color="sienna",
         linewidth=2.0,
+        zorder=_ZORDER,
     )
     ax.plot(
         time[int(width / 2 - 1) : int(-width / 2)],
         rolling_mean,
         color="wheat",
         linewidth=0.6,
+        zorder=_ZORDER,
     )
-    set_ax(
+    set_yax(
         ax,
         round(np.max(data), 3) + 0.0005,
         ATTRIBUTES[name].ylabel,
@@ -677,6 +791,54 @@ def read_date(nc_file: str) -> date:
     return case_date
 
 
+def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
+    """Returns source attr of field name or global one and maybe serial number ."""
+    with netCDF4.Dataset(nc_file) as nc:
+        if name in nc.variables.keys() and "source" in nc.variables[name].ncattrs():
+            # single device has available src attr and maybe SN
+            source = nc.variables[name].source
+            # even if the attr is source_serial_number, it is possible that
+            # the variable comes from more than one device, e.g. Do for drizzle
+            # for which we need to account
+            if (
+                add_serial_number
+                and "source_serial_number" in nc.variables[name].ncattrs()
+            ):
+                sno = nc.variables[name].source_serial_number
+                source, sno = source.split("\n"), sno.split("\n")
+                source = [
+                    f"{_source} (SN: {_sno})" if _sno else f"{_source}"
+                    for _source, _sno in zip(source, sno)
+                ]
+                source = "\n".join(source)
+        else:
+            # global src, a \n sep string-list
+            if "source" in nc.ncattrs():
+                source = nc.source
+            else:
+                # empty list means that the zip below runs for 0 times as
+                # the assumption is if we do not have any sources we can't
+                # have any serial numbers, i.e. no instrument type means
+                # to instrument serial number. If this would be the case
+                # something somewhere else is wrong and should not be
+                # fixed here.
+                source = []
+            # who knows whether the cloudnet nc file actually has the SNs
+            # so better check beforehand
+            if add_serial_number and "source_serial_numbers" in nc.ncattrs():
+                sno = nc.source_serial_numbers.split("\n")
+                sno = [i if i else "" for i in sno]
+                if source:
+                    source = source.split("\n")
+                source = [
+                    f"{_source} (SN: {_sno})" if _sno else f"{_source}"
+                    for _source, _sno in zip(source, sno)
+                ]
+                source = "\n".join(source)
+    source = source.rstrip("\n")
+    return source
+
+
 def add_subtitle(fig, case_date: date, site_name: str):
     """Adds subtitle into figure."""
     text = _get_subtitle_text(case_date, site_name)
@@ -704,7 +866,9 @@ def _create_save_name(
 
 
 def _plot_relative_error(ax, error: ma.MaskedArray, ax_values: tuple):
-    pl = ax.pcolorfast(*ax_values, error[:-1, :-1].T, cmap="RdBu", vmin=-30, vmax=30)
+    pl = ax.pcolorfast(
+        *ax_values, error[:-1, :-1].T, cmap="RdBu", vmin=-30, vmax=30, zorder=_ZORDER
+    )
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
     median_error = ma.median(error.compressed())
@@ -793,7 +957,7 @@ def compare_files(
 
     for ii, ax in enumerate(axes[:2]):
         field, ax_value = _screen_high_altitudes(fields[ii], ax_values[ii], max_y)
-        set_ax(ax, max_y, ylabel=None)
+        set_yax(ax, max_y, ylabel=None)
         _set_title(ax, field_name, subtitle[ii])
 
         if plot_type == "model":
@@ -801,13 +965,13 @@ def compare_files(
         elif plot_type == "bar":
             unit = _get_variable_unit(nc_files[ii], field_name)
             _plot_bar_data(ax, field, ax_value[0], unit)
-            set_ax(ax, 2, ATTRIBUTES[field_name].ylabel)
+            set_yax(ax, 2, ATTRIBUTES[field_name].ylabel)
         elif plot_type == "segment":
             _plot_segment_data(ax, field, field_name, ax_value)
         else:
             _plot_colormesh_data(ax, field, field_name, ax_value)
             if relative_err is True and ii == 1:
-                set_ax(axes[-1], max_y, ylabel=None)
+                set_yax(axes[-1], max_y, ylabel=None)
                 error, ax_value = _get_relative_error(fields, ax_values, max_y)
                 _plot_relative_error(axes[-1], error, ax_value)
 
