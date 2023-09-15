@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
 from matplotlib import rcParams
-from matplotlib.colors import ListedColormap
+from matplotlib.colors import Colormap, ListedColormap
 from matplotlib.transforms import Affine2D, Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma, ndarray
@@ -43,12 +43,12 @@ class Dimensions:
         x0, y0, x1, y1 = (
             Bbox.union([ax.get_window_extent() for ax in axes])
             .translated(-tightbbox.x0, -tightbbox.y0)
-            .extents.round()
+            .extents
         )
-        self.margin_top = int(self.height - y1)
-        self.margin_right = int(self.width - x1 - 1)
-        self.margin_bottom = int(y0 - 1)
-        self.margin_left = int(x0)
+        self.margin_top = int(self.height - round(y1))
+        self.margin_right = int(self.width - round(x1) - 1)
+        self.margin_bottom = int(round(y0) - 1)
+        self.margin_left = int(round(x0))
 
 
 def generate_figure(
@@ -430,18 +430,18 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
         data[data < 0.1] = ma.masked
 
     if variables.plot_type == "bit":
-        cmap = ListedColormap(variables.cbar)
+        color_map: Colormap = ListedColormap(str(variables.cbar))
         pos = ax.get_position()
         ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
     else:
-        cmap = plt.get_cmap(variables.cbar, 22)
+        color_map = plt.get_cmap(str(variables.cbar), 22)
 
     vmin, vmax = variables.plot_range
 
     if variables.plot_scale == Scale.LOGARITHMIC:
         data, vmin, vmax = lin2log(data, vmin, vmax)
 
-    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=cmap)
+    pl = ax.pcolorfast(*axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=color_map)
 
     if variables.plot_type != "bit":
         colorbar = _init_colorbar(pl, ax)
@@ -731,18 +731,18 @@ def plot_2d(
     """Simple plot of 2d variable."""
     plt.close()
     if cbar:
-        cmap = plt.get_cmap(cmap, ncolors)
+        color_map = plt.get_cmap(cmap, ncolors)
         plt.imshow(
             ma.masked_equal(data, 0).T,
             aspect="auto",
             origin="lower",
-            cmap=cmap,
+            cmap=color_map,
         )
         plt.colorbar()
     else:
         plt.imshow(ma.masked_equal(data, 0).T, aspect="auto", origin="lower")
     if clim:
-        plt.clim(clim)
+        plt.clim(clim[0], clim[1])
     if ylim is not None:
         plt.ylim(ylim)
     if xlim is not None:
