@@ -25,6 +25,7 @@ def parsivel2nc(
     uuid: str | None = None,
     date: str | datetime.date | None = None,
     telegram: Sequence[int | None] | None = None,
+    timestamps: Sequence[datetime.datetime] | None = None,
 ) -> str:
     """Converts OTT Parsivel-2 disdrometer data into Cloudnet Level 1b netCDF
     file.
@@ -40,6 +41,7 @@ def parsivel2nc(
             the instrument's operating instructions. Unknown values are indicated
             with None. Telegram is required if the input file doesn't contain a
             header.
+        timestamps:
 
     Returns:
         UUID of the generated file.
@@ -57,7 +59,7 @@ def parsivel2nc(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
-    disdrometer = Parsivel(disdrometer_file, site_meta, telegram, date)
+    disdrometer = Parsivel(disdrometer_file, site_meta, telegram, date, timestamps)
     disdrometer.sort_timestamps()
     disdrometer.remove_duplicate_timestamps()
     disdrometer.convert_units()
@@ -75,10 +77,11 @@ class Parsivel(CloudnetInstrument):
         site_meta: dict,
         telegram: Sequence[int | None] | None = None,
         expected_date: datetime.date | None = None,
+        timestamps: Sequence[datetime.datetime] | None = None,
     ):
         super().__init__()
         self.site_meta = site_meta
-        self.raw_data = _read_parsivel(filename, telegram)
+        self.raw_data = _read_parsivel(filename, telegram, timestamps)
         self._screen_time(expected_date)
         self.n_velocity = 32
         self.n_diameter = 32
@@ -468,7 +471,9 @@ def _read_toa5(filename: Path | str | bytes) -> dict[str, list]:
 
 
 def _read_parsivel(
-    filename: Path | str | bytes, telegram: Sequence[int | None] | None = None
+    filename: Path | str | bytes,
+    telegram: Sequence[int | None] | None = None,
+    timestamps: Sequence[datetime.datetime] | None = None,
 ) -> dict[str, np.ndarray]:
     with open(filename, encoding="latin1", errors="ignore") as file:
         lines = file.read().splitlines()
@@ -485,10 +490,13 @@ def _read_parsivel(
     else:
         raise ValueError("telegram must be specified for files without header")
     if "_datetime" not in data:
-        data["_datetime"] = [
-            datetime.datetime.combine(date, time)
-            for date, time in zip(data["_date"], data["_time"])
-        ]
+        if timestamps:
+            data["_datetime"] = list(timestamps)
+        else:
+            data["_datetime"] = [
+                datetime.datetime.combine(date, time)
+                for date, time in zip(data["_date"], data["_time"])
+            ]
     result = {key: np.array(value) for key, value in data.items()}
     result["time"] = result["_datetime"].astype("datetime64[s]")
     return result
