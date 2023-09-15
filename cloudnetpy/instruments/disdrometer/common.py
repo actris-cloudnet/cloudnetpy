@@ -6,7 +6,7 @@ from numpy import ma
 
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import DisdrometerDataError, ValidTimeStampError
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.vaisala import values_to_dict
 from cloudnetpy.metadata import MetaData
@@ -127,8 +127,14 @@ class Disdrometer(CloudnetInstrument):
                 data_type = "i4"
             self.data[key] = CloudnetArray(float_array, key, data_type=data_type)
         self.data["time"] = self._convert_time(data_dict)
-        if "_sensor_id" in data_dict:
-            self.sensor_id = data_dict["_sensor_id"][0]
+        if "_serial_number" in data_dict:
+            first_id = data_dict["_serial_number"][0]
+            for sensor_id in data_dict["_serial_number"]:
+                if sensor_id != first_id:
+                    raise DisdrometerDataError(
+                        "Multiple serial numbers are not supported"
+                    )
+            self.serial_number = first_id
 
     def _parse_useful_data(self, indices: list) -> list:
         data = []

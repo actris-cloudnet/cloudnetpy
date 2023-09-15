@@ -191,6 +191,7 @@ class TestThies(Check):
         assert self.nc.day == "15"
         assert self.nc.location == "Kumpula"
         assert self.nc.cloudnet_file_type == "disdrometer"
+        assert self.nc.serial_number == "1025"
 
 
 class TestInvalidCharacters(Check):
