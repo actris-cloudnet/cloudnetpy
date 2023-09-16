@@ -75,5 +75,6 @@ def generate_mwr_single(
                 f"{nc_l1c.history}"
             )
             nc_output.source_file_uuids = nc_l1c.file_uuid
+            nc_output.source = nc_l1c.source
 
     return file_uuid

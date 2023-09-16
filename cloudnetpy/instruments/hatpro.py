@@ -85,6 +85,7 @@ def hatpro2l1c(
         nc.title = nc.title.replace("radiometer", "radiometer Level 1c")
         nc.mwrpy_version = mwrpy_version
         nc.mwrpy_coefficients = ", ".join(site_meta["coefficientLinks"])
+        nc.history = nc.history.replace("mwr", "mwr-l1c")
 
     return uuid
 
