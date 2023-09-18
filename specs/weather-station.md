@@ -6,14 +6,13 @@ File format is comma-separated values (CSV).
 First line MUST be a header which specify columns used in the file.
 Supported columns are documented below.
 
-Values MUST be either integers or real numbers.
+Valid values MUST be either integers or real numbers.
 Decimal separator MUST be dot (e.g. `1.22`).
-Missing or invalid values SHOULD be left empty and placeholder values, such as `-99.99`, `NaN` or `NA`, SHOULD NOT be used.
-For example, row `1,,3` has missing value in second column.
+Missing or invalid values SHOULD be represented with `NaN` and placeholder values like `-99` or `-99.99` SHOULD NOT be used.
 
 ## Columns
 
-| Column                         | Obligation | Unit   | Description                                                                                                                                                                                       |
+| Columns                        | Obligation | Unit   | Description                                                                                                                                                                                       |
 | ------------------------------ | ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `year`                         | mandatory  | 1–9999 | Year of measurement in UTC.                                                                                                                                                                       |
 | `month`                        | mandatory  | 1–12   | Month of measurement in UTC.                                                                                                                                                                      |
@@ -21,20 +20,20 @@ For example, row `1,,3` has missing value in second column.
 | `hour`                         | mandatory  | 0–23   | Hour of measurement in UTC.                                                                                                                                                                       |
 | `minute`                       | mandatory  | 0–59   | Minute of measurement in UTC.                                                                                                                                                                     |
 | `second`                       | mandatory  | 0–59   | Second of measurement in UTC.                                                                                                                                                                     |
-| `wind_speed`                   | optional   | m s-1  |                                                                                                                                                                                                   |
-| `air_temperature`              | optional   | K      |                                                                                                                                                                                                   |
-| `relative_humidity`            | optional   | 1      |                                                                                                                                                                                                   |
-| `wind_from_direction`          | optional   | degree | The direction from which the wind is blowing. The direction increases clockwise such that a northerly wind is 0°, an easterly wind is 90°, a southerly wind is 180°, and a westerly wind is 270°. |
-| `air_pressure`                 | optional   | Pa     |                                                                                                                                                                                                   |
-| `rainfall_rate`                | optional   | m s-1  |                                                                                                                                                                                                   |
-| `thickness_of_rainfall_amount` | optional   | m      | Cumulated rainfall since 00:00:00 UTC.                                                                                                                                                            |
+| `wind_speed`                   | mandatory  | m s-1  |                                                                                                                                                                                                   |
+| `air_temperature`              | mandatory  | K      |                                                                                                                                                                                                   |
+| `relative_humidity`            | mandatory  | 1      |                                                                                                                                                                                                   |
+| `wind_to_direction`            | mandatory  | degree | The direction from which the wind is blowing. The direction increases clockwise such that a northerly wind is 0°, an easterly wind is 90°, a southerly wind is 180°, and a westerly wind is 270°. |
+| `air_pressure`                 | mandatory  | Pa     |                                                                                                                                                                                                   |
+| `rainfall_rate`                | mandatory  | mm h-1 |                                                                                                                                                                                                   |
+| `thickness_of_rainfall_amount` | mandatory  | mm     | Cumulated rainfall since 00:00:00 UTC.                                                                                                                                                            |
 
 Column name MUST be followed by measurement height in parentheses in meters above ground level, for example `wind_speed(2m)`.
 It's possible to have same measurement at different heights, for example: `wind_speed(2m)`, `wind_speed(10m)` and `wind_speed(20m)`.
 
 ## Examples
 
-Weather station with various measurements:
+Weather station at ground level with various measurements:
 
 ```csv
 year,month,day,hour,minute,second,wind_speed(10m),wind_from_direction(10m),air_temperature(2m),relative_humidity(2m),air_pressure(2m),rainfall_rate(2m),thickness_of_rainfall_amount(2m)
@@ -43,13 +42,13 @@ year,month,day,hour,minute,second,wind_speed(10m),wind_from_direction(10m),air_t
 2019,4,11,0,2,0,0.52,324.31,279.03,77.17,999.52,0.00,0.00
 ```
 
-Temperature missing in two out of three measurements:
+Missing temperature measurements:
 
 ```csv
 year,month,day,hour,minute,second,wind_speed(10m),wind_from_direction(10m),air_temperature(2m),relative_humidity(2m),air_pressure(2m),rainfall_rate(2m),thickness_of_rainfall_amount(2m)
-2019,4,11,0,0,0,1.22,32.75,,76.93,999.40,0.00,0.00
+2019,4,11,0,0,0,1.22,32.75,NaN,76.93,999.40,0.00,0.00
 2019,4,11,0,1,0,0.81,321.58,279.06,77.08,999.41,0.00,0.00
-2019,4,11,0,2,0,0.52,324.31,,77.17,999.52,0.00,0.00
+2019,4,11,0,2,0,0.52,324.31,NaN,77.17,999.52,0.00,0.00
 ```
 
 Wind speed measurements at three heights:
