@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.1 – 2023-09-18
+
+- Improve global attributes of `mwrpy` products
+
 ## 1.55.0 – 2023-09-15
 
 - Include serial number for Thies LNM
