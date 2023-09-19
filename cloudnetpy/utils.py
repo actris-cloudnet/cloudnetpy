@@ -6,7 +6,7 @@ import re
 import uuid
 import warnings
 from datetime import timezone
-from typing import Iterator
+from typing import Final, Iterator
 
 import netCDF4
 import numpy as np
@@ -19,9 +19,9 @@ from cloudnetpy.exceptions import ValidTimeStampError
 Epoch = tuple[int, int, int]
 Date = tuple[str, str, str]
 
-SECONDS_PER_MINUTE = 60
-SECONDS_PER_HOUR = 3600
-SECONDS_PER_DAY = 86400
+SECONDS_PER_MINUTE: Final = 60
+SECONDS_PER_HOUR: Final = 3600
+SECONDS_PER_DAY: Final = 86400
 
 
 def seconds2hours(time_in_seconds: np.ndarray) -> np.ndarray:

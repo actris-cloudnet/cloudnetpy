@@ -1,6 +1,8 @@
 """ This module contains functions to calculate
 various atmospheric parameters.
 """
+from typing import Final
+
 import numpy as np
 import scipy.constants
 from numpy import ma
@@ -14,8 +16,8 @@ from cloudnetpy.categorize.atmos_utils import (
 from cloudnetpy.categorize.containers import ClassificationResult
 from cloudnetpy.categorize.model import Model
 
-M_TO_KM = 0.001
-TWO_WAY = 2
+M_TO_KM: Final = 0.001
+TWO_WAY: Final = 2
 
 
 def calc_lwc_change_rate(temperature: np.ndarray, pressure: np.ndarray) -> np.ndarray:

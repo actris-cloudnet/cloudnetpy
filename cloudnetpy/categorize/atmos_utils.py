@@ -1,10 +1,12 @@
+from typing import Final
+
 import numpy as np
 from numpy import ma
 
 import cloudnetpy.constants as con
 
-HPA_TO_P = 100
-P_TO_HPA = 0.01
+HPA_TO_P: Final = 100
+P_TO_HPA: Final = 0.01
 
 
 def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
