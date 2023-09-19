@@ -3,7 +3,7 @@
 ⚠️ **This document is work in progress!** ⚠️
 
 File format is comma-separated values (CSV).
-First line MUST be a header which specify columns used in the file.
+First line, excluding comment lines, MUST be a header which specify columns used in the file.
 Supported columns are documented below.
 
 Valid values MUST be either integers or real numbers.
