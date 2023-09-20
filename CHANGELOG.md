@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.55.2 – 2023-09-20
+
+- Adjust parameters of CT25K background screening
+- Update weather station file format specification
+- Fix many warnings
+
 ## 1.55.1 – 2023-09-18
 
 - Improve global attributes of `mwrpy` products
