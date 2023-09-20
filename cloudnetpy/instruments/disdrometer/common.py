@@ -172,7 +172,10 @@ class Disdrometer(CloudnetInstrument):
                 values, (self.n_diameter, self.n_velocity)
             )
         self.data["data_raw"] = CloudnetArray(
-            array, "data_raw", dimensions=("time", "diameter", "velocity")
+            array,
+            "data_raw",
+            dimensions=("time", "diameter", "velocity"),
+            data_type="i2",
         )
 
     @classmethod
