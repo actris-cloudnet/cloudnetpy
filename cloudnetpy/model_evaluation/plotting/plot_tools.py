@@ -1,6 +1,6 @@
+import matplotlib
 import netCDF4
 import numpy as np
-from matplotlib import cm
 from matplotlib.colors import ListedColormap
 from numpy import ma
 
@@ -127,7 +127,7 @@ def create_segment_values(arrays: list) -> tuple:
     new_array[new_array == 3] = 2
     new_array[new_array == 4] = 3
 
-    colors = cm.get_cmap("YlGnBu", 256)
+    colors = matplotlib.colormaps["YlGnBu"]
     newcolors = colors(np.linspace(0, 1, 256))
     # No data, model, both, observation
     cmap = ListedColormap(["white", "khaki", newcolors[90], newcolors[140]])

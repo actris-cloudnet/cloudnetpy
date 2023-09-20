@@ -153,7 +153,10 @@ class DataSource:
     def _init_altitude(self) -> float | None:
         """Returns altitude of the instrument (m)."""
         if "altitude" in self.dataset.variables:
-            altitude_above_sea = self.to_m(self.dataset.variables["altitude"])
+            var = self.dataset.variables["altitude"]
+            if utils.is_all_masked(var[:]):
+                return None
+            altitude_above_sea = self.to_m(var)
             return float(
                 altitude_above_sea
                 if utils.isscalar(altitude_above_sea)

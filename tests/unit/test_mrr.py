@@ -48,6 +48,7 @@ class TestMrrPro(Check):
         assert (
             abs(self.nc.variables["radar_frequency"][:].data - 24.23) < 0.001
         )  # Hard coded
+        assert self.nc.variables["altitude"][:] == 50
 
     def test_global_attributes(self):
         assert self.nc.source == "METEK MRR-PRO"

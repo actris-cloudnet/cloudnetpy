@@ -23,7 +23,7 @@ def test_cf_cirrus_filter(obs_file, model_file, name):
 @pytest.mark.parametrize(
     "name, data",
     [
-        ("cf", ma.array([[ma.masked, 2], [3, 6], [5, 8]])),
+        ("cf", ma.array([[-99, 2], [3, 6], [5, 8]], mask=[[1, 0], [0, 0], [0, 0]])),
         ("h", np.array([[10, 14], [8, 14], [9, 15]])),
     ],
 )
@@ -77,7 +77,7 @@ def test_filter_high_iwc_low_cf(obs_file, model_file):
     cf = ma.array([0.0001, 0.0002, 0, 0.0001, 1, 0.0006])
     iwc = np.array([0.0, 0, 0, 0.2, 0.4, 0])
     lwc = np.array([0.0, 0.02, 0.01, 0, 0.01, 0.01])
-    compare = ma.array([0.0001, 0.0002, 0, ma.masked, 1, 0.0006])
+    compare = ma.array([0.0001, 0.0002, 0, -99, 1, 0.0006], mask=[0, 0, 0, 1, 0, 0])
     x = adv_pro.filter_high_iwc_low_cf(cf, iwc, lwc)
     testing.assert_array_almost_equal(x, compare)
 
@@ -115,7 +115,7 @@ def test_mask_weird_indices_values(obs_file, model_file):
     cf = ma.array([0.0001, 0.0002, 0, 0.0001, 1, 0.0006])
     iwc = np.array([0.0, 0, 0, 0.2, 0.4, 0])
     lwc = np.array([0.0, 0.02, 0.01, 0, 0.01, 0.01])
-    compare = ma.array([0.0001, 0.0002, 0, ma.masked, 1, 0.0006])
+    compare = ma.array([0.0001, 0.0002, 0, -99, 1, 0.0006], mask=[0, 0, 0, 1, 0, 0])
     x = adv_pro.mask_weird_indices(cf, iwc, lwc)
     testing.assert_array_almost_equal(x, compare)
 

@@ -3,6 +3,7 @@ import logging
 
 import netCDF4
 import numpy as np
+from numpy import ma
 
 from cloudnetpy import utils
 from cloudnetpy.instruments.ceilometer import Ceilometer
@@ -30,7 +31,7 @@ class NcLidar(Ceilometer):
     def _fetch_zenith_angle(self, key: str, default: float = 3.0) -> None:
         assert self.dataset is not None
         if key in self.dataset.variables:
-            zenith_angle = np.median(self.dataset.variables[key][:])
+            zenith_angle = ma.median(self.dataset.variables[key][:])
         else:
             zenith_angle = float(default)
             logging.warning(f"No zenith angle found, assuming {zenith_angle} degrees")

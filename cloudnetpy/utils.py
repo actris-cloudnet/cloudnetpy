@@ -946,3 +946,10 @@ def get_files_with_common_range(files: list) -> list:
         logging.warning(f"Removing {n_removed} files due to inconsistent height vector")
     ind = np.where(n_range == most_common)[0]
     return [file for i, file in enumerate(files) if i in ind]
+
+
+def is_all_masked(array: np.ndarray) -> bool:
+    """Tests if all values are masked."""
+    if ma.isMaskedArray(array) and hasattr(array, "mask"):
+        return array.mask.all()
+    return False

@@ -80,7 +80,7 @@ def test_get_1d_indices_mask():
     m = np.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
     x = tools.get_1d_indices(w, d, m)
     d[m] = ma.masked
-    compare = ma.array([0, 1, ma.masked, 1, 1, ma.masked, 0, ma.masked])
+    compare = ma.array([0, 1, -99, 1, 1, -99, 0, -99], mask=[0, 0, 1, 0, 0, 1, 0, 1])
     testing.assert_array_almost_equal(x, compare)
 
 
@@ -100,7 +100,7 @@ def test_get_adv_indices_mask():
     m = ma.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
     x = tools.get_adv_indices(mt, at, d, m)
     d[m] = ma.masked
-    compare = ma.array([0, 1, ma.masked, 1, 1, ma.masked, 0, 0])
+    compare = ma.array([0, 1, -99, 1, 1, -99, 0, 0], mask=[0, 0, 1, 0, 0, 1, 0, 0])
     testing.assert_array_almost_equal(x, compare)
 
 

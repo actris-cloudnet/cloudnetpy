@@ -133,9 +133,17 @@ class ProductGrid:
         """Calculates average cloud fraction value to grid point"""
         for key, downsample in storage.items():
             if data is not None:
-                downsample[i, j] = np.nanmean(data)
+                if isinstance(data, ma.MaskedArray) and data.mask.all():
+                    downsample[i, j] = np.nan
+                elif not np.isnan(data).all():
+                    downsample[i, j] = np.nanmean(data)
+                else:
+                    downsample[i, j] = np.nan
                 if "_A" in key:
-                    downsample[i, j] = tl.average_column_sum(data)
+                    if not np.isnan(data).all() and not (
+                        isinstance(data, ma.MaskedArray) and data.mask.all()
+                    ):
+                        downsample[i, j] = tl.average_column_sum(data)
             else:
                 downsample[i, j] = np.nan
             storage[key] = downsample
@@ -161,7 +169,14 @@ class ProductGrid:
         """Calculates average iwc value for grid point"""
         for key, downsample in storage.items():
             if not self._obs_data[ind_no_rain].mask.all():
-                downsample[i, j] = np.nanmean(self._obs_data[ind_no_rain])
+                if np.isnan(self._obs_data[ind_no_rain]).all():
+                    downsample[i, j] = np.nan
+                else:
+                    no_rain_data = self._obs_data[ind_no_rain]
+                    if no_rain_data.size > 0:
+                        downsample[i, j] = np.nanmean(self._obs_data[ind_no_rain])
+                    else:
+                        downsample[i, j] = np.nan
             elif "rain" in key and not self._obs_data[ind_rain].mask.all():
                 downsample[i, j] = np.nanmean(self._obs_data[ind_rain])
             else:
@@ -179,7 +194,10 @@ class ProductGrid:
         """Calculates average of standard product value to grid point"""
         for key, down_sample in storage.items():
             if not self._obs_data[ind].mask.all() and ind.any():
-                down_sample[i, j] = np.nanmean(self._obs_data[ind])
+                if np.isnan(self._obs_data[ind]).all():
+                    down_sample[i, j] = np.nan
+                else:
+                    down_sample[i, j] = np.nanmean(self._obs_data[ind])
             else:
                 down_sample[i, j] = np.nan
             storage[key] = down_sample

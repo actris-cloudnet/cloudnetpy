@@ -189,7 +189,9 @@ def test_regrid_cf_area_all_nan(model_file, obs_file):
     d = {"cf_A": np.zeros((1, 1))}
     d = obj._regrid_cf(d, 0, 0, data)
     x = d["cf_A"]
-    testing.assert_equal(x, 0.0)
+    # Not sure if this should be nan or 0 (Simo)
+    # testing.assert_equal(x, 0.0)
+    testing.assert_equal(x, np.nan)
 
 
 def test_regrid_cf_volume(model_file, obs_file):

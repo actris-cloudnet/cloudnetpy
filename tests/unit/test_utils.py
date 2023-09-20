@@ -789,3 +789,20 @@ def test_get_files_with_common_range(tmp_path):
 )
 def test_time2decimal_hours(data, result):
     assert utils.datetime2decimal_hours(data) == result
+
+
+@pytest.mark.parametrize(
+    "data, result",
+    [
+        ([np.array([1, 2, 3]), False]),
+        ([ma.array([1, 2, 3], mask=[1, 0, 0]), False]),
+        ([ma.array([1, 2, 3], mask=[1, 1, 1]), True]),
+        ([ma.array([1, 2, 3], mask=[0, 0, 0]), False]),
+        ([ma.array([1, 2, 3], mask=False), False]),
+        ([ma.array([1, 2, 3], mask=True), True]),
+        (3, False),
+        ([1, 2, 3], False),
+    ],
+)
+def test_is_all_masked(data: np.ndarray | ma.MaskedArray, result: bool):
+    assert utils.is_all_masked(data) == result
