@@ -39,7 +39,16 @@ class Ceilometer:
     ) -> np.ndarray:
         """Screens noise from lidar variable."""
         noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
-        array_screened = noisy_data.screen_data(array, snr_limit=snr_limit)
+        if (
+            self.instrument is not None
+            and getattr(self.instrument, "model", "").lower() == "ct25k"
+        ):
+            n_negatives = 20
+        else:
+            n_negatives = 5
+        array_screened = noisy_data.screen_data(
+            array, snr_limit=snr_limit, n_negatives=n_negatives
+        )
         return array_screened
 
     def calc_beta_smooth(
@@ -121,13 +130,16 @@ class NoisyData:
         filter_fog: bool = True,
         filter_negatives: bool = True,
         filter_snr: bool = True,
+        n_negatives: int = 5,
     ) -> np.ndarray:
         data = ma.copy(data_in)
         self._calc_range_uncorrected(data)
         noise = _estimate_background_noise(data)
         noise = self._adjust_noise(noise, is_smoothed)
         if filter_negatives is True:
-            is_negative = self._mask_low_values_above_consequent_negatives(data)
+            is_negative = self._mask_low_values_above_consequent_negatives(
+                data, n_negatives=n_negatives
+            )
             noise[is_negative] = 1e-12
         if filter_fog is True:
             is_fog = self._find_fog_profiles()

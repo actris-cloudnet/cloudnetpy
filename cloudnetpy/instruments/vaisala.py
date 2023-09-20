@@ -298,7 +298,7 @@ class Ct25k(VaisalaCeilo):
 
     """
 
-    noise_param = NoiseParam(noise_min=6e-7, noise_smooth_min=1e-7)
+    noise_param = NoiseParam(noise_min=0.7e-7, noise_smooth_min=1.2e-8)
 
     def __init__(
         self,
