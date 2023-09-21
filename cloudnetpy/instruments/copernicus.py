@@ -75,7 +75,7 @@ def copernicus2nc(
             copernicus.sort_timestamps()
             copernicus.remove_duplicate_timestamps()
             copernicus.calibrate_reflectivity()
-            copernicus.screen_by_snr(snr_limit=3)
+            copernicus.screen_using_top_gates_snr()
             copernicus.mask_corrupted_values()
             copernicus.mask_invalid_data()
             copernicus.add_time_and_range()

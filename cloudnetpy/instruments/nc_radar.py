@@ -59,6 +59,16 @@ class NcRadar(DataSource, CloudnetInstrument):
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(ind)
 
+    def screen_using_top_gates_snr(self, snr_limit: float = 2) -> None:
+        """Masks values where SNR is smaller than mean SNR of top gates."""
+        n_gates = 50
+        snr = self.data["SNR"][:]
+        mean_snr = np.mean(snr[:, -n_gates:], axis=1)
+        for time_ind, snr_profile in enumerate(snr):
+            alt_ind = np.where(snr_profile < mean_snr[time_ind] + snr_limit)[0]
+            if len(alt_ind) > 0:
+                self.data["Zh"][:][time_ind, alt_ind] = ma.masked
+
     def mask_invalid_data(self) -> None:
         """Makes sure Z and v masks are also in other 2d variables."""
         z_mask = self.data["Zh"][:].mask
