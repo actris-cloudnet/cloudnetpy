@@ -146,7 +146,7 @@ class DataSource:
         if len(time) == 0:
             raise ValidTimeStampError("Empty time vector")
         if max(time) > 25:
-            logging.warning("Assuming time as seconds, converting to fraction hour")
+            logging.debug("Assuming time as seconds, converting to fraction hour")
             time = utils.seconds2hours(time)
         return time
 
