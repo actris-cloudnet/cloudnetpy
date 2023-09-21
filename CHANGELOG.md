@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.55.3 – 2023-09-21
+
+- Improve Copernicus noise screening
+- Fix disdrometer data_raw data type
+
 ## 1.55.2 – 2023-09-20
 
 - Adjust parameters of CT25K background screening
