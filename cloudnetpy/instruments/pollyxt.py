@@ -85,6 +85,7 @@ class PollyXt(Ceilometer):
             )
         self.data["depolarisation"][self.data["depolarisation"] > 1] = ma.masked
         self.data["depolarisation"][self.data["depolarisation"] < 0] = ma.masked
+        self.data["beta"][self.data["beta"] < 0] = ma.masked
         del self.data["snr"]
 
     def fetch_zenith_angle(self) -> None:
