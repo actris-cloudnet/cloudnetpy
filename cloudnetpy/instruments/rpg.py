@@ -132,9 +132,15 @@ def _reduce_header(header: dict) -> dict:
             np.isclose(data, first_profile_value, rtol=1e-2).all()
         )
         if is_identical_value is False:
-            msg = f"Inconsistent header: {key}"
-            if key in ("latitude", "longitude", "sample_duration"):
-                logging.warning(f"{msg}: {data}")
+            msg = f"Inconsistent header: {key}: {data}"
+            if key in (
+                "latitude",
+                "longitude",
+                "sample_duration",
+                "calibration_interval",
+                "noise_threshold",
+            ):
+                logging.warning(msg)
             else:
                 raise InconsistentDataError(msg)
         reduced_header[key] = first_profile_value
