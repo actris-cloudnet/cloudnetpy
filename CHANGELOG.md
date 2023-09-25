@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.4 – 2023-09-25
+
+- Mask negative PollyXT beta
+
 ## 1.55.3 – 2023-09-21
 
 - Improve Copernicus noise screening
