@@ -1,5 +1,4 @@
 import math
-import sys
 from os import path
 from shutil import copytree
 from tempfile import TemporaryDirectory
@@ -8,7 +7,7 @@ import netCDF4
 import numpy as np
 import numpy.ma as ma
 import pytest
-from numpy.testing import assert_array_equal, assert_equal
+from numpy.testing import assert_equal
 
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import rpg, rpg2nc
@@ -155,6 +154,12 @@ class TestRPG2nc94GHz(Check):
             str(temp_dir), test_path, self.site_meta, date="2020-10-22"
         )
         assert len(files) == 2
+
+    def test_handling_of_corrupted_files_II(self, tmp_path, tmp_path_factory):
+        temp_file = tmp_path / "temp.nc"
+        filepath = f"{SCRIPT_PATH}/data/rpg-fmcw-94-corrupted"
+        with pytest.raises(ValidTimeStampError):
+            rpg2nc(filepath, str(temp_file), self.site_meta, date="2023-04-01")
 
     def test_geolocation_from_source_file(self, tmp_path):
         test_path = tmp_path / "geo.nc"

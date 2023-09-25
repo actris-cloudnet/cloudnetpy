@@ -5,6 +5,7 @@ from typing import Sequence
 
 import numpy as np
 from numpy import ma
+from rpgpy import RPGFileError
 
 from cloudnetpy import output, utils
 from cloudnetpy.categorize.atmos_utils import mmh2ms
@@ -169,7 +170,7 @@ def _get_fmcw94_objects(files: list, expected_date: str | None) -> tuple[list, l
             obj = Fmcw94Bin(file)
             if expected_date is not None:
                 _validate_date(obj, expected_date)
-        except (TypeError, ValueError, IndexError) as err:
+        except (RPGFileError, TypeError, ValueError, IndexError) as err:
             logging.warning(err)
             continue
         objects.append(obj)

@@ -20,7 +20,7 @@ dependencies = [
   "mwrpy>=0.4.3",
   "netCDF4",
   "requests",
-  "rpgpy>=0.14.2",
+  "rpgpy>=0.14.5",
   "scikit-image",
   "scipy",
 ]
