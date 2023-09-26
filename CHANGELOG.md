@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.6 – 2023-09-26
+
+- Filter RPG-FMCW-94 containing scan data
+
 ## 1.55.5 – 2023-09-26
 
 - Do not process corrupted RPG-FMCW-94 files
