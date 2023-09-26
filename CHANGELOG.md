@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.55.5 – 2023-09-26
+
+- Do not process corrupted RPG-FMCW-94 files
+- Allow some RPG cloud radar header values to vary
+
 ## 1.55.4 – 2023-09-25
 
 - Mask negative PollyXT beta
