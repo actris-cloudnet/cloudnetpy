@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.7 – 2023-09-27
+
+- Improve RPG-FMCW-94 zenith angle screening
+
 ## 1.55.6 – 2023-09-26
 
 - Filter RPG-FMCW-94 containing scan data
