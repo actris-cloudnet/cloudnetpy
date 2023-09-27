@@ -270,22 +270,20 @@ class Fmcw(Rpg):
                 self.data[key].data[ind] = ma.masked
 
     def add_zenith_angle(self) -> list:
-        """Adds zenith angle and returns time indices where zenith angle is stable."""
+        """Adds zenith angle and returns time indices with valid zenith angle."""
         elevation = self.data["elevation"].data
         zenith = 90 - elevation
-        if elevation.mask.all():
-            zenith[:] = 0
-            logging.warning("Can not determine zenith angle, assuming 0 degrees")
-        is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
-        is_stable_zenith[zenith.mask] = False
-        n_removed = len(is_stable_zenith) - np.count_nonzero(is_stable_zenith)
+        is_valid_zenith = _filter_zenith_angle(zenith)
+        n_removed = len(is_valid_zenith) - np.count_nonzero(is_valid_zenith)
+        if n_removed == len(zenith):
+            raise ValidTimeStampError("No profiles with valid zenith angle")
         if n_removed > 0:
             logging.warning(
-                f"Filtering {n_removed} profiles due to varying zenith angle"
+                f"Filtering {n_removed} profiles due to invalid zenith angle"
             )
         self.data["zenith_angle"] = CloudnetArray(zenith, "zenith_angle")
         del self.data["elevation"]
-        return list(is_stable_zenith)
+        return list(is_valid_zenith)
 
     def convert_units(self):
         """Converts units."""
@@ -308,6 +306,23 @@ class Hatpro(Rpg):
     def __init__(self, raw_data: dict, site_properties: dict):
         super().__init__(raw_data, site_properties)
         self.instrument = instruments.HATPRO
+
+
+def _filter_zenith_angle(zenith: ma.MaskedArray) -> np.ndarray:
+    """Returns indices of profiles with stable zenith angle close to 0 deg."""
+    if zenith.mask.all():
+        zenith[:] = 0
+        logging.warning("Can not determine zenith angle, assuming 0 degrees")
+    limits = [-5, 15]
+    ind_close_to_zenith = np.where(
+        np.logical_and(zenith > limits[0], zenith < limits[1])
+    )
+    if not ind_close_to_zenith[0].size:
+        return np.zeros_like(zenith, dtype=bool)
+    valid_range_median = ma.median(zenith[ind_close_to_zenith])
+    is_stable_zenith = np.isclose(zenith, valid_range_median, atol=0.1)
+    is_stable_zenith[zenith.mask] = False
+    return np.array(is_stable_zenith)
 
 
 DEFINITIONS = {

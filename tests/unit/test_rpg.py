@@ -258,3 +258,28 @@ class TestRPG2ncSTSR35GHz(Check):
     def test_global_attributes(self):
         assert self.nc.source == "RPG-Radiometer Physics RPG-FMCW-35"
         assert self.nc.title == f'RPG-FMCW-35 cloud radar from {self.site_meta["name"]}'
+
+
+@pytest.mark.parametrize(
+    "data, expected",
+    [
+        ([ma.array([0, 0, 0], mask=[0, 0, 0]), ma.array([1, 1, 1])]),
+        ([ma.array([0, 0, 0], mask=[0, 0, 1]), ma.array([1, 1, 0])]),
+        ([ma.array([0, 0, 1], mask=[0, 0, 0]), ma.array([1, 1, 0])]),
+        ([ma.array([16, 16, 16], mask=[0, 0, 0]), ma.array([0, 0, 0])]),
+        ([ma.array([-4, -4, -4], mask=[0, 0, 0]), ma.array([1, 1, 1])]),
+        ([ma.array([-6, -6, -6], mask=[0, 0, 0]), ma.array([0, 0, 0])]),
+        ([ma.array([-34, 233, 21214], mask=[1, 1, 1]), ma.array([1, 1, 1])]),
+        (
+            [
+                ma.array([0, 0, 50, 50, 50], mask=[0, 0, 0, 0, 0]),
+                ma.array([1, 1, 0, 0, 0]),
+            ]
+        ),
+    ],
+)
+def test_filter_zenith_angle(data: ma.MaskedArray, expected: ma.MaskedArray):
+    res = rpg._filter_zenith_angle(data)
+    assert_equal(res.data, expected.data)
+    if isinstance(res, ma.MaskedArray):
+        assert_equal(res.mask, expected.mask)
