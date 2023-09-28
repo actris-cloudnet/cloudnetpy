@@ -180,7 +180,7 @@ def _get_hatpro_objects(
             if expected_date is not None:
                 obj = _validate_date(obj, expected_date)
             objects[filename.stem].append(obj)
-        except (TypeError, ValueError) as err:
+        except (TypeError, ValueError, ValidTimeStampError) as err:
             logging.warning(f"Ignoring file '{filename}': {err}")
             continue
 

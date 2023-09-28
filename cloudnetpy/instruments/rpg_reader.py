@@ -1,9 +1,12 @@
+import logging
 from typing import BinaryIO, Literal
 
 import numpy as np
 from numpy import ma
 from numpy.lib import recfunctions as rfn
 from rpgpy import read_rpg
+
+from cloudnetpy.exceptions import ValidTimeStampError
 
 
 class Fmcw94Bin:
@@ -187,6 +190,15 @@ class HatproBin:
 
     def screen_bad_profiles(self):
         is_bad = self.data["_quality_flag"] & 0b110 == self.QUALITY_LOW << 1
+        n_bad = np.count_nonzero(is_bad)
+        if n_bad == len(is_bad):
+            raise ValidTimeStampError("All data are low quality")
+        if n_bad:
+            percentage = round(100 * n_bad / len(is_bad))
+            logging.info(
+                f"Screening {percentage}% ({n_bad}/{len(is_bad)})"
+                " data points with low quality"
+            )
         self.data[self.variable][is_bad] = ma.masked
 
     def _remove_duplicate_timestamps(self):
