@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.55.8 – 2023-09-28
+
+- Screen MIRA ldr in STSR mode
+- Mask Copernicus data below 150m
+- Detect if all MWR data are low quality
+
 ## 1.55.7 – 2023-09-27
 
 - Improve RPG-FMCW-94 zenith angle screening
