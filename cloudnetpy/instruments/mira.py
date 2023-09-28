@@ -1,7 +1,10 @@
 """Module for reading raw cloud radar data."""
+import logging
 import os
 from collections import OrderedDict
 from tempfile import TemporaryDirectory
+
+from numpy import ma
 
 from cloudnetpy import concat_lib, output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
@@ -118,6 +121,7 @@ def mira2nc(
             mira.remove_duplicate_timestamps()
             mira.linear_to_db(("Zh", "ldr", "SNR"))
             mira.screen_by_snr()
+            mira.screen_invalid_ldr()
             mira.mask_invalid_data()
             mira.add_time_and_range()
             mira.add_site_geolocation()
@@ -162,6 +166,20 @@ class Mira(NcRadar):
     def _init_mira_date(self) -> list[str]:
         time_stamps = self.getvar("time")
         return utils.seconds2date(time_stamps[0], self.epoch)[:3]
+
+    def screen_invalid_ldr(self):
+        """Masks LDR in MIRA STSR mode data.
+        Is there a better way to identify this mode?
+        """
+        if "ldr" not in self.data:
+            return
+        ldr = self.data["ldr"][:]
+        if ma.mean(ldr) > 0:
+            logging.warning(
+                "LDR values suspiciously high. Mira in STSR mode? "
+                "Screening all LDR for now."
+            )
+            self.data["ldr"].data[:] = ma.masked
 
 
 def _miraignorevar(filetype: str) -> list | None:
