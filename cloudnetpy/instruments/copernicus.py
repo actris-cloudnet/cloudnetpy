@@ -77,6 +77,7 @@ def copernicus2nc(
             copernicus.calibrate_reflectivity()
             copernicus.screen_using_top_gates_snr()
             copernicus.mask_corrupted_values()
+            copernicus.mask_first_range_gates()
             copernicus.mask_invalid_data()
             copernicus.add_time_and_range()
             copernicus.add_radar_specific_variables()

@@ -78,6 +78,14 @@ class NcRadar(DataSource, CloudnetInstrument):
                 cloudnet_array.mask_indices(z_mask)
                 cloudnet_array.mask_indices(v_mask)
 
+    def mask_first_range_gates(self, range_limit: float = 150):
+        """Masks first range gates."""
+        if "v" not in self.data or "range" not in self.data:
+            return
+        ind = np.where(self.data["range"][:] < range_limit)[0]
+        if len(ind) > 0:
+            self.data["v"].data[:, ind] = ma.masked
+
     def add_zenith_and_azimuth_angles(self) -> list:
         """Adds non-varying instrument zenith and azimuth angles and returns valid
         time indices."""
