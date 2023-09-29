@@ -21,6 +21,7 @@ class TestCopernicus2nc(Check):
         "latitude": 50,
         "longitude": 104.5,
         "altitude": 50,
+        "range_offset": 20,
     }
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/copernicus.nc"
@@ -48,6 +49,7 @@ class TestCopernicus2nc(Check):
             "beamwidthH",
             "beamwidthV",
             "antenna_diameter",
+            "range_offset",
         }
         assert set(self.nc.variables.keys()) == keys
 
@@ -77,6 +79,11 @@ class TestCopernicus2nc(Check):
     def test_global_attributes(self):
         assert self.nc.source == "RAL Space Copernicus"
         assert self.nc.title == f'Copernicus cloud radar from {self.site_meta["name"]}'
+
+    def test_range(self):
+        for key in ("range", "height"):
+            assert np.all(self.nc.variables[key][:] > 0)
+        assert self.nc.variables["range_offset"][:] == self.site_meta["range_offset"]
 
     def test_filename_argument(self, tmp_path):
         test_path = tmp_path / "date.nc"

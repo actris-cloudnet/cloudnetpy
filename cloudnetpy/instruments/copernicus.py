@@ -80,6 +80,8 @@ def copernicus2nc(
             copernicus.mask_first_range_gates()
             copernicus.mask_invalid_data()
             copernicus.add_time_and_range()
+            copernicus.fix_range_offset(site_meta)
+            copernicus.screen_negative_ranges()
             copernicus.add_radar_specific_variables()
             copernicus.add_nyquist_velocity(keymap)
             copernicus.add_site_geolocation()
@@ -123,12 +125,36 @@ class Copernicus(ChilboltonRadar):
             ind = np.where(np.abs(self.data[key][:]) > value)
             self.data["v"].mask_indices(ind)
 
+    def fix_range_offset(self, site_meta: dict):
+        """Fixes range offset."""
+        range_offset = site_meta.get("range_offset", 0)
+        self.data["range"].data[:] += range_offset
+        self.append_data(np.array(range_offset, dtype=float), "range_offset")
+
+    def screen_negative_ranges(self):
+        """Screens negative range values."""
+        valid_ind = np.where(self.data["range"][:] >= 0)[0]
+        for key, cloudnet_array in self.data.items():
+            try:
+                data = cloudnet_array[:]
+                if data.ndim == 2:
+                    cloudnet_array.data = data[:, valid_ind]
+                elif key == "range":
+                    cloudnet_array.data = data[valid_ind]
+            except IndexError:
+                continue
+
 
 ATTRIBUTES = {
     "calibration_offset": MetaData(
         long_name="Radar reflectivity calibration offset",
         units="1",
         comment="Calibration offset applied.",
+    ),
+    "range_offset": MetaData(
+        long_name="Radar range offset",
+        units="m",
+        comment="Range offset applied.",
     ),
     "antenna_diameter": MetaData(long_name="Antenna diameter", units="m"),
     "beamwidthV": MetaData(long_name="Vertical angular beamwidth", units="degree"),
