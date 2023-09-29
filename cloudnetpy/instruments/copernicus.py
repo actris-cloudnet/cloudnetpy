@@ -148,7 +148,7 @@ class Copernicus(ChilboltonRadar):
 ATTRIBUTES = {
     "calibration_offset": MetaData(
         long_name="Radar reflectivity calibration offset",
-        units="1",
+        units="dBZ",
         comment="Calibration offset applied.",
     ),
     "range_offset": MetaData(
