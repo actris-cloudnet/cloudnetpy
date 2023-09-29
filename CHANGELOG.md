@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.55.9 – 2023-09-29
+
+- Fix calibration offset unit
+- Fix Copernicus range issues
+
 ## 1.55.8 – 2023-09-28
 
 - Screen MIRA ldr in STSR mode
