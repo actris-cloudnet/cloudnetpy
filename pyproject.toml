@@ -15,7 +15,7 @@ classifiers = [
   "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-  "cloudnetpy_qc>=1.13.2",
+  "cloudnetpy_qc>=1.13.8",
   "matplotlib",
   "mwrpy>=0.4.3",
   "netCDF4",
