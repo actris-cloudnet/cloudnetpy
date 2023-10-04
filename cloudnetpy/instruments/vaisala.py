@@ -380,7 +380,7 @@ def values_to_dict(keys: tuple, values: list) -> dict:
     """
     out = {}
     for i, key in enumerate(keys):
-        out[key] = np.array([x[i] for x in values])
+        out[key] = np.array([x[i] for x in values if len(x) == len(keys)])
     return out
 
 
