@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.10 – 2023-10-04
+
+- Skip Vaisala ceilometer lines with bad data
+
 ## 1.55.9 – 2023-09-29
 
 - Fix calibration offset unit
