@@ -101,6 +101,14 @@ class Ceilometer:
             self.data[key][self.data[key] <= 0] = ma.masked
             self.data[key][self.data[key] > 1] = ma.masked
 
+    def screen_invalid_values(self):
+        for key in self.data.keys():
+            try:
+                if self.data[key][:].ndim == 2:
+                    self.data[key] = ma.masked_invalid(self.data[key])
+            except (IndexError, TypeError):
+                continue
+
     def add_snr_info(self, key: str, snr_limit: float):
         if key in self.data:
             self.data[key].comment += f" SNR threshold applied: {snr_limit}."

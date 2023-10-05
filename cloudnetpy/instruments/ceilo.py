@@ -79,6 +79,7 @@ def ceilo2nc(
     if "cl61" in ceilo_obj.instrument.model.lower():
         ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
     ceilo_obj.screen_depol()
+    ceilo_obj.screen_invalid_values()
     ceilo_obj.prepare_data()
     ceilo_obj.data_to_cloudnet_arrays()
     attributes = output.add_time_attribute(ATTRIBUTES, ceilo_obj.date)
