@@ -1,6 +1,5 @@
 import glob
 import os
-import sys
 from tempfile import TemporaryDirectory
 
 import netCDF4
@@ -28,6 +27,7 @@ SITE_META = {
 
 VARIABLES = {
     "beta",
+    "beta_raw",
     "beta_smooth",
     "calibration_factor",
     "range",
@@ -35,6 +35,7 @@ VARIABLES = {
     "zenith_angle",
     "time",
     "depolarisation",
+    "depolarisation_raw",
     "altitude",
     "latitude",
     "longitude",

@@ -78,7 +78,6 @@ def ceilo2nc(
     assert ceilo_obj.instrument is not None and ceilo_obj.instrument.model is not None
     if "cl61" in ceilo_obj.instrument.model.lower():
         ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
-        ceilo_obj.remove_raw_data()
     ceilo_obj.screen_depol()
     ceilo_obj.prepare_data()
     ceilo_obj.data_to_cloudnet_arrays()
@@ -140,6 +139,11 @@ def _find_ceilo_model(full_path: str) -> str:
 
 ATTRIBUTES = {
     "depolarisation": MetaData(
+        long_name="Lidar volume linear depolarisation ratio",
+        units="1",
+        comment="SNR-screened lidar volume linear depolarisation ratio at 910.55 nm.",
+    ),
+    "depolarisation_raw": MetaData(
         long_name="Lidar volume linear depolarisation ratio",
         units="1",
         comment="SNR-screened lidar volume linear depolarisation ratio at 910.55 nm.",

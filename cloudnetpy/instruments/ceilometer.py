@@ -91,13 +91,6 @@ class Ceilometer:
         self.date = utils.seconds2date(self.data["time"][0], epoch=epoch)[:3]
         self.data["time"] = utils.seconds2hours(self.data["time"])
 
-    def remove_raw_data(self):
-        keys = [key for key in self.data.keys() if "raw" in key]
-        for key in keys:
-            del self.data[key]
-        self.data.pop("x_pol", None)
-        self.data.pop("p_pol", None)
-
     def data_to_cloudnet_arrays(self):
         for key, array in self.data.items():
             self.data[key] = CloudnetArray(array, key)
