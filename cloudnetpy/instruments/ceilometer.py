@@ -264,7 +264,10 @@ def _calc_var_from_top_gates(data: np.ndarray) -> np.ndarray:
 
 
 def calc_sigma_units(
-    time_vector: np.ndarray, range_los: np.ndarray
+    time_vector: np.ndarray,
+    range_los: np.ndarray,
+    sigma_minutes: float = 1,
+    sigma_metres: float = 10,
 ) -> tuple[float, float]:
     """Calculates Gaussian peak std parameters.
 
@@ -274,6 +277,8 @@ def calc_sigma_units(
     Args:
         time_vector: 1D vector (fraction hour).
         range_los: 1D vector (m).
+        sigma_minutes: Smoothing in minutes.
+        sigma_metres: Smoothing in metres.
 
     Returns:
         tuple: Two element tuple containing number of steps in time and height to
@@ -283,8 +288,6 @@ def calc_sigma_units(
     if len(time_vector) == 0 or np.max(time_vector) > 24:
         raise ValueError("Invalid time vector")
     minutes_in_hour = 60
-    sigma_minutes = 2
-    sigma_metres = 5
     time_step = utils.mdiff(time_vector) * minutes_in_hour
     alt_step = utils.mdiff(range_los)
     x_std = sigma_minutes / time_step

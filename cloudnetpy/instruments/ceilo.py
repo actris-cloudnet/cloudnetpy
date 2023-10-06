@@ -2,6 +2,7 @@
 from itertools import islice
 
 import netCDF4
+from numpy import ma
 
 from cloudnetpy import output
 from cloudnetpy.instruments.campbell_scientific import Cs135
@@ -77,6 +78,10 @@ def ceilo2nc(
     )
     assert ceilo_obj.instrument is not None and ceilo_obj.instrument.model is not None
     if "cl61" in ceilo_obj.instrument.model.lower():
+        # This kind of screening could be used with other ceilometers as well:
+        mask = ceilo_obj.data["beta_smooth"].mask
+        ceilo_obj.data["beta"] = ma.masked_where(mask, ceilo_obj.data["beta_raw"])
+        ceilo_obj.data["beta"][ceilo_obj.data["beta"] <= 0] = ma.masked
         ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
     ceilo_obj.screen_depol()
     ceilo_obj.screen_invalid_values()

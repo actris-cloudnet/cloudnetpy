@@ -210,7 +210,9 @@ class TestCeilometer:
     def test_calc_sigma_units(self):
         time = np.linspace(0, 24, 721)  # 2 min resolution
         range_instru = np.arange(0, 1000, 5)  # 5 m resolution
-        std_time, std_range = ceilometer.calc_sigma_units(time, range_instru)
+        std_time, std_range = ceilometer.calc_sigma_units(
+            time, range_instru, sigma_minutes=2, sigma_metres=5
+        )
         assert_array_almost_equal(std_time, 1)
         assert_array_almost_equal(std_range, 1)
 
