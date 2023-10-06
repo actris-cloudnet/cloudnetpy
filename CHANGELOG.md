@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.55.11 – 2023-10-06
+
+- Screen nan values from Vaisala ceilometers
+- Store raw CL61 variables
+
 ## 1.55.10 – 2023-10-04
 
 - Skip Vaisala ceilometer lines with bad data
