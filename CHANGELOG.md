@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.12 – 2023-10-06
+
+- Use beta_smooth mask for beta with CL61
+
 ## 1.55.11 – 2023-10-06
 
 - Screen nan values from Vaisala ceilometers
