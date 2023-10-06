@@ -18,7 +18,7 @@ CloudnetPy is a rewritten version of the original Cloudnet Matlab code. Cloudnet
 - CloudnetPy documentation: https://cloudnetpy.readthedocs.io/en/latest/
 - Cloudnet data portal: https://cloudnet.fmi.fi
 
-![CloudnetPy example output](https://raw.githubusercontent.com/actris-cloudnet/cloudnetpy/main/docs/source/_static/20190423_mace-head_classification.png)
+![CloudnetPy example output](https://raw.githubusercontent.com/actris-cloudnet/cloudnetpy/main/docs/source/_static/20230831_lindenberg_classification-9b74f4ac-target_classification.png)
 
 ## Installation
 
