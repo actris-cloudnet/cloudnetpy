@@ -163,8 +163,11 @@ def generate_figure(
             sources = read_source(nc_file, name, add_serial_number=add_serial_number)
             display_datasources(ax, sources)
 
-        if not is_height or (
-            cloudnet_file_type == "mwr-single" and name in ("lwp", "iwv")
+        # 1D plots
+        if (
+            not is_height
+            or (cloudnet_file_type == "mwr-single" and name in ("lwp", "iwv"))
+            or (cloudnet_file_type == "radar" and name == "lwp")
         ):
             unit = _get_variable_unit(nc_file, name)
             source = ATTRIBUTES[name].source
