@@ -72,6 +72,7 @@ def ceilo2nc(
     calibration_factor = site_meta.get("calibration_factor", None)
     range_corrected = site_meta.get("range_corrected", True)
     ceilo_obj.read_ceilometer_file(calibration_factor)
+    ceilo_obj.check_beta_raw_shape()
     ceilo_obj.data["beta"] = ceilo_obj.calc_screened_product(
         ceilo_obj.data["beta_raw"], snr_limit, range_corrected
     )

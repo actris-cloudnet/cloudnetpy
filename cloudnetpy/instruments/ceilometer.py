@@ -7,6 +7,7 @@ from scipy.ndimage import gaussian_filter
 
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.utils import Epoch
 
@@ -112,6 +113,11 @@ class Ceilometer:
     def add_snr_info(self, key: str, snr_limit: float):
         if key in self.data:
             self.data[key].comment += f" SNR threshold applied: {snr_limit}."
+
+    def check_beta_raw_shape(self):
+        beta_raw = self.data["beta_raw"]
+        if beta_raw.ndim != 2 or (beta_raw.shape[0] == 1 or beta_raw.shape[1] == 1):
+            raise ValidTimeStampError(f"Invalid beta_raw shape: {beta_raw.shape}")
 
 
 class NoisyData:

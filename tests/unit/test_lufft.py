@@ -1,7 +1,6 @@
 """ This module contains unit tests for ceilo-module. """
 import glob
 import os
-import sys
 from tempfile import TemporaryDirectory
 
 import netCDF4
@@ -143,3 +142,9 @@ class TestWithRealData(Check):
                 self.site_meta,
                 date="2020-10-23",
             )
+
+
+def test_bad_file():
+    file = f"{SCRIPT_PATH}/data/chm15k-2/1-profile.nc"
+    with pytest.raises(ValidTimeStampError):
+        ceilo2nc(file, "temp.nc", SITE_META)
