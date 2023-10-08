@@ -48,20 +48,39 @@ def _find_falling_from_radar(obs: ClassData, is_insects: np.ndarray) -> np.ndarr
 
 def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
     """Lidar signals which are in colder than the threshold temperature
-    and threshold altitude from the ground are assumed ice. This method
-    should be improved in the future if possible.
+    and threshold altitude from the ground are assumed ice.
+
+    These pixels are easily mixed with aerosols at lower altitudes,
+    and at higher altitudes they could be supercooled liquid, actually.
+    This should be investigated and fixed in the future.
     """
     cold_aerosols = np.zeros(is_liquid.shape, dtype=bool)
-    temperature_limit = T0 - 15
-    range_limit = 2000
+    lidar_range = obs.height + obs.altitude
+    cold_aerosol_temperature_limit = T0 - 15
+    cold_aerosol_min_altitude = 2000
     is_beta = ~obs.beta.mask
     lidar_ice_indices = np.where(
-        (obs.tw.data < temperature_limit) & is_beta & ~is_liquid
+        (obs.tw.data < cold_aerosol_temperature_limit) & is_beta & ~is_liquid
     )
     cold_aerosols[lidar_ice_indices] = True
-    low_range_indices = np.where(obs.height + obs.altitude < range_limit)
+    low_range_indices = np.where(lidar_range < cold_aerosol_min_altitude)
     if low_range_indices:
         cold_aerosols[:, low_range_indices] = False
+
+    # Further investigate range gates between 2000 and 4000 m
+    # to avoid abrupt transitions from aerosol to ice.
+    altitude_limit = 4000
+    window_size = 6
+    n_beta_in_window = 2
+    for time_ind, profile in enumerate(cold_aerosols):
+        for alt_ind, is_cold_aerosol in enumerate(profile):
+            if is_cold_aerosol and lidar_range[alt_ind] < altitude_limit:
+                start_ind = max(0, alt_ind - window_size + 1)
+                end_ind = alt_ind + 1
+                n_beta_below = np.sum(is_beta[time_ind, start_ind:end_ind])
+                if n_beta_below > n_beta_in_window:
+                    cold_aerosols[time_ind, alt_ind] = False
+
     return cold_aerosols
 
 
