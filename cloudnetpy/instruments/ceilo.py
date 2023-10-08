@@ -19,26 +19,28 @@ def ceilo2nc(
     uuid: str | None = None,
     date: str | None = None,
 ) -> str:
-    """Converts Vaisala / Lufft ceilometer data into Cloudnet Level 1b netCDF file.
+    """Converts Vaisala, Lufft and Campbell Scientific ceilometer data into
+    Cloudnet Level 1b netCDF file.
 
-    This function reads raw Vaisala (CT25k, CL31, CL51, CL61-D) and Lufft
-    (CHM15k, CHM15kx) ceilometer files and writes the data into netCDF file.
-    Three variants of the attenuated backscatter are saved in the file:
+    This function reads raw Vaisala (CT25k, CL31, CL51, CL61), Lufft
+    (CHM 15k, CHM 15k-x) and Campbell Scientific (CS135) ceilometer files and writes
+    the data into netCDF file. Three variants of the backscatter are saved:
 
         1. Raw backscatter, `beta_raw`
         2. Signal-to-noise screened backscatter, `beta`
         3. SNR-screened backscatter with smoothed weak background, `beta_smooth`
 
-    With CL61-D `beta_raw` is not saved due to large file size. Instead, two additional
-    depolarisation parameters are saved:
+    With CL61 two additional depolarisation parameters are saved:
 
         1. Signal-to-noise screened depolarisation, `depolarisation`
         2. SNR-screened depolarisation with smoothed weak background,
            `depolarisation_smooth`
 
+    CL61 screened backscatter is screened using beta_smooth mask to improve detection
+    of weak aerosol layers and supercooled liquid clouds.
+
     Args:
-        full_path: Ceilometer file name. For Vaisala it is a text file, for CHM15k(x)
-        it is a netCDF file.
+        full_path: Ceilometer file name.
         output_file: Output file name, e.g. 'ceilo.nc'.
         site_meta: Dictionary containing information about the site and instrument.
             Required key value pairs are `name` and `altitude` (metres above mean
