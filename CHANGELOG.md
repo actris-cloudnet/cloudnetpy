@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.55.13 – 2023-10-08
+
+- Plot radar `lwp`
+- Check `beta_raw` shape
+
 ## 1.55.12 – 2023-10-06
 
 - Use beta_smooth mask for beta with CL61
