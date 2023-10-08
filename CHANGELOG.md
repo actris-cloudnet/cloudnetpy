@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.14 – 2023-10-08
+
+- Avoid abrupt transitions between aerosol and ice
+
 ## 1.55.13 – 2023-10-08
 
 - Plot radar `lwp`
