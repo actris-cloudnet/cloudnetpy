@@ -54,7 +54,7 @@ class AdvanceProductMethods(DataSource):
         h = self.getvar_from_object("h")
         temperature = self.getvar("temperature")
         t_screened = self.remove_extra_levels(temperature - 273.15)
-        iwc, lwc = [self._model_obj.get_water_continent(var) for var in ["iwc", "lwc"]]
+        iwc, lwc = [self._model_obj.get_water_content(var) for var in ["iwc", "lwc"]]
         tZT, tT, tZ, t = self.set_frequency_parameters()
         z_sen = self.fit_z_sensitivity(h)
         cf_filtered = self.filter_high_iwc_low_cf(cf, iwc, lwc)

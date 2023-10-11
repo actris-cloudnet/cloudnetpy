@@ -86,13 +86,13 @@ class ModelManager(DataSource):
         self.keys[self._product] = f"{self.model}{self.cycle}_cf"
 
     def _get_iwc(self):
-        iwc = self.get_water_continent("iwc")
+        iwc = self.get_water_content("iwc")
         iwc[iwc < 1e-7] = ma.masked
         self.append_data(iwc, f"{self.model}{self.cycle}_iwc")
         self.keys[self._product] = f"{self.model}{self.cycle}_iwc"
 
     def _get_lwc(self):
-        lwc = self.get_water_continent("lwc")
+        lwc = self.get_water_content("lwc")
         lwc[lwc < 1e-5] = ma.masked
         self.append_data(lwc, f"{self.model}{self.cycle}_lwc")
         self.keys[self._product] = f"{self.model}{self.cycle}_lwc"
@@ -104,7 +104,7 @@ class ModelManager(DataSource):
             var.append(VARIABLES[arg].long_name)
         return var
 
-    def get_water_continent(self, var: str) -> np.ndarray:
+    def get_water_content(self, var: str) -> np.ndarray:
         p_name = self.get_model_var_names(("p",))[0]
         t_name = self.get_model_var_names(("T",))[0]
         lwc_name = self.get_model_var_names((var,))[0]
