@@ -86,7 +86,7 @@ def save_downsampled_file(
     root_group = output.init_file(file_name, dimensions, obj.data, uuid)
     _augment_global_attributes(root_group)
     uuid = root_group.file_uuid
-    root_group.cloudnet_file_type = id_mark.split("-")[0]
+    root_group.cloudnet_file_type = "l3-" + id_mark.split("_")[0]
     root_group.title = (
         f"Downsampled {id_mark.capitalize().replace('_', ' of ')} "
         f"from {obj.dataset.location}"
@@ -139,7 +139,6 @@ def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
 
 def _augment_global_attributes(root_group: netCDF4.Dataset):
     root_group.Conventions = "CF-1.8"
-    # root_group.cloudnetme_version = version.__version__
 
 
 def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple):

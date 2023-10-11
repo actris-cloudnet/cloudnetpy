@@ -17,7 +17,7 @@ class TestCloudFractionProcessing:
         assert nc.month == "05"
         assert nc.day == "17"
         assert nc.title == "Downsampled Cf of ecmwf from Mace-Head"
-        assert nc.cloudnet_file_type == "cf_ecmwf"
+        assert nc.cloudnet_file_type == "l3-cf"
         assert nc.Conventions == "CF-1.8"
         assert (
             nc.source
