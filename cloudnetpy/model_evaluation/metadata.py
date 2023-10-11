@@ -8,16 +8,13 @@ class MetaData(NamedTuple):
     standard_name: str | None = None
     axis: str | None = None
     positive: str | None = None
+    calendar: str | None = None
 
 
 MODEL_ATTRIBUTES = {
-    "time": MetaData(
-        units="decimal hours since midnight",
-        long_name="Time UTC",
-        axis="T",
-    ),
-    "latitude": MetaData(long_name="Latitude of grid point", units="dergees_north"),
-    "longitude": MetaData(long_name="Longitude of grid point", units="degrees_east"),
+    "time": MetaData(units="", long_name="Time UTC", axis="T", calendar="standard"),
+    "latitude": MetaData(long_name="Latitude of grid point", units="degree_north"),
+    "longitude": MetaData(long_name="Longitude of grid point", units="degree_east"),
     "horizontal_resolution": MetaData(
         long_name="Horizontal resolution of model",
         units="km",

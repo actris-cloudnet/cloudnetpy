@@ -10,7 +10,6 @@ from .metadata import (
     MODEL_ATTRIBUTES,
     MODEL_L3_ATTRIBUTES,
     REGRID_PRODUCT_ATTRIBUTES,
-    MetaData,
 )
 from .products.model_products import ModelManager
 
@@ -164,7 +163,8 @@ def add_time_attribute(date: datetime) -> dict:
     Returns:
         dict: Same attributes with 'time' attribute added.
     """
-    d = date.strftime("%y.%m.%d")
-    attributes = {}
-    attributes["time"] = MetaData(units=f"hours since {d} 00:00:00", long_name="")
-    return attributes
+    return {
+        "time": MODEL_ATTRIBUTES["time"]._replace(
+            units=f"hours since {date:%Y-%m-%d} 00:00:00 +00:00"
+        )
+    }
