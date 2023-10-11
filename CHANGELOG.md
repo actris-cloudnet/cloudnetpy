@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.15 – 2023-10-11
+
+- Fix metadata of L3 products
+
 ## 1.55.14 – 2023-10-08
 
 - Avoid abrupt transitions between aerosol and ice
@@ -11,7 +15,7 @@
 
 ## 1.55.12 – 2023-10-06
 
-- Use beta_smooth mask for beta with CL61
+- Use `beta_smooth` mask for beta with CL61
 
 ## 1.55.11 – 2023-10-06
 
