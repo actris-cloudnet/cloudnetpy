@@ -433,6 +433,7 @@ LWC_ATTRIBUTES = {
         long_name="Liquid water content",
         comment=COMMENTS["lwc"],
         ancillary_variables="lwc_error",
+        standard_name="mass_concentration_of_liquid_water_in_air",
     ),
     "lwc_error": MetaData(
         long_name="Random error in liquid water content, one standard deviation",

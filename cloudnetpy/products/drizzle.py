@@ -210,6 +210,7 @@ DRIZZLE_ATTRIBUTES = {
         long_name="Drizzle liquid water content",
         units="kg m-3",
         ancillary_variables="drizzle_lwc_error drizzle_lwc_bias",
+        standard_name="mass_concentration_of_drizzle_in_air",
     ),
     "drizzle_lwc_error": MetaData(
         long_name="Random error in drizzle liquid water content",
@@ -250,6 +251,7 @@ DRIZZLE_ATTRIBUTES = {
         units="m s-1",
         ancillary_variables="v_air_error",
         comment="Positive values are towards the sky.",
+        standard_name="upward_air_velocity",
     ),
     "v_air_error": MetaData(
         long_name="Random error in vertical air velocity", units="dB"
