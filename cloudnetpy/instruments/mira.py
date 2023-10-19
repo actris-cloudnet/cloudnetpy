@@ -286,6 +286,7 @@ def _mirakeymap(filetype: str) -> dict:
             "nave": "nave",
             "prf": "prf",
             "rg0": "rg0",
+            "NyquistVelocity": "NyquistVelocity",  # variable in some mmclx files
         },
     }
 

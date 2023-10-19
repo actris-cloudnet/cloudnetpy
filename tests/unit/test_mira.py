@@ -250,3 +250,23 @@ class TestSTSRFiles(Check):
         for name, method in RadarFun.__dict__.items():
             if "test_" in name:
                 getattr(radar_fun, name)()
+
+
+class TestFilesHavingNyquistVelocityVector(Check):
+    site_meta = {
+        "name": "Punta Arenas",
+        "latitude": 50,
+        "longitude": 104.5,
+        "altitude": 50,
+    }
+    date = "2020-01-16"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/mira.nc"
+    filepath = f"{SCRIPT_PATH}/data/mira-nyquist/"
+    uuid = mira.mira2nc(f"{filepath}20200116_0000-trunc.mmclx", temp_path, site_meta)
+
+    def test_common_radar(self):
+        radar_fun = RadarFun(self.nc, self.site_meta, self.date, self.uuid)
+        for name, method in RadarFun.__dict__.items():
+            if "test_" in name:
+                getattr(radar_fun, name)()

@@ -134,7 +134,9 @@ class NcRadar(DataSource, CloudnetInstrument):
             possible_nyquist_names = ("ambiguous_velocity", "NyquistVelocity")
             data = self.getvar(*possible_nyquist_names)
             key = "nyquist_velocity"
-            self.data[key] = CloudnetArray(np.array(data), key)
+            self.data[key] = CloudnetArray(np.median(np.array(data)), key)
+            if "NyquistVelocity" in self.data:
+                del self.data["NyquistVelocity"]
         except RuntimeError:
             logging.warning("Unable to find nyquist_velocity")
 
