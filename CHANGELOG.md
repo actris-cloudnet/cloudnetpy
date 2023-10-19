@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.55.16 – 2023-10-19
+
+- Support MIRA files with NyquistVelocity as array
+- Add a few standard names
+
 ## 1.55.15 – 2023-10-11
 
 - Fix metadata of L3 products
