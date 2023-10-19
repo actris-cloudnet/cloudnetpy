@@ -57,60 +57,7 @@ def mira2nc(
     """
 
     with TemporaryDirectory() as temp_dir:
-        if isinstance(raw_mira, list) or os.path.isdir(raw_mira):
-            # better naming would be concat_filename but to be directly
-            # compatible with the opening of the output we stick to input_filename
-            input_filename = f"{temp_dir}/tmp.nc"
-            # passed in is a list of files
-            if isinstance(raw_mira, list):
-                valid_files = sorted(raw_mira)
-            else:
-                # passed in is a path with potentially files
-                valid_files = utils.get_sorted_filenames(raw_mira, ".znc")
-                if not valid_files:
-                    valid_files = utils.get_sorted_filenames(raw_mira, ".mmclx")
-
-            if not valid_files:
-                raise FileNotFoundError(
-                    "Neither znc nor mmclx files found "
-                    + f"{raw_mira}. Please check your input."
-                )
-
-            valid_files = utils.get_files_with_common_range(valid_files)
-
-            # get unique filetypes
-            filetypes = list({f.split(".")[-1].lower() for f in valid_files})
-
-            if len(filetypes) > 1:
-                raise TypeError(
-                    "mira2nc only supports a singlefile type as input",
-                    "either mmclx or znc",
-                )
-
-            keymap = _mirakeymap(filetypes[0])
-
-            variables = list(keymap.keys())
-            concat_lib.concatenate_files(
-                valid_files,
-                input_filename,
-                variables=variables,
-                ignore=_miraignorevar(filetypes[0]),
-                # somewhat risky to allow varying nfft as the vel resolution
-                # will be different, but this allows for concatenating when
-                # processing switched between different nffts without a hitch
-                # doppler is the third dimensions (other than time and height)
-                # that is relevant in znc files as they contain the spectra
-                # but it should be dropped rather than concatted
-                allow_difference=[
-                    "nave",
-                    "ovl",
-                    # "doppler",
-                    "nfft",
-                ],
-            )
-        else:
-            input_filename = raw_mira
-            keymap = _mirakeymap(input_filename.split(".")[-1])
+        input_filename, keymap = _parse_input_files(raw_mira, temp_dir)
 
         with Mira(input_filename, site_meta) as mira:
             mira.init_data(keymap)
@@ -165,7 +112,7 @@ class Mira(NcRadar):
 
     def _init_mira_date(self) -> list[str]:
         time_stamps = self.getvar("time")
-        return utils.seconds2date(time_stamps[0], self.epoch)[:3]
+        return utils.seconds2date(float(time_stamps[0]), self.epoch)[:3]
 
     def screen_invalid_ldr(self):
         """Masks LDR in MIRA STSR mode data.
@@ -182,36 +129,59 @@ class Mira(NcRadar):
             self.data["ldr"].data[:] = ma.masked
 
 
-def _miraignorevar(filetype: str) -> list | None:
-    """Returns the vars to ignore for METEK MIRA-35 cloud radar concat.
+def _parse_input_files(input_files: str | list[str], temp_dir: str) -> tuple:
+    if isinstance(input_files, list) or os.path.isdir(input_files):
+        input_filename = f"{temp_dir}/tmp.nc"
+        if isinstance(input_files, list):
+            valid_files = sorted(input_files)
+        else:
+            valid_files = utils.get_sorted_filenames(input_files, ".znc")
+            if not valid_files:
+                valid_files = utils.get_sorted_filenames(input_files, ".mmclx")
 
-    This function return the nc variable names that should be ignored when
-    concatenating several files, a requirement needed when a path/list of files
-    can be passed in to mira2nc, at the moment (08.2023) only relevant for znc.
+        if not valid_files:
+            raise FileNotFoundError(
+                "Neither znc nor mmclx files found "
+                + f"{input_files}. Please check your input."
+            )
 
-    Args:
-        filetype: Either znc or mmclx
+        valid_files = utils.get_files_with_common_range(valid_files)
+        filetypes = list({f.split(".")[-1].lower() for f in valid_files})
 
-    Returns:
-        Appropriate list of variables to ignore for the file type
+        if len(filetypes) > 1:
+            raise TypeError(
+                "mira2nc only supports a singlefile type as input",
+                "either mmclx or znc",
+            )
 
-    Raises:
-        TypeError: Not a valid filetype given, must be string.
-        ValueError: Not a known filetype given, must be znc or mmclx
+        keymap = _get_keymap(filetypes[0])
 
-    Examples:
-        not meant to be called directly by user
+        variables = list(keymap.keys())
+        concat_lib.concatenate_files(
+            valid_files,
+            input_filename,
+            variables=variables,
+            ignore=_get_ignored_variables(filetypes[0]),
+            # It's somewhat risky to use varying nfft values as the velocity resolution
+            # may differ, but this enables concatenation when switching between
+            # different nfft configurations. Spectral data is ignored anyway for now.
+            allow_difference=[
+                "nave",
+                "ovl",
+                "nfft",
+            ],
+        )
+    else:
+        input_filename = input_files
+        keymap = _get_keymap(input_filename.split(".")[-1])
 
-    """
-    known_filetypes = ["znc", "mmclx"]
-    if not isinstance(filetype, str):
-        raise TypeError("Filetype must be string")
+    return input_filename, keymap
 
-    if filetype.lower() not in known_filetypes:
-        raise ValueError(f"Filetype must be one of {known_filetypes}")
 
-    # faster this way than previous patch as spectra are not being used in
-    # cloudnetpy anyway and we therefore also do not need the Doppler dimension
+def _get_ignored_variables(filetype: str) -> list | None:
+    """Returns variables to ignore for METEK MIRA-35 cloud radar concat."""
+    _check_file_type(filetype)
+    # Ignore spectral variables for now
     keymaps = {
         "znc": ["DropSize", "SPCco", "SPCcx", "SPCcocxRe", "SPCcocxIm", "doppler"],
         "mmclx": None,
@@ -220,37 +190,13 @@ def _miraignorevar(filetype: str) -> list | None:
     return keymaps.get(filetype.lower(), keymaps.get("mmclx"))
 
 
-def _mirakeymap(filetype: str) -> dict:
-    """Returns the ncvariables to cloudnetpy mapping for METEK MIRA-35 cloud radar.
+def _get_keymap(filetype: str) -> dict:
+    """Returns a dictionary mapping the variables in the raw data to the processed
+    Cloudnet file."""
 
-    This function return the appropriate keymap (even for STSR polarimetric
-    config) for cloudnetpy to take the appropriate variables from the netCDF
-    whether mmclx (old format) or znc (new format).
+    _check_file_type(filetype)
 
-    Args:
-        filetype: Either znc or mmclx
-
-    Returns:
-        Appropriate keymap for the file type
-
-    Raises:
-        TypeError: Not a valid filetype given, must be string.
-        ValueError: Not a known filetype given, must be znc or mmclx
-
-    Examples:
-          not meant to be called directly by user
-
-    """
-    known_filetypes = ["znc", "mmclx"]
-    if not isinstance(filetype, str):
-        raise TypeError("Filetype must be string")
-
-    if filetype.lower() not in known_filetypes:
-        raise ValueError(f"Filetype must be one of {known_filetypes}")
-
-    # ordered dict here because that way the order is kept, which means
-    # we will get Zh2l over as Zh over Zg, which is relevant for the new
-    # znc files of an STSR radar
+    # Order is relevant with the new znc files from STSR radar
     keymaps = {
         "znc": OrderedDict(
             [
@@ -291,6 +237,12 @@ def _mirakeymap(filetype: str) -> dict:
     }
 
     return keymaps.get(filetype.lower(), keymaps["mmclx"])
+
+
+def _check_file_type(filetype: str):
+    known_filetypes = ["znc", "mmclx"]
+    if filetype.lower() not in known_filetypes:
+        raise ValueError(f"Filetype must be one of {known_filetypes}")
 
 
 ATTRIBUTES = {
