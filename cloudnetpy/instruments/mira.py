@@ -76,6 +76,7 @@ def mira2nc(
             valid_indices = mira.add_zenith_and_azimuth_angles()
             mira.screen_time_indices(valid_indices)
             mira.add_height()
+            mira.test_if_all_masked()
         attributes = output.add_time_attribute(ATTRIBUTES, mira.date)
         output.update_attributes(mira.data, attributes)
         uuid = output.save_level1b(mira, output_file, uuid)

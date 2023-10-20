@@ -8,7 +8,7 @@ from numpy import ma
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.datasource import DataSource
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import RadarDataError, ValidTimeStampError
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.instruments import Instrument
 
@@ -139,6 +139,11 @@ class NcRadar(DataSource, CloudnetInstrument):
                 del self.data["NyquistVelocity"]
         except RuntimeError:
             logging.warning("Unable to find nyquist_velocity")
+
+    def test_if_all_masked(self):
+        """Tests if all data are masked."""
+        if not np.any(~self.data["v"][:].mask):
+            raise RadarDataError("All radar data are masked")
 
 
 class ChilboltonRadar(NcRadar):

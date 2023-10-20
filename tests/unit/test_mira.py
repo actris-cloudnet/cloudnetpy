@@ -5,13 +5,20 @@ import netCDF4
 import numpy as np
 import pytest
 
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import RadarDataError, ValidTimeStampError
 from cloudnetpy.instruments import mira
 from tests.unit.all_products_fun import Check
 from tests.unit.radar_fun import RadarFun
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 filepath = f"{SCRIPT_PATH}/data/mira/"
+
+SITE_META = {
+    "name": "Punta Arenas",
+    "latitude": 50,
+    "longitude": 104.5,
+    "altitude": 50,
+}
 
 
 class TestMeasurementDate:
@@ -31,12 +38,7 @@ class TestMeasurementDate:
 
 
 class TestMIRA2nc(Check):
-    site_meta = {
-        "name": "Punta Arenas",
-        "latitude": 50,
-        "longitude": 104.5,
-        "altitude": 50,
-    }
+    site_meta = SITE_META
     date = "2021-01-02"
     n_time1 = 146
     n_time2 = 145
@@ -154,26 +156,15 @@ class TestMIRA2nc(Check):
 
 
 def test_allow_vary_option():
-    site_meta = {
-        "name": "Juelich",
-        "latitude": 50,
-        "longitude": 104.5,
-        "altitude": 50,
-    }
     temp_dir = TemporaryDirectory()
     temp_path = f"{temp_dir.name}/mira.nc"
     date = "2021-11-24"
     filepath = f"{SCRIPT_PATH}/data/mira_inconsistent/"
-    _ = mira.mira2nc(filepath, temp_path, site_meta=site_meta, date=date)
+    _ = mira.mira2nc(filepath, temp_path, site_meta=SITE_META, date=date)
 
 
 class TestZncFiles(Check):
-    site_meta = {
-        "name": "Punta Arenas",
-        "latitude": 50,
-        "longitude": 104.5,
-        "altitude": 50,
-    }
+    site_meta = SITE_META
     date = "2023-02-01"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/mira.nc"
@@ -231,12 +222,7 @@ class TestZncFiles(Check):
 
 
 class TestSTSRFiles(Check):
-    site_meta = {
-        "name": "Punta Arenas",
-        "latitude": 50,
-        "longitude": 104.5,
-        "altitude": 50,
-    }
+    site_meta = SITE_META
     date = "2023-02-01"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/mira.nc"
@@ -253,20 +239,21 @@ class TestSTSRFiles(Check):
 
 
 class TestFilesHavingNyquistVelocityVector(Check):
-    site_meta = {
-        "name": "Punta Arenas",
-        "latitude": 50,
-        "longitude": 104.5,
-        "altitude": 50,
-    }
+    site_meta = SITE_META
     date = "2020-01-16"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/mira.nc"
     filepath = f"{SCRIPT_PATH}/data/mira-nyquist/"
-    uuid = mira.mira2nc(f"{filepath}20200116_0000-trunc.mmclx", temp_path, site_meta)
+    uuid = mira.mira2nc(f"{filepath}20200116_0000-trunc.mmclx", temp_path, SITE_META)
 
     def test_common_radar(self):
         radar_fun = RadarFun(self.nc, self.site_meta, self.date, self.uuid)
         for name, method in RadarFun.__dict__.items():
             if "test_" in name:
                 getattr(radar_fun, name)()
+
+
+def test_masked_mira():
+    filepath = f"{SCRIPT_PATH}/data/mira-masked/"
+    with pytest.raises(RadarDataError):
+        mira.mira2nc(f"{filepath}", "temp.nc", SITE_META)
