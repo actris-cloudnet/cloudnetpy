@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.55.17 – 2023-10-23
+
+- Remove duplicate timestamps from BASTA
+- Raise error if all MIRA data are masked
+
 ## 1.55.16 – 2023-10-19
 
 - Support MIRA files with NyquistVelocity as array
