@@ -113,7 +113,10 @@ class Model(DataSource):
 
     def _get_model_heights(self, alt_site: float) -> np.ndarray:
         """Returns model heights for each time step."""
-        model_heights = self.dataset.variables["height"]
+        try:
+            model_heights = self.dataset.variables["height"]
+        except KeyError as err:
+            raise ModelDataError("No 'height' variable in the model file.") from err
         return self.to_m(model_heights) + alt_site
 
 
