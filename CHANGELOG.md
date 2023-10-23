@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.18 – 2023-10-23
+
+- Raise error if 'height' missing from model file
+
 ## 1.55.17 – 2023-10-23
 
 - Remove duplicate timestamps from BASTA
