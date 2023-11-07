@@ -34,7 +34,7 @@ test = [
   "pytest-flakefinder",
   "types-requests",
 ]
-dev = ["pre-commit"]
+dev = ["pre-commit", "release-version"]
 extras = ["voodoonet>=0.1.1"]
 
 [project.urls]
@@ -49,6 +49,11 @@ check_untyped_defs = true
 [[tool.mypy.overrides]]
 module = ["matplotlib.*", "mpl_toolkits.*", "netCDF4.*", "scipy.*", "skimage.*", "voodoonet.*"]
 ignore_missing_imports = true
+
+[tool.release-version]
+filename = "cloudnetpy/version.py"
+pattern = ["MAJOR = (?P<major>\\d+)", "MINOR = (?P<minor>\\d+)", "PATCH = (?P<patch>\\d+)"]
+changelog = "CHANGELOG.md"
 
 [tool.setuptools.dynamic]
 version = {attr = "cloudnetpy.version.__version__"}
