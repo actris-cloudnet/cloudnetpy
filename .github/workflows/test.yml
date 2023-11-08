@@ -19,17 +19,15 @@ jobs:
           cache: "pip"
       - name: Install dependencies
         run: |
-          pip install .[test,extras]
-      - name: Lint with pylint
+          pip install .[dev,test,extras]
+      - name: Run pre-commit checks
+        if: startsWith(matrix.os, 'ubuntu-')
         run: |
-          pylint cloudnetpy tests
-      - name: Typecheck with mypy
-        run: |
-          mypy cloudnetpy tests
-      - name: Test with pytest-flakefinder
+          pre-commit run --all-files --show-diff-on-failure
+      - name: Run unit tests
         run: |
           pytest --flake-finder --flake-runs=2
-      - name: Run e2e-test
+      - name: Run E2E tests
         run: |
           python3 tests/e2e_test.py
           python3 cloudnetpy/model_evaluation/tests/e2e/process_cf/main.py
