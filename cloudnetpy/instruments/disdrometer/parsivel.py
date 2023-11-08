@@ -2,10 +2,11 @@ import csv
 import datetime
 import logging
 import re
+from collections import defaultdict
 from collections.abc import Callable, Iterator, Sequence
 from itertools import islice
-from pathlib import Path
-from typing import Any, Literal
+from os import PathLike
+from typing import Any, Iterable, Literal
 
 import numpy as np
 
@@ -19,7 +20,7 @@ from .common import ATTRIBUTES, Disdrometer
 
 
 def parsivel2nc(
-    disdrometer_file: Path | str | bytes,
+    disdrometer_file: str | PathLike | Iterable[str | PathLike],
     output_file: str,
     site_meta: dict,
     uuid: str | None = None,
@@ -31,7 +32,7 @@ def parsivel2nc(
     file.
 
     Args:
-        disdrometer_file: Filename of disdrometer .log file.
+        disdrometer_file: Filename of disdrometer file or list of filenames.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
             is `name`.
@@ -59,6 +60,8 @@ def parsivel2nc(
     """
     if isinstance(date, str):
         date = datetime.date.fromisoformat(date)
+    if isinstance(disdrometer_file, str | PathLike):
+        disdrometer_file = [disdrometer_file]
     disdrometer = Parsivel(disdrometer_file, site_meta, telegram, date, timestamps)
     disdrometer.sort_timestamps()
     disdrometer.remove_duplicate_timestamps()
@@ -73,7 +76,7 @@ def parsivel2nc(
 class Parsivel(CloudnetInstrument):
     def __init__(
         self,
-        filename: Path | str | bytes,
+        filenames: Iterable[str | PathLike],
         site_meta: dict,
         telegram: Sequence[int | None] | None = None,
         expected_date: datetime.date | None = None,
@@ -81,7 +84,7 @@ class Parsivel(CloudnetInstrument):
     ):
         super().__init__()
         self.site_meta = site_meta
-        self.raw_data = _read_parsivel(filename, telegram, timestamps)
+        self.raw_data = _read_parsivel(filenames, telegram, timestamps)
         self._screen_time(expected_date)
         self.n_velocity = 32
         self.n_diameter = 32
@@ -405,7 +408,7 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
     return result
 
 
-def _read_toa5(filename: Path | str | bytes) -> dict[str, list]:
+def _read_toa5(filename: str | PathLike) -> dict[str, list]:
     """
     Read ASCII data from Campbell Scientific datalogger such as CR1000.
 
@@ -470,33 +473,58 @@ def _read_toa5(filename: Path | str | bytes) -> dict[str, list]:
         return data
 
 
+def _read_typ_op4a(filename: str | PathLike) -> dict[str, list]:
+    """Read file starting with "TYP OP4A" that contains one measurement."""
+    data = {}
+    with open(filename, encoding="latin1", errors="ignore") as file:
+        for line in file:
+            if ":" not in line:
+                continue
+            key, value = line.strip().split(":", maxsplit=1)
+            # Skip datetime and 16-bit values.
+            if key in ("19", "30", "31", "32", "33"):
+                continue
+            varname = TELEGRAM.get(int(key))
+            if varname is None:
+                continue
+            parser = PARSERS.get(varname, next)
+            tokens = value.split(";")
+            data[varname] = [parser(iter(tokens))]
+    return data
+
+
 def _read_parsivel(
-    filename: Path | str | bytes,
+    filenames: Iterable[str | PathLike],
     telegram: Sequence[int | None] | None = None,
     timestamps: Sequence[datetime.datetime] | None = None,
 ) -> dict[str, np.ndarray]:
-    with open(filename, encoding="latin1", errors="ignore") as file:
-        lines = file.read().splitlines()
-    if not lines:
-        raise DisdrometerDataError("File is empty")
-    if "TOA5" in lines[0]:
-        data = _read_toa5(filename)
-    elif "Date" in lines[0]:
-        headers = _parse_headers(lines[0])
-        data = _read_rows(headers, lines[1:])
-    elif telegram is not None:
-        headers = _parse_telegram(telegram)
-        data = _read_rows(headers, lines)
-    else:
-        raise ValueError("telegram must be specified for files without header")
-    if "_datetime" not in data:
-        if timestamps:
-            data["_datetime"] = list(timestamps)
+    combined_data = defaultdict(list)
+    for filename in filenames:
+        with open(filename, encoding="latin1", errors="ignore") as file:
+            lines = file.read().splitlines()
+        if not lines:
+            raise DisdrometerDataError("File is empty")
+        if "TOA5" in lines[0]:
+            data = _read_toa5(filename)
+        elif "TYP OP4A" in lines[0]:
+            data = _read_typ_op4a(filename)
+        elif "Date" in lines[0]:
+            headers = _parse_headers(lines[0])
+            data = _read_rows(headers, lines[1:])
+        elif telegram is not None:
+            headers = _parse_telegram(telegram)
+            data = _read_rows(headers, lines)
         else:
+            raise ValueError("telegram must be specified for files without header")
+        if "_datetime" not in data and timestamps is None:
             data["_datetime"] = [
                 datetime.datetime.combine(date, time)
                 for date, time in zip(data["_date"], data["_time"])
             ]
-    result = {key: np.array(value) for key, value in data.items()}
+        for key, values in data.items():
+            combined_data[key].extend(values)
+    if timestamps is not None:
+        combined_data["_datetime"] = list(timestamps)
+    result = {key: np.array(value) for key, value in combined_data.items()}
     result["time"] = result["_datetime"].astype("datetime64[s]")
     return result

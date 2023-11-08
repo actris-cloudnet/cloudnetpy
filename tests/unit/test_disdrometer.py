@@ -1,6 +1,8 @@
 import os
+from datetime import timedelta
 from tempfile import TemporaryDirectory
 
+import numpy as np
 import pytest
 
 from cloudnetpy.exceptions import DisdrometerDataError
@@ -174,6 +176,23 @@ class TestParsivel6(Check):
 
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 3
+
+
+class TestParsivel7(Check):
+    date = "2023-10-25"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/parsivel/bucharest_0000000123_20231025221800.txt"
+    site_meta = SITE_META
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.serial_number == "413259"
+        assert np.allclose(
+            self.nc["time"][:],
+            [timedelta(hours=22, minutes=18, seconds=4) / timedelta(hours=1)],
+        )
+        assert np.allclose(self.nc["rainfall_rate"][:], [2.356 / (3600 * 1e3)])
 
 
 class TestThies(Check):
