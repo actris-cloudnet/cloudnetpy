@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.19 – 2023-11-08
+
+- Fix mwr-l1c processing without IR data
+
 ## 1.55.18 – 2023-10-23
 
 - Raise error if 'height' missing from model file
