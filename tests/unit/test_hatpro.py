@@ -1,4 +1,3 @@
-import sys
 from os import path
 from shutil import copytree
 from tempfile import TemporaryDirectory
@@ -93,12 +92,12 @@ class TestHatpro2nc(Check):
             assert "zenith_angle" in nc.variables
             assert "lwp" in nc.variables
             assert "kg m-2" in nc.variables["lwp"].units
-            assert nc.variables["lwp"][:].mask[0] == True
+            assert nc.variables["lwp"][:].mask[0] is True
             assert ma.count_masked(nc.variables["lwp"][:]) == 1
             assert "iwv" in nc.variables
             assert "kg m-2" in nc.variables["iwv"].units
-            assert nc.variables["iwv"][:].mask[1] == True
-            assert nc.variables["iwv"][:].mask[-2] == True
+            assert nc.variables["iwv"][:].mask[1] is True
+            assert nc.variables["iwv"][:].mask[-2] is True
             assert ma.count_masked(nc.variables["iwv"][:]) == 2
 
     def test_lwp_iwv_different_number_of_files(self, tmp_path):

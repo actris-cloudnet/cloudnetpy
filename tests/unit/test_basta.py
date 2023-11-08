@@ -1,4 +1,3 @@
-import sys
 from os import path
 from tempfile import TemporaryDirectory
 
@@ -65,7 +64,7 @@ class TestBASTA(Check):
 
     def test_global_attributes(self):
         assert self.nc.source == "BASTA"
-        assert self.nc.title == f"BASTA cloud radar from Palaiseau"
+        assert self.nc.title == "BASTA cloud radar from Palaiseau"
 
     def test_wrong_date_validation(self, tmp_path):
         with pytest.raises(ValidTimeStampError):

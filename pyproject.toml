@@ -29,9 +29,9 @@ dynamic = ["version"]
 [project.optional-dependencies]
 test = [
   "mypy",
-  "pylint",
   "pytest",
   "pytest-flakefinder",
+  "ruff",
   "types-requests",
 ]
 dev = ["pre-commit", "release-version"]
@@ -54,6 +54,12 @@ ignore_missing_imports = true
 filename = "cloudnetpy/version.py"
 pattern = ["MAJOR = (?P<major>\\d+)", "MINOR = (?P<minor>\\d+)", "PATCH = (?P<patch>\\d+)"]
 changelog = "CHANGELOG.md"
+
+[tool.ruff]
+extend-select = ["I"]
+
+[tool.ruff.lint.extend-per-file-ignores]
+"__init__.py" = ["F401"]
 
 [tool.setuptools.dynamic]
 version = {attr = "cloudnetpy.version.__version__"}

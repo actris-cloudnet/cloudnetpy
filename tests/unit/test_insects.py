@@ -36,7 +36,8 @@ def test_adjust_for_radar():
     prob_from_others = np.array([1.0, 1.0, 1.0, 1.0])
     obs = Obs()
     assert_array_equal(
-        insects._adjust_for_radar(obs, prob, prob_from_others), np.array([0.5, 0.5, 0.5, 0.5])  # type: ignore
+        insects._adjust_for_radar(obs, prob, prob_from_others),  # type: ignore
+        np.array([0.5, 0.5, 0.5, 0.5]),
     )
 
 

@@ -1,4 +1,3 @@
-import sys
 from os import path
 from tempfile import TemporaryDirectory
 

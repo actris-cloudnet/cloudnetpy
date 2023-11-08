@@ -1,6 +1,5 @@
 """ This module contains unit tests for ceilo-module. """
 import os
-import sys
 from tempfile import TemporaryDirectory
 
 import netCDF4

@@ -4,7 +4,6 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 import pytest
-from numpy.testing import assert_equal
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import ceilo2nc

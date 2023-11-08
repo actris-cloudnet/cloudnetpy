@@ -22,7 +22,7 @@ def parse_wanted_names(
     standard_n = [n for n in names if name in n and "adv" not in n]
     standard_n = sort_model2first_element(standard_n, model)
     advection_n = [n for n in names if name in n and "adv" in n]
-    model_names = [n for n in names if f"{model}_" in n and not f"_{model}_" in n]
+    model_names = [n for n in names if f"{model}_" in n and f"_{model}_" not in n]
     for i, model_n in enumerate(model_names):
         advection_n.insert(0 + i, model_n)
     if len(advection_n) < len(standard_n):

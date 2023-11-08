@@ -524,9 +524,7 @@ def cumsumr(array: np.ndarray, axis: int = 0) -> np.ndarray:
 
     """
     cums = array.cumsum(axis=axis)
-    return cums - np.maximum.accumulate(
-        cums * (array == 0), axis=axis
-    )  # pylint: disable=E1101
+    return cums - np.maximum.accumulate(cums * (array == 0), axis=axis)  # pylint: disable=E1101
 
 
 def ffill(array: np.ndarray, value: int = 0) -> np.ndarray:

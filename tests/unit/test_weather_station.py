@@ -27,7 +27,7 @@ class TestWeatherStation(Check):
 
     def test_global_attributes(self):
         assert self.nc.cloudnet_file_type == "weather-station"
-        assert self.nc.title == f"Weather station from Kumpula"
+        assert self.nc.title == "Weather station from Kumpula"
         assert self.nc.year == "2022"
         assert self.nc.month == "01"
         assert self.nc.day == "01"

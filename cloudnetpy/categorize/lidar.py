@@ -30,7 +30,7 @@ class Lidar(DataSource):
         beta = self.data["beta"][:]
         indices = []
         for ind, b in enumerate(beta):
-            if not ma.all(b) is ma.masked:
+            if ma.all(b) is not ma.masked:
                 indices.append(ind)
         assert self.height is not None
         beta_interpolated = interpolate_2d_nearest(
