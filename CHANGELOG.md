@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.20 – 2023-11-08
+
+- Add yet another Parsivel reader
+
 ## 1.55.19 – 2023-11-08
 
 - Fix mwr-l1c processing without IR data
