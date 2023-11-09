@@ -474,7 +474,12 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
 
 
 def _read_typ_op4a(filename: str | PathLike) -> dict[str, list]:
-    """Read file starting with "TYP OP4A" that contains one measurement."""
+    """
+    Read output of "CS/PA" command. The output starts with line "TYP OP4A"
+    followed by one line per measured variable in format: <number>:<value>.
+    Output ends with characters: <ETX><CR><LF><NUL>. Lines are separated by
+    <CR><LF>.
+    """
     data = {}
     with open(filename, encoding="latin1", errors="ignore") as file:
         for line in file:
