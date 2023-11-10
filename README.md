@@ -6,14 +6,15 @@
 [![DOI](https://zenodo.org/badge/233602651.svg)](https://zenodo.org/badge/latestdoi/233602651)
 [![status](https://joss.theoj.org/papers/959971f196f617dddc0e7d8333ff22b7/status.svg)](https://joss.theoj.org/papers/959971f196f617dddc0e7d8333ff22b7)
 
-CloudnetPy is a Python software for producing vertical profiles of cloud properties from ground-based
-remote sensing measurements. The Cloudnet processing combines cloud radar, optical lidar, microwave
-radiometer and model data. Measurements and model data are brought into common grid and
+CloudnetPy is Python software designed for producing vertical profiles of cloud properties from ground-based
+remote sensing measurements. The Cloudnet processing combines data from cloud radar, optical lidar,
+microwave radiometer, and numerical weather prediction models.
+Measurements and model data are brought into a common grid and
 classified as ice, liquid, aerosol, insects, and so on.
-Then, geophysical products such as ice water content can be
-retrieved in the further processing steps. See [Illingworth et al. (2007)](https://doi.org/10.1175/BAMS-88-6-883) for more details about the concept.
+Subsequently, geophysical products such as ice water content can be
+retrieved in further processing steps. See [Illingworth et al. (2007)](https://doi.org/10.1175/BAMS-88-6-883) for more details about the concept.
 
-CloudnetPy is a rewritten version of the original Cloudnet Matlab code. CloudnetPy features several revised methods, extensive documentation, and more.
+CloudnetPy is a rewritten version of the original Cloudnet Matlab code. It features several revised methods, extensive documentation, and more.
 
 - CloudnetPy documentation: https://cloudnetpy.readthedocs.io/en/latest/
 - Cloudnet data portal: https://cloudnet.fmi.fi
