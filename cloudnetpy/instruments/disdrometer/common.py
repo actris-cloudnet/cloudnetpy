@@ -136,7 +136,7 @@ class Disdrometer(CloudnetInstrument):
                     )
             self.serial_number = first_id
 
-    def _parse_useful_data(self, indices: list) -> list:
+    def _parse_useful_data(self, indices: tuple) -> list:
         data = []
         for row in self._file_data["scalars"]:
             useful_data = [row[ind] for ind in indices]
