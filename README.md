@@ -81,7 +81,7 @@ python3 tests/e2e_test.py
 for f in cloudnetpy/model_evaluation/tests/e2e/*/main.py; do $f; done
 ```
 
-Force `pre-commit` checks (`pylint`, `mypy`, etc.) for all files:
+Force `pre-commit` checks (`ruff`, `mypy`, etc.) for all files:
 
 ```sh
 pre-commit run --all
