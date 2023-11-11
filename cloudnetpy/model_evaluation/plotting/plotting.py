@@ -392,9 +392,8 @@ def get_statistic_plots(
                         model_data,
                         data,
                     )
-                    if "error" in stat:
-                        if np.all(day_stat.model_stat.mask is True):
-                            raise ValueError("No data to calculate relative error")
+                    if "error" in stat and np.all(day_stat.model_stat.mask is True):
+                        raise ValueError("No data to calculate relative error")
                     initialize_statistic_plots(
                         j,
                         len(names) - 1,
@@ -589,10 +588,7 @@ def plot_histogram(ax, day_stat: DayStatistics, variable_info):
 def plot_vertical_profile(ax, day_stat: DayStatistics, axes: tuple, variable_info):
     mrm = p_tools.rolling_mean(day_stat.model_stat)
     orm = p_tools.rolling_mean(day_stat.observation_stat)
-    if len(axes[-1].shape) > 1:
-        axes = axes[-1][0]
-    else:
-        axes = axes[-1]
+    axes = axes[-1][0] if len(axes[-1].shape) > 1 else axes[-1]
     ax.plot(day_stat.model_stat, axes, "o", markersize=5.5, color="k")
     ax.plot(day_stat.observation_stat, axes, "o", markersize=5.5, color="k")
     ax.plot(

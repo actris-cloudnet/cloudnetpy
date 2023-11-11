@@ -44,7 +44,7 @@ def test_generate_regrid_product(model_file, obs_file, product, variables):
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, product)
     ProductGrid(model, obs)
     for var in variables:
-        assert var in model.data.keys()
+        assert var in model.data
 
 
 @pytest.mark.parametrize("key, value", [("iwc", 3), ("lwc", 1), ("cf", 2)])
@@ -71,7 +71,7 @@ def test_cf_method_storage(name, model_file, obs_file):
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
     x, y = obj._cf_method_storage()
-    assert name in x.keys()
+    assert name in x
 
 
 @pytest.mark.parametrize("name", ["cf_V_adv", "cf_A_adv"])
@@ -80,7 +80,7 @@ def test_cf_method_storage_adv(name, model_file, obs_file):
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
     x, y = obj._cf_method_storage()
-    assert name in y.keys()
+    assert name in y
 
 
 @pytest.mark.parametrize("name", ["iwc", "iwc_att", "iwc_rain"])
@@ -89,7 +89,7 @@ def test_iwc_method_storage(name, model_file, obs_file):
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
     x, y = obj._iwc_method_storage()
-    assert name in x.keys()
+    assert name in x
 
 
 @pytest.mark.parametrize("name", ["iwc_adv", "iwc_att_adv", "iwc_rain_adv"])

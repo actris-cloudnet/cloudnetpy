@@ -73,9 +73,11 @@ class Cs135(Ceilometer):
 
     def _check_timestamp(self, timestamp: datetime):
         timestamp_components = str(timestamp.date()).split("-")
-        if self.expected_date is not None:
-            if timestamp_components != self.expected_date.split("-"):
-                raise ValidTimeStampError
+        if (
+            self.expected_date is not None
+            and timestamp_components != self.expected_date.split("-")
+        ):
+            raise ValidTimeStampError
         if not self.date:
             self.date = timestamp_components
         assert timestamp_components == self.date

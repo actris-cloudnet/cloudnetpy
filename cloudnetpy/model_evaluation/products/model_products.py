@@ -162,10 +162,7 @@ class ModelManager(DataSource):
         except KeyError:
             return data
 
-        if data.ndim > 1:
-            data = data[:, :level]
-        else:
-            data = data[:level]
+        data = data[:, :level] if data.ndim > 1 else data[:level]
         return data
 
     def _calculate_wind_speed(self) -> np.ndarray:

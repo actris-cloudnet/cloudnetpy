@@ -54,7 +54,7 @@ class ClassData:
         self.v = data["radar"].data["v"][:]
         self.v_sigma = data["radar"].data["v_sigma"][:]
         for key in ("width", "ldr", "sldr"):
-            if key in data["radar"].data.keys():
+            if key in data["radar"].data:
                 setattr(self, key, data["radar"].data[key][:])
         self.time = data["radar"].time
         self.height = data["radar"].height

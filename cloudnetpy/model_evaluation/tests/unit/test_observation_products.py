@@ -32,13 +32,13 @@ def test_get_date(obs_file):
 def test_generate_product(key, obs_file):
     obj = ObservationManager(key, str(obs_file))
     obj._generate_product()
-    assert key in obj.data.keys()
+    assert key in obj.data
 
 
 def test_add_height(obs_file):
     obj = ObservationManager(PRODUCT, str(obs_file))
     obj._generate_product()
-    assert "height" in obj.data.keys()
+    assert "height" in obj.data
 
 
 def test_generate_cf(obs_file):
@@ -133,7 +133,7 @@ def test_rain_index(obs_file):
 def test_generate_iwc_masks(key, obs_file):
     obj = ObservationManager(PRODUCT, str(obs_file))
     obj._generate_iwc_masks()
-    assert key in obj.data.keys()
+    assert key in obj.data
 
 
 def test_get_rain_iwc(obs_file):

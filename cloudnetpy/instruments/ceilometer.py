@@ -105,7 +105,7 @@ class Ceilometer:
             self.data[key][self.data[key] > 1] = ma.masked
 
     def screen_invalid_values(self):
-        for key in self.data.keys():
+        for key in self.data:
             try:
                 if self.data[key][:].ndim == 2:
                     self.data[key] = ma.masked_invalid(self.data[key])

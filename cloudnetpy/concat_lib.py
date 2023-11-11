@@ -13,7 +13,7 @@ def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int):
         netCDF4.Dataset(filename, "r") as nc,
         netCDF4.Dataset(output_file, "w", format=nc.data_model) as nc_new,
     ):
-        for dim in nc.dimensions.keys():
+        for dim in nc.dimensions:
             dim_len = None if dim == "time" else nc.dimensions[dim].size
             nc_new.createDimension(dim, dim_len)
         for attr in nc.ncattrs():
@@ -152,7 +152,7 @@ class _Concat:
                 self._append_data(filename, allow_vary)
 
     def _write_initial_data(self, variables: list | None, ignore: list | None) -> None:
-        for key in self.first_file.variables.keys():
+        for key in self.first_file.variables:
             if (
                 variables is not None
                 and key not in variables
@@ -185,7 +185,7 @@ class _Concat:
             file.set_auto_scale(False)
             ind0 = len(self.concatenated_file.variables[self.concat_dimension])
             ind1 = ind0 + len(file.variables[self.concat_dimension])
-            for key in self.concatenated_file.variables.keys():
+            for key in self.concatenated_file.variables:
                 array = file[key][:]
                 if key in self.common_variables:
                     if allow_vary is not None and key in allow_vary:
@@ -208,7 +208,7 @@ class _Concat:
             "NETCDF4" if self.first_file.data_model == "NETCDF4" else "NETCDF4_CLASSIC"
         )
         nc = netCDF4.Dataset(output_file, "w", format=data_model)
-        for dim in self.first_file.dimensions.keys():
+        for dim in self.first_file.dimensions:
             dim_len = (
                 None
                 if dim == self.concat_dimension

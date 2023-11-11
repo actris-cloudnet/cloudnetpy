@@ -199,10 +199,7 @@ class VaisalaCeilo(Ceilometer):
             "message_number",
             "message_subclass",
         )
-        if self._is_ct25k():
-            indices = [1, 3, 4, 6, 7, 8]
-        else:
-            indices = [1, 3, 4, 7, 8, 9]
+        indices = [1, 3, 4, 6, 7, 8] if self._is_ct25k() else [1, 3, 4, 7, 8, 9]
         values = [split_string(line, indices) for line in lines]
         return values_to_dict(fields, values)
 

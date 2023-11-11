@@ -401,7 +401,7 @@ def _get_dimensions(nc: netCDF4.Dataset, data: np.ndarray) -> tuple:
     file_dims = nc.dimensions
     array_dims = data.shape
     for length in array_dims:
-        dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
+        dim = [key for key in file_dims if file_dims[key].size == length][0]
         variable_size = variable_size + [dim]
     return tuple(variable_size)
 

@@ -94,10 +94,7 @@ class NcRadar(DataSource, CloudnetInstrument):
         """
         if "azimuth_velocity" in self.data:
             azimuth = self.data["azimuth_velocity"].data
-            if np.all(azimuth == azimuth[0]):
-                azimuth_reference = azimuth[0]
-            else:
-                azimuth_reference = 0
+            azimuth_reference = azimuth[0] if np.all(azimuth == azimuth[0]) else 0
             azimuth_tolerance = 1e-6
         else:
             azimuth = self.data["azimuth_angle"].data

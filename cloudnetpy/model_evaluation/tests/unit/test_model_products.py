@@ -23,19 +23,19 @@ def test_read_cycle_name(cycle, model, answer, model_file):
 def test_get_cf(model_file):
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj._get_cf()
-    assert f"{MODEL}_cf" in obj.data.keys()
+    assert f"{MODEL}_cf" in obj.data
 
 
 def test_get_iwc(model_file):
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj._get_iwc()
-    assert f"{MODEL}_iwc" in obj.data.keys()
+    assert f"{MODEL}_iwc" in obj.data
 
 
 def test_get_lwc(model_file):
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     obj._get_lwc()
-    assert f"{MODEL}_lwc" in obj.data.keys()
+    assert f"{MODEL}_lwc" in obj.data
 
 
 def test_read_config(model_file):
@@ -69,7 +69,7 @@ def test_add_common_variables_false(key, model_file):
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj._is_file = False
     obj._add_variables()
-    assert key in obj.data.keys()
+    assert key in obj.data
 
 
 @pytest.mark.parametrize(
@@ -80,7 +80,7 @@ def test_add_common_variables_true(key, model_file, regrid_file):
     obj = ModelManager(str(model_file), MODEL, regrid_file, PRODUCT)
     obj._is_file = True
     obj._add_variables()
-    assert key not in obj.data.keys()
+    assert key not in obj.data
 
 
 @pytest.mark.parametrize("key", ["height", "forecast_time"])
@@ -88,7 +88,7 @@ def test_add_cycle_variables_no_products(key, model_file):
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj._is_file = False
     obj._add_variables()
-    assert f"{MODEL}_{key}" in obj.data.keys()
+    assert f"{MODEL}_{key}" in obj.data
 
 
 def test_cut_off_extra_levels(model_file):

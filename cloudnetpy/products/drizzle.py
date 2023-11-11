@@ -188,7 +188,7 @@ class RetrievalStatus:
 
 def _screen_rain(results: dict, classification: DrizzleClassification):
     """Removes rainy profiles from drizzle variables.."""
-    for key in results.keys():
+    for key in results:
         if not utils.isscalar(results[key]):
             results[key][classification.is_rain, :] = 0
     return results

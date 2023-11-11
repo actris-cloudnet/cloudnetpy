@@ -383,10 +383,7 @@ def _read_ax_values(full_path: str) -> tuple[ndarray, ndarray]:
     file_type = utils.get_file_type(full_path)
     with netCDF4.Dataset(full_path) as nc:
         is_height = "height" in nc.variables
-    if is_height is not True:
-        fields = ["time", "range"]
-    else:
-        fields = ["time", "height"]
+    fields = ["time", "range"] if is_height is not True else ["time", "height"]
     time, height = ptools.read_nc_fields(full_path, fields)
     if file_type == "model":
         height = ma.mean(height, axis=0)
@@ -468,11 +465,7 @@ def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
     """
     data = _convert_to_kg(data, unit)
     ax.plot(time, data, color="navy", zorder=_ZORDER)
-
-    if isinstance(data, ma.MaskedArray):
-        data_filled = data.filled(0)
-    else:
-        data_filled = data
+    data_filled = data.filled(0) if isinstance(data, ma.MaskedArray) else data
 
     ax.bar(
         time,
@@ -823,7 +816,7 @@ def read_date(nc_file: str) -> date:
 def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
     """Returns source attr of field name or global one and maybe serial number ."""
     with netCDF4.Dataset(nc_file) as nc:
-        if name in nc.variables.keys() and "source" in nc.variables[name].ncattrs():
+        if name in nc.variables and "source" in nc.variables[name].ncattrs():
             # single device has available src attr and maybe SN
             source = nc.variables[name].source
             # even if the attr is source_serial_number, it is possible that
@@ -842,16 +835,13 @@ def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
                 source = "\n".join(source)
         else:
             # global src, a \n sep string-list
-            if "source" in nc.ncattrs():
-                source = nc.source
-            else:
-                # empty list means that the zip below runs for 0 times as
-                # the assumption is if we do not have any sources we can't
-                # have any serial numbers, i.e. no instrument type means
-                # to instrument serial number. If this would be the case
-                # something somewhere else is wrong and should not be
-                # fixed here.
-                source = []
+            source = nc.source if "source" in nc.ncattrs() else []
+            # empty list means that the zip below runs for 0 times as
+            # the assumption is if we do not have any sources we can't
+            # have any serial numbers, i.e. no instrument type means
+            # to instrument serial number. If this is the case
+            # something somewhere else is wrong and should not be
+            # fixed here.
             # who knows whether the cloudnet nc file actually has the SNs
             # so better check beforehand
             if add_serial_number and "source_serial_numbers" in nc.ncattrs():

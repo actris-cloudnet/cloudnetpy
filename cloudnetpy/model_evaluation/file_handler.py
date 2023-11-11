@@ -120,7 +120,7 @@ def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
         file_dims = rootgrp.dimensions
         array_dims = array.shape
         for length in array_dims:
-            dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
+            dim = [key for key in file_dims if file_dims[key].size == length][0]
             variable_size = variable_size + (dim,)
         return variable_size
 

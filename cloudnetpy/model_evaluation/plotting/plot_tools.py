@@ -36,18 +36,14 @@ def parse_dataset_keys(
     nc_file: str,
     product: str,
     advance: bool,
-    model: str = "",
+    model: str,
 ) -> list:
     names = list(netCDF4.Dataset(nc_file).variables.keys())
     a_names = ["cirrus", "snow"]
     model_vars = []
     for n in names:
-        if model not in n:
+        if model not in n or (model in n and product not in n):
             model_vars.append(n)
-        elif model in n and product not in n:
-            model_vars.append(n)
-        else:
-            continue
     if not advance:
         for a in a_names:
             for n in names:

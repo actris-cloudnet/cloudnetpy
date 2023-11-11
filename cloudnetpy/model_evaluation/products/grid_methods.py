@@ -159,11 +159,11 @@ class ProductGrid:
                     downsample[i, j] = np.nanmean(data)
                 else:
                     downsample[i, j] = np.nan
-                if "_A" in key:
-                    if not np.isnan(data).all() and not (
-                        isinstance(data, ma.MaskedArray) and data.mask.all()
-                    ):
-                        downsample[i, j] = tl.average_column_sum(data)
+                if "_A" in key and (
+                    not np.isnan(data).all()
+                    and not (isinstance(data, ma.MaskedArray) and data.mask.all())
+                ):
+                    downsample[i, j] = tl.average_column_sum(data)
             else:
                 downsample[i, j] = np.nan
             storage[key] = downsample
@@ -228,7 +228,7 @@ class ProductGrid:
 
     def _append_data2object(self, data_storage: list):
         for storage in data_storage:
-            for key in storage.keys():
+            for key in storage:
                 down_sample = storage[key]
                 self.model_obj.append_data(
                     down_sample,
