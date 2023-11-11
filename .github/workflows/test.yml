@@ -19,6 +19,7 @@ jobs:
           cache: "pip"
       - name: Install dependencies
         run: |
+          pip install --upgrade pip
           pip install .[dev,test,extras]
       - name: Run pre-commit checks
         if: startsWith(matrix.os, 'ubuntu-')
