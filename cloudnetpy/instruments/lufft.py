@@ -39,7 +39,7 @@ class LufftCeilo(NcLidar):
         old_version = self._get_old_software_version()
         if old_version is not None:
             logging.warning(
-                f"Software version {old_version}. Assuming data not range corrected."
+                "Software version %s. Assuming data not range corrected.", old_version
             )
             data_std = self._getvar("stddev")
             normalised_apd = self._get_nn()

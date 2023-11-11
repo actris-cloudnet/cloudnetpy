@@ -47,12 +47,12 @@ class Lidar(DataSource):
         bad_height_indices = _get_bad_indices(self.height, height_new, max_height)
         if bad_time_indices:
             logging.warning(
-                f"Unable to interpolate lidar for {len(bad_time_indices)} time steps"
+                "Unable to interpolate lidar for %s time steps", len(bad_time_indices)
             )
         beta_interpolated[bad_time_indices, :] = ma.masked
         if bad_height_indices:
             logging.warning(
-                f"Unable to interpolate lidar for {len(bad_height_indices)} altitudes"
+                "Unable to interpolate lidar for %s altitudes", len(bad_height_indices)
             )
         beta_interpolated[:, bad_height_indices] = ma.masked
         self.data["beta"].data = beta_interpolated

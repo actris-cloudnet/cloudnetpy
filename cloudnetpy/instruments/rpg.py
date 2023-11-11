@@ -89,7 +89,7 @@ def print_info(data: dict) -> None:
         mode = "LDR"
     else:
         mode = "STSR"
-    logging.info(f"RPG cloud radar in {mode} mode")
+    logging.info("RPG cloud radar in %s mode", mode)
 
 
 RpgObjects = Sequence[Fmcw94Bin] | Sequence[HatproBinCombined]
@@ -195,7 +195,7 @@ def _remove_files_with_bad_height(objects: list, files: list) -> tuple[list, lis
     n_removed = len(lengths) - len(files)
     if n_removed > 0:
         logging.warning(
-            f"Removed {n_removed} RPG-FMCW-94 files due to inconsistent height vector"
+            "Removed %s RPG-FMCW-94 files due to inconsistent height vector", n_removed
         )
     return objects, files
 
@@ -279,7 +279,7 @@ class Fmcw(Rpg):
             raise ValidTimeStampError("No profiles with valid zenith angle")
         if n_removed > 0:
             logging.warning(
-                f"Filtering {n_removed} profiles due to invalid zenith angle"
+                "Filtering %s profiles due to invalid zenith angle", n_removed
             )
         self.data["zenith_angle"] = CloudnetArray(zenith, "zenith_angle")
         del self.data["elevation"]

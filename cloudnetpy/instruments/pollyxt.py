@@ -122,7 +122,7 @@ class PollyXt(Ceilometer):
                     )
                 except AssertionError as err:
                     logging.warning(
-                        f"Ignoring files '{nc_bsc}' and '{nc_depol}': {err}"
+                        "Ignoring files '%s' and '%s': %s", nc_bsc, nc_depol, err
                     )
                     continue
                 beta_raw = nc_bsc.variables[bsc_key][:]
@@ -152,7 +152,7 @@ class PollyXt(Ceilometer):
                     if not _only_zeros_or_masked(beta):
                         if channel != polly_channels[0]:
                             logging.warning(
-                                f"Using {channel}nm pollyXT channel for backscatter"
+                                "Using %s nm pollyXT channel for backscatter", channel
                             )
                             self.instrument.wavelength = float(channel)  # type: ignore
                         return channel

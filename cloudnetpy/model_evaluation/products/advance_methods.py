@@ -44,7 +44,7 @@ class AdvanceProductMethods(DataSource):
             name = f"get_advance_{self.product}"
             getattr(cls, name)(self)
         except AttributeError as error:
-            logging.warning(f"No advance method for {self.product}: {error}")
+            logging.warning("No advance method for %s: %s", self.product, error)
 
     def get_advance_cf(self):
         self.cf_cirrus_filter()

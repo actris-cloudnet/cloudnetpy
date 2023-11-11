@@ -162,7 +162,9 @@ class NoisyData:
             else self.noise_param.noise_min
         )
         noise_below_threshold = noise < noise_min
-        logging.debug(f"Adjusted noise of {sum(noise_below_threshold)} profiles")
+        logging.debug(
+            "Adjusted noise of %s profiles", sum(np.array(noise_below_threshold))
+        )
         noise[noise_below_threshold] = noise_min
         return noise
 
@@ -183,7 +185,7 @@ class NoisyData:
             profile[profile < threshold] = ma.masked
         cleaned_time_indices = np.unique(time_indices)
         logging.debug(
-            f"Cleaned {len(cleaned_time_indices)} profiles with negative filter"
+            "Cleaned %s profiles with negative filter", len(cleaned_time_indices)
         )
         return cleaned_time_indices
 
@@ -199,7 +201,7 @@ class NoisyData:
         )
         variance = _calc_var_from_top_gates(self.data["beta_raw"])
         is_fog = (signal_sum > signal_sum_threshold) | (variance < variance_threshold)
-        logging.debug(f"Cleaned {sum(is_fog)} profiles with fog filter")
+        logging.debug("Cleaned %s profiles with fog filter", sum(is_fog))
         return is_fog
 
     def _remove_noise(
@@ -234,7 +236,7 @@ class NoisyData:
         if self.range_corrected is False:
             alt_limit = 2400.0
             logging.warning(
-                f"Raw data not range-corrected, correcting below {alt_limit} m"
+                "Raw data not range-corrected, correcting below %s m", alt_limit
             )
         else:
             alt_limit = 1e12

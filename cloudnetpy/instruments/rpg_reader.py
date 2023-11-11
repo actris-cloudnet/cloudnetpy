@@ -196,8 +196,10 @@ class HatproBin:
         if n_bad:
             percentage = round(100 * n_bad / len(is_bad))
             logging.info(
-                f"Screening {percentage}% ({n_bad}/{len(is_bad)})"
-                " data points with low quality"
+                "Screening %s % (%s/%s)" " data points with low quality",
+                percentage,
+                n_bad,
+                len(is_bad),
             )
         self.data[self.variable][is_bad] = ma.masked
 

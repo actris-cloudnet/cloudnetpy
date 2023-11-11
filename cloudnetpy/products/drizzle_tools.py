@@ -165,7 +165,7 @@ class SpectralWidth:
             width = product_tools.read_nc_fields(self.cat_file, "width")
         except KeyError:
             width = [0]
-            logging.warning(f"No spectral width, assuming width = {width[0]}")
+            logging.warning("No spectral width, assuming width = %s", width[0])
         sigma_factor = self._calc_v_sigma_factor()
         return width - sigma_factor * v_sigma
 

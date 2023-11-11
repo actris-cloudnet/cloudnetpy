@@ -403,7 +403,7 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
     if invalid_rows == len(rows):
         raise DisdrometerDataError("No valid data in file")
     if invalid_rows > 0:
-        logging.info(f"Skipped {invalid_rows} invalid rows")
+        logging.info("Skipped %s invalid rows", invalid_rows)
     return result
 
 
@@ -468,7 +468,7 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
         if n_invalid_rows == n_rows:
             raise DisdrometerDataError("No valid data in file")
         if n_invalid_rows > 0:
-            logging.info(f"Skipped {n_invalid_rows} invalid rows")
+            logging.info("Skipped %s invalid rows", n_invalid_rows)
         return data
 
 

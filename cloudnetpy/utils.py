@@ -179,7 +179,7 @@ def rebin_2d(
             masked_result[ind, :] = ma.masked
             empty_indices.append(ind)
     if len(empty_indices) > 0:
-        logging.debug(f"No radar data in {len(empty_indices)} bins")
+        logging.debug("No radar data in %s bins", len(empty_indices))
 
     return masked_result, empty_indices
 
@@ -939,7 +939,9 @@ def get_files_with_common_range(files: list) -> list:
     most_common = np.bincount(n_range).argmax()
     n_removed = len([n for n in n_range if n != most_common])
     if n_removed > 0:
-        logging.warning(f"Removing {n_removed} files due to inconsistent height vector")
+        logging.warning(
+            "Removing %s files due to inconsistent height vector", n_removed
+        )
     ind = np.where(n_range == most_common)[0]
     return [file for i, file in enumerate(files) if i in ind]
 

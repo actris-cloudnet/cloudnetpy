@@ -128,8 +128,11 @@ class Radar(DataSource):
         )
         if n_vertical > 0 or n_horizontal > 0:
             logging.debug(
-                f"Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes "
-                f"from radar data using {variable}"
+                "Filtered %s vertical and %s horizontal stripes "
+                "from radar data using %s",
+                n_vertical,
+                n_horizontal,
+                variable,
             )
 
     def _filter(

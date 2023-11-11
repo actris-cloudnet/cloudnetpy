@@ -81,7 +81,7 @@ class DayStatistics:
             )
             self.title = getattr(cls, "day_stat_title")(self.method, self.product)
         except RuntimeError as error:
-            logging.error(f"Method {full_name} not found or missing: {error}")
+            logging.error("Method %s not found or missing: %s", full_name, error)
 
 
 def relative_error(

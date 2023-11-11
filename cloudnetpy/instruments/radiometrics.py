@@ -108,7 +108,7 @@ class Radiometrics:
                     column_names = record_columns.get(block_type)
                     if column_names is None:
                         if record_type not in unknown_record_types:
-                            logging.info(f"Skipping unknown record type {record_type}")
+                            logging.info("Skipping unknown record type %d", record_type)
                             unknown_record_types.add(record_type)
                         continue
                     record = Record(

@@ -67,7 +67,7 @@ class ObservationManager(DataSource):
                     self._generate_iwc_masks()
             self.append_data(self.getvar("height"), "height")
         except (KeyError, RuntimeError) as e:
-            logging.error(f"Invalid product name: {e}")
+            logging.error("Invalid product name: %s", e)
             raise
 
     def _generate_cf(self) -> np.ndarray:

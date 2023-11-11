@@ -183,7 +183,7 @@ def _get_hatpro_objects(
                 obj = _validate_date(obj, expected_date)
             objects[filename.stem].append(obj)
         except (TypeError, ValueError, ValidTimeStampError) as err:
-            logging.warning(f"Ignoring file '{filename}': {err}")
+            logging.warning("Ignoring file '%s': %s", filename, err)
             continue
 
     valid_files: list[str] = []
@@ -194,7 +194,7 @@ def _get_hatpro_objects(
             valid_files.extend(str(obj.filename) for obj in objs)
         except (TypeError, ValueError) as err:
             files = "'" + "', '".join(str(obj.filename) for obj in objs) + "'"
-            logging.warning(f"Ignoring files {files}: {err}")
+            logging.warning("Ignoring files %s: %s", files, err)
             continue
 
     return combined_objs, valid_files

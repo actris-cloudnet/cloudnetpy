@@ -37,7 +37,7 @@ class NcRadar(DataSource, CloudnetInstrument):
             try:
                 array = self.getvar(key)
             except RuntimeError:
-                logging.warning(f"Can not find variable {key} from the input file")
+                logging.warning("Can not find variable %s from the input file", key)
                 continue
             array = np.array(array) if utils.isscalar(array) else array
             array[~np.isfinite(array)] = ma.masked
@@ -117,7 +117,7 @@ class NcRadar(DataSource, CloudnetInstrument):
             )
         if n_removed > 0:
             logging.warning(
-                f"Filtering {n_removed} profiles due to varying zenith / azimuth angle"
+                "Filtering profiles due to varying zenith / azimuth angle", n_removed
             )
         self.append_data(zenith, "zenith_angle")
         for key in ("elevation", "azimuth_velocity"):

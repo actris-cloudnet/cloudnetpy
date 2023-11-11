@@ -70,7 +70,7 @@ def mrr2nc(
                 with netCDF4.Dataset(file):
                     yield file
             except OSError:
-                logging.warning(f"Skipping invalid file: {file}")
+                logging.warning("Skipping invalid file: %s", file)
 
     def concat_files(temp_dir: str, files: Iterable[PathLike | str]) -> str:
         tmp_filename = f"{temp_dir}/tmp.nc"

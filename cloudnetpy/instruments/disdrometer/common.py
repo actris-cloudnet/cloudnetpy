@@ -108,7 +108,7 @@ class Disdrometer(CloudnetInstrument):
                     float_array = ma.append(float_array, float(value_str))
                 except ValueError:
                     logging.warning(
-                        f"Invalid character: {value_str}, masking a data point"
+                        "Invalid character: %s, masking a data point", value_str
                     )
                     float_array = ma.append(float_array, invalid_value)
             float_array[float_array == invalid_value] = ma.masked
