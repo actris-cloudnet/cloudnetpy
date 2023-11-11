@@ -119,7 +119,7 @@ class NcRadar(DataSource, CloudnetInstrument):
             )
         if n_removed > 0:
             logging.warning(
-                "Filtering profiles due to varying zenith / azimuth angle",
+                "Filtering %s profiles due to varying zenith / azimuth angle",
                 n_removed,
             )
         self.append_data(zenith, "zenith_angle")
