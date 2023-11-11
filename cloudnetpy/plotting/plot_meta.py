@@ -1,6 +1,7 @@
 """Metadata for plotting module."""
+from collections.abc import Sequence
 from enum import Enum
-from typing import NamedTuple, Sequence
+from typing import NamedTuple
 
 
 class Scale(Enum):
@@ -778,25 +779,39 @@ ATTRIBUTES = {
         source="disdrometer",  # Also in weather-station and rain-radar
     ),
     "n_particles": PlotMeta(
-        name="Number of particles", plot_type="bar", source="disdrometer"
+        name="Number of particles",
+        plot_type="bar",
+        source="disdrometer",
     ),
     "air_temperature": PlotMeta(
-        name="Air temperature", plot_type="bar", source="weather-station"
+        name="Air temperature",
+        plot_type="bar",
+        source="weather-station",
     ),
     "wind_speed": PlotMeta(
-        name="Wind speed", plot_type="bar", source="weather-station"
+        name="Wind speed",
+        plot_type="bar",
+        source="weather-station",
     ),
     "wind_direction": PlotMeta(
-        name="Wind direction", plot_type="bar", source="weather-station"
+        name="Wind direction",
+        plot_type="bar",
+        source="weather-station",
     ),
     "relative_humidity": PlotMeta(
-        name="Relative humidity", plot_type="bar", source="weather-station"
+        name="Relative humidity",
+        plot_type="bar",
+        source="weather-station",
     ),
     "air_pressure": PlotMeta(
-        name="Air pressure", plot_type="bar", source="weather-station"
+        name="Air pressure",
+        plot_type="bar",
+        source="weather-station",
     ),
     "rainfall_amount": PlotMeta(
-        name="Rainfall amount", plot_type="bar", source="weather-station"
+        name="Rainfall amount",
+        plot_type="bar",
+        source="weather-station",
     ),
     "target_classification": PlotMeta(
         name="Target classification",
@@ -871,7 +886,10 @@ ATTRIBUTES = {
         plot_type="bit",
     ),
     "cold": PlotMeta(
-        name="Cold bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"
+        name="Cold bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
     ),
     "melting": PlotMeta(
         name="Melting bit",
@@ -892,10 +910,16 @@ ATTRIBUTES = {
         plot_type="bit",
     ),
     "radar": PlotMeta(
-        name="Radar bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"
+        name="Radar bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
     ),
     "lidar": PlotMeta(
-        name="Lidar bit", cbar=_CBAR["bit"], plot_range=(0, 1), plot_type="bit"
+        name="Lidar bit",
+        cbar=_CBAR["bit"],
+        plot_range=(0, 1),
+        plot_type="bit",
     ),
     "clutter": PlotMeta(
         name="Clutter bit",

@@ -18,9 +18,11 @@ class CategorizeBits:
     """Class holding information about category and quality bits.
 
     Args:
+    ----
         categorize_file (str): Categorize file name.
 
     Attributes:
+    ----------
         category_bits (dict): Dictionary containing boolean fields for `droplet`,
             `falling`, `cold`, `melting`, `aerosol`, `insect`.
 
@@ -68,9 +70,11 @@ class ProductClassification(CategorizeBits):
     of various Cloudnet products. Child of CategorizeBits class.
 
     Args:
+    ----
         categorize_file (str): Categorize file name.
 
     Attributes:
+    ----------
         is_rain (ndarray): 1D array denoting rainy profiles.
 
     """
@@ -146,7 +150,8 @@ class IceSource(DataSource):
         self.coefficients = self._get_coefficients()
 
     def append_main_variable_including_rain(
-        self, ice_classification: IceClassification
+        self,
+        ice_classification: IceClassification,
     ) -> None:
         """Adds the main variable (including ice above rain)."""
         data_including_rain = self._convert_z()
@@ -176,7 +181,8 @@ class IceSource(DataSource):
     def _get_coefficients(self) -> IceCoefficients:
         """Returns coefficients for ice effective radius retrieval.
 
-        References:
+        References
+        ----------
             Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
         """
         if self.product == "ier":
@@ -231,10 +237,12 @@ def read_nc_fields(nc_file: str, names: str | list) -> ma.MaskedArray | list:
     """Reads selected variables from a netCDF file.
 
     Args:
+    ----
         nc_file: netCDF file name.
         names: Variables to be read, e.g. 'temperature' or ['ldr', 'lwp'].
 
     Returns:
+    -------
         ndarray/list: Array in case of one variable passed as a string.
         List of arrays otherwise.
 
@@ -249,11 +257,13 @@ def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]
     """Interpolates 2D model field into dense Cloudnet grid.
 
     Args:
+    ----
         cat_file: Categorize file name.
         names: Model variable to be interpolated, e.g. 'temperature' or ['temperature',
             'pressure'].
 
     Returns:
+    -------
         dict: Interpolated variables.
 
     """

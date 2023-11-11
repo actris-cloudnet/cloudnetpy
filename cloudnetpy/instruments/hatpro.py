@@ -34,6 +34,7 @@ def hatpro2l1c(
     """Converts RPG HATPRO microwave radiometer data into Cloudnet Level 1c netCDF file.
 
     Args:
+    ----
         mwr_dir: Folder containing one day of HATPRO files.
         output_file: Output file name.
         site_meta: Dictionary containing information about the site and instrument
@@ -41,9 +42,9 @@ def hatpro2l1c(
         date: Expected date in the input files.
 
     Returns:
+    -------
         UUID of the generated file.
     """
-
     coeff_files = site_meta.get("coefficientFiles", None)
 
     hatpro_raw = mwrpy.lev1_to_nc(
@@ -115,6 +116,7 @@ def hatpro2nc(
     concatenates the data and writes it into netCDF file.
 
     Args:
+    ----
         path_to_files: Folder containing one day of RPG HATPRO files.
         output_file: Output file name.
         site_meta: Dictionary containing information about the site with keys:
@@ -131,15 +133,18 @@ def hatpro2nc(
             only files that match the date will be used.
 
     Returns:
+    -------
         2-element tuple containing
 
         - UUID of the generated file.
         - Files used in the processing.
 
     Raises:
+    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import hatpro2nc
         >>> site_meta = {'name': 'Hyytiala', 'altitude': 174}
         >>> hatpro2nc('/path/to/files/', 'hatpro.nc', site_meta)
@@ -165,7 +170,8 @@ def hatpro2nc(
 
 
 def _get_hatpro_objects(
-    directory: Path, expected_date: str | None
+    directory: Path,
+    expected_date: str | None,
 ) -> tuple[list[HatproBinCombined], list[str]]:
     objects = defaultdict(list)
     for filename in directory.iterdir():
@@ -215,7 +221,8 @@ def _validate_date(obj: HatproBin, expected_date: str):
 
 
 def _add_missing_variables(
-    hatpro_objects: list[HatproBinCombined], keys: tuple
+    hatpro_objects: list[HatproBinCombined],
+    keys: tuple,
 ) -> list[HatproBinCombined]:
     for obj in hatpro_objects:
         for key in keys:

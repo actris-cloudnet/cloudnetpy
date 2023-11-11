@@ -24,10 +24,12 @@ class ClassData:
     """Container for observations that are used in the classification.
 
     Args:
+    ----
         data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model`
             and :class:`Mwr` instances.
 
     Attributes:
+    ----------
         z (ndarray): 2D radar echo.
         ldr (ndarray): 2D linear depolarization ratio.
         v (ndarray): 2D radar velocity.
@@ -70,7 +72,9 @@ class ClassData:
 
 
 def _find_rain_from_radar_echo(
-    z: np.ndarray, time: np.ndarray, time_buffer: int = 5
+    z: np.ndarray,
+    time: np.ndarray,
+    time_buffer: int = 5,
 ) -> np.ndarray:
     """Find profiles affected by rain.
 
@@ -80,17 +84,21 @@ def _find_rain_from_radar_echo(
     detections as raining.
 
     Args:
+    ----
         z: Radar echo.
         time: Time vector.
         time_buffer: Time in minutes.
 
     Returns:
+    -------
         1D Boolean array denoting profiles with rain.
 
     """
     is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(False)
     is_rain = skimage.morphology.remove_small_objects(
-        is_rain, 2, connectivity=1
+        is_rain,
+        2,
+        connectivity=1,
     )  # Filter hot pixels
     n_profiles = len(time)
     n_steps = utils.n_elements(time, time_buffer, "time")
@@ -122,12 +130,14 @@ def _find_clutter(
     """Estimates clutter from doppler velocity.
 
     Args:
+    ----
         n_gates: Number of range gates from the ground where clutter is expected
             to be found. Default is 10.
         v_lim: Velocity threshold. Smaller values are classified as clutter.
             Default is 0.05 (m/s).
 
     Returns:
+    -------
         2-D boolean array denoting pixels contaminated by clutter.
 
     """

@@ -108,7 +108,8 @@ class Disdrometer(CloudnetInstrument):
                     float_array = ma.append(float_array, float(value_str))
                 except ValueError:
                     logging.warning(
-                        "Invalid character: %s, masking a data point", value_str
+                        "Invalid character: %s, masking a data point",
+                        value_str,
                     )
                     float_array = ma.append(float_array, invalid_value)
             float_array[float_array == invalid_value] = ma.masked
@@ -132,7 +133,7 @@ class Disdrometer(CloudnetInstrument):
             for sensor_id in data_dict["_serial_number"]:
                 if sensor_id != first_id:
                     raise DisdrometerDataError(
-                        "Multiple serial numbers are not supported"
+                        "Multiple serial numbers are not supported",
                     )
             self.serial_number = first_id
 
@@ -164,12 +165,13 @@ class Disdrometer(CloudnetInstrument):
 
     def _append_spectra(self):
         array = ma.masked_all(
-            (len(self._file_data["scalars"]), self.n_diameter, self.n_velocity)
+            (len(self._file_data["scalars"]), self.n_diameter, self.n_velocity),
         )
         for time_ind, row in enumerate(self._file_data["spectra"]):
             values = _parse_int(row)
             array[time_ind, :, :] = np.reshape(
-                values, (self.n_diameter, self.n_velocity)
+                values,
+                (self.n_diameter, self.n_velocity),
             )
         self.data["data_raw"] = CloudnetArray(
             array,
@@ -180,7 +182,12 @@ class Disdrometer(CloudnetInstrument):
 
     @classmethod
     def store_vectors(
-        cls, data, n_values: list, spreads: list, name: str, start: float = 0.0
+        cls,
+        data,
+        n_values: list,
+        spreads: list,
+        name: str,
+        start: float = 0.0,
     ):
         mid, bounds, spread = cls._create_vectors(n_values, spreads, start)
         data[name] = CloudnetArray(mid, name, dimensions=(name,))
@@ -191,7 +198,9 @@ class Disdrometer(CloudnetInstrument):
 
     @staticmethod
     def _create_vectors(
-        n_values: list[int], spreads: list[float], start: float
+        n_values: list[int],
+        spreads: list[float],
+        start: float,
     ) -> tuple:
         mid_value: np.ndarray = np.array([])
         lower_limit: np.ndarray = np.array([])
@@ -262,7 +271,9 @@ ATTRIBUTES = {
         units="m s-1",
     ),
     "rainfall_rate": MetaData(
-        long_name="Rainfall rate", units="m s-1", standard_name="rainfall_rate"
+        long_name="Rainfall rate",
+        units="m s-1",
+        standard_name="rainfall_rate",
     ),
     "rainfall_rate_1min_solid": MetaData(
         long_name="Solid precipitation rate",
@@ -288,7 +299,8 @@ ATTRIBUTES = {
     "interval": MetaData(long_name="Length of measurement interval", units="s"),
     "sig_laser": MetaData(long_name="Signal amplitude of the laser strip", units="1"),
     "n_particles": MetaData(
-        long_name="Number of particles in time interval", units="1"
+        long_name="Number of particles in time interval",
+        units="1",
     ),
     "T_sensor": MetaData(
         long_name="Temperature in the sensor housing",
@@ -326,7 +338,8 @@ ATTRIBUTES = {
         units="1",
     ),
     "kinetic_energy": MetaData(
-        long_name="Kinetic energy of the hydrometeors", units="J m-2 h-1"
+        long_name="Kinetic energy of the hydrometeors",
+        units="J m-2 h-1",
     ),
     # Thies-specific:
     "T_ambient": MetaData(long_name="Ambient temperature", units="K"),
@@ -397,12 +410,16 @@ ATTRIBUTES = {
         units="1",
     ),
     "status_laser": MetaData(
-        long_name="Status of laser", comment="0 = OK/on , 1 = Off", units="1"
+        long_name="Status of laser",
+        comment="0 = OK/on , 1 = Off",
+        units="1",
     ),
     "measurement_quality": MetaData(long_name="Measurement quality", units="%"),
     "maximum_hail_diameter": MetaData(long_name="Maximum hail diameter", units="mm"),
     "static_signal": MetaData(
-        long_name="Static signal", comment="0 = OK, 1 = ERROR", units="1"
+        long_name="Static signal",
+        comment="0 = OK, 1 = ERROR",
+        units="1",
     ),
     "T_laser_driver": MetaData(long_name="Temperature of laser driver", units="K"),
     "I_mean_laser": MetaData(long_name="Mean value of laser current", units="mA"),

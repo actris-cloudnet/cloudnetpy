@@ -1,7 +1,7 @@
 import netCDF4
 import numpy as np
-import numpy.testing as testing
 import pytest
+from numpy import testing
 
 from cloudnetpy.model_evaluation.products.model_products import ModelManager
 
@@ -62,7 +62,8 @@ def test_calc_water_content(p, T, q, model_file):
 
 
 @pytest.mark.parametrize(
-    "key", ["time", "level", "horizontal_resolution", "latitude", "longitude"]
+    "key",
+    ["time", "level", "horizontal_resolution", "latitude", "longitude"],
 )
 def test_add_common_variables_false(key, model_file):
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
@@ -72,7 +73,8 @@ def test_add_common_variables_false(key, model_file):
 
 
 @pytest.mark.parametrize(
-    "key", ["time", "level", "horizontal_resolution", "latitude", "longitude"]
+    "key",
+    ["time", "level", "horizontal_resolution", "latitude", "longitude"],
 )
 def test_add_common_variables_true(key, model_file, regrid_file):
     obj = ModelManager(str(model_file), MODEL, regrid_file, PRODUCT)

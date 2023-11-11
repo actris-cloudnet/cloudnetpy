@@ -116,7 +116,10 @@ FMCW35 = Instrument(
 )
 
 BASTA = Instrument(
-    domain="radar", category="cloud radar", model="BASTA", frequency=95.0
+    domain="radar",
+    category="cloud radar",
+    model="BASTA",
+    frequency=95.0,
 )
 
 HATPRO = Instrument(

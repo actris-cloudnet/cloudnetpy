@@ -17,6 +17,7 @@ class AdvanceProductMethods(DataSource):
     assumptions of model or observation data.
 
     Args:
+    ----
         model_obj (object): The :class:'ModelManager' object.
         obs_obj (object): The :class:'ObservationManager' object.
     """
@@ -39,7 +40,7 @@ class AdvanceProductMethods(DataSource):
         self.generate_products()
 
     def generate_products(self):
-        cls = getattr(importlib.import_module(__name__), "AdvanceProductMethods")
+        cls = importlib.import_module(__name__).AdvanceProductMethods
         try:
             name = f"get_advance_{self.product}"
             getattr(cls, name)(self)
@@ -54,7 +55,7 @@ class AdvanceProductMethods(DataSource):
         h = self.getvar_from_object("h")
         temperature = self.getvar("temperature")
         t_screened = self.remove_extra_levels(temperature - 273.15)
-        iwc, lwc = [self._model_obj.get_water_content(var) for var in ["iwc", "lwc"]]
+        iwc, lwc = (self._model_obj.get_water_content(var) for var in ["iwc", "lwc"])
         tZT, tT, tZ, t = self.set_frequency_parameters()
         z_sen = self.fit_z_sensitivity(h)
         cf_filtered = self.filter_high_iwc_low_cf(cf, iwc, lwc)
@@ -109,7 +110,10 @@ class AdvanceProductMethods(DataSource):
         return np.asarray(z_sen)
 
     def filter_high_iwc_low_cf(
-        self, cf: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+        self,
+        cf: np.ndarray,
+        iwc: np.ndarray,
+        lwc: np.ndarray,
     ) -> np.ndarray:
         cf_filtered = self.mask_weird_indices(cf, iwc, lwc)
         if np.sum((iwc > 0) & (lwc < iwc / 10) & (cf_filtered > 0)) == 0:
@@ -118,7 +122,9 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def mask_weird_indices(
-        cf: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+        cf: np.ndarray,
+        iwc: np.ndarray,
+        lwc: np.ndarray,
     ) -> np.ndarray:
         cf_filtered = np.copy(cf)
         weird_ind = (iwc / cf > 0.5e-3) & (cf < 0.001)
@@ -127,7 +133,10 @@ class AdvanceProductMethods(DataSource):
         return cf_filtered
 
     def find_ice_in_clouds(
-        self, cf_filtered: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+        self,
+        cf_filtered: np.ndarray,
+        iwc: np.ndarray,
+        lwc: np.ndarray,
     ) -> tuple[np.ndarray, tuple]:
         ice_ind = self.get_ice_indices(cf_filtered, iwc, lwc)
         cloud_iwc = iwc[ice_ind] / cf_filtered[ice_ind] * 1e3
@@ -135,7 +144,9 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def get_ice_indices(
-        cf_filtered: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+        cf_filtered: np.ndarray,
+        iwc: np.ndarray,
+        lwc: np.ndarray,
     ) -> tuple:
         return tuple(np.where((cf_filtered > 0) & (iwc > 0) & (lwc < iwc / 10)))
 
@@ -156,7 +167,10 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def calculate_wind_shear(
-        wind, u: np.ndarray, v: np.ndarray, height: np.ndarray
+        wind,
+        u: np.ndarray,
+        v: np.ndarray,
+        height: np.ndarray,
     ) -> np.ndarray:
         grand_winds = []
         for w in (wind, u, v):
@@ -188,7 +202,9 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def gamma_distribution(
-        iwc_dist: np.ndarray, f_variance_iwc: float, cloud_iwc: float
+        iwc_dist: np.ndarray,
+        f_variance_iwc: float,
+        cloud_iwc: float,
     ) -> np.ndarray:
         def calculate_gamma_dist():
             alpha = 1 / f_variance_iwc
@@ -223,6 +239,8 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def filter_cirrus(
-        p_iwc: np.ndarray, obs_index: np.ndarray, cf_filtered: np.ndarray
+        p_iwc: np.ndarray,
+        obs_index: np.ndarray,
+        cf_filtered: np.ndarray,
     ) -> np.ndarray:
         return (np.sum(p_iwc * obs_index) / np.sum(p_iwc)) * cf_filtered

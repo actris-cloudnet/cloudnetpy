@@ -40,6 +40,7 @@ def ceilo2nc(
     of weak aerosol layers and supercooled liquid clouds.
 
     Args:
+    ----
         full_path: Ceilometer file name.
         output_file: Output file name, e.g. 'ceilo.nc'.
         site_meta: Dictionary containing information about the site and instrument.
@@ -53,12 +54,15 @@ def ceilo2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         RuntimeError: Failed to read or process raw ceilometer data.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import ceilo2nc
         >>> site_meta = {'name': 'Mace-Head', 'altitude': 5}
         >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc', site_meta)
@@ -74,10 +78,14 @@ def ceilo2nc(
     ceilo_obj.read_ceilometer_file(calibration_factor)
     ceilo_obj.check_beta_raw_shape()
     ceilo_obj.data["beta"] = ceilo_obj.calc_screened_product(
-        ceilo_obj.data["beta_raw"], snr_limit, range_corrected
+        ceilo_obj.data["beta_raw"],
+        snr_limit,
+        range_corrected,
     )
     ceilo_obj.data["beta_smooth"] = ceilo_obj.calc_beta_smooth(
-        ceilo_obj.data["beta"], snr_limit, range_corrected
+        ceilo_obj.data["beta"],
+        snr_limit,
+        range_corrected,
     )
     assert ceilo_obj.instrument is not None and ceilo_obj.instrument.model is not None
     if "cl61" in ceilo_obj.instrument.model.lower():
@@ -98,7 +106,9 @@ def ceilo2nc(
 
 
 def _initialize_ceilo(
-    full_path: str, site_meta: dict, date: str | None = None
+    full_path: str,
+    site_meta: dict,
+    date: str | None = None,
 ) -> ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135:
     if "model" in site_meta:
         if site_meta["model"] not in (

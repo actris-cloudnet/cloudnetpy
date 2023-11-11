@@ -24,7 +24,11 @@ def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int):
             dimensions = nc.variables[key].dimensions
             fill_value = getattr(nc.variables[key], "_FillValue", None)
             var = nc_new.createVariable(
-                key, array.dtype, dimensions, zlib=True, fill_value=fill_value
+                key,
+                array.dtype,
+                dimensions,
+                zlib=True,
+                fill_value=fill_value,
             )
             if dimensions and "time" in dimensions[0]:
                 if array.ndim == 1:
@@ -43,13 +47,16 @@ def update_nc(old_file: str, new_file: str) -> int:
     """Appends data to existing netCDF file.
 
     Args:
+    ----
         old_file: Filename of an existing netCDF file.
         new_file: Filename of a new file whose data will be appended to the end.
 
     Returns:
+    -------
         1 = success, 0 = failed to add new data.
 
     Notes:
+    -----
         Requires 'time' variable with unlimited dimension.
 
     """
@@ -79,6 +86,7 @@ def concatenate_files(
     """Concatenate netCDF files in one dimension.
 
     Args:
+    ----
         filenames: List of files to be concatenated.
         output_file: Output file name.
         concat_dimension: Dimension name for concatenation. Default is 'time'.
@@ -90,6 +98,7 @@ def concatenate_files(
             another (value from the first file is saved).
 
     Notes:
+    -----
         Arrays without 'concat_dimension', scalars, and global attributes will be taken
         from the first file. Groups, possibly present in a NETCDF4 formatted file,
         are ignored.
@@ -105,7 +114,10 @@ class _Concat:
     common_variables: set[str]
 
     def __init__(
-        self, filenames: list, output_file: str, concat_dimension: str = "time"
+        self,
+        filenames: list,
+        output_file: str,
+        concat_dimension: str = "time",
     ):
         self.filenames = sorted(filenames)
         self.concat_dimension = concat_dimension
@@ -181,7 +193,7 @@ class _Concat:
                     if not np.array_equal(self.first_file[key][:], array):
                         raise InconsistentDataError(
                             f"Inconsistent values in variable '{key}' between "
-                            f"files '{self.first_filename}' and '{filename}'"
+                            f"files '{self.first_filename}' and '{filename}'",
                         )
                     continue
                 if array.ndim == 0:

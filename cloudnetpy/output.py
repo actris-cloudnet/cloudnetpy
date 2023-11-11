@@ -1,4 +1,4 @@
-""" Functions for file writing."""
+"""Functions for file writing."""
 import datetime
 import logging
 from os import PathLike
@@ -14,7 +14,9 @@ from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
 
 def save_level1b(
-    obj, output_file: PathLike | str, uuid: UUID | str | None = None
+    obj,
+    output_file: PathLike | str,
+    uuid: UUID | str | None = None,
 ) -> str:
     """Saves Cloudnet Level 1b file."""
     dimensions = _get_netcdf_dimensions(obj)
@@ -74,6 +76,7 @@ def save_product_file(
     """Saves a standard Cloudnet product file.
 
     Args:
+    ----
         short_id: Short file identifier, e.g. 'lwc', 'iwc', 'drizzle', 'classification'.
         obj: Instance containing product specific attributes: `time`, `dataset`, `data`.
         file_name: Name of the output file to be generated.
@@ -139,6 +142,7 @@ def get_references(identifier: str | None = None, extra: list | None = None) -> 
     """ "Returns references.
 
     Args:
+    ----
         identifier: Cloudnet file type, e.g., 'iwc'.
 
     """
@@ -170,9 +174,11 @@ def get_source_uuids(*sources) -> str:
     """Returns file_uuid attributes of objects.
 
     Args:
+    ----
         *sources: Objects whose file_uuid attributes are read (if exist).
 
     Returns:
+    -------
         str: UUIDs separated by comma.
 
     """
@@ -189,6 +195,7 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
     """Merges history fields from one or several files and creates a new record.
 
     Args:
+    ----
         nc: The netCDF Dataset instance.
         file_type: Long description of the file.
         data: Dictionary of objects with history attribute.
@@ -227,6 +234,7 @@ def init_file(
     """Initializes a Cloudnet file for writing.
 
     Args:
+    ----
         file_name: File name to be generated.
         dimensions: Dictionary containing dimension for this file.
         cloudnet_arrays: Dictionary containing :class:`CloudnetArray` instances.
@@ -242,11 +250,14 @@ def init_file(
 
 
 def copy_variables(
-    source: netCDF4.Dataset, target: netCDF4.Dataset, keys: tuple
+    source: netCDF4.Dataset,
+    target: netCDF4.Dataset,
+    keys: tuple,
 ) -> None:
     """Copies variables (and their attributes) from one file to another.
 
     Args:
+    ----
         source: Source object.
         target: Target object.
         keys: Variable names to be copied.
@@ -267,17 +278,20 @@ def copy_variables(
                     k: variable.getncattr(k)
                     for k in variable.ncattrs()
                     if k != "_FillValue"
-                }
+                },
             )
             var_out[:] = variable[:]
 
 
 def copy_global(
-    source: netCDF4.Dataset, target: netCDF4.Dataset, attributes: tuple
+    source: netCDF4.Dataset,
+    target: netCDF4.Dataset,
+    attributes: tuple,
 ) -> None:
     """Copies global attributes from one file to another.
 
     Args:
+    ----
         source: Source object.
         target: Target object.
         attributes: List of attributes to be copied.
@@ -290,7 +304,9 @@ def copy_global(
 
 
 def add_time_attribute(
-    attributes: dict, date: list[str] | datetime.date, key: str = "time"
+    attributes: dict,
+    date: list[str] | datetime.date,
+    key: str = "time",
 ) -> dict:
     """Adds time attribute with correct units."""
     if isinstance(date, list):
@@ -343,6 +359,7 @@ def update_attributes(cloudnet_variables: dict, attributes: dict) -> None:
     New attributes are added.
 
     Args:
+    ----
         cloudnet_variables: CloudnetArray instances.
         attributes: Product-specific attributes.
 
@@ -365,7 +382,11 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
         size = obj.dimensions or _get_dimensions(nc, obj.data)
 
         nc_variable = nc.createVariable(
-            obj.name, obj.data_type, size, zlib=True, fill_value=fill_value
+            obj.name,
+            obj.data_type,
+            size,
+            zlib=True,
+            fill_value=fill_value,
         )
         nc_variable[:] = obj.data
         for attr in obj.fetch_attributes():
@@ -401,7 +422,8 @@ def _get_identifier(short_id: str) -> str:
 
 
 def add_standard_global_attributes(
-    nc: netCDF4.Dataset, uuid: UUID | str | None = None
+    nc: netCDF4.Dataset,
+    uuid: UUID | str | None = None,
 ) -> None:
     nc.Conventions = "CF-1.8"
     nc.cloudnetpy_version = version.__version__
@@ -425,13 +447,15 @@ def fix_time_attributes(nc: netCDF4.Dataset) -> None:
     nc.variables["time"].standard_name = "time"
     nc.variables["time"].long_name = "Time UTC"
     nc.variables["time"].calendar = "standard"
-    nc.variables["time"].units = (
-        f"hours since " f"{nc.year}-{nc.month}-{nc.day} " f"00:00:00 +00:00"
-    )
+    nc.variables[
+        "time"
+    ].units = f"hours since {nc.year}-{nc.month}-{nc.day} 00:00:00 +00:00"
 
 
 def replace_attribute_with_standard_value(
-    nc: netCDF4.Dataset, variables: tuple, attributes: tuple
+    nc: netCDF4.Dataset,
+    variables: tuple,
+    attributes: tuple,
 ):
     for key in variables:
         if key in COMMON_ATTRIBUTES and key in nc.variables:

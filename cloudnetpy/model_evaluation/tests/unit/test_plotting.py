@@ -83,7 +83,8 @@ def test_get_product_title_cycle():
 
 
 @pytest.mark.parametrize(
-    "key, title", [("lwc", "Product"), ("lwc_adv", "Product (Advection time)")]
+    "key, title",
+    [("lwc", "Product"), ("lwc_adv", "Product (Advection time)")],
 )
 def test_get_stat_titles(key, title):
     field_name = key + "_" + MODEL

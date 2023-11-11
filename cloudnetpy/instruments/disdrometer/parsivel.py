@@ -3,10 +3,10 @@ import datetime
 import logging
 import re
 from collections import defaultdict
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import islice
 from os import PathLike
-from typing import Any, Iterable, Literal
+from typing import Any, Literal
 
 import numpy as np
 
@@ -32,6 +32,7 @@ def parsivel2nc(
     file.
 
     Args:
+    ----
         disdrometer_file: Filename of disdrometer file or list of filenames.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -45,13 +46,16 @@ def parsivel2nc(
         timestamps:
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         DisdrometerDataError: Timestamps do not match the expected date, or unable
             to read the disdrometer file.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import parsivel2nc
         >>> site_meta = {'name': 'Lindenberg', 'altitude': 104, 'latitude': 52.2,
         'longitude': 14.1}
@@ -408,10 +412,10 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
 
 
 def _read_toa5(filename: str | PathLike) -> dict[str, list]:
-    """
-    Read ASCII data from Campbell Scientific datalogger such as CR1000.
+    """Read ASCII data from Campbell Scientific datalogger such as CR1000.
 
-    References:
+    References
+    ----------
         CR1000 Measurement and Control System.
         https://s.campbellsci.com/documents/us/manuals/cr1000.pdf
     """
@@ -442,7 +446,8 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
                         continue
                     if header == "_datetime":
                         scalars[header] = datetime.datetime.strptime(
-                            value, "%Y-%m-%d %H:%M:%S"
+                            value,
+                            "%Y-%m-%d %H:%M:%S",
                         )
                     elif header in ("number_concentration", "fall_velocity"):
                         arrays[header].append(float(value))
@@ -459,7 +464,7 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
                 data[header].append(scalar)
             if "spectrum" in headers:
                 data["spectrum"].append(
-                    np.array(arrays["spectrum"], dtype="i2").reshape((32, 32))
+                    np.array(arrays["spectrum"], dtype="i2").reshape((32, 32)),
                 )
             if "number_concentration" in headers:
                 data["number_concentration"].append(arrays["number_concentration"])
@@ -473,8 +478,7 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
 
 
 def _read_typ_op4a(filename: str | PathLike) -> dict[str, list]:
-    """
-    Read output of "CS/PA" command. The output starts with line "TYP OP4A"
+    """Read output of "CS/PA" command. The output starts with line "TYP OP4A"
     followed by one line per measured variable in format: <number>:<value>.
     Output ends with characters: <ETX><CR><LF><NUL>. Lines are separated by
     <CR><LF>.

@@ -30,7 +30,7 @@ def test_time2datetime():
     d = datetime(2020, 4, 7, 0, 0, 0)
     x = tools.time2datetime(time_list, d)
     compare = [
-        datetime(2020, 4, 7, 0, 0, 0) + timedelta(hours=1 * x) for x in range(0, 10)
+        datetime(2020, 4, 7, 0, 0, 0) + timedelta(hours=1 * x) for x in range(10)
     ]
     assert all(a == b for a, b in zip(x, compare))
 

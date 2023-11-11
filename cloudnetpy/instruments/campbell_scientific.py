@@ -13,7 +13,10 @@ from cloudnetpy.instruments.ceilometer import Ceilometer
 
 class Cs135(Ceilometer):
     def __init__(
-        self, full_path: str, site_meta: dict, expected_date: str | None = None
+        self,
+        full_path: str,
+        site_meta: dict,
+        expected_date: str | None = None,
     ):
         super().__init__()
         self.full_path = full_path
@@ -103,7 +106,7 @@ def _read_message(message: bytes) -> Message:
         raise InvalidMessageError(
             "Invalid checksum: "
             f"expected {expected_checksum:04x}, "
-            f"got {actual_checksum:04x}"
+            f"got {actual_checksum:04x}",
         )
     lines = message.splitlines()
     if len(lines[0]) != 11:
@@ -124,7 +127,7 @@ def _read_backscatter(data: bytes, n_gates: int) -> np.ndarray:
     limit = (1 << (n_bits - 1)) - 1
     offset = 1 << n_bits
     out = np.array(
-        [int(data[i : i + n_chars], 16) for i in range(0, n_gates * n_chars, n_chars)]
+        [int(data[i : i + n_chars], 16) for i in range(0, n_gates * n_chars, n_chars)],
     )
     out[out > limit] -= offset
     return out

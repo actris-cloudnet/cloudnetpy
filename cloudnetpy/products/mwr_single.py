@@ -10,7 +10,9 @@ from cloudnetpy.products import product_tools
 
 
 def generate_mwr_single(
-    mwr_l1c_file: str, output_file: str, uuid: str | None = None
+    mwr_l1c_file: str,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     file_uuid = uuid if uuid is not None else utils.get_uuid()
 

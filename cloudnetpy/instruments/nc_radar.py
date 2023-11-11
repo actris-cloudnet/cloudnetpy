@@ -17,10 +17,12 @@ class NcRadar(DataSource, CloudnetInstrument):
     """Class for radars providing netCDF files. Child of DataSource().
 
     Args:
+    ----
         full_path: Filename of a radar-produced netCDF file.
         site_meta: Some metadata of the site.
 
     Notes:
+    -----
         Used with BASTA, MIRA and Copernicus radars.
     """
 
@@ -46,7 +48,7 @@ class NcRadar(DataSource, CloudnetInstrument):
     def add_time_and_range(self) -> None:
         """Adds time and range."""
         range_instru = np.array(
-            self.getvar("range", "height")
+            self.getvar("range", "height"),
         )  # "height" in old BASTA files
         time = np.array(self.time)
         self.append_data(range_instru, "range")
@@ -88,7 +90,8 @@ class NcRadar(DataSource, CloudnetInstrument):
 
     def add_zenith_and_azimuth_angles(self) -> list:
         """Adds non-varying instrument zenith and azimuth angles and returns valid
-        time indices."""
+        time indices.
+        """
         if "azimuth_velocity" in self.data:
             azimuth = self.data["azimuth_velocity"].data
             if np.all(azimuth == azimuth[0]):
@@ -105,7 +108,9 @@ class NcRadar(DataSource, CloudnetInstrument):
         zenith = 90 - elevation
         is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
         is_stable_azimuth = np.isclose(
-            azimuth, azimuth_reference, atol=azimuth_tolerance
+            azimuth,
+            azimuth_reference,
+            atol=azimuth_tolerance,
         )
         is_stable_profile = is_stable_zenith & is_stable_azimuth
         if ma.isMaskedArray(is_stable_profile):
@@ -113,11 +118,12 @@ class NcRadar(DataSource, CloudnetInstrument):
         n_removed = np.count_nonzero(~is_stable_profile)
         if n_removed >= len(zenith) - 1:
             raise ValidTimeStampError(
-                "Less than two profiles with valid zenith / azimuth angles"
+                "Less than two profiles with valid zenith / azimuth angles",
             )
         if n_removed > 0:
             logging.warning(
-                "Filtering profiles due to varying zenith / azimuth angle", n_removed
+                "Filtering profiles due to varying zenith / azimuth angle",
+                n_removed,
             )
         self.append_data(zenith, "zenith_angle")
         for key in ("elevation", "azimuth_velocity"):

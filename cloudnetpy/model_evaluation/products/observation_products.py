@@ -13,10 +13,12 @@ class ObservationManager(DataSource):
     """Class to collect and manage observations for downsampling.
 
     Args:
+    ----
         obs (str): Name of observation product
         obs_file (str): Path to source observation file
 
     Notes:
+    -----
         Output is ObservationManager object where all product data and
         information is included.
 
@@ -134,7 +136,8 @@ class ObservationManager(DataSource):
 
     def _mask_iwc_att(self, iwc: np.ndarray, iwc_status: np.ndarray) -> None:
         """Leaves only where reliable data, corrected liquid attenuation
-        and uncorrected liquid attenuation"""
+        and uncorrected liquid attenuation
+        """
         iwc_att = ma.copy(iwc)
         iwc_att[iwc_status > 3] = ma.masked
         self.append_data(iwc_att, "iwc_att")

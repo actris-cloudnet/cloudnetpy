@@ -20,6 +20,7 @@ def galileo2nc(
     """Converts 'Galileo' cloud radar data into Cloudnet Level 1b netCDF file.
 
     Args:
+    ----
         raw_files: Input file name or folder containing multiple input files.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -29,12 +30,15 @@ def galileo2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
+    --------
           >>> from cloudnetpy.instruments import galileo2nc
           >>> site_meta = {'name': 'Chilbolton'}
           >>> galileo2nc('raw_radar.nc', 'radar.nc', site_meta)
@@ -62,7 +66,9 @@ def galileo2nc(
             valid_filenames = utils.get_files_with_common_range(valid_filenames)
             variables = list(keymap.keys())
             concat_lib.concatenate_files(
-                valid_filenames, nc_filename, variables=variables
+                valid_filenames,
+                nc_filename,
+                variables=variables,
             )
         else:
             nc_filename = raw_files
@@ -94,6 +100,7 @@ class Galileo(ChilboltonRadar):
     """Class for Galileo raw radar data. Child of ChilboltonRadar().
 
     Args:
+    ----
         full_path: Filename of a daily Galileo .nc NetCDF file.
         site_meta: Site properties in a dictionary. Required keys are: `name`.
 
@@ -109,7 +116,7 @@ class Galileo(ChilboltonRadar):
         # Only strong Z values are valid
         n_low_gates = 15
         ind = np.where(self.data["Zh"][:, :n_low_gates] < -15) and np.where(
-            self.data["ldr"][:, :n_low_gates] > -5
+            self.data["ldr"][:, :n_low_gates] > -5,
         )
         self.data["v"].mask_indices(ind)
 

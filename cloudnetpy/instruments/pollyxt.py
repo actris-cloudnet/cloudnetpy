@@ -22,10 +22,10 @@ def pollyxt2nc(
     uuid: str | None = None,
     date: str | None = None,
 ) -> str:
-    """
-    Converts PollyXT Raman lidar data into Cloudnet Level 1b netCDF file.
+    """Converts PollyXT Raman lidar data into Cloudnet Level 1b netCDF file.
 
     Args:
+    ----
         input_folder: Path to pollyxt netCDF files.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site with keys:
@@ -40,9 +40,11 @@ def pollyxt2nc(
         date: Expected date of the measurements as YYYY-MM-DD.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import pollyxt2nc
         >>> site_meta = {'name': 'Mindelo', 'altitude': 13, 'zenith_angle': 6,
         'snr_limit': 3}
@@ -80,7 +82,8 @@ class PollyXt(Ceilometer):
         keys = ("beta", "depolarisation")
         for key in keys:
             self.data[key] = ma.masked_where(
-                self.data["snr"] < snr_limit, self.data[f"{key}_raw"]
+                self.data["snr"] < snr_limit,
+                self.data[f"{key}_raw"],
             )
         self.data["depolarisation"][self.data["depolarisation"] > 1] = ma.masked
         self.data["depolarisation"][self.data["depolarisation"] < 0] = ma.masked
@@ -101,11 +104,13 @@ class PollyXt(Ceilometer):
             raise RuntimeError("No pollyxt files found")
         if len(bsc_files) != len(depol_files):
             raise InconsistentDataError(
-                "Inconsistent number of pollyxt bsc / depol files"
+                "Inconsistent number of pollyxt bsc / depol files",
             )
         self._fetch_attributes(bsc_files[0])
         self.data["range"] = _read_array_from_multiple_files(
-            bsc_files, depol_files, "height"
+            bsc_files,
+            depol_files,
+            "height",
         )
         calibration_factors: np.ndarray = np.array([])
         beta_channel = self._get_valid_beta_channel(bsc_files)
@@ -118,11 +123,14 @@ class PollyXt(Ceilometer):
                 epoch = utils.get_epoch(nc_bsc["time"].unit)
                 try:
                     time = np.array(
-                        _read_array_from_file_pair(nc_bsc, nc_depol, "time")
+                        _read_array_from_file_pair(nc_bsc, nc_depol, "time"),
                     )
                 except AssertionError as err:
                     logging.warning(
-                        "Ignoring files '%s' and '%s': %s", nc_bsc, nc_depol, err
+                        "Ignoring files '%s' and '%s': %s",
+                        nc_bsc,
+                        nc_depol,
+                        err,
                     )
                     continue
                 beta_raw = nc_bsc.variables[bsc_key][:]
@@ -138,7 +146,7 @@ class PollyXt(Ceilometer):
                 ].Lidar_calibration_constant_used
                 calibration_factor = np.repeat(calibration_factor, len(time))
                 calibration_factors = np.concatenate(
-                    [calibration_factors, calibration_factor]
+                    [calibration_factors, calibration_factor],
                 )
         self.data["calibration_factor"] = calibration_factors
         return epoch
@@ -152,7 +160,8 @@ class PollyXt(Ceilometer):
                     if not _only_zeros_or_masked(beta):
                         if channel != polly_channels[0]:
                             logging.warning(
-                                "Using %s nm pollyXT channel for backscatter", channel
+                                "Using %s nm pollyXT channel for backscatter",
+                                channel,
                             )
                             self.instrument.wavelength = float(channel)  # type: ignore
                         return channel
@@ -176,7 +185,9 @@ def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarr
 
 
 def _read_array_from_file_pair(
-    nc_file1: netCDF4.Dataset, nc_file2: netCDF4.Dataset, key: str
+    nc_file1: netCDF4.Dataset,
+    nc_file2: netCDF4.Dataset,
+    key: str,
 ) -> np.ndarray:
     array1 = nc_file1.variables[key][:]
     array2 = nc_file2.variables[key][:]

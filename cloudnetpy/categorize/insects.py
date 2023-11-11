@@ -29,6 +29,7 @@ def find_insects(
     above melting layer.
 
     Args:
+    ----
         obs: The :class:`ClassData` instance.
         melting_layer: 2D array denoting melting layer.
         liquid_layers: 2D array denoting liquid layers.
@@ -36,12 +37,14 @@ def find_insects(
             Default is 0.8.
 
     Returns:
+    -------
         tuple: 2-element tuple containing
 
         - 2-D boolean flag of insects presence.
         - 2-D probability of pixel containing insects.
 
     Notes:
+    -----
         This insect detection method is novel and needs to be validated.
 
     """
@@ -79,7 +82,8 @@ def _get_probabilities(obs: ClassData) -> dict:
 
 
 def _get_smoothed_v(
-    obs: ClassData, sigma: tuple[float, float] = (5, 5)
+    obs: ClassData,
+    sigma: tuple[float, float] = (5, 5),
 ) -> ma.MaskedArray:
     smoothed_v = gaussian_filter(obs.v, sigma)
     return ma.masked_where(obs.v.mask, smoothed_v)
@@ -101,12 +105,15 @@ def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
 def _calc_prob_from_all(prob: dict) -> np.ndarray:
     """This can be tried when LDR is not available. To detect insects without LDR
     unambiguously is difficult and might result in many false positives and/or false
-    negatives."""
+    negatives.
+    """
     return prob["z_weak"] * prob["temp_strict"] * prob["width"] * prob["v"]
 
 
 def _adjust_for_radar(
-    obs: ClassData, prob: dict, prob_from_others: np.ndarray
+    obs: ClassData,
+    prob: dict,
+    prob_from_others: np.ndarray,
 ) -> np.ndarray:
     """Adds radar-specific weighting to insect probabilities."""
     if "mira" in obs.radar_type.lower():
@@ -115,7 +122,8 @@ def _adjust_for_radar(
 
 
 def _fill_missing_pixels(
-    prob_from_ldr: np.ndarray, prob_from_others: np.ndarray
+    prob_from_ldr: np.ndarray,
+    prob_from_others: np.ndarray,
 ) -> np.ndarray:
     prob_combined = np.copy(prob_from_ldr)
     no_ldr = np.where(prob_from_ldr == 0)

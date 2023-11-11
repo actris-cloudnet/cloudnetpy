@@ -8,7 +8,9 @@ from cloudnetpy.products.product_tools import IceClassification, IceSource
 
 
 def generate_iwc(
-    categorize_file: str, output_file: str, uuid: str | None = None
+    categorize_file: str,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     """Generates Cloudnet ice water content product.
 
@@ -18,18 +20,22 @@ def generate_iwc(
     netCDF file.
 
     Args:
+    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.products import generate_iwc
         >>> generate_iwc('categorize.nc', 'iwc.nc')
 
     References:
+    ----------
         Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
         The Retrieval of Ice Water Content from Radar Reflectivity Factor and
         Temperature and Its Use in Evaluating a Mesoscale Model.
@@ -85,7 +91,8 @@ class IwcSource(IceSource):
         error_uncorrected = _calc_error_in_uncorrected_ice()
         iwc_error = utils.l2norm(retrieval_uncertainty, random_error)
         iwc_error[ice_classification.uncorrected_ice] = utils.l2norm(
-            retrieval_uncertainty, error_uncorrected
+            retrieval_uncertainty,
+            error_uncorrected,
         )
         iwc_error[
             (~ice_classification.is_ice | ice_classification.ice_above_rain)
@@ -103,7 +110,7 @@ def _add_iwc_error_comment(attributes: dict, lwp_prior, uncertainty: float) -> d
         "present beneath the ice but no microwave radiometer data were available to\n"
         "correct for the associated attenuation, the error also includes a\n"
         f"contribution equivalent to approximately {lwp_prior} g m-2 of liquid water\n"
-        "path being uncorrected for."
+        "path being uncorrected for.",
     )
     return attributes
 
@@ -138,7 +145,7 @@ def _add_iwc_comment(attributes: dict, iwc: IwcSource) -> dict:
         "and liquid cloud occurred below the ice, the retrieval was still performed\n"
         "but its reliability is questionable due to the uncorrected liquid water\n"
         "attenuation. This is indicated by a value of 2 in the iwc_retrieval_status\n"
-        "variable, and an increase in the value of the iwc_error variable."
+        "variable, and an increase in the value of the iwc_error variable.",
     )
     return attributes
 
@@ -182,7 +189,7 @@ DEFINITIONS = {
         "Value 7: Drizzle or rain that would have been classified as ice if the\n"
         "         wet-bulb temperature were less than 0degC: may be ice if\n"
         "         temperature is in error."
-    )
+    ),
 }
 
 IWC_ATTRIBUTES = {

@@ -29,6 +29,7 @@ def mrr2nc(
     contains only the relevant data.
 
     Args:
+    ----
         input_file: Filename of a daily MMR-PRO .nc file, path to directory
             containing several non-concatenated .nc files from one day, or list
             of filenames.
@@ -39,17 +40,19 @@ def mrr2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
+    --------
           >>> from cloudnetpy.instruments import mira2nc
           >>> site_meta = {'name': 'LIM', 'latitude': 51.333, 'longitude': 12.389}
           >>> mrr2nc('input.nc', 'output.nc', site_meta)
     """
-
     if isinstance(uuid, str):
         uuid = UUID(uuid)
     if isinstance(date, str):
@@ -89,7 +92,8 @@ def mrr2nc(
             path = Path(input_file)
             if path.is_dir():
                 input_file = concat_files(
-                    temp_dir, (p for p in path.iterdir() if p.suffix.lower() == ".nc")
+                    temp_dir,
+                    (p for p in path.iterdir() if p.suffix.lower() == ".nc"),
                 )
         else:
             input_file = concat_files(temp_dir, input_file)
@@ -115,6 +119,7 @@ class MrrPro(NcRadar):
     """Class for MRR-PRO raw data. Child of NcRadar().
 
     Args:
+    ----
         full_path: MRR-PRO netCDF filename.
         site_meta: Site properties in a dictionary. Required keys are `name`,
             `latitude`, `longitude` and `altitude`.
@@ -127,7 +132,9 @@ class MrrPro(NcRadar):
         super().__init__(full_path, site_meta)
         self.instrument = instruments.MRR_PRO
         if m := re.search(
-            r"serial number:\s*(\w+)", self.dataset.instrument_name, re.I
+            r"serial number:\s*(\w+)",
+            self.dataset.instrument_name,
+            re.I,
         ):
             self.serial_number = m[1]
 

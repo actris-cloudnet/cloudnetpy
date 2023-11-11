@@ -20,6 +20,7 @@ def update_attributes(model_downsample_variables: dict, attributes: dict):
         New attributes are added.
 
     Args:
+    ----
         model_downsample_variables (dict): Array instances.
         attributes (dict): Product-specific attributes.
     """
@@ -32,11 +33,11 @@ def update_attributes(model_downsample_variables: dict, attributes: dict):
             model_downsample_variables[key].set_attributes(MODEL_ATTRIBUTES[key])
         elif "_".join(key_parts[0:-1]) in REGRID_PRODUCT_ATTRIBUTES:
             model_downsample_variables[key].set_attributes(
-                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-1])]
+                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-1])],
             )
         elif "_".join(key_parts[0:-2]) in REGRID_PRODUCT_ATTRIBUTES:
             model_downsample_variables[key].set_attributes(
-                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-2])]
+                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-2])],
             )
         elif (
             "_".join(key_parts[1:]) in MODEL_L3_ATTRIBUTES
@@ -44,19 +45,19 @@ def update_attributes(model_downsample_variables: dict, attributes: dict):
         ):
             try:
                 model_downsample_variables[key].set_attributes(
-                    MODEL_L3_ATTRIBUTES["_".join(key_parts[1:])]
+                    MODEL_L3_ATTRIBUTES["_".join(key_parts[1:])],
                 )
             except KeyError:
                 model_downsample_variables[key].set_attributes(
-                    MODEL_L3_ATTRIBUTES["_".join(key_parts[2:])]
+                    MODEL_L3_ATTRIBUTES["_".join(key_parts[2:])],
                 )
         elif "_".join(key_parts[1:]) in CYCLE_ATTRIBUTES:
             model_downsample_variables[key].set_attributes(
-                CYCLE_ATTRIBUTES["_".join(key_parts[1:])]
+                CYCLE_ATTRIBUTES["_".join(key_parts[1:])],
             )
         elif "_".join(key_parts[2:]) in CYCLE_ATTRIBUTES:
             model_downsample_variables[key].set_attributes(
-                CYCLE_ATTRIBUTES["_".join(key_parts[2:])]
+                CYCLE_ATTRIBUTES["_".join(key_parts[2:])],
             )
 
 
@@ -70,6 +71,7 @@ def save_downsampled_file(
     """Saves a standard downsampled day product file.
 
     Args:
+    ----
         id_mark (str): File identifier, format "(product name)_(model name)"
         file_name (str): Name of the output file to be generated
         objects (tuple): Include two objects: The :class:'ModelManager' and
@@ -127,7 +129,10 @@ def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
         size = _get_dimensions(obj.data)
         try:
             nc_variable = rootgrp.createVariable(
-                obj.name, obj.data_type, size, zlib=True
+                obj.name,
+                obj.data_type,
+                size,
+                zlib=True,
             )
             nc_variable[:] = obj.data
             for attr in obj.fetch_attributes():
@@ -157,14 +162,18 @@ def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple):
 
 def add_time_attribute(date: datetime) -> dict:
     """ "Adds time attribute with correct units.
+
     Args:
+    ----
         attributes: Attributes of variables.
         date: Date as Y M D 0 0 0.
+
     Returns:
+    -------
         dict: Same attributes with 'time' attribute added.
     """
     return {
         "time": MODEL_ATTRIBUTES["time"]._replace(
-            units=f"hours since {date:%Y-%m-%d} 00:00:00 +00:00"
-        )
+            units=f"hours since {date:%Y-%m-%d} 00:00:00 +00:00",
+        ),
     }

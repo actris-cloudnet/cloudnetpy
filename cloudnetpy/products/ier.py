@@ -8,7 +8,9 @@ from cloudnetpy.products.product_tools import IceClassification, IceSource
 
 
 def generate_ier(
-    categorize_file: str, output_file: str, uuid: str | None = None
+    categorize_file: str,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     """Generates Cloudnet ice effective radius product.
 
@@ -19,18 +21,22 @@ def generate_ier(
     and model temperature. The results are written in a netCDF file.
 
     Args:
+    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.products import generate_ier
         >>> generate_ier('categorize.nc', 'ier.nc')
 
     References:
+    ----------
         Hogan, R. J., Mittermaier, M. P., & Illingworth, A. J. (2006). The Retrieval
         of Ice Water Content from Radar Reflectivity Factor and Temperature and Its
         Use in Evaluating a Mesoscale Model, Journal of Applied Meteorology and
@@ -104,7 +110,7 @@ def _add_ier_comment(attributes: dict, ier: IerSource) -> dict:
         "as ice. Missing data indicates either that ice cloud was present but it was\n"
         "only detected by the lidar so its ice water content could not be estimated,\n"
         "or than there was rain below the ice associated with uncertain attenuation\n"
-        "of the reflectivities in the ice.\n"
+        "of the reflectivities in the ice.\n",
     )
     return attributes
 

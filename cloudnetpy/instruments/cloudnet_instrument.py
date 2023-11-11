@@ -24,7 +24,8 @@ class CloudnetInstrument:
                 value = self.site_meta[key]
             # From source global attributes (MIRA):
             elif isinstance(self.dataset, netCDF4.Dataset) and hasattr(
-                self.dataset, key.capitalize()
+                self.dataset,
+                key.capitalize(),
             ):
                 value = self.parse_global_attribute_numeral(key.capitalize())
             # From source data (BASTA / RPG):

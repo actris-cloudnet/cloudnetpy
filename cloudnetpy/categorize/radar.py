@@ -15,9 +15,11 @@ class Radar(DataSource):
     """Radar class, child of DataSource.
 
     Args:
+    ----
         full_path: Cloudnet Level 1 radar netCDF file.
 
     Attributes:
+    ----------
         radar_frequency (float): Radar frequency (GHz).
         folding_velocity (float): Radar's folding velocity (m/s).
         location (str): Location of the radar, copied from the global attribute
@@ -30,6 +32,7 @@ class Radar(DataSource):
             radars.
 
     See Also:
+    --------
         :func:`instruments.rpg2nc()`, :func:`instruments.mira2nc()`
 
     """
@@ -49,6 +52,7 @@ class Radar(DataSource):
         """Rebins radar data in time using mean.
 
         Args:
+        ----
             time_new: Target time array as fraction hour. Updates *time* attribute.
 
         """
@@ -83,7 +87,7 @@ class Radar(DataSource):
 
         """
         good_ind = ~ma.getmaskarray(self.data["Z"][:]) & ~ma.getmaskarray(
-            self.data["v"][:]
+            self.data["v"][:],
         )
 
         if "width" in self.data:
@@ -121,10 +125,20 @@ class Radar(DataSource):
         if n_profiles_with_data < 300:
             return
         n_vertical = self._filter(
-            data, 1, min_coverage=0.5, z_limit=10, distance=4, n_blocks=100
+            data,
+            1,
+            min_coverage=0.5,
+            z_limit=10,
+            distance=4,
+            n_blocks=100,
         )
         n_horizontal = self._filter(
-            data, 0, min_coverage=0.3, z_limit=-30, distance=3, n_blocks=20
+            data,
+            0,
+            min_coverage=0.3,
+            z_limit=-30,
+            distance=3,
+            n_blocks=20,
         )
         if n_vertical > 0 or n_horizontal > 0:
             logging.debug(
@@ -165,7 +179,7 @@ class Radar(DataSource):
             threshold = distance * (q3 - q1) + q3
 
             indices = np.where(
-                (n_values > threshold) & (n_values > (min_coverage * data.shape[1]))
+                (n_values > threshold) & (n_values > (min_coverage * data.shape[1])),
             )[0]
             true_ind = [int(x) for x in (block_number * len_block + indices)]
             n_removed = len(indices)
@@ -187,10 +201,12 @@ class Radar(DataSource):
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
+        ----
             attenuations: 2-D attenuations due to atmospheric gases and liquid:
                 `radar_gas_atten`, `radar_liquid_atten`.
 
         References:
+        ----------
             The method is based on Hogan R. and O'Connor E., 2004,
             https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 
@@ -201,7 +217,9 @@ class Radar(DataSource):
         self.append_data(z_corrected, "Z")
 
     def calc_errors(
-        self, attenuations: dict, classification: ClassificationResult
+        self,
+        attenuations: dict,
+        classification: ClassificationResult,
     ) -> None:
         """Calculates uncertainties of radar echo.
 
@@ -209,10 +227,12 @@ class Radar(DataSource):
         :class:`CloudnetArray` instances to `data` attribute.
 
         Args:
+        ----
             attenuations: 2-D attenuations due to atmospheric gases.
             classification: The :class:`ClassificationResult` instance.
 
         References:
+        ----------
             The method is based on Hogan R. and O'Connor E., 2004,
             https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 
@@ -284,12 +304,14 @@ class Radar(DataSource):
 
     def _init_sigma_v(self) -> None:
         """Initializes std of the velocity field. The std will be calculated
-        later when re-binning the data."""
+        later when re-binning the data.
+        """
         self.append_data(self.getvar("v"), "v_sigma")
 
     def _get_sequence_indices(self) -> list:
         """Mira has only one sequence and one folding velocity. RPG has
-        several sequences with different folding velocities."""
+        several sequences with different folding velocities.
+        """
         assert self.height is not None
         all_indices = np.arange(len(self.height))
         if not utils.isscalar(self.folding_velocity):
@@ -309,7 +331,8 @@ class Radar(DataSource):
         folding_velocity: list | np.ndarray = []
         if utils.isscalar(self.folding_velocity):
             folding_velocity = np.repeat(
-                self.folding_velocity, len(self.sequence_indices[0])
+                self.folding_velocity,
+                len(self.sequence_indices[0]),
             )
         else:
             assert isinstance(folding_velocity, list)

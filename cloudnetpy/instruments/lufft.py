@@ -13,7 +13,10 @@ class LufftCeilo(NcLidar):
     """Class for Lufft chm15k ceilometer."""
 
     def __init__(
-        self, file_name: str, site_meta: dict, expected_date: str | None = None
+        self,
+        file_name: str,
+        site_meta: dict,
+        expected_date: str | None = None,
     ):
         super().__init__()
         self.file_name = file_name
@@ -39,7 +42,8 @@ class LufftCeilo(NcLidar):
         old_version = self._get_old_software_version()
         if old_version is not None:
             logging.warning(
-                "Software version %s. Assuming data not range corrected.", old_version
+                "Software version %s. Assuming data not range corrected.",
+                old_version,
             )
             data_std = self._getvar("stddev")
             normalised_apd = self._get_nn()
@@ -80,7 +84,7 @@ class LufftCeilo(NcLidar):
     def _fetch_attributes(self):
         self.serial_number = getattr(self.dataset, "device_name", None)
         if self.serial_number is None:
-            self.serial_number = getattr(self.dataset, "source")
+            self.serial_number = getattr(self.dataset, "source", "")
         self.instrument = (
             instruments.CHM15KX
             if self.serial_number.startswith("CHX")

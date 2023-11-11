@@ -10,7 +10,9 @@ from cloudnetpy.products.product_tools import CategorizeBits
 
 
 def generate_classification(
-    categorize_file: str, output_file: str, uuid: str | None = None
+    categorize_file: str,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     """Generates Cloudnet classification product.
 
@@ -20,14 +22,17 @@ def generate_classification(
     netCDF file.
 
     Args:
+    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
+    -------
         str: UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.products import generate_classification
         >>> generate_classification('categorize.nc', 'classification.nc')
 
@@ -42,16 +47,21 @@ def generate_classification(
         product_container.append_data(bases, "cloud_base_height_amsl")
         product_container.append_data(tops, "cloud_top_height_amsl")
         product_container.append_data(
-            bases - product_container.altitude, "cloud_base_height_agl"
+            bases - product_container.altitude,
+            "cloud_base_height_agl",
         )
         product_container.append_data(
-            tops - product_container.altitude, "cloud_top_height_agl"
+            tops - product_container.altitude,
+            "cloud_top_height_agl",
         )
         date = product_container.get_date()
         attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
         output.update_attributes(product_container.data, attributes)
         return output.save_product_file(
-            "classification", product_container, output_file, uuid
+            "classification",
+            product_container,
+            output_file,
+            uuid,
         )
 
 
@@ -97,7 +107,8 @@ def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
 
 
 def _get_cloud_base_and_top_heights(
-    classification: np.ndarray, product_container: DataSource
+    classification: np.ndarray,
+    product_container: DataSource,
 ) -> tuple[np.ndarray, np.ndarray]:
     height = product_container.getvar("height")
     cloud_mask = _find_cloud_mask(classification)

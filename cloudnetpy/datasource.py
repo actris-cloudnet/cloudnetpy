@@ -1,8 +1,8 @@
 """Datasource module, containing the :class:`DataSource class.`"""
 import logging
 import os
+from collections.abc import Callable
 from datetime import datetime
-from typing import Callable
 
 import netCDF4
 import numpy as np
@@ -16,10 +16,12 @@ class DataSource:
     """Base class for all Cloudnet measurements and model data.
 
     Args:
+    ----
         full_path: Calibrated instrument / model NetCDF file.
         radar: Indicates if data is from cloud radar. Default is False.
 
     Attributes:
+    ----------
         filename (str): Filename of the input file.
         dataset (netCDF4.Dataset): A netCDF4 Dataset instance.
         source (str): Global attribute `source` read from the input file.
@@ -63,12 +65,15 @@ class DataSource:
             variables dictionary, fetched from the input netCDF file.
 
         Args:
+        ----
             *args: possible names of the variable. The first match is returned.
 
         Returns:
+        -------
             ndarray: The actual data.
 
         Raises:
+        ------
              RuntimeError: The variable is not found.
 
         """
@@ -87,6 +92,7 @@ class DataSource:
         """Adds new CloudnetVariable or RadarVariable into `data` attribute.
 
         Args:
+        ----
             variable: netCDF variable or data array to be added.
             key: Key used with *variable* when added to `data`
                 attribute (dictionary).
@@ -99,10 +105,12 @@ class DataSource:
     def get_date(self) -> list:
         """Returns date components.
 
-        Returns:
+        Returns
+        -------
             list: Date components [YYYY, MM, DD].
 
-        Raises:
+        Raises
+        ------
              RuntimeError: Not found or invalid date.
 
         """
@@ -113,7 +121,7 @@ class DataSource:
             datetime.strptime(f"{year}{month}{day}", "%Y%m%d")
         except (AttributeError, ValueError) as read_error:
             raise RuntimeError(
-                "Missing or invalid date in global attributes."
+                "Missing or invalid date in global attributes.",
             ) from read_error
         return [year, month, day]
 
@@ -160,7 +168,7 @@ class DataSource:
             return float(
                 altitude_above_sea
                 if utils.isscalar(altitude_above_sea)
-                else np.mean(altitude_above_sea)
+                else np.mean(altitude_above_sea),
             )
         return None
 
@@ -177,11 +185,13 @@ class DataSource:
         """Transforms netCDF4-variables into CloudnetArrays.
 
         Args:
+        ----
             keys: netCDF4-variables to be converted. The results
                 are saved in *self.data* dictionary with *fields*
                 strings as keys.
 
         Notes:
+        -----
             The attributes of the variables are not copied. Just the data.
 
         """
@@ -198,6 +208,7 @@ class DataSource:
         """Transforms single netCDF4 variable into CloudnetArray.
 
         Args:
+        ----
             possible_names: Tuple of strings containing the possible
                 names of the variable in the input NetCDF file.
             key: Key for self.data dictionary and name-attribute
@@ -206,6 +217,7 @@ class DataSource:
             ignore_mask: If true, always writes an ordinary numpy array.
 
         Raises:
+        ------
             RuntimeError: No variable found.
 
         """

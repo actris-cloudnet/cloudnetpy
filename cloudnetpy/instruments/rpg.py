@@ -1,7 +1,7 @@
 """This module contains RPG Cloud Radar related functions."""
 import logging
 import math
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from numpy import ma
@@ -31,6 +31,7 @@ def rpg2nc(
     concatenates the data and writes a netCDF file.
 
     Args:
+    ----
         path_to_l1_files: Folder containing one day of RPG LV1 files.
         output_file: Output file name.
         site_meta: Dictionary containing information about the
@@ -43,15 +44,18 @@ def rpg2nc(
             only files that match the date will be used.
 
     Returns:
+    -------
         2-element tuple containing
 
         - UUID of the generated file.
         - Files used in the processing.
 
     Raises:
+    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import rpg2nc
         >>> site_meta = {'name': 'Hyytiala', 'altitude': 174}
         >>> rpg2nc('/path/to/files/', 'test.nc', site_meta)
@@ -107,7 +111,8 @@ def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
 def _stack_rpg_data(rpg_objects: RpgObjects) -> tuple[dict, dict]:
     """Combines data from hourly RPG objects.
 
-    Notes:
+    Notes
+    -----
         Ignores variable names starting with an underscore.
 
     """
@@ -131,7 +136,7 @@ def _reduce_header(header: dict) -> dict:
     for key, data in header.items():
         first_profile_value = data[0]
         is_identical_value = bool(
-            np.isclose(data, first_profile_value, rtol=1e-2).all()
+            np.isclose(data, first_profile_value, rtol=1e-2).all(),
         )
         if is_identical_value is False:
             msg = f"Inconsistent header: {key}: {data}"
@@ -195,7 +200,8 @@ def _remove_files_with_bad_height(objects: list, files: list) -> tuple[list, lis
     n_removed = len(lengths) - len(files)
     if n_removed > 0:
         logging.warning(
-            "Removed %s RPG-FMCW-94 files due to inconsistent height vector", n_removed
+            "Removed %s RPG-FMCW-94 files due to inconsistent height vector",
+            n_removed,
         )
     return objects, files
 
@@ -223,7 +229,9 @@ class Rpg(CloudnetInstrument):
         key = "time"
         fraction_hour = utils.seconds2hours(self.raw_data[key])
         self.data[key] = CloudnetArray(
-            np.array(fraction_hour), key, data_type=data_type
+            np.array(fraction_hour),
+            key,
+            data_type=data_type,
         )
 
     def _get_date(self) -> list:
@@ -254,7 +262,8 @@ class Fmcw(Rpg):
         threshold = -35
         if "ldr" in self.data:
             self.data["ldr"].data = ma.masked_less_equal(
-                self.data["ldr"].data, threshold
+                self.data["ldr"].data,
+                threshold,
             )
 
     def mask_invalid_width(self) -> None:
@@ -279,7 +288,8 @@ class Fmcw(Rpg):
             raise ValidTimeStampError("No profiles with valid zenith angle")
         if n_removed > 0:
             logging.warning(
-                "Filtering %s profiles due to invalid zenith angle", n_removed
+                "Filtering %s profiles due to invalid zenith angle",
+                n_removed,
             )
         self.data["zenith_angle"] = CloudnetArray(zenith, "zenith_angle")
         del self.data["elevation"]
@@ -315,7 +325,7 @@ def _filter_zenith_angle(zenith: ma.MaskedArray) -> np.ndarray:
         logging.warning("Can not determine zenith angle, assuming 0 degrees")
     limits = [-5, 15]
     ind_close_to_zenith = np.where(
-        np.logical_and(zenith > limits[0], zenith < limits[1])
+        np.logical_and(zenith > limits[0], zenith < limits[1]),
     )
     if not ind_close_to_zenith[0].size:
         return np.zeros_like(zenith, dtype=bool)
@@ -365,7 +375,8 @@ RPG_ATTRIBUTES = {
     "srho_hv": MetaData(long_name="Slanted correlation coefficient", units="1"),
     "kdp": MetaData(long_name="Specific differential phase shift", units="rad km-1"),
     "differential_attenuation": MetaData(
-        long_name="Differential attenuation", units="dB km-1"
+        long_name="Differential attenuation",
+        units="dB km-1",
     ),
     # All radars
     "file_code": MetaData(

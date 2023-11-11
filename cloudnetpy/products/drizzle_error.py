@@ -9,15 +9,18 @@ MU_ERROR_SMALL = 0.25
 
 
 def get_drizzle_error(
-    categorize: DrizzleSource, drizzle_parameters: DrizzleSolver
+    categorize: DrizzleSource,
+    drizzle_parameters: DrizzleSolver,
 ) -> dict:
     """Estimates error and bias for drizzle classification.
 
     Args:
+    ----
         categorize: The :class:`DrizzleSource` instance.
         drizzle_parameters: The :class:`DrizzleSolver` instance.
 
     Returns:
+    -------
         dict: Dictionary containing information of estimated error and bias for drizzle
 
     """
@@ -99,7 +102,9 @@ def _calc_parameter_biases(bias_input: tuple) -> dict:
 
 
 def _add_supplementary_errors(
-    results: dict, drizzle_indices: dict, error_input: tuple
+    results: dict,
+    drizzle_indices: dict,
+    error_input: tuple,
 ) -> dict:
     def _calc_n_error() -> ma.MaskedArray:
         z_error = error_input[0]

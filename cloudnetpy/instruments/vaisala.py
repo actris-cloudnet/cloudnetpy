@@ -17,7 +17,10 @@ class VaisalaCeilo(Ceilometer):
     """Base class for Vaisala ceilometers."""
 
     def __init__(
-        self, full_path: str, site_meta: dict, expected_date: str | None = None
+        self,
+        full_path: str,
+        site_meta: dict,
+        expected_date: str | None = None,
     ):
         super().__init__(self.noise_param)
         self.full_path = full_path
@@ -103,12 +106,14 @@ class VaisalaCeilo(Ceilometer):
         timestamp_line_numbers = _find_timestamp_line_numbers(valid_lines)
         if self.expected_date is not None:
             timestamp_line_numbers = _find_correct_dates(
-                valid_lines, timestamp_line_numbers
+                valid_lines,
+                timestamp_line_numbers,
             )
             if not timestamp_line_numbers:
                 raise ValidTimeStampError
         number_of_data_lines = _find_number_of_data_lines(
-            valid_lines, timestamp_line_numbers[0]
+            valid_lines,
+            timestamp_line_numbers[0],
         )
         return _parse_data_lines(valid_lines, timestamp_line_numbers)
 
@@ -220,7 +225,10 @@ class ClCeilo(VaisalaCeilo):
     noise_param = NoiseParam(noise_min=3.1e-8, noise_smooth_min=1.1e-8)
 
     def __init__(
-        self, full_path: str, site_meta: dict, expected_date: str | None = None
+        self,
+        full_path: str,
+        site_meta: dict,
+        expected_date: str | None = None,
     ):
         super().__init__(full_path, site_meta, expected_date)
         self._hex_conversion_params = (5, 524288, 1048576)
@@ -291,7 +299,8 @@ class ClCeilo(VaisalaCeilo):
 class Ct25k(VaisalaCeilo):
     """Class for Vaisala CT25k ceilometer.
 
-    References:
+    References
+    ----------
         https://www.manualslib.com/manual/1414094/Vaisala-Ct25k.html
 
     """
@@ -352,11 +361,13 @@ class Ct25k(VaisalaCeilo):
 def split_string(string: str, indices: list) -> list:
     """Splits string between indices.
 
-    Notes:
+    Notes
+    -----
         It is possible to skip characters from the beginning and end of the
         string but not from the middle.
 
-    Examples:
+    Examples
+    --------
         >>> s = 'abcde'
         >>> indices = [1, 2, 4]
         >>> split_string(s, indices)
@@ -369,7 +380,8 @@ def split_string(string: str, indices: list) -> list:
 def values_to_dict(keys: tuple, values: list) -> dict:
     """Converts list elements to dictionary.
 
-    Examples:
+    Examples
+    --------
         >>> keys = ('a', 'b')
         >>> values = [[1, 2], [1, 2], [1, 2], [1, 2]]
         >>> values_to_dict(keys, values)

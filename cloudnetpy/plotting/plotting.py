@@ -75,6 +75,7 @@ def generate_figure(
     """Generates a Cloudnet figure.
 
     Args:
+    ----
         nc_file (str): Input file.
         field_names (list): Variable names to be plotted.
         show (bool, optional): If True, shows the figure. Default is True.
@@ -109,9 +110,11 @@ def generate_figure(
             after the copyright_text (datetime.datetime.utcnow()
 
     Returns:
+    -------
         Dimensions of the generated figure in pixels.
 
     Examples:
+    --------
         >>> from cloudnetpy.plotting import generate_figure
         >>> generate_figure('categorize_file.nc', ['Z', 'v', 'width', 'ldr',
         'beta', 'lwp'])
@@ -207,7 +210,9 @@ def generate_figure(
 
 
 def _mark_gaps(
-    time: np.ndarray, data: ma.MaskedArray, max_allowed_gap: float = 1
+    time: np.ndarray,
+    data: ma.MaskedArray,
+    max_allowed_gap: float = 1,
 ) -> tuple:
     assert time[0] >= 0
     assert time[-1] <= 24
@@ -303,7 +308,12 @@ def display_watermark(
 
 
 def display_datasources(
-    ax, source: str, xpos: float = 0.01, ypos: float = 0.99, fontsize: int = 7, **kwargs
+    ax,
+    source: str,
+    xpos: float = 0.01,
+    ypos: float = 0.99,
+    fontsize: int = 7,
+    **kwargs,
 ) -> None:
     _ = "s" if "\n" in source else ""
     ax.text(
@@ -357,7 +367,10 @@ def _get_variable_unit(full_path: str, name: str) -> str:
 def _initialize_figure(n_subplots: int, dpi) -> tuple:
     """Creates an empty figure according to the number of subplots."""
     fig, axes = plt.subplots(
-        n_subplots, 1, figsize=(16, 4 + (n_subplots - 1) * 4.8), dpi=dpi
+        n_subplots,
+        1,
+        figsize=(16, 4 + (n_subplots - 1) * 4.8),
+        dpi=dpi,
     )
     fig.subplots_adjust(left=0.06, right=0.73)
     if n_subplots == 1:
@@ -397,6 +410,7 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) ->
     saving fig. This fixes that bug till pcolorfast does fixing themselves.
 
     Args:
+    ----
         data_field (ndarray): 2D data array.
         ax_values (tuple): Time and height 1D arrays.
         max_y (int): Upper limit in the plots (km).
@@ -427,7 +441,8 @@ def set_yax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0):
 
 
 def _get_standard_time_ticks(
-    resolution: int = 4, include_xlimits: bool = False
+    resolution: int = 4,
+    include_xlimits: bool = False,
 ) -> list:
     """Returns typical ticks / labels for a time vector between 0-24h."""
     if include_xlimits:
@@ -445,6 +460,7 @@ def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
     """Plots 1D variable as bar plot.
 
     Args:
+    ----
         ax (obj): Axes object.
         data (maskedArray): 1D data array.
         time (ndarray): 1D time array.
@@ -475,6 +491,7 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
     """Plots categorical 2D variable.
 
     Args:
+    ----
         ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
         data (ndarray): 2D data array.
         name (string): Name of plotted data.
@@ -520,6 +537,7 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
     Creates only one plot, so can be used both one plot and subplot type of figs.
 
     Args:
+    ----
         ax (obj): Axes object of subplot (1,2,3,.. [1,1,],[1,2]... etc.)
         data (ndarray): 2D data array.
         name (string): Name of plotted data.
@@ -544,7 +562,12 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
         data, vmin, vmax = lin2log(data, vmin, vmax)
 
     pl = ax.pcolorfast(
-        *axes, data[:-1, :-1].T, vmin=vmin, vmax=vmax, cmap=color_map, zorder=_ZORDER
+        *axes,
+        data[:-1, :-1].T,
+        vmin=vmin,
+        vmax=vmax,
+        cmap=color_map,
+        zorder=_ZORDER,
     )
 
     if variables.plot_type != "bit":
@@ -600,7 +623,12 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
 def _plot_hatpro(ax, data: dict, full_path: str):
     tb = _pointing_filter(full_path, data["tb"])
     ax.plot(
-        data["time"], tb, color="royalblue", linestyle="-", linewidth=1, zorder=_ZORDER
+        data["time"],
+        tb,
+        color="royalblue",
+        linestyle="-",
+        linewidth=1,
+        zorder=_ZORDER,
     )
     set_yax(
         ax,
@@ -611,7 +639,10 @@ def _plot_hatpro(ax, data: dict, full_path: str):
 
 
 def _pointing_filter(
-    full_path: str, data: ndarray, zenith_limit=5, status: int = 0
+    full_path: str,
+    data: ndarray,
+    zenith_limit=5,
+    status: int = 0,
 ) -> ndarray:
     """Filters data according to pointing flag and zenith angle."""
     with netCDF4.Dataset(full_path) as nc:
@@ -711,7 +742,8 @@ def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
 
 
 def _get_unmasked_values(
-    data: ma.MaskedArray, time: ndarray
+    data: ma.MaskedArray,
+    time: ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
     if ma.is_masked(data) is False:
         return data, time
@@ -854,7 +886,10 @@ def _get_subtitle_text(case_date: date, site_name: str) -> str:
 
 
 def _create_save_name(
-    save_path: str, case_date: date, field_names: list, fix: str = ""
+    save_path: str,
+    case_date: date,
+    field_names: list,
+    fix: str = "",
 ) -> str:
     """Creates file name for saved images."""
     date_string = case_date.strftime("%Y%m%d")
@@ -863,7 +898,12 @@ def _create_save_name(
 
 def _plot_relative_error(ax, error: ma.MaskedArray, ax_values: tuple):
     pl = ax.pcolorfast(
-        *ax_values, error[:-1, :-1].T, cmap="RdBu", vmin=-30, vmax=30, zorder=_ZORDER
+        *ax_values,
+        error[:-1, :-1].T,
+        cmap="RdBu",
+        vmin=-30,
+        vmax=30,
+        zorder=_ZORDER,
     )
     colorbar = _init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
@@ -923,6 +963,7 @@ def compare_files(
     """Plots one particular field from two Cloudnet files.
 
     Args:
+    ----
         nc_files (tuple): Filenames of the two files to be compared.
         field_name (str): Name of variable to be plotted.
         show (bool, optional): If True, shows the plot.
@@ -936,6 +977,7 @@ def compare_files(
             Overrides the *save_path* option. Default is None.
 
     Returns:
+    -------
         Dimensions of the generated figure in pixels.
 
     """

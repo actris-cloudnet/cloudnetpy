@@ -10,7 +10,9 @@ from cloudnetpy.metadata import MetaData
 
 
 def generate_categorize(
-    input_files: dict, output_file: str, uuid: str | None = None
+    input_files: dict,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     """Generates Cloudnet Level 1c categorize file.
 
@@ -21,6 +23,7 @@ def generate_categorize(
     in *ouput_file* which is a compressed netCDF4 file.
 
     Args:
+    ----
         input_files: dict containing file names for calibrated `radar`, `lidar`,
             `model` and `mwr` files. Optionally also `lv0_files`, a list of
             RPG level 0 files.
@@ -28,12 +31,15 @@ def generate_categorize(
         uuid: Set specific UUID for the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         RuntimeError: Failed to create the categorize file.
 
     Notes:
+    -----
         Separate mwr-file is not needed when using RPG cloud radar which
         measures liquid water path. Then, the radar file can be used as
         a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
@@ -42,6 +48,7 @@ def generate_categorize(
         to detect liquid droplets.
 
     Examples:
+    --------
         >>> from cloudnetpy.categorize import generate_categorize
         >>> input_files = {'radar': 'radar.nc',
                            'lidar': 'lidar.nc',
@@ -147,10 +154,12 @@ def generate_categorize(
 
 
 def _save_cat(
-    full_path: str, data_obs: dict, cloudnet_arrays: dict, uuid: str | None
+    full_path: str,
+    data_obs: dict,
+    cloudnet_arrays: dict,
+    uuid: str | None,
 ) -> str:
     """Creates a categorize netCDF4 file and saves all data into it."""
-
     dims = {
         "time": len(data_obs["radar"].time),
         "height": len(data_obs["radar"].height),
@@ -163,7 +172,9 @@ def _save_cat(
         uuid_out = nc.file_uuid
         nc.cloudnet_file_type = file_type
         output.copy_global(
-            data_obs["radar"].dataset, nc, ("year", "month", "day", "location")
+            data_obs["radar"].dataset,
+            nc,
+            ("year", "month", "day", "location"),
         )
         nc.title = f"Cloud categorization products from {data_obs['radar'].location}"
         nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
@@ -172,7 +183,8 @@ def _save_cat(
             ["https://doi.org/10.5194/amt-15-5343-2022"] if is_voodoo else None
         )
         nc.references = output.get_references(
-            identifier=file_type, extra=extra_references
+            identifier=file_type,
+            extra=extra_references,
         )
         if is_voodoo:
             import voodoonet.version  # pylint: disable=import-outside-toplevel,import-error
@@ -314,7 +326,8 @@ CATEGORIZE_ATTRIBUTES = {
         comment=COMMENTS["Z_sensitivity"],
     ),
     "v_sigma": MetaData(
-        long_name="Standard deviation of mean Doppler velocity", units="m s-1"
+        long_name="Standard deviation of mean Doppler velocity",
+        units="m s-1",
     ),
     # Lidar variables
     "beta": MetaData(

@@ -12,6 +12,7 @@ class Lidar(DataSource):
     """Lidar class, child of DataSource.
 
     Args:
+    ----
         full_path: Cloudnet Level 1 lidar netCDF file.
 
     """
@@ -47,12 +48,14 @@ class Lidar(DataSource):
         bad_height_indices = _get_bad_indices(self.height, height_new, max_height)
         if bad_time_indices:
             logging.warning(
-                "Unable to interpolate lidar for %s time steps", len(bad_time_indices)
+                "Unable to interpolate lidar for %s time steps",
+                len(bad_time_indices),
             )
         beta_interpolated[bad_time_indices, :] = ma.masked
         if bad_height_indices:
             logging.warning(
-                "Unable to interpolate lidar for %s altitudes", len(bad_height_indices)
+                "Unable to interpolate lidar for %s altitudes",
+                len(bad_height_indices),
             )
         beta_interpolated[:, bad_height_indices] = ma.masked
         self.data["beta"].data = beta_interpolated
@@ -65,7 +68,9 @@ class Lidar(DataSource):
 
 
 def _get_bad_indices(
-    original_grid: np.ndarray, new_grid: np.ndarray, threshold: float
+    original_grid: np.ndarray,
+    new_grid: np.ndarray,
+    threshold: float,
 ) -> list:
     indices = []
     for ind, value in enumerate(new_grid):

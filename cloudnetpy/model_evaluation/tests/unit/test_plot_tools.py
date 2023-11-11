@@ -7,7 +7,8 @@ from cloudnetpy.model_evaluation.plotting import plot_tools as plt
 def test_parse_wanted_names(regrid_file):
     """nc_file: str, name: str, model: str,
     vars: list | None = None,
-    advance: bool = False"""
+    advance: bool = False
+    """
     compare = ["ecmwf_cf", "cf_ecmwf"]
     x, _ = plt.parse_wanted_names(regrid_file, "cf", "ecmwf")
     assert x == compare
@@ -217,14 +218,14 @@ def test_rolling_mean_all_mask():
 
 def test_change2one_dim_axes_maskY():
     x = np.ma.array(
-        [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]]
+        [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]],
     )
     y = np.ma.array(
-        [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]
+        [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]],
     )
     y[1] = np.ma.masked
     data = np.ma.array(
-        [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
+        [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]],
     )
     x, y, data = plt.change2one_dim_axes(x, y, data)
     compare_x = np.array([1, 2, 3, 4])
@@ -235,14 +236,14 @@ def test_change2one_dim_axes_maskY():
 
 def test_change2one_dim_axes_maskX():
     x = np.ma.array(
-        [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]]
+        [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]],
     )
     y = np.ma.array(
-        [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]
+        [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]],
     )
     x[1] = np.ma.masked
     data = np.ma.array(
-        [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
+        [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]],
     )
     x, y, data = plt.change2one_dim_axes(x, y, data)
     compare_x = np.array([1, 2, 3, 4])
@@ -253,15 +254,15 @@ def test_change2one_dim_axes_maskX():
 
 def test_change2one_dim_axes():
     x = np.ma.array(
-        [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]]
+        [[1, 1, 1, 1, 1], [2, 2, 2, 2, 2], [3, 3, 3, 3, 3], [4, 4, 4, 4, 4]],
     )
     compare_x = np.copy(x)
     y = np.ma.array(
-        [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]]
+        [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5], [1, 2, 3, 4, 5]],
     )
     compare_y = np.copy(y)
     data = np.ma.array(
-        [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]]
+        [[1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1], [1, 1, 1, 1, 1]],
     )
     x, y, data = plt.change2one_dim_axes(x, y, data)
     testing.assert_array_almost_equal(x, compare_x)

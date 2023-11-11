@@ -46,7 +46,9 @@ COMMON_ATTRIBUTES = {
         standard_name="longitude",
     ),
     "altitude": MetaData(
-        long_name="Altitude of site", standard_name="altitude", units="m"
+        long_name="Altitude of site",
+        standard_name="altitude",
+        units="m",
     ),
     "Zh": MetaData(
         long_name="Radar reflectivity factor",

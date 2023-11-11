@@ -16,9 +16,11 @@ class DrizzleSource(DataSource):
     """Class holding the input data for drizzle calculations.
 
     Args:
+    ----
         categorize_file: Categorize file name.
 
     Attributes:
+    ----------
         mie (dict): Mie look-up table data.
         dheight (float): Median difference of height array.
         z (ndarray): 2D radar echo (linear units).
@@ -59,7 +61,7 @@ class DrizzleSource(DataSource):
                     "width": mie[f"lu_width_{band}"][:],
                     "ray": mie[f"lu_mie_ray_{band}"][:],
                     "v": mie[f"lu_v_{band}"][:],
-                }
+                },
             )
         return lut
 
@@ -80,9 +82,11 @@ class DrizzleClassification(ProductClassification):
     child of  :class:`ProductClassification`.
 
     Args:
+    ----
         categorize_file: Categorize file name.
 
     Attributes:
+    ----------
         is_v_sigma (ndarray): 2D array denoting finite v_sigma.
         warm_liquid (ndarray): 2D array denoting warm liquid.
         drizzle (ndarray): 2D array denoting drizzle presence.
@@ -146,9 +150,11 @@ class SpectralWidth:
     spectral broadening of the Doppler velocity.
 
     Args:
+    ----
         categorize_file: Categorize file name.
 
     Attributes:
+    ----------
         categorize_file (str): Categorize file name.
         width_ht (ndarray): Spectral width containing the correction for turbulence
             broadening.
@@ -184,7 +190,8 @@ class SpectralWidth:
     def _calc_horizontal_wind(self):
         """Calculates magnitude of horizontal wind.
 
-        Returns:
+        Returns
+        -------
             ndarray: Horizontal wind (m s-1).
 
         """
@@ -198,11 +205,13 @@ class DrizzleSolver:
     """Estimates drizzle parameters.
 
     Args:
+    ----
         drizzle_source: The :class:`DrizzleSource` instance.
         drizzle_class: The :class:`DrizzleClassification` instance.
         spectral_width: The :class:`SpectralWidth` instance.
 
     Attributes:
+    ----------
         params (dict): Dictionary of retrieved drizzle parameters 'Do', 'mu', 'S',
             'beta_corr'.
 
@@ -238,7 +247,9 @@ class DrizzleSolver:
     def _find_lut_indices(self, ind, dia_init, n_dia, n_widths) -> tuple[int, int]:
         ind_dia = bisect_left(self._data.mie["Do"], dia_init[ind], hi=n_dia - 1)
         ind_width = bisect_left(
-            self._width_lut[:, ind_dia], -self._width_ht[ind], hi=n_widths - 1
+            self._width_lut[:, ind_dia],
+            -self._width_ht[ind],
+            hi=n_widths - 1,
         )
         return ind_width, ind_dia
 
@@ -261,12 +272,15 @@ class DrizzleSolver:
                     break
                 self._dia_init[ind] = dia
             beta_factor = np.exp(
-                2 * self.params["S"][ind] * self._data.beta[ind] * self._data.dheight
+                2 * self.params["S"][ind] * self._data.beta[ind] * self._data.dheight,
             )
             self.params["beta_corr"][ind[0], (ind[-1] + 1) :] *= beta_factor
 
     def _update_result_tables(
-        self, ind: tuple, dia: np.ndarray | float, lut_ind: tuple
+        self,
+        ind: tuple,
+        dia: np.ndarray | float,
+        lut_ind: tuple,
     ):
         self.params["Do"][ind] = dia
         self.params["mu"][ind] = self._data.mie["mu"][lut_ind[0]]
@@ -282,15 +296,18 @@ class DrizzleSolver:
         """Drizzle diameter calculation.
 
         Args:
+        ----
             beta_z_ratio: Beta to z ratio, multiplied by (2 / pi).
             mu: Shape parameter for gamma calculations. Default is 0.
             ray: Mie to Rayleigh ratio for z. Default is 1.
             k: Alpha to beta ratio . Default is 1.
 
         Returns:
+        -------
             ndarray: Drizzle diameter.
 
         References:
+        ----------
             https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
 
         """
@@ -299,7 +316,9 @@ class DrizzleSolver:
 
     @staticmethod
     def _is_converged(
-        ind: tuple, dia: np.ndarray | float, dia_init: np.ndarray
+        ind: tuple,
+        dia: np.ndarray | float,
+        dia_init: np.ndarray,
     ) -> bool:
         threshold = 1e-3
         return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold

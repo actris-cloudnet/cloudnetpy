@@ -48,7 +48,9 @@ class Ceilometer:
         else:
             n_negatives = 5
         return noisy_data.screen_data(
-            array, snr_limit=snr_limit, n_negatives=n_negatives
+            array,
+            snr_limit=snr_limit,
+            n_negatives=n_negatives,
         )
 
     def calc_beta_smooth(
@@ -65,7 +67,9 @@ class Ceilometer:
         beta_raw_smooth = gaussian_filter(beta_raw, sigma)
         beta_raw_smooth[cloud_ind] = cloud_values
         return noisy_data.screen_data(
-            beta_raw_smooth, is_smoothed=True, snr_limit=snr_limit
+            beta_raw_smooth,
+            is_smoothed=True,
+            snr_limit=snr_limit,
         )
 
     def prepare_data(self):
@@ -73,7 +77,7 @@ class Ceilometer:
         zenith_angle = self.data["zenith_angle"]
         self.data["height"] = np.array(
             self.site_meta["altitude"]
-            + utils.range_to_height(self.data["range"], zenith_angle)
+            + utils.range_to_height(self.data["range"], zenith_angle),
         )
         for key in ("time", "range"):
             self.data[key] = np.array(self.data[key])
@@ -120,7 +124,10 @@ class Ceilometer:
 
 class NoisyData:
     def __init__(
-        self, data: dict, noise_param: NoiseParam, range_corrected: bool = True
+        self,
+        data: dict,
+        noise_param: NoiseParam,
+        range_corrected: bool = True,
     ):
         self.data = data
         self.noise_param = noise_param
@@ -143,7 +150,8 @@ class NoisyData:
         noise = self._adjust_noise(noise, is_smoothed)
         if filter_negatives is True:
             is_negative = self._mask_low_values_above_consequent_negatives(
-                data, n_negatives=n_negatives
+                data,
+                n_negatives=n_negatives,
             )
             noise[is_negative] = 1e-12
         if filter_fog is True:
@@ -163,7 +171,8 @@ class NoisyData:
         )
         noise_below_threshold = noise < noise_min
         logging.debug(
-            "Adjusted noise of %s profiles", sum(np.array(noise_below_threshold))
+            "Adjusted noise of %s profiles",
+            sum(np.array(noise_below_threshold)),
         )
         noise[noise_below_threshold] = noise_min
         return noise
@@ -185,7 +194,8 @@ class NoisyData:
             profile[profile < threshold] = ma.masked
         cleaned_time_indices = np.unique(time_indices)
         logging.debug(
-            "Cleaned %s profiles with negative filter", len(cleaned_time_indices)
+            "Cleaned %s profiles with negative filter",
+            len(cleaned_time_indices),
         )
         return cleaned_time_indices
 
@@ -197,7 +207,8 @@ class NoisyData:
     ) -> np.ndarray:
         """Finds saturated (usually fog) profiles from beta_raw."""
         signal_sum = ma.sum(
-            ma.abs(self.data["beta_raw"][:, :n_gates_for_signal_sum]), axis=1
+            ma.abs(self.data["beta_raw"][:, :n_gates_for_signal_sum]),
+            axis=1,
         )
         variance = _calc_var_from_top_gates(self.data["beta_raw"])
         is_fog = (signal_sum > signal_sum_threshold) | (variance < variance_threshold)
@@ -236,7 +247,8 @@ class NoisyData:
         if self.range_corrected is False:
             alt_limit = 2400.0
             logging.warning(
-                "Raw data not range-corrected, correcting below %s m", alt_limit
+                "Raw data not range-corrected, correcting below %s m",
+                alt_limit,
             )
         else:
             alt_limit = 1e12
@@ -249,7 +261,9 @@ class NoisyData:
 
     @staticmethod
     def _clean_fog_profiles(
-        data: np.ndarray, is_fog: np.ndarray, threshold: float = 2e-6
+        data: np.ndarray,
+        is_fog: np.ndarray,
+        threshold: float = 2e-6,
     ) -> None:
         """Removes values in saturated (e.g. fog) profiles above peak."""
         for time_ind in np.where(is_fog)[0]:
@@ -281,12 +295,14 @@ def calc_sigma_units(
     how many steps in time and height corresponds to this smoothing.
 
     Args:
+    ----
         time_vector: 1D vector (fraction hour).
         range_los: 1D vector (m).
         sigma_minutes: Smoothing in minutes.
         sigma_metres: Smoothing in metres.
 
     Returns:
+    -------
         tuple: Two element tuple containing number of steps in time and height to
             achieve wanted smoothing.
 

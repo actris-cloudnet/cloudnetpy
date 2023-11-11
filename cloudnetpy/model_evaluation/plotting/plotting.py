@@ -38,7 +38,9 @@ def generate_L3_day_plots(
     Single fig_type will plot each product variable in a own figure.
     Statistic fig_type will plot select statistical method of all product method
     in same fig.
+
     Args:
+    ----
         nc_file (str): Path to source file
         product (str): Name of product wanted to plot
         model (str): Name of model which downsampling was done with
@@ -63,7 +65,9 @@ def generate_L3_day_plots(
         In case of model cycles, cycles are visualized in their on figures same
         way as an individual model run would be visualized in its own in a group
         figure.
+
     Examples:
+    --------
         >>> from cloudnetpy.model_evaluation.plotting.plotting
         import generate_L3_day_plots
         >>> l3_day_file = 'cf_ecmwf.nc'
@@ -161,7 +165,9 @@ def get_group_plots(
     Generates group subplot figure for product with model and all different
     downsampling methods. Generates separated figures for standard and advection
     timegrids. All model cycles if any will be generated to their own figures.
+
     Args:
+    ----
         product (str): Name of the product
         names (list): List of variables to be visualized to same fig
         nc_file (str): Path to a source file
@@ -194,7 +200,11 @@ def get_group_plots(
         fig.text(0.64, 0.885, f"Cycle: {cycle}", fontsize=13)
         model_run = f"{model}_{cycle}"
     cloud_plt.handle_saving(
-        image_name, save_path, show, casedate, [product, model_run, "group"]
+        image_name,
+        save_path,
+        show,
+        casedate,
+        [product, model_run, "group"],
     )
 
 
@@ -215,7 +225,9 @@ def get_pair_plots(
     In upper subplot is model product and lower subplot one of the
     downsampled method of select product. Function generates all product methods
     in a given nc-file in loop.
+
     Args:
+    ----
         product (str): Name of the product
         names (list): List of variables to be visualized to same fig
         nc_file (str): Path to a source file
@@ -265,7 +277,9 @@ def get_single_plots(
     include_xlimits: bool = False,
 ):
     """Generates figures of each product variable from given file in loop.
+
     Args:
+    ----
         product (str): Name of the product
         names (list): List of variables to be visualized to same fig
         nc_file (str): Path to a source file
@@ -332,7 +346,9 @@ def get_statistic_plots(
     per statistical method for a select product. All different downsampled method
     are in a same fig. Standard and advection timegrids are separated to own figs
     as well as different cycle runs.
+
     Args:
+    ----
         product (str): Name of the product
         names (list): List of variables to be visualized to same fig
         nc_file (str): Path to a source file
@@ -371,7 +387,10 @@ def get_statistic_plots(
                     name = ""
                     name = _get_stat_titles(name, product, variable_info)
                     day_stat = DayStatistics(
-                        stat, [product, model_name, name], model_data, data
+                        stat,
+                        [product, model_name, name],
+                        model_data,
+                        data,
                     )
                     if "error" in stat:
                         if np.all(day_stat.model_stat.mask is True):
@@ -401,7 +420,11 @@ def get_statistic_plots(
             fig.text(0.64, 0.885, f"Cycle: {cycle}", fontsize=13)
             model_run = f"{model}_{cycle}"
         cloud_plt.handle_saving(
-            image_name, save_path, show, casedate, [name, stat, model_run]
+            image_name,
+            save_path,
+            show,
+            casedate,
+            [name, stat, model_run],
         )
 
 
@@ -544,7 +567,7 @@ def plot_histogram(ax, day_stat: DayStatistics, variable_info):
     )
 
     weights = np.ones_like(day_stat.observation_stat) / float(
-        len(day_stat.observation_stat)
+        len(day_stat.observation_stat),
     )
     ax.hist(
         day_stat.observation_stat,

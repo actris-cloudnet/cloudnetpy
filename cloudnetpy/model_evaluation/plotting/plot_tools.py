@@ -33,7 +33,10 @@ def parse_wanted_names(
 
 
 def parse_dataset_keys(
-    nc_file: str, product: str, advance: bool, model: str = ""
+    nc_file: str,
+    product: str,
+    advance: bool,
+    model: str = "",
 ) -> list:
     names = list(netCDF4.Dataset(nc_file).variables.keys())
     a_names = ["cirrus", "snow"]
@@ -150,7 +153,9 @@ def rolling_mean(data: ma.MaskedArray, n: int = 4) -> np.ndarray:
 
 
 def change2one_dim_axes(
-    x: ma.MaskedArray, y: ma.MaskedArray, data: np.ndarray
+    x: ma.MaskedArray,
+    y: ma.MaskedArray,
+    data: np.ndarray,
 ) -> tuple:
     # If any mask in x or y, change 2d to 1d axes values
     # Common shape need to match 2d data.

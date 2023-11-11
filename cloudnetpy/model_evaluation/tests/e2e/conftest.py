@@ -8,6 +8,6 @@ def pytest_addoption(parser):
         parser.addoption(f"--{arg}", action="store")
 
 
-@pytest.fixture
+@pytest.fixture()
 def params(request):
     return {arg: request.config.getoption(f"--{arg}") for arg in args}

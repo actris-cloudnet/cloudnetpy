@@ -26,7 +26,7 @@ def test_relative_error_mask():
         [
             ma.array([-99, 0.0, -60.0, -99], mask=[1, 0, 0, 1]),
             ma.array([-50.0, -83.33, 25.0, -99], mask=[0, 0, 0, 1]),
-        ]
+        ],
     )
     testing.assert_array_almost_equal(x, compare)
 
@@ -39,7 +39,7 @@ def test_relative_error_nan():
         [
             ma.array([-66.67, 0.0, -60.0, -99], mask=[0, 0, 0, 1]),
             ma.array([-50.0, -99, 25.0, -75.0], mask=[0, 1, 0, 0]),
-        ]
+        ],
     )
     testing.assert_array_almost_equal(x, compare)
 
@@ -60,7 +60,7 @@ def test_absolute_error_nan():
         [
             ma.array([10.0, -99, -10.0, 10.0], mask=[0, 1, 0, 0]),
             ma.array([-99, 20.0, -20.0, 20.0], mask=[1, 0, 0, 0]),
-        ]
+        ],
     )
     testing.assert_array_almost_equal(x, compare)
 
@@ -75,7 +75,7 @@ def test_absolute_error_mask():
         [
             ma.array([10.0, 0.0, -10.0, -99], mask=[0, 0, 0, 1]),
             ma.array([20.0, -99, -20.0, -99], mask=[0, 1, 0, 1]),
-        ]
+        ],
     )
     testing.assert_array_almost_equal(x, compare)
 
@@ -99,13 +99,13 @@ def test_combine_masked_indices_min():
         [
             ma.array([-99, 2, 2, 3], mask=[1, 0, 0, 0]),
             ma.array([2, 4, 10, -99], mask=[1, 0, 0, 1]),
-        ]
+        ],
     )
     compare_o = ma.array(
         [
             ma.array([-99, 2, 5, 4], mask=[1, 0, 0, 0]),
             ma.array([4, 6, 8, -99], mask=[0, 0, 0, 1]),
-        ]
+        ],
     )
 
     testing.assert_array_almost_equal(x, compare_m)
@@ -122,13 +122,13 @@ def test_combine_masked_indices_mask():
         [
             ma.array([-99, -99, -99, 3], mask=[1, 1, 1, 0]),
             ma.array([-99, 4, 10, -99], mask=[1, 0, 0, 1]),
-        ]
+        ],
     )
     observation = ma.array(
         [
             ma.array([-99, -99, -99, 4], mask=[1, 1, 1, 0]),
             ma.array([-99, 6, 8, -99], mask=[1, 0, 0, 1]),
-        ]
+        ],
     )
     testing.assert_array_almost_equal(x, model)
     testing.assert_array_almost_equal(y, observation)
@@ -142,7 +142,7 @@ def test_combine_masked_indices_nan():
         [
             ma.array([-99, 2, 2, 3], mask=[1, 0, 0, 0]),
             ma.array([2, 4, -99, 1], mask=[0, 0, 1, 0]),
-        ]
+        ],
     )
     testing.assert_array_almost_equal(x, model)
     testing.assert_array_almost_equal(y, observation)

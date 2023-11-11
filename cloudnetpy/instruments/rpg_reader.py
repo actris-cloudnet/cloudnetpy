@@ -108,7 +108,9 @@ class Fmcw94Bin:
 
 
 def _read_from_file(
-    file: BinaryIO, fields: list[tuple[str, str]], count: int | None = None
+    file: BinaryIO,
+    fields: list[tuple[str, str]],
+    count: int | None = None,
 ) -> ma.MaskedArray:
     arr = np.fromfile(file, np.dtype(fields), 1 if count is None else count)
     masked_arr = ma.array(arr)
@@ -118,10 +120,10 @@ def _read_from_file(
 
 
 def _decode_angles(
-    x: np.ndarray, version: Literal[1, 2]
+    x: np.ndarray,
+    version: Literal[1, 2],
 ) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Decode elevation and azimuth angles.
+    """Decode elevation and azimuth angles.
 
     >>> _decode_angles(np.array([1267438.5]), version=1)
     (array([138.5]), array([267.4]))
@@ -131,7 +133,6 @@ def _decode_angles(
     Based on `interpret_angle` from mwr_raw2l1 licensed under BSD 3-Clause:
     https://github.com/MeteoSwiss/mwr_raw2l1/blob/0738490d22f77138cdf9329bf102f319c78be584/mwr_raw2l1/readers/reader_rpg_helpers.py#L30
     """
-
     if version == 1:
         # Description in the manual is quite unclear so here's an improved one:
         # Ang=sign(El)*(|El|+1000*Az), -90°<=El<100°, 0°<=Az<360°. If El>=100°
@@ -154,7 +155,7 @@ def _decode_angles(
         azi = (np.abs(x) - np.abs(ele) * 1e7) / 100
     else:
         raise NotImplementedError(
-            f"Known versions for angle encoding are 1 and 2, but received {version}"
+            f"Known versions for angle encoding are 1 and 2, but received {version}",
         )
 
     return ele, azi
@@ -163,7 +164,8 @@ def _decode_angles(
 class HatproBin:
     """HATPRO binary file reader. Byte order is assumed to be little endian.
 
-    References:
+    References
+    ----------
         Radiometer Physics (2014): Instrument Operation and Software Guide
         Operation Principles and Software Description for RPG standard single
         polarization radiometers (G5 series).
@@ -196,7 +198,7 @@ class HatproBin:
         if n_bad:
             percentage = round(100 * n_bad / len(is_bad))
             logging.info(
-                "Screening %s % (%s/%s)" " data points with low quality",
+                "Screening %s % (%s/%s) data points with low quality",
                 percentage,
                 n_bad,
                 len(is_bad),
@@ -208,10 +210,10 @@ class HatproBin:
         self.data = self.data[ind]
 
     def _read_header(self, file: BinaryIO):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def _read_data(self, file: BinaryIO):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def _add_zenith_angle(self):
         ele, _azi = _decode_angles(self.data["_instrument_angles"], self.version)
@@ -314,7 +316,8 @@ class HatproBinCombined:
             # Workaround because rfn.drop_fields seems to incorrectly drop mask...
             # arr = rfn.drop_fields(arr, ["zenith_angle1", "zenith_angle2"])
             arr = rfn.rename_fields(
-                arr, {"zenith_angle1": "_tmp1", "zenith_angle2": "_tmp2"}
+                arr,
+                {"zenith_angle1": "_tmp1", "zenith_angle2": "_tmp2"},
             )
         else:
             raise NotImplementedError("Only implemented up to 2 files")

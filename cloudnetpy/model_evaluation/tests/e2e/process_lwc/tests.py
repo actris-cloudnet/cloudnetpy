@@ -9,7 +9,7 @@ class TestCloudFractionProcessing:
     def _fetch_params(self, params):
         self.full_path = params["full_path"]
 
-    @pytest.mark.reprocess
+    @pytest.mark.reprocess()
     def test_that_has_correct_attributes(self):
         nc = netCDF4.Dataset(self.full_path)
         assert nc.location == "Mace-Head"
@@ -25,14 +25,14 @@ class TestCloudFractionProcessing:
         )
         nc.close()
 
-    @pytest.mark.reprocess
+    @pytest.mark.reprocess()
     @pytest.mark.parametrize("key", ["lwc_ecmwf", "lwc_adv_ecmwf"])
     def test_that_has_correct_product_variables(self, key):
         nc = netCDF4.Dataset(self.full_path)
         assert key in nc.variables.keys()
         nc.close()
 
-    @pytest.mark.reprocess
+    @pytest.mark.reprocess()
     @pytest.mark.parametrize(
         "key",
         ["time", "level", "latitude", "longitude", "horizontal_resolution"],
@@ -42,9 +42,10 @@ class TestCloudFractionProcessing:
         assert key in nc.variables.keys()
         nc.close()
 
-    @pytest.mark.reprocess
+    @pytest.mark.reprocess()
     @pytest.mark.parametrize(
-        "key", ["ecmwf_forecast_time", "ecmwf_height", "ecmwf_lwc"]
+        "key",
+        ["ecmwf_forecast_time", "ecmwf_height", "ecmwf_lwc"],
     )
     def test_that_has_correct_cycle_variables(self, key):
         nc = netCDF4.Dataset(self.full_path)

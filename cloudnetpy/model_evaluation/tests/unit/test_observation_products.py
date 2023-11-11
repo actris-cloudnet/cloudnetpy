@@ -1,9 +1,8 @@
 from datetime import datetime
 
 import numpy as np
-import numpy.ma as ma
-import numpy.testing as testing
 import pytest
+from numpy import ma, testing
 
 from cloudnetpy.model_evaluation.products.product_resampling import ObservationManager
 from cloudnetpy.products.product_tools import CategorizeBits
@@ -53,7 +52,7 @@ def test_generate_cf(obs_file):
             [0, 0, 0, 1],
             [1, 0, 0, 0],
             [0, 0, 0, 0],
-        ]
+        ],
     )
     compare[~obj._rain_index(), :] = ma.masked
     testing.assert_array_almost_equal(compare, x)
@@ -71,7 +70,7 @@ def test_basic_cloud_mask(obs_file):
             [0, 0, 0, 1],
             [0, 0, 6, 6],
             [7, 2, 0, 7],
-        ]
+        ],
     )
     testing.assert_array_almost_equal(x, compare)
 
@@ -89,7 +88,7 @@ def test_mask_cloud_bits(obs_file):
             [0, 0, 0, 1],
             [0, 0, 0, 0],
             [0, 0, 0, 0],
-        ]
+        ],
     )
     testing.assert_array_almost_equal(x, compare)
 

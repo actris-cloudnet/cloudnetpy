@@ -19,7 +19,11 @@ def _process():
     tmp_dir = TemporaryDirectory()
     temp_file = f"{tmp_dir.name}/xx.nc"
     product_resampling.process_L3_day_product(
-        "ecmwf", "lwc", [test_file_model], test_file_product, temp_file
+        "ecmwf",
+        "lwc",
+        [test_file_model],
+        test_file_product,
+        temp_file,
     )
     try:
         subprocess.call(
@@ -29,7 +33,7 @@ def _process():
                 f"{SCRIPT_PATH}/tests.py",
                 "--full_path",
                 temp_file,
-            ]
+            ],
         )
     except subprocess.CalledProcessError:
         raise
@@ -42,7 +46,7 @@ def main():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Model evaluation liquid water content processing e2e test."
+        description="Model evaluation liquid water content processing e2e test.",
     )
     ARGS = parser.parse_args()
     main()

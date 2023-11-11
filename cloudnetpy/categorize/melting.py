@@ -32,17 +32,20 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
     the rest -8..+6.
 
     Notes:
+    -----
         This melting layer detection method is novel and needs to be validated.
         Also note that there might be some detection problems with strong
         updrafts of air. In these cases the absolute values for speed do not
         make sense (rain drops can even move upwards instead of down).
 
     Args:
+    ----
         obs: The :class:`ClassData` instance.
         smooth: If True, apply a small Gaussian smoother to the
             melting layer. Default is True.
 
     Returns:
+    -------
         2-D boolean array denoting the melting layer.
 
     """
@@ -77,7 +80,10 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
             try:
                 assert ldr_prof is not None and ldr_dprof is not None
                 indices = _find_melting_layer_from_ldr(
-                    ldr_prof, ldr_dprof, v_prof, z_prof
+                    ldr_prof,
+                    ldr_dprof,
+                    v_prof,
+                    z_prof,
                 )
             except (ValueError, IndexError, AssertionError):
                 height = obs.height[temp_indices]
@@ -119,7 +125,9 @@ def _find_melting_layer_from_ldr(
 
 
 def _find_melting_layer_from_v(
-    v_prof: np.ndarray, width_prof: np.ndarray | None, height: np.ndarray
+    v_prof: np.ndarray,
+    width_prof: np.ndarray | None,
+    height: np.ndarray,
 ) -> np.ndarray | None:
     v = np.copy(v_prof[:-1])
     v_diff = np.diff(v_prof)

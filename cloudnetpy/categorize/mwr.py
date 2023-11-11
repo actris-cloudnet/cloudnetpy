@@ -9,6 +9,7 @@ class Mwr(DataSource):
     """Microwave radiometer class, child of DataSource.
 
     Args:
+    ----
          full_path: Cloudnet Level 1b mwr file.
 
     """
@@ -22,6 +23,7 @@ class Mwr(DataSource):
         """Approximates lwp and its error in a grid using mean.
 
         Args:
+        ----
             time_grid: 1D target time grid.
 
         """

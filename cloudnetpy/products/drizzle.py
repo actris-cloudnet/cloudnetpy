@@ -16,7 +16,9 @@ from cloudnetpy.products.drizzle_tools import (
 
 
 def generate_drizzle(
-    categorize_file: str, output_file: str, uuid: str | None = None
+    categorize_file: str,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     """Generates Cloudnet drizzle product.
 
@@ -24,18 +26,22 @@ def generate_drizzle(
     cloud radar and lidar measurements. The results are written in a netCDF file.
 
     Args:
+    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
+    -------
         str: UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.products import generate_drizzle
         >>> generate_drizzle('categorize.nc', 'drizzle.nc')
 
     References:
+    ----------
         O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
         Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
         J. Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
@@ -66,10 +72,12 @@ class DrizzleProducts:
     """Calculates additional quantities from the drizzle properties.
 
     Args:
+    ----
         drizzle_source: The :class:`DrizzleSource` instance.
         drizzle_solver: The :class:`DrizzleSolver` instance.
 
     Attributes:
+    ----------
         derived_products (dict): Dictionary containing derived drizzle products:
             'drizzle_N', 'drizzle_lwc', 'drizzle_lwf', 'v_drizzle', 'v_air'.
 
@@ -113,7 +121,7 @@ class DrizzleProducts:
     def _calc_lwc(self):
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
-        dia, mu, s = [self._params.get(key) for key in ("Do", "mu", "S")]
+        dia, mu, s = (self._params.get(key) for key in ("Do", "mu", "S"))
         assert isinstance(mu, np.ndarray)
         assert isinstance(s, np.ndarray)
         assert isinstance(dia, np.ndarray)
@@ -146,9 +154,11 @@ class RetrievalStatus:
     """Estimates the status of drizzle retrievals.
 
     Args:
+    ----
         drizzle_class: The :class:`DrizzleClassification` instance.
 
     Attributes:
+    ----------
         drizzle_class: The :class:`DrizzleClassification` instance.
         retrieval_status (ndarray): 2D array containing drizzle retrieval
             status information.
@@ -199,7 +209,8 @@ DRIZZLE_ATTRIBUTES = {
         ancillary_variables="drizzle_N_error drizzle_N_bias",
     ),
     "drizzle_N_error": MetaData(
-        long_name="Random error in drizzle number concentration", units="dB"
+        long_name="Random error in drizzle number concentration",
+        units="dB",
     ),
     "drizzle_N_bias": MetaData(
         long_name="Possible bias in drizzle number concentration",
@@ -239,7 +250,8 @@ DRIZZLE_ATTRIBUTES = {
         comment="Positive values are towards the ground.",
     ),
     "v_drizzle_error": MetaData(
-        long_name="Random error in drizzle droplet fall velocity", units="dB"
+        long_name="Random error in drizzle droplet fall velocity",
+        units="dB",
     ),
     "v_drizzle_bias": MetaData(
         long_name="Possible bias in drizzle droplet fall velocity",
@@ -253,7 +265,8 @@ DRIZZLE_ATTRIBUTES = {
         standard_name="upward_air_velocity",
     ),
     "v_air_error": MetaData(
-        long_name="Random error in vertical air velocity", units="dB"
+        long_name="Random error in vertical air velocity",
+        units="dB",
     ),
     "Do": MetaData(
         long_name="Drizzle median diameter",
@@ -288,6 +301,7 @@ DRIZZLE_ATTRIBUTES = {
     ),
     "beta_corr": MetaData(long_name="Lidar backscatter correction factor", units="1"),
     "drizzle_retrieval_status": MetaData(
-        long_name="Drizzle parameter retrieval status", units="1"
+        long_name="Drizzle parameter retrieval status",
+        units="1",
     ),
 }

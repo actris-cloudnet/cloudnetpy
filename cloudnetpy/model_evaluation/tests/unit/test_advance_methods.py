@@ -128,19 +128,19 @@ def test_find_ice_in_clouds(obs_file, model_file):
         [
             [-1, 0, 2, 3],
             [-1, 1, 2, 3],
-        ]
+        ],
     )
     iwc = np.array(
         [
             [-1, 0, 2, 31],
             [-1, 1, 200, 3],
-        ]
+        ],
     )
     lwc = np.array(
         [
             [0, 1, 2, 3],
             [0, 1, 2, 3],
-        ]
+        ],
     )
     expected = np.array([31 / 3 * 1000, 200 / 2 * 1000])
     x, _ = adv_pro.find_ice_in_clouds(cf_f, iwc, lwc)
@@ -155,19 +155,19 @@ def test_get_ice_indices(obs_file, model_file):
         [
             [-1, 0, 2, 3],
             [-1, 1, 2, 3],
-        ]
+        ],
     )
     iwc = np.array(
         [
             [-1, 0, 2, 31],
             [-1, 1, 200, 3],
-        ]
+        ],
     )
     lwc = np.array(
         [
             [0, 1, 2, 3],
             [0, 1, 2, 3],
-        ]
+        ],
     )
     x = np.array([0, 1])
     y = np.array([3, 2])
@@ -262,7 +262,13 @@ def test_get_observation_index(obs_file, model_file):
     iwc_dist = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
     compare = iwc_dist > min_iwc
     x = adv_pro.get_observation_index(
-        iwc_dist, tZT, tT, tZ, np.array([t]), temperature, z_sen
+        iwc_dist,
+        tZT,
+        tT,
+        tZ,
+        np.array([t]),
+        temperature,
+        z_sen,
     )
     testing.assert_array_almost_equal(x, compare)
 
