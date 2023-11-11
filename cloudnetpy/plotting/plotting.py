@@ -303,7 +303,6 @@ def display_watermark(
         fontsize=fontsize,
         ha="left",
         va="bottom",
-        # transform=ax.transAxes,
     )
 
 

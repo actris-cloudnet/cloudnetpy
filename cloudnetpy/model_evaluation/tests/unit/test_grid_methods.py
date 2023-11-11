@@ -128,17 +128,6 @@ def test_regrid_cf_area(model_file, obs_file):
     assert x[0, 0] == 0.75
 
 
-# def test_regrid_cf_none(model_file, obs_file):
-#     obs = ObservationManager(PRODUCT, str(obs_file))
-#     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
-#     obj = ProductGrid(model, obs)
-#     data = np.array([])
-#     d = {"cf_A": np.zeros((1, 1))}
-#     d = obj._regrid_cf(d, 0, 0, data)
-#     x = d["cf_A"]
-#     assert np.isnan(x[0, 0])
-
-
 def test_regrid_cf_area_masked(model_file, obs_file):
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
