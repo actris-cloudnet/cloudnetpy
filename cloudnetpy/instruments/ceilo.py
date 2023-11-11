@@ -94,8 +94,7 @@ def ceilo2nc(
     output.update_attributes(ceilo_obj.data, attributes)
     for key in ("beta", "beta_smooth"):
         ceilo_obj.add_snr_info(key, snr_limit)
-    uuid = output.save_level1b(ceilo_obj, output_file, uuid)
-    return uuid
+    return output.save_level1b(ceilo_obj, output_file, uuid)
 
 
 def _initialize_ceilo(

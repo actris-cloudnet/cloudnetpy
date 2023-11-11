@@ -110,8 +110,7 @@ class VaisalaCeilo(Ceilometer):
         number_of_data_lines = _find_number_of_data_lines(
             valid_lines, timestamp_line_numbers[0]
         )
-        data_lines = _parse_data_lines(valid_lines, timestamp_line_numbers)
-        return data_lines
+        return _parse_data_lines(valid_lines, timestamp_line_numbers)
 
     @staticmethod
     def _get_message_number(header_line_1: dict) -> int:
@@ -134,8 +133,7 @@ class VaisalaCeilo(Ceilometer):
     def _handle_metadata(cls, header: list) -> dict:
         meta = cls._concatenate_meta(header)
         meta = cls._remove_meta_duplicates(meta)
-        meta = cls._convert_meta_strings(meta)
-        return meta
+        return cls._convert_meta_strings(meta)
 
     @staticmethod
     def _concatenate_meta(header: list) -> dict:

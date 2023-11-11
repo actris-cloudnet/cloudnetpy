@@ -50,10 +50,9 @@ def generate_classification(
         date = product_container.get_date()
         attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
         output.update_attributes(product_container.data, attributes)
-        uuid = output.save_product_file(
+        return output.save_product_file(
             "classification", product_container, output_file, uuid
         )
-    return uuid
 
 
 def _get_target_classification(

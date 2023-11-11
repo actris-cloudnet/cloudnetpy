@@ -64,8 +64,7 @@ def radiometrics2nc(
     assert radiometrics.date is not None
     attributes = output.add_time_attribute({}, radiometrics.date)
     output.update_attributes(radiometrics.data, attributes)
-    uuid = output.save_level1b(radiometrics, output_file, uuid)
-    return uuid
+    return output.save_level1b(radiometrics, output_file, uuid)
 
 
 class Record(NamedTuple):

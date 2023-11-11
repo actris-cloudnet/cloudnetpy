@@ -346,15 +346,12 @@ def _find_valid_fields(nc_file: str, names: list) -> tuple[list, list]:
 
 def _is_height_dimension(full_path: str) -> bool:
     with netCDF4.Dataset(full_path) as nc:
-        is_height = any(key in nc.variables for key in ("height", "range"))
-    return is_height
+        return any(key in nc.variables for key in ("height", "range"))
 
 
 def _get_variable_unit(full_path: str, name: str) -> str:
     with netCDF4.Dataset(full_path) as nc:
-        var = nc.variables[name]
-        unit = var.units
-    return unit
+        return nc.variables[name].units
 
 
 def _initialize_figure(n_subplots: int, dpi) -> tuple:
@@ -732,8 +729,7 @@ def _find_time_gap_indices(time: ndarray) -> ndarray:
     """Finds time gaps bigger than 5min."""
     time_diff = np.diff(time)
     dec_hour_5min = 0.085
-    gaps = np.where(time_diff > dec_hour_5min)[0]
-    return gaps
+    return np.where(time_diff > dec_hour_5min)[0]
 
 
 def _get_plot_parameters(data: ndarray) -> tuple[int, float]:
@@ -783,15 +779,13 @@ def generate_log_cbar_ticklabel_list(vmin: float, vmax: float) -> list:
 def read_location(nc_file: str) -> str:
     """Returns site name."""
     with netCDF4.Dataset(nc_file) as nc:
-        site_name = nc.location
-    return site_name
+        return nc.location
 
 
 def read_date(nc_file: str) -> date:
     """Returns measurement date."""
     with netCDF4.Dataset(nc_file) as nc:
-        case_date = date(int(nc.year), int(nc.month), int(nc.day))
-    return case_date
+        return date(int(nc.year), int(nc.month), int(nc.day))
 
 
 def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
@@ -838,8 +832,7 @@ def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
                     for _source, _sno in zip(source, sno)
                 ]
                 source = "\n".join(source)
-    source = source.rstrip("\n")
-    return source
+    return source.rstrip("\n")
 
 
 def add_subtitle(fig, case_date: date, site_name: str):

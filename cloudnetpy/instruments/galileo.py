@@ -87,8 +87,7 @@ def galileo2nc(
             galileo.add_height()
         attributes = output.add_time_attribute(ATTRIBUTES, galileo.date)
         output.update_attributes(galileo.data, attributes)
-        uuid = output.save_level1b(galileo, output_file, uuid)
-        return uuid
+        return output.save_level1b(galileo, output_file, uuid)
 
 
 class Galileo(ChilboltonRadar):

@@ -51,7 +51,7 @@ def generate_lwc(
         date = lwc_source.get_date()
         attributes = output.add_time_attribute(LWC_ATTRIBUTES, date)
         output.update_attributes(lwc_source.data, attributes)
-        uuid = output.save_product_file(
+        return output.save_product_file(
             "lwc",
             lwc_source,
             output_file,
@@ -61,7 +61,6 @@ def generate_lwc(
                 "lwp_error",
             ),
         )
-    return uuid
 
 
 class LwcSource(DataSource):
@@ -234,8 +233,7 @@ class CloudAdjustor:
         detection_type[~top_clouds] = 0
         lidar_only_clouds = self._find_lidar_only_clouds(detection_type)
         top_clouds[~lidar_only_clouds, :] = 0
-        top_clouds = self._remove_good_profiles(top_clouds)
-        return top_clouds
+        return self._remove_good_profiles(top_clouds)
 
     def _find_topmost_clouds(self) -> np.ndarray:
         top_clouds = np.copy(self.is_liquid)

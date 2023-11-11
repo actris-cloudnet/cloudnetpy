@@ -59,8 +59,7 @@ def generate_drizzle(
         date = drizzle_source.get_date()
         attributes = output.add_time_attribute(DRIZZLE_ATTRIBUTES, date)
         output.update_attributes(drizzle_source.data, attributes)
-        uuid = output.save_product_file("drizzle", drizzle_source, output_file, uuid)
-    return uuid
+        return output.save_product_file("drizzle", drizzle_source, output_file, uuid)
 
 
 class DrizzleProducts:

@@ -705,8 +705,7 @@ def _get_iwc_title(field_name: str, variable_info) -> str:
 
 
 def _get_product_title(variable_info) -> str:
-    title = f"{variable_info.name}"
-    return title
+    return f"{variable_info.name}"
 
 
 def _get_stat_titles(field_name: str, product: str, variable_info) -> str:
@@ -742,5 +741,4 @@ def _get_iwc_title_stat(field_name: str, variable_info) -> str:
 
 def _get_product_title_stat(variable_info) -> str:
     name = variable_info.name
-    title = f"{name}"
-    return title
+    return f"{name}"

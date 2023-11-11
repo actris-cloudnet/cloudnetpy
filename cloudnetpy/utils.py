@@ -393,8 +393,7 @@ def interpolate_2d_mask(
     mask = mask_fun(x_new, y_new)
     mask[mask < 0.5] = 0
     masked_array = ma.array(data, mask=mask.astype(bool))
-    masked_array = ma.masked_invalid(masked_array)
-    return masked_array
+    return ma.masked_invalid(masked_array)
 
 
 def interpolate_2d_nearest(
@@ -922,8 +921,7 @@ def get_file_type(filename: str) -> str:
     """Returns cloudnet file type from new and legacy files."""
     with netCDF4.Dataset(filename) as nc:
         if hasattr(nc, "cloudnet_file_type"):
-            file_type = nc.cloudnet_file_type
-            return file_type
+            return nc.cloudnet_file_type
     product = filename.split("_")[-1][:-3]
     if product in ("categorize", "classification", "drizzle"):
         return product

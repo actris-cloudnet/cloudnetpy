@@ -29,8 +29,7 @@ def get_drizzle_error(
         z_error = np.full(categorize.z.shape, z_error)
         error_input = z_error, bias_error
     bias_input = _read_input_uncertainty(categorize, "bias")
-    errors = _calc_errors(drizzle_indices, error_input, bias_input)
-    return errors
+    return _calc_errors(drizzle_indices, error_input, bias_input)
 
 
 def _get_drizzle_indices(diameter: np.ndarray) -> dict:

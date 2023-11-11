@@ -60,8 +60,7 @@ class CategorizeBits:
             except KeyError as err:
                 raise KeyError from err
             keys = getattr(CategorizeBits, f"{bit_type}_keys")
-            bits = {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
-        return bits
+            return {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
 
 
 class ProductClassification(CategorizeBits):

@@ -50,8 +50,7 @@ def generate_iwc(
         attributes = _add_iwc_comment(attributes, iwc_source)
         attributes = _add_iwc_error_comment(attributes, lwp_prior, bias)
         output.update_attributes(iwc_source.data, attributes)
-        uuid = output.save_product_file(product, iwc_source, output_file, uuid)
-    return uuid
+        return output.save_product_file(product, iwc_source, output_file, uuid)
 
 
 class IwcSource(IceSource):

@@ -62,8 +62,7 @@ def generate_categorize(
         radar_data_gap_indices = data["radar"].rebin_to_grid(time)
         lidar_data_gap_indices = data["lidar"].interpolate_to_grid(time, height)
         bad_time_indices = list(set(radar_data_gap_indices + lidar_data_gap_indices))
-        valid_ind = [ind for ind in range(len(time)) if ind not in bad_time_indices]
-        return valid_ind
+        return [ind for ind in range(len(time)) if ind not in bad_time_indices]
 
     def _screen_bad_time_indices(valid_indices: list) -> None:
         n_time_full = len(time)
@@ -142,8 +141,7 @@ def generate_categorize(
         attributes = output.add_time_attribute(attributes, date, "model_time")
         attributes = output.add_source_attribute(attributes, data)
         output.update_attributes(cloudnet_arrays, attributes)
-        uuid = _save_cat(output_file, data, cloudnet_arrays, uuid)
-        return uuid
+        return _save_cat(output_file, data, cloudnet_arrays, uuid)
     finally:
         _close_all()
 

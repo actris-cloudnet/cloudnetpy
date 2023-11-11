@@ -90,8 +90,7 @@ def copernicus2nc(
             copernicus.add_height()
         attributes = output.add_time_attribute(ATTRIBUTES, copernicus.date)
         output.update_attributes(copernicus.data, attributes)
-        uuid = output.save_level1b(copernicus, output_file, uuid)
-        return uuid
+        return output.save_level1b(copernicus, output_file, uuid)
 
 
 class Copernicus(ChilboltonRadar):

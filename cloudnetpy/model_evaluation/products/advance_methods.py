@@ -145,8 +145,7 @@ class AdvanceProductMethods(DataSource):
         u = self.remove_extra_levels(u)
         v = self.remove_extra_levels(v)
         w_shear = self.calculate_wind_shear(self._model_obj.wind, u, v, height)
-        variance_iwc = self.calculate_variance_iwc(w_shear, ice_ind)
-        return variance_iwc
+        return self.calculate_variance_iwc(w_shear, ice_ind)
 
     def calculate_variance_iwc(self, w_shear: np.ndarray, ice_ind: tuple) -> np.ndarray:
         return 10 ** (
@@ -217,14 +216,10 @@ class AdvanceProductMethods(DataSource):
         z_sen: float,
     ) -> np.ndarray:
         def calculate_min_iwc():
-            min_iwc = 10 ** (
-                tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t
-            )
-            return min_iwc
+            return 10 ** (tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t)
 
         iwc_min = calculate_min_iwc()
-        obs_index = iwc_dist > iwc_min
-        return obs_index
+        return iwc_dist > iwc_min
 
     @staticmethod
     def filter_cirrus(

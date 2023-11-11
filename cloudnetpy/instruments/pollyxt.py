@@ -61,8 +61,7 @@ def pollyxt2nc(
     attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
     polly.add_snr_info("beta", snr_limit)
-    uuid = output.save_level1b(polly, output_file, uuid)
-    return uuid
+    return output.save_level1b(polly, output_file, uuid)
 
 
 class PollyXt(Ceilometer):

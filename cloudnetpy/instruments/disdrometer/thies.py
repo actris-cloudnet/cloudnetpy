@@ -50,8 +50,7 @@ def thies2nc(
     disdrometer.convert_units()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
     output.update_attributes(disdrometer.data, attributes)
-    uuid = output.save_level1b(disdrometer, output_file, uuid)
-    return uuid
+    return output.save_level1b(disdrometer, output_file, uuid)
 
 
 class Thies(Disdrometer):

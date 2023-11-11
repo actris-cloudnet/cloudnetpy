@@ -49,8 +49,7 @@ def calc_lwc_change_rate(temperature: np.ndarray, pressure: np.ndarray) -> np.nd
     )
     f3 = con.MW_RATIO * svp * pressure_difference**-2
     dqs_dp = f1 * f2 * f3
-    dqs_dz = dqs_dp * air_density**2 * -scipy.constants.g
-    return dqs_dz
+    return dqs_dp * air_density**2 * -scipy.constants.g
 
 
 def calc_mixing_ratio(svp: np.ndarray, pressure: np.ndarray) -> np.ndarray:
@@ -146,8 +145,7 @@ class GasAttenuation(Attenuation):
     def _calc_gas_atten(self) -> np.ndarray:
         specific_atten = ma.copy(self._model["specific_gas_atten"])
         specific_atten_corrected = self._fix_atten_in_liquid(specific_atten)
-        gas_atten = self._specific_to_gas_atten(specific_atten_corrected)
-        return gas_atten
+        return self._specific_to_gas_atten(specific_atten_corrected)
 
     def _fix_atten_in_liquid(self, atten: np.ndarray) -> np.ndarray:
         saturated_atten = self._model["specific_saturated_gas_atten"]

@@ -82,8 +82,7 @@ def _get_smoothed_v(
     obs: ClassData, sigma: tuple[float, float] = (5, 5)
 ) -> ma.MaskedArray:
     smoothed_v = gaussian_filter(obs.v, sigma)
-    smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
-    return smoothed_v
+    return ma.masked_where(obs.v.mask, smoothed_v)
 
 
 def _calc_prob_from_ldr(prob: dict) -> np.ndarray:

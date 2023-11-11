@@ -50,8 +50,7 @@ def ws2nc(
         output.update_attributes(ws.data, attributes)
     except ValueError as err:
         raise WeatherStationDataError from err
-    uuid = output.save_level1b(ws, output_file, uuid)
-    return uuid
+    return output.save_level1b(ws, output_file, uuid)
 
 
 class WS(CloudnetInstrument):

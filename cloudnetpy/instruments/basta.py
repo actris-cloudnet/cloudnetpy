@@ -63,8 +63,7 @@ def basta2nc(
         basta.remove_duplicate_timestamps()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
-    uuid = output.save_level1b(basta, output_file, uuid)
-    return uuid
+    return output.save_level1b(basta, output_file, uuid)
 
 
 class Basta(NcRadar):

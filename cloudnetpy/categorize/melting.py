@@ -114,8 +114,7 @@ def _find_melting_layer_from_ldr(
 
     if all(conditions):
         base = int(np.floor(base + (peak - base) / 2))
-        indices = np.arange(base, top)
-        return indices
+        return np.arange(base, top)
     return None
 
 

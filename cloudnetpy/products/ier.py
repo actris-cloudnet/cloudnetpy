@@ -63,8 +63,7 @@ def generate_ier(
         attributes = output.add_time_attribute(IER_ATTRIBUTES, date)
         attributes = _add_ier_comment(attributes, ier_source)
         output.update_attributes(ier_source.data, attributes)
-        uuid = output.save_product_file(product, ier_source, output_file, uuid)
-    return uuid
+        return output.save_product_file(product, ier_source, output_file, uuid)
 
 
 class IerSource(IceSource):

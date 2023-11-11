@@ -74,8 +74,7 @@ class ObservationManager(DataSource):
         """Generates cloud fractions using categorize bits and masking conditions"""
         categorize_bits = CategorizeBits(self._file)
         cloud_mask = self._classify_basic_mask(categorize_bits.category_bits)
-        cloud_mask = self._mask_cloud_bits(cloud_mask)
-        return cloud_mask
+        return self._mask_cloud_bits(cloud_mask)
 
     @staticmethod
     def _classify_basic_mask(bits: dict) -> np.ndarray:

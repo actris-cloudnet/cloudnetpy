@@ -108,8 +108,7 @@ def mrr2nc(
             mrr.sort_timestamps()
         attributes = output.add_time_attribute(ATTRIBUTES, mrr.date)
         output.update_attributes(mrr.data, attributes)
-        uuid = output.save_level1b(mrr, output_file, uuid)
-        return uuid
+        return output.save_level1b(mrr, output_file, uuid)
 
 
 class MrrPro(NcRadar):

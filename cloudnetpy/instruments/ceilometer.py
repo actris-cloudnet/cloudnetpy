@@ -47,10 +47,9 @@ class Ceilometer:
             n_negatives = 20
         else:
             n_negatives = 5
-        array_screened = noisy_data.screen_data(
+        return noisy_data.screen_data(
             array, snr_limit=snr_limit, n_negatives=n_negatives
         )
-        return array_screened
 
     def calc_beta_smooth(
         self,
@@ -65,10 +64,9 @@ class Ceilometer:
         sigma = calc_sigma_units(self.data["time"], self.data["range"])
         beta_raw_smooth = gaussian_filter(beta_raw, sigma)
         beta_raw_smooth[cloud_ind] = cloud_values
-        beta_smooth = noisy_data.screen_data(
+        return noisy_data.screen_data(
             beta_raw_smooth, is_smoothed=True, snr_limit=snr_limit
         )
-        return beta_smooth
 
     def prepare_data(self):
         """Add common additional data / metadata and convert into CloudnetArrays."""
