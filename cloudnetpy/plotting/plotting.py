@@ -350,7 +350,8 @@ def _find_valid_fields(nc_file: str, names: list) -> tuple[list, list]:
             else:
                 valid_names.remove(name)
     if not valid_names:
-        raise ValueError("No fields to be plotted")
+        msg = "No valid fields to be plotted."
+        raise ValueError(msg)
     return valid_data, valid_names
 
 

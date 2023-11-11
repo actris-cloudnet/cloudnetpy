@@ -117,7 +117,8 @@ class AdvanceProductMethods(DataSource):
     ) -> np.ndarray:
         cf_filtered = self.mask_weird_indices(cf, iwc, lwc)
         if np.sum((iwc > 0) & (lwc < iwc / 10) & (cf_filtered > 0)) == 0:
-            raise ValueError("No ice clouds in a input data")
+            msg = "No ice clouds in a input data"
+            raise ValueError(msg)
         return cf_filtered
 
     @staticmethod

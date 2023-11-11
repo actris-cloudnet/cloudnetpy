@@ -309,7 +309,8 @@ def calc_sigma_units(
 
     """
     if len(time_vector) == 0 or np.max(time_vector) > 24:
-        raise ValueError("Invalid time vector")
+        msg = "Invalid time vector"
+        raise ValueError(msg)
     minutes_in_hour = 60
     time_step = utils.mdiff(time_vector) * minutes_in_hour
     alt_step = utils.mdiff(range_los)

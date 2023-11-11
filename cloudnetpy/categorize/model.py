@@ -126,7 +126,8 @@ class Model(DataSource):
         try:
             model_heights = self.dataset.variables["height"]
         except KeyError as err:
-            raise ModelDataError("No 'height' variable in the model file.") from err
+            msg = "No 'height' variable in the model file."
+            raise ModelDataError(msg) from err
         return self.to_m(model_heights) + alt_site
 
 
@@ -141,7 +142,8 @@ def _find_model_type(file_name: str) -> str:
     for key in possible_keys:
         if key in file_name:
             return key
-    raise ValueError("Unknown model type")
+    msg = "Unknown model type"
+    raise ValueError(msg)
 
 
 def _find_number_of_valid_profiles(array: np.ndarray) -> int:

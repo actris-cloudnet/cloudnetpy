@@ -122,7 +122,8 @@ def time_grid(time_step: int = 30) -> np.ndarray:
 
     """
     if time_step < 1:
-        raise ValueError("Time resolution should be >= 1 seconds")
+        msg = "Time resolution should be >= 1 seconds"
+        raise ValueError(msg)
     half_step = time_step / SECONDS_PER_HOUR / 2
     return np.arange(half_step, 24 + half_step, half_step * 2)
 
@@ -328,7 +329,8 @@ def isbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
 
     """
     if nth_bit < 0:
-        raise ValueError("Negative bit number")
+        msg = "Negative bit number"
+        raise ValueError(msg)
     mask = 1 << nth_bit
     return array & mask > 0
 
@@ -362,7 +364,8 @@ def setbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
 
     """
     if nth_bit < 0:
-        raise ValueError("Negative bit number")
+        msg = "Negative bit number"
+        raise ValueError(msg)
     mask = 1 << nth_bit
     array |= mask
     return array
@@ -766,7 +769,8 @@ def get_frequency(wl_band: int) -> str:
 def transpose(data: np.ndarray) -> np.ndarray:
     """Transposes numpy array of (n, ) to (n, 1)."""
     if data.ndim != 1 or len(data) <= 1:
-        raise ValueError("Invalid input array shape")
+        msg = "Invalid input array shape"
+        raise ValueError(msg)
     return data[:, np.newaxis]
 
 
@@ -1027,7 +1031,8 @@ def get_file_type(filename: str) -> str:
         return product
     if product[:3] in ("lwc", "iwc"):
         return product[:3]
-    raise ValueError("Unknown file type")
+    msg = "Unknown file type"
+    raise ValueError(msg)
 
 
 def get_files_with_common_range(files: list) -> list:

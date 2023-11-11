@@ -325,7 +325,8 @@ class Radar(DataSource):
         if "prf" in self.dataset.variables:
             prf = self.getvar("prf")
             return _prf_to_folding_velocity(prf, self.radar_frequency)
-        raise RuntimeError("Unable to determine folding velocity")
+        msg = "Unable to determine folding velocity"
+        raise RuntimeError(msg)
 
     def _get_folding_velocity_full(self) -> None:
         folding_velocity: list | np.ndarray = []

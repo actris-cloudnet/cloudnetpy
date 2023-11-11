@@ -114,9 +114,9 @@ class NcRadar(DataSource, CloudnetInstrument):
             is_stable_profile[is_stable_profile.mask] = False
         n_removed = np.count_nonzero(~is_stable_profile)
         if n_removed >= len(zenith) - 1:
-            raise ValidTimeStampError(
-                "Less than two profiles with valid zenith / azimuth angles",
-            )
+            msg = "Less than two profiles with valid zenith / azimuth angles"
+            raise ValidTimeStampError(msg)
+
         if n_removed > 0:
             logging.warning(
                 "Filtering %s profiles due to varying zenith / azimuth angle",
@@ -146,7 +146,8 @@ class NcRadar(DataSource, CloudnetInstrument):
     def test_if_all_masked(self):
         """Tests if all data are masked."""
         if not np.any(~self.data["v"][:].mask):
-            raise RadarDataError("All radar data are masked")
+            msg = "All radar data are masked"
+            raise RadarDataError(msg)
 
 
 class ChilboltonRadar(NcRadar):

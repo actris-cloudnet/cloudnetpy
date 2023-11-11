@@ -132,9 +132,9 @@ class Disdrometer(CloudnetInstrument):
             first_id = data_dict["_serial_number"][0]
             for sensor_id in data_dict["_serial_number"]:
                 if sensor_id != first_id:
-                    raise DisdrometerDataError(
-                        "Multiple serial numbers are not supported",
-                    )
+                    msg = "Multiple serial numbers are not supported"
+                    raise DisdrometerDataError(msg)
+
             self.serial_number = first_id
 
     def _parse_useful_data(self, indices: tuple) -> list:

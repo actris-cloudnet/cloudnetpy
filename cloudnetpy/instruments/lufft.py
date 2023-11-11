@@ -80,7 +80,8 @@ class LufftCeilo(NcLidar):
             if arg in self.dataset.variables:
                 var = self.dataset.variables[arg]
                 return var[0] if utils.isscalar(var) else var[:]
-        raise ValueError("Unknown variable")
+        msg = f"Unable to find variable {args[0]}"
+        raise ValueError(msg)
 
     def _fetch_attributes(self) -> None:
         self.serial_number = getattr(self.dataset, "device_name", None)

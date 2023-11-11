@@ -43,7 +43,8 @@ def thies2nc(
     try:
         disdrometer = Thies(disdrometer_file, site_meta)
     except (ValueError, IndexError) as err:
-        raise DisdrometerDataError("Can not read disdrometer file") from err
+        msg = "Unable to read disdrometer file"
+        raise DisdrometerDataError(msg) from err
     if date is not None:
         disdrometer.validate_date(date)
     disdrometer.init_data()

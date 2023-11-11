@@ -210,7 +210,8 @@ def _validate_date(obj, expected_date: str) -> None:
     for t in obj.data["time"][:]:
         date_str = "-".join(utils.seconds2date(t)[:3])
         if date_str != expected_date:
-            raise ValueError("Ignoring a file (time stamps not what expected)")
+            msg = "Ignoring a file (time stamps not what expected)"
+            raise ValueError(msg)
 
 
 class Rpg(CloudnetInstrument):
@@ -285,7 +286,8 @@ class Fmcw(Rpg):
         is_valid_zenith = _filter_zenith_angle(zenith)
         n_removed = len(is_valid_zenith) - np.count_nonzero(is_valid_zenith)
         if n_removed == len(zenith):
-            raise ValidTimeStampError("No profiles with valid zenith angle")
+            msg = "No profiles with valid zenith angle"
+            raise ValidTimeStampError(msg)
         if n_removed > 0:
             logging.warning(
                 "Filtering %s profiles due to invalid zenith angle",

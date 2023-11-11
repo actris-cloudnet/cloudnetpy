@@ -380,7 +380,8 @@ def get_statistic_plots(
                 if np.all(data.mask is True):
                     obs_missing = True
                 if model_missing and obs_missing:
-                    raise ValueError("No data in either dataset")
+                    msg = f"No data in {model_name} or observation"
+                    raise ValueError(msg)
                 if product == "cf" and stat == "error":
                     stat = "aerror"
                 if j > 0:
@@ -393,7 +394,8 @@ def get_statistic_plots(
                         data,
                     )
                     if "error" in stat and np.all(day_stat.model_stat.mask is True):
-                        raise ValueError("No data to calculate relative error")
+                        msg = f"No data in {model_name} or observation"
+                        raise ValueError(msg)
                     initialize_statistic_plots(
                         j,
                         len(names) - 1,

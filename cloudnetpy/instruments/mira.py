@@ -153,10 +153,8 @@ def _parse_input_files(input_files: str | list[str], temp_dir: str) -> tuple:
         filetypes = list({f.split(".")[-1].lower() for f in valid_files})
 
         if len(filetypes) > 1:
-            raise TypeError(
-                "mira2nc only supports a singlefile type as input",
-                "either mmclx or znc",
-            )
+            msg = "Mixed mmclx and znc files. Please use only one filetype."
+            raise TypeError(msg)
 
         keymap = _get_keymap(filetypes[0])
 

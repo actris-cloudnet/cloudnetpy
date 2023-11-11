@@ -211,14 +211,16 @@ def _get_hatpro_objects(
 
 def _validate_date(obj: HatproBin, expected_date: str) -> HatproBin:
     if obj.header["_time_reference"] != 1:
-        raise ValueError("Can not validate non-UTC dates")
+        msg = "Can not validate non-UTC dates"
+        raise ValueError(msg)
     inds = []
     for ind, timestamp in enumerate(obj.data["time"][:]):
         date = "-".join(utils.seconds2date(timestamp)[:3])
         if date == expected_date:
             inds.append(ind)
     if not inds:
-        raise ValueError("Timestamps not what expected")
+        msg = f"No valid timestamps found for date {expected_date}"
+        raise ValueError(msg)
     obj.data = obj.data[:][inds]
     return obj
 

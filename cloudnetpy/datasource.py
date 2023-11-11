@@ -80,7 +80,8 @@ class DataSource:
         for arg in args:
             if arg in self.dataset.variables:
                 return self.dataset.variables[arg][:]
-        raise RuntimeError("Missing variable in the input file.")
+        msg = f"Missing variable {args[0]} in the input file."
+        raise RuntimeError(msg)
 
     def append_data(
         self,
@@ -122,9 +123,8 @@ class DataSource:
                 tz=timezone.utc
             )
         except (AttributeError, ValueError) as read_error:
-            raise RuntimeError(
-                "Missing or invalid date in global attributes.",
-            ) from read_error
+            msg = "Missing or invalid date in global attributes."
+            raise RuntimeError(msg) from read_error
         return [year, month, day]
 
     def close(self) -> None:
@@ -156,7 +156,8 @@ class DataSource:
     def _init_time(self) -> np.ndarray:
         time = self.getvar("time")
         if len(time) == 0:
-            raise ValidTimeStampError("Empty time vector")
+            msg = "Empty time vector"
+            raise ValidTimeStampError(msg)
         if max(time) > 25:
             logging.debug("Assuming time as seconds, converting to fraction hour")
             time = utils.seconds2hours(time)
@@ -232,7 +233,8 @@ class DataSource:
                     array = np.array(array)
                 self.append_data(array, key, units=units)
                 return
-        raise RuntimeError("Missing variable in the input file.")
+        msg = f"Missing variable {possible_names[0]} in the input file."
+        raise RuntimeError(msg)
 
     def __enter__(self):
         return self

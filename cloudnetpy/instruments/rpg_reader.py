@@ -193,7 +193,8 @@ class HatproBin:
         is_bad = self.data["_quality_flag"] & 0b110 == self.QUALITY_LOW << 1
         n_bad = np.count_nonzero(is_bad)
         if n_bad == len(is_bad):
-            raise ValidTimeStampError("All data are low quality")
+            msg = "All data are low quality"
+            raise ValidTimeStampError(msg)
         if n_bad:
             percentage = round(100 * n_bad / len(is_bad))
             logging.info(
@@ -321,11 +322,13 @@ class HatproBinCombined:
                 {"zenith_angle1": "_tmp1", "zenith_angle2": "_tmp2"},
             )
         else:
-            raise NotImplementedError("Only implemented up to 2 files")
+            msg = "Only implemented up to 2 files"
+            raise NotImplementedError(msg)
         self.data = {field: arr[field] for field in arr.dtype.fields}
 
 
 def _combine_values(arr1: ma.MaskedArray, arr2: ma.MaskedArray) -> ma.MaskedArray:
     if not ma.allequal(arr1, arr2):
-        raise ValueError("Inconsistent values")
+        msg = "Inconsistent values"
+        raise ValueError(msg)
     return ma.where(~arr1.mask, arr1, arr2)

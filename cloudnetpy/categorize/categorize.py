@@ -128,7 +128,8 @@ def generate_categorize(
         time, height = _define_dense_grid()
         valid_ind = _interpolate_to_cloudnet_grid()
         if not valid_ind:
-            raise ValidTimeStampError("No overlapping radar and lidar timestamps found")
+            msg = "No overlapping radar and lidar timestamps found"
+            raise ValidTimeStampError(msg)
         _screen_bad_time_indices(valid_ind)
         if "rpg" in data["radar"].type.lower() or "basta" in data["radar"].type.lower():
             data["radar"].filter_speckle_noise()

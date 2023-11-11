@@ -153,7 +153,8 @@ def _find_ceilo_model(full_path: str) -> str:
                     return "cl31_or_cl51"
                 if line.startswith(b"\x01CT"):
                     return "ct25k"
-    raise RuntimeError("Error: Unknown ceilo model.")
+    msg = "Unable to determine ceilometer model"
+    raise RuntimeError(msg)
 
 
 ATTRIBUTES = {

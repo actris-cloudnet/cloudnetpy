@@ -131,7 +131,8 @@ class Parsivel(CloudnetInstrument):
             first_id = self.raw_data["_sensor_id"][0]
             for sensor_id in self.raw_data["_sensor_id"]:
                 if sensor_id != first_id:
-                    raise DisdrometerDataError("Multiple sensor IDs are not supported")
+                    msg = "Multiple sensor IDs are not supported"
+                    raise DisdrometerDataError(msg)
             self.serial_number = first_id
 
     def _create_velocity_vectors(self) -> None:
@@ -341,13 +342,15 @@ def _parse_spectrum(tokens: Iterator[str]) -> np.ndarray:
         raw = [first.removeprefix("<SPECTRUM>")]
         raw.extend(islice(tokens, 1023))
         if next(tokens) != "</SPECTRUM>":
-            raise ValueError("Invalid spectrum format")
+            msg = "Invalid spectrum format"
+            raise ValueError(msg)
         values = [int(x) if x != "" else 0 for x in raw]
     else:
         values = [int(first)]
         values.extend(int(x) for x in islice(tokens, 1023))
     if len(values) != 1024:
-        raise ValueError("Invalid length")
+        msg = f"Invalid spectrum length: {len(values)}"
+        raise ValueError(msg)
     return np.array(values, dtype="i2").reshape((32, 32))
 
 
@@ -403,14 +406,16 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
             parsed = [PARSERS.get(header, next)(tokens) for header in headers]
             unread_tokens = list(tokens)
             if unread_tokens:
-                raise ValueError("More values than expected")
+                msg = f"Unused tokens: {unread_tokens}"
+                raise ValueError(msg)
             for header, value in zip(headers, parsed):
                 result[header].append(value)
         except (ValueError, StopIteration):
             invalid_rows += 1
             continue
     if invalid_rows == len(rows):
-        raise DisdrometerDataError("No valid data in file")
+        msg = "No valid data in file"
+        raise DisdrometerDataError(msg)
     if invalid_rows > 0:
         logging.info("Skipped %s invalid rows", invalid_rows)
     return result
@@ -476,7 +481,8 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
             if "fall_velocity" in headers:
                 data["fall_velocity"].append(arrays["fall_velocity"])
         if n_invalid_rows == n_rows:
-            raise DisdrometerDataError("No valid data in file")
+            msg = "No valid data in file"
+            raise DisdrometerDataError(msg)
         if n_invalid_rows > 0:
             logging.info("Skipped %s invalid rows", n_invalid_rows)
         return data
@@ -516,7 +522,8 @@ def _read_parsivel(
         with open(filename, encoding="latin1", errors="ignore") as file:
             lines = file.read().splitlines()
         if not lines:
-            raise DisdrometerDataError("File is empty")
+            msg = f"File '{filename}' is empty"
+            raise DisdrometerDataError(msg)
         if "TOA5" in lines[0]:
             data = _read_toa5(filename)
         elif "TYP OP4A" in lines[0]:
@@ -528,7 +535,8 @@ def _read_parsivel(
             headers = _parse_telegram(telegram)
             data = _read_rows(headers, lines)
         else:
-            raise ValueError("telegram must be specified for files without header")
+            msg = "telegram must be specified for files without header"
+            raise ValueError(msg)
         if "_datetime" not in data and timestamps is None:
             data["_datetime"] = [
                 datetime.datetime.combine(date, time)

@@ -54,13 +54,16 @@ class Cs135(Ceilometer):
             range_resolutions.append(message.range_resolution)
 
         if len(timestamps) == 0:
-            raise ValidTimeStampError("No valid timestamps found in the file")
+            msg = "No valid timestamps found in the file"
+            raise ValidTimeStampError(msg)
         range_resolution = range_resolutions[0]
         n_gates = len(profiles[0])
         if any(res != range_resolution for res in range_resolutions):
-            raise InconsistentDataError("Inconsistent range resolution")
+            msg = "Inconsistent range resolution"
+            raise InconsistentDataError(msg)
         if any(len(profile) != n_gates for profile in profiles):
-            raise InconsistentDataError("Inconsistent number of gates")
+            msg = "Inconsistent number of gates"
+            raise InconsistentDataError(msg)
 
         self.data["beta_raw"] = np.array(profiles)
         if calibration_factor is None:
@@ -115,12 +118,14 @@ def _read_message(message: bytes) -> Message:
         raise InvalidMessageError(msg)
     lines = message.splitlines()
     if len(lines[0]) != 11:
-        raise NotImplementedError("Unknown message format")
+        msg = f"Expected 11 characters in first line, got {len(lines[0])}"
+        raise NotImplementedError(msg)
     if (msg_no := lines[0][-4:-1]) != b"002":
         msg = f"Message number {msg_no.decode()} not implemented"
         raise NotImplementedError(msg)
     if len(lines) != 5:
-        raise InvalidMessageError("Invalid line count")
+        msg = f"Expected 5 lines, got {len(lines)}"
+        raise InvalidMessageError(msg)
     scale, res, n, energy, lt, ti, bl, pulse, rate, _sum = map(int, lines[2].split())
     data = _read_backscatter(lines[3].strip(), n)
     return Message(scale, res, energy, lt, ti, bl, pulse, rate, data)

@@ -90,7 +90,8 @@ class VaisalaCeilo(Ceilometer):
             for i, line in enumerate(data[timestamp_line_number:]):
                 if utils.is_empty_line(line):
                     return i
-            raise RuntimeError("Can not parse number of data lines")
+            msg = "Can not parse number of data lines"
+            raise RuntimeError(msg)
 
         def _parse_data_lines(data: list, starting_indices: list) -> list:
             return [
@@ -270,7 +271,8 @@ class ClCeilo(VaisalaCeilo):
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number != 2:
-            raise RuntimeError("Unsupported message number.")
+            msg = f"Unsupported message number: {self._message_number}"
+            raise RuntimeError(msg)
         keys = ("cloud_detection_status", "cloud_amount_data")
         values = [[line[0:3], line[3:].strip()] for line in lines]
         return values_to_dict(keys, values)
