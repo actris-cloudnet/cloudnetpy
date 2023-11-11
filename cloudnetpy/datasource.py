@@ -2,7 +2,7 @@
 import logging
 import os
 from collections.abc import Callable
-from datetime import datetime
+from datetime import datetime, timezone
 
 import netCDF4
 import numpy as np
@@ -118,7 +118,9 @@ class DataSource:
             year = str(self.dataset.year)
             month = str(self.dataset.month).zfill(2)
             day = str(self.dataset.day).zfill(2)
-            datetime.strptime(f"{year}{month}{day}", "%Y%m%d")
+            datetime.strptime(f"{year}{month}{day}", "%Y%m%d").astimezone(
+                tz=timezone.utc
+            )
         except (AttributeError, ValueError) as read_error:
             raise RuntimeError(
                 "Missing or invalid date in global attributes.",

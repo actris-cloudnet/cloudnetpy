@@ -321,7 +321,9 @@ def _parse_datetime(tokens: Iterator[str]) -> datetime.datetime:
     hour = int(token[8:10])
     minute = int(token[10:12])
     second = int(token[12:14])
-    return datetime.datetime(year, month, day, hour, minute, second)
+    return datetime.datetime(
+        year, month, day, hour, minute, second, tzinfo=datetime.timezone.utc
+    )
 
 
 def _parse_vector(tokens: Iterator[str]) -> np.ndarray:
@@ -448,7 +450,7 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
                         scalars[header] = datetime.datetime.strptime(
                             value,
                             "%Y-%m-%d %H:%M:%S",
-                        )
+                        ).astimezone(tz=datetime.timezone.utc)
                     elif header in ("number_concentration", "fall_velocity"):
                         arrays[header].append(float(value))
                     elif header == "spectrum":

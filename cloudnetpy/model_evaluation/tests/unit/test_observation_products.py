@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 import pytest
@@ -24,7 +24,7 @@ class CatBits:
 
 def test_get_date(obs_file):
     obj = ObservationManager(PRODUCT, str(obs_file))
-    date = datetime(2019, 5, 23, 0, 0, 0)
+    date = datetime(2019, 5, 23, 0, 0, 0, tzinfo=timezone.utc)
     assert obj._get_date() == date
 
 

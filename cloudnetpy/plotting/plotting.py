@@ -1,6 +1,6 @@
 """Misc. plotting routines for Cloudnet products."""
 import os.path
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 import matplotlib.pyplot as plt
 import netCDF4
@@ -293,7 +293,7 @@ def display_watermark(
     fontsize: int = 7,
 ) -> None:
     if add_creation_time:
-        now = datetime.utcnow().isoformat().split(".")[0].split("T")
+        now = datetime.now(tz=timezone.utc).isoformat().split(".")[0].split("T")
         copyright_text += " / Created on " + " ".join(now) + " UTC"
     # similar to add_subtitle
     fig.text(

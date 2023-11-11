@@ -61,7 +61,10 @@ def hatpro2l1c(
     if date is not None:
         # Screen timestamps if these assertions start to fail
         assert np.all(np.diff(timestamps) > 0)
-        dates = [str(datetime.datetime.utcfromtimestamp(t).date()) for t in timestamps]
+        dates = [
+            str(datetime.datetime.fromtimestamp(t, tz=datetime.timezone.utc).date())
+            for t in timestamps
+        ]
         assert len(set(dates)) == 1
 
     decimal_hours = utils.seconds2hours(timestamps)

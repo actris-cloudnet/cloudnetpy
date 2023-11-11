@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
@@ -27,10 +27,11 @@ def test_model_file_list_fail():
 
 def test_time2datetime():
     time_list = np.array(range(10))
-    d = datetime(2020, 4, 7, 0, 0, 0)
+    d = datetime(2020, 4, 7, 0, 0, 0, tzinfo=timezone.utc)
     x = tools.time2datetime(time_list, d)
     compare = [
-        datetime(2020, 4, 7, 0, 0, 0) + timedelta(hours=1 * x) for x in range(10)
+        datetime(2020, 4, 7, 0, 0, 0, tzinfo=timezone.utc) + timedelta(hours=1 * x)
+        for x in range(10)
     ]
     assert all(a == b for a, b in zip(x, compare))
 

@@ -86,7 +86,7 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
     )
     timestamp = time_in_seconds + epoch_in_seconds
     return (
-        datetime.datetime.utcfromtimestamp(timestamp)
+        datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
         .strftime("%Y %m %d %H %M %S")
         .split()
     )
@@ -726,7 +726,7 @@ def isscalar(array) -> bool:
 
 def get_time() -> str:
     """Returns current UTC-time."""
-    return f"{datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} +00:00"
+    return f"{datetime.datetime.now(tz=datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} +00:00"
 
 
 def date_range(
@@ -895,7 +895,7 @@ def get_epoch(units: str) -> Epoch:
         except ValueError:
             return fallback
     year, month, day = date_components
-    current_year = datetime.datetime.today().year
+    current_year = datetime.datetime.now(tz=datetime.timezone.utc).year
     if (1900 < year <= current_year) and (0 < month < 13) and (0 < day < 32):
         return year, month, day
     return fallback
