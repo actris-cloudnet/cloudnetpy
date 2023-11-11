@@ -13,7 +13,7 @@ PRODUCT = "cf"
 
 
 @pytest.mark.parametrize("name", ("ecmwf_cf_cirrus",))
-def test_cf_cirrus_filter(obs_file, model_file, name):
+def test_cf_cirrus_filter(obs_file, model_file, name) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     AdvanceProductMethods(model, str(model_file), obs)
@@ -27,7 +27,7 @@ def test_cf_cirrus_filter(obs_file, model_file, name):
         ("h", np.array([[10, 14], [8, 14], [9, 15]])),
     ],
 )
-def test_getvar_from_object(obs_file, model_file, name, data):
+def test_getvar_from_object(obs_file, model_file, name, data) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -36,7 +36,7 @@ def test_getvar_from_object(obs_file, model_file, name, data):
 
 
 @pytest.mark.parametrize("name", ("T",))
-def test_getvar_from_object_None(obs_file, model_file, name):
+def test_getvar_from_object_None(obs_file, model_file, name) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -51,7 +51,7 @@ def test_getvar_from_object_None(obs_file, model_file, name):
         (95, (0.00058, -0.00706, 0.0923, -0.992)),
     ],
 )
-def test_set_frequency_parameters(obs_file, model_file, radar_f, values):
+def test_set_frequency_parameters(obs_file, model_file, radar_f, values) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -60,7 +60,7 @@ def test_set_frequency_parameters(obs_file, model_file, radar_f, values):
     assert x == values
 
 
-def test_fit_z_sensitivity(obs_file, model_file):
+def test_fit_z_sensitivity(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -70,7 +70,7 @@ def test_fit_z_sensitivity(obs_file, model_file):
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_filter_high_iwc_low_cf(obs_file, model_file):
+def test_filter_high_iwc_low_cf(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -83,7 +83,7 @@ def test_filter_high_iwc_low_cf(obs_file, model_file):
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_filter_high_iwc_low_cf_no_ice(obs_file, model_file):
+def test_filter_high_iwc_low_cf_no_ice(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -93,7 +93,7 @@ def test_filter_high_iwc_low_cf_no_ice(obs_file, model_file):
     adv_pro.filter_high_iwc_low_cf(cf, iwc, lwc)
 
 
-def test_mask_weird_indices(obs_file, model_file):
+def test_mask_weird_indices(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -108,7 +108,7 @@ def test_mask_weird_indices(obs_file, model_file):
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_mask_weird_indices_values(obs_file, model_file):
+def test_mask_weird_indices_values(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -120,7 +120,7 @@ def test_mask_weird_indices_values(obs_file, model_file):
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_find_ice_in_clouds(obs_file, model_file):
+def test_find_ice_in_clouds(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -147,7 +147,7 @@ def test_find_ice_in_clouds(obs_file, model_file):
     testing.assert_array_almost_equal(x, expected)
 
 
-def test_get_ice_indices(obs_file, model_file):
+def test_get_ice_indices(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -176,7 +176,7 @@ def test_get_ice_indices(obs_file, model_file):
     testing.assert_array_almost_equal(result, expected)
 
 
-def test_iwc_variance(obs_file, model_file):
+def test_iwc_variance(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -188,7 +188,7 @@ def test_iwc_variance(obs_file, model_file):
     assert len(x) == 3
 
 
-def test_calculate_variance_iwc(obs_file, model_file):
+def test_calculate_variance_iwc(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -200,7 +200,7 @@ def test_calculate_variance_iwc(obs_file, model_file):
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_calculate_wind_shear(obs_file, model_file):
+def test_calculate_wind_shear(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -213,7 +213,7 @@ def test_calculate_wind_shear(obs_file, model_file):
     testing.assert_array_almost_equal(np.round(x, 2), compare)
 
 
-def test_calculate_iwc_distribution(obs_file, model_file):
+def test_calculate_iwc_distribution(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -227,7 +227,7 @@ def test_calculate_iwc_distribution(obs_file, model_file):
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_gamma_distribution(obs_file, model_file):
+def test_gamma_distribution(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -248,7 +248,7 @@ def test_gamma_distribution(obs_file, model_file):
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_get_observation_index(obs_file, model_file):
+def test_get_observation_index(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)
@@ -273,7 +273,7 @@ def test_get_observation_index(obs_file, model_file):
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_filter_cirrus(obs_file, model_file):
+def test_filter_cirrus(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     adv_pro = AdvanceProductMethods(model, str(model_file), obs)

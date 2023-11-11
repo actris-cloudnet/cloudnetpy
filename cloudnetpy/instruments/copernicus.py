@@ -113,13 +113,13 @@ class Copernicus(ChilboltonRadar):
         super().__init__(full_path, site_meta)
         self.instrument = COPERNICUS
 
-    def calibrate_reflectivity(self):
+    def calibrate_reflectivity(self) -> None:
         default_offset = -146.8  # TODO: check this value
         calibration_factor = self.site_meta.get("calibration_offset", default_offset)
         self.data["Zh"].data[:] += calibration_factor
         self.append_data(np.array(calibration_factor), "calibration_offset")
 
-    def mask_corrupted_values(self):
+    def mask_corrupted_values(self) -> None:
         """Experimental masking of corrupted Copernicus data.
 
         Notes
@@ -132,13 +132,13 @@ class Copernicus(ChilboltonRadar):
             ind = np.where(np.abs(self.data[key][:]) > value)
             self.data["v"].mask_indices(ind)
 
-    def fix_range_offset(self, site_meta: dict):
+    def fix_range_offset(self, site_meta: dict) -> None:
         """Fixes range offset."""
         range_offset = site_meta.get("range_offset", 0)
         self.data["range"].data[:] += range_offset
         self.append_data(np.array(range_offset, dtype=float), "range_offset")
 
-    def screen_negative_ranges(self):
+    def screen_negative_ranges(self) -> None:
         """Screens negative range values."""
         valid_ind = np.where(self.data["range"][:] >= 0)[0]
         for key, cloudnet_array in self.data.items():

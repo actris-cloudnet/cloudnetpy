@@ -101,7 +101,7 @@ def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
     return data, x, y
 
 
-def mask_small_values(data: ma.MaskedArray, name: str):
+def mask_small_values(data: ma.MaskedArray, name: str) -> ma.MaskedArray:
     data[data <= 0] = ma.masked
     if "lwc" in name:
         data[data < 1e-5] = ma.masked
@@ -133,7 +133,7 @@ def create_segment_values(arrays: list) -> tuple:
     return new_array, cmap
 
 
-def set_yaxis(ax, max_y: float, min_y: float = 0.0):
+def set_yaxis(ax, max_y: float, min_y: float = 0.0) -> None:
     ax.set_ylim(min_y, max_y)
     ax.set_ylabel("Height (km)", fontsize=13)
 

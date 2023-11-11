@@ -44,7 +44,7 @@ def _process() -> None:
     tmp_dir.cleanup()
 
 
-def main():
+def main() -> None:
     _process()
 
 

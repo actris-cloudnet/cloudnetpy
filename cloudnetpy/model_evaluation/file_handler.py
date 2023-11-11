@@ -14,7 +14,7 @@ from .metadata import (
 from .products.model_products import ModelManager
 
 
-def update_attributes(model_downsample_variables: dict, attributes: dict):
+def update_attributes(model_downsample_variables: dict, attributes: dict) -> None:
     """Overrides existing Cloudnet-ME Array-attributes.
         Overrides existing attributes using hard-coded values.
         New attributes are added.
@@ -67,7 +67,7 @@ def save_downsampled_file(
     objects: tuple,
     files: tuple,
     uuid: str | None,
-):
+) -> str:
     """Saves a standard downsampled day product file.
 
     Args:
@@ -100,10 +100,11 @@ def save_downsampled_file(
         root_group.year, root_group.month, root_group.day = obj.date
     output.merge_history(root_group, id_mark, {"l3": obj})
     root_group.close()
+    assert isinstance(uuid, str)
     return uuid
 
 
-def add_var2ncfile(obj: ModelManager, file_name: str):
+def add_var2ncfile(obj: ModelManager, file_name: str) -> None:
     nc_file = netCDF4.Dataset(file_name, "r+", format="NETCDF4_CLASSIC")
     _write_vars2nc(nc_file, obj.data)
     nc_file.close()

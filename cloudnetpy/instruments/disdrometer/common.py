@@ -27,7 +27,7 @@ class Disdrometer(CloudnetInstrument):
         self.n_velocity: int = 0
         self._file_data = self._read_file()
 
-    def convert_units(self):
+    def convert_units(self) -> None:
         mm_to_m = 1e3
         mmh_to_ms = 3600 * mm_to_m
         c_to_k = 273.15
@@ -42,7 +42,7 @@ class Disdrometer(CloudnetInstrument):
         self._convert_data(("T_ambient",), c_to_k, method="add")
         self._convert_data(("T_laser_driver",), c_to_k, method="add")
 
-    def add_meta(self):
+    def add_meta(self) -> None:
         valid_keys = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():
             key = key.lower()

@@ -189,7 +189,7 @@ class HatproBin:
         self._remove_duplicate_timestamps()
         self._add_zenith_angle()
 
-    def screen_bad_profiles(self):
+    def screen_bad_profiles(self) -> None:
         is_bad = self.data["_quality_flag"] & 0b110 == self.QUALITY_LOW << 1
         n_bad = np.count_nonzero(is_bad)
         if n_bad == len(is_bad):

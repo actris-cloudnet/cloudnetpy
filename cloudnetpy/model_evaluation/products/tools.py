@@ -54,8 +54,10 @@ def calculate_advection_time(
     return np.asarray([[timedelta(hours=float(t)) for t in time] for time in t_adv])
 
 
-def get_1d_indices(window: tuple, data: np.ndarray, mask: np.ndarray | None = None):
-    indices = (window[0] <= data) & (data < window[-1])
+def get_1d_indices(
+    window: tuple, data: np.ndarray, mask: np.ndarray | None = None
+) -> np.ndarray:
+    indices: np.ndarray = np.ndarray((window[0] <= data) & (data < window[-1]))
     if mask is not None:
         indices[mask] = ma.masked
     return indices
@@ -66,7 +68,7 @@ def get_adv_indices(
     adv_t: float,
     data: np.ndarray,
     mask: np.ndarray | None = None,
-):
+) -> np.ndarray:
     adv_indices = ((model_t - adv_t / 2) <= data) & (data < (model_t + adv_t / 2))
     if mask is not None:
         adv_indices[mask] = ma.masked

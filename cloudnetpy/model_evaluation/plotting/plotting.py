@@ -4,6 +4,7 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colorbar import Colorbar
 from matplotlib.patches import Patch
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma
@@ -28,7 +29,7 @@ def generate_L3_day_plots(
     save_path: str | None = None,
     image_name: str | None = None,
     show: bool | None = False,
-):
+) -> None:
     """Generate visualizations for level 3 dayscale products.
     With figure type visualizations can be subplot in group, pair, single or
     statistic of given product. In group fig_type all different methods are plot
@@ -160,7 +161,7 @@ def get_group_plots(
     cycle: str = "",
     title: bool = True,
     include_xlimits: bool = False,
-):
+) -> None:
     """Group subplot visualization for both standard and advection downsampling.
     Generates group subplot figure for product with model and all different
     downsampling methods. Generates separated figures for standard and advection
@@ -220,7 +221,7 @@ def get_pair_plots(
     cycle: str = "",
     title: bool = True,
     include_xlimits: bool = False,
-):
+) -> None:
     """Pair subplots of model and product method.
     In upper subplot is model product and lower subplot one of the
     downsampled method of select product. Function generates all product methods
@@ -275,7 +276,7 @@ def get_single_plots(
     cycle: str = "",
     title: bool = True,
     include_xlimits: bool = False,
-):
+) -> None:
     """Generates figures of each product variable from given file in loop.
 
     Args:
@@ -310,7 +311,7 @@ def get_single_plots(
         cloud_plt.handle_saving(image_name, save_path, show, casedate, [name, "single"])
 
 
-def plot_colormesh(ax, data: np.ndarray, axes: tuple, variable_info):
+def plot_colormesh(ax, data: np.ndarray, axes: tuple, variable_info) -> None:
     vmin, vmax = variable_info.plot_range
     if variable_info.plot_scale == "logarithmic":
         data, vmin, vmax = cloud_plt.lin2log(data, vmin, vmax)
@@ -320,7 +321,7 @@ def plot_colormesh(ax, data: np.ndarray, axes: tuple, variable_info):
     colorbar = init_colorbar(pl, ax)
     if variable_info.plot_scale == "logarithmic":
         tick_labels = cloud_plt.generate_log_cbar_ticklabel_list(vmin, vmax)
-        colorbar.set_ticks(np.arange(vmin, vmax + 1))
+        colorbar.set_ticks(np.arange(vmin, vmax + 1).tolist())
         colorbar.ax.set_yticklabels(tick_labels)
     ax.set_facecolor("white")
     colorbar.set_label(variable_info.clabel, fontsize=13)
@@ -338,7 +339,7 @@ def get_statistic_plots(
     show: bool,
     cycle: str = "",
     title: bool = True,
-):
+) -> None:
     """Statistical subplots for day scale products.
     Statistical analysis can be done by day scale with relative error ('error'),
     total data area analysis ('area'), histogram ('hist') or vertical profiles
@@ -441,7 +442,7 @@ def initialize_statistic_plots(
     variable_info,
     title: bool = True,
     include_xlimits: bool = False,
-):
+) -> None:
     if method in ("error", "aerror"):
         plot_relative_error(ax, day_stat.model_stat.T, args, method)
         if title:
@@ -497,7 +498,7 @@ def initialize_statistic_plots(
             )
 
 
-def plot_relative_error(ax, error: ma.MaskedArray, axes: tuple, method: str):
+def plot_relative_error(ax, error: ma.MaskedArray, axes: tuple, method: str) -> None:
     pl = ax.pcolormesh(*axes, error[:-1, :-1].T, cmap="RdBu_r", vmin=-50, vmax=50)
     colorbar = init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
@@ -532,12 +533,12 @@ def plot_data_area(
     obs: ma.MaskedArray,
     axes: tuple,
     title: bool = True,
-):
+) -> None:
     data, cmap = p_tools.create_segment_values([model.mask, obs.mask])
     pl = ax.pcolormesh(*axes, data, cmap=cmap)
     if title:
         colorbar = init_colorbar(pl, ax)
-        colorbar.set_ticks(np.arange(1, 1, 3))
+        colorbar.set_ticks(np.arange(1, 1, 3).tolist())
         ax.set_title(f"{day_stat.title}", fontsize=14)
     ax.set_facecolor("black")
     legend_elements = [
@@ -554,7 +555,7 @@ def plot_data_area(
     )
 
 
-def plot_histogram(ax, day_stat: DayStatistics, variable_info):
+def plot_histogram(ax, day_stat: DayStatistics, variable_info) -> None:
     weights = np.ones_like(day_stat.model_stat) / float(len(day_stat.model_stat))
     hist_bins = np.histogram(day_stat.observation_stat, density=True)[-1]
     ax.hist(
@@ -587,7 +588,9 @@ def plot_histogram(ax, day_stat: DayStatistics, variable_info):
     ax.set_title(f"{day_stat.title[-1]}", fontsize=14)
 
 
-def plot_vertical_profile(ax, day_stat: DayStatistics, axes: tuple, variable_info):
+def plot_vertical_profile(
+    ax, day_stat: DayStatistics, axes: tuple, variable_info
+) -> None:
     mrm = p_tools.rolling_mean(day_stat.model_stat)
     orm = p_tools.rolling_mean(day_stat.observation_stat)
     axes = axes[-1][0] if len(axes[-1].shape) > 1 else axes[-1]
@@ -680,7 +683,7 @@ def initialize_figure(n_subplots: int, stat: str = "") -> tuple:
     return fig, axes
 
 
-def init_colorbar(plot, axis):
+def init_colorbar(plot, axis) -> Colorbar:
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="1%", pad=0.25)
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)

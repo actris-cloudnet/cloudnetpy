@@ -5,7 +5,7 @@ import numpy as np
 from cloudnetpy.exceptions import InconsistentDataError
 
 
-def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int):
+def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int) -> None:
     """Truncates netcdf file in 'time' dimension taking only n_profiles.
     Useful for creating small files for tests.
     """

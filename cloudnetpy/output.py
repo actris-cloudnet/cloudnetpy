@@ -323,7 +323,7 @@ def add_time_attribute(
     return attributes
 
 
-def add_source_attribute(attributes: dict, data: dict):
+def add_source_attribute(attributes: dict, data: dict) -> dict:
     """Adds source attribute."""
     variables = {
         "radar": (
@@ -457,7 +457,7 @@ def replace_attribute_with_standard_value(
     nc: netCDF4.Dataset,
     variables: tuple,
     attributes: tuple,
-):
+) -> None:
     for key in variables:
         if key in COMMON_ATTRIBUTES and key in nc.variables:
             for attr in attributes:

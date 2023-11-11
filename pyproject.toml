@@ -58,6 +58,8 @@ changelog = "CHANGELOG.md"
 [tool.ruff]
 extend-select = ["I"]
 
+[tool.ruff.lint]
+
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = ["F401"]
 

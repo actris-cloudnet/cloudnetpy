@@ -118,7 +118,7 @@ class Mira(NcRadar):
         time_stamps = self.getvar("time")
         return utils.seconds2date(float(time_stamps[0]), self.epoch)[:3]
 
-    def screen_invalid_ldr(self):
+    def screen_invalid_ldr(self) -> None:
         """Masks LDR in MIRA STSR mode data.
         Is there a better way to identify this mode?
         """

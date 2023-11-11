@@ -297,7 +297,7 @@ class Fmcw(Rpg):
         del self.data["elevation"]
         return list(is_valid_zenith)
 
-    def convert_units(self):
+    def convert_units(self) -> None:
         """Converts units."""
         self.data["rainfall_rate"].data = mmh2ms(self.data["rainfall_rate"].data)
         self.data["lwp"].data *= 1e-3  # g -> kg

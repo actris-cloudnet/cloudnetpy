@@ -73,12 +73,12 @@ class PollyXt(Ceilometer):
         self.expected_date = expected_date
         self.instrument = instruments.POLLYXT
 
-    def mask_nan_values(self):
+    def mask_nan_values(self) -> None:
         for array in self.data.values():
             if getattr(array, "ndim", 0) > 0:
                 array[np.isnan(array)] = ma.masked
 
-    def calc_screened_products(self, snr_limit: float = 5.0):
+    def calc_screened_products(self, snr_limit: float = 5.0) -> None:
         keys = ("beta", "depolarisation")
         for key in keys:
             self.data[key] = ma.masked_where(

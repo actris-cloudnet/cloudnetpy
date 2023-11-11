@@ -102,11 +102,11 @@ class WS(CloudnetInstrument):
                 raise ValueError(error_msg)
         return {"timestamps": timestamps, "values": values}
 
-    def convert_time(self):
+    def convert_time(self) -> None:
         decimal_hours = datetime2decimal_hours(self._data["timestamps"])
         self.data["time"] = CloudnetArray(decimal_hours, "time")
 
-    def screen_timestamps(self, date: str):
+    def screen_timestamps(self, date: str) -> None:
         dates = [str(d.date()) for d in self._data["timestamps"]]
         valid_ind = [ind for ind, d in enumerate(dates) if d == date]
         if not valid_ind:
@@ -116,7 +116,7 @@ class WS(CloudnetInstrument):
                 x for ind, x in enumerate(self._data[key]) if ind in valid_ind
             ]
 
-    def add_date(self):
+    def add_date(self) -> None:
         first_date = self._data["timestamps"][0].date()
         self.date = [
             str(first_date.year),
@@ -124,7 +124,7 @@ class WS(CloudnetInstrument):
             str(first_date.day).zfill(2),
         ]
 
-    def add_data(self):
+    def add_data(self) -> None:
         keys = (
             "wind_speed",
             "wind_direction",
@@ -139,7 +139,7 @@ class WS(CloudnetInstrument):
             array_masked = ma.masked_invalid(array)
             self.data[key] = CloudnetArray(array_masked, key)
 
-    def convert_units(self):
+    def convert_units(self) -> None:
         temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
         self.data["air_temperature"].data = temperature_kelvins
         self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100

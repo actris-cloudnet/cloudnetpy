@@ -142,7 +142,7 @@ class MrrPro(NcRadar):
         time_stamps = self.getvar("time")
         return utils.seconds2date(time_stamps[0], (1970, 1, 1))[:3]
 
-    def fix_units(self):
+    def fix_units(self) -> None:
         self.data["v"].data *= -1  # towards -> away from instrument
         self.data["rainfall_rate"].data /= 3600000  # mm h-1 -> m s-1
         self.data["lwc"].data *= 0.001  # g m-3 -> kg m-3

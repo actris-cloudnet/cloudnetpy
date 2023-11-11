@@ -117,7 +117,7 @@ class DerSource(DataSource):
         else:
             self.parameters = parameters
 
-    def append_der(self):
+    def append_der(self) -> None:
         """Estimate liquid droplet effective radius using Frisch et al. 2002."""
         params = self.parameters
         rho_l = 1000  # density of liquid water(kg m-3)

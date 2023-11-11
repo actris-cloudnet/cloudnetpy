@@ -39,7 +39,7 @@ PRODUCT = "iwc"
         ("lwc", ("lwc_ecmwf", "lwc_ecmwf", "lwc_adv_ecmwf")),
     ],
 )
-def test_generate_regrid_product(model_file, obs_file, product, variables):
+def test_generate_regrid_product(model_file, obs_file, product, variables) -> None:
     obs = ObservationManager(product, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, product)
     ProductGrid(model, obs)
@@ -48,7 +48,7 @@ def test_generate_regrid_product(model_file, obs_file, product, variables):
 
 
 @pytest.mark.parametrize("key, value", [("iwc", 3), ("lwc", 1), ("cf", 2)])
-def test_get_method_storage(key, value, model_file, obs_file):
+def test_get_method_storage(key, value, model_file, obs_file) -> None:
     obs = ObservationManager(key, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, key)
     obj = ProductGrid(model, obs)
@@ -57,7 +57,7 @@ def test_get_method_storage(key, value, model_file, obs_file):
 
 
 @pytest.mark.parametrize("key, value", [("iwc", 3), ("lwc", 1), ("cf", 2)])
-def test_get_method_storage_adv(key, value, model_file, obs_file):
+def test_get_method_storage_adv(key, value, model_file, obs_file) -> None:
     obs = ObservationManager(key, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, key)
     obj = ProductGrid(model, obs)
@@ -66,7 +66,7 @@ def test_get_method_storage_adv(key, value, model_file, obs_file):
 
 
 @pytest.mark.parametrize("name", ["cf_V", "cf_A"])
-def test_cf_method_storage(name, model_file, obs_file):
+def test_cf_method_storage(name, model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -75,7 +75,7 @@ def test_cf_method_storage(name, model_file, obs_file):
 
 
 @pytest.mark.parametrize("name", ["cf_V_adv", "cf_A_adv"])
-def test_cf_method_storage_adv(name, model_file, obs_file):
+def test_cf_method_storage_adv(name, model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -84,7 +84,7 @@ def test_cf_method_storage_adv(name, model_file, obs_file):
 
 
 @pytest.mark.parametrize("name", ["iwc", "iwc_att", "iwc_rain"])
-def test_iwc_method_storage(name, model_file, obs_file):
+def test_iwc_method_storage(name, model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -93,7 +93,7 @@ def test_iwc_method_storage(name, model_file, obs_file):
 
 
 @pytest.mark.parametrize("name", ["iwc_adv", "iwc_att_adv", "iwc_rain_adv"])
-def test_iwc_method_storage_adv(name, model_file, obs_file):
+def test_iwc_method_storage_adv(name, model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -101,7 +101,7 @@ def test_iwc_method_storage_adv(name, model_file, obs_file):
     assert name in y
 
 
-def test_product_method_storage(model_file, obs_file):
+def test_product_method_storage(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     obj = ProductGrid(model, obs)
@@ -109,7 +109,7 @@ def test_product_method_storage(model_file, obs_file):
     assert "lwc" in x
 
 
-def test_product_method_storage_adv(model_file, obs_file):
+def test_product_method_storage_adv(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     obj = ProductGrid(model, obs)
@@ -117,7 +117,7 @@ def test_product_method_storage_adv(model_file, obs_file):
     assert "lwc_adv" in y
 
 
-def test_regrid_cf_area(model_file, obs_file):
+def test_regrid_cf_area(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -128,7 +128,7 @@ def test_regrid_cf_area(model_file, obs_file):
     assert x[0, 0] == 0.75
 
 
-def test_regrid_cf_area_masked(model_file, obs_file):
+def test_regrid_cf_area_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -140,7 +140,7 @@ def test_regrid_cf_area_masked(model_file, obs_file):
     assert round(x[0, 0], 3) == 0.667
 
 
-def test_regrid_cf_area_all_masked(model_file, obs_file):
+def test_regrid_cf_area_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -152,7 +152,7 @@ def test_regrid_cf_area_all_masked(model_file, obs_file):
     testing.assert_equal(x, np.nan)
 
 
-def test_regrid_cf_area_nan(model_file, obs_file):
+def test_regrid_cf_area_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -163,7 +163,7 @@ def test_regrid_cf_area_nan(model_file, obs_file):
     assert x[0, 0] == 0.75
 
 
-def test_regrid_cf_area_all_nan(model_file, obs_file):
+def test_regrid_cf_area_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -183,7 +183,7 @@ def test_regrid_cf_area_all_nan(model_file, obs_file):
     testing.assert_equal(x, np.nan)
 
 
-def test_regrid_cf_volume(model_file, obs_file):
+def test_regrid_cf_volume(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -194,7 +194,7 @@ def test_regrid_cf_volume(model_file, obs_file):
     assert x[0, 0] == 0.5
 
 
-def test_regrid_cf_volume_nan(model_file, obs_file):
+def test_regrid_cf_volume_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -205,7 +205,7 @@ def test_regrid_cf_volume_nan(model_file, obs_file):
     assert x[0, 0] == 0.5
 
 
-def test_regrid_cf_volume_all_nan(model_file, obs_file):
+def test_regrid_cf_volume_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -223,7 +223,7 @@ def test_regrid_cf_volume_all_nan(model_file, obs_file):
     testing.assert_equal(x, np.nan)
 
 
-def test_regrid_cf_volume_masked(model_file, obs_file):
+def test_regrid_cf_volume_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -235,7 +235,7 @@ def test_regrid_cf_volume_masked(model_file, obs_file):
     assert round(x[0, 0], 3) == 0.444
 
 
-def test_regrid_cf_volume_all_masked(model_file, obs_file):
+def test_regrid_cf_volume_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -247,7 +247,7 @@ def test_regrid_cf_volume_all_masked(model_file, obs_file):
     testing.assert_equal(x, np.nan)
 
 
-def test_reshape_data_to_window(model_file, obs_file):
+def test_reshape_data_to_window(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -280,7 +280,7 @@ def test_reshape_data_to_window(model_file, obs_file):
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_reshape_data_to_window_middle(model_file, obs_file):
+def test_reshape_data_to_window_middle(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -313,7 +313,7 @@ def test_reshape_data_to_window_middle(model_file, obs_file):
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_reshape_data_to_window_empty(model_file, obs_file):
+def test_reshape_data_to_window_empty(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -333,7 +333,7 @@ def test_reshape_data_to_window_empty(model_file, obs_file):
     assert x is None
 
 
-def test_regrid_iwc(model_file, obs_file):
+def test_regrid_iwc(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -349,7 +349,7 @@ def test_regrid_iwc(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], 1.4)
 
 
-def test_regrid_iwc_nan(model_file, obs_file):
+def test_regrid_iwc_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -367,7 +367,7 @@ def test_regrid_iwc_nan(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], 1.5)
 
 
-def test_regrid_iwc_all_nan(model_file, obs_file):
+def test_regrid_iwc_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -390,7 +390,7 @@ def test_regrid_iwc_all_nan(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], np.nan)
 
 
-def test_regrid_iwc_masked(model_file, obs_file):
+def test_regrid_iwc_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -407,7 +407,7 @@ def test_regrid_iwc_masked(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], 1.0)
 
 
-def test_regrid_iwc_all_masked(model_file, obs_file):
+def test_regrid_iwc_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -424,7 +424,7 @@ def test_regrid_iwc_all_masked(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], np.nan)
 
 
-def test_regrid_iwc_none(model_file, obs_file):
+def test_regrid_iwc_none(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -440,7 +440,7 @@ def test_regrid_iwc_none(model_file, obs_file):
     testing.assert_equal(x[0, 0], np.nan)
 
 
-def test_regrid_iwc_att(model_file, obs_file):
+def test_regrid_iwc_att(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -462,7 +462,7 @@ def test_regrid_iwc_att(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], 0.018)
 
 
-def test_regrid_iwc_att_masked(model_file, obs_file):
+def test_regrid_iwc_att_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -495,7 +495,7 @@ def test_regrid_iwc_att_masked(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], 0.018)
 
 
-def test_regrid_iwc_att_all_masked(model_file, obs_file):
+def test_regrid_iwc_att_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -528,7 +528,7 @@ def test_regrid_iwc_att_all_masked(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], np.nan)
 
 
-def test_regrid_iwc_att_none(model_file, obs_file):
+def test_regrid_iwc_att_none(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -550,7 +550,7 @@ def test_regrid_iwc_att_none(model_file, obs_file):
     assert np.isnan(x[0, 0])
 
 
-def test_regrid_iwc_rain(model_file, obs_file):
+def test_regrid_iwc_rain(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -566,7 +566,7 @@ def test_regrid_iwc_rain(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], 2.3)
 
 
-def test_regrid_iwc_rain_nan(model_file, obs_file):
+def test_regrid_iwc_rain_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -589,7 +589,7 @@ def test_regrid_iwc_rain_nan(model_file, obs_file):
     testing.assert_almost_equal(round(x[0, 0], 3), 2.429)
 
 
-def test_regrid_iwc_rain_all_nan(model_file, obs_file):
+def test_regrid_iwc_rain_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -612,7 +612,7 @@ def test_regrid_iwc_rain_all_nan(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], np.nan)
 
 
-def test_regrid_iwc_rain_masked(model_file, obs_file):
+def test_regrid_iwc_rain_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -629,7 +629,7 @@ def test_regrid_iwc_rain_masked(model_file, obs_file):
     testing.assert_almost_equal(round(x[0, 0], 3), 2.143)
 
 
-def test_regrid_iwc_rain_all_masked(model_file, obs_file):
+def test_regrid_iwc_rain_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
@@ -646,7 +646,7 @@ def test_regrid_iwc_rain_all_masked(model_file, obs_file):
     testing.assert_equal(x[0, 0], np.nan)
 
 
-def test_regrid_product(model_file, obs_file):
+def test_regrid_product(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     obj = ProductGrid(model, obs)
@@ -658,7 +658,7 @@ def test_regrid_product(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], 1.4)
 
 
-def test_regrid_product_nan(model_file, obs_file):
+def test_regrid_product_nan(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     obj = ProductGrid(model, obs)
@@ -677,7 +677,7 @@ def test_regrid_product_nan(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], 1.5)
 
 
-def test_regrid_product_all_nan(model_file, obs_file):
+def test_regrid_product_all_nan(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     obj = ProductGrid(model, obs)
@@ -696,7 +696,7 @@ def test_regrid_product_all_nan(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], np.nan)
 
 
-def test_regrid_product_masked(model_file, obs_file):
+def test_regrid_product_masked(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     obj = ProductGrid(model, obs)
@@ -709,7 +709,7 @@ def test_regrid_product_masked(model_file, obs_file):
     testing.assert_almost_equal(x[0, 0], 1.4)
 
 
-def test_regrid_product_all_masked(model_file, obs_file):
+def test_regrid_product_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     obj = ProductGrid(model, obs)
@@ -722,7 +722,7 @@ def test_regrid_product_all_masked(model_file, obs_file):
     testing.assert_almost_equal(x, np.nan)
 
 
-def test_regrid_product_none(model_file, obs_file):
+def test_regrid_product_none(model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     obj = ProductGrid(model, obs)
@@ -735,7 +735,7 @@ def test_regrid_product_none(model_file, obs_file):
 
 
 @pytest.mark.parametrize("product", ["cf_A", "cf_V", "cf_A_adv", "cf_V_adv"])
-def test_append_data2object_cf(product, model_file, obs_file):
+def test_append_data2object_cf(product, model_file, obs_file) -> None:
     obs = ObservationManager("cf", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "cf")
     ProductGrid(model, obs)
@@ -746,7 +746,7 @@ def test_append_data2object_cf(product, model_file, obs_file):
     "product",
     ["iwc", "iwc_att", "iwc_rain", "iwc_adv", "iwc_att_adv", "iwc_rain_adv"],
 )
-def test_append_data2object_iwc(product, model_file, obs_file):
+def test_append_data2object_iwc(product, model_file, obs_file) -> None:
     obs = ObservationManager("iwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "iwc")
     ProductGrid(model, obs)
@@ -754,7 +754,7 @@ def test_append_data2object_iwc(product, model_file, obs_file):
 
 
 @pytest.mark.parametrize("product", ["lwc", "lwc_adv"])
-def test_append_data2object_lwc(product, model_file, obs_file):
+def test_append_data2object_lwc(product, model_file, obs_file) -> None:
     obs = ObservationManager("lwc", str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, "lwc")
     ProductGrid(model, obs)

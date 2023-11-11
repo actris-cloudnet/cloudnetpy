@@ -89,7 +89,7 @@ class DataSource:
         key: str,
         name: str | None = None,
         units: str | None = None,
-    ):
+    ) -> None:
         """Adds new CloudnetVariable or RadarVariable into `data` attribute.
 
         Args:

@@ -6,7 +6,7 @@ import pytest
 
 
 @pytest.fixture(scope="session")
-def file_metadata():
+def file_metadata() -> dict:
     year, month, day = "2019", "05", "23"
     return {
         "year": year,
@@ -19,7 +19,7 @@ def file_metadata():
 
 
 @pytest.fixture(scope="session")
-def model_file(tmpdir_factory, file_metadata):
+def model_file(tmpdir_factory, file_metadata) -> str:
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     time = 3
@@ -61,7 +61,7 @@ def model_file(tmpdir_factory, file_metadata):
 
 
 @pytest.fixture(scope="session")
-def obs_file(tmpdir_factory, file_metadata):
+def obs_file(tmpdir_factory, file_metadata) -> str:
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     time = 6
@@ -158,7 +158,7 @@ def obs_file(tmpdir_factory, file_metadata):
 
 
 @pytest.fixture(scope="session")
-def regrid_file(tmpdir_factory, file_metadata):
+def regrid_file(tmpdir_factory, file_metadata) -> str:
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     time = 3

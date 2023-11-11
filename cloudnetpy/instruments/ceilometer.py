@@ -72,7 +72,7 @@ class Ceilometer:
             snr_limit=snr_limit,
         )
 
-    def prepare_data(self):
+    def prepare_data(self) -> None:
         """Add common additional data / metadata and convert into CloudnetArrays."""
         zenith_angle = self.data["zenith_angle"]
         self.data["height"] = np.array(
@@ -94,17 +94,17 @@ class Ceilometer:
         self.date = utils.seconds2date(self.data["time"][0], epoch=epoch)[:3]
         self.data["time"] = utils.seconds2hours(self.data["time"])
 
-    def data_to_cloudnet_arrays(self):
+    def data_to_cloudnet_arrays(self) -> None:
         for key, array in self.data.items():
             self.data[key] = CloudnetArray(array, key)
 
-    def screen_depol(self):
+    def screen_depol(self) -> None:
         key = "depolarisation"
         if key in self.data:
             self.data[key][self.data[key] <= 0] = ma.masked
             self.data[key][self.data[key] > 1] = ma.masked
 
-    def screen_invalid_values(self):
+    def screen_invalid_values(self) -> None:
         for key in self.data:
             try:
                 if self.data[key][:].ndim == 2:
@@ -112,11 +112,11 @@ class Ceilometer:
             except (IndexError, TypeError):
                 continue
 
-    def add_snr_info(self, key: str, snr_limit: float):
+    def add_snr_info(self, key: str, snr_limit: float) -> None:
         if key in self.data:
             self.data[key].comment += f" SNR threshold applied: {snr_limit}."
 
-    def check_beta_raw_shape(self):
+    def check_beta_raw_shape(self) -> None:
         beta_raw = self.data["beta_raw"]
         if beta_raw.ndim != 2 or (beta_raw.shape[0] == 1 or beta_raw.shape[1] == 1):
             msg = f"Invalid beta_raw shape: {beta_raw.shape}"

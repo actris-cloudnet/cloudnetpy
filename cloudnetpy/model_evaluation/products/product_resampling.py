@@ -22,7 +22,7 @@ def process_L3_day_product(
     output_file: str,
     uuid: str | None = None,
     overwrite: bool = False,
-):
+) -> str:
     """Main function to generate downsample of observations to match model grid.
 
     This function will generate a L3 product nc-file. It includes the information of
@@ -94,4 +94,5 @@ def process_L3_day_product(
             )
         else:
             add_var2ncfile(model_obj, output_file)
+    assert isinstance(uuid, str)
     return uuid

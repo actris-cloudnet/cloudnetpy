@@ -39,7 +39,7 @@ class AdvanceProductMethods(DataSource):
         self._model_height = model_obj.data[model_obj.keys["height"]][:]
         self.generate_products()
 
-    def generate_products(self):
+    def generate_products(self) -> None:
         cls = importlib.import_module(__name__).AdvanceProductMethods
         try:
             name = f"get_advance_{self.product}"
@@ -47,10 +47,10 @@ class AdvanceProductMethods(DataSource):
         except AttributeError as error:
             logging.warning("No advance method for %s: %s", self.product, error)
 
-    def get_advance_cf(self):
+    def get_advance_cf(self) -> None:
         self.cf_cirrus_filter()
 
-    def cf_cirrus_filter(self):
+    def cf_cirrus_filter(self) -> None:
         cf = self.getvar_from_object("cf")
         h = self.getvar_from_object("h")
         temperature = self.getvar("temperature")

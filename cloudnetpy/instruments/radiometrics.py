@@ -93,7 +93,7 @@ class Radiometrics:
         self.data: dict = {}
         self.instrument = instruments.RADIOMETRICS
 
-    def read_raw_data(self):
+    def read_raw_data(self) -> None:
         """Reads Radiometrics raw data."""
         record_columns = {}
         unknown_record_types = set()
@@ -133,7 +133,7 @@ class Radiometrics:
             if data_row.block_index == 0:
                 self.raw_data.append(data_row)
 
-    def read_data(self):
+    def read_data(self) -> None:
         """Reads values."""
         times = []
         lwps = []
@@ -168,7 +168,7 @@ class RadiometricsCombined:
                 self.data = utils.append_data(self.data, key, obj.data[key])
         self.instrument = instruments.RADIOMETRICS
 
-    def screen_time(self, expected_date: datetime.date | None):
+    def screen_time(self, expected_date: datetime.date | None) -> None:
         """Screens timestamps."""
         if expected_date is None:
             self.date = self.data["time"][0].astype(object).date()
@@ -180,16 +180,16 @@ class RadiometricsCombined:
         for key in self.data:
             self.data[key] = self.data[key][valid_mask]
 
-    def time_to_fractional_hours(self):
+    def time_to_fractional_hours(self) -> None:
         base = self.data["time"][0].astype("datetime64[D]")
         self.data["time"] = (self.data["time"] - base) / np.timedelta64(1, "h")
 
-    def data_to_cloudnet_arrays(self):
+    def data_to_cloudnet_arrays(self) -> None:
         """Converts arrays to CloudnetArrays."""
         for key, array in self.data.items():
             self.data[key] = CloudnetArray(array, key)
 
-    def add_meta(self):
+    def add_meta(self) -> None:
         """Adds some metadata."""
         valid_keys = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():

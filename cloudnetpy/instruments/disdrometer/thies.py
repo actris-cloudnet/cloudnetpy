@@ -68,7 +68,7 @@ class Thies(Disdrometer):
         self._create_diameter_vectors()
         self.instrument = instruments.THIES
 
-    def init_data(self):
+    def init_data(self) -> None:
         """According to
         https://www.biral.com/wp-content/uploads/2015/01/5.4110.xx_.xxx_.pdf
         """

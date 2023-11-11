@@ -75,7 +75,7 @@ def generate_ier(
 class IerSource(IceSource):
     """Data container for ice effective radius calculations."""
 
-    def convert_units(self):
+    def convert_units(self) -> None:
         """Convert um to m."""
         for prod in ("ier", "ier_inc_rain"):
             self.data[prod].data[:] /= 1e6

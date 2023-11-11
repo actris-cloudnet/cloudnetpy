@@ -11,7 +11,7 @@ class VariableInfo:
 
 
 @pytest.mark.parametrize("key", ["cf_V", "cf_A", "cf_V_adv", "cf_A_adv"])
-def test_get_cf_title(key):
+def test_get_cf_title(key) -> None:
     var = VariableInfo()
     field_name = key + "_" + MODEL
     value = "Product, Volume"
@@ -22,7 +22,7 @@ def test_get_cf_title(key):
 
 
 @pytest.mark.parametrize("key", ["cf_V", "cf_A", "cf_V_adv", "cf_A_adv"])
-def test_get_cf_title_cycle(key):
+def test_get_cf_title_cycle(key) -> None:
     var = VariableInfo()
     field_name = key + "_" + MODEL + "_001"
     value = "Product, Volume"
@@ -43,7 +43,7 @@ def test_get_cf_title_cycle(key):
         ("iwc_rain_adv", "Product with rain"),
     ],
 )
-def test_get_iwc_title(key, value):
+def test_get_iwc_title(key, value) -> None:
     var = VariableInfo()
     field_name = key + "_" + MODEL
     x = pl._get_iwc_title(field_name, var)
@@ -61,21 +61,21 @@ def test_get_iwc_title(key, value):
         ("iwc_rain_adv", "Product with rain"),
     ],
 )
-def test_get_iwc_title_cycle(key, value):
+def test_get_iwc_title_cycle(key, value) -> None:
     var = VariableInfo()
     field_name = key + "_" + MODEL + "_001"
     x = pl._get_iwc_title(field_name, var)
     assert x == value
 
 
-def test_get_product_title():
+def test_get_product_title() -> None:
     var = VariableInfo()
     value = "Product"
     x = pl._get_product_title(var)
     assert x == value
 
 
-def test_get_product_title_cycle():
+def test_get_product_title_cycle() -> None:
     var = VariableInfo()
     value = "Product"
     x = pl._get_product_title(var)
@@ -86,7 +86,7 @@ def test_get_product_title_cycle():
     "key, title",
     [("lwc", "Product"), ("lwc_adv", "Product (Advection time)")],
 )
-def test_get_stat_titles(key, title):
+def test_get_stat_titles(key, title) -> None:
     field_name = key + "_" + MODEL
     var = VariableInfo()
     x = pl._get_stat_titles(field_name, key, var)
@@ -94,7 +94,7 @@ def test_get_stat_titles(key, title):
 
 
 @pytest.mark.parametrize("key", ["cf_V", "cf_A", "cf_V_adv", "cf_A_adv"])
-def test_get_cf_title_stat(key):
+def test_get_cf_title_stat(key) -> None:
     field_name = key + "_" + MODEL
     var = VariableInfo()
     x = pl._get_cf_title_stat(field_name, var)
@@ -112,7 +112,7 @@ def test_get_cf_title_stat(key):
         ("iwc_rain", "Product with rain"),
     ],
 )
-def test_get_iwc_title_stat(key, value):
+def test_get_iwc_title_stat(key, value) -> None:
     field_name = key + "_" + MODEL
     var = VariableInfo()
     x = pl._get_iwc_title_stat(field_name, var)
@@ -120,7 +120,7 @@ def test_get_iwc_title_stat(key, value):
 
 
 @pytest.mark.parametrize("key", ["lwc"])
-def test_get_product_title_stat(key):
+def test_get_product_title_stat(key) -> None:
     var = VariableInfo()
     x = pl._get_product_title_stat(var)
     assert x == "Product"

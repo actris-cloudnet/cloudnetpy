@@ -258,7 +258,7 @@ def handle_saving(
     case_date: date,
     field_names: list,
     fix: str = "",
-):
+) -> None:
     if image_name:
         plt.savefig(image_name, bbox_inches="tight")
     elif save_path:
@@ -422,7 +422,7 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) ->
     return data_field, (ax_values[0], alt)
 
 
-def set_xax(ax, include_xlimits: bool = False):
+def set_xax(ax, include_xlimits: bool = False) -> None:
     """Sets xticks and xtick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks(include_xlimits=include_xlimits)
     ax.set_xticks(np.arange(0, 25, 4, dtype=int))
@@ -430,7 +430,7 @@ def set_xax(ax, include_xlimits: bool = False):
     ax.set_xlim(0, 24)
 
 
-def set_yax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0):
+def set_yax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0) -> None:
     """Sets yticks, ylim and ylabel for yaxis of axis."""
     ax.set_ylim(min_y, max_y)
     ax.set_ylabel("Height (km)", fontsize=13)
@@ -859,7 +859,7 @@ def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
     return source.rstrip("\n")
 
 
-def add_subtitle(fig, case_date: date, site_name: str):
+def add_subtitle(fig, case_date: date, site_name: str) -> None:
     """Adds subtitle into figure."""
     text = _get_subtitle_text(case_date, site_name)
     fig.suptitle(
@@ -919,7 +919,7 @@ def plot_2d(
     clim: tuple | None = None,
     ylim: tuple | None = None,
     xlim: tuple | None = None,
-):
+) -> None:
     """Simple plot of 2d variable."""
     plt.close()
     if cbar:

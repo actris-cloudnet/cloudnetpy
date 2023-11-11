@@ -80,7 +80,7 @@ class NcRadar(DataSource, CloudnetInstrument):
                 cloudnet_array.mask_indices(z_mask)
                 cloudnet_array.mask_indices(v_mask)
 
-    def mask_first_range_gates(self, range_limit: float = 150):
+    def mask_first_range_gates(self, range_limit: float = 150) -> None:
         """Masks first range gates."""
         if "v" not in self.data or "range" not in self.data:
             return
@@ -128,7 +128,7 @@ class NcRadar(DataSource, CloudnetInstrument):
                 del self.data[key]
         return list(is_stable_profile)
 
-    def add_radar_specific_variables(self):
+    def add_radar_specific_variables(self) -> None:
         """Adds radar specific variables."""
         assert self.instrument is not None
         key = "radar_frequency"
@@ -143,7 +143,7 @@ class NcRadar(DataSource, CloudnetInstrument):
         except RuntimeError:
             logging.warning("Unable to find nyquist_velocity")
 
-    def test_if_all_masked(self):
+    def test_if_all_masked(self) -> None:
         """Tests if all data are masked."""
         if not np.any(~self.data["v"][:].mask):
             msg = "All radar data are masked"
@@ -153,17 +153,17 @@ class NcRadar(DataSource, CloudnetInstrument):
 class ChilboltonRadar(NcRadar):
     """Class for Chilbolton cloud radars Galileo and Copernicus."""
 
-    def __init__(self, full_path: str, site_meta: dict):
+    def __init__(self, full_path: str, site_meta: dict) -> None:
         super().__init__(full_path, site_meta)
         self.date = self._init_date()
 
-    def add_nyquist_velocity(self, keymap: dict):
+    def add_nyquist_velocity(self, keymap: dict) -> None:
         """Adds nyquist velocity."""
         key = [key for key, value in keymap.items() if value == "v"][0]
         folding_velocity = self.dataset.variables[key].folding_velocity
         self.append_data(np.array(folding_velocity), "nyquist_velocity")
 
-    def check_date(self, date: str):
+    def check_date(self, date: str) -> None:
         if self.date != date.split("-"):
             raise ValidTimeStampError
 

@@ -111,7 +111,7 @@ class Galileo(ChilboltonRadar):
         self.date = self._init_date()
         self.instrument = GALILEO
 
-    def mask_clutter(self):
+    def mask_clutter(self) -> None:
         """Masks clutter."""
         # Only strong Z values are valid
         n_low_gates = 15
