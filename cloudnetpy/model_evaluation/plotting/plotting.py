@@ -687,7 +687,11 @@ def init_colorbar(plot, axis):
 
 
 def _set_title(
-    ax, field_name: str, product: str, variable_info, model_name: str = ""
+    ax,
+    field_name: str,
+    product: str,
+    variable_info,
+    model_name: str = "",
 ) -> None:
     """Generates subtitles for different product types"""
     parts = field_name.split("_")

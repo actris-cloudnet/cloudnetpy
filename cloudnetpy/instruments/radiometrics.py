@@ -205,5 +205,11 @@ def _parse_datetime(text: str) -> datetime.datetime:
     if year < 100:
         year += 2000
     return datetime.datetime(
-        year, month, day, hour, minute, second, tzinfo=datetime.timezone.utc
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        tzinfo=datetime.timezone.utc,
     )

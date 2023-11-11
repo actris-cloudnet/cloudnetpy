@@ -37,7 +37,8 @@ class Cs135(Ceilometer):
         parts = re.split(rb"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}),", content)
         for i in range(1, len(parts), 2):
             timestamp = datetime.strptime(
-                parts[i].decode(), "%Y-%m-%dT%H:%M:%S.%f"
+                parts[i].decode(),
+                "%Y-%m-%dT%H:%M:%S.%f",
             ).astimezone(tz=timezone.utc)
             try:
                 self._check_timestamp(timestamp)

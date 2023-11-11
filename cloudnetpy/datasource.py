@@ -120,7 +120,7 @@ class DataSource:
             month = str(self.dataset.month).zfill(2)
             day = str(self.dataset.day).zfill(2)
             datetime.strptime(f"{year}{month}{day}", "%Y%m%d").astimezone(
-                tz=timezone.utc
+                tz=timezone.utc,
             )
         except (AttributeError, ValueError) as read_error:
             msg = "Missing or invalid date in global attributes."

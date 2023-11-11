@@ -237,13 +237,16 @@ def _copy_attributes(source: netCDF4.Dataset, target: netCDF4.Dataset) -> None:
 
 
 def _find_valid_time_indices(
-    nc_old: netCDF4.Dataset, nc_new: netCDF4.Dataset
+    nc_old: netCDF4.Dataset,
+    nc_new: netCDF4.Dataset,
 ) -> np.ndarray:
     return np.where(nc_new.variables["time"][:] > nc_old.variables["time"][-1])[0]
 
 
 def _update_fields(
-    nc_old: netCDF4.Dataset, nc_new: netCDF4.Dataset, valid_ind: np.ndarray
+    nc_old: netCDF4.Dataset,
+    nc_new: netCDF4.Dataset,
+    valid_ind: np.ndarray,
 ) -> None:
     ind0 = len(nc_old.variables["time"])
     idx = [ind0 + x for x in valid_ind]

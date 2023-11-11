@@ -132,7 +132,11 @@ def _fill_missing_pixels(
 
 
 def _screen_insects(
-    insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers, obs
+    insect_prob,
+    insect_prob_no_ldr,
+    melting_layer,
+    liquid_layers,
+    obs,
 ) -> np.ndarray:
     def _screen_liquid_layers() -> None:
         prob[liquid_layers == 1] = 0

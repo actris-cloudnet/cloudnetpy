@@ -72,7 +72,8 @@ class WS(CloudnetInstrument):
             splat = row.split()
             try:
                 timestamp = datetime.datetime.strptime(
-                    splat[0], "%Y-%m-%dT%H:%M:%SZ"
+                    splat[0],
+                    "%Y-%m-%dT%H:%M:%SZ",
                 ).astimezone(tz=datetime.timezone.utc)
                 temp: list[str | float] = list(splat)
                 temp[1:] = [float(x) for x in temp[1:]]

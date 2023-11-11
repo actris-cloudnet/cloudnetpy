@@ -326,7 +326,13 @@ def _parse_datetime(tokens: Iterator[str]) -> datetime.datetime:
     minute = int(token[10:12])
     second = int(token[12:14])
     return datetime.datetime(
-        year, month, day, hour, minute, second, tzinfo=datetime.timezone.utc
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+        tzinfo=datetime.timezone.utc,
     )
 
 
