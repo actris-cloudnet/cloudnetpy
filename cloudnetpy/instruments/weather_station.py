@@ -64,7 +64,7 @@ class WS(CloudnetInstrument):
         self.instrument = instruments.GENERIC_WEATHER_STATION
         self._data = self._read_data()
 
-    def _read_data(self):
+    def _read_data(self) -> dict:
         timestamps, values, header = [], [], []
         with open(self.filename, encoding="latin-1") as f:
             data = f.readlines()

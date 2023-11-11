@@ -243,10 +243,11 @@ def _get_keymap(filetype: str) -> dict:
     return keymaps.get(filetype.lower(), keymaps["mmclx"])
 
 
-def _check_file_type(filetype: str):
+def _check_file_type(filetype: str) -> None:
     known_filetypes = ["znc", "mmclx"]
     if filetype.lower() not in known_filetypes:
-        raise ValueError(f"Filetype must be one of {known_filetypes}")
+        msg = f"Filetype must be one of {known_filetypes}"
+        raise ValueError(msg)
 
 
 ATTRIBUTES = {

@@ -39,6 +39,7 @@ class LufftCeilo(NcLidar):
             logging.warning("Using default calibration factor")
             calibration_factor = 3e-12
         beta_raw = self._getvar("beta_raw", "beta_att")
+        assert isinstance(beta_raw, ma.MaskedArray)
         old_version = self._get_old_software_version()
         if old_version is not None:
             logging.warning(
@@ -47,7 +48,7 @@ class LufftCeilo(NcLidar):
             )
             data_std = self._getvar("stddev")
             normalised_apd = self._get_nn()
-            beta_raw *= utils.transpose(data_std / normalised_apd)
+            beta_raw *= utils.transpose(ma.masked_array(data_std / normalised_apd))
             beta_raw *= self.data["range"] ** 2
         beta_raw *= calibration_factor
         self.data["calibration_factor"] = float(calibration_factor)
@@ -60,7 +61,7 @@ class LufftCeilo(NcLidar):
             return None
         return version
 
-    def _get_nn(self):
+    def _get_nn(self) -> float | ma.MaskedArray:
         nn1 = self._getvar("nn1", "NN1")
         median_nn1 = ma.median(nn1)
         # Parameters taken from the matlab code and should be verified
@@ -73,7 +74,7 @@ class LufftCeilo(NcLidar):
             return 1
         return step_factor ** (-(nn1 - reference) / scale)
 
-    def _getvar(self, *args):
+    def _getvar(self, *args) -> float | ma.MaskedArray:
         assert self.dataset is not None
         for arg in args:
             if arg in self.dataset.variables:
@@ -81,7 +82,7 @@ class LufftCeilo(NcLidar):
                 return var[0] if utils.isscalar(var) else var[:]
         raise ValueError("Unknown variable")
 
-    def _fetch_attributes(self):
+    def _fetch_attributes(self) -> None:
         self.serial_number = getattr(self.dataset, "device_name", None)
         if self.serial_number is None:
             self.serial_number = getattr(self.dataset, "source", "")

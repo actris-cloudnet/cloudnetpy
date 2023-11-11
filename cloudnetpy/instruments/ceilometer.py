@@ -119,7 +119,8 @@ class Ceilometer:
     def check_beta_raw_shape(self):
         beta_raw = self.data["beta_raw"]
         if beta_raw.ndim != 2 or (beta_raw.shape[0] == 1 or beta_raw.shape[1] == 1):
-            raise ValidTimeStampError(f"Invalid beta_raw shape: {beta_raw.shape}")
+            msg = f"Invalid beta_raw shape: {beta_raw.shape}"
+            raise ValidTimeStampError(msg)
 
 
 class NoisyData:

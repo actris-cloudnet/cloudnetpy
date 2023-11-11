@@ -160,7 +160,7 @@ def _stack_errors(
     error_small=None,
     error_tiny=None,
 ) -> ma.MaskedArray:
-    def _add_error_component(source: np.ndarray, ind: tuple):
+    def _add_error_component(source: np.ndarray, ind: tuple) -> None:
         error[ind] = source[ind]
 
     error = ma.zeros(error_in.shape)

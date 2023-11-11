@@ -6,7 +6,7 @@ class TestCloudFractionProcessing:
     product = "cf"
 
     @pytest.fixture(autouse=True)
-    def _fetch_params(self, params):
+    def _fetch_params(self, params) -> None:
         self.full_path = params["full_path"]
 
     @pytest.mark.reprocess()

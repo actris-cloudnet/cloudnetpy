@@ -244,7 +244,7 @@ class ClCeilo(VaisalaCeilo):
         self._store_ceilometer_info()
         self._sort_time()
 
-    def _sort_time(self):
+    def _sort_time(self) -> None:
         """Sorts timestamps and removes duplicates."""
         time = np.copy(self.data["time"][:])
         ind_sorted = np.argsort(time)
@@ -261,7 +261,7 @@ class ClCeilo(VaisalaCeilo):
             if array.ndim == 2 and array.shape[0] == n_time:
                 self.data[key] = self.data[key][ind_valid, :]
 
-    def _store_ceilometer_info(self):
+    def _store_ceilometer_info(self) -> None:
         n_gates = self.data["beta_raw"].shape[1]
         if n_gates < 1540:
             self.instrument = instruments.CL31
@@ -338,7 +338,8 @@ class Ct25k(VaisalaCeilo):
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number in (1, 3, 6):
-            raise RuntimeError(f"Unsupported message number: {self._message_number}")
+            msg = f"Unsupported message number: {self._message_number}"
+            raise RuntimeError(msg)
         keys = (
             "measurement_mode",
             "laser_energy",

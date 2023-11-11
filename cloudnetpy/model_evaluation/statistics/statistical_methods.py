@@ -76,7 +76,7 @@ class DayStatistics:
             full_name = "vertical_profile"
         return full_name, params
 
-    def _generate_day_statistics(self):
+    def _generate_day_statistics(self) -> None:
         full_name, params = self._get_method_attr()
         cls = __import__("statistical_methods")
         try:
@@ -123,7 +123,7 @@ def calc_common_area_sum(
     model: ma.MaskedArray,
     observation: ma.MaskedArray,
 ) -> tuple[float, str]:
-    def _indices_of_mask_sum():
+    def _indices_of_mask_sum() -> float:
         # Calculate percentage value of common area of indices from two arrays.
         # Results is total number of common indices with value
         observation[np.where(np.isnan(observation))] = ma.masked

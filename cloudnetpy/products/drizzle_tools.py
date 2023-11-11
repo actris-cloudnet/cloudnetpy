@@ -37,13 +37,13 @@ class DrizzleSource(DataSource):
         self.beta = self.getvar("beta")
         self.v = self.getvar("v")
 
-    def _convert_z_units(self):
+    def _convert_z_units(self) -> np.ndarray:
         """Converts reflectivity factor to SI units."""
         z = self.getvar("Z") - 180
         z[z > 0.0] = 0.0
         return utils.db2lin(z)
 
-    def _read_mie_lut(self):
+    def _read_mie_lut(self) -> dict:
         """Reads mie scattering look-up table."""
         mie_file = self._get_mie_file()
         with netCDF4.Dataset(mie_file) as nc:
@@ -66,11 +66,11 @@ class DrizzleSource(DataSource):
         return lut
 
     @staticmethod
-    def _get_mie_file():
+    def _get_mie_file() -> str:
         module_path = os.path.dirname(os.path.abspath(__file__))
         return "/".join((module_path, "mie_lu_tables.nc"))
 
-    def _get_wl_band(self):
+    def _get_wl_band(self) -> str:
         """Returns string corresponding the radar frequency."""
         radar_frequency = float(self.getvar("radar_frequency"))
         wl_band = utils.get_wl_band(radar_frequency)
@@ -104,14 +104,14 @@ class DrizzleClassification(ProductClassification):
         self.cold_rain = self._find_cold_rain()
 
     @staticmethod
-    def _find_v_sigma(cat_file: str):
+    def _find_v_sigma(cat_file: str) -> np.ndarray:
         v_sigma = product_tools.read_nc_fields(cat_file, "v_sigma")
         return np.isfinite(v_sigma)
 
-    def _find_warm_liquid(self):
+    def _find_warm_liquid(self) -> np.ndarray:
         return self.category_bits["droplet"] & ~self.category_bits["cold"]
 
-    def _find_drizzle(self):
+    def _find_drizzle(self) -> np.ndarray:
         return (
             ~utils.transpose(self.is_rain)
             & self.category_bits["falling"]
@@ -127,7 +127,7 @@ class DrizzleClassification(ProductClassification):
             & self.is_v_sigma
         )
 
-    def _find_would_be_drizzle(self):
+    def _find_would_be_drizzle(self) -> np.ndarray:
         return (
             ~utils.transpose(self.is_rain)
             & self.warm_liquid
@@ -139,7 +139,7 @@ class DrizzleClassification(ProductClassification):
             & ~self.quality_bits["molecular"]
         )
 
-    def _find_cold_rain(self):
+    def _find_cold_rain(self) -> np.ndarray:
         return np.any(self.category_bits["melting"], axis=1)
 
 
@@ -165,7 +165,7 @@ class SpectralWidth:
         self.cat_file = categorize_file
         self.width_ht = self._calculate_spectral_width()
 
-    def _calculate_spectral_width(self):
+    def _calculate_spectral_width(self) -> np.ndarray:
         v_sigma = product_tools.read_nc_fields(self.cat_file, "v_sigma")
         try:
             width = product_tools.read_nc_fields(self.cat_file, "width")
@@ -175,19 +175,19 @@ class SpectralWidth:
         sigma_factor = self._calc_v_sigma_factor()
         return width - sigma_factor * v_sigma
 
-    def _calc_v_sigma_factor(self):
+    def _calc_v_sigma_factor(self) -> np.ndarray:
         beam_divergence = self._calc_beam_divergence()
         wind = self._calc_horizontal_wind()
         actual_wind = (wind + beam_divergence) ** (2 / 3)
         scaled_wind = (30 * wind + beam_divergence) ** (2 / 3)
         return actual_wind / (scaled_wind - actual_wind)
 
-    def _calc_beam_divergence(self):
+    def _calc_beam_divergence(self) -> np.ndarray:
         beam_width = 0.5
         height = product_tools.read_nc_fields(self.cat_file, "height")
         return height * np.deg2rad(beam_width)
 
-    def _calc_horizontal_wind(self):
+    def _calc_horizontal_wind(self) -> np.ndarray:
         """Calculates magnitude of horizontal wind.
 
         Returns
@@ -253,7 +253,7 @@ class DrizzleSolver:
         )
         return ind_width, ind_dia
 
-    def _solve_drizzle(self, dia_init: np.ndarray):
+    def _solve_drizzle(self, dia_init: np.ndarray) -> None:
         drizzle_ind = np.where(self._drizzle_class.drizzle == 1)
         dia_init[drizzle_ind] = self._calc_dia(self._beta_z_ratio[drizzle_ind], k=18.8)
         n_widths, n_dia = self._width_lut.shape[0], len(self._data.mie["Do"])
@@ -281,7 +281,7 @@ class DrizzleSolver:
         ind: tuple,
         dia: np.ndarray | float,
         lut_ind: tuple,
-    ):
+    ) -> None:
         self.params["Do"][ind] = dia
         self.params["mu"][ind] = self._data.mie["mu"][lut_ind[0]]
         self.params["S"][ind] = self._data.mie["S"][lut_ind]

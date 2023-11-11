@@ -209,7 +209,7 @@ def _get_hatpro_objects(
     return combined_objs, valid_files
 
 
-def _validate_date(obj: HatproBin, expected_date: str):
+def _validate_date(obj: HatproBin, expected_date: str) -> HatproBin:
     if obj.header["_time_reference"] != 1:
         raise ValueError("Can not validate non-UTC dates")
     inds = []

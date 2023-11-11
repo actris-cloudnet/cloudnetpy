@@ -89,7 +89,7 @@ class DrizzleProducts:
         self._ind_drizzle, self._ind_lut = self._find_indices()
         self.derived_products = self._calc_derived_products()
 
-    def _find_indices(self):
+    def _find_indices(self) -> tuple:
         drizzle_ind = np.where(self._params["Do"])
         ind_mu = np.searchsorted(self._data.mie["mu"], self._params["mu"][drizzle_ind])
         ind_dia = np.searchsorted(self._data.mie["Do"], self._params["Do"][drizzle_ind])
@@ -98,7 +98,7 @@ class DrizzleProducts:
         ind_dia[ind_dia >= n_dia] = n_dia - 1
         return drizzle_ind, (ind_mu, ind_dia)
 
-    def _calc_derived_products(self):
+    def _calc_derived_products(self) -> dict:
         density = self._calc_density()
         lwc = self._calc_lwc()
         lwf = self._calc_lwf(lwc)
@@ -112,13 +112,13 @@ class DrizzleProducts:
             "v_air": v_air,
         }
 
-    def _calc_density(self):
+    def _calc_density(self) -> np.ndarray:
         """Calculates drizzle number density (m-3)."""
         a = self._data.z * 3.67**6
         b = self._params["Do"] ** 6
         return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
 
-    def _calc_lwc(self):
+    def _calc_lwc(self) -> np.ndarray:
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
         dia, mu, s = (self._params.get(key) for key in ("Do", "mu", "S"))
@@ -128,7 +128,7 @@ class DrizzleProducts:
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
         return rho_water / 3 * self._data.beta * s * dia * gamma_ratio
 
-    def _calc_lwf(self, lwc_in):
+    def _calc_lwf(self, lwc_in) -> np.ndarray:
         """Calculates drizzle liquid water flux."""
         flux = ma.copy(lwc_in)
         flux[self._ind_drizzle] *= (
@@ -137,13 +137,13 @@ class DrizzleProducts:
         )
         return flux
 
-    def _calc_fall_velocity(self):
+    def _calc_fall_velocity(self) -> np.ndarray:
         """Calculates drizzle droplet fall velocity (m s-1)."""
         velocity = np.zeros_like(self._params["Do"])
         velocity[self._ind_drizzle] = -self._data.mie["v"][self._ind_lut]
         return velocity
 
-    def _calc_v_air(self, droplet_velocity):
+    def _calc_v_air(self, droplet_velocity) -> np.ndarray:
         """Calculates vertical air velocity."""
         velocity = -np.copy(droplet_velocity)
         velocity[self._ind_drizzle] += self._data.v[self._ind_drizzle]
@@ -169,24 +169,24 @@ class RetrievalStatus:
         self.retrieval_status: np.ndarray = np.array([])
         self._get_retrieval_status()
 
-    def _get_retrieval_status(self):
+    def _get_retrieval_status(self) -> None:
         self.retrieval_status = np.copy(self.drizzle_class.drizzle).astype(int)
         self._find_retrieval_below_melting()
         self.retrieval_status[self.drizzle_class.would_be_drizzle == 1] = 3
         self._find_retrieval_in_warm_liquid()
         self.retrieval_status[self.drizzle_class.is_rain == 1, :] = 5
 
-    def _find_retrieval_below_melting(self):
+    def _find_retrieval_below_melting(self) -> None:
         cold_rain = utils.transpose(self.drizzle_class.cold_rain)
         below_melting = cold_rain * self.drizzle_class.drizzle
         self.retrieval_status[below_melting == 1] = 2
 
-    def _find_retrieval_in_warm_liquid(self):
+    def _find_retrieval_in_warm_liquid(self) -> None:
         in_warm_liquid = (self.retrieval_status == 0) * self.drizzle_class.warm_liquid
         self.retrieval_status[in_warm_liquid == 1] = 4
 
 
-def _screen_rain(results: dict, classification: DrizzleClassification):
+def _screen_rain(results: dict, classification: DrizzleClassification) -> dict:
     """Removes rainy profiles from drizzle variables.."""
     for key in results:
         if not utils.isscalar(results[key]):
@@ -194,7 +194,7 @@ def _screen_rain(results: dict, classification: DrizzleClassification):
     return results
 
 
-def _append_data(drizzle_data: DrizzleSource, results: dict):
+def _append_data(drizzle_data: DrizzleSource, results: dict) -> None:
     """Save retrieved fields to the drizzle_data object."""
     for key, value in results.items():
         if key != "drizzle_retrieval_status":

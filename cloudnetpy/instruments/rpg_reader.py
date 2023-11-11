@@ -154,9 +154,8 @@ def _decode_angles(
         ele = np.sign(x) * (np.abs(x) // 1e5) / 100
         azi = (np.abs(x) - np.abs(ele) * 1e7) / 100
     else:
-        raise NotImplementedError(
-            f"Known versions for angle encoding are 1 and 2, but received {version}",
-        )
+        msg = f"Known versions for angle encoding are 1 and 2, but received {version}"
+        raise NotImplementedError(msg)
 
     return ele, azi
 
@@ -205,17 +204,17 @@ class HatproBin:
             )
         self.data[self.variable][is_bad] = ma.masked
 
-    def _remove_duplicate_timestamps(self):
+    def _remove_duplicate_timestamps(self) -> None:
         _, ind = np.unique(self.data["time"], return_index=True)
         self.data = self.data[ind]
 
-    def _read_header(self, file: BinaryIO):
+    def _read_header(self, file: BinaryIO) -> None:
         raise NotImplementedError
 
-    def _read_data(self, file: BinaryIO):
+    def _read_data(self, file: BinaryIO) -> None:
         raise NotImplementedError
 
-    def _add_zenith_angle(self):
+    def _add_zenith_angle(self) -> None:
         ele, _azi = _decode_angles(self.data["_instrument_angles"], self.version)
         self.data = rfn.append_fields(self.data, "zenith_angle", 90 - ele)
 
@@ -225,7 +224,7 @@ class HatproBinLwp(HatproBin):
 
     variable = "lwp"
 
-    def _read_header(self, file):
+    def _read_header(self, file) -> None:
         self.header = _read_from_file(
             file,
             [
@@ -242,9 +241,10 @@ class HatproBinLwp(HatproBin):
         elif self.header["file_code"] == 934501000:
             self.version = 2
         else:
-            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"]}')
+            msg = f'Unknown HATPRO version. {self.header["file_code"]}'
+            raise ValueError(msg)
 
-    def _read_data(self, file):
+    def _read_data(self, file) -> None:
         self.data = _read_from_file(
             file,
             [
@@ -263,7 +263,7 @@ class HatproBinIwv(HatproBin):
 
     variable = "iwv"
 
-    def _read_header(self, file):
+    def _read_header(self, file) -> None:
         self.header = _read_from_file(
             file,
             [
@@ -280,9 +280,10 @@ class HatproBinIwv(HatproBin):
         elif self.header["file_code"] == 594811000:
             self.version = 2
         else:
-            raise ValueError(f'Unknown HATPRO version. {self.header["file_code"]}')
+            msg = f'Unknown HATPRO version. {self.header["file_code"]}'
+            raise ValueError(msg)
 
-    def _read_data(self, file):
+    def _read_data(self, file) -> None:
         self.data = _read_from_file(
             file,
             [

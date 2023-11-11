@@ -86,7 +86,7 @@ def find_liquid(
 
     """
 
-    def _is_proper_peak():
+    def _is_proper_peak() -> bool:
         conditions = (
             npoints >= min_points,
             peak_width < max_width,

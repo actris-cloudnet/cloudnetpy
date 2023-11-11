@@ -153,7 +153,7 @@ class Disdrometer(CloudnetInstrument):
             seconds.append(int(hour) * 3600 + int(minute) * 60 + int(sec))
         return CloudnetArray(utils.seconds2hours(np.array(seconds)), "time")
 
-    def _convert_data(self, keys: tuple, value: float, method: str = "divide"):
+    def _convert_data(self, keys: tuple, value: float, method: str = "divide") -> None:
         for key in keys:
             if key in self.data:
                 if method == "divide":
@@ -163,7 +163,7 @@ class Disdrometer(CloudnetInstrument):
                 else:
                     raise ValueError
 
-    def _append_spectra(self):
+    def _append_spectra(self) -> None:
         array = ma.masked_all(
             (len(self._file_data["scalars"]), self.n_diameter, self.n_velocity),
         )
@@ -217,7 +217,7 @@ class Disdrometer(CloudnetInstrument):
         return mid_value, bounds, spread
 
 
-def _format_thies_date(date: str):
+def _format_thies_date(date: str) -> str:
     day, month, year = date.split(".")
     year = f"20{year}"
     return f"{year}-{month.zfill(2)}-{day.zfill(2)}"

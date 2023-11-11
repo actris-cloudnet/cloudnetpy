@@ -109,10 +109,10 @@ def add_var2ncfile(obj: ModelManager, file_name: str):
     nc_file.close()
 
 
-def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
+def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict) -> None:
     """Iterates over Cloudnet-ME instances and write to given rootgrp."""
 
-    def _get_dimensions(array):
+    def _get_dimensions(array) -> tuple:
         """Finds correct dimensions for a variable."""
         if utils.isscalar(array):
             return ()
@@ -141,11 +141,11 @@ def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
             continue
 
 
-def _augment_global_attributes(root_group: netCDF4.Dataset):
+def _augment_global_attributes(root_group: netCDF4.Dataset) -> None:
     root_group.Conventions = "CF-1.8"
 
 
-def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple):
+def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple) -> None:
     """Generates source info for multiple files"""
     model, obs = objects
     model_files, obs_file = files

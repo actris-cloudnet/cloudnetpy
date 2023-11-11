@@ -14,7 +14,8 @@ def check_model_file_list(name: str, models: list) -> None:
     for m in models:
         if name not in m:
             logging.error("Invalid model file set")
-            raise AttributeError(f"{m} not from {name}")
+            msg = f"{m} not from {name}"
+            raise AttributeError(msg)
 
 
 def time2datetime(time: np.ndarray, date: datetime.datetime) -> np.ndarray:

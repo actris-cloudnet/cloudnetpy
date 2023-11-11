@@ -47,5 +47,5 @@ class Cl61d(NcLidar):
         )
         self.data["depolarisation_raw"] = self.data["depolarisation"].copy()
 
-    def _fetch_attributes(self):
+    def _fetch_attributes(self) -> None:
         self.serial_number = getattr(self.dataset, "instrument_serial_number", None)

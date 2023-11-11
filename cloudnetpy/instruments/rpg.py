@@ -117,7 +117,7 @@ def _stack_rpg_data(rpg_objects: RpgObjects) -> tuple[dict, dict]:
 
     """
 
-    def _stack(source, target, fun):
+    def _stack(source, target, fun) -> None:
         for name, value in source.items():
             if not name.startswith("_"):
                 target[name] = fun((target[name], value)) if name in target else value
@@ -307,7 +307,8 @@ class Fmcw(Rpg):
             return instruments.FMCW35
         if math.isclose(frequency, 94, abs_tol=0.1):
             return instruments.FMCW94
-        raise RuntimeError(f"Unknown RPG cloud radar frequency: {frequency}")
+        msg = f"Unknown RPG cloud radar frequency: {frequency}"
+        raise RuntimeError(msg)
 
 
 class Hatpro(Rpg):

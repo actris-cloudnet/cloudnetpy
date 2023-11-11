@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
 from matplotlib import rcParams
+from matplotlib.colorbar import Colorbar
 from matplotlib.colors import Colormap, ListedColormap
 from matplotlib.ticker import AutoMinorLocator
 from matplotlib.transforms import Affine2D, Bbox
@@ -327,7 +328,7 @@ def display_datasources(
     )
 
 
-def _set_title(ax, field_name: str, identifier: str = " from CloudnetPy"):
+def _set_title(ax, field_name: str, identifier: str = " from CloudnetPy") -> None:
     ax.set_title(f"{ATTRIBUTES[field_name].name}{identifier}", fontsize=14)
 
 
@@ -452,7 +453,7 @@ def _get_standard_time_ticks(
     ]
 
 
-def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
+def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str) -> None:
     """Plots 1D variable as bar plot.
 
     Args:
@@ -479,7 +480,7 @@ def _plot_bar_data(ax, data: np.ndarray, time: ndarray, unit: str):
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
 
-def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
+def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple) -> None:
     """Plots categorical 2D variable.
 
     Args:
@@ -519,11 +520,11 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple):
         zorder=_ZORDER,
     )
     colorbar = _init_colorbar(pl, ax)
-    colorbar.set_ticks(np.arange(len(clabel)))
+    colorbar.set_ticks(np.arange(len(clabel)).tolist())
     colorbar.ax.set_yticklabels(clabel, fontsize=13)
 
 
-def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
+def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple) -> None:
     """Plots continuous 2D variable.
 
     Creates only one plot, so can be used both one plot and subplot type of figs.
@@ -564,11 +565,11 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple):
 
     if variables.plot_type != "bit":
         colorbar = _init_colorbar(pl, ax)
-        colorbar.set_label(variables.clabel, fontsize=13)
+        colorbar.set_label(str(variables.clabel), fontsize=13)
 
     if variables.plot_scale == Scale.LOGARITHMIC:
         tick_labels = generate_log_cbar_ticklabel_list(vmin, vmax)
-        colorbar.set_ticks(np.arange(vmin, vmax + 1))
+        colorbar.set_ticks(np.arange(vmin, vmax + 1).tolist())
         colorbar.ax.set_yticklabels(tick_labels)
 
 
@@ -581,7 +582,7 @@ def _plot_instrument_data(
     unit: str,
     full_path: str | None = None,
     tb_ind: int | None = None,
-):
+) -> None:
     if product in ("mwr", "mwr-single"):
         _plot_mwr(ax, data, name, time, unit)
     if product == "disdrometer":
@@ -599,7 +600,7 @@ def _plot_instrument_data(
     ax.set_position([pos.x0, pos.y0, pos.width * 0.965, pos.height])
 
 
-def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
+def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str) -> None:
     if name == "rainfall_rate":
         if unit == "m s-1":
             data *= 1000 * 3600
@@ -612,7 +613,7 @@ def _plot_disdrometer(ax, data: ndarray, time: ndarray, name: str, unit: str):
         set_yax(ax, ylim, "")
 
 
-def _plot_hatpro(ax, data: dict, full_path: str):
+def _plot_hatpro(ax, data: dict, full_path: str) -> None:
     tb = _pointing_filter(full_path, data["tb"])
     ax.plot(
         data["time"],
@@ -650,7 +651,7 @@ def _pointing_filter(
     return data
 
 
-def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
+def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str) -> None:
     match name:
         case "air_temperature":
             unit = "K"
@@ -698,10 +699,11 @@ def _plot_weather_station(ax, data: ndarray, time: ndarray, name: str):
             ax.plot(time, data, color="royalblue", zorder=_ZORDER)
             set_yax(ax, min_y=min_y, max_y=max_y, ylabel=unit)
         case unknown:
-            raise NotImplementedError(f"Not implemented for {unknown}")
+            msg = f"Not implemented for {unknown}"
+            raise NotImplementedError(msg)
 
 
-def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str):
+def _plot_mwr(ax, data_in: ma.MaskedArray, name: str, time: ndarray, unit: str) -> None:
     data, time = _get_unmasked_values(data_in, time)
     data = _convert_to_kg(data, unit)
     rolling_mean, width = _calculate_rolling_mean(time, data)
@@ -789,7 +791,7 @@ def _filter_noise(data: ndarray, n: int) -> ndarray:
     return filtfilt(b, a, data)
 
 
-def _init_colorbar(plot, axis):
+def _init_colorbar(plot, axis) -> Colorbar:
     divider = make_axes_locatable(axis)
     cax = divider.append_axes("right", size="1%", pad=0.25)
     return plt.colorbar(plot, fraction=1.0, ax=axis, cax=cax)
@@ -885,7 +887,7 @@ def _create_save_name(
     return f"{save_path}{date_string}_{'_'.join(field_names)}{fix}.png"
 
 
-def _plot_relative_error(ax, error: ma.MaskedArray, ax_values: tuple):
+def _plot_relative_error(ax, error: ma.MaskedArray, ax_values: tuple) -> None:
     pl = ax.pcolorfast(
         *ax_values,
         error[:-1, :-1].T,

@@ -73,7 +73,7 @@ class Cs135(Ceilometer):
         self.data["time"] = utils.datetime2decimal_hours(timestamps)
         self.data["zenith_angle"] = np.median(tilt_angles)
 
-    def _check_timestamp(self, timestamp: datetime):
+    def _check_timestamp(self, timestamp: datetime) -> None:
         timestamp_components = str(timestamp.date()).split("-")
         if (
             self.expected_date is not None
@@ -107,16 +107,18 @@ def _read_message(message: bytes) -> Message:
     expected_checksum = int(message[end_idx + 1 : end_idx + 5], 16)
     actual_checksum = _crc16(content)
     if expected_checksum != actual_checksum:
-        raise InvalidMessageError(
+        msg = (
             "Invalid checksum: "
             f"expected {expected_checksum:04x}, "
-            f"got {actual_checksum:04x}",
+            f"got {actual_checksum:04x}"
         )
+        raise InvalidMessageError(msg)
     lines = message.splitlines()
     if len(lines[0]) != 11:
         raise NotImplementedError("Unknown message format")
     if (msg_no := lines[0][-4:-1]) != b"002":
-        raise NotImplementedError(f"Message number {msg_no.decode()} not implemented")
+        msg = f"Message number {msg_no.decode()} not implemented"
+        raise NotImplementedError(msg)
     if len(lines) != 5:
         raise InvalidMessageError("Invalid line count")
     scale, res, n, energy, lt, ti, bl, pulse, rate, _sum = map(int, lines[2].split())

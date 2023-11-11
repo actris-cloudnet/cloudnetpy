@@ -206,7 +206,7 @@ class AdvanceProductMethods(DataSource):
         f_variance_iwc: float,
         cloud_iwc: float,
     ) -> np.ndarray:
-        def calculate_gamma_dist():
+        def calculate_gamma_dist() -> float:
             alpha = 1 / f_variance_iwc
             return (
                 1
@@ -231,7 +231,7 @@ class AdvanceProductMethods(DataSource):
         temperature: float,
         z_sen: float,
     ) -> np.ndarray:
-        def calculate_min_iwc():
+        def calculate_min_iwc() -> np.ndarray:
             return 10 ** (tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t)
 
         iwc_min = calculate_min_iwc()

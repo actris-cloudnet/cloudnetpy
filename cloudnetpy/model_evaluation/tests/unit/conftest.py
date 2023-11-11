@@ -198,6 +198,6 @@ def regrid_file(tmpdir_factory, file_metadata):
     return file_name
 
 
-def _create_global_attributes(root_grp, meta):
+def _create_global_attributes(root_grp, meta) -> None:
     for key in ("year", "month", "day", "location"):
         setattr(root_grp, key, meta[key])

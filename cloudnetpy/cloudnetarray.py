@@ -113,7 +113,8 @@ class CloudnetArray:
                 return np.array(numeric_value)
             except ValueError:
                 pass
-        raise ValueError(f"Incorrect CloudnetArray input: {self.variable}")
+        msg = f"Incorrect CloudnetArray input: {self.variable}"
+        raise ValueError(msg)
 
     def _init_units(self) -> str:
         return getattr(self.variable, "units", "")

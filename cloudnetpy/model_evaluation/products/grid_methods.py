@@ -39,7 +39,7 @@ class ProductGrid:
         self._time_steps = tl.time2datetime(time_steps, self._date)
         self._generate_downsample_product()
 
-    def _generate_downsample_product(self):
+    def _generate_downsample_product(self) -> None:
         """Downsampling products are generated with different averaging methods
         for a selected size of model time-height window.
         """
@@ -110,7 +110,7 @@ class ProductGrid:
                     )
         self._append_data2object([product_dict, product_adv_dict])
 
-    def _get_method_storage(self):
+    def _get_method_storage(self) -> tuple[dict, dict]:
         if self._obs_obj.obs == "cf":
             return self._cf_method_storage()
         if self._obs_obj.obs == "iwc":
@@ -226,7 +226,7 @@ class ProductGrid:
             storage[key] = down_sample
         return storage
 
-    def _append_data2object(self, data_storage: list):
+    def _append_data2object(self, data_storage: list) -> None:
         for storage in data_storage:
             for key in storage:
                 down_sample = storage[key]

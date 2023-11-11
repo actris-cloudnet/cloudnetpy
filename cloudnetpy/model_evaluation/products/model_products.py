@@ -54,7 +54,7 @@ class ModelManager(DataSource):
         self.wind = self._calculate_wind_speed()
         self.resolution_h = self._get_horizontal_resolution()
 
-    def _read_cycle_name(self, model_file: str):
+    def _read_cycle_name(self, model_file: str) -> str:
         """Get cycle name from model_metadata.py for saving variable name(s)"""
         try:
             cycles = self.model_info.cycle
@@ -68,7 +68,7 @@ class ModelManager(DataSource):
             return ""
         return ""
 
-    def _generate_products(self):
+    def _generate_products(self) -> None:
         """Process needed data of model to a ModelManager object"""
         cls = importlib.import_module(__name__).ModelManager
         try:
@@ -78,7 +78,7 @@ class ModelManager(DataSource):
             logging.error("Invalid product name: %s", e)
             raise
 
-    def _get_cf(self):
+    def _get_cf(self) -> None:
         """Collect cloud fraction straight from model file."""
         cf_name = self.get_model_var_names(("cf",))[0]
         cf = self.getvar(cf_name)
@@ -87,13 +87,13 @@ class ModelManager(DataSource):
         self.append_data(cf, f"{self.model}{self.cycle}_cf")
         self.keys[self._product] = f"{self.model}{self.cycle}_cf"
 
-    def _get_iwc(self):
+    def _get_iwc(self) -> None:
         iwc = self.get_water_content("iwc")
         iwc[iwc < 1e-7] = ma.masked
         self.append_data(iwc, f"{self.model}{self.cycle}_iwc")
         self.keys[self._product] = f"{self.model}{self.cycle}_iwc"
 
-    def _get_lwc(self):
+    def _get_lwc(self) -> None:
         lwc = self.get_water_content("lwc")
         lwc[lwc < 1e-5] = ma.masked
         self.append_data(lwc, f"{self.model}{self.cycle}_lwc")
@@ -122,10 +122,10 @@ class ModelManager(DataSource):
     def _calc_water_content(q: np.ndarray, p: np.ndarray, t: np.ndarray) -> np.ndarray:
         return q * p / (287 * t)
 
-    def _add_variables(self):
+    def _add_variables(self) -> None:
         """Add basic variables off model and cycle"""
 
-        def _add_common_variables():
+        def _add_common_variables() -> None:
             """Model variables that are always the same within cycles"""
             wanted_vars = self.model_vars.common_var
             assert wanted_vars is not None
@@ -137,7 +137,7 @@ class ModelManager(DataSource):
                         data = self.cut_off_extra_levels(self.dataset.variables[var][:])
                     self.append_data(data, f"{var}")
 
-        def _add_cycle_variables():
+        def _add_cycle_variables() -> None:
             """Add cycle depending variables"""
             wanted_vars = self.model_vars.cycle_var
             assert wanted_vars is not None

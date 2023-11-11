@@ -294,7 +294,7 @@ class Radar(DataSource):
         for key in ("time", "height", "radar_frequency"):
             self.append_data(np.array(getattr(self, key)), key)
 
-    def _init_data(self):
+    def _init_data(self) -> None:
         self.append_data(self.getvar("Zh"), "Z", units="dBZ")
         for key in ("v", "ldr", "width", "sldr", "rainfall_rate"):
             try:
@@ -327,7 +327,7 @@ class Radar(DataSource):
             return _prf_to_folding_velocity(prf, self.radar_frequency)
         raise RuntimeError("Unable to determine folding velocity")
 
-    def _get_folding_velocity_full(self):
+    def _get_folding_velocity_full(self) -> None:
         folding_velocity: list | np.ndarray = []
         if utils.isscalar(self.folding_velocity):
             folding_velocity = np.repeat(

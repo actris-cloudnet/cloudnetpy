@@ -126,7 +126,7 @@ class _Concat:
         self.concatenated_file = self._init_output_file(output_file)
         self.common_variables = set()
 
-    def get_common_variables(self):
+    def get_common_variables(self) -> None:
         """Finds variables which should have the same values in all files."""
         for key, value in self.first_file.variables.items():
             if self.concat_dimension not in value.dimensions:
@@ -144,7 +144,7 @@ class _Concat:
         variables: list | None,
         ignore: list | None,
         allow_vary: list | None,
-    ):
+    ) -> None:
         """Concatenates data arrays."""
         self._write_initial_data(variables, ignore)
         if len(self.filenames) > 1:
@@ -191,10 +191,11 @@ class _Concat:
                     if allow_vary is not None and key in allow_vary:
                         continue
                     if not np.array_equal(self.first_file[key][:], array):
-                        raise InconsistentDataError(
+                        msg = (
                             f"Inconsistent values in variable '{key}' between "
-                            f"files '{self.first_filename}' and '{filename}'",
+                            f"files '{self.first_filename}' and '{filename}'"
                         )
+                        raise InconsistentDataError(msg)
                     continue
                 if array.ndim == 0:
                     continue
@@ -217,7 +218,7 @@ class _Concat:
             nc.createDimension(dim, dim_len)
         return nc
 
-    def _close(self):
+    def _close(self) -> None:
         self.first_file.close()
         self.concatenated_file.close()
 
@@ -235,11 +236,15 @@ def _copy_attributes(source: netCDF4.Dataset, target: netCDF4.Dataset) -> None:
             setattr(target, attr, value)
 
 
-def _find_valid_time_indices(nc_old: netCDF4.Dataset, nc_new: netCDF4.Dataset):
+def _find_valid_time_indices(
+    nc_old: netCDF4.Dataset, nc_new: netCDF4.Dataset
+) -> np.ndarray:
     return np.where(nc_new.variables["time"][:] > nc_old.variables["time"][-1])[0]
 
 
-def _update_fields(nc_old: netCDF4.Dataset, nc_new: netCDF4.Dataset, valid_ind: list):
+def _update_fields(
+    nc_old: netCDF4.Dataset, nc_new: netCDF4.Dataset, valid_ind: np.ndarray
+) -> None:
     ind0 = len(nc_old.variables["time"])
     idx = [ind0 + x for x in valid_ind]
     concat_dimension = nc_old.variables["time"].dimensions[0]

@@ -15,7 +15,7 @@ test_file_model = (
 test_file_product = f"{ROOT_PATH}/cloudnetpy/model_evaluation/tests/data/20190517_mace-head_lwc-scaled-adiabatic.nc"
 
 
-def _process():
+def _process() -> None:
     tmp_dir = TemporaryDirectory()
     temp_file = f"{tmp_dir.name}/xx.nc"
     product_resampling.process_L3_day_product(

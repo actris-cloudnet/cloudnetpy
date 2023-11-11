@@ -59,7 +59,7 @@ class ObservationManager(DataSource):
         except (KeyError, RuntimeError):
             return None
 
-    def _generate_product(self):
+    def _generate_product(self) -> None:
         """Process needed data of observation to a ObservationManager object"""
         try:
             if self.obs == "cf":

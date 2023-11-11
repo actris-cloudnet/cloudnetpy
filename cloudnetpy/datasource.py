@@ -138,7 +138,8 @@ class DataSource:
         if var.units == "km":
             alt *= 1000
         elif var.units not in ("m", "meters"):
-            raise ValueError(f"Unexpected unit: {var.units}")
+            msg = f"Unexpected unit: {var.units}"
+            raise ValueError(msg)
         return alt
 
     @staticmethod
@@ -148,7 +149,8 @@ class DataSource:
         if var.units == "m":
             alt /= 1000
         elif var.units != "km":
-            raise ValueError(f"Unexpected unit: {var.units}")
+            msg = f"Unexpected unit: {var.units}"
+            raise ValueError(msg)
         return alt
 
     def _init_time(self) -> np.ndarray:
@@ -206,7 +208,7 @@ class DataSource:
         key: str,
         units: str | None = None,
         ignore_mask: bool = False,
-    ):
+    ) -> None:
         """Transforms single netCDF4 variable into CloudnetArray.
 
         Args:

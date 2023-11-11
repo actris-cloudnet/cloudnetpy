@@ -98,18 +98,19 @@ class Parsivel(CloudnetInstrument):
         self._create_velocity_vectors()
         self._create_diameter_vectors()
 
-    def _screen_time(self, expected_date: datetime.date | None = None):
+    def _screen_time(self, expected_date: datetime.date | None = None) -> None:
         if expected_date is None:
             self.date = self.raw_data["time"][0].astype(object).date()
             return
         self.date = expected_date
         valid_mask = self.raw_data["time"].astype("datetime64[D]") == self.date
         if np.count_nonzero(valid_mask) == 0:
-            raise DisdrometerDataError(f"No data found on {expected_date}")
+            msg = f"No data found on {expected_date}"
+            raise DisdrometerDataError(msg)
         for key in self.raw_data:
             self.raw_data[key] = self.raw_data[key][valid_mask]
 
-    def _append_data(self):
+    def _append_data(self) -> None:
         for key, values in self.raw_data.items():
             if key.startswith("_"):
                 continue
@@ -133,17 +134,17 @@ class Parsivel(CloudnetInstrument):
                     raise DisdrometerDataError("Multiple sensor IDs are not supported")
             self.serial_number = first_id
 
-    def _create_velocity_vectors(self):
+    def _create_velocity_vectors(self) -> None:
         n_values = [10, 5, 5, 5, 5, 2]
         spreads = [0.1, 0.2, 0.4, 0.8, 1.6, 3.2]
         Disdrometer.store_vectors(self.data, n_values, spreads, "velocity")
 
-    def _create_diameter_vectors(self):
+    def _create_diameter_vectors(self) -> None:
         n_values = [10, 5, 5, 5, 5, 2]
         spreads = [0.125, 0.25, 0.5, 1, 2, 3]
         Disdrometer.store_vectors(self.data, n_values, spreads, "diameter")
 
-    def convert_units(self):
+    def convert_units(self) -> None:
         mm_to_m = 1e3
         mmh_to_ms = 3600 * mm_to_m
         c_to_k = 273.15
@@ -153,7 +154,7 @@ class Parsivel(CloudnetInstrument):
         self._convert_data(("V_sensor_supply",), 10)
         self._convert_data(("T_sensor",), c_to_k, method="add")
 
-    def add_meta(self):
+    def add_meta(self) -> None:
         valid_keys = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():
             key = key.lower()
@@ -165,7 +166,7 @@ class Parsivel(CloudnetInstrument):
         keys: tuple[str, ...],
         value: float,
         method: Literal["divide", "add"] = "divide",
-    ):
+    ) -> None:
         for key in keys:
             if key not in self.data:
                 continue
@@ -301,9 +302,11 @@ def _parse_date(tokens: Iterator[str]) -> datetime.date:
     elif "." in token:
         day, month, year = token.split(".")
     else:
-        raise ValueError(f"Unsupported date: '{input}'")
+        msg = f"Unsupported date: '{input}'"
+        raise ValueError(msg)
     if len(year) != 4:
-        raise ValueError(f"Unsupported date: '{input}'")
+        msg = f"Unsupported date: '{input}'"
+        raise ValueError(msg)
     return datetime.date(int(year), int(month), int(day))
 
 

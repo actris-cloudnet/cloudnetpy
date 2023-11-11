@@ -119,7 +119,8 @@ def _initialize_ceilo(
             "chm15k",
             "cs135",
         ):
-            raise ValueError(f"Invalid ceilometer model: {site_meta['model']}")
+            msg = f"Invalid ceilometer model: {site_meta['model']}"
+            raise ValueError(msg)
         if site_meta["model"] in ("cl31", "cl51"):
             model = "cl31_or_cl51"
         else:

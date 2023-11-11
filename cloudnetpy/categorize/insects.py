@@ -131,19 +131,21 @@ def _fill_missing_pixels(
     return prob_combined
 
 
-def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers, obs):
-    def _screen_liquid_layers():
+def _screen_insects(
+    insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers, obs
+) -> np.ndarray:
+    def _screen_liquid_layers() -> None:
         prob[liquid_layers == 1] = 0
 
-    def _screen_above_melting():
+    def _screen_above_melting() -> None:
         above_melting = utils.ffill(melting_layer)
         prob[above_melting == 1] = 0
 
-    def _screen_above_liquid():
+    def _screen_above_liquid() -> None:
         above_liquid = utils.ffill(liquid_layers)
         prob[(above_liquid == 1) & (insect_prob_no_ldr > 0)] = 0
 
-    def _screen_rainy_profiles():
+    def _screen_rainy_profiles() -> None:
         prob[obs.is_rain == 1, :] = 0
 
     prob = np.copy(insect_prob)

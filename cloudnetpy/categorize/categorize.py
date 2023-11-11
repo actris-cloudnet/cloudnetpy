@@ -108,10 +108,10 @@ def generate_categorize(
             **data["mwr"].data,
         }
 
-    def _define_dense_grid():
+    def _define_dense_grid() -> tuple:
         return utils.time_grid(), data["radar"].height
 
-    def _close_all():
+    def _close_all() -> None:
         for obj in data.values():
             if isinstance(obj, Radar | Lidar | Mwr | Model):
                 obj.close()
