@@ -84,8 +84,9 @@ class DayStatistics:
                 *params,
             )
             self.title = cls.day_stat_title(self.method, self.product)
-        except RuntimeError as error:
-            logging.error("Method %s not found or missing: %s", full_name, error)
+        except RuntimeError:
+            msg = f"Failed to calculate {self.method} of {self.product[0]}"
+            logging.exception(msg)
 
 
 def relative_error(

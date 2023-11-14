@@ -74,8 +74,9 @@ class ModelManager(DataSource):
         try:
             name = f"_get_{self._product}"
             getattr(cls, name)(self)
-        except AttributeError as e:
-            logging.error("Invalid product name: %s", e)
+        except AttributeError:
+            msg = f"Invalid product name: {self._product}"
+            logging.exception(msg)
             raise
 
     def _get_cf(self) -> None:

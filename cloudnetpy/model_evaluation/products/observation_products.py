@@ -69,8 +69,9 @@ class ObservationManager(DataSource):
                 if self.obs == "iwc":
                     self._generate_iwc_masks()
             self.append_data(self.getvar("height"), "height")
-        except (KeyError, RuntimeError) as e:
-            logging.error("Invalid product name: %s", e)
+        except (KeyError, RuntimeError):
+            msg = f"Failed to read {self.obs} from {self._file}"
+            logging.exception(msg)
             raise
 
     def _generate_cf(self) -> np.ndarray:
@@ -103,9 +104,9 @@ class ObservationManager(DataSource):
         """Check if rainrate in file"""
         try:
             self.getvar("rainrate")
-            return True
         except RuntimeError:
             return False
+        return True
 
     def _get_rainrate_threshold(self) -> int:
         assert self.radar_freq is not None

@@ -81,6 +81,11 @@ def generate_L3_day_plots(
         >>> generate_L3_day_plots(l3_day_file, product, model,
         >>>                       fig_type='statistic', stats=['error'])
     """
+
+    def _check_cycle_names():
+        if not c_names:
+            raise AttributeError
+
     cls = __import__("plotting")
     model_info = MODELS[model]
     model_name = model_info.model_name
@@ -90,8 +95,7 @@ def generate_L3_day_plots(
             try:
                 cycle_names, cycles = p_tools.sort_cycles(names, model)
                 for i, c_names in enumerate(cycle_names):
-                    if not c_names:
-                        raise AttributeError
+                    _check_cycle_names()
                     params = [
                         product,
                         c_names,
@@ -367,6 +371,19 @@ def get_statistic_plots(
     model_run = model
     name = ""
     j = 0
+
+    def _check_data():
+        if model_missing and obs_missing:
+            _raise()
+
+    def _check_data2():
+        if "error" in stat and np.all(day_stat.model_stat.mask is True):
+            _raise()
+
+    def _raise():
+        err_msg = f"No data in {model_name} or observation"
+        raise ValueError(err_msg)
+
     for stat in stats:
         try:
             obs_missing = False
@@ -380,9 +397,7 @@ def get_statistic_plots(
                 data, x, y = p_tools.read_data_characters(nc_file, name, model)
                 if np.all(data.mask is True):
                     obs_missing = True
-                if model_missing and obs_missing:
-                    msg = f"No data in {model_name} or observation"
-                    raise ValueError(msg)
+                _check_data()
                 if product == "cf" and stat == "error":
                     stat = "aerror"
                 if j > 0:
@@ -394,9 +409,7 @@ def get_statistic_plots(
                         model_data,
                         data,
                     )
-                    if "error" in stat and np.all(day_stat.model_stat.mask is True):
-                        msg = f"No data in {model_name} or observation"
-                        raise ValueError(msg)
+                    _check_data2()
                     initialize_statistic_plots(
                         j,
                         len(names) - 1,
@@ -409,8 +422,8 @@ def get_statistic_plots(
                         variable_info,
                         title,
                     )
-        except ValueError as e:
-            logging.error(e)
+        except ValueError:
+            logging.exception("Exception occurred")
         if stat not in ("hist", "vertical"):
             casedate = cloud_plt.set_labels(fig, ax[j - 1], nc_file, sub_title=title)
         else:

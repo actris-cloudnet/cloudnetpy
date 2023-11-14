@@ -408,12 +408,7 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
         if row == "":
             continue
         try:
-            tokens = iter(row.removesuffix(";").split(";"))
-            parsed = [PARSERS.get(header, next)(tokens) for header in headers]
-            unread_tokens = list(tokens)
-            if unread_tokens:
-                msg = f"Unused tokens: {unread_tokens}"
-                raise ValueError(msg)
+            parsed = _parse_row(row, headers)
             for header, value in zip(headers, parsed):
                 result[header].append(value)
         except (ValueError, StopIteration):
@@ -425,6 +420,15 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
     if invalid_rows > 0:
         logging.info("Skipped %s invalid rows", invalid_rows)
     return result
+
+
+def _parse_row(row_in: str, headers: list[str]) -> list:
+    tokens = iter(row_in.removesuffix(";").split(";"))
+    parsed = [PARSERS.get(header, next)(tokens) for header in headers]
+    if unread_tokens := list(tokens):
+        msg = f"Unused tokens: {unread_tokens}"
+        raise ValueError(msg)
+    return parsed
 
 
 def _read_toa5(filename: str | PathLike) -> dict[str, list]:

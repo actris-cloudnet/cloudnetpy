@@ -140,22 +140,26 @@ def _initialize_ceilo(
 
 
 def _find_ceilo_model(full_path: str) -> str:
+    model = None
     try:
         with netCDF4.Dataset(full_path) as nc:
             title = nc.title
         for identifier in ["cl61d", "cl61-d"]:
             if identifier in title.lower() or identifier in full_path.lower():
-                return "cl61d"
-        return "chm15k"
+                model = "cl61d"
+        if model is None:
+            model = "chm15k"
     except OSError:
         with open(full_path, "rb") as file:
             for line in islice(file, 100):
                 if line.startswith(b"\x01CL"):
-                    return "cl31_or_cl51"
-                if line.startswith(b"\x01CT"):
-                    return "ct25k"
-    msg = "Unable to determine ceilometer model"
-    raise RuntimeError(msg)
+                    model = "cl31_or_cl51"
+                elif line.startswith(b"\x01CT"):
+                    model = "ct25k"
+    if model is None:
+        msg = "Unable to determine ceilometer model"
+        raise RuntimeError(msg)
+    return model
 
 
 ATTRIBUTES = {
