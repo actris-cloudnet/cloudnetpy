@@ -346,4 +346,5 @@ class Radar(DataSource):
 
 def _prf_to_folding_velocity(prf: np.ndarray, radar_frequency: float) -> float:
     ghz_to_hz = 1e9
-    return float(prf * constants.c / (4 * radar_frequency * ghz_to_hz))
+    assert len(prf) == 1
+    return float(prf[0] * constants.c / (4 * radar_frequency * ghz_to_hz))
