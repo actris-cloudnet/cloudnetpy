@@ -9,7 +9,7 @@ from cloudnetpy.categorize.containers import ClassData
 from cloudnetpy.constants import T0
 
 
-def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
+def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> np.ndarray:
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Melting layer is detected using linear depolarization ratio, *ldr*,

@@ -114,19 +114,21 @@ class Parsivel(CloudnetInstrument):
         for key, values in self.raw_data.items():
             if key.startswith("_"):
                 continue
+            name = key
+            values_out = values
             match key:
                 case "spectrum":
-                    key = "data_raw"
+                    name = "data_raw"
                     dimensions = ["time", "diameter", "velocity"]
                 case "number_concentration" | "fall_velocity":
                     dimensions = ["time", "diameter"]
                 case "time":
                     dimensions = []
                     base = values[0].astype("datetime64[D]")
-                    values = (values - base) / np.timedelta64(1, "h")
+                    values_out = (values - base) / np.timedelta64(1, "h")
                 case _:
                     dimensions = ["time"]
-            self.data[key] = CloudnetArray(values, key, dimensions=dimensions)
+            self.data[name] = CloudnetArray(values_out, name, dimensions=dimensions)
         if "_sensor_id" in self.raw_data:
             first_id = self.raw_data["_sensor_id"][0]
             for sensor_id in self.raw_data["_sensor_id"]:
@@ -158,9 +160,9 @@ class Parsivel(CloudnetInstrument):
     def add_meta(self) -> None:
         valid_keys = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():
-            key = key.lower()
-            if key in valid_keys:
-                self.data[key] = CloudnetArray(float(value), key)
+            name = key.lower()
+            if name in valid_keys:
+                self.data[name] = CloudnetArray(float(value), name)
 
     def _convert_data(
         self,

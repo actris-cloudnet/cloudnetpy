@@ -531,11 +531,11 @@ def l2norm(*args) -> ma.MaskedArray:
     for arg in args:
         if isinstance(arg, ma.MaskedArray):
             # Raise only non-masked values, not sure if this is needed...
-            arg = ma.copy(arg)
-            arg[~arg.mask] = arg[~arg.mask] ** 2
+            arg_cpy = ma.copy(arg)
+            arg_cpy[~arg.mask] = arg_cpy[~arg.mask] ** 2
         else:
-            arg = arg**2
-        ss = ss + arg
+            arg_cpy = arg**2
+        ss = ss + arg_cpy
     return ma.sqrt(ss)
 
 
@@ -628,6 +628,7 @@ def init(
     n_vars: int,
     shape: tuple,
     dtype: type = float,
+    *,
     masked: bool = True,
 ) -> Iterator[np.ndarray | ma.MaskedArray]:
     """Initializes several numpy arrays.
@@ -800,6 +801,7 @@ def array_to_probability(
     array: np.ndarray,
     loc: float,
     scale: float,
+    *,
     invert: bool = False,
 ) -> np.ndarray:
     """Converts continuous variable into 0-1 probability.

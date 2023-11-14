@@ -94,7 +94,8 @@ def _find_rain_from_radar_echo(
         1D Boolean array denoting profiles with rain.
 
     """
-    is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(False)
+    filled = False
+    is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(filled)
     is_rain = skimage.morphology.remove_small_objects(
         is_rain,
         2,
@@ -142,6 +143,7 @@ def _find_clutter(
 
     """
     is_clutter = np.zeros(v.shape, dtype=bool)
-    tiny_velocity = (np.abs(v[:, :n_gates]) < v_lim).filled(False)
+    filled = False
+    tiny_velocity = (np.abs(v[:, :n_gates]) < v_lim).filled(filled)
     is_clutter[:, :n_gates] = tiny_velocity * utils.transpose(~is_rain)
     return is_clutter

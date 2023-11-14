@@ -143,6 +143,7 @@ def _calc_error(
     scale: float,
     weights: tuple,
     error_input: tuple,
+    *,
     add_mu: bool = False,
     add_mu_small: bool = False,
 ) -> ma.MaskedArray:

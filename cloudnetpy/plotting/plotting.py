@@ -58,13 +58,14 @@ class Dimensions:
 def generate_figure(
     nc_file: str,
     field_names: list,
-    show: bool = True,
+    *,
     save_path: str | None = None,
     max_y: int = 12,
     dpi: int = 120,
     image_name: str | None = None,
     sub_title: bool = True,
     title: bool = True,
+    show: bool = True,
     add_grid: bool = False,
     include_xlimits: bool = False,
     add_sources: bool = False,
@@ -177,36 +178,49 @@ def generate_figure(
             source = ATTRIBUTES[name].source
             time = _read_time_vector(nc_file)
             try:
-                tb_ind = int(tb_ind)
+                tb_index = int(tb_ind)
             except ValueError:
-                tb_ind = None
-            _plot_instrument_data(ax, field, name, source, time, unit, nc_file, tb_ind)
+                tb_index = None
+            _plot_instrument_data(
+                ax,
+                field,
+                name,
+                source,
+                time,
+                unit,
+                nc_file,
+                tb_index,
+            )
             continue
         ax_value = _read_ax_values(nc_file)
 
         if plot_type not in ("bar", "model"):
-            time_new, field = _mark_gaps(ax_value[0], field)
+            time_new, field_with_gaps = _mark_gaps(ax_value[0], field)
             ax_value = (time_new, ax_value[1])
 
-        field, ax_value = _screen_high_altitudes(field, ax_value, max_y)
+        field_screened, ax_value = _screen_high_altitudes(
+            field_with_gaps,
+            ax_value,
+            max_y,
+        )
         set_yax(ax, max_y, ylabel=None)
         if plot_type == "bar":
             unit = _get_variable_unit(nc_file, name)
-            _plot_bar_data(ax, field, ax_value[0], unit)
+            _plot_bar_data(ax, field_screened, ax_value[0], unit)
             set_yax(ax, 2, ATTRIBUTES[name].ylabel)
 
         elif plot_type == "segment":
-            _plot_segment_data(ax, field, name, ax_value)
+            _plot_segment_data(ax, field_screened, name, ax_value)
 
         else:
-            _plot_colormesh_data(ax, field, name, ax_value)
+            _plot_colormesh_data(ax, field_screened, name, ax_value)
         if original_attrib is not None:
             ATTRIBUTES[name] = original_attrib
-    case_date = set_labels(fig, axes[-1], nc_file, sub_title)
+    case_date = set_labels(fig, axes[-1], nc_file, sub_title=sub_title)
 
     if add_copyright:
         display_watermark(fig, copyright_text, add_creation_time)
-    handle_saving(image_name, save_path, show, case_date, valid_names)
+    handle_saving(image_name, save_path, case_date, valid_names, show=show)
     return Dimensions(fig, axes)
 
 
@@ -235,22 +249,22 @@ def _mark_gaps(
     temp_mask = np.ones((2, data.shape[1]))
     time_delta = 0.001
     for ind in np.sort(gap_indices)[::-1]:
-        ind += 1
-        data_new = np.insert(data_new, ind, temp_array, axis=0)
-        mask_new = np.insert(mask_new, ind, temp_mask, axis=0)
-        time_new = np.insert(time_new, ind, time[ind] - time_delta)
-        time_new = np.insert(time_new, ind, time[ind - 1] + time_delta)
+        ind_gap = ind + 1
+        data_new = np.insert(data_new, ind_gap, temp_array, axis=0)
+        mask_new = np.insert(mask_new, ind_gap, temp_mask, axis=0)
+        time_new = np.insert(time_new, ind_gap, time[ind_gap] - time_delta)
+        time_new = np.insert(time_new, ind_gap, time[ind_gap - 1] + time_delta)
     if (time[0] - 0) > max_gap:
         data_new = np.insert(data_new, 0, temp_array, axis=0)
         mask_new = np.insert(mask_new, 0, temp_mask, axis=0)
         time_new = np.insert(time_new, 0, time[0] - time_delta)
         time_new = np.insert(time_new, 0, time_delta)
     if (24 - time[-1]) > max_gap:
-        ind = mask_new.shape[0]
-        data_new = np.insert(data_new, ind, temp_array, axis=0)
-        mask_new = np.insert(mask_new, ind, temp_mask, axis=0)
-        time_new = np.insert(time_new, ind, 24 - time_delta)
-        time_new = np.insert(time_new, ind, time[-1] + time_delta)
+        ind_gap = mask_new.shape[0]
+        data_new = np.insert(data_new, ind_gap, temp_array, axis=0)
+        mask_new = np.insert(mask_new, ind_gap, temp_mask, axis=0)
+        time_new = np.insert(time_new, ind_gap, 24 - time_delta)
+        time_new = np.insert(time_new, ind_gap, time[-1] + time_delta)
     data_new.mask = mask_new
     return time_new, data_new
 
@@ -258,10 +272,11 @@ def _mark_gaps(
 def handle_saving(
     image_name: str | None,
     save_path: str | None,
-    show: bool,
     case_date: date,
     field_names: list,
     fix: str = "",
+    *,
+    show: bool = False,
 ) -> None:
     if image_name:
         plt.savefig(image_name, bbox_inches="tight")
@@ -281,7 +296,7 @@ def _get_relative_error(fields: list, ax_values: list, max_y: int) -> tuple:
     return _screen_high_altitudes(error, ax_values[1], max_y)
 
 
-def set_labels(fig, ax, nc_file: str, sub_title: bool = True) -> date:
+def set_labels(fig, ax, nc_file: str, *, sub_title: bool = True) -> date:
     ax.set_xlabel("Time (UTC)", fontsize=13)
     case_date = read_date(nc_file)
     site_name = read_location(nc_file)
@@ -426,7 +441,7 @@ def _screen_high_altitudes(data_field: ndarray, ax_values: tuple, max_y: int) ->
     return data_field, (ax_values[0], alt)
 
 
-def set_xax(ax, include_xlimits: bool = False) -> None:
+def set_xax(ax, *, include_xlimits: bool = False) -> None:
     """Sets xticks and xtick labels for plt.imshow()."""
     ticks_x_labels = _get_standard_time_ticks(include_xlimits=include_xlimits)
     ax.set_xticks(np.arange(0, 25, 4, dtype=int))
@@ -444,6 +459,7 @@ def set_yax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0) -> None:
 
 def _get_standard_time_ticks(
     resolution: int = 4,
+    *,
     include_xlimits: bool = False,
 ) -> list:
     """Returns typical ticks / labels for a time vector between 0-24h."""
@@ -823,7 +839,7 @@ def read_date(nc_file: str) -> date:
         return date(int(nc.year), int(nc.month), int(nc.day))
 
 
-def read_source(nc_file: str, name: str, add_serial_number: bool = True) -> str:
+def read_source(nc_file: str, name: str, *, add_serial_number: bool = True) -> str:
     """Returns source attr of field name or global one and maybe serial number ."""
     with netCDF4.Dataset(nc_file) as nc:
         if name in nc.variables and "source" in nc.variables[name].ncattrs():
@@ -921,12 +937,13 @@ def lin2log(*args) -> list:
 
 def plot_2d(
     data: ma.MaskedArray,
-    cbar: bool = True,
     cmap: str = "viridis",
     ncolors: int = 50,
     clim: tuple | None = None,
     ylim: tuple | None = None,
     xlim: tuple | None = None,
+    *,
+    cbar: bool = True,
 ) -> None:
     """Simple plot of 2d variable."""
     plt.close()
@@ -953,12 +970,13 @@ def plot_2d(
 def compare_files(
     nc_files: tuple[str, str],
     field_name: str,
-    show: bool = True,
-    relative_err: bool = False,
     save_path: str | None = None,
     max_y: int = 12,
     dpi: int = 120,
     image_name: str | None = None,
+    *,
+    show: bool = True,
+    relative_err: bool = False,
 ) -> Dimensions:
     """Plots one particular field from two Cloudnet files.
 
@@ -1014,5 +1032,12 @@ def compare_files(
                 _plot_relative_error(axes[-1], error, ax_value)
 
     case_date = set_labels(fig, axes[-1], nc_files[0], sub_title=False)
-    handle_saving(image_name, save_path, show, case_date, [field_name], "_comparison")
+    handle_saving(
+        image_name,
+        save_path,
+        case_date,
+        [field_name],
+        "_comparison",
+        show=show,
+    )
     return Dimensions(fig, axes)

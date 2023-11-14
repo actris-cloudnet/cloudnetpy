@@ -48,7 +48,7 @@ class DataSource:
     data_sparse: dict
     source_type: str
 
-    def __init__(self, full_path: os.PathLike | str, radar: bool = False):
+    def __init__(self, full_path: os.PathLike | str, *, radar: bool = False):
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
         self.source = getattr(self.dataset, "source", "")
@@ -209,6 +209,7 @@ class DataSource:
         possible_names: tuple,
         key: str,
         units: str | None = None,
+        *,
         ignore_mask: bool = False,
     ) -> None:
         """Transforms single netCDF4 variable into CloudnetArray.

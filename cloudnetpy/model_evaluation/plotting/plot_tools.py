@@ -12,13 +12,14 @@ def parse_wanted_names(
     name: str,
     model: str,
     variables: list | None = None,
+    *,
     advance: bool = False,
 ) -> tuple[list, list]:
     """Returns standard and advection lists of product types to plot"""
     if variables:
         names = variables
     else:
-        names = parse_dataset_keys(nc_file, name, advance, model)
+        names = parse_dataset_keys(nc_file, name, advance=advance, model=model)
     standard_n = [n for n in names if name in n and "adv" not in n]
     standard_n = sort_model2first_element(standard_n, model)
     advection_n = [n for n in names if name in n and "adv" in n]
@@ -35,6 +36,7 @@ def parse_wanted_names(
 def parse_dataset_keys(
     nc_file: str,
     product: str,
+    *,
     advance: bool,
     model: str,
 ) -> list:

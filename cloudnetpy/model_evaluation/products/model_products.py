@@ -38,6 +38,7 @@ class ModelManager(DataSource):
         model: str,
         output_file: str,
         product: str,
+        *,
         check_file: bool = True,
     ):
         super().__init__(model_file)

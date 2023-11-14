@@ -38,10 +38,15 @@ class Ceilometer:
         self,
         array: np.ndarray,
         snr_limit: int = 5,
+        *,
         range_corrected: bool = True,
     ) -> np.ndarray:
         """Screens noise from lidar variable."""
-        noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
+        noisy_data = NoisyData(
+            self.data,
+            self.noise_param,
+            range_corrected=range_corrected,
+        )
         if (
             self.instrument is not None
             and getattr(self.instrument, "model", "").lower() == "ct25k"
@@ -59,9 +64,12 @@ class Ceilometer:
         self,
         beta: np.ndarray,
         snr_limit: int = 5,
+        *,
         range_corrected: bool = True,
     ) -> np.ndarray:
-        noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
+        noisy_data = NoisyData(
+            self.data, self.noise_param, range_corrected=range_corrected
+        )
         beta_raw = ma.copy(self.data["beta_raw"])
         cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
         beta_raw[cloud_ind] = cloud_limit
@@ -131,6 +139,7 @@ class NoisyData:
         self,
         data: dict,
         noise_param: NoiseParam,
+        *,
         range_corrected: bool = True,
     ):
         self.data = data
@@ -141,17 +150,18 @@ class NoisyData:
         self,
         data_in: np.ndarray,
         snr_limit: float = 5,
+        n_negatives: int = 5,
+        *,
         is_smoothed: bool = False,
         keep_negative: bool = False,
         filter_fog: bool = True,
         filter_negatives: bool = True,
         filter_snr: bool = True,
-        n_negatives: int = 5,
     ) -> np.ndarray:
         data = ma.copy(data_in)
         self._calc_range_uncorrected(data)
         noise = _estimate_background_noise(data)
-        noise = self._adjust_noise(noise, is_smoothed)
+        noise = self._adjust_noise(noise, is_smoothed=is_smoothed)
         if filter_negatives is True:
             is_negative = self._mask_low_values_above_consequent_negatives(
                 data,
@@ -163,11 +173,13 @@ class NoisyData:
             self._clean_fog_profiles(data, is_fog)
             noise[is_fog] = 1e-12
         if filter_snr is True:
-            data = self._remove_noise(data, noise, keep_negative, snr_limit)
+            data = self._remove_noise(
+                data, noise, keep_negative=keep_negative, snr_limit=snr_limit
+            )
         self._calc_range_corrected(data)
         return data
 
-    def _adjust_noise(self, noise: np.ndarray, is_smoothed: bool) -> np.ndarray:
+    def _adjust_noise(self, noise: np.ndarray, *, is_smoothed: bool) -> np.ndarray:
         noise_min = (
             self.noise_param.noise_smooth_min
             if is_smoothed is True
@@ -223,6 +235,7 @@ class NoisyData:
         self,
         array: np.ndarray,
         noise: np.ndarray,
+        *,
         keep_negative: bool,
         snr_limit: float,
     ) -> np.ndarray:

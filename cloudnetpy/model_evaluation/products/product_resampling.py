@@ -21,6 +21,7 @@ def process_L3_day_product(
     product_file: str,
     output_file: str,
     uuid: str | None = None,
+    *,
     overwrite: bool = False,
 ) -> str:
     """Main function to generate downsample of observations to match model grid.

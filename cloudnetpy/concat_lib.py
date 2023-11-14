@@ -163,7 +163,8 @@ class _Concat:
             if ignore and key in ignore:
                 continue
 
-            self.first_file[key].set_auto_scale(False)
+            auto_scale = False
+            self.first_file[key].set_auto_scale(auto_scale)
             array = self.first_file[key][:]
             dimensions = self.first_file[key].dimensions
             fill_value = getattr(self.first_file[key], "_FillValue", None)
@@ -176,13 +177,15 @@ class _Concat:
                 shuffle=False,
                 fill_value=fill_value,
             )
-            var.set_auto_scale(False)
+            auto_scale = False
+            var.set_auto_scale(auto_scale)
             var[:] = array
             _copy_attributes(self.first_file[key], var)
 
     def _append_data(self, filename: str, allow_vary: list | None) -> None:
         with netCDF4.Dataset(filename) as file:
-            file.set_auto_scale(False)
+            auto_scale = False
+            file.set_auto_scale(auto_scale)
             ind0 = len(self.concatenated_file.variables[self.concat_dimension])
             ind1 = ind0 + len(file.variables[self.concat_dimension])
             for key in self.concatenated_file.variables:

@@ -43,11 +43,11 @@ class Disdrometer(CloudnetInstrument):
         self._convert_data(("T_laser_driver",), c_to_k, method="add")
 
     def add_meta(self) -> None:
-        valid_keys = ("latitude", "longitude", "altitude")
+        valid_names = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():
-            key = key.lower()
-            if key in valid_keys:
-                self.data[key] = CloudnetArray(float(value), key)
+            name = key.lower()
+            if name in valid_names:
+                self.data[name] = CloudnetArray(float(value), name)
 
     def validate_date(self, expected_date: str) -> None:
         valid_ind = []
@@ -227,9 +227,9 @@ def _parse_int(row: np.ndarray) -> np.ndarray:
     values = ma.masked_all((len(row),))
     for ind, value in enumerate(row):
         try:
-            value = int(value)
-            if value != 0:
-                values[ind] = value
+            value_int = int(value)
+            if value_int != 0:
+                values[ind] = value_int
         except ValueError:
             pass
     return values

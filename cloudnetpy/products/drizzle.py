@@ -198,8 +198,10 @@ def _append_data(drizzle_data: DrizzleSource, results: dict) -> None:
     """Save retrieved fields to the drizzle_data object."""
     for key, value in results.items():
         if key != "drizzle_retrieval_status":
-            value = ma.masked_where(value == 0, value)
-        drizzle_data.append_data(value, key)
+            arr = ma.masked_where(value == 0, value)
+        else:
+            arr = value
+        drizzle_data.append_data(arr, key)
 
 
 DRIZZLE_ATTRIBUTES = {

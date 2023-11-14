@@ -22,6 +22,7 @@ def generate_L3_day_plots(
     nc_file: str,
     product: str,
     model: str,
+    *,
     title: bool = True,
     var_list: list | None = None,
     fig_type: str | None = "group",
@@ -161,6 +162,7 @@ def get_group_plots(
     model_name: str,
     save_path: str,
     image_name: str,
+    *,
     show: bool,
     cycle: str = "",
     title: bool = True,
@@ -207,9 +209,9 @@ def get_group_plots(
     cloud_plt.handle_saving(
         image_name,
         save_path,
-        show,
         casedate,
         [product, model_run, "group"],
+        show=show,
     )
 
 
@@ -221,8 +223,9 @@ def get_pair_plots(
     model_name: str,
     save_path: str,
     image_name: str,
-    show: bool,
     cycle: str = "",
+    *,
+    show: bool = False,
     title: bool = True,
     include_xlimits: bool = False,
 ) -> None:
@@ -265,7 +268,13 @@ def get_pair_plots(
         casedate = cloud_plt.set_labels(fig, ax[-1], nc_file)
         if len(cycle) > 1:
             fig.text(0.64, 0.889, f"Cycle: {cycle}", fontsize=13)
-        cloud_plt.handle_saving(image_name, save_path, show, casedate, [name, "pair"])
+        cloud_plt.handle_saving(
+            image_name,
+            save_path,
+            casedate,
+            [name, "pair"],
+            show=show,
+        )
 
 
 def get_single_plots(
@@ -276,6 +285,7 @@ def get_single_plots(
     model_name: str,
     save_path: str,
     image_name: str,
+    *,
     show: bool,
     cycle: str = "",
     title: bool = True,
@@ -312,7 +322,13 @@ def get_single_plots(
                 fig.text(0.64, 0.9, f"{model_name} cycle: {cycle}", fontsize=13)
             else:
                 fig.text(0.64, 0.9, f"{model_name}", fontsize=13)
-        cloud_plt.handle_saving(image_name, save_path, show, casedate, [name, "single"])
+        cloud_plt.handle_saving(
+            image_name,
+            save_path,
+            casedate,
+            [name, "single"],
+            show=show,
+        )
 
 
 def plot_colormesh(ax, data: np.ndarray, axes: tuple, variable_info) -> None:
@@ -340,6 +356,7 @@ def get_statistic_plots(
     stats: list,
     save_path: str,
     image_name: str,
+    *,
     show: bool,
     cycle: str = "",
     title: bool = True,
@@ -398,14 +415,13 @@ def get_statistic_plots(
                 if np.all(data.mask is True):
                     obs_missing = True
                 _check_data()
-                if product == "cf" and stat == "error":
-                    stat = "aerror"
+                statistics = "aerror" if product == "cf" and stat == "error" else stat
                 if j > 0:
-                    name = ""
-                    name = _get_stat_titles(name, product, variable_info)
+                    name_new = ""
+                    name_new = _get_stat_titles(name_new, product, variable_info)
                     day_stat = DayStatistics(
-                        stat,
-                        [product, model_name, name],
+                        statistics,
+                        [product, model_name, name_new],
                         model_data,
                         data,
                     )
@@ -414,13 +430,13 @@ def get_statistic_plots(
                         j,
                         len(names) - 1,
                         ax[j - 1],
-                        stat,
+                        statistics,
                         day_stat,
                         model_data,
                         data,
                         (x, y),
                         variable_info,
-                        title,
+                        title=title,
                     )
         except ValueError:
             logging.exception("Exception occurred")
@@ -437,9 +453,9 @@ def get_statistic_plots(
         cloud_plt.handle_saving(
             image_name,
             save_path,
-            show,
             casedate,
             [name, stat, model_run],
+            show=show,
         )
 
 
@@ -453,6 +469,7 @@ def initialize_statistic_plots(
     obs: ma.MaskedArray,
     args: tuple,
     variable_info,
+    *,
     title: bool = True,
     include_xlimits: bool = False,
 ) -> None:
@@ -545,6 +562,7 @@ def plot_data_area(
     model: ma.MaskedArray,
     obs: ma.MaskedArray,
     axes: tuple,
+    *,
     title: bool = True,
 ) -> None:
     data, cmap = p_tools.create_segment_values([model.mask, obs.mask])
@@ -597,7 +615,7 @@ def plot_histogram(ax, day_stat: DayStatistics, variable_info) -> None:
     if variable_info.plot_scale == "logarithmic":
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
     ax.set_ylabel("Relative frequency %", fontsize=13)
-    ax.yaxis.grid(True, "major")
+    ax.yaxis.grid(which="major")
     ax.set_title(f"{day_stat.title[-1]}", fontsize=14)
 
 
@@ -645,8 +663,8 @@ def plot_vertical_profile(
     ax.set_xlabel(variable_info.x_title, fontsize=13)
     if variable_info.plot_scale == "logarithmic":
         ax.ticklabel_format(axis="x", style="sci", scilimits=(0, 0))
-    ax.yaxis.grid(True, "major")
-    ax.xaxis.grid(True, "major")
+    ax.yaxis.grid(which="major")
+    ax.xaxis.grid(which="major")
 
 
 def initialize_figure(n_subplots: int, stat: str = "") -> tuple:

@@ -80,12 +80,12 @@ def ceilo2nc(
     ceilo_obj.data["beta"] = ceilo_obj.calc_screened_product(
         ceilo_obj.data["beta_raw"],
         snr_limit,
-        range_corrected,
+        range_corrected=range_corrected,
     )
     ceilo_obj.data["beta_smooth"] = ceilo_obj.calc_beta_smooth(
         ceilo_obj.data["beta"],
         snr_limit,
-        range_corrected,
+        range_corrected=range_corrected,
     )
     if ceilo_obj.instrument is None or ceilo_obj.instrument.model is None:
         msg = "Failed to read ceilometer model"

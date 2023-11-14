@@ -197,9 +197,9 @@ class RadiometricsCombined:
         """Adds some metadata."""
         valid_keys = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():
-            key = key.lower()
-            if key in valid_keys:
-                self.data[key] = CloudnetArray(float(value), key)
+            name = key.lower()
+            if name in valid_keys:
+                self.data[name] = CloudnetArray(float(value), key)
 
 
 def _parse_datetime(text: str) -> datetime.datetime:
