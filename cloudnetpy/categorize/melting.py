@@ -78,7 +78,8 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
 
         if ma.count(ldr_prof) > 3 or ma.count(v_prof) > 3:
             try:
-                assert ldr_prof is not None and ldr_dprof is not None
+                assert ldr_prof is not None
+                assert ldr_dprof is not None
                 indices = _find_melting_layer_from_ldr(
                     ldr_prof,
                     ldr_dprof,

@@ -5,8 +5,8 @@ from tempfile import TemporaryDirectory
 
 import netCDF4
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_equal
 
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
@@ -88,7 +88,9 @@ class TestRPG2nc94GHz(Check):
 
     def test_variables(self):
         assert math.isclose(
-            self.nc.variables["radar_frequency"][:].data, 94.0, abs_tol=0.1
+            self.nc.variables["radar_frequency"][:].data,
+            94.0,
+            abs_tol=0.1,
         )
         assert np.all(self.nc.variables["zenith_angle"][:].data) == 0
 
@@ -99,7 +101,7 @@ class TestRPG2nc94GHz(Check):
                 array = self.nc.variables[key][:]
                 if array.ndim > 1:
                     assert not np.any(
-                        np.isclose(array, value)
+                        np.isclose(array, value),
                     ), f"{key} - {value}: {array}"
 
     def test_global_attributes(self):
@@ -151,7 +153,10 @@ class TestRPG2nc94GHz(Check):
         copytree(FILEPATH, temp_dir, dirs_exist_ok=True)
         (temp_dir / "foo.LV1").write_text("kissa")
         _, files = rpg.rpg2nc(
-            str(temp_dir), test_path, self.site_meta, date="2020-10-22"
+            str(temp_dir),
+            test_path,
+            self.site_meta,
+            date="2020-10-22",
         )
         assert len(files) == 2
 
@@ -239,10 +244,14 @@ class TestRPG2ncSTSR35GHz(Check):
 
     def test_variables(self):
         assert math.isclose(
-            self.nc.variables["radar_frequency"][:].data, 35.0, rel_tol=0.1
+            self.nc.variables["radar_frequency"][:].data,
+            35.0,
+            rel_tol=0.1,
         )
         assert math.isclose(
-            ma.median(self.nc.variables["zenith_angle"][:].data), 15, abs_tol=1
+            ma.median(self.nc.variables["zenith_angle"][:].data),
+            15,
+            abs_tol=1,
         )
 
     def test_fill_values(self):
@@ -252,7 +261,7 @@ class TestRPG2ncSTSR35GHz(Check):
                 array = self.nc.variables[key][:]
                 if array.ndim > 1:
                     assert not np.any(
-                        np.isclose(array, value)
+                        np.isclose(array, value),
                     ), f"{key} - {value}: {array}"
 
     def test_global_attributes(self):

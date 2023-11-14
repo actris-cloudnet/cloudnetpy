@@ -1,6 +1,6 @@
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from cloudnetpy.instruments import ceilometer
@@ -15,7 +15,6 @@ class TestNoisyData:
         }
         noise_params = ceilometer.NoiseParam()
         self.noisy_data = ceilometer.NoisyData(data, noise_params)
-        yield
 
     def test_remove_noise(self):
         noise = np.array([1.1, -1.1])
@@ -48,7 +47,11 @@ class TestNoisyData:
         )
 
         res = self.noisy_data._mask_low_values_above_consequent_negatives(
-            data, n_negatives=2, threshold=1, n_gates=5, n_skip_lowest=0
+            data,
+            n_negatives=2,
+            threshold=1,
+            n_gates=5,
+            n_skip_lowest=0,
         )
         expected_indices = np.array([1])
         assert res == expected_indices
@@ -196,7 +199,7 @@ class TestNoisyData:
                     1,
                     20,
                 ],
-            ]
+            ],
         )
         result = [0, 1, 1, 0]
         assert_array_equal(self.noisy_data._find_fog_profiles(), result)
@@ -211,7 +214,10 @@ class TestCeilometer:
         time = np.linspace(0, 24, 721)  # 2 min resolution
         range_instru = np.arange(0, 1000, 5)  # 5 m resolution
         std_time, std_range = ceilometer.calc_sigma_units(
-            time, range_instru, sigma_minutes=2, sigma_metres=5
+            time,
+            range_instru,
+            sigma_minutes=2,
+            sigma_metres=5,
         )
         assert_array_almost_equal(std_time, 1)
         assert_array_almost_equal(std_range, 1)

@@ -57,8 +57,34 @@ changelog = "CHANGELOG.md"
 
 [tool.ruff]
 extend-select = ["I"]
+exclude = ["cloudnetpy/model_evaluation/tests/", "tests/"]
 
 [tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "A001",
+  "ANN",
+  "B9",
+  "C9",
+  "D",
+  "ERA",
+  "FBT",
+  "FIX002",
+  "INP001",
+  "N8",
+  "PD011",
+  "PERF",
+  "PLR",
+  "PLR2004",
+  "PLW",
+  "PTH",
+  "RUF",
+  "RUF002",
+  "S101",
+  "TD002",
+  "TD003",
+  "TRY",
+]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = ["F401"]

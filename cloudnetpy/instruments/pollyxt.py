@@ -163,7 +163,8 @@ class PollyXt(Ceilometer):
                                 "Using %s nm pollyXT channel for backscatter",
                                 channel,
                             )
-                            self.instrument.wavelength = float(channel)  # type: ignore
+                            assert self.instrument is not None
+                            self.instrument.wavelength = float(channel)
                         return channel
         msg = "No functional pollyXT backscatter channels found"
         raise ValidTimeStampError(msg)

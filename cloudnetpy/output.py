@@ -205,7 +205,7 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
     histories = []
     for key, obj in data.items():
         if (
-            not isinstance(obj, (str, list))
+            not isinstance(obj, str | list)
             and obj is not None
             and hasattr(obj.dataset, "history")
         ):

@@ -159,7 +159,11 @@ class TestParsivel5(Check):
     filename = f"{SCRIPT_PATH}/data/parsivel/warsaw.txt"
     site_meta = SITE_META
     uuid = disdrometer.parsivel2nc(
-        filename, temp_path, site_meta, date=date, telegram=TELEGRAM3
+        filename,
+        temp_path,
+        site_meta,
+        date=date,
+        telegram=TELEGRAM3,
     )
 
     def test_dimensions(self):

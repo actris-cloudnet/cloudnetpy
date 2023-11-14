@@ -1,7 +1,7 @@
 import netCDF4
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy import utils
@@ -31,7 +31,7 @@ def fake_nc_file(tmpdir_factory):
                 [3, 3, 3, 1],
                 [4, 4, 4, 1],
                 [5, 5, 5, 1],
-            ]
+            ],
         )
     return file_name
 

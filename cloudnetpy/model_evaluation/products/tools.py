@@ -55,9 +55,11 @@ def calculate_advection_time(
 
 
 def get_1d_indices(
-    window: tuple, data: np.ndarray, mask: np.ndarray | None = None
+    window: tuple,
+    data: np.ndarray,
+    mask: np.ndarray | None = None,
 ) -> np.ndarray:
-    indices: np.ndarray = np.ndarray((window[0] <= data) & (data < window[-1]))
+    indices: np.ndarray = np.array((window[0] <= data) & (data < window[-1]))
     if mask is not None:
         indices[mask] = ma.masked
     return indices

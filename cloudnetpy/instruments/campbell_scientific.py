@@ -39,7 +39,7 @@ class Cs135(Ceilometer):
             timestamp = datetime.strptime(
                 parts[i].decode(),
                 "%Y-%m-%dT%H:%M:%S.%f",
-            ).astimezone(tz=timezone.utc)
+            ).replace(tzinfo=timezone.utc)
             try:
                 self._check_timestamp(timestamp)
             except ValidTimeStampError:

@@ -68,7 +68,7 @@ class DrizzleSource(DataSource):
     @staticmethod
     def _get_mie_file() -> str:
         module_path = os.path.dirname(os.path.abspath(__file__))
-        return "/".join((module_path, "mie_lu_tables.nc"))
+        return f"{module_path}/mie_lu_tables.nc"
 
     def _get_wl_band(self) -> str:
         """Returns string corresponding the radar frequency."""

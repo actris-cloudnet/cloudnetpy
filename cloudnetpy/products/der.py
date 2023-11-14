@@ -1,7 +1,7 @@
 """Module for creating Cloudnet droplet effective radius
 using the Frisch et al. 2002 method.
 """
-from collections import namedtuple
+from typing import NamedTuple
 
 import numpy as np
 from numpy import ma
@@ -16,7 +16,14 @@ from cloudnetpy.products.product_tools import (
     get_is_rain,
 )
 
-Parameters = namedtuple("Parameters", "ddBZ N dN sigma_x dsigma_x dQ")
+
+class Parameters(NamedTuple):
+    ddBZ: float
+    N: float
+    dN: float
+    sigma_x: float
+    dsigma_x: float
+    dQ: float
 
 
 def generate_der(

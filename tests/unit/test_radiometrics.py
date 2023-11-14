@@ -46,7 +46,10 @@ class TestRadiometrics2nc(Check):
         test_path = tmp_path / "no.nc"
         with pytest.raises(ValidTimeStampError):
             radiometrics2nc(
-                self.test_input, test_path, self.site_meta, date="2021-07-19"
+                self.test_input,
+                test_path,
+                self.site_meta,
+                date="2021-07-19",
             )
 
 
@@ -84,5 +87,8 @@ class TestRadiometrics2ncAgain(Check):
         test_path = tmp_path / "no.nc"
         with pytest.raises(ValidTimeStampError):
             radiometrics2nc(
-                self.test_input, test_path, self.site_meta, date="2021-10-07"
+                self.test_input,
+                test_path,
+                self.site_meta,
+                date="2021-10-07",
             )

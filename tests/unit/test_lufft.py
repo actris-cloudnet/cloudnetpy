@@ -1,4 +1,4 @@
-""" This module contains unit tests for ceilo-module. """
+"""This module contains unit tests for ceilo-module."""
 import glob
 import os
 from tempfile import TemporaryDirectory
@@ -24,7 +24,7 @@ SITE_META = {
 }
 
 
-@pytest.fixture
+@pytest.fixture()
 def fake_jenoptik_file(tmpdir):
     file_name = tmpdir.join("jenoptik.nc")
     with netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC") as root_grp:

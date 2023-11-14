@@ -1,6 +1,6 @@
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.categorize import melting
@@ -59,16 +59,16 @@ class Obs:
             [
                 [1, 1, 1, 3, 150, 3, 1, 1, 1, 1],
                 [1, 1, 1, 3, 150, 3, 1, 1, 1, 1],
-            ]
+            ],
         )
         self.v = ma.array(
             [
                 [-1, -1, -4, -2, -2, -1, 0, 0, 0, 0],
                 [-1, -1, -4, -2, -2, -1, 0, 0, 0, 0],
-            ]
+            ],
         )
         self.z = ma.array(
-            [[1, 1, 1, 1, 1, 3, 1, 1, 1, 1], [1, 1, 1, 1, 1, 3, 1, 1, 1, 1]]
+            [[1, 1, 1, 1, 1, 3, 1, 1, 1, 1], [1, 1, 1, 1, 1, 3, 1, 1, 1, 1]],
         )
         self.model_type = "ecmwf"
 

@@ -20,7 +20,9 @@ class TestUpdateNc:
     def test_does_append_to_end(self, tmp_path):
         temp_path = tmp_path / "end.nc"
         concat_lib.concatenate_files(
-            self.files[:2], str(temp_path), concat_dimension="profile"
+            self.files[:2],
+            str(temp_path),
+            concat_dimension="profile",
         )
         succ = concat_lib.update_nc(str(temp_path), self.files[2])
         assert succ == 1
@@ -33,7 +35,9 @@ class TestUpdateNc:
     def test_does_not_append_to_beginning(self, tmp_path):
         temp_path = tmp_path / "beginning.nc"
         concat_lib.concatenate_files(
-            self.files[1:3], str(temp_path), concat_dimension="profile"
+            self.files[1:3],
+            str(temp_path),
+            concat_dimension="profile",
         )
         succ = concat_lib.update_nc(str(temp_path), self.files[0])
         assert succ == 0
@@ -100,7 +104,7 @@ class TestConcat:
 
     def test_create_global_attributes(self):
         self.concat.create_global_attributes(
-            new_attributes={"kissa": 50, "koira": "23"}
+            new_attributes={"kissa": 50, "koira": "23"},
         )
         for attr in ("day", "title", "month", "comment", "kissa", "koira"):
             assert hasattr(self.file, attr)
@@ -146,7 +150,6 @@ class TestCommonVariables:
         )
         self.files = [self.file1, self.file2]
         self.output = tmp_path / "concat.nc"
-        yield
 
     def _write_scalar(self, file, key, value):
         with netCDF4.Dataset(file, "r+") as nc:
@@ -215,10 +218,14 @@ class TestCommonVariables:
 
     def test_consistent_masked_arrays(self):
         self._write_array(
-            self.file1, "kissa", ma.masked_array([1, 2, 3], mask=[1, 0, 1])
+            self.file1,
+            "kissa",
+            ma.masked_array([1, 2, 3], mask=[1, 0, 1]),
         )
         self._write_array(
-            self.file2, "kissa", ma.masked_array([3, 2, 1], mask=[1, 0, 1])
+            self.file2,
+            "kissa",
+            ma.masked_array([3, 2, 1], mask=[1, 0, 1]),
         )
 
         with concat_lib._Concat(self.files, str(self.output)) as concat:
@@ -235,10 +242,14 @@ class TestCommonVariables:
 
     def test_inconsistent_masked_arrays(self):
         self._write_array(
-            self.file1, "kissa", ma.masked_array([1, 2, 3], mask=[1, 0, 1])
+            self.file1,
+            "kissa",
+            ma.masked_array([1, 2, 3], mask=[1, 0, 1]),
         )
         self._write_array(
-            self.file2, "kissa", ma.masked_array([2, 3, 4], mask=[1, 0, 1])
+            self.file2,
+            "kissa",
+            ma.masked_array([2, 3, 4], mask=[1, 0, 1]),
         )
 
         with concat_lib._Concat(self.files, str(self.output)) as concat:

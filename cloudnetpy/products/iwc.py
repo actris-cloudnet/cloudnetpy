@@ -80,7 +80,7 @@ class IwcSource(IceSource):
             scaled_temperature += self.coefficients.Z
             return self.getvar("Z_error") * scaled_temperature * 10
 
-        def _calc_error_in_uncorrected_ice() -> np.ndarray:
+        def _calc_error_in_uncorrected_ice() -> float:
             spec_liq_atten = 1.0 if self.wl_band == 0 else 4.5
             liq_atten_scaled = spec_liq_atten * self.coefficients.Z
             return lwp_prior * liq_atten_scaled * 2 * 1e-3 * 10

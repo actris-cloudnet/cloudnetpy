@@ -94,9 +94,7 @@ def save_downsampled_file(
     )
     _add_source(root_group, objects, files)
     output.copy_global(obj.dataset, root_group, ("location", "day", "month", "year"))
-    try:
-        obj.dataset.day
-    except AttributeError:
+    if not hasattr(obj.dataset, "day"):
         root_group.year, root_group.month, root_group.day = obj.date
     output.merge_history(root_group, id_mark, {"l3": obj})
     root_group.close()

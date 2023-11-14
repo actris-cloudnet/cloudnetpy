@@ -3,9 +3,9 @@ from pathlib import Path
 
 import netCDF4
 import numpy as np
-import numpy.ma as ma
 import pytest
 from cloudnetpy_qc import quality
+from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.categorize import model
@@ -30,7 +30,7 @@ def test_calc_mean_height():
             [0, 1, 2, 3, 4],
             [0.2, 1.2, 2.2, 3.2, 4.2],
             [-0.2, 0.8, 1.8, 2.8, 3.8],
-        ]
+        ],
     )
     result = np.array([0, 1, 2, 3, 4])
     assert_array_equal(model._calc_mean_height(height), result)
@@ -65,7 +65,7 @@ def fake_model_file(tmpdir_factory):
                 [1000, 2000, 3000, 4000],
                 [1000, 2000, 3000, 4000],
                 [1000, 2000, 3000, 4000],
-            ]
+            ],
         )
         var.units = "m"
         _create_var(root_grp, "temperature")
@@ -118,7 +118,7 @@ def test_get_model_heights(fake_model_file):
                 [1000, 2000, 3000, 4000],
                 [1000, 2000, 3000, 4000],
                 [1000, 2000, 3000, 4000],
-            ]
+            ],
         ),
     )
 
@@ -184,7 +184,8 @@ class TestEcmwf:
     def test_qc(self):
         n = 0
         report = quality.run_tests(
-            Path(self.filename), ignore_tests=["TestCFConvention"]
+            Path(self.filename),
+            ignore_tests=["TestCFConvention"],
         )
         keys = ("TestUnits",)
         for test in report["tests"]:

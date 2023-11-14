@@ -2,6 +2,7 @@
 import logging
 import math
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import ma
@@ -13,9 +14,11 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
-from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBinCombined
 from cloudnetpy.metadata import MetaData
+
+if TYPE_CHECKING:
+    from cloudnetpy.instruments.instruments import Instrument
 
 
 def rpg2nc(

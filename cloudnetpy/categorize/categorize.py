@@ -131,7 +131,10 @@ def generate_categorize(
             msg = "No overlapping radar and lidar timestamps found"
             raise ValidTimeStampError(msg)
         _screen_bad_time_indices(valid_ind)
-        if "rpg" in data["radar"].type.lower() or "basta" in data["radar"].type.lower():
+        if (
+            "rpg" in data["radar"].source_type.lower()
+            or "basta" in data["radar"].source_type.lower()
+        ):
             data["radar"].filter_speckle_noise()
             data["radar"].filter_1st_gate_artifact()
         for variable in ("v", "v_sigma", "ldr"):

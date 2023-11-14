@@ -72,7 +72,10 @@ class TestHatpro2nc(Check):
         (temp_dir / "foo.LV1").write_text("kissa")
         test_path = tmp_path / "corrupt.nc"
         _, files = hatpro.hatpro2nc(
-            str(temp_dir), test_path, self.site_meta, date="2021-01-23"
+            str(temp_dir),
+            test_path,
+            self.site_meta,
+            date="2021-01-23",
         )
         assert len(files) == 2
 

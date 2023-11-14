@@ -1,6 +1,7 @@
 """Module for reading raw cloud radar data."""
 import logging
 from os import PathLike
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import ma
@@ -10,7 +11,9 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import RadarDataError, ValidTimeStampError
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
-from cloudnetpy.instruments.instruments import Instrument
+
+if TYPE_CHECKING:
+    from cloudnetpy.instruments.instruments import Instrument
 
 
 class NcRadar(DataSource, CloudnetInstrument):

@@ -37,7 +37,10 @@ def main():
         "longitude": 11.573,
     }
     uuid_radar = mira2nc(
-        raw_files["radar"], calibrated_files["radar"], site_meta, uuid="kissa"
+        raw_files["radar"],
+        calibrated_files["radar"],
+        site_meta,
+        uuid="kissa",
     )
     assert uuid_radar == "kissa"
     lidar_meta = site_meta.copy()
@@ -60,7 +63,8 @@ def main():
     _run_tests(categorize_file)
     _check_is_valid_uuid(uuid_categorize)
     _check_source_file_uuids(
-        categorize_file, (uuid_lidar, uuid_radar, uuid_model, uuid_mwr)
+        categorize_file,
+        (uuid_lidar, uuid_radar, uuid_model, uuid_mwr),
     )
     product_file_types = [
         "classification",
@@ -72,7 +76,9 @@ def main():
     ]
     for file in product_file_types:
         product_file, uuid_product = _process_product_file(
-            file, source_path, categorize_file
+            file,
+            source_path,
+            categorize_file,
         )
         _run_tests(product_file)
         _check_is_valid_uuid(uuid_product)

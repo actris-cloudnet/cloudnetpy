@@ -3,8 +3,8 @@ from tempfile import TemporaryDirectory
 
 import netCDF4
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 
 import cloudnetpy.instruments.pollyxt
 from cloudnetpy.exceptions import ValidTimeStampError

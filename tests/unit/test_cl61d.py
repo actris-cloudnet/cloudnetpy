@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 
 import netCDF4
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 
 from cloudnetpy import concat_lib
 from cloudnetpy.instruments import ceilo2nc

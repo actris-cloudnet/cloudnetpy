@@ -6,7 +6,7 @@ from numpy.testing import assert_array_equal
 from cloudnetpy.products import product_tools
 
 
-@pytest.fixture
+@pytest.fixture()
 def fake_categorize_file(tmpdir_factory):
     """Creates a simple categorize for testing."""
     file_name = tmpdir_factory.mktemp("data").join("categorize.nc")

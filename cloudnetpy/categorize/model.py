@@ -20,7 +20,7 @@ class Model(DataSource):
 
     Attributes:
     ----------
-        type (str): Model type, e.g. 'gdas1' or 'ecwmf'.
+        source_type (str): Model type, e.g. 'gdas1' or 'ecwmf'.
         model_heights (ndarray): 2-D array of model heights (one for each time
             step).
         mean_height (ndarray): Mean of *model_heights*.
@@ -44,7 +44,7 @@ class Model(DataSource):
 
     def __init__(self, model_file: str, alt_site: float):
         super().__init__(model_file)
-        self.type = _find_model_type(model_file)
+        self.source_type = _find_model_type(model_file)
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = _calc_mean_height(self.model_heights)
         self.height: np.ndarray

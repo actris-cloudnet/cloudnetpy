@@ -4,7 +4,7 @@ import re
 from collections.abc import Iterable
 from os import PathLike
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from uuid import UUID
 
 import netCDF4
@@ -75,17 +75,22 @@ def mrr2nc(
             except OSError:
                 logging.warning("Skipping invalid file: %s", file)
 
-    def concat_files(temp_dir: str, files: Iterable[PathLike | str]) -> str:
-        tmp_filename = f"{temp_dir}/tmp.nc"
-        variables = list(keymap.keys()) + ["elevation"]
-        valid_files = list(valid_nc_files(files))
-        concat_lib.concatenate_files(
-            valid_files,
-            tmp_filename,
-            variables=variables,
-            ignore=["time_coverage_start", "time_coverage_end"],
-        )
-        return tmp_filename
+    def concat_files(dir_name: str, files: Iterable[PathLike | str]) -> str:
+        with NamedTemporaryFile(
+            dir=dir_name,
+            suffix=".nc",
+            delete=False,
+        ) as temp_file:
+            tmp_filename = temp_file.name
+            variables = list(keymap.keys()) + ["elevation"]
+            valid_files = list(valid_nc_files(files))
+            concat_lib.concatenate_files(
+                valid_files,
+                tmp_filename,
+                variables=variables,
+                ignore=["time_coverage_start", "time_coverage_end"],
+            )
+            return tmp_filename
 
     with TemporaryDirectory() as temp_dir:
         if isinstance(input_file, PathLike | str):

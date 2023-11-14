@@ -37,7 +37,7 @@ class RadarFun:
                 - self.site_meta["altitude"]
                 - self.nc.variables["range"][:]
             )
-            <= 1e-3
+            <= 1e-3,
         )
 
     def test_global_attributes(self):

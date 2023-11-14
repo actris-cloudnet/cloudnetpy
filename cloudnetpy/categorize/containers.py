@@ -58,9 +58,9 @@ class ClassData:
                 setattr(self, key, data["radar"].data[key][:])
         self.time = data["radar"].time
         self.height = data["radar"].height
-        self.radar_type = data["radar"].type
+        self.radar_type = data["radar"].source_type
         self.tw = data["model"].data["Tw"][:]
-        self.model_type = data["model"].type
+        self.model_type = data["model"].source_type
         self.beta = data["lidar"].data["beta"][:]
         self.lwp = data["mwr"].data["lwp"][:]
         self.is_rain = _find_rain_from_radar_echo(self.z, self.time)

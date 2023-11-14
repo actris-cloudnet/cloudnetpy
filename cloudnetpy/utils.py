@@ -729,7 +729,9 @@ def isscalar(array) -> bool:
 
 def get_time() -> str:
     """Returns current UTC-time."""
-    return f"{datetime.datetime.now(tz=datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} +00:00"
+    t_zone = datetime.timezone.utc
+    form = "%Y-%m-%d %H:%M:%S"
+    return f"{datetime.datetime.now(tz=t_zone).strftime(form)} +00:00"
 
 
 def date_range(
@@ -867,9 +869,7 @@ def get_sorted_filenames(file_path: str, extension: str) -> list:
     extension = extension.lower()
     all_files = os.listdir(file_path)
     files = [
-        "/".join((file_path, file))
-        for file in all_files
-        if file.lower().endswith(extension)
+        f"{file_path}/{file}" for file in all_files if file.lower().endswith(extension)
     ]
     files.sort()
     return files

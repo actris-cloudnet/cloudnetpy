@@ -1,8 +1,7 @@
 import netCDF4
 import numpy as np
-import numpy.ma as ma
 import pytest
-from numpy import testing
+from numpy import ma, testing
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.products.iwc import IceClassification, IwcSource
@@ -30,16 +29,16 @@ def categorize_file(tmpdir_factory, file_metadata):
         nc.createVariable("Z_bias", "f8")[:] = 0.5
         nc.createVariable("radar_frequency", "f8")[:] = 35.5
         nc.createVariable("Z", "f8", ("time", "height"))[:] = np.array(
-            [[10, 20], [10, 20], [10, 20]]
+            [[10, 20], [10, 20], [10, 20]],
         )
         nc.createVariable("Z_error", "f8", ("time", "height"))[:] = np.array(
-            [[1, 2], [1, 2], [2, 3]]
+            [[1, 2], [1, 2], [2, 3]],
         )
         nc.createVariable("category_bits", "i4", ("time", "height"))[:] = np.array(
-            [[0, 1], [2, 3], [4, 8]]
+            [[0, 1], [2, 3], [4, 8]],
         )
         nc.createVariable("quality_bits", "i4", ("time", "height"))[:] = np.array(
-            [[0, 1], [2, 3], [4, 8]]
+            [[0, 1], [2, 3], [4, 8]],
         )
         temperature = np.array([[280, 290], [280, 290], [280, 290]])
         nc.createVariable("temperature", "f8", ("model_time", "model_height"))[
@@ -132,7 +131,8 @@ class TestAppending:
     def test_append_iwc(self):
         self.ice_class.ice_above_rain = np.array([0, 0, 0, 1, 1], dtype=bool)
         self.iwc_source.data["iwc_inc_rain"] = ma.array(
-            [1, 2, 3, 4, 5], mask=[1, 0, 1, 0, 1]
+            [1, 2, 3, 4, 5],
+            mask=[1, 0, 1, 0, 1],
         )
         self.iwc_source.append_main_variable(self.ice_class)
         expected_mask = [1, 0, 1, 1, 1]
@@ -158,7 +158,9 @@ def test_append_iwc_status(categorize_file):
     iwc_source = IwcSource(categorize_file, "iwc")
     ice_class = IceClassification(categorize_file)
     iwc_source.data["iwc"] = ma.array(
-        [[1, 1], [1, 1], [1, 1]], dtype=float, mask=[[1, 0], [0, 0], [0, 0]]
+        [[1, 1], [1, 1], [1, 1]],
+        dtype=float,
+        mask=[[1, 0], [0, 0], [0, 0]],
     )
     ice_class.is_ice = np.array([[1, 0], [0, 0], [0, 0]], dtype=bool)
     ice_class.corrected_ice = np.array([[0, 0], [1, 0], [0, 1]], dtype=bool)

@@ -1,6 +1,6 @@
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.categorize import freezing
@@ -13,7 +13,7 @@ def test_find_t0_alt():
             [290, 280, T0, 260],
             [320, T0 + 10, T0 - 10, 220],
             [240, 230, 220, 210],
-        ]
+        ],
     )
     height = np.array([10, 20, 30, 40])
     res = [30, 25, 10]
@@ -75,7 +75,7 @@ class Obs:
                 [290, 280, 270, 260, 250, 240],
                 [290, 280, 270, 260, 250, 240],
                 [290, 280, 280, 260, 250, 240],
-            ]
+            ],
         )
 
 

@@ -1,11 +1,11 @@
-""" This module contains unit tests for utils-module. """
+"""This module contains unit tests for utils-module."""
 import datetime
 import re
 
 import netCDF4
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from cloudnetpy import utils
@@ -681,7 +681,7 @@ def test_seconds2date(input, result, epoch):
     assert result[3:] == utils.seconds2time(input)
 
 
-@pytest.fixture
+@pytest.fixture()
 def example_files(tmpdir):
     file_names = ["f.LV1", "f.txt", "f.LV0", "f2.lv1", "g.LV1"]
     folder = tmpdir.mkdir("data/")

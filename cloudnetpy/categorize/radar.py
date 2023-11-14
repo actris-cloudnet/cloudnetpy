@@ -26,7 +26,7 @@ class Radar(DataSource):
             `location` of the input file.
         sequence_indices (list): Indices denoting the different altitude
             regimes of the radar.
-        type (str): Type of the radar, copied from the global attribute
+        source_type (str): Type of the radar, copied from the global attribute
             `source` of the *radar_file*. Can be free form string but must
             include either 'rpg' or 'mira' denoting one of the two supported
             radars.
@@ -43,7 +43,7 @@ class Radar(DataSource):
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, "location", "")
-        self.type = getattr(self.dataset, "source", "")
+        self.source_type = getattr(self.dataset, "source", "")
         self._init_data()
         self._init_sigma_v()
         self._get_folding_velocity_full()

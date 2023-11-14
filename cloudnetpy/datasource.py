@@ -46,7 +46,7 @@ class DataSource:
     radar_frequency: float
     data_dense: dict
     data_sparse: dict
-    type: str
+    source_type: str
 
     def __init__(self, full_path: os.PathLike | str, radar: bool = False):
         self.filename = os.path.basename(full_path)
@@ -85,7 +85,7 @@ class DataSource:
 
     def append_data(
         self,
-        variable: netCDF4.Variable | np.ndarray | float | int,
+        variable: netCDF4.Variable | np.ndarray | float,
         key: str,
         name: str | None = None,
         units: str | None = None,
@@ -119,9 +119,10 @@ class DataSource:
             year = str(self.dataset.year)
             month = str(self.dataset.month).zfill(2)
             day = str(self.dataset.day).zfill(2)
-            datetime.strptime(f"{year}{month}{day}", "%Y%m%d").astimezone(
-                tz=timezone.utc,
+            datetime.strptime(f"{year}{month}{day}", "%Y%m%d").replace(
+                tzinfo=timezone.utc,
             )
+
         except (AttributeError, ValueError) as read_error:
             msg = "Missing or invalid date in global attributes."
             raise RuntimeError(msg) from read_error

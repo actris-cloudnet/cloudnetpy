@@ -1,6 +1,6 @@
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.categorize import falling
@@ -24,7 +24,7 @@ class Obs:
         )
 
         self.tw = ma.array(
-            [[250, 250, 250, 250, 250, 250], [250, 250, 250, 250, 250, 270]]
+            [[250, 250, 250, 250, 250, 250], [250, 250, 250, 250, 250, 270]],
         )
 
         self.height = np.array([1999, 2002, 3000, 4000, 5000, 6000])

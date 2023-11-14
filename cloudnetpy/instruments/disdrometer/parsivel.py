@@ -464,7 +464,7 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
                         scalars[header] = datetime.datetime.strptime(
                             value,
                             "%Y-%m-%d %H:%M:%S",
-                        ).astimezone(tz=datetime.timezone.utc)
+                        ).replace(tzinfo=datetime.timezone.utc)
                     elif header in ("number_concentration", "fall_velocity"):
                         arrays[header].append(float(value))
                     elif header == "spectrum":

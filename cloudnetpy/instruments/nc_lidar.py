@@ -1,12 +1,15 @@
 """Module with a class for Lufft chm15k ceilometer."""
 import logging
+from typing import TYPE_CHECKING
 
-import netCDF4
 import numpy as np
 from numpy import ma
 
 from cloudnetpy import utils
 from cloudnetpy.instruments.ceilometer import Ceilometer
+
+if TYPE_CHECKING:
+    import netCDF4
 
 
 class NcLidar(Ceilometer):

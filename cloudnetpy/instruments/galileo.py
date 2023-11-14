@@ -1,6 +1,6 @@
 """Module for reading raw Galileo cloud radar data."""
 import os
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import numpy as np
 
@@ -61,15 +61,20 @@ def galileo2nc(
 
     with TemporaryDirectory() as temp_dir:
         if os.path.isdir(raw_files):
-            nc_filename = f"{temp_dir}/tmp.nc"
-            valid_filenames = utils.get_sorted_filenames(raw_files, ".nc")
-            valid_filenames = utils.get_files_with_common_range(valid_filenames)
-            variables = list(keymap.keys())
-            concat_lib.concatenate_files(
-                valid_filenames,
-                nc_filename,
-                variables=variables,
-            )
+            with NamedTemporaryFile(
+                dir=temp_dir,
+                suffix=".nc",
+                delete=False,
+            ) as temp_file:
+                nc_filename = temp_file.name
+                valid_filenames = utils.get_sorted_filenames(raw_files, ".nc")
+                valid_filenames = utils.get_files_with_common_range(valid_filenames)
+                variables = list(keymap.keys())
+                concat_lib.concatenate_files(
+                    valid_filenames,
+                    nc_filename,
+                    variables=variables,
+                )
         else:
             nc_filename = raw_files
 

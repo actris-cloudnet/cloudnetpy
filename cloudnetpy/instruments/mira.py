@@ -2,7 +2,7 @@
 import logging
 import os
 from collections import OrderedDict
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 from numpy import ma
 
@@ -135,44 +135,53 @@ class Mira(NcRadar):
 
 def _parse_input_files(input_files: str | list[str], temp_dir: str) -> tuple:
     if isinstance(input_files, list) or os.path.isdir(input_files):
-        input_filename = f"{temp_dir}/tmp.nc"
-        if isinstance(input_files, list):
-            valid_files = sorted(input_files)
-        else:
-            valid_files = utils.get_sorted_filenames(input_files, ".znc")
+        with NamedTemporaryFile(
+            dir=temp_dir,
+            suffix=".nc",
+            delete=False,
+        ) as temp_file:
+            input_filename = temp_file.name
+            if isinstance(input_files, list):
+                valid_files = sorted(input_files)
+            else:
+                valid_files = utils.get_sorted_filenames(input_files, ".znc")
+                if not valid_files:
+                    valid_files = utils.get_sorted_filenames(input_files, ".mmclx")
+
             if not valid_files:
-                valid_files = utils.get_sorted_filenames(input_files, ".mmclx")
+                msg = (
+                    (
+                        f"Neither znc nor mmclx files found {input_files}. "
+                        f"Please check your input."
+                    ),
+                )
+                raise FileNotFoundError(msg)
 
-        if not valid_files:
-            raise FileNotFoundError(
-                "Neither znc nor mmclx files found "
-                + f"{input_files}. Please check your input.",
+            valid_files = utils.get_files_with_common_range(valid_files)
+            filetypes = list({f.split(".")[-1].lower() for f in valid_files})
+
+            if len(filetypes) > 1:
+                err_msg = "Mixed mmclx and znc files. Please use only one filetype."
+                raise TypeError(err_msg)
+
+            keymap = _get_keymap(filetypes[0])
+
+            variables = list(keymap.keys())
+            concat_lib.concatenate_files(
+                valid_files,
+                input_filename,
+                variables=variables,
+                ignore=_get_ignored_variables(filetypes[0]),
+                # It's somewhat risky to use varying nfft values as the velocity
+                # resolution may differ, but this enables concatenation when switching
+                # between different nfft configurations. Spectral data is ignored
+                # anyway for now.
+                allow_difference=[
+                    "nave",
+                    "ovl",
+                    "nfft",
+                ],
             )
-
-        valid_files = utils.get_files_with_common_range(valid_files)
-        filetypes = list({f.split(".")[-1].lower() for f in valid_files})
-
-        if len(filetypes) > 1:
-            msg = "Mixed mmclx and znc files. Please use only one filetype."
-            raise TypeError(msg)
-
-        keymap = _get_keymap(filetypes[0])
-
-        variables = list(keymap.keys())
-        concat_lib.concatenate_files(
-            valid_files,
-            input_filename,
-            variables=variables,
-            ignore=_get_ignored_variables(filetypes[0]),
-            # It's somewhat risky to use varying nfft values as the velocity resolution
-            # may differ, but this enables concatenation when switching between
-            # different nfft configurations. Spectral data is ignored anyway for now.
-            allow_difference=[
-                "nave",
-                "ovl",
-                "nfft",
-            ],
-        )
     else:
         input_filename = input_files
         keymap = _get_keymap(input_filename.split(".")[-1])

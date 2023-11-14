@@ -589,7 +589,10 @@ def plot_histogram(ax, day_stat: DayStatistics, variable_info) -> None:
 
 
 def plot_vertical_profile(
-    ax, day_stat: DayStatistics, axes: tuple, variable_info
+    ax,
+    day_stat: DayStatistics,
+    axes: tuple,
+    variable_info,
 ) -> None:
     mrm = p_tools.rolling_mean(day_stat.model_stat)
     orm = p_tools.rolling_mean(day_stat.observation_stat)

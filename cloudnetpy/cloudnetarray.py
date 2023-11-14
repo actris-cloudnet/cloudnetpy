@@ -26,7 +26,7 @@ class CloudnetArray:
 
     def __init__(
         self,
-        variable: netCDF4.Variable | np.ndarray | float | int,
+        variable: netCDF4.Variable | np.ndarray | float,
         name: str,
         units_from_user: str | None = None,
         dimensions: Sequence[str] | None = None,
@@ -104,7 +104,7 @@ class CloudnetArray:
             return self.variable
         if isinstance(
             self.variable,
-            (int, float, np.float32, np.int8, np.float64, np.int32, np.uint16),
+            int | float | np.float32 | np.int8 | np.float64 | np.int32 | np.uint16,
         ):
             return np.array(self.variable)
         if isinstance(self.variable, str):

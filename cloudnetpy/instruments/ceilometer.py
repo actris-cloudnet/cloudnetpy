@@ -1,5 +1,5 @@
 import logging
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 from numpy import ma
@@ -8,8 +8,10 @@ from scipy.ndimage import gaussian_filter
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.utils import Epoch
+
+if TYPE_CHECKING:
+    from cloudnetpy.instruments.instruments import Instrument
 
 
 class NoiseParam(NamedTuple):
@@ -22,8 +24,8 @@ class NoiseParam(NamedTuple):
 class Ceilometer:
     """Base class for all types of ceilometers and pollyxt."""
 
-    def __init__(self, noise_param: NoiseParam = NoiseParam()):
-        self.noise_param = noise_param
+    def __init__(self, noise_param: NoiseParam | None = None):
+        self.noise_param = noise_param or NoiseParam()
         self.data: dict = {}  # Need to contain 'beta_raw', 'range' and 'time'
         self.metadata: dict = {}  # Need to contain 'date' as ('yyyy', 'mm', 'dd')
         self.expected_date: str | None = None

@@ -35,7 +35,7 @@ class History:
         self.history = None
 
 
-@pytest.fixture
+@pytest.fixture()
 def fake_nc_file(tmpdir_factory):
     """Creates a simple categorize for testing."""
     file_name = tmpdir_factory.mktemp("data").join("nc_file.nc")

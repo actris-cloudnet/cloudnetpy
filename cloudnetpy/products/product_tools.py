@@ -1,6 +1,6 @@
 """General helper classes and functions for all products."""
 import os
-from collections import namedtuple
+from typing import NamedTuple
 
 import netCDF4
 import numpy as np
@@ -11,7 +11,15 @@ from cloudnetpy import constants, utils
 from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.datasource import DataSource
 
-IceCoefficients = namedtuple("IceCoefficients", "K2liquid0 ZT T Z c")
+
+class IceCoefficients(NamedTuple):
+    """Coefficients for ice effective radius retrieval."""
+
+    K2liquid0: float
+    ZT: float
+    T: float
+    Z: float
+    c: float
 
 
 class CategorizeBits:
@@ -219,7 +227,8 @@ class IceSource(DataSource):
 
     def _get_z_factor(self) -> float:
         """Returns empirical scaling factor for radar echo."""
-        return float(utils.lin2db(self.coefficients.K2liquid0 / 0.93))
+        k2 = np.array(self.coefficients.K2liquid0) / 0.93
+        return float(utils.lin2db(k2))
 
 
 def get_is_rain(filename: str) -> np.ndarray:
