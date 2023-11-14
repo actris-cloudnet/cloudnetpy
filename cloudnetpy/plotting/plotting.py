@@ -215,8 +215,12 @@ def _mark_gaps(
     data: ma.MaskedArray,
     max_allowed_gap: float = 1,
 ) -> tuple:
-    assert time[0] >= 0
-    assert time[-1] <= 24
+    if time[0] < 0:
+        msg = "Negative time values in the file."
+        raise ValueError(msg)
+    if time[-1] > 24:
+        msg = "Time values exceed 24 hours."
+        raise ValueError(msg)
     max_gap = max_allowed_gap / 60
     if not ma.is_masked(data):
         mask_new = np.zeros(data.shape)
@@ -496,7 +500,9 @@ def _plot_segment_data(ax, data: ma.MaskedArray, name: str, axes: tuple) -> None
     def _hide_segments(
         data_in: ma.MaskedArray,
     ) -> tuple[ma.MaskedArray, list, list]:
-        assert variables.clabel is not None
+        if variables.clabel is None:
+            msg = f"Labels not defined for {name}."
+            raise ValueError(msg)
         labels = [x[0] for x in variables.clabel]
         colors = [x[1] for x in variables.clabel]
         segments_to_hide = np.char.startswith(labels, "_")
@@ -538,7 +544,9 @@ def _plot_colormesh_data(ax, data: ndarray, name: str, axes: tuple) -> None:
         axes (tuple): Time and height 1D arrays.
     """
     variables = ATTRIBUTES[name]
-    assert variables.plot_range is not None
+    if variables.plot_range is None:
+        msg = f"Plot range not defined for {name}."
+        raise ValueError(msg)
 
     if name == "cloud_fraction":
         data[data < 0.1] = ma.masked
@@ -592,8 +600,8 @@ def _plot_instrument_data(
         _plot_weather_station(ax, data, time, name)
     if full_path is not None and tb_ind is not None:
         quality_flag_array = ptools.read_nc_fields(full_path, "quality_flag")
-        assert isinstance(quality_flag_array, ndarray)
-        quality_flag = quality_flag_array[:, tb_ind]
+        quality_flag_array_ma = ma.array(quality_flag_array)
+        quality_flag = quality_flag_array_ma[:, tb_ind]
         data = data[:, tb_ind]
         data_dict = {"tb": data, "quality_flag": quality_flag, "time": time}
         _plot_hatpro(ax, data_dict, full_path)

@@ -93,7 +93,9 @@ class AdvanceProductMethods(DataSource):
         return self._model_obj.cut_off_extra_levels(arg)
 
     def set_frequency_parameters(self) -> tuple:
-        assert self._obs_obj.radar_freq is not None
+        if self._obs_obj.radar_freq is None:
+            msg = "No radar frequency in observation file"
+            raise ValueError(msg)
         if 30 <= self._obs_obj.radar_freq <= 40:
             return 0.000242, -0.0186, 0.0699, -1.63
         if 90 <= float(self._obs_obj.radar_freq) <= 100:
@@ -101,8 +103,12 @@ class AdvanceProductMethods(DataSource):
         raise ValueError
 
     def fit_z_sensitivity(self, h: np.ndarray) -> np.ndarray:
-        assert self._obs_obj.z_sensitivity is not None
-        assert self._obs_obj.height is not None
+        if self._obs_obj.z_sensitivity is None:
+            msg = "No z_sensitivity in observation file"
+            raise ValueError(msg)
+        if self._obs_obj.height is None:
+            msg = "No height in observation file"
+            raise ValueError(msg)
         z_sen = [
             cl_tools.rebin_1d(self._obs_obj.height, self._obs_obj.z_sensitivity, h[i])
             for i in range(len(h))

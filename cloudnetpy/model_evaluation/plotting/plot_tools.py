@@ -84,10 +84,12 @@ def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
     x = reshape_1d2nd(x, data)
     try:
         y = nc.variables[f"{model}_height"][:]
-    except KeyError:
+    except KeyError as err:
         model_info = MODELS[model]
         cycles = model_info.cycle
-        assert cycles is not None
+        if cycles is None:
+            msg = f"Invalid model: {model}"
+            raise RuntimeError(msg) from err
         cycles_split = [x.strip() for x in cycles.split(",")]
         cycle = [cycle for cycle in cycles_split if cycle in name]
         y = nc.variables[f"{model}_{cycle[0]}_height"][:]

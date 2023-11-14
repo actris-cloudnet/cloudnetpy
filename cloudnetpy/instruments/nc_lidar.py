@@ -20,19 +20,25 @@ class NcLidar(Ceilometer):
         self.dataset: netCDF4.Dataset | None = None
 
     def _fetch_range(self, reference: str) -> None:
-        assert self.dataset is not None
+        if self.dataset is None:
+            msg = "No dataset found"
+            raise RuntimeError(msg)
         range_instrument = self.dataset.variables["range"][:]
         self.data["range"] = utils.edges2mid(range_instrument, reference)
 
     def _fetch_time_and_date(self) -> None:
-        assert self.dataset is not None
+        if self.dataset is None:
+            msg = "No dataset found"
+            raise RuntimeError(msg)
         time = self.dataset.variables["time"]
         self.data["time"] = time[:]
         epoch = utils.get_epoch(time.units)
         self.get_date_and_time(epoch)
 
     def _fetch_zenith_angle(self, key: str, default: float = 3.0) -> None:
-        assert self.dataset is not None
+        if self.dataset is None:
+            msg = "No dataset found"
+            raise RuntimeError(msg)
         if key in self.dataset.variables:
             zenith_angle = ma.median(self.dataset.variables[key][:])
         else:

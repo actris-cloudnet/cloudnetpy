@@ -240,8 +240,7 @@ class LiquidAttenuation(Attenuation):
         return hard_to_correct
 
     def _find_corrected_pixels(self) -> np.ndarray:
-        proper_values = self.atten > 0
-        assert isinstance(proper_values, ma.MaskedArray)
+        proper_values = ma.array(self.atten > 0)
         return proper_values.filled(False) & ~self.uncorrected
 
     def _mask_uncorrected_attenuation(self) -> None:

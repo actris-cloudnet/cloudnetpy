@@ -83,8 +83,9 @@ class Ceilometer:
         )
         for key in ("time", "range"):
             self.data[key] = np.array(self.data[key])
-        assert self.instrument is not None
-        assert self.instrument.wavelength is not None
+        if self.instrument is None or self.instrument.wavelength is None:
+            msg = "Instrument wavelength not defined"
+            raise RuntimeError(msg)
         self.data["wavelength"] = float(self.instrument.wavelength)
         for key in ("latitude", "longitude", "altitude"):
             if key in self.site_meta:

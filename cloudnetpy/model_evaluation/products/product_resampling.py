@@ -85,7 +85,7 @@ def process_L3_day_product(
         update_attributes(model_obj.data, attributes)
         if not file_exists(output_file) or overwrite:
             tl.add_date(model_obj, product_obj)
-            uuid = save_downsampled_file(
+            uuid_out = save_downsampled_file(
                 f"{obs}_{model}",
                 output_file,
                 (model_obj, product_obj),
@@ -94,5 +94,4 @@ def process_L3_day_product(
             )
         else:
             add_var2ncfile(model_obj, output_file)
-    assert isinstance(uuid, str)
-    return uuid
+    return uuid_out

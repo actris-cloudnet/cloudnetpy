@@ -58,8 +58,7 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
 
     if hasattr(obs, "ldr"):
         # Required for peak detection
-        diffu = np.diff(obs.ldr, axis=1)
-        assert isinstance(diffu, ma.MaskedArray)
+        diffu = ma.array(np.diff(obs.ldr, axis=1))
         ldr_diff = diffu.filled(0)
 
     t_range = _find_model_temperature_range(obs.model_type)
@@ -72,14 +71,17 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
         v_prof = obs.v[ind, temp_indices]
 
         if ldr_diff is not None:
-            assert hasattr(obs, "ldr")
+            if not hasattr(obs, "ldr"):
+                msg = "ldr_diff is not None but obs.ldr does not exist"
+                raise RuntimeError(msg)
             ldr_prof = obs.ldr[ind, temp_indices]
             ldr_dprof = ldr_diff[ind, temp_indices]
 
         if ma.count(ldr_prof) > 3 or ma.count(v_prof) > 3:
             try:
-                assert ldr_prof is not None
-                assert ldr_dprof is not None
+                if ldr_prof is None or ldr_dprof is None:
+                    msg = "ldr_prof or ldr_dprof is None"
+                    raise RuntimeError(msg)
                 indices = _find_melting_layer_from_ldr(
                     ldr_prof,
                     ldr_dprof,

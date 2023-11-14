@@ -116,7 +116,9 @@ def _get_cloud_base_and_top_heights(
         return ma.masked_all(cloud_mask.shape[0]), ma.masked_all(cloud_mask.shape[0])
     lowest_bases = atmos.find_lowest_cloud_bases(cloud_mask, height)
     highest_tops = atmos.find_highest_cloud_tops(cloud_mask, height)
-    assert (highest_tops - lowest_bases >= 0).all()
+    if not (highest_tops - lowest_bases >= 0).all():
+        msg = "Cloud base higher than cloud top!"
+        raise ValueError(msg)
     return lowest_bases, highest_tops
 
 

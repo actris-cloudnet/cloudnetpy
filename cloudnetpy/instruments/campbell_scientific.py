@@ -86,7 +86,9 @@ class Cs135(Ceilometer):
             raise ValidTimeStampError
         if not self.date:
             self.date = timestamp_components
-        assert timestamp_components == self.date
+        if timestamp_components != self.date:
+            msg = "Inconsistent dates in the file"
+            raise RuntimeError(msg)
 
 
 class Message(NamedTuple):

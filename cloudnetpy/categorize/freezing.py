@@ -72,7 +72,9 @@ def _is_all_freezing(
 
 
 def _find_mean_melting_alt(obs: ClassData, melting_layer: np.ndarray) -> ma.MaskedArray:
-    assert melting_layer.dtype == bool
+    if melting_layer.dtype != bool:
+        msg = "melting_layer data type should be boolean"
+        raise ValueError(msg)
     alt_array = np.tile(obs.height, (len(obs.time), 1))
     melting_alts = ma.array(alt_array, mask=~melting_layer)
     return ma.median(melting_alts, axis=1)

@@ -163,7 +163,9 @@ class PollyXt(Ceilometer):
                                 "Using %s nm pollyXT channel for backscatter",
                                 channel,
                             )
-                            assert self.instrument is not None
+                            if self.instrument is None:
+                                msg = "No instrument defined"
+                                raise RuntimeError(msg)
                             self.instrument.wavelength = float(channel)
                         return channel
         msg = "No functional pollyXT backscatter channels found"

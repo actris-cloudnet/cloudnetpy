@@ -34,12 +34,11 @@ class LufftCeilo(NcLidar):
             self._fetch_zenith_angle("zenith")
 
     def _fetch_beta_raw(self, calibration_factor: float | None = None) -> None:
-        assert self.dataset is not None
         if calibration_factor is None:
             logging.warning("Using default calibration factor")
             calibration_factor = 3e-12
         beta_raw = self._getvar("beta_raw", "beta_att")
-        assert isinstance(beta_raw, ma.MaskedArray)
+        beta_raw = ma.masked_array(beta_raw)
         old_version = self._get_old_software_version()
         if old_version is not None:
             logging.warning(
@@ -55,7 +54,9 @@ class LufftCeilo(NcLidar):
         self.data["beta_raw"] = beta_raw
 
     def _get_old_software_version(self) -> str | None:
-        assert self.dataset is not None
+        if self.dataset is None:
+            msg = "No dataset found"
+            raise RuntimeError(msg)
         version = self.dataset.software_version
         if len(str(version)) > 4:
             return None
@@ -75,7 +76,9 @@ class LufftCeilo(NcLidar):
         return step_factor ** (-(nn1 - reference) / scale)
 
     def _getvar(self, *args) -> float | ma.MaskedArray:
-        assert self.dataset is not None
+        if self.dataset is None:
+            msg = "No dataset found"
+            raise RuntimeError(msg)
         for arg in args:
             if arg in self.dataset.variables:
                 var = self.dataset.variables[arg]

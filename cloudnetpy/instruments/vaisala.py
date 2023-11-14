@@ -121,7 +121,9 @@ class VaisalaCeilo(Ceilometer):
     @staticmethod
     def _get_message_number(header_line_1: dict) -> int:
         msg_no = header_line_1["message_number"]
-        assert len(np.unique(msg_no)) == 1, "Error: inconsistent message numbers."
+        if len(np.unique(msg_no)) != 1:
+            msg = "Error: inconsistent message numbers."
+            raise RuntimeError(msg)
         return int(msg_no[0])
 
     @staticmethod

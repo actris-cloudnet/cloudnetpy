@@ -72,7 +72,8 @@ class CloudnetArray:
             self.data = utils.rebin_1d(time, self.data, time_new)
             bad_indices = list(np.where(self.data == ma.masked)[0])
         else:
-            assert isinstance(self.data, ma.MaskedArray)
+            if not isinstance(self.data, ma.MaskedArray):
+                self.data = ma.masked_array(self.data)
             self.data, bad_indices = utils.rebin_2d(time, self.data, time_new)
         return bad_indices
 
@@ -138,7 +139,8 @@ class CloudnetArray:
         self._filter(utils.filter_x_pixels)
 
     def _filter(self, fun) -> None:
-        assert isinstance(self.data, ma.MaskedArray)
+        if not isinstance(self.data, ma.MaskedArray):
+            self.data = ma.masked_array(self.data)
         is_data = (~self.data.mask).astype(int)
         is_data_filtered = fun(is_data)
         self.data[is_data_filtered == 0] = ma.masked
@@ -156,7 +158,7 @@ class CloudnetArray:
             The result is masked if the bin contains masked values.
         """
         data_as_float = self.data.astype(float)
-        assert isinstance(data_as_float, ma.MaskedArray)
+        data_as_float = ma.masked_array(data_as_float)
         self.data, _ = utils.rebin_2d(time, data_as_float, time_new, "std")
 
     def rebin_velocity(

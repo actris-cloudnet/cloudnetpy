@@ -133,7 +133,9 @@ class NcRadar(DataSource, CloudnetInstrument):
 
     def add_radar_specific_variables(self) -> None:
         """Adds radar specific variables."""
-        assert self.instrument is not None
+        if self.instrument is None:
+            msg = "Instrument not defined"
+            raise RuntimeError(msg)
         key = "radar_frequency"
         self.data[key] = CloudnetArray(self.instrument.frequency, key)
         try:

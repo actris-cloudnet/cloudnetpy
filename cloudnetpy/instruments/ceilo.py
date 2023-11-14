@@ -87,8 +87,9 @@ def ceilo2nc(
         snr_limit,
         range_corrected,
     )
-    assert ceilo_obj.instrument is not None
-    assert ceilo_obj.instrument.model is not None
+    if ceilo_obj.instrument is None or ceilo_obj.instrument.model is None:
+        msg = "Failed to read ceilometer model"
+        raise RuntimeError(msg)
     if "cl61" in ceilo_obj.instrument.model.lower():
         # This kind of screening could be used with other ceilometers as well:
         mask = ceilo_obj.data["beta_smooth"].mask

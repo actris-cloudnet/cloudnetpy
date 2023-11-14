@@ -203,8 +203,12 @@ class IceSource(DataSource):
 
     def _convert_z(self, z_variable: str = "Z") -> np.ndarray:
         """Calculates temperature weighted z, i.e. ice effective radius [m]."""
-        assert self.product in ("iwc", "ier")
-        assert z_variable in ("Z", "Z_sensitivity")
+        if self.product not in ("iwc", "ier"):
+            msg = f"Invalid product: {self.product}"
+            raise ValueError(msg)
+        if z_variable not in ("Z", "Z_sensitivity"):
+            msg = f"Invalid z_variable: {z_variable}"
+            raise ValueError(msg)
         temperature = (
             self.temperature if z_variable == "Z" else ma.mean(self.temperature, axis=0)
         )
@@ -237,7 +241,8 @@ def get_is_rain(filename: str) -> np.ndarray:
     except KeyError:
         rainfall_rate = read_nc_fields(filename, "rain_rate")
     is_rain = rainfall_rate != 0
-    assert isinstance(is_rain, ma.MaskedArray)
+    if not isinstance(is_rain, ma.MaskedArray):
+        is_rain = ma.array(is_rain)
     is_rain[is_rain.mask] = True
     return np.array(is_rain)
 

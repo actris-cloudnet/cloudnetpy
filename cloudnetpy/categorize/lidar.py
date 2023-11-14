@@ -33,7 +33,9 @@ class Lidar(DataSource):
         for ind, b in enumerate(beta):
             if ma.all(b) is not ma.masked:
                 indices.append(ind)
-        assert self.height is not None
+        if self.height is None:
+            msg = "Unable to interpolate lidar: no height information"
+            raise RuntimeError(msg)
         beta_interpolated = interpolate_2d_nearest(
             self.time[indices],
             self.height,

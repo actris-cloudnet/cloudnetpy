@@ -122,9 +122,9 @@ class DrizzleProducts:
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
         dia, mu, s = (self._params.get(key) for key in ("Do", "mu", "S"))
-        assert isinstance(mu, np.ndarray)
-        assert isinstance(s, np.ndarray)
-        assert isinstance(dia, np.ndarray)
+        dia = ma.array(dia)
+        mu = ma.array(mu)
+        s = ma.array(s)
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
         return rho_water / 3 * self._data.beta * s * dia * gamma_ratio
 

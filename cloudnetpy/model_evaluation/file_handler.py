@@ -98,7 +98,9 @@ def save_downsampled_file(
         root_group.year, root_group.month, root_group.day = obj.date
     output.merge_history(root_group, id_mark, {"l3": obj})
     root_group.close()
-    assert isinstance(uuid, str)
+    if not isinstance(uuid, str):
+        msg = "UUID is not a string."
+        raise TypeError(msg)
     return uuid
 
 

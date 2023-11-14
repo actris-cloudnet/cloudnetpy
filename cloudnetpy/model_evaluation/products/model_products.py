@@ -129,7 +129,9 @@ class ModelManager(DataSource):
         def _add_common_variables() -> None:
             """Model variables that are always the same within cycles"""
             wanted_vars = self.model_vars.common_var
-            assert wanted_vars is not None
+            if wanted_vars is None:
+                msg = f"Model {self.model} has no common variables"
+                raise ValueError(msg)
             wanted_vars_split = [x.strip() for x in wanted_vars.split(",")]
             for var in wanted_vars_split:
                 if var in self.dataset.variables:
@@ -141,7 +143,9 @@ class ModelManager(DataSource):
         def _add_cycle_variables() -> None:
             """Add cycle depending variables"""
             wanted_vars = self.model_vars.cycle_var
-            assert wanted_vars is not None
+            if wanted_vars is None:
+                msg = f"Model {self.model} has no cycle variables"
+                raise ValueError(msg)
             wanted_vars_split = [x.strip() for x in wanted_vars.split(",")]
             for var in wanted_vars_split:
                 if var in self.dataset.variables:

@@ -123,7 +123,9 @@ def generate_categorize(
             "mwr": Mwr(input_files["mwr"]),
             "lv0_files": input_files.get("lv0_files", None),
         }
-        assert data["radar"].altitude is not None
+        if data["radar"].altitude is None:
+            msg = "Radar altitude not defined"
+            raise RuntimeError(msg)
         data["model"] = Model(input_files["model"], data["radar"].altitude)
         time, height = _define_dense_grid()
         valid_ind = _interpolate_to_cloudnet_grid()

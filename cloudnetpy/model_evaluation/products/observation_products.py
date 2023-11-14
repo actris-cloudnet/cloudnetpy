@@ -109,7 +109,9 @@ class ObservationManager(DataSource):
         return True
 
     def _get_rainrate_threshold(self) -> int:
-        assert self.radar_freq is not None
+        if self.radar_freq is None:
+            msg = "Radar frequency not found from file"
+            raise RuntimeError(msg)
         wband = utils.get_wl_band(float(self.radar_freq))
         rainrate_threshold = 8
         if 90 < wband < 100:

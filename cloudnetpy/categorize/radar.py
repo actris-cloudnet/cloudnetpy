@@ -312,7 +312,9 @@ class Radar(DataSource):
         """Mira has only one sequence and one folding velocity. RPG has
         several sequences with different folding velocities.
         """
-        assert self.height is not None
+        if self.height is None:
+            msg = "Height not found in the input file"
+            raise RuntimeError(msg)
         all_indices = np.arange(len(self.height))
         if not utils.isscalar(self.folding_velocity):
             starting_indices = self.getvar("chirp_start_indices")
@@ -336,8 +338,8 @@ class Radar(DataSource):
                 len(self.sequence_indices[0]),
             )
         else:
-            assert isinstance(folding_velocity, list)
-            assert isinstance(self.folding_velocity, np.ndarray)
+            folding_velocity = list(folding_velocity)
+            self.folding_velocity = np.array(self.folding_velocity)
             for indices, velocity in zip(self.sequence_indices, self.folding_velocity):
                 folding_velocity.append(np.repeat(velocity, len(indices)))
             folding_velocity = np.hstack(folding_velocity)
@@ -346,5 +348,7 @@ class Radar(DataSource):
 
 def _prf_to_folding_velocity(prf: np.ndarray, radar_frequency: float) -> float:
     ghz_to_hz = 1e9
-    assert len(prf) == 1
+    if len(prf) != 1:
+        msg = "Unable to determine folding velocity"
+        raise RuntimeError(msg)
     return float(prf[0] * constants.c / (4 * radar_frequency * ghz_to_hz))

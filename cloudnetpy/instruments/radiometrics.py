@@ -64,7 +64,9 @@ def radiometrics2nc(
     radiometrics.time_to_fractional_hours()
     radiometrics.data_to_cloudnet_arrays()
     radiometrics.add_meta()
-    assert radiometrics.date is not None
+    if radiometrics.date is None:
+        msg = "Failed to find valid timestamps from Radiometrics file(s)."
+        raise ValidTimeStampError(msg)
     attributes = output.add_time_attribute({}, radiometrics.date)
     output.update_attributes(radiometrics.data, attributes)
     return output.save_level1b(radiometrics, output_file, uuid)
@@ -102,7 +104,9 @@ class Radiometrics:
             reader = csv.reader(infile)
             for row in reader:
                 if row[0] == "Record":
-                    assert row[1] == "Date/Time"
+                    if row[1] != "Date/Time":
+                        msg = "Unexpected header in Radiometrics file"
+                        raise RuntimeError(msg)
                     record_type = int(row[2])
                     record_columns[record_type] = row[3:]
                 else:

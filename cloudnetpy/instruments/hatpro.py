@@ -60,12 +60,16 @@ def hatpro2l1c(
     timestamps = hatpro.data["time"][:]
     if date is not None:
         # Screen timestamps if these assertions start to fail
-        assert np.all(np.diff(timestamps) > 0)
+        if not np.all(np.diff(timestamps) > 0):
+            msg = "Timestamps are not increasing"
+            raise RuntimeError(msg)
         dates = [
             str(datetime.datetime.fromtimestamp(t, tz=datetime.timezone.utc).date())
             for t in timestamps
         ]
-        assert len(set(dates)) == 1
+        if len(set(dates)) != 1:
+            msg = f"Several dates, something is wrong: {set(dates)}"
+            raise RuntimeError(msg)
 
     decimal_hours = utils.seconds2hours(timestamps)
     hatpro.data["time"] = CloudnetArray(decimal_hours, "time", data_type="f8")
