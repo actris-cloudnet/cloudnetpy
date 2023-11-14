@@ -82,7 +82,6 @@ def test_filter_high_iwc_low_cf(obs_file, model_file) -> None:
     testing.assert_array_almost_equal(x, compare)
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_filter_high_iwc_low_cf_no_ice(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
@@ -90,7 +89,8 @@ def test_filter_high_iwc_low_cf_no_ice(obs_file, model_file) -> None:
     cf = ma.array([0.0001, 0.0002, 0, 0, 0, 0.0006])
     iwc = np.array([0.0, 0, 0, 0.2, 0.4, 0])
     lwc = np.array([0.0, 0.02, 0.01, 0, 0.01, 0.01])
-    adv_pro.filter_high_iwc_low_cf(cf, iwc, lwc)
+    with pytest.raises(ValueError):
+        adv_pro.filter_high_iwc_low_cf(cf, iwc, lwc)
 
 
 def test_mask_weird_indices(obs_file, model_file) -> None:

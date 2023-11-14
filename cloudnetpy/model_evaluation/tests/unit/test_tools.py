@@ -18,11 +18,11 @@ def test_model_file_list() -> None:
     tools.check_model_file_list(name, models)
 
 
-@pytest.mark.xfail(raises=AttributeError)
 def test_model_file_list_fail() -> None:
     name = "ec"
     models = ["00_ec_1", "ac_1", "00_ec_2", "00_ec_3"]
-    tools.check_model_file_list(name, models)
+    with pytest.raises(AttributeError):
+        tools.check_model_file_list(name, models)
 
 
 def test_time2datetime() -> None:
