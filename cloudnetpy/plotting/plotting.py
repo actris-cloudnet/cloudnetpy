@@ -203,6 +203,8 @@ def generate_figure(
         if plot_type not in ("bar", "model"):
             time_new, field_with_gaps = _mark_gaps(ax_value[0], field)
             ax_value = (time_new, ax_value[1])
+        else:
+            field_with_gaps = field
 
         field_screened, ax_value = _screen_high_altitudes(
             field_with_gaps,
