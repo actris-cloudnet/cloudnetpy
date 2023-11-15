@@ -205,7 +205,7 @@ class NoisyData:
         n_consequent_negatives = utils.cumsumr(negative_data, axis=1)
         time_indices, alt_indices = np.where(n_consequent_negatives > n_negatives)
         alt_indices += n_skip_lowest
-        for time_ind, alt_ind in zip(time_indices, alt_indices):
+        for time_ind, alt_ind in zip(time_indices, alt_indices, strict=True):
             profile = data[time_ind, alt_ind:]
             profile[profile < threshold] = ma.masked
         cleaned_time_indices = np.unique(time_indices)

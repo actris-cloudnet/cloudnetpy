@@ -376,7 +376,7 @@ def split_string(string: str, indices: list) -> list:
         ['b', 'cd']
 
     """
-    return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
+    return [string[n:m] for n, m in zip(indices[:-1], indices[1:], strict=True)]
 
 
 def values_to_dict(keys: tuple, values: list) -> dict:

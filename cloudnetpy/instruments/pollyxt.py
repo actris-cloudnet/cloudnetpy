@@ -115,7 +115,7 @@ class PollyXt(Ceilometer):
         calibration_factors: np.ndarray = np.array([])
         beta_channel = self._get_valid_beta_channel(bsc_files)
         bsc_key = f"attenuated_backscatter_{beta_channel}nm"
-        for bsc_file, depol_file in zip(bsc_files, depol_files):
+        for bsc_file, depol_file in zip(bsc_files, depol_files, strict=True):
             with (
                 netCDF4.Dataset(bsc_file, "r") as nc_bsc,
                 netCDF4.Dataset(depol_file, "r") as nc_depol,
@@ -139,6 +139,7 @@ class PollyXt(Ceilometer):
                 for array, key in zip(
                     [beta_raw, depol_raw, time, snr],
                     ["beta_raw", "depolarisation_raw", "time", "snr"],
+                    strict=True,
                 ):
                     self.data = utils.append_data(self.data, key, array)
                 calibration_factor = nc_bsc.variables[
@@ -179,7 +180,7 @@ class PollyXt(Ceilometer):
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
     array: np.ndarray = np.array([])
-    for ind, (file1, file2) in enumerate(zip(files1, files2)):
+    for ind, (file1, file2) in enumerate(zip(files1, files2, strict=True)):
         with netCDF4.Dataset(file1, "r") as nc1, netCDF4.Dataset(file2, "r") as nc2:
             array1 = _read_array_from_file_pair(nc1, nc2, key)
             if ind == 0:

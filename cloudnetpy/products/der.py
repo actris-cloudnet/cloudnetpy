@@ -149,7 +149,11 @@ class DerSource(DataSource):
         liquid_bases = atmos.find_cloud_bases(is_droplet)
         liquid_tops = atmos.find_cloud_tops(is_droplet)
 
-        for base, top in zip(zip(*np.where(liquid_bases)), zip(*np.where(liquid_tops))):
+        for base, top in zip(
+            zip(*np.where(liquid_bases), strict=True),
+            zip(*np.where(liquid_tops), strict=True),
+            strict=True,
+        ):
             ind_t = base[0]
             idx_layer = np.arange(base[1], top[1] + 1)
             idx_layer = idx_layer[~Z[ind_t, idx_layer].mask]

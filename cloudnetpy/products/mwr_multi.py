@@ -30,6 +30,7 @@ def generate_mwr_multi(
         for prod, file in zip(
             ("2P02", "2P03", "2P04", "2P07", "2P08"),
             (temp_file, abs_hum_file, rel_hum_file, t_pot_file, eq_temp_file),
+            strict=True,
         ):
             try:
                 lev2_to_nc(

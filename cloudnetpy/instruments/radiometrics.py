@@ -124,7 +124,7 @@ class Radiometrics:
                         timestamp=_parse_datetime(row[1]),
                         block_type=block_type,
                         block_index=block_index,
-                        values=dict(zip(column_names, row[3:])),
+                        values=dict(zip(column_names, row[3:], strict=True)),
                     )
                     rows.append(record)
 

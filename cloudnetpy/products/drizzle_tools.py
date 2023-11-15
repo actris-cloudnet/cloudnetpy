@@ -258,7 +258,7 @@ class DrizzleSolver:
         dia_init[drizzle_ind] = self._calc_dia(self._beta_z_ratio[drizzle_ind], k=18.8)
         n_widths, n_dia = self._width_lut.shape[0], len(self._data.mie["Do"])
         max_ite = 10
-        for ind in zip(*drizzle_ind):
+        for ind in zip(*drizzle_ind, strict=True):
             for _ in range(max_ite):
                 lut_ind = self._find_lut_indices(ind, dia_init, n_dia, n_widths)
                 dia = self._calc_dia(

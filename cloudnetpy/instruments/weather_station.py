@@ -97,7 +97,7 @@ class WS(CloudnetInstrument):
         error_msg = "Unexpected weather station file format"
         if len(column_titles) != len(expected_identifiers):
             raise ValueError(error_msg)
-        for title, identifier in zip(column_titles, expected_identifiers):
+        for title, identifier in zip(column_titles, expected_identifiers, strict=True):
             if identifier not in title:
                 raise ValueError(error_msg)
         return {"timestamps": timestamps, "values": values}

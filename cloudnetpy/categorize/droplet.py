@@ -37,7 +37,7 @@ def correct_liquid_top(
     is_liquid_corrected = np.copy(is_liquid)
     liquid_tops = cloudnetpy.categorize.atmos.find_cloud_tops(is_liquid)
     top_above = utils.n_elements(obs.height, limit)
-    for prof, top in zip(*np.where(liquid_tops)):
+    for prof, top in zip(*np.where(liquid_tops), strict=True):
         ind = _find_ind_above_top(is_freezing[prof, top:], top_above)
         rad = obs.z[prof, top : top + ind + 1]
         if not (rad.mask.all() or ~rad.mask.any()):
@@ -108,7 +108,7 @@ def find_liquid(
     beta = beta.filled(0)
     peak_indices = _find_strong_peaks(beta, peak_amp)
 
-    for n, peak in zip(*peak_indices):
+    for n, peak in zip(*peak_indices, strict=True):
         lprof = beta[n, :]
         dprof = beta_diff[n, :]
         try:

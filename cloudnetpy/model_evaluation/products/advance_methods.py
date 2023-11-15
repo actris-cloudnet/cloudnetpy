@@ -62,7 +62,7 @@ class AdvanceProductMethods(DataSource):
         cloud_iwc, ice_ind = self.find_ice_in_clouds(cf_filtered, iwc, lwc)
         variance_iwc = self.iwc_variance(h, ice_ind)
         # Looks suspicious, check me:
-        for i, ind in enumerate(zip(ice_ind[0], ice_ind[-1])):
+        for i, ind in enumerate(zip(ice_ind[0], ice_ind[-1], strict=True)):
             iwc_dist = self.calculate_iwc_distribution(cloud_iwc[i], variance_iwc[i])
             p_iwc = self.gamma_distribution(iwc_dist, variance_iwc[i], cloud_iwc[i])
             if np.sum(p_iwc) == 0 or p_iwc[-1] > 0.01 * np.sum(p_iwc):

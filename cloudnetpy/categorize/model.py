@@ -64,7 +64,9 @@ class Model(DataSource):
 
         def _interpolate_variable(data_in: ma.MaskedArray) -> CloudnetArray:
             datai = ma.zeros((len(self.time), len(self.mean_height)))
-            for ind, (alt, prof) in enumerate(zip(self.model_heights, data_in)):
+            for ind, (alt, prof) in enumerate(
+                zip(self.model_heights, data_in, strict=True)
+            ):
                 if prof.mask.all():
                     datai[ind, :] = ma.masked
                 else:

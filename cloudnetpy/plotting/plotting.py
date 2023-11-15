@@ -140,7 +140,9 @@ def generate_figure(
     is_height = _is_height_dimension(nc_file)
     fig, axes = _initialize_figure(len(valid_fields), dpi)
 
-    for ax, field, name, tb_ind in zip(axes, valid_fields, valid_names, indices):
+    for ax, field, name, tb_ind in zip(
+        axes, valid_fields, valid_names, indices, strict=True
+    ):
         original_attrib = None  # monkey patch
         if cloudnet_file_type == "rain-radar" and name == "rainfall_rate":
             original_attrib = ATTRIBUTES[name]
@@ -856,7 +858,7 @@ def read_source(nc_file: str, name: str, *, add_serial_number: bool = True) -> s
                 source, sno = source.split("\n"), sno.split("\n")
                 source = [
                     f"{_source} (SN: {_sno})" if _sno else f"{_source}"
-                    for _source, _sno in zip(source, sno)
+                    for _source, _sno in zip(source, sno, strict=True)
                 ]
                 source = "\n".join(source)
         else:
@@ -877,7 +879,7 @@ def read_source(nc_file: str, name: str, *, add_serial_number: bool = True) -> s
                     source = source.split("\n")
                 source = [
                     f"{_source} (SN: {_sno})" if _sno else f"{_source}"
-                    for _source, _sno in zip(source, sno)
+                    for _source, _sno in zip(source, sno, strict=True)
                 ]
                 source = "\n".join(source)
     return source.rstrip("\n")

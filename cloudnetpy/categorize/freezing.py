@@ -99,6 +99,11 @@ def _find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
         if ind == 0:
             alt = np.append(alt, height[0])
         else:
-            x, y = zip(*sorted(zip(prof[ind - 1 : ind + 1], height[ind - 1 : ind + 1])))
+            x, y = zip(
+                *sorted(
+                    zip(prof[ind - 1 : ind + 1], height[ind - 1 : ind + 1], strict=True)
+                ),
+                strict=True,
+            )
             alt = np.append(alt, np.interp(T0, x, y))
     return alt

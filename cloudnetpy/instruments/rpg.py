@@ -196,10 +196,14 @@ def _remove_files_with_bad_height(objects: list, files: list) -> tuple[list, lis
     most_common = np.bincount(lengths).argmax()
     files = [
         file
-        for file, obj, length in zip(files, objects, lengths)
+        for file, obj, length in zip(files, objects, lengths, strict=True)
         if length == most_common
     ]
-    objects = [obj for obj, length in zip(objects, lengths) if length == most_common]
+    objects = [
+        obj
+        for obj, length in zip(objects, lengths, strict=True)
+        if length == most_common
+    ]
     n_removed = len(lengths) - len(files)
     if n_removed > 0:
         logging.warning(

@@ -411,7 +411,7 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
             continue
         try:
             parsed = _parse_row(row, headers)
-            for header, value in zip(headers, parsed):
+            for header, value in zip(headers, parsed, strict=True):
                 result[header].append(value)
         except (ValueError, StopIteration):
             invalid_rows += 1
@@ -463,7 +463,7 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
                 "spectrum": [],
             }
             try:
-                for header, value in zip(headers, data_line):
+                for header, value in zip(headers, data_line, strict=True):
                     if header is None:
                         continue
                     if header == "_datetime":
@@ -552,7 +552,7 @@ def _read_parsivel(
         if "_datetime" not in data and timestamps is None:
             data["_datetime"] = [
                 datetime.datetime.combine(date, time)
-                for date, time in zip(data["_date"], data["_time"])
+                for date, time in zip(data["_date"], data["_time"], strict=True)
             ]
         for key, values in data.items():
             combined_data[key].extend(values)

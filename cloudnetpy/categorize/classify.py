@@ -83,7 +83,7 @@ def _remove_false_radar_liquid(
 ) -> np.ndarray:
     """Removes radar-liquid below lidar-detected liquid bases."""
     lidar_liquid_bases = cloudnetpy.categorize.atmos.find_cloud_bases(liquid_from_lidar)
-    for prof, base in zip(*np.where(lidar_liquid_bases)):
+    for prof, base in zip(*np.where(lidar_liquid_bases), strict=True):
         liquid_from_radar[prof, 0:base] = 0
     return liquid_from_radar
 
@@ -221,7 +221,7 @@ def _filter_insects(bits: list) -> list:
     # remove around melting layer:
     original_insects = np.copy(is_insects)
     n_gates = 5
-    for x, y in zip(*np.where(is_melting_layer)):
+    for x, y in zip(*np.where(is_melting_layer), strict=True):
         try:
             # change insects to drizzle below melting layer pixel
             ind1 = np.arange(y - n_gates, y)

@@ -103,7 +103,7 @@ def _fix_liquid_dominated_radar(
     base_indices = np.where(liquid_bases)
     top_indices = np.where(liquid_tops)
 
-    for n, base, _, top in zip(*base_indices, *top_indices):
+    for n, base, _, top in zip(*base_indices, *top_indices, strict=True):
         z_prof = obs.z[n, :]
         if _is_z_missing_above_liquid(z_prof, top) and _is_z_increasing(
             z_prof,

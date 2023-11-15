@@ -95,7 +95,7 @@ class Disdrometer(CloudnetInstrument):
         return data
 
     def _append_data(self, column_and_key: list) -> None:
-        indices, keys = zip(*column_and_key)
+        indices, keys = zip(*column_and_key, strict=True)
         data = self._parse_useful_data(indices)
         data_dict = values_to_dict(keys, data)
         for key in keys:
@@ -205,7 +205,7 @@ class Disdrometer(CloudnetInstrument):
         mid_value: np.ndarray = np.array([])
         lower_limit: np.ndarray = np.array([])
         upper_limit: np.ndarray = np.array([])
-        for spread, n in zip(spreads, n_values):
+        for spread, n in zip(spreads, n_values, strict=True):
             lower = np.linspace(start, start + (n - 1) * spread, n)
             upper = lower + spread
             lower_limit = np.append(lower_limit, lower)

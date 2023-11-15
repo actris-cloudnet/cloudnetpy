@@ -28,6 +28,7 @@ def generate_mwr_single(
         for prod, file in zip(
             ("2I01", "2I02", "2P01", "2P03"),
             (lwp_file, iwv_file, t_prof_file, abs_hum_file),
+            strict=True,
         ):
             lev2_to_nc(prod, mwr_l1c_file, file.name, coeff_files=coeffs)
 
