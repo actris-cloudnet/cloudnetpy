@@ -316,7 +316,6 @@ class HatproBinCombined:
                 _combine_values(arr["zenith_angle1"], arr["zenith_angle2"]),
             )
             # Workaround because rfn.drop_fields seems to incorrectly drop mask...
-            # arr = rfn.drop_fields(arr, ["zenith_angle1", "zenith_angle2"])
             arr = rfn.rename_fields(
                 arr,
                 {"zenith_angle1": "_tmp1", "zenith_angle2": "_tmp2"},

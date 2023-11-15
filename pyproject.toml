@@ -67,14 +67,13 @@ ignore = [
   "C9",
   "COM812",
   "D",
-  "ERA",
   "FIX002",
   "INP001",
   "ISC001",
-  "N8",
-  "PD011",
+  "N8", # uppercase variable names
+  "PD011", # false positive
   "PERF",
-  "PLR",
+  "PLR", # too many arguments etc.
   "PLR2004",
   "PTH",
   "RUF",
