@@ -82,7 +82,7 @@ def mrr2nc(
             delete=False,
         ) as temp_file:
             tmp_filename = temp_file.name
-            variables = list(keymap.keys()) + ["elevation"]
+            variables = [*keymap.keys(), "elevation"]
             valid_files = list(valid_nc_files(files))
             concat_lib.concatenate_files(
                 valid_files,

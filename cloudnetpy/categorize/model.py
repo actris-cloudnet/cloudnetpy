@@ -40,7 +40,7 @@ class Model(DataSource):
         "specific_saturated_gas_atten",
         "specific_liquid_atten",
     )
-    fields_sparse = fields_dense + ("q", "uwind", "vwind")
+    fields_sparse = (*fields_dense, "q", "uwind", "vwind")
 
     def __init__(self, model_file: str, alt_site: float):
         super().__init__(model_file)

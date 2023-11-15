@@ -98,7 +98,8 @@ def save_product_file(
             "longitude",
             "time",
             "height",
-        ) + copy_from_cat
+            *copy_from_cat,
+        )
         copy_variables(obj.dataset, nc, vars_from_source)
         nc.title = (
             f"{human_readable_file_type.capitalize()} products from"
@@ -401,8 +402,8 @@ def _get_dimensions(nc: netCDF4.Dataset, data: np.ndarray) -> tuple:
     file_dims = nc.dimensions
     array_dims = data.shape
     for length in array_dims:
-        dim = [key for key in file_dims if file_dims[key].size == length][0]
-        variable_size = variable_size + [dim]
+        dim = [key for key in file_dims if file_dims[key].size == length][0]  # noqa: RUF015
+        variable_size = [*variable_size, dim]
     return tuple(variable_size)
 
 

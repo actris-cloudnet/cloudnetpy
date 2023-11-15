@@ -67,12 +67,13 @@ ignore = [
   "COM812", # Formatting
   "D", # documentation
   "FIX002", # TODOs
+  "ISC001", # Formatter wants me
   "N8", # uppercase variable names
   "PD011", # false positive
   "PERF", # try except in loop
   "PLR", # too many arguments etc.
   "PTH", # use pathlib, fix me later
-  "RUF",
+  "RUF002", # unicode in doc string
   "TD002", # TODOs
   "TD003", # TODOs
 ]

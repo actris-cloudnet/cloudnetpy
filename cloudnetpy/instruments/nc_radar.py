@@ -164,7 +164,7 @@ class ChilboltonRadar(NcRadar):
 
     def add_nyquist_velocity(self, keymap: dict) -> None:
         """Adds nyquist velocity."""
-        key = [key for key, value in keymap.items() if value == "v"][0]
+        key = [key for key, value in keymap.items() if value == "v"][0]  # noqa: RUF015
         folding_velocity = self.dataset.variables[key].folding_velocity
         self.append_data(np.array(folding_velocity), "nyquist_velocity")
 

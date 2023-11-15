@@ -1,4 +1,5 @@
 """Module with classes for Vaisala ceilometers."""
+import itertools
 import logging
 
 import numpy as np
@@ -356,7 +357,7 @@ class Ct25k(VaisalaCeilo):
             "backscatter_sum",
         )
         values = [line.split() for line in lines]
-        keys_out = ("scale",) + keys if len(values[0]) == 10 else keys
+        keys_out = ("scale", *keys) if len(values[0]) == 10 else keys
         return values_to_dict(keys_out, values)
 
 
@@ -376,7 +377,7 @@ def split_string(string: str, indices: list) -> list:
         ['b', 'cd']
 
     """
-    return [string[n:m] for n, m in zip(indices[:-1], indices[1:], strict=True)]
+    return [string[n:m] for n, m in itertools.pairwise(indices)]
 
 
 def values_to_dict(keys: tuple, values: list) -> dict:
