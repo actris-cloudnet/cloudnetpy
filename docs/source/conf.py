@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath("../../cloudnetpy/"))
 # -- Project information -----------------------------------------------------
 
 project = "CloudnetPy"
-copyright = "2022, Finnish Meteorological Institute"
+copyright = "2022, Finnish Meteorological Institute"  # noqa: A001
 author = "Finnish Meteorological Institute"
 
 # -- General configuration ---------------------------------------------------

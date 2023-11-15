@@ -62,7 +62,6 @@ exclude = ["cloudnetpy/model_evaluation/tests/", "tests/"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-  "A001",
   "ANN",
   "C9",
   "COM812",
