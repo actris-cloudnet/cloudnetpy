@@ -101,7 +101,9 @@ def _find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
         else:
             x, y = zip(
                 *sorted(
-                    zip(prof[ind - 1 : ind + 1], height[ind - 1 : ind + 1], strict=True)
+                    zip(
+                        prof[ind - 1 : ind + 1], height[ind - 1 : ind + 1], strict=True
+                    ),
                 ),
                 strict=True,
             )

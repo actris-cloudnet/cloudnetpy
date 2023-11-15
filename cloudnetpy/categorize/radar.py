@@ -341,7 +341,9 @@ class Radar(DataSource):
             folding_velocity = list(folding_velocity)
             self.folding_velocity = np.array(self.folding_velocity)
             for indices, velocity in zip(
-                self.sequence_indices, self.folding_velocity, strict=True
+                self.sequence_indices,
+                self.folding_velocity,
+                strict=True,
             ):
                 folding_velocity.append(np.repeat(velocity, len(indices)))
             folding_velocity = np.hstack(folding_velocity)

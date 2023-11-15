@@ -68,7 +68,9 @@ class Ceilometer:
         range_corrected: bool = True,
     ) -> np.ndarray:
         noisy_data = NoisyData(
-            self.data, self.noise_param, range_corrected=range_corrected
+            self.data,
+            self.noise_param,
+            range_corrected=range_corrected,
         )
         beta_raw = ma.copy(self.data["beta_raw"])
         cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
@@ -174,7 +176,10 @@ class NoisyData:
             noise[is_fog] = 1e-12
         if filter_snr is True:
             data = self._remove_noise(
-                data, noise, keep_negative=keep_negative, snr_limit=snr_limit
+                data,
+                noise,
+                keep_negative=keep_negative,
+                snr_limit=snr_limit,
             )
         self._calc_range_corrected(data)
         return data

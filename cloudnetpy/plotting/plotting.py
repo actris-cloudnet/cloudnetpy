@@ -141,7 +141,11 @@ def generate_figure(
     fig, axes = _initialize_figure(len(valid_fields), dpi)
 
     for ax, field, name, tb_ind in zip(
-        axes, valid_fields, valid_names, indices, strict=True
+        axes,
+        valid_fields,
+        valid_names,
+        indices,
+        strict=True,
     ):
         original_attrib = None  # monkey patch
         if cloudnet_file_type == "rain-radar" and name == "rainfall_rate":
