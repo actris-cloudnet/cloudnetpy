@@ -551,7 +551,7 @@ def _read_parsivel(
             raise ValueError(msg)
         if "_datetime" not in data and timestamps is None:
             data["_datetime"] = [
-                datetime.datetime.combine(date, time)
+                datetime.datetime.combine(date, time, tzinfo=datetime.timezone.utc)
                 for date, time in zip(data["_date"], data["_time"], strict=True)
             ]
         for key, values in data.items():
