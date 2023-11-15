@@ -215,5 +215,4 @@ def _parse_datetime(text: str) -> datetime.datetime:
         hour,
         minute,
         second,
-        tzinfo=datetime.timezone.utc,
     )

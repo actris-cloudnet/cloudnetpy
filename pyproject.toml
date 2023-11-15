@@ -66,6 +66,7 @@ ignore = [
   "C9", # too complex, fix me later
   "COM812", # Formatting
   "D", # documentation
+  "DTZ001", # do not check timezone info
   "FIX002", # TODOs
   "ISC001", # Formatter wants me
   "N8", # uppercase variable names

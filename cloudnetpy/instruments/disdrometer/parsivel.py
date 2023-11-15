@@ -334,7 +334,6 @@ def _parse_datetime(tokens: Iterator[str]) -> datetime.datetime:
         hour,
         minute,
         second,
-        tzinfo=datetime.timezone.utc,
     )
 
 
@@ -551,7 +550,7 @@ def _read_parsivel(
             raise ValueError(msg)
         if "_datetime" not in data and timestamps is None:
             data["_datetime"] = [
-                datetime.datetime.combine(date, time, tzinfo=datetime.timezone.utc)
+                datetime.datetime.combine(date, time)
                 for date, time in zip(data["_date"], data["_time"], strict=True)
             ]
         for key, values in data.items():
