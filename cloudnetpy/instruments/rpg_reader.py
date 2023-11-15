@@ -198,7 +198,7 @@ class HatproBin:
         if n_bad:
             percentage = round(100 * n_bad / len(is_bad))
             logging.info(
-                "Screening %s % (%s/%s) data points with low quality",
+                "Screening %s %% (%s/%s) data points with low quality",
                 percentage,
                 n_bad,
                 len(is_bad),
