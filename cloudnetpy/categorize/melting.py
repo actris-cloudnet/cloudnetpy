@@ -81,7 +81,7 @@ def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> np.ndarray:
             try:
                 if ldr_prof is None or ldr_dprof is None:
                     msg = "ldr_prof or ldr_dprof is None"
-                    raise RuntimeError(msg)
+                    raise AssertionError(msg)  # noqa: TRY301
                 indices = _find_melting_layer_from_ldr(
                     ldr_prof,
                     ldr_dprof,
