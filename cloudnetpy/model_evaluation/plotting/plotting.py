@@ -105,10 +105,8 @@ def generate_L3_day_plots(
                         model_name,
                         save_path,
                         image_name,
-                        show,
-                        cycles[i],
-                        title,
                     ]
+                    kwargs = {"show": show, "title": title, "cycle": cycles[i]}
                     if fig_type == "statistic":
                         params = [
                             product,
@@ -119,11 +117,8 @@ def generate_L3_day_plots(
                             stats,
                             save_path,
                             image_name,
-                            show,
-                            cycles[i],
-                            title,
                         ]
-                    getattr(cls, f"get_{fig_type}_plots")(*params)
+                    getattr(cls, f"get_{fig_type}_plots")(*params, **kwargs)
             except AttributeError:
                 params = [
                     product,
@@ -133,10 +128,8 @@ def generate_L3_day_plots(
                     model_name,
                     save_path,
                     image_name,
-                    show,
-                    "",
-                    title,
                 ]
+                kwargs = {"show": show, "title": title}
                 if fig_type == "statistic":
                     params = [
                         product,
@@ -147,11 +140,8 @@ def generate_L3_day_plots(
                         stats,
                         save_path,
                         image_name,
-                        show,
-                        "",
-                        title,
                     ]
-                getattr(cls, f"get_{fig_type}_plots")(*params)
+                getattr(cls, f"get_{fig_type}_plots")(*params, **kwargs)
 
 
 def get_group_plots(
