@@ -15,21 +15,24 @@ class Radar(DataSource):
     """Radar class, child of DataSource.
 
     Args:
+    ----
         full_path: Cloudnet Level 1 radar netCDF file.
 
     Attributes:
+    ----------
         radar_frequency (float): Radar frequency (GHz).
         folding_velocity (float): Radar's folding velocity (m/s).
         location (str): Location of the radar, copied from the global attribute
             `location` of the input file.
         sequence_indices (list): Indices denoting the different altitude
             regimes of the radar.
-        type (str): Type of the radar, copied from the global attribute
+        source_type (str): Type of the radar, copied from the global attribute
             `source` of the *radar_file*. Can be free form string but must
             include either 'rpg' or 'mira' denoting one of the two supported
             radars.
 
     See Also:
+    --------
         :func:`instruments.rpg2nc()`, :func:`instruments.mira2nc()`
 
     """
@@ -40,7 +43,7 @@ class Radar(DataSource):
         self.folding_velocity = self._get_folding_velocity()
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, "location", "")
-        self.type = getattr(self.dataset, "source", "")
+        self.source_type = getattr(self.dataset, "source", "")
         self._init_data()
         self._init_sigma_v()
         self._get_folding_velocity_full()
@@ -49,6 +52,7 @@ class Radar(DataSource):
         """Rebins radar data in time using mean.
 
         Args:
+        ----
             time_new: Target time array as fraction hour. Updates *time* attribute.
 
         """
@@ -83,7 +87,7 @@ class Radar(DataSource):
 
         """
         good_ind = ~ma.getmaskarray(self.data["Z"][:]) & ~ma.getmaskarray(
-            self.data["v"][:]
+            self.data["v"][:],
         )
 
         if "width" in self.data:
@@ -121,15 +125,28 @@ class Radar(DataSource):
         if n_profiles_with_data < 300:
             return
         n_vertical = self._filter(
-            data, 1, min_coverage=0.5, z_limit=10, distance=4, n_blocks=100
+            data,
+            1,
+            min_coverage=0.5,
+            z_limit=10,
+            distance=4,
+            n_blocks=100,
         )
         n_horizontal = self._filter(
-            data, 0, min_coverage=0.3, z_limit=-30, distance=3, n_blocks=20
+            data,
+            0,
+            min_coverage=0.3,
+            z_limit=-30,
+            distance=3,
+            n_blocks=20,
         )
         if n_vertical > 0 or n_horizontal > 0:
             logging.debug(
-                f"Filtered {n_vertical} vertical and {n_horizontal} horizontal stripes "
-                f"from radar data using {variable}"
+                "Filtered %s vertical and %s horizontal stripes "
+                "from radar data using %s",
+                n_vertical,
+                n_horizontal,
+                variable,
             )
 
     def _filter(
@@ -162,7 +179,7 @@ class Radar(DataSource):
             threshold = distance * (q3 - q1) + q3
 
             indices = np.where(
-                (n_values > threshold) & (n_values > (min_coverage * data.shape[1]))
+                (n_values > threshold) & (n_values > (min_coverage * data.shape[1])),
             )[0]
             true_ind = [int(x) for x in (block_number * len_block + indices)]
             n_removed = len(indices)
@@ -184,10 +201,12 @@ class Radar(DataSource):
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
+        ----
             attenuations: 2-D attenuations due to atmospheric gases and liquid:
                 `radar_gas_atten`, `radar_liquid_atten`.
 
         References:
+        ----------
             The method is based on Hogan R. and O'Connor E., 2004,
             https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 
@@ -198,7 +217,9 @@ class Radar(DataSource):
         self.append_data(z_corrected, "Z")
 
     def calc_errors(
-        self, attenuations: dict, classification: ClassificationResult
+        self,
+        attenuations: dict,
+        classification: ClassificationResult,
     ) -> None:
         """Calculates uncertainties of radar echo.
 
@@ -206,10 +227,12 @@ class Radar(DataSource):
         :class:`CloudnetArray` instances to `data` attribute.
 
         Args:
+        ----
             attenuations: 2-D attenuations due to atmospheric gases.
             classification: The :class:`ClassificationResult` instance.
 
         References:
+        ----------
             The method is based on Hogan R. and O'Connor E., 2004,
             https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 
@@ -271,7 +294,7 @@ class Radar(DataSource):
         for key in ("time", "height", "radar_frequency"):
             self.append_data(np.array(getattr(self, key)), key)
 
-    def _init_data(self):
+    def _init_data(self) -> None:
         self.append_data(self.getvar("Zh"), "Z", units="dBZ")
         for key in ("v", "ldr", "width", "sldr", "rainfall_rate"):
             try:
@@ -281,13 +304,17 @@ class Radar(DataSource):
 
     def _init_sigma_v(self) -> None:
         """Initializes std of the velocity field. The std will be calculated
-        later when re-binning the data."""
+        later when re-binning the data.
+        """
         self.append_data(self.getvar("v"), "v_sigma")
 
     def _get_sequence_indices(self) -> list:
         """Mira has only one sequence and one folding velocity. RPG has
-        several sequences with different folding velocities."""
-        assert self.height is not None
+        several sequences with different folding velocities.
+        """
+        if self.height is None:
+            msg = "Height not found in the input file"
+            raise RuntimeError(msg)
         all_indices = np.arange(len(self.height))
         if not utils.isscalar(self.folding_velocity):
             starting_indices = self.getvar("chirp_start_indices")
@@ -300,18 +327,24 @@ class Radar(DataSource):
         if "prf" in self.dataset.variables:
             prf = self.getvar("prf")
             return _prf_to_folding_velocity(prf, self.radar_frequency)
-        raise RuntimeError("Unable to determine folding velocity")
+        msg = "Unable to determine folding velocity"
+        raise RuntimeError(msg)
 
-    def _get_folding_velocity_full(self):
+    def _get_folding_velocity_full(self) -> None:
         folding_velocity: list | np.ndarray = []
         if utils.isscalar(self.folding_velocity):
             folding_velocity = np.repeat(
-                self.folding_velocity, len(self.sequence_indices[0])
+                self.folding_velocity,
+                len(self.sequence_indices[0]),
             )
         else:
-            assert isinstance(folding_velocity, list)
-            assert isinstance(self.folding_velocity, np.ndarray)
-            for indices, velocity in zip(self.sequence_indices, self.folding_velocity):
+            folding_velocity = list(folding_velocity)
+            self.folding_velocity = np.array(self.folding_velocity)
+            for indices, velocity in zip(
+                self.sequence_indices,
+                self.folding_velocity,
+                strict=True,
+            ):
                 folding_velocity.append(np.repeat(velocity, len(indices)))
             folding_velocity = np.hstack(folding_velocity)
         self.append_data(folding_velocity, "nyquist_velocity")
@@ -319,4 +352,7 @@ class Radar(DataSource):
 
 def _prf_to_folding_velocity(prf: np.ndarray, radar_frequency: float) -> float:
     ghz_to_hz = 1e9
-    return float(prf * constants.c / (4 * radar_frequency * ghz_to_hz))
+    if len(prf) != 1:
+        msg = "Unable to determine folding velocity"
+        raise RuntimeError(msg)
+    return float(prf[0] * constants.c / (4 * radar_frequency * ghz_to_hz))

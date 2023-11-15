@@ -1,5 +1,5 @@
 import logging
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 from numpy import ma
@@ -8,8 +8,10 @@ from scipy.ndimage import gaussian_filter
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.utils import Epoch
+
+if TYPE_CHECKING:
+    from cloudnetpy.instruments.instruments import Instrument
 
 
 class NoiseParam(NamedTuple):
@@ -22,8 +24,8 @@ class NoiseParam(NamedTuple):
 class Ceilometer:
     """Base class for all types of ceilometers and pollyxt."""
 
-    def __init__(self, noise_param: NoiseParam = NoiseParam()):
-        self.noise_param = noise_param
+    def __init__(self, noise_param: NoiseParam | None = None):
+        self.noise_param = noise_param or NoiseParam()
         self.data: dict = {}  # Need to contain 'beta_raw', 'range' and 'time'
         self.metadata: dict = {}  # Need to contain 'date' as ('yyyy', 'mm', 'dd')
         self.expected_date: str | None = None
@@ -36,10 +38,15 @@ class Ceilometer:
         self,
         array: np.ndarray,
         snr_limit: int = 5,
+        *,
         range_corrected: bool = True,
     ) -> np.ndarray:
         """Screens noise from lidar variable."""
-        noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
+        noisy_data = NoisyData(
+            self.data,
+            self.noise_param,
+            range_corrected=range_corrected,
+        )
         if (
             self.instrument is not None
             and getattr(self.instrument, "model", "").lower() == "ct25k"
@@ -47,40 +54,48 @@ class Ceilometer:
             n_negatives = 20
         else:
             n_negatives = 5
-        array_screened = noisy_data.screen_data(
-            array, snr_limit=snr_limit, n_negatives=n_negatives
+        return noisy_data.screen_data(
+            array,
+            snr_limit=snr_limit,
+            n_negatives=n_negatives,
         )
-        return array_screened
 
     def calc_beta_smooth(
         self,
         beta: np.ndarray,
         snr_limit: int = 5,
+        *,
         range_corrected: bool = True,
     ) -> np.ndarray:
-        noisy_data = NoisyData(self.data, self.noise_param, range_corrected)
+        noisy_data = NoisyData(
+            self.data,
+            self.noise_param,
+            range_corrected=range_corrected,
+        )
         beta_raw = ma.copy(self.data["beta_raw"])
         cloud_ind, cloud_values, cloud_limit = _estimate_clouds_from_beta(beta)
         beta_raw[cloud_ind] = cloud_limit
         sigma = calc_sigma_units(self.data["time"], self.data["range"])
         beta_raw_smooth = gaussian_filter(beta_raw, sigma)
         beta_raw_smooth[cloud_ind] = cloud_values
-        beta_smooth = noisy_data.screen_data(
-            beta_raw_smooth, is_smoothed=True, snr_limit=snr_limit
+        return noisy_data.screen_data(
+            beta_raw_smooth,
+            is_smoothed=True,
+            snr_limit=snr_limit,
         )
-        return beta_smooth
 
-    def prepare_data(self):
+    def prepare_data(self) -> None:
         """Add common additional data / metadata and convert into CloudnetArrays."""
         zenith_angle = self.data["zenith_angle"]
         self.data["height"] = np.array(
             self.site_meta["altitude"]
-            + utils.range_to_height(self.data["range"], zenith_angle)
+            + utils.range_to_height(self.data["range"], zenith_angle),
         )
         for key in ("time", "range"):
             self.data[key] = np.array(self.data[key])
-        assert self.instrument is not None
-        assert self.instrument.wavelength is not None
+        if self.instrument is None or self.instrument.wavelength is None:
+            msg = "Instrument wavelength not defined"
+            raise RuntimeError(msg)
         self.data["wavelength"] = float(self.instrument.wavelength)
         for key in ("latitude", "longitude", "altitude"):
             if key in self.site_meta:
@@ -92,37 +107,42 @@ class Ceilometer:
         self.date = utils.seconds2date(self.data["time"][0], epoch=epoch)[:3]
         self.data["time"] = utils.seconds2hours(self.data["time"])
 
-    def data_to_cloudnet_arrays(self):
+    def data_to_cloudnet_arrays(self) -> None:
         for key, array in self.data.items():
             self.data[key] = CloudnetArray(array, key)
 
-    def screen_depol(self):
+    def screen_depol(self) -> None:
         key = "depolarisation"
         if key in self.data:
             self.data[key][self.data[key] <= 0] = ma.masked
             self.data[key][self.data[key] > 1] = ma.masked
 
-    def screen_invalid_values(self):
-        for key in self.data.keys():
+    def screen_invalid_values(self) -> None:
+        for key in self.data:
             try:
                 if self.data[key][:].ndim == 2:
                     self.data[key] = ma.masked_invalid(self.data[key])
             except (IndexError, TypeError):
                 continue
 
-    def add_snr_info(self, key: str, snr_limit: float):
+    def add_snr_info(self, key: str, snr_limit: float) -> None:
         if key in self.data:
             self.data[key].comment += f" SNR threshold applied: {snr_limit}."
 
-    def check_beta_raw_shape(self):
+    def check_beta_raw_shape(self) -> None:
         beta_raw = self.data["beta_raw"]
         if beta_raw.ndim != 2 or (beta_raw.shape[0] == 1 or beta_raw.shape[1] == 1):
-            raise ValidTimeStampError(f"Invalid beta_raw shape: {beta_raw.shape}")
+            msg = f"Invalid beta_raw shape: {beta_raw.shape}"
+            raise ValidTimeStampError(msg)
 
 
 class NoisyData:
     def __init__(
-        self, data: dict, noise_param: NoiseParam, range_corrected: bool = True
+        self,
+        data: dict,
+        noise_param: NoiseParam,
+        *,
+        range_corrected: bool = True,
     ):
         self.data = data
         self.noise_param = noise_param
@@ -132,20 +152,22 @@ class NoisyData:
         self,
         data_in: np.ndarray,
         snr_limit: float = 5,
+        n_negatives: int = 5,
+        *,
         is_smoothed: bool = False,
         keep_negative: bool = False,
         filter_fog: bool = True,
         filter_negatives: bool = True,
         filter_snr: bool = True,
-        n_negatives: int = 5,
     ) -> np.ndarray:
         data = ma.copy(data_in)
         self._calc_range_uncorrected(data)
         noise = _estimate_background_noise(data)
-        noise = self._adjust_noise(noise, is_smoothed)
+        noise = self._adjust_noise(noise, is_smoothed=is_smoothed)
         if filter_negatives is True:
             is_negative = self._mask_low_values_above_consequent_negatives(
-                data, n_negatives=n_negatives
+                data,
+                n_negatives=n_negatives,
             )
             noise[is_negative] = 1e-12
         if filter_fog is True:
@@ -153,18 +175,26 @@ class NoisyData:
             self._clean_fog_profiles(data, is_fog)
             noise[is_fog] = 1e-12
         if filter_snr is True:
-            data = self._remove_noise(data, noise, keep_negative, snr_limit)
+            data = self._remove_noise(
+                data,
+                noise,
+                keep_negative=keep_negative,
+                snr_limit=snr_limit,
+            )
         self._calc_range_corrected(data)
         return data
 
-    def _adjust_noise(self, noise: np.ndarray, is_smoothed: bool) -> np.ndarray:
+    def _adjust_noise(self, noise: np.ndarray, *, is_smoothed: bool) -> np.ndarray:
         noise_min = (
             self.noise_param.noise_smooth_min
             if is_smoothed is True
             else self.noise_param.noise_min
         )
         noise_below_threshold = noise < noise_min
-        logging.debug(f"Adjusted noise of {sum(noise_below_threshold)} profiles")
+        logging.debug(
+            "Adjusted noise of %s profiles",
+            sum(np.array(noise_below_threshold)),
+        )
         noise[noise_below_threshold] = noise_min
         return noise
 
@@ -180,12 +210,13 @@ class NoisyData:
         n_consequent_negatives = utils.cumsumr(negative_data, axis=1)
         time_indices, alt_indices = np.where(n_consequent_negatives > n_negatives)
         alt_indices += n_skip_lowest
-        for time_ind, alt_ind in zip(time_indices, alt_indices):
+        for time_ind, alt_ind in zip(time_indices, alt_indices, strict=True):
             profile = data[time_ind, alt_ind:]
             profile[profile < threshold] = ma.masked
         cleaned_time_indices = np.unique(time_indices)
         logging.debug(
-            f"Cleaned {len(cleaned_time_indices)} profiles with negative filter"
+            "Cleaned %s profiles with negative filter",
+            len(cleaned_time_indices),
         )
         return cleaned_time_indices
 
@@ -197,17 +228,19 @@ class NoisyData:
     ) -> np.ndarray:
         """Finds saturated (usually fog) profiles from beta_raw."""
         signal_sum = ma.sum(
-            ma.abs(self.data["beta_raw"][:, :n_gates_for_signal_sum]), axis=1
+            ma.abs(self.data["beta_raw"][:, :n_gates_for_signal_sum]),
+            axis=1,
         )
         variance = _calc_var_from_top_gates(self.data["beta_raw"])
         is_fog = (signal_sum > signal_sum_threshold) | (variance < variance_threshold)
-        logging.debug(f"Cleaned {sum(is_fog)} profiles with fog filter")
+        logging.debug("Cleaned %s profiles with fog filter", sum(is_fog))
         return is_fog
 
     def _remove_noise(
         self,
         array: np.ndarray,
         noise: np.ndarray,
+        *,
         keep_negative: bool,
         snr_limit: float,
     ) -> np.ndarray:
@@ -236,7 +269,8 @@ class NoisyData:
         if self.range_corrected is False:
             alt_limit = 2400.0
             logging.warning(
-                f"Raw data not range-corrected, correcting below {alt_limit} m"
+                "Raw data not range-corrected, correcting below %s m",
+                alt_limit,
             )
         else:
             alt_limit = 1e12
@@ -249,7 +283,9 @@ class NoisyData:
 
     @staticmethod
     def _clean_fog_profiles(
-        data: np.ndarray, is_fog: np.ndarray, threshold: float = 2e-6
+        data: np.ndarray,
+        is_fog: np.ndarray,
+        threshold: float = 2e-6,
     ) -> None:
         """Removes values in saturated (e.g. fog) profiles above peak."""
         for time_ind in np.where(is_fog)[0]:
@@ -281,18 +317,21 @@ def calc_sigma_units(
     how many steps in time and height corresponds to this smoothing.
 
     Args:
+    ----
         time_vector: 1D vector (fraction hour).
         range_los: 1D vector (m).
         sigma_minutes: Smoothing in minutes.
         sigma_metres: Smoothing in metres.
 
     Returns:
+    -------
         tuple: Two element tuple containing number of steps in time and height to
             achieve wanted smoothing.
 
     """
     if len(time_vector) == 0 or np.max(time_vector) > 24:
-        raise ValueError("Invalid time vector")
+        msg = "Invalid time vector"
+        raise ValueError(msg)
     minutes_in_hour = 60
     time_step = utils.mdiff(time_vector) * minutes_in_hour
     alt_step = utils.mdiff(range_los)

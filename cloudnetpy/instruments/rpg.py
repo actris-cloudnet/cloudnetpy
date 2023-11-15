@@ -1,7 +1,8 @@
 """This module contains RPG Cloud Radar related functions."""
 import logging
 import math
-from typing import Sequence
+from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import ma
@@ -13,9 +14,11 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
-from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.instruments.rpg_reader import Fmcw94Bin, HatproBinCombined
 from cloudnetpy.metadata import MetaData
+
+if TYPE_CHECKING:
+    from cloudnetpy.instruments.instruments import Instrument
 
 
 def rpg2nc(
@@ -31,6 +34,7 @@ def rpg2nc(
     concatenates the data and writes a netCDF file.
 
     Args:
+    ----
         path_to_l1_files: Folder containing one day of RPG LV1 files.
         output_file: Output file name.
         site_meta: Dictionary containing information about the
@@ -43,15 +47,18 @@ def rpg2nc(
             only files that match the date will be used.
 
     Returns:
+    -------
         2-element tuple containing
 
         - UUID of the generated file.
         - Files used in the processing.
 
     Raises:
+    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import rpg2nc
         >>> site_meta = {'name': 'Hyytiala', 'altitude': 174}
         >>> rpg2nc('/path/to/files/', 'test.nc', site_meta)
@@ -89,7 +96,7 @@ def print_info(data: dict) -> None:
         mode = "LDR"
     else:
         mode = "STSR"
-    logging.info(f"RPG cloud radar in {mode} mode")
+    logging.info("RPG cloud radar in %s mode", mode)
 
 
 RpgObjects = Sequence[Fmcw94Bin] | Sequence[HatproBinCombined]
@@ -107,12 +114,13 @@ def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
 def _stack_rpg_data(rpg_objects: RpgObjects) -> tuple[dict, dict]:
     """Combines data from hourly RPG objects.
 
-    Notes:
+    Notes
+    -----
         Ignores variable names starting with an underscore.
 
     """
 
-    def _stack(source, target, fun):
+    def _stack(source, target, fun) -> None:
         for name, value in source.items():
             if not name.startswith("_"):
                 target[name] = fun((target[name], value)) if name in target else value
@@ -131,7 +139,7 @@ def _reduce_header(header: dict) -> dict:
     for key, data in header.items():
         first_profile_value = data[0]
         is_identical_value = bool(
-            np.isclose(data, first_profile_value, rtol=1e-2).all()
+            np.isclose(data, first_profile_value, rtol=1e-2).all(),
         )
         if is_identical_value is False:
             msg = f"Inconsistent header: {key}: {data}"
@@ -188,14 +196,19 @@ def _remove_files_with_bad_height(objects: list, files: list) -> tuple[list, lis
     most_common = np.bincount(lengths).argmax()
     files = [
         file
-        for file, obj, length in zip(files, objects, lengths)
+        for file, obj, length in zip(files, objects, lengths, strict=True)
         if length == most_common
     ]
-    objects = [obj for obj, length in zip(objects, lengths) if length == most_common]
+    objects = [
+        obj
+        for obj, length in zip(objects, lengths, strict=True)
+        if length == most_common
+    ]
     n_removed = len(lengths) - len(files)
     if n_removed > 0:
         logging.warning(
-            f"Removed {n_removed} RPG-FMCW-94 files due to inconsistent height vector"
+            "Removed %s RPG-FMCW-94 files due to inconsistent height vector",
+            n_removed,
         )
     return objects, files
 
@@ -204,7 +217,8 @@ def _validate_date(obj, expected_date: str) -> None:
     for t in obj.data["time"][:]:
         date_str = "-".join(utils.seconds2date(t)[:3])
         if date_str != expected_date:
-            raise ValueError("Ignoring a file (time stamps not what expected)")
+            msg = "Ignoring a file (time stamps not what expected)"
+            raise ValueError(msg)
 
 
 class Rpg(CloudnetInstrument):
@@ -223,7 +237,9 @@ class Rpg(CloudnetInstrument):
         key = "time"
         fraction_hour = utils.seconds2hours(self.raw_data[key])
         self.data[key] = CloudnetArray(
-            np.array(fraction_hour), key, data_type=data_type
+            np.array(fraction_hour),
+            key,
+            data_type=data_type,
         )
 
     def _get_date(self) -> list:
@@ -254,7 +270,8 @@ class Fmcw(Rpg):
         threshold = -35
         if "ldr" in self.data:
             self.data["ldr"].data = ma.masked_less_equal(
-                self.data["ldr"].data, threshold
+                self.data["ldr"].data,
+                threshold,
             )
 
     def mask_invalid_width(self) -> None:
@@ -276,16 +293,18 @@ class Fmcw(Rpg):
         is_valid_zenith = _filter_zenith_angle(zenith)
         n_removed = len(is_valid_zenith) - np.count_nonzero(is_valid_zenith)
         if n_removed == len(zenith):
-            raise ValidTimeStampError("No profiles with valid zenith angle")
+            msg = "No profiles with valid zenith angle"
+            raise ValidTimeStampError(msg)
         if n_removed > 0:
             logging.warning(
-                f"Filtering {n_removed} profiles due to invalid zenith angle"
+                "Filtering %s profiles due to invalid zenith angle",
+                n_removed,
             )
         self.data["zenith_angle"] = CloudnetArray(zenith, "zenith_angle")
         del self.data["elevation"]
         return list(is_valid_zenith)
 
-    def convert_units(self):
+    def convert_units(self) -> None:
         """Converts units."""
         self.data["rainfall_rate"].data = mmh2ms(self.data["rainfall_rate"].data)
         self.data["lwp"].data *= 1e-3  # g -> kg
@@ -297,7 +316,8 @@ class Fmcw(Rpg):
             return instruments.FMCW35
         if math.isclose(frequency, 94, abs_tol=0.1):
             return instruments.FMCW94
-        raise RuntimeError(f"Unknown RPG cloud radar frequency: {frequency}")
+        msg = f"Unknown RPG cloud radar frequency: {frequency}"
+        raise RuntimeError(msg)
 
 
 class Hatpro(Rpg):
@@ -315,7 +335,7 @@ def _filter_zenith_angle(zenith: ma.MaskedArray) -> np.ndarray:
         logging.warning("Can not determine zenith angle, assuming 0 degrees")
     limits = [-5, 15]
     ind_close_to_zenith = np.where(
-        np.logical_and(zenith > limits[0], zenith < limits[1])
+        np.logical_and(zenith > limits[0], zenith < limits[1]),
     )
     if not ind_close_to_zenith[0].size:
         return np.zeros_like(zenith, dtype=bool)
@@ -365,7 +385,8 @@ RPG_ATTRIBUTES = {
     "srho_hv": MetaData(long_name="Slanted correlation coefficient", units="1"),
     "kdp": MetaData(long_name="Specific differential phase shift", units="rad km-1"),
     "differential_attenuation": MetaData(
-        long_name="Differential attenuation", units="dB km-1"
+        long_name="Differential attenuation",
+        units="dB km-1",
     ),
     # All radars
     "file_code": MetaData(

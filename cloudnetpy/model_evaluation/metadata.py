@@ -51,7 +51,9 @@ CYCLE_ATTRIBUTES = {
     "pressure": MetaData(long_name="Pressure", units="Pa"),
     "temperature": MetaData(long_name="Temperature", units="K"),
     "uwind": MetaData(
-        long_name="Zonal wind", units="m s-1", standard_name="eastward_wind"
+        long_name="Zonal wind",
+        units="m s-1",
+        standard_name="eastward_wind",
     ),
     "vwind": MetaData(
         long_name="Meridional wind",

@@ -29,19 +29,19 @@ def categorize_file(tmpdir_factory, file_metadata):
     nc.createVariable("lwp_error", "f8", "time")[:] = [0.1, 0.1, 0.01]
     nc.createVariable("rainfall_rate", "i4", "time")[:] = [0, 1, 1]
     nc.createVariable("category_bits", "i4", ("time", "height"))[:] = np.array(
-        [[0, 1, 0], [2, 3, 4], [4, 8, 2]]
+        [[0, 1, 0], [2, 3, 4], [4, 8, 2]],
     )
     nc.createVariable("quality_bits", "i4", ("time", "height"))[:] = np.array(
-        [[0, 1, 1], [2, 3, 4], [4, 8, 1]]
+        [[0, 1, 1], [2, 3, 4], [4, 8, 1]],
     )
     nc.createVariable("temperature", "f8", ("model_time", "model_height"))[
         :
     ] = np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
     nc.createVariable("pressure", "f8", ("model_time", "model_height"))[:] = np.array(
-        [[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]]
+        [[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]],
     )
     nc.createVariable("Z", "f8", ("time", "height"))[:] = np.array(
-        [[10, 20, -10], [10, 20, -10], [10, 20, -10]]
+        [[10, 20, -10], [10, 20, -10], [10, 20, -10]],
     )
 
     nc.close()
@@ -139,7 +139,8 @@ class TestAppending:
     def test_append_ier(self):
         self.ice_class.ice_above_rain = np.array([0, 0, 0, 1, 1], dtype=bool)
         self.ier_source.data["ier_inc_rain"] = np.ma.array(
-            [1, 2, 3, 4, 5], mask=[1, 0, 1, 0, 1]
+            [1, 2, 3, 4, 5],
+            mask=[1, 0, 1, 0, 1],
         )
         self.ier_source.append_main_variable(self.ice_class)
         expected_mask = [1, 0, 1, 1, 1]
@@ -147,7 +148,8 @@ class TestAppending:
 
     def test_append_ier_error(self):
         self.ier_source.data["ier_inc_rain"] = np.ma.array(
-            [[1, 2], [3, 4], [5, 6]], mask=[[1, 0], [1, 0], [1, 0]]
+            [[1, 2], [3, 4], [5, 6]],
+            mask=[[1, 0], [1, 0], [1, 0]],
         )
         self.ice_class.is_ice = np.array([[0, 0], [0, 1], [1, 1]], dtype=bool)
         self.ice_class.ice_above_rain = np.array([[1, 0], [1, 0], [1, 0]], dtype=bool)

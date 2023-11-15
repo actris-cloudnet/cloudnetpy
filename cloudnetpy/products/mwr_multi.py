@@ -11,7 +11,9 @@ from cloudnetpy.products import product_tools
 
 
 def generate_mwr_multi(
-    mwr_l1c_file: str, output_file: str, uuid: str | None = None
+    mwr_l1c_file: str,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     file_uuid = uuid if uuid is not None else utils.get_uuid()
 
@@ -28,6 +30,7 @@ def generate_mwr_multi(
         for prod, file in zip(
             ("2P02", "2P03", "2P04", "2P07", "2P08"),
             (temp_file, abs_hum_file, rel_hum_file, t_pot_file, eq_temp_file),
+            strict=True,
         ):
             try:
                 lev2_to_nc(

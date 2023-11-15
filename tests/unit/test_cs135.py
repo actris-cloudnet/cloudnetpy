@@ -1,4 +1,4 @@
-""" This module contains unit tests for ceilo-module. """
+"""This module contains unit tests for ceilo-module."""
 import os
 from tempfile import TemporaryDirectory
 

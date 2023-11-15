@@ -1,4 +1,4 @@
-""" This module has functions for liquid layer detection.
+"""This module has functions for liquid layer detection.
 """
 import numpy as np
 import scipy.signal
@@ -18,6 +18,7 @@ def correct_liquid_top(
     """Corrects lidar detected liquid cloud top using radar data.
 
     Args:
+    ----
         obs: The :class:`ClassData` instance.
         is_liquid: 2-D boolean array denoting liquid clouds from lidar data.
         is_freezing: 2-D boolean array of sub-zero temperature, derived from the model
@@ -25,16 +26,18 @@ def correct_liquid_top(
         limit: The maximum correction distance (m) above liquid cloud top.
 
     Returns:
+    -------
         Corrected liquid cloud array.
 
     References:
+    ----------
         Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ.
 
     """
     is_liquid_corrected = np.copy(is_liquid)
     liquid_tops = cloudnetpy.categorize.atmos.find_cloud_tops(is_liquid)
     top_above = utils.n_elements(obs.height, limit)
-    for prof, top in zip(*np.where(liquid_tops)):
+    for prof, top in zip(*np.where(liquid_tops), strict=True):
         ind = _find_ind_above_top(is_freezing[prof, top:], top_above)
         rad = obs.z[prof, top : top + ind + 1]
         if not (rad.mask.all() or ~rad.mask.any()):
@@ -61,6 +64,7 @@ def find_liquid(
     """Estimate liquid layers from SNR-screened attenuated backscatter.
 
     Args:
+    ----
         obs: The :class:`ClassData` instance.
         peak_amp: Minimum value of peak. Default is 1e-6.
         max_width: Maximum width of peak. Default is 300 (m).
@@ -72,15 +76,17 @@ def find_liquid(
         min_alt: Minimum altitude of the peak from the ground. Default is 100 (m).
 
     Returns:
+    -------
         2-D boolean array denoting liquid layers.
 
     References:
+    ----------
         The method is based on Tuononen, M. et.al, 2019,
         https://acp.copernicus.org/articles/19/1985/2019/.
 
     """
 
-    def _is_proper_peak():
+    def _is_proper_peak() -> bool:
         conditions = (
             npoints >= min_points,
             peak_width < max_width,
@@ -97,13 +103,12 @@ def find_liquid(
     is_liquid = np.zeros(beta.shape, dtype=bool)
     base_below_peak = utils.n_elements(height, 200)
     top_above_peak = utils.n_elements(height, 150)
-    difference = np.diff(beta, axis=1)
-    assert isinstance(difference, ma.MaskedArray)
+    difference = ma.array(np.diff(beta, axis=1))
     beta_diff = difference.filled(0)
     beta = beta.filled(0)
     peak_indices = _find_strong_peaks(beta, peak_amp)
 
-    for n, peak in zip(*peak_indices):
+    for n, peak in zip(*peak_indices, strict=True):
         lprof = beta[n, :]
         dprof = beta_diff[n, :]
         try:
@@ -129,6 +134,7 @@ def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
     below the peak exceed a threshold value.
 
     Args:
+    ----
         dprof: 1-D array of 1st discrete difference. Masked values should
             be 0, e.g. dprof = np.diff(masked_prof).filled(0)
         ind_peak: Index of (possibly local) peak in the original profile.
@@ -143,13 +149,16 @@ def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
             in the profile.
 
     Returns:
+    -------
         Base index of the peak.
 
     Raises:
+    ------
         IndexError: Can't find proper base index (probably too many masked
             values in the profile).
 
     Examples:
+    --------
         Consider a profile
 
         >>> x = np.array([0, 0.5, 1, -99, 4, 8, 5])
@@ -177,7 +186,8 @@ def ind_base(dprof: np.ndarray, ind_peak: int, dist: int, lim: float) -> int:
         >>> ind_base(dx, 5, 4, 10)
             1
 
-    See also:
+    See Also:
+    --------
         droplet.ind_top()
 
     """
@@ -194,6 +204,7 @@ def ind_top(dprof: np.ndarray, ind_peak: int, nprof: int, dist: int, lim: float)
     above the peak exceed a threshold value.
 
     Args:
+    ----
         dprof: 1-D array of 1st discrete difference. Masked values should be 0, e.g.
             dprof = np.diff(masked_prof).filled(0)
         nprof: Length of the profile. Top index can't be higher than this.
@@ -207,13 +218,16 @@ def ind_top(dprof: np.ndarray, ind_peak: int, nprof: int, dist: int, lim: float)
             likely accept some other point, higher in the profile.
 
     Returns:
+    -------
         Top index of the peak.
 
     Raises:
+    ------
         IndexError: Can not find proper top index (probably too many masked
             values in the profile).
 
-    See also:
+    See Also:
+    --------
         droplet.ind_base()
 
     """
@@ -227,9 +241,11 @@ def interpolate_lwp(obs: ClassData) -> np.ndarray:
     """Linear interpolation of liquid water path to fill masked values.
 
     Args:
+    ----
         obs: The :class:`ClassData` instance.
 
     Returns:
+    -------
         Liquid water path where the masked values are filled by interpolation.
 
     """

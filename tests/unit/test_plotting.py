@@ -1,8 +1,8 @@
 from datetime import date
 
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from scipy.signal import filtfilt
 
@@ -181,7 +181,7 @@ def test_mark_gaps():
             [0, 0, 0],
             [1, 1, 1],
             [1, 1, 1],
-        ]
+        ],
     )
     expected_data = np.array(
         [
@@ -199,7 +199,7 @@ def test_mark_gaps():
             [1, 1, 1],
             [0, 0, 0],
             [0, 0, 0],
-        ]
+        ],
     )
     expected_time = np.array(
         [
@@ -217,7 +217,7 @@ def test_mark_gaps():
             22,
             22.001,
             23.999,
-        ]
+        ],
     )
     assert_array_equal(data_new.data, expected_data)
     assert_array_equal(data_new.mask, expected_mask)

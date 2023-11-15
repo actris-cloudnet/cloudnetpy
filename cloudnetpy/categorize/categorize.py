@@ -10,7 +10,9 @@ from cloudnetpy.metadata import MetaData
 
 
 def generate_categorize(
-    input_files: dict, output_file: str, uuid: str | None = None
+    input_files: dict,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     """Generates Cloudnet Level 1c categorize file.
 
@@ -21,6 +23,7 @@ def generate_categorize(
     in *ouput_file* which is a compressed netCDF4 file.
 
     Args:
+    ----
         input_files: dict containing file names for calibrated `radar`, `lidar`,
             `model` and `mwr` files. Optionally also `lv0_files`, a list of
             RPG level 0 files.
@@ -28,12 +31,15 @@ def generate_categorize(
         uuid: Set specific UUID for the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         RuntimeError: Failed to create the categorize file.
 
     Notes:
+    -----
         Separate mwr-file is not needed when using RPG cloud radar which
         measures liquid water path. Then, the radar file can be used as
         a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
@@ -42,6 +48,7 @@ def generate_categorize(
         to detect liquid droplets.
 
     Examples:
+    --------
         >>> from cloudnetpy.categorize import generate_categorize
         >>> input_files = {'radar': 'radar.nc',
                            'lidar': 'lidar.nc',
@@ -62,8 +69,7 @@ def generate_categorize(
         radar_data_gap_indices = data["radar"].rebin_to_grid(time)
         lidar_data_gap_indices = data["lidar"].interpolate_to_grid(time, height)
         bad_time_indices = list(set(radar_data_gap_indices + lidar_data_gap_indices))
-        valid_ind = [ind for ind in range(len(time)) if ind not in bad_time_indices]
-        return valid_ind
+        return [ind for ind in range(len(time)) if ind not in bad_time_indices]
 
     def _screen_bad_time_indices(valid_indices: list) -> None:
         n_time_full = len(time)
@@ -102,10 +108,10 @@ def generate_categorize(
             **data["mwr"].data,
         }
 
-    def _define_dense_grid():
+    def _define_dense_grid() -> tuple:
         return utils.time_grid(), data["radar"].height
 
-    def _close_all():
+    def _close_all() -> None:
         for obj in data.values():
             if isinstance(obj, Radar | Lidar | Mwr | Model):
                 obj.close()
@@ -117,14 +123,20 @@ def generate_categorize(
             "mwr": Mwr(input_files["mwr"]),
             "lv0_files": input_files.get("lv0_files", None),
         }
-        assert data["radar"].altitude is not None
+        if data["radar"].altitude is None:
+            msg = "Radar altitude not defined"
+            raise RuntimeError(msg)
         data["model"] = Model(input_files["model"], data["radar"].altitude)
         time, height = _define_dense_grid()
         valid_ind = _interpolate_to_cloudnet_grid()
         if not valid_ind:
-            raise ValidTimeStampError("No overlapping radar and lidar timestamps found")
+            msg = "No overlapping radar and lidar timestamps found"
+            raise ValidTimeStampError(msg)
         _screen_bad_time_indices(valid_ind)
-        if "rpg" in data["radar"].type.lower() or "basta" in data["radar"].type.lower():
+        if (
+            "rpg" in data["radar"].source_type.lower()
+            or "basta" in data["radar"].source_type.lower()
+        ):
             data["radar"].filter_speckle_noise()
             data["radar"].filter_1st_gate_artifact()
         for variable in ("v", "v_sigma", "ldr"):
@@ -142,17 +154,18 @@ def generate_categorize(
         attributes = output.add_time_attribute(attributes, date, "model_time")
         attributes = output.add_source_attribute(attributes, data)
         output.update_attributes(cloudnet_arrays, attributes)
-        uuid = _save_cat(output_file, data, cloudnet_arrays, uuid)
-        return uuid
+        return _save_cat(output_file, data, cloudnet_arrays, uuid)
     finally:
         _close_all()
 
 
 def _save_cat(
-    full_path: str, data_obs: dict, cloudnet_arrays: dict, uuid: str | None
+    full_path: str,
+    data_obs: dict,
+    cloudnet_arrays: dict,
+    uuid: str | None,
 ) -> str:
     """Creates a categorize netCDF4 file and saves all data into it."""
-
     dims = {
         "time": len(data_obs["radar"].time),
         "height": len(data_obs["radar"].height),
@@ -165,7 +178,9 @@ def _save_cat(
         uuid_out = nc.file_uuid
         nc.cloudnet_file_type = file_type
         output.copy_global(
-            data_obs["radar"].dataset, nc, ("year", "month", "day", "location")
+            data_obs["radar"].dataset,
+            nc,
+            ("year", "month", "day", "location"),
         )
         nc.title = f"Cloud categorization products from {data_obs['radar'].location}"
         nc.source_file_uuids = output.get_source_uuids(*data_obs.values())
@@ -174,7 +189,8 @@ def _save_cat(
             ["https://doi.org/10.5194/amt-15-5343-2022"] if is_voodoo else None
         )
         nc.references = output.get_references(
-            identifier=file_type, extra=extra_references
+            identifier=file_type,
+            extra=extra_references,
         )
         if is_voodoo:
             import voodoonet.version  # pylint: disable=import-outside-toplevel,import-error
@@ -316,7 +332,8 @@ CATEGORIZE_ATTRIBUTES = {
         comment=COMMENTS["Z_sensitivity"],
     ),
     "v_sigma": MetaData(
-        long_name="Standard deviation of mean Doppler velocity", units="m s-1"
+        long_name="Standard deviation of mean Doppler velocity",
+        units="m s-1",
     ),
     # Lidar variables
     "beta": MetaData(

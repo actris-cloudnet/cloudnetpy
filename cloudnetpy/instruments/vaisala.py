@@ -1,4 +1,5 @@
 """Module with classes for Vaisala ceilometers."""
+import itertools
 import logging
 
 import numpy as np
@@ -17,7 +18,10 @@ class VaisalaCeilo(Ceilometer):
     """Base class for Vaisala ceilometers."""
 
     def __init__(
-        self, full_path: str, site_meta: dict, expected_date: str | None = None
+        self,
+        full_path: str,
+        site_meta: dict,
+        expected_date: str | None = None,
     ):
         super().__init__(self.noise_param)
         self.full_path = full_path
@@ -87,7 +91,8 @@ class VaisalaCeilo(Ceilometer):
             for i, line in enumerate(data[timestamp_line_number:]):
                 if utils.is_empty_line(line):
                     return i
-            raise RuntimeError("Can not parse number of data lines")
+            msg = "Can not parse number of data lines"
+            raise RuntimeError(msg)
 
         def _parse_data_lines(data: list, starting_indices: list) -> list:
             return [
@@ -103,20 +108,23 @@ class VaisalaCeilo(Ceilometer):
         timestamp_line_numbers = _find_timestamp_line_numbers(valid_lines)
         if self.expected_date is not None:
             timestamp_line_numbers = _find_correct_dates(
-                valid_lines, timestamp_line_numbers
+                valid_lines,
+                timestamp_line_numbers,
             )
             if not timestamp_line_numbers:
                 raise ValidTimeStampError
         number_of_data_lines = _find_number_of_data_lines(
-            valid_lines, timestamp_line_numbers[0]
+            valid_lines,
+            timestamp_line_numbers[0],
         )
-        data_lines = _parse_data_lines(valid_lines, timestamp_line_numbers)
-        return data_lines
+        return _parse_data_lines(valid_lines, timestamp_line_numbers)
 
     @staticmethod
     def _get_message_number(header_line_1: dict) -> int:
         msg_no = header_line_1["message_number"]
-        assert len(np.unique(msg_no)) == 1, "Error: inconsistent message numbers."
+        if len(np.unique(msg_no)) != 1:
+            msg = "Error: inconsistent message numbers."
+            raise RuntimeError(msg)
         return int(msg_no[0])
 
     @staticmethod
@@ -134,8 +142,7 @@ class VaisalaCeilo(Ceilometer):
     def _handle_metadata(cls, header: list) -> dict:
         meta = cls._concatenate_meta(header)
         meta = cls._remove_meta_duplicates(meta)
-        meta = cls._convert_meta_strings(meta)
-        return meta
+        return cls._convert_meta_strings(meta)
 
     @staticmethod
     def _concatenate_meta(header: list) -> dict:
@@ -196,10 +203,7 @@ class VaisalaCeilo(Ceilometer):
             "message_number",
             "message_subclass",
         )
-        if self._is_ct25k():
-            indices = [1, 3, 4, 6, 7, 8]
-        else:
-            indices = [1, 3, 4, 7, 8, 9]
+        indices = [1, 3, 4, 6, 7, 8] if self._is_ct25k() else [1, 3, 4, 7, 8, 9]
         values = [split_string(line, indices) for line in lines]
         return values_to_dict(fields, values)
 
@@ -222,7 +226,10 @@ class ClCeilo(VaisalaCeilo):
     noise_param = NoiseParam(noise_min=3.1e-8, noise_smooth_min=1.1e-8)
 
     def __init__(
-        self, full_path: str, site_meta: dict, expected_date: str | None = None
+        self,
+        full_path: str,
+        site_meta: dict,
+        expected_date: str | None = None,
     ):
         super().__init__(full_path, site_meta, expected_date)
         self._hex_conversion_params = (5, 524288, 1048576)
@@ -241,7 +248,7 @@ class ClCeilo(VaisalaCeilo):
         self._store_ceilometer_info()
         self._sort_time()
 
-    def _sort_time(self):
+    def _sort_time(self) -> None:
         """Sorts timestamps and removes duplicates."""
         time = np.copy(self.data["time"][:])
         ind_sorted = np.argsort(time)
@@ -258,7 +265,7 @@ class ClCeilo(VaisalaCeilo):
             if array.ndim == 2 and array.shape[0] == n_time:
                 self.data[key] = self.data[key][ind_valid, :]
 
-    def _store_ceilometer_info(self):
+    def _store_ceilometer_info(self) -> None:
         n_gates = self.data["beta_raw"].shape[1]
         if n_gates < 1540:
             self.instrument = instruments.CL31
@@ -267,7 +274,8 @@ class ClCeilo(VaisalaCeilo):
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number != 2:
-            raise RuntimeError("Unsupported message number.")
+            msg = f"Unsupported message number: {self._message_number}"
+            raise RuntimeError(msg)
         keys = ("cloud_detection_status", "cloud_amount_data")
         values = [[line[0:3], line[3:].strip()] for line in lines]
         return values_to_dict(keys, values)
@@ -293,7 +301,8 @@ class ClCeilo(VaisalaCeilo):
 class Ct25k(VaisalaCeilo):
     """Class for Vaisala CT25k ceilometer.
 
-    References:
+    References
+    ----------
         https://www.manualslib.com/manual/1414094/Vaisala-Ct25k.html
 
     """
@@ -334,7 +343,8 @@ class Ct25k(VaisalaCeilo):
 
     def _read_header_line_3(self, lines: list) -> dict:
         if self._message_number in (1, 3, 6):
-            raise RuntimeError(f"Unsupported message number: {self._message_number}")
+            msg = f"Unsupported message number: {self._message_number}"
+            raise RuntimeError(msg)
         keys = (
             "measurement_mode",
             "laser_energy",
@@ -347,31 +357,34 @@ class Ct25k(VaisalaCeilo):
             "backscatter_sum",
         )
         values = [line.split() for line in lines]
-        keys_out = ("scale",) + keys if len(values[0]) == 10 else keys
+        keys_out = ("scale", *keys) if len(values[0]) == 10 else keys
         return values_to_dict(keys_out, values)
 
 
 def split_string(string: str, indices: list) -> list:
     """Splits string between indices.
 
-    Notes:
+    Notes
+    -----
         It is possible to skip characters from the beginning and end of the
         string but not from the middle.
 
-    Examples:
+    Examples
+    --------
         >>> s = 'abcde'
         >>> indices = [1, 2, 4]
         >>> split_string(s, indices)
         ['b', 'cd']
 
     """
-    return [string[n:m] for n, m in zip(indices[:-1], indices[1:])]
+    return [string[n:m] for n, m in itertools.pairwise(indices)]
 
 
 def values_to_dict(keys: tuple, values: list) -> dict:
     """Converts list elements to dictionary.
 
-    Examples:
+    Examples
+    --------
         >>> keys = ('a', 'b')
         >>> values = [[1, 2], [1, 2], [1, 2], [1, 2]]
         >>> values_to_dict(keys, values)

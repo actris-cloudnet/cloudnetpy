@@ -16,7 +16,9 @@ from cloudnetpy.products.drizzle_tools import (
 
 
 def generate_drizzle(
-    categorize_file: str, output_file: str, uuid: str | None = None
+    categorize_file: str,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     """Generates Cloudnet drizzle product.
 
@@ -24,18 +26,22 @@ def generate_drizzle(
     cloud radar and lidar measurements. The results are written in a netCDF file.
 
     Args:
+    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
+    -------
         str: UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.products import generate_drizzle
         >>> generate_drizzle('categorize.nc', 'drizzle.nc')
 
     References:
+    ----------
         O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
         Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
         J. Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
@@ -59,18 +65,19 @@ def generate_drizzle(
         date = drizzle_source.get_date()
         attributes = output.add_time_attribute(DRIZZLE_ATTRIBUTES, date)
         output.update_attributes(drizzle_source.data, attributes)
-        uuid = output.save_product_file("drizzle", drizzle_source, output_file, uuid)
-    return uuid
+        return output.save_product_file("drizzle", drizzle_source, output_file, uuid)
 
 
 class DrizzleProducts:
     """Calculates additional quantities from the drizzle properties.
 
     Args:
+    ----
         drizzle_source: The :class:`DrizzleSource` instance.
         drizzle_solver: The :class:`DrizzleSolver` instance.
 
     Attributes:
+    ----------
         derived_products (dict): Dictionary containing derived drizzle products:
             'drizzle_N', 'drizzle_lwc', 'drizzle_lwf', 'v_drizzle', 'v_air'.
 
@@ -82,7 +89,7 @@ class DrizzleProducts:
         self._ind_drizzle, self._ind_lut = self._find_indices()
         self.derived_products = self._calc_derived_products()
 
-    def _find_indices(self):
+    def _find_indices(self) -> tuple:
         drizzle_ind = np.where(self._params["Do"])
         ind_mu = np.searchsorted(self._data.mie["mu"], self._params["mu"][drizzle_ind])
         ind_dia = np.searchsorted(self._data.mie["Do"], self._params["Do"][drizzle_ind])
@@ -91,7 +98,7 @@ class DrizzleProducts:
         ind_dia[ind_dia >= n_dia] = n_dia - 1
         return drizzle_ind, (ind_mu, ind_dia)
 
-    def _calc_derived_products(self):
+    def _calc_derived_products(self) -> dict:
         density = self._calc_density()
         lwc = self._calc_lwc()
         lwf = self._calc_lwf(lwc)
@@ -105,23 +112,23 @@ class DrizzleProducts:
             "v_air": v_air,
         }
 
-    def _calc_density(self):
+    def _calc_density(self) -> np.ndarray:
         """Calculates drizzle number density (m-3)."""
         a = self._data.z * 3.67**6
         b = self._params["Do"] ** 6
         return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
 
-    def _calc_lwc(self):
+    def _calc_lwc(self) -> np.ndarray:
         """Calculates drizzle liquid water content (kg m-3)"""
         rho_water = 1000
-        dia, mu, s = [self._params.get(key) for key in ("Do", "mu", "S")]
-        assert isinstance(mu, np.ndarray)
-        assert isinstance(s, np.ndarray)
-        assert isinstance(dia, np.ndarray)
+        dia, mu, s = (self._params.get(key) for key in ("Do", "mu", "S"))
+        dia = ma.array(dia)
+        mu = ma.array(mu)
+        s = ma.array(s)
         gamma_ratio = gamma(4 + mu) / gamma(3 + mu) / (3.67 + mu)
         return rho_water / 3 * self._data.beta * s * dia * gamma_ratio
 
-    def _calc_lwf(self, lwc_in):
+    def _calc_lwf(self, lwc_in) -> np.ndarray:
         """Calculates drizzle liquid water flux."""
         flux = ma.copy(lwc_in)
         flux[self._ind_drizzle] *= (
@@ -130,13 +137,13 @@ class DrizzleProducts:
         )
         return flux
 
-    def _calc_fall_velocity(self):
+    def _calc_fall_velocity(self) -> np.ndarray:
         """Calculates drizzle droplet fall velocity (m s-1)."""
         velocity = np.zeros_like(self._params["Do"])
         velocity[self._ind_drizzle] = -self._data.mie["v"][self._ind_lut]
         return velocity
 
-    def _calc_v_air(self, droplet_velocity):
+    def _calc_v_air(self, droplet_velocity) -> np.ndarray:
         """Calculates vertical air velocity."""
         velocity = -np.copy(droplet_velocity)
         velocity[self._ind_drizzle] += self._data.v[self._ind_drizzle]
@@ -147,9 +154,11 @@ class RetrievalStatus:
     """Estimates the status of drizzle retrievals.
 
     Args:
+    ----
         drizzle_class: The :class:`DrizzleClassification` instance.
 
     Attributes:
+    ----------
         drizzle_class: The :class:`DrizzleClassification` instance.
         retrieval_status (ndarray): 2D array containing drizzle retrieval
             status information.
@@ -160,37 +169,39 @@ class RetrievalStatus:
         self.retrieval_status: np.ndarray = np.array([])
         self._get_retrieval_status()
 
-    def _get_retrieval_status(self):
+    def _get_retrieval_status(self) -> None:
         self.retrieval_status = np.copy(self.drizzle_class.drizzle).astype(int)
         self._find_retrieval_below_melting()
         self.retrieval_status[self.drizzle_class.would_be_drizzle == 1] = 3
         self._find_retrieval_in_warm_liquid()
         self.retrieval_status[self.drizzle_class.is_rain == 1, :] = 5
 
-    def _find_retrieval_below_melting(self):
+    def _find_retrieval_below_melting(self) -> None:
         cold_rain = utils.transpose(self.drizzle_class.cold_rain)
         below_melting = cold_rain * self.drizzle_class.drizzle
         self.retrieval_status[below_melting == 1] = 2
 
-    def _find_retrieval_in_warm_liquid(self):
+    def _find_retrieval_in_warm_liquid(self) -> None:
         in_warm_liquid = (self.retrieval_status == 0) * self.drizzle_class.warm_liquid
         self.retrieval_status[in_warm_liquid == 1] = 4
 
 
-def _screen_rain(results: dict, classification: DrizzleClassification):
+def _screen_rain(results: dict, classification: DrizzleClassification) -> dict:
     """Removes rainy profiles from drizzle variables.."""
-    for key in results.keys():
+    for key in results:
         if not utils.isscalar(results[key]):
             results[key][classification.is_rain, :] = 0
     return results
 
 
-def _append_data(drizzle_data: DrizzleSource, results: dict):
+def _append_data(drizzle_data: DrizzleSource, results: dict) -> None:
     """Save retrieved fields to the drizzle_data object."""
     for key, value in results.items():
         if key != "drizzle_retrieval_status":
-            value = ma.masked_where(value == 0, value)
-        drizzle_data.append_data(value, key)
+            arr = ma.masked_where(value == 0, value)
+        else:
+            arr = value
+        drizzle_data.append_data(arr, key)
 
 
 DRIZZLE_ATTRIBUTES = {
@@ -200,7 +211,8 @@ DRIZZLE_ATTRIBUTES = {
         ancillary_variables="drizzle_N_error drizzle_N_bias",
     ),
     "drizzle_N_error": MetaData(
-        long_name="Random error in drizzle number concentration", units="dB"
+        long_name="Random error in drizzle number concentration",
+        units="dB",
     ),
     "drizzle_N_bias": MetaData(
         long_name="Possible bias in drizzle number concentration",
@@ -240,7 +252,8 @@ DRIZZLE_ATTRIBUTES = {
         comment="Positive values are towards the ground.",
     ),
     "v_drizzle_error": MetaData(
-        long_name="Random error in drizzle droplet fall velocity", units="dB"
+        long_name="Random error in drizzle droplet fall velocity",
+        units="dB",
     ),
     "v_drizzle_bias": MetaData(
         long_name="Possible bias in drizzle droplet fall velocity",
@@ -254,7 +267,8 @@ DRIZZLE_ATTRIBUTES = {
         standard_name="upward_air_velocity",
     ),
     "v_air_error": MetaData(
-        long_name="Random error in vertical air velocity", units="dB"
+        long_name="Random error in vertical air velocity",
+        units="dB",
     ),
     "Do": MetaData(
         long_name="Drizzle median diameter",
@@ -289,6 +303,7 @@ DRIZZLE_ATTRIBUTES = {
     ),
     "beta_corr": MetaData(long_name="Lidar backscatter correction factor", units="1"),
     "drizzle_retrieval_status": MetaData(
-        long_name="Drizzle parameter retrieval status", units="1"
+        long_name="Drizzle parameter retrieval status",
+        units="1",
     ),
 }

@@ -1,7 +1,7 @@
-""" This module contains unit tests for classify-module. """
+"""This module contains unit tests for classify-module."""
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.categorize import classify, containers
@@ -39,19 +39,20 @@ class TestFindRain:
     @pytest.fixture(autouse=True)
     def run_before_tests(self):
         self.z = np.zeros((len(self.time), 10))
-        yield
 
     def test_low_values(self):
         result = np.zeros(len(self.time))
         assert_array_equal(
-            containers._find_rain_from_radar_echo(self.z, self.time), result
+            containers._find_rain_from_radar_echo(self.z, self.time),
+            result,
         )
 
     def test_threshold_value(self):
         self.z[:, 3] = 0.1
         result = np.ones(len(self.time))
         assert_array_equal(
-            containers._find_rain_from_radar_echo(self.z, self.time), result
+            containers._find_rain_from_radar_echo(self.z, self.time),
+            result,
         )
 
     def test_hot_pixel_removal(self):
@@ -164,7 +165,7 @@ def test_remove_false_radar_liquid():
             [0, 0, 0, 1, 1, 0, 0],
             [1, 1, 0, 1, 1, 0, 0],
             [0, 1, 0, 0, 1, 0, 1],
-        ]
+        ],
     )
     liquid_from_radar = np.array(
         [
@@ -173,7 +174,7 @@ def test_remove_false_radar_liquid():
             [0, 0, 1, 1, 1, 1, 1],
             [1, 1, 1, 1, 1, 1, 1],
             [1, 1, 1, 1, 1, 1, 1],
-        ]
+        ],
     )
     result = np.array(
         [
@@ -182,7 +183,7 @@ def test_remove_false_radar_liquid():
             [0, 0, 0, 1, 1, 1, 1],
             [0, 0, 0, 1, 1, 1, 1],
             [0, 0, 0, 0, 0, 0, 1],
-        ]
+        ],
     )
     assert_array_equal(
         classify._remove_false_radar_liquid(liquid_from_radar, liquid_from_lidar),

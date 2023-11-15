@@ -5,8 +5,8 @@ import numpy as np
 import pytest
 from numpy import testing
 
-import cloudnetpy.products.drizzle as drizzle
 from cloudnetpy import utils
+from cloudnetpy.products import drizzle
 from cloudnetpy.products.drizzle_error import get_drizzle_error
 
 DIMENSIONS_X = ("time", "model_time")
@@ -140,7 +140,7 @@ def test_find_warm_liquid(drizzle_cat_file):
             np.array([0, 0, 0, 1]),
             np.array([0, 0, 0, 1]),
             np.array([1, 1, 0, 1]),
-        )
+        ),
     ],
 )
 def test_find_drizzle(
@@ -176,7 +176,7 @@ def test_find_drizzle(
 
 
 @pytest.mark.parametrize(
-    "is_rain, warm, falling, melting, insect, " "radar, clutter, molecular",
+    "is_rain, warm, falling, melting, insect, radar, clutter, molecular",
     [
         (
             np.array([0, 0, 0, 0]),
@@ -187,7 +187,7 @@ def test_find_drizzle(
             np.array([0, 1, 1, 0]),
             np.array([0, 0, 0, 1]),
             np.array([0, 0, 0, 1]),
-        )
+        ),
     ],
 )
 def test_find_would_be_drizzle(
@@ -293,7 +293,8 @@ def test_find_lut_indices(class_objects):
     ind_w = bisect_left(obj._width_lut[:, ind_d], -obj._width_ht[ind], hi=n_width - 1)
     expected = (ind_w, ind_d)
     testing.assert_almost_equal(
-        obj._find_lut_indices(ind, dia_init, n_dia, n_width), expected
+        obj._find_lut_indices(ind, dia_init, n_dia, n_width),
+        expected,
     )
 
 
@@ -342,7 +343,8 @@ def test_find_indices(class_objects, params_objects):
 
 
 @pytest.mark.parametrize(
-    "key", ["drizzle_N", "drizzle_lwc", "drizzle_lwf", "v_drizzle", "v_air"]
+    "key",
+    ["drizzle_N", "drizzle_lwc", "drizzle_lwf", "v_drizzle", "v_air"],
 )
 def test_calc_derived_products(class_objects, params_objects, key):
     d_source, d_class, s_width = class_objects
@@ -363,7 +365,7 @@ def test_calc_density(class_objects, params_objects):
 def test_calc_lwc(class_objects, params_objects):
     d_source, _, _ = class_objects
     obj = drizzle.DrizzleProducts(d_source, params_objects)
-    dia, mu, s = [obj._params.get(key) for key in ("Do", "mu", "S")]
+    dia, mu, s = (obj._params.get(key) for key in ("Do", "mu", "S"))
     assert mu is not None
     assert obj._data.beta is not None
     assert s is not None
@@ -453,7 +455,7 @@ def test_screen_rain(class_objects, result):
     expected = True
     for key in result.keys():
         if not utils.isscalar(result[key]):
-            if not np.any(result[key][-1]) == np.any(np.array([0, 0, 0])):
+            if np.any(result[key][-1]) != np.any(np.array([0, 0, 0])):
                 expected = False
     assert expected is True
 

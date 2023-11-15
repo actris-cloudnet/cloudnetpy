@@ -14,12 +14,14 @@ class ModelManager(DataSource):
     """Class to collect and manage model data.
 
     Args:
+    ----
         model_file (str): Path to source model file.
         model (str): Name of model
         output_file (str): name of output file name and path to save data
         product (str): name of product to generate
 
     Notes:
+    -----
         For this class to work, needed information of model in use should be found in
         model_metadata.py
 
@@ -36,6 +38,7 @@ class ModelManager(DataSource):
         model: str,
         output_file: str,
         product: str,
+        *,
         check_file: bool = True,
     ):
         super().__init__(model_file)
@@ -52,7 +55,7 @@ class ModelManager(DataSource):
         self.wind = self._calculate_wind_speed()
         self.resolution_h = self._get_horizontal_resolution()
 
-    def _read_cycle_name(self, model_file: str):
+    def _read_cycle_name(self, model_file: str) -> str:
         """Get cycle name from model_metadata.py for saving variable name(s)"""
         try:
             cycles = self.model_info.cycle
@@ -66,17 +69,18 @@ class ModelManager(DataSource):
             return ""
         return ""
 
-    def _generate_products(self):
+    def _generate_products(self) -> None:
         """Process needed data of model to a ModelManager object"""
-        cls = getattr(importlib.import_module(__name__), "ModelManager")
+        cls = importlib.import_module(__name__).ModelManager
         try:
             name = f"_get_{self._product}"
             getattr(cls, name)(self)
-        except AttributeError as e:
-            logging.error(f"Invalid product name: {e}")
+        except AttributeError:
+            msg = f"Invalid product name: {self._product}"
+            logging.exception(msg)
             raise
 
-    def _get_cf(self):
+    def _get_cf(self) -> None:
         """Collect cloud fraction straight from model file."""
         cf_name = self.get_model_var_names(("cf",))[0]
         cf = self.getvar(cf_name)
@@ -85,13 +89,13 @@ class ModelManager(DataSource):
         self.append_data(cf, f"{self.model}{self.cycle}_cf")
         self.keys[self._product] = f"{self.model}{self.cycle}_cf"
 
-    def _get_iwc(self):
+    def _get_iwc(self) -> None:
         iwc = self.get_water_content("iwc")
         iwc[iwc < 1e-7] = ma.masked
         self.append_data(iwc, f"{self.model}{self.cycle}_iwc")
         self.keys[self._product] = f"{self.model}{self.cycle}_iwc"
 
-    def _get_lwc(self):
+    def _get_lwc(self) -> None:
         lwc = self.get_water_content("lwc")
         lwc[lwc < 1e-5] = ma.masked
         self.append_data(lwc, f"{self.model}{self.cycle}_lwc")
@@ -120,13 +124,15 @@ class ModelManager(DataSource):
     def _calc_water_content(q: np.ndarray, p: np.ndarray, t: np.ndarray) -> np.ndarray:
         return q * p / (287 * t)
 
-    def _add_variables(self):
+    def _add_variables(self) -> None:
         """Add basic variables off model and cycle"""
 
-        def _add_common_variables():
+        def _add_common_variables() -> None:
             """Model variables that are always the same within cycles"""
             wanted_vars = self.model_vars.common_var
-            assert wanted_vars is not None
+            if wanted_vars is None:
+                msg = f"Model {self.model} has no common variables"
+                raise ValueError(msg)
             wanted_vars_split = [x.strip() for x in wanted_vars.split(",")]
             for var in wanted_vars_split:
                 if var in self.dataset.variables:
@@ -135,10 +141,12 @@ class ModelManager(DataSource):
                         data = self.cut_off_extra_levels(self.dataset.variables[var][:])
                     self.append_data(data, f"{var}")
 
-        def _add_cycle_variables():
+        def _add_cycle_variables() -> None:
             """Add cycle depending variables"""
             wanted_vars = self.model_vars.cycle_var
-            assert wanted_vars is not None
+            if wanted_vars is None:
+                msg = f"Model {self.model} has no cycle variables"
+                raise ValueError(msg)
             wanted_vars_split = [x.strip() for x in wanted_vars.split(",")]
             for var in wanted_vars_split:
                 if var in self.dataset.variables:
@@ -160,11 +168,7 @@ class ModelManager(DataSource):
         except KeyError:
             return data
 
-        if data.ndim > 1:
-            data = data[:, :level]
-        else:
-            data = data[:level]
-        return data
+        return data[:, :level] if data.ndim > 1 else data[:level]
 
     def _calculate_wind_speed(self) -> np.ndarray:
         """Real wind from x- and y-components"""

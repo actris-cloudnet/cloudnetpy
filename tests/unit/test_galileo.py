@@ -51,10 +51,12 @@ class TestGalileo2nc(Check):
 
     def test_variables(self):
         assert np.isclose(
-            self.nc.variables["radar_frequency"][:].data, 94.0, atol=0.1
+            self.nc.variables["radar_frequency"][:].data,
+            94.0,
+            atol=0.1,
         )  # Hard coded
         assert np.all(
-            np.isclose(self.nc.variables["zenith_angle"][:].data, 0.0, atol=0.1)
+            np.isclose(self.nc.variables["zenith_angle"][:].data, 0.0, atol=0.1),
         )
 
     def test_common_radar(self):
@@ -94,7 +96,10 @@ class TestGalileo2nc(Check):
         test_path = tmp_path / "uuid.nc"
         uuid_from_user = "kissa"
         uuid = galileo.galileo2nc(
-            FILEPATH, test_path, self.site_meta, uuid=uuid_from_user
+            FILEPATH,
+            test_path,
+            self.site_meta,
+            uuid=uuid_from_user,
         )
         with netCDF4.Dataset(test_path) as nc:
             assert nc.file_uuid == uuid_from_user

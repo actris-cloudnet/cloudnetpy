@@ -1,7 +1,7 @@
 """Module for creating Cloudnet droplet effective radius
 using the Frisch et al. 2002 method.
 """
-from collections import namedtuple
+from typing import NamedTuple
 
 import numpy as np
 from numpy import ma
@@ -16,7 +16,14 @@ from cloudnetpy.products.product_tools import (
     get_is_rain,
 )
 
-Parameters = namedtuple("Parameters", "ddBZ N dN sigma_x dsigma_x dQ")
+
+class Parameters(NamedTuple):
+    ddBZ: float
+    N: float
+    dN: float
+    sigma_x: float
+    dsigma_x: float
+    dQ: float
 
 
 def generate_der(
@@ -34,6 +41,7 @@ def generate_der(
     liquid water path. The results are written in a netCDF file.
 
     Args:
+    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
@@ -42,9 +50,11 @@ def generate_der(
         used in Frisch approach.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.products import generate_der
         >>> generate_der('categorize.nc', 'der.nc')
         >>>
@@ -53,6 +63,7 @@ def generate_der(
         >>> generate_der('categorize.nc', 'der.nc', parameters=params)
 
     References:
+    ----------
         Frisch, S., Shupe, M., Djalalova, I., Feingold, G., & Poellot, M. (2002).
         The Retrieval of Stratus Cloud Droplet Effective Radius with Cloud Radars,
         Journal of Atmospheric and Oceanic Technology, 19(6), 835-842.
@@ -113,9 +124,8 @@ class DerSource(DataSource):
         else:
             self.parameters = parameters
 
-    def append_der(self):
+    def append_der(self) -> None:
         """Estimate liquid droplet effective radius using Frisch et al. 2002."""
-
         params = self.parameters
         rho_l = 1000  # density of liquid water(kg m-3)
 
@@ -139,7 +149,11 @@ class DerSource(DataSource):
         liquid_bases = atmos.find_cloud_bases(is_droplet)
         liquid_tops = atmos.find_cloud_tops(is_droplet)
 
-        for base, top in zip(zip(*np.where(liquid_bases)), zip(*np.where(liquid_tops))):
+        for base, top in zip(
+            zip(*np.where(liquid_bases), strict=True),
+            zip(*np.where(liquid_tops), strict=True),
+            strict=True,
+        ):
             ind_t = base[0]
             idx_layer = np.arange(base[1], top[1] + 1)
             idx_layer = idx_layer[~Z[ind_t, idx_layer].mask]
@@ -159,7 +173,7 @@ class DerSource(DataSource):
             B = params.sigma_x * params.dsigma_x
             C = dZ[ind_t, idx_layer] / (6 * Z[ind_t, idx_layer])
             der_error[ind_t, idx_layer] = der[ind_t, idx_layer] * ma.sqrt(
-                A * A + B * B + C * C
+                A * A + B * B + C * C,
             )
 
             # der scaled formula (6)
@@ -176,7 +190,7 @@ class DerSource(DataSource):
             B = 4 * params.sigma_x * params.dsigma_x
             C = params.dQ / (3 * lwp[ind_t])
             der_scaled_error[ind_t, idx_layer] = der_scaled[ind_t, idx_layer] * ma.sqrt(
-                A * A + B * B + C * C
+                A * A + B * B + C * C,
             )
 
         N_scaled = ma.masked_less_equal(ma.masked_invalid(N_scaled), 0.0) * 1.0e-6
@@ -197,7 +211,8 @@ class DerSource(DataSource):
         self.append_data(der_scaled_error, "der_scaled_error")
 
     def append_retrieval_status(
-        self, droplet_classification: DropletClassification
+        self,
+        droplet_classification: DropletClassification,
     ) -> None:
         """Returns information about the status of der retrieval."""
         is_retrieved = ~self.data["der"][:].mask
@@ -224,7 +239,7 @@ DEFINITIONS = {
         "         of MWR but also the target reflectivity.\n"
         "Value 4: Surrounding ice: Less crucial! Ice crystals in the vicinity of a\n"
         "         droplet pixel may also bias its reflectivity.\n"
-    )
+    ),
 }
 
 
@@ -271,7 +286,7 @@ def _add_der_error_comment(attributes: dict, der_source: DerSource) -> dict:
         comment="This variable is an estimate of the random error in effective\n"
         f"radius assuming an error in Z of ddBZ = {params.ddBZ} in N of\n"
         f"dN = {params.dN} and in the spectral width dsigma_x = {params.dsigma_x}\n"
-        f"and in the LWP Q of {params.dQ} kg m-3."
+        f"and in the LWP Q of {params.dQ} kg m-3.",
     )
     return attributes
 

@@ -8,7 +8,9 @@ from cloudnetpy.constants import T0
 
 
 def find_falling_hydrometeors(
-    obs: ClassData, is_liquid: np.ndarray, is_insects: np.ndarray
+    obs: ClassData,
+    is_liquid: np.ndarray,
+    is_insects: np.ndarray,
 ) -> np.ndarray:
     """Finds falling hydrometeors.
 
@@ -19,21 +21,25 @@ def find_falling_hydrometeors(
     temperatures.
 
     Args:
+    ----
         obs: The :class:`ClassData` instance.
         is_liquid: 2-D boolean array of liquid droplets.
         is_insects: 2-D boolean array of insects.
 
     Returns:
+    -------
         2-D boolean array containing falling hydrometeors.
 
     References:
+    ----------
         Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ.
 
     """
-
     falling_from_radar = _find_falling_from_radar(obs, is_insects)
     falling_from_radar_fixed = _fix_liquid_dominated_radar(
-        obs, falling_from_radar, is_liquid
+        obs,
+        falling_from_radar,
+        is_liquid,
     )
     cold_aerosols = _find_cold_aerosols(obs, is_liquid)
     return falling_from_radar_fixed | cold_aerosols
@@ -60,7 +66,7 @@ def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
     cold_aerosol_min_altitude = 2000
     is_beta = ~obs.beta.mask
     lidar_ice_indices = np.where(
-        (obs.tw.data < cold_aerosol_temperature_limit) & is_beta & ~is_liquid
+        (obs.tw.data < cold_aerosol_temperature_limit) & is_beta & ~is_liquid,
     )
     cold_aerosols[lidar_ice_indices] = True
     low_range_indices = np.where(lidar_range < cold_aerosol_min_altitude)
@@ -85,7 +91,9 @@ def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
 
 
 def _fix_liquid_dominated_radar(
-    obs: ClassData, falling_from_radar: np.ndarray, is_liquid: np.ndarray
+    obs: ClassData,
+    falling_from_radar: np.ndarray,
+    is_liquid: np.ndarray,
 ) -> np.ndarray:
     """Radar signals inside liquid clouds are NOT ice if Z is
     increasing in height inside the cloud.
@@ -95,10 +103,12 @@ def _fix_liquid_dominated_radar(
     base_indices = np.where(liquid_bases)
     top_indices = np.where(liquid_tops)
 
-    for n, base, _, top in zip(*base_indices, *top_indices):
+    for n, base, _, top in zip(*base_indices, *top_indices, strict=True):
         z_prof = obs.z[n, :]
         if _is_z_missing_above_liquid(z_prof, top) and _is_z_increasing(
-            z_prof, base, top
+            z_prof,
+            base,
+            top,
         ):
             falling_from_radar[n, base : top + 1] = False
 

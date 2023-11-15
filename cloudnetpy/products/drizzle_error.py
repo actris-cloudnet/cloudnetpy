@@ -9,15 +9,18 @@ MU_ERROR_SMALL = 0.25
 
 
 def get_drizzle_error(
-    categorize: DrizzleSource, drizzle_parameters: DrizzleSolver
+    categorize: DrizzleSource,
+    drizzle_parameters: DrizzleSolver,
 ) -> dict:
     """Estimates error and bias for drizzle classification.
 
     Args:
+    ----
         categorize: The :class:`DrizzleSource` instance.
         drizzle_parameters: The :class:`DrizzleSolver` instance.
 
     Returns:
+    -------
         dict: Dictionary containing information of estimated error and bias for drizzle
 
     """
@@ -29,8 +32,7 @@ def get_drizzle_error(
         z_error = np.full(categorize.z.shape, z_error)
         error_input = z_error, bias_error
     bias_input = _read_input_uncertainty(categorize, "bias")
-    errors = _calc_errors(drizzle_indices, error_input, bias_input)
-    return errors
+    return _calc_errors(drizzle_indices, error_input, bias_input)
 
 
 def _get_drizzle_indices(diameter: np.ndarray) -> dict:
@@ -100,7 +102,9 @@ def _calc_parameter_biases(bias_input: tuple) -> dict:
 
 
 def _add_supplementary_errors(
-    results: dict, drizzle_indices: dict, error_input: tuple
+    results: dict,
+    drizzle_indices: dict,
+    error_input: tuple,
 ) -> dict:
     def _calc_n_error() -> ma.MaskedArray:
         z_error = error_input[0]
@@ -139,6 +143,7 @@ def _calc_error(
     scale: float,
     weights: tuple,
     error_input: tuple,
+    *,
     add_mu: bool = False,
     add_mu_small: bool = False,
 ) -> ma.MaskedArray:
@@ -156,7 +161,7 @@ def _stack_errors(
     error_small=None,
     error_tiny=None,
 ) -> ma.MaskedArray:
-    def _add_error_component(source: np.ndarray, ind: tuple):
+    def _add_error_component(source: np.ndarray, ind: tuple) -> None:
         error[ind] = source[ind]
 
     error = ma.zeros(error_in.shape)

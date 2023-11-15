@@ -11,9 +11,12 @@ class ProductGrid:
     """Class to generate downsampling of observation product to model grid.
 
     Args:
+    ----
         model_obj (object): The :class:'ModelManager' object.
         obs_obj (object): The :class:'ObservationManager' object.
+
     Notes:
+    -----
         Downsampled observation products data is added to a ModelManager
         object which is used for nc-file creation and writing
     """
@@ -28,13 +31,15 @@ class ProductGrid:
         self._model_time = model_obj.time
         self._model_height = model_obj.data[model_obj.keys["height"]][:]
         self._time_adv = tl.calculate_advection_time(
-            int(model_obj.resolution_h), ma.array(model_obj.wind), 1
+            int(model_obj.resolution_h),
+            ma.array(model_obj.wind),
+            1,
         )
         time_steps = utils.binvec(self._model_time)
         self._time_steps = tl.time2datetime(time_steps, self._date)
         self._generate_downsample_product()
 
-    def _generate_downsample_product(self):
+    def _generate_downsample_product(self) -> None:
         """Downsampling products are generated with different averaging methods
         for a selected size of model time-height window.
         """
@@ -42,7 +47,8 @@ class ProductGrid:
         model_t = tl.time2datetime(self._model_time, self._date)
         for i in range(len(self._time_steps) - 1):
             x_ind = tl.get_1d_indices(
-                (self._time_steps[i], self._time_steps[i + 1]), self._obs_time
+                (self._time_steps[i], self._time_steps[i + 1]),
+                self._obs_time,
             )
             if self._obs_obj.obs == "iwc":
                 x_ind_no_rain = tl.get_1d_indices(
@@ -53,10 +59,13 @@ class ProductGrid:
             y_steps = tl.rebin_edges(self._model_height[i])
             for j in range(len(y_steps) - 1):
                 x_ind_adv = tl.get_adv_indices(
-                    model_t[i], self._time_adv[i, j], self._obs_time
+                    model_t[i],
+                    self._time_adv[i, j],
+                    self._obs_time,
                 )
                 y_ind = tl.get_1d_indices(
-                    (y_steps[j], y_steps[j + 1]), self._obs_height
+                    (y_steps[j], y_steps[j + 1]),
+                    self._obs_height,
                 )
                 ind = np.outer(x_ind, y_ind)
                 ind_avd = np.outer(x_ind_adv, y_ind)
@@ -66,7 +75,9 @@ class ProductGrid:
                         continue
                     product_dict = self._regrid_cf(product_dict, i, j, data)
                     data_adv = self._reshape_data_to_window(ind_avd, x_ind_adv, y_ind)
-                    assert data_adv is not None
+                    if data_adv is None:
+                        msg = "No data for advection"
+                        raise RuntimeError(msg)
                     product_adv_dict = self._regrid_cf(product_adv_dict, i, j, data_adv)
                 elif self._obs_obj.obs == "iwc":
                     x_ind_no_rain_adv = tl.get_adv_indices(
@@ -78,19 +89,30 @@ class ProductGrid:
                     ind_no_rain = np.outer(x_ind_no_rain, y_ind)
                     ind_no_rain_adv = np.outer(x_ind_no_rain_adv, y_ind)
                     product_dict = self._regrid_iwc(
-                        product_dict, i, j, ind, ind_no_rain
+                        product_dict,
+                        i,
+                        j,
+                        ind,
+                        ind_no_rain,
                     )
                     product_adv_dict = self._regrid_iwc(
-                        product_adv_dict, i, j, ind_avd, ind_no_rain_adv
+                        product_adv_dict,
+                        i,
+                        j,
+                        ind_avd,
+                        ind_no_rain_adv,
                     )
                 else:
                     product_dict = self._regrid_product(product_dict, i, j, ind)
                     product_adv_dict = self._regrid_product(
-                        product_adv_dict, i, j, ind_avd
+                        product_adv_dict,
+                        i,
+                        j,
+                        ind_avd,
                     )
         self._append_data2object([product_dict, product_adv_dict])
 
-    def _get_method_storage(self):
+    def _get_method_storage(self) -> tuple[dict, dict]:
         if self._obs_obj.obs == "cf":
             return self._cf_method_storage()
         if self._obs_obj.obs == "iwc":
@@ -124,7 +146,7 @@ class ProductGrid:
     def _product_method_storage(self) -> tuple[dict, dict]:
         product_dict = {f"{self._obs_obj.obs}": np.zeros(self._model_height.shape)}
         product_adv_dict = {
-            f"{self._obs_obj.obs}_adv": np.zeros(self._model_height.shape)
+            f"{self._obs_obj.obs}_adv": np.zeros(self._model_height.shape),
         }
         return product_dict, product_adv_dict
 
@@ -139,18 +161,21 @@ class ProductGrid:
                     downsample[i, j] = np.nanmean(data)
                 else:
                     downsample[i, j] = np.nan
-                if "_A" in key:
-                    if not np.isnan(data).all() and not (
-                        isinstance(data, ma.MaskedArray) and data.mask.all()
-                    ):
-                        downsample[i, j] = tl.average_column_sum(data)
+                if "_A" in key and (
+                    not np.isnan(data).all()
+                    and not (isinstance(data, ma.MaskedArray) and data.mask.all())
+                ):
+                    downsample[i, j] = tl.average_column_sum(data)
             else:
                 downsample[i, j] = np.nan
             storage[key] = downsample
         return storage
 
     def _reshape_data_to_window(
-        self, ind: np.ndarray, x_ind: np.ndarray, y_ind: np.ndarray
+        self,
+        ind: np.ndarray,
+        x_ind: np.ndarray,
+        y_ind: np.ndarray,
     ) -> np.ndarray | None:
         """Reshapes True observation values to windows shape"""
         window_size = tl.get_obs_window_size(x_ind, y_ind)
@@ -203,9 +228,9 @@ class ProductGrid:
             storage[key] = down_sample
         return storage
 
-    def _append_data2object(self, data_storage: list):
+    def _append_data2object(self, data_storage: list) -> None:
         for storage in data_storage:
-            for key in storage.keys():
+            for key in storage:
                 down_sample = storage[key]
                 self.model_obj.append_data(
                     down_sample,

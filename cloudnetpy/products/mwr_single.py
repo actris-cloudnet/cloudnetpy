@@ -10,7 +10,9 @@ from cloudnetpy.products import product_tools
 
 
 def generate_mwr_single(
-    mwr_l1c_file: str, output_file: str, uuid: str | None = None
+    mwr_l1c_file: str,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     file_uuid = uuid if uuid is not None else utils.get_uuid()
 
@@ -26,6 +28,7 @@ def generate_mwr_single(
         for prod, file in zip(
             ("2I01", "2I02", "2P01", "2P03"),
             (lwp_file, iwv_file, t_prof_file, abs_hum_file),
+            strict=True,
         ):
             lev2_to_nc(prod, mwr_l1c_file, file.name, coeff_files=coeffs)
 

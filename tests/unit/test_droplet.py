@@ -1,6 +1,6 @@
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_equal
 
 from cloudnetpy.categorize import droplet
@@ -19,7 +19,10 @@ class TestIndBase:
     def test_ind_base_0(self):
         assert (
             droplet.ind_base(
-                self.dx, self.peak_position, self.search_range, self.threshold
+                self.dx,
+                self.peak_position,
+                self.search_range,
+                self.threshold,
             )
             == 4
         )
@@ -35,7 +38,10 @@ class TestIndBase:
         huge_threshold = 5000
         assert (
             droplet.ind_base(
-                self.dx, self.peak_position, self.search_range, huge_threshold
+                self.dx,
+                self.peak_position,
+                self.search_range,
+                huge_threshold,
             )
             == 1
         )
@@ -44,7 +50,10 @@ class TestIndBase:
         small_threshold = 1.01
         assert (
             droplet.ind_base(
-                self.dx, self.peak_position, self.search_range, small_threshold
+                self.dx,
+                self.peak_position,
+                self.search_range,
+                small_threshold,
             )
             == 4
         )
@@ -198,7 +207,7 @@ def test_correct_liquid_top():
             [0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
             [0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
             [0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
-        ]
+        ],
     )
 
     liquid = np.array(

@@ -14,11 +14,13 @@ class Model(DataSource):
     """Model class, child of DataSource.
 
     Args:
+    ----
         model_file: File name of the NWP model file.
         alt_site: Altitude of the site above mean sea level (m).
 
     Attributes:
-        type (str): Model type, e.g. 'gdas1' or 'ecwmf'.
+    ----------
+        source_type (str): Model type, e.g. 'gdas1' or 'ecwmf'.
         model_heights (ndarray): 2-D array of model heights (one for each time
             step).
         mean_height (ndarray): Mean of *model_heights*.
@@ -38,11 +40,11 @@ class Model(DataSource):
         "specific_saturated_gas_atten",
         "specific_liquid_atten",
     )
-    fields_sparse = fields_dense + ("q", "uwind", "vwind")
+    fields_sparse = (*fields_dense, "q", "uwind", "vwind")
 
     def __init__(self, model_file: str, alt_site: float):
         super().__init__(model_file)
-        self.type = _find_model_type(model_file)
+        self.source_type = _find_model_type(model_file)
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = _calc_mean_height(self.model_heights)
         self.height: np.ndarray
@@ -54,6 +56,7 @@ class Model(DataSource):
         """Interpolates model variables to common height grid.
 
         Args:
+        ----
             wl_band: Integer denoting the approximate wavelength band of the
                 cloud radar (0 = ~35.5 GHz, 1 = ~94 GHz).
 
@@ -61,7 +64,9 @@ class Model(DataSource):
 
         def _interpolate_variable(data_in: ma.MaskedArray) -> CloudnetArray:
             datai = ma.zeros((len(self.time), len(self.mean_height)))
-            for ind, (alt, prof) in enumerate(zip(self.model_heights, data_in)):
+            for ind, (alt, prof) in enumerate(
+                zip(self.model_heights, data_in, strict=True),
+            ):
                 if prof.mask.all():
                     datai[ind, :] = ma.masked
                 else:
@@ -78,11 +83,14 @@ class Model(DataSource):
             self.data_sparse[key] = _interpolate_variable(data)
 
     def interpolate_to_grid(
-        self, time_grid: np.ndarray, height_grid: np.ndarray
+        self,
+        time_grid: np.ndarray,
+        height_grid: np.ndarray,
     ) -> None:
         """Interpolates model variables to Cloudnet's dense time / height grid.
 
         Args:
+        ----
             time_grid: The target time array (fraction hour).
             height_grid: The target height array (m).
 
@@ -93,7 +101,11 @@ class Model(DataSource):
             if valid_profiles < 2:
                 raise ModelDataError
             self.data_dense[key] = utils.interpolate_2d_mask(
-                self.time, self.mean_height, array, time_grid, height_grid
+                self.time,
+                self.mean_height,
+                array,
+                time_grid,
+                height_grid,
             )
         self.height = height_grid
 
@@ -116,7 +128,8 @@ class Model(DataSource):
         try:
             model_heights = self.dataset.variables["height"]
         except KeyError as err:
-            raise ModelDataError("No 'height' variable in the model file.") from err
+            msg = "No 'height' variable in the model file."
+            raise ModelDataError(msg) from err
         return self.to_m(model_heights) + alt_site
 
 
@@ -131,7 +144,8 @@ def _find_model_type(file_name: str) -> str:
     for key in possible_keys:
         if key in file_name:
             return key
-    raise ValueError("Unknown model type")
+    msg = "Unknown model type"
+    raise ValueError(msg)
 
 
 def _find_number_of_valid_profiles(array: np.ndarray) -> int:

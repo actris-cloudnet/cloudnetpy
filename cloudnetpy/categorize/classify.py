@@ -19,18 +19,22 @@ def classify_measurements(data: dict) -> ClassificationResult:
     time / height grid before calling this function.
 
     Args:
+    ----
         data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model`
             and :class:`Mwr` instances.
 
     Returns:
+    -------
         A :class:`ClassificationResult` instance.
 
     References:
+    ----------
         The Cloudnet classification scheme is based on methodology proposed by
         Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ and its
         proprietary Matlab implementation.
 
     Notes:
+    -----
         Some individual classification methods are changed in this Python
         implementation compared to the original Cloudnet methodology.
         Especially methods classifying insects, melting layer and liquid droplets.
@@ -48,7 +52,8 @@ def classify_measurements(data: dict) -> ClassificationResult:
         liquid_prob = voodoonet.infer(obs.lv0_files, target_time=target_time)
         liquid_from_radar = liquid_prob > 0.55
         liquid_from_radar = _remove_false_radar_liquid(
-            liquid_from_radar, liquid_from_lidar
+            liquid_from_radar,
+            liquid_from_lidar,
         )
         bits[0] = liquid_from_radar | liquid_from_lidar
     else:
@@ -73,27 +78,32 @@ def classify_measurements(data: dict) -> ClassificationResult:
 
 
 def _remove_false_radar_liquid(
-    liquid_from_radar: np.ndarray, liquid_from_lidar: np.ndarray
+    liquid_from_radar: np.ndarray,
+    liquid_from_lidar: np.ndarray,
 ) -> np.ndarray:
     """Removes radar-liquid below lidar-detected liquid bases."""
     lidar_liquid_bases = cloudnetpy.categorize.atmos.find_cloud_bases(liquid_from_lidar)
-    for prof, base in zip(*np.where(lidar_liquid_bases)):
+    for prof, base in zip(*np.where(lidar_liquid_bases), strict=True):
         liquid_from_radar[prof, 0:base] = 0
     return liquid_from_radar
 
 
 def fetch_quality(
-    data: dict, classification: ClassificationResult, attenuations: dict
+    data: dict,
+    classification: ClassificationResult,
+    attenuations: dict,
 ) -> dict:
     """Returns Cloudnet quality bits.
 
     Args:
+    ----
         data: Containing :class:`Radar` and :class:`Lidar` instances.
         classification: A :class:`ClassificationResult` instance.
         attenuations: Dictionary containing keys `liquid_corrected`,
             `liquid_uncorrected`.
 
     Returns:
+    -------
         Dictionary containing `quality_bits`, an integer array with the bits:
 
             - bit 0: Pixel contains radar data
@@ -117,18 +127,22 @@ def fetch_quality(
 
 
 def _find_aerosols(
-    obs: ClassData, is_falling: np.ndarray, is_liquid: np.ndarray
+    obs: ClassData,
+    is_falling: np.ndarray,
+    is_liquid: np.ndarray,
 ) -> np.ndarray:
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
 
     Args:
+    ----
         obs: A :class:`ClassData` instance.
         is_falling: 2-D boolean array of falling hydrometeors.
         is_liquid: 2-D boolean array of liquid droplets.
 
     Returns:
+    -------
         2-D boolean array containing aerosols.
 
     """
@@ -145,16 +159,20 @@ def _fix_undetected_melting_layer(bits: list) -> np.ndarray:
 
 
 def _find_drizzle_and_falling(
-    is_liquid: np.ndarray, is_falling: np.ndarray, is_freezing: np.ndarray
+    is_liquid: np.ndarray,
+    is_falling: np.ndarray,
+    is_freezing: np.ndarray,
 ) -> np.ndarray:
     """Classifies pixels as falling, drizzle and others.
 
     Args:
+    ----
         is_liquid: 2D boolean array denoting liquid layers.
         is_falling: 2D boolean array denoting falling pixels.
         is_freezing: 2D boolean array denoting subzero temperatures.
 
     Returns:
+    -------
         2D array where values are 1 (falling, drizzle, supercooled liquids),
         2 (drizzle), and masked (all others).
 
@@ -173,10 +191,12 @@ def _bits_to_integer(bits: list) -> np.ndarray:
     """Creates array of integers from individual boolean arrays.
 
     Args:
+    ----
         bits: List of bit fields (of similar sizes) to be saved in the resulting
             array of integers. bits[0] is saved as bit 0, bits[1] as bit 1, etc.
 
     Returns:
+    -------
         Array of integers containing the information of the individual boolean arrays.
 
     """
@@ -201,7 +221,7 @@ def _filter_insects(bits: list) -> list:
     # remove around melting layer:
     original_insects = np.copy(is_insects)
     n_gates = 5
-    for x, y in zip(*np.where(is_melting_layer)):
+    for x, y in zip(*np.where(is_melting_layer), strict=True):
         try:
             # change insects to drizzle below melting layer pixel
             ind1 = np.arange(y - n_gates, y)
@@ -229,7 +249,9 @@ def _filter_falling(bits: list) -> tuple:
     is_freezing = bits[2]
     is_falling = bits[1]
     is_falling_filtered = skimage.morphology.remove_small_objects(
-        is_falling, 10, connectivity=1
+        is_falling,
+        10,
+        connectivity=1,
     )
     is_filtered = is_falling & ~np.array(is_falling_filtered)
     ice_ind = np.where(is_freezing & is_filtered)

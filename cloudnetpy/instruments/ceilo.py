@@ -40,6 +40,7 @@ def ceilo2nc(
     of weak aerosol layers and supercooled liquid clouds.
 
     Args:
+    ----
         full_path: Ceilometer file name.
         output_file: Output file name, e.g. 'ceilo.nc'.
         site_meta: Dictionary containing information about the site and instrument.
@@ -53,12 +54,15 @@ def ceilo2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         RuntimeError: Failed to read or process raw ceilometer data.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import ceilo2nc
         >>> site_meta = {'name': 'Mace-Head', 'altitude': 5}
         >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc', site_meta)
@@ -74,12 +78,18 @@ def ceilo2nc(
     ceilo_obj.read_ceilometer_file(calibration_factor)
     ceilo_obj.check_beta_raw_shape()
     ceilo_obj.data["beta"] = ceilo_obj.calc_screened_product(
-        ceilo_obj.data["beta_raw"], snr_limit, range_corrected
+        ceilo_obj.data["beta_raw"],
+        snr_limit,
+        range_corrected=range_corrected,
     )
     ceilo_obj.data["beta_smooth"] = ceilo_obj.calc_beta_smooth(
-        ceilo_obj.data["beta"], snr_limit, range_corrected
+        ceilo_obj.data["beta"],
+        snr_limit,
+        range_corrected=range_corrected,
     )
-    assert ceilo_obj.instrument is not None and ceilo_obj.instrument.model is not None
+    if ceilo_obj.instrument is None or ceilo_obj.instrument.model is None:
+        msg = "Failed to read ceilometer model"
+        raise RuntimeError(msg)
     if "cl61" in ceilo_obj.instrument.model.lower():
         # This kind of screening could be used with other ceilometers as well:
         mask = ceilo_obj.data["beta_smooth"].mask
@@ -94,12 +104,13 @@ def ceilo2nc(
     output.update_attributes(ceilo_obj.data, attributes)
     for key in ("beta", "beta_smooth"):
         ceilo_obj.add_snr_info(key, snr_limit)
-    uuid = output.save_level1b(ceilo_obj, output_file, uuid)
-    return uuid
+    return output.save_level1b(ceilo_obj, output_file, uuid)
 
 
 def _initialize_ceilo(
-    full_path: str, site_meta: dict, date: str | None = None
+    full_path: str,
+    site_meta: dict,
+    date: str | None = None,
 ) -> ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135:
     if "model" in site_meta:
         if site_meta["model"] not in (
@@ -110,7 +121,8 @@ def _initialize_ceilo(
             "chm15k",
             "cs135",
         ):
-            raise ValueError(f"Invalid ceilometer model: {site_meta['model']}")
+            msg = f"Invalid ceilometer model: {site_meta['model']}"
+            raise ValueError(msg)
         if site_meta["model"] in ("cl31", "cl51"):
             model = "cl31_or_cl51"
         else:
@@ -129,21 +141,26 @@ def _initialize_ceilo(
 
 
 def _find_ceilo_model(full_path: str) -> str:
+    model = None
     try:
         with netCDF4.Dataset(full_path) as nc:
             title = nc.title
         for identifier in ["cl61d", "cl61-d"]:
             if identifier in title.lower() or identifier in full_path.lower():
-                return "cl61d"
-        return "chm15k"
+                model = "cl61d"
+        if model is None:
+            model = "chm15k"
     except OSError:
         with open(full_path, "rb") as file:
             for line in islice(file, 100):
                 if line.startswith(b"\x01CL"):
-                    return "cl31_or_cl51"
-                if line.startswith(b"\x01CT"):
-                    return "ct25k"
-    raise RuntimeError("Error: Unknown ceilo model.")
+                    model = "cl31_or_cl51"
+                elif line.startswith(b"\x01CT"):
+                    model = "ct25k"
+    if model is None:
+        msg = "Unable to determine ceilometer model"
+        raise RuntimeError(msg)
+    return model
 
 
 ATTRIBUTES = {

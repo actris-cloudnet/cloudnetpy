@@ -13,7 +13,10 @@ class LufftCeilo(NcLidar):
     """Class for Lufft chm15k ceilometer."""
 
     def __init__(
-        self, file_name: str, site_meta: dict, expected_date: str | None = None
+        self,
+        file_name: str,
+        site_meta: dict,
+        expected_date: str | None = None,
     ):
         super().__init__()
         self.file_name = file_name
@@ -31,32 +34,35 @@ class LufftCeilo(NcLidar):
             self._fetch_zenith_angle("zenith")
 
     def _fetch_beta_raw(self, calibration_factor: float | None = None) -> None:
-        assert self.dataset is not None
         if calibration_factor is None:
             logging.warning("Using default calibration factor")
             calibration_factor = 3e-12
         beta_raw = self._getvar("beta_raw", "beta_att")
+        beta_raw = ma.masked_array(beta_raw)
         old_version = self._get_old_software_version()
         if old_version is not None:
             logging.warning(
-                f"Software version {old_version}. Assuming data not range corrected."
+                "Software version %s. Assuming data not range corrected.",
+                old_version,
             )
             data_std = self._getvar("stddev")
             normalised_apd = self._get_nn()
-            beta_raw *= utils.transpose(data_std / normalised_apd)
+            beta_raw *= utils.transpose(ma.masked_array(data_std / normalised_apd))
             beta_raw *= self.data["range"] ** 2
         beta_raw *= calibration_factor
         self.data["calibration_factor"] = float(calibration_factor)
         self.data["beta_raw"] = beta_raw
 
     def _get_old_software_version(self) -> str | None:
-        assert self.dataset is not None
+        if self.dataset is None:
+            msg = "No dataset found"
+            raise RuntimeError(msg)
         version = self.dataset.software_version
         if len(str(version)) > 4:
             return None
         return version
 
-    def _get_nn(self):
+    def _get_nn(self) -> float | ma.MaskedArray:
         nn1 = self._getvar("nn1", "NN1")
         median_nn1 = ma.median(nn1)
         # Parameters taken from the matlab code and should be verified
@@ -69,18 +75,21 @@ class LufftCeilo(NcLidar):
             return 1
         return step_factor ** (-(nn1 - reference) / scale)
 
-    def _getvar(self, *args):
-        assert self.dataset is not None
+    def _getvar(self, *args) -> float | ma.MaskedArray:
+        if self.dataset is None:
+            msg = "No dataset found"
+            raise RuntimeError(msg)
         for arg in args:
             if arg in self.dataset.variables:
                 var = self.dataset.variables[arg]
                 return var[0] if utils.isscalar(var) else var[:]
-        raise ValueError("Unknown variable")
+        msg = f"Unable to find variable {args[0]}"
+        raise ValueError(msg)
 
-    def _fetch_attributes(self):
+    def _fetch_attributes(self) -> None:
         self.serial_number = getattr(self.dataset, "device_name", None)
         if self.serial_number is None:
-            self.serial_number = getattr(self.dataset, "source")
+            self.serial_number = getattr(self.dataset, "source", "")
         self.instrument = (
             instruments.CHM15KX
             if self.serial_number.startswith("CHX")

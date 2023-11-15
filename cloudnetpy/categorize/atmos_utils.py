@@ -17,12 +17,15 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
     expansion of a simple expression for the saturated vapour pressure.
 
     Args:
+    ----
         model_data: Model variables `temperature`, `pressure`, `rh`.
 
     Returns:
+    -------
         Wet bulb temperature (K).
 
     References:
+    ----------
         J. Sullivan and L. D. Sanders: Method for obtaining wet-bulb
         temperatures by modifying the psychrometric formula.
 
@@ -63,9 +66,11 @@ def calc_saturation_vapor_pressure(temperature: np.ndarray) -> np.ndarray:
     """Goff-Gratch formula for saturation vapor pressure over water adopted by WMO.
 
     Args:
+    ----
         temperature: Temperature (K).
 
     Returns:
+    -------
         Saturation vapor pressure (Pa).
 
     """
@@ -90,9 +95,11 @@ def calc_psychrometric_constant(pressure: np.ndarray) -> np.ndarray:
     of water in air to the air temperature.
 
     Args:
+    ----
         pressure: Atmospheric pressure (Pa).
 
     Returns:
+    -------
         Psychrometric constant value (Pa K-1)
 
     """
@@ -103,12 +110,15 @@ def calc_dew_point_temperature(vapor_pressure: np.ndarray) -> np.ndarray:
     """Returns dew point temperature.
 
     Args:
+    ----
         vapor_pressure: Water vapor pressure (Pa).
 
     Returns:
+    -------
         Dew point temperature (K).
 
     Notes:
+    -----
         Method from Vaisala's white paper: "Humidity conversion formulas".
 
     """

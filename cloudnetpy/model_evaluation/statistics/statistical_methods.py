@@ -15,6 +15,7 @@ class DayStatistics:
     and observation data of wanted product.
 
     Args:
+    ----
         method (str): Name on statistical method to be calculated
         product_info (list): List of information of statistical analysis is
             done with. A list includes observed product name (str), model variable (str)
@@ -24,12 +25,15 @@ class DayStatistics:
         observation (np.ndarray): Ndrray of Downsampled observation of product
 
     Raises:
+    ------
         RuntimeError: A function of given method not found
 
     Returns:
+    -------
         day_statistic (object): The :class:'DayStatistic' object.
 
     Examples:
+    --------
         >>> from cloudnetpy.model_evaluation.products.product_resampling import \
         process_L3_day_product
         >>> method = 'error'
@@ -72,20 +76,22 @@ class DayStatistics:
             full_name = "vertical_profile"
         return full_name, params
 
-    def _generate_day_statistics(self):
+    def _generate_day_statistics(self) -> None:
         full_name, params = self._get_method_attr()
         cls = __import__("statistical_methods")
         try:
             self.model_stat, self.observation_stat = getattr(cls, f"{full_name}")(
-                *params
+                *params,
             )
-            self.title = getattr(cls, "day_stat_title")(self.method, self.product)
-        except RuntimeError as error:
-            logging.error(f"Method {full_name} not found or missing: {error}")
+            self.title = cls.day_stat_title(self.method, self.product)
+        except RuntimeError:
+            msg = f"Failed to calculate {self.method} of {self.product[0]}"
+            logging.exception(msg)
 
 
 def relative_error(
-    model: ma.MaskedArray, observation: ma.MaskedArray
+    model: ma.MaskedArray,
+    observation: ma.MaskedArray,
 ) -> tuple[float, str]:
     model, observation = combine_masked_indices(model, observation)
     error = ((model - observation) / observation) * 100
@@ -93,7 +99,8 @@ def relative_error(
 
 
 def absolute_error(
-    model: ma.MaskedArray, observation: ma.MaskedArray
+    model: ma.MaskedArray,
+    observation: ma.MaskedArray,
 ) -> tuple[float, str]:
     model, observation = combine_masked_indices(model, observation)
     error = (observation - model) * 100
@@ -101,7 +108,8 @@ def absolute_error(
 
 
 def combine_masked_indices(
-    model: ma.MaskedArray, observation: ma.MaskedArray
+    model: ma.MaskedArray,
+    observation: ma.MaskedArray,
 ) -> tuple[ma.MaskedArray, ma.MaskedArray]:
     """Connects two array masked indices to one and add in two array same mask"""
     observation[np.where(np.isnan(observation))] = ma.masked
@@ -113,9 +121,10 @@ def combine_masked_indices(
 
 
 def calc_common_area_sum(
-    model: ma.MaskedArray, observation: ma.MaskedArray
+    model: ma.MaskedArray,
+    observation: ma.MaskedArray,
 ) -> tuple[float, str]:
-    def _indices_of_mask_sum():
+    def _indices_of_mask_sum() -> float:
         # Calculate percentage value of common area of indices from two arrays.
         # Results is total number of common indices with value
         observation[np.where(np.isnan(observation))] = ma.masked
@@ -131,17 +140,21 @@ def calc_common_area_sum(
 
 
 def histogram(
-    product: list, model: ma.MaskedArray, observation: ma.MaskedArray
+    product: list,
+    model: ma.MaskedArray,
+    observation: ma.MaskedArray,
 ) -> tuple:
     if "cf" in product:
         model = ma.round(model[~model.mask].data, decimals=1).flatten()
         observation = ma.round(
-            observation[~observation.mask].data, decimals=1
+            observation[~observation.mask].data,
+            decimals=1,
         ).flatten()
     else:
-        model = ma.round(model[~model.mask].data, decimals=6).flatten()
-        observation = ma.round(
-            observation[~observation.mask].data, decimals=6
+        model = np.round(model[~model.mask].data, decimals=6).flatten()
+        observation = np.round(
+            observation[~observation.mask].data,
+            decimals=6,
         ).flatten()
     observation = observation[~np.isnan(observation)]
     hist_bins = np.histogram(observation, density=True)[-1]

@@ -11,7 +11,10 @@ class Cl61d(NcLidar):
     """Class for Vaisala CL61d ceilometer."""
 
     def __init__(
-        self, file_name: str, site_meta: dict, expected_date: str | None = None
+        self,
+        file_name: str,
+        site_meta: dict,
+        expected_date: str | None = None,
     ):
         super().__init__()
         self.file_name = file_name
@@ -31,7 +34,9 @@ class Cl61d(NcLidar):
             self.dataset = None
 
     def _fetch_lidar_variables(self, calibration_factor: float | None = None) -> None:
-        assert self.dataset is not None
+        if self.dataset is None:
+            msg = "No dataset found"
+            raise RuntimeError(msg)
         beta_raw = self.dataset.variables["beta_att"][:]
         if calibration_factor is None:
             logging.warning("Using default calibration factor")
@@ -44,5 +49,5 @@ class Cl61d(NcLidar):
         )
         self.data["depolarisation_raw"] = self.data["depolarisation"].copy()
 
-    def _fetch_attributes(self):
+    def _fetch_attributes(self) -> None:
         self.serial_number = getattr(self.dataset, "instrument_serial_number", None)

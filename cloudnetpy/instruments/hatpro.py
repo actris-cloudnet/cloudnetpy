@@ -34,6 +34,7 @@ def hatpro2l1c(
     """Converts RPG HATPRO microwave radiometer data into Cloudnet Level 1c netCDF file.
 
     Args:
+    ----
         mwr_dir: Folder containing one day of HATPRO files.
         output_file: Output file name.
         site_meta: Dictionary containing information about the site and instrument
@@ -41,9 +42,9 @@ def hatpro2l1c(
         date: Expected date in the input files.
 
     Returns:
+    -------
         UUID of the generated file.
     """
-
     coeff_files = site_meta.get("coefficientFiles", None)
 
     hatpro_raw = mwrpy.lev1_to_nc(
@@ -59,9 +60,16 @@ def hatpro2l1c(
     timestamps = hatpro.data["time"][:]
     if date is not None:
         # Screen timestamps if these assertions start to fail
-        assert np.all(np.diff(timestamps) > 0)
-        dates = [str(datetime.datetime.utcfromtimestamp(t).date()) for t in timestamps]
-        assert len(set(dates)) == 1
+        if not np.all(np.diff(timestamps) > 0):
+            msg = "Timestamps are not increasing"
+            raise RuntimeError(msg)
+        dates = [
+            str(datetime.datetime.fromtimestamp(t, tz=datetime.timezone.utc).date())
+            for t in timestamps
+        ]
+        if len(set(dates)) != 1:
+            msg = f"Several dates, something is wrong: {set(dates)}"
+            raise RuntimeError(msg)
 
     decimal_hours = utils.seconds2hours(timestamps)
     hatpro.data["time"] = CloudnetArray(decimal_hours, "time", data_type="f8")
@@ -115,6 +123,7 @@ def hatpro2nc(
     concatenates the data and writes it into netCDF file.
 
     Args:
+    ----
         path_to_files: Folder containing one day of RPG HATPRO files.
         output_file: Output file name.
         site_meta: Dictionary containing information about the site with keys:
@@ -131,15 +140,18 @@ def hatpro2nc(
             only files that match the date will be used.
 
     Returns:
+    -------
         2-element tuple containing
 
         - UUID of the generated file.
         - Files used in the processing.
 
     Raises:
+    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import hatpro2nc
         >>> site_meta = {'name': 'Hyytiala', 'altitude': 174}
         >>> hatpro2nc('/path/to/files/', 'hatpro.nc', site_meta)
@@ -165,7 +177,8 @@ def hatpro2nc(
 
 
 def _get_hatpro_objects(
-    directory: Path, expected_date: str | None
+    directory: Path,
+    expected_date: str | None,
 ) -> tuple[list[HatproBinCombined], list[str]]:
     objects = defaultdict(list)
     for filename in directory.iterdir():
@@ -183,7 +196,7 @@ def _get_hatpro_objects(
                 obj = _validate_date(obj, expected_date)
             objects[filename.stem].append(obj)
         except (TypeError, ValueError, ValidTimeStampError) as err:
-            logging.warning(f"Ignoring file '{filename}': {err}")
+            logging.warning("Ignoring file '%s': %s", filename, err)
             continue
 
     valid_files: list[str] = []
@@ -194,28 +207,31 @@ def _get_hatpro_objects(
             valid_files.extend(str(obj.filename) for obj in objs)
         except (TypeError, ValueError) as err:
             files = "'" + "', '".join(str(obj.filename) for obj in objs) + "'"
-            logging.warning(f"Ignoring files {files}: {err}")
+            logging.warning("Ignoring files %s: %s", files, err)
             continue
 
     return combined_objs, valid_files
 
 
-def _validate_date(obj: HatproBin, expected_date: str):
+def _validate_date(obj: HatproBin, expected_date: str) -> HatproBin:
     if obj.header["_time_reference"] != 1:
-        raise ValueError("Can not validate non-UTC dates")
+        msg = "Can not validate non-UTC dates"
+        raise ValueError(msg)
     inds = []
     for ind, timestamp in enumerate(obj.data["time"][:]):
         date = "-".join(utils.seconds2date(timestamp)[:3])
         if date == expected_date:
             inds.append(ind)
     if not inds:
-        raise ValueError("Timestamps not what expected")
+        msg = f"No valid timestamps found for date {expected_date}"
+        raise ValueError(msg)
     obj.data = obj.data[:][inds]
     return obj
 
 
 def _add_missing_variables(
-    hatpro_objects: list[HatproBinCombined], keys: tuple
+    hatpro_objects: list[HatproBinCombined],
+    keys: tuple,
 ) -> list[HatproBinCombined]:
     for obj in hatpro_objects:
         for key in keys:

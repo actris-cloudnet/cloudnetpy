@@ -22,6 +22,7 @@ def ws2nc(
     """Converts weather-station data into Cloudnet Level 1b netCDF file.
 
     Args:
+    ----
         weather_station_file: Filename of weather-station ASCII file.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -30,13 +31,14 @@ def ws2nc(
         date: Expected date of the measurements as YYYY-MM-DD.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         WeatherStationDataError : Unable to read the file.
         ValidTimeStampError: No valid timestamps found.
     """
-
     try:
         ws = WS(weather_station_file, site_meta)
         if date is not None:
@@ -50,8 +52,7 @@ def ws2nc(
         output.update_attributes(ws.data, attributes)
     except ValueError as err:
         raise WeatherStationDataError from err
-    uuid = output.save_level1b(ws, output_file, uuid)
-    return uuid
+    return output.save_level1b(ws, output_file, uuid)
 
 
 class WS(CloudnetInstrument):
@@ -63,14 +64,17 @@ class WS(CloudnetInstrument):
         self.instrument = instruments.GENERIC_WEATHER_STATION
         self._data = self._read_data()
 
-    def _read_data(self):
+    def _read_data(self) -> dict:
         timestamps, values, header = [], [], []
         with open(self.filename, encoding="latin-1") as f:
             data = f.readlines()
         for row in data:
             splat = row.split()
             try:
-                timestamp = datetime.datetime.strptime(splat[0], "%Y-%m-%dT%H:%M:%SZ")
+                timestamp = datetime.datetime.strptime(
+                    splat[0],
+                    "%Y-%m-%dT%H:%M:%SZ",
+                ).replace(tzinfo=datetime.timezone.utc)
                 temp: list[str | float] = list(splat)
                 temp[1:] = [float(x) for x in temp[1:]]
                 values.append(temp)
@@ -93,16 +97,16 @@ class WS(CloudnetInstrument):
         error_msg = "Unexpected weather station file format"
         if len(column_titles) != len(expected_identifiers):
             raise ValueError(error_msg)
-        for title, identifier in zip(column_titles, expected_identifiers):
+        for title, identifier in zip(column_titles, expected_identifiers, strict=True):
             if identifier not in title:
                 raise ValueError(error_msg)
         return {"timestamps": timestamps, "values": values}
 
-    def convert_time(self):
+    def convert_time(self) -> None:
         decimal_hours = datetime2decimal_hours(self._data["timestamps"])
         self.data["time"] = CloudnetArray(decimal_hours, "time")
 
-    def screen_timestamps(self, date: str):
+    def screen_timestamps(self, date: str) -> None:
         dates = [str(d.date()) for d in self._data["timestamps"]]
         valid_ind = [ind for ind, d in enumerate(dates) if d == date]
         if not valid_ind:
@@ -112,7 +116,7 @@ class WS(CloudnetInstrument):
                 x for ind, x in enumerate(self._data[key]) if ind in valid_ind
             ]
 
-    def add_date(self):
+    def add_date(self) -> None:
         first_date = self._data["timestamps"][0].date()
         self.date = [
             str(first_date.year),
@@ -120,7 +124,7 @@ class WS(CloudnetInstrument):
             str(first_date.day).zfill(2),
         ]
 
-    def add_data(self):
+    def add_data(self) -> None:
         keys = (
             "wind_speed",
             "wind_direction",
@@ -135,7 +139,7 @@ class WS(CloudnetInstrument):
             array_masked = ma.masked_invalid(array)
             self.data[key] = CloudnetArray(array_masked, key)
 
-    def convert_units(self):
+    def convert_units(self) -> None:
         temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
         self.data["air_temperature"].data = temperature_kelvins
         self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100

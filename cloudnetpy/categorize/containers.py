@@ -24,10 +24,12 @@ class ClassData:
     """Container for observations that are used in the classification.
 
     Args:
+    ----
         data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model`
             and :class:`Mwr` instances.
 
     Attributes:
+    ----------
         z (ndarray): 2D radar echo.
         ldr (ndarray): 2D linear depolarization ratio.
         v (ndarray): 2D radar velocity.
@@ -52,13 +54,13 @@ class ClassData:
         self.v = data["radar"].data["v"][:]
         self.v_sigma = data["radar"].data["v_sigma"][:]
         for key in ("width", "ldr", "sldr"):
-            if key in data["radar"].data.keys():
+            if key in data["radar"].data:
                 setattr(self, key, data["radar"].data[key][:])
         self.time = data["radar"].time
         self.height = data["radar"].height
-        self.radar_type = data["radar"].type
+        self.radar_type = data["radar"].source_type
         self.tw = data["model"].data["Tw"][:]
-        self.model_type = data["model"].type
+        self.model_type = data["model"].source_type
         self.beta = data["lidar"].data["beta"][:]
         self.lwp = data["mwr"].data["lwp"][:]
         self.is_rain = _find_rain_from_radar_echo(self.z, self.time)
@@ -70,7 +72,9 @@ class ClassData:
 
 
 def _find_rain_from_radar_echo(
-    z: np.ndarray, time: np.ndarray, time_buffer: int = 5
+    z: np.ndarray,
+    time: np.ndarray,
+    time_buffer: int = 5,
 ) -> np.ndarray:
     """Find profiles affected by rain.
 
@@ -80,17 +84,22 @@ def _find_rain_from_radar_echo(
     detections as raining.
 
     Args:
+    ----
         z: Radar echo.
         time: Time vector.
         time_buffer: Time in minutes.
 
     Returns:
+    -------
         1D Boolean array denoting profiles with rain.
 
     """
-    is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(False)
+    filled = False
+    is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(filled)
     is_rain = skimage.morphology.remove_small_objects(
-        is_rain, 2, connectivity=1
+        is_rain,
+        2,
+        connectivity=1,
     )  # Filter hot pixels
     n_profiles = len(time)
     n_steps = utils.n_elements(time, time_buffer, "time")
@@ -122,16 +131,19 @@ def _find_clutter(
     """Estimates clutter from doppler velocity.
 
     Args:
+    ----
         n_gates: Number of range gates from the ground where clutter is expected
             to be found. Default is 10.
         v_lim: Velocity threshold. Smaller values are classified as clutter.
             Default is 0.05 (m/s).
 
     Returns:
+    -------
         2-D boolean array denoting pixels contaminated by clutter.
 
     """
     is_clutter = np.zeros(v.shape, dtype=bool)
-    tiny_velocity = (np.abs(v[:, :n_gates]) < v_lim).filled(False)
+    filled = False
+    tiny_velocity = (np.abs(v[:, :n_gates]) < v_lim).filled(filled)
     is_clutter[:, :n_gates] = tiny_velocity * utils.transpose(~is_rain)
     return is_clutter

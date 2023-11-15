@@ -8,7 +8,7 @@ DIMENSIONS = ("time", "height", "model_time", "model_height")
 TEST_ARRAY = np.arange(5)  # Simple array for all dimension and variables
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_array():
     return TEST_ARRAY
 
@@ -37,7 +37,11 @@ def nc_file(tmpdir_factory, file_metadata):
         _create_dimension_variables(root_grp)
         _create_global_attributes(root_grp, file_metadata)
         _create_variable(
-            root_grp, "altitude", file_metadata["altitude_km"], "km", dim=[]
+            root_grp,
+            "altitude",
+            file_metadata["altitude_km"],
+            "km",
+            dim=[],
         )
         _create_variable(root_grp, "test_array", TEST_ARRAY, "m s-1")
         _create_variable(root_grp, "range", TEST_ARRAY, "km")

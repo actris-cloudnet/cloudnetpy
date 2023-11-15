@@ -1,6 +1,6 @@
 """Module for reading raw Galileo cloud radar data."""
 import os
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 
 import numpy as np
 
@@ -20,6 +20,7 @@ def galileo2nc(
     """Converts 'Galileo' cloud radar data into Cloudnet Level 1b netCDF file.
 
     Args:
+    ----
         raw_files: Input file name or folder containing multiple input files.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -29,12 +30,15 @@ def galileo2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
+    --------
           >>> from cloudnetpy.instruments import galileo2nc
           >>> site_meta = {'name': 'Chilbolton'}
           >>> galileo2nc('raw_radar.nc', 'radar.nc', site_meta)
@@ -57,13 +61,20 @@ def galileo2nc(
 
     with TemporaryDirectory() as temp_dir:
         if os.path.isdir(raw_files):
-            nc_filename = f"{temp_dir}/tmp.nc"
-            valid_filenames = utils.get_sorted_filenames(raw_files, ".nc")
-            valid_filenames = utils.get_files_with_common_range(valid_filenames)
-            variables = list(keymap.keys())
-            concat_lib.concatenate_files(
-                valid_filenames, nc_filename, variables=variables
-            )
+            with NamedTemporaryFile(
+                dir=temp_dir,
+                suffix=".nc",
+                delete=False,
+            ) as temp_file:
+                nc_filename = temp_file.name
+                valid_filenames = utils.get_sorted_filenames(raw_files, ".nc")
+                valid_filenames = utils.get_files_with_common_range(valid_filenames)
+                variables = list(keymap.keys())
+                concat_lib.concatenate_files(
+                    valid_filenames,
+                    nc_filename,
+                    variables=variables,
+                )
         else:
             nc_filename = raw_files
 
@@ -87,14 +98,14 @@ def galileo2nc(
             galileo.add_height()
         attributes = output.add_time_attribute(ATTRIBUTES, galileo.date)
         output.update_attributes(galileo.data, attributes)
-        uuid = output.save_level1b(galileo, output_file, uuid)
-        return uuid
+        return output.save_level1b(galileo, output_file, uuid)
 
 
 class Galileo(ChilboltonRadar):
     """Class for Galileo raw radar data. Child of ChilboltonRadar().
 
     Args:
+    ----
         full_path: Filename of a daily Galileo .nc NetCDF file.
         site_meta: Site properties in a dictionary. Required keys are: `name`.
 
@@ -105,12 +116,12 @@ class Galileo(ChilboltonRadar):
         self.date = self._init_date()
         self.instrument = GALILEO
 
-    def mask_clutter(self):
+    def mask_clutter(self) -> None:
         """Masks clutter."""
         # Only strong Z values are valid
         n_low_gates = 15
         ind = np.where(self.data["Zh"][:, :n_low_gates] < -15) and np.where(
-            self.data["ldr"][:, :n_low_gates] > -5
+            self.data["ldr"][:, :n_low_gates] > -5,
         )
         self.data["v"].mask_indices(ind)
 

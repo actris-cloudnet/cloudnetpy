@@ -14,7 +14,8 @@ def check_model_file_list(name: str, models: list) -> None:
     for m in models:
         if name not in m:
             logging.error("Invalid model file set")
-            raise AttributeError(f"{m} not from {name}")
+            msg = f"{m} not from {name}"
+            raise AttributeError(msg)
 
 
 def time2datetime(time: np.ndarray, date: datetime.datetime) -> np.ndarray:
@@ -30,18 +31,22 @@ def rebin_edges(arr: np.ndarray) -> np.ndarray:
 
 
 def calculate_advection_time(
-    resolution: int, wind: ma.MaskedArray, sampling: int
+    resolution: int,
+    wind: ma.MaskedArray,
+    sampling: int,
 ) -> np.ndarray:
     """Calculates time which variable takes to go through the time window
 
-    Notes:
+    Notes
+    -----
         Wind speed is stronger in upper levels, so advection time is more
         there then lower levels. Effect is small in a mid-latitudes,
         but visible in a tropics.
 
         sampling = 1 -> hour, sampling 1/6 -> 10min
 
-    References:
+    References
+    ----------
     """
     t_adv = resolution * 1000 / wind / 60**2
     t_adv[t_adv.mask] = 0
@@ -49,8 +54,12 @@ def calculate_advection_time(
     return np.asarray([[timedelta(hours=float(t)) for t in time] for time in t_adv])
 
 
-def get_1d_indices(window: tuple, data: np.ndarray, mask: np.ndarray | None = None):
-    indices = (window[0] <= data) & (data < window[-1])
+def get_1d_indices(
+    window: tuple,
+    data: np.ndarray,
+    mask: np.ndarray | None = None,
+) -> np.ndarray:
+    indices: np.ndarray = np.array((window[0] <= data) & (data < window[-1]))
     if mask is not None:
         indices[mask] = ma.masked
     return indices
@@ -61,7 +70,7 @@ def get_adv_indices(
     adv_t: float,
     data: np.ndarray,
     mask: np.ndarray | None = None,
-):
+) -> np.ndarray:
     adv_indices = ((model_t - adv_t / 2) <= data) & (data < (model_t + adv_t / 2))
     if mask is not None:
         adv_indices[mask] = ma.masked

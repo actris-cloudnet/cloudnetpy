@@ -29,7 +29,8 @@ class Check:
     def test_qc(self):
         n = 0
         report = quality.run_tests(
-            Path(self.temp_path), ignore_tests=["TestCFConvention"]
+            Path(self.temp_path),
+            ignore_tests=["TestCFConvention"],
         )
         keys = ("TestUnits", "TestLongNames", "TestStandardNames")
         for test in report["tests"]:

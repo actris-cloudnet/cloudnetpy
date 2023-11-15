@@ -1,8 +1,8 @@
 """Datasource module, containing the :class:`DataSource class.`"""
 import logging
 import os
-from datetime import datetime
-from typing import Callable
+from collections.abc import Callable
+from datetime import datetime, timezone
 
 import netCDF4
 import numpy as np
@@ -16,10 +16,12 @@ class DataSource:
     """Base class for all Cloudnet measurements and model data.
 
     Args:
+    ----
         full_path: Calibrated instrument / model NetCDF file.
         radar: Indicates if data is from cloud radar. Default is False.
 
     Attributes:
+    ----------
         filename (str): Filename of the input file.
         dataset (netCDF4.Dataset): A netCDF4 Dataset instance.
         source (str): Global attribute `source` read from the input file.
@@ -44,9 +46,9 @@ class DataSource:
     radar_frequency: float
     data_dense: dict
     data_sparse: dict
-    type: str
+    source_type: str
 
-    def __init__(self, full_path: os.PathLike | str, radar: bool = False):
+    def __init__(self, full_path: os.PathLike | str, *, radar: bool = False):
         self.filename = os.path.basename(full_path)
         self.dataset = netCDF4.Dataset(full_path)
         self.source = getattr(self.dataset, "source", "")
@@ -63,30 +65,35 @@ class DataSource:
             variables dictionary, fetched from the input netCDF file.
 
         Args:
+        ----
             *args: possible names of the variable. The first match is returned.
 
         Returns:
+        -------
             ndarray: The actual data.
 
         Raises:
+        ------
              RuntimeError: The variable is not found.
 
         """
         for arg in args:
             if arg in self.dataset.variables:
                 return self.dataset.variables[arg][:]
-        raise RuntimeError("Missing variable in the input file.")
+        msg = f"Missing variable {args[0]} in the input file."
+        raise RuntimeError(msg)
 
     def append_data(
         self,
-        variable: netCDF4.Variable | np.ndarray | float | int,
+        variable: netCDF4.Variable | np.ndarray | float,
         key: str,
         name: str | None = None,
         units: str | None = None,
-    ):
+    ) -> None:
         """Adds new CloudnetVariable or RadarVariable into `data` attribute.
 
         Args:
+        ----
             variable: netCDF variable or data array to be added.
             key: Key used with *variable* when added to `data`
                 attribute (dictionary).
@@ -99,10 +106,12 @@ class DataSource:
     def get_date(self) -> list:
         """Returns date components.
 
-        Returns:
+        Returns
+        -------
             list: Date components [YYYY, MM, DD].
 
-        Raises:
+        Raises
+        ------
              RuntimeError: Not found or invalid date.
 
         """
@@ -110,11 +119,13 @@ class DataSource:
             year = str(self.dataset.year)
             month = str(self.dataset.month).zfill(2)
             day = str(self.dataset.day).zfill(2)
-            datetime.strptime(f"{year}{month}{day}", "%Y%m%d")
+            datetime.strptime(f"{year}{month}{day}", "%Y%m%d").replace(
+                tzinfo=timezone.utc,
+            )
+
         except (AttributeError, ValueError) as read_error:
-            raise RuntimeError(
-                "Missing or invalid date in global attributes."
-            ) from read_error
+            msg = "Missing or invalid date in global attributes."
+            raise RuntimeError(msg) from read_error
         return [year, month, day]
 
     def close(self) -> None:
@@ -128,7 +139,8 @@ class DataSource:
         if var.units == "km":
             alt *= 1000
         elif var.units not in ("m", "meters"):
-            raise ValueError(f"Unexpected unit: {var.units}")
+            msg = f"Unexpected unit: {var.units}"
+            raise ValueError(msg)
         return alt
 
     @staticmethod
@@ -138,13 +150,15 @@ class DataSource:
         if var.units == "m":
             alt /= 1000
         elif var.units != "km":
-            raise ValueError(f"Unexpected unit: {var.units}")
+            msg = f"Unexpected unit: {var.units}"
+            raise ValueError(msg)
         return alt
 
     def _init_time(self) -> np.ndarray:
         time = self.getvar("time")
         if len(time) == 0:
-            raise ValidTimeStampError("Empty time vector")
+            msg = "Empty time vector"
+            raise ValidTimeStampError(msg)
         if max(time) > 25:
             logging.debug("Assuming time as seconds, converting to fraction hour")
             time = utils.seconds2hours(time)
@@ -160,7 +174,7 @@ class DataSource:
             return float(
                 altitude_above_sea
                 if utils.isscalar(altitude_above_sea)
-                else np.mean(altitude_above_sea)
+                else np.mean(altitude_above_sea),
             )
         return None
 
@@ -177,11 +191,13 @@ class DataSource:
         """Transforms netCDF4-variables into CloudnetArrays.
 
         Args:
+        ----
             keys: netCDF4-variables to be converted. The results
                 are saved in *self.data* dictionary with *fields*
                 strings as keys.
 
         Notes:
+        -----
             The attributes of the variables are not copied. Just the data.
 
         """
@@ -193,11 +209,13 @@ class DataSource:
         possible_names: tuple,
         key: str,
         units: str | None = None,
+        *,
         ignore_mask: bool = False,
-    ):
+    ) -> None:
         """Transforms single netCDF4 variable into CloudnetArray.
 
         Args:
+        ----
             possible_names: Tuple of strings containing the possible
                 names of the variable in the input NetCDF file.
             key: Key for self.data dictionary and name-attribute
@@ -206,6 +224,7 @@ class DataSource:
             ignore_mask: If true, always writes an ordinary numpy array.
 
         Raises:
+        ------
             RuntimeError: No variable found.
 
         """
@@ -216,7 +235,8 @@ class DataSource:
                     array = np.array(array)
                 self.append_data(array, key, units=units)
                 return
-        raise RuntimeError("Missing variable in the input file.")
+        msg = f"Missing variable {possible_names[0]} in the input file."
+        raise RuntimeError(msg)
 
     def __enter__(self):
         return self

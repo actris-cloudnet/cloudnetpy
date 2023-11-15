@@ -1,6 +1,6 @@
 import binascii
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import NamedTuple
 
 import numpy as np
@@ -13,7 +13,10 @@ from cloudnetpy.instruments.ceilometer import Ceilometer
 
 class Cs135(Ceilometer):
     def __init__(
-        self, full_path: str, site_meta: dict, expected_date: str | None = None
+        self,
+        full_path: str,
+        site_meta: dict,
+        expected_date: str | None = None,
     ):
         super().__init__()
         self.full_path = full_path
@@ -33,7 +36,10 @@ class Cs135(Ceilometer):
 
         parts = re.split(rb"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{6}),", content)
         for i in range(1, len(parts), 2):
-            timestamp = datetime.strptime(parts[i].decode(), "%Y-%m-%dT%H:%M:%S.%f")
+            timestamp = datetime.strptime(
+                parts[i].decode(),
+                "%Y-%m-%dT%H:%M:%S.%f",
+            ).replace(tzinfo=timezone.utc)
             try:
                 self._check_timestamp(timestamp)
             except ValidTimeStampError:
@@ -49,13 +55,16 @@ class Cs135(Ceilometer):
             range_resolutions.append(message.range_resolution)
 
         if len(timestamps) == 0:
-            raise ValidTimeStampError("No valid timestamps found in the file")
+            msg = "No valid timestamps found in the file"
+            raise ValidTimeStampError(msg)
         range_resolution = range_resolutions[0]
         n_gates = len(profiles[0])
         if any(res != range_resolution for res in range_resolutions):
-            raise InconsistentDataError("Inconsistent range resolution")
+            msg = "Inconsistent range resolution"
+            raise InconsistentDataError(msg)
         if any(len(profile) != n_gates for profile in profiles):
-            raise InconsistentDataError("Inconsistent number of gates")
+            msg = "Inconsistent number of gates"
+            raise InconsistentDataError(msg)
 
         self.data["beta_raw"] = np.array(profiles)
         if calibration_factor is None:
@@ -68,14 +77,18 @@ class Cs135(Ceilometer):
         self.data["time"] = utils.datetime2decimal_hours(timestamps)
         self.data["zenith_angle"] = np.median(tilt_angles)
 
-    def _check_timestamp(self, timestamp: datetime):
+    def _check_timestamp(self, timestamp: datetime) -> None:
         timestamp_components = str(timestamp.date()).split("-")
-        if self.expected_date is not None:
-            if timestamp_components != self.expected_date.split("-"):
-                raise ValidTimeStampError
+        if (
+            self.expected_date is not None
+            and timestamp_components != self.expected_date.split("-")
+        ):
+            raise ValidTimeStampError
         if not self.date:
             self.date = timestamp_components
-        assert timestamp_components == self.date
+        if timestamp_components != self.date:
+            msg = "Inconsistent dates in the file"
+            raise RuntimeError(msg)
 
 
 class Message(NamedTuple):
@@ -100,18 +113,22 @@ def _read_message(message: bytes) -> Message:
     expected_checksum = int(message[end_idx + 1 : end_idx + 5], 16)
     actual_checksum = _crc16(content)
     if expected_checksum != actual_checksum:
-        raise InvalidMessageError(
+        msg = (
             "Invalid checksum: "
             f"expected {expected_checksum:04x}, "
             f"got {actual_checksum:04x}"
         )
+        raise InvalidMessageError(msg)
     lines = message.splitlines()
     if len(lines[0]) != 11:
-        raise NotImplementedError("Unknown message format")
+        msg = f"Expected 11 characters in first line, got {len(lines[0])}"
+        raise NotImplementedError(msg)
     if (msg_no := lines[0][-4:-1]) != b"002":
-        raise NotImplementedError(f"Message number {msg_no.decode()} not implemented")
+        msg = f"Message number {msg_no.decode()} not implemented"
+        raise NotImplementedError(msg)
     if len(lines) != 5:
-        raise InvalidMessageError("Invalid line count")
+        msg = f"Expected 5 lines, got {len(lines)}"
+        raise InvalidMessageError(msg)
     scale, res, n, energy, lt, ti, bl, pulse, rate, _sum = map(int, lines[2].split())
     data = _read_backscatter(lines[3].strip(), n)
     return Message(scale, res, energy, lt, ti, bl, pulse, rate, data)
@@ -124,7 +141,7 @@ def _read_backscatter(data: bytes, n_gates: int) -> np.ndarray:
     limit = (1 << (n_bits - 1)) - 1
     offset = 1 << n_bits
     out = np.array(
-        [int(data[i : i + n_chars], 16) for i in range(0, n_gates * n_chars, n_chars)]
+        [int(data[i : i + n_chars], 16) for i in range(0, n_gates * n_chars, n_chars)],
     )
     out[out > limit] -= offset
     return out

@@ -181,7 +181,10 @@ class TestZncFiles(Check):
         filepath = f"{SCRIPT_PATH}/data/vaisala/"
         with pytest.raises(FileNotFoundError):
             mira.mira2nc(
-                filepath, self.temp_path, site_meta=self.site_meta, date=self.date
+                filepath,
+                self.temp_path,
+                site_meta=self.site_meta,
+                date=self.date,
             )
 
     def test_if_both_types_of_files(self):
@@ -191,14 +194,20 @@ class TestZncFiles(Check):
         ]
         with pytest.raises(TypeError):
             mira.mira2nc(
-                files, self.temp_path, site_meta=self.site_meta, date=self.date
+                files,
+                self.temp_path,
+                site_meta=self.site_meta,
+                date=self.date,
             )
 
     def test_wrong_kind_of_file(self):
         input_file = f"{SCRIPT_PATH}/data/chm15k/00100_A202010222015_CHM170137.nc"
         with pytest.raises(ValueError):
             mira.mira2nc(
-                input_file, self.temp_path, site_meta=self.site_meta, date=self.date
+                input_file,
+                self.temp_path,
+                site_meta=self.site_meta,
+                date=self.date,
             )
 
     def test_list_of_wrong_kind_of_files(self):
@@ -209,7 +218,10 @@ class TestZncFiles(Check):
         ]
         with pytest.raises(ValueError):
             mira.mira2nc(
-                files, self.temp_path, site_meta=self.site_meta, date=self.date
+                files,
+                self.temp_path,
+                site_meta=self.site_meta,
+                date=self.date,
             )
 
     def test_takes_znc_as_default(self):
@@ -228,7 +240,9 @@ class TestSTSRFiles(Check):
     temp_path = temp_dir.name + "/mira.nc"
     filepath = f"{SCRIPT_PATH}/data/mira_stsr/"
     uuid = mira.mira2nc(
-        f"{filepath}20230201_0900_mbr7_stsr-trunc.znc", temp_path, site_meta
+        f"{filepath}20230201_0900_mbr7_stsr-trunc.znc",
+        temp_path,
+        site_meta,
     )
 
     def test_common_radar(self):

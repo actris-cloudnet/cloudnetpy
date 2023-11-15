@@ -15,6 +15,7 @@ def thies2nc(
     """Converts Thies-LNM disdrometer data into Cloudnet Level 1b netCDF file.
 
     Args:
+    ----
         disdrometer_file: Filename of disdrometer .log file.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -23,13 +24,16 @@ def thies2nc(
         date: Expected date of the measurements as YYYY-MM-DD.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         DisdrometerDataError: Timestamps do not match the expected date, or unable
             to read the disdrometer file.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import thies2nc
         >>> site_meta = {'name': 'Lindenberg', 'altitude': 104, 'latitude': 52.2,
         'longitude': 14.1}
@@ -39,7 +43,8 @@ def thies2nc(
     try:
         disdrometer = Thies(disdrometer_file, site_meta)
     except (ValueError, IndexError) as err:
-        raise DisdrometerDataError("Can not read disdrometer file") from err
+        msg = "Unable to read disdrometer file"
+        raise DisdrometerDataError(msg) from err
     if date is not None:
         disdrometer.validate_date(date)
     disdrometer.init_data()
@@ -50,8 +55,7 @@ def thies2nc(
     disdrometer.convert_units()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
     output.update_attributes(disdrometer.data, attributes)
-    uuid = output.save_level1b(disdrometer, output_file, uuid)
-    return uuid
+    return output.save_level1b(disdrometer, output_file, uuid)
 
 
 class Thies(Disdrometer):
@@ -64,7 +68,7 @@ class Thies(Disdrometer):
         self._create_diameter_vectors()
         self.instrument = instruments.THIES
 
-    def init_data(self):
+    def init_data(self) -> None:
         """According to
         https://www.biral.com/wp-content/uploads/2015/01/5.4110.xx_.xxx_.pdf
         """
@@ -127,12 +131,12 @@ class Thies(Disdrometer):
         first_date = _format_thies_date(first_date)
         return first_date.split("-")
 
-    def _create_velocity_vectors(self):
+    def _create_velocity_vectors(self) -> None:
         n_values = [5, 6, 7, 1, 1]
         spreads = [0.2, 0.4, 0.8, 1, 10]
         self.store_vectors(self.data, n_values, spreads, "velocity")
 
-    def _create_diameter_vectors(self):
+    def _create_diameter_vectors(self) -> None:
         n_values = [3, 6, 13]
         spreads = [0.125, 0.25, 0.5]
         self.store_vectors(self.data, n_values, spreads, "diameter", start=0.125)

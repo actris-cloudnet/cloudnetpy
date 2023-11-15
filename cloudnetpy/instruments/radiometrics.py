@@ -24,6 +24,7 @@ def radiometrics2nc(
     """Converts Radiometrics .csv file into Cloudnet Level 1b netCDF file.
 
     Args:
+    ----
         full_path: Input file name or folder containing multiple input files.
         output_file: Output file name, e.g. 'radiometrics.nc'.
         site_meta: Dictionary containing information about the site and instrument.
@@ -33,9 +34,11 @@ def radiometrics2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import radiometrics2nc
         >>> site_meta = {'name': 'Soverato', 'altitude': 21}
         >>> radiometrics2nc('radiometrics.csv', 'radiometrics.nc', site_meta)
@@ -61,11 +64,12 @@ def radiometrics2nc(
     radiometrics.time_to_fractional_hours()
     radiometrics.data_to_cloudnet_arrays()
     radiometrics.add_meta()
-    assert radiometrics.date is not None
+    if radiometrics.date is None:
+        msg = "Failed to find valid timestamps from Radiometrics file(s)."
+        raise ValidTimeStampError(msg)
     attributes = output.add_time_attribute({}, radiometrics.date)
     output.update_attributes(radiometrics.data, attributes)
-    uuid = output.save_level1b(radiometrics, output_file, uuid)
-    return uuid
+    return output.save_level1b(radiometrics, output_file, uuid)
 
 
 class Record(NamedTuple):
@@ -79,7 +83,8 @@ class Record(NamedTuple):
 class Radiometrics:
     """Reader for level 2 files of Radiometrics microwave radiometers.
 
-    References:
+    References
+    ----------
         Radiometrics (2008). Profiler Operator's Manual: MP-3000A, MP-2500A,
         MP-1500A, MP-183A.
     """
@@ -90,16 +95,18 @@ class Radiometrics:
         self.data: dict = {}
         self.instrument = instruments.RADIOMETRICS
 
-    def read_raw_data(self):
+    def read_raw_data(self) -> None:
         """Reads Radiometrics raw data."""
         record_columns = {}
         unknown_record_types = set()
         rows = []
-        with open(self.filename, mode="r", encoding="utf8") as infile:
+        with open(self.filename, encoding="utf8") as infile:
             reader = csv.reader(infile)
             for row in reader:
                 if row[0] == "Record":
-                    assert row[1] == "Date/Time"
+                    if row[1] != "Date/Time":
+                        msg = "Unexpected header in Radiometrics file"
+                        raise RuntimeError(msg)
                     record_type = int(row[2])
                     record_columns[record_type] = row[3:]
                 else:
@@ -109,7 +116,7 @@ class Radiometrics:
                     column_names = record_columns.get(block_type)
                     if column_names is None:
                         if record_type not in unknown_record_types:
-                            logging.info(f"Skipping unknown record type {record_type}")
+                            logging.info("Skipping unknown record type %d", record_type)
                             unknown_record_types.add(record_type)
                         continue
                     record = Record(
@@ -117,7 +124,7 @@ class Radiometrics:
                         timestamp=_parse_datetime(row[1]),
                         block_type=block_type,
                         block_index=block_index,
-                        values=dict(zip(column_names, row[3:])),
+                        values=dict(zip(column_names, row[3:], strict=True)),
                     )
                     rows.append(record)
 
@@ -130,7 +137,7 @@ class Radiometrics:
             if data_row.block_index == 0:
                 self.raw_data.append(data_row)
 
-    def read_data(self):
+    def read_data(self) -> None:
         """Reads values."""
         times = []
         lwps = []
@@ -165,7 +172,7 @@ class RadiometricsCombined:
                 self.data = utils.append_data(self.data, key, obj.data[key])
         self.instrument = instruments.RADIOMETRICS
 
-    def screen_time(self, expected_date: datetime.date | None):
+    def screen_time(self, expected_date: datetime.date | None) -> None:
         """Screens timestamps."""
         if expected_date is None:
             self.date = self.data["time"][0].astype(object).date()
@@ -177,22 +184,22 @@ class RadiometricsCombined:
         for key in self.data:
             self.data[key] = self.data[key][valid_mask]
 
-    def time_to_fractional_hours(self):
+    def time_to_fractional_hours(self) -> None:
         base = self.data["time"][0].astype("datetime64[D]")
         self.data["time"] = (self.data["time"] - base) / np.timedelta64(1, "h")
 
-    def data_to_cloudnet_arrays(self):
+    def data_to_cloudnet_arrays(self) -> None:
         """Converts arrays to CloudnetArrays."""
         for key, array in self.data.items():
             self.data[key] = CloudnetArray(array, key)
 
-    def add_meta(self):
+    def add_meta(self) -> None:
         """Adds some metadata."""
         valid_keys = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():
-            key = key.lower()
-            if key in valid_keys:
-                self.data[key] = CloudnetArray(float(value), key)
+            name = key.lower()
+            if name in valid_keys:
+                self.data[name] = CloudnetArray(float(value), key)
 
 
 def _parse_datetime(text: str) -> datetime.datetime:
@@ -201,4 +208,11 @@ def _parse_datetime(text: str) -> datetime.datetime:
     hour, minute, second = map(int, time.split(":"))
     if year < 100:
         year += 2000
-    return datetime.datetime(year, month, day, hour, minute, second)
+    return datetime.datetime(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+    )

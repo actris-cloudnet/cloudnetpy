@@ -14,6 +14,7 @@ class CloudnetArray:
     """Stores netCDF4 variables, numpy arrays and scalars as CloudnetArrays.
 
     Args:
+    ----
         variable: The netCDF4 :class:`Variable` instance,
             numpy array (masked or regular), or scalar (float, int).
         name: Name of the variable.
@@ -25,7 +26,7 @@ class CloudnetArray:
 
     def __init__(
         self,
-        variable: netCDF4.Variable | np.ndarray | float | int,
+        variable: netCDF4.Variable | np.ndarray | float,
         name: str,
         units_from_user: str | None = None,
         dimensions: Sequence[str] | None = None,
@@ -58,10 +59,12 @@ class CloudnetArray:
         """Rebins `data` in time.
 
         Args:
+        ----
             time: 1D time array.
             time_new: 1D new time array.
 
         Returns:
+        -------
             Time indices without data.
 
         """
@@ -69,7 +72,8 @@ class CloudnetArray:
             self.data = utils.rebin_1d(time, self.data, time_new)
             bad_indices = list(np.where(self.data == ma.masked)[0])
         else:
-            assert isinstance(self.data, ma.MaskedArray)
+            if not isinstance(self.data, ma.MaskedArray):
+                self.data = ma.masked_array(self.data)
             self.data, bad_indices = utils.rebin_2d(time, self.data, time_new)
         return bad_indices
 
@@ -101,7 +105,7 @@ class CloudnetArray:
             return self.variable
         if isinstance(
             self.variable,
-            (int, float, np.float32, np.int8, np.float64, np.int32, np.uint16),
+            int | float | np.float32 | np.int8 | np.float64 | np.int32 | np.uint16,
         ):
             return np.array(self.variable)
         if isinstance(self.variable, str):
@@ -110,7 +114,8 @@ class CloudnetArray:
                 return np.array(numeric_value)
             except ValueError:
                 pass
-        raise ValueError(f"Incorrect CloudnetArray input: {self.variable}")
+        msg = f"Incorrect CloudnetArray input: {self.variable}"
+        raise ValueError(msg)
 
     def _init_units(self) -> str:
         return getattr(self.variable, "units", "")
@@ -134,7 +139,8 @@ class CloudnetArray:
         self._filter(utils.filter_x_pixels)
 
     def _filter(self, fun) -> None:
-        assert isinstance(self.data, ma.MaskedArray)
+        if not isinstance(self.data, ma.MaskedArray):
+            self.data = ma.masked_array(self.data)
         is_data = (~self.data.mask).astype(int)
         is_data_filtered = fun(is_data)
         self.data[is_data_filtered == 0] = ma.masked
@@ -143,14 +149,16 @@ class CloudnetArray:
         """Calculates std of radar velocity.
 
         Args:
+        ----
             time: 1D time array.
             time_new: 1D new time array.
 
         Notes:
+        -----
             The result is masked if the bin contains masked values.
         """
         data_as_float = self.data.astype(float)
-        assert isinstance(data_as_float, ma.MaskedArray)
+        data_as_float = ma.masked_array(data_as_float)
         self.data, _ = utils.rebin_2d(time, data_as_float, time_new, "std")
 
     def rebin_velocity(
@@ -163,6 +171,7 @@ class CloudnetArray:
         """Rebins Doppler velocity in polar coordinates.
 
         Args:
+        ----
             time: 1D time array.
             time_new: 1D new time array.
             folding_velocity: Folding velocity (m/s). Can be a float when

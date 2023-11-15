@@ -1,5 +1,6 @@
 """Module for reading raw cloud radar data."""
 import os
+import tempfile
 from tempfile import TemporaryDirectory
 
 import numpy as np
@@ -20,6 +21,7 @@ def copernicus2nc(
     """Converts 'Copernicus' cloud radar data into Cloudnet Level 1b netCDF file.
 
     Args:
+    ----
         raw_files: Input file name or folder containing multiple input files.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -29,12 +31,15 @@ def copernicus2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
+    --------
           >>> from cloudnetpy.instruments import copernicus2nc
           >>> site_meta = {'name': 'Chilbolton'}
           >>> copernicus2nc('raw_radar.nc', 'radar.nc', site_meta)
@@ -57,13 +62,20 @@ def copernicus2nc(
 
     with TemporaryDirectory() as temp_dir:
         if os.path.isdir(raw_files):
-            nc_filename = f"{temp_dir}/tmp.nc"
-            valid_filenames = utils.get_sorted_filenames(raw_files, ".nc")
-            valid_filenames = utils.get_files_with_common_range(valid_filenames)
-            variables = list(keymap.keys())
-            concat_lib.concatenate_files(
-                valid_filenames, nc_filename, variables=variables
-            )
+            with tempfile.NamedTemporaryFile(
+                dir=temp_dir,
+                suffix=".nc",
+                delete=False,
+            ) as temp_file:
+                nc_filename = temp_file.name
+                valid_filenames = utils.get_sorted_filenames(raw_files, ".nc")
+                valid_filenames = utils.get_files_with_common_range(valid_filenames)
+                variables = list(keymap.keys())
+                concat_lib.concatenate_files(
+                    valid_filenames,
+                    nc_filename,
+                    variables=variables,
+                )
         else:
             nc_filename = raw_files
 
@@ -90,14 +102,14 @@ def copernicus2nc(
             copernicus.add_height()
         attributes = output.add_time_attribute(ATTRIBUTES, copernicus.date)
         output.update_attributes(copernicus.data, attributes)
-        uuid = output.save_level1b(copernicus, output_file, uuid)
-        return uuid
+        return output.save_level1b(copernicus, output_file, uuid)
 
 
 class Copernicus(ChilboltonRadar):
     """Class for Copernicus raw radar data. Child of ChilboltonRadar().
 
     Args:
+    ----
         full_path: Filename of a daily Copernicus .nc NetCDF file.
         site_meta: Site properties in a dictionary. Required keys are: `name`.
 
@@ -107,16 +119,17 @@ class Copernicus(ChilboltonRadar):
         super().__init__(full_path, site_meta)
         self.instrument = COPERNICUS
 
-    def calibrate_reflectivity(self):
+    def calibrate_reflectivity(self) -> None:
         default_offset = -146.8  # TODO: check this value
         calibration_factor = self.site_meta.get("calibration_offset", default_offset)
         self.data["Zh"].data[:] += calibration_factor
         self.append_data(np.array(calibration_factor), "calibration_offset")
 
-    def mask_corrupted_values(self):
+    def mask_corrupted_values(self) -> None:
         """Experimental masking of corrupted Copernicus data.
 
-        Notes:
+        Notes
+        -----
             This method is based on a few days of test data only. Should be improved
             and tested more carefully in the future.
         """
@@ -125,13 +138,13 @@ class Copernicus(ChilboltonRadar):
             ind = np.where(np.abs(self.data[key][:]) > value)
             self.data["v"].mask_indices(ind)
 
-    def fix_range_offset(self, site_meta: dict):
+    def fix_range_offset(self, site_meta: dict) -> None:
         """Fixes range offset."""
         range_offset = site_meta.get("range_offset", 0)
         self.data["range"].data[:] += range_offset
         self.append_data(np.array(range_offset, dtype=float), "range_offset")
 
-    def screen_negative_ranges(self):
+    def screen_negative_ranges(self) -> None:
         """Screens negative range values."""
         valid_ind = np.where(self.data["range"][:] >= 0)[0]
         for key, cloudnet_array in self.data.items():

@@ -9,7 +9,7 @@ from cloudnetpy.categorize.containers import ClassData
 from cloudnetpy.constants import T0
 
 
-def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
+def find_melting_layer(obs: ClassData, *, smooth: bool = True) -> np.ndarray:
     """Finds melting layer from model temperature, ldr, and velocity.
 
     Melting layer is detected using linear depolarization ratio, *ldr*,
@@ -32,17 +32,20 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
     the rest -8..+6.
 
     Notes:
+    -----
         This melting layer detection method is novel and needs to be validated.
         Also note that there might be some detection problems with strong
         updrafts of air. In these cases the absolute values for speed do not
         make sense (rain drops can even move upwards instead of down).
 
     Args:
+    ----
         obs: The :class:`ClassData` instance.
         smooth: If True, apply a small Gaussian smoother to the
             melting layer. Default is True.
 
     Returns:
+    -------
         2-D boolean array denoting the melting layer.
 
     """
@@ -55,8 +58,7 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
 
     if hasattr(obs, "ldr"):
         # Required for peak detection
-        diffu = np.diff(obs.ldr, axis=1)
-        assert isinstance(diffu, ma.MaskedArray)
+        diffu = ma.array(np.diff(obs.ldr, axis=1))
         ldr_diff = diffu.filled(0)
 
     t_range = _find_model_temperature_range(obs.model_type)
@@ -69,15 +71,22 @@ def find_melting_layer(obs: ClassData, smooth: bool = True) -> np.ndarray:
         v_prof = obs.v[ind, temp_indices]
 
         if ldr_diff is not None:
-            assert hasattr(obs, "ldr")
+            if not hasattr(obs, "ldr"):
+                msg = "ldr_diff is not None but obs.ldr does not exist"
+                raise RuntimeError(msg)
             ldr_prof = obs.ldr[ind, temp_indices]
             ldr_dprof = ldr_diff[ind, temp_indices]
 
         if ma.count(ldr_prof) > 3 or ma.count(v_prof) > 3:
             try:
-                assert ldr_prof is not None and ldr_dprof is not None
+                if ldr_prof is None or ldr_dprof is None:
+                    msg = "ldr_prof or ldr_dprof is None"
+                    raise AssertionError(msg)  # noqa: TRY301
                 indices = _find_melting_layer_from_ldr(
-                    ldr_prof, ldr_dprof, v_prof, z_prof
+                    ldr_prof,
+                    ldr_dprof,
+                    v_prof,
+                    z_prof,
                 )
             except (ValueError, IndexError, AssertionError):
                 height = obs.height[temp_indices]
@@ -114,13 +123,14 @@ def _find_melting_layer_from_ldr(
 
     if all(conditions):
         base = int(np.floor(base + (peak - base) / 2))
-        indices = np.arange(base, top)
-        return indices
+        return np.arange(base, top)
     return None
 
 
 def _find_melting_layer_from_v(
-    v_prof: np.ndarray, width_prof: np.ndarray | None, height: np.ndarray
+    v_prof: np.ndarray,
+    width_prof: np.ndarray | None,
+    height: np.ndarray,
 ) -> np.ndarray | None:
     v = np.copy(v_prof[:-1])
     v_diff = np.diff(v_prof)

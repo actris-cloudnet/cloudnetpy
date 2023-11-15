@@ -3,10 +3,10 @@ import datetime
 import logging
 import re
 from collections import defaultdict
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import islice
 from os import PathLike
-from typing import Any, Iterable, Literal
+from typing import Any, Literal
 
 import numpy as np
 
@@ -32,6 +32,7 @@ def parsivel2nc(
     file.
 
     Args:
+    ----
         disdrometer_file: Filename of disdrometer file or list of filenames.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -45,13 +46,16 @@ def parsivel2nc(
         timestamps:
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         DisdrometerDataError: Timestamps do not match the expected date, or unable
             to read the disdrometer file.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import parsivel2nc
         >>> site_meta = {'name': 'Lindenberg', 'altitude': 104, 'latitude': 52.2,
         'longitude': 14.1}
@@ -69,8 +73,7 @@ def parsivel2nc(
     disdrometer.add_meta()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
     output.update_attributes(disdrometer.data, attributes)
-    uuid = output.save_level1b(disdrometer, output_file, uuid)
-    return uuid
+    return output.save_level1b(disdrometer, output_file, uuid)
 
 
 class Parsivel(CloudnetInstrument):
@@ -95,52 +98,56 @@ class Parsivel(CloudnetInstrument):
         self._create_velocity_vectors()
         self._create_diameter_vectors()
 
-    def _screen_time(self, expected_date: datetime.date | None = None):
+    def _screen_time(self, expected_date: datetime.date | None = None) -> None:
         if expected_date is None:
             self.date = self.raw_data["time"][0].astype(object).date()
             return
         self.date = expected_date
         valid_mask = self.raw_data["time"].astype("datetime64[D]") == self.date
         if np.count_nonzero(valid_mask) == 0:
-            raise DisdrometerDataError(f"No data found on {expected_date}")
+            msg = f"No data found on {expected_date}"
+            raise DisdrometerDataError(msg)
         for key in self.raw_data:
             self.raw_data[key] = self.raw_data[key][valid_mask]
 
-    def _append_data(self):
+    def _append_data(self) -> None:
         for key, values in self.raw_data.items():
             if key.startswith("_"):
                 continue
+            name = key
+            values_out = values
             match key:
                 case "spectrum":
-                    key = "data_raw"
+                    name = "data_raw"
                     dimensions = ["time", "diameter", "velocity"]
                 case "number_concentration" | "fall_velocity":
                     dimensions = ["time", "diameter"]
                 case "time":
                     dimensions = []
                     base = values[0].astype("datetime64[D]")
-                    values = (values - base) / np.timedelta64(1, "h")
+                    values_out = (values - base) / np.timedelta64(1, "h")
                 case _:
                     dimensions = ["time"]
-            self.data[key] = CloudnetArray(values, key, dimensions=dimensions)
+            self.data[name] = CloudnetArray(values_out, name, dimensions=dimensions)
         if "_sensor_id" in self.raw_data:
             first_id = self.raw_data["_sensor_id"][0]
             for sensor_id in self.raw_data["_sensor_id"]:
                 if sensor_id != first_id:
-                    raise DisdrometerDataError("Multiple sensor IDs are not supported")
+                    msg = "Multiple sensor IDs are not supported"
+                    raise DisdrometerDataError(msg)
             self.serial_number = first_id
 
-    def _create_velocity_vectors(self):
+    def _create_velocity_vectors(self) -> None:
         n_values = [10, 5, 5, 5, 5, 2]
         spreads = [0.1, 0.2, 0.4, 0.8, 1.6, 3.2]
         Disdrometer.store_vectors(self.data, n_values, spreads, "velocity")
 
-    def _create_diameter_vectors(self):
+    def _create_diameter_vectors(self) -> None:
         n_values = [10, 5, 5, 5, 5, 2]
         spreads = [0.125, 0.25, 0.5, 1, 2, 3]
         Disdrometer.store_vectors(self.data, n_values, spreads, "diameter")
 
-    def convert_units(self):
+    def convert_units(self) -> None:
         mm_to_m = 1e3
         mmh_to_ms = 3600 * mm_to_m
         c_to_k = 273.15
@@ -150,19 +157,19 @@ class Parsivel(CloudnetInstrument):
         self._convert_data(("V_sensor_supply",), 10)
         self._convert_data(("T_sensor",), c_to_k, method="add")
 
-    def add_meta(self):
+    def add_meta(self) -> None:
         valid_keys = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():
-            key = key.lower()
-            if key in valid_keys:
-                self.data[key] = CloudnetArray(float(value), key)
+            name = key.lower()
+            if name in valid_keys:
+                self.data[name] = CloudnetArray(float(value), name)
 
     def _convert_data(
         self,
         keys: tuple[str, ...],
         value: float,
         method: Literal["divide", "add"] = "divide",
-    ):
+    ) -> None:
         for key in keys:
             if key not in self.data:
                 continue
@@ -298,9 +305,11 @@ def _parse_date(tokens: Iterator[str]) -> datetime.date:
     elif "." in token:
         day, month, year = token.split(".")
     else:
-        raise ValueError(f"Unsupported date: '{input}'")
+        msg = f"Unsupported date: '{input}'"
+        raise ValueError(msg)
     if len(year) != 4:
-        raise ValueError(f"Unsupported date: '{input}'")
+        msg = f"Unsupported date: '{input}'"
+        raise ValueError(msg)
     return datetime.date(int(year), int(month), int(day))
 
 
@@ -318,7 +327,14 @@ def _parse_datetime(tokens: Iterator[str]) -> datetime.datetime:
     hour = int(token[8:10])
     minute = int(token[10:12])
     second = int(token[12:14])
-    return datetime.datetime(year, month, day, hour, minute, second)
+    return datetime.datetime(
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
+    )
 
 
 def _parse_vector(tokens: Iterator[str]) -> np.ndarray:
@@ -333,13 +349,15 @@ def _parse_spectrum(tokens: Iterator[str]) -> np.ndarray:
         raw = [first.removeprefix("<SPECTRUM>")]
         raw.extend(islice(tokens, 1023))
         if next(tokens) != "</SPECTRUM>":
-            raise ValueError("Invalid spectrum format")
+            msg = "Invalid spectrum format"
+            raise ValueError(msg)
         values = [int(x) if x != "" else 0 for x in raw]
     else:
         values = [int(first)]
         values.extend(int(x) for x in islice(tokens, 1023))
     if len(values) != 1024:
-        raise ValueError("Invalid length")
+        msg = f"Invalid spectrum length: {len(values)}"
+        raise ValueError(msg)
     return np.array(values, dtype="i2").reshape((32, 32))
 
 
@@ -391,28 +409,34 @@ def _read_rows(headers: list[str], rows: list[str]) -> dict[str, list]:
         if row == "":
             continue
         try:
-            tokens = iter(row.removesuffix(";").split(";"))
-            parsed = [PARSERS.get(header, next)(tokens) for header in headers]
-            unread_tokens = list(tokens)
-            if unread_tokens:
-                raise ValueError("More values than expected")
-            for header, value in zip(headers, parsed):
+            parsed = _parse_row(row, headers)
+            for header, value in zip(headers, parsed, strict=True):
                 result[header].append(value)
         except (ValueError, StopIteration):
             invalid_rows += 1
             continue
     if invalid_rows == len(rows):
-        raise DisdrometerDataError("No valid data in file")
+        msg = "No valid data in file"
+        raise DisdrometerDataError(msg)
     if invalid_rows > 0:
-        logging.info(f"Skipped {invalid_rows} invalid rows")
+        logging.info("Skipped %s invalid rows", invalid_rows)
     return result
 
 
-def _read_toa5(filename: str | PathLike) -> dict[str, list]:
-    """
-    Read ASCII data from Campbell Scientific datalogger such as CR1000.
+def _parse_row(row_in: str, headers: list[str]) -> list:
+    tokens = iter(row_in.removesuffix(";").split(";"))
+    parsed = [PARSERS.get(header, next)(tokens) for header in headers]
+    if unread_tokens := list(tokens):
+        msg = f"Unused tokens: {unread_tokens}"
+        raise ValueError(msg)
+    return parsed
 
-    References:
+
+def _read_toa5(filename: str | PathLike) -> dict[str, list]:
+    """Read ASCII data from Campbell Scientific datalogger such as CR1000.
+
+    References
+    ----------
         CR1000 Measurement and Control System.
         https://s.campbellsci.com/documents/us/manuals/cr1000.pdf
     """
@@ -438,12 +462,13 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
                 "spectrum": [],
             }
             try:
-                for header, value in zip(headers, data_line):
+                for header, value in zip(headers, data_line, strict=True):
                     if header is None:
                         continue
                     if header == "_datetime":
                         scalars[header] = datetime.datetime.strptime(
-                            value, "%Y-%m-%d %H:%M:%S"
+                            value,
+                            "%Y-%m-%d %H:%M:%S",
                         )
                     elif header in ("number_concentration", "fall_velocity"):
                         arrays[header].append(float(value))
@@ -460,22 +485,22 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
                 data[header].append(scalar)
             if "spectrum" in headers:
                 data["spectrum"].append(
-                    np.array(arrays["spectrum"], dtype="i2").reshape((32, 32))
+                    np.array(arrays["spectrum"], dtype="i2").reshape((32, 32)),
                 )
             if "number_concentration" in headers:
                 data["number_concentration"].append(arrays["number_concentration"])
             if "fall_velocity" in headers:
                 data["fall_velocity"].append(arrays["fall_velocity"])
         if n_invalid_rows == n_rows:
-            raise DisdrometerDataError("No valid data in file")
+            msg = "No valid data in file"
+            raise DisdrometerDataError(msg)
         if n_invalid_rows > 0:
-            logging.info(f"Skipped {n_invalid_rows} invalid rows")
+            logging.info("Skipped %s invalid rows", n_invalid_rows)
         return data
 
 
 def _read_typ_op4a(filename: str | PathLike) -> dict[str, list]:
-    """
-    Read output of "CS/PA" command. The output starts with line "TYP OP4A"
+    """Read output of "CS/PA" command. The output starts with line "TYP OP4A"
     followed by one line per measured variable in format: <number>:<value>.
     Output ends with characters: <ETX><CR><LF><NUL>. Lines are separated by
     <CR><LF>.
@@ -508,7 +533,8 @@ def _read_parsivel(
         with open(filename, encoding="latin1", errors="ignore") as file:
             lines = file.read().splitlines()
         if not lines:
-            raise DisdrometerDataError("File is empty")
+            msg = f"File '{filename}' is empty"
+            raise DisdrometerDataError(msg)
         if "TOA5" in lines[0]:
             data = _read_toa5(filename)
         elif "TYP OP4A" in lines[0]:
@@ -520,11 +546,12 @@ def _read_parsivel(
             headers = _parse_telegram(telegram)
             data = _read_rows(headers, lines)
         else:
-            raise ValueError("telegram must be specified for files without header")
+            msg = "telegram must be specified for files without header"
+            raise ValueError(msg)
         if "_datetime" not in data and timestamps is None:
             data["_datetime"] = [
                 datetime.datetime.combine(date, time)
-                for date, time in zip(data["_date"], data["_time"])
+                for date, time in zip(data["_date"], data["_time"], strict=True)
             ]
         for key, values in data.items():
             combined_data[key].extend(values)

@@ -1,4 +1,4 @@
-""" This module contains unit tests for atmos-module. """
+"""This module contains unit tests for atmos-module."""
 import numpy as np
 import pytest
 from numpy.testing import assert_array_almost_equal

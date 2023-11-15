@@ -1,11 +1,11 @@
 import numpy as np
-import numpy.testing as testing
 import pytest
+from numpy import testing
 
 from cloudnetpy.products import drizzle_error as de
 
 DRIZZLE_PARAMETERS = {
-    "Do": np.array([[0.0001, 0.01, 0.000001], [0.001, 0.000001, 0.0001]])
+    "Do": np.array([[0.0001, 0.01, 0.000001], [0.001, 0.000001, 0.0001]]),
 }
 DRIZZLE_INDICES = {
     "drizzle": np.array([[1, 1, 1], [1, 1, 1]], dtype=bool),
@@ -31,7 +31,8 @@ def test_get_drizzle_indices(key, value):
 
 
 @pytest.mark.parametrize(
-    "key", ["Do_error", "drizzle_lwc_error", "drizzle_lwf_error", "S_error"]
+    "key",
+    ["Do_error", "drizzle_lwc_error", "drizzle_lwf_error", "S_error"],
 )
 def test_calc_parameter_errors(key):
     x = de._calc_parameter_errors(DRIZZLE_INDICES, ERROR_INPUT)
@@ -44,7 +45,7 @@ def test_calc_parameter_biases(key):
     assert key in x.keys()
 
 
-@pytest.fixture
+@pytest.fixture()
 def results():
     errors = de._calc_parameter_errors(DRIZZLE_INDICES, ERROR_INPUT)
     biases = de._calc_parameter_biases(BIAS_INPUT)

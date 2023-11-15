@@ -1,6 +1,6 @@
 import netCDF4
 import numpy as np
-import numpy.ma as ma
+from numpy import ma
 
 
 class LidarFun:
@@ -32,7 +32,7 @@ class LidarFun:
                 - self.site_meta["altitude"]
                 - self.nc.variables["range"][:]
             )
-            <= 1e-3
+            <= 1e-3,
         )
         assert ma.min(self.nc.variables["beta"][:]) > 0
 

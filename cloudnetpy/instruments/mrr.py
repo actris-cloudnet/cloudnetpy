@@ -4,7 +4,7 @@ import re
 from collections.abc import Iterable
 from os import PathLike
 from pathlib import Path
-from tempfile import TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 from uuid import UUID
 
 import netCDF4
@@ -29,6 +29,7 @@ def mrr2nc(
     contains only the relevant data.
 
     Args:
+    ----
         input_file: Filename of a daily MMR-PRO .nc file, path to directory
             containing several non-concatenated .nc files from one day, or list
             of filenames.
@@ -39,17 +40,19 @@ def mrr2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
+    --------
           >>> from cloudnetpy.instruments import mira2nc
           >>> site_meta = {'name': 'LIM', 'latitude': 51.333, 'longitude': 12.389}
           >>> mrr2nc('input.nc', 'output.nc', site_meta)
     """
-
     if isinstance(uuid, str):
         uuid = UUID(uuid)
     if isinstance(date, str):
@@ -70,26 +73,32 @@ def mrr2nc(
                 with netCDF4.Dataset(file):
                     yield file
             except OSError:
-                logging.warning(f"Skipping invalid file: {file}")
+                logging.warning("Skipping invalid file: %s", file)
 
-    def concat_files(temp_dir: str, files: Iterable[PathLike | str]) -> str:
-        tmp_filename = f"{temp_dir}/tmp.nc"
-        variables = list(keymap.keys()) + ["elevation"]
-        valid_files = list(valid_nc_files(files))
-        concat_lib.concatenate_files(
-            valid_files,
-            tmp_filename,
-            variables=variables,
-            ignore=["time_coverage_start", "time_coverage_end"],
-        )
-        return tmp_filename
+    def concat_files(dir_name: str, files: Iterable[PathLike | str]) -> str:
+        with NamedTemporaryFile(
+            dir=dir_name,
+            suffix=".nc",
+            delete=False,
+        ) as temp_file:
+            tmp_filename = temp_file.name
+            variables = [*keymap.keys(), "elevation"]
+            valid_files = list(valid_nc_files(files))
+            concat_lib.concatenate_files(
+                valid_files,
+                tmp_filename,
+                variables=variables,
+                ignore=["time_coverage_start", "time_coverage_end"],
+            )
+            return tmp_filename
 
     with TemporaryDirectory() as temp_dir:
         if isinstance(input_file, PathLike | str):
             path = Path(input_file)
             if path.is_dir():
                 input_file = concat_files(
-                    temp_dir, (p for p in path.iterdir() if p.suffix.lower() == ".nc")
+                    temp_dir,
+                    (p for p in path.iterdir() if p.suffix.lower() == ".nc"),
                 )
         else:
             input_file = concat_files(temp_dir, input_file)
@@ -108,14 +117,14 @@ def mrr2nc(
             mrr.sort_timestamps()
         attributes = output.add_time_attribute(ATTRIBUTES, mrr.date)
         output.update_attributes(mrr.data, attributes)
-        uuid = output.save_level1b(mrr, output_file, uuid)
-        return uuid
+        return output.save_level1b(mrr, output_file, uuid)
 
 
 class MrrPro(NcRadar):
     """Class for MRR-PRO raw data. Child of NcRadar().
 
     Args:
+    ----
         full_path: MRR-PRO netCDF filename.
         site_meta: Site properties in a dictionary. Required keys are `name`,
             `latitude`, `longitude` and `altitude`.
@@ -128,7 +137,9 @@ class MrrPro(NcRadar):
         super().__init__(full_path, site_meta)
         self.instrument = instruments.MRR_PRO
         if m := re.search(
-            r"serial number:\s*(\w+)", self.dataset.instrument_name, re.I
+            r"serial number:\s*(\w+)",
+            self.dataset.instrument_name,
+            re.I,
         ):
             self.serial_number = m[1]
 
@@ -136,7 +147,7 @@ class MrrPro(NcRadar):
         time_stamps = self.getvar("time")
         return utils.seconds2date(time_stamps[0], (1970, 1, 1))[:3]
 
-    def fix_units(self):
+    def fix_units(self) -> None:
         self.data["v"].data *= -1  # towards -> away from instrument
         self.data["rainfall_rate"].data /= 3600000  # mm h-1 -> m s-1
         self.data["lwc"].data *= 0.001  # g m-3 -> kg m-3

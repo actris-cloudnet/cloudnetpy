@@ -29,6 +29,7 @@ def find_insects(
     above melting layer.
 
     Args:
+    ----
         obs: The :class:`ClassData` instance.
         melting_layer: 2D array denoting melting layer.
         liquid_layers: 2D array denoting liquid layers.
@@ -36,12 +37,14 @@ def find_insects(
             Default is 0.8.
 
     Returns:
+    -------
         tuple: 2-element tuple containing
 
         - 2-D boolean flag of insects presence.
         - 2-D probability of pixel containing insects.
 
     Notes:
+    -----
         This insect detection method is novel and needs to be validated.
 
     """
@@ -65,9 +68,9 @@ def _get_probabilities(obs: ClassData) -> dict:
     lwp_interp = droplet.interpolate_lwp(obs)
     fun = utils.array_to_probability
     return {
-        "width": fun(obs.width, 1, 0.3, True) if hasattr(obs, "width") else 1,
-        "z_strong": fun(obs.z, 0, 8, True),
-        "z_weak": fun(obs.z, -20, 8, True),
+        "width": fun(obs.width, 1, 0.3, invert=True) if hasattr(obs, "width") else 1,
+        "z_strong": fun(obs.z, 0, 8, invert=True),
+        "z_weak": fun(obs.z, -20, 8, invert=True),
         "ldr": fun(obs.ldr, -25, 5) if hasattr(obs, "ldr") else None,
         "sldr": fun(obs.sldr, -25, 5) if hasattr(obs, "sldr") else None,
         "temp_loose": fun(obs.tw, 268, 2),
@@ -79,11 +82,11 @@ def _get_probabilities(obs: ClassData) -> dict:
 
 
 def _get_smoothed_v(
-    obs: ClassData, sigma: tuple[float, float] = (5, 5)
+    obs: ClassData,
+    sigma: tuple[float, float] = (5, 5),
 ) -> ma.MaskedArray:
     smoothed_v = gaussian_filter(obs.v, sigma)
-    smoothed_v = ma.masked_where(obs.v.mask, smoothed_v)
-    return smoothed_v
+    return ma.masked_where(obs.v.mask, smoothed_v)
 
 
 def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
@@ -102,12 +105,15 @@ def _calc_prob_from_ldr(prob: dict) -> np.ndarray:
 def _calc_prob_from_all(prob: dict) -> np.ndarray:
     """This can be tried when LDR is not available. To detect insects without LDR
     unambiguously is difficult and might result in many false positives and/or false
-    negatives."""
+    negatives.
+    """
     return prob["z_weak"] * prob["temp_strict"] * prob["width"] * prob["v"]
 
 
 def _adjust_for_radar(
-    obs: ClassData, prob: dict, prob_from_others: np.ndarray
+    obs: ClassData,
+    prob: dict,
+    prob_from_others: np.ndarray,
 ) -> np.ndarray:
     """Adds radar-specific weighting to insect probabilities."""
     if "mira" in obs.radar_type.lower():
@@ -116,7 +122,8 @@ def _adjust_for_radar(
 
 
 def _fill_missing_pixels(
-    prob_from_ldr: np.ndarray, prob_from_others: np.ndarray
+    prob_from_ldr: np.ndarray,
+    prob_from_others: np.ndarray,
 ) -> np.ndarray:
     prob_combined = np.copy(prob_from_ldr)
     no_ldr = np.where(prob_from_ldr == 0)
@@ -124,19 +131,25 @@ def _fill_missing_pixels(
     return prob_combined
 
 
-def _screen_insects(insect_prob, insect_prob_no_ldr, melting_layer, liquid_layers, obs):
-    def _screen_liquid_layers():
+def _screen_insects(
+    insect_prob,
+    insect_prob_no_ldr,
+    melting_layer,
+    liquid_layers,
+    obs,
+) -> np.ndarray:
+    def _screen_liquid_layers() -> None:
         prob[liquid_layers == 1] = 0
 
-    def _screen_above_melting():
+    def _screen_above_melting() -> None:
         above_melting = utils.ffill(melting_layer)
         prob[above_melting == 1] = 0
 
-    def _screen_above_liquid():
+    def _screen_above_liquid() -> None:
         above_liquid = utils.ffill(liquid_layers)
         prob[(above_liquid == 1) & (insect_prob_no_ldr > 0)] = 0
 
-    def _screen_rainy_profiles():
+    def _screen_rainy_profiles() -> None:
         prob[obs.is_rain == 1, :] = 0
 
     prob = np.copy(insect_prob)

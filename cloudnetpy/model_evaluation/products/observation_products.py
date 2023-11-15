@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 
 import numpy as np
 from numpy import ma
@@ -13,10 +13,12 @@ class ObservationManager(DataSource):
     """Class to collect and manage observations for downsampling.
 
     Args:
+    ----
         obs (str): Name of observation product
         obs_file (str): Path to source observation file
 
     Notes:
+    -----
         Output is ObservationManager object where all product data and
         information is included.
 
@@ -42,6 +44,7 @@ class ObservationManager(DataSource):
             0,
             0,
             0,
+            tzinfo=timezone.utc,
         )
 
     def _get_radar_frequency(self) -> np.ndarray | None:
@@ -56,7 +59,7 @@ class ObservationManager(DataSource):
         except (KeyError, RuntimeError):
             return None
 
-    def _generate_product(self):
+    def _generate_product(self) -> None:
         """Process needed data of observation to a ObservationManager object"""
         try:
             if self.obs == "cf":
@@ -66,16 +69,16 @@ class ObservationManager(DataSource):
                 if self.obs == "iwc":
                     self._generate_iwc_masks()
             self.append_data(self.getvar("height"), "height")
-        except (KeyError, RuntimeError) as e:
-            logging.error(f"Invalid product name: {e}")
+        except (KeyError, RuntimeError):
+            msg = f"Failed to read {self.obs} from {self._file}"
+            logging.exception(msg)
             raise
 
     def _generate_cf(self) -> np.ndarray:
         """Generates cloud fractions using categorize bits and masking conditions"""
         categorize_bits = CategorizeBits(self._file)
         cloud_mask = self._classify_basic_mask(categorize_bits.category_bits)
-        cloud_mask = self._mask_cloud_bits(cloud_mask)
-        return cloud_mask
+        return self._mask_cloud_bits(cloud_mask)
 
     @staticmethod
     def _classify_basic_mask(bits: dict) -> np.ndarray:
@@ -101,12 +104,14 @@ class ObservationManager(DataSource):
         """Check if rainrate in file"""
         try:
             self.getvar("rainrate")
-            return True
         except RuntimeError:
             return False
+        return True
 
     def _get_rainrate_threshold(self) -> int:
-        assert self.radar_freq is not None
+        if self.radar_freq is None:
+            msg = "Radar frequency not found from file"
+            raise RuntimeError(msg)
         wband = utils.get_wl_band(float(self.radar_freq))
         rainrate_threshold = 8
         if 90 < wband < 100:
@@ -135,7 +140,8 @@ class ObservationManager(DataSource):
 
     def _mask_iwc_att(self, iwc: np.ndarray, iwc_status: np.ndarray) -> None:
         """Leaves only where reliable data, corrected liquid attenuation
-        and uncorrected liquid attenuation"""
+        and uncorrected liquid attenuation
+        """
         iwc_att = ma.copy(iwc)
         iwc_att[iwc_status > 3] = ma.masked
         self.append_data(iwc_att, "iwc_att")

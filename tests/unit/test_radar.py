@@ -1,7 +1,7 @@
 import netCDF4
 import numpy as np
-import numpy.ma as ma
 import pytest
+from numpy import ma
 from numpy.testing import assert_array_equal
 from scipy import constants
 

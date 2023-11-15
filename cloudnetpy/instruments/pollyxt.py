@@ -22,10 +22,10 @@ def pollyxt2nc(
     uuid: str | None = None,
     date: str | None = None,
 ) -> str:
-    """
-    Converts PollyXT Raman lidar data into Cloudnet Level 1b netCDF file.
+    """Converts PollyXT Raman lidar data into Cloudnet Level 1b netCDF file.
 
     Args:
+    ----
         input_folder: Path to pollyxt netCDF files.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site with keys:
@@ -40,9 +40,11 @@ def pollyxt2nc(
         date: Expected date of the measurements as YYYY-MM-DD.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.instruments import pollyxt2nc
         >>> site_meta = {'name': 'Mindelo', 'altitude': 13, 'zenith_angle': 6,
         'snr_limit': 3}
@@ -61,8 +63,7 @@ def pollyxt2nc(
     attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
     polly.add_snr_info("beta", snr_limit)
-    uuid = output.save_level1b(polly, output_file, uuid)
-    return uuid
+    return output.save_level1b(polly, output_file, uuid)
 
 
 class PollyXt(Ceilometer):
@@ -72,16 +73,17 @@ class PollyXt(Ceilometer):
         self.expected_date = expected_date
         self.instrument = instruments.POLLYXT
 
-    def mask_nan_values(self):
+    def mask_nan_values(self) -> None:
         for array in self.data.values():
             if getattr(array, "ndim", 0) > 0:
                 array[np.isnan(array)] = ma.masked
 
-    def calc_screened_products(self, snr_limit: float = 5.0):
+    def calc_screened_products(self, snr_limit: float = 5.0) -> None:
         keys = ("beta", "depolarisation")
         for key in keys:
             self.data[key] = ma.masked_where(
-                self.data["snr"] < snr_limit, self.data[f"{key}_raw"]
+                self.data["snr"] < snr_limit,
+                self.data[f"{key}_raw"],
             )
         self.data["depolarisation"][self.data["depolarisation"] > 1] = ma.masked
         self.data["depolarisation"][self.data["depolarisation"] < 0] = ma.masked
@@ -99,19 +101,21 @@ class PollyXt(Ceilometer):
         bsc_files.sort()
         depol_files.sort()
         if not bsc_files:
-            raise RuntimeError("No pollyxt files found")
+            msg = "No pollyxt bsc files found"
+            raise RuntimeError(msg)
         if len(bsc_files) != len(depol_files):
-            raise InconsistentDataError(
-                "Inconsistent number of pollyxt bsc / depol files"
-            )
+            msg = "Inconsistent number of pollyxt bsc / depol files"
+            raise InconsistentDataError(msg)
         self._fetch_attributes(bsc_files[0])
         self.data["range"] = _read_array_from_multiple_files(
-            bsc_files, depol_files, "height"
+            bsc_files,
+            depol_files,
+            "height",
         )
         calibration_factors: np.ndarray = np.array([])
         beta_channel = self._get_valid_beta_channel(bsc_files)
         bsc_key = f"attenuated_backscatter_{beta_channel}nm"
-        for bsc_file, depol_file in zip(bsc_files, depol_files):
+        for bsc_file, depol_file in zip(bsc_files, depol_files, strict=True):
             with (
                 netCDF4.Dataset(bsc_file, "r") as nc_bsc,
                 netCDF4.Dataset(depol_file, "r") as nc_depol,
@@ -119,11 +123,14 @@ class PollyXt(Ceilometer):
                 epoch = utils.get_epoch(nc_bsc["time"].unit)
                 try:
                     time = np.array(
-                        _read_array_from_file_pair(nc_bsc, nc_depol, "time")
+                        _read_array_from_file_pair(nc_bsc, nc_depol, "time"),
                     )
                 except AssertionError as err:
                     logging.warning(
-                        f"Ignoring files '{nc_bsc}' and '{nc_depol}': {err}"
+                        "Ignoring files '%s' and '%s': %s",
+                        nc_bsc,
+                        nc_depol,
+                        err,
                     )
                     continue
                 beta_raw = nc_bsc.variables[bsc_key][:]
@@ -132,6 +139,7 @@ class PollyXt(Ceilometer):
                 for array, key in zip(
                     [beta_raw, depol_raw, time, snr],
                     ["beta_raw", "depolarisation_raw", "time", "snr"],
+                    strict=True,
                 ):
                     self.data = utils.append_data(self.data, key, array)
                 calibration_factor = nc_bsc.variables[
@@ -139,7 +147,7 @@ class PollyXt(Ceilometer):
                 ].Lidar_calibration_constant_used
                 calibration_factor = np.repeat(calibration_factor, len(time))
                 calibration_factors = np.concatenate(
-                    [calibration_factors, calibration_factor]
+                    [calibration_factors, calibration_factor],
                 )
         self.data["calibration_factor"] = calibration_factors
         return epoch
@@ -153,11 +161,16 @@ class PollyXt(Ceilometer):
                     if not _only_zeros_or_masked(beta):
                         if channel != polly_channels[0]:
                             logging.warning(
-                                f"Using {channel}nm pollyXT channel for backscatter"
+                                "Using %s nm pollyXT channel for backscatter",
+                                channel,
                             )
-                            self.instrument.wavelength = float(channel)  # type: ignore
+                            if self.instrument is None:
+                                msg = "No instrument defined"
+                                raise RuntimeError(msg)
+                            self.instrument.wavelength = float(channel)
                         return channel
-        raise ValidTimeStampError("No functional pollyXT backscatter channels found")
+        msg = "No functional pollyXT backscatter channels found"
+        raise ValidTimeStampError(msg)
 
     def _fetch_attributes(self, file: str) -> None:
         with netCDF4.Dataset(file, "r") as nc:
@@ -167,7 +180,7 @@ class PollyXt(Ceilometer):
 
 def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
     array: np.ndarray = np.array([])
-    for ind, (file1, file2) in enumerate(zip(files1, files2)):
+    for ind, (file1, file2) in enumerate(zip(files1, files2, strict=True)):
         with netCDF4.Dataset(file1, "r") as nc1, netCDF4.Dataset(file2, "r") as nc2:
             array1 = _read_array_from_file_pair(nc1, nc2, key)
             if ind == 0:
@@ -177,7 +190,9 @@ def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarr
 
 
 def _read_array_from_file_pair(
-    nc_file1: netCDF4.Dataset, nc_file2: netCDF4.Dataset, key: str
+    nc_file1: netCDF4.Dataset,
+    nc_file2: netCDF4.Dataset,
+    key: str,
 ) -> np.ndarray:
     array1 = nc_file1.variables[key][:]
     array2 = nc_file2.variables[key][:]

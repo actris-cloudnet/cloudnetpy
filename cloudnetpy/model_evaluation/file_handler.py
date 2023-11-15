@@ -14,12 +14,13 @@ from .metadata import (
 from .products.model_products import ModelManager
 
 
-def update_attributes(model_downsample_variables: dict, attributes: dict):
+def update_attributes(model_downsample_variables: dict, attributes: dict) -> None:
     """Overrides existing Cloudnet-ME Array-attributes.
         Overrides existing attributes using hard-coded values.
         New attributes are added.
 
     Args:
+    ----
         model_downsample_variables (dict): Array instances.
         attributes (dict): Product-specific attributes.
     """
@@ -32,11 +33,11 @@ def update_attributes(model_downsample_variables: dict, attributes: dict):
             model_downsample_variables[key].set_attributes(MODEL_ATTRIBUTES[key])
         elif "_".join(key_parts[0:-1]) in REGRID_PRODUCT_ATTRIBUTES:
             model_downsample_variables[key].set_attributes(
-                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-1])]
+                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-1])],
             )
         elif "_".join(key_parts[0:-2]) in REGRID_PRODUCT_ATTRIBUTES:
             model_downsample_variables[key].set_attributes(
-                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-2])]
+                REGRID_PRODUCT_ATTRIBUTES["_".join(key_parts[0:-2])],
             )
         elif (
             "_".join(key_parts[1:]) in MODEL_L3_ATTRIBUTES
@@ -44,19 +45,19 @@ def update_attributes(model_downsample_variables: dict, attributes: dict):
         ):
             try:
                 model_downsample_variables[key].set_attributes(
-                    MODEL_L3_ATTRIBUTES["_".join(key_parts[1:])]
+                    MODEL_L3_ATTRIBUTES["_".join(key_parts[1:])],
                 )
             except KeyError:
                 model_downsample_variables[key].set_attributes(
-                    MODEL_L3_ATTRIBUTES["_".join(key_parts[2:])]
+                    MODEL_L3_ATTRIBUTES["_".join(key_parts[2:])],
                 )
         elif "_".join(key_parts[1:]) in CYCLE_ATTRIBUTES:
             model_downsample_variables[key].set_attributes(
-                CYCLE_ATTRIBUTES["_".join(key_parts[1:])]
+                CYCLE_ATTRIBUTES["_".join(key_parts[1:])],
             )
         elif "_".join(key_parts[2:]) in CYCLE_ATTRIBUTES:
             model_downsample_variables[key].set_attributes(
-                CYCLE_ATTRIBUTES["_".join(key_parts[2:])]
+                CYCLE_ATTRIBUTES["_".join(key_parts[2:])],
             )
 
 
@@ -66,10 +67,11 @@ def save_downsampled_file(
     objects: tuple,
     files: tuple,
     uuid: str | None,
-):
+) -> str:
     """Saves a standard downsampled day product file.
 
     Args:
+    ----
         id_mark (str): File identifier, format "(product name)_(model name)"
         file_name (str): Name of the output file to be generated
         objects (tuple): Include two objects: The :class:'ModelManager' and
@@ -92,25 +94,26 @@ def save_downsampled_file(
     )
     _add_source(root_group, objects, files)
     output.copy_global(obj.dataset, root_group, ("location", "day", "month", "year"))
-    try:
-        obj.dataset.day
-    except AttributeError:
+    if not hasattr(obj.dataset, "day"):
         root_group.year, root_group.month, root_group.day = obj.date
     output.merge_history(root_group, id_mark, {"l3": obj})
     root_group.close()
+    if not isinstance(uuid, str):
+        msg = "UUID is not a string."
+        raise TypeError(msg)
     return uuid
 
 
-def add_var2ncfile(obj: ModelManager, file_name: str):
+def add_var2ncfile(obj: ModelManager, file_name: str) -> None:
     nc_file = netCDF4.Dataset(file_name, "r+", format="NETCDF4_CLASSIC")
     _write_vars2nc(nc_file, obj.data)
     nc_file.close()
 
 
-def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
+def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict) -> None:
     """Iterates over Cloudnet-ME instances and write to given rootgrp."""
 
-    def _get_dimensions(array):
+    def _get_dimensions(array) -> tuple:
         """Finds correct dimensions for a variable."""
         if utils.isscalar(array):
             return ()
@@ -118,8 +121,8 @@ def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
         file_dims = rootgrp.dimensions
         array_dims = array.shape
         for length in array_dims:
-            dim = [key for key in file_dims.keys() if file_dims[key].size == length][0]
-            variable_size = variable_size + (dim,)
+            dim = [key for key in file_dims if file_dims[key].size == length][0]  # noqa: RUF015
+            variable_size = (*variable_size, dim)
         return variable_size
 
     for key in cloudnet_variables:
@@ -127,7 +130,10 @@ def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
         size = _get_dimensions(obj.data)
         try:
             nc_variable = rootgrp.createVariable(
-                obj.name, obj.data_type, size, zlib=True
+                obj.name,
+                obj.data_type,
+                size,
+                zlib=True,
             )
             nc_variable[:] = obj.data
             for attr in obj.fetch_attributes():
@@ -136,11 +142,11 @@ def _write_vars2nc(rootgrp: netCDF4.Dataset, cloudnet_variables: dict):
             continue
 
 
-def _augment_global_attributes(root_group: netCDF4.Dataset):
+def _augment_global_attributes(root_group: netCDF4.Dataset) -> None:
     root_group.Conventions = "CF-1.8"
 
 
-def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple):
+def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple) -> None:
     """Generates source info for multiple files"""
     model, obs = objects
     model_files, obs_file = files
@@ -157,14 +163,18 @@ def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple):
 
 def add_time_attribute(date: datetime) -> dict:
     """ "Adds time attribute with correct units.
+
     Args:
+    ----
         attributes: Attributes of variables.
         date: Date as Y M D 0 0 0.
+
     Returns:
+    -------
         dict: Same attributes with 'time' attribute added.
     """
     return {
         "time": MODEL_ATTRIBUTES["time"]._replace(
-            units=f"hours since {date:%Y-%m-%d} 00:00:00 +00:00"
-        )
+            units=f"hours since {date:%Y-%m-%d} 00:00:00 +00:00",
+        ),
     }

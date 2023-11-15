@@ -17,6 +17,7 @@ class AdvanceProductMethods(DataSource):
     assumptions of model or observation data.
 
     Args:
+    ----
         model_obj (object): The :class:'ModelManager' object.
         obs_obj (object): The :class:'ObservationManager' object.
     """
@@ -38,30 +39,30 @@ class AdvanceProductMethods(DataSource):
         self._model_height = model_obj.data[model_obj.keys["height"]][:]
         self.generate_products()
 
-    def generate_products(self):
-        cls = getattr(importlib.import_module(__name__), "AdvanceProductMethods")
+    def generate_products(self) -> None:
+        cls = importlib.import_module(__name__).AdvanceProductMethods
         try:
             name = f"get_advance_{self.product}"
             getattr(cls, name)(self)
         except AttributeError as error:
-            logging.warning(f"No advance method for {self.product}: {error}")
+            logging.warning("No advance method for %s: %s", self.product, error)
 
-    def get_advance_cf(self):
+    def get_advance_cf(self) -> None:
         self.cf_cirrus_filter()
 
-    def cf_cirrus_filter(self):
+    def cf_cirrus_filter(self) -> None:
         cf = self.getvar_from_object("cf")
         h = self.getvar_from_object("h")
         temperature = self.getvar("temperature")
         t_screened = self.remove_extra_levels(temperature - 273.15)
-        iwc, lwc = [self._model_obj.get_water_content(var) for var in ["iwc", "lwc"]]
+        iwc, lwc = (self._model_obj.get_water_content(var) for var in ["iwc", "lwc"])
         tZT, tT, tZ, t = self.set_frequency_parameters()
         z_sen = self.fit_z_sensitivity(h)
         cf_filtered = self.filter_high_iwc_low_cf(cf, iwc, lwc)
         cloud_iwc, ice_ind = self.find_ice_in_clouds(cf_filtered, iwc, lwc)
         variance_iwc = self.iwc_variance(h, ice_ind)
         # Looks suspicious, check me:
-        for i, ind in enumerate(zip(ice_ind[0], ice_ind[-1])):
+        for i, ind in enumerate(zip(ice_ind[0], ice_ind[-1], strict=True)):
             iwc_dist = self.calculate_iwc_distribution(cloud_iwc[i], variance_iwc[i])
             p_iwc = self.gamma_distribution(iwc_dist, variance_iwc[i], cloud_iwc[i])
             if np.sum(p_iwc) == 0 or p_iwc[-1] > 0.01 * np.sum(p_iwc):
@@ -92,7 +93,9 @@ class AdvanceProductMethods(DataSource):
         return self._model_obj.cut_off_extra_levels(arg)
 
     def set_frequency_parameters(self) -> tuple:
-        assert self._obs_obj.radar_freq is not None
+        if self._obs_obj.radar_freq is None:
+            msg = "No radar frequency in observation file"
+            raise ValueError(msg)
         if 30 <= self._obs_obj.radar_freq <= 40:
             return 0.000242, -0.0186, 0.0699, -1.63
         if 90 <= float(self._obs_obj.radar_freq) <= 100:
@@ -100,8 +103,12 @@ class AdvanceProductMethods(DataSource):
         raise ValueError
 
     def fit_z_sensitivity(self, h: np.ndarray) -> np.ndarray:
-        assert self._obs_obj.z_sensitivity is not None
-        assert self._obs_obj.height is not None
+        if self._obs_obj.z_sensitivity is None:
+            msg = "No z_sensitivity in observation file"
+            raise ValueError(msg)
+        if self._obs_obj.height is None:
+            msg = "No height in observation file"
+            raise ValueError(msg)
         z_sen = [
             cl_tools.rebin_1d(self._obs_obj.height, self._obs_obj.z_sensitivity, h[i])
             for i in range(len(h))
@@ -109,16 +116,22 @@ class AdvanceProductMethods(DataSource):
         return np.asarray(z_sen)
 
     def filter_high_iwc_low_cf(
-        self, cf: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+        self,
+        cf: np.ndarray,
+        iwc: np.ndarray,
+        lwc: np.ndarray,
     ) -> np.ndarray:
         cf_filtered = self.mask_weird_indices(cf, iwc, lwc)
         if np.sum((iwc > 0) & (lwc < iwc / 10) & (cf_filtered > 0)) == 0:
-            raise ValueError("No ice clouds in a input data")
+            msg = "No ice clouds in a input data"
+            raise ValueError(msg)
         return cf_filtered
 
     @staticmethod
     def mask_weird_indices(
-        cf: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+        cf: np.ndarray,
+        iwc: np.ndarray,
+        lwc: np.ndarray,
     ) -> np.ndarray:
         cf_filtered = np.copy(cf)
         weird_ind = (iwc / cf > 0.5e-3) & (cf < 0.001)
@@ -127,7 +140,10 @@ class AdvanceProductMethods(DataSource):
         return cf_filtered
 
     def find_ice_in_clouds(
-        self, cf_filtered: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+        self,
+        cf_filtered: np.ndarray,
+        iwc: np.ndarray,
+        lwc: np.ndarray,
     ) -> tuple[np.ndarray, tuple]:
         ice_ind = self.get_ice_indices(cf_filtered, iwc, lwc)
         cloud_iwc = iwc[ice_ind] / cf_filtered[ice_ind] * 1e3
@@ -135,7 +151,9 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def get_ice_indices(
-        cf_filtered: np.ndarray, iwc: np.ndarray, lwc: np.ndarray
+        cf_filtered: np.ndarray,
+        iwc: np.ndarray,
+        lwc: np.ndarray,
     ) -> tuple:
         return tuple(np.where((cf_filtered > 0) & (iwc > 0) & (lwc < iwc / 10)))
 
@@ -145,8 +163,7 @@ class AdvanceProductMethods(DataSource):
         u = self.remove_extra_levels(u)
         v = self.remove_extra_levels(v)
         w_shear = self.calculate_wind_shear(self._model_obj.wind, u, v, height)
-        variance_iwc = self.calculate_variance_iwc(w_shear, ice_ind)
-        return variance_iwc
+        return self.calculate_variance_iwc(w_shear, ice_ind)
 
     def calculate_variance_iwc(self, w_shear: np.ndarray, ice_ind: tuple) -> np.ndarray:
         return 10 ** (
@@ -157,7 +174,10 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def calculate_wind_shear(
-        wind, u: np.ndarray, v: np.ndarray, height: np.ndarray
+        wind,
+        u: np.ndarray,
+        v: np.ndarray,
+        height: np.ndarray,
     ) -> np.ndarray:
         grand_winds = []
         for w in (wind, u, v):
@@ -189,9 +209,11 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def gamma_distribution(
-        iwc_dist: np.ndarray, f_variance_iwc: float, cloud_iwc: float
+        iwc_dist: np.ndarray,
+        f_variance_iwc: float,
+        cloud_iwc: float,
     ) -> np.ndarray:
-        def calculate_gamma_dist():
+        def calculate_gamma_dist() -> float:
             alpha = 1 / f_variance_iwc
             return (
                 1
@@ -216,18 +238,16 @@ class AdvanceProductMethods(DataSource):
         temperature: float,
         z_sen: float,
     ) -> np.ndarray:
-        def calculate_min_iwc():
-            min_iwc = 10 ** (
-                tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t
-            )
-            return min_iwc
+        def calculate_min_iwc() -> np.ndarray:
+            return 10 ** (tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t)
 
         iwc_min = calculate_min_iwc()
-        obs_index = iwc_dist > iwc_min
-        return obs_index
+        return iwc_dist > iwc_min
 
     @staticmethod
     def filter_cirrus(
-        p_iwc: np.ndarray, obs_index: np.ndarray, cf_filtered: np.ndarray
+        p_iwc: np.ndarray,
+        obs_index: np.ndarray,
+        cf_filtered: np.ndarray,
     ) -> np.ndarray:
         return (np.sum(p_iwc * obs_index) / np.sum(p_iwc)) * cf_filtered

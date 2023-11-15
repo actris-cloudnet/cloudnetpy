@@ -13,7 +13,9 @@ from cloudnetpy.products.product_tools import CategorizeBits, get_is_rain
 
 
 def generate_lwc(
-    categorize_file: str, output_file: str, uuid: str | None = None
+    categorize_file: str,
+    output_file: str,
+    uuid: str | None = None,
 ) -> str:
     """Generates Cloudnet liquid water content product.
 
@@ -23,18 +25,22 @@ def generate_lwc(
     content of observed liquid clouds. The results are written in a netCDF file.
 
     Args:
+    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
+    -------
         str: UUID of the generated file.
 
     Examples:
+    --------
         >>> from cloudnetpy.products import generate_lwc
         >>> generate_lwc('categorize.nc', 'lwc.nc')
 
     References:
+    ----------
         Illingworth, A.J., R.J. Hogan, E. O'Connor, D. Bouniol, M.E. Brooks,
         J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
         M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
@@ -51,7 +57,7 @@ def generate_lwc(
         date = lwc_source.get_date()
         attributes = output.add_time_attribute(LWC_ATTRIBUTES, date)
         output.update_attributes(lwc_source.data, attributes)
-        uuid = output.save_product_file(
+        return output.save_product_file(
             "lwc",
             lwc_source,
             output_file,
@@ -61,7 +67,6 @@ def generate_lwc(
                 "lwp_error",
             ),
         )
-    return uuid
 
 
 class LwcSource(DataSource):
@@ -71,9 +76,11 @@ class LwcSource(DataSource):
     structures and methods for holding the results.
 
     Args:
+    ----
         categorize_file: Categorize file name.
 
     Attributes:
+    ----------
         lwp (ndarray): 1D liquid water path.
         lwp_error (ndarray): 1D error of liquid water path.
         is_rain (ndarray): 1D array denoting presence of rain.
@@ -95,7 +102,10 @@ class LwcSource(DataSource):
         self.categorize_bits = CategorizeBits(categorize_file)
 
     def append_results(
-        self, lwc: np.ndarray, status: np.ndarray, error: np.ndarray
+        self,
+        lwc: np.ndarray,
+        status: np.ndarray,
+        error: np.ndarray,
     ) -> None:
         self.append_data(lwc, "lwc", units="kg m-3")
         self.append_data(status, "lwc_retrieval_status")
@@ -112,9 +122,11 @@ class Lwc:
     """Class handling the actual LWC calculations.
 
     Args:
+    ----
         lwc_source: The :class:`LwcSource` instance.
 
     Attributes:
+    ----------
         lwc_source (LwcSource): The :class:`LwcSource` instance.
         dheight (float): Median difference in height vector.
         is_liquid (ndarray): 2D array denoting liquid.
@@ -138,7 +150,8 @@ class Lwc:
     def _init_lwc_adiabatic(self) -> np.ndarray:
         """Returns theoretical adiabatic lwc in liquid clouds (kg/m3)."""
         lwc_dz = atmos.fill_clouds_with_lwc_dz(
-            self.lwc_source.atmosphere, self.is_liquid
+            self.lwc_source.atmosphere,
+            self.is_liquid,
         )
         return atmos.calc_adiabatic_lwc(lwc_dz, self.dheight)
 
@@ -148,7 +161,8 @@ class Lwc:
         Calculates LWC for ALL profiles (rain, lwp > theoretical, etc.),
         """
         lwc_scaled = atmos.distribute_lwp_to_liquid_clouds(
-            self.lwc_adiabatic, self.lwc_source.lwp
+            self.lwc_adiabatic,
+            self.lwc_source.lwp,
         )
         return lwc_scaled / self.dheight
 
@@ -161,10 +175,12 @@ class CloudAdjustor:
     """Adjusts clouds (where possible) so that theoretical and measured LWP agree.
 
     Args:
+    ----
         lwc_source: The :class:`LwcSource` instance.
         lwc:  The :class:`Lwc` instance.
 
     Attributes:
+    ----------
         lwc_source (LwcSource): The :class:`LwcSource` instance.
         lwc (ndarray): Liquid water content data.
         is_liquid (ndarray): 2D array denoting liquid.
@@ -196,7 +212,8 @@ class CloudAdjustor:
 
     def _adjust_cloud_tops(self, adjustable_clouds: np.ndarray) -> None:
         """Adjusts cloud top index so that measured lwc corresponds to theoretical
-        value."""
+        value.
+        """
         for time_index in np.unique(np.where(adjustable_clouds)[0]):
             base_index = np.where(adjustable_clouds[time_index, :])[0][0]
             self._update_status(time_index)
@@ -234,8 +251,7 @@ class CloudAdjustor:
         detection_type[~top_clouds] = 0
         lidar_only_clouds = self._find_lidar_only_clouds(detection_type)
         top_clouds[~lidar_only_clouds, :] = 0
-        top_clouds = self._remove_good_profiles(top_clouds)
-        return top_clouds
+        return self._remove_good_profiles(top_clouds)
 
     def _find_topmost_clouds(self) -> np.ndarray:
         top_clouds = np.copy(self.is_liquid)
@@ -256,9 +272,11 @@ class CloudAdjustor:
         """Finds top clouds that contain only lidar-detected pixels.
 
         Args:
+        ----
             detection: Array of integers where 1=lidar, 2=radar, 3=both.
 
         Returns:
+        -------
             Boolean array containing top-clouds that are detected only by lidar.
 
         """
@@ -295,10 +313,12 @@ class LwcError:
     """Calculates liquid water content error.
 
     Args:
+    ----
         lwc_source: The :class:`LwcSource` instance.
         lwc: The :class:`Lwc` instance.
 
     Attributes:
+    ----------
         lwc_source (LwcSource): The :class:`LwcSource` instance.
         lwc (ndarray): Liquid water content data.
         error (ndarray): 2D array storing lwc_error.
@@ -315,7 +335,8 @@ class LwcError:
         lwc_relative_error = self._calc_lwc_relative_error()
         lwp_relative_error = self._calc_lwp_relative_error()
         combined_error = self._calc_combined_error(
-            lwc_relative_error, lwp_relative_error
+            lwc_relative_error,
+            lwp_relative_error,
         )
         return self._fill_error_array(combined_error)
 
@@ -325,7 +346,8 @@ class LwcError:
         return self._limit_error(error, 5)
 
     def _calc_lwc_gradient(self) -> np.ndarray:
-        assert isinstance(self.lwc, ma.MaskedArray)
+        if not isinstance(self.lwc, ma.MaskedArray):
+            self.lwc = ma.masked_array(self.lwc)
         gradient_elements = np.gradient(self.lwc.filled(0))
         return utils.l2norm(*gradient_elements)
 
@@ -424,7 +446,7 @@ DEFINITIONS = {
         "         attenuated."
         "Value 6: Rain present: cloud extent is difficult to ascertain and liquid\n"
         "         water path also uncertain."
-    )
+    ),
 }
 
 

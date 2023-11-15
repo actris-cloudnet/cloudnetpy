@@ -18,7 +18,9 @@ from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 def test_parse_global_attribute_numeral(data: str, result: float):
     instrument = CloudnetInstrument()
     with netCDF4.Dataset(
-        NamedTemporaryFile().name, "w", format="NETCDF4_CLASSIC"
+        NamedTemporaryFile().name,
+        "w",
+        format="NETCDF4_CLASSIC",
     ) as nc:
         instrument.dataset = nc
         for key in ["Altitude", "Latitude", "Longitude"]:

@@ -1,6 +1,6 @@
 """General helper classes and functions for all products."""
 import os
-from collections import namedtuple
+from typing import NamedTuple
 
 import netCDF4
 import numpy as np
@@ -11,16 +11,26 @@ from cloudnetpy import constants, utils
 from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.datasource import DataSource
 
-IceCoefficients = namedtuple("IceCoefficients", "K2liquid0 ZT T Z c")
+
+class IceCoefficients(NamedTuple):
+    """Coefficients for ice effective radius retrieval."""
+
+    K2liquid0: float
+    ZT: float
+    T: float
+    Z: float
+    c: float
 
 
 class CategorizeBits:
     """Class holding information about category and quality bits.
 
     Args:
+    ----
         categorize_file (str): Categorize file name.
 
     Attributes:
+    ----------
         category_bits (dict): Dictionary containing boolean fields for `droplet`,
             `falling`, `cold`, `melting`, `aerosol`, `insect`.
 
@@ -60,8 +70,7 @@ class CategorizeBits:
             except KeyError as err:
                 raise KeyError from err
             keys = getattr(CategorizeBits, f"{bit_type}_keys")
-            bits = {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
-        return bits
+            return {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
 
 
 class ProductClassification(CategorizeBits):
@@ -69,9 +78,11 @@ class ProductClassification(CategorizeBits):
     of various Cloudnet products. Child of CategorizeBits class.
 
     Args:
+    ----
         categorize_file (str): Categorize file name.
 
     Attributes:
+    ----------
         is_rain (ndarray): 1D array denoting rainy profiles.
 
     """
@@ -147,7 +158,8 @@ class IceSource(DataSource):
         self.coefficients = self._get_coefficients()
 
     def append_main_variable_including_rain(
-        self, ice_classification: IceClassification
+        self,
+        ice_classification: IceClassification,
     ) -> None:
         """Adds the main variable (including ice above rain)."""
         data_including_rain = self._convert_z()
@@ -177,7 +189,8 @@ class IceSource(DataSource):
     def _get_coefficients(self) -> IceCoefficients:
         """Returns coefficients for ice effective radius retrieval.
 
-        References:
+        References
+        ----------
             Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
         """
         if self.product == "ier":
@@ -190,8 +203,12 @@ class IceSource(DataSource):
 
     def _convert_z(self, z_variable: str = "Z") -> np.ndarray:
         """Calculates temperature weighted z, i.e. ice effective radius [m]."""
-        assert self.product in ("iwc", "ier")
-        assert z_variable in ("Z", "Z_sensitivity")
+        if self.product not in ("iwc", "ier"):
+            msg = f"Invalid product: {self.product}"
+            raise ValueError(msg)
+        if z_variable not in ("Z", "Z_sensitivity"):
+            msg = f"Invalid z_variable: {z_variable}"
+            raise ValueError(msg)
         temperature = (
             self.temperature if z_variable == "Z" else ma.mean(self.temperature, axis=0)
         )
@@ -214,7 +231,8 @@ class IceSource(DataSource):
 
     def _get_z_factor(self) -> float:
         """Returns empirical scaling factor for radar echo."""
-        return float(utils.lin2db(self.coefficients.K2liquid0 / 0.93))
+        k2 = np.array(self.coefficients.K2liquid0) / 0.93
+        return float(utils.lin2db(k2))
 
 
 def get_is_rain(filename: str) -> np.ndarray:
@@ -223,7 +241,8 @@ def get_is_rain(filename: str) -> np.ndarray:
     except KeyError:
         rainfall_rate = read_nc_fields(filename, "rain_rate")
     is_rain = rainfall_rate != 0
-    assert isinstance(is_rain, ma.MaskedArray)
+    if not isinstance(is_rain, ma.MaskedArray):
+        is_rain = ma.array(is_rain)
     is_rain[is_rain.mask] = True
     return np.array(is_rain)
 
@@ -232,10 +251,12 @@ def read_nc_fields(nc_file: str, names: str | list) -> ma.MaskedArray | list:
     """Reads selected variables from a netCDF file.
 
     Args:
+    ----
         nc_file: netCDF file name.
         names: Variables to be read, e.g. 'temperature' or ['ldr', 'lwp'].
 
     Returns:
+    -------
         ndarray/list: Array in case of one variable passed as a string.
         List of arrays otherwise.
 
@@ -250,11 +271,13 @@ def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]
     """Interpolates 2D model field into dense Cloudnet grid.
 
     Args:
+    ----
         cat_file: Categorize file name.
         names: Model variable to be interpolated, e.g. 'temperature' or ['temperature',
             'pressure'].
 
     Returns:
+    -------
         dict: Interpolated variables.
 
     """

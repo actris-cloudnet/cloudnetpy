@@ -12,6 +12,7 @@ class Lidar(DataSource):
     """Lidar class, child of DataSource.
 
     Args:
+    ----
         full_path: Cloudnet Level 1 lidar netCDF file.
 
     """
@@ -32,7 +33,9 @@ class Lidar(DataSource):
         for ind, b in enumerate(beta):
             if ma.all(b) is not ma.masked:
                 indices.append(ind)
-        assert self.height is not None
+        if self.height is None:
+            msg = "Unable to interpolate lidar: no height information"
+            raise RuntimeError(msg)
         beta_interpolated = interpolate_2d_nearest(
             self.time[indices],
             self.height,
@@ -47,12 +50,14 @@ class Lidar(DataSource):
         bad_height_indices = _get_bad_indices(self.height, height_new, max_height)
         if bad_time_indices:
             logging.warning(
-                f"Unable to interpolate lidar for {len(bad_time_indices)} time steps"
+                "Unable to interpolate lidar for %s time steps",
+                len(bad_time_indices),
             )
         beta_interpolated[bad_time_indices, :] = ma.masked
         if bad_height_indices:
             logging.warning(
-                f"Unable to interpolate lidar for {len(bad_height_indices)} altitudes"
+                "Unable to interpolate lidar for %s altitudes",
+                len(bad_height_indices),
             )
         beta_interpolated[:, bad_height_indices] = ma.masked
         self.data["beta"].data = beta_interpolated
@@ -65,7 +70,9 @@ class Lidar(DataSource):
 
 
 def _get_bad_indices(
-    original_grid: np.ndarray, new_grid: np.ndarray, threshold: float
+    original_grid: np.ndarray,
+    new_grid: np.ndarray,
+    threshold: float,
 ) -> list:
     indices = []
     for ind, value in enumerate(new_grid):

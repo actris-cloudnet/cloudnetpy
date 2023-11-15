@@ -57,6 +57,27 @@ changelog = "CHANGELOG.md"
 
 [tool.ruff]
 extend-select = ["I"]
+exclude = ["cloudnetpy/model_evaluation/tests/", "tests/"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "ANN", # missing types, use mypy for this
+  "C9", # too complex, fix me later
+  "COM812", # Formatting
+  "D", # documentation
+  "DTZ00", # do not check timezone info
+  "FIX002", # TODOs
+  "ISC001", # Formatter wants me
+  "N8", # uppercase variable names
+  "PD011", # false positive
+  "PERF", # try except in loop
+  "PLR", # too many arguments etc.
+  "PTH", # use pathlib, fix me later
+  "RUF002", # unicode in doc string
+  "TD002", # TODOs
+  "TD003", # TODOs
+]
 
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = ["F401"]

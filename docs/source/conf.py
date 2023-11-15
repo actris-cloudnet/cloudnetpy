@@ -1,3 +1,4 @@
+# noqa: INP001
 import os
 import sys
 
@@ -15,7 +16,7 @@ sys.path.insert(0, os.path.abspath("../../cloudnetpy/"))
 # -- Project information -----------------------------------------------------
 
 project = "CloudnetPy"
-copyright = "2022, Finnish Meteorological Institute"
+copyright = "2022, Finnish Meteorological Institute"  # noqa: A001
 author = "Finnish Meteorological Institute"
 
 # -- General configuration ---------------------------------------------------
@@ -40,7 +41,6 @@ autodoc_member_order = "bysource"
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-# html_theme = 'alabaster'
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 

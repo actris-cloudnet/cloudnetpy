@@ -6,7 +6,7 @@ import pytest
 
 
 @pytest.fixture(scope="session")
-def file_metadata():
+def file_metadata() -> dict:
     year, month, day = "2019", "05", "23"
     return {
         "year": year,
@@ -19,7 +19,7 @@ def file_metadata():
 
 
 @pytest.fixture(scope="session")
-def model_file(tmpdir_factory, file_metadata):
+def model_file(tmpdir_factory, file_metadata) -> str:
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     time = 3
@@ -61,7 +61,7 @@ def model_file(tmpdir_factory, file_metadata):
 
 
 @pytest.fixture(scope="session")
-def obs_file(tmpdir_factory, file_metadata):
+def obs_file(tmpdir_factory, file_metadata) -> str:
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     time = 6
@@ -96,7 +96,7 @@ def obs_file(tmpdir_factory, file_metadata):
             [4, 4, 0, 1],
             [0, 8, 16, 16],
             [32, 2, 8, 32],
-        ]
+        ],
     )
     var = root_grp.createVariable("quality_bits", "i4", ("time", "height"))
     var[:] = np.array(
@@ -107,7 +107,7 @@ def obs_file(tmpdir_factory, file_metadata):
             [0, 1, 2, 4],
             [8, 16, 32, 16],
             [8, 4, 2, 1],
-        ]
+        ],
     )
     var = root_grp.createVariable("iwc", "f8", ("time", "height"))
     var[:] = np.array(
@@ -118,7 +118,7 @@ def obs_file(tmpdir_factory, file_metadata):
             [0.01, 0.02, 0.06, 0.01],
             [0.02, 0.06, 0.00, 0.03],
             [0.08, 0.00, 0.03, 0.08],
-        ]
+        ],
     )
     var = root_grp.createVariable("iwc_retrieval_status", "f8", ("time", "height"))
     var[:] = np.array(
@@ -129,7 +129,7 @@ def obs_file(tmpdir_factory, file_metadata):
             [1, 2, 6, 7],
             [4, 6, 5, 3],
             [7, 5, 3, 4],
-        ]
+        ],
     )
     var = root_grp.createVariable("lwc", "f8", ("time", "height"))
     var[:] = np.array(
@@ -140,7 +140,7 @@ def obs_file(tmpdir_factory, file_metadata):
             [0.08, 0.04, 0.01, 0.08],
             [0.04, 0.01, 0.09, 0.07],
             [0.02, 0.09, 0.07, 0.02],
-        ]
+        ],
     )
     var = root_grp.createVariable("data", "i4", ("time", "height"))
     var[:] = np.array(
@@ -151,14 +151,14 @@ def obs_file(tmpdir_factory, file_metadata):
             [3, 5, 1, 0],
             [2, 5, 6, 1],
             [2, 9, 7, 2],
-        ]
+        ],
     )
     root_grp.close()
     return file_name
 
 
 @pytest.fixture(scope="session")
-def regrid_file(tmpdir_factory, file_metadata):
+def regrid_file(tmpdir_factory, file_metadata) -> str:
     file_name = tmpdir_factory.mktemp("data").join("file.nc")
     root_grp = netCDF4.Dataset(file_name, "w", format="NETCDF4_CLASSIC")
     time = 3
@@ -198,6 +198,6 @@ def regrid_file(tmpdir_factory, file_metadata):
     return file_name
 
 
-def _create_global_attributes(root_grp, meta):
+def _create_global_attributes(root_grp, meta) -> None:
     for key in ("year", "month", "day", "location"):
         setattr(root_grp, key, meta[key])

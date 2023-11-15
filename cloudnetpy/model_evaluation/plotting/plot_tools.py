@@ -1,4 +1,4 @@
-import matplotlib
+import matplotlib as mpl
 import netCDF4
 import numpy as np
 from matplotlib.colors import ListedColormap
@@ -12,13 +12,14 @@ def parse_wanted_names(
     name: str,
     model: str,
     variables: list | None = None,
+    *,
     advance: bool = False,
 ) -> tuple[list, list]:
     """Returns standard and advection lists of product types to plot"""
     if variables:
         names = variables
     else:
-        names = parse_dataset_keys(nc_file, name, advance, model)
+        names = parse_dataset_keys(nc_file, name, advance=advance, model=model)
     standard_n = [n for n in names if name in n and "adv" not in n]
     standard_n = sort_model2first_element(standard_n, model)
     advection_n = [n for n in names if name in n and "adv" in n]
@@ -33,18 +34,18 @@ def parse_wanted_names(
 
 
 def parse_dataset_keys(
-    nc_file: str, product: str, advance: bool, model: str = ""
+    nc_file: str,
+    product: str,
+    *,
+    advance: bool,
+    model: str,
 ) -> list:
     names = list(netCDF4.Dataset(nc_file).variables.keys())
     a_names = ["cirrus", "snow"]
     model_vars = []
     for n in names:
-        if model not in n:
+        if model not in n or (model in n and product not in n):
             model_vars.append(n)
-        elif model in n and product not in n:
-            model_vars.append(n)
-        else:
-            continue
     if not advance:
         for a in a_names:
             for n in names:
@@ -85,10 +86,12 @@ def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
     x = reshape_1d2nd(x, data)
     try:
         y = nc.variables[f"{model}_height"][:]
-    except KeyError:
+    except KeyError as err:
         model_info = MODELS[model]
         cycles = model_info.cycle
-        assert cycles is not None
+        if cycles is None:
+            msg = f"Invalid model: {model}"
+            raise RuntimeError(msg) from err
         cycles_split = [x.strip() for x in cycles.split(",")]
         cycle = [cycle for cycle in cycles_split if cycle in name]
         y = nc.variables[f"{model}_{cycle[0]}_height"][:]
@@ -102,7 +105,7 @@ def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
     return data, x, y
 
 
-def mask_small_values(data: ma.MaskedArray, name: str):
+def mask_small_values(data: ma.MaskedArray, name: str) -> ma.MaskedArray:
     data[data <= 0] = ma.masked
     if "lwc" in name:
         data[data < 1e-5] = ma.masked
@@ -127,14 +130,14 @@ def create_segment_values(arrays: list) -> tuple:
     new_array[new_array == 3] = 2
     new_array[new_array == 4] = 3
 
-    colors = matplotlib.colormaps["YlGnBu"]
+    colors = mpl.colormaps["YlGnBu"]
     newcolors = colors(np.linspace(0, 1, 256))
     # No data, model, both, observation
     cmap = ListedColormap(["white", "khaki", newcolors[90], newcolors[140]])
     return new_array, cmap
 
 
-def set_yaxis(ax, max_y: float, min_y: float = 0.0):
+def set_yaxis(ax, max_y: float, min_y: float = 0.0) -> None:
     ax.set_ylim(min_y, max_y)
     ax.set_ylabel("Height (km)", fontsize=13)
 
@@ -150,7 +153,9 @@ def rolling_mean(data: ma.MaskedArray, n: int = 4) -> np.ndarray:
 
 
 def change2one_dim_axes(
-    x: ma.MaskedArray, y: ma.MaskedArray, data: np.ndarray
+    x: ma.MaskedArray,
+    y: ma.MaskedArray,
+    data: np.ndarray,
 ) -> tuple:
     # If any mask in x or y, change 2d to 1d axes values
     # Common shape need to match 2d data.

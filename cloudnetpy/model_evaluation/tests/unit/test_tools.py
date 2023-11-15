@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
@@ -12,37 +12,38 @@ OUTPUT_FILE = "/"
 PRODUCT = "iwc"
 
 
-def test_model_file_list():
+def test_model_file_list() -> None:
     name = "ec"
     models = ["00_ec_1", "00_ec_2", "00_ec_3"]
     tools.check_model_file_list(name, models)
 
 
-@pytest.mark.xfail(raises=AttributeError)
-def test_model_file_list_fail():
+def test_model_file_list_fail() -> None:
     name = "ec"
     models = ["00_ec_1", "ac_1", "00_ec_2", "00_ec_3"]
-    tools.check_model_file_list(name, models)
+    with pytest.raises(AttributeError):
+        tools.check_model_file_list(name, models)
 
 
-def test_time2datetime():
+def test_time2datetime() -> None:
     time_list = np.array(range(10))
-    d = datetime(2020, 4, 7, 0, 0, 0)
+    d = datetime(2020, 4, 7, 0, 0, 0, tzinfo=timezone.utc)
     x = tools.time2datetime(time_list, d)
     compare = [
-        datetime(2020, 4, 7, 0, 0, 0) + timedelta(hours=1 * x) for x in range(0, 10)
+        datetime(2020, 4, 7, 0, 0, 0, tzinfo=timezone.utc) + timedelta(hours=1 * x)
+        for x in range(10)
     ]
     assert all(a == b for a, b in zip(x, compare))
 
 
-def test_rebin_edges():
+def test_rebin_edges() -> None:
     data = np.array([1, 3, 6, 10, 15, 21, 28])
     compare = np.array([-1, 2, 4.5, 8, 12.5, 18, 24.5, 35])
     x = tools.rebin_edges(data)
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_calculate_advection_time_hour(model_file):
+def test_calculate_advection_time_hour(model_file) -> None:
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     h = obj.resolution_h
     v = ma.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
@@ -54,7 +55,7 @@ def test_calculate_advection_time_hour(model_file):
     assert x.all() == compare.all()
 
 
-def test_calculate_advection_time_10min(model_file):
+def test_calculate_advection_time_10min(model_file) -> None:
     obj = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     h = obj.resolution_h
     v = ma.array([[1, 2, 3], [2, 3, 4], [3, 4, 5]])
@@ -66,7 +67,7 @@ def test_calculate_advection_time_10min(model_file):
     assert x.all() == compare.all()
 
 
-def test_get_1d_indices():
+def test_get_1d_indices() -> None:
     w = (1, 5)
     d = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
     compare = ma.array([0, 1, 1, 1, 1, 0, 0, 0])
@@ -74,7 +75,7 @@ def test_get_1d_indices():
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_get_1d_indices_mask():
+def test_get_1d_indices_mask() -> None:
     w = (1, 5)
     d = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
     m = np.array([0, 0, 1, 0, 0, 1, 0, 1], dtype=bool)
@@ -84,7 +85,7 @@ def test_get_1d_indices_mask():
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_get_adv_indices():
+def test_get_adv_indices() -> None:
     mt = 3
     at = 4
     d = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
@@ -93,7 +94,7 @@ def test_get_adv_indices():
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_get_adv_indices_mask():
+def test_get_adv_indices_mask() -> None:
     mt = 3
     at = 4
     d = ma.array([0, 1, 2, 3, 4, 5, 6, 7])
@@ -104,7 +105,7 @@ def test_get_adv_indices_mask():
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_obs_windows_size():
+def test_obs_windows_size() -> None:
     i = np.array([0, 0, 1, 1, 1, 1, 0], dtype=bool)
     j = np.array([0, 1, 1, 1, 0, 0, 0], dtype=bool)
     x = tools.get_obs_window_size(i, j)
@@ -112,7 +113,7 @@ def test_obs_windows_size():
     testing.assert_almost_equal(x, (4, 3))
 
 
-def test_obs_windows_size_none():
+def test_obs_windows_size_none() -> None:
     i = np.array([0, 0, 1, 1, 1, 1, 0], dtype=bool)
     j = np.array([0, 0, 0, 0, 0, 0, 0], dtype=bool)
     x = tools.get_obs_window_size(i, j)

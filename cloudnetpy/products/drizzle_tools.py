@@ -16,9 +16,11 @@ class DrizzleSource(DataSource):
     """Class holding the input data for drizzle calculations.
 
     Args:
+    ----
         categorize_file: Categorize file name.
 
     Attributes:
+    ----------
         mie (dict): Mie look-up table data.
         dheight (float): Median difference of height array.
         z (ndarray): 2D radar echo (linear units).
@@ -35,13 +37,13 @@ class DrizzleSource(DataSource):
         self.beta = self.getvar("beta")
         self.v = self.getvar("v")
 
-    def _convert_z_units(self):
+    def _convert_z_units(self) -> np.ndarray:
         """Converts reflectivity factor to SI units."""
         z = self.getvar("Z") - 180
         z[z > 0.0] = 0.0
         return utils.db2lin(z)
 
-    def _read_mie_lut(self):
+    def _read_mie_lut(self) -> dict:
         """Reads mie scattering look-up table."""
         mie_file = self._get_mie_file()
         with netCDF4.Dataset(mie_file) as nc:
@@ -59,16 +61,16 @@ class DrizzleSource(DataSource):
                     "width": mie[f"lu_width_{band}"][:],
                     "ray": mie[f"lu_mie_ray_{band}"][:],
                     "v": mie[f"lu_v_{band}"][:],
-                }
+                },
             )
         return lut
 
     @staticmethod
-    def _get_mie_file():
+    def _get_mie_file() -> str:
         module_path = os.path.dirname(os.path.abspath(__file__))
-        return "/".join((module_path, "mie_lu_tables.nc"))
+        return f"{module_path}/mie_lu_tables.nc"
 
-    def _get_wl_band(self):
+    def _get_wl_band(self) -> str:
         """Returns string corresponding the radar frequency."""
         radar_frequency = float(self.getvar("radar_frequency"))
         wl_band = utils.get_wl_band(radar_frequency)
@@ -80,9 +82,11 @@ class DrizzleClassification(ProductClassification):
     child of  :class:`ProductClassification`.
 
     Args:
+    ----
         categorize_file: Categorize file name.
 
     Attributes:
+    ----------
         is_v_sigma (ndarray): 2D array denoting finite v_sigma.
         warm_liquid (ndarray): 2D array denoting warm liquid.
         drizzle (ndarray): 2D array denoting drizzle presence.
@@ -100,14 +104,14 @@ class DrizzleClassification(ProductClassification):
         self.cold_rain = self._find_cold_rain()
 
     @staticmethod
-    def _find_v_sigma(cat_file: str):
+    def _find_v_sigma(cat_file: str) -> np.ndarray:
         v_sigma = product_tools.read_nc_fields(cat_file, "v_sigma")
         return np.isfinite(v_sigma)
 
-    def _find_warm_liquid(self):
+    def _find_warm_liquid(self) -> np.ndarray:
         return self.category_bits["droplet"] & ~self.category_bits["cold"]
 
-    def _find_drizzle(self):
+    def _find_drizzle(self) -> np.ndarray:
         return (
             ~utils.transpose(self.is_rain)
             & self.category_bits["falling"]
@@ -123,7 +127,7 @@ class DrizzleClassification(ProductClassification):
             & self.is_v_sigma
         )
 
-    def _find_would_be_drizzle(self):
+    def _find_would_be_drizzle(self) -> np.ndarray:
         return (
             ~utils.transpose(self.is_rain)
             & self.warm_liquid
@@ -135,7 +139,7 @@ class DrizzleClassification(ProductClassification):
             & ~self.quality_bits["molecular"]
         )
 
-    def _find_cold_rain(self):
+    def _find_cold_rain(self) -> np.ndarray:
         return np.any(self.category_bits["melting"], axis=1)
 
 
@@ -146,9 +150,11 @@ class SpectralWidth:
     spectral broadening of the Doppler velocity.
 
     Args:
+    ----
         categorize_file: Categorize file name.
 
     Attributes:
+    ----------
         categorize_file (str): Categorize file name.
         width_ht (ndarray): Spectral width containing the correction for turbulence
             broadening.
@@ -159,32 +165,33 @@ class SpectralWidth:
         self.cat_file = categorize_file
         self.width_ht = self._calculate_spectral_width()
 
-    def _calculate_spectral_width(self):
+    def _calculate_spectral_width(self) -> np.ndarray:
         v_sigma = product_tools.read_nc_fields(self.cat_file, "v_sigma")
         try:
             width = product_tools.read_nc_fields(self.cat_file, "width")
         except KeyError:
             width = [0]
-            logging.warning(f"No spectral width, assuming width = {width[0]}")
+            logging.warning("No spectral width, assuming width = %s", width[0])
         sigma_factor = self._calc_v_sigma_factor()
         return width - sigma_factor * v_sigma
 
-    def _calc_v_sigma_factor(self):
+    def _calc_v_sigma_factor(self) -> np.ndarray:
         beam_divergence = self._calc_beam_divergence()
         wind = self._calc_horizontal_wind()
         actual_wind = (wind + beam_divergence) ** (2 / 3)
         scaled_wind = (30 * wind + beam_divergence) ** (2 / 3)
         return actual_wind / (scaled_wind - actual_wind)
 
-    def _calc_beam_divergence(self):
+    def _calc_beam_divergence(self) -> np.ndarray:
         beam_width = 0.5
         height = product_tools.read_nc_fields(self.cat_file, "height")
         return height * np.deg2rad(beam_width)
 
-    def _calc_horizontal_wind(self):
+    def _calc_horizontal_wind(self) -> np.ndarray:
         """Calculates magnitude of horizontal wind.
 
-        Returns:
+        Returns
+        -------
             ndarray: Horizontal wind (m s-1).
 
         """
@@ -198,11 +205,13 @@ class DrizzleSolver:
     """Estimates drizzle parameters.
 
     Args:
+    ----
         drizzle_source: The :class:`DrizzleSource` instance.
         drizzle_class: The :class:`DrizzleClassification` instance.
         spectral_width: The :class:`SpectralWidth` instance.
 
     Attributes:
+    ----------
         params (dict): Dictionary of retrieved drizzle parameters 'Do', 'mu', 'S',
             'beta_corr'.
 
@@ -238,16 +247,18 @@ class DrizzleSolver:
     def _find_lut_indices(self, ind, dia_init, n_dia, n_widths) -> tuple[int, int]:
         ind_dia = bisect_left(self._data.mie["Do"], dia_init[ind], hi=n_dia - 1)
         ind_width = bisect_left(
-            self._width_lut[:, ind_dia], -self._width_ht[ind], hi=n_widths - 1
+            self._width_lut[:, ind_dia],
+            -self._width_ht[ind],
+            hi=n_widths - 1,
         )
         return ind_width, ind_dia
 
-    def _solve_drizzle(self, dia_init: np.ndarray):
+    def _solve_drizzle(self, dia_init: np.ndarray) -> None:
         drizzle_ind = np.where(self._drizzle_class.drizzle == 1)
         dia_init[drizzle_ind] = self._calc_dia(self._beta_z_ratio[drizzle_ind], k=18.8)
         n_widths, n_dia = self._width_lut.shape[0], len(self._data.mie["Do"])
         max_ite = 10
-        for ind in zip(*drizzle_ind):
+        for ind in zip(*drizzle_ind, strict=True):
             for _ in range(max_ite):
                 lut_ind = self._find_lut_indices(ind, dia_init, n_dia, n_widths)
                 dia = self._calc_dia(
@@ -261,13 +272,16 @@ class DrizzleSolver:
                     break
                 self._dia_init[ind] = dia
             beta_factor = np.exp(
-                2 * self.params["S"][ind] * self._data.beta[ind] * self._data.dheight
+                2 * self.params["S"][ind] * self._data.beta[ind] * self._data.dheight,
             )
             self.params["beta_corr"][ind[0], (ind[-1] + 1) :] *= beta_factor
 
     def _update_result_tables(
-        self, ind: tuple, dia: np.ndarray | float, lut_ind: tuple
-    ):
+        self,
+        ind: tuple,
+        dia: np.ndarray | float,
+        lut_ind: tuple,
+    ) -> None:
         self.params["Do"][ind] = dia
         self.params["mu"][ind] = self._data.mie["mu"][lut_ind[0]]
         self.params["S"][ind] = self._data.mie["S"][lut_ind]
@@ -282,15 +296,18 @@ class DrizzleSolver:
         """Drizzle diameter calculation.
 
         Args:
+        ----
             beta_z_ratio: Beta to z ratio, multiplied by (2 / pi).
             mu: Shape parameter for gamma calculations. Default is 0.
             ray: Mie to Rayleigh ratio for z. Default is 1.
             k: Alpha to beta ratio . Default is 1.
 
         Returns:
+        -------
             ndarray: Drizzle diameter.
 
         References:
+        ----------
             https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
 
         """
@@ -299,7 +316,9 @@ class DrizzleSolver:
 
     @staticmethod
     def _is_converged(
-        ind: tuple, dia: np.ndarray | float, dia_init: np.ndarray
+        ind: tuple,
+        dia: np.ndarray | float,
+        dia_init: np.ndarray,
     ) -> bool:
         threshold = 1e-3
         return abs((dia - dia_init[ind]) / dia_init[ind]) < threshold

@@ -22,6 +22,7 @@ def basta2nc(
     steps.
 
     Args:
+    ----
         basta_file: Filename of a daily BASTA .nc file.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -30,12 +31,15 @@ def basta2nc(
         date: Expected date of the measurements as YYYY-MM-DD.
 
     Returns:
+    -------
         UUID of the generated file.
 
     Raises:
+    ------
         ValueError: Timestamps do not match the expected date.
 
     Examples:
+    --------
           >>> from cloudnetpy.instruments import basta2nc
           >>> site_meta = {'name': 'Palaiseau', 'latitude': 48.718, 'longitude': 2.207}
           >>> basta2nc('basta_file.nc', 'radar.nc', site_meta)
@@ -63,14 +67,14 @@ def basta2nc(
         basta.remove_duplicate_timestamps()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
-    uuid = output.save_level1b(basta, output_file, uuid)
-    return uuid
+    return output.save_level1b(basta, output_file, uuid)
 
 
 class Basta(NcRadar):
     """Class for BASTA raw radar data. Child of NcRadar().
 
     Args:
+    ----
         full_path: BASTA netCDF filename.
         site_meta: Site properties in a dictionary. Required key is `name`.
 
