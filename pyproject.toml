@@ -62,18 +62,17 @@ exclude = ["cloudnetpy/model_evaluation/tests/", "tests/"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-  "ANN",
+  "ANN", # missing types, use mypy for this
   "C9", # too complex, fix me later
   "COM812", # Formatting
-  "D",
+  "D", # documentation
   "FIX002", # TODOs
   "N8", # uppercase variable names
   "PD011", # false positive
-  "PERF",
+  "PERF", # try except in loop
   "PLR", # too many arguments etc.
   "PTH", # use pathlib, fix me later
   "RUF",
-  "RUF002",
   "TD002", # TODOs
   "TD003", # TODOs
 ]
