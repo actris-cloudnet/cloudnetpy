@@ -229,7 +229,7 @@ def rebin_1d(
     edges = binvec(x_new)
     result = np.zeros(len(x_new))
     array_screened = ma.masked_invalid(array, copy=True)  # data may contain nan-values
-    mask = ~array_screened.mask  # pylint: disable=E1101
+    mask = ~array_screened.mask
     if ma.any(array_screened[mask]):
         result, _, _ = stats.binned_statistic(
             x_in[mask],
@@ -428,9 +428,9 @@ def interpolate_2d_mask(
         interpolation. Input data may contain nan-values.
 
     """
-    z = ma.array(ma.masked_invalid(z, copy=True))  # ma.array() to avoid pylint nag
+    z = ma.array(ma.masked_invalid(z, copy=True))
     # Interpolate ignoring masked values:
-    valid_points = np.logical_not(z.mask)  # ~z.mask causes pylint nag
+    valid_points = np.logical_not(z.mask)
     xx, yy = np.meshgrid(y, x)
     x_valid = xx[valid_points]
     y_valid = yy[valid_points]
@@ -589,7 +589,7 @@ def cumsumr(array: np.ndarray, axis: int = 0) -> np.ndarray:
 
     """
     cums = array.cumsum(axis=axis)
-    return cums - np.maximum.accumulate(cums * (array == 0), axis=axis)  # pylint: disable=E1101
+    return cums - np.maximum.accumulate(cums * (array == 0), axis=axis)
 
 
 def ffill(array: np.ndarray, value: int = 0) -> np.ndarray:
@@ -618,7 +618,7 @@ def ffill(array: np.ndarray, value: int = 0) -> np.ndarray:
     ndims = len(array.shape)
     ran = np.arange(array.shape[ndims - 1])
     idx = np.where((array != value), ran, 0)
-    idx = np.maximum.accumulate(idx, axis=ndims - 1)  # pylint: disable=E1101
+    idx = np.maximum.accumulate(idx, axis=ndims - 1)
     if ndims == 2:
         return array[np.arange(idx.shape[0])[:, None], idx]
     return array[idx]

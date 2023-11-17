@@ -440,7 +440,6 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
         CR1000 Measurement and Control System.
         https://s.campbellsci.com/documents/us/manuals/cr1000.pdf
     """
-    # pylint: disable=too-many-branches,comparison-with-callable
     with open(filename, encoding="latin1", errors="ignore") as file:
         reader = csv.reader(file)
         _origin_line = next(reader)

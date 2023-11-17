@@ -46,7 +46,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[2] = freezing.find_freezing_region(obs, bits[3])
     liquid_from_lidar = droplet.find_liquid(obs)
     if obs.lv0_files is not None and len(obs.lv0_files) > 0:
-        import voodoonet  # pylint: disable=import-outside-toplevel,import-error
+        import voodoonet
 
         target_time = voodoonet.utils.decimal_hour2unix(obs.date, obs.time)
         liquid_prob = voodoonet.infer(obs.lv0_files, target_time=target_time)

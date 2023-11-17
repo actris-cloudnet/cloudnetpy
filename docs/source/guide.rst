@@ -2,10 +2,10 @@ Developer's Guide
 =================
 
 CloudnetPy is hosted by Finnish Meteorological Institute (FMI) and
-will be used to process cloud remote sensing data in the
-ACTRIS research infrastructure. We are happy to welcome the cloud remote sensing community
-to provide improvements in the methods and their implementations, writing
-tests and fixing bugs.
+is used to process cloud remote sensing data in the
+ACTRIS research infrastructure. We are happy to welcome the cloud remote sensing
+community to provide improvements in the methods and their implementations,
+writing tests and fixing bugs.
 
 How to contribute
 -----------------
@@ -34,7 +34,7 @@ Create a virtual environment and install:
     $ python3 -m venv venv
     $ source venv/bin/activate
     (venv) $ pip3 install --upgrade pip
-    (venv) $ pip3 install .[test]
+    (venv) $ pip3 install .[test,dev,extras]
 
 Unit tests
 ..........
@@ -52,19 +52,9 @@ End-to-end test
 
 .. note::
 
-   Cloudnetpy performs relatively complicated scientific processing, converting
+   CloudnetPy performs relatively complicated scientific processing, converting
    noisy measurement data into higher level products. Most of the
    Cloudnetpy's low-level functions are unit tested, but it is
    difficult to write unambiguous tests for the high-level API functions.
    However, the quality of the processed files can be at least roughly
    checked using CloudnetPy's quality control functions.
-
-
-Coding guidelines
------------------
-
-- Use `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ standard.
-
-- Write `Google-style docstrings <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_.
-
-- Check your code using, e.g., `Pylint <https://www.pylint.org/>`_.

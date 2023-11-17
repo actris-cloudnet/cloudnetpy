@@ -99,7 +99,7 @@ class TestRebin2D:
         data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew)
         expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
         assert_array_almost_equal(data_i.data, expected_data)
-        assert bool(data_i.mask) is False  # pylint: disable=E1101
+        assert bool(data_i.mask) is False
         assert empty_ind == []
 
     def test_rebin_2d_n_min(self):
@@ -113,7 +113,7 @@ class TestRebin2D:
         expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
         expected_mask = np.array([[0, 1, 1], [0, 1, 1]]).T
         assert_array_almost_equal(data_i.data, expected_data)
-        assert_array_almost_equal(data_i.mask, expected_mask)  # pylint: disable=E1101
+        assert_array_almost_equal(data_i.mask, expected_mask)
         assert empty_ind == [1, 2]
 
     def test_rebin_2d_std(self):
@@ -313,7 +313,7 @@ def test_interpolate_2d_mask_edge(x_new, y_new, expected: ma.MaskedArray):
     )
     result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
     assert_array_almost_equal(result.data, expected.data)
-    assert_array_almost_equal(result.mask, expected.mask)  # pylint: disable=E1101
+    assert_array_almost_equal(result.mask, expected.mask)
 
 
 @pytest.mark.parametrize(
@@ -350,7 +350,7 @@ def test_interpolate_2d_mask_middle(x_new, y_new, expected):
     )
     result = utils.interpolate_2d_mask(x, y, z, x_new, y_new)
     assert_array_almost_equal(result.data, expected.data)
-    assert_array_almost_equal(result.mask, expected.mask)  # pylint: disable=E1101
+    assert_array_almost_equal(result.mask, expected.mask)
 
 
 @pytest.mark.parametrize(
@@ -567,7 +567,7 @@ def test_db2lin_arrays(data: np.ndarray, expected: ma.MaskedArray):
     assert_array_almost_equal(converted, expected)
     if ma.isMaskedArray(data):
         assert isinstance(converted, ma.MaskedArray)
-        assert_array_equal(converted.mask, expected.mask)  # pylint: disable=E1101
+        assert_array_equal(converted.mask, expected.mask)
 
 
 def test_time_grid():

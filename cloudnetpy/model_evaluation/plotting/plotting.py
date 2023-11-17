@@ -373,8 +373,6 @@ def get_statistic_plots(
         show (bool): Show figure before saving if True
         cycle (str): Name of cycle if exists
     """
-    # pylint: disable=too-many-branches
-    # pylint: disable=too-many-nested-blocks
     model_run = model
     name = ""
     j = 0
