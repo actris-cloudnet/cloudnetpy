@@ -188,8 +188,8 @@ class TestEcmwf:
             ignore_tests=["TestCFConvention"],
         )
         keys = ("TestUnits",)
-        for test in report["tests"]:
-            if test["testId"] in keys:
-                assert not test["exceptions"]
+        for test in report.tests:
+            if test.test_id in keys:
+                assert not test.exceptions, test.exceptions
                 n += 1
         assert n == len(keys)
