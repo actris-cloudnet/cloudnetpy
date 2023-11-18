@@ -1059,3 +1059,9 @@ def is_all_masked(array: np.ndarray) -> bool:
     if ma.isMaskedArray(array) and hasattr(array, "mask"):
         return array.mask.all()
     return False
+
+
+def find_masked_profiles_indices(array: ma.MaskedArray) -> list:
+    non_masked_counts = np.ma.count(array, axis=1)
+    masked_profiles_indices = np.where(non_masked_counts == 0)[0]
+    return list(masked_profiles_indices)

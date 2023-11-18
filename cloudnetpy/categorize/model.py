@@ -86,13 +86,17 @@ class Model(DataSource):
         self,
         time_grid: np.ndarray,
         height_grid: np.ndarray,
-    ) -> None:
+    ) -> list:
         """Interpolates model variables to Cloudnet's dense time / height grid.
 
         Args:
         ----
             time_grid: The target time array (fraction hour).
             height_grid: The target height array (m).
+
+        Returns:
+        -------
+            Indices fully masked profiles.
 
         """
         for key in self.fields_dense:
@@ -108,6 +112,7 @@ class Model(DataSource):
                 height_grid,
             )
         self.height = height_grid
+        return utils.find_masked_profiles_indices(self.data_dense["temperature"])
 
     def calc_wet_bulb(self) -> None:
         """Calculates wet-bulb temperature in dense grid."""

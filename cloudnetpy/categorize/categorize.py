@@ -63,13 +63,13 @@ def generate_categorize(
 
     def _interpolate_to_cloudnet_grid() -> list:
         wl_band = utils.get_wl_band(data["radar"].radar_frequency)
-        data["model"].interpolate_to_common_height(wl_band)
-        data["model"].interpolate_to_grid(time, height)
         data["mwr"].rebin_to_grid(time)
-        radar_data_gap_indices = data["radar"].rebin_to_grid(time)
-        lidar_data_gap_indices = data["lidar"].interpolate_to_grid(time, height)
-        bad_time_indices = list(set(radar_data_gap_indices + lidar_data_gap_indices))
-        return [ind for ind in range(len(time)) if ind not in bad_time_indices]
+        data["model"].interpolate_to_common_height(wl_band)
+        model_gap_ind = data["model"].interpolate_to_grid(time, height)
+        radar_gap_ind = data["radar"].rebin_to_grid(time)
+        lidar_gap_ind = data["lidar"].interpolate_to_grid(time, height)
+        gap_indices = radar_gap_ind + lidar_gap_ind + model_gap_ind
+        return list(set(range(len(time))) - set(gap_indices))
 
     def _screen_bad_time_indices(valid_indices: list) -> None:
         n_time_full = len(time)

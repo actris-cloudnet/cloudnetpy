@@ -806,3 +806,17 @@ def test_time2decimal_hours(data, result):
 )
 def test_is_all_masked(data: np.ndarray | ma.MaskedArray, result: bool):
     assert utils.is_all_masked(data) == result
+
+
+@pytest.mark.parametrize(
+    "array, expected",
+    [
+        (np.ma.array([[1, 2], [3, 4]], mask=[[True, True], [True, True]]), [0, 1]),
+        (np.ma.array([[1, 2], [3, 4]], mask=[[False, False], [False, False]]), []),
+        (np.ma.array([[1, 2], [3, 4]], mask=[[True, True], [False, False]]), [0]),
+        (np.ma.array([[1, 2], [3, 4]], mask=False), []),
+    ]
+)
+def test_find_masked_profiles_indices(array: ma.MaskedArray, expected: list):
+    result = utils.find_masked_profiles_indices(array)
+    assert np.array_equal(result, expected)
