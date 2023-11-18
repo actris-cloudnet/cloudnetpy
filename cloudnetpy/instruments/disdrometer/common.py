@@ -6,6 +6,7 @@ from numpy import ma
 
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.constants import MM_TO_M, SEC_IN_HOUR, SEC_IN_MINUTE
 from cloudnetpy.exceptions import DisdrometerDataError, ValidTimeStampError
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.vaisala import values_to_dict
@@ -28,13 +29,12 @@ class Disdrometer(CloudnetInstrument):
         self._file_data = self._read_file()
 
     def convert_units(self) -> None:
-        mm_to_m = 1e3
-        mmh_to_ms = 3600 * mm_to_m
+        mmh_to_ms = SEC_IN_HOUR / MM_TO_M
         c_to_k = 273.15
         self._convert_data(("rainfall_rate_1min_total",), mmh_to_ms)
         self._convert_data(("rainfall_rate",), mmh_to_ms)
         self._convert_data(("rainfall_rate_1min_solid",), mmh_to_ms)
-        self._convert_data(("diameter", "diameter_spread", "diameter_bnds"), mm_to_m)
+        self._convert_data(("diameter", "diameter_spread", "diameter_bnds"), 1e3)
         self._convert_data(("V_sensor_supply",), 10)
         self._convert_data(("I_mean_laser",), 100)
         self._convert_data(("T_sensor",), c_to_k, method="add")
@@ -150,7 +150,9 @@ class Disdrometer(CloudnetInstrument):
             if self.source == PARSIVEL:
                 raise NotImplementedError
             hour, minute, sec = timestamp.split(":")
-            seconds.append(int(hour) * 3600 + int(minute) * 60 + int(sec))
+            seconds.append(
+                int(hour) * SEC_IN_HOUR + int(minute) * SEC_IN_MINUTE + int(sec)
+            )
         return CloudnetArray(utils.seconds2hours(np.array(seconds)), "time")
 
     def _convert_data(self, keys: tuple, value: float, method: str = "divide") -> None:

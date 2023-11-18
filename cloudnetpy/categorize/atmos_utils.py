@@ -140,4 +140,4 @@ def k2c(temp: np.ndarray) -> np.ndarray:
 
 def mmh2ms(data: np.ndarray) -> np.ndarray:
     """Converts mm h-1 to m s-1"""
-    return data / 3600_000
+    return data / con.SEC_IN_HOUR * con.MM_TO_M

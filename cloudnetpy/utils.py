@@ -7,7 +7,7 @@ import uuid
 import warnings
 from collections.abc import Iterator
 from datetime import timezone
-from typing import Final
+from typing import Literal
 
 import netCDF4
 import numpy as np
@@ -15,14 +15,11 @@ from numpy import ma
 from scipy import ndimage, stats
 from scipy.interpolate import RectBivariateSpline, RegularGridInterpolator, griddata
 
+from cloudnetpy.constants import SEC_IN_DAY, SEC_IN_HOUR, SEC_IN_MINUTE
 from cloudnetpy.exceptions import ValidTimeStampError
 
 Epoch = tuple[int, int, int]
 Date = tuple[str, str, str]
-
-SECONDS_PER_MINUTE: Final = 60
-SECONDS_PER_HOUR: Final = 3600
-SECONDS_PER_DAY: Final = 86400
 
 
 def seconds2hours(time_in_seconds: np.ndarray) -> np.ndarray:
@@ -41,8 +38,8 @@ def seconds2hours(time_in_seconds: np.ndarray) -> np.ndarray:
         Excludes leap seconds.
 
     """
-    seconds_since_midnight = np.mod(time_in_seconds, SECONDS_PER_DAY)
-    fraction_hour = seconds_since_midnight / SECONDS_PER_HOUR
+    seconds_since_midnight = np.mod(time_in_seconds, SEC_IN_DAY)
+    fraction_hour = seconds_since_midnight / SEC_IN_HOUR
     if fraction_hour[-1] == 0:
         fraction_hour[-1] = 24
     return fraction_hour
@@ -60,10 +57,10 @@ def seconds2time(time_in_seconds: float) -> list:
         list: [hours, minutes, seconds] formatted as '05' etc.
 
     """
-    seconds_since_midnight = np.mod(time_in_seconds, SECONDS_PER_DAY)
-    hours = seconds_since_midnight // SECONDS_PER_HOUR
-    minutes = seconds_since_midnight % SECONDS_PER_HOUR // SECONDS_PER_MINUTE
-    seconds = seconds_since_midnight % SECONDS_PER_MINUTE
+    seconds_since_midnight = np.mod(time_in_seconds, SEC_IN_DAY)
+    hours = seconds_since_midnight // SEC_IN_HOUR
+    minutes = seconds_since_midnight % SEC_IN_HOUR // SEC_IN_MINUTE
+    seconds = seconds_since_midnight % SEC_IN_MINUTE
     time = [hours, minutes, seconds]
     return [str(t).zfill(2) for t in time]
 
@@ -97,7 +94,7 @@ def datetime2decimal_hours(data: np.ndarray | list) -> np.ndarray:
     output = []
     for timestamp in data:
         t = timestamp.time()
-        decimal_hours = t.hour + t.minute / 60 + t.second / 3600
+        decimal_hours = t.hour + t.minute / SEC_IN_MINUTE + t.second / SEC_IN_HOUR
         output.append(decimal_hours)
     return np.array(output)
 
@@ -124,7 +121,7 @@ def time_grid(time_step: int = 30) -> np.ndarray:
     if time_step < 1:
         msg = "Time resolution should be >= 1 seconds"
         raise ValueError(msg)
-    half_step = time_step / SECONDS_PER_HOUR / 2
+    half_step = time_step / SEC_IN_HOUR / 2
     return np.arange(half_step, 24 + half_step, half_step * 2)
 
 
@@ -223,7 +220,7 @@ def rebin_1d(
 
     Returns:
     -------
-        Rebinned data with shape (N,).
+        Re-binned data with shape (N,).
 
     """
     edges = binvec(x_new)
@@ -301,7 +298,7 @@ def _filter(array: np.ndarray, structure: np.ndarray) -> np.ndarray:
 
 
 def isbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
-    """Tests if nth bit (0,1,2..) is set.
+    """Tests if nth bit (0,1,2,...) is set.
 
     Args:
     ----
@@ -671,7 +668,7 @@ def n_elements(array: np.ndarray, dist: float, var: str | None = None) -> int:
         array: Input array with arbitrary units or time in fraction hour. *x* should
             be evenly spaced or at least close to.
         dist: Distance to be covered. If x is fraction time, *dist* is in minutes.
-            Otherwise *x* and *dist* should have the same units.
+            Otherwise, *x* and *dist* should have the same units.
         var: If 'time', input is fraction hour and distance in minutes, else inputs
             have the same units. Default is None (same units).
 
@@ -701,11 +698,11 @@ def n_elements(array: np.ndarray, dist: float, var: str | None = None) -> int:
     """
     n = dist / mdiff(array)
     if var == "time":
-        n = n / 60
+        n = n / SEC_IN_MINUTE
     return int(np.round(n))
 
 
-def isscalar(array) -> bool:
+def isscalar(array: np.ndarray | float | list) -> bool:
     """Tests if input is scalar.
 
     By "scalar" we mean that array has a single value.
@@ -723,9 +720,7 @@ def isscalar(array) -> bool:
 
     """
     arr = ma.array(array)
-    if not hasattr(arr, "__len__") or arr.shape == () or len(arr) == 1:
-        return True
-    return False
+    return not hasattr(arr, "__len__") or arr.shape == () or len(arr) == 1
 
 
 def get_time() -> str:
@@ -1000,7 +995,7 @@ def append_data(data_in: dict, key: str, array: np.ndarray) -> dict:
     return data
 
 
-def edges2mid(data: np.ndarray, reference: str) -> np.ndarray:
+def edges2mid(data: np.ndarray, reference: Literal["upper", "lower"]) -> np.ndarray:
     """Shifts values half bin towards up or down.
 
     Args:
@@ -1013,8 +1008,6 @@ def edges2mid(data: np.ndarray, reference: str) -> np.ndarray:
         Shifted values.
 
     """
-    if reference not in ("lower", "upper"):
-        raise ValueError
     gaps = (data[1:] - data[0:-1]) / 2
     if reference == "lower":
         gaps = np.append(gaps, gaps[-1])
@@ -1039,29 +1032,22 @@ def get_file_type(filename: str) -> str:
 
 def get_files_with_common_range(files: list) -> list:
     """Returns files with the same (most common) number of range gates."""
-    n_range = []
-    for file in files:
-        with netCDF4.Dataset(file) as nc:
-            n_range.append(len(nc.variables["range"]))
+    n_range = [len(netCDF4.Dataset(file).variables["range"]) for file in files]
     most_common = np.bincount(n_range).argmax()
-    n_removed = len([n for n in n_range if n != most_common])
-    if n_removed > 0:
+    if n_removed := len(files) - n_range.count(int(most_common)) > 0:
         logging.warning(
-            "Removing %s files due to inconsistent height vector",
-            n_removed,
+            "Removing %s files due to inconsistent height vector", n_removed
         )
-    ind = np.where(n_range == most_common)[0]
-    return [file for i, file in enumerate(files) if i in ind]
+    return [file for i, file in enumerate(files) if n_range[i] == most_common]
 
 
 def is_all_masked(array: np.ndarray) -> bool:
     """Tests if all values are masked."""
-    if ma.isMaskedArray(array) and hasattr(array, "mask"):
-        return array.mask.all()
-    return False
+    return ma.isMaskedArray(array) and hasattr(array, "mask") and array.mask.all()
 
 
 def find_masked_profiles_indices(array: ma.MaskedArray) -> list:
+    """Finds indices of masked profiles in a 2-D array."""
     non_masked_counts = np.ma.count(array, axis=1)
     masked_profiles_indices = np.where(non_masked_counts == 0)[0]
     return list(masked_profiles_indices)

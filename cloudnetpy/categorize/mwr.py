@@ -2,6 +2,7 @@
 import numpy as np
 
 from cloudnetpy import utils
+from cloudnetpy.constants import G_TO_KG
 from cloudnetpy.datasource import DataSource
 
 
@@ -36,8 +37,7 @@ class Mwr(DataSource):
 
     def _init_lwp_error(self) -> None:
         random_error, bias = 0.25, 20
-        g2kg = 1e-3
-        lwp_error = utils.l2norm(self.data["lwp"][:] * random_error, bias * g2kg)
+        lwp_error = utils.l2norm(self.data["lwp"][:] * random_error, bias * G_TO_KG)
         self.append_data(lwp_error, "lwp_error", units="kg m-2")
         self.data["lwp_error"].comment = (
             "This variable is a rough estimate of the one-standard-deviation\n"

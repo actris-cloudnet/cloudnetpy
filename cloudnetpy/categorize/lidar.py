@@ -1,5 +1,6 @@
 """Lidar module, containing the :class:`Lidar` class."""
 import logging
+from typing import Literal
 
 import numpy as np
 from numpy import ma
@@ -22,46 +23,46 @@ class Lidar(DataSource):
         self.append_data(self.getvar("beta"), "beta")
         self._add_meta()
 
-    def interpolate_to_grid(self, time_new: np.ndarray, height_new: np.ndarray) -> list:
+    def interpolate_to_grid(
+        self, time_new: np.ndarray, height_new: np.ndarray
+    ) -> list[int]:
         """Interpolate beta using nearest neighbor."""
-        max_height = 100.0  # m
-        max_time = 1.0  # min
+        max_height = 100  # m
+        max_time = 1 / 60  # min -> fraction hour
 
-        # Remove completely masked profiles from the interpolation
-        beta = self.data["beta"][:]
-        indices = []
-        for ind, b in enumerate(beta):
-            if ma.all(b) is not ma.masked:
-                indices.append(ind)
         if self.height is None:
             msg = "Unable to interpolate lidar: no height information"
             raise RuntimeError(msg)
-        beta_interpolated = interpolate_2d_nearest(
+
+        # Interpolate beta to new grid but ignore profiles that are completely masked
+        beta = self.data["beta"][:]
+        indices = [ind for ind, b in enumerate(beta) if ma.all(b) is not ma.masked]
+        beta_interp = interpolate_2d_nearest(
             self.time[indices],
             self.height,
             beta[indices, :],
             time_new,
             height_new,
         )
+        # Mask data points that are too far from the original grid
+        time_gap_ind = _get_gap_ind(self.time[indices], time_new, max_time)
+        height_gap_ind = _get_gap_ind(self.height, height_new, max_height)
+        self._mask_profiles(beta_interp, time_gap_ind, "time")
+        self._mask_profiles(beta_interp, height_gap_ind, "height")
+        self.data["beta"].data = beta_interp
+        return time_gap_ind
 
-        # Filter profiles and range gates having data gap
-        max_time /= 60  # to fraction hour
-        bad_time_indices = _get_bad_indices(self.time[indices], time_new, max_time)
-        bad_height_indices = _get_bad_indices(self.height, height_new, max_height)
-        if bad_time_indices:
-            logging.warning(
-                "Unable to interpolate lidar for %s time steps",
-                len(bad_time_indices),
-            )
-        beta_interpolated[bad_time_indices, :] = ma.masked
-        if bad_height_indices:
-            logging.warning(
-                "Unable to interpolate lidar for %s altitudes",
-                len(bad_height_indices),
-            )
-        beta_interpolated[:, bad_height_indices] = ma.masked
-        self.data["beta"].data = beta_interpolated
-        return bad_time_indices
+    @staticmethod
+    def _mask_profiles(
+        data: ma.MaskedArray, ind: list[int], dim: Literal["time", "height"]
+    ) -> None:
+        prefix = f"Unable to interpolate lidar for {len(ind)}"
+        if dim == "time" and ind:
+            logging.warning("%s time steps", prefix)
+            data[ind, :] = ma.masked
+        elif dim == "height" and ind:
+            logging.warning("%s altitudes", prefix)
+            data[:, ind] = ma.masked
 
     def _add_meta(self) -> None:
         self.append_data(float(self.getvar("wavelength")), "lidar_wavelength")
@@ -69,15 +70,9 @@ class Lidar(DataSource):
         self.append_data(3.0, "beta_bias")
 
 
-def _get_bad_indices(
-    original_grid: np.ndarray,
-    new_grid: np.ndarray,
-    threshold: float,
-) -> list:
-    indices = []
-    for ind, value in enumerate(new_grid):
-        diffu = np.abs(original_grid - value)
-        distance = diffu[diffu.argmin()]
-        if distance > threshold:
-            indices.append(ind)
-    return indices
+def _get_gap_ind(grid: np.ndarray, new_grid: np.ndarray, threshold: float) -> list[int]:
+    return [
+        ind
+        for ind, value in enumerate(new_grid)
+        if np.min(np.abs(grid - value)) > threshold
+    ]

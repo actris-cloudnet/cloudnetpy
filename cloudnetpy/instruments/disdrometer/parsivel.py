@@ -12,6 +12,7 @@ import numpy as np
 
 from cloudnetpy import output
 from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.constants import MM_TO_M, SEC_IN_HOUR
 from cloudnetpy.exceptions import DisdrometerDataError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
@@ -148,12 +149,11 @@ class Parsivel(CloudnetInstrument):
         Disdrometer.store_vectors(self.data, n_values, spreads, "diameter")
 
     def convert_units(self) -> None:
-        mm_to_m = 1e3
-        mmh_to_ms = 3600 * mm_to_m
+        mmh_to_ms = SEC_IN_HOUR / MM_TO_M
         c_to_k = 273.15
         self._convert_data(("rainfall_rate",), mmh_to_ms)
         self._convert_data(("snowfall_rate",), mmh_to_ms)
-        self._convert_data(("diameter", "diameter_spread", "diameter_bnds"), mm_to_m)
+        self._convert_data(("diameter", "diameter_spread", "diameter_bnds"), 1e3)
         self._convert_data(("V_sensor_supply",), 10)
         self._convert_data(("T_sensor",), c_to_k, method="add")
 

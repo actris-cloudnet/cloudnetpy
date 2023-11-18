@@ -1,6 +1,6 @@
 """Module with a class for Lufft chm15k ceilometer."""
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 from numpy import ma
@@ -19,7 +19,7 @@ class NcLidar(Ceilometer):
         super().__init__()
         self.dataset: netCDF4.Dataset | None = None
 
-    def _fetch_range(self, reference: str) -> None:
+    def _fetch_range(self, reference: Literal["upper", "lower"]) -> None:
         if self.dataset is None:
             msg = "No dataset found"
             raise RuntimeError(msg)

@@ -18,3 +18,10 @@ RS: Final = 287.058
 
 # ice density kg m-3
 RHO_ICE: Final = 917
+
+# other
+SEC_IN_MINUTE: Final = 60
+SEC_IN_HOUR: Final = 3600
+SEC_IN_DAY: Final = 86400
+MM_TO_M: Final = 1e-3
+G_TO_KG: Final = 1e-3

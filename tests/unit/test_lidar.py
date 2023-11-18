@@ -4,7 +4,7 @@ import pytest
 from numpy import ma
 from numpy.testing import assert_array_equal
 
-from cloudnetpy.categorize.lidar import Lidar
+from cloudnetpy.categorize.lidar import Lidar, _get_gap_ind
 
 WAVELENGTH = 900.0
 
@@ -51,3 +51,17 @@ def test_rebin(fake_lidar_file):
     result = np.array([[2, 3], [2, 3]])
     assert_array_equal(obj.data["beta"].data, result)
     assert ind == [0, 1]
+
+
+@pytest.mark.parametrize("original_grid, new_grid, threshold, expected", [
+    (np.array([1, 2, 3, 4, 5]), np.array([1.9, 2.2, 3.1, 4.0, 4.9]), 1, []),
+    (np.array([1, 2, 3, 4, 5]), np.array([10, 20, 30, 40, 50]), 1, [0, 1, 2, 3, 4]),
+    (np.array([1, 2, 3, 4, 5]), np.array([1.1, 2.1, 3.2, 4.2, 5.3]), 0.15, [2, 3, 4]),
+    (np.array([]), np.array([]), 0.5, [])
+])
+def test_get_gap_ind(
+        original_grid: np.ndarray,
+        new_grid: np.ndarray,
+        threshold: float,
+        expected: np.ndarray):
+    assert _get_gap_ind(original_grid, new_grid, threshold) == expected
