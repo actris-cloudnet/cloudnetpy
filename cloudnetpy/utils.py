@@ -1030,15 +1030,18 @@ def get_file_type(filename: str) -> str:
     raise ValueError(msg)
 
 
-def get_files_with_common_range(files: list) -> list:
+def get_files_with_common_range(filenames: list) -> list:
     """Returns files with the same (most common) number of range gates."""
-    n_range = [len(netCDF4.Dataset(file).variables["range"]) for file in files]
+    n_range = []
+    for file in filenames:
+        with netCDF4.Dataset(file) as nc:
+            n_range.append(len(nc.variables["range"]))
     most_common = np.bincount(n_range).argmax()
-    if n_removed := len(files) - n_range.count(int(most_common)) > 0:
+    if n_removed := len(filenames) - n_range.count(int(most_common)) > 0:
         logging.warning(
             "Removing %s files due to inconsistent height vector", n_removed
         )
-    return [file for i, file in enumerate(files) if n_range[i] == most_common]
+    return [file for i, file in enumerate(filenames) if n_range[i] == most_common]
 
 
 def is_all_masked(array: np.ndarray) -> bool:
