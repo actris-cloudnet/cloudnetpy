@@ -3,6 +3,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import output, utils
+from cloudnetpy.constants import G_TO_KG
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import IceClassification, IceSource
 
@@ -83,7 +84,7 @@ class IwcSource(IceSource):
         def _calc_error_in_uncorrected_ice() -> float:
             spec_liq_atten = 1.0 if self.wl_band == 0 else 4.5
             liq_atten_scaled = spec_liq_atten * self.coefficients.Z
-            return lwp_prior * liq_atten_scaled * 2 * 1e-3 * 10
+            return lwp_prior * G_TO_KG * liq_atten_scaled * 2 * 10
 
         lwp_prior = 250  # g m-2
         retrieval_uncertainty = 1.7  # dB

@@ -8,6 +8,7 @@ from scipy import constants
 
 from cloudnetpy import utils
 from cloudnetpy.categorize.classify import ClassificationResult
+from cloudnetpy.constants import SEC_IN_HOUR
 from cloudnetpy.datasource import DataSource
 
 
@@ -261,8 +262,7 @@ class Radar(DataSource):
             return z_error
 
         def _number_of_independent_pulses() -> float:
-            seconds_in_hour = 3600
-            dwell_time = utils.mdiff(self.time) * seconds_in_hour
+            dwell_time = utils.mdiff(self.time) * SEC_IN_HOUR
             return (
                 dwell_time
                 * self.radar_frequency

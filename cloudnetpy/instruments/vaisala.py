@@ -5,13 +5,12 @@ import logging
 import numpy as np
 
 from cloudnetpy import utils
+from cloudnetpy.constants import SEC_IN_HOUR, SEC_IN_MINUTE
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.ceilometer import Ceilometer, NoiseParam
 
 M2KM = 0.001
-SECONDS_IN_MINUTE = 60
-SECONDS_IN_HOUR = 3600
 
 
 class VaisalaCeilo(Ceilometer):
@@ -400,4 +399,4 @@ def values_to_dict(keys: tuple, values: list) -> dict:
 def time_to_fraction_hour(time: str) -> float:
     """Returns time (hh:mm:ss) as fraction hour"""
     hour, minute, sec = time.split(":")
-    return int(hour) + (int(minute) * SECONDS_IN_MINUTE + int(sec)) / SECONDS_IN_HOUR
+    return int(hour) + (int(minute) * SEC_IN_MINUTE + int(sec)) / SEC_IN_HOUR

@@ -6,6 +6,7 @@ from numpy import ma
 from numpy.lib import recfunctions as rfn
 from rpgpy import read_rpg
 
+from cloudnetpy.constants import G_TO_KG
 from cloudnetpy.exceptions import ValidTimeStampError
 
 
@@ -256,7 +257,7 @@ class HatproBinLwp(HatproBin):
             ],
             self.header["_n_samples"],
         )
-        self.data["lwp"] *= 1e-3  # Convert from g/m^2 to kg/m^2
+        self.data["lwp"] *= G_TO_KG
 
 
 class HatproBinIwv(HatproBin):

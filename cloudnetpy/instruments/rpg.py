@@ -11,6 +11,7 @@ from rpgpy import RPGFileError
 from cloudnetpy import output, utils
 from cloudnetpy.categorize.atmos_utils import mmh2ms
 from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.constants import G_TO_KG
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
@@ -307,7 +308,7 @@ class Fmcw(Rpg):
     def convert_units(self) -> None:
         """Converts units."""
         self.data["rainfall_rate"].data = mmh2ms(self.data["rainfall_rate"].data)
-        self.data["lwp"].data *= 1e-3  # g -> kg
+        self.data["lwp"].data *= G_TO_KG
 
     @staticmethod
     def _get_instrument(data: dict):
