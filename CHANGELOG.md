@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.21 – 2023-11-20
+
+- Remove masked model profiles from categorize
+
 ## 1.55.20 – 2023-11-08
 
 - Add yet another Parsivel reader
