@@ -219,7 +219,7 @@ class LiquidAttenuation(Attenuation):
     def _find_pixels_hard_to_correct(self) -> np.ndarray:
         melting_layer = utils.isbit(self.classification.category_bits, 3)
         hard_to_correct = np.cumsum(melting_layer, axis=1) >= 1
-        hard_to_correct[self.classification.is_rain, :] = True
+        hard_to_correct[self.classification.is_rain == 1, :] = True
         attenuated = self._find_attenuated_part_of_atmosphere()
         hard_to_correct[attenuated & self.atten.mask] = True
         return hard_to_correct

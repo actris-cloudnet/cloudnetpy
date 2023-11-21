@@ -140,6 +140,8 @@ def rebin_2d(
     x_new: np.ndarray,
     statistic: str = "mean",
     n_min: int = 1,
+    *,
+    mask_zeros: bool = True,
 ) -> tuple[ma.MaskedArray, list]:
     """Rebins 2-D data in one dimension.
 
@@ -171,7 +173,10 @@ def rebin_2d(
                 bins=edges,
             )
     result[~np.isfinite(result)] = 0
-    masked_result = ma.masked_equal(result, 0)
+    if mask_zeros is True:
+        masked_result = ma.masked_equal(result, 0)
+    else:
+        masked_result = ma.array(result)
 
     # Fill bins with not enough profiles
     empty_indices = []
@@ -191,6 +196,8 @@ def rebin_1d(
     array: np.ndarray | ma.MaskedArray,
     x_new: np.ndarray,
     statistic: str = "mean",
+    *,
+    mask_zeros: bool = True,
 ) -> ma.MaskedArray:
     """Rebins 1D array.
 
@@ -217,7 +224,9 @@ def rebin_1d(
             bins=edges,
         )
     result[~np.isfinite(result)] = 0
-    return ma.masked_equal(result, 0)
+    if mask_zeros:
+        return ma.masked_equal(result, 0)
+    return ma.array(result)
 
 
 def filter_isolated_pixels(array: np.ndarray) -> np.ndarray:

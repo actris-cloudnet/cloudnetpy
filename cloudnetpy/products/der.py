@@ -214,7 +214,7 @@ class DerSource(DataSource):
         is_retrieved = ~self.data["der"][:].mask
         is_mixed = droplet_classification.is_mixed
         is_ice = droplet_classification.is_ice
-        is_rain = np.tile(self.is_rain, (is_retrieved.shape[1], 1)).T
+        is_rain = np.tile(self.is_rain == 1, (is_retrieved.shape[1], 1)).T
 
         retrieval_status = np.zeros(is_retrieved.shape, dtype=int)
         retrieval_status[is_ice] = 4

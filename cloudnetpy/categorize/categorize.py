@@ -1,10 +1,12 @@
 """Module that generates Cloudnet categorize file."""
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos, classify
+from cloudnetpy.categorize.disdrometer import Disdrometer
 from cloudnetpy.categorize.lidar import Lidar
 from cloudnetpy.categorize.model import Model
 from cloudnetpy.categorize.mwr import Mwr
 from cloudnetpy.categorize.radar import Radar
+from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.metadata import MetaData
 
@@ -59,6 +61,8 @@ def generate_categorize(
     def _interpolate_to_cloudnet_grid() -> list:
         wl_band = utils.get_wl_band(data["radar"].radar_frequency)
         data["mwr"].rebin_to_grid(time)
+        if is_disdrometer:
+            data["disdrometer"].interpolate_to_grid(time)
         data["model"].interpolate_to_common_height(wl_band)
         model_gap_ind = data["model"].interpolate_to_grid(time, height)
         radar_gap_ind = data["radar"].rebin_to_grid(time)
@@ -69,8 +73,10 @@ def generate_categorize(
     def _screen_bad_time_indices(valid_indices: list) -> None:
         n_time_full = len(time)
         data["radar"].time = time[valid_indices]
-        for var in ("radar", "lidar", "mwr", "model"):
-            for key, item in data[var].data.items():
+        for data_key, obj in data.items():
+            if obj is None or data_key == "lv0_files":
+                continue
+            for key, item in obj.data.items():
                 if utils.isscalar(item.data):
                     continue
                 array = item[:]
@@ -81,26 +87,31 @@ def generate_categorize(
                         array = array[valid_indices, :]
                     else:
                         continue
-                    data[var].data[key].data = array
+                    obj.data[key].data = array
         for key, item in data["model"].data_dense.items():
             data["model"].data_dense[key] = item[valid_indices, :]
 
     def _prepare_output() -> dict:
         data["radar"].add_meta()
         data["model"].screen_sparse_fields()
-        for key in ("category_bits", "rainfall_rate", "insect_prob"):
+        if is_disdrometer:
+            data["radar"].data.pop("rainfall_rate", None)
+            data["disdrometer"].data.pop("n_particles", None)
+        for key in ("category_bits", "insect_prob"):
             data["radar"].append_data(getattr(classification, key), key)
         if classification.liquid_prob is not None:
             data["radar"].append_data(classification.liquid_prob, "liquid_prob")
         for key in ("radar_liquid_atten", "radar_gas_atten"):
             data["radar"].append_data(attenuations[key], key)
         data["radar"].append_data(quality["quality_bits"], "quality_bits")
+        data["radar"].append_data(classification.is_rain, "rain_detected")
         return {
             **data["radar"].data,
             **data["lidar"].data,
             **data["model"].data,
             **data["model"].data_sparse,
             **data["mwr"].data,
+            **(data["disdrometer"].data if is_disdrometer else {}),
         }
 
     def _define_dense_grid() -> tuple:
@@ -108,19 +119,20 @@ def generate_categorize(
 
     def _close_all() -> None:
         for obj in data.values():
-            if isinstance(obj, Radar | Lidar | Mwr | Model):
+            if isinstance(obj, DataSource):
                 obj.close()
 
     try:
+        is_disdrometer = "disdrometer" in input_files
         data = {
             "radar": Radar(input_files["radar"]),
             "lidar": Lidar(input_files["lidar"]),
             "mwr": Mwr(input_files["mwr"]),
             "lv0_files": input_files.get("lv0_files", None),
+            "disdrometer": Disdrometer(input_files["disdrometer"])
+            if is_disdrometer
+            else None,
         }
-        if data["radar"].altitude is None:
-            msg = "Radar altitude not defined"
-            raise RuntimeError(msg)
         data["model"] = Model(input_files["model"], data["radar"].altitude)
         time, height = _define_dense_grid()
         valid_ind = _interpolate_to_cloudnet_grid()
@@ -141,7 +153,7 @@ def generate_categorize(
         classification = classify.classify_measurements(data)
         attenuations = atmos.get_attenuations(data, classification)
         data["radar"].correct_atten(attenuations)
-        data["radar"].calc_errors(attenuations, classification)
+        data["radar"].calc_errors(attenuations, classification.is_clutter)
         quality = classify.fetch_quality(data, classification, attenuations)
         cloudnet_arrays = _prepare_output()
         date = data["radar"].get_date()
@@ -382,12 +394,6 @@ CATEGORIZE_ATTRIBUTES = {
         definition=DEFINITIONS["quality_bits"],
         units="1",
     ),
-    "rainfall_rate": MetaData(
-        long_name="Rainfall rate",
-        standard_name="rainfall_rate",
-        units="m s-1",
-        comment="Fill values denote rain with undefined intensity.",
-    ),
     "radar_liquid_atten": MetaData(
         long_name="Two-way radar attenuation due to liquid water",
         units="dB",
@@ -408,5 +414,10 @@ CATEGORIZE_ATTRIBUTES = {
         long_name="Liquid probability",
         units="1",
         comment=COMMENTS["liquid_prob"],
+    ),
+    "rain_detected": MetaData(
+        long_name="Rain detected",
+        units="1",
+        comment="1 = rain detected, 0 = no rain detected",
     ),
 }

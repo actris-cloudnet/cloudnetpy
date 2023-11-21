@@ -7,7 +7,6 @@ from numpy import ma
 from scipy import constants
 
 from cloudnetpy import utils
-from cloudnetpy.categorize.containers import ClassificationResult
 from cloudnetpy.constants import GHZ_TO_HZ, SEC_IN_HOUR, SPEED_OF_LIGHT
 from cloudnetpy.datasource import DataSource
 
@@ -69,8 +68,10 @@ class Radar(DataSource):
                     )
                 case "v_sigma":
                     array.calc_linear_std(self.time, time_new)
-                case "width" | "rainfall_rate":
+                case "width":
                     array.rebin_data(self.time, time_new)
+                case "rainfall_rate":
+                    array.rebin_data(self.time, time_new, mask_zeros=False)
                 case _:
                     continue
         return bad_time_indices
@@ -214,7 +215,7 @@ class Radar(DataSource):
     def calc_errors(
         self,
         attenuations: dict,
-        classification: ClassificationResult,
+        is_clutter: np.ndarray,
     ) -> None:
         """Calculates uncertainties of radar echo.
 
@@ -223,7 +224,7 @@ class Radar(DataSource):
 
         Args:
             attenuations: 2-D attenuations due to atmospheric gases.
-            classification: The :class:`ClassificationResult` instance.
+            is_clutter: 2-D boolean array denoting pixels contaminated by clutter.
 
         References:
             The method is based on Hogan R. and O'Connor E., 2004,
@@ -235,7 +236,7 @@ class Radar(DataSource):
             """Returns sensitivity of radar as function of altitude."""
             mean_gas_atten = ma.mean(attenuations["radar_gas_atten"], axis=0)
             z_sensitivity = z_power_min + log_range + mean_gas_atten
-            zc = ma.median(ma.array(z, mask=~classification.is_clutter), axis=0)
+            zc = ma.median(ma.array(z, mask=~is_clutter), axis=0)
             valid_values = np.logical_not(zc.mask)
             z_sensitivity[valid_values] = zc[valid_values]
             return z_sensitivity

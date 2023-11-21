@@ -4,6 +4,7 @@ from bisect import bisect_left
 
 import netCDF4
 import numpy as np
+from numpy import ma
 from scipy.special import gamma
 
 from cloudnetpy import utils
@@ -101,7 +102,7 @@ class DrizzleClassification(ProductClassification):
 
     @staticmethod
     def _find_v_sigma(cat_file: str) -> np.ndarray:
-        v_sigma = product_tools.read_nc_fields(cat_file, "v_sigma")
+        v_sigma = product_tools.read_nc_field(cat_file, "v_sigma")
         return np.isfinite(v_sigma)
 
     def _find_warm_liquid(self) -> np.ndarray:
@@ -160,11 +161,11 @@ class SpectralWidth:
         self.width_ht = self._calculate_spectral_width()
 
     def _calculate_spectral_width(self) -> np.ndarray:
-        v_sigma = product_tools.read_nc_fields(self.cat_file, "v_sigma")
+        v_sigma = product_tools.read_nc_field(self.cat_file, "v_sigma")
         try:
-            width = product_tools.read_nc_fields(self.cat_file, "width")
+            width = product_tools.read_nc_field(self.cat_file, "width")
         except KeyError:
-            width = [0]
+            width = ma.array([0])
             logging.warning("No spectral width, assuming width = %s", width[0])
         sigma_factor = self._calc_v_sigma_factor()
         return width - sigma_factor * v_sigma
@@ -178,7 +179,7 @@ class SpectralWidth:
 
     def _calc_beam_divergence(self) -> np.ndarray:
         beam_width = 0.5
-        height = product_tools.read_nc_fields(self.cat_file, "height")
+        height = product_tools.read_nc_field(self.cat_file, "height")
         return height * np.deg2rad(beam_width)
 
     def _calc_horizontal_wind(self) -> np.ndarray:

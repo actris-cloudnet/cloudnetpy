@@ -36,6 +36,6 @@ def test_quality_bits(fake_categorize_file):
 
 def test_read_nc_fields(fake_categorize_file):
     assert_array_equal(
-        product_tools.read_nc_fields(fake_categorize_file, "time"),
+        product_tools.read_nc_field(fake_categorize_file, "time"),
         np.arange(7),
     )

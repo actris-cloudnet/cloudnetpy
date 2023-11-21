@@ -66,12 +66,11 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
     bits[4][filtered_ice] = False
     return ClassificationResult(
-        _bits_to_integer(bits),
-        obs.is_rain,
-        obs.is_clutter,
-        obs.rainfall_rate,
-        insect_prob,
-        liquid_prob,
+        category_bits=_bits_to_integer(bits),
+        is_rain=obs.is_rain,
+        is_clutter=obs.is_clutter,
+        insect_prob=insect_prob,
+        liquid_prob=liquid_prob,
     )
 
 

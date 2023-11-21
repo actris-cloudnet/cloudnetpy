@@ -54,7 +54,9 @@ class CloudnetArray:
         """Masks data from given indices."""
         self.data[ind] = ma.masked
 
-    def rebin_data(self, time: np.ndarray, time_new: np.ndarray) -> list:
+    def rebin_data(
+        self, time: np.ndarray, time_new: np.ndarray, *, mask_zeros: bool = True
+    ) -> list:
         """Rebins `data` in time.
 
         Args:
@@ -66,12 +68,14 @@ class CloudnetArray:
 
         """
         if self.data.ndim == 1:
-            self.data = utils.rebin_1d(time, self.data, time_new)
+            self.data = utils.rebin_1d(time, self.data, time_new, mask_zeros=mask_zeros)
             bad_indices = list(np.where(self.data == ma.masked)[0])
         else:
             if not isinstance(self.data, ma.MaskedArray):
                 self.data = ma.masked_array(self.data)
-            self.data, bad_indices = utils.rebin_2d(time, self.data, time_new)
+            self.data, bad_indices = utils.rebin_2d(
+                time, self.data, time_new, mask_zeros=mask_zeros
+            )
         return bad_indices
 
     def fetch_attributes(self) -> list:

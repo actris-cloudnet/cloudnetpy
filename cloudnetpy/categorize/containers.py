@@ -1,11 +1,10 @@
-import logging
 from dataclasses import dataclass
 
 import numpy as np
-import skimage
 from numpy import ma
 
 from cloudnetpy import utils
+from cloudnetpy.constants import MM_H_TO_M_S
 
 
 @dataclass
@@ -15,7 +14,6 @@ class ClassificationResult:
     category_bits: np.ndarray
     is_rain: np.ndarray
     is_clutter: np.ndarray
-    rainfall_rate: np.ndarray
     insect_prob: np.ndarray
     liquid_prob: np.ndarray | None
 
@@ -42,12 +40,12 @@ class ClassData:
         radar_type (str): Radar identifier.
         is_rain (ndarray): 2D boolean array denoting rain.
         is_clutter (ndarray): 2D boolean array denoting clutter.
-        rainfall_rate: 1D rain rate.
         altitude: site altitude.
 
     """
 
     def __init__(self, data: dict):
+        self.data = data
         self.z = data["radar"].data["Z"][:]
         self.v = data["radar"].data["v"][:]
         self.v_sigma = data["radar"].data["v_sigma"][:]
@@ -61,61 +59,39 @@ class ClassData:
         self.model_type = data["model"].source_type
         self.beta = data["lidar"].data["beta"][:]
         self.lwp = data["mwr"].data["lwp"][:]
-        self.is_rain = _find_rain_from_radar_echo(self.z, self.time)
-        self.rainfall_rate = _find_rainfall_rate(self.is_rain, data["radar"])
+        self.is_rain = self._find_profiles_with_rain()
         self.is_clutter = _find_clutter(self.v, self.is_rain)
         self.altitude = data["radar"].altitude
         self.lv0_files = data["lv0_files"]
         self.date = data["radar"].get_date()
 
+    def _find_profiles_with_rain(self) -> np.ndarray:
+        is_rain = self._find_rain_from_radar_echo()
+        rain_from_disdrometer = self._find_rain_from_disdrometer()
+        ind = ~rain_from_disdrometer.mask
+        is_rain[ind] = rain_from_disdrometer[ind]
+        return is_rain
 
-def _find_rain_from_radar_echo(
-    z: np.ndarray,
-    time: np.ndarray,
-    time_buffer: int = 5,
-) -> np.ndarray:
-    """Find profiles affected by rain.
+    def _find_rain_from_radar_echo(self) -> np.ndarray:
+        gate_number = 3
+        threshold = 0
+        z = self.z[:, gate_number]
+        return np.where((~ma.getmaskarray(z)) & (z > threshold), 1, 0)
 
-    Rain is present in such profiles where the radar echo in
-    the third range gate is > 0 dB. To make sure we do not include any
-    rainy profiles, we also flag a few profiles before and after
-    detections as raining.
-
-    Args:
-        z: Radar echo.
-        time: Time vector.
-        time_buffer: Time in minutes.
-
-    Returns:
-        1D Boolean array denoting profiles with rain.
-
-    """
-    filled = False
-    is_rain = ma.array(z[:, 3] > 0, dtype=bool).filled(filled)
-    is_rain = skimage.morphology.remove_small_objects(
-        is_rain,
-        2,
-        connectivity=1,
-    )  # Filter hot pixels
-    n_profiles = len(time)
-    n_steps = utils.n_elements(time, time_buffer, "time")
-    for ind in np.where(is_rain)[0]:
-        ind1 = max(0, ind - n_steps)
-        ind2 = min(ind + n_steps, n_profiles)
-        is_rain[ind1 : ind2 + 1] = True
-    return is_rain
-
-
-def _find_rainfall_rate(is_rain: np.ndarray, radar) -> np.ndarray:
-    rainfall_rate = ma.zeros(len(is_rain))
-    rainfall_rate[is_rain] = ma.masked
-    if "rainfall_rate" in radar.data:
-        radar_rainfall_rate = radar.data["rainfall_rate"].data
-        ind = np.where(~radar_rainfall_rate.mask)
-        rainfall_rate[ind] = radar_rainfall_rate[ind]
-    else:
-        logging.info("No measured rain rate available")
-    return rainfall_rate
+    def _find_rain_from_disdrometer(self) -> ma.MaskedArray:
+        threshold_mm_h = 0.25  # Standard threshold for drizzle -> rain
+        threshold_particles = 10  # This is arbitrary and should be better tested
+        threshold_rate = threshold_mm_h * MM_H_TO_M_S
+        try:
+            rainfall_rate = self.data["disdrometer"].data["rainfall_rate"].data
+            n_particles = self.data["disdrometer"].data["n_particles"].data
+            is_rain = ma.array(
+                (rainfall_rate > threshold_rate) & (n_particles > threshold_particles),
+                dtype=int,
+            )
+        except (AttributeError, KeyError):
+            is_rain = ma.masked_all(self.time.shape, dtype=int)
+        return is_rain
 
 
 def _find_clutter(

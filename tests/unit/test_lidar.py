@@ -4,7 +4,7 @@ import pytest
 from numpy import ma
 from numpy.testing import assert_array_equal
 
-from cloudnetpy.categorize.lidar import Lidar, _get_gap_ind
+from cloudnetpy.categorize.lidar import Lidar, get_gap_ind
 
 WAVELENGTH = 900.0
 
@@ -64,4 +64,4 @@ def test_get_gap_ind(
         new_grid: np.ndarray,
         threshold: float,
         expected: np.ndarray):
-    assert _get_gap_ind(original_grid, new_grid, threshold) == expected
+    assert get_gap_ind(original_grid, new_grid, threshold) == expected

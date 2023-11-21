@@ -232,32 +232,35 @@ class IceSource(DataSource):
 
 def get_is_rain(filename: str) -> np.ndarray:
     try:
-        rainfall_rate = read_nc_fields(filename, "rainfall_rate")
+        is_rain = read_nc_field(filename, "rain_detected")
     except KeyError:
-        rainfall_rate = read_nc_fields(filename, "rain_rate")
-    is_rain = rainfall_rate != 0
-    if not isinstance(is_rain, ma.MaskedArray):
-        is_rain = ma.array(is_rain)
-    is_rain[is_rain.mask] = True
+        try:
+            rainfall_rate = read_nc_field(filename, "rainfall_rate")
+        except KeyError:
+            rainfall_rate = read_nc_field(filename, "rain_rate")
+        is_rain = rainfall_rate != 0
+        is_rain[is_rain.mask] = True
     return np.array(is_rain)
 
 
-def read_nc_fields(nc_file: str, names: str | list) -> ma.MaskedArray | list:
+def read_nc_field(nc_file: str, name: str) -> ma.MaskedArray:
+    with netCDF4.Dataset(nc_file) as nc:
+        return nc.variables[name][:]
+
+
+def read_nc_fields(nc_file: str, names: list[str]) -> list[ma.MaskedArray]:
     """Reads selected variables from a netCDF file.
 
     Args:
         nc_file: netCDF file name.
-        names: Variables to be read, e.g. 'temperature' or ['ldr', 'lwp'].
+        names: Variables to be read, e.g. ['ldr', 'lwp'].
 
     Returns:
-        ndarray/list: Array in case of one variable passed as a string.
-        List of arrays otherwise.
+        List of numpy arrays.
 
     """
-    names = [names] if isinstance(names, str) else names
     with netCDF4.Dataset(nc_file) as nc:
-        data = [nc.variables[name][:] for name in names]
-    return data[0] if len(data) == 1 else data
+        return [nc.variables[name][:] for name in names]
 
 
 def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]:

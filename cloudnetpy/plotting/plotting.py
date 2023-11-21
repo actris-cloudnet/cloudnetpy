@@ -514,6 +514,9 @@ class Plot2D(Plot):
         if figure_data.height is None:
             msg = "No height information in the file."
             raise ValueError(msg)
+        if self._data.ndim < 2:
+            msg = "Data has to be 2D."
+            raise PlottingError(msg)
         alt = figure_data.height
         if figure_data.options.max_y is None:
             return alt

@@ -44,8 +44,8 @@ class Lidar(DataSource):
             height_new,
         )
         # Mask data points that are too far from the original grid
-        time_gap_ind = _get_gap_ind(self.time[indices], time_new, max_time)
-        height_gap_ind = _get_gap_ind(self.height, height_new, max_height)
+        time_gap_ind = get_gap_ind(self.time[indices], time_new, max_time)
+        height_gap_ind = get_gap_ind(self.height, height_new, max_height)
         self._mask_profiles(beta_interp, time_gap_ind, "time")
         self._mask_profiles(beta_interp, height_gap_ind, "height")
         self.data["beta"].data = beta_interp
@@ -69,7 +69,7 @@ class Lidar(DataSource):
         self.append_data(3.0, "beta_bias")
 
 
-def _get_gap_ind(grid: np.ndarray, new_grid: np.ndarray, threshold: float) -> list[int]:
+def get_gap_ind(grid: np.ndarray, new_grid: np.ndarray, threshold: float) -> list[int]:
     return [
         ind
         for ind, value in enumerate(new_grid)

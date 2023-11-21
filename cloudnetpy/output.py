@@ -317,7 +317,7 @@ def add_time_attribute(
 
 
 def add_source_attribute(attributes: dict, data: dict) -> dict:
-    """Adds source attribute."""
+    """Adds source attribute to variables."""
     variables = {
         "radar": (
             "v",
@@ -334,8 +334,11 @@ def add_source_attribute(attributes: dict, data: dict) -> dict:
         "lidar": ("beta", "lidar_wavelength"),
         "mwr": ("lwp",),
         "model": ("uwind", "vwind", "Tw", "q", "pressure", "temperature"),
+        "disdrometer": ("rainfall_rate",),
     }
     for instrument, keys in variables.items():
+        if data[instrument] is None:
+            continue
         source = data[instrument].dataset.source
         for key in keys:
             if key in attributes:

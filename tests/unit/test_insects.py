@@ -7,13 +7,14 @@ from cloudnetpy.categorize import insects
 
 class Obs:
     def __init__(self):
+        self.time = np.array([1, 2, 3, 4])
         self.radar_type = "MIRA-35"
         self.lwp = np.array([1, 2, 3, 4])
         self.v = ma.array(
             [[0, 1, 1, 0], [0, 1, -99, 0]],
             mask=[[0, 0, 0, 0], [1, 0, 1, 0]],
         )
-        self.is_rain = np.array([0, 0, 1])
+        self.is_rain = np.array([0, 0, 0, 1])
 
 
 def test_calc_prob_from_ldr():
@@ -75,11 +76,11 @@ def test_get_smoothed_v():
 
 def test_screen_insets():
     obs = Obs()
-    insect_prob = np.ones((3, 4))
-    insect_prob_no_ldr = np.ones((3, 4)) * 0.5
-    melting_layer = np.array([[0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
-    liquid_layers = np.array([[0, 0, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0]])
-    result = np.array([[1, 1, 0, 0], [1, 0, 0, 0], [0, 0, 0, 0]])
+    insect_prob = np.ones((4, 4))
+    insect_prob_no_ldr = np.ones((4, 4)) * 0.5
+    melting_layer = np.array([[0, 0, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+    liquid_layers = np.array([[0, 0, 1, 0], [0, 1, 1, 0], [0, 0, 0, 0], [0, 0, 0, 0]])
+    result = np.array([[1, 1, 0, 0], [1, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0]])
     screened_prob = insects._screen_insects(
         insect_prob,
         insect_prob_no_ldr,
