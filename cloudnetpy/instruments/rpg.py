@@ -163,6 +163,8 @@ def _mask_invalid_data(data_in: dict) -> dict:
     data = data_in.copy()
     fill_values = (-999, 1e-10)
     for name in data:
+        if np.issubdtype(data[name].dtype, np.integer) or name == "rainfall_rate":
+            continue
         data[name] = ma.masked_equal(data[name], 0)
         for value in fill_values:
             data[name][data[name] == value] = ma.masked
