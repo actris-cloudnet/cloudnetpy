@@ -1,54 +1,51 @@
-class InconsistentDataError(Exception):
+class CloudnetException(Exception):
+    """Base class for exceptions in this module."""
+
+
+class InconsistentDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str = ""):
-        self.message = msg
-        super().__init__(self.message)
+    def __init__(self, msg: str):
+        super().__init__(msg)
 
 
-class DisdrometerDataError(Exception):
+class DisdrometerDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str = ""):
-        self.message = msg
-        super().__init__(self.message)
+    def __init__(self, msg: str):
+        super().__init__(msg)
 
 
-class RadarDataError(Exception):
+class RadarDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str = ""):
-        self.message = msg
-        super().__init__(self.message)
+    def __init__(self, msg: str):
+        super().__init__(msg)
 
 
-class WeatherStationDataError(Exception):
+class WeatherStationDataError(CloudnetException):
     """Internal exception class."""
 
-    def __init__(self, msg: str = ""):
-        self.message = msg
-        super().__init__(self.message)
+    def __init__(self, msg: str = "Unable to read the file"):
+        super().__init__(msg)
 
 
-class ModelDataError(Exception):
+class ModelDataError(CloudnetException):
     """Internal exception class."""
 
     def __init__(self, msg: str = "Invalid model file: not enough proper profiles"):
-        self.message = msg
-        super().__init__(self.message)
+        super().__init__(msg)
 
 
-class ValidTimeStampError(Exception):
+class ValidTimeStampError(CloudnetException):
     """Internal exception class."""
 
     def __init__(self, msg: str = "No valid timestamps found"):
-        self.message = msg
-        super().__init__(self.message)
+        super().__init__(msg)
 
 
-class MissingInputFileError(Exception):
+class MissingInputFileError(CloudnetException):
     """Internal exception class."""
 
     def __init__(self, msg: str = "Missing required input files"):
-        self.message = msg
-        super().__init__(self.message)
+        super().__init__(msg)
