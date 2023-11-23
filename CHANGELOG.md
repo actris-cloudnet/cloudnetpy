@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.55.23 – 2023-11-23
+
+- Add CloudnetException
+
 ## 1.55.22 – 2023-11-23
 
 - Do not mask zeros from integer data types and rainfall_rate
