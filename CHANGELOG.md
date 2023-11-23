@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.55.22 – 2023-11-23
+
+- Do not mask zeros from integer data types and rainfall_rate
+- Use milliseconds in RPG time
+- Fix bug in time index order
+
 ## 1.55.21 – 2023-11-20
 
 - Remove masked model profiles from categorize
