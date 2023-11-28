@@ -56,7 +56,6 @@ _CLABEL = {
         ("Aerosols", _COLORS["lightbrown"]),
         ("Insects", _COLORS["shockred"]),
         ("Aerosols & insects", _COLORS["pink"]),
-        ("No data", _COLORS["mask"]),
     ),
     "detection_status": (
         ("_Clear sky", _COLORS["white"]),
@@ -69,7 +68,6 @@ _CLABEL = {
         ("Corrected atten.", _COLORS["skyblue"]),
         ("Clutter", _COLORS["shockred"]),
         ("_Lidar molecular scattering", _COLORS["pink"]),
-        ("No data", _COLORS["mask"]),
     ),
     "ice_retrieval_status": (
         ("_No ice", _COLORS["white"]),
@@ -80,7 +78,6 @@ _CLABEL = {
         ("Ice above rain", _COLORS["darksky"]),
         ("Clear above rain", _COLORS["skyblue"]),
         ("Positive temp.", _COLORS["seaweed"]),
-        ("No data", _COLORS["mask"]),
     ),
     "lwc_retrieval_status": (
         ("No liquid", _COLORS["white"]),
@@ -90,7 +87,6 @@ _CLABEL = {
         ("Invalid LWP", _COLORS["seaweed_roll"]),
         ("_Invalid LWP2", _COLORS["shockred"]),
         ("_Measured rain", _COLORS["orange"]),
-        ("No data", _COLORS["mask"]),
     ),
     "drizzle_retrieval_status": (
         ("_No drizzle", _COLORS["white"]),
@@ -99,14 +95,13 @@ _CLABEL = {
         ("Unfeasible", _COLORS["red"]),
         ("Drizzle-free", _COLORS["orange"]),
         ("Rain", _COLORS["seaweed"]),
-        ("No data", _COLORS["mask"]),
     ),
     "der_retrieval_status": (
         ("_Clear sky", _COLORS["white"]),
         ("Reliable", _COLORS["green"]),
-        ("Mixed-phase", _COLORS["lightgreen"]),
+        ("Mixed phase", _COLORS["lightgreen"]),
         ("Unfeasible", _COLORS["red"]),
-        ("Surrounding-ice", _COLORS["mask"]),
+        ("Surrounding ice", _COLORS["lightsteel"]),
     ),
 }
 
@@ -254,7 +249,7 @@ ATTRIBUTES = {
             log_scale=True,
         ),
         "pressure": PlotMeta(
-            plot_range=(1e3, 1e6),
+            plot_range=(1e4, 1.2e5),
             log_scale=True,
         ),
         "beta": PlotMeta(

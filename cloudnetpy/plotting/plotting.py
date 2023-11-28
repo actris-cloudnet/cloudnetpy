@@ -31,6 +31,7 @@ class PlotParameters:
     show_sources: bool = False
     show_serial_number: bool = False
     show_creation_time: bool = True
+    mark_data_gaps: bool = True
 
 
 class Dimensions:
@@ -193,16 +194,17 @@ class SubPlot:
 
     def add_grid(self) -> None:
         self.ax.xaxis.set_minor_locator(AutoMinorLocator(4))
-        self.ax.grid(which="major", axis="x", color="k", lw=0.1, zorder=0)
-        self.ax.grid(which="minor", axis="x", lw=0.1, color="k", ls=":", zorder=0)
-        self.ax.grid(which="major", axis="y", lw=0.1, color="k", ls=":", zorder=0)
+        self.ax.grid(which="major", axis="x", color="k", lw=0.1)
+        self.ax.grid(which="minor", axis="x", lw=0.1, color="k", ls=":")
+        self.ax.grid(which="major", axis="y", lw=0.1, color="k", ls=":")
 
     def add_source(self, figure_data: FigureData) -> None:
         source = getattr(self.variable, "source", None) or (
             figure_data.file.source if "source" in figure_data.file.ncattrs() else None
         )
         if source is not None:
-            text = f"Data source:\n{source}"
+            source_word = "sources" if "\n" in source else "source"
+            text = f"Data {source_word}:\n{source}"
             self.ax.text(
                 0.012,
                 0.96,
@@ -211,7 +213,6 @@ class SubPlot:
                 va="top",
                 fontsize=7,
                 transform=self.ax.transAxes,
-                zorder=100,
                 bbox={
                     "facecolor": "white",
                     "alpha": 0.8,
@@ -245,8 +246,6 @@ class SubPlot:
 
 
 class Plot:
-    z_order = 42
-
     def __init__(self, sub_plot: SubPlot, ind: int | None):
         self.sub_plot = sub_plot
         self.ind = ind
@@ -260,93 +259,22 @@ class Plot:
         cax = divider.append_axes("right", size="1%", pad=0.25)
         return plt.colorbar(plot, fraction=1.0, ax=self._ax, cax=cax)
 
-
-class Plot2D(Plot):
-    def plot(self, figure_data: FigureData):
-        max_gap = self._get_max_gap_in_minutes(figure_data.file_type)
-        self._mark_gaps(figure_data, max_gap_min=max_gap)
-        if any(
-            key in self.sub_plot.variable.name for key in ("status", "classification")
-        ):
-            self._plot_segment_data(figure_data)
-        else:
-            self._plot_mesh_data(figure_data)
-
-    @staticmethod
-    def _get_max_gap_in_minutes(cloudnet_file_type: str) -> float:
-        if cloudnet_file_type == "model":
-            return 61
-        if cloudnet_file_type in ("mwr-single", "mwr-multi"):
-            return 31
-        return 5
-
-    def _plot_segment_data(self, figure_data: FigureData) -> None:
-        def _hide_segments(
-            data_in: ma.MaskedArray,
-        ) -> tuple[ma.MaskedArray, list, list]:
-            if self._plot_meta.clabel is None:
-                msg = f"No clabel defined for {self.sub_plot.variable.name}."
-                raise ValueError(msg)
-            labels = [x[0] for x in self._plot_meta.clabel]
-            colors = [x[1] for x in self._plot_meta.clabel]
-            segments_to_hide = np.char.startswith(labels, "_")
-            indices = np.where(segments_to_hide)[0]
-            for ind in np.flip(indices):
-                del labels[ind], colors[ind]
-                data_in[data_in == ind] = ma.masked
-                data_in[data_in > ind] -= 1
-            return data_in, colors, labels
-
-        original_mask = np.copy(self._data.mask)
-        data, cbar, clabel = _hide_segments(self._data)
-        data[original_mask] = 99
-        image = self._ax.pcolorfast(
-            figure_data.time_including_gaps,
-            self._screen_data_by_max_y(figure_data),
-            self._data.T[:-1, :-1],
-            cmap=ListedColormap(cbar),
-            vmin=-0.5,
-            vmax=len(cbar) - 0.5,
-            zorder=self.z_order,
+    def _fill_between_data_gaps(self, figure_data: FigureData) -> None:
+        gap_times = list(set(figure_data.time_including_gaps) - set(figure_data.time))
+        gap_times.sort()
+        batches = [gap_times[i : i + 2] for i in range(0, len(gap_times), 2)]
+        y_lim = (
+            ma.max(self._data) if self._data.ndim == 1 else figure_data.options.max_y
         )
-        colorbar = self._init_colorbar(image)
-        colorbar.set_ticks(np.arange(len(clabel)).tolist())
-        colorbar.ax.set_yticklabels(clabel, fontsize=13)
-
-    def _plot_mesh_data(self, figure_data: FigureData) -> None:
-        if self._plot_meta.plot_range is None:
-            vmin, vmax = self._data.min(), self._data.max()
-        else:
-            vmin, vmax = self._plot_meta.plot_range
-        if self._is_log:
-            self._data, vmin, vmax = lin2log(self._data, vmin, vmax)
-
-        image = self._ax.pcolorfast(
-            figure_data.time_including_gaps,
-            self._screen_data_by_max_y(figure_data),
-            self._data.T[:-1, :-1],
-            cmap=plt.get_cmap(str(self._plot_meta.cmap)),
-            vmin=vmin,
-            vmax=vmax,
-            zorder=self.z_order,
-        )
-        cbar = self._init_colorbar(image)
-        cbar.set_label(str(self._plot_meta.clabel), fontsize=13)
-        if self._is_log:
-            cbar.set_ticks(np.arange(vmin, vmax + 1).tolist())
-            tick_labels = get_log_cbar_tick_labels(vmin, vmax)
-            cbar.ax.set_yticklabels(tick_labels)
-
-    def _screen_data_by_max_y(self, figure_data: FigureData) -> ndarray:
-        if figure_data.height is None:
-            msg = "No height information in the file."
-            raise ValueError(msg)
-        if figure_data.options.max_y is None:
-            return figure_data.height
-        alt = figure_data.height
-        ind = int((np.argmax(alt > figure_data.options.max_y) or len(alt)) + 1)
-        self._data = self._data[:, :ind]
-        return alt[:ind]
+        for batch in batches:
+            self._ax.fill_between(
+                batch,
+                y_lim * 1.05,
+                hatch="//",
+                facecolor="grey",
+                edgecolor="black",
+                alpha=0.15,
+            )
 
     def _mark_gaps(self, figure_data: FigureData, max_gap_min: float = 1) -> None:
         time = figure_data.time
@@ -367,8 +295,12 @@ class Plot2D(Plot):
             mask_new = np.copy(data.mask)
         data_new = ma.copy(data)
         time_new = np.copy(time)
-        temp_array = np.zeros((2, data.shape[1]))
-        temp_mask = np.ones((2, data.shape[1]))
+        if self._data.ndim == 2:
+            temp_array = np.zeros((2, data.shape[1]))
+            temp_mask = np.ones((2, data.shape[1]))
+        else:
+            temp_array = np.zeros(2)
+            temp_mask = np.ones(2)
         time_delta = 0.001
         for ind in np.sort(gap_indices)[::-1]:
             ind_gap = ind + 1
@@ -392,22 +324,107 @@ class Plot2D(Plot):
         figure_data.time_including_gaps = time_new
 
 
+class Plot2D(Plot):
+    def plot(self, figure_data: FigureData):
+        max_gap = _get_max_gap_in_minutes(figure_data.file_type)
+        self._mark_gaps(figure_data, max_gap_min=max_gap)
+        if self.sub_plot.variable.name == "cloud_fraction":
+            self._data[self._data == 0] = ma.masked
+        if any(
+            key in self.sub_plot.variable.name for key in ("status", "classification")
+        ):
+            self._plot_segment_data(figure_data)
+        else:
+            self._plot_mesh_data(figure_data)
+
+        if figure_data.options.mark_data_gaps:
+            self._fill_between_data_gaps(figure_data)
+
+    def _plot_segment_data(self, figure_data: FigureData) -> None:
+        def _hide_segments(
+            data_in: ma.MaskedArray,
+        ) -> tuple[ma.MaskedArray, list, list]:
+            if self._plot_meta.clabel is None:
+                msg = f"No clabel defined for {self.sub_plot.variable.name}."
+                raise ValueError(msg)
+            labels = [x[0] for x in self._plot_meta.clabel]
+            colors = [x[1] for x in self._plot_meta.clabel]
+            segments_to_hide = np.char.startswith(labels, "_")
+            indices = np.where(segments_to_hide)[0]
+            for ind in np.flip(indices):
+                del labels[ind], colors[ind]
+                data_in[data_in == ind] = ma.masked
+                data_in[data_in > ind] -= 1
+            return data_in, colors, labels
+
+        data, cbar, clabel = _hide_segments(self._data)
+        image = self._ax.pcolorfast(
+            figure_data.time_including_gaps,
+            self._screen_data_by_max_y(figure_data),
+            self._data.T[:-1, :-1],
+            cmap=ListedColormap(cbar),
+            vmin=-0.5,
+            vmax=len(cbar) - 0.5,
+        )
+        colorbar = self._init_colorbar(image)
+        colorbar.set_ticks(np.arange(len(clabel)).tolist())
+        colorbar.ax.set_yticklabels(clabel, fontsize=13)
+
+    def _plot_mesh_data(self, figure_data: FigureData) -> None:
+        if self._plot_meta.plot_range is None:
+            vmin, vmax = self._data.min(), self._data.max()
+        else:
+            vmin, vmax = self._plot_meta.plot_range
+        if self._is_log:
+            self._data, vmin, vmax = lin2log(self._data, vmin, vmax)
+
+        image = self._ax.pcolorfast(
+            figure_data.time_including_gaps,
+            self._screen_data_by_max_y(figure_data),
+            self._data.T[:-1, :-1],
+            cmap=plt.get_cmap(str(self._plot_meta.cmap)),
+            vmin=vmin,
+            vmax=vmax,
+        )
+        cbar = self._init_colorbar(image)
+        cbar.set_label(str(self._plot_meta.clabel), fontsize=13)
+        if self._is_log:
+            cbar.set_ticks(np.arange(vmin, vmax + 1).tolist())
+            tick_labels = get_log_cbar_tick_labels(vmin, vmax)
+            cbar.ax.set_yticklabels(tick_labels)
+
+    def _screen_data_by_max_y(self, figure_data: FigureData) -> ndarray:
+        if figure_data.height is None:
+            msg = "No height information in the file."
+            raise ValueError(msg)
+        if figure_data.options.max_y is None:
+            return figure_data.height
+        alt = figure_data.height
+        ind = int((np.argmax(alt > figure_data.options.max_y) or len(alt)) + 1)
+        self._data = self._data[:, :ind]
+        return alt[:ind]
+
+
 class Plot1D(Plot):
     def plot(self, figure_data: FigureData):
         if self.ind is not None and self._data.ndim == 2:
             self._data = self._data[:, self.ind]
             self._data = self._pointing_filter(self._data, figure_data)
         units = self._convert_units()
+        max_gap = _get_max_gap_in_minutes(figure_data.file_type)
+        self._mark_gaps(figure_data, max_gap_min=max_gap)
         self._ax.plot(
-            figure_data.time,
+            figure_data.time_including_gaps,
             self._data,
             color="royalblue",
-            zorder=self.z_order,
             **self._get_plot_options(figure_data),
         )
         if self._plot_meta.moving_average:
             self._plot_moving_average(figure_data)
-        self.sub_plot.set_yax(ylabel=units)
+        self._fill_between_data_gaps(figure_data)
+        min_y = self._data.min() * 0.98
+        max_y = self._data.max() * 1.02
+        self.sub_plot.set_yax(ylabel=units, y_limits=(min_y, max_y))
         pos = self._ax.get_position()
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
 
@@ -448,13 +465,14 @@ class Plot1D(Plot):
         return min(max(line_width, 0.25), 0.9)
 
     def _plot_moving_average(self, figure_data: FigureData):
-        time = figure_data.time.copy()
+        time = figure_data.time_including_gaps.copy()
         data, time = self._get_unmasked_values(self._data, time)
         sma = self._calculate_moving_average(data, time, window=5)
-        gaps = self._find_time_gap_indices(time, max_gap_min=5)
+        gap_time = _get_max_gap_in_minutes(figure_data.file_type)
+        gaps = self._find_time_gap_indices(time, max_gap_min=gap_time)
         sma[gaps] = np.nan
-        self._ax.plot(time, sma, color="sienna", zorder=self.z_order, lw=2)
-        self._ax.plot(time, sma, color="wheat", zorder=self.z_order, lw=0.6)
+        self._ax.plot(time, sma, color="sienna", lw=2)
+        self._ax.plot(time, sma, color="wheat", lw=0.6)
 
     @staticmethod
     def _get_unmasked_values(
@@ -523,7 +541,7 @@ def generate_figure(
                 Plot1D(subplot, ind).plot(figure_data)
             else:
                 Plot2D(subplot, ind).plot(figure_data)
-                subplot.set_yax()
+                subplot.set_yax(y_limits=(0, figure_data.options.max_y))
 
             subplot.set_xax()
 
@@ -611,3 +629,11 @@ def _reformat_units(unit: str) -> str:
     if unit in units_map:
         return units_map[unit]
     return unit
+
+
+def _get_max_gap_in_minutes(cloudnet_file_type: str) -> float:
+    if cloudnet_file_type == "model":
+        return 61
+    if cloudnet_file_type == "mwr-multi":
+        return 21
+    return 10
