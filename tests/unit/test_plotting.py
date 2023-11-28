@@ -1,13 +1,13 @@
-from datetime import date
+import os
 
 import numpy as np
 import pytest
-from numpy import ma
-from numpy.testing import assert_array_almost_equal, assert_array_equal
-from scipy.signal import filtfilt
-
 from cloudnetpy.plotting import plotting
+from cloudnetpy.instruments import basta2nc
+from os import path
+import netCDF4
 
+SCRIPT_PATH = path.dirname(path.realpath(__file__))
 
 @pytest.mark.parametrize(
     "numbers, result",
@@ -20,34 +20,6 @@ def test_lin2log(numbers, result):
     assert plotting.lin2log(*numbers) == result
 
 
-# @pytest.mark.parametrize(
-#     "reso, result",
-#     [
-#         (4, ["", "04:00", "08:00", "12:00", "16:00", "20:00", ""]),
-#         (
-#             2,
-#             [
-#                 "",
-#                 "02:00",
-#                 "04:00",
-#                 "06:00",
-#                 "08:00",
-#                 "10:00",
-#                 "12:00",
-#                 "14:00",
-#                 "16:00",
-#                 "18:00",
-#                 "20:00",
-#                 "22:00",
-#                 "",
-#             ],
-#         ),
-#     ],
-# )
-# def test_get_standard_time_ticks(reso, result):
-#     assert plotting._get_standard_time_ticks(reso) == result
-
-
 @pytest.mark.parametrize(
     "vmin, vmax, result",
     [
@@ -57,73 +29,32 @@ def test_lin2log(numbers, result):
 def test_generate_log_cbar_ticklabel_list(vmin, vmax, result):
     assert plotting.get_log_cbar_tick_labels(vmin, vmax) == result
 
+@pytest.fixture(scope="session")
+def basta_nc(tmpdir_factory) -> str:
+    basta_raw = f"{SCRIPT_PATH}/data/basta/basta_1a_cldradLz1R025m_v03_20210827_000000.nc"
+    site_meta = {
+        "name": "Palaiseau",
+        "latitude": 50,
+        "longitude": 104.5,
+        "altitude": 50,
+    }
+    filename = tmpdir_factory.mktemp("data").join("file.nc")
+    basta2nc(basta_raw, filename, site_meta)
+    return filename
 
-# def test_find_time_gap_indices():
-#     time = np.array([0.01, 0.02, 0.04, 0.13, 0.14, 0.23, 0.24])
-#     indices = (2, 4)
-#     gaps = plotting._find_time_gap_indices(time, 5)
-#     assert_array_almost_equal(gaps, indices)
-#
-#
-# def test_mark_gaps():
-#     time = np.array([1.0, 2, 3, 10, 11, 20, 21, 22])
-#     data = ma.ones((len(time), 3))
-#     data.mask = np.zeros(data.shape)
-#     time_new, data_new = plotting._mark_gaps(time, data, 60)
-#     expected_mask = np.array(
-#         [
-#             [0, 0, 0],
-#             [0, 0, 0],
-#             [0, 0, 0],
-#             [1, 1, 1],
-#             [1, 1, 1],
-#             [0, 0, 0],
-#             [0, 0, 0],
-#             [1, 1, 1],
-#             [1, 1, 1],
-#             [0, 0, 0],
-#             [0, 0, 0],
-#             [0, 0, 0],
-#             [1, 1, 1],
-#             [1, 1, 1],
-#         ],
-#     )
-#     expected_data = np.array(
-#         [
-#             [1, 1, 1],
-#             [1, 1, 1],
-#             [1, 1, 1],
-#             [0, 0, 0],
-#             [0, 0, 0],
-#             [1, 1, 1],
-#             [1, 1, 1],
-#             [0, 0, 0],
-#             [0, 0, 0],
-#             [1, 1, 1],
-#             [1, 1, 1],
-#             [1, 1, 1],
-#             [0, 0, 0],
-#             [0, 0, 0],
-#         ],
-#     )
-#     expected_time = np.array(
-#         [
-#             1,
-#             2,
-#             3,
-#             3.001,
-#             9.999,
-#             10,
-#             11,
-#             11.001,
-#             19.999,
-#             20,
-#             21,
-#             22,
-#             22.001,
-#             23.999,
-#         ],
-#     )
-#     assert_array_equal(data_new.data, expected_data)
-#     assert_array_equal(data_new.mask, expected_mask)
-#     assert_array_almost_equal(expected_time, time_new)
+
+def test_figure_data(basta_nc):
+    options = plotting.PlotParameters()
+    with netCDF4.Dataset(basta_nc) as nc:
+        figure_data = plotting.FigureData(nc, ["Zh", "v", "kissa"], options)
+        assert len(figure_data) == 2
+        assert figure_data.height is not None
+        assert np.max(figure_data.height) < 25
+
+
+def test_generate_figure(basta_nc):
+    plotting.generate_figure(basta_nc, ["Zh"], show=False)
+    image_name = "test_23142134.png"
+    plotting.generate_figure(basta_nc, ["Zh"], show=False, output_filename=image_name)
+    assert path.exists(image_name)
+    os.remove(image_name)

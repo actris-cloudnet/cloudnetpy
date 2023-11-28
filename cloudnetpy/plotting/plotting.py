@@ -23,15 +23,14 @@ from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
 class PlotParameters:
     dpi: float = 120
     max_y: int = 12
-    grid: bool = False
     title: bool = True
     subtitle: bool = True
-    footer_text: str | None = None
-    x_edge_ticks: bool = False
-    show_sources: bool = False
-    show_serial_number: bool = False
-    show_creation_time: bool = True
     mark_data_gaps: bool = True
+    grid: bool = False
+    edge_tick_labels: bool = False
+    show_sources: bool = False
+    footer_text: str | None = None
+    plot_meta: PlotMeta | None = None
 
 
 class Dimensions:
@@ -75,17 +74,15 @@ class FigureData:
         options: PlotParameters,
     ):
         self.file = file
-        self.file_type = file.cloudnet_file_type
         self.variables, self.indices = self._get_valid_variables_and_indices(
             requested_variables
         )
         self.options = options
         self.height = self._get_height()
-        self.time = self._get_time()
+        self.time = self.file.variables["time"][:]
         self.time_including_gaps = np.array([])
 
     def initialize_figure(self) -> tuple[Figure, list[Axes]]:
-        """Creates an empty figure according to the number of subplots."""
         n_subplots = len(self)
         fig, axes = plt.subplots(
             n_subplots,
@@ -137,16 +134,13 @@ class FigureData:
 
     def _get_height(self) -> np.ndarray | None:
         m2km = 1e-3
-        if self.file_type == "model":
+        if self.file.cloudnet_file_type == "model":
             return ma.mean(self.file.variables["height"][:], axis=0) * m2km
         if "height" in self.file.variables:
             return self.file.variables["height"][:] * m2km
         if "range" in self.file.variables:
             return self.file.variables["range"][:] * m2km
         return None
-
-    def _get_time(self) -> np.ndarray:
-        return self.file.variables["time"][:]
 
     def __len__(self) -> int:
         return len(self.variables)
@@ -163,14 +157,13 @@ class SubPlot:
         self.ax = ax
         self.variable = variable
         self.options = options
-        self.file_type = file_type
-        self.plot_meta = self._read_plot_meta()
+        self.plot_meta = self._read_plot_meta(file_type)
 
     def set_xax(self) -> None:
         resolution = 4
         x_tick_labels = [
             f"{int(i):02d}:00"
-            if (24 >= i >= 0 if self.options.x_edge_ticks else 24 > i > 0)
+            if (24 >= i >= 0 if self.options.edge_tick_labels else 24 > i > 0)
             else ""
             for i in np.arange(0, 24.01, resolution)
         ]
@@ -188,8 +181,10 @@ class SubPlot:
         if y_limits is not None:
             self.ax.set_ylim(*y_limits)
 
-    def add_title(self) -> None:
+    def add_title(self, ind: int | None) -> None:
         title = self.variable.long_name
+        if self.variable.name == "tb" and ind is not None:
+            title += f" (channel {ind + 1})"
         self.ax.set_title(title, fontsize=14)
 
     def add_grid(self) -> None:
@@ -198,7 +193,7 @@ class SubPlot:
         self.ax.grid(which="minor", axis="x", lw=0.1, color="k", ls=":")
         self.ax.grid(which="major", axis="y", lw=0.1, color="k", ls=":")
 
-    def add_source(self, figure_data: FigureData) -> None:
+    def add_sources(self, figure_data: FigureData) -> None:
         source = getattr(self.variable, "source", None) or (
             figure_data.file.source if "source" in figure_data.file.ncattrs() else None
         )
@@ -236,9 +231,11 @@ class SubPlot:
                 va="bottom",
             )
 
-    def _read_plot_meta(self) -> PlotMeta:
+    def _read_plot_meta(self, file_type: str) -> PlotMeta:
+        if self.options.plot_meta is not None:
+            return self.options.plot_meta
         fallback = ATTRIBUTES["fallback"].get(self.variable.name, PlotMeta())
-        file_attributes = ATTRIBUTES.get(self.file_type, {})
+        file_attributes = ATTRIBUTES.get(file_type, {})
         plot_meta = file_attributes.get(self.variable.name, fallback)
         if plot_meta.clabel is None:
             plot_meta.clabel = _reformat_units(self.variable.units)
@@ -246,13 +243,15 @@ class SubPlot:
 
 
 class Plot:
-    def __init__(self, sub_plot: SubPlot, ind: int | None):
+    def __init__(self, sub_plot: SubPlot):
         self.sub_plot = sub_plot
-        self.ind = ind
         self._data = sub_plot.variable[:]
         self._plot_meta = sub_plot.plot_meta
         self._is_log = sub_plot.plot_meta.log_scale
         self._ax = sub_plot.ax
+
+    def _get_y_limits(self) -> tuple[float, float]:
+        return 0, self.sub_plot.options.max_y
 
     def _init_colorbar(self, plot) -> Colorbar:
         divider = make_axes_locatable(self._ax)
@@ -263,29 +262,23 @@ class Plot:
         gap_times = list(set(figure_data.time_including_gaps) - set(figure_data.time))
         gap_times.sort()
         batches = [gap_times[i : i + 2] for i in range(0, len(gap_times), 2)]
-        y_lim = (
-            ma.max(self._data) if self._data.ndim == 1 else figure_data.options.max_y
-        )
         for batch in batches:
             self._ax.fill_between(
                 batch,
-                y_lim * 1.05,
+                *self._get_y_limits(),
                 hatch="//",
                 facecolor="grey",
                 edgecolor="black",
                 alpha=0.15,
             )
 
-    def _mark_gaps(self, figure_data: FigureData, max_gap_min: float = 1) -> None:
+    def _mark_gaps(self, figure_data: FigureData) -> None:
         time = figure_data.time
         data = self._data
-        if time[0] < 0:
-            msg = "Negative time values in the file."
+        if time[0] < 0 or time[-1] > 24:
+            msg = "Time values outside the range 0-24."
             raise ValueError(msg)
-        if time[-1] > 24:
-            msg = "Time values exceed 24 hours."
-            raise ValueError(msg)
-        max_gap_fraction_hour = max_gap_min / 60
+        max_gap_fraction_hour = _get_max_gap_in_minutes(figure_data) / 60
         gap_indices = np.where(np.diff(time) > max_gap_fraction_hour)[0]
         if not ma.is_masked(data):
             mask_new = np.zeros(data.shape)
@@ -326,8 +319,7 @@ class Plot:
 
 class Plot2D(Plot):
     def plot(self, figure_data: FigureData):
-        max_gap = _get_max_gap_in_minutes(figure_data.file_type)
-        self._mark_gaps(figure_data, max_gap_min=max_gap)
+        self._mark_gaps(figure_data)
         if self.sub_plot.variable.name == "cloud_fraction":
             self._data[self._data == 0] = ma.masked
         if any(
@@ -358,9 +350,10 @@ class Plot2D(Plot):
             return data_in, colors, labels
 
         data, cbar, clabel = _hide_segments(self._data)
+        alt = self._screen_data_by_max_y(figure_data)
         image = self._ax.pcolorfast(
             figure_data.time_including_gaps,
-            self._screen_data_by_max_y(figure_data),
+            alt,
             self._data.T[:-1, :-1],
             cmap=ListedColormap(cbar),
             vmin=-0.5,
@@ -378,9 +371,10 @@ class Plot2D(Plot):
         if self._is_log:
             self._data, vmin, vmax = lin2log(self._data, vmin, vmax)
 
+        alt = self._screen_data_by_max_y(figure_data)
         image = self._ax.pcolorfast(
             figure_data.time_including_gaps,
-            self._screen_data_by_max_y(figure_data),
+            alt,
             self._data.T[:-1, :-1],
             cmap=plt.get_cmap(str(self._plot_meta.cmap)),
             vmin=vmin,
@@ -397,36 +391,56 @@ class Plot2D(Plot):
         if figure_data.height is None:
             msg = "No height information in the file."
             raise ValueError(msg)
-        if figure_data.options.max_y is None:
-            return figure_data.height
         alt = figure_data.height
+        if figure_data.options.max_y is None:
+            return alt
         ind = int((np.argmax(alt > figure_data.options.max_y) or len(alt)) + 1)
         self._data = self._data[:, :ind]
         return alt[:ind]
 
 
 class Plot1D(Plot):
+    def plot_tb(self, figure_data: FigureData, ind: int):
+        flagged_data = self._pointing_filter(figure_data, ind)
+        self._ax.plot(
+            figure_data.time,
+            flagged_data,
+            color="salmon",
+            marker=".",
+            lw=0,
+            markersize=3,
+        )
+        self.plot(figure_data)
+        self._ax.legend(
+            ["Flagged data", "Valid data"],
+            markerscale=3,
+            numpoints=1,
+            reverse=True,
+            frameon=False,
+        )
+
     def plot(self, figure_data: FigureData):
-        if self.ind is not None and self._data.ndim == 2:
-            self._data = self._data[:, self.ind]
-            self._data = self._pointing_filter(self._data, figure_data)
         units = self._convert_units()
-        max_gap = _get_max_gap_in_minutes(figure_data.file_type)
-        self._mark_gaps(figure_data, max_gap_min=max_gap)
+        self._mark_gaps(figure_data)
         self._ax.plot(
             figure_data.time_including_gaps,
             self._data,
-            color="royalblue",
-            **self._get_plot_options(figure_data),
+            **self._get_plot_options(),
         )
         if self._plot_meta.moving_average:
             self._plot_moving_average(figure_data)
         self._fill_between_data_gaps(figure_data)
-        min_y = self._data.min() * 0.98
-        max_y = self._data.max() * 1.02
-        self.sub_plot.set_yax(ylabel=units, y_limits=(min_y, max_y))
+        self.sub_plot.set_yax(ylabel=units, y_limits=self._get_y_limits())
         pos = self._ax.get_position()
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
+
+    def _get_y_limits(self) -> tuple[float, float]:
+        range_val = self._data.max() - self._data.min()
+        percent_gap = 0.05
+        gap = percent_gap * range_val
+        min_y = self._data.min() - gap
+        max_y = self._data.max() + gap
+        return min_y, max_y
 
     def _convert_units(self) -> str | None:
         multiply, add = "multiply", "add"
@@ -448,16 +462,24 @@ class Plot1D(Plot):
             return units
         return _reformat_units(self.sub_plot.variable.units)
 
-    def _get_plot_options(self, figure_data: FigureData):
-        options = {
-            "wind_direction": {
-                "marker": ".",
-                "linewidth": 0,
-                "markersize": 3,
+    def _get_plot_options(self) -> dict:
+        default_options = {
+            "color": "lightblue",
+            "lw": 0,
+            "marker": ".",
+            "markersize": 3,
+        }
+        custom_options = {
+            "tb": {
+                "color": "lightblue",
             }
         }
-        line_width = self._get_line_width(figure_data.time)
-        return options.get(self.sub_plot.variable.name, {"lw": line_width})
+
+        variable_name = self.sub_plot.variable.name
+        if variable_name in custom_options:
+            default_options.update(custom_options[variable_name])
+
+        return default_options
 
     @staticmethod
     def _get_line_width(time: np.ndarray) -> float:
@@ -468,10 +490,10 @@ class Plot1D(Plot):
         time = figure_data.time_including_gaps.copy()
         data, time = self._get_unmasked_values(self._data, time)
         sma = self._calculate_moving_average(data, time, window=5)
-        gap_time = _get_max_gap_in_minutes(figure_data.file_type)
+        gap_time = _get_max_gap_in_minutes(figure_data)
         gaps = self._find_time_gap_indices(time, max_gap_min=gap_time)
         sma[gaps] = np.nan
-        self._ax.plot(time, sma, color="sienna", lw=2)
+        self._ax.plot(time, sma, color="sienna", lw=3)
         self._ax.plot(time, sma, color="wheat", lw=0.6)
 
     @staticmethod
@@ -481,20 +503,27 @@ class Plot1D(Plot):
     ) -> tuple[np.ndarray, np.ndarray]:
         if not ma.is_masked(data):
             return data, time
-
         good_values = ~data.mask
         return data[good_values], time[good_values]
 
-    @staticmethod
-    def _pointing_filter(data: np.ndarray, figure_data: FigureData) -> ndarray:
+    def _pointing_filter(self, figure_data: FigureData, ind: int) -> ndarray:
         zenith_limit = 5
         status = 0
+        self._data = self._data[:, int]
+        flagged_data = ma.masked_all_like(figure_data.time)
         if "pointing_flag" in figure_data.file.variables:
-            pointing = figure_data.file.variables["pointing_flag"][:]
+            pointing_flag = figure_data.file.variables["pointing_flag"][:]
             zenith_angle = figure_data.file.variables["zenith_angle"][:]
-            data[np.abs(zenith_angle) > zenith_limit] = ma.masked
-            data[pointing != status] = ma.masked
-        return data
+            quality_flag = figure_data.file.variables["quality_flag"][:, ind]
+            # First mask bad zenith angle points
+            self._data[np.abs(zenith_angle) > zenith_limit] = ma.masked
+            self._data[pointing_flag != status] = ma.masked
+            # Store flagged data points for visualization
+            valid_ind = np.where(quality_flag != status)[0]
+            if len(valid_ind) > 0:
+                flagged_data[valid_ind] = self._data[valid_ind]
+            self._data[quality_flag != status] = ma.masked
+        return flagged_data
 
     @staticmethod
     def _find_time_gap_indices(time: ndarray, max_gap_min: float) -> ndarray:
@@ -523,36 +552,38 @@ def generate_figure(
     *,
     show: bool = True,
     output_filename: os.PathLike | str | None = None,
-    options: PlotParameters | None,
+    options: PlotParameters | None = None,
 ) -> Dimensions:
     if options is None:
         options = PlotParameters()
 
-    with netCDF4.Dataset(filename) as nc_file:
-        figure_data = FigureData(nc_file, variables, options)
+    with netCDF4.Dataset(filename) as file:
+        figure_data = FigureData(file, variables, options)
         fig, axes = figure_data.initialize_figure()
 
         for ax, variable, ind in zip(
             axes, figure_data.variables, figure_data.indices, strict=True
         ):
-            subplot = SubPlot(ax, variable, options, figure_data.file_type)
+            subplot = SubPlot(ax, variable, options, file.cloudnet_file_type)
 
-            if variable.ndim == 1 or (variable.ndim == 2 and ind is not None):
-                Plot1D(subplot, ind).plot(figure_data)
+            if variable.name == "tb" and ind is not None:
+                Plot1D(subplot).plot_tb(figure_data, ind)
+            elif variable.ndim == 1:
+                Plot1D(subplot).plot(figure_data)
             else:
-                Plot2D(subplot, ind).plot(figure_data)
+                Plot2D(subplot).plot(figure_data)
                 subplot.set_yax(y_limits=(0, figure_data.options.max_y))
 
             subplot.set_xax()
 
             if options.title:
-                subplot.add_title()
+                subplot.add_title(ind)
 
             if options.grid:
                 subplot.add_grid()
 
             if options.show_sources:
-                subplot.add_source(figure_data)
+                subplot.add_sources(figure_data)
 
             if options.subtitle and variable == figure_data.variables[-1]:
                 figure_data.add_subtitle(fig)
@@ -579,6 +610,32 @@ def lin2log(*args) -> list:
 
 def get_log_cbar_tick_labels(value_min: float, value_max: float) -> list[str]:
     return [f"10$^{{{int(i)}}}$" for i in np.arange(value_min, value_max + 1)]
+
+
+def _reformat_units(unit: str) -> str:
+    unit_mapping = {
+        "1": "",
+        "mu m": "$\\mu$m",
+        "m-3": "m$^{-3}$",
+        "m s-1": "m s$^{-1}$",
+        "sr-1 m-1": "sr$^{-1}$ m$^{-1}$",
+        "kg m-2": "kg m$^{-2}$",
+        "kg m-3": "kg m$^{-3}$",
+        "kg m-2 s-1": "kg m$^{-2}$ s$^{-1}$",
+        "dB km-1": "dB km$^{-1}$",
+        "rad km-1": "rad km$^{-1}$",
+    }
+    if unit in unit_mapping:
+        return unit_mapping[unit]
+    return unit
+
+
+def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
+    max_allowed_gap = {
+        "model": 181 if "gdas1" in figure_data.file.source else 61,
+        "mwr-multi": 21,
+    }
+    return max_allowed_gap.get(figure_data.file.cloudnet_file_type, 10)
 
 
 def plot_2d(
@@ -611,29 +668,3 @@ def plot_2d(
     if xlim is not None:
         plt.xlim(xlim)
     plt.show()
-
-
-def _reformat_units(unit: str) -> str:
-    units_map = {
-        "1": "",
-        "mu m": "$\\mu$m",
-        "m-3": "m$^{-3}$",
-        "m s-1": "m s$^{-1}$",
-        "sr-1 m-1": "sr$^{-1}$ m$^{-1}$",
-        "kg m-2": "kg m$^{-2}$",
-        "kg m-3": "kg m$^{-3}$",
-        "kg m-2 s-1": "kg m$^{-2}$ s$^{-1}$",
-        "dB km-1": "dB km$^{-1}$",
-        "rad km-1": "rad km$^{-1}$",
-    }
-    if unit in units_map:
-        return units_map[unit]
-    return unit
-
-
-def _get_max_gap_in_minutes(cloudnet_file_type: str) -> float:
-    if cloudnet_file_type == "model":
-        return 61
-    if cloudnet_file_type == "mwr-multi":
-        return 21
-    return 10

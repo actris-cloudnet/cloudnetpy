@@ -114,6 +114,9 @@ ATTRIBUTES = {
         )
     },
     "fallback": {
+        "rainfall_rate": PlotMeta(
+            moving_average=True,
+        ),
         "ier": PlotMeta(
             plot_range=(2e-5, 6e-5),
         ),
