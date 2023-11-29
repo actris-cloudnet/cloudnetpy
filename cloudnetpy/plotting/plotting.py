@@ -435,11 +435,17 @@ class Plot1D(Plot):
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
 
     def _get_y_limits(self) -> tuple[float, float]:
-        range_val = self._data.max() - self._data.min()
+        min_data = self._data.min()
+        max_data = self._data.max()
+        range_val = max_data - min_data
         percent_gap = 0.05
         gap = percent_gap * range_val
-        min_y = self._data.min() - gap
-        max_y = self._data.max() + gap
+        min_y = min_data - gap
+        max_y = max_data + gap
+        if min_y == 0:
+            min_y = -percent_gap
+        if max_y == 0:
+            max_y = percent_gap
         return min_y, max_y
 
     def _convert_units(self) -> str | None:
