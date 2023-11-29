@@ -442,9 +442,8 @@ class Plot1D(Plot):
         gap = percent_gap * range_val
         min_y = min_data - gap
         max_y = max_data + gap
-        if min_y == 0:
+        if min_y == 0 and max_y == 0:
             min_y = -percent_gap
-        if max_y == 0:
             max_y = percent_gap
         return min_y, max_y
 
