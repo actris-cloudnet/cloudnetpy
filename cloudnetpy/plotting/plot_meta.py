@@ -9,7 +9,7 @@ class PlotMeta:
     clabel: str | Sequence[tuple[str, str]] | None = None
     plot_range: tuple[float, float] | None = None
     log_scale: bool = False
-    moving_average: bool = False
+    moving_average: bool = True
 
 
 _COLORS = {
@@ -114,9 +114,6 @@ ATTRIBUTES = {
         )
     },
     "fallback": {
-        "rainfall_rate": PlotMeta(
-            moving_average=True,
-        ),
         "ier": PlotMeta(
             plot_range=(2e-5, 6e-5),
         ),
@@ -416,13 +413,9 @@ ATTRIBUTES = {
         "radar_gas_atten": PlotMeta(
             plot_range=(0, 1),
         ),
-        "lwp": PlotMeta(
-            moving_average=True,
-        ),
         "iwv": PlotMeta(
             cmap="Blues",
             plot_range=(0, 1),
-            moving_average=True,
         ),
         "target_classification": PlotMeta(
             clabel=_CLABEL["target_classification"],

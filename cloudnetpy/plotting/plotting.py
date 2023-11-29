@@ -435,16 +435,18 @@ class Plot1D(Plot):
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
 
     def _get_y_limits(self) -> tuple[float, float]:
+        percent_gap = 0.05
+        fallback = (-percent_gap, percent_gap)
+        if ma.all(self._data.mask):
+            return fallback
         min_data = self._data.min()
         max_data = self._data.max()
         range_val = max_data - min_data
-        percent_gap = 0.05
         gap = percent_gap * range_val
         min_y = min_data - gap
         max_y = max_data + gap
         if min_y == 0 and max_y == 0:
-            min_y = -percent_gap
-            max_y = percent_gap
+            return fallback
         return min_y, max_y
 
     def _convert_units(self) -> str | None:
@@ -514,7 +516,7 @@ class Plot1D(Plot):
     def _pointing_filter(self, figure_data: FigureData, ind: int) -> ndarray:
         zenith_limit = 5
         status = 0
-        self._data = self._data[:, int]
+        self._data = self._data[:, ind]
         flagged_data = ma.masked_all_like(figure_data.time)
         if "pointing_flag" in figure_data.file.variables:
             pointing_flag = figure_data.file.variables["pointing_flag"][:]
@@ -539,6 +541,8 @@ class Plot1D(Plot):
     def _calculate_moving_average(
         data: np.ndarray, time: np.ndarray, window: float = 5
     ) -> np.ndarray:
+        if len(data) == 0:
+            return np.array([])
         time_delta_hours = np.median(np.diff(time))
         window_size = int(window / 60 / time_delta_hours)
         if window_size < 1:
