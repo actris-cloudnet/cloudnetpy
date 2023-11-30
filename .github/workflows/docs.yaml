@@ -1,0 +1,32 @@
+on:
+  push:
+    # tags:
+    #   - '*'
+jobs:
+  docs:
+    name: "Generate documentation"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip"
+      - name: Install dependencies
+        working-directory: ./docs
+        run: pip install -r requirements.txt
+      - name: Build documentations
+        working-directory: ./docs
+        run: make html
+      - name: Commit
+        working-directory: ./docs
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git checkout -b gh-pages
+          git add -f html
+          git commit -m "Generate docs"
+          git filter-branch --prune-empty --subdirectory-filter html gh-pages
+          git push origin gh-pages -f
