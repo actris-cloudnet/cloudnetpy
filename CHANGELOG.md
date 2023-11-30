@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.56.0 – 2023-11-30
+
+- `generate_figure` now takes plotting options as single argument
+
 ## 1.55.23 – 2023-11-23
 
 - Add CloudnetException
