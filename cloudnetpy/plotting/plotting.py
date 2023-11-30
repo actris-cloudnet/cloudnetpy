@@ -238,7 +238,7 @@ class SubPlot:
         file_attributes = ATTRIBUTES.get(file_type, {})
         plot_meta = file_attributes.get(self.variable.name, fallback)
         if plot_meta.clabel is None:
-            plot_meta.clabel = _reformat_units(self.variable.units)
+            plot_meta = plot_meta._replace(clabel=_reformat_units(self.variable.units))
         return plot_meta
 
 

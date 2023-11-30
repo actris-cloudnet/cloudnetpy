@@ -1,11 +1,10 @@
 """Metadata for plotting module."""
 from collections.abc import Sequence
-from dataclasses import dataclass
+from typing import NamedTuple
 
 
-@dataclass
-class PlotMeta:
-    cmap: str | Sequence[str] | None = "viridis"
+class PlotMeta(NamedTuple):
+    cmap: str = "viridis"
     clabel: str | Sequence[tuple[str, str]] | None = None
     plot_range: tuple[float, float] | None = None
     log_scale: bool = False
@@ -161,7 +160,6 @@ ATTRIBUTES = {
         ),
         "der_retrieval_status": PlotMeta(
             clabel=_CLABEL["der_retrieval_status"],
-            cmap=None,
         ),
         "mu": PlotMeta(
             plot_range=(0, 10),
