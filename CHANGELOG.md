@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.56.1 – 2023-11-30
+
+- Avoid crashing if source attribute is missing
+- Make plotting work with legacy files
+
 ## 1.56.0 – 2023-11-30
 
 - `generate_figure` now takes plotting options as single argument
