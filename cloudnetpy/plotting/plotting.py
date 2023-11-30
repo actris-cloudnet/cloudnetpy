@@ -134,7 +134,8 @@ class FigureData:
 
     def _get_height(self) -> np.ndarray | None:
         m2km = 1e-3
-        if self.file.cloudnet_file_type == "model":
+        file_type = getattr(self.file, "cloudnet_file_type", "")
+        if file_type == "model":
             return ma.mean(self.file.variables["height"][:], axis=0) * m2km
         if "height" in self.file.variables:
             return self.file.variables["height"][:] * m2km
@@ -152,7 +153,7 @@ class SubPlot:
         ax: Axes,
         variable: netCDF4.Variable,
         options: PlotParameters,
-        file_type: str,
+        file_type: str | None,
     ):
         self.ax = ax
         self.variable = variable
@@ -231,10 +232,12 @@ class SubPlot:
                 va="bottom",
             )
 
-    def _read_plot_meta(self, file_type: str) -> PlotMeta:
+    def _read_plot_meta(self, file_type: str | None) -> PlotMeta:
         if self.options.plot_meta is not None:
             return self.options.plot_meta
         fallback = ATTRIBUTES["fallback"].get(self.variable.name, PlotMeta())
+        if file_type is None:
+            return fallback
         file_attributes = ATTRIBUTES.get(file_type, {})
         plot_meta = file_attributes.get(self.variable.name, fallback)
         if plot_meta.clabel is None:
@@ -572,7 +575,8 @@ def generate_figure(
         for ax, variable, ind in zip(
             axes, figure_data.variables, figure_data.indices, strict=True
         ):
-            subplot = SubPlot(ax, variable, options, file.cloudnet_file_type)
+            file_type = getattr(file, "cloudnet_file_type", None)
+            subplot = SubPlot(ax, variable, options, file_type)
 
             if variable.name == "tb" and ind is not None:
                 Plot1D(subplot).plot_tb(figure_data, ind)
@@ -640,11 +644,12 @@ def _reformat_units(unit: str) -> str:
 
 def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
     source = getattr(figure_data.file, "source", "")
+    file_type = getattr(figure_data.file, "cloudnet_file_type", "")
     max_allowed_gap = {
         "model": 181 if "gdas1" in source else 61,
         "mwr-multi": 21,
     }
-    return max_allowed_gap.get(figure_data.file.cloudnet_file_type, 10)
+    return max_allowed_gap.get(file_type, 10)
 
 
 def plot_2d(
