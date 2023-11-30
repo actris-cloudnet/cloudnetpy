@@ -1,10 +1,12 @@
+name: "Generate documentation"
+
 on:
   push:
     # tags:
     #   - '*'
+
 jobs:
   docs:
-    name: "Generate documentation"
     runs-on: "ubuntu-latest"
     steps:
       - name: Checkout
@@ -17,16 +19,15 @@ jobs:
       - name: Install dependencies
         working-directory: ./docs
         run: pip install -r requirements.txt
-      - name: Build documentations
+      - name: Build documentation
         working-directory: ./docs
         run: make html
       - name: Commit
-        working-directory: ./docs
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git checkout -b gh-pages
-          git add -f html
+          git add -f docs/html
           git commit -m "Generate docs"
-          git filter-branch --prune-empty --subdirectory-filter html gh-pages
+          git filter-branch --prune-empty --subdirectory-filter docs/html gh-pages
           git push origin gh-pages -f
