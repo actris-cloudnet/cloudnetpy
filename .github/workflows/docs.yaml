@@ -17,18 +17,20 @@ jobs:
           python-version: "3.10"
           cache: "pip"
       - name: Install dependencies
-        working-directory: ./docs
-        run: pip install -r requirements.txt
+        run: |
+          pip install .
+          pip install -r docs/requirements.txt
       - name: Build documentation
-        working-directory: ./docs
-        run: make html
+        run: |
+          cd docs
+          make html
+          touch html/.nojekyll
       - name: Commit
         run: |
-          touch docs/html/.nojekyll
           git config user.name github-actions
           git config user.email github-actions@github.com
           git checkout -b gh-pages
           git add -f docs/html
-          git commit -m "Generate docs"
+          git commit -m "Generate documentation"
           git filter-branch --prune-empty --subdirectory-filter docs/html gh-pages
           git push origin gh-pages -f
