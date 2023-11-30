@@ -1,8 +1,10 @@
 import logging
 import os
 import sys
+from datetime import date
 
 import matplotlib.pyplot as plt
+import netCDF4
 import numpy as np
 from matplotlib.colorbar import Colorbar
 from matplotlib.patches import Patch
@@ -10,10 +12,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma
 
 import cloudnetpy.model_evaluation.plotting.plot_tools as p_tools
-import cloudnetpy.plotting.plotting as cloud_plt
 from cloudnetpy.model_evaluation.model_metadata import MODELS
 from cloudnetpy.model_evaluation.plotting.plot_meta import ATTRIBUTES
 from cloudnetpy.model_evaluation.statistics.statistical_methods import DayStatistics
+from cloudnetpy.plotting.plotting import get_log_cbar_tick_labels, lin2log
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -182,21 +184,21 @@ def get_group_plots(
     j = 0
     for j, name in enumerate(names):
         variable_info = ATTRIBUTES[product]
-        cloud_plt.set_yax(ax[j], 12, ylabel=None)
-        cloud_plt.set_xax(ax[j], include_xlimits=include_xlimits)
+        set_yax(ax[j], 12, ylabel=None)
+        set_xax(ax[j], include_xlimits=include_xlimits)
         if title:
             _set_title(ax[j], name, product, variable_info)
         if j == 0 and title:
             _set_title(ax[j], model, product, variable_info, model_name)
         data, x, y = p_tools.read_data_characters(nc_file, name, model)
         plot_colormesh(ax[j], data, (x, y), variable_info)
-    casedate = cloud_plt.set_labels(fig, ax[j], nc_file)
+    casedate = set_labels(fig, ax[j], nc_file)
     if "adv" in name:
         product = product + "_adv"
     if len(cycle) > 1:
         fig.text(0.64, 0.885, f"Cycle: {cycle}", fontsize=13)
         model_run = f"{model}_{cycle}"
-    cloud_plt.handle_saving(
+    handle_saving(
         image_name,
         save_path,
         casedate,
@@ -243,10 +245,10 @@ def get_pair_plots(
         if i == 0:
             continue
         fig, ax = initialize_figure(2)
-        cloud_plt.set_yax(ax[0], 12, ylabel=None)
-        cloud_plt.set_yax(ax[-1], 12, ylabel=None)
-        cloud_plt.set_xax(ax[0], include_xlimits=include_xlimits)
-        cloud_plt.set_xax(ax[-1], include_xlimits=include_xlimits)
+        set_yax(ax[0], 12, ylabel=None)
+        set_yax(ax[-1], 12, ylabel=None)
+        set_xax(ax[0], include_xlimits=include_xlimits)
+        set_xax(ax[-1], include_xlimits=include_xlimits)
 
         if title:
             _set_title(ax[0], model, product, variable_info, model_name)
@@ -255,10 +257,10 @@ def get_pair_plots(
         data, x, y = p_tools.read_data_characters(nc_file, name, model)
         plot_colormesh(ax[0], model_data, (mx, my), variable_info)
         plot_colormesh(ax[-1], data, (x, y), variable_info)
-        casedate = cloud_plt.set_labels(fig, ax[-1], nc_file)
+        casedate = set_labels(fig, ax[-1], nc_file)
         if len(cycle) > 1:
             fig.text(0.64, 0.889, f"Cycle: {cycle}", fontsize=13)
-        cloud_plt.handle_saving(
+        handle_saving(
             image_name,
             save_path,
             casedate,
@@ -299,20 +301,20 @@ def get_single_plots(
     variable_info = ATTRIBUTES[product]
     for _, name in enumerate(names):
         fig, ax = initialize_figure(1)
-        cloud_plt.set_yax(ax[0], 12, ylabel=None)
-        cloud_plt.set_xax(ax[0], include_xlimits=include_xlimits)
+        set_yax(ax[0], 12, ylabel=None)
+        set_xax(ax[0], include_xlimits=include_xlimits)
 
         if title:
             _set_title(ax[0], name, product, variable_info)
         data, x, y = p_tools.read_data_characters(nc_file, name, model)
         plot_colormesh(ax[0], data, (x, y), variable_info)
-        casedate = cloud_plt.set_labels(fig, ax[0], nc_file, sub_title=title)
+        casedate = set_labels(fig, ax[0], nc_file, sub_title=title)
         if title:
             if len(cycle) > 1:
                 fig.text(0.64, 0.9, f"{model_name} cycle: {cycle}", fontsize=13)
             else:
                 fig.text(0.64, 0.9, f"{model_name}", fontsize=13)
-        cloud_plt.handle_saving(
+        handle_saving(
             image_name,
             save_path,
             casedate,
@@ -324,13 +326,13 @@ def get_single_plots(
 def plot_colormesh(ax, data: np.ndarray, axes: tuple, variable_info) -> None:
     vmin, vmax = variable_info.plot_range
     if variable_info.plot_scale == "logarithmic":
-        data, vmin, vmax = cloud_plt.lin2log(data, vmin, vmax)
+        data, vmin, vmax = lin2log(data, vmin, vmax)
     cmap = plt.get_cmap(variable_info.cbar, 22)
     data[data < vmin] = ma.masked
     pl = ax.pcolormesh(*axes, data, vmin=vmin, vmax=vmax, cmap=cmap)
     colorbar = init_colorbar(pl, ax)
     if variable_info.plot_scale == "logarithmic":
-        tick_labels = cloud_plt.generate_log_cbar_ticklabel_list(vmin, vmax)
+        tick_labels = get_log_cbar_tick_labels(vmin, vmax)
         colorbar.set_ticks(np.arange(vmin, vmax + 1).tolist())
         colorbar.ax.set_yticklabels(tick_labels)
     ax.set_facecolor("white")
@@ -429,16 +431,16 @@ def get_statistic_plots(
         except ValueError:
             logging.exception("Exception occurred")
         if stat not in ("hist", "vertical"):
-            casedate = cloud_plt.set_labels(fig, ax[j - 1], nc_file, sub_title=title)
+            casedate = set_labels(fig, ax[j - 1], nc_file, sub_title=title)
         else:
-            casedate = cloud_plt.read_date(nc_file)
-            _name = cloud_plt.read_location(nc_file)
+            casedate = read_date(nc_file)
+            _name = read_location(nc_file)
             if title:
-                cloud_plt.add_subtitle(fig, casedate, _name.capitalize())
+                add_subtitle(fig, casedate, _name.capitalize())
         if len(cycle) > 1:
             fig.text(0.64, 0.885, f"Cycle: {cycle}", fontsize=13)
             model_run = f"{model}_{cycle}"
-        cloud_plt.handle_saving(
+        handle_saving(
             image_name,
             save_path,
             casedate,
@@ -465,8 +467,8 @@ def initialize_statistic_plots(
         plot_relative_error(ax, day_stat.model_stat.T, args, method)
         if title:
             ax.set_title(day_stat.title, fontsize=14)
-        cloud_plt.set_yax(ax, 12, ylabel=None)
-        cloud_plt.set_xax(ax, include_xlimits=include_xlimits)
+        set_yax(ax, 12, ylabel=None)
+        set_xax(ax, include_xlimits=include_xlimits)
 
     if method == "area":
         plot_data_area(ax, day_stat, model, obs, args, title=title)
@@ -478,8 +480,8 @@ def initialize_statistic_plots(
             ha="center",
             transform=ax.transAxes,
         )
-        cloud_plt.set_yax(ax, 12, ylabel=None)
-        cloud_plt.set_xax(ax, include_xlimits=include_xlimits)
+        set_yax(ax, 12, ylabel=None)
+        set_xax(ax, include_xlimits=include_xlimits)
 
     if method == "hist":
         plot_histogram(ax, day_stat, variable_info)
@@ -794,3 +796,105 @@ def _get_iwc_title_stat(field_name: str, variable_info) -> str:
 def _get_product_title_stat(variable_info) -> str:
     name = variable_info.name
     return f"{name}"
+
+
+def set_yax(ax, max_y: float, ylabel: str | None, min_y: float = 0.0) -> None:
+    """Sets yticks, ylim and ylabel for yaxis of axis."""
+    ax.set_ylim(min_y, max_y)
+    ax.set_ylabel("Height (km)", fontsize=13)
+    if ylabel is not None:
+        ax.set_ylabel(ylabel, fontsize=13)
+
+
+def set_xax(ax, *, include_xlimits: bool = False) -> None:
+    """Sets xticks and xtick labels for plt.imshow()."""
+    ticks_x_labels = _get_standard_time_ticks(include_xlimits=include_xlimits)
+    ax.set_xticks(np.arange(0, 25, 4, dtype=int))
+    ax.set_xticklabels(ticks_x_labels, fontsize=12)
+    ax.set_xlim(0, 24)
+
+
+def _get_standard_time_ticks(
+    resolution: int = 4,
+    *,
+    include_xlimits: bool = False,
+) -> list:
+    """Returns typical ticks / labels for a time vector between 0-24h."""
+    if include_xlimits:
+        return [
+            f"{int(i):02d}:00" if 24 >= i >= 0 else ""
+            for i in np.arange(0, 24.01, resolution)
+        ]
+    return [
+        f"{int(i):02d}:00" if 24 > i > 0 else ""
+        for i in np.arange(0, 24.01, resolution)
+    ]
+
+
+def set_labels(fig, ax, nc_file: str, *, sub_title: bool = True) -> date:
+    ax.set_xlabel("Time (UTC)", fontsize=13)
+    case_date = read_date(nc_file)
+    site_name = read_location(nc_file)
+    if sub_title:
+        add_subtitle(fig, case_date, site_name)
+    return case_date
+
+
+def read_location(nc_file: str) -> str:
+    """Returns site name."""
+    with netCDF4.Dataset(nc_file) as nc:
+        return nc.location
+
+
+def read_date(nc_file: str) -> date:
+    """Returns measurement date."""
+    with netCDF4.Dataset(nc_file) as nc:
+        return date(int(nc.year), int(nc.month), int(nc.day))
+
+
+def add_subtitle(fig, case_date: date, site_name: str) -> None:
+    """Adds subtitle into figure."""
+    text = _get_subtitle_text(case_date, site_name)
+    fig.suptitle(
+        text,
+        fontsize=13,
+        y=0.885,
+        x=0.07,
+        horizontalalignment="left",
+        verticalalignment="bottom",
+    )
+
+
+def _get_subtitle_text(case_date: date, site_name: str) -> str:
+    site_name = site_name.replace("-", " ")
+    return f"{site_name}, {case_date.strftime('%d %b %Y').lstrip('0')}"
+
+
+def _create_save_name(
+    save_path: str,
+    case_date: date,
+    field_names: list,
+    fix: str = "",
+) -> str:
+    """Creates file name for saved images."""
+    date_string = case_date.strftime("%Y%m%d")
+    return f"{save_path}{date_string}_{'_'.join(field_names)}{fix}.png"
+
+
+def handle_saving(
+    image_name: str | None,
+    save_path: str | None,
+    case_date: date,
+    field_names: list,
+    fix: str = "",
+    *,
+    show: bool = False,
+) -> None:
+    if image_name:
+        plt.savefig(image_name, bbox_inches="tight")
+    elif save_path:
+        file_name = _create_save_name(save_path, case_date, field_names, fix)
+        plt.savefig(file_name, bbox_inches="tight")
+    if show:
+        plt.show()
+    plt.close()
