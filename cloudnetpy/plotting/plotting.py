@@ -500,8 +500,7 @@ class Plot1D(Plot):
         gap_time = _get_max_gap_in_minutes(figure_data)
         gaps = self._find_time_gap_indices(time, max_gap_min=gap_time)
         sma[gaps] = np.nan
-        self._ax.plot(time, sma, color="sienna", lw=3)
-        self._ax.plot(time, sma, color="wheat", lw=0.6)
+        self._ax.plot(time, sma, color="slateblue", lw=2)
 
     @staticmethod
     def _get_unmasked_values(
