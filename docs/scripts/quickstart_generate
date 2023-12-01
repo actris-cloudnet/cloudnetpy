@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+
+from cloudnetpy.categorize import generate_categorize
+from cloudnetpy.instruments import ceilo2nc, hatpro2nc, mira2nc
+from cloudnetpy.plotting import generate_figure
+from cloudnetpy.products import generate_classification
+
+uuid = mira2nc("20230729_0000.mmclx", "radar.nc", {"name": "Munich"})
+
+generate_figure(
+    "radar.nc",
+    ["Zh"],
+    show=False,
+    output_filename="source/_static/quickstart_radar.png",
+)
+
+uuid = ceilo2nc(
+    "CHM15kxLMU_20230729.nc", "lidar.nc", {"name": "Munich", "altitude": 538}
+)
+generate_figure(
+    "lidar.nc",
+    ["beta"],
+    show=False,
+    output_filename="source/_static/quickstart_lidar.png",
+)
+
+
+uuid, valid_files = hatpro2nc(
+    ".", "mwr.nc", {"name": "Munich", "altitude": 538}, date="2023-07-29"
+)
+generate_figure(
+    "mwr.nc", ["lwp"], show=False, output_filename="source/_static/quickstart_mwr.png"
+)
+
+generate_figure(
+    "20230729_munich_ecmwf.nc",
+    ["cloud_fraction"],
+    show=False,
+    output_filename="source/_static/quickstart_model.png",
+)
+
+input_files = {
+    "radar": "radar.nc",
+    "lidar": "lidar.nc",
+    "model": "20230729_munich_ecmwf.nc",
+    "mwr": "mwr.nc",
+}
+uuid = generate_categorize(input_files, "categorize.nc")
+
+uuid = generate_classification("categorize.nc", "classification.nc")
+generate_figure(
+    "classification.nc",
+    ["target_classification"],
+    show=False,
+    output_filename="source/_static/quickstart_classification.png",
+)
