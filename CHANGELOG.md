@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.56.3 – 2023-12-01
+
+- Improve quickstart documentation
+
 ## 1.56.2 – 2023-12-01
 
 - Host documentation on GitHub Pages
