@@ -11,12 +11,10 @@ class ProductGrid:
     """Class to generate downsampling of observation product to model grid.
 
     Args:
-    ----
         model_obj (object): The :class:'ModelManager' object.
         obs_obj (object): The :class:'ObservationManager' object.
 
     Notes:
-    -----
         Downsampled observation products data is added to a ModelManager
         object which is used for nc-file creation and writing
     """

@@ -31,7 +31,6 @@ def process_L3_day_product(
     and other variables of each cycles.
 
     Args:
-    ----
         model (str): Name of model
         obs (str): Name of product to generate
         model_files (list): List of model + cycles file path(s) to be generated
@@ -44,19 +43,16 @@ def process_L3_day_product(
                           default False
 
     Raises:
-    ------
         RuntimeError: Failed to create the L3 product file.
         ValueError (Warning): No ice clouds in model data
 
     Notes:
-    -----
         Model file(s) are given as a list to make all different cycles to be at same
         nc-file. If list includes more than one model file, nc-file is created within
         the first round. With rest of rounds, downsample observation and model data
         is added to same L3 day nc-file.
 
     Examples:
-    --------
         >>> from cloudnetpy.model_evaluation.products.product_resampling import \
         process_L3_day_product
         >>> product = 'cf'

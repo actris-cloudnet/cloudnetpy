@@ -262,11 +262,9 @@ class CloudAdjustor:
         """Finds top clouds that contain only lidar-detected pixels.
 
         Args:
-        ----
             detection: Array of integers where 1=lidar, 2=radar, 3=both.
 
         Returns:
-        -------
             Boolean array containing top-clouds that are detected only by lidar.
 
         """

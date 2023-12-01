@@ -50,7 +50,6 @@ class Radar(DataSource):
         """Rebins radar data in time using mean.
 
         Args:
-        ----
             time_new: Target time array as fraction hour. Updates *time* attribute.
 
         """
@@ -199,12 +198,10 @@ class Radar(DataSource):
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
-        ----
             attenuations: 2-D attenuations due to atmospheric gases and liquid:
                 `radar_gas_atten`, `radar_liquid_atten`.
 
         References:
-        ----------
             The method is based on Hogan R. and O'Connor E., 2004,
             https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 
@@ -225,12 +222,10 @@ class Radar(DataSource):
         :class:`CloudnetArray` instances to `data` attribute.
 
         Args:
-        ----
             attenuations: 2-D attenuations due to atmospheric gases.
             classification: The :class:`ClassificationResult` instance.
 
         References:
-        ----------
             The method is based on Hogan R. and O'Connor E., 2004,
             https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 

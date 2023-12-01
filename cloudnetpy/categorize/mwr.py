@@ -23,7 +23,6 @@ class Mwr(DataSource):
         """Approximates lwp and its error in a grid using mean.
 
         Args:
-        ----
             time_grid: 1D target time grid.
 
         """

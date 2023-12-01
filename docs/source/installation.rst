@@ -1,12 +1,12 @@
 =========================
-Installation Instructions
+Installation instructions
 =========================
 
-CloudnetPy can be installed on any computer having Python3.10 (or higher).
+CloudnetPy can be installed on any computer having Python 3.10 or higher.
 The actual installation procedure depends on the operating system. The
 instructions below are for Ubuntu 22.04.
 
-Python Installation
+Python installation
 -------------------
 
 .. code-block:: console
@@ -14,7 +14,7 @@ Python Installation
    $ sudo apt update && sudo apt upgrade
    $ sudo apt install python3-venv python3-pip python3-tk
 
-Virtual Environment
+Virtual environment
 -------------------
 
 Create a new virtual environment and activate it:
@@ -25,7 +25,7 @@ Create a new virtual environment and activate it:
    $ source venv/bin/activate
 
 
-Pip-based Installation
+Pip-based installation
 ----------------------
 
 CloudnetPy is available from Python Package Index, `PyPI
@@ -38,10 +38,3 @@ to install CloudnetPy package into the virtual environment:
    (venv)$ pip3 install cloudnetpy
 
 CloudnetPy is now ready for use from that virtual environment.
-
-.. note::
-
-   CloudnetPy codebase is rapidly developing and the PyPI package does not
-   necessarily contain all the latest features and modifications. To get an up-to-date
-   version of CloudnetPy, download it directly from `GitHub
-   <https://github.com/actris-cloudnet/cloudnetpy>`_.

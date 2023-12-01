@@ -58,12 +58,10 @@ class CloudnetArray:
         """Rebins `data` in time.
 
         Args:
-        ----
             time: 1D time array.
             time_new: 1D new time array.
 
         Returns:
-        -------
             Time indices without data.
 
         """
@@ -148,12 +146,10 @@ class CloudnetArray:
         """Calculates std of radar velocity.
 
         Args:
-        ----
             time: 1D time array.
             time_new: 1D new time array.
 
         Notes:
-        -----
             The result is masked if the bin contains masked values.
         """
         data_as_float = self.data.astype(float)
@@ -170,7 +166,6 @@ class CloudnetArray:
         """Rebins Doppler velocity in polar coordinates.
 
         Args:
-        ----
             time: 1D time array.
             time_new: 1D new time array.
             folding_velocity: Folding velocity (m/s). Can be a float when

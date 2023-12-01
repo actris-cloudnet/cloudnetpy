@@ -13,12 +13,10 @@ class ObservationManager(DataSource):
     """Class to collect and manage observations for downsampling.
 
     Args:
-    ----
         obs (str): Name of observation product
         obs_file (str): Path to source observation file
 
     Notes:
-    -----
         Output is ObservationManager object where all product data and
         information is included.
 

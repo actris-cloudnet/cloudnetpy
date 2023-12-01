@@ -54,7 +54,6 @@ class Model(DataSource):
         """Interpolates model variables to common height grid.
 
         Args:
-        ----
             wl_band: Integer denoting the approximate wavelength band of the
                 cloud radar (0 = ~35.5 GHz, 1 = ~94 GHz).
 
@@ -88,12 +87,10 @@ class Model(DataSource):
         """Interpolates model variables to Cloudnet's dense time / height grid.
 
         Args:
-        ----
             time_grid: The target time array (fraction hour).
             height_grid: The target height array (m).
 
         Returns:
-        -------
             Indices fully masked profiles.
 
         """

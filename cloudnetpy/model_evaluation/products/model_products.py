@@ -14,14 +14,12 @@ class ModelManager(DataSource):
     """Class to collect and manage model data.
 
     Args:
-    ----
         model_file (str): Path to source model file.
         model (str): Name of model
         output_file (str): name of output file name and path to save data
         product (str): name of product to generate
 
     Notes:
-    -----
         For this class to work, needed information of model in use should be found in
         model_metadata.py
 

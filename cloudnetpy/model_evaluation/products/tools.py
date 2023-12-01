@@ -38,7 +38,6 @@ def calculate_advection_time(
     """Calculates time which variable takes to go through the time window
 
     Notes
-    -----
         Wind speed is stronger in upper levels, so advection time is more
         there then lower levels. Effect is small in a mid-latitudes,
         but visible in a tropics.
@@ -46,7 +45,6 @@ def calculate_advection_time(
         sampling = 1 -> hour, sampling 1/6 -> 10min
 
     References
-    ----------
     """
     t_adv = resolution * 1000 / wind / 60**2
     t_adv[t_adv.mask] = 0

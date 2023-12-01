@@ -185,7 +185,6 @@ class SpectralWidth:
         """Calculates magnitude of horizontal wind.
 
         Returns
-        -------
             ndarray: Horizontal wind (m s-1).
 
         """
@@ -288,18 +287,15 @@ class DrizzleSolver:
         """Drizzle diameter calculation.
 
         Args:
-        ----
             beta_z_ratio: Beta to z ratio, multiplied by (2 / pi).
             mu: Shape parameter for gamma calculations. Default is 0.
             ray: Mie to Rayleigh ratio for z. Default is 1.
             k: Alpha to beta ratio . Default is 1.
 
         Returns:
-        -------
             ndarray: Drizzle diameter.
 
         References:
-        ----------
             https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
 
         """

@@ -186,7 +186,6 @@ class IceSource(DataSource):
         """Returns coefficients for ice effective radius retrieval.
 
         References
-        ----------
             Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
         """
         if self.product == "ier":

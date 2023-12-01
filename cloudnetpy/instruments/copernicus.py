@@ -124,7 +124,6 @@ class Copernicus(ChilboltonRadar):
         """Experimental masking of corrupted Copernicus data.
 
         Notes
-        -----
             This method is based on a few days of test data only. Should be improved
             and tested more carefully in the future.
         """
