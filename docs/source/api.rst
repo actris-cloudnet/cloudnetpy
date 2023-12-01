@@ -78,13 +78,6 @@ CloudnetPy offers an easy-to-use plotting interface:
 
 .. autofunction:: plotting.generate_figure
 
-There is also possibility to compare CloundetPy files with the
-Matlab-processed legacy files
-(tagged "legacy" in the `Cloudnet data portal <https://cloudnet.fmi.fi>`_):
-
-.. autofunction:: plotting.compare_files
-
-
 Categorize modules
 ------------------
 
