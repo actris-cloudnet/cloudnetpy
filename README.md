@@ -1,7 +1,6 @@
 # CloudnetPy
 
 [![CloudnetPy CI](https://github.com/actris-cloudnet/cloudnetpy/actions/workflows/test.yml/badge.svg)](https://github.com/actris-cloudnet/cloudnetpy/actions/workflows/test.yml)
-[![Documentation Status](https://readthedocs.org/projects/cloudnetpy/badge/?version=latest)](https://cloudnetpy.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/cloudnetpy.svg)](https://badge.fury.io/py/cloudnetpy)
 [![DOI](https://zenodo.org/badge/233602651.svg)](https://zenodo.org/badge/latestdoi/233602651)
 [![status](https://joss.theoj.org/papers/959971f196f617dddc0e7d8333ff22b7/status.svg)](https://joss.theoj.org/papers/959971f196f617dddc0e7d8333ff22b7)
@@ -16,8 +15,8 @@ retrieved in further processing steps. See [Illingworth et al. (2007)](https://d
 
 CloudnetPy is a rewritten version of the original Cloudnet Matlab code. It features several revised methods, extensive documentation, and more.
 
-- CloudnetPy documentation: https://cloudnetpy.readthedocs.io/en/latest/
-- Cloudnet data portal: https://cloudnet.fmi.fi
+- CloudnetPy documentation: <https://actris-cloudnet.github.io/cloudnetpy/>
+- Cloudnet data portal: <https://cloudnet.fmi.fi>
 
 ![CloudnetPy example output](https://raw.githubusercontent.com/actris-cloudnet/cloudnetpy/main/docs/source/_static/20230831_lindenberg_classification-9b74f4ac-target_classification.png)
 

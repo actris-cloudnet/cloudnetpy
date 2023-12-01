@@ -301,7 +301,6 @@ class Ct25k(VaisalaCeilo):
     """Class for Vaisala CT25k ceilometer.
 
     References
-    ----------
         https://www.manualslib.com/manual/1414094/Vaisala-Ct25k.html
 
     """
@@ -364,12 +363,10 @@ def split_string(string: str, indices: list) -> list:
     """Splits string between indices.
 
     Notes
-    -----
         It is possible to skip characters from the beginning and end of the
         string but not from the middle.
 
     Examples
-    --------
         >>> s = 'abcde'
         >>> indices = [1, 2, 4]
         >>> split_string(s, indices)
@@ -383,7 +380,6 @@ def values_to_dict(keys: tuple, values: list) -> dict:
     """Converts list elements to dictionary.
 
     Examples
-    --------
         >>> keys = ('a', 'b')
         >>> values = [[1, 2], [1, 2], [1, 2], [1, 2]]
         >>> values_to_dict(keys, values)

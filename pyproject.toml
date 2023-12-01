@@ -39,7 +39,7 @@ extras = ["voodoonet>=0.1.1"]
 
 [project.urls]
 Homepage = "https://github.com/actris-cloudnet/cloudnetpy"
-Documentation = "https://cloudnetpy.readthedocs.io"
+Documentation = "https://actris-cloudnet.github.io/cloudnetpy/"
 Repository = "https://github.com/actris-cloudnet/cloudnetpy"
 Changelog = "https://github.com/actris-cloudnet/cloudnetpy/blob/main/CHANGELOG.md"
 

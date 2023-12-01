@@ -47,16 +47,13 @@ def update_nc(old_file: str, new_file: str) -> int:
     """Appends data to existing netCDF file.
 
     Args:
-    ----
         old_file: Filename of an existing netCDF file.
         new_file: Filename of a new file whose data will be appended to the end.
 
     Returns:
-    -------
         1 = success, 0 = failed to add new data.
 
     Notes:
-    -----
         Requires 'time' variable with unlimited dimension.
 
     """
@@ -86,7 +83,6 @@ def concatenate_files(
     """Concatenate netCDF files in one dimension.
 
     Args:
-    ----
         filenames: List of files to be concatenated.
         output_file: Output file name.
         concat_dimension: Dimension name for concatenation. Default is 'time'.
@@ -98,7 +94,6 @@ def concatenate_files(
             another (value from the first file is saved).
 
     Notes:
-    -----
         Arrays without 'concat_dimension', scalars, and global attributes will be taken
         from the first file. Groups, possibly present in a NETCDF4 formatted file,
         are ignored.

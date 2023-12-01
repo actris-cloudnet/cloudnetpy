@@ -22,17 +22,14 @@ def generate_classification(
     netCDF file.
 
     Args:
-    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
-    -------
         str: UUID of the generated file.
 
     Examples:
-    --------
         >>> from cloudnetpy.products import generate_classification
         >>> generate_classification('categorize.nc', 'classification.nc')
 

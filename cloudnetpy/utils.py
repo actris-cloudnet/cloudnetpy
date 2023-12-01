@@ -26,15 +26,12 @@ def seconds2hours(time_in_seconds: np.ndarray) -> np.ndarray:
     """Converts seconds since some epoch to fraction hour.
 
     Args:
-    ----
         time_in_seconds: 1-D array of seconds since some epoch that starts on midnight.
 
     Returns:
-    -------
         Time as fraction hour.
 
     Notes:
-    -----
         Excludes leap seconds.
 
     """
@@ -49,11 +46,9 @@ def seconds2time(time_in_seconds: float) -> list:
     """Converts seconds since some epoch to time of day.
 
     Args:
-    ----
         time_in_seconds: seconds since some epoch.
 
     Returns:
-    -------
         list: [hours, minutes, seconds] formatted as '05' etc.
 
     """
@@ -69,12 +64,10 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
     """Converts seconds since some epoch to datetime (UTC).
 
     Args:
-    ----
         time_in_seconds: Seconds since some epoch.
         epoch: Epoch, default is (2001, 1, 1) (UTC).
 
     Returns:
-    -------
         [year, month, day, hours, minutes, seconds] formatted as '05' etc (UTC).
 
     """
@@ -106,15 +99,12 @@ def time_grid(time_step: int = 30) -> np.ndarray:
     resolution (in seconds).
 
     Args:
-    ----
         time_step: Time resolution in seconds, greater than 1. Default is 30.
 
     Returns:
-    -------
         Time vector between 0 and 24.
 
     Raises:
-    ------
         ValueError: Bad resolution as input.
 
     """
@@ -129,15 +119,12 @@ def binvec(x: np.ndarray | list) -> np.ndarray:
     """Converts 1-D center points to bins with even spacing.
 
     Args:
-    ----
         x: 1-D array of N real values.
 
     Returns:
-    -------
         ndarray: N + 1 edge values.
 
     Examples:
-    --------
         >>> binvec([1, 2, 3])
             [0.5, 1.5, 2.5, 3.5]
 
@@ -157,7 +144,6 @@ def rebin_2d(
     """Rebins 2-D data in one dimension.
 
     Args:
-    ----
         x_in: 1-D array with shape (n,).
         array: 2-D input data with shape (n, m).
         x_new: 1-D target vector (center points) with shape (N,).
@@ -166,11 +152,9 @@ def rebin_2d(
         n_min: Minimum number of points to have good statistics in a bin. Default is 1.
 
     Returns:
-    -------
         tuple: Rebinned data with shape (N, m) and indices of bins without enough data.
 
     Notes:
-    -----
         0-values are masked in the returned array.
 
     """
@@ -211,7 +195,6 @@ def rebin_1d(
     """Rebins 1D array.
 
     Args:
-    ----
         x_in: 1-D array with shape (n,).
         array: 1-D input data with shape (m,).
         x_new: 1-D target vector (center points) with shape (N,).
@@ -219,7 +202,6 @@ def rebin_1d(
             Default is 'mean'.
 
     Returns:
-    -------
         Re-binned data with shape (N,).
 
     """
@@ -242,15 +224,12 @@ def filter_isolated_pixels(array: np.ndarray) -> np.ndarray:
     """From a 2D boolean array, remove completely isolated single cells.
 
     Args:
-    ----
         array: 2-D boolean array containing isolated values.
 
     Returns:
-    -------
         Cleaned array.
 
     Examples:
-    --------
         >>> filter_isolated_pixels([[0, 0, 0], [0, 1, 0], [0, 0, 0]])
             array([[0, 0, 0],
                    [0, 0, 0],
@@ -265,19 +244,15 @@ def filter_x_pixels(array: np.ndarray) -> np.ndarray:
     """From a 2D boolean array, remove cells isolated in x-direction.
 
     Args:
-    ----
         array: 2-D boolean array containing isolated pixels in x-direction.
 
     Returns:
-    -------
         Cleaned array.
 
     Notes:
-    -----
         Stronger cleaning than `filter_isolated_pixels()`
 
     Examples:
-    --------
         >>> filter_x_pixels([[1, 0, 0], [0, 1, 0], [0, 1, 1]])
             array([[0, 0, 0],
                    [0, 1, 0],
@@ -301,27 +276,22 @@ def isbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
     """Tests if nth bit (0,1,2,...) is set.
 
     Args:
-    ----
         array: Integer array.
         nth_bit: Investigated bit.
 
     Returns:
-    -------
         Boolean array denoting values where nth_bit is set.
 
     Raises:
-    ------
         ValueError: negative bit as input.
 
     Examples:
-    --------
         >>> isbit(4, 1)
             False
         >>> isbit(4, 2)
             True
 
     See Also:
-    --------
         utils.setbit()
 
     """
@@ -336,27 +306,22 @@ def setbit(array: np.ndarray, nth_bit: int) -> np.ndarray:
     """Sets nth bit (0, 1, 2, ...) on number.
 
     Args:
-    ----
         array: Integer array.
         nth_bit: Bit to be set.
 
     Returns:
-    -------
         Integer where nth bit is set.
 
     Raises:
-    ------
         ValueError: negative bit as input.
 
     Examples:
-    --------
         >>> setbit(1, 1)
             3
         >>> setbit(0, 2)
             4
 
     See Also:
-    --------
         utils.isbit()
 
     """
@@ -378,7 +343,6 @@ def interpolate_2d(
     """Linear interpolation of gridded 2d data.
 
     Args:
-    ----
         x: 1-D array.
         y: 1-D array.
         z: 2-D array at points (x, y).
@@ -386,11 +350,9 @@ def interpolate_2d(
         y_new: 1-D array.
 
     Returns:
-    -------
         Interpolated data.
 
     Notes:
-    -----
         Does not work with nans. Ignores mask of masked data. Does not extrapolate.
 
     """
@@ -408,7 +370,6 @@ def interpolate_2d_mask(
     """2D linear interpolation preserving the mask.
 
     Args:
-    ----
         x: 1D array, x-coordinates.
         y: 1D array, y-coordinates.
         z: 2D masked array, data values.
@@ -416,11 +377,9 @@ def interpolate_2d_mask(
         y_new: 1D array, new y-coordinates.
 
     Returns:
-    -------
         Interpolated 2D masked array.
 
     Notes:
-    -----
         Points outside the original range will be nans (and masked). Uses linear
         interpolation. Input data may contain nan-values.
 
@@ -457,7 +416,6 @@ def interpolate_2d_nearest(
     """2D nearest neighbor interpolation preserving mask.
 
     Args:
-    ----
         x: 1D array, x-coordinates.
         y: 1D array, y-coordinates.
         z: 2D masked array, data values.
@@ -465,11 +423,9 @@ def interpolate_2d_nearest(
         y_new: 1D array, new y-coordinates.
 
     Returns:
-    -------
         Interpolated 2D masked array.
 
     Notes:
-    -----
         Points outside the original range will be interpolated but masked.
 
     """
@@ -516,11 +472,9 @@ def l2norm(*args) -> ma.MaskedArray:
     """Returns l2 norm.
 
     Args:
-    ----
        *args: Variable number of data (*array_like*) with the same shape.
 
     Returns:
-    -------
         The l2 norm.
 
     """
@@ -548,14 +502,12 @@ def l2norm_weighted(
     for the terms.
 
     Args:
-    ----
         values: Tuple containing the values.
         overall_scale: Scale factor for the calculated Euclidean distance.
         term_weights: Weights for the terms. Must be single float or a list of numbers
             (one per term).
 
     Returns:
-    -------
         Scaled and weighted Euclidean distance.
 
     TODO: Use masked arrays instead of tuples.
@@ -570,16 +522,13 @@ def cumsumr(array: np.ndarray, axis: int = 0) -> np.ndarray:
     """Finds cumulative sum that resets on 0.
 
     Args:
-    ----
         array: Input array.
         axis: Axis where the sum is calculated. Default is 0.
 
     Returns:
-    -------
         Cumulative sum, restarted at 0.
 
     Examples:
-    --------
         >>> x = np.array([0, 0, 1, 1, 0, 0, 0, 1, 1, 1])
         >>> cumsumr(x)
             [0, 0, 1, 2, 0, 0, 0, 1, 2, 3]
@@ -593,22 +542,18 @@ def ffill(array: np.ndarray, value: int = 0) -> np.ndarray:
     """Forward fills an array.
 
     Args:
-    ----
         array: 1-D or 2-D array.
         value: Value to be filled. Default is 0.
 
     Returns:
-    -------
         ndarray: Forward-filled array.
 
     Examples:
-    --------
         >>> x = np.array([0, 5, 0, 0, 2, 0])
         >>> ffill(x)
             [0, 5, 5, 5, 2, 2]
 
     Notes:
-    -----
         Works only in axis=1 direction.
 
     """
@@ -631,7 +576,6 @@ def init(
     """Initializes several numpy arrays.
 
     Args:
-    ----
         n_vars: Number of arrays to be generated.
         shape: Shape of the arrays, e.g. (2, 3).
         dtype: The desired data-type for the arrays, e.g., int. Default is float.
@@ -639,11 +583,9 @@ def init(
             Default is True.
 
     Yields:
-    ------
         Iterator containing the empty arrays.
 
     Examples:
-    --------
         >>> a, b = init(2, (2, 3))
         >>> a
             masked_array(
@@ -664,7 +606,6 @@ def n_elements(array: np.ndarray, dist: float, var: str | None = None) -> int:
     """Returns the number of elements that cover certain distance.
 
     Args:
-    ----
         array: Input array with arbitrary units or time in fraction hour. *x* should
             be evenly spaced or at least close to.
         dist: Distance to be covered. If x is fraction time, *dist* is in minutes.
@@ -673,11 +614,9 @@ def n_elements(array: np.ndarray, dist: float, var: str | None = None) -> int:
             have the same units. Default is None (same units).
 
     Returns:
-    -------
         Number of elements in the input array that cover *dist*.
 
     Examples:
-    --------
         >>> x = np.array([2, 4, 6, 8, 10])
         >>> n_elements(x, 6)
             3
@@ -708,7 +647,6 @@ def isscalar(array: np.ndarray | float | list) -> bool:
     By "scalar" we mean that array has a single value.
 
     Examples
-    --------
         >>> isscalar(1)
             True
         >>> isscalar([1])
@@ -748,11 +686,9 @@ def get_wl_band(radar_frequency: float) -> int:
     """Returns integer corresponding to radar frequency.
 
     Args:
-    ----
         radar_frequency: Radar frequency (GHz).
 
     Returns:
-    -------
         0 = 35GHz radar, 1 = 94Ghz radar.
 
     """
@@ -776,12 +712,10 @@ def del_dict_keys(data: dict, keys: tuple | list) -> dict:
     """Deletes multiple keys from dictionary.
 
     Args:
-    ----
         data: A dictionary.
         keys: Keys to be deleted.
 
     Returns:
-    -------
         Dictionary without the deleted keys.
 
     """
@@ -802,7 +736,6 @@ def array_to_probability(
     """Converts continuous variable into 0-1 probability.
 
     Args:
-    ----
         array: Numpy array.
         loc: Center of the distribution. Values smaller than this will have small
             probability. Values greater than this will have large probability.
@@ -812,7 +745,6 @@ def array_to_probability(
             Default is False.
 
     Returns:
-    -------
         Probability with the same shape as the input data.
 
     """
@@ -830,16 +762,13 @@ def range_to_height(range_los: np.ndarray, tilt_angle: float) -> np.ndarray:
     """Converts distances from a tilted instrument to height above the ground.
 
     Args:
-    ----
         range_los: Distances towards the line of sign from the instrument.
         tilt_angle: Angle in degrees from the zenith (0 = zenith).
 
     Returns:
-    -------
         Altitudes of the LOS points.
 
     Notes:
-    -----
         Uses plane parallel Earth approximation.
 
     """
@@ -906,17 +835,14 @@ def screen_by_time(data_in: dict, epoch: Epoch, expected_date: str) -> dict:
     """Screen data by time.
 
     Args:
-    ----
         data_in: Dictionary containing at least 'time' key and other numpy arrays.
         epoch: Epoch of the time array, e.g., (1970, 1, 1)
         expected_date: Expected date in yyyy-mm-dd
 
     Returns:
-    -------
         data: Screened and sorted by the time vector.
 
     Notes:
-    -----
         - Requires 'time' key
         - Works for dimensions 1, 2, 3 (time has to be at 0-axis)
         - Does nothing for scalars
@@ -946,21 +872,17 @@ def find_valid_time_indices(time: np.ndarray, epoch: Epoch, expected_date: str) 
     """Finds valid time array indices for the given date.
 
     Args:
-    ----
         time: Time in seconds from some epoch.
         epoch: Epoch of the time array, e.g., (1970, 1, 1)
         expected_date: Expected date in yyyy-mm-dd
 
     Returns:
-    -------
         list: Valid indices for the given date in sorted order.
 
     Raises:
-    ------
         RuntimeError: No valid timestamps.
 
     Examples:
-    --------
         >>> time = [1, 5, 1e6, 3]
         >>> find_valid_time_indices(time, (1970, 1, 1) '1970-01-01')
             [0, 3, 2]
@@ -981,7 +903,6 @@ def append_data(data_in: dict, key: str, array: np.ndarray) -> dict:
     """Appends data to a dictionary field (creates the field if not yet present).
 
     Args:
-    ----
         data_in: Dictionary where data will be appended.
         key: Key of the field.
         array: Numpy array to be appended to data_in[key].
@@ -999,12 +920,10 @@ def edges2mid(data: np.ndarray, reference: Literal["upper", "lower"]) -> np.ndar
     """Shifts values half bin towards up or down.
 
     Args:
-    ----
         data: 1D numpy array (e.g. range)
         reference: If 'lower', increase values by half bin. If 'upper', decrease values.
 
     Returns:
-    -------
         Shifted values.
 
     """

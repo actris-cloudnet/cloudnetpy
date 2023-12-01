@@ -15,7 +15,6 @@ def thies2nc(
     """Converts Thies-LNM disdrometer data into Cloudnet Level 1b netCDF file.
 
     Args:
-    ----
         disdrometer_file: Filename of disdrometer .log file.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -24,16 +23,13 @@ def thies2nc(
         date: Expected date of the measurements as YYYY-MM-DD.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Raises:
-    ------
         DisdrometerDataError: Timestamps do not match the expected date, or unable
             to read the disdrometer file.
 
     Examples:
-    --------
         >>> from cloudnetpy.instruments import thies2nc
         >>> site_meta = {'name': 'Lindenberg', 'altitude': 104, 'latitude': 52.2,
         'longitude': 14.1}

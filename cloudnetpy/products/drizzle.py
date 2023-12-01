@@ -26,22 +26,18 @@ def generate_drizzle(
     cloud radar and lidar measurements. The results are written in a netCDF file.
 
     Args:
-    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
-    -------
         str: UUID of the generated file.
 
     Examples:
-    --------
         >>> from cloudnetpy.products import generate_drizzle
         >>> generate_drizzle('categorize.nc', 'drizzle.nc')
 
     References:
-    ----------
         O’Connor, E.J., R.J. Hogan, and A.J. Illingworth, 2005:
         Retrieving Stratocumulus Drizzle Parameters Using Doppler Radar and Lidar.
         J. Appl. Meteor., 44, 14–27, https://doi.org/10.1175/JAM-2181.1
@@ -72,12 +68,10 @@ class DrizzleProducts:
     """Calculates additional quantities from the drizzle properties.
 
     Args:
-    ----
         drizzle_source: The :class:`DrizzleSource` instance.
         drizzle_solver: The :class:`DrizzleSolver` instance.
 
     Attributes:
-    ----------
         derived_products (dict): Dictionary containing derived drizzle products:
             'drizzle_N', 'drizzle_lwc', 'drizzle_lwf', 'v_drizzle', 'v_air'.
 
@@ -154,11 +148,9 @@ class RetrievalStatus:
     """Estimates the status of drizzle retrievals.
 
     Args:
-    ----
         drizzle_class: The :class:`DrizzleClassification` instance.
 
     Attributes:
-    ----------
         drizzle_class: The :class:`DrizzleClassification` instance.
         retrieval_status (ndarray): 2D array containing drizzle retrieval
             status information.

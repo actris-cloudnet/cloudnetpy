@@ -21,22 +21,18 @@ def generate_ier(
     and model temperature. The results are written in a netCDF file.
 
     Args:
-    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Examples:
-    --------
         >>> from cloudnetpy.products import generate_ier
         >>> generate_ier('categorize.nc', 'ier.nc')
 
     References:
-    ----------
         Hogan, R. J., Mittermaier, M. P., & Illingworth, A. J. (2006). The Retrieval
         of Ice Water Content from Radar Reflectivity Factor and Temperature and Its
         Use in Evaluating a Mesoscale Model, Journal of Applied Meteorology and

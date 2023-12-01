@@ -25,22 +25,18 @@ def generate_lwc(
     content of observed liquid clouds. The results are written in a netCDF file.
 
     Args:
-    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
-    -------
         str: UUID of the generated file.
 
     Examples:
-    --------
         >>> from cloudnetpy.products import generate_lwc
         >>> generate_lwc('categorize.nc', 'lwc.nc')
 
     References:
-    ----------
         Illingworth, A.J., R.J. Hogan, E. O'Connor, D. Bouniol, M.E. Brooks,
         J. Delanoé, D.P. Donovan, J.D. Eastment, N. Gaussiat, J.W. Goddard,
         M. Haeffelin, H.K. Baltink, O.A. Krasnov, J. Pelon, J. Piriou, A. Protat,
@@ -76,11 +72,9 @@ class LwcSource(DataSource):
     structures and methods for holding the results.
 
     Args:
-    ----
         categorize_file: Categorize file name.
 
     Attributes:
-    ----------
         lwp (ndarray): 1D liquid water path.
         lwp_error (ndarray): 1D error of liquid water path.
         is_rain (ndarray): 1D array denoting presence of rain.
@@ -122,11 +116,9 @@ class Lwc:
     """Class handling the actual LWC calculations.
 
     Args:
-    ----
         lwc_source: The :class:`LwcSource` instance.
 
     Attributes:
-    ----------
         lwc_source (LwcSource): The :class:`LwcSource` instance.
         dheight (float): Median difference in height vector.
         is_liquid (ndarray): 2D array denoting liquid.
@@ -175,12 +167,10 @@ class CloudAdjustor:
     """Adjusts clouds (where possible) so that theoretical and measured LWP agree.
 
     Args:
-    ----
         lwc_source: The :class:`LwcSource` instance.
         lwc:  The :class:`Lwc` instance.
 
     Attributes:
-    ----------
         lwc_source (LwcSource): The :class:`LwcSource` instance.
         lwc (ndarray): Liquid water content data.
         is_liquid (ndarray): 2D array denoting liquid.
@@ -272,11 +262,9 @@ class CloudAdjustor:
         """Finds top clouds that contain only lidar-detected pixels.
 
         Args:
-        ----
             detection: Array of integers where 1=lidar, 2=radar, 3=both.
 
         Returns:
-        -------
             Boolean array containing top-clouds that are detected only by lidar.
 
         """
@@ -313,12 +301,10 @@ class LwcError:
     """Calculates liquid water content error.
 
     Args:
-    ----
         lwc_source: The :class:`LwcSource` instance.
         lwc: The :class:`Lwc` instance.
 
     Attributes:
-    ----------
         lwc_source (LwcSource): The :class:`LwcSource` instance.
         lwc (ndarray): Liquid water content data.
         error (ndarray): 2D array storing lwc_error.

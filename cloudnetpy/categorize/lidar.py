@@ -13,7 +13,6 @@ class Lidar(DataSource):
     """Lidar class, child of DataSource.
 
     Args:
-    ----
         full_path: Cloudnet Level 1 lidar netCDF file.
 
     """

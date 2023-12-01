@@ -17,7 +17,6 @@ class AdvanceProductMethods(DataSource):
     assumptions of model or observation data.
 
     Args:
-    ----
         model_obj (object): The :class:'ModelManager' object.
         obs_obj (object): The :class:'ObservationManager' object.
     """

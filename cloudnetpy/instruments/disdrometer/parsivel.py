@@ -33,7 +33,6 @@ def parsivel2nc(
     file.
 
     Args:
-    ----
         disdrometer_file: Filename of disdrometer file or list of filenames.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -47,16 +46,13 @@ def parsivel2nc(
         timestamps:
 
     Returns:
-    -------
         UUID of the generated file.
 
     Raises:
-    ------
         DisdrometerDataError: Timestamps do not match the expected date, or unable
             to read the disdrometer file.
 
     Examples:
-    --------
         >>> from cloudnetpy.instruments import parsivel2nc
         >>> site_meta = {'name': 'Lindenberg', 'altitude': 104, 'latitude': 52.2,
         'longitude': 14.1}
@@ -436,7 +432,6 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
     """Read ASCII data from Campbell Scientific datalogger such as CR1000.
 
     References
-    ----------
         CR1000 Measurement and Control System.
         https://s.campbellsci.com/documents/us/manuals/cr1000.pdf
     """

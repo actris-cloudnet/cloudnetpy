@@ -40,7 +40,6 @@ def ceilo2nc(
     of weak aerosol layers and supercooled liquid clouds.
 
     Args:
-    ----
         full_path: Ceilometer file name.
         output_file: Output file name, e.g. 'ceilo.nc'.
         site_meta: Dictionary containing information about the site and instrument.
@@ -54,15 +53,12 @@ def ceilo2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Raises:
-    ------
         RuntimeError: Failed to read or process raw ceilometer data.
 
     Examples:
-    --------
         >>> from cloudnetpy.instruments import ceilo2nc
         >>> site_meta = {'name': 'Mace-Head', 'altitude': 5}
         >>> ceilo2nc('vaisala_raw.txt', 'vaisala.nc', site_meta)

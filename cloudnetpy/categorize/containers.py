@@ -24,12 +24,10 @@ class ClassData:
     """Container for observations that are used in the classification.
 
     Args:
-    ----
         data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model`
             and :class:`Mwr` instances.
 
     Attributes:
-    ----------
         z (ndarray): 2D radar echo.
         ldr (ndarray): 2D linear depolarization ratio.
         v (ndarray): 2D radar velocity.
@@ -84,13 +82,11 @@ def _find_rain_from_radar_echo(
     detections as raining.
 
     Args:
-    ----
         z: Radar echo.
         time: Time vector.
         time_buffer: Time in minutes.
 
     Returns:
-    -------
         1D Boolean array denoting profiles with rain.
 
     """
@@ -131,14 +127,12 @@ def _find_clutter(
     """Estimates clutter from doppler velocity.
 
     Args:
-    ----
         n_gates: Number of range gates from the ground where clutter is expected
             to be found. Default is 10.
         v_lim: Velocity threshold. Smaller values are classified as clutter.
             Default is 0.05 (m/s).
 
     Returns:
-    -------
         2-D boolean array denoting pixels contaminated by clutter.
 
     """

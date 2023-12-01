@@ -41,7 +41,6 @@ def generate_der(
     liquid water path. The results are written in a netCDF file.
 
     Args:
-    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
@@ -50,11 +49,9 @@ def generate_der(
         used in Frisch approach.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Examples:
-    --------
         >>> from cloudnetpy.products import generate_der
         >>> generate_der('categorize.nc', 'der.nc')
         >>>
@@ -63,7 +60,6 @@ def generate_der(
         >>> generate_der('categorize.nc', 'der.nc', parameters=params)
 
     References:
-    ----------
         Frisch, S., Shupe, M., Djalalova, I., Feingold, G., & Poellot, M. (2002).
         The Retrieval of Stratus Cloud Droplet Effective Radius with Cloud Radars,
         Journal of Atmospheric and Oceanic Technology, 19(6), 835-842.

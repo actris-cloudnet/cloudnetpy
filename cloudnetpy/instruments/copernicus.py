@@ -21,7 +21,6 @@ def copernicus2nc(
     """Converts 'Copernicus' cloud radar data into Cloudnet Level 1b netCDF file.
 
     Args:
-    ----
         raw_files: Input file name or folder containing multiple input files.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -31,15 +30,12 @@ def copernicus2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Raises:
-    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
-    --------
           >>> from cloudnetpy.instruments import copernicus2nc
           >>> site_meta = {'name': 'Chilbolton'}
           >>> copernicus2nc('raw_radar.nc', 'radar.nc', site_meta)
@@ -109,7 +105,6 @@ class Copernicus(ChilboltonRadar):
     """Class for Copernicus raw radar data. Child of ChilboltonRadar().
 
     Args:
-    ----
         full_path: Filename of a daily Copernicus .nc NetCDF file.
         site_meta: Site properties in a dictionary. Required keys are: `name`.
 
@@ -129,7 +124,6 @@ class Copernicus(ChilboltonRadar):
         """Experimental masking of corrupted Copernicus data.
 
         Notes
-        -----
             This method is based on a few days of test data only. Should be improved
             and tested more carefully in the future.
         """

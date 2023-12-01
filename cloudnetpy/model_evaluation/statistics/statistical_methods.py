@@ -15,7 +15,6 @@ class DayStatistics:
     and observation data of wanted product.
 
     Args:
-    ----
         method (str): Name on statistical method to be calculated
         product_info (list): List of information of statistical analysis is
             done with. A list includes observed product name (str), model variable (str)
@@ -25,15 +24,12 @@ class DayStatistics:
         observation (np.ndarray): Ndrray of Downsampled observation of product
 
     Raises:
-    ------
         RuntimeError: A function of given method not found
 
     Returns:
-    -------
         day_statistic (object): The :class:'DayStatistic' object.
 
     Examples:
-    --------
         >>> from cloudnetpy.model_evaluation.products.product_resampling import \
         process_L3_day_product
         >>> method = 'error'

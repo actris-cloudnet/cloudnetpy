@@ -44,7 +44,6 @@ def generate_L3_day_plots(
     in same fig.
 
     Args:
-    ----
         nc_file (str): Path to source file
         product (str): Name of product wanted to plot
         model (str): Name of model which downsampling was done with
@@ -71,7 +70,6 @@ def generate_L3_day_plots(
         figure.
 
     Examples:
-    --------
         >>> from cloudnetpy.model_evaluation.plotting.plotting
         import generate_L3_day_plots
         >>> l3_day_file = 'cf_ecmwf.nc'
@@ -166,7 +164,6 @@ def get_group_plots(
     timegrids. All model cycles if any will be generated to their own figures.
 
     Args:
-    ----
         product (str): Name of the product
         names (list): List of variables to be visualized to same fig
         nc_file (str): Path to a source file
@@ -227,7 +224,6 @@ def get_pair_plots(
     in a given nc-file in loop.
 
     Args:
-    ----
         product (str): Name of the product
         names (list): List of variables to be visualized to same fig
         nc_file (str): Path to a source file
@@ -286,7 +282,6 @@ def get_single_plots(
     """Generates figures of each product variable from given file in loop.
 
     Args:
-    ----
         product (str): Name of the product
         names (list): List of variables to be visualized to same fig
         nc_file (str): Path to a source file
@@ -362,7 +357,6 @@ def get_statistic_plots(
     as well as different cycle runs.
 
     Args:
-    ----
         product (str): Name of the product
         names (list): List of variables to be visualized to same fig
         nc_file (str): Path to a source file

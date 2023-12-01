@@ -16,11 +16,9 @@ class DrizzleSource(DataSource):
     """Class holding the input data for drizzle calculations.
 
     Args:
-    ----
         categorize_file: Categorize file name.
 
     Attributes:
-    ----------
         mie (dict): Mie look-up table data.
         dheight (float): Median difference of height array.
         z (ndarray): 2D radar echo (linear units).
@@ -82,11 +80,9 @@ class DrizzleClassification(ProductClassification):
     child of  :class:`ProductClassification`.
 
     Args:
-    ----
         categorize_file: Categorize file name.
 
     Attributes:
-    ----------
         is_v_sigma (ndarray): 2D array denoting finite v_sigma.
         warm_liquid (ndarray): 2D array denoting warm liquid.
         drizzle (ndarray): 2D array denoting drizzle presence.
@@ -150,11 +146,9 @@ class SpectralWidth:
     spectral broadening of the Doppler velocity.
 
     Args:
-    ----
         categorize_file: Categorize file name.
 
     Attributes:
-    ----------
         categorize_file (str): Categorize file name.
         width_ht (ndarray): Spectral width containing the correction for turbulence
             broadening.
@@ -191,7 +185,6 @@ class SpectralWidth:
         """Calculates magnitude of horizontal wind.
 
         Returns
-        -------
             ndarray: Horizontal wind (m s-1).
 
         """
@@ -205,13 +198,11 @@ class DrizzleSolver:
     """Estimates drizzle parameters.
 
     Args:
-    ----
         drizzle_source: The :class:`DrizzleSource` instance.
         drizzle_class: The :class:`DrizzleClassification` instance.
         spectral_width: The :class:`SpectralWidth` instance.
 
     Attributes:
-    ----------
         params (dict): Dictionary of retrieved drizzle parameters 'Do', 'mu', 'S',
             'beta_corr'.
 
@@ -296,18 +287,15 @@ class DrizzleSolver:
         """Drizzle diameter calculation.
 
         Args:
-        ----
             beta_z_ratio: Beta to z ratio, multiplied by (2 / pi).
             mu: Shape parameter for gamma calculations. Default is 0.
             ray: Mie to Rayleigh ratio for z. Default is 1.
             k: Alpha to beta ratio . Default is 1.
 
         Returns:
-        -------
             ndarray: Drizzle diameter.
 
         References:
-        ----------
             https://journals.ametsoc.org/doi/pdf/10.1175/JAM-2181.1
 
         """

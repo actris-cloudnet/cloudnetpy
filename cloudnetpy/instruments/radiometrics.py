@@ -24,7 +24,6 @@ def radiometrics2nc(
     """Converts Radiometrics .csv file into Cloudnet Level 1b netCDF file.
 
     Args:
-    ----
         full_path: Input file name or folder containing multiple input files.
         output_file: Output file name, e.g. 'radiometrics.nc'.
         site_meta: Dictionary containing information about the site and instrument.
@@ -34,11 +33,9 @@ def radiometrics2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Examples:
-    --------
         >>> from cloudnetpy.instruments import radiometrics2nc
         >>> site_meta = {'name': 'Soverato', 'altitude': 21}
         >>> radiometrics2nc('radiometrics.csv', 'radiometrics.nc', site_meta)
@@ -84,7 +81,6 @@ class Radiometrics:
     """Reader for level 2 files of Radiometrics microwave radiometers.
 
     References
-    ----------
         Radiometrics (2008). Profiler Operator's Manual: MP-3000A, MP-2500A,
         MP-1500A, MP-183A.
     """

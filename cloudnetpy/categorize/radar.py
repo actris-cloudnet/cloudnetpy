@@ -16,11 +16,9 @@ class Radar(DataSource):
     """Radar class, child of DataSource.
 
     Args:
-    ----
         full_path: Cloudnet Level 1 radar netCDF file.
 
     Attributes:
-    ----------
         radar_frequency (float): Radar frequency (GHz).
         folding_velocity (float): Radar's folding velocity (m/s).
         location (str): Location of the radar, copied from the global attribute
@@ -33,7 +31,6 @@ class Radar(DataSource):
             radars.
 
     See Also:
-    --------
         :func:`instruments.rpg2nc()`, :func:`instruments.mira2nc()`
 
     """
@@ -53,7 +50,6 @@ class Radar(DataSource):
         """Rebins radar data in time using mean.
 
         Args:
-        ----
             time_new: Target time array as fraction hour. Updates *time* attribute.
 
         """
@@ -202,12 +198,10 @@ class Radar(DataSource):
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
-        ----
             attenuations: 2-D attenuations due to atmospheric gases and liquid:
                 `radar_gas_atten`, `radar_liquid_atten`.
 
         References:
-        ----------
             The method is based on Hogan R. and O'Connor E., 2004,
             https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 
@@ -228,12 +222,10 @@ class Radar(DataSource):
         :class:`CloudnetArray` instances to `data` attribute.
 
         Args:
-        ----
             attenuations: 2-D attenuations due to atmospheric gases.
             classification: The :class:`ClassificationResult` instance.
 
         References:
-        ----------
             The method is based on Hogan R. and O'Connor E., 2004,
             https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 

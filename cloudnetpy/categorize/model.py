@@ -14,12 +14,10 @@ class Model(DataSource):
     """Model class, child of DataSource.
 
     Args:
-    ----
         model_file: File name of the NWP model file.
         alt_site: Altitude of the site above mean sea level (m).
 
     Attributes:
-    ----------
         source_type (str): Model type, e.g. 'gdas1' or 'ecwmf'.
         model_heights (ndarray): 2-D array of model heights (one for each time
             step).
@@ -56,7 +54,6 @@ class Model(DataSource):
         """Interpolates model variables to common height grid.
 
         Args:
-        ----
             wl_band: Integer denoting the approximate wavelength band of the
                 cloud radar (0 = ~35.5 GHz, 1 = ~94 GHz).
 
@@ -90,12 +87,10 @@ class Model(DataSource):
         """Interpolates model variables to Cloudnet's dense time / height grid.
 
         Args:
-        ----
             time_grid: The target time array (fraction hour).
             height_grid: The target height array (m).
 
         Returns:
-        -------
             Indices fully masked profiles.
 
         """
