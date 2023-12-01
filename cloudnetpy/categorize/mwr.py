@@ -10,7 +10,6 @@ class Mwr(DataSource):
     """Microwave radiometer class, child of DataSource.
 
     Args:
-    ----
          full_path: Cloudnet Level 1b mwr file.
 
     """

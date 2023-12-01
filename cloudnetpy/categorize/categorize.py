@@ -20,10 +20,9 @@ def generate_categorize(
     and classified as different types of scatterers such as ice, liquid,
     insects, etc. Next, the radar signal is corrected for atmospheric
     attenuation, and error estimates are computed. Results are saved
-    in *ouput_file* which is a compressed netCDF4 file.
+    in *output_file* which is a compressed netCDF4 file.
 
     Args:
-    ----
         input_files: dict containing file names for calibrated `radar`, `lidar`,
             `model` and `mwr` files. Optionally also `lv0_files`, a list of
             RPG level 0 files.
@@ -31,15 +30,12 @@ def generate_categorize(
         uuid: Set specific UUID for the file.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Raises:
-    ------
         RuntimeError: Failed to create the categorize file.
 
     Notes:
-    -----
         Separate mwr-file is not needed when using RPG cloud radar which
         measures liquid water path. Then, the radar file can be used as
         a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
@@ -48,7 +44,6 @@ def generate_categorize(
         to detect liquid droplets.
 
     Examples:
-    --------
         >>> from cloudnetpy.categorize import generate_categorize
         >>> input_files = {'radar': 'radar.nc',
                            'lidar': 'lidar.nc',

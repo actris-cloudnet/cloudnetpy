@@ -20,12 +20,10 @@ class NcRadar(DataSource, CloudnetInstrument):
     """Class for radars providing netCDF files. Child of DataSource().
 
     Args:
-    ----
         full_path: Filename of a radar-produced netCDF file.
         site_meta: Some metadata of the site.
 
     Notes:
-    -----
         Used with BASTA, MIRA and Copernicus radars.
     """
 

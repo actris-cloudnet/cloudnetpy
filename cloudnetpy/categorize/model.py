@@ -14,12 +14,10 @@ class Model(DataSource):
     """Model class, child of DataSource.
 
     Args:
-    ----
         model_file: File name of the NWP model file.
         alt_site: Altitude of the site above mean sea level (m).
 
     Attributes:
-    ----------
         source_type (str): Model type, e.g. 'gdas1' or 'ecwmf'.
         model_heights (ndarray): 2-D array of model heights (one for each time
             step).

@@ -14,7 +14,6 @@ class CloudnetArray:
     """Stores netCDF4 variables, numpy arrays and scalars as CloudnetArrays.
 
     Args:
-    ----
         variable: The netCDF4 :class:`Variable` instance,
             numpy array (masked or regular), or scalar (float, int).
         name: Name of the variable.

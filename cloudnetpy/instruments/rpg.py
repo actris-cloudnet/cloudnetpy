@@ -35,7 +35,6 @@ def rpg2nc(
     concatenates the data and writes a netCDF file.
 
     Args:
-    ----
         path_to_l1_files: Folder containing one day of RPG LV1 files.
         output_file: Output file name.
         site_meta: Dictionary containing information about the
@@ -48,18 +47,15 @@ def rpg2nc(
             only files that match the date will be used.
 
     Returns:
-    -------
         2-element tuple containing
 
         - UUID of the generated file.
         - Files used in the processing.
 
     Raises:
-    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
-    --------
         >>> from cloudnetpy.instruments import rpg2nc
         >>> site_meta = {'name': 'Hyytiala', 'altitude': 174}
         >>> rpg2nc('/path/to/files/', 'test.nc', site_meta)
@@ -116,7 +112,6 @@ def _stack_rpg_data(rpg_objects: RpgObjects) -> tuple[dict, dict]:
     """Combines data from hourly RPG objects.
 
     Notes
-    -----
         Ignores variable names starting with an underscore.
 
     """

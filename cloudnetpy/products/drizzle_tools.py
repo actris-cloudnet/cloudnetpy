@@ -16,11 +16,9 @@ class DrizzleSource(DataSource):
     """Class holding the input data for drizzle calculations.
 
     Args:
-    ----
         categorize_file: Categorize file name.
 
     Attributes:
-    ----------
         mie (dict): Mie look-up table data.
         dheight (float): Median difference of height array.
         z (ndarray): 2D radar echo (linear units).
@@ -82,11 +80,9 @@ class DrizzleClassification(ProductClassification):
     child of  :class:`ProductClassification`.
 
     Args:
-    ----
         categorize_file: Categorize file name.
 
     Attributes:
-    ----------
         is_v_sigma (ndarray): 2D array denoting finite v_sigma.
         warm_liquid (ndarray): 2D array denoting warm liquid.
         drizzle (ndarray): 2D array denoting drizzle presence.
@@ -150,11 +146,9 @@ class SpectralWidth:
     spectral broadening of the Doppler velocity.
 
     Args:
-    ----
         categorize_file: Categorize file name.
 
     Attributes:
-    ----------
         categorize_file (str): Categorize file name.
         width_ht (ndarray): Spectral width containing the correction for turbulence
             broadening.
@@ -205,13 +199,11 @@ class DrizzleSolver:
     """Estimates drizzle parameters.
 
     Args:
-    ----
         drizzle_source: The :class:`DrizzleSource` instance.
         drizzle_class: The :class:`DrizzleClassification` instance.
         spectral_width: The :class:`SpectralWidth` instance.
 
     Attributes:
-    ----------
         params (dict): Dictionary of retrieved drizzle parameters 'Do', 'mu', 'S',
             'beta_corr'.
 

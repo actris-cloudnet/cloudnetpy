@@ -27,16 +27,13 @@ def calc_lwc_change_rate(temperature: np.ndarray, pressure: np.ndarray) -> np.nd
     with height, given the cloud base temperature and pressure.
 
     Args:
-    ----
         temperature: Temperature of cloud base (K).
         pressure: Pressure of cloud base (Pa).
 
     Returns:
-    -------
         dlwc/dz (kg m-3 m-1)
 
     References:
-    ----------
         Brenguier, 1991, https://bit.ly/2QCSJtb
 
     """
@@ -59,12 +56,10 @@ def calc_mixing_ratio(svp: np.ndarray, pressure: np.ndarray) -> np.ndarray:
     """Calculates mixing ratio from saturation vapor pressure and pressure.
 
     Args:
-    ----
         svp: Saturation vapor pressure (Pa).
         pressure: Atmospheric pressure (Pa).
 
     Returns:
-    -------
         Mixing ratio (kg kg-1).
 
     """
@@ -79,13 +74,11 @@ def calc_air_density(
     """Calculates air density (kg m-3).
 
     Args:
-    ----
         pressure: Pressure (Pa).
         temperature: Temperature (K).
         svp_mixing_ratio: Saturation vapor pressure mixing ratio (kg/kg).
 
     Returns:
-    -------
         Air density (kg m-3).
 
     """
@@ -96,12 +89,10 @@ def get_attenuations(data: dict, classification: ClassificationResult) -> dict:
     """Calculates attenuations due to atmospheric gases and liquid water.
 
     Args:
-    ----
         data: Containing :class:`Model` and :class:`Mwr` instances.
         classification: A :class:`ClassificationResult` instance.
 
     Returns:
-    -------
         Dictionary containing `radar_gas_atten`, `radar_liquid_atten`,
             `liquid_atten_err`, `liquid_corrected` and `liquid_uncorrected` fields.
 
@@ -121,12 +112,10 @@ class Attenuation:
     """Base class for gas and liquid attenuations.
 
     Args:
-    ----
         model: The :class:`Model` instance.
         classification: The :class:`ClassificationResult` instance.
 
     Attributes:
-    ----------
         classification (ClassificationResult): The :class:`ClassificationResult`
         instance.
 
@@ -143,12 +132,10 @@ class GasAttenuation(Attenuation):
     """Radar gas attenuation class. Child of Attenuation.
 
     Args:
-    ----
         data: Containing :class:`Model` instance.
         classification: The :class:`ClassificationResult` instance.
 
     Attributes:
-    ----------
         atten (ndarray): Gas attenuation (dB).
 
     """
@@ -180,12 +167,10 @@ class LiquidAttenuation(Attenuation):
     """Radar liquid attenuation class. Child of Attenuation.
 
     Args:
-    ----
         data: Containing :class:`Model` and :class:`Mwr` instances.
         classification: The :class:`ClassificationResult` instance.
 
     Attributes:
-    ----------
         atten (ndarray): Radar liquid attenuation (dB).
         atten_err (ndarray): Error of radar liquid attenuation (dB).
         uncorrected (ndarray): Boolean array denoting uncorrected pixels.
@@ -255,12 +240,10 @@ def fill_clouds_with_lwc_dz(atmosphere: tuple, is_liquid: np.ndarray) -> np.ndar
     """Fills liquid clouds with lwc change rate at the cloud bases.
 
     Args:
-    ----
         atmosphere: 2-element tuple containing temperature (K) and pressure (Pa).
         is_liquid: Boolean array indicating presence of liquid clouds.
 
     Returns:
-    -------
         Liquid water content change rate (kg/m3/m), so that for each cloud the base
         value is filled for the whole cloud.
 
@@ -278,12 +261,10 @@ def get_lwc_change_rate_at_bases(
     """Finds LWC change rate in liquid cloud bases.
 
     Args:
-    ----
         atmosphere: 2-element tuple containing temperature (K) and pressure (Pa).
         is_liquid: Boolean array indicating presence of liquid clouds.
 
     Returns:
-    -------
         Liquid water content change rate at cloud bases (kg/m3/m).
 
     """
@@ -300,11 +281,9 @@ def find_cloud_bases(array: np.ndarray) -> np.ndarray:
     """Finds bases of clouds.
 
     Args:
-    ----
         array: 2D boolean array denoting clouds or some other similar field.
 
     Returns:
-    -------
         Boolean array indicating bases of the individual clouds.
 
     """
@@ -317,11 +296,9 @@ def find_cloud_tops(array: np.ndarray) -> np.ndarray:
     """Finds tops of clouds.
 
     Args:
-    ----
         array: 2D boolean array denoting clouds or some other similar field.
 
     Returns:
-    -------
         Boolean array indicating tops of the individual clouds.
 
     """
@@ -359,13 +336,11 @@ def calc_adiabatic_lwc(lwc_change_rate: np.ndarray, dheight: float) -> np.ndarra
     """Calculates adiabatic liquid water content (kg/m3).
 
     Args:
-    ----
         lwc_change_rate: Liquid water content change rate (kg/m3/m) calculated at the
             base of each cloud and filled to that cloud.
         dheight: Median difference of the height vector (m).
 
     Returns:
-    -------
         Liquid water content (kg/m3).
 
     """
@@ -382,12 +357,10 @@ def distribute_lwp_to_liquid_clouds(lwc: np.ndarray, lwp: np.ndarray) -> np.ndar
     theoretical proportion, i.e., sum(scaled LWC) = measured LWP.
 
     Args:
-    ----
         lwc: 2D liquid water content (kg/m3).
         lwp: 1D liquid water path (kg/m2).
 
     Returns:
-    -------
         2D LWP-weighted, normalized LWC (kg/m2).
 
     """

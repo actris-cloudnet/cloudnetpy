@@ -16,12 +16,10 @@ class DataSource:
     """Base class for all Cloudnet measurements and model data.
 
     Args:
-    ----
         full_path: Calibrated instrument / model NetCDF file.
         radar: Indicates if data is from cloud radar. Default is False.
 
     Attributes:
-    ----------
         filename (str): Filename of the input file.
         dataset (netCDF4.Dataset): A netCDF4 Dataset instance.
         source (str): Global attribute `source` read from the input file.

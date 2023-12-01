@@ -29,7 +29,6 @@ def mrr2nc(
     contains only the relevant data.
 
     Args:
-    ----
         input_file: Filename of a daily MMR-PRO .nc file, path to directory
             containing several non-concatenated .nc files from one day, or list
             of filenames.
@@ -40,15 +39,12 @@ def mrr2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Raises:
-    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
-    --------
           >>> from cloudnetpy.instruments import mira2nc
           >>> site_meta = {'name': 'LIM', 'latitude': 51.333, 'longitude': 12.389}
           >>> mrr2nc('input.nc', 'output.nc', site_meta)
@@ -124,7 +120,6 @@ class MrrPro(NcRadar):
     """Class for MRR-PRO raw data. Child of NcRadar().
 
     Args:
-    ----
         full_path: MRR-PRO netCDF filename.
         site_meta: Site properties in a dictionary. Required keys are `name`,
             `latitude`, `longitude` and `altitude`.

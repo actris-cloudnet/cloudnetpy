@@ -20,7 +20,6 @@ def galileo2nc(
     """Converts 'Galileo' cloud radar data into Cloudnet Level 1b netCDF file.
 
     Args:
-    ----
         raw_files: Input file name or folder containing multiple input files.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -30,15 +29,12 @@ def galileo2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Raises:
-    ------
         ValidTimeStampError: No valid timestamps found.
 
     Examples:
-    --------
           >>> from cloudnetpy.instruments import galileo2nc
           >>> site_meta = {'name': 'Chilbolton'}
           >>> galileo2nc('raw_radar.nc', 'radar.nc', site_meta)
@@ -105,7 +101,6 @@ class Galileo(ChilboltonRadar):
     """Class for Galileo raw radar data. Child of ChilboltonRadar().
 
     Args:
-    ----
         full_path: Filename of a daily Galileo .nc NetCDF file.
         site_meta: Site properties in a dictionary. Required keys are: `name`.
 

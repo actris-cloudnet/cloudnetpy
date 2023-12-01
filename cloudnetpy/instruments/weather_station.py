@@ -22,7 +22,6 @@ def ws2nc(
     """Converts weather-station data into Cloudnet Level 1b netCDF file.
 
     Args:
-    ----
         weather_station_file: Filename of weather-station ASCII file.
         output_file: Output filename.
         site_meta: Dictionary containing information about the site. Required key
@@ -31,11 +30,9 @@ def ws2nc(
         date: Expected date of the measurements as YYYY-MM-DD.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Raises:
-    ------
         WeatherStationDataError : Unable to read the file.
         ValidTimeStampError: No valid timestamps found.
     """

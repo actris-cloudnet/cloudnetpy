@@ -15,12 +15,10 @@ def get_drizzle_error(
     """Estimates error and bias for drizzle classification.
 
     Args:
-    ----
         categorize: The :class:`DrizzleSource` instance.
         drizzle_parameters: The :class:`DrizzleSolver` instance.
 
     Returns:
-    -------
         dict: Dictionary containing information of estimated error and bias for drizzle
 
     """

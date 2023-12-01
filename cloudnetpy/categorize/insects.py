@@ -29,7 +29,6 @@ def find_insects(
     above melting layer.
 
     Args:
-    ----
         obs: The :class:`ClassData` instance.
         melting_layer: 2D array denoting melting layer.
         liquid_layers: 2D array denoting liquid layers.
@@ -37,14 +36,12 @@ def find_insects(
             Default is 0.8.
 
     Returns:
-    -------
         tuple: 2-element tuple containing
 
         - 2-D boolean flag of insects presence.
         - 2-D probability of pixel containing insects.
 
     Notes:
-    -----
         This insect detection method is novel and needs to be validated.
 
     """

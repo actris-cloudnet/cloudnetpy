@@ -20,16 +20,13 @@ def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarra
     interpolated for all profiles.
 
     Args:
-    ----
         obs: The :class:`ClassData` instance.
         melting_layer: 2-D boolean array denoting melting layer.
 
     Returns:
-    -------
         2-D boolean array denoting the sub-zero region.
 
     Notes:
-    -----
         It is not clear how model temperature and melting layer should be
         ideally combined to determine the sub-zero region. This current
         method differs slightly from the original Matlab code and should
@@ -84,12 +81,10 @@ def _find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
     """Interpolates altitudes where temperature goes below freezing.
 
     Args:
-    ----
         temperature: 2-D temperature (K).
         height: 1-D altitude grid (m).
 
     Returns:
-    -------
         1-D array denoting altitudes where the temperature drops below 0 deg C.
 
     """

@@ -16,11 +16,9 @@ class Radar(DataSource):
     """Radar class, child of DataSource.
 
     Args:
-    ----
         full_path: Cloudnet Level 1 radar netCDF file.
 
     Attributes:
-    ----------
         radar_frequency (float): Radar frequency (GHz).
         folding_velocity (float): Radar's folding velocity (m/s).
         location (str): Location of the radar, copied from the global attribute
@@ -33,7 +31,6 @@ class Radar(DataSource):
             radars.
 
     See Also:
-    --------
         :func:`instruments.rpg2nc()`, :func:`instruments.mira2nc()`
 
     """

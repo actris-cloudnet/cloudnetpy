@@ -20,7 +20,6 @@ def update_attributes(model_downsample_variables: dict, attributes: dict) -> Non
         New attributes are added.
 
     Args:
-    ----
         model_downsample_variables (dict): Array instances.
         attributes (dict): Product-specific attributes.
     """
@@ -71,7 +70,6 @@ def save_downsampled_file(
     """Saves a standard downsampled day product file.
 
     Args:
-    ----
         id_mark (str): File identifier, format "(product name)_(model name)"
         file_name (str): Name of the output file to be generated
         objects (tuple): Include two objects: The :class:'ModelManager' and
@@ -165,12 +163,10 @@ def add_time_attribute(date: datetime) -> dict:
     """ "Adds time attribute with correct units.
 
     Args:
-    ----
         attributes: Attributes of variables.
         date: Date as Y M D 0 0 0.
 
     Returns:
-    -------
         dict: Same attributes with 'time' attribute added.
     """
     return {

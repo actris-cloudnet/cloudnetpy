@@ -76,7 +76,6 @@ def save_product_file(
     """Saves a standard Cloudnet product file.
 
     Args:
-    ----
         short_id: Short file identifier, e.g. 'lwc', 'iwc', 'drizzle', 'classification'.
         obj: Instance containing product specific attributes: `time`, `dataset`, `data`.
         file_name: Name of the output file to be generated.
@@ -143,7 +142,6 @@ def get_references(identifier: str | None = None, extra: list | None = None) -> 
     """ "Returns references.
 
     Args:
-    ----
         identifier: Cloudnet file type, e.g., 'iwc'.
 
     """
@@ -175,11 +173,9 @@ def get_source_uuids(*sources) -> str:
     """Returns file_uuid attributes of objects.
 
     Args:
-    ----
         *sources: Objects whose file_uuid attributes are read (if exist).
 
     Returns:
-    -------
         str: UUIDs separated by comma.
 
     """
@@ -196,7 +192,6 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
     """Merges history fields from one or several files and creates a new record.
 
     Args:
-    ----
         nc: The netCDF Dataset instance.
         file_type: Long description of the file.
         data: Dictionary of objects with history attribute.
@@ -235,7 +230,6 @@ def init_file(
     """Initializes a Cloudnet file for writing.
 
     Args:
-    ----
         file_name: File name to be generated.
         dimensions: Dictionary containing dimension for this file.
         cloudnet_arrays: Dictionary containing :class:`CloudnetArray` instances.
@@ -258,7 +252,6 @@ def copy_variables(
     """Copies variables (and their attributes) from one file to another.
 
     Args:
-    ----
         source: Source object.
         target: Target object.
         keys: Variable names to be copied.
@@ -292,7 +285,6 @@ def copy_global(
     """Copies global attributes from one file to another.
 
     Args:
-    ----
         source: Source object.
         target: Target object.
         attributes: List of attributes to be copied.
@@ -360,7 +352,6 @@ def update_attributes(cloudnet_variables: dict, attributes: dict) -> None:
     New attributes are added.
 
     Args:
-    ----
         cloudnet_variables: CloudnetArray instances.
         attributes: Product-specific attributes.
 

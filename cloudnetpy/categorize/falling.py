@@ -21,17 +21,14 @@ def find_falling_hydrometeors(
     temperatures.
 
     Args:
-    ----
         obs: The :class:`ClassData` instance.
         is_liquid: 2-D boolean array of liquid droplets.
         is_insects: 2-D boolean array of insects.
 
     Returns:
-    -------
         2-D boolean array containing falling hydrometeors.
 
     References:
-    ----------
         Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ.
 
     """

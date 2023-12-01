@@ -21,22 +21,18 @@ def generate_iwc(
     netCDF file.
 
     Args:
-    ----
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Examples:
-    --------
         >>> from cloudnetpy.products import generate_iwc
         >>> generate_iwc('categorize.nc', 'iwc.nc')
 
     References:
-    ----------
         Hogan, R.J., M.P. Mittermaier, and A.J. Illingworth, 2006:
         The Retrieval of Ice Water Content from Radar Reflectivity Factor and
         Temperature and Its Use in Evaluating a Mesoscale Model.

@@ -27,7 +27,6 @@ def mira2nc(
     steps.
 
     Args:
-    ----
         raw_mira: Filename of a daily MIRA .mmclx or .zncfile. Can be also a folder
             containing several non-concatenated .mmclx or .znc files from one day
             or list of files. znc files take precedence because they are the newer
@@ -39,18 +38,15 @@ def mira2nc(
         date: Expected date as YYYY-MM-DD of all profiles in the file.
 
     Returns:
-    -------
         UUID of the generated file.
 
     Raises:
-    ------
         ValidTimeStampError: No valid timestamps found.
         FileNotFoundError: No suitable input files found.
         ValueError: Wrong suffix in input file(s).
         TypeError: Mixed mmclx and znc files.
 
     Examples:
-    --------
           >>> from cloudnetpy.instruments import mira2nc
           >>> site_meta = {'name': 'Vehmasmaki'}
           >>> mira2nc('raw_radar.mmclx', 'radar.nc', site_meta)
@@ -89,7 +85,6 @@ class Mira(NcRadar):
     """Class for MIRA-35 raw radar data. Child of NcRadar().
 
     Args:
-    ----
         full_path: Filename of a daily MIRA .mmclx NetCDF file.
         site_meta: Site properties in a dictionary. Required keys are: `name`.
 

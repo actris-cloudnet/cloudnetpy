@@ -19,22 +19,18 @@ def classify_measurements(data: dict) -> ClassificationResult:
     time / height grid before calling this function.
 
     Args:
-    ----
         data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model`
             and :class:`Mwr` instances.
 
     Returns:
-    -------
         A :class:`ClassificationResult` instance.
 
     References:
-    ----------
         The Cloudnet classification scheme is based on methodology proposed by
         Hogan R. and O'Connor E., 2004, https://bit.ly/2Yjz9DZ and its
         proprietary Matlab implementation.
 
     Notes:
-    -----
         Some individual classification methods are changed in this Python
         implementation compared to the original Cloudnet methodology.
         Especially methods classifying insects, melting layer and liquid droplets.
@@ -96,14 +92,12 @@ def fetch_quality(
     """Returns Cloudnet quality bits.
 
     Args:
-    ----
         data: Containing :class:`Radar` and :class:`Lidar` instances.
         classification: A :class:`ClassificationResult` instance.
         attenuations: Dictionary containing keys `liquid_corrected`,
             `liquid_uncorrected`.
 
     Returns:
-    -------
         Dictionary containing `quality_bits`, an integer array with the bits:
 
             - bit 0: Pixel contains radar data
@@ -136,13 +130,11 @@ def _find_aerosols(
     Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
 
     Args:
-    ----
         obs: A :class:`ClassData` instance.
         is_falling: 2-D boolean array of falling hydrometeors.
         is_liquid: 2-D boolean array of liquid droplets.
 
     Returns:
-    -------
         2-D boolean array containing aerosols.
 
     """
@@ -166,13 +158,11 @@ def _find_drizzle_and_falling(
     """Classifies pixels as falling, drizzle and others.
 
     Args:
-    ----
         is_liquid: 2D boolean array denoting liquid layers.
         is_falling: 2D boolean array denoting falling pixels.
         is_freezing: 2D boolean array denoting subzero temperatures.
 
     Returns:
-    -------
         2D array where values are 1 (falling, drizzle, supercooled liquids),
         2 (drizzle), and masked (all others).
 
@@ -191,12 +181,10 @@ def _bits_to_integer(bits: list) -> np.ndarray:
     """Creates array of integers from individual boolean arrays.
 
     Args:
-    ----
         bits: List of bit fields (of similar sizes) to be saved in the resulting
             array of integers. bits[0] is saved as bit 0, bits[1] as bit 1, etc.
 
     Returns:
-    -------
         Array of integers containing the information of the individual boolean arrays.
 
     """

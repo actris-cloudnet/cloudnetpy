@@ -317,14 +317,12 @@ def calc_sigma_units(
     how many steps in time and height corresponds to this smoothing.
 
     Args:
-    ----
         time_vector: 1D vector (fraction hour).
         range_los: 1D vector (m).
         sigma_minutes: Smoothing in minutes.
         sigma_metres: Smoothing in metres.
 
     Returns:
-    -------
         tuple: Two element tuple containing number of steps in time and height to
             achieve wanted smoothing.
 
