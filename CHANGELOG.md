@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.56.2 – 2023-12-01
+
+- Host documentation on GitHub Pages
+
 ## 1.56.1 – 2023-11-30
 
 - Avoid crashing if source attribute is missing
