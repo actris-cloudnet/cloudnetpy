@@ -13,12 +13,40 @@ from cloudnetpy.products import product_tools
 def generate_mwr_single(
     mwr_l1c_file: str, output_file: str, uuid: str | None = None
 ) -> str:
+    """
+    Generates MWR single-pointing product including liquid water path, integrated
+    water vapor, etc. from zenith measurements.
+
+    Args:
+        mwr_l1c_file: The Level 1C MWR file to be processed.
+        output_file: The file path where the output file should be saved.
+        uuid: The UUID, if any, associated with the output file. Defaults to None.
+
+    Returns:
+        UUID of generated file.
+
+    Example:
+        >>> generate_mwr_single('input_mwr_l1c_file', 'output_file', 'abcdefg1234567')
+    """
     return _generate_product(mwr_l1c_file, output_file, uuid, "single")
 
 
 def generate_mwr_multi(
     mwr_l1c_file: str, output_file: str, uuid: str | None = None
 ) -> str:
+    """
+    Generates MWR multiple-pointing product, including relative humidity profiles,
+    etc. from scanning measurements.
+
+    Args:
+        mwr_l1c_file: The input file in MWR L1C format.
+        output_file: The location where the output file should be generated.
+        uuid: The UUID for the MWR multi product, defaults to None if
+            not provided.
+
+    Returns:
+        UUID of generated file.
+    """
     return _generate_product(mwr_l1c_file, output_file, uuid, "multi")
 
 
