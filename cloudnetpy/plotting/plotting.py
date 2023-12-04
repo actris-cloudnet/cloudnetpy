@@ -177,7 +177,7 @@ class SubPlot:
         ylabel: str | None = None,
         y_limits: tuple[float, float] | None = None,
     ) -> None:
-        label = ylabel or "Height (km)"
+        label = ylabel if ylabel is not None else "Height (km)"
         self.ax.set_ylabel(label, fontsize=13)
         if y_limits is not None:
             self.ax.set_ylim(*y_limits)
@@ -249,9 +249,30 @@ class Plot:
     def __init__(self, sub_plot: SubPlot):
         self.sub_plot = sub_plot
         self._data = sub_plot.variable[:]
+        self._data_orig = self._data.copy()
         self._plot_meta = sub_plot.plot_meta
         self._is_log = sub_plot.plot_meta.log_scale
         self._ax = sub_plot.ax
+
+    def _convert_units(self) -> str | None:
+        multiply, add = "multiply", "add"
+        units_conversion = {
+            "rainfall_rate": (multiply, 360000, "mm h$^{-1}$"),
+            "air_pressure": (multiply, 0.01, "hPa"),
+            "relative_humidity": (multiply, 100, "%"),
+            "rainfall_amount": (multiply, 1000, "mm"),
+            "air_temperature": (add, -273.15, "\u00B0C"),
+        }
+        conversion_method, conversion, units = units_conversion.get(
+            self.sub_plot.variable.name, (multiply, 1, None)
+        )
+        if conversion_method == multiply:
+            self._data *= conversion
+        elif conversion_method == add:
+            self._data += conversion
+        if units is not None:
+            return units
+        return _reformat_units(self.sub_plot.variable.units)
 
     def _get_y_limits(self) -> tuple[float, float]:
         return 0, self.sub_plot.options.max_y
@@ -273,6 +294,7 @@ class Plot:
                 facecolor="grey",
                 edgecolor="black",
                 alpha=0.15,
+                label="_nolegend_",
             )
 
     def _mark_gaps(self, figure_data: FigureData) -> None:
@@ -319,9 +341,16 @@ class Plot:
         self._data = data_new
         figure_data.time_including_gaps = time_new
 
+    def _read_flags(self, figure_data: FigureData):
+        flag_name = f"{self.sub_plot.variable.name}_quality_flag"
+        if flag_name not in figure_data.variables:
+            flag_name = "temperature_quality_flag"
+        return figure_data.file.variables[flag_name][:] > 0
+
 
 class Plot2D(Plot):
     def plot(self, figure_data: FigureData):
+        self._convert_units()
         self._mark_gaps(figure_data)
         if self.sub_plot.variable.name == "cloud_fraction":
             self._data[self._data == 0] = ma.masked
@@ -334,6 +363,26 @@ class Plot2D(Plot):
 
         if figure_data.options.mark_data_gaps:
             self._fill_between_data_gaps(figure_data)
+
+        if figure_data.file.cloudnet_file_type in ("mwr-single", "mwr-multi"):
+            self._fill_flagged_data(figure_data)
+
+    def _fill_flagged_data(self, figure_data: FigureData) -> None:
+        flags = self._read_flags(figure_data)
+        batches = find_batches_of_ones(flags)
+        for batch in batches:
+            if batch[0] == batch[1]:
+                continue
+            time_batch = figure_data.time[batch[0]], figure_data.time[batch[1]]
+            self._ax.fill_between(
+                time_batch,
+                *self._get_y_limits(),
+                facecolor="whitesmoke",
+                alpha=1,
+                hatch="//",
+                edgecolor="salmon",
+                label="_nolegend_",
+            )
 
     def _plot_segment_data(self, figure_data: FigureData) -> None:
         def _hide_segments(
@@ -405,20 +454,26 @@ class Plot2D(Plot):
 class Plot1D(Plot):
     def plot_tb(self, figure_data: FigureData, ind: int):
         flagged_data = self._pointing_filter(figure_data, ind)
+        self.plot(figure_data)
+        self.plot_flag_data(figure_data.time, flagged_data)
+        self.add_legend()
+
+    def plot_flag_data(self, time: np.ndarray, values: np.ndarray) -> None:
         self._ax.plot(
-            figure_data.time,
-            flagged_data,
+            time,
+            values,
             color="salmon",
             marker=".",
             lw=0,
             markersize=3,
+            zorder=10,
         )
-        self.plot(figure_data)
+
+    def add_legend(self):
         self._ax.legend(
-            ["Flagged data", "Valid data"],
+            ["Flagged data"],
             markerscale=3,
             numpoints=1,
-            reverse=True,
             frameon=False,
         )
 
@@ -428,6 +483,7 @@ class Plot1D(Plot):
         self._ax.plot(
             figure_data.time_including_gaps,
             self._data,
+            label="_nolegend_",
             **self._get_plot_options(),
         )
         if self._plot_meta.moving_average:
@@ -436,6 +492,11 @@ class Plot1D(Plot):
         self.sub_plot.set_yax(ylabel=units, y_limits=self._get_y_limits())
         pos = self._ax.get_position()
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
+
+        if figure_data.file.cloudnet_file_type in ("mwr-single", "mwr-multi"):
+            flags = self._read_flags(figure_data)
+            self.plot_flag_data(figure_data.time[flags], self._data_orig[flags])
+            self.add_legend()
 
     def _get_y_limits(self) -> tuple[float, float]:
         percent_gap = 0.05
@@ -451,26 +512,6 @@ class Plot1D(Plot):
         if min_y == 0 and max_y == 0:
             return fallback
         return min_y, max_y
-
-    def _convert_units(self) -> str | None:
-        multiply, add = "multiply", "add"
-        units_conversion = {
-            "rainfall_rate": (multiply, 360000, "mm h$^{-1}$"),
-            "air_pressure": (multiply, 0.01, "hPa"),
-            "relative_humidity": (multiply, 100, "%"),
-            "rainfall_amount": (multiply, 1000, "mm"),
-            "air_temperature": (add, -273.15, "\u00B0C"),
-        }
-        conversion_method, conversion, units = units_conversion.get(
-            self.sub_plot.variable.name, (multiply, 1, None)
-        )
-        if conversion_method == multiply:
-            self._data *= conversion
-        elif conversion_method == add:
-            self._data += conversion
-        if units is not None:
-            return units
-        return _reformat_units(self.sub_plot.variable.units)
 
     def _get_plot_options(self) -> dict:
         default_options = {
@@ -503,7 +544,7 @@ class Plot1D(Plot):
         gap_time = _get_max_gap_in_minutes(figure_data)
         gaps = self._find_time_gap_indices(time, max_gap_min=gap_time)
         sma[gaps] = np.nan
-        self._ax.plot(time, sma, color="slateblue", lw=2)
+        self._ax.plot(time, sma, color="slateblue", lw=2, label="_nolegend_")
 
     @staticmethod
     def _get_unmasked_values(
@@ -682,3 +723,10 @@ def plot_2d(
     if xlim is not None:
         plt.xlim(xlim)
     plt.show()
+
+
+def find_batches_of_ones(array: np.ndarray) -> list[tuple[int, int]]:
+    """Find batches of ones in a binary array."""
+    starts = np.where(np.diff(np.hstack(([0], array))) == 1)[0]
+    stops = np.where(np.diff(np.hstack((array, [0]))) == -1)[0]
+    return list(zip(starts, stops, strict=True))

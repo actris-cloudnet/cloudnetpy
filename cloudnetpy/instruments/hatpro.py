@@ -4,10 +4,10 @@ import logging
 from collections import defaultdict
 from pathlib import Path
 
-import mwrpy
 import netCDF4
 import numpy as np
 from mwrpy.level1.lev1_meta_nc import ATTRIBUTES_1B01
+from mwrpy.level1.write_lev1_nc import lev1_to_nc
 from mwrpy.version import __version__ as mwrpy_version
 from numpy import ma
 
@@ -45,7 +45,7 @@ def hatpro2l1c(
     """
     coeff_files = site_meta.get("coefficientFiles", None)
 
-    hatpro_raw = mwrpy.lev1_to_nc(
+    hatpro_raw = lev1_to_nc(
         "1C01",
         mwr_dir,
         output_file=output_file,
@@ -99,7 +99,7 @@ def hatpro2l1c(
 
 
 class HatproL1c:
-    def __init__(self, hatpro: mwrpy.Rpg, site_meta: dict):
+    def __init__(self, hatpro, site_meta: dict):
         self.raw_data = hatpro.raw_data
         self.data = hatpro.data
         self.date = hatpro.date.split("-")
