@@ -83,9 +83,9 @@ netCDF file to retrieve integrated liquid water path (LWP).
 .. code-block:: python
 
     from cloudnetpy.instruments import hatpro2nc
-    uuid = hatpro2nc('.', 'mwr.nc', {'name': 'Munich', 'altitude': 538}, date='2023-07-29')
+    uuid, valid_files = hatpro2nc('.', 'mwr.nc', {'name': 'Munich', 'altitude': 538}, date='2023-07-29')
 
-Variable ``uuid`` contains an unique identifier for the generated ``mwr.nc`` file.
+Variable ``uuid`` contains an unique identifier for the generated ``mwr.nc`` file and `valid_files` contains which files were used for the processing.
 For more information, see `API reference <api.html#instruments.hatpro2nc>`__ for this function.
 
 You can plot variables such as liquid water path from the newly generated file.
