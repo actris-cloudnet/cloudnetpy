@@ -199,6 +199,28 @@ class TestParsivel7(Check):
         assert np.allclose(self.nc["rainfall_rate"][:], [2.356 / (3600 * 1e3)])
 
 
+class TestParsivel8(Check):
+    date = "2023-12-04"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/parsivel/Lindenberg_Parsivel_20231204.log"
+    site_meta = SITE_META
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date,
+        telegram=TELEGRAM,
+                                   )
+
+    def test_dimensions(self):
+        assert self.nc.serial_number == "451221"
+        assert np.allclose(
+            self.nc["time"][:],
+            [
+                timedelta(hours=0, minutes=0, seconds=47) / timedelta(hours=1),
+                timedelta(hours=0, minutes=1, seconds=47) / timedelta(hours=1),
+                timedelta(hours=0, minutes=2, seconds=47) / timedelta(hours=1),
+            ],
+        )
+
+
 class TestThies(Check):
     date = "2021-09-15"
     temp_dir = TemporaryDirectory()

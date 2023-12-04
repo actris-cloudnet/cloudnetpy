@@ -348,6 +348,8 @@ def _parse_spectrum(tokens: Iterator[str]) -> np.ndarray:
             msg = "Invalid spectrum format"
             raise ValueError(msg)
         values = [int(x) if x != "" else 0 for x in raw]
+    elif "/" in first:
+        values = [int(x) for x in first.removesuffix("/R").split("/")]
     else:
         values = [int(first)]
         values.extend(int(x) for x in islice(tokens, 1023))
