@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.56.4 – 2023-12-04
+
+- Fix "/" separator in Parsivel spectra
+
 ## 1.56.3 – 2023-12-01
 
 - Improve quickstart documentation
