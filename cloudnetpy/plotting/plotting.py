@@ -143,6 +143,10 @@ class FigureData:
             return self.file.variables["range"][:] * m2km
         return None
 
+    def is_mwrpy_product(self) -> bool:
+        cloudnet_file_type = getattr(self.file, "cloudnet_file_type", "")
+        return cloudnet_file_type in ("mwr-single", "mwr-multi")
+
     def __len__(self) -> int:
         return len(self.variables)
 
@@ -236,9 +240,7 @@ class SubPlot:
         if self.options.plot_meta is not None:
             return self.options.plot_meta
         fallback = ATTRIBUTES["fallback"].get(self.variable.name, PlotMeta())
-        if file_type is None:
-            return fallback
-        file_attributes = ATTRIBUTES.get(file_type, {})
+        file_attributes = ATTRIBUTES.get(file_type or "", {})
         plot_meta = file_attributes.get(self.variable.name, fallback)
         if plot_meta.clabel is None:
             plot_meta = plot_meta._replace(clabel=_reformat_units(self.variable.units))
@@ -272,7 +274,8 @@ class Plot:
             self._data += conversion
         if units is not None:
             return units
-        return _reformat_units(self.sub_plot.variable.units)
+        units = getattr(self.sub_plot.variable, "units", "")
+        return _reformat_units(units)
 
     def _get_y_limits(self) -> tuple[float, float]:
         return 0, self.sub_plot.options.max_y
@@ -341,7 +344,7 @@ class Plot:
         self._data = data_new
         figure_data.time_including_gaps = time_new
 
-    def _read_flags(self, figure_data: FigureData):
+    def _read_flags(self, figure_data: FigureData) -> np.ndarray:
         flag_name = f"{self.sub_plot.variable.name}_quality_flag"
         if flag_name not in figure_data.variables:
             flag_name = "temperature_quality_flag"
@@ -364,7 +367,7 @@ class Plot2D(Plot):
         if figure_data.options.mark_data_gaps:
             self._fill_between_data_gaps(figure_data)
 
-        if figure_data.file.cloudnet_file_type in ("mwr-single", "mwr-multi"):
+        if figure_data.is_mwrpy_product():
             self._fill_flagged_data(figure_data)
 
     def _fill_flagged_data(self, figure_data: FigureData) -> None:
@@ -455,8 +458,9 @@ class Plot1D(Plot):
     def plot_tb(self, figure_data: FigureData, ind: int):
         flagged_data = self._pointing_filter(figure_data, ind)
         self.plot(figure_data)
-        self.plot_flag_data(figure_data.time, flagged_data)
-        self.add_legend()
+        if ma.count(flagged_data) > 0:
+            self.plot_flag_data(figure_data.time, flagged_data)
+            self.add_legend()
 
     def plot_flag_data(self, time: np.ndarray, values: np.ndarray) -> None:
         self._ax.plot(
@@ -492,11 +496,11 @@ class Plot1D(Plot):
         self.sub_plot.set_yax(ylabel=units, y_limits=self._get_y_limits())
         pos = self._ax.get_position()
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
-
-        if figure_data.file.cloudnet_file_type in ("mwr-single", "mwr-multi"):
+        if figure_data.is_mwrpy_product():
             flags = self._read_flags(figure_data)
-            self.plot_flag_data(figure_data.time[flags], self._data_orig[flags])
-            self.add_legend()
+            if np.any(flags):
+                self.plot_flag_data(figure_data.time[flags], self._data_orig[flags])
+                self.add_legend()
 
     def _get_y_limits(self) -> tuple[float, float]:
         percent_gap = 0.05
