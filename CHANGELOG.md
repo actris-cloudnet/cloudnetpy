@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.56.5 – 2023-12-05
+
+- Improve mwrpy processing and plotting (#97)
+
 ## 1.56.4 – 2023-12-04
 
 - Fix "/" separator in Parsivel spectra
