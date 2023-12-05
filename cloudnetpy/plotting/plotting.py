@@ -307,6 +307,10 @@ class Plot:
             msg = "Time values outside the range 0-24."
             raise ValueError(msg)
         max_gap_fraction_hour = _get_max_gap_in_minutes(figure_data) / 60
+
+        if figure_data.file.cloudnet_file_type == "model":
+            time, data = self._get_unmasked_model_values(time, data)
+
         gap_indices = np.where(np.diff(time) > max_gap_fraction_hour)[0]
         if not ma.is_masked(data):
             mask_new = np.zeros(data.shape)
@@ -343,6 +347,16 @@ class Plot:
         data_new.mask = mask_new
         self._data = data_new
         figure_data.time_including_gaps = time_new
+
+    @staticmethod
+    def _get_unmasked_model_values(time: np.ndarray, data: ma.MaskedArray) -> tuple:
+        good_ind = np.where(np.any(~data.mask, axis=1))[0]
+        if len(good_ind) == 0:
+            msg = "No unmasked values in the file."
+            raise ValueError(msg)
+        good_ind = np.append(good_ind, good_ind[-1] + 1)
+        good_ind = np.clip(good_ind, 0, len(time) - 1)
+        return time[good_ind], data[good_ind, :]
 
     def _read_flags(self, figure_data: FigureData) -> np.ndarray:
         flag_name = f"{self.sub_plot.variable.name}_quality_flag"
@@ -678,6 +692,8 @@ def _reformat_units(unit: str) -> str:
         "sr-1 m-1": "sr$^{-1}$ m$^{-1}$",
         "kg m-2": "kg m$^{-2}$",
         "kg m-3": "kg m$^{-3}$",
+        "g m-3": "g m$^{-3}$",
+        "g m-2": "g m$^{-2}$",
         "kg m-2 s-1": "kg m$^{-2}$ s$^{-1}$",
         "dB km-1": "dB km$^{-1}$",
         "rad km-1": "rad km$^{-1}$",
