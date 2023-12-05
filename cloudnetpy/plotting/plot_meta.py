@@ -224,11 +224,18 @@ ATTRIBUTES = {
         ),
         "potential_temperature": PlotMeta(
             cmap="RdBu_r",
-            plot_range=(260, 330),
+            plot_range=(260, 320),
+        ),
+        "equivalent_potential_temperature": PlotMeta(
+            cmap="RdBu_r",
+            plot_range=(260, 320),
         ),
         "absolute_humidity": PlotMeta(
-            plot_range=(1e-5, 1e-2),
+            plot_range=(1e-4, 1e-2),
             log_scale=True,
+        ),
+        "relative_humidity": PlotMeta(
+            plot_range=(0, 120),
         ),
         "cloud_fraction": PlotMeta(
             cmap="Blues",
