@@ -377,10 +377,10 @@ class Plot2D(Plot):
             self._ax.fill_between(
                 time_batch,
                 *self._get_y_limits(),
-                facecolor="whitesmoke",
+                facecolor="mistyrose",
                 alpha=1,
-                hatch="//",
-                edgecolor="salmon",
+                hatch=r"\\",
+                edgecolor="lightsalmon",
                 label="_nolegend_",
             )
 
