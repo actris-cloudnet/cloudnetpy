@@ -16,6 +16,7 @@ from matplotlib.transforms import Affine2D, Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma, ndarray
 
+from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
 
 
@@ -129,7 +130,7 @@ class FigureData:
                 variable_indices.append(extracted_ind)
         if not valid_variables:
             msg = f"None of the variables {requested_variables} found in the file."
-            raise ValueError(msg)
+            raise PlottingError(msg)
         return valid_variables, variable_indices
 
     def _get_height(self) -> np.ndarray | None:
@@ -754,7 +755,7 @@ def screen_completely_masked_profiles(time: np.ndarray, data: ma.MaskedArray) ->
     good_ind = np.where(np.any(~data.mask, axis=1))[0]
     if len(good_ind) == 0:
         msg = "All values masked in the file."
-        raise ValueError(msg)
+        raise PlottingError(msg)
     good_ind = np.append(good_ind, good_ind[-1] + 1)
     good_ind = np.clip(good_ind, 0, len(time) - 1)
     return time[good_ind], data[good_ind, :]

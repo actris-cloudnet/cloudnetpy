@@ -5,6 +5,7 @@ import numpy.ma as ma
 import pytest
 from cloudnetpy.plotting import plotting
 from cloudnetpy.instruments import basta2nc
+from cloudnetpy.exceptions import PlottingError
 from os import path
 import netCDF4
 
@@ -118,7 +119,7 @@ def test_screen_completely_masked_profiles_with_all_masked():
         [4, 5],
         [4, 5]], mask=True
     )
-    with pytest.raises(ValueError, match="All values masked in the file."):
+    with pytest.raises(PlottingError, match="All values masked in the file."):
         plotting.screen_completely_masked_profiles(time, data)
 
 def test_screen_completely_masked_profiles_with_all_masked_2():
@@ -128,5 +129,5 @@ def test_screen_completely_masked_profiles_with_all_masked_2():
         [4, 5],
         [4, 5]], mask=[[True, True], [True, True], [True, True]]
     )
-    with pytest.raises(ValueError, match="All values masked in the file."):
+    with pytest.raises(PlottingError, match="All values masked in the file."):
         plotting.screen_completely_masked_profiles(time, data)
