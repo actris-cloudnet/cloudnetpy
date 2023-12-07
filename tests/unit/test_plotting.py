@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import numpy.ma as ma
 import pytest
 from cloudnetpy.plotting import plotting
 from cloudnetpy.instruments import basta2nc
@@ -58,3 +59,74 @@ def test_generate_figure(basta_nc):
     plotting.generate_figure(basta_nc, ["Zh"], show=False, output_filename=image_name)
     assert path.exists(image_name)
     os.remove(image_name)
+
+def test_screen_completely_masked_profiles_with_no_mask():
+    time = np.array([1, 2, 3])
+    data = ma.array([4, 5, 6])
+    result_time, result_data = plotting.screen_completely_masked_profiles(time, data)
+    assert np.array_equal(result_time, time)
+    assert np.array_equal(result_data, data)
+
+def test_screen_completely_masked_profiles_with_nothing_masked():
+    time = np.array([1, 2, 3])
+    data = ma.array([
+        [4, 5],
+        [4, 5],
+        [4, 5]], mask=False
+    )
+    result_time, result_data = plotting.screen_completely_masked_profiles(time, data)
+    assert np.array_equal(result_time, time)
+    assert np.array_equal(result_data, data)
+
+
+def test_screen_completely_masked_profiles_with_nothing_masked_2():
+    time = np.array([1, 2, 3])
+    data = ma.array([
+        [4, 5],
+        [4, 5],
+        [4, 5]], mask=[[False, False], [False, False], [False, False]]
+    )
+    result_time, result_data = plotting.screen_completely_masked_profiles(time, data)
+    assert np.array_equal(result_time, time)
+    assert np.array_equal(result_data, data)
+
+
+def test_screen_completely_masked_profiles_with_partial_mask():
+    time = np.array([1, 2, 3, 4, 5, 6])
+    data = ma.array([
+        [4, 5],
+        [6, 7],
+        [7, 8],
+        [8, 9],
+        [9, 10],
+        [10, 11]], mask=[
+        [False, True],
+        [False, False],
+        [False, False],
+        [False, False],
+        [True, True],
+        [True, True],
+    ])
+    result_time, result_data = plotting.screen_completely_masked_profiles(time, data)
+    assert np.array_equal(result_time, np.array([1, 2, 3, 4, 5]))
+    assert np.array_equal(result_data, ma.array([[4, 5], [6, 7], [7, 8], [8, 9], [9, 10]]))
+
+def test_screen_completely_masked_profiles_with_all_masked():
+    time = np.array([1, 2, 3])
+    data = ma.array([
+        [4, 5],
+        [4, 5],
+        [4, 5]], mask=True
+    )
+    with pytest.raises(ValueError, match="All values masked in the file."):
+        plotting.screen_completely_masked_profiles(time, data)
+
+def test_screen_completely_masked_profiles_with_all_masked_2():
+    time = np.array([1, 2, 3])
+    data = ma.array([
+        [4, 5],
+        [4, 5],
+        [4, 5]], mask=[[True, True], [True, True], [True, True]]
+    )
+    with pytest.raises(ValueError, match="All values masked in the file."):
+        plotting.screen_completely_masked_profiles(time, data)

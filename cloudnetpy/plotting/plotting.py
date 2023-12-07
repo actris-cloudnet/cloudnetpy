@@ -270,8 +270,10 @@ class Plot:
         )
         if conversion_method == multiply:
             self._data *= conversion
+            self._data_orig *= conversion
         elif conversion_method == add:
             self._data += conversion
+            self._data_orig += conversion
         if units is not None:
             return units
         units = getattr(self.sub_plot.variable, "units", "")
@@ -309,7 +311,7 @@ class Plot:
         max_gap_fraction_hour = _get_max_gap_in_minutes(figure_data) / 60
 
         if figure_data.file.cloudnet_file_type == "model":
-            time, data = self._get_unmasked_model_values(time, data)
+            time, data = screen_completely_masked_profiles(time, data)
 
         gap_indices = np.where(np.diff(time) > max_gap_fraction_hour)[0]
         if not ma.is_masked(data):
@@ -348,21 +350,16 @@ class Plot:
         self._data = data_new
         figure_data.time_including_gaps = time_new
 
-    @staticmethod
-    def _get_unmasked_model_values(time: np.ndarray, data: ma.MaskedArray) -> tuple:
-        good_ind = np.where(np.any(~data.mask, axis=1))[0]
-        if len(good_ind) == 0:
-            msg = "No unmasked values in the file."
-            raise ValueError(msg)
-        good_ind = np.append(good_ind, good_ind[-1] + 1)
-        good_ind = np.clip(good_ind, 0, len(time) - 1)
-        return time[good_ind], data[good_ind, :]
-
-    def _read_flags(self, figure_data: FigureData) -> np.ndarray:
-        flag_name = f"{self.sub_plot.variable.name}_quality_flag"
-        if flag_name not in figure_data.variables:
-            flag_name = "temperature_quality_flag"
-        return figure_data.file.variables[flag_name][:] > 0
+    def _read_flagged_data(self, figure_data: FigureData) -> np.ndarray:
+        flag_names = [
+            f"{self.sub_plot.variable.name}_quality_flag",
+            "temperature_quality_flag",
+            "quality_flag",
+        ]
+        for flag_name in flag_names:
+            if flag_name in figure_data.file.variables:
+                return figure_data.file.variables[flag_name][:] > 0
+        return np.array([])
 
 
 class Plot2D(Plot):
@@ -385,7 +382,7 @@ class Plot2D(Plot):
             self._fill_flagged_data(figure_data)
 
     def _fill_flagged_data(self, figure_data: FigureData) -> None:
-        flags = self._read_flags(figure_data)
+        flags = self._read_flagged_data(figure_data)
         batches = find_batches_of_ones(flags)
         for batch in batches:
             if batch[0] == batch[1]:
@@ -469,12 +466,18 @@ class Plot2D(Plot):
 
 
 class Plot1D(Plot):
-    def plot_tb(self, figure_data: FigureData, ind: int):
-        flagged_data = self._pointing_filter(figure_data, ind)
-        self.plot(figure_data)
-        if ma.count(flagged_data) > 0:
-            self.plot_flag_data(figure_data.time, flagged_data)
+    def plot_tb(self, figure_data: FigureData, freq_ind: int):
+        self._data = self._data[:, freq_ind]
+        self._data_orig = self._data_orig[:, freq_ind]
+        is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
+        self._data[is_bad_zenith] = ma.masked
+        self._data_orig[is_bad_zenith] = ma.masked
+        flags = self._read_flagged_data(figure_data)[:, freq_ind]
+        flags[is_bad_zenith] = False
+        if np.any(flags):
+            self.plot_flag_data(figure_data.time[flags], self._data_orig[flags])
             self.add_legend()
+        self.plot(figure_data)
 
     def plot_flag_data(self, time: np.ndarray, values: np.ndarray) -> None:
         self._ax.plot(
@@ -511,7 +514,7 @@ class Plot1D(Plot):
         pos = self._ax.get_position()
         self._ax.set_position((pos.x0, pos.y0, pos.width * 0.965, pos.height))
         if figure_data.is_mwrpy_product():
-            flags = self._read_flags(figure_data)
+            flags = self._read_flagged_data(figure_data)
             if np.any(flags):
                 self.plot_flag_data(figure_data.time[flags], self._data_orig[flags])
                 self.add_legend()
@@ -556,8 +559,9 @@ class Plot1D(Plot):
         return min(max(line_width, 0.25), 0.9)
 
     def _plot_moving_average(self, figure_data: FigureData):
-        time = figure_data.time_including_gaps.copy()
-        data, time = self._get_unmasked_values(self._data, time)
+        time = figure_data.time.copy()
+        data = self._data_orig.copy()
+        data, time = self._get_unmasked_values(data, time)
         sma = self._calculate_moving_average(data, time, window=5)
         gap_time = _get_max_gap_in_minutes(figure_data)
         gaps = self._find_time_gap_indices(time, max_gap_min=gap_time)
@@ -574,24 +578,17 @@ class Plot1D(Plot):
         good_values = ~data.mask
         return data[good_values], time[good_values]
 
-    def _pointing_filter(self, figure_data: FigureData, ind: int) -> ndarray:
+    @staticmethod
+    def _get_bad_zenith_profiles(figure_data: FigureData) -> np.ndarray:
         zenith_limit = 5
-        status = 0
-        self._data = self._data[:, ind]
-        flagged_data = ma.masked_all_like(figure_data.time)
+        valid_pointing_status = 0
         if "pointing_flag" in figure_data.file.variables:
             pointing_flag = figure_data.file.variables["pointing_flag"][:]
             zenith_angle = figure_data.file.variables["zenith_angle"][:]
-            quality_flag = figure_data.file.variables["quality_flag"][:, ind]
-            # First mask bad zenith angle points
-            self._data[np.abs(zenith_angle) > zenith_limit] = ma.masked
-            self._data[pointing_flag != status] = ma.masked
-            # Store flagged data points for visualization
-            valid_ind = np.where(quality_flag != status)[0]
-            if len(valid_ind) > 0:
-                flagged_data[valid_ind] = self._data[valid_ind]
-            self._data[quality_flag != status] = ma.masked
-        return flagged_data
+            is_bad_zenith = np.abs(zenith_angle) > zenith_limit
+            is_bad_pointing = pointing_flag != valid_pointing_status
+            return is_bad_zenith | is_bad_pointing
+        return np.zeros_like(figure_data.time, dtype=bool)
 
     @staticmethod
     def _find_time_gap_indices(time: ndarray, max_gap_min: float) -> ndarray:
@@ -750,3 +747,15 @@ def find_batches_of_ones(array: np.ndarray) -> list[tuple[int, int]]:
     starts = np.where(np.diff(np.hstack(([0], array))) == 1)[0]
     stops = np.where(np.diff(np.hstack((array, [0]))) == -1)[0]
     return list(zip(starts, stops, strict=True))
+
+
+def screen_completely_masked_profiles(time: np.ndarray, data: ma.MaskedArray) -> tuple:
+    if not ma.is_masked(data):
+        return time, data
+    good_ind = np.where(np.any(~data.mask, axis=1))[0]
+    if len(good_ind) == 0:
+        msg = "All values masked in the file."
+        raise ValueError(msg)
+    good_ind = np.append(good_ind, good_ind[-1] + 1)
+    good_ind = np.clip(good_ind, 0, len(time) - 1)
+    return time[good_ind], data[good_ind, :]
