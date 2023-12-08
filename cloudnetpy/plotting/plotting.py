@@ -438,6 +438,7 @@ class Plot2D(Plot):
             self._data, vmin, vmax = lin2log(self._data, vmin, vmax)
 
         alt = self._screen_data_by_max_y(figure_data)
+
         image = self._ax.pcolorfast(
             figure_data.time_including_gaps,
             alt,
@@ -448,10 +449,22 @@ class Plot2D(Plot):
         )
         cbar = self._init_colorbar(image)
         cbar.set_label(str(self._plot_meta.clabel), fontsize=13)
+
         if self._is_log:
             cbar.set_ticks(np.arange(vmin, vmax + 1).tolist())
             tick_labels = get_log_cbar_tick_labels(vmin, vmax)
             cbar.ax.set_yticklabels(tick_labels)
+
+        if self._plot_meta.contour:
+            levels = np.linspace(vmin, vmax, num=10)
+            self._ax.contour(
+                figure_data.time_including_gaps,
+                alt,
+                self._data.T,
+                levels=levels,
+                colors="black",
+                linewidths=0.5,
+            )
 
     def _screen_data_by_max_y(self, figure_data: FigureData) -> ndarray:
         if figure_data.height is None:

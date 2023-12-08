@@ -9,6 +9,7 @@ class PlotMeta(NamedTuple):
     plot_range: tuple[float, float] | None = None
     log_scale: bool = False
     moving_average: bool = True
+    contour: bool = False
 
 
 _COLORS = {
