@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.56.6 – 2023-12-08
+
+- Fix moving average plot in precense of flagged data
+- Adjust flagged region style
+- Add PlottingError exception
+
 ## 1.56.5 – 2023-12-05
 
 - Improve mwrpy processing and plotting (#97)
