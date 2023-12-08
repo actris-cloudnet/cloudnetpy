@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.56.7 – 2023-12-08
+
+- Add dimension check to moving average plot
+
 ## 1.56.6 – 2023-12-08
 
 - Fix moving average plot in precense of flagged data
