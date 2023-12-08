@@ -392,10 +392,10 @@ class Plot2D(Plot):
             self._ax.fill_between(
                 time_batch,
                 *self._get_y_limits(),
-                facecolor="whitesmoke",
+                facecolor="white",
                 alpha=0.7,
-                edgecolor="grey",
                 label="_nolegend_",
+                zorder=10,
             )
 
     def _plot_segment_data(self, figure_data: FigureData) -> None:
@@ -456,12 +456,14 @@ class Plot2D(Plot):
             cbar.ax.set_yticklabels(tick_labels)
 
         if self._plot_meta.contour:
-            levels = np.linspace(vmin, vmax, num=10)
+            time_length = len(figure_data.time_including_gaps)
+            step = max(1, time_length // 200)
+            ind_time = np.arange(0, time_length, step)
             self._ax.contour(
-                figure_data.time_including_gaps,
+                figure_data.time_including_gaps[ind_time],
                 alt,
-                self._data.T,
-                levels=levels,
+                self._data[ind_time, :].T,
+                levels=np.linspace(vmin, vmax, num=10),
                 colors="black",
                 linewidths=0.5,
             )

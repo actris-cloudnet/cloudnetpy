@@ -113,6 +113,51 @@ ATTRIBUTES = {
             plot_range=(0, 50 / 3600000),
         )
     },
+    "mwr-single": {
+        "temperature": PlotMeta(
+            cmap="coolwarm",
+            plot_range=(223.15, 323.15),
+            contour=True,
+        ),
+        "potential_temperature": PlotMeta(
+            cmap="coolwarm",
+            plot_range=(260, 320),
+            contour=True,
+        ),
+        "equivalent_potential_temperature": PlotMeta(
+            cmap="coolwarm",
+            plot_range=(260, 320),
+            contour=True,
+        ),
+        "relative_humidity": PlotMeta(
+            plot_range=(0, 120),
+            contour=True,
+        ),
+        "absolute_humidity": PlotMeta(
+            plot_range=(1e-4, 1e-2),
+            log_scale=True,
+            contour=True,
+        ),
+    },
+    "mwr-multi": {
+        "temperature": PlotMeta(
+            cmap="coolwarm",
+            plot_range=(223.15, 323.15),
+            contour=True,
+        ),
+        "potential_temperature": PlotMeta(
+            cmap="coolwarm",
+            plot_range=(260, 320),
+            contour=True,
+        ),
+        "equivalent_potential_temperature": PlotMeta(
+            cmap="coolwarm", plot_range=(260, 320), contour=True
+        ),
+        "relative_humidity": PlotMeta(
+            plot_range=(0, 120),
+            contour=True,
+        ),
+    },
     "fallback": {
         "ier": PlotMeta(
             plot_range=(2e-5, 6e-5),
@@ -222,21 +267,6 @@ ATTRIBUTES = {
         "temperature": PlotMeta(
             cmap="RdBu_r",
             plot_range=(223.15, 323.15),
-        ),
-        "potential_temperature": PlotMeta(
-            cmap="RdBu_r",
-            plot_range=(260, 320),
-        ),
-        "equivalent_potential_temperature": PlotMeta(
-            cmap="RdBu_r",
-            plot_range=(260, 320),
-        ),
-        "absolute_humidity": PlotMeta(
-            plot_range=(1e-4, 1e-2),
-            log_scale=True,
-        ),
-        "relative_humidity": PlotMeta(
-            plot_range=(0, 120),
         ),
         "cloud_fraction": PlotMeta(
             cmap="Blues",
