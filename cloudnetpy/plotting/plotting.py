@@ -133,7 +133,7 @@ class FigureData:
             raise PlottingError(msg)
         return valid_variables, variable_indices
 
-    def _get_height(self) -> np.ndarray | None:
+    def _get_height(self) -> ndarray | None:
         m2km = 1e-3
         file_type = getattr(self.file, "cloudnet_file_type", "")
         if file_type == "model":
@@ -351,7 +351,7 @@ class Plot:
         self._data = data_new
         figure_data.time_including_gaps = time_new
 
-    def _read_flagged_data(self, figure_data: FigureData) -> np.ndarray:
+    def _read_flagged_data(self, figure_data: FigureData) -> ndarray:
         flag_names = [
             f"{self.sub_plot.variable.name}_quality_flag",
             "temperature_quality_flag",
@@ -399,11 +399,9 @@ class Plot2D(Plot):
             )
 
     def _plot_segment_data(self, figure_data: FigureData) -> None:
-        def _hide_segments(
-            data_in: ma.MaskedArray,
-        ) -> tuple[ma.MaskedArray, list, list]:
+        def _hide_segments() -> tuple[list, list]:
             if self._plot_meta.clabel is None:
-                msg = f"No clabel defined for {self.sub_plot.variable.name}."
+                msg = "Missing clabel"
                 raise ValueError(msg)
             labels = [x[0] for x in self._plot_meta.clabel]
             colors = [x[1] for x in self._plot_meta.clabel]
@@ -411,11 +409,11 @@ class Plot2D(Plot):
             indices = np.where(segments_to_hide)[0]
             for ind in np.flip(indices):
                 del labels[ind], colors[ind]
-                data_in[data_in == ind] = ma.masked
-                data_in[data_in > ind] -= 1
-            return data_in, colors, labels
+                self._data[self._data == ind] = ma.masked
+                self._data[self._data > ind] -= 1
+            return colors, labels
 
-        data, cbar, clabel = _hide_segments(self._data)
+        cbar, clabel = _hide_segments()
         alt = self._screen_data_by_max_y(figure_data)
         image = self._ax.pcolorfast(
             figure_data.time_including_gaps,
@@ -481,7 +479,7 @@ class Plot2D(Plot):
 
 
 class Plot1D(Plot):
-    def plot_tb(self, figure_data: FigureData, freq_ind: int):
+    def plot_tb(self, figure_data: FigureData, freq_ind: int) -> None:
         self._data = self._data[:, freq_ind]
         self._data_orig = self._data_orig[:, freq_ind]
         is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
@@ -494,7 +492,7 @@ class Plot1D(Plot):
             self.add_legend()
         self.plot(figure_data)
 
-    def plot_flag_data(self, time: np.ndarray, values: np.ndarray) -> None:
+    def plot_flag_data(self, time: ndarray, values: ndarray) -> None:
         self._ax.plot(
             time,
             values,
@@ -505,7 +503,7 @@ class Plot1D(Plot):
             zorder=10,
         )
 
-    def add_legend(self):
+    def add_legend(self) -> None:
         self._ax.legend(
             ["Flagged data"],
             markerscale=3,
@@ -513,7 +511,7 @@ class Plot1D(Plot):
             frameon=False,
         )
 
-    def plot(self, figure_data: FigureData):
+    def plot(self, figure_data: FigureData) -> None:
         units = self._convert_units()
         self._mark_gaps(figure_data)
         self._ax.plot(
@@ -569,11 +567,11 @@ class Plot1D(Plot):
         return default_options
 
     @staticmethod
-    def _get_line_width(time: np.ndarray) -> float:
+    def _get_line_width(time: ndarray) -> float:
         line_width = np.median(np.diff(time)) * 1000
         return min(max(line_width, 0.25), 0.9)
 
-    def _plot_moving_average(self, figure_data: FigureData):
+    def _plot_moving_average(self, figure_data: FigureData) -> None:
         time = figure_data.time.copy()
         data = self._data_orig.copy()
         data, time = self._get_unmasked_values(data, time)
@@ -587,15 +585,15 @@ class Plot1D(Plot):
     @staticmethod
     def _get_unmasked_values(
         data: ma.MaskedArray,
-        time: np.ndarray,
-    ) -> tuple[np.ndarray, np.ndarray]:
+        time: ndarray,
+    ) -> tuple[ndarray, ndarray]:
         if not ma.is_masked(data):
             return data, time
         good_values = ~data.mask
         return data[good_values], time[good_values]
 
     @staticmethod
-    def _get_bad_zenith_profiles(figure_data: FigureData) -> np.ndarray:
+    def _get_bad_zenith_profiles(figure_data: FigureData) -> ndarray:
         zenith_limit = 5
         valid_pointing_status = 0
         if "pointing_flag" in figure_data.file.variables:
@@ -613,8 +611,8 @@ class Plot1D(Plot):
 
     @staticmethod
     def _calculate_moving_average(
-        data: np.ndarray, time: np.ndarray, window: float = 5
-    ) -> np.ndarray:
+        data: ndarray, time: ndarray, window: float = 5
+    ) -> ndarray:
         if len(data) == 0:
             return np.array([])
         time_delta_hours = np.median(np.diff(time))
@@ -726,6 +724,25 @@ def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
     return max_allowed_gap.get(file_type, 10)
 
 
+def find_batches_of_ones(array: ndarray) -> list[tuple[int, int]]:
+    """Find batches of ones in a binary array."""
+    starts = np.where(np.diff(np.hstack(([0], array))) == 1)[0]
+    stops = np.where(np.diff(np.hstack((array, [0]))) == -1)[0]
+    return list(zip(starts, stops, strict=True))
+
+
+def screen_completely_masked_profiles(time: ndarray, data: ma.MaskedArray) -> tuple:
+    if not ma.is_masked(data):
+        return time, data
+    good_ind = np.where(np.any(~data.mask, axis=1))[0]
+    if len(good_ind) == 0:
+        msg = "All values masked in the file."
+        raise PlottingError(msg)
+    good_ind = np.append(good_ind, good_ind[-1] + 1)
+    good_ind = np.clip(good_ind, 0, len(time) - 1)
+    return time[good_ind], data[good_ind, :]
+
+
 def plot_2d(
     data: ma.MaskedArray,
     cmap: str = "viridis",
@@ -756,22 +773,3 @@ def plot_2d(
     if xlim is not None:
         plt.xlim(xlim)
     plt.show()
-
-
-def find_batches_of_ones(array: np.ndarray) -> list[tuple[int, int]]:
-    """Find batches of ones in a binary array."""
-    starts = np.where(np.diff(np.hstack(([0], array))) == 1)[0]
-    stops = np.where(np.diff(np.hstack((array, [0]))) == -1)[0]
-    return list(zip(starts, stops, strict=True))
-
-
-def screen_completely_masked_profiles(time: np.ndarray, data: ma.MaskedArray) -> tuple:
-    if not ma.is_masked(data):
-        return time, data
-    good_ind = np.where(np.any(~data.mask, axis=1))[0]
-    if len(good_ind) == 0:
-        msg = "All values masked in the file."
-        raise PlottingError(msg)
-    good_ind = np.append(good_ind, good_ind[-1] + 1)
-    good_ind = np.clip(good_ind, 0, len(time) - 1)
-    return time[good_ind], data[good_ind, :]
