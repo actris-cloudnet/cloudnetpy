@@ -4,6 +4,22 @@ from typing import NamedTuple
 
 
 class PlotMeta(NamedTuple):
+    """
+    A class representing the metadata for plotting.
+
+    Attributes:
+        cmap: The colormap to be used for the plot.
+        clabel: The label for the colorbar. It can be a single string, a sequence
+            of tuples containing the label and units for each colorbar, or None
+            if no colorbar is needed.
+        plot_range: The range of values to be plotted. It can be a tuple
+            containing the minimum and maximum values, or None if the range should
+            be automatically determined.
+        log_scale: Whether to use a logarithmic scale for the plot.
+        moving_average: Whether to add a moving average to a 1d plot.
+        contour: Whether to plot contours on top of a filled colormap.
+    """
+
     cmap: str = "viridis"
     clabel: str | Sequence[tuple[str, str]] | None = None
     plot_range: tuple[float, float] | None = None

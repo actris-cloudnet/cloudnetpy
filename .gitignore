@@ -6,4 +6,5 @@ tests/source_data/
 build/
 dist/
 .eggs/
+scripts/
 *~

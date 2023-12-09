@@ -22,6 +22,22 @@ from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
 
 @dataclass
 class PlotParameters:
+    """
+    Class representing the parameters for plotting.
+
+    Attributes:
+        dpi: The resolution of the plot in dots per inch.
+        max_y: Maximum y-axis value (km) in 2D time / height plots.
+        title: Whether to display the title of the plot.
+        subtitle: Whether to display the subtitle of the plot.
+        mark_data_gaps: Whether to mark data gaps in the plot.
+        grid: Whether to display grid lines in the plot.
+        edge_tick_labels: Whether to display tick labels on the edges of the plot.
+        show_sources: Whether to display the sources of plotted data.
+        footer_text: The text to display in the footer of the plot.
+        plot_meta: Additional metadata for the plot.
+    """
+
     dpi: float = 120
     max_y: int = 12
     title: bool = True
@@ -635,6 +651,20 @@ def generate_figure(
     output_filename: os.PathLike | str | None = None,
     options: PlotParameters | None = None,
 ) -> Dimensions:
+    """
+    Generate a figure based on the given filename and variables.
+
+    Args:
+        filename: The path to the input file.
+        variables: A list of variable names to plot.
+        show: Whether to display the figure. Defaults to True.
+        output_filename: The path to save the figure. Defaults to None.
+        options: Additional plot parameters. Defaults to None.
+
+    Returns:
+        Dimensions: Dimensions of a generated figure in pixels.
+
+    """
     if options is None:
         options = PlotParameters()
 
