@@ -211,10 +211,11 @@ class SubPlot:
         self.ax.set_title(title, fontsize=14)
 
     def add_grid(self) -> None:
+        zorder = _get_zorder("grid")
         self.ax.xaxis.set_minor_locator(AutoMinorLocator(4))
-        self.ax.grid(which="major", axis="x", color="k", lw=0.1)
-        self.ax.grid(which="minor", axis="x", lw=0.1, color="k", ls=":")
-        self.ax.grid(which="major", axis="y", lw=0.1, color="k", ls=":")
+        self.ax.grid(which="major", axis="x", color="k", lw=0.1, zorder=zorder)
+        self.ax.grid(which="minor", axis="x", lw=0.1, color="k", ls=":", zorder=zorder)
+        self.ax.grid(which="major", axis="y", lw=0.1, color="k", ls=":", zorder=zorder)
 
     def add_sources(self, figure_data: FigureData) -> None:
         source = getattr(self.variable, "source", None) or (
@@ -323,10 +324,10 @@ class Plot:
                 batch,
                 *self._get_y_limits(),
                 hatch="//",
-                facecolor="grey",
-                edgecolor="black",
-                alpha=0.15,
+                facecolor="whitesmoke",
+                edgecolor="lightgrey",
                 label="_nolegend_",
+                zorder=_get_zorder("data_gap"),
             )
 
     def _mark_gaps(self, figure_data: FigureData) -> None:
@@ -421,7 +422,7 @@ class Plot2D(Plot):
                 facecolor="white",
                 alpha=0.7,
                 label="_nolegend_",
-                zorder=10,
+                zorder=_get_zorder("flags"),
             )
 
     def _plot_segment_data(self, figure_data: FigureData) -> None:
@@ -448,6 +449,7 @@ class Plot2D(Plot):
             cmap=ListedColormap(cbar),
             vmin=-0.5,
             vmax=len(cbar) - 0.5,
+            zorder=_get_zorder("data"),
         )
         colorbar = self._init_colorbar(image)
         colorbar.set_ticks(np.arange(len(clabel)).tolist())
@@ -470,6 +472,7 @@ class Plot2D(Plot):
             cmap=plt.get_cmap(str(self._plot_meta.cmap)),
             vmin=vmin,
             vmax=vmax,
+            zorder=_get_zorder("data"),
         )
         cbar = self._init_colorbar(image)
         cbar.set_label(str(self._plot_meta.clabel), fontsize=13)
@@ -490,6 +493,7 @@ class Plot2D(Plot):
                 levels=np.linspace(vmin, vmax, num=10),
                 colors="black",
                 linewidths=0.5,
+                zorder=_get_zorder("contour"),
             )
 
     def _screen_data_by_max_y(self, figure_data: FigureData) -> ndarray:
@@ -526,7 +530,7 @@ class Plot1D(Plot):
             marker=".",
             lw=0,
             markersize=3,
-            zorder=10,
+            zorder=_get_zorder("flags"),
         )
 
     def add_legend(self) -> None:
@@ -545,6 +549,7 @@ class Plot1D(Plot):
             self._data,
             label="_nolegend_",
             **self._get_plot_options(),
+            zorder=_get_zorder("data"),
         )
         if self._plot_meta.moving_average:
             self._plot_moving_average(figure_data)
@@ -606,7 +611,14 @@ class Plot1D(Plot):
         gaps = self._find_time_gap_indices(time, max_gap_min=gap_time)
         sma[gaps] = np.nan
         if len(sma) == len(time):
-            self._ax.plot(time, sma, color="slateblue", lw=2, label="_nolegend_")
+            self._ax.plot(
+                time,
+                sma,
+                color="slateblue",
+                lw=2,
+                label="_nolegend_",
+                zorder=_get_zorder("mean_curve"),
+            )
 
     @staticmethod
     def _get_unmasked_values(
@@ -762,6 +774,15 @@ def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
         "mwr-multi": 21,
     }
     return max_allowed_gap.get(file_type, 10)
+
+
+def _get_zorder(name: str) -> int:
+    zorder = {
+        "contour": 2,
+        "data_gap": 2,
+        "flags": 2,
+    }
+    return zorder.get(name, -1)
 
 
 def find_batches_of_ones(array: ndarray) -> list[tuple[int, int]]:
