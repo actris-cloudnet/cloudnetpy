@@ -1,5 +1,6 @@
 """Misc. plotting routines for Cloudnet products."""
 import os.path
+import textwrap
 from dataclasses import dataclass
 from datetime import date
 
@@ -242,11 +243,20 @@ class SubPlot:
     def set_xlabel(self) -> None:
         self.ax.set_xlabel("Time (UTC)", fontsize=13)
 
-    def show_footer(self, fig: Figure):
+    def show_footer(self, fig: Figure, ax: Axes) -> None:
         if isinstance(self.options.footer_text, str):
+            n = 50
+            if len(self.options.footer_text) > n:
+                wrapped_text = textwrap.fill(self.options.footer_text, n)
+                self.options.footer_text = "\n".join(wrapped_text.splitlines())
+
+            n_lines = self.options.footer_text.count("\n") + 1
+            y0 = ax.get_position().y0
+            y1 = ax.get_position().y1
+            y = (y1 - y0) * (n_lines * 0.06 + 0.1)
             fig.text(
                 0.06,
-                -0.05 + len(fig.get_axes()) / 50,
+                y0 - y,
                 self.options.footer_text,
                 fontsize=11,
                 ha="left",
@@ -703,7 +713,7 @@ def generate_figure(
     subplot.set_xlabel()
 
     if options.footer_text is not None:
-        subplot.show_footer(fig)
+        subplot.show_footer(fig, ax)
 
     if output_filename:
         plt.savefig(output_filename, bbox_inches="tight")
