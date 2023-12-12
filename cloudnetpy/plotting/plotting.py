@@ -291,7 +291,7 @@ class Plot:
         self._is_log = sub_plot.plot_meta.log_scale
         self._ax = sub_plot.ax
 
-    def _convert_units(self) -> str | None:
+    def _convert_units(self) -> str:
         multiply, add = "multiply", "add"
         units_conversion = {
             "rainfall_rate": (multiply, 360000, "mm h$^{-1}$"),
@@ -310,6 +310,7 @@ class Plot:
             self._data += conversion
             self._data_orig += conversion
         if units is not None:
+            self._plot_meta = self._plot_meta._replace(clabel=units)
             return units
         units = getattr(self.sub_plot.variable, "units", "")
         return _reformat_units(units)
