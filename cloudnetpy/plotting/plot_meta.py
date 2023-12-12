@@ -15,8 +15,8 @@ class PlotMeta(NamedTuple):
         plot_range: The range of values to be plotted. It can be a tuple
             containing the minimum and maximum values, or None if the range should
             be automatically determined.
-        log_scale: Whether to use a logarithmic scale for the plot.
-        moving_average: Whether to add a moving average to a 1d plot.
+        log_scale: Whether to plot data values in a logarithmic scale.
+        moving_average: Whether to plot a moving average in a 1d plot.
         contour: Whether to plot contours on top of a filled colormap.
     """
 

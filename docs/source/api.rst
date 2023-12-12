@@ -78,6 +78,12 @@ CloudnetPy offers an easy-to-use plotting interface:
 
 .. autofunction:: plotting.generate_figure
 
+.. autoclass:: plotting.PlotParameters
+
+.. autoclass:: plotting.PlotMeta
+
+.. autoclass:: plotting.Dimensions
+
 Categorize modules
 ------------------
 

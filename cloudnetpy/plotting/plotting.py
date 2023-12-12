@@ -34,7 +34,8 @@ class PlotParameters:
         mark_data_gaps: Whether to mark data gaps in the plot.
         grid: Whether to display grid lines in the plot.
         edge_tick_labels: Whether to display tick labels on the edges of the plot.
-        show_sources: Whether to display the sources of plotted data.
+        show_sources: Whether to display the sources of plotted data (i.e.
+            instruments and model).
         footer_text: The text to display in the footer of the plot.
         plot_meta: Additional metadata for the plot.
     """
@@ -52,14 +53,18 @@ class PlotParameters:
 
 
 class Dimensions:
-    """Dimensions of a generated figure in pixels."""
+    """
+    Dimensions of a generated figure in pixels. Elements such as the figure
+    title, labels, colorbar and legend are exluded from the margins.
 
-    width: int
-    height: int
-    margin_top: int
-    margin_right: int
-    margin_bottom: int
-    margin_left: int
+    Attributes:
+        width: Figure width in pixels.
+        height: Figure height in pixels.
+        margin_top: Space between top edge of image and plotted data in pixels.
+        margin_right: Space between right edge of image and plotted data in pixels.
+        margin_bottom: Space between bottom edge of image and plotted data in pixels.
+        margin_left: Space between left edge of image and plotted data in pixels.
+    """
 
     def __init__(self, fig, axes, pad_inches: float | None = None):
         if pad_inches is None:
