@@ -58,12 +58,14 @@ class Dimensions:
     title, labels, colorbar and legend are exluded from the margins.
 
     Attributes:
-        width: Figure width in pixels.
-        height: Figure height in pixels.
-        margin_top: Space between top edge of image and plotted data in pixels.
-        margin_right: Space between right edge of image and plotted data in pixels.
-        margin_bottom: Space between bottom edge of image and plotted data in pixels.
-        margin_left: Space between left edge of image and plotted data in pixels.
+        width (int): Figure width in pixels.
+        height (int): Figure height in pixels.
+        margin_top (int): Space between top edge of image and plotted data in pixels.
+        margin_right (int): Space between right edge of image and plotted data
+            in pixels.
+        margin_bottom (int): Space between bottom edge of image and plotted
+            data in pixels.
+        margin_left (int): Space between left edge of image and plotted data in pixels.
     """
 
     def __init__(self, fig, axes, pad_inches: float | None = None):
