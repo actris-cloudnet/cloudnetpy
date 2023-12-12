@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.56.8 – 2023-12-12
+
+- Adjust plotting
+- Fix a few small bugs and other issues
+
 ## 1.56.7 – 2023-12-08
 
 - Add dimension check to moving average plot
