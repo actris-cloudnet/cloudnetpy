@@ -653,6 +653,8 @@ class Plot1D(Plot):
     ) -> ndarray:
         if len(data) == 0:
             return np.array([])
+        if len(data) == 1:
+            return data
         time_delta_hours = np.median(np.diff(time))
         window_size = int(window / 60 / time_delta_hours)
         if window_size < 1:
