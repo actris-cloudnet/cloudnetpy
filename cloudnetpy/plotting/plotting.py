@@ -517,38 +517,6 @@ class Plot2D(Plot):
 
 
 class Plot1D(Plot):
-    def plot_tb(self, figure_data: FigureData, freq_ind: int) -> None:
-        self._data = self._data[:, freq_ind]
-        self._data_orig = self._data_orig[:, freq_ind]
-        is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
-        self._data[is_bad_zenith] = ma.masked
-        self._data_orig[is_bad_zenith] = ma.masked
-        flags = self._read_flagged_data(figure_data)[:, freq_ind]
-        flags[is_bad_zenith] = False
-        if np.any(flags):
-            self.plot_flag_data(figure_data.time[flags], self._data_orig[flags])
-            self.add_legend()
-        self.plot(figure_data)
-
-    def plot_flag_data(self, time: ndarray, values: ndarray) -> None:
-        self._ax.plot(
-            time,
-            values,
-            color="salmon",
-            marker=".",
-            lw=0,
-            markersize=3,
-            zorder=_get_zorder("flags"),
-        )
-
-    def add_legend(self) -> None:
-        self._ax.legend(
-            ["Flagged data"],
-            markerscale=3,
-            numpoints=1,
-            frameon=False,
-        )
-
     def plot(self, figure_data: FigureData) -> None:
         units = self._convert_units()
         self._mark_gaps(figure_data)
@@ -568,8 +536,57 @@ class Plot1D(Plot):
         if figure_data.is_mwrpy_product():
             flags = self._read_flagged_data(figure_data)
             if np.any(flags):
-                self.plot_flag_data(figure_data.time[flags], self._data_orig[flags])
-                self.add_legend()
+                self._plot_flag_data(figure_data.time[flags], self._data_orig[flags])
+                self._add_legend()
+
+    def plot_tb(self, figure_data: FigureData, freq_ind: int) -> None:
+        self._data = self._data[:, freq_ind]
+        self._data_orig = self._data_orig[:, freq_ind]
+        is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
+        self._data[is_bad_zenith] = ma.masked
+        self._data_orig[is_bad_zenith] = ma.masked
+        flags = self._read_flagged_data(figure_data)[:, freq_ind]
+        flags[is_bad_zenith] = False
+        if np.any(flags):
+            self._plot_flag_data(figure_data.time[flags], self._data_orig[flags])
+            self._add_legend()
+        self.plot(figure_data)
+        self._show_frequency(figure_data, freq_ind)
+
+    def _show_frequency(self, figure_data: FigureData, freq_ind: int) -> None:
+        frequency = figure_data.file.variables["frequency"][freq_ind]
+        self._ax.text(
+            0.0,
+            -0.13,
+            f"Freq: {frequency:.2f} GHz",
+            transform=self._ax.transAxes,
+            fontsize=12,
+            color="dimgrey",
+            bbox={
+                "facecolor": "white",
+                "linewidth": 0,
+                "boxstyle": "round",
+            },
+        )
+
+    def _plot_flag_data(self, time: ndarray, values: ndarray) -> None:
+        self._ax.plot(
+            time,
+            values,
+            color="salmon",
+            marker=".",
+            lw=0,
+            markersize=3,
+            zorder=_get_zorder("flags"),
+        )
+
+    def _add_legend(self) -> None:
+        self._ax.legend(
+            ["Flagged data"],
+            markerscale=3,
+            numpoints=1,
+            frameon=False,
+        )
 
     def _get_y_limits(self) -> tuple[float, float]:
         percent_gap = 0.05
@@ -605,11 +622,6 @@ class Plot1D(Plot):
 
         return default_options
 
-    @staticmethod
-    def _get_line_width(time: ndarray) -> float:
-        line_width = np.median(np.diff(time)) * 1000
-        return min(max(line_width, 0.25), 0.9)
-
     def _plot_moving_average(self, figure_data: FigureData) -> None:
         time = figure_data.time.copy()
         data = self._data_orig.copy()
@@ -627,6 +639,11 @@ class Plot1D(Plot):
                 label="_nolegend_",
                 zorder=_get_zorder("mean_curve"),
             )
+
+    @staticmethod
+    def _get_line_width(time: ndarray) -> float:
+        line_width = np.median(np.diff(time)) * 1000
+        return min(max(line_width, 0.25), 0.9)
 
     @staticmethod
     def _get_unmasked_values(
