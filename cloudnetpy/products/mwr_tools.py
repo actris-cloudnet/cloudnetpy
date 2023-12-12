@@ -4,9 +4,11 @@ from typing import Literal
 import netCDF4
 from mwrpy.level2.lev2_collocated import generate_lev2_multi as gen_multi
 from mwrpy.level2.lev2_collocated import generate_lev2_single as gen_single
+from mwrpy.level2.write_lev2_nc import MissingInputData
 from mwrpy.version import __version__ as mwrpy_version
 
 from cloudnetpy import output, utils
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.products import product_tools
 
 
@@ -59,7 +61,10 @@ def _generate_product(
     fun = gen_multi if product == "multi" else gen_single
     with tempfile.TemporaryDirectory() as temp_dir:
         coeffs = product_tools.get_read_mwrpy_coeffs(mwr_l1c_file, temp_dir)
-        fun(None, mwr_l1c_file, output_file, coeff_files=coeffs)
+        try:
+            fun(None, mwr_l1c_file, output_file, coeff_files=coeffs)
+        except MissingInputData as err:
+            raise ValidTimeStampError from err
     with (
         netCDF4.Dataset(mwr_l1c_file, "r") as nc_input,
         netCDF4.Dataset(output_file, "r+") as nc_output,
