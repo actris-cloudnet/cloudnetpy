@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.56.9 – 2023-12-13
+
+- Fix colorbar label of certain 2d plots
+- Show frequency in brightness temperature plot
+
 ## 1.56.8 – 2023-12-12
 
 - Adjust plotting
