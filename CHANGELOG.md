@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.56.10 – 2023-12-15
+
+- Remove radar-detected liquid at warm temperatures
+
 ## 1.56.9 – 2023-12-13
 
 - Fix colorbar label of certain 2d plots
