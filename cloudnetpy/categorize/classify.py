@@ -51,6 +51,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
             liquid_from_radar,
             liquid_from_lidar,
         )
+        liquid_from_radar[~bits[2]] = 0
         bits[0] = liquid_from_radar | liquid_from_lidar
     else:
         bits[0] = droplet.correct_liquid_top(obs, liquid_from_lidar, bits[2], limit=500)
