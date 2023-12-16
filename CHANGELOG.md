@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.56.11 – 2023-12-16
+
+- Correct voodoo liquid tops
+
 ## 1.56.10 – 2023-12-15
 
 - Remove radar-detected liquid at warm temperatures
