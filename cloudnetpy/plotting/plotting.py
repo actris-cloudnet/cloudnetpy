@@ -294,7 +294,7 @@ class Plot:
     def _convert_units(self) -> str:
         multiply, add = "multiply", "add"
         units_conversion = {
-            "rainfall_rate": (multiply, 360000, "mm h$^{-1}$"),
+            "rainfall_rate": (multiply, 3600000, "mm h$^{-1}$"),
             "air_pressure": (multiply, 0.01, "hPa"),
             "relative_humidity": (multiply, 100, "%"),
             "rainfall_amount": (multiply, 1000, "mm"),
