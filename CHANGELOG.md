@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.56.12 – 2024-01-08
+
+- Fix unit in rainfall rate plots
+
 ## 1.56.11 – 2023-12-16
 
 - Correct voodoo liquid tops
