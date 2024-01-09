@@ -629,7 +629,8 @@ class Plot1D(Plot):
         sma = self._calculate_moving_average(data, time, window=5)
         gap_time = _get_max_gap_in_minutes(figure_data)
         gaps = self._find_time_gap_indices(time, max_gap_min=gap_time)
-        sma[gaps] = np.nan
+        if len(gaps) > 0:
+            sma[gaps] = np.nan
         if len(sma) == len(time):
             self._ax.plot(
                 time,
