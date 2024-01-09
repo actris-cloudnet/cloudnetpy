@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.56.13 – 2024-01-09
+
+- Fix moving average plotting when no gaps
+- Check parsivel time vector
+
 ## 1.56.12 – 2024-01-08
 
 - Fix unit in rainfall rate plots
