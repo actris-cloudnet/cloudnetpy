@@ -66,6 +66,9 @@ def parsivel2nc(
     disdrometer = Parsivel(disdrometer_file, site_meta, telegram, date, timestamps)
     disdrometer.sort_timestamps()
     disdrometer.remove_duplicate_timestamps()
+    if len(disdrometer.data["time"].data) < 2:
+        msg = "Too few data points"
+        raise DisdrometerDataError(msg)
     disdrometer.convert_units()
     disdrometer.add_meta()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
