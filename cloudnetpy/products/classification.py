@@ -166,7 +166,7 @@ DEFINITIONS = {
         "Value 5: Good radar echo only.\n"
         "Value 6: No radar echo but known attenuation.\n"
         "Value 7: Radar echo corrected for liquid attenuation using microwave\n"
-        "         radiometer data."
+        "         radiometer data.\n"
         "Value 8: Radar ground clutter.\n"
         "Value 9: Lidar clear-air molecular scattering."
     ),
