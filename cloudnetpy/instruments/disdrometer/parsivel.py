@@ -498,28 +498,56 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
         return data
 
 
-def _read_typ_op4a(filename: str | PathLike) -> dict[str, list]:
+def _read_typ_op4a(lines: list[str]) -> dict[str, list]:
     """Read output of "CS/PA" command. The output starts with line "TYP OP4A"
     followed by one line per measured variable in format: <number>:<value>.
     Output ends with characters: <ETX><CR><LF><NUL>. Lines are separated by
     <CR><LF>.
     """
     data = {}
-    with open(filename, encoding="latin1", errors="ignore") as file:
-        for line in file:
-            if ":" not in line:
-                continue
-            key, value = line.strip().split(":", maxsplit=1)
-            # Skip datetime and 16-bit values.
-            if key in ("19", "30", "31", "32", "33"):
-                continue
-            varname = TELEGRAM.get(int(key))
-            if varname is None:
-                continue
-            parser = PARSERS.get(varname, next)
-            tokens = value.split(";")
-            data[varname] = [parser(iter(tokens))]
+    for line in lines:
+        if ":" not in line:
+            continue
+        key, value = line.strip().split(":", maxsplit=1)
+        # Skip datetime and 16-bit values.
+        if key in ("19", "30", "31", "32", "33"):
+            continue
+        varname = TELEGRAM.get(int(key))
+        if varname is None:
+            continue
+        parser = PARSERS.get(varname, next)
+        tokens = value.split(";")
+        data[varname] = [parser(iter(tokens))]
     return data
+
+
+def _read_fmi(content: str):
+    """Read format used by Finnish Meteorological Institute and University of
+    Helsinki:
+    - "[YYYY-MM-DD HH:MM:SS\n"
+    - output of "CS/PA" command without non-printable characters at the end
+    - "]\n"
+    """
+    output: dict[str, Any] = defaultdict(list)
+    for m in re.finditer(
+        r"\[(?P<year>\d+)-(?P<month>\d+)-(?P<day>\d+) "
+        r"(?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+)"
+        r"(?P<output>[^\]]*)\]",
+        content,
+    ):
+        for key, value in _read_typ_op4a(m["output"].splitlines()).items():
+            output[key].append(value)
+        output["_datetime"].append(
+            datetime.datetime(
+                int(m["year"]),
+                int(m["month"]),
+                int(m["day"]),
+                int(m["hour"]),
+                int(m["minute"]),
+                int(m["second"]),
+            )
+        )
+    return output
 
 
 def _read_parsivel(
@@ -530,17 +558,20 @@ def _read_parsivel(
     combined_data = defaultdict(list)
     for filename in filenames:
         with open(filename, encoding="latin1", errors="ignore") as file:
-            lines = file.read().splitlines()
+            content = file.read()
+            lines = content.splitlines()
         if not lines:
             msg = f"File '{filename}' is empty"
             raise DisdrometerDataError(msg)
         if "TOA5" in lines[0]:
             data = _read_toa5(filename)
         elif "TYP OP4A" in lines[0]:
-            data = _read_typ_op4a(filename)
+            data = _read_typ_op4a(lines)
         elif "Date" in lines[0]:
             headers = _parse_headers(lines[0])
             data = _read_rows(headers, lines[1:])
+        elif "[" in lines[0]:
+            data = _read_fmi(content)
         elif telegram is not None:
             headers = _parse_telegram(telegram)
             data = _read_rows(headers, lines)

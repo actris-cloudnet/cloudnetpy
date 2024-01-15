@@ -214,6 +214,26 @@ class TestParsivel8(Check):
         )
 
 
+class TestParsivel9(Check):
+    date = "2024-01-14"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/parsivel/hyytiala.txt"
+    site_meta = SITE_META
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.serial_number == "291923"
+        assert np.allclose(
+            self.nc["time"][:],
+            [
+                timedelta(hours=0, minutes=0, seconds=0) / timedelta(hours=1),
+                timedelta(hours=0, minutes=1, seconds=0) / timedelta(hours=1),
+                timedelta(hours=0, minutes=2, seconds=0) / timedelta(hours=1),
+            ],
+        )
+
+
 class TestThies(Check):
     date = "2021-09-15"
     temp_dir = TemporaryDirectory()
