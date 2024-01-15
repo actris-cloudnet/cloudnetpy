@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.56.14 – 2024-01-15
+
+- Support yet another Parsivel format
+- Fix line break in a netCDF definition
+
 ## 1.56.13 – 2024-01-09
 
 - Fix moving average plotting when no gaps
