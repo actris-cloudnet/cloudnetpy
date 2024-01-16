@@ -1,5 +1,6 @@
 """Misc. plotting routines for Cloudnet products."""
 import os.path
+import re
 import textwrap
 from dataclasses import dataclass
 from datetime import date
@@ -775,23 +776,9 @@ def get_log_cbar_tick_labels(value_min: float, value_max: float) -> list[str]:
 
 
 def _reformat_units(unit: str) -> str:
-    unit_mapping = {
-        "1": "",
-        "mu m": "$\\mu$m",
-        "m-3": "m$^{-3}$",
-        "m s-1": "m s$^{-1}$",
-        "sr-1 m-1": "sr$^{-1}$ m$^{-1}$",
-        "kg m-2": "kg m$^{-2}$",
-        "kg m-3": "kg m$^{-3}$",
-        "g m-3": "g m$^{-3}$",
-        "g m-2": "g m$^{-2}$",
-        "kg m-2 s-1": "kg m$^{-2}$ s$^{-1}$",
-        "dB km-1": "dB km$^{-1}$",
-        "rad km-1": "rad km$^{-1}$",
-    }
-    if unit in unit_mapping:
-        return unit_mapping[unit]
-    return unit
+    if unit == "1":
+        return ""
+    return re.sub(r"(-\d+)", r"$^{\1}$", unit).replace("mu ", "$\\mu$")
 
 
 def _get_max_gap_in_minutes(figure_data: FigureData) -> float:

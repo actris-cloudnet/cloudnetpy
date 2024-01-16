@@ -131,3 +131,23 @@ def test_screen_completely_masked_profiles_with_all_masked_2():
     )
     with pytest.raises(PlottingError, match="All values masked in the file."):
         plotting.screen_completely_masked_profiles(time, data)
+
+@pytest.mark.parametrize(
+    "units, result",
+    [
+        ("1", ""),
+        ("mu m", "$\\mu$m"),
+        ("m-3", "m$^{-3}$"),
+        ("m s-1", "m s$^{-1}$"),
+        ("sr-1 m-1", "sr$^{-1}$ m$^{-1}$"),
+        ("kg m-2", "kg m$^{-2}$"),
+        ("kg m-3", "kg m$^{-3}$"),
+        ("g m-3", "g m$^{-3}$"),
+        ("g m-2", "g m$^{-2}$"),
+        ("kg m-2 s-1", "kg m$^{-2}$ s$^{-1}$"),
+        ("dB km-1", "dB km$^{-1}$"),
+        ("rad km-1", "rad km$^{-1}$"),
+    ],
+)
+def test_reformat_units(units, result):
+    assert plotting._reformat_units(units) == result
