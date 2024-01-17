@@ -115,6 +115,7 @@ class FigureData:
             1,
             figsize=(16, 4 + (n_subplots - 1) * 4.8),
             dpi=self.options.dpi,
+            sharex=True,
         )
         fig.subplots_adjust(left=0.06, right=0.73)
         if n_subplots == 1:
