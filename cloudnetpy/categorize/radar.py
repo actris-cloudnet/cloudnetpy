@@ -248,9 +248,6 @@ class Radar(DataSource):
                 PhD Thesis, University of Reading, UK.
 
             """
-            if "width" not in self.data:
-                return 0.3
-
             noise_threshold = 3
             n_pulses = _number_of_independent_pulses()
             ln_to_log10 = 10 / np.log(10)
@@ -271,9 +268,15 @@ class Radar(DataSource):
                 Advances in Geophys., 10, 318-478.
 
             """
+            if "width" not in self.data:
+                default_width = 0.3
+                width = np.zeros_like(self.data["Z"][:])
+                width[~width.mask] = default_width
+            else:
+                width = self.data["width"][:]
             dwell_time = utils.mdiff(self.time) * SEC_IN_HOUR
             wl = SPEED_OF_LIGHT / (self.radar_frequency * GHZ_TO_HZ)
-            return 4 * np.sqrt(math.pi) * dwell_time * self.data["width"][:] / wl
+            return 4 * np.sqrt(math.pi) * dwell_time * width / wl
 
         def _calc_z_power_min() -> float:
             if ma.all(z_power.mask):
