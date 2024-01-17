@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.57.0 – 2024-01-17
+
+- Support plotting of additional Parsivel variables
+- Mask invalid values in `number_concentration` and `fall_velocity`
+- Fix units of `number_concentration` variable
+- Share x-axis on multiple plots
+
 ## 1.56.14 – 2024-01-15
 
 - Support yet another Parsivel format
