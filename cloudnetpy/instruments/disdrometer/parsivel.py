@@ -155,6 +155,8 @@ class Parsivel(CloudnetInstrument):
         self._convert_data(("diameter", "diameter_spread", "diameter_bnds"), 1e3)
         self._convert_data(("V_sensor_supply",), 10)
         self._convert_data(("T_sensor",), c_to_k, method="add")
+        if variable := self.data.get("number_concentration"):
+            variable.data = np.power(10, variable.data).round().astype(np.uint32)
 
     def add_meta(self) -> None:
         valid_keys = ("latitude", "longitude", "altitude")
