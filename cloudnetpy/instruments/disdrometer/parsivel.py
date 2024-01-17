@@ -9,6 +9,7 @@ from os import PathLike
 from typing import Any, Literal
 
 import numpy as np
+from numpy import ma
 
 from cloudnetpy import output
 from cloudnetpy.cloudnetarray import CloudnetArray
@@ -66,6 +67,7 @@ def parsivel2nc(
     disdrometer = Parsivel(disdrometer_file, site_meta, telegram, date, timestamps)
     disdrometer.sort_timestamps()
     disdrometer.remove_duplicate_timestamps()
+    disdrometer.mask_invalid_values()
     if len(disdrometer.data["time"].data) < 2:
         msg = "Too few data points"
         raise DisdrometerDataError(msg)
@@ -146,6 +148,12 @@ class Parsivel(CloudnetInstrument):
         n_values = [10, 5, 5, 5, 5, 2]
         spreads = [0.125, 0.25, 0.5, 1, 2, 3]
         Disdrometer.store_vectors(self.data, n_values, spreads, "diameter")
+
+    def mask_invalid_values(self) -> None:
+        if variable := self.data.get("number_concentration"):
+            variable.data = ma.masked_where(variable.data == -9.999, variable.data)
+        if variable := self.data.get("fall_velocity"):
+            variable.data = ma.masked_where(variable.data == 0, variable.data)
 
     def convert_units(self) -> None:
         mmh_to_ms = SEC_IN_HOUR / MM_TO_M
