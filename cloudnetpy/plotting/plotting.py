@@ -161,6 +161,7 @@ class FigureData:
 
     def _get_height(self) -> ndarray | None:
         m2km = 1e-3
+        m2mm = 1e3
         file_type = getattr(self.file, "cloudnet_file_type", "")
         if file_type == "model":
             return ma.mean(self.file.variables["height"][:], axis=0) * m2km
@@ -168,6 +169,8 @@ class FigureData:
             return self.file.variables["height"][:] * m2km
         if "range" in self.file.variables:
             return self.file.variables["range"][:] * m2km
+        if "diameter" in self.file.variables:
+            return self.file.variables["diameter"][:] * m2mm
         return None
 
     def is_mwrpy_product(self) -> bool:
@@ -297,6 +300,7 @@ class Plot:
         multiply, add = "multiply", "add"
         units_conversion = {
             "rainfall_rate": (multiply, 3600000, "mm h$^{-1}$"),
+            "snowfall_rate": (multiply, 3600000, "mm h$^{-1}$"),
             "air_pressure": (multiply, 0.01, "hPa"),
             "relative_humidity": (multiply, 100, "%"),
             "rainfall_amount": (multiply, 1000, "mm"),
@@ -734,6 +738,9 @@ def generate_figure(
                 Plot1D(subplot).plot_tb(figure_data, ind)
             elif variable.ndim == 1:
                 Plot1D(subplot).plot(figure_data)
+            elif variable.name in ("number_concentration", "fall_velocity"):
+                Plot2D(subplot).plot(figure_data)
+                subplot.set_yax(ylabel="Diameter (mm)", y_limits=(0, 10))
             else:
                 Plot2D(subplot).plot(figure_data)
                 subplot.set_yax(y_limits=(0, figure_data.options.max_y))
