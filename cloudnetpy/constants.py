@@ -20,8 +20,12 @@ RS: Final = 287.058
 RHO_ICE: Final = 917
 
 # other
+SPEED_OF_LIGHT: Final = 3.0e8
 SEC_IN_MINUTE: Final = 60
 SEC_IN_HOUR: Final = 3600
 SEC_IN_DAY: Final = 86400
 MM_TO_M: Final = 1e-3
 G_TO_KG: Final = 1e-3
+M_S_TO_MM_H: Final = SEC_IN_HOUR / MM_TO_M
+MM_H_TO_M_S: Final = 1 / M_S_TO_MM_H
+GHZ_TO_HZ: Final = 1e9

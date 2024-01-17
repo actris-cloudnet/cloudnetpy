@@ -7,8 +7,8 @@ from numpy import ma
 from scipy import constants
 
 from cloudnetpy import utils
-from cloudnetpy.categorize.classify import ClassificationResult
-from cloudnetpy.constants import SEC_IN_HOUR
+from cloudnetpy.categorize.containers import ClassificationResult
+from cloudnetpy.constants import GHZ_TO_HZ, SEC_IN_HOUR, SPEED_OF_LIGHT
 from cloudnetpy.datasource import DataSource
 
 
@@ -241,11 +241,21 @@ class Radar(DataSource):
             return z_sensitivity
 
         def _calc_error() -> np.ndarray | float:
+            """Returns error of radar as function of altitude.
+
+            References:
+                Hogan, R. J., 1998: Dual-wavelength radar studies of clouds.
+                PhD Thesis, University of Reading, UK.
+
+            """
             if "width" not in self.data:
                 return 0.3
-            z_precision = 4.343 * (
-                1 / np.sqrt(_number_of_independent_pulses())
-                + utils.db2lin(z_power_min - z_power) / 3
+
+            noise_threshold = 3
+            n_pulses = _number_of_independent_pulses()
+            ln_to_log10 = 10 / np.log(10)
+            z_precision = (ln_to_log10 / np.sqrt(n_pulses)) * (
+                1 + (utils.db2lin(z_power_min - z_power) / noise_threshold)
             )
             gas_error = attenuations["radar_gas_atten"] * 0.1
             liq_error = attenuations["liquid_atten_err"].filled(0)
@@ -254,16 +264,16 @@ class Radar(DataSource):
             return z_error
 
         def _number_of_independent_pulses() -> float:
+            """Returns number of independent pulses.
+
+            References:
+                Atlas, D., 1964: Advances in radar meteorology.
+                Advances in Geophys., 10, 318-478.
+
+            """
             dwell_time = utils.mdiff(self.time) * SEC_IN_HOUR
-            return (
-                dwell_time
-                * self.radar_frequency
-                * 1e9
-                * 4
-                * np.sqrt(math.pi)
-                * self.data["width"][:]
-                / 3e8
-            )
+            wl = SPEED_OF_LIGHT / (self.radar_frequency * GHZ_TO_HZ)
+            return 4 * np.sqrt(math.pi) * dwell_time * self.data["width"][:] / wl
 
         def _calc_z_power_min() -> float:
             if ma.all(z_power.mask):
