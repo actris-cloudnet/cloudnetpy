@@ -372,7 +372,10 @@ def _parse_spectrum(tokens: Iterator[str]) -> np.ndarray:
     return np.array(values, dtype="i2").reshape((32, 32))
 
 
-PARSERS: dict[str, Callable[[Iterator[str]], Any]] = {
+ParserType = Callable[[Iterator[str]], Any]
+
+
+PARSERS: dict[str, ParserType] = {
     "I_heating": _parse_float,
     "T_sensor": _parse_int,
     "_T_pcb": _parse_int,
@@ -399,6 +402,16 @@ PARSERS: dict[str, Callable[[Iterator[str]], Any]] = {
     "synop_WaWa": _parse_int,
     "synop_WW": _parse_int,
     "visibility": _parse_int,
+}
+
+EMPTY_VALUES: dict[ParserType, Any] = {
+    _parse_int: 0,
+    _parse_float: 0.0,
+    _parse_date: datetime.date(2000, 1, 1),
+    _parse_time: datetime.time(12, 0, 0),
+    _parse_datetime: datetime.datetime(2000, 1, 1),
+    _parse_vector: np.zeros(32, dtype=float),
+    _parse_spectrum: np.zeros((32, 32), dtype="i2"),
 }
 
 
@@ -508,7 +521,7 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
         return data
 
 
-def _read_typ_op4a(lines: list[str]) -> dict[str, list]:
+def _read_typ_op4a(lines: list[str]) -> dict[str, Any]:
     """Read output of "CS/PA" command. The output starts with line "TYP OP4A"
     followed by one line per measured variable in format: <number>:<value>.
     Output ends with characters: <ETX><CR><LF><NUL>. Lines are separated by
@@ -527,7 +540,7 @@ def _read_typ_op4a(lines: list[str]) -> dict[str, list]:
             continue
         parser = PARSERS.get(varname, next)
         tokens = value.split(";")
-        data[varname] = [parser(iter(tokens))]
+        data[varname] = parser(iter(tokens))
     return data
 
 
@@ -538,15 +551,26 @@ def _read_fmi(content: str):
     - output of "CS/PA" command without non-printable characters at the end
     - "]\n"
     """
-    output: dict[str, Any] = defaultdict(list)
+    output: dict[str, list] = {"_datetime": []}
     for m in re.finditer(
         r"\[(?P<year>\d+)-(?P<month>\d+)-(?P<day>\d+) "
         r"(?P<hour>\d+):(?P<minute>\d+):(?P<second>\d+)"
         r"(?P<output>[^\]]*)\]",
         content,
     ):
-        for key, value in _read_typ_op4a(m["output"].splitlines()).items():
+        try:
+            record = _read_typ_op4a(m["output"].splitlines())
+        except ValueError:
+            continue
+
+        for key, value in record.items():
+            if key not in output:
+                output[key] = [None] * len(output["_datetime"])
             output[key].append(value)
+        for key in output:
+            if key not in record and key != "_datetime":
+                output[key].append(None)
+
         output["_datetime"].append(
             datetime.datetime(
                 int(m["year"]),
@@ -577,6 +601,7 @@ def _read_parsivel(
             data = _read_toa5(filename)
         elif "TYP OP4A" in lines[0]:
             data = _read_typ_op4a(lines)
+            data = {key: [value] for key, value in data.items()}
         elif "Date" in lines[0]:
             headers = _parse_headers(lines[0])
             data = _read_rows(headers, lines[1:])
@@ -597,6 +622,17 @@ def _read_parsivel(
             combined_data[key].extend(values)
     if timestamps is not None:
         combined_data["_datetime"] = list(timestamps)
-    result = {key: np.array(value) for key, value in combined_data.items()}
+    result = {}
+    for key, value in combined_data.items():
+        array = np.array(
+            [
+                x
+                if x is not None
+                else (EMPTY_VALUES[PARSERS[key]] if key in PARSERS else "")
+                for x in value
+            ]
+        )
+        mask = [np.full(array.shape[1:], x is None) for x in value]
+        result[key] = ma.array(array, mask=mask)
     result["time"] = result["_datetime"].astype("datetime64[s]")
     return result
