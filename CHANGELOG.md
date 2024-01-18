@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.58.1 – 2024-01-18
+
+- Support missing values in Parsivel reader
+
 ## 1.58.0 – 2024-01-18
 
 - Fix Z_error calculation to follow Hogan 1998
