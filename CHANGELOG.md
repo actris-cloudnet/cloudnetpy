@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.58.0 – 2024-01-18
+
+- Fix Z_error calculation to follow Hogan 1998
+- Fix error for radars without width
+- Implement disdrometer data in categorize file
+
 ## 1.57.0 – 2024-01-17
 
 - Support plotting of additional Parsivel variables
