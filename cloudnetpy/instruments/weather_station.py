@@ -143,20 +143,12 @@ class WS(CloudnetInstrument):
         self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
         rainfall_rate = self.data["rainfall_rate"][:]
         self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
-        self.data["rainfall_amount"].data = self.data["rainfall_amount"][:] / 1000
+        self.data["rainfall_amount"].data = (
+            self.data["rainfall_amount"][:] / 1000
+        )  # m -> mm
 
 
 ATTRIBUTES = {
-    "air_temperature": MetaData(
-        long_name="Air temperature",
-        standard_name="air_temperature",
-        units="K",
-    ),
-    "air_pressure": MetaData(
-        long_name="Air pressure",
-        standard_name="air_pressure",
-        units="Pa",
-    ),
     "rainfall_amount": MetaData(
         long_name="Rainfall amount",
         standard_name="thickness_of_rainfall_amount",

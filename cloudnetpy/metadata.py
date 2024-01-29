@@ -159,4 +159,14 @@ COMMON_ATTRIBUTES = {
         standard_name="rainfall_rate",
         units="m s-1",
     ),
+    "air_temperature": MetaData(
+        long_name="Air temperature",
+        standard_name="air_temperature",
+        units="K",
+    ),
+    "air_pressure": MetaData(
+        long_name="Air pressure",
+        standard_name="air_pressure",
+        units="Pa",
+    ),
 }

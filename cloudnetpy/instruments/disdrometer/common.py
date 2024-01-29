@@ -294,9 +294,11 @@ ATTRIBUTES = {
         standard_name="equivalent_reflectivity_factor",
     ),
     "visibility": MetaData(
-        long_name="Visibility range in precipitation after MOR",
+        long_name="Meteorological optical range (MOR) visibility",
         units="m",
         standard_name="visibility_in_air",
+        comment="Visibility estimation by the disdrometer is valid\n"
+        "only during precipitation events.",
     ),
     "interval": MetaData(long_name="Length of measurement interval", units="s"),
     "sig_laser": MetaData(long_name="Signal amplitude of the laser strip", units="1"),
