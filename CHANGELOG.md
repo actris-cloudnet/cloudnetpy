@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.58.2 – 2024-01-31
+
+- Adjust variable metadata
+- Allow 12 min gap in weather station plots
+
 ## 1.58.1 – 2024-01-18
 
 - Support missing values in Parsivel reader
