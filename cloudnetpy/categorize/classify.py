@@ -42,6 +42,9 @@ def classify_measurements(data: dict) -> ClassificationResult:
     bits[2] = freezing.find_freezing_region(obs, bits[3])
     liquid_from_lidar = droplet.find_liquid(obs)
     if obs.lv0_files is not None and len(obs.lv0_files) > 0:
+        if "rpg-fmcw-94" not in obs.radar_type.lower():
+            msg = "VoodooNet is only implemented for RPG-FMCW-94 radar."
+            raise NotImplementedError(msg)
         import voodoonet
 
         target_time = voodoonet.utils.decimal_hour2unix(obs.date, obs.time)

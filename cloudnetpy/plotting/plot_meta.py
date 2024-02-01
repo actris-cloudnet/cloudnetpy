@@ -463,6 +463,9 @@ ATTRIBUTES = {
         "insect_prob": PlotMeta(
             plot_range=(0, 1),
         ),
+        "liquid_prob": PlotMeta(
+            plot_range=(0, 0.7),
+        ),
         "radar_liquid_atten": PlotMeta(
             plot_range=(0, 5),
         ),
