@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.58.3 – 2024-02-01
+
+- Make sure only RPG cloud radar is used with Voodoo
+
 ## 1.58.2 – 2024-01-31
 
 - Adjust variable metadata
