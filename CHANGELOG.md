@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.58.4 – 2024-02-05
+
+- Support plotting infrared brightness temperature
+- Disable voodoonet progress bar
+
 ## 1.58.3 – 2024-02-01
 
 - Make sure only RPG cloud radar is used with Voodoo
