@@ -46,9 +46,13 @@ def classify_measurements(data: dict) -> ClassificationResult:
             msg = "VoodooNet is only implemented for RPG-FMCW-94 radar."
             raise NotImplementedError(msg)
         import voodoonet
+        from voodoonet.utils import VoodooOptions
 
+        options = VoodooOptions(progress_bar=False)
         target_time = voodoonet.utils.decimal_hour2unix(obs.date, obs.time)
-        liquid_prob = voodoonet.infer(obs.lv0_files, target_time=target_time)
+        liquid_prob = voodoonet.infer(
+            obs.lv0_files, target_time=target_time, options=options
+        )
         liquid_from_radar = liquid_prob > 0.55
         liquid_from_radar = _remove_false_radar_liquid(
             liquid_from_radar,

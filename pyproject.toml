@@ -35,7 +35,7 @@ test = [
   "types-requests",
 ]
 dev = ["pre-commit", "release-version"]
-extras = ["voodoonet>=0.1.1"]
+extras = ["voodoonet>=0.1.7"]
 
 [project.urls]
 Homepage = "https://github.com/actris-cloudnet/cloudnetpy"
