@@ -145,9 +145,10 @@ class FigureData:
         valid_variables = []
         variable_indices = []
         for variable_name in requested_variables:
-            if variable_name.startswith("tb_"):
-                extracted_name = "tb"
-                extracted_ind = int(variable_name.split("_")[1])
+            if variable_name.startswith(("tb_", "irt_")):
+                parts = variable_name.split("_")
+                extracted_name = parts[0]
+                extracted_ind = int(parts[1])
             else:
                 extracted_name = variable_name
                 extracted_ind = None
@@ -554,13 +555,14 @@ class Plot1D(Plot):
         is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
         self._data[is_bad_zenith] = ma.masked
         self._data_orig[is_bad_zenith] = ma.masked
-        flags = self._read_flagged_data(figure_data)[:, freq_ind]
-        flags[is_bad_zenith] = False
-        if np.any(flags):
-            self._plot_flag_data(figure_data.time[flags], self._data_orig[flags])
-            self._add_legend()
+        if self.sub_plot.variable == "tb":
+            flags = self._read_flagged_data(figure_data)[:, freq_ind]
+            flags[is_bad_zenith] = False
+            if np.any(flags):
+                self._plot_flag_data(figure_data.time[flags], self._data_orig[flags])
+                self._add_legend()
+            self._show_frequency(figure_data, freq_ind)
         self.plot(figure_data)
-        self._show_frequency(figure_data, freq_ind)
 
     def _show_frequency(self, figure_data: FigureData, freq_ind: int) -> None:
         frequency = figure_data.file.variables["frequency"][freq_ind]
@@ -737,7 +739,7 @@ def generate_figure(
             file_type = getattr(file, "cloudnet_file_type", None)
             subplot = SubPlot(ax, variable, options, file_type)
 
-            if variable.name == "tb" and ind is not None:
+            if variable.name in ("tb", "irt") and ind is not None:
                 Plot1D(subplot).plot_tb(figure_data, ind)
             elif variable.ndim == 1:
                 Plot1D(subplot).plot(figure_data)
