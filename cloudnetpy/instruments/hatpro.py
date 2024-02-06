@@ -81,6 +81,9 @@ def hatpro2l1c(
         new_key = key.replace("elevation", "zenith")
         hatpro.data[new_key] = CloudnetArray(zenith_angle, new_key)
 
+    if "ir_wavelength" in hatpro.data:
+        hatpro.data["ir_wavelength"].dimensions = ("ir_channel",)
+
     for key in ("latitude", "longitude", "altitude"):
         if key in site_meta:
             hatpro.data[key] = CloudnetArray(site_meta[key], key, data_type="f4")
