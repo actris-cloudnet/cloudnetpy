@@ -550,6 +550,9 @@ class Plot1D(Plot):
                 self._add_legend()
 
     def plot_tb(self, figure_data: FigureData, freq_ind: int) -> None:
+        if len(self._data.shape) != 2 or freq_ind >= self._data.shape[1]:
+            msg = "Frequency index not found in data"
+            raise PlottingError(msg)
         self._data = self._data[:, freq_ind]
         self._data_orig = self._data_orig[:, freq_ind]
         is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
@@ -561,15 +564,25 @@ class Plot1D(Plot):
             if np.any(flags):
                 self._plot_flag_data(figure_data.time[flags], self._data_orig[flags])
                 self._add_legend()
-            self._show_frequency(figure_data, freq_ind)
+        self._show_frequency(figure_data, freq_ind)
         self.plot(figure_data)
 
     def _show_frequency(self, figure_data: FigureData, freq_ind: int) -> None:
-        frequency = figure_data.file.variables["frequency"][freq_ind]
+        if self.sub_plot.variable.name == "tb":
+            label = "Freq"
+            value = figure_data.file.variables["frequency"][freq_ind]
+            unit = "GHz"
+        else:
+            label = "Wavel"
+            variable = figure_data.file.variables["ir_wavelength"]
+            # `ir_wavelength` is scalar in old files
+            value = variable[:] if len(variable.shape) == 0 else variable[freq_ind]
+            value /= 1e-6  # m to μm
+            unit = "μm"
         self._ax.text(
             0.0,
             -0.13,
-            f"Freq: {frequency:.2f} GHz",
+            f"{label}: {value:.2f} {unit}",
             transform=self._ax.transAxes,
             fontsize=12,
             color="dimgrey",
