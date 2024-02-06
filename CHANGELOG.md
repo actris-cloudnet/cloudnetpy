@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.58.6 – 2024-02-06
+
+- Skip NaNs when plotting `mwr-l1c`
+
 ## 1.58.5 – 2024-02-06
 
 - Fix plotting of brightness temperatures
