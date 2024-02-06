@@ -555,7 +555,7 @@ class Plot1D(Plot):
         is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
         self._data[is_bad_zenith] = ma.masked
         self._data_orig[is_bad_zenith] = ma.masked
-        if self.sub_plot.variable == "tb":
+        if self.sub_plot.variable.name == "tb":
             flags = self._read_flagged_data(figure_data)[:, freq_ind]
             flags[is_bad_zenith] = False
             if np.any(flags):
