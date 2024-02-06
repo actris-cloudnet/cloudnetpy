@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.58.5 – 2024-02-06
+
+- Fix plotting of brightness temperatures
+- Fix dimensions of `ir_wavelength` variable
+- Show wavelength in IR plots
+
 ## 1.58.4 – 2024-02-05
 
 - Support plotting infrared brightness temperature
