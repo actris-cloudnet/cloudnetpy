@@ -554,6 +554,10 @@ class Plot1D(Plot):
             msg = "Frequency index not found in data"
             raise PlottingError(msg)
         self._data = self._data[:, freq_ind]
+        self._data[np.isnan(self._data)] = ma.masked
+        if self._data.mask.all():
+            msg = "All data is masked"
+            raise PlottingError(msg)
         self._data_orig = self._data_orig[:, freq_ind]
         is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
         self._data[is_bad_zenith] = ma.masked
