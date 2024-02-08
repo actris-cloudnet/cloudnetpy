@@ -77,7 +77,7 @@ def hatpro2l1c(
     for key in ("elevation_angle", "ir_elevation_angle"):
         if key not in hatpro.data:
             continue
-        zenith_angle = 90 - hatpro.data.pop(key)[:]
+        zenith_angle = 90 - hatpro.data[key][:]
         new_key = key.replace("elevation", "zenith")
         hatpro.data[new_key] = CloudnetArray(zenith_angle, new_key)
 
