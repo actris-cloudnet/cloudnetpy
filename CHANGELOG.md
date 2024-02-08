@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.58.7 – 2024-02-08
+
+- Include both elevation and zenith angle in MWRpy products
+- Test with Python 3.12
+
 ## 1.58.6 – 2024-02-06
 
 - Skip NaNs when plotting `mwr-l1c`
