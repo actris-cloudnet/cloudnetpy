@@ -68,6 +68,9 @@ def hatpro2l1c(
         if len(set(dates)) != 1:
             msg = f"Several dates, something is wrong: {set(dates)}"
             raise RuntimeError(msg)
+        if date != dates[0]:
+            msg = f"Expected date {date}, got {dates[0]}"
+            raise RuntimeError(msg)
 
     decimal_hours = utils.seconds2hours(timestamps)
     hatpro.data["time"] = CloudnetArray(decimal_hours, "time", data_type="f8")
