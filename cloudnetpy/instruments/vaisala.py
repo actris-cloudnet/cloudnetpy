@@ -94,13 +94,15 @@ class VaisalaCeilo(Ceilometer):
             raise RuntimeError(msg)
 
         def _parse_data_lines(data: list, starting_indices: list) -> list:
+            iterator = range(number_of_data_lines)
+            n_lines = max(iterator)
             return [
                 [
                     data[n + line_number]
                     for n in starting_indices
-                    if (n + line_number) < len(data)
+                    if (n + n_lines) < len(data)
                 ]
-                for line_number in range(number_of_data_lines)
+                for line_number in iterator
             ]
 
         valid_lines = _filter_lines(data_in)
