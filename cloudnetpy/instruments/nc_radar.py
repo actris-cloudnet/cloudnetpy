@@ -46,14 +46,14 @@ class NcRadar(DataSource, CloudnetInstrument):
             array[~np.isfinite(array)] = ma.masked
             self.append_data(array, name)
 
-    def add_time_and_range(self) -> None:
+    def add_time_and_range(self, time_dtype: str | None = None) -> None:
         """Adds time and range."""
         range_instru = np.array(
             self.getvar("range", "height"),
         )  # "height" in old BASTA files
         time = np.array(self.time)
         self.append_data(range_instru, "range")
-        self.append_data(time, "time")
+        self.append_data(time, "time", dtype=time_dtype)
 
     def screen_by_snr(self, snr_limit: float = -17) -> None:
         """Mask values where SNR smaller than threshold."""

@@ -84,6 +84,7 @@ class DataSource:
         key: str,
         name: str | None = None,
         units: str | None = None,
+        dtype: str | None = None,
     ) -> None:
         """Adds new CloudnetVariable or RadarVariable into `data` attribute.
 
@@ -95,7 +96,7 @@ class DataSource:
             units: CloudnetArray.units attribute.
 
         """
-        self.data[key] = CloudnetArray(variable, name or key, units)
+        self.data[key] = CloudnetArray(variable, name or key, units, data_type=dtype)
 
     def get_date(self) -> list:
         """Returns date components.
