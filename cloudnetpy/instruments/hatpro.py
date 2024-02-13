@@ -6,6 +6,7 @@ from pathlib import Path
 
 import netCDF4
 import numpy as np
+from mwrpy.exceptions import MissingInputData
 from mwrpy.level1.lev1_meta_nc import ATTRIBUTES_1B01
 from mwrpy.level1.write_lev1_nc import lev1_to_nc
 from mwrpy.version import __version__ as mwrpy_version
@@ -13,7 +14,7 @@ from numpy import ma
 
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import HatproDataError, ValidTimeStampError
 from cloudnetpy.instruments import rpg
 from cloudnetpy.instruments.instruments import HATPRO
 from cloudnetpy.instruments.rpg_reader import (
@@ -45,13 +46,16 @@ def hatpro2l1c(
     """
     coeff_files = site_meta.get("coefficientFiles", None)
 
-    hatpro_raw = lev1_to_nc(
-        "1C01",
-        mwr_dir,
-        output_file=output_file,
-        coeff_files=coeff_files,
-        instrument_config=site_meta,
-    )
+    try:
+        hatpro_raw = lev1_to_nc(
+            "1C01",
+            mwr_dir,
+            output_file=output_file,
+            coeff_files=coeff_files,
+            instrument_config=site_meta,
+        )
+    except MissingInputData as err:
+        raise HatproDataError from err
 
     hatpro = HatproL1c(hatpro_raw, site_meta)
 
