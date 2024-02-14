@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.58.8 – 2024-02-14
+
+- Check measurement date in MWRpy-processed data
+- Use double precision for BASTA time
+- Handle truncated Vaisala ceilometer file
+- Skip invalid lines in Thies LNM file
+
 ## 1.58.7 – 2024-02-08
 
 - Include both elevation and zenith angle in MWRpy products
