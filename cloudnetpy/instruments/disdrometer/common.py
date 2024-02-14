@@ -171,6 +171,8 @@ class Disdrometer(CloudnetInstrument):
         )
         for time_ind, row in enumerate(self._file_data["spectra"]):
             values = _parse_int(row)
+            if len(values) != self.n_diameter * self.n_velocity:
+                continue
             array[time_ind, :, :] = np.reshape(
                 values,
                 (self.n_diameter, self.n_velocity),
