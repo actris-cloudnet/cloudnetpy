@@ -276,7 +276,15 @@ ATTRIBUTES = {
             cmap="RdBu_r",
             plot_range=(-50, 50),
         ),
+        "uwind_raw": PlotMeta(
+            cmap="RdBu_r",
+            plot_range=(-50, 50),
+        ),
         "vwind": PlotMeta(
+            cmap="RdBu_r",
+            plot_range=(-50, 50),
+        ),
+        "vwind_raw": PlotMeta(
             cmap="RdBu_r",
             plot_range=(-50, 50),
         ),

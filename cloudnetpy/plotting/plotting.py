@@ -818,6 +818,7 @@ def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
         "model": 181 if "gdas1" in source else 61,
         "mwr-multi": 21,
         "weather-station": 12,
+        "doppler-lidar-wind": 75,
     }
     return max_allowed_gap.get(file_type, 10)
 
