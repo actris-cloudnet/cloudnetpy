@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.59.0 – 2024-02-15
+
+- Add doppler-lidar-wind product
+
 ## 1.58.8 – 2024-02-14
 
 - Check measurement date in MWRpy-processed data
