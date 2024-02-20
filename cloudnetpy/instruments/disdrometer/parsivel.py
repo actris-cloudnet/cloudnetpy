@@ -216,24 +216,31 @@ CSV_HEADERS = {
 
 TOA5_HEADERS = {
     "TIMESTAMP": "_datetime",
+    "datetime_utc": "_datetime",
     "rainIntensity": "rainfall_rate",
     "rain_intensity": "rainfall_rate",
+    "rain rate [mm/h]": "rainfall_rate",
     "snowIntensity": "snowfall_rate",
     "snow_intensity": "snowfall_rate",
     "accPrec": "_rain_accum",
     "precipitation": "_rain_accum",
+    "rain accum [mm]": "_rain_accum",
     "weatherCodeWaWa": "synop_WaWa",
     "weather_code_wawa": "synop_WaWa",
     "radarReflectivity": "radar_reflectivity",
     "radar_reflectivity": "radar_reflectivity",
+    "Z [dBz]": "radar_reflectivity",
     "morVisibility": "visibility",
     "mor_visibility": "visibility",
+    "MOR visibility [m]": "visibility",
     "kineticEnergy": "kinetic_energy",
     "kinetic_energy": "kinetic_energy",
     "signalAmplitude": "sig_laser",
     "signal_amplitude": "sig_laser",
+    "Signal amplitude": "sig_laser",
     "sensorTemperature": "T_sensor",
     "sensor_temperature": "T_sensor",
+    "Temperature sensor [°C]": "T_sensor",
     "pbcTemperature": "_T_pcb",
     "pbc_temperature": "_T_pcb",
     "rightTemperature": "_T_right",
@@ -244,15 +251,20 @@ TOA5_HEADERS = {
     "heating_current": "I_heating",
     "sensorVoltage": "V_power_supply",
     "sensor_voltage": "V_power_supply",
+    "Power supply voltage in the sensor [V]": "V_power_supply",
     "sensorStatus": "state_sensor",
     "sensor_status": "state_sensor",
+    "Sensor status": "state_sensor",
     "errorCode": "error_code",
     "error_code": "error_code",
+    "Error code": "error_code",
     "numberParticles": "n_particles",
     "number_particles": "n_particles",
+    "Number of detected particles": "n_particles",
     "N": "number_concentration",
     "V": "fall_velocity",
     "spectrum": "spectrum",
+    "Current heating system [A]": "I_heating",
 }
 
 TELEGRAM = {
@@ -521,6 +533,72 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
         return data
 
 
+def _read_bucharest_file(filename: str | PathLike) -> dict[str, list]:
+    with open(filename, encoding="latin1", errors="ignore") as file:
+        reader = csv.reader(file)
+        header_line = next(reader)[0].split(";")
+        headers = [
+            TOA5_HEADERS.get(
+                re.sub(
+                    r"N[0-9][0-9]",
+                    "N",
+                    re.sub(r"v[0-9][0-9]", "V", re.sub(r"M\_.*", "spectrum", field)),
+                ),
+            )
+            for field in header_line
+        ]
+
+        data: dict[str, list] = {header: [] for header in headers if header is not None}
+        n_rows = 0
+        n_invalid_rows = 0
+        for data_line in reader:
+            data_line_splat = data_line[0].split(";")
+            data_line_splat = [d for d in data_line_splat if d != ""]
+            n_rows += 1
+            scalars: dict[str, datetime.datetime | int | float] = {}
+            arrays: dict[str, list] = {
+                "number_concentration": [],
+                "fall_velocity": [],
+                "spectrum": [],
+            }
+            try:
+                for header, value in zip(headers, data_line_splat, strict=True):
+                    if header is None:
+                        continue
+                    if header == "_datetime":
+                        scalars[header] = datetime.datetime.strptime(
+                            value,
+                            "%Y-%m-%d %H:%M:%S",
+                        )
+                    elif header in ("number_concentration", "fall_velocity"):
+                        arrays[header].append(float(value))
+                    elif header == "spectrum":
+                        arrays[header].append(int(value))
+                    elif PARSERS.get(header) == _parse_int:
+                        scalars[header] = int(value)
+                    elif PARSERS.get(header) == _parse_float:
+                        scalars[header] = float(value)
+            except ValueError:
+                n_invalid_rows += 1
+                continue
+            for header, scalar in scalars.items():
+                data[header].append(scalar)
+            if "spectrum" in headers:
+                data["spectrum"].append(
+                    np.array(arrays["spectrum"], dtype="i2").reshape((32, 32)),
+                )
+            if "number_concentration" in headers:
+                data["number_concentration"].append(arrays["number_concentration"])
+            if "fall_velocity" in headers:
+                data["fall_velocity"].append(arrays["fall_velocity"])
+        if n_invalid_rows == n_rows:
+            msg = "No valid data in file"
+            raise DisdrometerDataError(msg)
+        if n_invalid_rows > 0:
+            logging.info("Skipped %s invalid rows", n_invalid_rows)
+        return data
+
+
 def _read_typ_op4a(lines: list[str]) -> dict[str, Any]:
     """Read output of "CS/PA" command. The output starts with line "TYP OP4A"
     followed by one line per measured variable in format: <number>:<value>.
@@ -599,6 +677,8 @@ def _read_parsivel(
             raise DisdrometerDataError(msg)
         if "TOA5" in lines[0]:
             data = _read_toa5(filename)
+        elif "N00" in lines[0]:
+            data = _read_bucharest_file(filename)
         elif "TYP OP4A" in lines[0]:
             data = _read_typ_op4a(lines)
             data = {key: [value] for key, value in data.items()}

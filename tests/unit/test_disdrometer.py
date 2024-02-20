@@ -255,6 +255,18 @@ class TestParsivel10(Check):
         assert_array_equal(self.nc["data_raw"][:].mask, [[[1]*32]*32, [[0]*32]*32])
 
 
+class TestParsivel11(Check):
+    date = "2024-02-19"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/parsivel/bucharest-20240219.cvs"
+    site_meta = SITE_META
+    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 4
+
+
 class TestThies(Check):
     date = "2021-09-15"
     temp_dir = TemporaryDirectory()
