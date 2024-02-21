@@ -215,6 +215,7 @@ CSV_HEADERS = {
 }
 
 TOA5_HEADERS = {
+    "RECORD": "_record",
     "TIMESTAMP": "_datetime",
     "datetime_utc": "_datetime",
     "rainIntensity": "rainfall_rate",
@@ -265,6 +266,11 @@ TOA5_HEADERS = {
     "V": "fall_velocity",
     "spectrum": "spectrum",
     "Current heating system [A]": "I_heating",
+    "sample interval [s]": "interval",
+    "Serial number": "_sensor_id",
+    "IOP firmware version": "_iop_firmware_version",
+    "Station name": "_station_name",
+    "Rain amount absolute [mm]": "_rain_amount_absolute",
 }
 
 TELEGRAM = {
@@ -475,13 +481,18 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
         CR1000 Measurement and Control System.
         https://s.campbellsci.com/documents/us/manuals/cr1000.pdf
     """
-    with open(filename, encoding="latin1", errors="ignore") as file:
+    with open(filename, errors="ignore") as file:
         reader = csv.reader(file)
         _origin_line = next(reader)
         header_line = next(reader)
         headers = [
             TOA5_HEADERS.get(re.sub(r"\(.*", "", field)) for field in header_line
         ]
+        if unknown_headers := [
+            header_line[i] for i in range(len(header_line)) if headers[i] is None
+        ]:
+            msg = "Unknown headers: " + ", ".join(unknown_headers)
+            logging.warning(msg)
         _units_line = next(reader)
         _process_line = next(reader)
         data: dict[str, list] = {header: [] for header in headers if header is not None}
@@ -489,7 +500,7 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
         n_invalid_rows = 0
         for data_line in reader:
             n_rows += 1
-            scalars: dict[str, datetime.datetime | int | float] = {}
+            scalars: dict[str, datetime.datetime | int | float | str] = {}
             arrays: dict[str, list] = {
                 "number_concentration": [],
                 "fall_velocity": [],
@@ -512,6 +523,8 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
                         scalars[header] = int(value)
                     elif PARSERS.get(header) == _parse_float:
                         scalars[header] = float(value)
+                    else:
+                        scalars[header] = value
             except ValueError:
                 n_invalid_rows += 1
                 continue
@@ -534,7 +547,7 @@ def _read_toa5(filename: str | PathLike) -> dict[str, list]:
 
 
 def _read_bucharest_file(filename: str | PathLike) -> dict[str, list]:
-    with open(filename, encoding="latin1", errors="ignore") as file:
+    with open(filename, errors="ignore") as file:
         reader = csv.reader(file)
         header_line = next(reader)[0].split(";")
         headers = [
@@ -547,6 +560,11 @@ def _read_bucharest_file(filename: str | PathLike) -> dict[str, list]:
             )
             for field in header_line
         ]
+        if unknown_headers := [
+            header_line[i] for i in range(len(header_line)) if headers[i] is None
+        ]:
+            msg = "Unknown headers: " + ", ".join(unknown_headers)
+            logging.warning(msg)
 
         data: dict[str, list] = {header: [] for header in headers if header is not None}
         n_rows = 0
@@ -555,7 +573,7 @@ def _read_bucharest_file(filename: str | PathLike) -> dict[str, list]:
             data_line_splat = data_line[0].split(";")
             data_line_splat = [d for d in data_line_splat if d != ""]
             n_rows += 1
-            scalars: dict[str, datetime.datetime | int | float] = {}
+            scalars: dict[str, datetime.datetime | int | float | str] = {}
             arrays: dict[str, list] = {
                 "number_concentration": [],
                 "fall_velocity": [],
@@ -578,6 +596,8 @@ def _read_bucharest_file(filename: str | PathLike) -> dict[str, list]:
                         scalars[header] = int(value)
                     elif PARSERS.get(header) == _parse_float:
                         scalars[header] = float(value)
+                    else:
+                        scalars[header] = value
             except ValueError:
                 n_invalid_rows += 1
                 continue
