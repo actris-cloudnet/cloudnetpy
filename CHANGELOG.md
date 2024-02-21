@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.59.1 – 2024-02-21
+
+- Add reader for Bucharest Parsivel
+
 ## 1.59.0 – 2024-02-15
 
 - Add doppler-lidar-wind product
