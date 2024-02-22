@@ -142,6 +142,13 @@ HALO = Instrument(
     model="StreamLine",
 )
 
+WINDCUBE = Instrument(
+    manufacturer="Leosphere",
+    domain="lidar",
+    category="Doppler lidar",
+    model="WindCube",
+)
+
 PARSIVEL2 = Instrument(
     manufacturer="OTT HydroMet",
     domain="disdrometer",
