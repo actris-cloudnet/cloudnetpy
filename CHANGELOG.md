@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.59.2 – 2024-02-22
+
+- Add windcube instrument
+
 ## 1.59.1 – 2024-02-21
 
 - Add reader for Bucharest Parsivel
