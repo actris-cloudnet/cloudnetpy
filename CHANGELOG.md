@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.59.3 – 2024-02-23
+
+- Add zero-line to lwp plot
+- Add smoothing to 2d mwrpy plots
+
 ## 1.59.2 – 2024-02-22
 
 - Add windcube instrument
