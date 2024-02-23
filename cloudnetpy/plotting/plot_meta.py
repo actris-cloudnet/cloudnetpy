@@ -18,6 +18,9 @@ class PlotMeta(NamedTuple):
         log_scale: Whether to plot data values in a logarithmic scale.
         moving_average: Whether to plot a moving average in a 1d plot.
         contour: Whether to plot contours on top of a filled colormap.
+        zero_line: Whether to plot a zero line in a 1d plot.
+        time_smoothing_duration: The duration of the time smoothing window
+            (in 2d plots) in minutes.
     """
 
     cmap: str = "viridis"
@@ -27,6 +30,7 @@ class PlotMeta(NamedTuple):
     moving_average: bool = True
     contour: bool = False
     zero_line: bool = False
+    time_smoothing_duration: int = 0
 
 
 _COLORS = {
@@ -123,6 +127,9 @@ _CLABEL = {
 }
 
 
+_MWR_SINGLE_SMOOTHING = 10
+_MWR_MULTI_SMOOTHING = 30
+
 ATTRIBUTES = {
     "rain-radar": {
         "rainfall_rate": PlotMeta(
@@ -135,25 +142,30 @@ ATTRIBUTES = {
             cmap="coolwarm",
             plot_range=(223.15, 323.15),
             contour=True,
+            time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
         ),
         "potential_temperature": PlotMeta(
             cmap="coolwarm",
             plot_range=(260, 320),
             contour=True,
+            time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
         ),
         "equivalent_potential_temperature": PlotMeta(
             cmap="coolwarm",
             plot_range=(260, 320),
             contour=True,
+            time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
         ),
         "relative_humidity": PlotMeta(
             plot_range=(0, 120),
             contour=True,
+            time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
         ),
         "absolute_humidity": PlotMeta(
             plot_range=(1e-4, 1e-2),
             log_scale=True,
             contour=True,
+            time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
         ),
     },
     "mwr-multi": {
@@ -161,18 +173,24 @@ ATTRIBUTES = {
             cmap="coolwarm",
             plot_range=(223.15, 323.15),
             contour=True,
+            time_smoothing_duration=_MWR_MULTI_SMOOTHING,
         ),
         "potential_temperature": PlotMeta(
             cmap="coolwarm",
             plot_range=(260, 320),
             contour=True,
+            time_smoothing_duration=_MWR_MULTI_SMOOTHING,
         ),
         "equivalent_potential_temperature": PlotMeta(
-            cmap="coolwarm", plot_range=(260, 320), contour=True
+            cmap="coolwarm",
+            plot_range=(260, 320),
+            contour=True,
+            time_smoothing_duration=_MWR_MULTI_SMOOTHING,
         ),
         "relative_humidity": PlotMeta(
             plot_range=(0, 120),
             contour=True,
+            time_smoothing_duration=_MWR_MULTI_SMOOTHING,
         ),
     },
     "fallback": {

@@ -17,8 +17,10 @@ from matplotlib.ticker import AutoMinorLocator
 from matplotlib.transforms import Affine2D, Bbox
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma, ndarray
+from scipy.ndimage import uniform_filter
 
 from cloudnetpy.exceptions import PlottingError
+from cloudnetpy.instruments.ceilometer import calc_sigma_units
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
 
 
@@ -479,6 +481,12 @@ class Plot2D(Plot):
             self._data, vmin, vmax = lin2log(self._data, vmin, vmax)
 
         alt = self._screen_data_by_max_y(figure_data)
+
+        if (duration := self._plot_meta.time_smoothing_duration) > 0:
+            sigma_units = calc_sigma_units(
+                figure_data.time, alt * 1e3, sigma_minutes=duration, sigma_metres=0
+            )
+            self._data = uniform_filter(self._data, sigma_units)
 
         image = self._ax.pcolorfast(
             figure_data.time_including_gaps,
