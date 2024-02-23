@@ -26,6 +26,7 @@ class PlotMeta(NamedTuple):
     log_scale: bool = False
     moving_average: bool = True
     contour: bool = False
+    zero_line: bool = False
 
 
 _COLORS = {
@@ -520,6 +521,9 @@ ATTRIBUTES = {
         ),
         "pia": PlotMeta(
             plot_range=(0, 3),
+        ),
+        "lwp": PlotMeta(
+            zero_line=True,
         ),
     },
 }
