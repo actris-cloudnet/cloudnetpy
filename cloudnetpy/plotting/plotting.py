@@ -550,7 +550,7 @@ class Plot1D(Plot):
         if self._plot_meta.moving_average:
             self._plot_moving_average(figure_data)
         if self._plot_meta.zero_line:
-            self._ax.axhline(0, color="black", alpha=0.5)
+            self._ax.axhline(0, color="black", alpha=0.5, label="_nolegend_")
         self._fill_between_data_gaps(figure_data)
         self.sub_plot.set_yax(ylabel=units, y_limits=self._get_y_limits())
         pos = self._ax.get_position()
