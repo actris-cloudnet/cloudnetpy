@@ -486,7 +486,9 @@ class Plot2D(Plot):
             sigma_units = calc_sigma_units(
                 figure_data.time, alt * 1e3, sigma_minutes=duration, sigma_metres=0
             )
-            self._data = uniform_filter(self._data, sigma_units)
+            valid_time_ind = ~np.all(self._data.mask, axis=1)
+            smoothed_data = uniform_filter(self._data[valid_time_ind, :], sigma_units)
+            self._data[valid_time_ind, :] = smoothed_data
 
         image = self._ax.pcolorfast(
             figure_data.time_including_gaps,
