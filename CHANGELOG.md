@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.59.5 – 2024-02-25
+
+- Remove zero-line from legend
+
 ## 1.59.4 – 2024-02-25
 
 - Fix 2d smoothing to work with masked profiles
