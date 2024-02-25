@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.59.4 – 2024-02-25
+
+- Fix 2d smoothing to work with masked profiles
+
 ## 1.59.3 – 2024-02-23
 
 - Add zero-line to lwp plot
