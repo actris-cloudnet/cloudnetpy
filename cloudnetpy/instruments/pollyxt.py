@@ -57,8 +57,7 @@ def pollyxt2nc(
     polly.mask_nan_values()
     polly.prepare_data()
     polly.screen_completely_masked_profiles()
-    polly.data_to_cloudnet_arrays()
-
+    polly.data_to_cloudnet_arrays(time_dtype="f8")
     attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
     polly.add_snr_info("beta", snr_limit)

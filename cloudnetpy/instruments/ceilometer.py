@@ -107,9 +107,12 @@ class Ceilometer:
         self.date = utils.seconds2date(self.data["time"][0], epoch=epoch)[:3]
         self.data["time"] = utils.seconds2hours(self.data["time"])
 
-    def data_to_cloudnet_arrays(self) -> None:
+    def data_to_cloudnet_arrays(self, time_dtype="f4") -> None:
         for key, array in self.data.items():
-            self.data[key] = CloudnetArray(array, key)
+            if key == "time":
+                self.data[key] = CloudnetArray(array, key, data_type=time_dtype)
+            else:
+                self.data[key] = CloudnetArray(array, key)
 
     def screen_depol(self) -> None:
         key = "depolarisation"
