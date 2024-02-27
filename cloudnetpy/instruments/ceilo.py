@@ -69,7 +69,7 @@ def ceilo2nc(
     """
     snr_limit = 5
     ceilo_obj = _initialize_ceilo(full_path, site_meta, date)
-    calibration_factor = site_meta.get("calibration_factor", None)
+    calibration_factor = site_meta.get("calibration_factor")
     range_corrected = site_meta.get("range_corrected", True)
     ceilo_obj.read_ceilometer_file(calibration_factor)
     ceilo_obj.check_beta_raw_shape()

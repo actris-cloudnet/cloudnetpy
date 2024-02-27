@@ -124,11 +124,12 @@ def generate_categorize(
 
     try:
         is_disdrometer = "disdrometer" in input_files
-        data = {
+
+        data: dict = {
             "radar": Radar(input_files["radar"]),
             "lidar": Lidar(input_files["lidar"]),
             "mwr": Mwr(input_files["mwr"]),
-            "lv0_files": input_files.get("lv0_files", None),
+            "lv0_files": input_files.get("lv0_files"),
             "disdrometer": Disdrometer(input_files["disdrometer"])
             if is_disdrometer
             else None,

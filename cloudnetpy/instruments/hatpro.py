@@ -44,7 +44,7 @@ def hatpro2l1c(
     Returns:
         UUID of the generated file.
     """
-    coeff_files = site_meta.get("coefficientFiles", None)
+    coeff_files = site_meta.get("coefficientFiles")
 
     try:
         hatpro_raw = lev1_to_nc(
