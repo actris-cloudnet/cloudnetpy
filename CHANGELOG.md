@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.60.0 – 2024-02-27
+
+- Screen completely masked profiles from PollyXT data
+- Use double precision in PollyXT time vector
+
 ## 1.59.5 – 2024-02-25
 
 - Remove zero-line from legend
