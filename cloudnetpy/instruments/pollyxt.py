@@ -56,7 +56,9 @@ def pollyxt2nc(
     polly.calc_screened_products(snr_limit)
     polly.mask_nan_values()
     polly.prepare_data()
+    polly.screen_completely_masked_profiles()
     polly.data_to_cloudnet_arrays()
+
     attributes = output.add_time_attribute(ATTRIBUTES, polly.date)
     output.update_attributes(polly.data, attributes)
     polly.add_snr_info("beta", snr_limit)
@@ -148,6 +150,12 @@ class PollyXt(Ceilometer):
                 )
         self.data["calibration_factor"] = calibration_factors
         return epoch
+
+    def screen_completely_masked_profiles(self) -> None:
+        valid_ind = ~np.all(np.ma.getmaskarray(self.data["beta_raw"]), axis=1)
+        for key, item in self.data.items():
+            if isinstance(item, np.ndarray) and item.shape[0] == len(valid_ind):
+                self.data[key] = item[valid_ind]
 
     def _get_valid_beta_channel(self, files: list) -> str:
         polly_channels = ("1064", "532", "355")
