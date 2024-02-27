@@ -124,7 +124,7 @@ class Radar(DataSource):
             return
         n_vertical = self._filter(
             data,
-            1,
+            axis=1,
             min_coverage=0.5,
             z_limit=10,
             distance=4,
@@ -132,7 +132,7 @@ class Radar(DataSource):
         )
         n_horizontal = self._filter(
             data,
-            0,
+            axis=0,
             min_coverage=0.3,
             z_limit=-30,
             distance=3,
@@ -174,6 +174,10 @@ class Radar(DataSource):
                 q3 = np.quantile(n_values, 0.75)
             except IndexError:
                 continue
+
+            if q1 == q3:
+                continue
+
             threshold = distance * (q3 - q1) + q3
 
             indices = np.where(
