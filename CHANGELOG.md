@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.60.1 – 2024-03-06
+
+- Improve stripe filter
+- Fix Radiometrics units
+
 ## 1.60.0 – 2024-02-27
 
 - Screen completely masked profiles from PollyXT data
