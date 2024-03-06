@@ -145,9 +145,9 @@ class Radiometrics:
                 continue
             times.append(record.timestamp)
             if lwp is not None:
-                lwps.append(float(lwp) * 1000)  # g / m2
+                lwps.append(float(lwp))  # mm => kg m-2
             if iwv is not None:
-                iwvs.append(float(iwv) * 100)  # g / m2
+                iwvs.append(float(iwv) * 10)  # cm => kg m-2
         self.data["time"] = np.array(times, dtype="datetime64[s]")
         self.data["lwp"] = np.array(lwps, dtype=float)
         self.data["iwv"] = np.array(iwvs, dtype=float)

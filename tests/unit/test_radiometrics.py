@@ -28,7 +28,7 @@ class TestRadiometrics2nc(Check):
         assert_allclose(self.nc.variables["time"][:], [0.02, 0.10527778, 0.1886111])
 
     def test_lwp(self):
-        assert_array_equal(self.nc.variables["lwp"][:], [30, 30, 0])
+        assert_allclose(self.nc.variables["lwp"][:], [0.030, 0.030, 0])
 
     def test_global_attributes(self):
         assert self.nc.source == "Radiometrics"
@@ -73,7 +73,7 @@ class TestRadiometrics2ncAgain(Check):
         )
 
     def test_lwp(self):
-        assert_array_equal(self.nc.variables["lwp"][:], [164, 198, 161, 202])
+        assert_allclose(self.nc.variables["lwp"][:], [0.164, 0.198, 0.161, 0.202])
 
     def test_default_processing(self, tmp_path):
         test_path = tmp_path / "default.nc"
