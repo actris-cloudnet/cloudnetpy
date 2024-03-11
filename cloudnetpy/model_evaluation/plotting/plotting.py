@@ -519,14 +519,12 @@ def plot_relative_error(ax, error: ma.MaskedArray, axes: tuple, method: str) -> 
     colorbar = init_colorbar(pl, ax)
     colorbar.set_label("%", fontsize=13)
     error[np.isnan(error)] = ma.masked
-    error = ma.round(error, decimals=4)
     median_error = ma.median(error.compressed())
-    median_error = np.round(median_error, 3)
     if method == "aerror":
         ax.text(
             0.9,
             -0.17,
-            f"Median absolute error: {median_error} %",
+            f"Median absolute error: {median_error:.2f} %",
             size=12,
             ha="center",
             transform=ax.transAxes,
@@ -535,7 +533,7 @@ def plot_relative_error(ax, error: ma.MaskedArray, axes: tuple, method: str) -> 
         ax.text(
             0.9,
             -0.17,
-            f"Median relative error: {median_error} %",
+            f"Median relative error: {median_error:.2f} %",
             size=12,
             ha="center",
             transform=ax.transAxes,
