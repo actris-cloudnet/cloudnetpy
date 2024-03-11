@@ -1,7 +1,5 @@
-import matplotlib as mpl
 import netCDF4
 import numpy as np
-from matplotlib.colors import ListedColormap
 from numpy import ma
 
 from cloudnetpy.model_evaluation.model_metadata import MODELS
@@ -121,20 +119,13 @@ def reshape_1d2nd(one_d: np.ndarray, two_d: np.ndarray) -> np.ndarray:
     return new_arr
 
 
-def create_segment_values(arrays: list) -> tuple:
-    # 0=no data, 1=model, 2=intersection, 3=observation
-    new_array = np.zeros(arrays[0].shape, dtype=int)
-    for i, array in enumerate(arrays):
-        new_array[~array] = new_array[~array] + i + 1
-    new_array[new_array == 2] = 4
-    new_array[new_array == 3] = 2
-    new_array[new_array == 4] = 3
-
-    colors = mpl.colormaps["YlGnBu"]
-    newcolors = colors(np.linspace(0, 1, 256))
-    # No data, model, both, observation
-    cmap = ListedColormap(["white", "khaki", newcolors[90], newcolors[140]])
-    return new_array, cmap
+def create_segment_values(model: ma.MaskedArray, obs: ma.MaskedArray) -> np.ndarray:
+    new_array = np.zeros(model.shape, dtype=int)
+    new_array[model.mask & obs.mask] = 0  # No data
+    new_array[~model.mask & obs.mask] = 1  # Only model
+    new_array[~obs.mask & model.mask] = 3  # Only observation
+    new_array[(~model.mask == 1) & (~obs.mask == 1)] = 2  # Both
+    return new_array
 
 
 def set_yaxis(ax, max_y: float, min_y: float = 0.0) -> None:

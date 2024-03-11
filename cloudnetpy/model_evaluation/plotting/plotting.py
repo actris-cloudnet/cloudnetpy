@@ -3,10 +3,12 @@ import os
 import sys
 from datetime import date
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
 from matplotlib.colorbar import Colorbar
+from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma
@@ -549,17 +551,31 @@ def plot_data_area(
     *,
     title: bool = True,
 ) -> None:
-    data, cmap = p_tools.create_segment_values([model.mask, obs.mask])
-    pl = ax.pcolormesh(*axes, data, cmap=cmap)
+    data = p_tools.create_segment_values(model, obs)
+
+    colors = mpl.colormaps["YlGnBu"]
+    newcolors = colors(np.linspace(0, 1, 256))
+    c_map = {
+        0: "white",
+        1: "khaki",
+        2: newcolors[90],
+        3: newcolors[140],
+    }
+    unique_values = sorted(np.unique(data))
+    c_list = [c_map[value] for value in unique_values if value in c_map]
+    cmap = ListedColormap(c_list)
+
+    ax.pcolormesh(*axes, data, cmap=cmap)
+
     if title:
-        colorbar = init_colorbar(pl, ax)
-        colorbar.set_ticks(np.arange(1, 1, 3).tolist())
         ax.set_title(f"{day_stat.title}", fontsize=14)
+
     ax.set_facecolor("black")
+
     legend_elements = [
         Patch(facecolor="khaki", edgecolor="k", label="Model"),
-        Patch(facecolor=cmap(0.5), edgecolor="k", label="Common"),
-        Patch(facecolor=cmap(1.0), edgecolor="k", label="Observation"),
+        Patch(facecolor=newcolors[90], edgecolor="k", label="Common"),
+        Patch(facecolor=newcolors[140], edgecolor="k", label="Observation"),
     ]
     ax.legend(
         handles=legend_elements,

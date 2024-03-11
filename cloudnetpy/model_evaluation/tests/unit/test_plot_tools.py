@@ -180,8 +180,10 @@ def test_reshape_1d2nd() -> None:
 
 def test_create_segment_values() -> None:
     model_mask = np.array([[0, 1, 1, 0], [0, 0, 1, 0], [1, 0, 0, 0]], dtype=bool)
+    model = ma.array(np.ones(model_mask.shape), mask=model_mask)
     obs_mask = np.array([[0, 0, 0, 0], [0, 0, 1, 0], [1, 0, 1, 1]], dtype=bool)
-    x, _ = plt.create_segment_values([model_mask, obs_mask])
+    obs = ma.array(np.ones(obs_mask.shape), mask=obs_mask)
+    x = plt.create_segment_values(model, obs)
     compare = np.array([[2, 3, 3, 2], [2, 2, 0, 2], [0, 2, 1, 1]])
     testing.assert_array_almost_equal(x, compare)
 
