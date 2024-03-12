@@ -383,11 +383,6 @@ def _write_vars2nc(nc: netCDF4.Dataset, cloudnet_variables: dict) -> None:
             zlib=True,
             fill_value=fill_value,
         )
-
-        # L3 products contain NaN values
-        if isinstance(obj.data, ma.MaskedArray):
-            obj.data[np.isnan(obj.data)] = ma.masked
-
         nc_variable[:] = obj.data
         for attr in obj.fetch_attributes():
             setattr(nc_variable, attr, getattr(obj, attr))
