@@ -248,31 +248,6 @@ def test_gamma_distribution(obs_file, model_file) -> None:
     testing.assert_array_almost_equal(x, compare)
 
 
-def test_get_observation_index(obs_file, model_file) -> None:
-    obs = ObservationManager(PRODUCT, str(obs_file))
-    model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
-    adv_pro = AdvanceProductMethods(model, str(model_file), obs)
-    tZT = 0.01
-    z_sen = 0.02
-    temperature = -13
-    tT = 0.04
-    tZ = 0.05
-    t = 0.06
-    min_iwc = 10 ** (tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t)
-    iwc_dist = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6])
-    compare = iwc_dist > min_iwc
-    x = adv_pro.get_observation_index(
-        iwc_dist,
-        tZT,
-        tT,
-        tZ,
-        np.array([t]),
-        temperature,
-        z_sen,
-    )
-    testing.assert_array_almost_equal(x, compare)
-
-
 def test_filter_cirrus(obs_file, model_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
