@@ -45,7 +45,7 @@ class AdvanceProductMethods(DataSource):
             name = f"get_advance_{self.product}"
             getattr(cls, name)(self)
         except AttributeError as error:
-            logging.warning("No advance method for %s: %s", self.product, error)
+            logging.debug("No advance method for %s: %s", self.product, error)
 
     def get_advance_cf(self) -> None:
         self.cf_cirrus_filter()
@@ -61,23 +61,34 @@ class AdvanceProductMethods(DataSource):
         cf_filtered = self.filter_high_iwc_low_cf(cf, iwc, lwc)
         cloud_iwc, ice_ind = self.find_ice_in_clouds(cf_filtered, iwc, lwc)
         variance_iwc = self.iwc_variance(h, ice_ind)
-        # Looks suspicious, check me:
+
         for i, ind in enumerate(zip(ice_ind[0], ice_ind[-1], strict=True)):
-            iwc_dist = self.calculate_iwc_distribution(cloud_iwc[i], variance_iwc[i])
+            try:
+                iwc_dist = self.calculate_iwc_distribution(
+                    cloud_iwc[i], variance_iwc[i]
+                )
+            except ValueError:
+                continue
+
             p_iwc = self.gamma_distribution(iwc_dist, variance_iwc[i], cloud_iwc[i])
+
+            if np.isinf(p_iwc).any():
+                cf_filtered[ind] = ma.masked
+                continue
+
             if np.sum(p_iwc) == 0 or p_iwc[-1] > 0.01 * np.sum(p_iwc):
                 cf_filtered[ind] = ma.masked
                 continue
-            obs_index = self.get_observation_index(
-                iwc_dist,
-                tZT,
-                tT,
-                tZ,
-                t,
-                float(t_screened[ind]),
-                float(z_sen[ind]),
+
+            min_iwc = 10 ** (
+                tZT * z_sen[ind] * t_screened[ind]
+                + tT * t_screened[ind]
+                + tZ * z_sen[ind]
+                + t
             )
+            obs_index = iwc_dist > min_iwc
             cf_filtered[ind] = self.filter_cirrus(p_iwc, obs_index, cf_filtered[ind])
+
         cf_filtered[cf_filtered < 0.05] = ma.masked
 
         self._model_obj.append_data(
@@ -134,7 +145,7 @@ class AdvanceProductMethods(DataSource):
         iwc: np.ndarray,
         lwc: np.ndarray,
     ) -> np.ndarray:
-        cf_filtered = np.copy(cf)
+        cf_filtered = ma.copy(cf)
         weird_ind = (iwc / cf > 0.5e-3) & (cf < 0.001)
         weird_ind = weird_ind | (iwc == 0) & (lwc == 0) & (cf == 0)
         cf_filtered[weird_ind] = ma.masked
@@ -201,7 +212,9 @@ class AdvanceProductMethods(DataSource):
         n_std: int = 5,
         n_dist: int = 250,
     ) -> np.ndarray:
-        finish = cloud_iwc + n_std * (np.sqrt(f_variance_iwc) * cloud_iwc)
+        finish = cloud_iwc + n_std * (ma.sqrt(f_variance_iwc) * cloud_iwc)
+        if isinstance(finish, ma.MaskedArray) and finish.mask.all():
+            raise ValueError
         iwc_dist = np.arange(0, finish, finish / (n_dist - 1))
         if cloud_iwc < iwc_dist[2]:
             finish = cloud_iwc * 10
@@ -217,25 +230,9 @@ class AdvanceProductMethods(DataSource):
         return scipy.stats.gamma.pdf(iwc_dist, a=alpha, scale=theta)
 
     @staticmethod
-    def get_observation_index(
-        iwc_dist: np.ndarray,
-        tZT: float,
-        tT: float,
-        tZ: float,
-        t: np.ndarray,
-        temperature: float,
-        z_sen: float,
-    ) -> np.ndarray:
-        def calculate_min_iwc() -> np.ndarray:
-            return 10 ** (tZT * z_sen * temperature + tT * temperature + tZ * z_sen + t)
-
-        iwc_min = calculate_min_iwc()
-        return iwc_dist > iwc_min
-
-    @staticmethod
     def filter_cirrus(
         p_iwc: np.ndarray,
         obs_index: np.ndarray,
         cf_filtered: np.ndarray,
     ) -> np.ndarray:
-        return (np.sum(p_iwc * obs_index) / np.sum(p_iwc)) * cf_filtered
+        return (ma.sum(p_iwc * obs_index) / ma.sum(p_iwc)) * cf_filtered

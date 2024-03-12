@@ -119,55 +119,34 @@ class ProductGrid:
 
     def _cf_method_storage(self) -> tuple[dict, dict]:
         cf_dict = {
-            "cf_V": np.zeros(self._model_height.shape),
-            "cf_A": np.zeros(self._model_height.shape),
+            "cf_V": ma.zeros(self._model_height.shape),
+            "cf_A": ma.zeros(self._model_height.shape),
         }
         cf_adv_dict = {
-            "cf_V_adv": np.zeros(self._model_height.shape),
-            "cf_A_adv": np.zeros(self._model_height.shape),
+            "cf_V_adv": ma.zeros(self._model_height.shape),
+            "cf_A_adv": ma.zeros(self._model_height.shape),
         }
         return cf_dict, cf_adv_dict
 
     def _iwc_method_storage(self) -> tuple[dict, dict]:
         iwc_dict = {
-            "iwc": np.zeros(self._model_height.shape),
-            "iwc_att": np.zeros(self._model_height.shape),
-            "iwc_rain": np.zeros(self._model_height.shape),
+            "iwc": ma.zeros(self._model_height.shape),
+            "iwc_att": ma.zeros(self._model_height.shape),
+            "iwc_rain": ma.zeros(self._model_height.shape),
         }
         iwc_adv_dict = {
-            "iwc_adv": np.zeros(self._model_height.shape),
-            "iwc_att_adv": np.zeros(self._model_height.shape),
-            "iwc_rain_adv": np.zeros(self._model_height.shape),
+            "iwc_adv": ma.zeros(self._model_height.shape),
+            "iwc_att_adv": ma.zeros(self._model_height.shape),
+            "iwc_rain_adv": ma.zeros(self._model_height.shape),
         }
         return iwc_dict, iwc_adv_dict
 
     def _product_method_storage(self) -> tuple[dict, dict]:
-        product_dict = {f"{self._obs_obj.obs}": np.zeros(self._model_height.shape)}
+        product_dict = {f"{self._obs_obj.obs}": ma.zeros(self._model_height.shape)}
         product_adv_dict = {
-            f"{self._obs_obj.obs}_adv": np.zeros(self._model_height.shape),
+            f"{self._obs_obj.obs}_adv": ma.zeros(self._model_height.shape),
         }
         return product_dict, product_adv_dict
-
-    @staticmethod
-    def _regrid_cf(storage: dict, i: int, j: int, data: np.ndarray | None) -> dict:
-        """Calculates average cloud fraction value to grid point"""
-        for key, downsample in storage.items():
-            if data is not None:
-                if isinstance(data, ma.MaskedArray) and data.mask.all():
-                    downsample[i, j] = np.nan
-                elif not np.isnan(data).all():
-                    downsample[i, j] = np.nanmean(data)
-                else:
-                    downsample[i, j] = np.nan
-                if "_A" in key and (
-                    not np.isnan(data).all()
-                    and not (isinstance(data, ma.MaskedArray) and data.mask.all())
-                ):
-                    downsample[i, j] = tl.average_column_sum(data)
-            else:
-                downsample[i, j] = np.nan
-            storage[key] = downsample
-        return storage
 
     def _reshape_data_to_window(
         self,
@@ -181,6 +160,17 @@ class ProductGrid:
             return self._obs_data[ind].reshape(window_size)
         return None
 
+    @staticmethod
+    def _regrid_cf(storage: dict, i: int, j: int, data: np.ndarray) -> dict:
+        """Calculates average cloud fraction value to grid point."""
+        data_ma = ma.array(data) if not isinstance(data, ma.MaskedArray) else data
+        for key, downsample in storage.items():
+            downsample[i, j] = ma.mean(data_ma)
+            if "_A" in key and not data_ma.mask.all():
+                downsample[i, j] = tl.average_column_sum(data_ma)
+            storage[key] = downsample
+        return storage
+
     def _regrid_iwc(
         self,
         storage: dict,
@@ -189,40 +179,33 @@ class ProductGrid:
         ind_rain: np.ndarray,
         ind_no_rain: np.ndarray,
     ) -> dict:
-        """Calculates average iwc value for grid point"""
-        for key, downsample in storage.items():
-            if not self._obs_data[ind_no_rain].mask.all():
-                if np.isnan(self._obs_data[ind_no_rain]).all():
-                    downsample[i, j] = np.nan
-                else:
-                    no_rain_data = self._obs_data[ind_no_rain]
-                    if no_rain_data.size > 0:
-                        downsample[i, j] = np.nanmean(self._obs_data[ind_no_rain])
-                    else:
-                        downsample[i, j] = np.nan
-            elif "rain" in key and not self._obs_data[ind_rain].mask.all():
-                downsample[i, j] = np.nanmean(self._obs_data[ind_rain])
-            else:
-                downsample[i, j] = np.nan
+        """Calculates average iwc value for each grid point."""
+        for key, down_sample in storage.items():
+            down_sample[i, j] = ma.masked
+            if "rain" not in key:
+                no_rain_data = self._obs_data[ind_no_rain]
+                if ind_no_rain.any() and not no_rain_data.mask.all():
+                    down_sample[i, j] = ma.mean(no_rain_data)
+            if "rain" in key:
+                rain_data = self._obs_data[ind_rain]
+                if ind_rain.any() and not rain_data.mask.all():
+                    down_sample[i, j] = ma.mean(rain_data)
             if "att" in key:
-                iwc_att = self._obs_obj.data["iwc_att"][:]
-                if iwc_att[ind_no_rain].mask.all():
-                    downsample[i, j] = np.nan
-                else:
-                    downsample[i, j] = np.nanmean(iwc_att[ind_no_rain])
-            storage[key] = downsample
+                no_rain_att_data = self._obs_obj.data["iwc_att"][ind_no_rain]
+                if ind_no_rain.any() and not no_rain_att_data.mask.all():
+                    down_sample[i, j] = ma.mean(no_rain_att_data)
+            storage[key] = down_sample
         return storage
 
     def _regrid_product(self, storage: dict, i: int, j: int, ind: np.ndarray) -> dict:
-        """Calculates average of standard product value to grid point"""
+        """Calculates average of standard product value for each grid point."""
         for key, down_sample in storage.items():
-            if not self._obs_data[ind].mask.all() and ind.any():
-                if np.isnan(self._obs_data[ind]).all():
-                    down_sample[i, j] = np.nan
-                else:
-                    down_sample[i, j] = np.nanmean(self._obs_data[ind])
-            else:
-                down_sample[i, j] = np.nan
+            obs_data_selected = ma.masked_invalid(self._obs_data[ind])
+            down_sample[i, j] = (
+                ma.mean(obs_data_selected)
+                if not obs_data_selected.mask.all()
+                else ma.masked
+            )
             storage[key] = down_sample
         return storage
 
