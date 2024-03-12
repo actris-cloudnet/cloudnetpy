@@ -2,8 +2,9 @@ import importlib
 import logging
 
 import numpy as np
+import scipy.special
+import scipy.stats
 from numpy import ma
-from scipy.special import gamma
 
 import cloudnetpy.utils as cl_tools
 from cloudnetpy.datasource import DataSource
@@ -65,7 +66,7 @@ class AdvanceProductMethods(DataSource):
             iwc_dist = self.calculate_iwc_distribution(cloud_iwc[i], variance_iwc[i])
             p_iwc = self.gamma_distribution(iwc_dist, variance_iwc[i], cloud_iwc[i])
             if np.sum(p_iwc) == 0 or p_iwc[-1] > 0.01 * np.sum(p_iwc):
-                cf_filtered[ind] = np.nan
+                cf_filtered[ind] = ma.masked
                 continue
             obs_index = self.get_observation_index(
                 iwc_dist,
@@ -78,6 +79,7 @@ class AdvanceProductMethods(DataSource):
             )
             cf_filtered[ind] = self.filter_cirrus(p_iwc, obs_index, cf_filtered[ind])
         cf_filtered[cf_filtered < 0.05] = ma.masked
+
         self._model_obj.append_data(
             cf_filtered,
             f"{self._model_obj.model}{self._model_obj.cycle}_cf_cirrus",
@@ -208,24 +210,11 @@ class AdvanceProductMethods(DataSource):
 
     @staticmethod
     def gamma_distribution(
-        iwc_dist: np.ndarray,
-        f_variance_iwc: float,
-        cloud_iwc: float,
+        iwc_dist: np.ndarray, f_variance_iwc: float, cloud_iwc: float
     ) -> np.ndarray:
-        def calculate_gamma_dist() -> float:
-            alpha = 1 / f_variance_iwc
-            return (
-                1
-                / gamma(alpha)
-                * (alpha / cloud_iwc) ** alpha
-                * iwc_dist[i] ** (alpha - 1)
-                * ma.exp(-(alpha * iwc_dist[i] / cloud_iwc))
-            )
-
-        p_iwc = np.zeros(iwc_dist.shape)
-        for i in range(len(iwc_dist)):
-            p_iwc[i] = calculate_gamma_dist()
-        return p_iwc
+        alpha = 1 / f_variance_iwc
+        theta = cloud_iwc / alpha
+        return scipy.stats.gamma.pdf(iwc_dist, a=alpha, scale=theta)
 
     @staticmethod
     def get_observation_index(
