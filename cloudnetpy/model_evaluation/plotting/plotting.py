@@ -17,7 +17,7 @@ import cloudnetpy.model_evaluation.plotting.plot_tools as p_tools
 from cloudnetpy.model_evaluation.model_metadata import MODELS
 from cloudnetpy.model_evaluation.plotting.plot_meta import ATTRIBUTES
 from cloudnetpy.model_evaluation.statistics.statistical_methods import DayStatistics
-from cloudnetpy.plotting.plotting import get_log_cbar_tick_labels, lin2log
+from cloudnetpy.plotting.plotting import Dimensions, get_log_cbar_tick_labels, lin2log
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
@@ -34,7 +34,7 @@ def generate_L3_day_plots(
     save_path: str | None = None,
     image_name: str | None = None,
     show: bool | None = False,
-) -> None:
+) -> list[Dimensions]:
     """Generate visualizations for level 3 dayscale products.
     With figure type visualizations can be subplot in group, pair, single or
     statistic of given product. In group fig_type all different methods are plot
@@ -93,7 +93,11 @@ def generate_L3_day_plots(
     model_info = MODELS[model]
     model_name = model_info.model_name
     name_set = p_tools.parse_wanted_names(nc_file, product, model, var_list)
-    for names in name_set:
+    unique_tuples = {tuple(lst) for lst in name_set}
+    name_set_unique = tuple(list(tup) for tup in unique_tuples)
+
+    dimensions = []
+    for names in name_set_unique:
         if len(names) > 0:
             try:
                 cycle_names, cycles = p_tools.sort_cycles(names, model)
@@ -120,7 +124,11 @@ def generate_L3_day_plots(
                             save_path,
                             image_name,
                         ]
-                    getattr(cls, f"get_{fig_type}_plots")(*params, **kwargs)
+                    figs, axes = getattr(cls, f"get_{fig_type}_plots")(
+                        *params, **kwargs
+                    )
+                    for fig, ax in zip(figs, axes, strict=False):
+                        dimensions.append(Dimensions(fig, ax))
             except AttributeError:
                 params = [
                     product,
@@ -143,7 +151,10 @@ def generate_L3_day_plots(
                         save_path,
                         image_name,
                     ]
-                getattr(cls, f"get_{fig_type}_plots")(*params, **kwargs)
+                figs, axes = getattr(cls, f"get_{fig_type}_plots")(*params, **kwargs)
+                for fig, ax in zip(figs, axes, strict=False):
+                    dimensions.append(Dimensions(fig, ax))
+    return dimensions
 
 
 def get_group_plots(
@@ -159,7 +170,7 @@ def get_group_plots(
     cycle: str = "",
     title: bool = True,
     include_xlimits: bool = False,
-) -> None:
+) -> tuple:
     """Group subplot visualization for both standard and advection downsampling.
     Generates group subplot figure for product with model and all different
     downsampling methods. Generates separated figures for standard and advection
@@ -204,6 +215,7 @@ def get_group_plots(
         [product, model_run, "group"],
         show=show,
     )
+    return fig, ax
 
 
 def get_pair_plots(
@@ -280,7 +292,7 @@ def get_single_plots(
     cycle: str = "",
     title: bool = True,
     include_xlimits: bool = False,
-) -> None:
+) -> tuple[list, list]:
     """Generates figures of each product variable from given file in loop.
 
     Args:
@@ -295,9 +307,13 @@ def get_single_plots(
         cycle (str): Name of cycle if exists
         title (bool): True or False if wanted to add title to subfig
     """
+    figs = []
+    axes = []
     variable_info = ATTRIBUTES[product]
-    for _, name in enumerate(names):
+    for name in names:
         fig, ax = initialize_figure(1)
+        figs.append(fig)
+        axes.append(ax)
         set_yax(ax[0], 12, ylabel=None)
         set_xax(ax[0], include_xlimits=include_xlimits)
 
@@ -318,6 +334,7 @@ def get_single_plots(
             [name, "single"],
             show=show,
         )
+    return figs, axes
 
 
 def plot_colormesh(ax, data: np.ndarray, axes: tuple, variable_info) -> None:
@@ -349,7 +366,7 @@ def get_statistic_plots(
     show: bool,
     cycle: str = "",
     title: bool = True,
-) -> None:
+) -> tuple:
     """Statistical subplots for day scale products.
     Statistical analysis can be done by day scale with relative error ('error'),
     total data area analysis ('area'), histogram ('hist') or vertical profiles
@@ -387,12 +404,16 @@ def get_statistic_plots(
         err_msg = f"No data in {model_name} or observation"
         raise ValueError(err_msg)
 
+    figs = []
+    axes = []
     for stat in stats:
         try:
             obs_missing = False
             model_missing = False
             variable_info = ATTRIBUTES[product]
             fig, ax = initialize_figure(len(names) - 1, stat)
+            figs.append(fig)
+            axes.append(ax)
             model_data, _, _ = p_tools.read_data_characters(nc_file, names[0], model)
             if np.all(model_data.mask is True):
                 model_missing = True
@@ -443,6 +464,7 @@ def get_statistic_plots(
             [name, stat, model_run],
             show=show,
         )
+    return figs, axes
 
 
 def initialize_statistic_plots(
