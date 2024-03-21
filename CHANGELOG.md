@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.60.3 – 2024-03-21
+
+- Remove NaNs from L3 files
+- Return dimensions from L3 plotting
+
 ## 1.60.2 – 2024-03-11
 
 - Fix L3 plot issues
