@@ -281,10 +281,11 @@ class SubPlot:
 
     def _read_plot_meta(self, file_type: str | None) -> PlotMeta:
         if self.options.plot_meta is not None:
-            return self.options.plot_meta
-        fallback = ATTRIBUTES["fallback"].get(self.variable.name, PlotMeta())
-        file_attributes = ATTRIBUTES.get(file_type or "", {})
-        plot_meta = file_attributes.get(self.variable.name, fallback)
+            plot_meta = self.options.plot_meta
+        else:
+            fallback = ATTRIBUTES["fallback"].get(self.variable.name, PlotMeta())
+            file_attributes = ATTRIBUTES.get(file_type or "", {})
+            plot_meta = file_attributes.get(self.variable.name, fallback)
         if plot_meta.clabel is None:
             plot_meta = plot_meta._replace(clabel=_reformat_units(self.variable.units))
         return plot_meta
