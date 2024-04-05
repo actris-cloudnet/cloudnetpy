@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.60.4 – 2024-04-05
+
+- Fix `clabel` fallback when using custom `plot_meta`
+
 ## 1.60.3 – 2024-03-21
 
 - Remove NaNs from L3 files
