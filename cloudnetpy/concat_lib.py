@@ -5,8 +5,10 @@ import numpy as np
 from cloudnetpy.exceptions import InconsistentDataError
 
 
-def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int) -> None:
-    """Truncates netcdf file in 'time' dimension taking only n_profiles.
+def truncate_netcdf_file(
+    filename: str, output_file: str, n_profiles: int, dim_name: str = "time"
+) -> None:
+    """Truncates netcdf file in dim_name dimension taking only n_profiles.
     Useful for creating small files for tests.
     """
     with (
@@ -14,7 +16,7 @@ def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int) -> No
         netCDF4.Dataset(output_file, "w", format=nc.data_model) as nc_new,
     ):
         for dim in nc.dimensions:
-            dim_len = None if dim == "time" else nc.dimensions[dim].size
+            dim_len = None if dim == dim_name else nc.dimensions[dim].size
             nc_new.createDimension(dim, dim_len)
         for attr in nc.ncattrs():
             value = getattr(nc, attr)
@@ -30,7 +32,7 @@ def truncate_netcdf_file(filename: str, output_file: str, n_profiles: int) -> No
                 zlib=True,
                 fill_value=fill_value,
             )
-            if dimensions and "time" in dimensions[0]:
+            if dimensions and dim_name in dimensions[0]:
                 if array.ndim == 1:
                     var[:] = array[:n_profiles]
                 if array.ndim == 2:

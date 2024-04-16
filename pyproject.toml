@@ -57,7 +57,6 @@ pattern = ["MAJOR = (?P<major>\\d+)", "MINOR = (?P<minor>\\d+)", "PATCH = (?P<pa
 changelog = "CHANGELOG.md"
 
 [tool.ruff]
-extend-select = ["I"]
 exclude = ["cloudnetpy/model_evaluation/tests/", "tests/"]
 
 [tool.ruff.lint]
