@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.1 – 2024-04-17
+
+- Fix truncation in unit conversion
+
 ## 1.61.0 – 2024-04-17
 
 - Support TOA5 format for Thies LNM
