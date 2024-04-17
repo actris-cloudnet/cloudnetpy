@@ -1,4 +1,5 @@
 import datetime
+from collections import defaultdict
 from os import PathLike
 from typing import Any
 
@@ -125,7 +126,7 @@ class Thies(Disdrometer):
         self.n_velocity = 20
         self.n_diameter = 22
         self.site_meta = site_meta
-        self.raw_data: dict[str, Any] = {}
+        self.raw_data: dict[str, Any] = defaultdict(list)
         self._read_data(filename)
         self._screen_time(expected_date)
         self.data = {}
@@ -156,7 +157,7 @@ class Thies(Disdrometer):
             with open(filename) as file:
                 for line in file:
                     self._read_line(line)
-        if "time" not in self.raw_data or len(self.raw_data["time"]) == 0:
+        if len(self.raw_data["time"]) == 0:
             raise ValidTimeStampError
         for key, value in self.raw_data.items():
             array = np.array(value)
@@ -225,8 +226,6 @@ class Thies(Disdrometer):
                 value = raw_values[i]
             else:
                 value = int(raw_values[i])
-            if key not in self.raw_data:
-                self.raw_data[key] = []
             self.raw_data[key].append(value)
         self.raw_data["spectrum"].append(
             np.array(list(map(int, raw_values[79:-2])), dtype="i2").reshape(
