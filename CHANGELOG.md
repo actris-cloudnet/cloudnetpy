@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.2 – 2024-04-17
+
+- Handle unreadable Thies LNM file gracefully
+
 ## 1.61.1 – 2024-04-17
 
 - Fix truncation in unit conversion
