@@ -8,7 +8,6 @@ from numpy.testing import assert_array_equal
 
 from cloudnetpy.exceptions import DisdrometerDataError
 from cloudnetpy.instruments import disdrometer
-from cloudnetpy.instruments.disdrometer.common import _format_thies_date
 from tests.unit.all_products_fun import Check
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -27,10 +26,6 @@ TELEGRAM2 = [19, 1] + [None] * 16 + [90, 91, 93]
 TELEGRAM3 = [21, 20, 1, 2, 3, 5, 6, 7, 8, 10,
             11, 12, 16, 17, 34, 18, 93]
 # fmt: on
-
-
-def test_format_time():
-    assert _format_thies_date("3.10.20") == "2020-10-03"
 
 
 class TestParsivel(Check):
@@ -283,6 +278,32 @@ class TestThies(Check):
         assert self.nc.location == "Kumpula"
         assert self.nc.cloudnet_file_type == "disdrometer"
         assert self.nc.serial_number == "1025"
+
+
+class TestThies2(Check):
+    date = "2024-04-14"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/thies-lnm/THIES_LMP_2024_04_14_00_00.dat"
+    site_meta = SITE_META
+    uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
+
+    def test_processing(self):
+        assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
+        assert self.nc.year == "2024"
+        assert self.nc.month == "04"
+        assert self.nc.day == "14"
+        assert self.nc.location == "Kumpula"
+        assert self.nc.cloudnet_file_type == "disdrometer"
+        assert self.nc.serial_number == "2965"
+        assert np.allclose(
+            self.nc["time"][:],
+            [
+                timedelta(hours=0, minutes=1, seconds=0) / timedelta(hours=1),
+                timedelta(hours=0, minutes=2, seconds=0) / timedelta(hours=1),
+                timedelta(hours=0, minutes=3, seconds=0) / timedelta(hours=1),
+            ],
+        )
 
 
 class TestInvalidCharacters(Check):

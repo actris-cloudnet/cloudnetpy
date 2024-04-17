@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Callable, Iterable, Iterator, Sequence
 from itertools import islice
 from os import PathLike
-from typing import Any, Literal
+from typing import Any
 
 import numpy as np
 from numpy import ma
@@ -16,7 +16,6 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import MM_TO_M, SEC_IN_HOUR
 from cloudnetpy.exceptions import DisdrometerDataError
 from cloudnetpy.instruments import instruments
-from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 
 from .common import ATTRIBUTES, Disdrometer
 
@@ -78,7 +77,7 @@ def parsivel2nc(
     return output.save_level1b(disdrometer, output_file, uuid)
 
 
-class Parsivel(CloudnetInstrument):
+class Parsivel(Disdrometer):
     def __init__(
         self,
         filenames: Iterable[str | PathLike],
@@ -142,12 +141,12 @@ class Parsivel(CloudnetInstrument):
     def _create_velocity_vectors(self) -> None:
         n_values = [10, 5, 5, 5, 5, 2]
         spreads = [0.1, 0.2, 0.4, 0.8, 1.6, 3.2]
-        Disdrometer.store_vectors(self.data, n_values, spreads, "velocity")
+        self.store_vectors(n_values, spreads, "velocity")
 
     def _create_diameter_vectors(self) -> None:
         n_values = [10, 5, 5, 5, 5, 2]
         spreads = [0.125, 0.25, 0.5, 1, 2, 3]
-        Disdrometer.store_vectors(self.data, n_values, spreads, "diameter")
+        self.store_vectors(n_values, spreads, "diameter")
 
     def mask_invalid_values(self) -> None:
         if variable := self.data.get("number_concentration"):
@@ -165,32 +164,6 @@ class Parsivel(CloudnetInstrument):
         self._convert_data(("T_sensor",), c_to_k, method="add")
         if variable := self.data.get("number_concentration"):
             variable.data = np.power(10, variable.data).round().astype(np.uint32)
-
-    def add_meta(self) -> None:
-        valid_keys = ("latitude", "longitude", "altitude")
-        for key, value in self.site_meta.items():
-            name = key.lower()
-            if name in valid_keys:
-                self.data[name] = CloudnetArray(float(value), name)
-
-    def _convert_data(
-        self,
-        keys: tuple[str, ...],
-        value: float,
-        method: Literal["divide", "add"] = "divide",
-    ) -> None:
-        for key in keys:
-            if key not in self.data:
-                continue
-            variable = self.data[key]
-            if method == "divide":
-                variable.data = variable.data.astype("f4") / value
-                variable.data_type = "f4"
-            elif method == "add":
-                variable.data = variable.data.astype("f4") + value
-                variable.data_type = "f4"
-            else:
-                raise ValueError
 
 
 CSV_HEADERS = {

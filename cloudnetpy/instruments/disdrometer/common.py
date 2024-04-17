@@ -1,207 +1,46 @@
 """Module for reading / converting disdrometer data."""
-import logging
 
 import numpy as np
-from numpy import ma
 
-from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import MM_TO_M, SEC_IN_HOUR, SEC_IN_MINUTE
-from cloudnetpy.exceptions import DisdrometerDataError, ValidTimeStampError
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
-from cloudnetpy.instruments.vaisala import values_to_dict
 from cloudnetpy.metadata import MetaData
-
-PARSIVEL = "OTT Parsivel-2"
-THIES = "Thies-LNM"
 
 
 class Disdrometer(CloudnetInstrument):
-    def __init__(self, filename: str, site_meta: dict, source: str):
-        super().__init__()
-        self.filename = filename
-        self.site_meta = site_meta
-        self.source = source
-        self.date: list[str] = []
-        self.sensor_id = None
-        self.n_diameter: int = 0
-        self.n_velocity: int = 0
-        self._file_data = self._read_file()
-
-    def convert_units(self) -> None:
-        mmh_to_ms = SEC_IN_HOUR / MM_TO_M
-        c_to_k = 273.15
-        self._convert_data(("rainfall_rate_1min_total",), mmh_to_ms)
-        self._convert_data(("rainfall_rate",), mmh_to_ms)
-        self._convert_data(("rainfall_rate_1min_solid",), mmh_to_ms)
-        self._convert_data(("diameter", "diameter_spread", "diameter_bnds"), 1e3)
-        self._convert_data(("V_sensor_supply",), 10)
-        self._convert_data(("I_mean_laser",), 100)
-        self._convert_data(("T_sensor",), c_to_k, method="add")
-        self._convert_data(("T_interior",), c_to_k, method="add")
-        self._convert_data(("T_ambient",), c_to_k, method="add")
-        self._convert_data(("T_laser_driver",), c_to_k, method="add")
-
     def add_meta(self) -> None:
-        valid_names = ("latitude", "longitude", "altitude")
+        valid_keys = ("latitude", "longitude", "altitude")
         for key, value in self.site_meta.items():
             name = key.lower()
-            if name in valid_names:
+            if name in valid_keys:
                 self.data[name] = CloudnetArray(float(value), name)
-
-    def validate_date(self, expected_date: str) -> None:
-        valid_ind = []
-        for ind, row in enumerate(self._file_data["scalars"]):
-            if self.source == PARSIVEL:
-                raise NotImplementedError
-            date = _format_thies_date(row[3])
-            if date == expected_date:
-                valid_ind.append(ind)
-        if not valid_ind:
-            raise ValidTimeStampError
-        for key, value in self._file_data.items():
-            if value:
-                self._file_data[key] = [self._file_data[key][ind] for ind in valid_ind]
-        self.date = expected_date.split("-")
-
-    def sort_time(self) -> None:
-        time = self.data["time"][:]
-        ind = time.argsort()
-        for _, data in self.data.items():
-            if data.data.shape[0] == len(time):
-                data.data[:] = data.data[ind]
-
-    def _read_file(self) -> dict:
-        data: dict = {"scalars": [], "vectors": [], "spectra": []}
-        with open(self.filename, encoding="utf8", errors="ignore") as file:
-            for row in file:
-                if row == "\n":
-                    continue
-                if self.source == PARSIVEL:
-                    values = row.split(";")
-                    if "\n" in values:
-                        values.remove("\n")
-                    if len(values) != 1106:
-                        continue
-                    data["scalars"].append(values[:18])
-                    data["vectors"].append(values[18 : 18 + 64])
-                    data["spectra"].append(values[18 + 64 :])
-                else:
-                    values = row.split(";")
-                    data["scalars"].append(values[:79])
-                    data["spectra"].append(values[79:-2])
-        if len(data["scalars"]) == 0:
-            raise ValueError
-        return data
-
-    def _append_data(self, column_and_key: list) -> None:
-        indices, keys = zip(*column_and_key, strict=True)
-        data = self._parse_useful_data(indices)
-        data_dict = values_to_dict(keys, data)
-        for key in keys:
-            if key.startswith("_"):
-                continue
-            invalid_value = -9999.0
-            float_array = ma.array([])
-            for value_str in data_dict[key]:
-                try:
-                    float_array = ma.append(float_array, float(value_str))
-                except ValueError:
-                    logging.warning(
-                        "Invalid character: %s, masking a data point",
-                        value_str,
-                    )
-                    float_array = ma.append(float_array, invalid_value)
-            float_array[float_array == invalid_value] = ma.masked
-            if key in (
-                "rainfall_rate",
-                "radar_reflectivity",
-                "T_sensor",
-                "I_heating",
-                "V_power_supply",
-                "T_interior",
-                "T_ambient",
-                "T_laser_driver",
-            ):
-                data_type = "f4"
-            else:
-                data_type = "i4"
-            self.data[key] = CloudnetArray(float_array, key, data_type=data_type)
-        self.data["time"] = self._convert_time(data_dict)
-        if "_serial_number" in data_dict:
-            first_id = data_dict["_serial_number"][0]
-            for sensor_id in data_dict["_serial_number"]:
-                if sensor_id != first_id:
-                    msg = "Multiple serial numbers are not supported"
-                    raise DisdrometerDataError(msg)
-
-            self.serial_number = first_id
-
-    def _parse_useful_data(self, indices: tuple) -> list:
-        data = []
-        for row in self._file_data["scalars"]:
-            useful_data = [row[ind] for ind in indices]
-            data.append(useful_data)
-        return data
-
-    def _convert_time(self, data: dict) -> CloudnetArray:
-        seconds = []
-        for timestamp in data["_time"]:
-            if self.source == PARSIVEL:
-                raise NotImplementedError
-            hour, minute, sec = timestamp.split(":")
-            seconds.append(
-                int(hour) * SEC_IN_HOUR + int(minute) * SEC_IN_MINUTE + int(sec)
-            )
-        return CloudnetArray(utils.seconds2hours(np.array(seconds)), "time")
 
     def _convert_data(self, keys: tuple, value: float, method: str = "divide") -> None:
         for key in keys:
             if key in self.data:
                 if method == "divide":
-                    self.data[key].data /= value
+                    self.data[key].data = self.data[key].data / value
                 elif method == "add":
-                    self.data[key].data += value
+                    self.data[key].data = self.data[key].data + value
                 else:
                     raise ValueError
 
-    def _append_spectra(self) -> None:
-        array = ma.masked_all(
-            (len(self._file_data["scalars"]), self.n_diameter, self.n_velocity),
-        )
-        for time_ind, row in enumerate(self._file_data["spectra"]):
-            values = _parse_int(row)
-            if len(values) != self.n_diameter * self.n_velocity:
-                continue
-            array[time_ind, :, :] = np.reshape(
-                values,
-                (self.n_diameter, self.n_velocity),
-            )
-        self.data["data_raw"] = CloudnetArray(
-            array,
-            "data_raw",
-            dimensions=("time", "diameter", "velocity"),
-            data_type="i2",
-        )
-
-    @classmethod
     def store_vectors(
-        cls,
-        data,
+        self,
         n_values: list,
         spreads: list,
         name: str,
         start: float = 0.0,
     ):
-        mid, bounds, spread = cls._create_vectors(n_values, spreads, start)
-        data[name] = CloudnetArray(mid, name, dimensions=(name,))
+        mid, bounds, spread = self._create_vectors(n_values, spreads, start)
+        self.data[name] = CloudnetArray(mid, name, dimensions=(name,))
         key = f"{name}_spread"
-        data[key] = CloudnetArray(spread, key, dimensions=(name,))
+        self.data[key] = CloudnetArray(spread, key, dimensions=(name,))
         key = f"{name}_bnds"
-        data[key] = CloudnetArray(bounds, key, dimensions=(name, "nv"))
+        self.data[key] = CloudnetArray(bounds, key, dimensions=(name, "nv"))
 
-    @staticmethod
     def _create_vectors(
+        self,
         n_values: list[int],
         spreads: list[float],
         start: float,
@@ -219,24 +58,6 @@ class Disdrometer(CloudnetInstrument):
         bounds = np.stack((lower_limit, upper_limit)).T
         spread = bounds[:, 1] - bounds[:, 0]
         return mid_value, bounds, spread
-
-
-def _format_thies_date(date: str) -> str:
-    day, month, year = date.split(".")
-    year = f"20{year}"
-    return f"{year}-{month.zfill(2)}-{day.zfill(2)}"
-
-
-def _parse_int(row: np.ndarray) -> np.ndarray:
-    values = ma.masked_all((len(row),))
-    for ind, value in enumerate(row):
-        try:
-            value_int = int(value)
-            if value_int != 0:
-                values[ind] = value_int
-        except ValueError:
-            pass
-    return values
 
 
 ATTRIBUTES = {
