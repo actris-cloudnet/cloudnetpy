@@ -1,5 +1,7 @@
 """Module for reading / converting disdrometer data."""
 
+from typing import Literal
+
 import numpy as np
 
 from cloudnetpy.cloudnetarray import CloudnetArray
@@ -15,15 +17,24 @@ class Disdrometer(CloudnetInstrument):
             if name in valid_keys:
                 self.data[name] = CloudnetArray(float(value), name)
 
-    def _convert_data(self, keys: tuple, value: float, method: str = "divide") -> None:
+    def _convert_data(
+        self,
+        keys: tuple[str, ...],
+        value: float,
+        method: Literal["divide", "add"] = "divide",
+    ) -> None:
         for key in keys:
-            if key in self.data:
-                if method == "divide":
-                    self.data[key].data = self.data[key].data / value
-                elif method == "add":
-                    self.data[key].data = self.data[key].data + value
-                else:
-                    raise ValueError
+            if key not in self.data:
+                continue
+            variable = self.data[key]
+            if method == "divide":
+                variable.data = variable.data.astype("f4") / value
+                variable.data_type = "f4"
+            elif method == "add":
+                variable.data = variable.data.astype("f4") + value
+                variable.data_type = "f4"
+            else:
+                raise ValueError
 
     def store_vectors(
         self,
