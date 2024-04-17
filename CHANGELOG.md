@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.61.0 – 2024-04-17
+
+- Support TOA5 format for Thies LNM
+- Allow truncation in other than time dimension
+
 ## 1.60.4 – 2024-04-05
 
 - Fix `clabel` fallback when using custom `plot_meta`
