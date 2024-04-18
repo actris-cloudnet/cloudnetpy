@@ -194,9 +194,13 @@ class Thies(Disdrometer):
 
     def _read_line(self, line: str, timestamp: datetime.datetime | None = None):
         raw_values = line.split(";")
-        if len(raw_values) != 521:
+        # Support custom truncated format used in Leipzig LIM.
+        expected_columns = self.site_meta.get("truncate_columns", 521)
+        if len(raw_values) != expected_columns:
             return
         for i, key in TELEGRAM4:
+            if i >= expected_columns - 1:
+                break
             value: Any
             if key == "_date":
                 value = _parse_date(raw_values[i])
@@ -227,11 +231,12 @@ class Thies(Disdrometer):
             else:
                 value = int(raw_values[i])
             self.raw_data[key].append(value)
-        self.raw_data["spectrum"].append(
-            np.array(list(map(int, raw_values[79:-2])), dtype="i2").reshape(
-                self.n_diameter, self.n_velocity
+        if expected_columns > 79:
+            self.raw_data["spectrum"].append(
+                np.array(list(map(int, raw_values[79:-2])), dtype="i2").reshape(
+                    self.n_diameter, self.n_velocity
+                )
             )
-        )
         if timestamp is not None:
             self.raw_data["time"].append(timestamp)
         else:
@@ -266,7 +271,9 @@ class Thies(Disdrometer):
 
 def _parse_date(date: str) -> datetime.date:
     day, month, year = map(int, date.split("."))
-    return datetime.date(2000 + year, month, day)
+    if year < 100:
+        year += 2000
+    return datetime.date(year, month, day)
 
 
 def _parse_time(time: str) -> datetime.time:
