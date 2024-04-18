@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.4 – 2024-04-18
+
+- Support custom truncated Thies LNM format
+
 ## 1.61.3 – 2024-04-17
 
 - Fix Thies LNM reader
