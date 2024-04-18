@@ -7,6 +7,7 @@ from scipy.interpolate import interp1d
 
 from cloudnetpy.categorize.lidar import get_gap_ind
 from cloudnetpy.datasource import DataSource
+from cloudnetpy.exceptions import DisdrometerDataError
 
 
 class Disdrometer(DataSource):
@@ -29,6 +30,9 @@ class Disdrometer(DataSource):
     def _init_rainfall_rate(self) -> None:
         keys = ("rainfall_rate", "n_particles")
         for key in keys:
+            if key not in self.dataset.variables:
+                msg = f"variable {key} is missing"
+                raise DisdrometerDataError(msg)
             self.append_data(self.dataset.variables[key][:], key)
 
     def _interpolate(self, y: ma.MaskedArray, x_new: np.ndarray) -> np.ndarray:

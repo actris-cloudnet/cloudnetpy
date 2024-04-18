@@ -1,4 +1,6 @@
 """Module that generates Cloudnet categorize file."""
+import logging
+
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos, classify
 from cloudnetpy.categorize.disdrometer import Disdrometer
@@ -7,7 +9,7 @@ from cloudnetpy.categorize.model import Model
 from cloudnetpy.categorize.mwr import Mwr
 from cloudnetpy.categorize.radar import Radar
 from cloudnetpy.datasource import DataSource
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import DisdrometerDataError, ValidTimeStampError
 from cloudnetpy.metadata import MetaData
 
 
@@ -61,7 +63,7 @@ def generate_categorize(
     def _interpolate_to_cloudnet_grid() -> list:
         wl_band = utils.get_wl_band(data["radar"].radar_frequency)
         data["mwr"].rebin_to_grid(time)
-        if is_disdrometer:
+        if data["disdrometer"] is not None:
             data["disdrometer"].interpolate_to_grid(time)
         data["model"].interpolate_to_common_height(wl_band)
         model_gap_ind = data["model"].interpolate_to_grid(time, height)
@@ -94,7 +96,7 @@ def generate_categorize(
     def _prepare_output() -> dict:
         data["radar"].add_meta()
         data["model"].screen_sparse_fields()
-        if is_disdrometer:
+        if data["disdrometer"] is not None:
             data["radar"].data.pop("rainfall_rate", None)
             data["disdrometer"].data.pop("n_particles", None)
         for key in ("category_bits", "insect_prob"):
@@ -111,7 +113,7 @@ def generate_categorize(
             **data["model"].data,
             **data["model"].data_sparse,
             **data["mwr"].data,
-            **(data["disdrometer"].data if is_disdrometer else {}),
+            **(data["disdrometer"].data if data["disdrometer"] is not None else {}),
         }
 
     def _define_dense_grid() -> tuple:
@@ -123,17 +125,18 @@ def generate_categorize(
                 obj.close()
 
     try:
-        is_disdrometer = "disdrometer" in input_files
-
         data: dict = {
             "radar": Radar(input_files["radar"]),
             "lidar": Lidar(input_files["lidar"]),
             "mwr": Mwr(input_files["mwr"]),
             "lv0_files": input_files.get("lv0_files"),
-            "disdrometer": Disdrometer(input_files["disdrometer"])
-            if is_disdrometer
-            else None,
+            "disdrometer": None,
         }
+        if "disdrometer" in input_files:
+            try:
+                data["disdrometer"] = Disdrometer(input_files["disdrometer"])
+            except DisdrometerDataError as err:
+                logging.warning("Unable to use disdrometer: %s", err)
         data["model"] = Model(input_files["model"], data["radar"].altitude)
         time, height = _define_dense_grid()
         valid_ind = _interpolate_to_cloudnet_grid()
