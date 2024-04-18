@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.5 – 2024-04-18
+
+- Fix missing `n_particles` in categorize generation
+
 ## 1.61.4 – 2024-04-18
 
 - Support custom truncated Thies LNM format
