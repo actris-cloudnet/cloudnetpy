@@ -130,3 +130,4 @@ class Mwr:
         )
         self.nc_l2.source_file_uuids = self.nc_l1c.file_uuid
         self.nc_l2.mwrpy_version = mwrpy_version
+        self.nc_l2.instrument_pid = self.nc_l1c.instrument_pid
