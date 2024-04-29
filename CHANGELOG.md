@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.61.6 – 2024-04-29
+
+- Support Granada weather station
+- Add `instrument_pid` attribute to `mwr-single` and `mwr-multi`
+
 ## 1.61.5 – 2024-04-18
 
 - Fix missing `n_particles` in categorize generation
