@@ -1,5 +1,6 @@
 import datetime
 
+import numpy as np
 from numpy import ma
 
 from cloudnetpy import output
@@ -8,6 +9,7 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
+from cloudnetpy.instruments.toa5 import read_toa5
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.utils import datetime2decimal_hours
 
@@ -19,7 +21,7 @@ def ws2nc(
     uuid: str | None = None,
     date: str | None = None,
 ) -> str:
-    """Converts weather-station data into Cloudnet Level 1b netCDF file.
+    """Converts weather station data into Cloudnet Level 1b netCDF file.
 
     Args:
         weather_station_file: Filename of weather-station ASCII file.
@@ -37,7 +39,14 @@ def ws2nc(
         ValidTimeStampError: No valid timestamps found.
     """
     try:
-        ws = WS(weather_station_file, site_meta)
+        ws: WS
+        if site_meta["name"] == "Palaiseau":
+            ws = PalaiseauWS(weather_station_file, site_meta)
+        elif site_meta["name"] == "Granada":
+            ws = GranadaWS(weather_station_file, site_meta)
+        else:
+            msg = "Unsupported site"
+            raise ValueError(msg)  # noqa: TRY301
         if date is not None:
             ws.screen_timestamps(date)
         ws.convert_time()
@@ -53,11 +62,29 @@ def ws2nc(
 
 
 class WS(CloudnetInstrument):
+    date: list[str]
+
+    def convert_time(self) -> None:
+        pass
+
+    def screen_timestamps(self, date: str) -> None:
+        pass
+
+    def add_date(self) -> None:
+        pass
+
+    def add_data(self) -> None:
+        pass
+
+    def convert_units(self) -> None:
+        pass
+
+
+class PalaiseauWS(WS):
     def __init__(self, filename: str, site_meta: dict):
         super().__init__()
         self.filename = filename
         self.site_meta = site_meta
-        self.date: list[str] = []
         self.instrument = instruments.GENERIC_WEATHER_STATION
         self._data = self._read_data()
 
@@ -145,7 +172,94 @@ class WS(CloudnetInstrument):
         self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
         self.data["rainfall_amount"].data = (
             self.data["rainfall_amount"][:] / 1000
-        )  # m -> mm
+        )  # mm -> m
+
+
+class GranadaWS(WS):
+    def __init__(self, filename: str, site_meta: dict):
+        super().__init__()
+        self.filename = filename
+        self.site_meta = site_meta
+        self.instrument = instruments.GENERIC_WEATHER_STATION
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        keymap = {
+            "TIMESTAMP": "time",
+            "air_t_Avg": "air_temperature",
+            "rh_Avg": "relative_humidity",
+            "pressure_Avg": "air_pressure",
+            "wind_speed_avg": "wind_speed",
+            "wind_dir_avg": "wind_direction",
+            "rain_Tot": "rainfall_rate",
+        }
+        expected_units = {
+            "air_t_Avg": "degC",
+            "rh_Avg": "%",
+            "pressure_Avg": "hPa",
+            "wind_speed_avg": "m/s",
+            "wind_dir_avg": "Deg",
+            "rain_Tot": "mm",
+        }
+        units, process, rows = read_toa5(self.filename)
+        for key in units:
+            if key in expected_units and expected_units[key] != units[key]:
+                msg = (
+                    f"Expected {key} to have units {expected_units[key]},"
+                    f" got {units[key]} instead"
+                )
+                raise ValueError(msg)
+
+        data: dict[str, list] = {keymap[key]: [] for key in units if key in keymap}
+        for row in rows:
+            for key, value in row.items():
+                if key not in keymap:
+                    continue
+                parsed = value
+                if keymap[key] != "time":
+                    parsed = float(value)
+                data[keymap[key]].append(parsed)
+        return data
+
+    def convert_time(self) -> None:
+        pass
+
+    def screen_timestamps(self, date: str) -> None:
+        dates = [str(d.date()) for d in self._data["time"]]
+        valid_ind = [ind for ind, d in enumerate(dates) if d == date]
+        if not valid_ind:
+            raise ValidTimeStampError
+        for key in self._data:
+            self._data[key] = [
+                x for ind, x in enumerate(self._data[key]) if ind in valid_ind
+            ]
+
+    def add_date(self) -> None:
+        first_date = self._data["time"][0].date()
+        self.date = [
+            str(first_date.year),
+            str(first_date.month).zfill(2),
+            str(first_date.day).zfill(2),
+        ]
+
+    def add_data(self) -> None:
+        for key, value in self._data.items():
+            parsed = datetime2decimal_hours(value) if key == "time" else np.array(value)
+            self.data[key] = CloudnetArray(parsed, key)
+        self.data["rainfall_amount"] = CloudnetArray(
+            np.cumsum(self._data["rainfall_rate"]), "rainfall_amount"
+        )
+
+    def convert_units(self) -> None:
+        temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
+        self.data["air_temperature"].data = temperature_kelvins
+        self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
+        self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
+        rainfall_rate = self.data["rainfall_rate"][:]
+        self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
+        self.data["rainfall_amount"].data = (
+            self.data["rainfall_amount"][:] / 1000
+        )  # mm -> m
 
 
 ATTRIBUTES = {

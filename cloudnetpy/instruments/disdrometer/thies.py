@@ -151,7 +151,8 @@ class Thies(Disdrometer):
         with open(filename) as file:
             first_line = file.readline()
         if "TOA5" in first_line:
-            for row in read_toa5(filename):
+            units, process, rows = read_toa5(filename)
+            for row in rows:
                 self._read_line(row["RawString"], row["TIMESTAMP"])
         else:
             with open(filename) as file:

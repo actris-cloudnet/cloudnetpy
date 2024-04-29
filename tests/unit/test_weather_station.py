@@ -10,7 +10,7 @@ from tests.unit.all_products_fun import Check
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 SITE_META = {
-    "name": "Kumpula",
+    "name": "Palaiseau",
     "latitude": 50,
     "longitude": 104.5,
     "altitude": 50,
@@ -27,11 +27,11 @@ class TestWeatherStation(Check):
 
     def test_global_attributes(self):
         assert self.nc.cloudnet_file_type == "weather-station"
-        assert self.nc.title == "Weather station from Kumpula"
+        assert self.nc.title == "Weather station from Palaiseau"
         assert self.nc.year == "2022"
         assert self.nc.month == "01"
         assert self.nc.day == "01"
-        assert self.nc.location == "Kumpula"
+        assert self.nc.location == "Palaiseau"
 
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 29
@@ -86,3 +86,23 @@ def test_invalid_header2():
     temp_path = "test.nc"
     with pytest.raises(WeatherStationDataError):
         weather_station.ws2nc(filename, temp_path, SITE_META)
+
+
+class TestWeatherStationGranada(Check):
+    date = "2024-04-19"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = { **SITE_META, "name": "Granada" }
+    filename = f"{SCRIPT_PATH}/data/ws/granada.dat"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta)
+
+    def test_global_attributes(self):
+        assert self.nc.cloudnet_file_type == "weather-station"
+        assert self.nc.title == "Weather station from Granada"
+        assert self.nc.year == "2024"
+        assert self.nc.month == "04"
+        assert self.nc.day == "19"
+        assert self.nc.location == "Granada"
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 10

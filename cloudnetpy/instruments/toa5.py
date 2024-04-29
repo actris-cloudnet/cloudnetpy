@@ -4,7 +4,9 @@ from os import PathLike
 from typing import Any
 
 
-def read_toa5(filename: str | PathLike) -> list[dict[str, Any]]:
+def read_toa5(
+    filename: str | PathLike,
+) -> tuple[dict[str, str], dict[str, str], list[dict[str, Any]]]:
     """Read ASCII data from Campbell Scientific datalogger such as CR1000.
 
     References
@@ -18,9 +20,11 @@ def read_toa5(filename: str | PathLike) -> list[dict[str, Any]]:
             msg = "Invalid TOA5 file"
             raise ValueError(msg)
         header_line = next(reader)
-        _units_line = next(reader)
-        _process_line = next(reader)
+        units_line = next(reader)
+        process_line = next(reader)
         output = []
+        units = dict(zip(header_line, units_line, strict=False))
+        process = dict(zip(header_line, process_line, strict=False))
 
         row_template: dict[str, Any] = {}
         for header in header_line:
@@ -42,4 +46,4 @@ def read_toa5(filename: str | PathLike) -> list[dict[str, Any]]:
                 else:
                     row[key] = parsed_value
             output.append(row)
-        return output
+        return units, process, output
