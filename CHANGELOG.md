@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.7 – 2024-05-03
+
+- Skip Copernicus and Galileo files with missing variables
+
 ## 1.61.6 – 2024-04-29
 
 - Support Granada weather station
