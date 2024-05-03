@@ -972,6 +972,19 @@ def get_files_with_common_range(filenames: list) -> list:
     return [file for i, file in enumerate(filenames) if n_range[i] == most_common]
 
 
+def get_files_with_variables(filenames: list, variables: list[str]) -> list:
+    """Returns files where all variables exist."""
+    valid_files = []
+    for file in filenames:
+        with netCDF4.Dataset(file) as nc:
+            for variable in variables:
+                if variable not in nc.variables:
+                    break
+            else:
+                valid_files.append(file)
+    return valid_files
+
+
 def is_all_masked(array: np.ndarray) -> bool:
     """Tests if all values are masked."""
     return ma.isMaskedArray(array) and hasattr(array, "mask") and array.mask.all()
