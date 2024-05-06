@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 import netCDF4
 import numpy as np
 import pytest
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_almost_equal
 
 from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import ceilo2nc, vaisala
@@ -126,6 +126,21 @@ def test_cl51_corrupted_profile(tmp_path):
     ceilo2nc(input_path, output_path, site_meta, date="2022-05-06")
     with netCDF4.Dataset(output_path) as nc:
         assert_equal(nc.variables["beta"][:].mask.all(axis=1), [False, True, False])
+
+
+def test_cl51_corrupted_profile2(tmp_path):
+    site_meta = {
+        "name": "Chilbolton",
+        "altitude": 25,
+        "latitude": 78.924,
+        "longitude": 22.0,
+    }
+    input_path = f"{SCRIPT_PATH}/data/vaisala/C5061800-first-invalid.DAT"
+    output_path = tmp_path / "cl51-corrupted-profile.nc"
+    ceilo2nc(input_path, output_path, site_meta, date="2015-06-18")
+    with netCDF4.Dataset(output_path) as nc:
+        assert_equal(nc.variables["beta"][:].mask.all(axis=1), [False, True])
+        assert_almost_equal(nc.variables["time"][:], [40/60/60, 19+54/60+8/60/60], decimal=5)
 
 
 class TestCL31(Check):

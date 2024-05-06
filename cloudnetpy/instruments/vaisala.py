@@ -54,10 +54,13 @@ class VaisalaCeilo(Ceilometer):
     def _read_backscatter(self, lines: list) -> np.ndarray:
         """Converts backscatter profile from 2-complement hex to floats."""
         n_chars = self._hex_conversion_params[0]
-        n_gates = int(len(lines[0]) / n_chars)
+        n_gates = len(self.data["range"])
         profiles = np.zeros((len(lines), n_gates), dtype=int)
         ran = range(0, n_gates * n_chars, n_chars)
         for ind, line in enumerate(lines):
+            if int(len(line) / n_chars) != n_gates:
+                logging.warning("Invalid line in raw ceilometer data")
+                continue
             try:
                 profiles[ind, :] = [int(line[i : i + n_chars], 16) for i in ran]
             except ValueError:
