@@ -3,11 +3,12 @@ import datetime
 import logging
 import os
 import re
+import textwrap
 import uuid
 import warnings
 from collections.abc import Iterator
 from datetime import timezone
-from typing import Literal
+from typing import Literal, TypeVar
 
 import netCDF4
 import numpy as np
@@ -995,3 +996,25 @@ def find_masked_profiles_indices(array: ma.MaskedArray) -> list:
     non_masked_counts = np.ma.count(array, axis=1)
     masked_profiles_indices = np.where(non_masked_counts == 0)[0]
     return list(masked_profiles_indices)
+
+
+T = TypeVar("T", int, str)
+
+
+def _format_definition(kind: str, definitions: dict[T, str]) -> str:
+    lines = [""]
+    for key, value in definitions.items():
+        prefix = f"{kind} {key}: "
+        indent = " " * len(prefix)
+        text = " ".join(value.split())
+        wrapped = textwrap.wrap(prefix + text, subsequent_indent=indent)
+        lines.extend(wrapped)
+    return "\n".join(lines)
+
+
+def status_field_definition(definitions: dict[T, str]) -> str:
+    return _format_definition("Value", definitions)
+
+
+def bit_field_definition(definitions: dict[T, str]) -> str:
+    return _format_definition("Bit", definitions)

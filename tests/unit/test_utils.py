@@ -820,3 +820,32 @@ def test_is_all_masked(data: np.ndarray | ma.MaskedArray, result: bool):
 def test_find_masked_profiles_indices(array: ma.MaskedArray, expected: list):
     result = utils.find_masked_profiles_indices(array)
     assert np.array_equal(result, expected)
+
+
+
+def test_bit_field_definition():
+    definition = utils.bit_field_definition({
+        0: """Used to indicate sightings of airborne swine.""",
+        1: """Indicates the presence of an unknown flying kitchen utensil.""",
+        2: """Marks the presence of clouds that bear an uncanny resemblance to
+              famous personalities.""",
+        3: """Identifies weather balloons with an assurance that they are not
+              spy equipment.""",
+        4: """Used when reports come in of heavy precipitation that seems to
+              include small domestic animals.""",
+        5: """Activated when there's a widespread panic about the sky
+              falling.""",
+    })
+    assert definition == (
+        "\n"
+        "Bit 0: Used to indicate sightings of airborne swine.\n"
+        "Bit 1: Indicates the presence of an unknown flying kitchen utensil.\n"
+        "Bit 2: Marks the presence of clouds that bear an uncanny resemblance\n"
+        "       to famous personalities.\n"
+        "Bit 3: Identifies weather balloons with an assurance that they are not\n"
+        "       spy equipment.\n"
+        "Bit 4: Used when reports come in of heavy precipitation that seems to\n"
+        "       include small domestic animals.\n"
+        "Bit 5: Activated when there's a widespread panic about the sky\n"
+        "       falling."
+    )

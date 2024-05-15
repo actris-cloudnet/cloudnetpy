@@ -289,33 +289,38 @@ COMMENTS = {
 }
 
 DEFINITIONS = {
-    "category_bits": (
-        "\n"
-        "Bit 0: Small liquid droplets are present.\n"
-        "Bit 1: Falling hydrometeors are present; if Bit 2 is set then these are most\n"
-        "       likely ice particles, otherwise they are drizzle or rain drops.\n"
-        "Bit 2: Wet-bulb temperature is less than 0 degrees C, implying the phase of\n"
-        "       Bit-1 particles.\n"
-        "Bit 3: Melting ice particles are present.\n"
-        "Bit 4: Aerosol particles are present and visible to the lidar.\n"
-        "Bit 5: Insects are present and visible to the radar."
+    "category_bits": utils.bit_field_definition(
+        {
+            0: """Small liquid droplets are present.""",
+            1: """Falling hydrometeors are present; if Bit 2 is set then these
+                  are most likely ice particles, otherwise they are drizzle or
+                  rain drops.""",
+            2: """Wet-bulb temperature is less than 0 degrees C, implying the
+                  phase of Bit-1 particles.""",
+            3: """Melting ice particles are present.""",
+            4: """Aerosol particles are present and visible to the lidar.""",
+            5: """Insects are present and visible to the radar.""",
+        }
     ),
-    "quality_bits": (
-        "\n"
-        "Bit 0: An echo is detected by the radar.\n"
-        "Bit 1: An echo is detected by the lidar.\n"
-        "Bit 2: The apparent echo detected by the radar is ground clutter or some\n"
-        "       other non-atmospheric artifact.\n"
-        "Bit 3: The lidar echo is due to clear-air molecular scattering.\n"
-        "Bit 4: Liquid water cloud, rainfall or melting ice below this pixel\n"
-        "       will have caused radar and lidar attenuation; if bit 5 is set then\n"
-        "       a correction for the radar attenuation has been performed;\n"
-        "       otherwise do not trust the absolute values of reflectivity factor.\n"
-        "       No correction is performed for lidar attenuation.\n"
-        "Bit 5: Radar reflectivity has been corrected for liquid-water attenuation\n"
-        "       using the microwave radiometer measurements of liquid water path\n"
-        "       and the lidar estimation of the location of liquid water cloud;\n"
-        "       be aware that errors in reflectivity may result.\n"
+    "quality_bits": utils.bit_field_definition(
+        {
+            0: """An echo is detected by the radar.""",
+            1: """An echo is detected by the lidar.""",
+            2: """The apparent echo detected by the radar is ground clutter or
+                  some other non-atmospheric artifact.""",
+            3: """The lidar echo is due to clear-air molecular scattering.""",
+            4: """Liquid water cloud, rainfall or melting ice below this pixel
+                  will have caused radar and lidar attenuation; if bit 5 is set
+                  then a correction for the radar attenuation has been
+                  performed; otherwise do not trust the absolute values of
+                  reflectivity factor. No correction is performed for lidar
+                  attenuation.""",
+            5: """Radar reflectivity has been corrected for liquid-water
+                  attenuation using the microwave radiometer measurements of
+                  liquid water path and the lidar estimation of the location of
+                  liquid water cloud; be aware that errors in reflectivity may
+                  result.""",
+        }
     ),
 }
 

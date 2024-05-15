@@ -4,7 +4,7 @@ from itertools import islice
 import netCDF4
 from numpy import ma
 
-from cloudnetpy import output
+from cloudnetpy import output, utils
 from cloudnetpy.instruments.campbell_scientific import Cs135
 from cloudnetpy.instruments.cl61d import Cl61d
 from cloudnetpy.instruments.lufft import LufftCeilo
@@ -225,11 +225,12 @@ ATTRIBUTES = {
     "warning": MetaData(
         long_name="Warning and Alarm flag",
         units="1",
-        definition=(
-            "\n"
-            "Value 0: Self-check OK\n"
-            "Value W: At least one warning on\n"
-            "Value A: At least one error active."
+        definition=utils.status_field_definition(
+            {
+                "0": "Self-check OK",
+                "W": "At least one warning on",
+                "A": "At least one error active.",
+            }
         ),
     ),
     "warning_flags": MetaData(

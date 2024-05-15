@@ -2,7 +2,7 @@
 import numpy as np
 from numpy import ma
 
-from cloudnetpy import output
+from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.metadata import MetaData
@@ -140,35 +140,38 @@ COMMENTS = {
 }
 
 DEFINITIONS = {
-    "target_classification": (
-        "\n"
-        "Value 0: Clear sky.\n"
-        "Value 1: Cloud liquid droplets only.\n"
-        "Value 2: Drizzle or rain.\n"
-        "Value 3: Drizzle or rain coexisting with cloud liquid droplets.\n"
-        "Value 4: Ice particles.\n"
-        "Value 5: Ice coexisting with supercooled liquid droplets.\n"
-        "Value 6: Melting ice particles.\n"
-        "Value 7: Melting ice particles coexisting with cloud liquid droplets.\n"
-        "Value 8: Aerosol particles, no cloud or precipitation.\n"
-        "Value 9: Insects, no cloud or precipitation.\n"
-        "Value 10: Aerosol coexisting with insects, no cloud or precipitation."
+    "target_classification": utils.status_field_definition(
+        {
+            0: "Clear sky.",
+            1: "Cloud liquid droplets only.",
+            2: "Drizzle or rain.",
+            3: "Drizzle or rain coexisting with cloud liquid droplets.",
+            4: "Ice particles.",
+            5: "Ice coexisting with supercooled liquid droplets.",
+            6: "Melting ice particles.",
+            7: "Melting ice particles coexisting with cloud liquid droplets.",
+            8: "Aerosol particles, no cloud or precipitation.",
+            9: "Insects, no cloud or precipitation.",
+            10: "Aerosol coexisting with insects, no cloud or precipitation.",
+        }
     ),
-    "detection_status": (
-        "\n"
-        "Value 0: Clear sky.\n"
-        "Value 1: Lidar echo only.\n"
-        "Value 2: Radar echo but reflectivity may be unreliable as attenuation\n"
-        "         by rain, melting ice or liquid cloud has not been corrected.\n"
-        "Value 3: Good radar and lidar echos.\n"
-        "Value 4: No radar echo but rain or liquid cloud beneath mean that\n"
-        "         attenuation that would be experienced is unknown.\n"
-        "Value 5: Good radar echo only.\n"
-        "Value 6: No radar echo but known attenuation.\n"
-        "Value 7: Radar echo corrected for liquid attenuation using microwave\n"
-        "         radiometer data.\n"
-        "Value 8: Radar ground clutter.\n"
-        "Value 9: Lidar clear-air molecular scattering."
+    "detection_status": utils.status_field_definition(
+        {
+            0: """Clear sky.""",
+            1: """Lidar echo only.""",
+            2: """Radar echo but reflectivity may be unreliable as attenuation
+                  by rain, melting ice or liquid cloud has not been
+                  corrected.""",
+            3: """Good radar and lidar echos.""",
+            4: """No radar echo but rain or liquid cloud beneath mean that
+                  attenuation that would be experienced is unknown.""",
+            5: """Good radar echo only.""",
+            6: """No radar echo but known attenuation.""",
+            7: """Radar echo corrected for liquid attenuation using microwave
+                  radiometer data.""",
+            8: """Radar ground clutter.""",
+            9: """Lidar clear-air molecular scattering.""",
+        }
     ),
 }
 

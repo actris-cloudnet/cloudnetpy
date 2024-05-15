@@ -225,16 +225,17 @@ class DerSource(DataSource):
 
 
 DEFINITIONS = {
-    "der_retrieval_status": (
-        "\n"
-        "Value 0: No data: No cloud observed.\n"
-        "Value 1: Reliable retrieval.\n"
-        "Value 2: Mix of drops and ice: Droplets and ice crystals coexist within\n"
-        "pixel. Z may be biased by large crystals.\n"
-        "Value 3: Precipitation in profile: Drizzle and rain affects LWP retrieval\n"
-        "         of MWR but also the target reflectivity.\n"
-        "Value 4: Surrounding ice: Less crucial! Ice crystals in the vicinity of a\n"
-        "         droplet pixel may also bias its reflectivity.\n"
+    "der_retrieval_status": utils.status_field_definition(
+        {
+            0: """No data: No cloud observed.""",
+            1: """Reliable retrieval.""",
+            2: """Mix of drops and ice: Droplets and ice crystals coexist within
+                  pixel. Z may be biased by large crystals.""",
+            3: """Precipitation in profile: Drizzle and rain affects LWP
+                  retrieval of MWR but also the target reflectivity.""",
+            4: """Surrounding ice: Less crucial! Ice crystals in the vicinity of
+                  a droplet pixel may also bias its reflectivity.""",
+        }
     ),
 }
 

@@ -346,30 +346,37 @@ def _filter_zenith_angle(zenith: ma.MaskedArray) -> np.ndarray:
 
 
 DEFINITIONS = {
-    "model_number": "\n"
-    "0: Single polarisation radar.\n"
-    "1: Dual polarisation radar.",
-    "dual_polarization": (
-        "\n"
-        "Value 0: Single polarisation radar.\n"
-        "Value 1: Dual polarisation radar in linear depolarisation ratio (LDR) mode.\n"
-        "Value 2: Dual polarisation radar in simultaneous transmission simultaneous\n"
-        "reception (STSR) mode."
+    "model_number": utils.status_field_definition(
+        {
+            0: "Single polarisation radar.",
+            1: "Dual polarisation radar.",
+        }
     ),
-    "FFT_window": (
-        "\n"
-        "Value 0: Square\n"
-        "Value 1: Parzen\n"
-        "Value 2: Blackman\n"
-        "Value 3: Welch\n"
-        "Value 4: Slepian2\n"
-        "Value 5: Slepian3"
+    "dual_polarization": utils.status_field_definition(
+        {
+            0: """Single polarisation radar.""",
+            1: """Dual polarisation radar in linear depolarisation ratio (LDR)
+                  mode.""",
+            2: """Dual polarisation radar in simultaneous transmission
+                  simultaneous reception (STSR) mode.""",
+        }
     ),
-    "quality_flag": (
-        "\n"
-        "Bit 0: ADC saturation.\n"
-        "Bit 1: Spectral width too high.\n"
-        "Bit 2: No transmission power levelling."
+    "FFT_window": utils.status_field_definition(
+        {
+            0: "Square",
+            1: "Parzen",
+            2: "Blackman",
+            3: "Welch",
+            4: "Slepian2",
+            5: "Slepian3",
+        }
+    ),
+    "quality_flag": utils.bit_field_definition(
+        {
+            0: "ADC saturation.",
+            1: "Spectral width too high.",
+            2: "No transmission power levelling.",
+        }
     ),
 }
 

@@ -414,24 +414,25 @@ COMMENTS = {
 }
 
 DEFINITIONS = {
-    "lwc_retrieval_status": (
-        "\n"
-        "Value 0: No liquid water detected.\n"
-        "Value 1: Reliable retrieval.\n"
-        "Value 2: Adiabatic retrieval where cloud top has been adjusted to match\n"
-        "         liquid water path from microwave radiometer because layer is not\n"
-        "         detected by radar."
-        "Value 3: Adiabatic retrieval: new cloud pixels where cloud top has been\n"
-        "         adjusted to match liquid water path from microwave radiometer\n"
-        "         because layer is not detected by radar.\n"
-        "Value 4: No retrieval: either no liquid water path is available or liquid\n"
-        "          water path is uncertain.\n"
-        "Value 5: No retrieval: liquid water layer detected only by the lidar and\n"
-        "         liquid water path is unavailable or uncertain: cloud top may be\n"
-        "         higher than diagnosed cloud top since lidar signal has been\n"
-        "         attenuated."
-        "Value 6: Rain present: cloud extent is difficult to ascertain and liquid\n"
-        "         water path also uncertain."
+    "lwc_retrieval_status": utils.status_field_definition(
+        {
+            0: """No liquid water detected.""",
+            1: """Reliable retrieval.""",
+            2: """Adiabatic retrieval where cloud top has been adjusted to match
+                  liquid water path from microwave radiometer because layer is
+                  not detected by radar.""",
+            3: """Adiabatic retrieval: new cloud pixels where cloud top has been
+                  adjusted to match liquid water path from microwave radiometer
+                  because layer is not detected by radar.""",
+            4: """No retrieval: either no liquid water path is available or
+                  liquid water path is uncertain.""",
+            5: """No retrieval: liquid water layer detected only by the lidar
+                  and liquid water path is unavailable or uncertain: cloud top
+                  may be higher than diagnosed cloud top since lidar signal has
+                  been attenuated.""",
+            6: """Rain present: cloud extent is difficult to ascertain and
+                  liquid water path also uncertain.""",
+        }
     ),
 }
 

@@ -130,23 +130,26 @@ COMMENTS = {
 }
 
 DEFINITIONS = {
-    "ier_retrieval_status": (
-        "\n"
-        "Value 0: No ice present.\n"
-        "Value 1: Reliable retrieval.\n"
-        "Value 2: Unreliable retrieval due to uncorrected attenuation from liquid\n"
-        "         water below the ice (no liquid water path measurement available).\n"
-        "Value 3: Retrieval performed but radar corrected for liquid attenuation\n"
-        "         using radiometer liquid water path which is not always accurate.\n"
-        "Value 4: Ice detected only by the lidar.\n"
-        "Value 5: Ice detected by radar but rain below so no retrieval performed\n"
-        "         due to very uncertain attenuation.\n"
-        "Value 6: Clear sky above rain wet-bulb temperature less than 0degC: if\n"
-        "         rain attenuation were strong then ice could be present but\n"
-        "         undetected."
-        "Value 7: Drizzle or rain that would have been classified as ice if\n"
-        "          the wet-bulb temperature were less than 0degC: may be ice\n"
-        "          if temperature is in error."
+    "ier_retrieval_status": utils.status_field_definition(
+        {
+            0: """No ice present.""",
+            1: """Reliable retrieval.""",
+            2: """Unreliable retrieval due to uncorrected attenuation from
+                  liquid water below the ice (no liquid water path measurement
+                  available).""",
+            3: """Retrieval performed but radar corrected for liquid attenuation
+                  using radiometer liquid water path which is not always
+                  accurate.""",
+            4: """Ice detected only by the lidar.""",
+            5: """Ice detected by radar but rain below so no retrieval performed
+                  due to very uncertain attenuation.""",
+            6: """Clear sky above rain wet-bulb temperature less than 0degC: if
+                  rain attenuation were strong then ice could be present but
+                  undetected.""",
+            7: """Drizzle or rain that would have been classified as ice if the
+                  wet-bulb temperature were less than 0degC: may be ice if
+                  temperature is in error.""",
+        }
     ),
 }
 
