@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.61.8 – 2024-05-15
+
+- Handle incorrect data length in Vaisala ceilometer
+- Harmonize `definition` attribute formatting
+
 ## 1.61.7 – 2024-05-03
 
 - Skip Copernicus and Galileo files with missing variables
