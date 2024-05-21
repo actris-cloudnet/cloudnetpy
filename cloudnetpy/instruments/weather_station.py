@@ -44,6 +44,8 @@ def ws2nc(
             ws = PalaiseauWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Granada":
             ws = GranadaWS(weather_station_file, site_meta)
+        elif site_meta["name"] == "Jülich":
+            ws = JuelichWS(weather_station_file, site_meta)
         else:
             msg = "Unsupported site"
             raise ValueError(msg)  # noqa: TRY301
@@ -260,6 +262,83 @@ class GranadaWS(WS):
         self.data["rainfall_amount"].data = (
             self.data["rainfall_amount"][:] / 1000
         )  # mm -> m
+
+
+class JuelichWS(WS):
+    def __init__(self, filename: str, site_meta: dict):
+        super().__init__()
+        self.filename = filename
+        self.site_meta = site_meta
+        self.instrument = instruments.GENERIC_WEATHER_STATION
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        keymap = {
+            "TIMESTAMP": "time",
+            "AirTC_Avg": "air_temperature",
+            "RH": "relative_humidity",
+            "BV_BP_Avg": "air_pressure",
+            "WS_ms_S_WVT": "wind_speed",
+            "WindDir_D1_WVT": "wind_direction",
+        }
+        expected_units = {
+            "AirTC_Avg": "Deg C",
+            "RH": "%",
+            "BV_BP_Avg": "hPa",
+            "WS_ms_S_WVT": "meters/Second",
+            "WindDir_D1_WVT": "Deg",
+        }
+        units, process, rows = read_toa5(self.filename)
+        for key in units:
+            if key in expected_units and expected_units[key] != units[key]:
+                msg = (
+                    f"Expected {key} to have units {expected_units[key]},"
+                    f" got {units[key]} instead"
+                )
+                raise ValueError(msg)
+
+        data: dict[str, list] = {keymap[key]: [] for key in units if key in keymap}
+        for row in rows:
+            for key, value in row.items():
+                if key not in keymap:
+                    continue
+                parsed = value
+                if keymap[key] != "time":
+                    parsed = float(value)
+                data[keymap[key]].append(parsed)
+        return data
+
+    def convert_time(self) -> None:
+        pass
+
+    def screen_timestamps(self, date: str) -> None:
+        dates = [str(d.date()) for d in self._data["time"]]
+        valid_ind = [ind for ind, d in enumerate(dates) if d == date]
+        if not valid_ind:
+            raise ValidTimeStampError
+        for key in self._data:
+            self._data[key] = [
+                x for ind, x in enumerate(self._data[key]) if ind in valid_ind
+            ]
+
+    def add_date(self) -> None:
+        first_date = self._data["time"][0].date()
+        self.date = [
+            str(first_date.year),
+            str(first_date.month).zfill(2),
+            str(first_date.day).zfill(2),
+        ]
+
+    def add_data(self) -> None:
+        for key, value in self._data.items():
+            parsed = datetime2decimal_hours(value) if key == "time" else np.array(value)
+            self.data[key] = CloudnetArray(parsed, key)
+
+    def convert_units(self) -> None:
+        temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
+        self.data["air_temperature"].data = temperature_kelvins
+        self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
+        self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
 
 
 ATTRIBUTES = {
