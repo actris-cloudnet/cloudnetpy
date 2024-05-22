@@ -1,4 +1,6 @@
+import csv
 import datetime
+import math
 
 import numpy as np
 from numpy import ma
@@ -15,7 +17,7 @@ from cloudnetpy.utils import datetime2decimal_hours
 
 
 def ws2nc(
-    weather_station_file: str,
+    weather_station_file: str | list[str],
     output_file: str,
     site_meta: dict,
     uuid: str | None = None,
@@ -38,12 +40,16 @@ def ws2nc(
         WeatherStationDataError : Unable to read the file.
         ValidTimeStampError: No valid timestamps found.
     """
+    if not isinstance(weather_station_file, list):
+        weather_station_file = [weather_station_file]
     try:
         ws: WS
         if site_meta["name"] == "Palaiseau":
             ws = PalaiseauWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Granada":
             ws = GranadaWS(weather_station_file, site_meta)
+        elif site_meta["name"] == "Kenttärova":
+            ws = KenttarovaWS(weather_station_file, site_meta)
         else:
             msg = "Unsupported site"
             raise ValueError(msg)  # noqa: TRY301
@@ -81,9 +87,11 @@ class WS(CloudnetInstrument):
 
 
 class PalaiseauWS(WS):
-    def __init__(self, filename: str, site_meta: dict):
+    def __init__(self, filenames: list[str], site_meta: dict):
         super().__init__()
-        self.filename = filename
+        if len(filenames) != 1:
+            raise ValueError
+        self.filename = filenames[0]
         self.site_meta = site_meta
         self.instrument = instruments.GENERIC_WEATHER_STATION
         self._data = self._read_data()
@@ -176,9 +184,11 @@ class PalaiseauWS(WS):
 
 
 class GranadaWS(WS):
-    def __init__(self, filename: str, site_meta: dict):
+    def __init__(self, filenames: list[str], site_meta: dict):
+        if len(filenames) != 1:
+            raise ValueError
         super().__init__()
-        self.filename = filename
+        self.filename = filenames[0]
         self.site_meta = site_meta
         self.instrument = instruments.GENERIC_WEATHER_STATION
         self._data = self._read_data()
@@ -248,6 +258,94 @@ class GranadaWS(WS):
             self.data[key] = CloudnetArray(parsed, key)
         self.data["rainfall_amount"] = CloudnetArray(
             np.cumsum(self._data["rainfall_rate"]), "rainfall_amount"
+        )
+
+    def convert_units(self) -> None:
+        temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
+        self.data["air_temperature"].data = temperature_kelvins
+        self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
+        self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
+        rainfall_rate = self.data["rainfall_rate"][:]
+        self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
+        self.data["rainfall_amount"].data = (
+            self.data["rainfall_amount"][:] / 1000
+        )  # mm -> m
+
+
+class KenttarovaWS(WS):
+    def __init__(self, filenames: list[str], site_meta: dict):
+        super().__init__()
+        self.filenames = filenames
+        self.site_meta = site_meta
+        self.instrument = instruments.GENERIC_WEATHER_STATION
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        merged: dict = {}
+        for filename in self.filenames:
+            with open(filename, newline="") as f:
+                reader = csv.DictReader(f)
+                raw_data: dict = {key: [] for key in reader.fieldnames}  # type: ignore[union-attr]
+                for row in reader:
+                    for key, value in row.items():
+                        parsed_value: float | datetime.datetime
+                        if key == "Read time (UTC+2)":
+                            parsed_value = datetime.datetime.strptime(
+                                value, "%Y-%m-%d %H:%M:%S"
+                            ) - datetime.timedelta(hours=2)
+                        else:
+                            try:
+                                parsed_value = float(value)
+                            except ValueError:
+                                parsed_value = math.nan
+                        raw_data[key].append(parsed_value)
+            data = {
+                "time": raw_data["Read time (UTC+2)"],
+                "air_temperature": raw_data["Temp 2m (C)"],
+                "relative_humidity": raw_data["Humidity 2m (%)"],
+                "air_pressure": raw_data["Pressure (hPa)"],
+                "wind_speed": raw_data["Wind speed (m/s)"],
+                "wind_direction": raw_data["Wind dir (deg)"],
+                "rainfall_rate": raw_data["Precipitation (?)"],
+            }
+            if merged:
+                merged = {key: [*merged[key], *data[key]] for key in merged}
+            else:
+                merged = data
+        for key, value in merged.items():
+            new_value = np.array(value)
+            if key != "time":
+                new_value = ma.masked_where(np.isnan(new_value), new_value)
+            merged[key] = new_value
+        return merged
+
+    def convert_time(self) -> None:
+        pass
+
+    def screen_timestamps(self, date: str) -> None:
+        dates = [str(d.date()) for d in self._data["time"]]
+        valid_ind = [ind for ind, d in enumerate(dates) if d == date]
+        if not valid_ind:
+            raise ValidTimeStampError
+        for key in self._data:
+            self._data[key] = [
+                x for ind, x in enumerate(self._data[key]) if ind in valid_ind
+            ]
+
+    def add_date(self) -> None:
+        first_date = self._data["time"][0].date()
+        self.date = [
+            str(first_date.year),
+            str(first_date.month).zfill(2),
+            str(first_date.day).zfill(2),
+        ]
+
+    def add_data(self) -> None:
+        for key, value in self._data.items():
+            parsed = datetime2decimal_hours(value) if key == "time" else ma.array(value)
+            self.data[key] = CloudnetArray(parsed, key)
+        self.data["rainfall_amount"] = CloudnetArray(
+            ma.cumsum(self._data["rainfall_rate"]), "rainfall_amount"
         )
 
     def convert_units(self) -> None:

@@ -106,3 +106,26 @@ class TestWeatherStationGranada(Check):
 
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 10
+
+
+
+class TestWeatherStationKenttarova(Check):
+    date = "2024-05-20"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = { **SITE_META, "name": "Kenttärova" }
+    filename = [f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240520.csv",
+                f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240521.csv"
+                ]
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_global_attributes(self):
+        assert self.nc.cloudnet_file_type == "weather-station"
+        assert self.nc.title == "Weather station from Kenttärova"
+        assert self.nc.year == "2024"
+        assert self.nc.month == "05"
+        assert self.nc.day == "20"
+        assert self.nc.location == "Kenttärova"
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 24*(60/10)+1
