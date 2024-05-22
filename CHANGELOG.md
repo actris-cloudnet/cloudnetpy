@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.10 – 2024-05-22
+
+- Fix Kenttärova rainfall rate units
+
 ## 1.61.9 – 2024-05-22
 
 - Support Kenttärova weather station
