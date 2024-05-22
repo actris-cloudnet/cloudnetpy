@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.9 – 2024-05-22
+
+- Support Kenttärova weather station
+
 ## 1.61.8 – 2024-05-15
 
 - Handle incorrect data length in Vaisala ceilometer
