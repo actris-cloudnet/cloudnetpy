@@ -354,7 +354,7 @@ class KenttarovaWS(WS):
         self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
         self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
         rainfall_rate = self.data["rainfall_rate"][:]
-        self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
+        self.data["rainfall_rate"].data = rainfall_rate / 60  # m/min -> m/s
         self.data["rainfall_amount"].data = (
             self.data["rainfall_amount"][:] / 1000
         )  # mm -> m
