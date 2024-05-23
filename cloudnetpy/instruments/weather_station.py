@@ -8,6 +8,7 @@ from numpy import ma
 from cloudnetpy import output
 from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.constants import SEC_IN_HOUR
 from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
@@ -60,6 +61,7 @@ def ws2nc(
         ws.add_site_geolocation()
         ws.add_data()
         ws.convert_units()
+        ws.calculate_rainfall_amount()
         attributes = output.add_time_attribute(ATTRIBUTES, ws.date)
         output.update_attributes(ws.data, attributes)
     except ValueError as err:
@@ -84,6 +86,13 @@ class WS(CloudnetInstrument):
 
     def convert_units(self) -> None:
         pass
+
+    def calculate_rainfall_amount(self) -> None:
+        if "rainfall_amount" in self.data:
+            return
+        resolution = np.median(np.diff(self.data["time"].data)) * SEC_IN_HOUR
+        rainfall_amount = ma.cumsum(self.data["rainfall_rate"].data * resolution)
+        self.data["rainfall_amount"] = CloudnetArray(rainfall_amount, "rainfall_amount")
 
 
 class PalaiseauWS(WS):
@@ -256,9 +265,6 @@ class GranadaWS(WS):
         for key, value in self._data.items():
             parsed = datetime2decimal_hours(value) if key == "time" else np.array(value)
             self.data[key] = CloudnetArray(parsed, key)
-        self.data["rainfall_amount"] = CloudnetArray(
-            np.cumsum(self._data["rainfall_rate"]), "rainfall_amount"
-        )
 
     def convert_units(self) -> None:
         temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
@@ -267,9 +273,6 @@ class GranadaWS(WS):
         self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
         rainfall_rate = self.data["rainfall_rate"][:]
         self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
-        self.data["rainfall_amount"].data = (
-            self.data["rainfall_amount"][:] / 1000
-        )  # mm -> m
 
 
 class KenttarovaWS(WS):
@@ -344,9 +347,6 @@ class KenttarovaWS(WS):
         for key, value in self._data.items():
             parsed = datetime2decimal_hours(value) if key == "time" else ma.array(value)
             self.data[key] = CloudnetArray(parsed, key)
-        self.data["rainfall_amount"] = CloudnetArray(
-            ma.cumsum(self._data["rainfall_rate"]), "rainfall_amount"
-        )
 
     def convert_units(self) -> None:
         temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
@@ -354,10 +354,9 @@ class KenttarovaWS(WS):
         self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
         self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
         rainfall_rate = self.data["rainfall_rate"][:]
-        self.data["rainfall_rate"].data = rainfall_rate / 60  # m/min -> m/s
-        self.data["rainfall_amount"].data = (
-            self.data["rainfall_amount"][:] / 1000
-        )  # mm -> m
+        self.data["rainfall_rate"].data = (
+            rainfall_rate / 3600 / 10 / 1000
+        )  # not sure about units
 
 
 ATTRIBUTES = {
