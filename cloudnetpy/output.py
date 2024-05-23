@@ -117,9 +117,10 @@ def save_product_file(
 
 def get_l1b_source(instrument: Instrument) -> str:
     """Returns level 1b file source."""
-    return " ".join(
+    parts = [
         item for item in [instrument.manufacturer, instrument.model] if item is not None
-    )
+    ]
+    return " ".join(parts) if parts else instrument.category.capitalize()
 
 
 def get_l1b_history(instrument: Instrument) -> str:

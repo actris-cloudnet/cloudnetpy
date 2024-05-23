@@ -28,6 +28,7 @@ class TestWeatherStation(Check):
     def test_global_attributes(self):
         assert self.nc.cloudnet_file_type == "weather-station"
         assert self.nc.title == "Weather station from Palaiseau"
+        assert self.nc.source == "Weather station"
         assert self.nc.year == "2022"
         assert self.nc.month == "01"
         assert self.nc.day == "01"
@@ -99,6 +100,7 @@ class TestWeatherStationGranada(Check):
     def test_global_attributes(self):
         assert self.nc.cloudnet_file_type == "weather-station"
         assert self.nc.title == "Weather station from Granada"
+        assert self.nc.source == "Weather station"
         assert self.nc.year == "2024"
         assert self.nc.month == "04"
         assert self.nc.day == "19"
@@ -122,6 +124,7 @@ class TestWeatherStationKenttarova(Check):
     def test_global_attributes(self):
         assert self.nc.cloudnet_file_type == "weather-station"
         assert self.nc.title == "Weather station from Kenttärova"
+        assert self.nc.source == "Weather station"
         assert self.nc.year == "2024"
         assert self.nc.month == "05"
         assert self.nc.day == "20"
