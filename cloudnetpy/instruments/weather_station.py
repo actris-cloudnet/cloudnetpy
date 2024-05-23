@@ -8,7 +8,7 @@ from numpy import ma
 from cloudnetpy import output
 from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import SEC_IN_HOUR
+from cloudnetpy.constants import MM_H_TO_M_S, SEC_IN_HOUR
 from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
@@ -353,10 +353,9 @@ class KenttarovaWS(WS):
         self.data["air_temperature"].data = temperature_kelvins
         self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
         self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
+        # Rainfall rate is 10-minute averaged in mm h-1
         rainfall_rate = self.data["rainfall_rate"][:]
-        self.data["rainfall_rate"].data = (
-            rainfall_rate / 3600 / 10 / 1000
-        )  # not sure about units
+        self.data["rainfall_rate"].data = rainfall_rate * MM_H_TO_M_S / 10
 
 
 ATTRIBUTES = {
