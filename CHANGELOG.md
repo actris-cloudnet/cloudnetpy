@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.61.11 – 2024-05-23
+
+- Fix `rainfall_amount` calculation
+- Fix `source` global attribute in weather station
+
 ## 1.61.10 – 2024-05-22
 
 - Fix Kenttärova rainfall rate units
