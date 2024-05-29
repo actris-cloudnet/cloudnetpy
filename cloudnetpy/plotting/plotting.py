@@ -4,6 +4,7 @@ import re
 import textwrap
 from dataclasses import dataclass
 from datetime import date
+from typing import Any
 
 import matplotlib.pyplot as plt
 import netCDF4
@@ -491,15 +492,28 @@ class Plot2D(Plot):
             smoothed_data = uniform_filter(self._data[valid_time_ind, :], sigma_units)
             self._data[valid_time_ind, :] = smoothed_data
 
-        image = self._ax.pcolorfast(
-            figure_data.time_including_gaps,
-            alt,
-            self._data.T[:-1, :-1],
-            cmap=plt.get_cmap(str(self._plot_meta.cmap)),
-            vmin=vmin,
-            vmax=vmax,
-            zorder=_get_zorder("data"),
-        )
+        pcolor_kwargs = {
+            "cmap": plt.get_cmap(str(self._plot_meta.cmap)),
+            "vmin": vmin,
+            "vmax": vmax,
+            "zorder": _get_zorder("data"),
+        }
+        image: Any
+        if figure_data.file.cloudnet_file_type == "model":
+            image = self._ax.pcolor(
+                figure_data.time_including_gaps,
+                alt,
+                self._data.T,
+                **pcolor_kwargs,
+                shading="nearest",
+            )
+        else:
+            image = self._ax.pcolorfast(
+                figure_data.time_including_gaps,
+                alt,
+                self._data.T[:-1, :-1],
+                **pcolor_kwargs,
+            )
         cbar = self._init_colorbar(image)
         cbar.set_label(str(self._plot_meta.clabel), fontsize=13)
 
