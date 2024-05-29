@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.12 – 2024-05-29
+
+- Change plotting of models
+
 ## 1.61.11 – 2024-05-23
 
 - Fix `rainfall_amount` calculation
