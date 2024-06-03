@@ -357,7 +357,7 @@ class Plot:
             raise ValueError(msg)
         max_gap_fraction_hour = _get_max_gap_in_minutes(figure_data) / 60
 
-        if figure_data.file.cloudnet_file_type == "model":
+        if getattr(figure_data.file, "cloudnet_file_type", "") == "model":
             time, data = screen_completely_masked_profiles(time, data)
 
         gap_indices = np.where(np.diff(time) > max_gap_fraction_hour)[0]
@@ -499,7 +499,7 @@ class Plot2D(Plot):
             "zorder": _get_zorder("data"),
         }
         image: Any
-        if figure_data.file.cloudnet_file_type == "model":
+        if getattr(figure_data.file, "cloudnet_file_type", "") == "model":
             image = self._ax.pcolor(
                 figure_data.time_including_gaps,
                 alt,
