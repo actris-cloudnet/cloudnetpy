@@ -51,6 +51,8 @@ def ws2nc(
             ws = GranadaWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Kenttärova":
             ws = KenttarovaWS(weather_station_file, site_meta)
+        elif site_meta["name"] == "Hyytiälä":
+            ws = HyytialaWS(weather_station_file, site_meta)
         else:
             msg = "Unsupported site"
             raise ValueError(msg)  # noqa: TRY301
@@ -60,7 +62,10 @@ def ws2nc(
         ws.add_date()
         ws.add_site_geolocation()
         ws.add_data()
-        ws.convert_units()
+        ws.convert_temperature_and_humidity()
+        ws.convert_pressure()
+        ws.convert_rainfall_rate()
+        ws.convert_rainfall_amount()
         ws.calculate_rainfall_amount()
         attributes = output.add_time_attribute(ATTRIBUTES, ws.date)
         output.update_attributes(ws.data, attributes)
@@ -70,22 +75,24 @@ def ws2nc(
 
 
 class WS(CloudnetInstrument):
+    def __init__(self):
+        super().__init__()
+        self._data: dict
+
     date: list[str]
 
-    def convert_time(self) -> None:
-        pass
-
-    def screen_timestamps(self, date: str) -> None:
-        pass
-
     def add_date(self) -> None:
-        pass
+        first_date = self._data["time"][0].date()
+        self.date = [
+            str(first_date.year),
+            str(first_date.month).zfill(2),
+            str(first_date.day).zfill(2),
+        ]
 
     def add_data(self) -> None:
-        pass
-
-    def convert_units(self) -> None:
-        pass
+        for key, value in self._data.items():
+            parsed = datetime2decimal_hours(value) if key == "time" else ma.array(value)
+            self.data[key] = CloudnetArray(parsed, key)
 
     def calculate_rainfall_amount(self) -> None:
         if "rainfall_amount" in self.data:
@@ -93,6 +100,34 @@ class WS(CloudnetInstrument):
         resolution = np.median(np.diff(self.data["time"].data)) * SEC_IN_HOUR
         rainfall_amount = ma.cumsum(self.data["rainfall_rate"].data * resolution)
         self.data["rainfall_amount"] = CloudnetArray(rainfall_amount, "rainfall_amount")
+
+    def screen_timestamps(self, date: str) -> None:
+        dates = [str(d.date()) for d in self._data["time"]]
+        valid_ind = [ind for ind, d in enumerate(dates) if d == date]
+        if not valid_ind:
+            raise ValidTimeStampError
+        for key in self._data:
+            self._data[key] = [
+                x for ind, x in enumerate(self._data[key]) if ind in valid_ind
+            ]
+
+    def convert_temperature_and_humidity(self) -> None:
+        temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
+        self.data["air_temperature"].data = temperature_kelvins
+        self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
+
+    def convert_rainfall_rate(self) -> None:
+        rainfall_rate = self.data["rainfall_rate"][:]
+        self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
+
+    def convert_pressure(self) -> None:
+        self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa to Pa
+
+    def convert_time(self) -> None:
+        pass
+
+    def convert_rainfall_amount(self) -> None:
+        pass
 
 
 class PalaiseauWS(WS):
@@ -141,14 +176,14 @@ class PalaiseauWS(WS):
         for title, identifier in zip(column_titles, expected_identifiers, strict=True):
             if identifier not in title:
                 raise ValueError(error_msg)
-        return {"timestamps": timestamps, "values": values}
+        return {"time": timestamps, "values": values}
 
     def convert_time(self) -> None:
-        decimal_hours = datetime2decimal_hours(self._data["timestamps"])
+        decimal_hours = datetime2decimal_hours(self._data["time"])
         self.data["time"] = CloudnetArray(decimal_hours, "time")
 
     def screen_timestamps(self, date: str) -> None:
-        dates = [str(d.date()) for d in self._data["timestamps"]]
+        dates = [str(d.date()) for d in self._data["time"]]
         valid_ind = [ind for ind, d in enumerate(dates) if d == date]
         if not valid_ind:
             raise ValidTimeStampError
@@ -156,14 +191,6 @@ class PalaiseauWS(WS):
             self._data[key] = [
                 x for ind, x in enumerate(self._data[key]) if ind in valid_ind
             ]
-
-    def add_date(self) -> None:
-        first_date = self._data["timestamps"][0].date()
-        self.date = [
-            str(first_date.year),
-            str(first_date.month).zfill(2),
-            str(first_date.day).zfill(2),
-        ]
 
     def add_data(self) -> None:
         keys = (
@@ -180,13 +207,7 @@ class PalaiseauWS(WS):
             array_masked = ma.masked_invalid(array)
             self.data[key] = CloudnetArray(array_masked, key)
 
-    def convert_units(self) -> None:
-        temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
-        self.data["air_temperature"].data = temperature_kelvins
-        self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
-        self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
-        rainfall_rate = self.data["rainfall_rate"][:]
-        self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
+    def convert_rainfall_amount(self) -> None:
         self.data["rainfall_amount"].data = (
             self.data["rainfall_amount"][:] / 1000
         )  # mm -> m
@@ -240,40 +261,6 @@ class GranadaWS(WS):
                 data[keymap[key]].append(parsed)
         return data
 
-    def convert_time(self) -> None:
-        pass
-
-    def screen_timestamps(self, date: str) -> None:
-        dates = [str(d.date()) for d in self._data["time"]]
-        valid_ind = [ind for ind, d in enumerate(dates) if d == date]
-        if not valid_ind:
-            raise ValidTimeStampError
-        for key in self._data:
-            self._data[key] = [
-                x for ind, x in enumerate(self._data[key]) if ind in valid_ind
-            ]
-
-    def add_date(self) -> None:
-        first_date = self._data["time"][0].date()
-        self.date = [
-            str(first_date.year),
-            str(first_date.month).zfill(2),
-            str(first_date.day).zfill(2),
-        ]
-
-    def add_data(self) -> None:
-        for key, value in self._data.items():
-            parsed = datetime2decimal_hours(value) if key == "time" else np.array(value)
-            self.data[key] = CloudnetArray(parsed, key)
-
-    def convert_units(self) -> None:
-        temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
-        self.data["air_temperature"].data = temperature_kelvins
-        self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
-        self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
-        rainfall_rate = self.data["rainfall_rate"][:]
-        self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
-
 
 class KenttarovaWS(WS):
     def __init__(self, filenames: list[str], site_meta: dict):
@@ -322,40 +309,89 @@ class KenttarovaWS(WS):
             merged[key] = new_value
         return merged
 
-    def convert_time(self) -> None:
-        pass
-
-    def screen_timestamps(self, date: str) -> None:
-        dates = [str(d.date()) for d in self._data["time"]]
-        valid_ind = [ind for ind, d in enumerate(dates) if d == date]
-        if not valid_ind:
-            raise ValidTimeStampError
-        for key in self._data:
-            self._data[key] = [
-                x for ind, x in enumerate(self._data[key]) if ind in valid_ind
-            ]
-
-    def add_date(self) -> None:
-        first_date = self._data["time"][0].date()
-        self.date = [
-            str(first_date.year),
-            str(first_date.month).zfill(2),
-            str(first_date.day).zfill(2),
-        ]
-
-    def add_data(self) -> None:
-        for key, value in self._data.items():
-            parsed = datetime2decimal_hours(value) if key == "time" else ma.array(value)
-            self.data[key] = CloudnetArray(parsed, key)
-
-    def convert_units(self) -> None:
-        temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
-        self.data["air_temperature"].data = temperature_kelvins
-        self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
-        self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa -> Pa
+    def convert_rainfall_rate(self) -> None:
         # Rainfall rate is 10-minute averaged in mm h-1
         rainfall_rate = self.data["rainfall_rate"][:]
         self.data["rainfall_rate"].data = rainfall_rate * MM_H_TO_M_S / 10
+
+    def convert_pressure(self) -> None:
+        # Magic number 10 to convert to realistic Pa
+        self.data["air_pressure"].data = self.data["air_pressure"][:] * 10
+
+
+class HyytialaWS(WS):
+    """
+    Hyytiälä rain-gauge variables: a = Pluvio400 and b = Pluvio200.
+    E.g.
+    - AaRNRT/mm = amount of non-real-time rain total (Pluvio400) [mm]
+    - BbRT/mm = Bucket content in real-time (Pluvio200) [mm]
+    """
+
+    def __init__(self, filenames: list[str], site_meta: dict):
+        super().__init__()
+        self.filename = filenames[0]
+        self.site_meta = site_meta
+        self.instrument = instruments.GENERIC_WEATHER_STATION
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        with open(self.filename, newline="") as f:
+            # Skip first two lines
+            for _ in range(2):
+                next(f)
+            # Read header
+            header_line = f.readline().strip()
+            fields = header_line[1:].strip().split()
+            reader = csv.DictReader(
+                f, delimiter=" ", skipinitialspace=True, fieldnames=fields
+            )
+            if reader.fieldnames is None:
+                raise ValueError
+            raw_data: dict = {key: [] for key in reader.fieldnames}
+            raw_data["time"] = []
+            # Read data
+            for row in reader:
+                for key, value in row.items():
+                    if key:
+                        parsed_value: float | datetime.datetime
+                        if key == "y":
+                            current_time = datetime.datetime(
+                                int(value),
+                                int(row["m"]),
+                                int(row["d"]),
+                                int(row["minute"]) // 60,
+                                int(row["minute"]) % 60,
+                            )
+                            raw_data["time"].append(current_time)
+                        else:
+                            try:
+                                parsed_value = float(value)
+                            except (TypeError, ValueError):
+                                parsed_value = math.nan
+                            if parsed_value == -99.99:
+                                parsed_value = math.nan
+                            raw_data[key].append(parsed_value)
+
+        data = {
+            "time": raw_data["time"],
+            "air_temperature": raw_data["Ta/dsC"],
+            "relative_humidity": raw_data["RH/pcnt"],
+            "air_pressure": raw_data["Pa/kPa"],
+            "wind_speed": raw_data["WS/(m/s)"],
+            "wind_direction": raw_data["WD/ds"],
+            "rainfall_rate": raw_data["AaNRT/mm"],
+        }
+        for key, value in data.items():
+            new_value = np.array(value)
+            if key != "time":
+                new_value = ma.masked_where(np.isnan(new_value), new_value)
+            data[key] = new_value
+        return data
+
+    def convert_pressure(self) -> None:
+        self.data["air_pressure"].data = (
+            self.data["air_pressure"][:] * 1000
+        )  # kPa to Pa
 
 
 ATTRIBUTES = {

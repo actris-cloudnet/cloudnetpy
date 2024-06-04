@@ -6,6 +6,8 @@ import pytest
 from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
 from cloudnetpy.instruments import weather_station
 from tests.unit.all_products_fun import Check
+import numpy as np
+from numpy import ma
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -17,7 +19,31 @@ SITE_META = {
 }
 
 
-class TestWeatherStation(Check):
+class WS(Check):
+
+    def test_pressure_values(self):
+        assert self.nc.variables["air_pressure"].units == "Pa"
+        min_pressure = ma.min(self.nc.variables["air_pressure"][:])
+        max_pressure = ma.max(self.nc.variables["air_pressure"][:])
+        assert min_pressure > 90000
+        assert max_pressure < 110000
+
+    def test_wind_direction_values(self):
+        assert self.nc.variables["wind_direction"].units == "degree"
+        min_wind_dir = ma.min(self.nc.variables["wind_direction"][:])
+        max_wind_dir = ma.max(self.nc.variables["wind_direction"][:])
+        assert min_wind_dir >= 0
+        assert max_wind_dir <= 360
+
+    def test_rainfall_rate_values(self):
+        assert self.nc.variables["rainfall_rate"].units == "m s-1"
+        min_rainfall = ma.min(self.nc.variables["rainfall_rate"][:])
+        max_rainfall = ma.max(self.nc.variables["rainfall_rate"][:])
+        assert min_rainfall >= 0
+        assert max_rainfall <= 1.4e-6
+
+
+class TestWeatherStation(WS):
     date = "2022-01-01"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
@@ -38,7 +64,7 @@ class TestWeatherStation(Check):
         assert self.nc.dimensions["time"].size == 29
 
 
-class TestDateArgument(Check):
+class TestDateArgument(WS):
     date = "2022-01-01"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
@@ -56,7 +82,7 @@ class TestDateArgument(Check):
             )
 
 
-class TestTimestampScreening(Check):
+class TestTimestampScreening(WS):
     date = "2022-01-01"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
@@ -89,7 +115,7 @@ def test_invalid_header2():
         weather_station.ws2nc(filename, temp_path, SITE_META)
 
 
-class TestWeatherStationGranada(Check):
+class TestWeatherStationGranada(WS):
     date = "2024-04-19"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
@@ -111,7 +137,7 @@ class TestWeatherStationGranada(Check):
 
 
 
-class TestWeatherStationKenttarova(Check):
+class TestWeatherStationKenttarova(WS):
     date = "2024-05-20"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
@@ -132,3 +158,25 @@ class TestWeatherStationKenttarova(Check):
 
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 24*(60/10)+1
+
+
+
+class TestWeatherStationHyytiala(WS):
+    date = "2024-01-10"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = { **SITE_META, "name": "Hyytiälä" }
+    filename = f"{SCRIPT_PATH}/data/ws/hyy20240110swx.txt"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_global_attributes(self):
+        assert self.nc.cloudnet_file_type == "weather-station"
+        assert self.nc.title == "Weather station from Hyytiälä"
+        assert self.nc.source == "Weather station"
+        assert self.nc.year == "2024"
+        assert self.nc.month == "01"
+        assert self.nc.day == "10"
+        assert self.nc.location == "Hyytiälä"
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 24*60
