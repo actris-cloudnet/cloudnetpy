@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.61.13 – 2024-06-05
+
+- Fix legacy file plotting
+- Add support for hyytiala weather-station
+
 ## 1.61.12 – 2024-05-29
 
 - Change plotting of models
