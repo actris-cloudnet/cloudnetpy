@@ -368,7 +368,7 @@ class HyytialaWS(WS):
                                 parsed_value = float(value)
                             except (TypeError, ValueError):
                                 parsed_value = math.nan
-                            if parsed_value == -99.99:
+                            if parsed_value in (-99.99, -99.9):
                                 parsed_value = math.nan
                             raw_data[key].append(parsed_value)
 
