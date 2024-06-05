@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.14 – 2024-06-05
+
+- Fix hyytiala weather-station invalid data screening
+
 ## 1.61.13 – 2024-06-05
 
 - Fix legacy file plotting
