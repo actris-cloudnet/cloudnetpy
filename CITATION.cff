@@ -1,25 +1,55 @@
 cff-version: 1.2.0
-message: "If you wish to acknowledge CloudnetPy in your publication, please cite it as below."
-title: CloudnetPy
+title: >-
+  CloudnetPy: A Python package for processing cloud remote
+  sensing data
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
 authors:
-  - family-names: "Tukiainen"
-    given-names: "Simo"
-  - family-names: "O'Connor"
-    given-names: "Ewan"
-  - family-names: "Anniina"
-    given-names: "Korpinen"
-url: "https://github.com/actris-cloudnet/cloudnetpy"
+  - family-names: Tukiainen
+    given-names: Simo
+    orcid: "https://orcid.org/0000-0002-0651-4622"
+    affiliation: Finnish Meteorological Institute
+  - given-names: Tuomas
+    family-names: Siipola
+    affiliation: Finnish Meteorological Institute
+    orcid: "https://orcid.org/0009-0004-7757-0893"
+  - family-names: Anniina
+    given-names: Korpinen
+    affiliation: Finnish Meteorological Institute
+  - family-names: O'Connor
+    given-names: Ewan
+    orcid: "https://orcid.org/0000-0001-9834-5100"
+    affiliation: Finnish Meteorological Institute
+repository-code: "https://github.com/actris-cloudnet/cloudnetpy"
+abstract: >-
+  CloudnetPy is Python software designed for producing
+  vertical profiles of cloud properties from ground-based
+  remote sensing measurements.
+keywords:
+  - Python
+  - cloud radar
+  - lidar
+  - microwave radiometer
+  - remote sensing
+license: MIT
 preferred-citation:
   type: article
   authors:
-    - family-names: "Tukiainen"
-      given-names: "Simo"
-    - family-names: "O'Connor"
-      given-names: "Ewan"
-    - family-names: "Anniina"
-      given-names: "Korpinen"
-  doi: "10.21105/joss.02123"
-  journal: "Journal of Open Source Software"
+    - family-names: Tukiainen
+      given-names: Simo
+      orcid: "https://orcid.org/0000-0002-0651-4622"
+      affiliation: Finnish Meteorological Institute
+    - family-names: O'Connor
+      given-names: Ewan
+      orcid: "https://orcid.org/0000-0001-9834-5100"
+      affiliation: Finnish Meteorological Institute
+    - family-names: Anniina
+      given-names: Korpinen
+      affiliation: Finnish Meteorological Institute
+  doi: 10.21105/joss.02123
+  journal: Journal of Open Source Software
   start: 2123
   end: 2123
   title: "CloudnetPy: A Python package for processing cloud remote sensing data"
