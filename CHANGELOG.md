@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.15 – 2024-06-12
+
+- Improve CITATION.cff
+
 ## 1.61.14 – 2024-06-05
 
 - Fix hyytiala weather-station invalid data screening
