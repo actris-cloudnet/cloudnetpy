@@ -7,9 +7,11 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import netCDF4
 import numpy as np
+from matplotlib.axes import Axes
 from matplotlib.colorbar import Colorbar
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
+from matplotlib.pyplot import Figure
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma
 
@@ -687,7 +689,7 @@ def plot_vertical_profile(
     ax.xaxis.grid(which="major")
 
 
-def initialize_figure(n_subplots: int, stat: str = "") -> tuple:
+def initialize_figure(n_subplots: int, stat: str = "") -> tuple[Figure, list[Axes]]:
     """Set up fig and ax object, if subplot"""
     if n_subplots <= 0:
         n_subplots = 1
@@ -714,7 +716,6 @@ def initialize_figure(n_subplots: int, stat: str = "") -> tuple:
                 right=0.75,
                 hspace=0.2,
             )
-            axes = axes.flatten()
     if stat == "vertical" and n_subplots > 1:
         fig, axes = plt.subplots(
             int(n_subplots / 2),
@@ -731,10 +732,8 @@ def initialize_figure(n_subplots: int, stat: str = "") -> tuple:
             right=0.75,
             hspace=0.16,
         )
-        axes = axes.flatten()
-    if n_subplots == 1:
-        axes = [axes]
-    return fig, axes
+    axes_list = [axes] if isinstance(axes, Axes) else axes.flatten().tolist()
+    return fig, axes_list
 
 
 def init_colorbar(plot, axis) -> Colorbar:

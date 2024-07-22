@@ -121,9 +121,8 @@ class FigureData:
             sharex=True,
         )
         fig.subplots_adjust(left=0.06, right=0.73)
-        if n_subplots == 1:
-            axes = [axes]
-        return fig, axes
+        axes_list = [axes] if isinstance(axes, Axes) else axes.tolist()
+        return fig, axes_list
 
     def add_subtitle(self, fig: Figure) -> None:
         fig.suptitle(
