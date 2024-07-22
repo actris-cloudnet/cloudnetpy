@@ -3,8 +3,8 @@ title: >-
   CloudnetPy: A Python package for processing cloud remote
   sensing data
 message: >-
-  If you use this software, please cite it using the
-  metadata from this file.
+  If you use this software, please cite our article in the
+  Journal of Open Source Software.
 type: software
 authors:
   - family-names: Tukiainen
@@ -22,6 +22,11 @@ authors:
     given-names: Ewan
     orcid: "https://orcid.org/0000-0001-9834-5100"
     affiliation: Finnish Meteorological Institute
+contact:
+  - family-names: Tukiainen
+    given-names: Simo
+    orcid: "https://orcid.org/0000-0002-0651-4622"
+    affiliation: Finnish Meteorological Institute
 repository-code: "https://github.com/actris-cloudnet/cloudnetpy"
 abstract: >-
   CloudnetPy is Python software designed for producing
@@ -34,6 +39,7 @@ keywords:
   - microwave radiometer
   - remote sensing
 license: MIT
+doi: 10.5281/zenodo.3666030
 preferred-citation:
   type: article
   authors:
@@ -50,9 +56,14 @@ preferred-citation:
       affiliation: Finnish Meteorological Institute
   doi: 10.21105/joss.02123
   journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  issn: 2475-9066
   start: 2123
   end: 2123
   title: "CloudnetPy: A Python package for processing cloud remote sensing data"
   issue: 53
   volume: 5
   year: 2020
+  date-published: 2020-09-04
+  url: https://joss.theoj.org/papers/10.21105/joss.02123
