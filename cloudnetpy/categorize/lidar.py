@@ -1,4 +1,5 @@
 """Lidar module, containing the :class:`Lidar` class."""
+
 import logging
 from typing import Literal
 

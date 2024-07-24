@@ -139,12 +139,12 @@ def test_adjust_lwc(value):
 
 def test_has_converged():
     ind = 1
-    assert STATUS_OBJ._has_converged(ind) is True
+    assert STATUS_OBJ._has_converged(ind)
 
 
 def test_out_of_bound():
     ind = 2
-    assert STATUS_OBJ._out_of_bound(ind) is True
+    assert STATUS_OBJ._out_of_bound(ind)
 
 
 def test_find_adjustable_clouds():

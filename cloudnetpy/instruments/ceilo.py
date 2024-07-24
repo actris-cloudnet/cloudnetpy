@@ -1,4 +1,5 @@
 """Module for reading and processing Vaisala / Lufft ceilometers."""
+
 from itertools import islice
 
 import netCDF4

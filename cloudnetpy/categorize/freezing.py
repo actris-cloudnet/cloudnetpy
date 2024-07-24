@@ -1,4 +1,5 @@
 """Module to find freezing region from data."""
+
 import logging
 
 import numpy as np

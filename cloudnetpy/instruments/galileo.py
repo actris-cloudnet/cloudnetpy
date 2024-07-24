@@ -1,4 +1,5 @@
 """Module for reading raw Galileo cloud radar data."""
+
 import os
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 

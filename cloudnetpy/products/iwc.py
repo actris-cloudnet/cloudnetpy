@@ -1,4 +1,5 @@
 """Module for creating Cloudnet ice water content file using Z-T method."""
+
 import numpy as np
 from numpy import ma
 
@@ -91,9 +92,9 @@ class IwcSource(IceSource):
             retrieval_uncertainty,
             error_uncorrected,
         )
-        iwc_error[
-            (~ice_classification.is_ice | ice_classification.ice_above_rain)
-        ] = ma.masked
+        iwc_error[(~ice_classification.is_ice | ice_classification.ice_above_rain)] = (
+            ma.masked
+        )
         self.append_data(iwc_error, f"{self.product}_error")
         return lwp_prior, retrieval_uncertainty
 

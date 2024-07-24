@@ -1,4 +1,5 @@
 """Module with classes for Vaisala ceilometers."""
+
 import itertools
 import logging
 

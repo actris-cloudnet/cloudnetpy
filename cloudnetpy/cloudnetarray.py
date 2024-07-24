@@ -1,4 +1,5 @@
 """CloudnetArray class."""
+
 import math
 from collections.abc import Sequence
 

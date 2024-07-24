@@ -1,4 +1,5 @@
 """Datasource module, containing the :class:`DataSource` class."""
+
 import logging
 import os
 from collections.abc import Callable

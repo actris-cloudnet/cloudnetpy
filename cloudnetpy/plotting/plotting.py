@@ -1,4 +1,5 @@
 """Misc. plotting routines for Cloudnet products."""
+
 import os.path
 import re
 import textwrap
@@ -306,7 +307,7 @@ class Plot:
             "air_pressure": (multiply, 0.01, "hPa"),
             "relative_humidity": (multiply, 100, "%"),
             "rainfall_amount": (multiply, 1000, "mm"),
-            "air_temperature": (add, -273.15, "\u00B0C"),
+            "air_temperature": (add, -273.15, "\u00b0C"),
         }
         conversion_method, conversion, units = units_conversion.get(
             self.sub_plot.variable.name, (multiply, 1, None)

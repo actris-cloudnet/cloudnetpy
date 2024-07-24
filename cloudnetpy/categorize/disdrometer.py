@@ -1,4 +1,5 @@
 """Mwr module, containing the :class:`Mwr` class."""
+
 import logging
 
 import numpy as np

@@ -1,4 +1,5 @@
 """This module contains RPG Cloud Radar related functions."""
+
 import logging
 import math
 from collections.abc import Sequence

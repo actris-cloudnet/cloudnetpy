@@ -1,6 +1,7 @@
 """Module for creating Cloudnet droplet effective radius
 using the Frisch et al. 2002 method.
 """
+
 from typing import NamedTuple
 
 import numpy as np

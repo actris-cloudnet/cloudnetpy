@@ -1,4 +1,5 @@
 """Module that generates Cloudnet categorize file."""
+
 import logging
 
 from cloudnetpy import output, utils

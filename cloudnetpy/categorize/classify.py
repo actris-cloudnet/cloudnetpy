@@ -1,6 +1,7 @@
 """Module containing low-level functions to classify gridded
 radar / lidar measurements.
 """
+
 import numpy as np
 import skimage
 from numpy import ma

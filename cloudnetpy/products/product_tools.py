@@ -1,4 +1,5 @@
 """General helper classes and functions for all products."""
+
 import os
 from typing import NamedTuple
 

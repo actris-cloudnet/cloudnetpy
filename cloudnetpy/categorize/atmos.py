@@ -1,6 +1,7 @@
 """This module contains functions to calculate
 various atmospheric parameters.
 """
+
 from typing import Final
 
 import numpy as np

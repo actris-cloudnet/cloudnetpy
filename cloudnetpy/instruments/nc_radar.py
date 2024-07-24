@@ -1,4 +1,5 @@
 """Module for reading raw cloud radar data."""
+
 import logging
 from os import PathLike
 from typing import TYPE_CHECKING

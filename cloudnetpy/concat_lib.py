@@ -1,4 +1,5 @@
 """Module for concatenating netCDF files."""
+
 import netCDF4
 import numpy as np
 

@@ -1,4 +1,5 @@
 """Radar module, containing the :class:`Radar` class."""
+
 import logging
 import math
 

@@ -1,4 +1,5 @@
 """Constants used in Cloudnet processing."""
+
 from typing import Final
 
 # Triple point of water

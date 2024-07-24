@@ -1,4 +1,5 @@
 """This module contains general helper functions."""
+
 import datetime
 import logging
 import os
@@ -785,17 +786,13 @@ def range_to_height(range_los: np.ndarray, tilt_angle: float) -> np.ndarray:
 
 def is_empty_line(line: str) -> bool:
     """Tests if a line (of a text file) is empty."""
-    if line in ("\n", "\r\n"):
-        return True
-    return False
+    return line in ("\n", "\r\n")
 
 
 def is_timestamp(timestamp: str) -> bool:
     """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss."""
     reg_exp = re.compile(r"-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
-    if reg_exp.match(timestamp) is not None:
-        return True
-    return False
+    return reg_exp.match(timestamp) is not None
 
 
 def get_sorted_filenames(file_path: str, extension: str) -> list:

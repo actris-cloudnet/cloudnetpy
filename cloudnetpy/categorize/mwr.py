@@ -1,4 +1,5 @@
 """Mwr module, containing the :class:`Mwr` class."""
+
 import numpy as np
 
 from cloudnetpy import utils

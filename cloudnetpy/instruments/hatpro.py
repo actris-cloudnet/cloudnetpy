@@ -1,4 +1,5 @@
 """This module contains RPG Cloud Radar related functions."""
+
 import datetime
 import logging
 from collections import defaultdict

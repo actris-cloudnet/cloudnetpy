@@ -1,4 +1,5 @@
 """Metadata for plotting module."""
+
 from collections.abc import Sequence
 from typing import NamedTuple
 

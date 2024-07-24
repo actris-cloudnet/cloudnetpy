@@ -1,4 +1,5 @@
 """Module for creating classification file."""
+
 import numpy as np
 from numpy import ma
 
@@ -70,20 +71,20 @@ def _get_target_classification(
     classification = ma.zeros(bits["cold"].shape, dtype=int)
     classification[bits["droplet"] & ~bits["falling"]] = 1  # Cloud droplets
     classification[~bits["droplet"] & bits["falling"]] = 2  # Drizzle or rain
-    classification[
-        bits["droplet"] & bits["falling"]
-    ] = 3  # Drizzle or rain and droplets
+    classification[bits["droplet"] & bits["falling"]] = (
+        3  # Drizzle or rain and droplets
+    )
     classification[~bits["droplet"] & bits["falling"] & bits["cold"]] = 4  # ice
-    classification[
-        bits["droplet"] & bits["falling"] & bits["cold"]
-    ] = 5  # ice + supercooled
+    classification[bits["droplet"] & bits["falling"] & bits["cold"]] = (
+        5  # ice + supercooled
+    )
     classification[bits["melting"]] = 6  # melting layer
     classification[bits["melting"] & bits["droplet"]] = 7  # melting + droplets
     classification[bits["aerosol"]] = 8  # aerosols
     classification[bits["insect"] & ~clutter] = 9  # insects
-    classification[
-        bits["aerosol"] & bits["insect"] & ~clutter
-    ] = 10  # insects + aerosols
+    classification[bits["aerosol"] & bits["insect"] & ~clutter] = (
+        10  # insects + aerosols
+    )
     classification[clutter & ~bits["aerosol"]] = 0
     return classification
 

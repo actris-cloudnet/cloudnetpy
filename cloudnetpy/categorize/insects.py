@@ -1,4 +1,5 @@
 """Module to find insects from data."""
+
 import numpy as np
 from numpy import ma
 from scipy.ndimage import gaussian_filter

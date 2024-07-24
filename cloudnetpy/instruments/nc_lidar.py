@@ -1,4 +1,5 @@
 """Module with a class for Lufft chm15k ceilometer."""
+
 import logging
 from typing import TYPE_CHECKING, Literal
 

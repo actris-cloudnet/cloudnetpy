@@ -1,4 +1,5 @@
 """Model module, containing the :class:`Model` class."""
+
 import numpy as np
 from numpy import ma
 from scipy.interpolate import interp1d

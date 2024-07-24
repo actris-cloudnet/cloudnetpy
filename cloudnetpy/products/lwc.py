@@ -1,6 +1,7 @@
 """Module for creating Cloudnet liquid water content file using scaled-adiabatic
 method.
 """
+
 import numpy as np
 from numpy import ma
 
@@ -228,9 +229,7 @@ class CloudAdjustor:
 
     def _has_converged(self, ind: int) -> bool:
         lwc_sum = ma.sum(self.lwc_adiabatic[ind, :])
-        if lwc_sum * self.lwc_source.dheight > self.lwc_source.lwp[ind]:
-            return True
-        return False
+        return lwc_sum * self.lwc_source.dheight > self.lwc_source.lwp[ind]
 
     def _out_of_bound(self, ind: int) -> bool:
         return ind >= self.lwc.shape[1] - 1

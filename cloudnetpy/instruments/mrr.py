@@ -134,7 +134,7 @@ class MrrPro(NcRadar):
         if m := re.search(
             r"serial number:\s*(\w+)",
             self.dataset.instrument_name,
-            re.I,
+            re.IGNORECASE,
         ):
             self.serial_number = m[1]
 

@@ -1,4 +1,5 @@
 """Functions for file writing."""
+
 import datetime
 import logging
 from os import PathLike
