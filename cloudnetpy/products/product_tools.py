@@ -185,7 +185,7 @@ class IceSource(DataSource):
     def _get_coefficients(self) -> IceCoefficients:
         """Returns coefficients for ice effective radius retrieval.
 
-        References
+        References:
             Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
         """
         if self.product == "ier":

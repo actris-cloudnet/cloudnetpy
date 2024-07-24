@@ -62,6 +62,7 @@ class CloudnetArray:
         Args:
             time: 1D time array.
             time_new: 1D new time array.
+            mask_zeros: Whether to mask 0 values in the returned array. Default is True.
 
         Returns:
             Time indices without data.

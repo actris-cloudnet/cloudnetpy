@@ -139,7 +139,7 @@ class VaisalaCeilo(Ceilometer):
 
     @staticmethod
     def _calc_date(time_lines) -> list:
-        """Returns the date [yyyy, mm, dd]"""
+        """Returns the date [yyyy, mm, dd]."""
         return time_lines[0].split()[0].strip("-").split("-")
 
     @classmethod
@@ -305,7 +305,7 @@ class ClCeilo(VaisalaCeilo):
 class Ct25k(VaisalaCeilo):
     """Class for Vaisala CT25k ceilometer.
 
-    References
+    References:
         https://www.manualslib.com/manual/1414094/Vaisala-Ct25k.html
 
     """
@@ -367,11 +367,11 @@ class Ct25k(VaisalaCeilo):
 def split_string(string: str, indices: list) -> list:
     """Splits string between indices.
 
-    Notes
+    Notes:
         It is possible to skip characters from the beginning and end of the
         string but not from the middle.
 
-    Examples
+    Examples:
         >>> s = 'abcde'
         >>> indices = [1, 2, 4]
         >>> split_string(s, indices)
@@ -384,7 +384,7 @@ def split_string(string: str, indices: list) -> list:
 def values_to_dict(keys: tuple, values: list) -> dict:
     """Converts list elements to dictionary.
 
-    Examples
+    Examples:
         >>> keys = ('a', 'b')
         >>> values = [[1, 2], [1, 2], [1, 2], [1, 2]]
         >>> values_to_dict(keys, values)
@@ -398,6 +398,6 @@ def values_to_dict(keys: tuple, values: list) -> dict:
 
 
 def time_to_fraction_hour(time: str) -> float:
-    """Returns time (hh:mm:ss) as fraction hour"""
+    """Returns time (hh:mm:ss) as fraction hour."""
     hour, minute, sec = time.split(":")
     return int(hour) + (int(minute) * SEC_IN_MINUTE + int(sec)) / SEC_IN_HOUR

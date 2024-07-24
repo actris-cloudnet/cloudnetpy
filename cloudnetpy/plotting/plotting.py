@@ -27,8 +27,7 @@ from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
 
 @dataclass
 class PlotParameters:
-    """
-    Class representing the parameters for plotting.
+    """Class representing the parameters for plotting.
 
     Attributes:
         dpi: The resolution of the plot in dots per inch.
@@ -57,8 +56,7 @@ class PlotParameters:
 
 
 class Dimensions:
-    """
-    Dimensions of a generated figure in pixels. Elements such as the figure
+    """Dimensions of a generated figure in pixels. Elements such as the figure
     title, labels, colorbar and legend are exluded from the margins.
 
     Attributes:
@@ -755,8 +753,7 @@ def generate_figure(
     output_filename: os.PathLike | str | None = None,
     options: PlotParameters | None = None,
 ) -> Dimensions:
-    """
-    Generate a figure based on the given filename and variables.
+    """Generate a figure based on the given filename and variables.
 
     Args:
         filename: The path to the input file.

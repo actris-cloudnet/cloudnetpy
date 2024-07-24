@@ -145,7 +145,7 @@ def _augment_global_attributes(root_group: netCDF4.Dataset) -> None:
 
 
 def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple) -> None:
-    """Generates source info for multiple files"""
+    """Generates source info for multiple files."""
     model, obs = objects
     model_files, obs_file = files
     source = f"Observation file: {os.path.basename(obs_file)}"
@@ -160,7 +160,7 @@ def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple) -> N
 
 
 def add_time_attribute(date: datetime) -> dict:
-    """ "Adds time attribute with correct units.
+    """Adds time attribute with correct units.
 
     Args:
         attributes: Attributes of variables.

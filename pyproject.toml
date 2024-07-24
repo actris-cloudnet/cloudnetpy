@@ -65,7 +65,17 @@ ignore = [
   "ANN", # missing types, use mypy for this
   "C9", # too complex, fix me later
   "COM812", # Formatting
-  "D", # documentation
+  "D100", # allow missing documentation
+  "D101", # allow missing documentation
+  "D102", # allow missing documentation
+  "D103", # allow missing documentation
+  "D104", # allow missing documentation
+  "D105", # allow missing documentation
+  "D106", # allow missing documentation
+  "D107", # allow missing documentation
+  "D205", # allow long multi-line summary
+  "D211", # conflicting documentation rule
+  "D213", # conflicting documentation rule
   "DTZ00", # do not check timezone info
   "FIX002", # TODOs
   "ISC001", # Formatter wants me
@@ -81,6 +91,9 @@ ignore = [
 
 [tool.ruff.lint.extend-per-file-ignores]
 "__init__.py" = ["F401"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.setuptools.dynamic]
 version = {attr = "cloudnetpy.version.__version__"}

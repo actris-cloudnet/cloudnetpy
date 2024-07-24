@@ -43,7 +43,7 @@ def parsivel2nc(
             the instrument's operating instructions. Unknown values are indicated
             with None. Telegram is required if the input file doesn't contain a
             header.
-        timestamps:
+        timestamps: Specify list of timestamps if they are missing in the input file.
 
     Returns:
         UUID of the generated file.
@@ -450,7 +450,7 @@ def _parse_row(row_in: str, headers: list[str]) -> list:
 def _read_toa5(filename: str | PathLike) -> dict[str, list]:
     """Read ASCII data from Campbell Scientific datalogger such as CR1000.
 
-    References
+    References:
         CR1000 Measurement and Control System.
         https://s.campbellsci.com/documents/us/manuals/cr1000.pdf
     """
@@ -616,8 +616,10 @@ def _read_typ_op4a(lines: list[str]) -> dict[str, Any]:
 
 
 def _read_fmi(content: str):
-    """Read format used by Finnish Meteorological Institute and University of
-    Helsinki:
+    r"""Read format used by Finnish Meteorological Institute and University of
+    Helsinki.
+
+    Format consists of sequence of the following:
     - "[YYYY-MM-DD HH:MM:SS\n"
     - output of "CS/PA" command without non-printable characters at the end
     - "]\n"

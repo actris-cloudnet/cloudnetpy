@@ -54,7 +54,7 @@ class ModelManager(DataSource):
         self.resolution_h = self._get_horizontal_resolution()
 
     def _read_cycle_name(self, model_file: str) -> str:
-        """Get cycle name from model_metadata.py for saving variable name(s)"""
+        """Get cycle name from model_metadata.py for saving variable name(s)."""
         try:
             cycles = self.model_info.cycle
             if cycles is None:
@@ -68,7 +68,7 @@ class ModelManager(DataSource):
         return ""
 
     def _generate_products(self) -> None:
-        """Process needed data of model to a ModelManager object"""
+        """Process needed data of model to a ModelManager object."""
         cls = importlib.import_module(__name__).ModelManager
         try:
             name = f"_get_{self._product}"
@@ -123,10 +123,10 @@ class ModelManager(DataSource):
         return q * p / (287 * t)
 
     def _add_variables(self) -> None:
-        """Add basic variables off model and cycle"""
+        """Add basic variables off model and cycle."""
 
         def _add_common_variables() -> None:
-            """Model variables that are always the same within cycles"""
+            """Model variables that are always the same within cycles."""
             wanted_vars = self.model_vars.common_var
             if wanted_vars is None:
                 msg = f"Model {self.model} has no common variables"
@@ -140,7 +140,7 @@ class ModelManager(DataSource):
                     self.append_data(data, f"{var}")
 
         def _add_cycle_variables() -> None:
-            """Add cycle depending variables"""
+            """Add cycle depending variables."""
             wanted_vars = self.model_vars.cycle_var
             if wanted_vars is None:
                 msg = f"Model {self.model} has no cycle variables"
@@ -160,7 +160,7 @@ class ModelManager(DataSource):
         _add_cycle_variables()
 
     def cut_off_extra_levels(self, data: np.ndarray) -> np.ndarray:
-        """Remove unused levels (over 22km) from model data"""
+        """Remove unused levels (over 22km) from model data."""
         try:
             level = self.model_info.level
         except KeyError:
@@ -169,7 +169,7 @@ class ModelManager(DataSource):
         return data[:, :level] if data.ndim > 1 else data[:level]
 
     def _calculate_wind_speed(self) -> np.ndarray:
-        """Real wind from x- and y-components"""
+        """Real wind from x- and y-components."""
         u = self.getvar("uwind")
         v = self.getvar("vwind")
         u = self.cut_off_extra_levels(u)

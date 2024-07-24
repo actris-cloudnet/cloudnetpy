@@ -80,7 +80,7 @@ class Record(NamedTuple):
 class Radiometrics:
     """Reader for level 2 files of Radiometrics microwave radiometers.
 
-    References
+    References:
         Radiometrics (2008). Profiler Operator's Manual: MP-3000A, MP-2500A,
         MP-1500A, MP-183A.
     """

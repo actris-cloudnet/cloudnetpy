@@ -1,4 +1,4 @@
-"""Datasource module, containing the :class:`DataSource class.`"""
+"""Datasource module, containing the :class:`DataSource` class."""
 import logging
 import os
 from collections.abc import Callable
@@ -94,6 +94,7 @@ class DataSource:
                 attribute (dictionary).
             name: CloudnetArray.name attribute. Default value is *key*.
             units: CloudnetArray.units attribute.
+            dtype: CloudnetArray.data_type attribute.
 
         """
         self.data[key] = CloudnetArray(variable, name or key, units, data_type=dtype)
@@ -101,10 +102,10 @@ class DataSource:
     def get_date(self) -> list:
         """Returns date components.
 
-        Returns
+        Returns:
             list: Date components [YYYY, MM, DD].
 
-        Raises
+        Raises:
              RuntimeError: Not found or invalid date.
 
         """

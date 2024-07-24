@@ -154,7 +154,7 @@ class ProductGrid:
         x_ind: np.ndarray,
         y_ind: np.ndarray,
     ) -> np.ndarray | None:
-        """Reshapes True observation values to windows shape"""
+        """Reshapes True observation values to windows shape."""
         window_size = tl.get_obs_window_size(x_ind, y_ind)
         if window_size is not None:
             return self._obs_data[ind].reshape(window_size)

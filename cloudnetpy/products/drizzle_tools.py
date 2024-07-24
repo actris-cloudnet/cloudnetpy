@@ -185,7 +185,7 @@ class SpectralWidth:
     def _calc_horizontal_wind(self) -> np.ndarray:
         """Calculates magnitude of horizontal wind.
 
-        Returns
+        Returns:
             ndarray: Horizontal wind (m s-1).
 
         """

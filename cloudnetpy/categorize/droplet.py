@@ -1,5 +1,4 @@
-"""This module has functions for liquid layer detection.
-"""
+"""This module has functions for liquid layer detection."""
 import numpy as np
 import scipy.signal
 from numpy import ma

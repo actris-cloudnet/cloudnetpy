@@ -126,7 +126,7 @@ class Copernicus(ChilboltonRadar):
     def mask_corrupted_values(self) -> None:
         """Experimental masking of corrupted Copernicus data.
 
-        Notes
+        Notes:
             This method is based on a few days of test data only. Should be improved
             and tested more carefully in the future.
         """

@@ -10,7 +10,7 @@ from cloudnetpy.model_evaluation.products.observation_products import Observatio
 
 
 def check_model_file_list(name: str, models: list) -> None:
-    """Check that files in models are from same model and date"""
+    """Check that files in models are from same model and date."""
     for m in models:
         if name not in m:
             logging.error("Invalid model file set")
@@ -35,16 +35,14 @@ def calculate_advection_time(
     wind: ma.MaskedArray,
     sampling: int,
 ) -> np.ndarray:
-    """Calculates time which variable takes to go through the time window
+    """Calculates time which variable takes to go through the time window.
 
-    Notes
+    Notes:
         Wind speed is stronger in upper levels, so advection time is more
         there then lower levels. Effect is small in a mid-latitudes,
         but visible in a tropics.
 
         sampling = 1 -> hour, sampling 1/6 -> 10min
-
-    References
     """
     t_adv = resolution * 1000 / wind / 60**2
     t_adv[t_adv.mask] = 0
@@ -76,7 +74,7 @@ def get_adv_indices(
 
 
 def get_obs_window_size(ind_x: np.ndarray, ind_y: np.ndarray) -> tuple | None:
-    """Returns shape (tuple) of window area, where values are True"""
+    """Returns shape (tuple) of window area, where values are True."""
     x = np.where(ind_x)[0]
     y = np.where(ind_y)[0]
     if np.any(x) and np.any(y):
@@ -90,5 +88,5 @@ def add_date(model_obj: ModelManager, obs_obj: ObservationManager) -> None:
 
 
 def average_column_sum(data: np.ndarray) -> np.ndarray:
-    """Returns average sum of columns which have any data"""
+    """Returns average sum of columns which have any data."""
     return np.nanmean(np.nansum(data, 1) > 0)

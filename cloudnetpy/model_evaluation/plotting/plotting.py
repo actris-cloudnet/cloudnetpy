@@ -189,6 +189,7 @@ def get_group_plots(
         show (bool): Show figure before saving if True
         cycle (str): Name of cycle if exists
         title (bool): True or False if wanted to add title to subfig
+        include_xlimits (bool): Show labels at the ends of x-axis
     """
     fig, ax = initialize_figure(len(names))
     model_run = model
@@ -250,6 +251,7 @@ def get_pair_plots(
         show (bool): Show figure before saving if True
         cycle (str): Name of cycle if exists
         title (bool): True or False if wanted add title to subfig
+        include_xlimits (bool): Show labels at the ends of x-axis
     """
     variable_info = ATTRIBUTES[product]
     model_ax = names[0]
@@ -308,6 +310,7 @@ def get_single_plots(
         show (bool): Show figure before saving if True
         cycle (str): Name of cycle if exists
         title (bool): True or False if wanted to add title to subfig
+        include_xlimits (bool): Show labels at the ends of x-axis
     """
     figs = []
     axes = []
@@ -389,6 +392,7 @@ def get_statistic_plots(
         image_name (str, optional): Saving name of generated fig
         show (bool): Show figure before saving if True
         cycle (str): Name of cycle if exists
+        title (bool): True or False if wanted to add title to subfig
     """
     model_run = model
     name = ""
@@ -690,7 +694,7 @@ def plot_vertical_profile(
 
 
 def initialize_figure(n_subplots: int, stat: str = "") -> tuple[Figure, list[Axes]]:
-    """Set up fig and ax object, if subplot"""
+    """Set up fig and ax object, if subplot."""
     if n_subplots <= 0:
         n_subplots = 1
     fig, axes = plt.subplots(n_subplots, 1, figsize=(16, 4 + (n_subplots - 1) * 4.8))
@@ -749,7 +753,7 @@ def _set_title(
     variable_info,
     model_name: str = "",
 ) -> None:
-    """Generates subtitles for different product types"""
+    """Generates subtitles for different product types."""
     parts = field_name.split("_")
     if parts[0] == product:
         title = _get_product_title(variable_info)

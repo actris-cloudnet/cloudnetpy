@@ -140,10 +140,11 @@ def get_l1b_title(instrument: Instrument, location: str) -> str:
 
 
 def get_references(identifier: str | None = None, extra: list | None = None) -> str:
-    """ "Returns references.
+    """Returns references.
 
     Args:
         identifier: Cloudnet file type, e.g., 'iwc'.
+        extra: List of additional references to include
 
     """
     references = "https://doi.org/10.21105/joss.02123"

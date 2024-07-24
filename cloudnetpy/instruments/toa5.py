@@ -9,7 +9,7 @@ def read_toa5(
 ) -> tuple[dict[str, str], dict[str, str], list[dict[str, Any]]]:
     """Read ASCII data from Campbell Scientific datalogger such as CR1000.
 
-    References
+    References:
         CR1000 Measurement and Control System.
         https://s.campbellsci.com/documents/us/manuals/cr1000.pdf
     """

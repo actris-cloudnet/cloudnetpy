@@ -58,7 +58,7 @@ class ObservationManager(DataSource):
             return None
 
     def _generate_product(self) -> None:
-        """Process needed data of observation to a ObservationManager object"""
+        """Process needed data of observation to a ObservationManager object."""
         try:
             if self.obs == "cf":
                 self.append_data(self._generate_cf(), "cf")
@@ -73,7 +73,7 @@ class ObservationManager(DataSource):
             raise
 
     def _generate_cf(self) -> np.ndarray:
-        """Generates cloud fractions using categorize bits and masking conditions"""
+        """Generates cloud fractions using categorize bits and masking conditions."""
         categorize_bits = CategorizeBits(self._file)
         cloud_mask = self._classify_basic_mask(categorize_bits.category_bits)
         return self._mask_cloud_bits(cloud_mask)
@@ -91,7 +91,7 @@ class ObservationManager(DataSource):
 
     @staticmethod
     def _mask_cloud_bits(cloud_mask: np.ndarray) -> np.ndarray:
-        """Creates cloud fraction"""
+        """Creates cloud fraction."""
         for i in [1, 3, 4, 5]:
             cloud_mask[cloud_mask == i] = 1
         for i in [2, 6, 7, 8]:
@@ -99,7 +99,7 @@ class ObservationManager(DataSource):
         return cloud_mask
 
     def _check_rainrate(self) -> bool:
-        """Check if rainrate in file"""
+        """Check if rainrate in file."""
         try:
             self.getvar("rainrate")
         except RuntimeError:
@@ -122,7 +122,7 @@ class ObservationManager(DataSource):
         return rainrate > rainrate_threshold
 
     def _generate_iwc_masks(self) -> None:
-        """Generates ice water content variables with different masks"""
+        """Generates ice water content variables with different masks."""
         # TODO: Differences with CloudnetPy (status=2) and Legacy data (status=3)
         iwc = self.getvar(self.obs)
         iwc_status = self.getvar("iwc_retrieval_status")
@@ -131,21 +131,21 @@ class ObservationManager(DataSource):
         self._mask_iwc(iwc, iwc_status)
 
     def _mask_iwc(self, iwc: np.ndarray, iwc_status: np.ndarray) -> None:
-        """Leaves only reliable data and corrected liquid attenuation"""
+        """Leaves only reliable data and corrected liquid attenuation."""
         iwc_mask = ma.copy(iwc)
         iwc_mask[np.bitwise_and(iwc_status != 1, iwc_status != 2)] = ma.masked
         self.append_data(iwc_mask, "iwc")
 
     def _mask_iwc_att(self, iwc: np.ndarray, iwc_status: np.ndarray) -> None:
         """Leaves only where reliable data, corrected liquid attenuation
-        and uncorrected liquid attenuation
+        and uncorrected liquid attenuation.
         """
         iwc_att = ma.copy(iwc)
         iwc_att[iwc_status > 3] = ma.masked
         self.append_data(iwc_att, "iwc_att")
 
     def _get_rain_iwc(self, iwc_status: np.ndarray) -> None:
-        """Finds columns where is rain, return boolean of x-axis shape"""
+        """Finds columns where is rain, return boolean of x-axis shape."""
         iwc_rain = np.zeros(iwc_status.shape, dtype=bool)
         iwc_rain[iwc_status == 5] = 1
         iwc_rain = np.any(iwc_rain, axis=1)

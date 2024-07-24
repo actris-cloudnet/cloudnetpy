@@ -84,7 +84,7 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
 
 
 def datetime2decimal_hours(data: np.ndarray | list) -> np.ndarray:
-    """Converts array of datetime to decimal_hours"""
+    """Converts array of datetime to decimal_hours."""
     output = []
     for timestamp in data:
         t = timestamp.time()
@@ -153,13 +153,10 @@ def rebin_2d(
         statistic: Statistic to be calculated. Possible statistics are 'mean', 'std'.
             Default is 'mean'.
         n_min: Minimum number of points to have good statistics in a bin. Default is 1.
+        mask_zeros: Whether to mask 0 values in the returned array. Default is True.
 
     Returns:
         tuple: Rebinned data with shape (N, m) and indices of bins without enough data.
-
-    Notes:
-        0-values are masked in the returned array.
-
     """
     edges = binvec(x_new)
     result = np.zeros((len(x_new), array.shape[1]))
@@ -208,6 +205,7 @@ def rebin_1d(
         x_new: 1-D target vector (center points) with shape (N,).
         statistic: Statistic to be calculated. Possible statistics are 'mean', 'std'.
             Default is 'mean'.
+        mask_zeros: Whether to mask 0 values in the returned array. Default is True.
 
     Returns:
         Re-binned data with shape (N,).
@@ -656,7 +654,7 @@ def isscalar(array: np.ndarray | float | list) -> bool:
 
     By "scalar" we mean that array has a single value.
 
-    Examples
+    Examples:
         >>> isscalar(1)
             True
         >>> isscalar([1])
@@ -793,7 +791,7 @@ def is_empty_line(line: str) -> bool:
 
 
 def is_timestamp(timestamp: str) -> bool:
-    """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss"""
+    """Tests if the input string is formatted as -yyyy-mm-dd hh:mm:ss."""
     reg_exp = re.compile(r"-\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}")
     if reg_exp.match(timestamp) is not None:
         return True

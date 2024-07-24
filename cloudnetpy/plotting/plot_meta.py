@@ -4,8 +4,7 @@ from typing import NamedTuple
 
 
 class PlotMeta(NamedTuple):
-    """
-    A class representing the metadata for plotting.
+    """A class representing the metadata for plotting.
 
     Attributes:
         cmap: The colormap to be used for the plot.

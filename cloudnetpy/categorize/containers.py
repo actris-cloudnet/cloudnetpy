@@ -9,7 +9,7 @@ from cloudnetpy.constants import MM_H_TO_M_S
 
 @dataclass
 class ClassificationResult:
-    """Result of classification"""
+    """Result of classification."""
 
     category_bits: np.ndarray
     is_rain: np.ndarray
@@ -103,6 +103,8 @@ def _find_clutter(
     """Estimates clutter from doppler velocity.
 
     Args:
+        v: 2D radar velocity.
+        is_rain: 2D boolean array denoting rain.
         n_gates: Number of range gates from the ground where clutter is expected
             to be found. Default is 10.
         v_lim: Velocity threshold. Smaller values are classified as clutter.

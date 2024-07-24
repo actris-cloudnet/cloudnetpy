@@ -13,7 +13,7 @@ def parse_wanted_names(
     *,
     advance: bool = False,
 ) -> tuple[list, list]:
-    """Returns standard and advection lists of product types to plot"""
+    """Returns standard and advection lists of product types to plot."""
     if variables:
         names = variables
     else:
@@ -76,7 +76,7 @@ def sort_cycles(names: list, model: str) -> tuple[list, list]:
 
 
 def read_data_characters(nc_file: str, name: str, model: str) -> tuple:
-    """Gets dimensions and data for plotting"""
+    """Gets dimensions and data for plotting."""
     nc = netCDF4.Dataset(nc_file)
     data = nc.variables[name][:]
     data = mask_small_values(data, name)

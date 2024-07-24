@@ -111,7 +111,7 @@ def create_one_day_data_record(rpg_objects: RpgObjects) -> dict:
 def _stack_rpg_data(rpg_objects: RpgObjects) -> tuple[dict, dict]:
     """Combines data from hourly RPG objects.
 
-    Notes
+    Notes:
         Ignores variable names starting with an underscore.
 
     """

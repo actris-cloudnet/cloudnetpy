@@ -1,5 +1,4 @@
-"""Module for creating Cloudnet drizzle product.
-"""
+"""Module for creating Cloudnet drizzle product."""
 import numpy as np
 from numpy import ma
 from scipy.special import gamma
@@ -113,7 +112,7 @@ class DrizzleProducts:
         return np.divide(a, b, out=np.zeros_like(a), where=b != 0)
 
     def _calc_lwc(self) -> np.ndarray:
-        """Calculates drizzle liquid water content (kg m-3)"""
+        """Calculates drizzle liquid water content (kg m-3)."""
         rho_water = 1000
         dia, mu, s = (self._params.get(key) for key in ("Do", "mu", "S"))
         dia = ma.array(dia)

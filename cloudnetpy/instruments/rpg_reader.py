@@ -164,7 +164,7 @@ def _decode_angles(
 class HatproBin:
     """HATPRO binary file reader. Byte order is assumed to be little endian.
 
-    References
+    References:
         Radiometer Physics (2014): Instrument Operation and Software Guide
         Operation Principles and Software Description for RPG standard single
         polarization radiometers (G5 series).

@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
 class DayStatistics:
-    """Class for calculating statistical analysis of day scale products
+    """Class for calculating statistical analysis of day scale products.
 
     Class generates one statistical method at the time with given model data
     and observation data of wanted product.
@@ -107,7 +107,7 @@ def combine_masked_indices(
     model: ma.MaskedArray,
     observation: ma.MaskedArray,
 ) -> tuple[ma.MaskedArray, ma.MaskedArray]:
-    """Connects two array masked indices to one and add in two array same mask"""
+    """Connects two array masked indices to one and add in two array same mask."""
     observation[np.where(np.isnan(observation))] = ma.masked
     model[model < np.min(observation)] = ma.masked
     combine_mask = model.mask + observation.mask

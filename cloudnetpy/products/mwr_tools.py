@@ -15,8 +15,7 @@ from cloudnetpy.products import product_tools
 def generate_mwr_single(
     mwr_l1c_file: str, output_file: str, uuid: str | None = None
 ) -> str:
-    """
-    Generates MWR single-pointing product including liquid water path, integrated
+    """Generates MWR single-pointing product including liquid water path, integrated
     water vapor, etc. from zenith measurements.
 
     Args:
@@ -36,8 +35,7 @@ def generate_mwr_single(
 def generate_mwr_multi(
     mwr_l1c_file: str, output_file: str, uuid: str | None = None
 ) -> str:
-    """
-    Generates MWR multiple-pointing product, including relative humidity profiles,
+    """Generates MWR multiple-pointing product, including relative humidity profiles,
     etc. from scanning measurements.
 
     Args:
