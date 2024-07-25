@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.61.16 – 2024-07-25
+
+- Fix `seconds2date` with NumPy 2.0
+
 ## 1.61.15 – 2024-06-12
 
 - Improve CITATION.cff
