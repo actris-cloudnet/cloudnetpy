@@ -45,7 +45,7 @@ Time-height grid of observation products is always thicker than grid of models s
 observation data is downsampled by averaging to be same size as model grid.
 Downsampled observation and simulations are L3 day scale products.
 
-Examples of L3 day products: model simulation vs. downsampled observation comparions
+Examples of L3 day products: model simulation vs. downsampled observation comparisons
 of Cloud fraction, IWC and LWC.
 
 .. figure:: _figs/20190517_mace-head_cf_ecmwf_group.png
