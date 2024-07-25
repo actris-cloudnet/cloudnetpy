@@ -76,7 +76,7 @@ def seconds2date(time_in_seconds: float, epoch: Epoch = (2001, 1, 1)) -> list:
     epoch_in_seconds = datetime.datetime.timestamp(
         datetime.datetime(*epoch, tzinfo=timezone.utc),
     )
-    timestamp = time_in_seconds + epoch_in_seconds
+    timestamp = float(time_in_seconds) + epoch_in_seconds
     return (
         datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)
         .strftime("%Y %m %d %H %M %S")
