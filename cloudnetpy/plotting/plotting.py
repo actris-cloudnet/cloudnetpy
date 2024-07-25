@@ -58,7 +58,7 @@ class PlotParameters:
 
 class Dimensions:
     """Dimensions of a generated figure in pixels. Elements such as the figure
-    title, labels, colorbar and legend are exluded from the margins.
+    title, labels, colorbar and legend are excluded from the margins.
 
     Attributes:
         width (int): Figure width in pixels.

@@ -114,7 +114,7 @@ REGRID_PRODUCT_ATTRIBUTES = {
         comment=(
             "Cloud fraction generated from observations and by volume,\n"
             "averaged onto the models grid with height and time. Volume is\n"
-            "space withing four grid points."
+            "space within four grid points."
         ),
     ),
     "cf_A": MetaData(

@@ -46,7 +46,7 @@ def ceilo2nc(
         site_meta: Dictionary containing information about the site and instrument.
             Required key value pairs are `name` and `altitude` (metres above mean
             sea level). Also, 'calibration_factor' is recommended because the default
-            value is probably incorrect. If the backround noise is *not*
+            value is probably incorrect. If the background noise is *not*
             range-corrected, you must define: {'range_corrected': False}.
             You can also explicitly set the instrument model with
             e.g. {'model': 'cl61d'}.

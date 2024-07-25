@@ -34,7 +34,7 @@ def generate_der(
     parameters: Parameters | None = None,
 ) -> str:
     """Generates Cloudnet effective radius of liquid water droplets
-        product acording to Frisch et al. 2002.
+        product according to Frisch et al. 2002.
 
     This function calculates liquid droplet effective radius def
     using the Frisch method. In this method, def is calculated
@@ -45,7 +45,7 @@ def generate_der(
         categorize_file: Categorize file name.
         output_file: Output file name.
         uuid: Set specific UUID for the file.
-        parameters: Tuple of specific fixed paramaters
+        parameters: Tuple of specific fixed parameters
             (ddBZ, N, dN, sigma_x, dsigma_x, dQ)
         used in Frisch approach.
 
