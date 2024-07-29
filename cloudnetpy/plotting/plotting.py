@@ -678,8 +678,16 @@ class Plot1D(Plot):
     def _plot_moving_average(self, figure_data: FigureData) -> None:
         time = figure_data.time.copy()
         data = self._data_orig.copy()
-        data, time = self._get_unmasked_values(data, time)
-        sma = self._calculate_moving_average(data, time, window=5)
+        good_values = ~ma.getmaskarray(data)
+        data = data[good_values]
+        time = time[good_values]
+        if self.sub_plot.variable.name == "wind_direction":
+            wind_speed = figure_data.file["wind_speed"][good_values]
+            sma = self._calculate_average_wind_direction(
+                wind_speed, data, time, window=15
+            )
+        else:
+            sma = self._calculate_moving_average(data, time, window=5)
         gap_time = _get_max_gap_in_minutes(figure_data)
         gaps = self._find_time_gap_indices(time, max_gap_min=gap_time)
         if len(gaps) > 0:
@@ -698,16 +706,6 @@ class Plot1D(Plot):
     def _get_line_width(time: ndarray) -> float:
         line_width = np.median(np.diff(time)) * 1000
         return min(max(line_width, 0.25), 0.9)
-
-    @staticmethod
-    def _get_unmasked_values(
-        data: ma.MaskedArray,
-        time: ndarray,
-    ) -> tuple[ndarray, ndarray]:
-        if not ma.is_masked(data):
-            return data, time
-        good_values = ~data.mask
-        return data[good_values], time[good_values]
 
     @staticmethod
     def _get_bad_zenith_profiles(figure_data: FigureData) -> ndarray:
@@ -744,6 +742,24 @@ class Plot1D(Plot):
         sma = np.convolve(data, weights, "valid")
         edge = window_size // 2
         return np.pad(sma, (edge, edge - 1), mode="constant", constant_values=np.nan)
+
+    @classmethod
+    def _calculate_average_wind_direction(
+        cls,
+        wind_speed: ndarray,
+        wind_direction: ndarray,
+        time: ndarray,
+        window: float = 5,
+    ) -> ndarray:
+        angle = np.deg2rad(wind_direction)
+        u = wind_speed * np.cos(angle)
+        v = wind_speed * np.sin(angle)
+        avg_u = cls._calculate_moving_average(u, time, window)
+        avg_v = cls._calculate_moving_average(v, time, window)
+        data = np.rad2deg(np.arctan2(avg_v, avg_u)) % 360
+        wrap = np.where(np.abs(np.diff(data)) > 300)[0]
+        data[wrap] = np.nan
+        return data
 
 
 def generate_figure(
