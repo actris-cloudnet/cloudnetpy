@@ -212,7 +212,7 @@
 
 ## 1.56.6 – 2023-12-08
 
-- Fix moving average plot in precense of flagged data
+- Fix moving average plot in presence of flagged data
 - Adjust flagged region style
 - Add PlottingError exception
 
@@ -565,7 +565,7 @@
 
 ## 1.41.0 – 2022-11-18
 
-- Migrate model-evalution to cloudnetpy
+- Migrate model-evaluation to cloudnetpy
 
 ## 1.40.0 – 2022-11-17
 
