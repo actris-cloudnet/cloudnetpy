@@ -45,14 +45,16 @@ def ws2nc(
         weather_station_file = [weather_station_file]
     try:
         ws: WS
-        if site_meta["name"] == "Palaiseau":
-            ws = PalaiseauWS(weather_station_file, site_meta)
+        if site_meta["name"] in ("Palaiseau", "Bucharest"):
+            ws = SirtaFormatWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Granada":
             ws = GranadaWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Kenttärova":
             ws = KenttarovaWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Hyytiälä":
             ws = HyytialaWS(weather_station_file, site_meta)
+        elif site_meta["name"] == "Galați":
+            ws = GalatiWS(weather_station_file, site_meta)
         else:
             msg = "Unsupported site"
             raise ValueError(msg)  # noqa: TRY301
@@ -66,6 +68,7 @@ def ws2nc(
         ws.convert_pressure()
         ws.convert_rainfall_rate()
         ws.convert_rainfall_amount()
+        ws.normalize_rainfall_amount()
         ws.calculate_rainfall_amount()
         attributes = output.add_time_attribute(ATTRIBUTES, ws.date)
         output.update_attributes(ws.data, attributes)
@@ -75,9 +78,11 @@ def ws2nc(
 
 
 class WS(CloudnetInstrument):
-    def __init__(self):
+    def __init__(self, site_meta: dict):
         super().__init__()
         self._data: dict
+        self.site_meta = site_meta
+        self.instrument = instruments.GENERIC_WEATHER_STATION
 
     date: list[str]
 
@@ -111,6 +116,15 @@ class WS(CloudnetInstrument):
                 x for ind, x in enumerate(self._data[key]) if ind in valid_ind
             ]
 
+    @staticmethod
+    def format_data(data: dict) -> dict:
+        for key, value in data.items():
+            new_value = np.array(value)
+            if key != "time":
+                new_value = ma.masked_where(np.isnan(new_value), new_value)
+            data[key] = new_value
+        return data
+
     def convert_temperature_and_humidity(self) -> None:
         temperature_kelvins = atmos_utils.c2k(self.data["air_temperature"][:])
         self.data["air_temperature"].data = temperature_kelvins
@@ -123,6 +137,10 @@ class WS(CloudnetInstrument):
     def convert_pressure(self) -> None:
         self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa to Pa
 
+    def normalize_rainfall_amount(self) -> None:
+        if "rainfall_amount" in self.data:
+            self.data["rainfall_amount"].data -= self.data["rainfall_amount"][0]
+
     def convert_time(self) -> None:
         pass
 
@@ -130,52 +148,32 @@ class WS(CloudnetInstrument):
         pass
 
 
-class PalaiseauWS(WS):
+class SirtaFormatWS(WS):
     def __init__(self, filenames: list[str], site_meta: dict):
-        super().__init__()
-        if len(filenames) != 1:
-            raise ValueError
-        self.filename = filenames[0]
-        self.site_meta = site_meta
-        self.instrument = instruments.GENERIC_WEATHER_STATION
+        super().__init__(site_meta)
+        self.filenames = filenames
         self._data = self._read_data()
 
     def _read_data(self) -> dict:
         timestamps, values, header = [], [], []
-        with open(self.filename, encoding="latin-1") as f:
-            data = f.readlines()
-        for row in data:
-            splat = row.split()
-            try:
-                timestamp = datetime.datetime.strptime(
-                    splat[0],
-                    "%Y-%m-%dT%H:%M:%SZ",
-                ).replace(tzinfo=datetime.timezone.utc)
-                temp: list[str | float] = list(splat)
-                temp[1:] = [float(x) for x in temp[1:]]
-                values.append(temp)
-                timestamps.append(timestamp)
-            except ValueError:
-                header.append("".join(splat))
+        for filename in self.filenames:
+            with open(filename, encoding="latin-1") as f:
+                data = f.readlines()
+            for row in data:
+                if not (columns := row.split()):
+                    continue
+                if row.startswith("#"):
+                    header_row = "".join(columns)
+                    if header_row not in header:
+                        header.append(header_row)
+                else:
+                    timestamp = datetime.datetime.strptime(
+                        columns[0], "%Y-%m-%dT%H:%M:%SZ"
+                    ).replace(tzinfo=datetime.timezone.utc)
+                    values.append([timestamp] + [float(x) for x in columns[1:]])
+                    timestamps.append(timestamp)
 
-        # Simple validation for now:
-        expected_identifiers = [
-            "DateTime(yyyy-mm-ddThh:mm:ssZ)",
-            "Windspeed(m/s)",
-            "Winddirection(degres)",
-            "Airtemperature(°C)",
-            "Relativehumidity(%)",
-            "Pressure(hPa)",
-            "Precipitationrate(mm/min)",
-            "24-hrcumulatedprecipitationsince00UT(mm)",
-        ]
-        column_titles = [row for row in header if "Col." in row]
-        error_msg = "Unexpected weather station file format"
-        if len(column_titles) != len(expected_identifiers):
-            raise ValueError(error_msg)
-        for title, identifier in zip(column_titles, expected_identifiers, strict=True):
-            if identifier not in title:
-                raise ValueError(error_msg)
+        self._validate_header(header)
         return {"time": timestamps, "values": values}
 
     def convert_time(self) -> None:
@@ -212,15 +210,33 @@ class PalaiseauWS(WS):
             self.data["rainfall_amount"][:] / 1000
         )  # mm -> m
 
+    @staticmethod
+    def _validate_header(header: list[str]) -> None:
+        expected_identifiers = [
+            "DateTime(yyyy-mm-ddThh:mm:ssZ)",
+            "Windspeed(m/s)",
+            "Winddirection(deg",
+            "Airtemperature",
+            "Relativehumidity(%)",
+            "Pressure(hPa)",
+            "Precipitationrate(mm/min)",
+            "precipitation",
+        ]
+        column_titles = [row for row in header if "Col." in row]
+        error_msg = "Unexpected weather station file format"
+        if len(column_titles) != len(expected_identifiers):
+            raise ValueError(error_msg)
+        for title, identifier in zip(column_titles, expected_identifiers, strict=True):
+            if identifier not in title:
+                raise ValueError(error_msg)
+
 
 class GranadaWS(WS):
     def __init__(self, filenames: list[str], site_meta: dict):
         if len(filenames) != 1:
             raise ValueError
-        super().__init__()
+        super().__init__(site_meta)
         self.filename = filenames[0]
-        self.site_meta = site_meta
-        self.instrument = instruments.GENERIC_WEATHER_STATION
         self._data = self._read_data()
 
     def _read_data(self) -> dict:
@@ -264,10 +280,8 @@ class GranadaWS(WS):
 
 class KenttarovaWS(WS):
     def __init__(self, filenames: list[str], site_meta: dict):
-        super().__init__()
+        super().__init__(site_meta)
         self.filenames = filenames
-        self.site_meta = site_meta
-        self.instrument = instruments.GENERIC_WEATHER_STATION
         self._data = self._read_data()
 
     def _read_data(self) -> dict:
@@ -302,12 +316,7 @@ class KenttarovaWS(WS):
                 merged = {key: [*merged[key], *data[key]] for key in merged}
             else:
                 merged = data
-        for key, value in merged.items():
-            new_value = np.array(value)
-            if key != "time":
-                new_value = ma.masked_where(np.isnan(new_value), new_value)
-            merged[key] = new_value
-        return merged
+        return self.format_data(merged)
 
     def convert_rainfall_rate(self) -> None:
         # Rainfall rate is 10-minute averaged in mm h-1
@@ -327,10 +336,8 @@ class HyytialaWS(WS):
     """
 
     def __init__(self, filenames: list[str], site_meta: dict):
-        super().__init__()
+        super().__init__(site_meta)
         self.filename = filenames[0]
-        self.site_meta = site_meta
-        self.instrument = instruments.GENERIC_WEATHER_STATION
         self._data = self._read_data()
 
     def _read_data(self) -> dict:
@@ -380,17 +387,51 @@ class HyytialaWS(WS):
             "wind_direction": raw_data["WD/ds"],
             "rainfall_rate": raw_data["AaNRT/mm"],
         }
-        for key, value in data.items():
-            new_value = np.array(value)
-            if key != "time":
-                new_value = ma.masked_where(np.isnan(new_value), new_value)
-            data[key] = new_value
-        return data
+        return self.format_data(data)
 
     def convert_pressure(self) -> None:
         self.data["air_pressure"].data = (
             self.data["air_pressure"][:] * 1000
         )  # kPa to Pa
+
+
+class GalatiWS(WS):
+    def __init__(self, filenames: list[str], site_meta: dict):
+        super().__init__(site_meta)
+        self.filename = filenames[0]
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        with open(self.filename, newline="") as f:
+            reader = csv.DictReader(f)
+            raw_data: dict = {key: [] for key in reader.fieldnames}  # type: ignore[union-attr]
+            for row in reader:
+                for key, value in row.items():
+                    parsed_value: float | datetime.datetime
+                    if key == "TimeStamp":
+                        parsed_value = datetime.datetime.strptime(
+                            value, "%Y-%m-%d %H:%M:%S.%f"
+                        )
+                    else:
+                        try:
+                            parsed_value = float(value)
+                        except ValueError:
+                            parsed_value = math.nan
+                    raw_data[key].append(parsed_value)
+        data = {
+            "time": raw_data["TimeStamp"],
+            "air_temperature": raw_data["Temperature"],
+            "relative_humidity": raw_data["RH"],
+            "air_pressure": raw_data["Atmospheric_pressure"],
+            "wind_speed": raw_data["Wind_speed"],
+            "wind_direction": raw_data["Wind_direction"],
+            "rainfall_rate": raw_data["Precipitations"],
+        }
+        return self.format_data(data)
+
+    def convert_pressure(self) -> None:
+        mmHg2Pa = 133.322
+        self.data["air_pressure"].data = self.data["air_pressure"][:] * mmHg2Pa
 
 
 ATTRIBUTES = {

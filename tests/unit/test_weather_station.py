@@ -21,6 +21,9 @@ SITE_META = {
 
 class WS(Check):
 
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+
     def test_pressure_values(self):
         assert self.nc.variables["air_pressure"].units == "Pa"
         min_pressure = ma.min(self.nc.variables["air_pressure"][:])
@@ -42,6 +45,19 @@ class WS(Check):
         assert min_rainfall >= 0
         assert max_rainfall <= 1.4e-6
 
+    def test_rainfall_amount(self):
+        assert self.nc.variables["rainfall_amount"][0] == 0.0
+        assert (np.diff(self.nc.variables["rainfall_amount"][:]) >= 0).all()
+
+    def test_global_attributes(self):
+        assert self.nc.cloudnet_file_type == "weather-station"
+        assert self.nc.title == f"Weather station from {self.site_meta['name']}"
+        assert self.nc.source == "Weather station"
+        assert self.nc.year == self.date[:4]
+        assert self.nc.month == self.date[5:7]
+        assert self.nc.day == self.date[8:10]
+        assert self.nc.location == self.site_meta["name"]
+
 
 class TestWeatherStation(WS):
     date = "2022-01-01"
@@ -50,15 +66,6 @@ class TestWeatherStation(WS):
     site_meta = SITE_META
     filename = f"{SCRIPT_PATH}/data/ws/palaiseau-ws.asc"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta)
-
-    def test_global_attributes(self):
-        assert self.nc.cloudnet_file_type == "weather-station"
-        assert self.nc.title == "Weather station from Palaiseau"
-        assert self.nc.source == "Weather station"
-        assert self.nc.year == "2022"
-        assert self.nc.month == "01"
-        assert self.nc.day == "01"
-        assert self.nc.location == "Palaiseau"
 
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 29
@@ -123,18 +130,8 @@ class TestWeatherStationGranada(WS):
     filename = f"{SCRIPT_PATH}/data/ws/granada.dat"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta)
 
-    def test_global_attributes(self):
-        assert self.nc.cloudnet_file_type == "weather-station"
-        assert self.nc.title == "Weather station from Granada"
-        assert self.nc.source == "Weather station"
-        assert self.nc.year == "2024"
-        assert self.nc.month == "04"
-        assert self.nc.day == "19"
-        assert self.nc.location == "Granada"
-
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 10
-
 
 
 class TestWeatherStationKenttarova(WS):
@@ -147,18 +144,8 @@ class TestWeatherStationKenttarova(WS):
                 ]
     uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
 
-    def test_global_attributes(self):
-        assert self.nc.cloudnet_file_type == "weather-station"
-        assert self.nc.title == "Weather station from Kenttärova"
-        assert self.nc.source == "Weather station"
-        assert self.nc.year == "2024"
-        assert self.nc.month == "05"
-        assert self.nc.day == "20"
-        assert self.nc.location == "Kenttärova"
-
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 24*(60/10)+1
-
 
 
 class TestWeatherStationHyytiala(WS):
@@ -169,14 +156,38 @@ class TestWeatherStationHyytiala(WS):
     filename = f"{SCRIPT_PATH}/data/ws/hyy20240110swx.txt"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
 
-    def test_global_attributes(self):
-        assert self.nc.cloudnet_file_type == "weather-station"
-        assert self.nc.title == "Weather station from Hyytiälä"
-        assert self.nc.source == "Weather station"
-        assert self.nc.year == "2024"
-        assert self.nc.month == "01"
-        assert self.nc.day == "10"
-        assert self.nc.location == "Hyytiälä"
-
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 24*60
+
+
+class TestWeatherStationGalati(WS):
+    date = "2024-07-14"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = { **SITE_META, "name": "Galați" }
+    filename = f"{SCRIPT_PATH}/data/ws/galati.csv"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta)
+
+
+class TestWeatherStationBucharest(WS):
+    date = "2024-06-01"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = { **SITE_META, "name": "Bucharest" }
+    filename = f"{SCRIPT_PATH}/data/ws/bucharest.csv"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 19
+
+
+class TestWeatherStationBucharestII(WS):
+    date = "2024-07-14"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = { **SITE_META, "name": "Bucharest"}
+    filename = f"{SCRIPT_PATH}/data/ws/bucharest2.csv"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 48
