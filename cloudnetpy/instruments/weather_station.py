@@ -45,8 +45,10 @@ def ws2nc(
         weather_station_file = [weather_station_file]
     try:
         ws: WS
-        if site_meta["name"] in ("Palaiseau", "Bucharest"):
-            ws = SirtaFormatWS(weather_station_file, site_meta)
+        if site_meta["name"] == "Palaiseau":
+            ws = PalaiseauWS(weather_station_file, site_meta)
+        elif site_meta["name"] == "Bucharest":
+            ws = BucharestWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Granada":
             ws = GranadaWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Kenttärova":
@@ -148,7 +150,7 @@ class WS(CloudnetInstrument):
         pass
 
 
-class SirtaFormatWS(WS):
+class PalaiseauWS(WS):
     def __init__(self, filenames: list[str], site_meta: dict):
         super().__init__(site_meta)
         self.filenames = filenames
@@ -229,6 +231,12 @@ class SirtaFormatWS(WS):
         for title, identifier in zip(column_titles, expected_identifiers, strict=True):
             if identifier not in title:
                 raise ValueError(error_msg)
+
+
+class BucharestWS(PalaiseauWS):
+    def convert_rainfall_rate(self) -> None:
+        rainfall_rate = self.data["rainfall_rate"][:]
+        self.data["rainfall_rate"].data = rainfall_rate * MM_H_TO_M_S
 
 
 class GranadaWS(WS):
