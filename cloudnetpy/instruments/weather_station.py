@@ -438,8 +438,6 @@ class GalatiWS(WS):
             "air_temperature": raw_data["Temperature"],
             "relative_humidity": raw_data["RH"],
             "air_pressure": raw_data["Atmospheric_pressure"],
-            "wind_speed": raw_data["Wind_speed"],
-            "wind_direction": raw_data["Wind_direction"],
             "rainfall_rate": raw_data["Precipitations"],
         }
         return self.format_data(data)
