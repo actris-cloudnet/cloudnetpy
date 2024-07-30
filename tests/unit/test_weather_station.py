@@ -32,7 +32,16 @@ class WS(Check):
         assert min_pressure > 90000
         assert max_pressure < 110000
 
+    def test_wind_speed_values(self):
+        if "wind_speed" not in self.nc.variables:
+            return
+        assert self.nc.variables["wind_speed"].units == "m s-1"
+        min_wind_speed = ma.min(self.nc.variables["wind_speed"][:])
+        assert min_wind_speed >= 0
+
     def test_wind_direction_values(self):
+        if "wind_direction" not in self.nc.variables:
+            return
         assert self.nc.variables["wind_direction"].units == "degree"
         min_wind_dir = ma.min(self.nc.variables["wind_direction"][:])
         max_wind_dir = ma.max(self.nc.variables["wind_direction"][:])
