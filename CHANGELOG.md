@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.61.17 – 2024-07-30
+
+- Add support for Galati and Bucharest weather stations
+- Fix calculation of average wind direction
+
 ## 1.61.16 – 2024-07-25
 
 - Fix `seconds2date` with NumPy 2.0
