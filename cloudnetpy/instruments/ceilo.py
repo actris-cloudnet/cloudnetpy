@@ -87,12 +87,15 @@ def ceilo2nc(
     if ceilo_obj.instrument is None or ceilo_obj.instrument.model is None:
         msg = "Failed to read ceilometer model"
         raise RuntimeError(msg)
-    if "cl61" in ceilo_obj.instrument.model.lower():
-        # This kind of screening could be used with other ceilometers as well:
+    if any(
+        model in ceilo_obj.instrument.model.lower()
+        for model in ("cl61", "chm15k", "chm15kx", "cl51", "cl31")
+    ):
         mask = ceilo_obj.data["beta_smooth"].mask
         ceilo_obj.data["beta"] = ma.masked_where(mask, ceilo_obj.data["beta_raw"])
         ceilo_obj.data["beta"][ceilo_obj.data["beta"] <= 0] = ma.masked
-        ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
+        if "depolarisation" in ceilo_obj.data:
+            ceilo_obj.data["depolarisation"].mask = ceilo_obj.data["beta"].mask
     ceilo_obj.screen_depol()
     ceilo_obj.screen_invalid_values()
     ceilo_obj.prepare_data()
