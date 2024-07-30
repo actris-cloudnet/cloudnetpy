@@ -10,6 +10,7 @@ import cloudnetpy.categorize.atmos
 from cloudnetpy import utils
 from cloudnetpy.categorize import droplet, falling, freezing, insects, melting
 from cloudnetpy.categorize.containers import ClassData, ClassificationResult
+from cloudnetpy.constants import T0
 
 
 def classify_measurements(data: dict) -> ClassificationResult:
@@ -35,6 +36,14 @@ def classify_measurements(data: dict) -> ClassificationResult:
         Some individual classification methods are changed in this Python
         implementation compared to the original Cloudnet methodology.
         Especially methods classifying insects, melting layer and liquid droplets.
+
+        Explanation of bits:
+            - bit 0: Liquid droplets
+            - bit 1: Falling hydrometeors
+            - bit 2: Freezing region
+            - bit 3: Melting layer
+            - bit 4: Aerosols
+            - bit 5: Insects
 
     """
     obs = ClassData(data)
@@ -73,6 +82,8 @@ def classify_measurements(data: dict) -> ClassificationResult:
         bits = _filter_insects(bits)
     bits[4] = _find_aerosols(obs, bits[1], bits[0])
     bits[4][filtered_ice] = False
+    bits = _fix_super_cold_liquid(obs, bits)
+
     return ClassificationResult(
         category_bits=_bits_to_integer(bits),
         is_rain=obs.is_rain,
@@ -80,6 +91,15 @@ def classify_measurements(data: dict) -> ClassificationResult:
         insect_prob=insect_prob,
         liquid_prob=liquid_prob,
     )
+
+
+def _fix_super_cold_liquid(obs: ClassData, bits: list) -> list:
+    """Supercooled liquid droplets do not exist in atmosphere below around -38 C."""
+    t_limit = T0 - 38
+    super_cold_liquid = np.where((obs.tw < t_limit) & bits[0])
+    bits[0][super_cold_liquid] = False
+    bits[1][super_cold_liquid] = True
+    return bits
 
 
 def _remove_false_radar_liquid(
