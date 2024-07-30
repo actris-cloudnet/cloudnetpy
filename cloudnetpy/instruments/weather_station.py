@@ -142,9 +142,12 @@ class WS(CloudnetInstrument):
     def normalize_rainfall_amount(self) -> None:
         if "rainfall_amount" in self.data:
             amount = self.data["rainfall_amount"][:]
+            offset = 0
+            for i in range(1, len(amount)):
+                if amount[i] + offset < amount[i - 1]:
+                    offset += amount[i - 1]
+                amount[i] += offset
             amount -= amount[0]
-            jumps = np.maximum.accumulate(amount) - amount
-            amount += jumps
             self.data["rainfall_amount"].data = amount
 
     def convert_time(self) -> None:

@@ -1,6 +1,7 @@
 import os
 from tempfile import TemporaryDirectory
 
+from cloudnetpy.cloudnetarray import CloudnetArray
 import pytest
 
 from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
@@ -191,3 +192,23 @@ class TestWeatherStationBucharestII(WS):
 
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 48
+
+
+@pytest.mark.parametrize(
+    "original, expected",
+    [
+        ([0,1,2], [0,1,2]),
+        ([1,2,3], [0,1,2]),
+        ([10, 11, 15, 16, 2], [0, 1, 5, 6, 8]),
+        ([10, 11, 15, 16, 0, 2], [0, 1, 5, 6, 6, 8]),
+    ],
+)
+def test_normalize_rainfall_amount(original, expected):
+    filename = [f"{SCRIPT_PATH}/data/ws/bucharest2.csv"]
+    site_meta = { **SITE_META, "name": "Bucharest"}
+    a = weather_station.BucharestWS(filename, site_meta)
+    original = np.array(original)
+    expected = np.array(expected)
+    a.data["rainfall_amount"] = CloudnetArray(original, "rainfall_amount")
+    a.normalize_rainfall_amount()
+    assert np.array_equal(a.data["rainfall_amount"].data, expected)
