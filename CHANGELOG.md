@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.62.1 – 2024-07-31
+
+- Support missing values in Granada weather station
+
 ## 1.62.0 – 2024-07-31
 
 - Convert lidar liquid colder than -38 C into ice
