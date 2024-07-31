@@ -74,9 +74,24 @@ class ClassData:
 
     def _find_rain_from_radar_echo(self) -> np.ndarray:
         gate_number = 3
-        threshold = 0
+        threshold = {"z": 3, "v": 0, "ldr": -15}
         z = self.z[:, gate_number]
-        return np.where((~ma.getmaskarray(z)) & (z > threshold), 1, 0)
+        v = self.v[:, gate_number]
+        if hasattr(self, "ldr"):
+            ldr = self.ldr[:, gate_number]
+        elif hasattr(self, "sldr"):
+            ldr = self.sldr[:, gate_number]
+        else:
+            ldr = np.full(self.time.shape, threshold["ldr"] - 1)
+
+        return np.where(
+            (~ma.getmaskarray(z))
+            & (z > threshold["z"])
+            & (v < threshold["v"])
+            & (ldr < threshold["ldr"]),
+            1,
+            0,
+        )
 
     def _find_rain_from_disdrometer(self) -> ma.MaskedArray:
         threshold_mm_h = 0.25  # Standard threshold for drizzle -> rain
