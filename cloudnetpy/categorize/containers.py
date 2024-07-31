@@ -95,7 +95,7 @@ class ClassData:
 
     def _find_rain_from_disdrometer(self) -> ma.MaskedArray:
         threshold_mm_h = 0.25  # Standard threshold for drizzle -> rain
-        threshold_particles = 10  # This is arbitrary and should be better tested
+        threshold_particles = 30  # This is arbitrary and should be better tested
         threshold_rate = threshold_mm_h * MM_H_TO_M_S
         try:
             rainfall_rate = self.data["disdrometer"].data["rainfall_rate"].data
