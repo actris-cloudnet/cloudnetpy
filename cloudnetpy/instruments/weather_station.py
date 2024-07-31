@@ -288,9 +288,12 @@ class GranadaWS(WS):
                     continue
                 parsed = value
                 if keymap[key] != "time":
-                    parsed = float(value)
+                    try:
+                        parsed = float(value)
+                    except ValueError:
+                        parsed = math.nan
                 data[keymap[key]].append(parsed)
-        return data
+        return self.format_data(data)
 
 
 class KenttarovaWS(WS):
