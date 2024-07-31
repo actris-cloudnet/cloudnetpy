@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.62.0 – 2024-07-31
+
+- Convert lidar liquid colder than -38 C into ice
+- Use cl61d noise screening with more ceilometers
+
 ## 1.61.17 – 2024-07-30
 
 - Add support for Galati and Bucharest weather stations
