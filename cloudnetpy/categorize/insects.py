@@ -148,8 +148,7 @@ def _screen_insects(
         prob[(above_liquid == 1) & (insect_prob_no_ldr > 0)] = 0
 
     def _screen_rainy_profiles() -> None:
-        rain_smoothed = _smooth_rain(obs.time, obs.is_rain)
-        prob[rain_smoothed == 1, :] = 0
+        prob[obs.is_rain == 1, :] = 0
 
     prob = np.copy(insect_prob)
     _screen_liquid_layers()
@@ -157,15 +156,3 @@ def _screen_insects(
     _screen_above_liquid()
     _screen_rainy_profiles()
     return prob
-
-
-def _smooth_rain(time: np.ndarray, is_rain: np.ndarray) -> np.ndarray:
-    is_rain_smoothed = np.copy(is_rain)
-    time_buffer = 5  # minutes
-    n_profiles = len(is_rain)
-    n_steps = utils.n_elements(time, time_buffer, "time")
-    for rain_idx in np.where(is_rain)[0]:
-        idx_start = max(0, rain_idx - n_steps)
-        idx_end = min(rain_idx + n_steps, n_profiles)
-        is_rain_smoothed[idx_start : idx_end + 1] = True
-    return is_rain_smoothed
