@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.63.0 – 2024-08-01
+
+- Improve method for detecting rain from radar
+- Increase particle limit in disdrometer rain detection
+- Remove rain smoothing when screening insects
+
 ## 1.62.1 – 2024-07-31
 
 - Support missing values in Granada weather station
