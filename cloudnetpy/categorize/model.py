@@ -17,6 +17,7 @@ class Model(DataSource):
     Args:
         model_file: File name of the NWP model file.
         alt_site: Altitude of the site above mean sea level (m).
+        options: Dictionary containing optional parameters.
 
     Attributes:
         source_type (str): Model type, e.g. 'gdas1' or 'ecwmf'.
@@ -41,8 +42,9 @@ class Model(DataSource):
     )
     fields_sparse = (*fields_dense, "q", "uwind", "vwind")
 
-    def __init__(self, model_file: str, alt_site: float):
+    def __init__(self, model_file: str, alt_site: float, options: dict | None = None):
         super().__init__(model_file)
+        self.options = options
         self.source_type = _find_model_type(model_file)
         self.model_heights = self._get_model_heights(alt_site)
         self.mean_height = _calc_mean_height(self.model_heights)
@@ -113,7 +115,11 @@ class Model(DataSource):
     def calc_wet_bulb(self) -> None:
         """Calculates wet-bulb temperature in dense grid."""
         wet_bulb_temp = atmos_utils.calc_wet_bulb_temperature(self.data_dense)
+        offset = (self.options or {}).get("temperature_offset", 0)
+        wet_bulb_temp += offset
         self.append_data(wet_bulb_temp, "Tw", units="K")
+        if offset:
+            self.data["Tw"].temperature_correction_applied = offset
 
     def screen_sparse_fields(self) -> None:
         """Removes model fields that we don't want to write in the output."""

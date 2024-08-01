@@ -18,6 +18,7 @@ def generate_categorize(
     input_files: dict,
     output_file: str,
     uuid: str | None = None,
+    options: dict | None = None,
 ) -> str:
     """Generates Cloudnet Level 1c categorize file.
 
@@ -33,6 +34,7 @@ def generate_categorize(
             RPG level 0 files.
         output_file: Full path of the output file.
         uuid: Set specific UUID for the file.
+        options: Dictionary containing optional parameters.
 
     Returns:
         UUID of the generated file.
@@ -138,7 +140,7 @@ def generate_categorize(
                 data["disdrometer"] = Disdrometer(input_files["disdrometer"])
             except DisdrometerDataError as err:
                 logging.warning("Unable to use disdrometer: %s", err)
-        data["model"] = Model(input_files["model"], data["radar"].altitude)
+        data["model"] = Model(input_files["model"], data["radar"].altitude, options)
         time, height = _define_dense_grid()
         valid_ind = _interpolate_to_cloudnet_grid()
         if not valid_ind:
