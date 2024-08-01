@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.64.0 – 2024-08-01
+
+- Add `temperature_offset` option to wet bulb temperature
+
 ## 1.63.0 – 2024-08-01
 
 - Improve method for detecting rain from radar
