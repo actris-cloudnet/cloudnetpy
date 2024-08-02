@@ -856,7 +856,7 @@ def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
     file_type = getattr(figure_data.file, "cloudnet_file_type", "")
     max_allowed_gap = {
         "model": 181 if "gdas1" in source else 61,
-        "mwr-multi": 21,
+        "mwr-multi": 35,
         "weather-station": 12,
         "doppler-lidar-wind": 75,
     }
