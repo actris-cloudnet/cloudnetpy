@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.64.1 – 2024-08-02
+
+- Sort hatpro timestamps after conversion to fraction hour
+
 ## 1.64.0 – 2024-08-01
 
 - Add `temperature_offset` option to wet bulb temperature
