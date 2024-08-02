@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.64.2 – 2024-08-02
+
+- Increase allowed gap for `mwr-multi`
+
 ## 1.64.1 – 2024-08-02
 
 - Sort hatpro timestamps after conversion to fraction hour
