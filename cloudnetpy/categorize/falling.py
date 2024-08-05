@@ -59,7 +59,7 @@ def _find_cold_aerosols(obs: ClassData, is_liquid: np.ndarray) -> np.ndarray:
     This should be investigated and fixed in the future.
     """
     cold_aerosols = np.zeros(is_liquid.shape, dtype=bool)
-    lidar_range = obs.height + obs.altitude
+    lidar_range = obs.height - obs.altitude
     cold_aerosol_temperature_limit = T0 - 15
     cold_aerosol_min_altitude = 2000
     is_beta = ~obs.beta.mask
