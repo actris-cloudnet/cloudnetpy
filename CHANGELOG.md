@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.64.3 – 2024-08-05
+
+- Fix bug in altitude above ground calculation
+
 ## 1.64.2 – 2024-08-02
 
 - Increase allowed gap for `mwr-multi`
