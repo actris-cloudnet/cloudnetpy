@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.64.4 – 2024-08-06
+
+- Adjust screening of old chm15k data
+- Skip smoothing-based filtering when data are range-uncorrected
+
 ## 1.64.3 – 2024-08-05
 
 - Fix bug in altitude above ground calculation
