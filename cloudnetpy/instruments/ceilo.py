@@ -90,9 +90,12 @@ def ceilo2nc(
     if ceilo_obj.instrument is None or ceilo_obj.instrument.model is None:
         msg = "Failed to read ceilometer model"
         raise RuntimeError(msg)
-    if any(
-        model in ceilo_obj.instrument.model.lower()
-        for model in ("cl61", "chm15k", "chm15kx", "cl51", "cl31")
+    if (
+        any(
+            model in ceilo_obj.instrument.model.lower()
+            for model in ("cl61", "chm15k", "chm15kx", "cl51", "cl31")
+        )
+        and range_corrected
     ):
         mask = ceilo_obj.data["beta_smooth"].mask
         ceilo_obj.data["beta"] = ma.masked_where(mask, ceilo_obj.data["beta_raw"])
