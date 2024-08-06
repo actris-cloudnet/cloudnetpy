@@ -38,6 +38,7 @@ class Ceilometer:
         self,
         array: np.ndarray,
         snr_limit: int = 5,
+        n_negatives: int = 5,
         *,
         range_corrected: bool = True,
     ) -> np.ndarray:
@@ -47,13 +48,6 @@ class Ceilometer:
             self.noise_param,
             range_corrected=range_corrected,
         )
-        if (
-            self.instrument is not None
-            and getattr(self.instrument, "model", "").lower() == "ct25k"
-        ):
-            n_negatives = 20
-        else:
-            n_negatives = 5
         return noisy_data.screen_data(
             array,
             snr_limit=snr_limit,
@@ -64,6 +58,7 @@ class Ceilometer:
         self,
         beta: np.ndarray,
         snr_limit: int = 5,
+        n_negatives: int = 5,
         *,
         range_corrected: bool = True,
     ) -> np.ndarray:
@@ -82,6 +77,7 @@ class Ceilometer:
             beta_raw_smooth,
             is_smoothed=True,
             snr_limit=snr_limit,
+            n_negatives=n_negatives,
         )
 
     def prepare_data(self) -> None:

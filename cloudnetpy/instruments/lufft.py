@@ -23,6 +23,7 @@ class LufftCeilo(NcLidar):
         self.file_name = file_name
         self.site_meta = site_meta
         self.expected_date = expected_date
+        self.is_old_version = False
 
     def read_ceilometer_file(self, calibration_factor: float | None = None) -> None:
         """Reads data and metadata from Jenoptik netCDF file."""
@@ -42,6 +43,7 @@ class LufftCeilo(NcLidar):
         beta_raw = ma.masked_array(beta_raw)
         old_version = self._get_old_software_version()
         if old_version is not None:
+            self.is_old_version = True
             logging.warning(
                 "Software version %s. Assuming data not range corrected.",
                 old_version,

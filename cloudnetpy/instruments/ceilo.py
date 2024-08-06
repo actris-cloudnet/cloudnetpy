@@ -74,15 +74,18 @@ def ceilo2nc(
     range_corrected = site_meta.get("range_corrected", True)
     ceilo_obj.read_ceilometer_file(calibration_factor)
     ceilo_obj.check_beta_raw_shape()
+    n_negatives = _get_n_negatives(ceilo_obj)
     ceilo_obj.data["beta"] = ceilo_obj.calc_screened_product(
         ceilo_obj.data["beta_raw"],
         snr_limit,
         range_corrected=range_corrected,
+        n_negatives=n_negatives,
     )
     ceilo_obj.data["beta_smooth"] = ceilo_obj.calc_beta_smooth(
         ceilo_obj.data["beta"],
         snr_limit,
         range_corrected=range_corrected,
+        n_negatives=n_negatives,
     )
     if ceilo_obj.instrument is None or ceilo_obj.instrument.model is None:
         msg = "Failed to read ceilometer model"
@@ -105,6 +108,19 @@ def ceilo2nc(
     for key in ("beta", "beta_smooth"):
         ceilo_obj.add_snr_info(key, snr_limit)
     return output.save_level1b(ceilo_obj, output_file, uuid)
+
+
+def _get_n_negatives(ceilo_obj: ClCeilo | Ct25k | LufftCeilo | Cl61d | Cs135) -> int:
+    is_old_chm_version = (
+        hasattr(ceilo_obj, "is_old_version") and ceilo_obj.is_old_version
+    )
+    is_ct25k = (
+        ceilo_obj.instrument is not None
+        and getattr(ceilo_obj.instrument, "model", "").lower() == "ct25k"
+    )
+    if is_old_chm_version or is_ct25k:
+        return 20
+    return 5
 
 
 def _initialize_ceilo(
