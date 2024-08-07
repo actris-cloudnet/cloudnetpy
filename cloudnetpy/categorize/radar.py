@@ -257,7 +257,7 @@ class Radar(DataSource):
             noise_threshold = 3
             n_pulses = _number_of_independent_pulses()
             ln_to_log10 = 10 / np.log(10)
-            z_precision = (ln_to_log10 / np.sqrt(n_pulses)) * (
+            z_precision = ma.divide(ln_to_log10, np.sqrt(n_pulses)) * (
                 1 + (utils.db2lin(z_power_min - z_power) / noise_threshold)
             )
             gas_error = attenuations["radar_gas_atten"] * 0.1
