@@ -1,6 +1,7 @@
 """Mwr module, containing the :class:`Mwr` class."""
 
 import numpy as np
+import numpy.ma as ma
 
 from cloudnetpy import utils
 from cloudnetpy.constants import G_TO_KG
@@ -32,6 +33,9 @@ class Mwr(DataSource):
 
     def _init_lwp_data(self) -> None:
         lwp = self.dataset.variables["lwp"][:]
+        if "lwp_quality_flag" in self.dataset.variables:
+            quality_flag = self.dataset.variables["lwp_quality_flag"][:]
+            lwp[quality_flag != 0] = ma.masked
         self.append_data(lwp, "lwp")
 
     def _init_lwp_error(self) -> None:
