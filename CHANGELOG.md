@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.64.5 – 2024-08-07
+
+- Use `lwp_quality_flag` if exists
+- Avoid divide by zero warning
+
 ## 1.64.4 – 2024-08-06
 
 - Adjust screening of old chm15k data
