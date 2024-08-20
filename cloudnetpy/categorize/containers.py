@@ -58,7 +58,11 @@ class ClassData:
         self.tw = data["model"].data["Tw"][:]
         self.model_type = data["model"].source_type
         self.beta = data["lidar"].data["beta"][:]
-        self.lwp = data["mwr"].data["lwp"][:]
+        self.lwp = (
+            data["mwr"].data["lwp"][:]
+            if data["mwr"] is not None
+            else ma.masked_all(self.time.shape)
+        )
         self.is_rain = self._find_profiles_with_rain()
         self.is_clutter = _find_clutter(self.v, self.is_rain)
         self.altitude = data["radar"].altitude

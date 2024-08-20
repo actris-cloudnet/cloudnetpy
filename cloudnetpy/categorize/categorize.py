@@ -65,9 +65,10 @@ def generate_categorize(
 
     def _interpolate_to_cloudnet_grid() -> list:
         wl_band = utils.get_wl_band(data["radar"].radar_frequency)
-        data["mwr"].rebin_to_grid(time)
         if data["disdrometer"] is not None:
             data["disdrometer"].interpolate_to_grid(time)
+        if data["mwr"] is not None:
+            data["mwr"].rebin_to_grid(time)
         data["model"].interpolate_to_common_height(wl_band)
         model_gap_ind = data["model"].interpolate_to_grid(time, height)
         radar_gap_ind = data["radar"].rebin_to_grid(time)
@@ -115,7 +116,7 @@ def generate_categorize(
             **data["lidar"].data,
             **data["model"].data,
             **data["model"].data_sparse,
-            **data["mwr"].data,
+            **(data["mwr"].data if data["mwr"] is not None else {}),
             **(data["disdrometer"].data if data["disdrometer"] is not None else {}),
         }
 
@@ -131,10 +132,12 @@ def generate_categorize(
         data: dict = {
             "radar": Radar(input_files["radar"]),
             "lidar": Lidar(input_files["lidar"]),
-            "mwr": Mwr(input_files["mwr"]),
             "lv0_files": input_files.get("lv0_files"),
+            "mwr": None,
             "disdrometer": None,
         }
+        if "mwr" in input_files:
+            data["mwr"] = Mwr(input_files["mwr"])
         if "disdrometer" in input_files:
             try:
                 data["disdrometer"] = Disdrometer(input_files["disdrometer"])
