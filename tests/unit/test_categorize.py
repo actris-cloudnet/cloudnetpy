@@ -36,10 +36,14 @@ class TestCategorize(Check):
     }
 
     temp_path = temp_dir.name + "/categorize.nc"
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=DeprecationWarning)
-        uuid = generate_categorize(input_files, temp_path)
+    uuid = generate_categorize(input_files, temp_path)
 
     def test_global_attributes(self):
         with netCDF4.Dataset(self.temp_path) as nc:
             assert nc.title == "Cloud categorization products from Munich"
+
+    def test_categorize_without_lwp(self):
+        input_files_without_mwr = self.input_files.copy()
+        del input_files_without_mwr["mwr"]
+        temp_path = self.temp_dir.name + "/categorize_without_lwp.nc"
+        generate_categorize(input_files_without_mwr, temp_path)

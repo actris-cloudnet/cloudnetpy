@@ -181,7 +181,14 @@ class LiquidAttenuation(Attenuation):
 
     def __init__(self, data: dict, classification: ClassificationResult):
         super().__init__(data["model"], classification)
-        self._mwr = data["mwr"].data
+        if data["mwr"] is not None:
+            self._mwr = data["mwr"].data
+        else:
+            n_time = data["radar"].data["Z"][:].shape[0]
+            self._mwr = {
+                "lwp": ma.masked_all(n_time),
+                "lwp_error": ma.masked_all(n_time),
+            }
         self._lwc_dz_err = self._get_lwc_change_rate_error()
         self.atten = self._get_liquid_atten()
         self.atten_err = self._get_liquid_atten_err()
