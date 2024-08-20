@@ -8,6 +8,7 @@ from numpy import ma
 from cloudnetpy import output, utils
 from cloudnetpy.categorize import atmos
 from cloudnetpy.datasource import DataSource
+from cloudnetpy.exceptions import InvalidSourceFileError
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products import product_tools as p_tools
 from cloudnetpy.products.product_tools import CategorizeBits, get_is_rain
@@ -88,6 +89,9 @@ class LwcSource(DataSource):
 
     def __init__(self, categorize_file: str):
         super().__init__(categorize_file)
+        if "lwp" not in self.dataset.variables:
+            msg = "Liquid water path missing from the categorize file."
+            raise InvalidSourceFileError(msg)
         self.lwp = self.getvar("lwp")
         self.lwp[self.lwp < 0] = 0
         self.lwp_error = self.getvar("lwp_error")
