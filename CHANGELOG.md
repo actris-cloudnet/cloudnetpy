@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.65.0 – 2024-08-20
+
+- Make geophysical products work without LWP where possible
+
 ## 1.64.5 – 2024-08-07
 
 - Use `lwp_quality_flag` if exists
