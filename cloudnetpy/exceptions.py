@@ -63,3 +63,10 @@ class HatproDataError(CloudnetException):
 
     def __init__(self, msg: str = "Invalid HATPRO file"):
         super().__init__(msg)
+
+
+class InvalidSourceFileError(CloudnetException):
+    """Internal exception class."""
+
+    def __init__(self, msg: str = "Invalid source file"):
+        super().__init__(msg)
