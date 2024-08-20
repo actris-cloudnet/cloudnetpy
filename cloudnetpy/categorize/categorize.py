@@ -20,47 +20,50 @@ def generate_categorize(
     uuid: str | None = None,
     options: dict | None = None,
 ) -> str:
-    """Generates Cloudnet Level 1c categorize file.
+    """Generates a Cloudnet Level 1c categorize file.
 
-    The measurements are rebinned into a common height / time grid,
-    and classified as different types of scatterers such as ice, liquid,
-    insects, etc. Next, the radar signal is corrected for atmospheric
-    attenuation, and error estimates are computed. Results are saved
-    in *output_file* which is a compressed netCDF4 file.
+    This function rebins measurements into a common height/time grid
+    and classifies them into different scatterer types, such as ice,
+    liquid, insects, etc. The radar signal is corrected for atmospheric
+    attenuation, and error estimates are computed. The results are saved in
+    *output_file*, a compressed netCDF4 file.
 
     Args:
-        input_files: dict containing file names for calibrated `radar`, `lidar`,
-            `model` and `mwr` files. Optionally also `lv0_files`, a list of
-            RPG level 0 files.
-        output_file: Full path of the output file.
-        uuid: Set specific UUID for the file.
-        options: Dictionary containing optional parameters.
+        input_files (dict): Contains filenames for calibrated `radar`, `lidar`,
+            and `model` files. Optionally, it can also include `disdrometer`,
+            `mwr` (containing the LWP variable), and `lv0_files` (a list of RPG
+            Level 0 files).
+        output_file (str): The full path of the output file.
+        uuid (str): Specific UUID to assign to the generated file.
+        options (dict): Dictionary containing optional parameters.
 
     Returns:
-        UUID of the generated file.
+        str: UUID of the generated file.
 
     Raises:
-        RuntimeError: Failed to create the categorize file.
+        RuntimeError: Raised if the categorize file creation fails.
 
     Notes:
-        Separate mwr-file is not needed when using RPG cloud radar which
-        measures liquid water path. Then, the radar file can be used as
-        a mwr-file as well, i.e. {'mwr': 'radar.nc'}.
+        A separate MWR file is not required when using an RPG cloud radar that
+        measures liquid water path (LWP). In this case, the radar file can also
+        serve as the MWR file (e.g., {'mwr': 'radar.nc'}). If no MWR file
+        is provided, liquid attenuation correction cannot be performed.
 
-        If RPG L0 files are provided as an additional input, Voodoo method is used
-        to detect liquid droplets.
+        If RPG L0 files are included as additional input, the Voodoo method
+        is used to detect liquid droplets.
 
     Examples:
         >>> from cloudnetpy.categorize import generate_categorize
-        >>> input_files = {'radar': 'radar.nc',
-                           'lidar': 'lidar.nc',
-                           'model': 'model.nc',
-                           'mwr': 'mwr.nc'}
+        >>> input_files = {
+        ...     'radar': 'radar.nc',
+        ...     'lidar': 'lidar.nc',
+        ...     'model': 'model.nc',
+        ...     'mwr': 'mwr.nc'
+        ... }
         >>> generate_categorize(input_files, 'output.nc')
 
-        >>> input_files["lv0_files"] = ["file1.LV0", "file2.LV0"]  # Add RGP LV0 files
-        >>> generate_categorize(input_files, 'output.nc')  # Use Voodoo method
-
+        >>> input_files['lv0_files'] = ['file1.LV0', 'file2.LV0']  # Add RPG LV0 files
+        >>> generate_categorize(input_files, 'output.nc')  # Use the Voodoo method
     """
 
     def _interpolate_to_cloudnet_grid() -> list:
