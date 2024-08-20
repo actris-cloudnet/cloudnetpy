@@ -60,6 +60,10 @@ def hatpro2l1c(
 
     hatpro = HatproL1c(hatpro_raw, site_meta)
 
+    if not np.any(hatpro.data["tb"][:]):
+        msg = "No valid brightness temperatures found"
+        raise HatproDataError(msg)
+
     timestamps = hatpro.data["time"][:]
     if date is not None:
         # Screen timestamps if these assertions start to fail
