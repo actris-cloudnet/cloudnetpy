@@ -2,6 +2,7 @@ import tempfile
 from typing import Literal
 
 import netCDF4
+import numpy as np
 from mwrpy.level2.lev2_collocated import generate_lev2_multi as gen_multi
 from mwrpy.level2.lev2_collocated import generate_lev2_single as gen_single
 from mwrpy.level2.write_lev2_nc import MissingInputData
@@ -67,6 +68,12 @@ def _generate_product(
         netCDF4.Dataset(mwr_l1c_file, "r") as nc_input,
         netCDF4.Dataset(output_file, "r+") as nc_output,
     ):
+        flag_variable = "lwp" if product == "single" else "temperature"
+        flag_name = f"{flag_variable}_quality_flag"
+        flags = nc_output.variables[flag_name][:]
+        if not np.any(flags == 0):
+            msg = f"All {flag_variable} data are flagged."
+            raise ValidTimeStampError(msg)
         mwr = Mwr(nc_input, nc_output, uuid)
         return mwr.harmonize(product)
 
