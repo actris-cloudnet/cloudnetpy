@@ -60,8 +60,10 @@ def hatpro2l1c(
 
     hatpro = HatproL1c(hatpro_raw, site_meta)
 
-    if not np.any(hatpro.data["tb"][:]):
-        msg = "No valid brightness temperatures found"
+    flags = hatpro.data["quality_flag"][:]
+    bad_percentage = ma.sum(flags != 0) / flags.size * 100
+    if bad_percentage > 90:
+        msg = "More than 90% of brightness temperatures are flagged"
         raise HatproDataError(msg)
 
     timestamps = hatpro.data["time"][:]
