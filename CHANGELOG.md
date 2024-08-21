@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.65.1 – 2024-08-21
+
+- Add check for valid brightness temperatures
+
 ## 1.65.0 – 2024-08-20
 
 - Make geophysical products work without LWP where possible
