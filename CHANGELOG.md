@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.65.2 – 2024-08-21
+
+- Check if all data are masked in mwr-single and mwr-multi
+
 ## 1.65.1 – 2024-08-21
 
 - Add check for valid brightness temperatures
