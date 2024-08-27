@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.65.3 – 2024-08-27
+
+- Support pyAtmosLogger format for Thies LNM
+
 ## 1.65.2 – 2024-08-21
 
 - Check if all data are masked in mwr-single and mwr-multi
