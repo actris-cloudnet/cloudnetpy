@@ -332,6 +332,32 @@ class TestThies3(Check):
         )
 
 
+class TestThies4(Check):
+    date = "2024-07-02"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    filename = f"{SCRIPT_PATH}/data/thies-lnm/PAY_DDTH01_20240702_actris.csv"
+    site_meta = SITE_META
+    uuid = disdrometer.thies2nc(filename, temp_path, site_meta, date=date)
+
+    def test_processing(self):
+        assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'
+        assert self.nc.year == "2024"
+        assert self.nc.month == "07"
+        assert self.nc.day == "02"
+        assert self.nc.location == "Kumpula"
+        assert self.nc.cloudnet_file_type == "disdrometer"
+        assert self.nc.serial_number == "3486"
+        assert np.allclose(
+            self.nc["time"][:],
+            [
+                timedelta(hours=0, minutes=0, seconds=0) / timedelta(hours=1),
+                timedelta(hours=0, minutes=1, seconds=0) / timedelta(hours=1),
+                timedelta(hours=0, minutes=2, seconds=0) / timedelta(hours=1),
+            ],
+        )
+
+
 class TestInvalidCharacters(Check):
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"

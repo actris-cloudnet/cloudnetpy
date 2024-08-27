@@ -154,6 +154,16 @@ class Thies(Disdrometer):
             units, process, rows = read_toa5(filename)
             for row in rows:
                 self._read_line(row["RawString"], row["TIMESTAMP"])
+        elif first_line.startswith("Datetime [utc];Device address;"):
+            with open(filename) as file:
+                first_line = file.readline()
+                for line in file:
+                    timestamp, telegram = line.split(";", maxsplit=1)
+                    fixed_telegram = telegram.strip().rstrip(";") + ";"
+                    parsed_timestamp = datetime.datetime.strptime(
+                        timestamp, "%Y-%m-%d %H:%M:%S"
+                    )
+                    self._read_line(fixed_telegram, parsed_timestamp)
         else:
             with open(filename) as file:
                 for line in file:
