@@ -56,7 +56,7 @@ def hatpro2l1c(
             instrument_config=site_meta,
         )
     except MissingInputData as err:
-        raise HatproDataError from err
+        raise HatproDataError(str(err)) from err
 
     hatpro = HatproL1c(hatpro_raw, site_meta)
 
