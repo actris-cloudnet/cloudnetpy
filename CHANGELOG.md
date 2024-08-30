@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.65.4 – 2024-08-30
+
+- Fix weather station variable names and units of RPG cloud radars
+
 ## 1.65.3 – 2024-08-27
 
 - Support pyAtmosLogger format for Thies LNM
