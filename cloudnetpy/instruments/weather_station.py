@@ -8,7 +8,7 @@ from numpy import ma
 from cloudnetpy import output
 from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.constants import MM_H_TO_M_S, SEC_IN_HOUR
+from cloudnetpy.constants import HPA_TO_PA, MM_H_TO_M_S, SEC_IN_HOUR
 from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
@@ -137,7 +137,7 @@ class WS(CloudnetInstrument):
         self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
 
     def convert_pressure(self) -> None:
-        self.data["air_pressure"].data = self.data["air_pressure"][:] * 100  # hPa to Pa
+        self.data["air_pressure"].data = self.data["air_pressure"][:] * HPA_TO_PA
 
     def normalize_rainfall_amount(self) -> None:
         if "rainfall_amount" in self.data:

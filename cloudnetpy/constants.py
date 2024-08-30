@@ -31,4 +31,5 @@ M_S_TO_MM_H: Final = SEC_IN_HOUR / MM_TO_M
 MM_H_TO_M_S: Final = 1 / M_S_TO_MM_H
 GHZ_TO_HZ: Final = 1e9
 HPA_TO_PA: Final = 100
-KM_H_TO_M_S: Final = 1000 / (SEC_IN_HOUR)
+PA_TO_HPA: Final = 1 / HPA_TO_PA
+KM_H_TO_M_S: Final = 1000 / SEC_IN_HOUR

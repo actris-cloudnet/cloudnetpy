@@ -53,9 +53,3 @@ def test_wet_bulb(t, p, rh, res):
     }
     cnet = atmos_utils.calc_wet_bulb_temperature(model)
     assert_array_almost_equal(cnet / 10, res / 10, decimal=1)
-
-
-def test_mmh2ms():
-    data = np.array([3600 * 1000])
-    assert atmos_utils.mmh2ms(data) == 1
-    assert_array_almost_equal(data, np.array([3600 * 1000]))

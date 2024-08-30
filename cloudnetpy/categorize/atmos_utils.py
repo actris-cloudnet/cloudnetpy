@@ -1,12 +1,7 @@
-from typing import Final
-
 import numpy as np
 from numpy import ma
 
 import cloudnetpy.constants as con
-
-HPA_TO_P: Final = 100
-P_TO_HPA: Final = 0.01
 
 
 def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
@@ -80,7 +75,7 @@ def calc_saturation_vapor_pressure(temperature: np.ndarray) -> np.ndarray:
             + 0.42873e-3 * (10 ** (4.76955 * (1 - ratio)) - 1)
             + 0.78614
         )
-    ) * HPA_TO_P
+    ) * con.HPA_TO_PA
 
 
 def calc_psychrometric_constant(pressure: np.ndarray) -> np.ndarray:
@@ -114,7 +109,7 @@ def calc_dew_point_temperature(vapor_pressure: np.ndarray) -> np.ndarray:
     """
     vaisala_parameters_over_water = (6.116441, 7.591386, 240.7263)
     a, m, tn = vaisala_parameters_over_water
-    dew_point_celsius = tn / ((m / np.log10(vapor_pressure * P_TO_HPA / a)) - 1)
+    dew_point_celsius = tn / ((m / np.log10(vapor_pressure * con.PA_TO_HPA / a)) - 1)
     return c2k(dew_point_celsius)
 
 
@@ -126,8 +121,3 @@ def c2k(temp: np.ndarray) -> np.ndarray:
 def k2c(temp: np.ndarray) -> np.ndarray:
     """Converts Kelvins to Celsius."""
     return ma.array(temp) - 273.15
-
-
-def mmh2ms(data: np.ndarray) -> np.ndarray:
-    """Converts mm h-1 to m s-1."""
-    return data / con.SEC_IN_HOUR * con.MM_TO_M
