@@ -490,6 +490,10 @@ class Plot2D(Plot):
             smoothed_data = uniform_filter(self._data[valid_time_ind, :], sigma_units)
             self._data[valid_time_ind, :] = smoothed_data
 
+        if self._data.mask.all():
+            msg = "All data is masked"
+            raise PlottingError(msg)
+
         pcolor_kwargs = {
             "cmap": plt.get_cmap(str(self._plot_meta.cmap)),
             "vmin": vmin,

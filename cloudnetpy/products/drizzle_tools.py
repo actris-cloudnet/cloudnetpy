@@ -21,7 +21,6 @@ class DrizzleSource(DataSource):
 
     Attributes:
         mie (dict): Mie look-up table data.
-        dheight (float): Median difference of height array.
         z (ndarray): 2D radar echo (linear units).
         beta (ndarray): 2D lidar backscatter.
         v (ndarray): 2D doppler velocity.
@@ -31,7 +30,7 @@ class DrizzleSource(DataSource):
     def __init__(self, categorize_file: str):
         super().__init__(categorize_file)
         self.mie = self._read_mie_lut()
-        self.dheight = utils.mdiff(self.getvar("height"))
+        self.height_vector = self.getvar("height")
         self.z = self._convert_z_units()
         self.beta = self.getvar("beta")
         self.v = self.getvar("v")
@@ -106,21 +105,22 @@ class DrizzleClassification(ProductClassification):
         return np.isfinite(v_sigma)
 
     def _find_warm_liquid(self) -> np.ndarray:
-        return self.category_bits["droplet"] & ~self.category_bits["cold"]
+        return self.category_bits.droplet & ~self.category_bits.freezing
 
     def _find_drizzle(self) -> np.ndarray:
         return (
             ~utils.transpose(self.is_rain)
-            & self.category_bits["falling"]
-            & ~self.category_bits["droplet"]
-            & ~self.category_bits["cold"]
-            & ~self.category_bits["melting"]
-            & ~self.category_bits["insect"]
-            & self.quality_bits["radar"]
-            & self.quality_bits["lidar"]
-            & ~self.quality_bits["clutter"]
-            & ~self.quality_bits["molecular"]
-            & ~self.quality_bits["attenuated"]
+            & self.category_bits.falling
+            & ~self.category_bits.droplet
+            & ~self.category_bits.freezing
+            & ~self.category_bits.melting
+            & ~self.category_bits.insect
+            & self.quality_bits.radar
+            & self.quality_bits.lidar
+            & ~self.quality_bits.clutter
+            & ~self.quality_bits.molecular
+            & ~self.quality_bits.attenuated_liquid
+            & ~self.quality_bits.attenuated_rain
             & self.is_v_sigma
         )
 
@@ -128,16 +128,16 @@ class DrizzleClassification(ProductClassification):
         return (
             ~utils.transpose(self.is_rain)
             & self.warm_liquid
-            & self.category_bits["falling"]
-            & ~self.category_bits["melting"]
-            & ~self.category_bits["insect"]
-            & self.quality_bits["radar"]
-            & ~self.quality_bits["clutter"]
-            & ~self.quality_bits["molecular"]
+            & self.category_bits.falling
+            & ~self.category_bits.melting
+            & ~self.category_bits.insect
+            & self.quality_bits.radar
+            & ~self.quality_bits.clutter
+            & ~self.quality_bits.molecular
         )
 
     def _find_cold_rain(self) -> np.ndarray:
-        return np.any(self.category_bits["melting"], axis=1)
+        return np.any(self.category_bits.melting, axis=1)
 
 
 class SpectralWidth:
@@ -250,6 +250,7 @@ class DrizzleSolver:
         dia_init[drizzle_ind] = self._calc_dia(self._beta_z_ratio[drizzle_ind], k=18.8)
         n_widths, n_dia = self._width_lut.shape[0], len(self._data.mie["Do"])
         max_ite = 10
+        path_lengths = utils.path_lengths_from_ground(self._data.height_vector)
         for ind in zip(*drizzle_ind, strict=True):
             for _ in range(max_ite):
                 lut_ind = self._find_lut_indices(ind, dia_init, n_dia, n_widths)
@@ -264,7 +265,7 @@ class DrizzleSolver:
                     break
                 self._dia_init[ind] = dia
             beta_factor = np.exp(
-                2 * self.params["S"][ind] * self._data.beta[ind] * self._data.dheight,
+                2 * self.params["S"][ind] * self._data.beta[ind] * path_lengths[ind[-1]]
             )
             self.params["beta_corr"][ind[0], (ind[-1] + 1) :] *= beta_factor
 

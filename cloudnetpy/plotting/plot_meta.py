@@ -96,7 +96,7 @@ _CLABEL = {
         ("Uncorrected", _COLORS["orange"]),
         ("Corrected", _COLORS["lightgreen"]),
         ("Ice from lidar", _COLORS["yellow"]),
-        ("Ice above rain", _COLORS["darksky"]),
+        ("_Ice above rain", _COLORS["darksky"]),
         ("Clear above rain", _COLORS["skyblue"]),
         ("Positive temp.", _COLORS["seaweed"]),
     ),
@@ -497,7 +497,13 @@ ATTRIBUTES = {
             plot_range=(0, 5),
         ),
         "radar_gas_atten": PlotMeta(
-            plot_range=(0, 1),
+            plot_range=(0, 5),
+        ),
+        "radar_rain_atten": PlotMeta(
+            plot_range=(0, 5),
+        ),
+        "radar_melting_atten": PlotMeta(
+            plot_range=(0, 5),
         ),
         "iwv": PlotMeta(
             cmap="Blues",

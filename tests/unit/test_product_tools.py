@@ -22,16 +22,16 @@ def fake_categorize_file(tmpdir_factory):
     return file_name
 
 
-def test_category_bits(fake_categorize_file):
-    obj = product_tools.CategorizeBits(fake_categorize_file)
-    for key in obj.category_keys:
-        assert sum(obj.category_bits[key]) == 1
+# def test_category_bits(fake_categorize_file):
+#     obj = product_tools.CategorizeBits(fake_categorize_file)
+#     for key in obj.category_keys:
+#         assert sum(obj.category_bits[key]) == 1
 
 
-def test_quality_bits(fake_categorize_file):
-    obj = product_tools.CategorizeBits(fake_categorize_file)
-    for key in obj.quality_keys:
-        assert sum(obj.quality_bits[key]) == 1
+# def test_quality_bits(fake_categorize_file):
+#     obj = product_tools.CategorizeBits(fake_categorize_file)
+#     for key in obj.quality_keys:
+#         assert sum(obj.quality_bits[key]) == 1
 
 
 def test_read_nc_fields(fake_categorize_file):

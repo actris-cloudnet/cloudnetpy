@@ -1,19 +1,28 @@
-"""Module containing low-level functions to classify gridded
-radar / lidar measurements.
-"""
-
 import numpy as np
 import skimage
 from numpy import ma
+from numpy.typing import NDArray
 
-import cloudnetpy.categorize.atmos
 from cloudnetpy import utils
-from cloudnetpy.categorize import droplet, falling, freezing, insects, melting
-from cloudnetpy.categorize.containers import ClassData, ClassificationResult
+from cloudnetpy.categorize import (
+    atmos_utils,
+    droplet,
+    falling,
+    freezing,
+    insects,
+    melting,
+)
+from cloudnetpy.categorize.attenuations import RadarAttenuation
+from cloudnetpy.categorize.containers import (
+    ClassData,
+    ClassificationResult,
+    Observations,
+)
 from cloudnetpy.constants import T0
+from cloudnetpy.products.product_tools import CategoryBits, QualityBits
 
 
-def classify_measurements(data: dict) -> ClassificationResult:
+def classify_measurements(data: Observations) -> ClassificationResult:
     """Classifies radar/lidar observations.
 
     This function classifies atmospheric scatterers from the input data.
@@ -21,8 +30,7 @@ def classify_measurements(data: dict) -> ClassificationResult:
     time / height grid before calling this function.
 
     Args:
-        data: Containing :class:`Radar`, :class:`Lidar`, :class:`Model`
-            and :class:`Mwr` instances.
+        data: A :class:`Observations` instance.
 
     Returns:
         A :class:`ClassificationResult` instance.
@@ -37,19 +45,20 @@ def classify_measurements(data: dict) -> ClassificationResult:
         implementation compared to the original Cloudnet methodology.
         Especially methods classifying insects, melting layer and liquid droplets.
 
-        Explanation of bits:
-            - bit 0: Liquid droplets
-            - bit 1: Falling hydrometeors
-            - bit 2: Freezing region
-            - bit 3: Melting layer
-            - bit 4: Aerosols
-            - bit 5: Insects
-
     """
+    bits = CategoryBits(
+        droplet=np.array([], dtype=bool),
+        falling=np.array([], dtype=bool),
+        freezing=np.array([], dtype=bool),
+        melting=np.array([], dtype=bool),
+        aerosol=np.array([], dtype=bool),
+        insect=np.array([], dtype=bool),
+    )
+
     obs = ClassData(data)
-    bits: list[np.ndarray] = [np.array([])] * 6
-    bits[3] = melting.find_melting_layer(obs)
-    bits[2] = freezing.find_freezing_region(obs, bits[3])
+
+    bits.melting = melting.find_melting_layer(obs)
+    bits.freezing = freezing.find_freezing_region(obs, bits.melting)
     liquid_from_lidar = droplet.find_liquid(obs)
     if obs.lv0_files is not None and len(obs.lv0_files) > 0:
         if "rpg-fmcw-94" not in obs.radar_type.lower():
@@ -68,24 +77,24 @@ def classify_measurements(data: dict) -> ClassificationResult:
             liquid_from_radar,
             liquid_from_lidar,
         )
-        liquid_from_radar[~bits[2]] = 0
+        liquid_from_radar[~bits.freezing] = 0
         is_liquid = liquid_from_radar | liquid_from_lidar
     else:
         is_liquid = liquid_from_lidar
         liquid_prob = None
-    bits[0] = droplet.correct_liquid_top(obs, is_liquid, bits[2], limit=500)
-    bits[5], insect_prob = insects.find_insects(obs, bits[3], bits[0])
-    bits[1] = falling.find_falling_hydrometeors(obs, bits[0], bits[5])
-    bits, filtered_ice = _filter_falling(bits)
+    bits.droplet = droplet.correct_liquid_top(obs, is_liquid, bits.freezing, limit=500)
+    bits.insect, insect_prob = insects.find_insects(obs, bits.melting, bits.droplet)
+    bits.falling = falling.find_falling_hydrometeors(obs, bits.droplet, bits.insect)
+    filtered_ice = _filter_falling(bits)
     for _ in range(5):
-        bits[3] = _fix_undetected_melting_layer(bits)
-        bits = _filter_insects(bits)
-    bits[4] = _find_aerosols(obs, bits[1], bits[0])
-    bits[4][filtered_ice] = False
-    bits = _fix_super_cold_liquid(obs, bits)
+        _fix_undetected_melting_layer(bits)
+        _filter_insects(bits)
+    bits.aerosol = _find_aerosols(obs, bits)
+    bits.aerosol[filtered_ice] = False
+    _fix_super_cold_liquid(obs, bits)
 
     return ClassificationResult(
-        category_bits=_bits_to_integer(bits),
+        category_bits=bits,
         is_rain=obs.is_rain,
         is_clutter=obs.is_clutter,
         insect_prob=insect_prob,
@@ -93,112 +102,86 @@ def classify_measurements(data: dict) -> ClassificationResult:
     )
 
 
-def _fix_super_cold_liquid(obs: ClassData, bits: list) -> list:
+def fetch_quality(
+    data: Observations,
+    classification: ClassificationResult,
+    attenuations: RadarAttenuation,
+) -> QualityBits:
+    return QualityBits(
+        radar=~data.radar.data["Z"][:].mask,
+        lidar=~data.lidar.data["beta"][:].mask,
+        clutter=classification.is_clutter,
+        molecular=np.zeros(data.radar.data["Z"][:].shape, dtype=bool),
+        attenuated_liquid=attenuations.liquid.attenuated,
+        corrected_liquid=attenuations.liquid.attenuated
+        & ~attenuations.liquid.uncorrected,
+        attenuated_rain=attenuations.rain.attenuated,
+        corrected_rain=attenuations.rain.attenuated & ~attenuations.rain.uncorrected,
+        attenuated_melting=attenuations.melting.attenuated,
+        corrected_melting=attenuations.melting.attenuated
+        & ~attenuations.melting.uncorrected,
+    )
+
+
+def _fix_super_cold_liquid(obs: ClassData, bits: CategoryBits) -> None:
     """Supercooled liquid droplets do not exist in atmosphere below around -38 C."""
     t_limit = T0 - 38
-    super_cold_liquid = np.where((obs.tw < t_limit) & bits[0])
-    bits[0][super_cold_liquid] = False
-    bits[1][super_cold_liquid] = True
-    return bits
+    super_cold_liquid = np.where((obs.tw < t_limit) & bits.droplet)
+    bits.droplet[super_cold_liquid] = False
+    bits.falling[super_cold_liquid] = True
 
 
 def _remove_false_radar_liquid(
     liquid_from_radar: np.ndarray,
     liquid_from_lidar: np.ndarray,
-) -> np.ndarray:
+) -> NDArray[np.bool_]:
     """Removes radar-liquid below lidar-detected liquid bases."""
-    lidar_liquid_bases = cloudnetpy.categorize.atmos.find_cloud_bases(liquid_from_lidar)
+    lidar_liquid_bases = atmos_utils.find_cloud_bases(liquid_from_lidar)
     for prof, base in zip(*np.where(lidar_liquid_bases), strict=True):
         liquid_from_radar[prof, 0:base] = 0
     return liquid_from_radar
 
 
-def fetch_quality(
-    data: dict,
-    classification: ClassificationResult,
-    attenuations: dict,
-) -> dict:
-    """Returns Cloudnet quality bits.
-
-    Args:
-        data: Containing :class:`Radar` and :class:`Lidar` instances.
-        classification: A :class:`ClassificationResult` instance.
-        attenuations: Dictionary containing keys `liquid_corrected`,
-            `liquid_uncorrected`.
-
-    Returns:
-        Dictionary containing `quality_bits`, an integer array with the bits:
-
-            - bit 0: Pixel contains radar data
-            - bit 1: Pixel contains lidar data
-            - bit 2: Pixel contaminated by radar clutter
-            - bit 3: Molecular scattering present (currently not implemented!)
-            - bit 4: Pixel was affected by liquid attenuation
-            - bit 5: Liquid attenuation was corrected
-            - bit 6: Data gap in radar or lidar data
-
-    """
-    bits: list[np.ndarray] = [np.ndarray([])] * 7
-    radar_echo = data["radar"].data["Z"][:]
-    bits[0] = ~radar_echo.mask
-    bits[1] = ~data["lidar"].data["beta"][:].mask
-    bits[2] = classification.is_clutter
-    bits[4] = attenuations["liquid_corrected"] | attenuations["liquid_uncorrected"]
-    bits[5] = attenuations["liquid_corrected"]
-    qbits = _bits_to_integer(bits)
-    return {"quality_bits": qbits}
-
-
 def _find_aerosols(
     obs: ClassData,
-    is_falling: np.ndarray,
-    is_liquid: np.ndarray,
-) -> np.ndarray:
+    bits: CategoryBits,
+) -> NDArray[np.bool_]:
     """Estimates aerosols from lidar backscattering.
 
     Aerosols are lidar signals that are: a) not falling, b) not liquid droplets.
 
     Args:
         obs: A :class:`ClassData` instance.
-        is_falling: 2-D boolean array of falling hydrometeors.
-        is_liquid: 2-D boolean array of liquid droplets.
+        bits: A :class:`CategoryBits instance.
 
     Returns:
         2-D boolean array containing aerosols.
 
     """
     is_beta = ~obs.beta.mask
-    return is_beta & ~is_falling & ~is_liquid
+    return is_beta & ~bits.falling & ~bits.droplet
 
 
-def _fix_undetected_melting_layer(bits: list) -> np.ndarray:
-    melting_layer = bits[3]
-    drizzle_and_falling = _find_drizzle_and_falling(*bits[:3])
+def _fix_undetected_melting_layer(bits: CategoryBits) -> None:
+    drizzle_and_falling = _find_drizzle_and_falling(bits)
     transition = ma.diff(drizzle_and_falling, axis=1) == -1
-    melting_layer[:, 1:][transition] = True
-    return melting_layer
+    bits.melting[:, 1:][transition] = True
 
 
-def _find_drizzle_and_falling(
-    is_liquid: np.ndarray,
-    is_falling: np.ndarray,
-    is_freezing: np.ndarray,
-) -> np.ndarray:
+def _find_drizzle_and_falling(bits: CategoryBits) -> np.ndarray:
     """Classifies pixels as falling, drizzle and others.
 
     Args:
-        is_liquid: 2D boolean array denoting liquid layers.
-        is_falling: 2D boolean array denoting falling pixels.
-        is_freezing: 2D boolean array denoting subzero temperatures.
+        bits: A :class:`CategoryBits instance.
 
     Returns:
         2D array where values are 1 (falling, drizzle, supercooled liquids),
         2 (drizzle), and masked (all others).
 
     """
-    falling_dry = is_falling & ~is_liquid
-    supercooled_liquids = is_liquid & is_freezing
-    drizzle = falling_dry & ~is_freezing
+    falling_dry = bits.falling & ~bits.droplet
+    supercooled_liquids = bits.droplet & bits.freezing
+    drizzle = falling_dry & ~bits.freezing
     drizzle_and_falling = falling_dry.astype(int) + drizzle.astype(int)
     drizzle_and_falling = ma.copy(drizzle_and_falling)
     drizzle_and_falling[supercooled_liquids] = 1
@@ -206,28 +189,10 @@ def _find_drizzle_and_falling(
     return drizzle_and_falling
 
 
-def _bits_to_integer(bits: list) -> np.ndarray:
-    """Creates array of integers from individual boolean arrays.
-
-    Args:
-        bits: List of bit fields (of similar sizes) to be saved in the resulting
-            array of integers. bits[0] is saved as bit 0, bits[1] as bit 1, etc.
-
-    Returns:
-        Array of integers containing the information of the individual boolean arrays.
-
-    """
-    int_array = np.zeros_like(bits[0], dtype=int)
-    for n, bit in enumerate(bits):
-        ind = np.where(bit)  # works also if bit is None
-        int_array[ind] = utils.setbit(int_array[ind].astype(int), n)
-    return int_array
-
-
-def _filter_insects(bits: list) -> list:
-    is_melting_layer = bits[3]
-    is_insects = bits[5]
-    is_falling = bits[1]
+def _filter_insects(bits: CategoryBits) -> None:
+    is_melting_layer = bits.melting
+    is_insects = bits.insect
+    is_falling = bits.falling
 
     # Remove above melting layer
     above_melting = utils.ffill(is_melting_layer)
@@ -256,15 +221,14 @@ def _filter_insects(bits: list) -> list:
             is_insects[ind1[ind11], y - 1 : y + 2] = False
         except IndexError:
             continue
-    bits[1] = is_falling
-    bits[5] = is_insects
-    return bits
+    bits.falling = is_falling
+    bits.insect = is_insects
 
 
-def _filter_falling(bits: list) -> tuple:
+def _filter_falling(bits: CategoryBits) -> tuple:
     # filter falling ice speckle noise
-    is_freezing = bits[2]
-    is_falling = bits[1]
+    is_freezing = bits.freezing
+    is_falling = bits.falling
     is_falling_filtered = skimage.morphology.remove_small_objects(
         is_falling,
         10,
@@ -276,6 +240,6 @@ def _filter_falling(bits: list) -> tuple:
     # in warm these are (probably) insects
     insect_ind = np.where(~is_freezing & is_filtered)
     is_falling[insect_ind] = False
-    bits[1] = is_falling
-    bits[5][insect_ind] = True
-    return bits, ice_ind
+    bits.falling = is_falling
+    bits.insect[insect_ind] = True
+    return ice_ind

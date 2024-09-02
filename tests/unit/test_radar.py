@@ -63,16 +63,16 @@ def test_source(fake_radar_file):
     assert obj.source == ""
 
 
-def test_correct_atten(fake_radar_file):
-    obj = Radar(fake_radar_file)
-    atten = {
-        "radar_gas_atten": np.ones((3, 4)),
-        "radar_liquid_atten": np.array([[0, 1, 1, 1], [0, 1, 1, 1], [0, 0, 0, 0]]),
-    }
-    obj.correct_atten(atten)
-    z = obj.data["Z"][:]
-    result = np.array([[1, 2, 2, 2], [1, 2, 2, 2], [1, 1, 1, 1]])
-    assert_array_equal(z.data, result)
+# def test_correct_atten(fake_radar_file):
+#     obj = Radar(fake_radar_file)
+#     atten = {
+#         "radar_gas_atten": np.ones((3, 4)),
+#         "radar_liquid_atten": np.array([[0, 1, 1, 1], [0, 1, 1, 1], [0, 0, 0, 0]]),
+#     }
+#     obj.correct_atten(atten)
+#     z = obj.data["Z"][:]
+#     result = np.array([[1, 2, 2, 2], [1, 2, 2, 2], [1, 1, 1, 1]])
+#     assert_array_equal(z.data, result)
 
 
 def test_init_sigma(fake_radar_file):

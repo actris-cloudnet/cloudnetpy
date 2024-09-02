@@ -94,7 +94,7 @@ def save_downsampled_file(
     output.copy_global(obj.dataset, root_group, ("location", "day", "month", "year"))
     if not hasattr(obj.dataset, "day"):
         root_group.year, root_group.month, root_group.day = obj.date
-    output.merge_history(root_group, id_mark, {"l3": obj})
+    output.merge_history(root_group, id_mark, obj)
     root_group.close()
     if not isinstance(uuid, str):
         msg = "UUID is not a string."
@@ -156,7 +156,7 @@ def _add_source(root_ground: netCDF4.Dataset, objects: tuple, files: tuple) -> N
         if i < len(model_files) - 1:
             source += "\n"
     root_ground.source = source
-    root_ground.source_file_uuids = output.get_source_uuids(model, obs)
+    root_ground.source_file_uuids = output.get_source_uuids([model, obs])
 
 
 def add_time_attribute(date: datetime) -> dict:

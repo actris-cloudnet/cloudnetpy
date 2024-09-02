@@ -6,7 +6,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import output, utils
-from cloudnetpy.categorize import atmos
+from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import InvalidSourceFileError
 from cloudnetpy.metadata import MetaData
@@ -80,7 +80,7 @@ class LwcSource(DataSource):
         lwp (ndarray): 1D liquid water path.
         lwp_error (ndarray): 1D error of liquid water path.
         is_rain (ndarray): 1D array denoting presence of rain.
-        dheight (float): Median difference in height vector.
+        path_lengths (ndarray): 1D array of path lengths.
         atmosphere (dict): Dictionary containing interpolated fields `temperature`
             and `pressure`.
         categorize_bits (CategorizeBits): The :class:`CategorizeBits` instance.
@@ -96,7 +96,7 @@ class LwcSource(DataSource):
         self.lwp[self.lwp < 0] = 0
         self.lwp_error = self.getvar("lwp_error")
         self.is_rain = get_is_rain(categorize_file)
-        self.dheight = utils.mdiff(self.getvar("height"))
+        self.path_lengths = utils.path_lengths_from_ground(self.getvar("height"))
         self.atmosphere = self._get_atmosphere(categorize_file)
         self.categorize_bits = CategorizeBits(categorize_file)
 
@@ -125,7 +125,6 @@ class Lwc:
 
     Attributes:
         lwc_source (LwcSource): The :class:`LwcSource` instance.
-        dheight (float): Median difference in height vector.
         is_liquid (ndarray): 2D array denoting liquid.
         lwc_adiabatic (ndarray): 2D array storing adiabatic lwc.
         lwc (ndarray): 2D array of liquid water content (scaled with lwp).
@@ -134,7 +133,7 @@ class Lwc:
 
     def __init__(self, lwc_source: LwcSource):
         self.lwc_source = lwc_source
-        self.dheight = self.lwc_source.dheight
+        self.height = lwc_source.getvar("height")
         self.is_liquid = self._get_liquid()
         self.lwc_adiabatic = self._init_lwc_adiabatic()
         self.lwc = self._adiabatic_lwc_to_lwc()
@@ -142,26 +141,27 @@ class Lwc:
 
     def _get_liquid(self) -> np.ndarray:
         category_bits = self.lwc_source.categorize_bits.category_bits
-        return category_bits["droplet"]
+        return category_bits.droplet
 
     def _init_lwc_adiabatic(self) -> np.ndarray:
         """Returns theoretical adiabatic lwc in liquid clouds (kg/m3)."""
-        lwc_dz = atmos.fill_clouds_with_lwc_dz(
-            self.lwc_source.atmosphere,
+        lwc_dz = atmos_utils.fill_clouds_with_lwc_dz(
+            *self.lwc_source.atmosphere,
             self.is_liquid,
         )
-        return atmos.calc_adiabatic_lwc(lwc_dz, self.dheight)
+        return atmos_utils.calc_adiabatic_lwc(lwc_dz, self.height)
 
     def _adiabatic_lwc_to_lwc(self) -> np.ndarray:
         """Initialises liquid water content (kg/m3).
 
         Calculates LWC for ALL profiles (rain, lwp > theoretical, etc.),
         """
-        lwc_scaled = atmos.distribute_lwp_to_liquid_clouds(
+        lwc_scaled = atmos_utils.normalize_lwc_by_lwp(
             self.lwc_adiabatic,
             self.lwc_source.lwp,
+            self.height,
         )
-        return lwc_scaled / self.dheight
+        return lwc_scaled / self.lwc_source.path_lengths
 
     def _mask_rain(self) -> None:
         is_rain = self.lwc_source.is_rain.astype(bool)
@@ -198,7 +198,7 @@ class CloudAdjustor:
 
     def _get_echo(self) -> dict:
         quality_bits = self.lwc_source.categorize_bits.quality_bits
-        return {key: quality_bits[key] for key in ("radar", "lidar")}
+        return {"radar": quality_bits.radar, "lidar": quality_bits.lidar}
 
     def _init_status(self) -> ma.MaskedArray:
         status = ma.zeros(self.is_liquid.shape, dtype=int)
@@ -232,8 +232,8 @@ class CloudAdjustor:
             distance_from_base += 1
 
     def _has_converged(self, ind: int) -> bool:
-        lwc_sum = ma.sum(self.lwc_adiabatic[ind, :])
-        return lwc_sum * self.lwc_source.dheight > self.lwc_source.lwp[ind]
+        lwc_sum = ma.sum(self.lwc_adiabatic[ind, :] * self.lwc_source.path_lengths)
+        return lwc_sum > self.lwc_source.lwp[ind]
 
     def _out_of_bound(self, ind: int) -> bool:
         return ind >= self.lwc.shape[1] - 1
@@ -288,7 +288,7 @@ class CloudAdjustor:
         In theory, this difference should be always positive. Negative values
         indicate missing (or too narrow) liquid clouds.
         """
-        lwc_sum = ma.sum(self.lwc_adiabatic, axis=1) * self.lwc_source.dheight
+        lwc_sum = ma.sum(self.lwc_adiabatic * self.lwc_source.path_lengths, axis=1)
         return lwc_sum - self.lwc_source.lwp
 
     def _mask_rain(self) -> None:

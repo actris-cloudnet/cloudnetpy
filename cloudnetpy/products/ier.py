@@ -57,8 +57,7 @@ def generate_ier(
     product = "ier"
     with IerSource(categorize_file, product) as ier_source:
         ice_classification = IceClassification(categorize_file)
-        ier_source.append_main_variable_including_rain(ice_classification)
-        ier_source.append_main_variable(ice_classification)
+        ier_source.append_icy_data(ice_classification)
         ier_source.convert_units()
         ier_source.append_status(ice_classification)
         ier_source.append_ier_error(ice_classification)
@@ -74,11 +73,10 @@ class IerSource(IceSource):
 
     def convert_units(self) -> None:
         """Convert um to m."""
-        for prod in ("ier", "ier_inc_rain"):
-            self.data[prod].data[:] /= 1e6
+        self.data["ier"].data[:] /= 1e6
 
     def append_ier_error(self, ice_classification: IceClassification) -> None:
-        error = ma.copy(self.data[f"{self.product}_inc_rain"][:])
+        error = ma.copy(self.data[f"{self.product}"][:])
         error[ice_classification.ice_above_rain] = ma.masked
         error = error * np.sqrt(0.4**2 + 0.4**2)
         self.append_data(error, f"{self.product}_error")
@@ -122,12 +120,6 @@ COMMENTS = {
         "This variable describes whether a retrieval was performed\n"
         "for each pixel, and its associated quality."
     ),
-    "ier_inc_rain": (
-        "This variable is the same as ier but it also contains ier values\n"
-        "above rain. The ier values above rain have been severely affected\n"
-        "by attenuation and should be used when the effect of attenuation\n"
-        "is being studied."
-    ),
 }
 
 DEFINITIONS = {
@@ -159,11 +151,6 @@ IER_ATTRIBUTES = {
         long_name="Ice effective radius",
         units="m",
         ancillary_variables="ier_error",
-    ),
-    "ier_inc_rain": MetaData(
-        long_name="Ice effective radius including rain",
-        units="m",
-        comment=COMMENTS["ier_inc_rain"],
     ),
     "ier_error": MetaData(
         long_name="Random error in ice effective radius",

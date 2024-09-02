@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+from dataclasses import fields
 from os import PathLike
 from uuid import UUID
 
@@ -10,6 +11,9 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import utils, version
+from cloudnetpy.categorize.containers import Observations
+from cloudnetpy.categorize.model import Model
+from cloudnetpy.datasource import DataSource
 from cloudnetpy.instruments.instruments import Instrument
 from cloudnetpy.metadata import COMMON_ATTRIBUTES, MetaData
 
@@ -69,7 +73,7 @@ def _get_netcdf_dimensions(obj) -> dict:
 
 def save_product_file(
     short_id: str,
-    obj,
+    obj: DataSource,
     file_name: str,
     uuid: str | None = None,
     copy_from_cat: tuple = (),
@@ -105,13 +109,13 @@ def save_product_file(
             f"{human_readable_file_type.capitalize()} products from"
             f" {obj.dataset.location}"
         )
-        nc.source_file_uuids = get_source_uuids(nc, obj)
+        nc.source_file_uuids = get_source_uuids([nc, obj])
         copy_global(
             obj.dataset,
             nc,
             ("location", "day", "month", "year", "source", "voodoonet_version"),
         )
-        merge_history(nc, human_readable_file_type, {"categorize": obj})
+        merge_history(nc, human_readable_file_type, obj)
         nc.references = get_references(short_id)
     return file_uuid
 
@@ -172,26 +176,32 @@ def get_references(identifier: str | None = None, extra: list | None = None) -> 
     return references
 
 
-def get_source_uuids(*sources) -> str:
+def get_source_uuids(data: Observations | list[netCDF4.Dataset | DataSource]) -> str:
     """Returns file_uuid attributes of objects.
 
     Args:
-        *sources: Objects whose file_uuid attributes are read (if exist).
+        data: Observations instance.
 
     Returns:
         str: UUIDs separated by comma.
 
     """
+    if isinstance(data, Observations):
+        obs = [getattr(data, field.name) for field in fields(data)]
+    elif isinstance(data, list):
+        obs = data
     uuids = [
-        source.dataset.file_uuid
-        for source in sources
-        if hasattr(source, "dataset") and hasattr(source.dataset, "file_uuid")
+        obj.dataset.file_uuid
+        for obj in obs
+        if hasattr(obj, "dataset") and hasattr(obj.dataset, "file_uuid")
     ]
     unique_uuids = list(set(uuids))
     return ", ".join(unique_uuids)
 
 
-def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
+def merge_history(
+    nc: netCDF4.Dataset, file_type: str, data: Observations | DataSource
+) -> None:
     """Merges history fields from one or several files and creates a new record.
 
     Args:
@@ -202,26 +212,36 @@ def merge_history(nc: netCDF4.Dataset, file_type: str, data: dict) -> None:
     """
     new_record = f"{utils.get_time()} - {file_type} file created"
     histories = []
-    for key, obj in data.items():
-        if (
-            not isinstance(obj, str | list)
-            and obj is not None
-            and hasattr(obj.dataset, "history")
-        ):
-            history = obj.dataset.history
-            history = history.split("\n")[-1] if key == "model" else history
-            histories.append(history)
+    if (
+        isinstance(data, DataSource)
+        and hasattr(data, "dataset")
+        and hasattr(data.dataset, "history")
+    ):
+        history = data.dataset.history
+        histories.append(history)
+    if isinstance(data, Observations):
+        for field in fields(data):
+            obj = getattr(data, field.name)
+            if hasattr(obj, "dataset") and hasattr(obj.dataset, "history"):
+                history = obj.dataset.history
+                history = history.split("\n")[-1] if isinstance(obj, Model) else history
+                histories.append(history)
     histories.sort(reverse=True)
     old_history = [f"\n{history}" for history in histories]
     old_history_str = "".join(old_history)
     nc.history = f"{new_record}{old_history_str}"
 
 
-def add_source_instruments(nc: netCDF4.Dataset, data: dict) -> None:
+def add_source_instruments(nc: netCDF4.Dataset, data: Observations) -> None:
     """Adds source attribute to categorize file."""
-    sources = [obj.source for obj in data.values() if hasattr(obj, "source")]
-    sources = [sources[0]] + [f"\n{source}" for source in sources[1:]]
-    nc.source = "".join(sources)
+    sources = []
+    for field in fields(data):
+        obj = getattr(data, field.name)
+        if hasattr(obj, "source"):
+            sources.append(obj.source)
+    if sources:
+        formatted_sources = [sources[0]] + [f"\n{source}" for source in sources[1:]]
+        nc.source = "".join(formatted_sources)
 
 
 def init_file(
@@ -319,7 +339,7 @@ def add_time_attribute(
     return attributes
 
 
-def add_source_attribute(attributes: dict, data: dict) -> dict:
+def add_source_attribute(attributes: dict, data: Observations) -> dict:
     """Adds source attribute to variables."""
     variables = {
         "radar": (
@@ -340,9 +360,9 @@ def add_source_attribute(attributes: dict, data: dict) -> dict:
         "disdrometer": ("rainfall_rate",),
     }
     for instrument, keys in variables.items():
-        if data[instrument] is None:
+        if getattr(data, instrument) is None:
             continue
-        source = data[instrument].dataset.source
+        source = getattr(data, instrument).dataset.source
         for key in keys:
             if key in attributes:
                 attributes[key] = attributes[key]._replace(source=source)

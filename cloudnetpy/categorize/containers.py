@@ -5,13 +5,28 @@ from numpy import ma
 
 from cloudnetpy import utils
 from cloudnetpy.constants import MM_H_TO_M_S
+from cloudnetpy.products.product_tools import CategoryBits
+
+from .disdrometer import Disdrometer
+from .lidar import Lidar
+from .model import Model
+from .mwr import Mwr
+from .radar import Radar
+
+
+@dataclass
+class Observations:
+    radar: Radar
+    lidar: Lidar
+    model: Model
+    mwr: Mwr | None = None
+    disdrometer: Disdrometer | None = None
+    lv0_files: list[str] | None = None
 
 
 @dataclass
 class ClassificationResult:
-    """Result of classification."""
-
-    category_bits: np.ndarray
+    category_bits: CategoryBits
     is_rain: np.ndarray
     is_clutter: np.ndarray
     insect_prob: np.ndarray
@@ -44,30 +59,30 @@ class ClassData:
 
     """
 
-    def __init__(self, data: dict):
+    def __init__(self, data: Observations):
         self.data = data
-        self.z = data["radar"].data["Z"][:]
-        self.v = data["radar"].data["v"][:]
-        self.v_sigma = data["radar"].data["v_sigma"][:]
+        self.z = data.radar.data["Z"][:]
+        self.v = data.radar.data["v"][:]
+        self.v_sigma = data.radar.data["v_sigma"][:]
         for key in ("width", "ldr", "sldr"):
-            if key in data["radar"].data:
-                setattr(self, key, data["radar"].data[key][:])
-        self.time = data["radar"].time
-        self.height = data["radar"].height
-        self.radar_type = data["radar"].source_type
-        self.tw = data["model"].data["Tw"][:]
-        self.model_type = data["model"].source_type
-        self.beta = data["lidar"].data["beta"][:]
+            if key in data.radar.data:
+                setattr(self, key, data.radar.data[key][:])
+        self.time = data.radar.time
+        self.height = data.radar.height
+        self.radar_type = data.radar.source_type
+        self.tw = data.model.data["Tw"][:]
+        self.model_type = data.model.source_type
+        self.beta = data.lidar.data["beta"][:]
         self.lwp = (
-            data["mwr"].data["lwp"][:]
-            if data["mwr"] is not None
+            data.mwr.data["lwp"][:]
+            if data.mwr is not None
             else ma.masked_all(self.time.shape)
         )
         self.is_rain = self._find_profiles_with_rain()
         self.is_clutter = _find_clutter(self.v, self.is_rain)
-        self.altitude = data["radar"].altitude
-        self.lv0_files = data["lv0_files"]
-        self.date = data["radar"].get_date()
+        self.altitude = data.radar.altitude
+        self.lv0_files = data.lv0_files
+        self.date = data.radar.get_date()
 
     def _find_profiles_with_rain(self) -> np.ndarray:
         is_rain = self._find_rain_from_radar_echo()
@@ -98,19 +113,17 @@ class ClassData:
         )
 
     def _find_rain_from_disdrometer(self) -> ma.MaskedArray:
+        if self.data.disdrometer is None:
+            return ma.masked_all(self.time.shape, dtype=int)
         threshold_mm_h = 0.25  # Standard threshold for drizzle -> rain
         threshold_particles = 30  # This is arbitrary and should be better tested
         threshold_rate = threshold_mm_h * MM_H_TO_M_S
-        try:
-            rainfall_rate = self.data["disdrometer"].data["rainfall_rate"].data
-            n_particles = self.data["disdrometer"].data["n_particles"].data
-            is_rain = ma.array(
-                (rainfall_rate > threshold_rate) & (n_particles > threshold_particles),
-                dtype=int,
-            )
-        except (AttributeError, KeyError):
-            is_rain = ma.masked_all(self.time.shape, dtype=int)
-        return is_rain
+        rainfall_rate = self.data.disdrometer.data["rainfall_rate"].data
+        n_particles = self.data.disdrometer.data["n_particles"].data
+        return ma.array(
+            (rainfall_rate > threshold_rate) & (n_particles > threshold_particles),
+            dtype=int,
+        )
 
 
 def _find_clutter(

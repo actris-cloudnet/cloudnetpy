@@ -74,21 +74,21 @@ class TestDropletClassification:
         self.obj = DropletClassification(categorize_file)
 
     def test_find_ice(self):
-        self.obj.category_bits["falling"] = np.array([[1, 1, 1], [0, 1, 1], [0, 1, 1]])
-        self.obj.category_bits["cold"] = np.array([[0, 1, 1], [0, 1, 1], [0, 1, 1]])
-        self.obj.category_bits["melting"] = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 1]])
-        self.obj.category_bits["insect"] = np.array([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
+        self.obj.category_bits.falling = np.array([[1, 1, 1], [0, 1, 1], [0, 1, 1]])
+        self.obj.category_bits.freezing = np.array([[0, 1, 1], [0, 1, 1], [0, 1, 1]])
+        self.obj.category_bits.melting = np.array([[0, 0, 0], [0, 0, 0], [0, 0, 1]])
+        self.obj.category_bits.insect = np.array([[0, 0, 0], [0, 0, 1], [0, 0, 0]])
         expected = [[0, 0, 1], [0, 0, 0], [0, 1, 0]]
         assert_array_equal(self.obj._find_ice(), expected)
 
     def test_find_droplet(self):
-        self.obj.category_bits["droplet"] = np.array([[1, 1, 0], [0, 1, 1], [0, 1, 1]])
+        self.obj.category_bits.droplet = np.array([[1, 1, 0], [0, 1, 1], [0, 1, 1]])
         expected = [[1, 1, 0], [0, 1, 1], [0, 1, 1]]
         assert_array_equal(self.obj._find_droplet(), expected)
 
     def test_find_mixed(self):
-        self.obj.category_bits["falling"] = np.array([[1, 1, 0], [0, 1, 1], [0, 1, 0]])
-        self.obj.category_bits["droplet"] = np.array([[0, 1, 1], [0, 1, 1], [0, 1, 1]])
+        self.obj.category_bits.falling = np.array([[1, 1, 0], [0, 1, 1], [0, 1, 0]])
+        self.obj.category_bits.droplet = np.array([[0, 1, 1], [0, 1, 1], [0, 1, 1]])
         expected = [[0, 1, 0], [0, 1, 1], [0, 1, 0]]
         assert_array_equal(self.obj._find_mixed(), expected)
 

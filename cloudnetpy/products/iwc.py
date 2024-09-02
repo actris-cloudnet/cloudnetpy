@@ -43,8 +43,7 @@ def generate_iwc(
     product = "iwc"
     with IwcSource(categorize_file, product) as iwc_source:
         ice_classification = IceClassification(categorize_file)
-        iwc_source.append_main_variable_including_rain(ice_classification)
-        iwc_source.append_main_variable(ice_classification)
+        iwc_source.append_icy_data(ice_classification)
         iwc_source.append_bias()
         iwc_source.append_sensitivity()
         lwp_prior, bias = iwc_source.append_error(ice_classification)
@@ -92,7 +91,7 @@ class IwcSource(IceSource):
             retrieval_uncertainty,
             error_uncorrected,
         )
-        iwc_error[(~ice_classification.is_ice | ice_classification.ice_above_rain)] = (
+        iwc_error[~ice_classification.is_ice | ice_classification.uncorrected_ice] = (
             ma.masked
         )
         self.append_data(iwc_error, f"{self.product}_error")
@@ -162,12 +161,6 @@ COMMENTS = {
         "This variable describes whether a retrieval was performed\n"
         "for each pixel, and its associated quality."
     ),
-    "iwc_inc_rain": (
-        "This variable is the same as iwc but it also contains iwc values\n"
-        "above rain. The iwc values above rain have been severely affected\n"
-        "by attenuation and should be used when the effect of attenuation\n"
-        "is being studied."
-    ),
 }
 
 DEFINITIONS = {
@@ -199,11 +192,6 @@ IWC_ATTRIBUTES = {
         long_name="Ice water content",
         units="kg m-3",
         ancillary_variables="iwc_error iwc_sensitivity iwc_bias",
-    ),
-    "iwc_inc_rain": MetaData(
-        long_name="Ice water content including rain",
-        units="kg m-3",
-        comment=COMMENTS["iwc_inc_rain"],
     ),
     "iwc_error": MetaData(
         long_name="Random error in ice water content",

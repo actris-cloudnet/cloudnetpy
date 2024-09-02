@@ -4,7 +4,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import output, utils
-from cloudnetpy.categorize import atmos
+from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.product_tools import CategorizeBits
@@ -67,40 +67,42 @@ def _get_target_classification(
     categorize_bits: CategorizeBits,
 ) -> ma.MaskedArray:
     bits = categorize_bits.category_bits
-    clutter = categorize_bits.quality_bits["clutter"]
-    classification = ma.zeros(bits["cold"].shape, dtype=int)
-    classification[bits["droplet"] & ~bits["falling"]] = 1  # Cloud droplets
-    classification[~bits["droplet"] & bits["falling"]] = 2  # Drizzle or rain
-    classification[bits["droplet"] & bits["falling"]] = (
-        3  # Drizzle or rain and droplets
-    )
-    classification[~bits["droplet"] & bits["falling"] & bits["cold"]] = 4  # ice
-    classification[bits["droplet"] & bits["falling"] & bits["cold"]] = (
-        5  # ice + supercooled
-    )
-    classification[bits["melting"]] = 6  # melting layer
-    classification[bits["melting"] & bits["droplet"]] = 7  # melting + droplets
-    classification[bits["aerosol"]] = 8  # aerosols
-    classification[bits["insect"] & ~clutter] = 9  # insects
-    classification[bits["aerosol"] & bits["insect"] & ~clutter] = (
-        10  # insects + aerosols
-    )
-    classification[clutter & ~bits["aerosol"]] = 0
+    clutter = categorize_bits.quality_bits.clutter
+    classification = ma.zeros(bits.freezing.shape, dtype=int)
+    classification[bits.droplet & ~bits.falling] = 1  # Cloud droplets
+    classification[~bits.droplet & bits.falling] = 2  # Drizzle or rain
+    classification[bits.droplet & bits.falling] = 3  # Drizzle or rain and droplets
+    classification[~bits.droplet & bits.falling & bits.freezing] = 4  # ice
+    classification[bits.droplet & bits.falling & bits.freezing] = 5  # ice + supercooled
+    classification[bits.melting] = 6  # melting layer
+    classification[bits.melting & bits.droplet] = 7  # melting + droplets
+    classification[bits.aerosol] = 8  # aerosols
+    classification[bits.insect & ~clutter] = 9  # insects
+    classification[bits.aerosol & bits.insect & ~clutter] = 10  # insects + aerosols
+    classification[clutter & ~bits.aerosol] = 0
     return classification
 
 
 def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
     bits = categorize_bits.quality_bits
-    status = np.zeros(bits["radar"].shape, dtype=int)
-    status[bits["lidar"] & ~bits["radar"]] = 1
-    status[bits["radar"] & bits["lidar"]] = 3
-    status[~bits["radar"] & bits["attenuated"] & ~bits["corrected"]] = 4
-    status[bits["radar"] & ~bits["lidar"] & ~bits["attenuated"]] = 5
-    status[~bits["radar"] & bits["attenuated"] & bits["corrected"]] = 6
-    status[bits["radar"] & bits["corrected"]] = 7
-    status[bits["radar"] & bits["attenuated"] & ~bits["corrected"]] = 2
-    status[bits["clutter"]] = 8
-    status[bits["molecular"] & ~bits["radar"]] = 9
+
+    is_attenuated = (
+        bits.attenuated_liquid | bits.attenuated_rain | bits.attenuated_melting
+    )
+    is_corrected = (bits.corrected_liquid | bits.corrected_rain) & ~(
+        bits.attenuated_melting & ~bits.corrected_melting
+    )
+
+    status = np.zeros(bits.radar.shape, dtype=int)
+    status[bits.lidar & ~bits.radar] = 1
+    status[bits.radar & bits.lidar] = 3
+    status[~bits.radar & is_attenuated & ~is_corrected] = 4
+    status[bits.radar & ~bits.lidar & ~is_attenuated] = 5
+    status[~bits.radar & is_attenuated & is_corrected] = 6
+    status[bits.radar & is_corrected] = 7
+    status[bits.radar & is_attenuated & ~is_corrected] = 2
+    status[bits.clutter] = 8
+    status[bits.molecular & ~bits.radar] = 9
     return status
 
 
@@ -112,8 +114,8 @@ def _get_cloud_base_and_top_heights(
     cloud_mask = _find_cloud_mask(classification)
     if not cloud_mask.any():
         return ma.masked_all(cloud_mask.shape[0]), ma.masked_all(cloud_mask.shape[0])
-    lowest_bases = atmos.find_lowest_cloud_bases(cloud_mask, height)
-    highest_tops = atmos.find_highest_cloud_tops(cloud_mask, height)
+    lowest_bases = atmos_utils.find_lowest_cloud_bases(cloud_mask, height)
+    highest_tops = atmos_utils.find_highest_cloud_tops(cloud_mask, height)
     if not (highest_tops - lowest_bases >= 0).all():
         msg = "Cloud base higher than cloud top!"
         raise ValueError(msg)
