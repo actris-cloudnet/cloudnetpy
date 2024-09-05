@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.65.5 – 2024-09-05
+
+- Improve moving average calculation in 1D plots
+- Include error message from MWRpy
+
 ## 1.65.4 – 2024-08-30
 
 - Fix weather station variable names and units of RPG cloud radars
