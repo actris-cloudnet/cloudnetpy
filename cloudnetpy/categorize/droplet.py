@@ -114,7 +114,7 @@ def find_liquid(
         peak_width = height[top] - height[base]
         peak_alt = height[peak] - height[0]
         top_der = (lprof[peak] - lprof[top]) / (height[top] - height[peak])
-        is_positive_lwp = lwp_int[n] > min_lwp
+        is_positive_lwp = lwp_int[n] >= min_lwp
         if _is_proper_peak():
             is_liquid[n, base : top + 1] = True
 
