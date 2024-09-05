@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.65.7 – 2024-09-05
+
+- Fix bug in liquid detection if all LWP are masked
+
 ## 1.65.6 – 2024-09-05
 
 - Fix `mwr-l1c` plotting
