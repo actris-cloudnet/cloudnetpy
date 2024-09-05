@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.65.6 – 2024-09-05
+
+- Fix `mwr-l1c` plotting
+
 ## 1.65.5 – 2024-09-05
 
 - Improve moving average calculation in 1D plots
