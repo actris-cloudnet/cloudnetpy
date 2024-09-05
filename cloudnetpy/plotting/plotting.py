@@ -678,29 +678,40 @@ class Plot1D(Plot):
     def _plot_moving_average(self, figure_data: FigureData) -> None:
         time = figure_data.time.copy()
         data = self._data_orig.copy()
-        good_values = ~ma.getmaskarray(data)
-        data = data[good_values]
-        time = time[good_values]
-        if self.sub_plot.variable.name == "wind_direction":
-            wind_speed = figure_data.file["wind_speed"][good_values]
-            sma = self._calculate_average_wind_direction(
-                wind_speed, data, time, window=15
-            )
-        else:
-            sma = self._calculate_moving_average(data, time, window=5)
-        gap_time = _get_max_gap_in_minutes(figure_data)
-        gaps = self._find_time_gap_indices(time, max_gap_min=gap_time)
-        if len(gaps) > 0:
-            sma[gaps] = np.nan
-        if len(sma) == len(time):
-            self._ax.plot(
-                time,
-                sma,
-                color="slateblue",
-                lw=2,
-                label="_nolegend_",
-                zorder=_get_zorder("mean_curve"),
-            )
+        flags = self._read_flagged_data(figure_data)
+        is_invalid = ma.getmaskarray(data)
+        if np.any(flags):
+            is_invalid |= flags
+
+        is_wind_direction = self.sub_plot.variable.name == "wind_direction"
+        if is_wind_direction:
+            data = np.stack([figure_data.file["wind_speed"], data])
+
+        block_ind = np.where(np.diff(is_invalid))[0] + 1
+        valid_time_blocks = np.split(time, block_ind)[is_invalid[0] :: 2]
+        valid_data_blocks = np.split(data, block_ind)[is_invalid[0] :: 2]
+
+        for time1, data1 in zip(valid_time_blocks, valid_data_blocks, strict=False):
+            if is_wind_direction:
+                sma = self._calculate_average_wind_direction(
+                    data1[0], data1[1], time1, window=15
+                )
+            else:
+                sma = self._calculate_moving_average(data1, time1, window=5)
+            gap_time = _get_max_gap_in_minutes(figure_data)
+            gaps = self._find_time_gap_indices(time1, max_gap_min=gap_time) + 1
+
+            for time2, data2 in zip(
+                np.split(time1, gaps), np.split(sma, gaps), strict=False
+            ):
+                self._ax.plot(
+                    time2,
+                    data2,
+                    color="slateblue",
+                    lw=2,
+                    label="_nolegend_",
+                    zorder=_get_zorder("mean_curve"),
+                )
 
     @staticmethod
     def _get_line_width(time: ndarray) -> float:
@@ -736,12 +747,11 @@ class Plot1D(Plot):
         window_size = int(window / 60 / time_delta_hours)
         if window_size < 1:
             window_size = 1
-        if (window_size % 2) != 0:
+        if window_size % 2 == 0:
             window_size += 1
-        weights = np.repeat(1.0, window_size) / window_size
-        sma = np.convolve(data, weights, "valid")
-        edge = window_size // 2
-        return np.pad(sma, (edge, edge - 1), mode="constant", constant_values=np.nan)
+        weights = np.repeat(1 / window_size, window_size)
+        padded_data = np.pad(data, window_size // 2, mode="edge")
+        return np.convolve(padded_data, weights, "valid")
 
     @classmethod
     def _calculate_average_wind_direction(
