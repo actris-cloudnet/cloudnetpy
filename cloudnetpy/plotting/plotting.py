@@ -550,7 +550,7 @@ class Plot2D(Plot):
 
 
 class Plot1D(Plot):
-    def plot(self, figure_data: FigureData) -> None:
+    def plot(self, figure_data: FigureData, hacky_freq_ind: int | None = None) -> None:
         units = self._convert_units()
         self._mark_gaps(figure_data)
         self._ax.plot(
@@ -561,7 +561,7 @@ class Plot1D(Plot):
             zorder=_get_zorder("data"),
         )
         if self._plot_meta.moving_average:
-            self._plot_moving_average(figure_data)
+            self._plot_moving_average(figure_data, hacky_freq_ind)
         if self._plot_meta.zero_line:
             self._ax.axhline(0, color="black", alpha=0.5, label="_nolegend_")
         self._fill_between_data_gaps(figure_data)
@@ -594,7 +594,7 @@ class Plot1D(Plot):
                 self._plot_flag_data(figure_data.time[flags], self._data_orig[flags])
                 self._add_legend()
         self._show_frequency(figure_data, freq_ind)
-        self.plot(figure_data)
+        self.plot(figure_data, freq_ind)
 
     def _show_frequency(self, figure_data: FigureData, freq_ind: int) -> None:
         if self.sub_plot.variable.name == "tb":
@@ -675,10 +675,14 @@ class Plot1D(Plot):
 
         return default_options
 
-    def _plot_moving_average(self, figure_data: FigureData) -> None:
+    def _plot_moving_average(
+        self, figure_data: FigureData, hacky_freq_ind: int | None = None
+    ) -> None:
         time = figure_data.time.copy()
         data = self._data_orig.copy()
         flags = self._read_flagged_data(figure_data)
+        if hacky_freq_ind is not None:
+            flags = flags[:, hacky_freq_ind]
         is_invalid = ma.getmaskarray(data)
         if np.any(flags):
             is_invalid |= flags
