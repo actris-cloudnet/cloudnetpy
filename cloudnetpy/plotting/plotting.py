@@ -689,7 +689,8 @@ class Plot1D(Plot):
 
         is_wind_direction = self.sub_plot.variable.name == "wind_direction"
         if is_wind_direction:
-            data = np.stack([figure_data.file["wind_speed"], data])
+            wind_speed = figure_data.file["wind_speed"]
+            data = np.stack([wind_speed, data], axis=1)
 
         block_ind = np.where(np.diff(is_invalid))[0] + 1
         valid_time_blocks = np.split(time, block_ind)[is_invalid[0] :: 2]
@@ -698,7 +699,7 @@ class Plot1D(Plot):
         for time1, data1 in zip(valid_time_blocks, valid_data_blocks, strict=False):
             if is_wind_direction:
                 sma = self._calculate_average_wind_direction(
-                    data1[0], data1[1], time1, window=15
+                    data1[:, 0], data1[:, 1], time1, window=15
                 )
             else:
                 sma = self._calculate_moving_average(data1, time1, window=5)
