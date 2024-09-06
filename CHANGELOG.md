@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.65.8 – 2024-09-06
+
+- Fix wind direction plotting
+
 ## 1.65.7 – 2024-09-05
 
 - Fix bug in liquid detection if all LWP are masked
