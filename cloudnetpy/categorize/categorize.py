@@ -73,12 +73,12 @@ def generate_categorize(
     """
 
     def _interpolate_to_cloudnet_grid() -> list[int]:
-        wl_band = utils.get_wl_band(data.radar.radar_frequency)
         if data.disdrometer is not None:
             data.disdrometer.interpolate_to_grid(time)
         if data.mwr is not None:
             data.mwr.rebin_to_grid(time)
-        data.model.interpolate_to_common_height(wl_band)
+        data.model.calc_attenuations(data.radar.radar_frequency)
+        data.model.interpolate_to_common_height()
         model_gap_ind = data.model.interpolate_to_grid(time, height)
         radar_gap_ind = data.radar.rebin_to_grid(time)
         lidar_gap_ind = data.lidar.interpolate_to_grid(time, height)
