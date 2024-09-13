@@ -96,6 +96,7 @@ class Model(DataSource):
             Indices fully masked profiles.
 
         """
+        half_height = height_grid - np.diff(height_grid, prepend=0) / 2
         for key in self.fields_dense + self.fields_atten:
             array = self.data_sparse[key][:]
             valid_profiles = _find_number_of_valid_profiles(array)
@@ -106,7 +107,7 @@ class Model(DataSource):
                 self.mean_height,
                 array,
                 time_grid,
-                height_grid,
+                half_height if "atten" in key else height_grid,
             )
         self.height = height_grid
         return utils.find_masked_profiles_indices(self.data_dense["temperature"])
