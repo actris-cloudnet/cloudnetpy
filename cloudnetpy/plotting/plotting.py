@@ -21,6 +21,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma, ndarray
 from scipy.ndimage import uniform_filter
 
+from cloudnetpy.categorize.freezing import find_t0_alt
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.instruments.ceilometer import calc_sigma_units
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
@@ -425,6 +426,16 @@ class Plot2D(Plot):
 
         if figure_data.is_mwrpy_product():
             self._fill_flagged_data(figure_data)
+
+        if self.sub_plot.variable.name == "Tw":
+            tw = figure_data.file["Tw"][:]
+            height = figure_data.height
+            if height is None:
+                msg = "No height information in the file."
+                raise ValueError(msg)
+            t0_alt = find_t0_alt(tw, height)
+            t0_alt = ma.masked_where(t0_alt <= height[0], t0_alt)
+            self._ax.plot(figure_data.time, t0_alt, color="gray", linestyle="dashed")
 
     def _fill_flagged_data(self, figure_data: FigureData) -> None:
         flags = self._read_flagged_data(figure_data)
