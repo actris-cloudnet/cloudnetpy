@@ -283,6 +283,12 @@ COMMENTS = {
         "humidity, but forcing pixels containing liquid cloud to saturation with\n"
         "respect to liquid water. It has been used to correct Z."
     ),
+    "radar_rain_atten": (
+        "This variable was calculated from the disdrometer rainfall rate."
+    ),
+    "radar_melting_atten": (
+        "This variable was calculated from the disdrometer rainfall rate."
+    ),
     "Tw": (
         "This variable was derived from model temperature, pressure and relative\n"
         "humidity."
@@ -290,7 +296,7 @@ COMMENTS = {
     "Z_sensitivity": (
         "This variable is an estimate of the radar sensitivity, i.e. the minimum\n"
         "detectable radar reflectivity, as a function of height. It includes the\n"
-        "effect of ground clutter and gas attenuation but not liquid attenuation."
+        "effect of ground clutter and gas attenuation but not other attenuations."
     ),
     "Z_error": (
         "This variable is an estimate of the one-standard-deviation random error\n"
@@ -464,11 +470,13 @@ CATEGORIZE_ATTRIBUTES = {
         long_name="Two-way radar attenuation due to rain",
         units="dB",
         references="Crane, R. (1980)",
+        comment=COMMENTS["radar_rain_atten"],
     ),
     "radar_melting_atten": MetaData(
         long_name="Two-way radar attenuation due to melting ice",
         units="dB",
         references="Li, H., & Moisseev, D. (2019)",
+        comment=COMMENTS["radar_melting_atten"],
     ),
     "radar_gas_atten": MetaData(
         long_name="Two-way radar attenuation due to atmospheric gases",
