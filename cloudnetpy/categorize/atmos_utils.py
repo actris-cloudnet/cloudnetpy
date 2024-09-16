@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.typing as npt
 import scipy.constants
 from numpy import ma
 
@@ -20,16 +21,9 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
         Wet bulb temperature (K).
 
     References:
-        J. Sullivan and L. D. Sanders: Method for obtaining wet-bulb
+        Sullivan, J., and Sanders, L. D. (1974). Method for obtaining wet-bulb
         temperatures by modifying the psychrometric formula.
-
     """
-
-    def _screen_rh() -> np.ndarray:
-        rh = model_data["rh"]
-        rh_min = 1e-5
-        rh[rh < rh_min] = rh_min
-        return rh
 
     def _vapor_derivatives() -> tuple:
         m = 17.269
@@ -40,9 +34,7 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
         second = vapor_pressure * ((f1 / (f2**2)) ** 2 + 2 * f1 / (f2**3))
         return first, second
 
-    relative_humidity = _screen_rh()
-    saturation_pressure = calc_saturation_vapor_pressure(model_data["temperature"])
-    vapor_pressure = saturation_pressure * relative_humidity
+    vapor_pressure = calc_vapor_pressure(model_data["pressure"], model_data["q"])
     dew_point = calc_dew_point_temperature(vapor_pressure)
     psychrometric_constant = calc_psychrometric_constant(model_data["pressure"])
     first_der, second_der = _vapor_derivatives()
@@ -54,6 +46,30 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
         + 0.5 * dew_point**2 * second_der
     )
     return (-b + ma.sqrt(b * b - 4 * a * c)) / (2 * a)
+
+
+def calc_vapor_pressure(
+    pressure: npt.NDArray, specific_humidity: npt.NDArray
+) -> npt.NDArray:
+    """Calculate vapor pressure of water based on pressure and specific
+    humidity.
+
+    Args:
+        pressure: Pressure (Pa)
+        specific_humidity: Specific humidity (1)
+
+    Returns:
+        Vapor pressure (Pa)
+
+    References:
+        Cai, J. (2019). Humidity Measures.
+        https://cran.r-project.org/web/packages/humidity/vignettes/humidity-measures.html
+    """
+    return (
+        specific_humidity
+        * pressure
+        / (con.MW_RATIO + (1 - con.MW_RATIO) * specific_humidity)
+    )
 
 
 def calc_dew_point_temperature(vapor_pressure: np.ndarray) -> np.ndarray:

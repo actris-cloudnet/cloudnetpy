@@ -131,30 +131,6 @@ def _calc_vapor_refractivity(
     return np.sum(strength * shape, axis=0)
 
 
-def calc_vapor_pressure(
-    pressure: npt.NDArray, specific_humidity: npt.NDArray
-) -> npt.NDArray:
-    """Calculate vapor pressure of water based on pressure and specific
-    humidity.
-
-    Args:
-        pressure: Pressure (Pa)
-        specific_humidity: Specific humidity (1)
-
-    Returns:
-        Vapor pressure (Pa)
-
-    References:
-        Cai, J. (2019). Humidity Measures.
-        https://cran.r-project.org/web/packages/humidity/vignettes/humidity-measures.html
-    """
-    return (
-        specific_humidity
-        * pressure
-        / (con.MW_RATIO + (1 - con.MW_RATIO) * specific_humidity)
-    )
-
-
 def calc_saturation_vapor_pressure(temperature: npt.NDArray) -> npt.NDArray:
     """Calculate saturation vapor pressure using Tetens equation with respect to
     water or ice depending on whether the temperature is above freezing or not.

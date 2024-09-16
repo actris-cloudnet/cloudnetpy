@@ -75,10 +75,6 @@ class LiquidAttenuation:
             lwc_scaled: Liquid water content (kg m-3).
 
         """
-        specific_attenuation_rate = self._model[
-            "specific_liquid_atten"
-        ]  # (dB km-1) / (g m-3)
-        specific_attenuation = (
-            specific_attenuation_rate * lwc_scaled * con.KG_TO_G
-        )  # dB km-1
+        specific_attenuation_rate = self._model["specific_liquid_atten"]
+        specific_attenuation = specific_attenuation_rate * lwc_scaled * con.KG_TO_G
         return calc_two_way_attenuation(self._height, specific_attenuation)

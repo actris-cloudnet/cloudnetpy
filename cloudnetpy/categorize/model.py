@@ -10,7 +10,6 @@ from cloudnetpy.categorize.itu import (
     calc_gas_specific_attenuation,
     calc_liquid_specific_attenuation,
     calc_saturation_vapor_pressure,
-    calc_vapor_pressure,
 )
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.datasource import DataSource
@@ -41,8 +40,9 @@ class Model(DataSource):
         "temperature",
         "pressure",
         "rh",
+        "q",
     )
-    fields_sparse = (*fields_dense, "q", "uwind", "vwind")
+    fields_sparse = (*fields_dense, "uwind", "vwind")
     fields_atten = (
         "specific_gas_atten",
         "specific_saturated_gas_atten",
@@ -147,7 +147,7 @@ class Model(DataSource):
         self.data_sparse["specific_liquid_atten"] = calc_liquid_specific_attenuation(
             temperature, frequency
         )
-        vp = calc_vapor_pressure(pressure, specific_humidity)
+        vp = atmos_utils.calc_vapor_pressure(pressure, specific_humidity)
         svp = calc_saturation_vapor_pressure(temperature)
         self.data_sparse["specific_gas_atten"] = calc_gas_specific_attenuation(
             pressure, vp, temperature, frequency
