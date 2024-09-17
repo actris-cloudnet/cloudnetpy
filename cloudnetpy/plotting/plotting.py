@@ -602,7 +602,7 @@ class Plot1D(Plot):
             value = figure_data.file.variables["frequency"][freq_ind]
             unit = "GHz"
         else:
-            label = "Wavel"
+            label = "WL"
             variable = figure_data.file.variables["ir_wavelength"]
             # `ir_wavelength` is scalar in old files
             value = variable[:] if len(variable.shape) == 0 else variable[freq_ind]
