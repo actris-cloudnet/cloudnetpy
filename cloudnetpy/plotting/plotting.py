@@ -399,8 +399,9 @@ class Plot:
         flag_names = [
             f"{self.sub_plot.variable.name}_quality_flag",
             "temperature_quality_flag",
-            "quality_flag",
         ]
+        if self.sub_plot.variable.name != "irt":
+            flag_names.append("quality_flag")
         for flag_name in flag_names:
             if flag_name in figure_data.file.variables:
                 return figure_data.file.variables[flag_name][:] > 0
@@ -584,10 +585,10 @@ class Plot1D(Plot):
             msg = "All data is masked"
             raise PlottingError(msg)
         self._data_orig = self._data_orig[:, freq_ind]
-        is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
-        self._data[is_bad_zenith] = ma.masked
-        self._data_orig[is_bad_zenith] = ma.masked
         if self.sub_plot.variable.name == "tb":
+            is_bad_zenith = self._get_bad_zenith_profiles(figure_data)
+            self._data[is_bad_zenith] = ma.masked
+            self._data_orig[is_bad_zenith] = ma.masked
             flags = self._read_flagged_data(figure_data)[:, freq_ind]
             flags[is_bad_zenith] = False
             if np.any(flags):
@@ -681,7 +682,7 @@ class Plot1D(Plot):
         time = figure_data.time.copy()
         data = self._data_orig.copy()
         flags = self._read_flagged_data(figure_data)
-        if hacky_freq_ind is not None:
+        if hacky_freq_ind is not None and np.any(flags):
             flags = flags[:, hacky_freq_ind]
         is_invalid = ma.getmaskarray(data)
         if np.any(flags):
