@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import numpy.typing as npt
 import scipy.constants
@@ -8,44 +10,58 @@ from cloudnetpy import utils
 
 
 def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
-    """Returns wet bulb temperature.
-
-    Returns wet bulb temperature for given temperature,
-    pressure and relative humidity. Algorithm is based on a Taylor
-    expansion of a simple expression for the saturated vapour pressure.
+    """Calculate wet-bulb temperature iteratively.
 
     Args:
-        model_data: Model variables `temperature`, `pressure`, `rh`.
+        model_data: Model variables `temperature`, `pressure`, `q`.
 
     Returns:
-        Wet bulb temperature (K).
+        Wet-bulb temperature (K).
 
     References:
-        Sullivan, J., and Sanders, L. D. (1974). Method for obtaining wet-bulb
-        temperatures by modifying the psychrometric formula.
+        ASHRAE (2001). Psychrometrics. In 2001 ASHRAE Handbook - Fundamentals.
+
+        Al-Ismaili, A. M., & Al-Azri, N. A. (2016). Simple Iterative Approach to
+        Calculate Wet-Bulb Temperature for Estimating Evaporative Cooling
+        Efficiency. Int. J. Agric. Innovations Res., 4, 1013-1018.
     """
+    specific_humidity = model_data["q"]
+    pressure = model_data["pressure"]
+    temperature = k2c(model_data["temperature"])
+    vp = calc_vapor_pressure(pressure, specific_humidity)
+    W = calc_mixing_ratio(vp, pressure)
+    L_v_0 = 2501  # Latent heat of vaporization at 0degC (kJ kg-1)
+    C_p_w = 4.186  # Specific heat of liquid water (kJ kg-1 degC-1)
+    C_p_wv = 1.805  # Specific heat of water vapor (kJ kg-1 degC-1)
+    C_p_da = 1.006  # Specific heat capacity of dry air (kJ kg-1 degC-1)
 
-    def _vapor_derivatives() -> tuple:
-        m = 17.269
-        tn = 35.86
-        f1 = m * (tn - con.T0)
-        f2 = dew_point - tn
-        first = -vapor_pressure * f1 / (f2**2)
-        second = vapor_pressure * ((f1 / (f2**2)) ** 2 + 2 * f1 / (f2**3))
-        return first, second
+    def f(tw):
+        svp = calc_saturation_vapor_pressure(c2k(tw))
+        W_tw = calc_mixing_ratio(svp, pressure)
+        a = (L_v_0 - (C_p_w - C_p_wv) * tw) * W_tw - C_p_da * (temperature - tw)
+        b = L_v_0 + C_p_wv * temperature - C_p_w * tw
+        return a / b - W
 
-    vapor_pressure = calc_vapor_pressure(model_data["pressure"], model_data["q"])
-    dew_point = calc_dew_point_temperature(vapor_pressure)
-    psychrometric_constant = calc_psychrometric_constant(model_data["pressure"])
-    first_der, second_der = _vapor_derivatives()
-    a = 0.5 * second_der
-    b = first_der + psychrometric_constant - dew_point * second_der
-    c = (
-        -model_data["temperature"] * psychrometric_constant
-        - dew_point * first_der
-        + 0.5 * dew_point**2 * second_der
-    )
-    return (-b + ma.sqrt(b * b - 4 * a * c)) / (2 * a)
+    min_err = 1e-12
+    delta = 1e-12
+    tw = temperature
+    max_iter = 20
+    for _ in range(max_iter):
+        f_tw = f(tw)
+        if np.all(np.abs(f_tw) < min_err):
+            break
+        df_tw = (f(tw + delta) - f_tw) / delta
+        tw = tw - f_tw / df_tw
+    else:
+        msg = (
+            "Wet-bulb temperature didn't converge after %d iterations: "
+            "error min %g, max %g, mean %g, median %g"
+        )
+        logging.warning(
+            msg, max_iter, np.min(f_tw), np.max(f_tw), np.mean(f_tw), np.median(f_tw)
+        )
+
+    return c2k(tw)
 
 
 def calc_vapor_pressure(
@@ -70,25 +86,6 @@ def calc_vapor_pressure(
         * pressure
         / (con.MW_RATIO + (1 - con.MW_RATIO) * specific_humidity)
     )
-
-
-def calc_dew_point_temperature(vapor_pressure: np.ndarray) -> np.ndarray:
-    """Returns dew point temperature.
-
-    Args:
-        vapor_pressure: Water vapor pressure (Pa).
-
-    Returns:
-        Dew point temperature (K).
-
-    Notes:
-        Method from Vaisala's white paper: "Humidity conversion formulas".
-
-    """
-    vaisala_parameters_over_water = (6.116441, 7.591386, 240.7263)
-    a, m, tn = vaisala_parameters_over_water
-    dew_point_celsius = tn / ((m / np.log10(vapor_pressure * con.PA_TO_HPA / a)) - 1)
-    return c2k(dew_point_celsius)
 
 
 def c2k(temp: np.ndarray) -> np.ndarray:
@@ -271,18 +268,18 @@ def calc_saturation_vapor_pressure(temperature: np.ndarray) -> np.ndarray:
     ) * con.HPA_TO_PA
 
 
-def calc_mixing_ratio(svp: np.ndarray, pressure: np.ndarray) -> np.ndarray:
-    """Calculates mixing ratio from saturation vapor pressure and pressure.
+def calc_mixing_ratio(vapor_pressure: np.ndarray, pressure: np.ndarray) -> np.ndarray:
+    """Calculates mixing ratio from partial vapor pressure and pressure.
 
     Args:
-        svp: Saturation vapor pressure (Pa).
+        vapor_pressure: Partial pressure of water vapor (Pa).
         pressure: Atmospheric pressure (Pa).
 
     Returns:
         Mixing ratio (kg kg-1).
 
     """
-    return con.MW_RATIO * svp / (pressure - svp)
+    return con.MW_RATIO * vapor_pressure / (pressure - vapor_pressure)
 
 
 def calc_air_density(
@@ -302,22 +299,6 @@ def calc_air_density(
 
     """
     return pressure / (con.RS * temperature * (0.6 * svp_mixing_ratio + 1))
-
-
-def calc_psychrometric_constant(pressure: np.ndarray) -> np.ndarray:
-    """Returns psychrometric constant.
-
-    Psychrometric constant relates the partial pressure
-    of water in air to the air temperature.
-
-    Args:
-        pressure: Atmospheric pressure (Pa).
-
-    Returns:
-        Psychrometric constant value (Pa K-1)
-
-    """
-    return pressure * con.SPECIFIC_HEAT / (con.LATENT_HEAT * con.MW_RATIO)
 
 
 def calc_adiabatic_lwc(lwc_dz: np.ndarray, height: np.ndarray) -> np.ndarray:

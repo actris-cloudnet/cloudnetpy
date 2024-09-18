@@ -20,24 +20,6 @@ def test_saturation_vapor_pressure(t, res):
 
 
 @pytest.mark.parametrize(
-    "vapor_pressure, res",
-    [
-        (500, 270.37),
-        (300, 263.68),
-        (200, 258.63),
-        (100, 250.48),
-    ],
-)
-def test_dew_point_temperature(vapor_pressure, res):
-    """Unit tests for atmos.dew_point()."""
-    assert_array_almost_equal(
-        atmos_utils.calc_dew_point_temperature(np.array(vapor_pressure)),
-        res,
-        decimal=1,
-    )
-
-
-@pytest.mark.parametrize(
     "t, p, q, res",
     [
         (280, 101330, 0.001, 273.21),
