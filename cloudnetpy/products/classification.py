@@ -89,8 +89,11 @@ def _get_detection_status(categorize_bits: CategorizeBits) -> np.ndarray:
     is_attenuated = (
         bits.attenuated_liquid | bits.attenuated_rain | bits.attenuated_melting
     )
-    is_corrected = (bits.corrected_liquid | bits.corrected_rain) & ~(
-        bits.attenuated_melting & ~bits.corrected_melting
+    is_corrected = (
+        is_attenuated
+        & (~bits.attenuated_liquid | bits.corrected_liquid)
+        & (~bits.attenuated_rain | bits.corrected_rain)
+        & (~bits.attenuated_melting | bits.corrected_melting)
     )
 
     status = np.zeros(bits.radar.shape, dtype=int)
@@ -170,8 +173,8 @@ DEFINITIONS = {
                   attenuation that would be experienced is unknown.""",
             5: """Good radar echo only.""",
             6: """No radar echo but known attenuation.""",
-            7: """Radar echo corrected for liquid attenuation using microwave
-                  radiometer data.""",
+            7: """Radar echo corrected for liquid, rain or melting
+                  attenuation.""",
             8: """Radar ground clutter.""",
             9: """Lidar clear-air molecular scattering.""",
         }

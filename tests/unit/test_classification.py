@@ -24,7 +24,7 @@ class CategorizeBits:
                 dtype=bool,
             ),
             attenuated_liquid= np.asarray(
-                [[1, 1, 1, 0, 0, 1], [0, 1, 1, 0, 0, 0]],
+                [[1, 1, 1, 0, 0, 1], [1, 1, 1, 0, 0, 0]],
                 dtype=bool,
             ),
             corrected_liquid=np.asarray(
