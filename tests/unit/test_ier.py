@@ -151,6 +151,6 @@ class TestAppending:
         )
         self.ice_class.is_ice = np.array([[0, 0], [0, 1], [1, 1]], dtype=bool)
         self.ice_class.ice_above_rain = np.array([[1, 0], [1, 0], [1, 0]], dtype=bool)
-        self.ier_source.append_ier_error(self.ice_class)
+        self.ier_source.append_ier_error()
         expected_mask = [[1, 0], [1, 0], [1, 0]]
         assert_array_equal(self.ier_source.data["ier_error"][:].mask, expected_mask)

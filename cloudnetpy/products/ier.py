@@ -60,7 +60,7 @@ def generate_ier(
         ier_source.append_icy_data(ice_classification)
         ier_source.convert_units()
         ier_source.append_status(ice_classification)
-        ier_source.append_ier_error(ice_classification)
+        ier_source.append_ier_error()
         date = ier_source.get_date()
         attributes = output.add_time_attribute(IER_ATTRIBUTES, date)
         attributes = _add_ier_comment(attributes, ier_source)
@@ -75,9 +75,8 @@ class IerSource(IceSource):
         """Convert um to m."""
         self.data["ier"].data[:] /= 1e6
 
-    def append_ier_error(self, ice_classification: IceClassification) -> None:
+    def append_ier_error(self) -> None:
         error = ma.copy(self.data[f"{self.product}"][:])
-        error[ice_classification.ice_above_rain] = ma.masked
         error = error * np.sqrt(0.4**2 + 0.4**2)
         self.append_data(error, f"{self.product}_error")
 
@@ -103,9 +102,7 @@ def _add_ier_comment(attributes: dict, ier: IerSource) -> dict:
         "data has diagnosed that the radar echo is due to ice, but note\n"
         "that in some cases supercooled drizzle will erroneously be identified\n"
         "as ice. Missing data indicates either that ice cloud was present but it was\n"
-        "only detected by the lidar so its ice water content could not be estimated,\n"
-        "or than there was rain below the ice associated with uncertain attenuation\n"
-        "of the reflectivities in the ice.\n",
+        "only detected by the lidar so its ice water content could not be estimated."
     )
     return attributes
 
