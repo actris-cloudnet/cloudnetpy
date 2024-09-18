@@ -219,7 +219,7 @@ class CloudAdjustor:
         self.status[time_ind, alt_indices] = 2
 
     def _adjust_lwc(self, time_ind: int, base_ind: int) -> None:
-        lwc_base = self.lwc_adiabatic[time_ind, base_ind]
+        lwc_base = self.lwc_adiabatic[time_ind, base_ind + 1]
         distance_from_base = 1
         while True:
             top_ind = base_ind + distance_from_base
