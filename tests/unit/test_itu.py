@@ -1,7 +1,10 @@
 import numpy as np
 from numpy.testing import assert_allclose
 
-from cloudnetpy.categorize.itu import calc_liquid_specific_attenuation, calc_gas_specific_attenuation
+from cloudnetpy.categorize.itu import (
+    calc_liquid_specific_attenuation,
+    calc_gas_specific_attenuation,
+)
 
 
 def test_calc_liquid_specific_attenuation():

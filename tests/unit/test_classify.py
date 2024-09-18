@@ -1,4 +1,5 @@
 """This module contains unit tests for classify-module."""
+
 import numpy as np
 import pytest
 from numpy import ma
@@ -29,7 +30,7 @@ def test_find_aerosols():
         melting=np.array([]),
         insect=np.array([]),
         aerosol=np.array([]),
-        )
+    )
 
     assert_array_equal(classify._find_aerosols(obs, bits), result)  # type: ignore
 

@@ -8,22 +8,22 @@ from cloudnetpy.products.product_tools import CategoryBits, QualityBits
 class CategorizeBits:
     def __init__(self):
         self.category_bits = CategoryBits(
-            droplet= np.asarray([[1, 0, 1, 1, 1, 1], [0, 1, 1, 1, 0, 0]], dtype=bool),
-            falling= np.asarray([[0, 0, 0, 0, 1, 0], [0, 0, 0, 1, 1, 1]], dtype=bool),
-            freezing= np.asarray([[0, 0, 1, 1, 0, 0], [0, 1, 1, 1, 0, 1]], dtype=bool),
-            melting= np.asarray([[1, 0, 1, 0, 0, 0], [1, 1, 0, 0, 0, 0]], dtype=bool),
-            aerosol= np.asarray([[1, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool),
-            insect= np.asarray([[0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0]], dtype=bool),
+            droplet=np.asarray([[1, 0, 1, 1, 1, 1], [0, 1, 1, 1, 0, 0]], dtype=bool),
+            falling=np.asarray([[0, 0, 0, 0, 1, 0], [0, 0, 0, 1, 1, 1]], dtype=bool),
+            freezing=np.asarray([[0, 0, 1, 1, 0, 0], [0, 1, 1, 1, 0, 1]], dtype=bool),
+            melting=np.asarray([[1, 0, 1, 0, 0, 0], [1, 1, 0, 0, 0, 0]], dtype=bool),
+            aerosol=np.asarray([[1, 0, 1, 0, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool),
+            insect=np.asarray([[0, 1, 0, 0, 0, 0], [0, 0, 1, 0, 0, 0]], dtype=bool),
         )
         self.quality_bits = QualityBits(
-            radar= np.asarray([[0, 0, 0, 1, 1, 1], [1, 0, 0, 1, 1, 1]], dtype=bool),
-            lidar= np.asarray([[1, 1, 1, 1, 0, 0], [1, 1, 0, 1, 1, 0]], dtype=bool),
-            clutter= np.asarray([[0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool),
-            molecular= np.asarray(
+            radar=np.asarray([[0, 0, 0, 1, 1, 1], [1, 0, 0, 1, 1, 1]], dtype=bool),
+            lidar=np.asarray([[1, 1, 1, 1, 0, 0], [1, 1, 0, 1, 1, 0]], dtype=bool),
+            clutter=np.asarray([[0, 0, 1, 1, 0, 0], [0, 0, 0, 0, 0, 0]], dtype=bool),
+            molecular=np.asarray(
                 [[1, 0, 0, 1, 0, 0], [0, 1, 0, 0, 0, 0]],
                 dtype=bool,
             ),
-            attenuated_liquid= np.asarray(
+            attenuated_liquid=np.asarray(
                 [[1, 1, 1, 0, 0, 1], [1, 1, 1, 0, 0, 0]],
                 dtype=bool,
             ),

@@ -178,7 +178,7 @@ class TestParsivel6(Check):
         assert self.nc.dimensions["time"].size == 3
 
 
-class TestParsivel7():
+class TestParsivel7:
     date = "2023-10-25"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
@@ -194,9 +194,13 @@ class TestParsivel8(Check):
     temp_path = temp_dir.name + "/test.nc"
     filename = f"{SCRIPT_PATH}/data/parsivel/Lindenberg_Parsivel_20231204.log"
     site_meta = SITE_META
-    uuid = disdrometer.parsivel2nc(filename, temp_path, site_meta, date=date,
+    uuid = disdrometer.parsivel2nc(
+        filename,
+        temp_path,
+        site_meta,
+        date=date,
         telegram=TELEGRAM,
-                                   )
+    )
 
     def test_dimensions(self):
         assert self.nc.serial_number == "451221"
@@ -247,7 +251,9 @@ class TestParsivel10(Check):
                 timedelta(hours=10, minutes=2, seconds=0) / timedelta(hours=1),
             ],
         )
-        assert_array_equal(self.nc["data_raw"][:].mask, [[[1]*32]*32, [[0]*32]*32])
+        assert_array_equal(
+            self.nc["data_raw"][:].mask, [[[1] * 32] * 32, [[0] * 32] * 32]
+        )
 
 
 class TestParsivel11(Check):
@@ -312,7 +318,9 @@ class TestThies3(Check):
     temp_path = temp_dir.name + "/test.nc"
     filename = f"{SCRIPT_PATH}/data/thies-lnm/2024041723-leipzig-lim.txt"
     site_meta = SITE_META
-    uuid = disdrometer.thies2nc(filename, temp_path, {**site_meta, "truncate_columns": 23}, date=date)
+    uuid = disdrometer.thies2nc(
+        filename, temp_path, {**site_meta, "truncate_columns": 23}, date=date
+    )
 
     def test_processing(self):
         assert self.nc.title == f'LNM disdrometer from {self.site_meta["name"]}'

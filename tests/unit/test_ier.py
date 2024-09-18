@@ -34,9 +34,9 @@ def categorize_file(tmpdir_factory, file_metadata):
     nc.createVariable("quality_bits", "i4", ("time", "height"))[:] = np.array(
         [[0, 1, 1], [2, 3, 4], [4, 8, 1]],
     )
-    nc.createVariable("temperature", "f8", ("model_time", "model_height"))[
-        :
-    ] = np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
+    nc.createVariable("temperature", "f8", ("model_time", "model_height"))[:] = (
+        np.array([[282, 280, 278], [286, 284, 282], [284, 282, 280]])
+    )
     nc.createVariable("pressure", "f8", ("model_time", "model_height"))[:] = np.array(
         [[1010, 1000, 990], [1020, 1010, 1000], [1030, 1020, 1010]],
     )

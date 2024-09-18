@@ -1,4 +1,5 @@
 """This module contains unit tests for atmos-module."""
+
 import numpy as np
 import pytest
 from numpy import ma
@@ -65,8 +66,8 @@ def test_find_highest_cloud_tops():
 
 def test_distribute_lwp_to_liquid_clouds():
     lwc = np.array([[1, 1, 1], [2, 2, 2]])
-    lwp = np.array([2., 8])
-    height = np.array([1,2,3])
+    lwp = np.array([2.0, 8])
+    height = np.array([1, 2, 3])
     result = atmos_utils.normalize_lwc_by_lwp(lwc, lwp, height)
     correct = [[2 / 3, 2 / 3, 2 / 3], [16 / 6, 16 / 6, 16 / 6]]
     assert_array_equal(result, correct)

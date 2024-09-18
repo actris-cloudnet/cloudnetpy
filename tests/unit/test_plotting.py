@@ -11,6 +11,7 @@ import netCDF4
 
 SCRIPT_PATH = path.dirname(path.realpath(__file__))
 
+
 @pytest.mark.parametrize(
     "numbers, result",
     [
@@ -31,9 +32,12 @@ def test_lin2log(numbers, result):
 def test_generate_log_cbar_ticklabel_list(vmin, vmax, result):
     assert plotting.get_log_cbar_tick_labels(vmin, vmax) == result
 
+
 @pytest.fixture(scope="session")
 def basta_nc(tmpdir_factory) -> str:
-    basta_raw = f"{SCRIPT_PATH}/data/basta/basta_1a_cldradLz1R025m_v03_20210827_000000.nc"
+    basta_raw = (
+        f"{SCRIPT_PATH}/data/basta/basta_1a_cldradLz1R025m_v03_20210827_000000.nc"
+    )
     site_meta = {
         "name": "Palaiseau",
         "latitude": 50,
@@ -61,6 +65,7 @@ def test_generate_figure(basta_nc):
     assert path.exists(image_name)
     os.remove(image_name)
 
+
 def test_screen_completely_masked_profiles_with_no_mask():
     time = np.array([1, 2, 3])
     data = ma.array([4, 5, 6])
@@ -68,13 +73,10 @@ def test_screen_completely_masked_profiles_with_no_mask():
     assert np.array_equal(result_time, time)
     assert np.array_equal(result_data, data)
 
+
 def test_screen_completely_masked_profiles_with_nothing_masked():
     time = np.array([1, 2, 3])
-    data = ma.array([
-        [4, 5],
-        [4, 5],
-        [4, 5]], mask=False
-    )
+    data = ma.array([[4, 5], [4, 5], [4, 5]], mask=False)
     result_time, result_data = plotting.screen_completely_masked_profiles(time, data)
     assert np.array_equal(result_time, time)
     assert np.array_equal(result_data, data)
@@ -82,10 +84,8 @@ def test_screen_completely_masked_profiles_with_nothing_masked():
 
 def test_screen_completely_masked_profiles_with_nothing_masked_2():
     time = np.array([1, 2, 3])
-    data = ma.array([
-        [4, 5],
-        [4, 5],
-        [4, 5]], mask=[[False, False], [False, False], [False, False]]
+    data = ma.array(
+        [[4, 5], [4, 5], [4, 5]], mask=[[False, False], [False, False], [False, False]]
     )
     result_time, result_data = plotting.screen_completely_masked_profiles(time, data)
     assert np.array_equal(result_time, time)
@@ -94,43 +94,39 @@ def test_screen_completely_masked_profiles_with_nothing_masked_2():
 
 def test_screen_completely_masked_profiles_with_partial_mask():
     time = np.array([1, 2, 3, 4, 5, 6])
-    data = ma.array([
-        [4, 5],
-        [6, 7],
-        [7, 8],
-        [8, 9],
-        [9, 10],
-        [10, 11]], mask=[
-        [False, True],
-        [False, False],
-        [False, False],
-        [False, False],
-        [True, True],
-        [True, True],
-    ])
+    data = ma.array(
+        [[4, 5], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11]],
+        mask=[
+            [False, True],
+            [False, False],
+            [False, False],
+            [False, False],
+            [True, True],
+            [True, True],
+        ],
+    )
     result_time, result_data = plotting.screen_completely_masked_profiles(time, data)
     assert np.array_equal(result_time, np.array([1, 2, 3, 4, 5]))
-    assert np.array_equal(result_data, ma.array([[4, 5], [6, 7], [7, 8], [8, 9], [9, 10]]))
+    assert np.array_equal(
+        result_data, ma.array([[4, 5], [6, 7], [7, 8], [8, 9], [9, 10]])
+    )
+
 
 def test_screen_completely_masked_profiles_with_all_masked():
     time = np.array([1, 2, 3])
-    data = ma.array([
-        [4, 5],
-        [4, 5],
-        [4, 5]], mask=True
+    data = ma.array([[4, 5], [4, 5], [4, 5]], mask=True)
+    with pytest.raises(PlottingError, match="All values masked in the file."):
+        plotting.screen_completely_masked_profiles(time, data)
+
+
+def test_screen_completely_masked_profiles_with_all_masked_2():
+    time = np.array([1, 2, 3])
+    data = ma.array(
+        [[4, 5], [4, 5], [4, 5]], mask=[[True, True], [True, True], [True, True]]
     )
     with pytest.raises(PlottingError, match="All values masked in the file."):
         plotting.screen_completely_masked_profiles(time, data)
 
-def test_screen_completely_masked_profiles_with_all_masked_2():
-    time = np.array([1, 2, 3])
-    data = ma.array([
-        [4, 5],
-        [4, 5],
-        [4, 5]], mask=[[True, True], [True, True], [True, True]]
-    )
-    with pytest.raises(PlottingError, match="All values masked in the file."):
-        plotting.screen_completely_masked_profiles(time, data)
 
 @pytest.mark.parametrize(
     "units, result",

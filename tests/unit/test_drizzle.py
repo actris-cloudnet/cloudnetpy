@@ -172,7 +172,7 @@ def test_find_drizzle(
     obj.quality_bits.attenuated_liquid = attenuated
     obj.is_v_sigma = v_sigma
     expected = np.array([[1, 1, 0, 0], [1, 1, 0, 0], [1, 1, 0, 0], [1, 1, 0, 0]])
-    #testing.assert_array_almost_equal(obj._find_drizzle(), expected)
+    # testing.assert_array_almost_equal(obj._find_drizzle(), expected)
 
 
 @pytest.mark.parametrize(
