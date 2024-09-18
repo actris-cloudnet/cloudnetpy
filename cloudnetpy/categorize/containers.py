@@ -92,7 +92,8 @@ class ClassData:
         return is_rain
 
     def _find_rain_from_radar_echo(self) -> np.ndarray:
-        gate_number = 3
+        first_gate_with_data = np.argmin(self.z.mask.all(axis=0))
+        gate_number = first_gate_with_data + 3
         threshold = {"z": 3, "v": 0, "ldr": -15}
         z = self.z[:, gate_number]
         v = self.v[:, gate_number]
