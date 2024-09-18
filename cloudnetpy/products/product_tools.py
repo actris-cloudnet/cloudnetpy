@@ -204,8 +204,8 @@ class IceSource(DataSource):
         is_data = ~data.mask
         retrieval_status[is_data] = 1
         retrieval_status[is_data & ice_classification.corrected_ice] = 3
-        retrieval_status[ice_classification.uncorrected_ice] = 2
         retrieval_status[~is_data & ice_classification.is_ice] = 4
+        retrieval_status[ice_classification.uncorrected_ice] = 2
         retrieval_status[ice_classification.clear_above_rain] = 6
         retrieval_status[ice_classification.would_be_ice & (retrieval_status == 0)] = 7
         self.append_data(retrieval_status, f"{self.product}_retrieval_status")

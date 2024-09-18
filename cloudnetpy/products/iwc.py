@@ -168,15 +168,12 @@ DEFINITIONS = {
         {
             0: """No ice present.""",
             1: """Reliable retrieval.""",
-            2: """Unreliable retrieval due to uncorrected attenuation from
-                  liquid water below the ice (no liquid water path measurement
-                  available).""",
-            3: """Retrieval performed but radar corrected for liquid attenuation
-                  using radiometer liquid water path which is not always
-                  accurate.""",
+            2: """Unreliable retrieval due to uncorrected liquid, rain or
+                  melting attenuation.""",
+            3: """Retrieval performed with radar corrected for liquid, rain and
+                  melting attenuation.""",
             4: """Ice detected only by the lidar.""",
-            5: """Ice detected by radar but rain below so no retrieval performed
-                  due to very uncertain attenuation.""",
+            5: """Uncorrected rain attenuation (deprecated).""",
             6: """Clear sky above rain and wet-bulb temperature less than 0degC:
                   if rain attenuation is strong, ice could be present but
                   undetected.""",
