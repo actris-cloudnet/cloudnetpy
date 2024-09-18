@@ -19,6 +19,8 @@ def calc_melting_attenuation(
 
     if data.disdrometer is None:
         affected_region[~is_rain, :] = False
+        above_melting = utils.ffill(classification.category_bits.melting)
+        affected_region[~above_melting] = False
         return Attenuation(
             amount=ma.masked_all(shape),
             error=ma.masked_all(shape),
