@@ -42,8 +42,8 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
         b = L_v_0 + C_p_wv * temperature - C_p_w * tw
         return a / b - W
 
-    min_err = 1e-12
-    delta = 1e-12
+    min_err = 1e-6 * np.maximum(np.abs(temperature), 1)
+    delta = 1e-8
     tw = temperature
     max_iter = 20
     for _ in range(max_iter):
