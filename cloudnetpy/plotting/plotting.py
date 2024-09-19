@@ -435,7 +435,13 @@ class Plot2D(Plot):
                 raise ValueError(msg)
             t0_alt = find_t0_alt(tw, height)
             t0_alt = ma.masked_where(t0_alt <= height[0], t0_alt)
-            self._ax.plot(figure_data.time, t0_alt, color="gray", linestyle="dashed")
+            self._ax.plot(
+                figure_data.time,
+                t0_alt,
+                color="gray",
+                linestyle="dashed",
+                zorder=_get_zorder("t0"),
+            )
 
     def _fill_flagged_data(self, figure_data: FigureData) -> None:
         flags = self._read_flagged_data(figure_data)
