@@ -45,6 +45,6 @@ def test_calc_adiabatic_lwc():
 
     adiabatic_lwc = atmos_utils.calc_adiabatic_lwc(lwc_dz, height)
 
-    expected = np.array([[0, 0, 0, 4.2, 0, 0, 6.4], [0, 0, 4, 0, 0, 3, 0]])
+    expected = np.array([[0, 0, 4.2, 8.4, 0, 6.4, 12.8], [0, 4, 8, 0, 3, 6, 0]])
 
     assert_array_almost_equal(adiabatic_lwc, expected, decimal=1)

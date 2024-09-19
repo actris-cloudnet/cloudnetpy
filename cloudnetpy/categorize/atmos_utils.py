@@ -316,7 +316,7 @@ def calc_adiabatic_lwc(lwc_dz: np.ndarray, height: np.ndarray) -> np.ndarray:
     is_cloud = lwc_dz != 0
     cloud_indices = utils.cumsumr(is_cloud, axis=1)
     dz = utils.path_lengths_from_ground(height) * np.ones_like(lwc_dz)
-    dz[cloud_indices <= 1] = 0
+    dz[cloud_indices < 1] = 0
     return utils.cumsumr(dz, axis=1) * lwc_dz
 
 
