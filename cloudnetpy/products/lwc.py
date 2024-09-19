@@ -156,12 +156,11 @@ class Lwc:
 
         Calculates LWC for ALL profiles (rain, lwp > theoretical, etc.),
         """
-        lwc_scaled = atmos_utils.normalize_lwc_by_lwp(
+        return atmos_utils.normalize_lwc_by_lwp(
             self.lwc_adiabatic,
             self.lwc_source.lwp,
             self.height,
         )
-        return lwc_scaled / self.lwc_source.path_lengths
 
     def _mask_rain(self) -> None:
         is_rain = self.lwc_source.is_rain.astype(bool)
