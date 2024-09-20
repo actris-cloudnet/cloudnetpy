@@ -19,32 +19,30 @@ def calc_wet_bulb_temperature(model_data: dict) -> np.ndarray:
         Wet-bulb temperature (K).
 
     References:
-        ASHRAE (2001). Psychrometrics. In 2001 ASHRAE Handbook - Fundamentals.
-
         Al-Ismaili, A. M., & Al-Azri, N. A. (2016). Simple Iterative Approach to
         Calculate Wet-Bulb Temperature for Estimating Evaporative Cooling
         Efficiency. Int. J. Agric. Innovations Res., 4, 1013-1018.
     """
     specific_humidity = model_data["q"]
     pressure = model_data["pressure"]
-    temperature = k2c(model_data["temperature"])
+    td = k2c(model_data["temperature"])
     vp = calc_vapor_pressure(pressure, specific_humidity)
     W = calc_mixing_ratio(vp, pressure)
-    L_v_0 = 2501  # Latent heat of vaporization at 0degC (kJ kg-1)
-    C_p_w = 4.186  # Specific heat of liquid water (kJ kg-1 degC-1)
-    C_p_wv = 1.805  # Specific heat of water vapor (kJ kg-1 degC-1)
-    C_p_da = 1.006  # Specific heat capacity of dry air (kJ kg-1 degC-1)
+    L_v_0 = 2501e3  # Latent heat of vaporization at 0degC (J kg-1)
 
     def f(tw):
         svp = calc_saturation_vapor_pressure(c2k(tw))
-        W_tw = calc_mixing_ratio(svp, pressure)
-        a = (L_v_0 - (C_p_w - C_p_wv) * tw) * W_tw - C_p_da * (temperature - tw)
-        b = L_v_0 + C_p_wv * temperature - C_p_w * tw
+        W_s = calc_mixing_ratio(svp, pressure)
+        C_p_w = 0.0265 * tw**2 - 1.7688 * tw + 4205.6  # Eq. 6 (J kg-1 C-1)
+        C_p_wv = 0.0016 * td**2 + 0.1546 * td + 1858.7  # Eq. 7 (J kg-1 C-1)
+        C_p_da = 0.0667 * ((td + tw) / 2) + 1005  # Eq. 8 (J kg-1 C-1)
+        a = (L_v_0 - (C_p_w - C_p_wv) * tw) * W_s - C_p_da * (td - tw)
+        b = L_v_0 + C_p_wv * td - C_p_w * tw
         return a / b - W
 
-    min_err = 1e-6 * np.maximum(np.abs(temperature), 1)
+    min_err = 1e-6 * np.maximum(np.abs(td), 1)
     delta = 1e-8
-    tw = temperature
+    tw = td
     max_iter = 20
     for _ in range(max_iter):
         f_tw = f(tw)
