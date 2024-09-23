@@ -195,7 +195,7 @@ def get_source_uuids(data: Observations | list[netCDF4.Dataset | DataSource]) ->
         for obj in obs
         if hasattr(obj, "dataset") and hasattr(obj.dataset, "file_uuid")
     ]
-    unique_uuids = list(set(uuids))
+    unique_uuids = sorted(set(uuids))
     return ", ".join(unique_uuids)
 
 
