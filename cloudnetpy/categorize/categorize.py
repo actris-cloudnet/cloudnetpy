@@ -289,10 +289,7 @@ COMMENTS = {
     "radar_melting_atten": (
         "This variable was calculated from the disdrometer rainfall rate."
     ),
-    "Tw": (
-        "This variable was derived from model temperature, pressure and relative\n"
-        "humidity."
-    ),
+    "Tw": "This variable was derived from model temperature, pressure and humidity.",
     "Z_sensitivity": (
         "This variable is an estimate of the radar sensitivity, i.e. the minimum\n"
         "detectable radar reflectivity, as a function of height. It includes the\n"
