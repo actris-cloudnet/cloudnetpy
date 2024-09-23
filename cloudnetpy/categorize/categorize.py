@@ -1,5 +1,6 @@
 """Module that generates Cloudnet categorize file."""
 
+import dataclasses
 import logging
 from dataclasses import fields
 
@@ -243,9 +244,9 @@ def _save_cat(
 
 def _classes_to_bits(data: QualityBits | CategoryBits) -> NDArray[np.int_]:
     shape = data.radar.shape if hasattr(data, "radar") else data.droplet.shape
-    quality = np.zeros(shape, dtype=int)
-    for i, value in enumerate(vars(data).values()):
-        quality += (2**i) * value.astype(int)
+    quality = np.zeros(shape, dtype=np.int64)
+    for i, field in enumerate(dataclasses.fields(data)):
+        quality |= (1 << i) * getattr(data, field.name)
     return quality
 
 
