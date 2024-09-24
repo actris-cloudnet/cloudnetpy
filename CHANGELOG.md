@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.66.0 – 2024-09-24
+
+- Implement rain and melting layer attenuations
+- Calculate liquid and gas attenuation using ITU recommendations
+- Calculate wet-bulb temperature using iterative method
+- Fix rain detection when data is masked
+- Plot zero line for wet-bulb temperature
+- Don't flag IRT data in MWR plot
+- Change "Wavel" to "WL" in MWR plot
+- Sort values in `source_file_uuids` attribute
+
 ## 1.65.8 – 2024-09-06
 
 - Fix wind direction plotting
