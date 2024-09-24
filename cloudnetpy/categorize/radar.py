@@ -8,6 +8,7 @@ from numpy import ma
 from scipy import constants
 
 from cloudnetpy import utils
+from cloudnetpy.categorize.attenuations import RadarAttenuation
 from cloudnetpy.constants import GHZ_TO_HZ, SEC_IN_HOUR, SPEED_OF_LIGHT
 from cloudnetpy.datasource import DataSource
 
@@ -42,6 +43,8 @@ class Radar(DataSource):
         self.sequence_indices = self._get_sequence_indices()
         self.location = getattr(self.dataset, "location", "")
         self.source_type = getattr(self.dataset, "source", "")
+        self.height: np.ndarray
+        self.altitude: float
         self._init_data()
         self._init_sigma_v()
         self._get_folding_velocity_full()
@@ -200,26 +203,29 @@ class Radar(DataSource):
 
         return n_removed_total
 
-    def correct_atten(self, attenuations: dict) -> None:
+    def correct_atten(self, attenuations: RadarAttenuation) -> None:
         """Corrects radar echo for liquid and gas attenuation.
 
         Args:
-            attenuations: 2-D attenuations due to atmospheric gases and liquid:
-                `radar_gas_atten`, `radar_liquid_atten`.
+            attenuations: Radar attenuation object.
 
         References:
             The method is based on Hogan R. and O'Connor E., 2004,
             https://bit.ly/2Yjz9DZ and the original Cloudnet Matlab implementation.
 
         """
-        z_corrected = self.data["Z"][:] + attenuations["radar_gas_atten"]
-        ind = ma.where(attenuations["radar_liquid_atten"])
-        z_corrected[ind] += attenuations["radar_liquid_atten"][ind]
+        z_corrected = self.data["Z"][:] + attenuations.gas.amount
+        ind = ma.where(attenuations.liquid.amount)
+        z_corrected[ind] += attenuations.liquid.amount[ind]
+        ind = ma.where(attenuations.rain.amount)
+        z_corrected[ind] += attenuations.rain.amount[ind]
+        ind = ma.where(attenuations.melting.amount)
+        z_corrected[ind] += attenuations.melting.amount[ind]
         self.append_data(z_corrected, "Z")
 
     def calc_errors(
         self,
-        attenuations: dict,
+        attenuations: RadarAttenuation,
         is_clutter: np.ndarray,
     ) -> None:
         """Calculates uncertainties of radar echo.
@@ -239,7 +245,7 @@ class Radar(DataSource):
 
         def _calc_sensitivity() -> np.ndarray:
             """Returns sensitivity of radar as function of altitude."""
-            mean_gas_atten = ma.mean(attenuations["radar_gas_atten"], axis=0)
+            mean_gas_atten = ma.mean(attenuations.gas.amount, axis=0)
             z_sensitivity = z_power_min + log_range + mean_gas_atten
             zc = ma.median(ma.array(z, mask=~is_clutter), axis=0)
             valid_values = np.logical_not(zc.mask)
@@ -260,10 +266,20 @@ class Radar(DataSource):
             z_precision = ma.divide(ln_to_log10, np.sqrt(n_pulses)) * (
                 1 + (utils.db2lin(z_power_min - z_power) / noise_threshold)
             )
-            gas_error = attenuations["radar_gas_atten"] * 0.1
-            liq_error = attenuations["liquid_atten_err"].filled(0)
-            z_error = utils.l2norm(gas_error, liq_error, z_precision)
-            z_error[attenuations["liquid_uncorrected"]] = ma.masked
+
+            z_error = utils.l2norm(
+                z_precision,
+                attenuations.liquid.error.filled(0),
+                attenuations.rain.error.filled(0),
+                attenuations.melting.error.filled(0),
+            )
+
+            z_error[
+                attenuations.liquid.uncorrected
+                | attenuations.rain.uncorrected
+                | attenuations.melting.uncorrected
+            ] = ma.masked
+
             return z_error
 
         def _number_of_independent_pulses() -> float:

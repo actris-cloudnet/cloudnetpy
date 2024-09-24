@@ -6,7 +6,7 @@ from numpy import ma
 
 from cloudnetpy import utils
 from cloudnetpy.datasource import DataSource
-from cloudnetpy.products.product_tools import CategorizeBits
+from cloudnetpy.products.product_tools import CategorizeBits, CategoryBits
 
 
 class ObservationManager(DataSource):
@@ -79,14 +79,14 @@ class ObservationManager(DataSource):
         return self._mask_cloud_bits(cloud_mask)
 
     @staticmethod
-    def _classify_basic_mask(bits: dict) -> np.ndarray:
-        cloud_mask = bits["droplet"] + bits["falling"] * 2
-        cloud_mask[bits["falling"] & bits["cold"]] = (
-            cloud_mask[bits["falling"] & bits["cold"]] + 2
+    def _classify_basic_mask(bits: CategoryBits) -> np.ndarray:
+        cloud_mask = bits.droplet + bits.falling * 2
+        cloud_mask[bits.falling & bits.freezing] = (
+            cloud_mask[bits.falling & bits.freezing] + 2
         )
-        cloud_mask[bits["aerosol"]] = 6
-        cloud_mask[bits["insect"]] = 7
-        cloud_mask[bits["aerosol"] & bits["insect"]] = 8
+        cloud_mask[bits.aerosol] = 6
+        cloud_mask[bits.insect] = 7
+        cloud_mask[bits.aerosol & bits.insect] = 8
         return cloud_mask
 
     @staticmethod

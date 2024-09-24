@@ -107,9 +107,6 @@ def _find_melting_layer_from_ldr(
     v_prof: np.ndarray,
     z_prof: np.ndarray,
 ) -> np.ndarray | None:
-    if ldr_prof is None:
-        raise ValueError
-
     peak = int(np.argmax(ldr_prof))
     base, top = _basetop(ldr_dprof, peak)
     conditions = (

@@ -1,4 +1,5 @@
 """This module contains unit tests for ceilo-module."""
+
 import os
 from tempfile import TemporaryDirectory
 
@@ -140,7 +141,11 @@ def test_cl51_corrupted_profile2(tmp_path):
     ceilo2nc(input_path, output_path, site_meta, date="2015-06-18")
     with netCDF4.Dataset(output_path) as nc:
         assert_equal(nc.variables["beta"][:].mask.all(axis=1), [False, True])
-        assert_almost_equal(nc.variables["time"][:], [40/60/60, 19+54/60+8/60/60], decimal=5)
+        assert_almost_equal(
+            nc.variables["time"][:],
+            [40 / 60 / 60, 19 + 54 / 60 + 8 / 60 / 60],
+            decimal=5,
+        )
 
 
 class TestCL31(Check):

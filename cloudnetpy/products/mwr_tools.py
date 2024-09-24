@@ -1,8 +1,10 @@
+import os
 import tempfile
 from typing import Literal
 
 import netCDF4
 import numpy as np
+import requests
 from mwrpy.level2.lev2_collocated import generate_lev2_multi as gen_multi
 from mwrpy.level2.lev2_collocated import generate_lev2_single as gen_single
 from mwrpy.level2.write_lev2_nc import MissingInputData
@@ -10,7 +12,6 @@ from mwrpy.version import __version__ as mwrpy_version
 
 from cloudnetpy import output, utils
 from cloudnetpy.exceptions import ValidTimeStampError
-from cloudnetpy.products import product_tools
 
 
 def generate_mwr_single(
@@ -59,7 +60,7 @@ def _generate_product(
 ) -> str:
     fun = gen_multi if product == "multi" else gen_single
     with tempfile.TemporaryDirectory() as temp_dir:
-        coeffs = product_tools.get_read_mwrpy_coeffs(mwr_l1c_file, temp_dir)
+        coeffs = _read_mwrpy_coeffs(mwr_l1c_file, temp_dir)
         try:
             fun(None, mwr_l1c_file, output_file, coeff_files=coeffs)
         except MissingInputData as err:
@@ -136,3 +137,15 @@ class Mwr:
         self.nc_l2.source_file_uuids = self.nc_l1c.file_uuid
         self.nc_l2.mwrpy_version = mwrpy_version
         self.nc_l2.instrument_pid = self.nc_l1c.instrument_pid
+
+
+def _read_mwrpy_coeffs(mwr_l1c_file, folder: str) -> list:
+    with netCDF4.Dataset(mwr_l1c_file) as nc:
+        links = nc.mwrpy_coefficients.split(", ")
+    coeffs = []
+    for link in links:
+        full_path = os.path.join(folder, link.split("/")[-1])
+        with open(full_path, "wb") as f:
+            f.write(requests.get(link, timeout=10).content)
+        coeffs.append(full_path)
+    return coeffs

@@ -21,7 +21,6 @@ SITE_META = {
 
 
 class WS(Check):
-
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
 
@@ -136,7 +135,7 @@ class TestWeatherStationGranada(WS):
     date = "2024-04-19"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
-    site_meta = { **SITE_META, "name": "Granada" }
+    site_meta = {**SITE_META, "name": "Granada"}
     filename = f"{SCRIPT_PATH}/data/ws/granada.dat"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta)
 
@@ -148,33 +147,34 @@ class TestWeatherStationKenttarova(WS):
     date = "2024-05-20"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
-    site_meta = { **SITE_META, "name": "Kenttärova" }
-    filename = [f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240520.csv",
-                f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240521.csv"
-                ]
+    site_meta = {**SITE_META, "name": "Kenttärova"}
+    filename = [
+        f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240520.csv",
+        f"{SCRIPT_PATH}/data/ws/Krova_aws_pqBARLog5_20240521.csv",
+    ]
     uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
 
     def test_dimensions(self):
-        assert self.nc.dimensions["time"].size == 24*(60/10)+1
+        assert self.nc.dimensions["time"].size == 24 * (60 / 10) + 1
 
 
 class TestWeatherStationHyytiala(WS):
     date = "2024-01-10"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
-    site_meta = { **SITE_META, "name": "Hyytiälä" }
+    site_meta = {**SITE_META, "name": "Hyytiälä"}
     filename = f"{SCRIPT_PATH}/data/ws/hyy20240110swx.txt"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
 
     def test_dimensions(self):
-        assert self.nc.dimensions["time"].size == 24*60
+        assert self.nc.dimensions["time"].size == 24 * 60
 
 
 class TestWeatherStationGalati(WS):
     date = "2024-07-14"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
-    site_meta = { **SITE_META, "name": "Galați" }
+    site_meta = {**SITE_META, "name": "Galați"}
     filename = f"{SCRIPT_PATH}/data/ws/galati.csv"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta)
 
@@ -183,7 +183,7 @@ class TestWeatherStationBucharest(WS):
     date = "2024-06-01"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
-    site_meta = { **SITE_META, "name": "Bucharest" }
+    site_meta = {**SITE_META, "name": "Bucharest"}
     filename = f"{SCRIPT_PATH}/data/ws/bucharest.csv"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
 
@@ -195,7 +195,7 @@ class TestWeatherStationBucharestII(WS):
     date = "2024-07-14"
     temp_dir = TemporaryDirectory()
     temp_path = temp_dir.name + "/test.nc"
-    site_meta = { **SITE_META, "name": "Bucharest"}
+    site_meta = {**SITE_META, "name": "Bucharest"}
     filename = f"{SCRIPT_PATH}/data/ws/bucharest2.csv"
     uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
 
@@ -206,15 +206,15 @@ class TestWeatherStationBucharestII(WS):
 @pytest.mark.parametrize(
     "original, expected",
     [
-        ([0,1,2], [0,1,2]),
-        ([1,2,3], [0,1,2]),
+        ([0, 1, 2], [0, 1, 2]),
+        ([1, 2, 3], [0, 1, 2]),
         ([10, 11, 15, 16, 2], [0, 1, 5, 6, 8]),
         ([10, 11, 15, 16, 0, 2], [0, 1, 5, 6, 6, 8]),
     ],
 )
 def test_normalize_rainfall_amount(original, expected):
     filename = [f"{SCRIPT_PATH}/data/ws/bucharest2.csv"]
-    site_meta = { **SITE_META, "name": "Bucharest"}
+    site_meta = {**SITE_META, "name": "Bucharest"}
     a = weather_station.BucharestWS(filename, site_meta)
     original = np.array(original)
     expected = np.array(expected)

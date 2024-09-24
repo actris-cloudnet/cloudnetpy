@@ -5,6 +5,7 @@ from numpy import ma
 
 from cloudnetpy import constants, output, utils
 from cloudnetpy.metadata import MetaData
+from cloudnetpy.products.iwc import DEFINITIONS as IWC_DEFINITION
 from cloudnetpy.products.product_tools import IceClassification, IceSource
 
 
@@ -57,11 +58,10 @@ def generate_ier(
     product = "ier"
     with IerSource(categorize_file, product) as ier_source:
         ice_classification = IceClassification(categorize_file)
-        ier_source.append_main_variable_including_rain(ice_classification)
-        ier_source.append_main_variable(ice_classification)
+        ier_source.append_icy_data(ice_classification)
         ier_source.convert_units()
         ier_source.append_status(ice_classification)
-        ier_source.append_ier_error(ice_classification)
+        ier_source.append_ier_error()
         date = ier_source.get_date()
         attributes = output.add_time_attribute(IER_ATTRIBUTES, date)
         attributes = _add_ier_comment(attributes, ier_source)
@@ -74,12 +74,10 @@ class IerSource(IceSource):
 
     def convert_units(self) -> None:
         """Convert um to m."""
-        for prod in ("ier", "ier_inc_rain"):
-            self.data[prod].data[:] /= 1e6
+        self.data["ier"].data[:] /= 1e6
 
-    def append_ier_error(self, ice_classification: IceClassification) -> None:
-        error = ma.copy(self.data[f"{self.product}_inc_rain"][:])
-        error[ice_classification.ice_above_rain] = ma.masked
+    def append_ier_error(self) -> None:
+        error = ma.copy(self.data[f"{self.product}"][:])
         error = error * np.sqrt(0.4**2 + 0.4**2)
         self.append_data(error, f"{self.product}_error")
 
@@ -105,9 +103,7 @@ def _add_ier_comment(attributes: dict, ier: IerSource) -> dict:
         "data has diagnosed that the radar echo is due to ice, but note\n"
         "that in some cases supercooled drizzle will erroneously be identified\n"
         "as ice. Missing data indicates either that ice cloud was present but it was\n"
-        "only detected by the lidar so its ice water content could not be estimated,\n"
-        "or than there was rain below the ice associated with uncertain attenuation\n"
-        "of the reflectivities in the ice.\n",
+        "only detected by the lidar so its ice water content could not be estimated."
     )
     return attributes
 
@@ -122,48 +118,15 @@ COMMENTS = {
         "This variable describes whether a retrieval was performed\n"
         "for each pixel, and its associated quality."
     ),
-    "ier_inc_rain": (
-        "This variable is the same as ier but it also contains ier values\n"
-        "above rain. The ier values above rain have been severely affected\n"
-        "by attenuation and should be used when the effect of attenuation\n"
-        "is being studied."
-    ),
 }
 
-DEFINITIONS = {
-    "ier_retrieval_status": utils.status_field_definition(
-        {
-            0: """No ice present.""",
-            1: """Reliable retrieval.""",
-            2: """Unreliable retrieval due to uncorrected attenuation from
-                  liquid water below the ice (no liquid water path measurement
-                  available).""",
-            3: """Retrieval performed but radar corrected for liquid attenuation
-                  using radiometer liquid water path which is not always
-                  accurate.""",
-            4: """Ice detected only by the lidar.""",
-            5: """Ice detected by radar but rain below so no retrieval performed
-                  due to very uncertain attenuation.""",
-            6: """Clear sky above rain wet-bulb temperature less than 0degC: if
-                  rain attenuation were strong then ice could be present but
-                  undetected.""",
-            7: """Drizzle or rain that would have been classified as ice if the
-                  wet-bulb temperature were less than 0degC: may be ice if
-                  temperature is in error.""",
-        }
-    ),
-}
+DEFINITIONS = {"ier_retrieval_status": IWC_DEFINITION["iwc_retrieval_status"]}
 
 IER_ATTRIBUTES = {
     "ier": MetaData(
         long_name="Ice effective radius",
         units="m",
         ancillary_variables="ier_error",
-    ),
-    "ier_inc_rain": MetaData(
-        long_name="Ice effective radius including rain",
-        units="m",
-        comment=COMMENTS["ier_inc_rain"],
     ),
     "ier_error": MetaData(
         long_name="Random error in ice effective radius",

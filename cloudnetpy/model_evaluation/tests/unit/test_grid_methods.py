@@ -174,7 +174,8 @@ def test_regrid_cf_area_all_nan(model_file, obs_file) -> None:
             [1, 1, 1],
             [1, 1, 1],
             [1, 1, 1],
-        ], mask=True
+        ],
+        mask=True,
     )
     d = {"cf_A": ma.zeros((1, 1))}
     d = obj._regrid_cf(d, 0, 0, data)
@@ -413,7 +414,9 @@ def test_regrid_iwc_all_masked(model_file, obs_file) -> None:
     obs = ObservationManager(PRODUCT, str(obs_file))
     model = ModelManager(str(model_file), MODEL, OUTPUT_FILE, PRODUCT)
     obj = ProductGrid(model, obs)
-    obj._obs_data = ma.array([[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]], mask=True)
+    obj._obs_data = ma.array(
+        [[1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]], mask=True
+    )
     d = {"iwc": ma.zeros((1, 1))}
     ind = ma.array([[0, 1, 1, 1]], dtype=bool)
     no_rain = ma.array(

@@ -56,10 +56,8 @@ filename = "cloudnetpy/version.py"
 pattern = ["MAJOR = (?P<major>\\d+)", "MINOR = (?P<minor>\\d+)", "PATCH = (?P<patch>\\d+)"]
 changelog = "CHANGELOG.md"
 
-[tool.ruff]
-exclude = ["cloudnetpy/model_evaluation/tests/", "tests/"]
-
 [tool.ruff.lint]
+exclude = ["cloudnetpy/model_evaluation/tests/*", "tests/*"]
 select = ["ALL"]
 ignore = [
   "ANN", # missing types, use mypy for this

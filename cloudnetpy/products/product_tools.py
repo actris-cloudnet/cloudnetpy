@@ -1,12 +1,12 @@
 """General helper classes and functions for all products."""
 
-import os
+from dataclasses import dataclass
 from typing import NamedTuple
 
 import netCDF4
 import numpy as np
-import requests
 from numpy import ma
+from numpy.typing import NDArray
 
 from cloudnetpy import constants, utils
 from cloudnetpy.categorize import atmos_utils
@@ -23,53 +23,63 @@ class IceCoefficients(NamedTuple):
     c: float
 
 
+@dataclass
+class CategoryBits:
+    droplet: NDArray[np.bool_]
+    falling: NDArray[np.bool_]
+    freezing: NDArray[np.bool_]
+    melting: NDArray[np.bool_]
+    aerosol: NDArray[np.bool_]
+    insect: NDArray[np.bool_]
+
+
+@dataclass
+class QualityBits:
+    radar: NDArray[np.bool_]
+    lidar: NDArray[np.bool_]
+    clutter: NDArray[np.bool_]
+    molecular: NDArray[np.bool_]
+    attenuated_liquid: NDArray[np.bool_]
+    corrected_liquid: NDArray[np.bool_]
+    attenuated_rain: NDArray[np.bool_]
+    corrected_rain: NDArray[np.bool_]
+    attenuated_melting: NDArray[np.bool_]
+    corrected_melting: NDArray[np.bool_]
+
+
 class CategorizeBits:
-    """Class holding information about category and quality bits.
-
-    Args:
-        categorize_file (str): Categorize file name.
-
-    Attributes:
-        category_bits (dict): Dictionary containing boolean fields for `droplet`,
-            `falling`, `cold`, `melting`, `aerosol`, `insect`.
-
-        quality_bits (dict): Dictionary containing boolean fields for `radar`,
-            `lidar`, `clutter`, `molecular`, `attenuated` and `corrected`.
-
-    """
-
-    category_keys = (
-        "droplet",
-        "falling",
-        "cold",
-        "melting",
-        "aerosol",
-        "insect",
-    )
-
-    quality_keys = (
-        "radar",
-        "lidar",
-        "clutter",
-        "molecular",
-        "attenuated",
-        "corrected",
-    )
-
     def __init__(self, categorize_file: str):
         self._categorize_file = categorize_file
-        self.category_bits = self._read_bits("category")
-        self.quality_bits = self._read_bits("quality")
+        self.category_bits = self._read_category_bits()
+        self.quality_bits = self._read_quality_bits()
 
-    def _read_bits(self, bit_type: str) -> dict:
-        """Converts bitfield into dictionary."""
+    def _read_category_bits(self) -> CategoryBits:
         with netCDF4.Dataset(self._categorize_file) as nc:
-            try:
-                bitfield = nc.variables[f"{bit_type}_bits"][:]
-            except KeyError as err:
-                raise KeyError from err
-            keys = getattr(CategorizeBits, f"{bit_type}_keys")
-            return {key: utils.isbit(bitfield, i) for i, key in enumerate(keys)}
+            bits = nc.variables["category_bits"][:]
+            return CategoryBits(
+                droplet=utils.isbit(bits, 0),
+                falling=utils.isbit(bits, 1),
+                freezing=utils.isbit(bits, 2),
+                melting=utils.isbit(bits, 3),
+                aerosol=utils.isbit(bits, 4),
+                insect=utils.isbit(bits, 5),
+            )
+
+    def _read_quality_bits(self) -> QualityBits:
+        with netCDF4.Dataset(self._categorize_file) as nc:
+            bits = nc.variables["quality_bits"][:]
+            return QualityBits(
+                radar=utils.isbit(bits, 0),
+                lidar=utils.isbit(bits, 1),
+                clutter=utils.isbit(bits, 2),
+                molecular=utils.isbit(bits, 3),
+                attenuated_liquid=utils.isbit(bits, 4),
+                corrected_liquid=utils.isbit(bits, 5),
+                attenuated_rain=utils.isbit(bits, 6),
+                corrected_rain=utils.isbit(bits, 7),
+                attenuated_melting=utils.isbit(bits, 8),
+                corrected_melting=utils.isbit(bits, 9),
+            )
 
 
 class ProductClassification(CategorizeBits):
@@ -96,52 +106,74 @@ class IceClassification(ProductClassification):
 
     def __init__(self, categorize_file: str):
         super().__init__(categorize_file)
+        self._is_attenuated = self._find_attenuated()
+        self._is_corrected = self._find_corrected()
         self.is_ice = self._find_ice()
         self.would_be_ice = self._find_would_be_ice()
         self.corrected_ice = self._find_corrected_ice()
         self.uncorrected_ice = self._find_uncorrected_ice()
         self.ice_above_rain = self._find_ice_above_rain()
-        self.cold_above_rain = self._find_cold_above_rain()
+        self.clear_above_rain = self._find_clear_above_rain()
+
+    def _find_clear_above_rain(self) -> np.ndarray:
+        return (
+            utils.transpose(self.is_rain) * ~self.is_ice
+            & self.category_bits.freezing
+            & ~self.category_bits.melting
+        )
+
+    def _find_attenuated(self) -> np.ndarray:
+        return (
+            self.quality_bits.attenuated_liquid
+            | self.quality_bits.attenuated_rain
+            | self.quality_bits.attenuated_melting
+        )
+
+    def _find_corrected(self) -> np.ndarray:
+        return (
+            self.quality_bits.corrected_liquid
+            | self.quality_bits.corrected_rain
+            | self.quality_bits.corrected_melting
+        )
 
     def _find_ice(self) -> np.ndarray:
         return (
-            self.category_bits["falling"]
-            & self.category_bits["cold"]
-            & ~self.category_bits["melting"]
-            & ~self.category_bits["insect"]
+            self.category_bits.falling
+            & self.category_bits.freezing
+            & ~self.category_bits.melting
+            & ~self.category_bits.insect
         )
 
     def _find_would_be_ice(self) -> np.ndarray:
         warm_falling = (
-            self.category_bits["falling"]
-            & ~self.category_bits["cold"]
-            & ~self.category_bits["insect"]
+            self.category_bits.falling
+            & ~self.category_bits.freezing
+            & ~self.category_bits.insect
         )
-        return warm_falling | self.category_bits["melting"]
+        return warm_falling | self.category_bits.melting
 
     def _find_corrected_ice(self) -> np.ndarray:
-        return (
-            self.is_ice
-            & self.quality_bits["attenuated"]
-            & self.quality_bits["corrected"]
-        )
+        return self.is_ice & self._is_attenuated & self._is_corrected
 
     def _find_uncorrected_ice(self) -> np.ndarray:
+        uncorrected_melting = (
+            self.quality_bits.attenuated_melting & ~self.quality_bits.corrected_melting
+        )
+        uncorrected_rain = (
+            self.quality_bits.attenuated_rain & ~self.quality_bits.corrected_rain
+        )
+        uncorrected_liquid = (
+            self.quality_bits.attenuated_liquid & ~self.quality_bits.corrected_liquid
+        )
         return (
             self.is_ice
-            & self.quality_bits["attenuated"]
-            & ~self.quality_bits["corrected"]
+            & self._is_attenuated
+            & (uncorrected_melting | uncorrected_rain | uncorrected_liquid)
         )
 
     def _find_ice_above_rain(self) -> np.ndarray:
         is_rain = utils.transpose(self.is_rain)
         return (self.is_ice * is_rain) == 1
-
-    def _find_cold_above_rain(self) -> np.ndarray:
-        is_cold = self.category_bits["cold"]
-        is_rain = utils.transpose(self.is_rain)
-        is_cold_rain = (is_cold * is_rain) == 1
-        return is_cold_rain & ~self.category_bits["melting"]
 
 
 class IceSource(DataSource):
@@ -150,24 +182,20 @@ class IceSource(DataSource):
     def __init__(self, categorize_file: str, product: str):
         super().__init__(categorize_file)
         self.wl_band = utils.get_wl_band(float(self.getvar("radar_frequency")))
-        self.temperature = get_temperature(categorize_file)
+        self.temperature = _get_temperature(categorize_file)
         self.product = product
         self.coefficients = self._get_coefficients()
 
-    def append_main_variable_including_rain(
+    def append_icy_data(
         self,
         ice_classification: IceClassification,
     ) -> None:
         """Adds the main variable (including ice above rain)."""
-        data_including_rain = self._convert_z()
-        data_including_rain[~ice_classification.is_ice] = ma.masked
-        self.append_data(data_including_rain, f"{self.product}_inc_rain")
-
-    def append_main_variable(self, ice_classification: IceClassification) -> None:
-        """Adds the main variable (excluding rain)."""
-        data = ma.copy(self.data[f"{self.product}_inc_rain"][:])
-        data[ice_classification.ice_above_rain] = ma.masked
-        self.append_data(data, self.product)
+        data = self._convert_z()
+        data[~ice_classification.is_ice | ice_classification.uncorrected_ice] = (
+            ma.masked
+        )
+        self.append_data(data, f"{self.product}")
 
     def append_status(self, ice_classification: IceClassification) -> None:
         """Adds the status of retrieval."""
@@ -176,10 +204,9 @@ class IceSource(DataSource):
         is_data = ~data.mask
         retrieval_status[is_data] = 1
         retrieval_status[is_data & ice_classification.corrected_ice] = 3
-        retrieval_status[is_data & ice_classification.uncorrected_ice] = 2
         retrieval_status[~is_data & ice_classification.is_ice] = 4
-        retrieval_status[ice_classification.cold_above_rain] = 6
-        retrieval_status[ice_classification.ice_above_rain] = 5
+        retrieval_status[ice_classification.uncorrected_ice] = 2
+        retrieval_status[ice_classification.clear_above_rain] = 6
         retrieval_status[ice_classification.would_be_ice & (retrieval_status == 0)] = 7
         self.append_data(retrieval_status, f"{self.product}_retrieval_status")
 
@@ -232,36 +259,21 @@ class IceSource(DataSource):
 
 
 def get_is_rain(filename: str) -> np.ndarray:
-    try:
-        is_rain = read_nc_field(filename, "rain_detected")
-    except KeyError:
-        try:
-            rainfall_rate = read_nc_field(filename, "rainfall_rate")
-        except KeyError:
-            rainfall_rate = read_nc_field(filename, "rain_rate")
-        is_rain = rainfall_rate != 0
-        is_rain[is_rain.mask] = True
-    return np.array(is_rain)
+    # TODO: Check that this is correct
+    with netCDF4.Dataset(filename) as nc:
+        for name in ["rain_detected", "rainfall_rate", "rain_rate"]:
+            if name in nc.variables:
+                data = nc.variables[name][:]
+                data = data != 0
+                data[data.mask] = True
+                return np.array(data)
+    msg = "No rain data found."
+    raise ValueError(msg)
 
 
 def read_nc_field(nc_file: str, name: str) -> ma.MaskedArray:
     with netCDF4.Dataset(nc_file) as nc:
         return nc.variables[name][:]
-
-
-def read_nc_fields(nc_file: str, names: list[str]) -> list[ma.MaskedArray]:
-    """Reads selected variables from a netCDF file.
-
-    Args:
-        nc_file: netCDF file name.
-        names: Variables to be read, e.g. ['ldr', 'lwp'].
-
-    Returns:
-        List of numpy arrays.
-
-    """
-    with netCDF4.Dataset(nc_file) as nc:
-        return [nc.variables[name][:] for name in names]
 
 
 def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]:
@@ -278,7 +290,7 @@ def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]
     """
 
     def _interp_field(var_name: str) -> np.ndarray:
-        values = read_nc_fields(
+        values = _read_nc_fields(
             cat_file,
             ["model_time", "model_height", var_name, "time", "height"],
         )
@@ -288,22 +300,12 @@ def interpolate_model(cat_file: str, names: str | list) -> dict[str, np.ndarray]
     return {name: _interp_field(name) for name in names}
 
 
-def get_temperature(categorize_file: str) -> np.ndarray:
+def _read_nc_fields(nc_file: str, names: list[str]) -> list[ma.MaskedArray]:
+    with netCDF4.Dataset(nc_file) as nc:
+        return [nc.variables[name][:] for name in names]
+
+
+def _get_temperature(categorize_file: str) -> np.ndarray:
     """Returns interpolated temperatures in Celsius."""
     atmosphere = interpolate_model(categorize_file, "temperature")
     return atmos_utils.k2c(atmosphere["temperature"])
-
-
-def get_mwrpy_coeffs(nc_file: str) -> str:
-    with netCDF4.Dataset(nc_file) as nc:
-        return nc.mwrpy_coefficients.split(", ")
-
-
-def get_read_mwrpy_coeffs(mwr_l1c_file, folder: str) -> list:
-    coeffs = []
-    for link in get_mwrpy_coeffs(mwr_l1c_file):
-        full_path = os.path.join(folder, link.split("/")[-1])
-        with open(full_path, "wb") as f:
-            f.write(requests.get(link, timeout=10).content)
-        coeffs.append(full_path)
-    return coeffs

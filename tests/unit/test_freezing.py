@@ -17,7 +17,7 @@ def test_find_t0_alt():
     )
     height = np.array([10, 20, 30, 40])
     res = [30, 25, 10]
-    cnet = freezing._find_t0_alt(temperature, height)
+    cnet = freezing.find_t0_alt(temperature, height)
     assert_array_equal(cnet, res)
 
 

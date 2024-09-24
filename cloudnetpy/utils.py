@@ -1013,3 +1013,7 @@ def status_field_definition(definitions: dict[T, str]) -> str:
 
 def bit_field_definition(definitions: dict[T, str]) -> str:
     return _format_definition("Bit", definitions)
+
+
+def path_lengths_from_ground(height: np.ndarray) -> np.ndarray:
+    return np.diff(height, prepend=0)

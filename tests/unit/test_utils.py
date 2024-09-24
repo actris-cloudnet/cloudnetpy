@@ -1,4 +1,5 @@
 """This module contains unit tests for utils-module."""
+
 import datetime
 import re
 
@@ -815,27 +816,28 @@ def test_is_all_masked(data: np.ndarray | ma.MaskedArray, result: bool):
         (np.ma.array([[1, 2], [3, 4]], mask=[[False, False], [False, False]]), []),
         (np.ma.array([[1, 2], [3, 4]], mask=[[True, True], [False, False]]), [0]),
         (np.ma.array([[1, 2], [3, 4]], mask=False), []),
-    ]
+    ],
 )
 def test_find_masked_profiles_indices(array: ma.MaskedArray, expected: list):
     result = utils.find_masked_profiles_indices(array)
     assert np.array_equal(result, expected)
 
 
-
 def test_bit_field_definition():
-    definition = utils.bit_field_definition({
-        0: """Used to indicate sightings of airborne swine.""",
-        1: """Indicates the presence of an unknown flying kitchen utensil.""",
-        2: """Marks the presence of clouds that bear an uncanny resemblance to
+    definition = utils.bit_field_definition(
+        {
+            0: """Used to indicate sightings of airborne swine.""",
+            1: """Indicates the presence of an unknown flying kitchen utensil.""",
+            2: """Marks the presence of clouds that bear an uncanny resemblance to
               famous personalities.""",
-        3: """Identifies weather balloons with an assurance that they are not
+            3: """Identifies weather balloons with an assurance that they are not
               spy equipment.""",
-        4: """Used when reports come in of heavy precipitation that seems to
+            4: """Used when reports come in of heavy precipitation that seems to
               include small domestic animals.""",
-        5: """Activated when there's a widespread panic about the sky
+            5: """Activated when there's a widespread panic about the sky
               falling.""",
-    })
+        }
+    )
     assert definition == (
         "\n"
         "Bit 0: Used to indicate sightings of airborne swine.\n"

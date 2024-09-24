@@ -3,7 +3,7 @@
 import numpy as np
 from numpy import ma
 
-from cloudnetpy.categorize import atmos
+from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.categorize.containers import ClassData
 from cloudnetpy.constants import T0
 
@@ -96,8 +96,8 @@ def _fix_liquid_dominated_radar(
     """Radar signals inside liquid clouds are NOT ice if Z is
     increasing in height inside the cloud.
     """
-    liquid_bases = atmos.find_cloud_bases(is_liquid)
-    liquid_tops = atmos.find_cloud_tops(is_liquid)
+    liquid_bases = atmos_utils.find_cloud_bases(is_liquid)
+    liquid_tops = atmos_utils.find_cloud_tops(is_liquid)
     base_indices = np.where(liquid_bases)
     top_indices = np.where(liquid_tops)
 

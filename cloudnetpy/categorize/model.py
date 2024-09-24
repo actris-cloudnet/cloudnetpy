@@ -6,6 +6,11 @@ from scipy.interpolate import interp1d
 
 from cloudnetpy import utils
 from cloudnetpy.categorize import atmos_utils
+from cloudnetpy.categorize.itu import (
+    calc_gas_specific_attenuation,
+    calc_liquid_specific_attenuation,
+    calc_saturation_vapor_pressure,
+)
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import ModelDataError
@@ -35,12 +40,14 @@ class Model(DataSource):
         "temperature",
         "pressure",
         "rh",
-        "gas_atten",
+        "q",
+    )
+    fields_sparse = (*fields_dense, "uwind", "vwind")
+    fields_atten = (
         "specific_gas_atten",
         "specific_saturated_gas_atten",
         "specific_liquid_atten",
     )
-    fields_sparse = (*fields_dense, "q", "uwind", "vwind")
 
     def __init__(self, model_file: str, alt_site: float, options: dict | None = None):
         super().__init__(model_file)
@@ -53,14 +60,8 @@ class Model(DataSource):
         self.data_dense: dict = {}
         self._append_grid()
 
-    def interpolate_to_common_height(self, wl_band: int) -> None:
-        """Interpolates model variables to common height grid.
-
-        Args:
-            wl_band: Integer denoting the approximate wavelength band of the
-                cloud radar (0 = ~35.5 GHz, 1 = ~94 GHz).
-
-        """
+    def interpolate_to_common_height(self) -> None:
+        """Interpolates model variables to common height grid."""
 
         def _interpolate_variable(data_in: ma.MaskedArray) -> CloudnetArray:
             datai = ma.zeros((len(self.time), len(self.mean_height)))
@@ -78,8 +79,6 @@ class Model(DataSource):
             variable = self.dataset.variables[key]
             data = variable[:]
             units = variable.units
-            if "atten" in key:
-                data = data[wl_band, :, :]
             self.data_sparse[key] = _interpolate_variable(data)
 
     def interpolate_to_grid(
@@ -97,7 +96,8 @@ class Model(DataSource):
             Indices fully masked profiles.
 
         """
-        for key in self.fields_dense:
+        half_height = height_grid - np.diff(height_grid, prepend=0) / 2
+        for key in self.fields_dense + self.fields_atten:
             array = self.data_sparse[key][:]
             valid_profiles = _find_number_of_valid_profiles(array)
             if valid_profiles < 2:
@@ -107,7 +107,7 @@ class Model(DataSource):
                 self.mean_height,
                 array,
                 time_grid,
-                height_grid,
+                half_height if "atten" in key else height_grid,
             )
         self.height = height_grid
         return utils.find_masked_profiles_indices(self.data_dense["temperature"])
@@ -138,6 +138,23 @@ class Model(DataSource):
             msg = "No 'height' variable in the model file."
             raise ModelDataError(msg) from err
         return self.to_m(model_heights) + alt_site
+
+    def calc_attenuations(self, frequency: float):
+        temperature = self.getvar("temperature")
+        pressure = self.getvar("pressure")
+        specific_humidity = self.getvar("q")
+
+        self.data_sparse["specific_liquid_atten"] = calc_liquid_specific_attenuation(
+            temperature, frequency
+        )
+        vp = atmos_utils.calc_vapor_pressure(pressure, specific_humidity)
+        svp = calc_saturation_vapor_pressure(temperature)
+        self.data_sparse["specific_gas_atten"] = calc_gas_specific_attenuation(
+            pressure, vp, temperature, frequency
+        )
+        self.data_sparse["specific_saturated_gas_atten"] = (
+            calc_gas_specific_attenuation(pressure, svp, temperature, frequency)
+        )
 
 
 def _calc_mean_height(model_heights: np.ndarray) -> np.ndarray:

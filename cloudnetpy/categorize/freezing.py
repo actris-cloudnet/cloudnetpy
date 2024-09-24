@@ -35,7 +35,7 @@ def find_freezing_region(obs: ClassData, melting_layer: np.ndarray) -> np.ndarra
 
     """
     is_freezing = np.zeros(obs.tw.shape, dtype=bool)
-    t0_alt = _find_t0_alt(obs.tw, obs.height)
+    t0_alt = find_t0_alt(obs.tw, obs.height)
     mean_melting_alt = _find_mean_melting_alt(obs, melting_layer)
 
     if _is_all_freezing(mean_melting_alt, t0_alt, obs.height):
@@ -78,7 +78,7 @@ def _find_mean_melting_alt(obs: ClassData, melting_layer: np.ndarray) -> ma.Mask
     return ma.median(melting_alts, axis=1)
 
 
-def _find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
+def find_t0_alt(temperature: np.ndarray, height: np.ndarray) -> np.ndarray:
     """Interpolates altitudes where temperature goes below freezing.
 
     Args:

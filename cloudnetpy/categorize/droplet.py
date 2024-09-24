@@ -4,8 +4,8 @@ import numpy as np
 import scipy.signal
 from numpy import ma
 
-import cloudnetpy.categorize.atmos
 from cloudnetpy import utils
+from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.categorize.containers import ClassData
 
 
@@ -32,7 +32,7 @@ def correct_liquid_top(
 
     """
     is_liquid_corrected = np.copy(is_liquid)
-    liquid_tops = cloudnetpy.categorize.atmos.find_cloud_tops(is_liquid)
+    liquid_tops = atmos_utils.find_cloud_tops(is_liquid)
     top_above = utils.n_elements(obs.height, limit)
     for prof, top in zip(*np.where(liquid_tops), strict=True):
         ind = _find_ind_above_top(is_freezing[prof, top:], top_above)

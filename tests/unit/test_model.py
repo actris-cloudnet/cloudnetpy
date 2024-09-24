@@ -68,37 +68,12 @@ def fake_model_file(tmpdir_factory):
             ],
         )
         var.units = "m"
-        _create_var(root_grp, "temperature")
-        _create_var(root_grp, "pressure")
+        _create_var(root_grp, "temperature", data=var[:])
+        _create_var(root_grp, "pressure", data=var[:])
         _create_var(root_grp, "uwind")
         _create_var(root_grp, "vwind")
-        _create_var(root_grp, "q")
+        _create_var(root_grp, "q", data=var[:])
         _create_var(root_grp, "rh")
-        _create_var(root_grp, "gas_atten", data=BIG_ARRAY, dim=("wl", "time", "height"))
-        _create_var(
-            root_grp,
-            "specific_gas_atten",
-            data=BIG_ARRAY,
-            dim=("wl", "time", "height"),
-        )
-        _create_var(
-            root_grp,
-            "specific_saturated_gas_atten",
-            data=BIG_ARRAY,
-            dim=("wl", "time", "height"),
-        )
-        _create_var(
-            root_grp,
-            "liquid_atten",
-            data=BIG_ARRAY,
-            dim=("wl", "time", "height"),
-        )
-        _create_var(
-            root_grp,
-            "specific_liquid_atten",
-            data=BIG_ARRAY,
-            dim=("wl", "time", "height"),
-        )
     return file_name
 
 
@@ -130,8 +105,7 @@ def test_mean_height(fake_model_file):
 
 def test_interpolate_to_common_height(fake_model_file):
     obj = model.Model(str(fake_model_file), ALT_SITE)
-    radar_wl_band = 0
-    obj.interpolate_to_common_height(radar_wl_band)
+    obj.interpolate_to_common_height()
     for key in (
         "uwind",
         "vwind",
@@ -139,7 +113,14 @@ def test_interpolate_to_common_height(fake_model_file):
         "temperature",
         "pressure",
         "rh",
-        "gas_atten",
+    ):
+        assert key in obj.data_sparse
+
+
+def test_calculate_attenuations(fake_model_file):
+    obj = model.Model(str(fake_model_file), ALT_SITE)
+    obj.calc_attenuations(94.0)
+    for key in (
         "specific_gas_atten",
         "specific_saturated_gas_atten",
         "specific_liquid_atten",
@@ -169,8 +150,8 @@ def test_find_valid_profiles(data, expected):
 
 def test_interpolate_to_grid(fake_model_file):
     obj = model.Model(str(fake_model_file), ALT_SITE)
-    radar_wl_band = 0
-    obj.interpolate_to_common_height(radar_wl_band)
+    obj.calc_attenuations(94.0)
+    obj.interpolate_to_common_height()
     time_grid = np.array([1, 3])
     height_grid = np.array([1, 3])
     obj.interpolate_to_grid(time_grid, height_grid)

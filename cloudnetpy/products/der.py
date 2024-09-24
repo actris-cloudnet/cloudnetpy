@@ -8,7 +8,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import output, utils
-from cloudnetpy.categorize import atmos
+from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.datasource import DataSource
 from cloudnetpy.exceptions import InvalidSourceFileError
 from cloudnetpy.metadata import MetaData
@@ -94,18 +94,18 @@ class DropletClassification(ProductClassification):
         self.is_ice = self._find_ice()
 
     def _find_droplet(self) -> np.ndarray:
-        return self.category_bits["droplet"]
+        return self.category_bits.droplet
 
     def _find_mixed(self) -> np.ndarray:
-        return self.category_bits["falling"] & self.category_bits["droplet"]
+        return self.category_bits.falling & self.category_bits.droplet
 
     def _find_ice(self) -> np.ndarray:
         return (
-            self.category_bits["falling"]
-            & self.category_bits["cold"]
-            & ~self.category_bits["melting"]
-            & ~self.category_bits["droplet"]
-            & ~self.category_bits["insect"]
+            self.category_bits.falling
+            & self.category_bits.freezing
+            & ~self.category_bits.melting
+            & ~self.category_bits.droplet
+            & ~self.category_bits.insect
         )
 
 
@@ -131,7 +131,6 @@ class DerSource(DataSource):
         rho_l = 1000  # density of liquid water(kg m-3)
 
         var_x = params.sigma_x * params.sigma_x
-        dheight = utils.mdiff(self.getvar("height"))
 
         Z = self.getvar("Z")
         Z = utils.db2lin(Z)
@@ -146,9 +145,12 @@ class DerSource(DataSource):
         der_scaled_error = np.zeros(Z.shape)
         N_scaled = np.zeros(Z.shape)
 
-        is_droplet = self.categorize_bits.category_bits["droplet"]
-        liquid_bases = atmos.find_cloud_bases(is_droplet)
-        liquid_tops = atmos.find_cloud_tops(is_droplet)
+        is_droplet = self.categorize_bits.category_bits.droplet
+        liquid_bases = atmos_utils.find_cloud_bases(is_droplet)
+        liquid_tops = atmos_utils.find_cloud_tops(is_droplet)
+
+        height = self.getvar("height")
+        path_lengths = utils.path_lengths_from_ground(height)
 
         for base, top in zip(
             zip(*np.where(liquid_bases), strict=True),
@@ -162,7 +164,7 @@ class DerSource(DataSource):
             if Z[ind_t, idx_layer].mask.all():
                 continue
 
-            integral = ma.sum(ma.sqrt(Z[ind_t, idx_layer])) * dheight
+            integral = ma.sum(ma.sqrt(Z[ind_t, idx_layer])) * path_lengths[idx_layer]
 
             # der formula (5)
             A = (Z[ind_t, idx_layer] / params.N) ** (1 / 6)
