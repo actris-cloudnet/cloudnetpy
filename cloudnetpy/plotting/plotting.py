@@ -702,7 +702,15 @@ class Plot1D(Plot):
     ) -> None:
         time = figure_data.time.copy()
         data = self._data_orig.copy()
-        flags = self._read_flagged_data(figure_data)
+
+        if figure_data.is_mwrpy_product() or self.sub_plot.variable.name in (
+            "tb",
+            "irt",
+        ):
+            flags = self._read_flagged_data(figure_data)
+        else:
+            flags = np.array([])
+
         if hacky_freq_ind is not None and np.any(flags):
             flags = flags[:, hacky_freq_ind]
         is_invalid = ma.getmaskarray(data)
