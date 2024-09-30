@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.1 – 2024-09-30
+
+- Use flags in moving average plot only with MWRpy products
+
 ## 1.66.0 – 2024-09-24
 
 - Implement rain and melting layer attenuations
