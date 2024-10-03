@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.2 – 2024-10-03
+
+- Support variation of Thies LNM format from pyAtmosLogger
+
 ## 1.66.1 – 2024-09-30
 
 - Use flags in moving average plot only with MWRpy products
