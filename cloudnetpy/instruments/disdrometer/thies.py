@@ -148,14 +148,14 @@ class Thies(Disdrometer):
         self._convert_data(("T_laser_driver",), c_to_k, method="add")
 
     def _read_data(self, filename: str | PathLike) -> None:
-        with open(filename) as file:
+        with open(filename, errors="ignore") as file:
             first_line = file.readline()
         if "TOA5" in first_line:
             units, process, rows = read_toa5(filename)
             for row in rows:
                 self._read_line(row["RawString"], row["TIMESTAMP"])
-        elif first_line.startswith("Datetime [utc];Device address;"):
-            with open(filename) as file:
+        elif first_line.lower().startswith("datetime [utc];"):
+            with open(filename, errors="ignore") as file:
                 first_line = file.readline()
                 for line in file:
                     timestamp, telegram = line.split(";", maxsplit=1)
@@ -165,7 +165,7 @@ class Thies(Disdrometer):
                     )
                     self._read_line(fixed_telegram, parsed_timestamp)
         else:
-            with open(filename) as file:
+            with open(filename, errors="ignore") as file:
                 for line in file:
                     self._read_line(line)
         if len(self.raw_data["time"]) == 0:
