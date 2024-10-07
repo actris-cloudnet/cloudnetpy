@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.4 – 2024-10-07
+
+- Support `ecmwf-open` model
+
 ## 1.66.3 – 2024-10-07
 
 - Improve MIRA data screening
