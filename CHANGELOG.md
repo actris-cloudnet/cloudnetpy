@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.3 – 2024-10-07
+
+- Improve MIRA data screening
+
 ## 1.66.2 – 2024-10-03
 
 - Support variation of Thies LNM format from pyAtmosLogger
