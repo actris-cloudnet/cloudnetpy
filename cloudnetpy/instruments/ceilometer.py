@@ -98,6 +98,9 @@ class Ceilometer:
                 self.data[key] = float(self.site_meta[key])
 
     def get_date_and_time(self, epoch: Epoch) -> None:
+        if "time" not in self.data:
+            msg = "Time array missing from data"
+            raise ValidTimeStampError(msg)
         if self.expected_date is not None:
             self.data = utils.screen_by_time(self.data, epoch, self.expected_date)
         self.date = utils.seconds2date(self.data["time"][0], epoch=epoch)[:3]
