@@ -21,7 +21,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma, ndarray
 from scipy.ndimage import uniform_filter
 
-from cloudnetpy.categorize.freezing import find_t0_alt
+from cloudnetpy.constants import T0
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.instruments.ceilometer import calc_sigma_units
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
@@ -428,22 +428,6 @@ class Plot2D(Plot):
         if figure_data.is_mwrpy_product():
             self._fill_flagged_data(figure_data)
 
-        if self.sub_plot.variable.name == "Tw":
-            tw = figure_data.file["Tw"][:]
-            height = figure_data.height
-            if height is None:
-                msg = "No height information in the file."
-                raise ValueError(msg)
-            t0_alt = find_t0_alt(tw, height)
-            t0_alt = ma.masked_where(t0_alt <= height[0], t0_alt)
-            self._ax.plot(
-                figure_data.time,
-                t0_alt,
-                color="gray",
-                linestyle="dashed",
-                zorder=_get_zorder("t0"),
-            )
-
     def _fill_flagged_data(self, figure_data: FigureData) -> None:
         flags = self._read_flagged_data(figure_data)
         batches = find_batches_of_ones(flags)
@@ -543,18 +527,35 @@ class Plot2D(Plot):
             cbar.ax.set_yticklabels(tick_labels)
 
         if self._plot_meta.contour:
-            time_length = len(figure_data.time_including_gaps)
-            step = max(1, time_length // 200)
-            ind_time = np.arange(0, time_length, step)
-            self._ax.contour(
-                figure_data.time_including_gaps[ind_time],
+            self._plot_contour(
+                figure_data,
                 alt,
-                self._data[ind_time, :].T,
                 levels=np.linspace(vmin, vmax, num=10),
                 colors="black",
                 linewidths=0.5,
-                zorder=_get_zorder("contour"),
             )
+
+        if self.sub_plot.variable.name == "Tw":
+            self._plot_contour(
+                figure_data,
+                alt,
+                levels=np.array([T0]),
+                colors="gray",
+                linewidths=1.25,
+                linestyles="dashed",
+            )
+
+    def _plot_contour(self, figure_data: FigureData, alt: np.ndarray, **options):
+        time_length = len(figure_data.time_including_gaps)
+        step = max(1, time_length // 200)
+        ind_time = np.arange(0, time_length, step)
+        self._ax.contour(
+            figure_data.time_including_gaps[ind_time],
+            alt,
+            self._data[ind_time, :].T,
+            **options,
+            zorder=_get_zorder("contour"),
+        )
 
     def _screen_data_by_max_y(self, figure_data: FigureData) -> ndarray:
         if figure_data.height is None:
