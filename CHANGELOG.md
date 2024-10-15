@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.66.5 – 2024-10-15
+
+- Check for missing time data
+- Improve plotting of zero temperature line
+
 ## 1.66.4 – 2024-10-07
 
 - Support `ecmwf-open` model
