@@ -178,14 +178,12 @@ def rebin_2d(
         masked_result = ma.array(result)
 
     # Fill bins with not enough profiles
-    empty_indices = []
-    for ind in range(len(edges) - 1):
-        is_data = np.where((x_in > edges[ind]) & (x_in <= edges[ind + 1]))[0]
-        if len(is_data) < n_min:
-            masked_result[ind, :] = ma.masked
-            empty_indices.append(ind)
+    x_hist, _ = np.histogram(x_in, bins=edges)
+    empty_mask = x_hist < n_min
+    masked_result[empty_mask, :] = ma.masked
+    empty_indices = list(np.nonzero(empty_mask)[0])
     if len(empty_indices) > 0:
-        logging.debug("No radar data in %s bins", len(empty_indices))
+        logging.debug("No data in %s bins", len(empty_indices))
 
     return masked_result, empty_indices
 

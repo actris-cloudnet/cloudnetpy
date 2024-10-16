@@ -100,7 +100,7 @@ class TestRebin2D:
         data_i, empty_ind = utils.rebin_2d(self.x, self.data, self.xnew)
         expected_data = np.array([[2, 4.5, 6.5], [2, 4.5, 6.5]]).T
         assert_array_almost_equal(data_i.data, expected_data)
-        assert bool(data_i.mask) is False
+        assert not ma.getmaskarray(data_i.mask).any()
         assert empty_ind == []
 
     def test_rebin_2d_n_min(self):
