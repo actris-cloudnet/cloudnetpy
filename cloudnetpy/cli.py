@@ -1,0 +1,468 @@
+import argparse
+import gzip
+import importlib
+import logging
+import os
+import re
+import shutil
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import TYPE_CHECKING, Final, Literal
+
+import requests
+
+from cloudnetpy.categorize import generate_categorize
+from cloudnetpy.concat_lib import concatenate_files
+from cloudnetpy.exceptions import PlottingError
+from cloudnetpy.instruments import (
+    basta2nc,
+    ceilo2nc,
+    copernicus2nc,
+    galileo2nc,
+    hatpro2l1c,
+    hatpro2nc,
+    mira2nc,
+    mrr2nc,
+    parsivel2nc,
+    pollyxt2nc,
+    rpg2nc,
+    thies2nc,
+    ws2nc,
+)
+from cloudnetpy.plotting import generate_figure
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+
+cloudnet_api_url: Final = "https://cloudnet.fmi.fi/api/"
+
+logging.basicConfig(level=logging.INFO)
+
+
+def run(args: argparse.Namespace, tmpdir: str):
+    files_for_cat = {}
+    if source_instruments := _get_source_instruments(args.products):
+        for product, possible_instruments in source_instruments.items():
+            meta = _fetch_raw_meta(possible_instruments, args)
+            instrument = _select_instrument(meta, product)
+            if not instrument:
+                logging.info("No instrument found for %s", product)
+                continue
+            meta = _filter_by_instrument(meta, instrument)
+            meta = _filter_by_filename(meta)
+            meta = _filter_by_suffix(meta, product)
+            if not meta:
+                logging.info("No suitable data available for %s", product)
+                continue
+            output_filepath = _process_instrument_product(
+                product, meta, instrument, tmpdir, args
+            )
+            _plot(output_filepath, product, args)
+            files_for_cat[product] = output_filepath
+
+    if "categorize" in args.products:
+        cat_filepath = _process_categorize(files_for_cat, args)
+        _plot(cat_filepath, "categorize", args)
+
+    l2_products = ("lwc", "iwc", "classification", "der", "ier", "drizzle")
+    for product in args.products:
+        if product not in l2_products:
+            continue
+        if "categorize" not in args.products:
+            cat_filepath = _fetch_product(args, "categorize")
+        if cat_filepath is None:
+            logging.info("No categorize data available for l2 products")
+            break
+        l2_filename = _process_product_file(product, cat_filepath)
+        _plot(l2_filename, product, args)
+
+
+def _process_categorize(input_files: dict, args: argparse.Namespace) -> str | None:
+    cat_filepath = _create_categorize_filepath(args)
+    input_files["model"] = _fetch_model(args)
+    if not input_files["model"]:
+        logging.info("No model data available for this date.")
+        return None
+    for product in ("radar", "lidar", "disdrometer"):
+        if product not in input_files and (filepath := _fetch_product(args, product)):
+            input_files[product] = filepath
+    mwr = _fetch_product(args, "mwr-single")
+    if mwr is None:
+        mwr = _fetch_product(args, "mwr")
+    if mwr is None:
+        mwr = _fetch_product(args, "radar", source="rpg-fmcw-94")
+    if mwr is not None:
+        input_files["mwr"] = mwr
+    try:
+        logging.info("Processing categorize...")
+        generate_categorize(input_files, cat_filepath)
+        logging.info("Processed categorize to %s", cat_filepath)
+    except NameError:
+        logging.info("No data available for this date.")
+        return None
+    return cat_filepath
+
+
+def _process_instrument_product(
+    product: str,
+    meta: list[dict],
+    instrument: dict,
+    tmpdir: str,
+    args: argparse.Namespace,
+) -> str:
+    output_filepath = _create_instrument_filepath(instrument, args)
+    site_meta = _read_site_meta(meta)
+    input_files: list[str] | str
+    input_files = _fetch_raw(meta, args)
+    input_folder = str(Path(input_files[0]).parent)
+    calibration = _get_calibration(instrument, args)
+    fun: Callable
+    match (product, instrument["instrumentId"]):
+        case ("radar", _id) if "mira" in _id:
+            fun = mira2nc
+        case ("radar", _id) if "rpg" in _id:
+            fun = rpg2nc
+            input_files = input_folder
+        case ("radar", _id) if "basta" in _id:
+            fun = basta2nc
+            _check_input(input_files)
+            input_files = input_files[0]
+        case ("radar", _id) if "copernicus" in _id:
+            fun = copernicus2nc
+        case ("radar", _id) if "galileo" in _id:
+            fun = galileo2nc
+        case ("disdrometer", _id) if "parsivel" in _id:
+            fun = parsivel2nc
+        case ("disdrometer", _id) if "thies" in _id:
+            fun = thies2nc
+            _check_input(input_files)
+            input_files = input_files[0]
+        case ("lidar", _id) if "pollyxt" in _id:
+            fun = pollyxt2nc
+        case ("lidar", _id) if "chm" in _id:
+            fun = ceilo2nc
+            if len(input_files) > 1:
+                concat_file = str(Path(tmpdir) / "concat.nc")
+                concatenate_files(input_files, concat_file)
+                input_files = concat_file
+            else:
+                input_files = input_files[0]
+            if factor := calibration.get("calibration_factor"):
+                site_meta["calibration_factor"] = factor
+        case ("lidar", _id):
+            fun = ceilo2nc
+        case ("mwr", _id):
+            fun = hatpro2nc
+            input_files = input_folder
+        case ("mwr-l1c", _id):
+            fun = hatpro2l1c
+            coefficients = _fetch_coefficient_files(calibration, tmpdir)
+            site_meta = {**site_meta, **calibration}
+            site_meta["coefficientFiles"] = coefficients
+            input_files = input_folder
+        case ("mrr", _id):
+            fun = mrr2nc
+        case ("weather-station", _id):
+            fun = ws2nc
+    fun(input_files, output_filepath, site_meta)
+    logging.info("Processed %s to %s", product, output_filepath)
+    return output_filepath
+
+
+def _fetch_coefficient_files(calibration: dict, tmpdir: str) -> list:
+    if not (links := calibration.get("coefficientLinks")):
+        msg = "No calibration coefficients found"
+        raise ValueError(msg)
+    coefficient_paths = []
+    for filename in links:
+        res = requests.get(filename, timeout=60)
+        res.raise_for_status()
+        filepath = Path(tmpdir) / Path(filename).name
+        filepath.write_bytes(res.content)
+        coefficient_paths.append(str(filepath))
+    return coefficient_paths
+
+
+def _get_calibration(instrument: dict, args) -> dict:
+    params = {
+        "date": args.date,
+        "instrumentPid": instrument["pid"],
+    }
+    res = requests.get(
+        f"{cloudnet_api_url}calibration",
+        params=params,
+        timeout=60,
+    )
+    if res.status_code == 404:
+        return {}
+    return res.json().get("data", {})
+
+
+def _create_instrument_filepath(instrument: dict, args: argparse.Namespace) -> str:
+    folder = _create_folder("instrument", args)
+    instrument_id = instrument["instrumentId"]
+    pid = _shorten_pid(instrument["pid"])
+    filename = f"{args.date.replace('-', '')}_{args.site}_{instrument_id}_{pid}.nc"
+    return str(folder / filename)
+
+
+def _create_categorize_filepath(args: argparse.Namespace) -> str:
+    folder = _create_folder("geophysical", args)
+    filename = f"{args.date.replace('-', '')}_{args.site}_categorize.nc"
+    return str(folder / filename)
+
+
+def _create_folder(
+    folder_type: Literal["geophysical", "instrument"], args: argparse.Namespace
+) -> Path:
+    folder = args.output / args.site / args.date / folder_type
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+    return folder
+
+
+def _fetch_raw_meta(instruments: list[str], args: argparse.Namespace) -> list[dict]:
+    res = requests.get(
+        f"{cloudnet_api_url}raw-files/",
+        params={
+            "site": args.site,
+            "date": args.date,
+            "instrument": instruments,
+        },
+        timeout=60,
+    )
+    res.raise_for_status()
+    return res.json()
+
+
+def _filter_by_instrument(meta: list[dict], instrument: dict) -> list[dict]:
+    return [m for m in meta if m["instrumentInfo"]["pid"] == instrument["pid"]]
+
+
+def _filter_by_filename(meta: list[dict]) -> list[dict]:
+    return [m for m in meta if not m["filename"].lower().endswith(".lv0")]
+
+
+def _filter_by_suffix(meta: list[dict], product: str) -> list[dict]:
+    if product == "mwr":
+        meta = [m for m in meta if re.search(r"\.(lwp|iwv)\.", m["filename"])]
+    elif product == "mwr-l1c":
+        meta = [m for m in meta if not m["filename"].lower().endswith(".nc")]
+    return meta
+
+
+def _get_source_instruments(products: list[str]) -> dict[str, list[str]]:
+    source_instruments = {}
+    for product in products:
+        res = requests.get(f"{cloudnet_api_url}products/{product}", timeout=60)
+        res.raise_for_status()
+        if sources := res.json().get("sourceInstruments", []):
+            source_instruments[product] = [i["id"] for i in sources]
+    return source_instruments
+
+
+def _select_instrument(meta: list[dict], product: str) -> dict | None:
+    instruments = _get_unique_instruments(meta)
+    if len(instruments) == 0:
+        logging.info("No instruments found")
+        return None
+    if len(instruments) > 1:
+        logging.info("Multiple instruments found for %s", product)
+        logging.info("Please specify which one to use")
+        for i, _id in enumerate(instruments):
+            logging.info("%d: %s", i + 1, _id["name"])
+        ind = int(input("Select: ")) - 1
+        selected_instrument = instruments[ind]
+    else:
+        selected_instrument = instruments[0]
+        logging.info("Single instrument found: %s", selected_instrument["name"])
+    return selected_instrument
+
+
+def _get_unique_instruments(meta: list[dict]) -> list[dict]:
+    unique_pids = {m["instrumentInfo"]["pid"] for m in meta}
+    unique_instruments = []
+    for pid in unique_pids:
+        for m in meta:
+            if m["instrumentInfo"]["pid"] == pid:
+                unique_instruments.append(m["instrumentInfo"])
+                break
+    unique_instruments.sort(key=lambda x: x["name"])
+    return unique_instruments
+
+
+def _fetch_product(
+    args: argparse.Namespace, product: str, source: str | None = None
+) -> str | None:
+    payload = {
+        "date": args.date,
+        "site": args.site,
+        "product": product,
+    }
+    url = f"{cloudnet_api_url}files"
+    res = requests.get(url, payload, timeout=60)
+    res.raise_for_status()
+    meta = res.json()
+    if source:
+        meta = [
+            m for m in meta if "instrument" in m and m["instrument"]["id"] == source
+        ]
+    if not meta:
+        logging.info("No data available for %s", product)
+        return None
+    if len(meta) > 1:
+        logging.info(
+            "Multiple files for %s ... taking the first but some logic needed", product
+        )
+    meta = meta[0]
+    suffix = "geophysical" if "geophysical" in meta["product"]["type"] else "instrument"
+    folder = args.output / args.site / args.date / suffix
+    return _download_file(meta, folder, args)
+
+
+def _fetch_model(args: argparse.Namespace) -> str | None:
+    payload = {
+        "date": args.date,
+        "site": args.site,
+    }
+    url = f"{cloudnet_api_url}model-files"
+    res = requests.get(url, payload, timeout=60)
+    res.raise_for_status()
+    meta = res.json()
+    if not meta:
+        logging.info("No model data available for this date")
+        return None
+    meta = meta[0]
+    folder = Path(args.output) / args.site / args.date / "instrument"
+    return _download_file(meta, folder, args)
+
+
+def _fetch_raw(metadata: list[dict], args: argparse.Namespace) -> list[str]:
+    filepaths = []
+    for meta in metadata:
+        pid = _shorten_pid(meta["instrumentInfo"]["pid"])
+        instrument = f"{meta['instrumentInfo']['instrumentId']}_{pid}"
+        folder = args.input / args.site / args.date / instrument
+        filepath = _download_file(meta, folder, args)
+        filepaths.append(filepath)
+    return filepaths
+
+
+def _download_file(meta: dict, folder: Path, args: argparse.Namespace) -> str:
+    folder.mkdir(parents=True, exist_ok=True)
+    filepath = folder / meta["filename"]
+    filepath_trunc = filepath.with_suffix("") if filepath.suffix == ".gz" else filepath
+    if filepath.exists() and not args.force:
+        logging.info("Using existing file: %s", filepath)
+    elif filepath_trunc.exists() and not args.force:
+        logging.info("Using existing file: %s", filepath_trunc)
+        filepath = filepath_trunc
+    else:
+        logging.info("Downloading file: %s", filepath)
+        res = requests.get(meta["downloadUrl"], timeout=60)
+        res.raise_for_status()
+        filepath.write_bytes(res.content)
+        filepath = _unzip_gz_file(filepath)
+    return str(filepath)
+
+
+def _unzip_gz_file(path_in: Path) -> Path:
+    if path_in.suffix != ".gz":
+        return path_in
+    path_out = path_in.with_suffix("")
+    logging.debug("Decompressing %s to %s", path_in, path_out)
+    with gzip.open(path_in, "rb") as file_in, open(path_out, "wb") as file_out:
+        shutil.copyfileobj(file_in, file_out)
+    path_in.unlink()
+    return path_out
+
+
+def _read_site_meta(meta: list[dict]) -> dict:
+    return {
+        "latitude": meta[0]["site"]["latitude"],
+        "longitude": meta[0]["site"]["longitude"],
+        "altitude": meta[0]["site"]["altitude"],
+        "name": meta[0]["site"]["humanReadableName"],
+    }
+
+
+def _shorten_pid(pid: str) -> str:
+    return pid.split(".")[-1][:8]
+
+
+def _check_input(files: list) -> None:
+    if len(files) > 1:
+        msg = "Multiple input files found"
+        raise ValueError(msg)
+
+
+def _parse_arg_list(products: str) -> list[str]:
+    return products.split(",")
+
+
+def _plot(filepath: os.PathLike | str | None, product: str, args: argparse.Namespace):
+    if not args.plot or filepath is None:
+        return
+    res = requests.get(f"{cloudnet_api_url}products/variables", timeout=60)
+    res.raise_for_status()
+    variables = next(var["variables"] for var in res.json() if var["id"] == product)
+    variables = [var["id"].split("-")[-1] for var in variables]
+    image_name = str(filepath).replace(".nc", ".png")
+    try:
+        generate_figure(
+            filepath,
+            variables,
+            show=False,
+            output_filename=image_name,
+        )
+    except PlottingError as e:
+        logging.info("Failed to plot %s: %s", product, e)
+
+
+def _process_product_file(product: str, categorize_file: str) -> str:
+    output_file = categorize_file.replace("categorize", product)
+    module = importlib.import_module("cloudnetpy.products")
+    getattr(module, f"generate_{product}")(categorize_file, output_file)
+    logging.info("Processed %s to %s", product, output_file)
+    return output_file
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Command line interface for running CloudnetPy."
+    )
+    parser.add_argument("-s", "--site", type=str, help="Site", required=True)
+    parser.add_argument(
+        "-d", "--date", type=str, help="Date in YYYY-MM-DD", required=True
+    )
+    parser.add_argument(
+        "-p",
+        "--products",
+        type=_parse_arg_list,
+        help="Products to process",
+        required=True,
+    )
+    parser.add_argument("--input", type=Path, help="Input path", default="input/")
+    parser.add_argument("--output", type=Path, help="Output path", default="output/")
+    parser.add_argument(
+        "--plot",
+        help="Plot the processed data",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        help="Force download of files",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    args = parser.parse_args()
+
+    with TemporaryDirectory() as tmpdir:
+        run(args, tmpdir)
+
+
+if __name__ == "__main__":
+    main()
