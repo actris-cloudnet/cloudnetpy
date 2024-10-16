@@ -140,7 +140,7 @@ def rebin_2d(
     x_in: np.ndarray,
     array: ma.MaskedArray,
     x_new: np.ndarray,
-    statistic: str = "mean",
+    statistic: Literal["mean", "std"] = "mean",
     n_min: int = 1,
     *,
     mask_zeros: bool = True,
