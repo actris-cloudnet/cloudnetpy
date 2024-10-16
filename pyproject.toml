@@ -38,6 +38,9 @@ test = [
 dev = ["pre-commit", "release-version"]
 extras = ["voodoonet>=0.1.7"]
 
+[project.scripts]
+cloudnetpy = "cloudnetpy.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/actris-cloudnet/cloudnetpy"
 Documentation = "https://actris-cloudnet.github.io/cloudnetpy/"

@@ -1,8 +1,12 @@
 """Module for concatenating netCDF files."""
 
+import shutil
+from os import PathLike
+
 import netCDF4
 import numpy as np
 
+from cloudnetpy import utils
 from cloudnetpy.exceptions import InconsistentDataError
 
 
@@ -264,3 +268,63 @@ def _update_fields(
                 nc_old.variables[field][idx, :] = nc_new.variables[field][valid_ind, :]
             elif len(dimensions) == 2 and concat_ind == 1:
                 nc_old.variables[field][:, idx] = nc_new.variables[field][:, valid_ind]
+
+
+def concatenate_text_files(filenames: list, output_filename: str | PathLike) -> None:
+    """Concatenates text files."""
+    with open(output_filename, "wb") as target:
+        for filename in filenames:
+            with open(filename, "rb") as source:
+                shutil.copyfileobj(source, target)
+
+
+def bundle_netcdf_files(
+    files: list,
+    date: str,
+    output_file: str,
+    concat_dimensions: tuple[str, ...] = ("time", "profile"),
+    variables: list | None = None,
+) -> list:
+    """Concatenates several netcdf files into daily file with
+    some extra data manipulation.
+    """
+    with netCDF4.Dataset(files[0]) as nc:
+        concat_dimension = None
+        for key in concat_dimensions:
+            if key in nc.dimensions:
+                concat_dimension = key
+                break
+        if concat_dimension is None:
+            msg = f"Dimension '{concat_dimensions}' not found in the files."
+            raise KeyError(msg)
+    if len(files) == 1:
+        shutil.copy(files[0], output_file)
+        return files
+    valid_files = []
+    for file in files:
+        try:
+            with netCDF4.Dataset(file) as nc:
+                time = nc.variables["time"]
+                time_array = time[:]
+                time_units = time.units
+        except OSError:
+            continue
+        epoch = utils.get_epoch(time_units)
+        for timestamp in time_array:
+            if utils.seconds2date(timestamp, epoch)[:3] == date.split("-"):
+                valid_files.append(file)
+                break
+    concatenate_files(
+        valid_files,
+        output_file,
+        concat_dimension=concat_dimension,
+        variables=variables,
+        ignore=[
+            "minimum",
+            "maximum",
+            "number_integrated_samples",
+            "Min_LWP",
+            "Max_LWP",
+        ],
+    )
+    return valid_files

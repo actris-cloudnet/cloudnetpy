@@ -1,6 +1,8 @@
 """This module contains general helper functions."""
 
+import base64
 import datetime
+import hashlib
 import logging
 import os
 import re
@@ -1026,3 +1028,23 @@ def remove_masked_blocks(array: ma.MaskedArray, limit: int = 50) -> np.ndarray:
     mask = np.bincount(labeled_array) < limit
     mask[0] = True
     return mask[labeled_array]
+
+
+def sha256sum(filename: str | os.PathLike) -> str:
+    """Calculates hash of file using sha-256."""
+    return _calc_hash_sum(filename, "sha256", is_base64=False)
+
+
+def md5sum(filename: str | os.PathLike, *, is_base64: bool = False) -> str:
+    """Calculates hash of file using md5."""
+    return _calc_hash_sum(filename, "md5", is_base64=is_base64)
+
+
+def _calc_hash_sum(filename, method, *, is_base64: bool) -> str:
+    hash_sum = getattr(hashlib, method)()
+    with open(filename, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            hash_sum.update(byte_block)
+    if is_base64:
+        return base64.encodebytes(hash_sum.digest()).decode("utf-8").strip()
+    return hash_sum.hexdigest()
