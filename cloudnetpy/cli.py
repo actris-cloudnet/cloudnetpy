@@ -127,6 +127,8 @@ def _process_instrument_product(
                 concat_file = str(Path(tmpdir) / "tmp.txt")
                 concatenate_text_files(input_files, concat_file)
                 input_files = concat_file
+            else:
+                input_files = input_files[0]
         case ("lidar", _id) if "pollyxt" in _id:
             fun = instruments.pollyxt2nc
         case ("lidar", _id) if "chm" in _id:
