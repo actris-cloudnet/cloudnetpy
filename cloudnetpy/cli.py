@@ -13,7 +13,7 @@ import requests
 
 from cloudnetpy import instruments
 from cloudnetpy.categorize import generate_categorize
-from cloudnetpy.concat_lib import concatenate_files
+from cloudnetpy.concat_lib import concatenate_files, concatenate_text_files
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.plotting import generate_figure
 
@@ -122,14 +122,16 @@ def _process_instrument_product(
             fun = instruments.parsivel2nc
         case ("disdrometer", _id) if "thies" in _id:
             fun = instruments.thies2nc
-            _check_input(input_files)
-            input_files = input_files[0]
+            if len(input_files) > 1:
+                concat_file = str(Path(tmpdir) / "tmp.txt")
+                concatenate_text_files(input_files, concat_file)
+                input_files = concat_file
         case ("lidar", _id) if "pollyxt" in _id:
             fun = instruments.pollyxt2nc
         case ("lidar", _id) if "chm" in _id:
             fun = instruments.ceilo2nc
             if len(input_files) > 1:
-                concat_file = str(Path(tmpdir) / "concat.nc")
+                concat_file = str(Path(tmpdir) / "tmp.nc")
                 concatenate_files(input_files, concat_file)
                 input_files = concat_file
             else:

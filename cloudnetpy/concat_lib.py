@@ -1,5 +1,8 @@
 """Module for concatenating netCDF files."""
 
+import shutil
+from os import PathLike
+
 import netCDF4
 import numpy as np
 
@@ -264,3 +267,11 @@ def _update_fields(
                 nc_old.variables[field][idx, :] = nc_new.variables[field][valid_ind, :]
             elif len(dimensions) == 2 and concat_ind == 1:
                 nc_old.variables[field][:, idx] = nc_new.variables[field][:, valid_ind]
+
+
+def concatenate_text_files(filenames: list, output_filename: str | PathLike) -> None:
+    """Concatenates text files."""
+    with open(output_filename, "wb") as target:
+        for filename in filenames:
+            with open(filename, "rb") as source:
+                shutil.copyfileobj(source, target)
