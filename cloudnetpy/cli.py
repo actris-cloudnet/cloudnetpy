@@ -232,7 +232,9 @@ def _filter_by_filename(meta: list[dict]) -> list[dict]:
 
 def _filter_by_suffix(meta: list[dict], product: str) -> list[dict]:
     if product == "mwr":
-        meta = [m for m in meta if re.search(r"\.(lwp|iwv)\.", m["filename"])]
+        meta = [
+            m for m in meta if re.search(r"\.(lwp|iwv)", m["filename"], re.IGNORECASE)
+        ]
     elif product == "mwr-l1c":
         meta = [m for m in meta if not m["filename"].lower().endswith(".nc")]
     return meta
