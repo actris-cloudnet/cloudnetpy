@@ -35,7 +35,6 @@ def run(args: argparse.Namespace, tmpdir: str):
                 logging.info("No instrument found for %s", product)
                 continue
             meta = _filter_by_instrument(meta, instrument)
-            meta = _filter_by_filename(meta)
             meta = _filter_by_suffix(meta, product)
             if not meta:
                 logging.info("No suitable data available for %s", product)
@@ -226,12 +225,10 @@ def _filter_by_instrument(meta: list[dict], instrument: dict) -> list[dict]:
     return [m for m in meta if m["instrumentInfo"]["pid"] == instrument["pid"]]
 
 
-def _filter_by_filename(meta: list[dict]) -> list[dict]:
-    return [m for m in meta if not m["filename"].lower().endswith(".lv0")]
-
-
 def _filter_by_suffix(meta: list[dict], product: str) -> list[dict]:
-    if product == "mwr":
+    if product == "radar":
+        meta = [m for m in meta if not m["filename"].lower().endswith(".lv0")]
+    elif product == "mwr":
         meta = [
             m for m in meta if re.search(r"\.(lwp|iwv)", m["filename"], re.IGNORECASE)
         ]
