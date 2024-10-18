@@ -5,6 +5,7 @@ import logging
 import os
 import re
 import shutil
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Final
@@ -328,9 +329,12 @@ def _fetch_raw(metadata: list[dict], args: argparse.Namespace) -> list[str]:
     instrument = f"{metadata[0]['instrumentInfo']['instrumentId']}_{pid}"
     folder = _create_folder(instrument, args)
     filepaths = []
-    for meta in metadata:
-        filepath = _download_file(meta, folder, args)
-        filepaths.append(filepath)
+    with ThreadPoolExecutor() as executor:
+        futures = [
+            executor.submit(_download_file, meta, folder, args) for meta in metadata
+        ]
+        for future in as_completed(futures):
+            filepaths.append(future.result())
     return filepaths
 
 
