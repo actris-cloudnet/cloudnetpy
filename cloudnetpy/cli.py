@@ -11,24 +11,10 @@ from typing import TYPE_CHECKING, Final
 
 import requests
 
+from cloudnetpy import instruments
 from cloudnetpy.categorize import generate_categorize
 from cloudnetpy.concat_lib import concatenate_files
 from cloudnetpy.exceptions import PlottingError
-from cloudnetpy.instruments import (
-    basta2nc,
-    ceilo2nc,
-    copernicus2nc,
-    galileo2nc,
-    hatpro2l1c,
-    hatpro2nc,
-    mira2nc,
-    mrr2nc,
-    parsivel2nc,
-    pollyxt2nc,
-    rpg2nc,
-    thies2nc,
-    ws2nc,
-)
 from cloudnetpy.plotting import generate_figure
 
 if TYPE_CHECKING:
@@ -120,28 +106,28 @@ def _process_instrument_product(
     fun: Callable
     match (product, instrument["instrumentId"]):
         case ("radar", _id) if "mira" in _id:
-            fun = mira2nc
+            fun = instruments.mira2nc
         case ("radar", _id) if "rpg" in _id:
-            fun = rpg2nc
+            fun = instruments.rpg2nc
             input_files = input_folder
         case ("radar", _id) if "basta" in _id:
-            fun = basta2nc
+            fun = instruments.basta2nc
             _check_input(input_files)
             input_files = input_files[0]
         case ("radar", _id) if "copernicus" in _id:
-            fun = copernicus2nc
+            fun = instruments.copernicus2nc
         case ("radar", _id) if "galileo" in _id:
-            fun = galileo2nc
+            fun = instruments.galileo2nc
         case ("disdrometer", _id) if "parsivel" in _id:
-            fun = parsivel2nc
+            fun = instruments.parsivel2nc
         case ("disdrometer", _id) if "thies" in _id:
-            fun = thies2nc
+            fun = instruments.thies2nc
             _check_input(input_files)
             input_files = input_files[0]
         case ("lidar", _id) if "pollyxt" in _id:
-            fun = pollyxt2nc
+            fun = instruments.pollyxt2nc
         case ("lidar", _id) if "chm" in _id:
-            fun = ceilo2nc
+            fun = instruments.ceilo2nc
             if len(input_files) > 1:
                 concat_file = str(Path(tmpdir) / "concat.nc")
                 concatenate_files(input_files, concat_file)
@@ -151,20 +137,20 @@ def _process_instrument_product(
             if factor := calibration.get("calibration_factor"):
                 site_meta["calibration_factor"] = factor
         case ("lidar", _id):
-            fun = ceilo2nc
+            fun = instruments.ceilo2nc
         case ("mwr", _id):
-            fun = hatpro2nc
+            fun = instruments.hatpro2nc
             input_files = input_folder
         case ("mwr-l1c", _id):
-            fun = hatpro2l1c
+            fun = instruments.hatpro2l1c
             coefficients = _fetch_coefficient_files(calibration, tmpdir)
             site_meta = {**site_meta, **calibration}
             site_meta["coefficientFiles"] = coefficients
             input_files = input_folder
         case ("mrr", _id):
-            fun = mrr2nc
+            fun = instruments.mrr2nc
         case ("weather-station", _id):
-            fun = ws2nc
+            fun = instruments.ws2nc
     fun(input_files, output_filepath, site_meta)
     logging.info("Processed %s to %s", product, output_filepath)
     return output_filepath
