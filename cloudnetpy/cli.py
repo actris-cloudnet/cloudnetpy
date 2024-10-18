@@ -7,7 +7,7 @@ import re
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Final
 
 import requests
 
@@ -213,12 +213,9 @@ def _create_categorize_filepath(args: argparse.Namespace) -> str:
     return str(folder / filename)
 
 
-def _create_folder(
-    folder_type: Literal["geophysical", "instrument"], args: argparse.Namespace
-) -> Path:
-    folder = args.output / args.site / args.date / folder_type
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+def _create_folder(end_point: str, args: argparse.Namespace) -> Path:
+    folder = Path(args.output) / args.site / args.date / end_point
+    folder.mkdir(parents=True, exist_ok=True)
     return folder
 
 
@@ -317,7 +314,7 @@ def _fetch_product(
         )
     meta = meta[0]
     suffix = "geophysical" if "geophysical" in meta["product"]["type"] else "instrument"
-    folder = args.output / args.site / args.date / suffix
+    folder = _create_folder(suffix, args)
     return _download_file(meta, folder, args)
 
 
@@ -334,23 +331,22 @@ def _fetch_model(args: argparse.Namespace) -> str | None:
         logging.info("No model data available for this date")
         return None
     meta = meta[0]
-    folder = Path(args.output) / args.site / args.date / "instrument"
+    folder = _create_folder("instrument", args)
     return _download_file(meta, folder, args)
 
 
 def _fetch_raw(metadata: list[dict], args: argparse.Namespace) -> list[str]:
+    pid = _shorten_pid(metadata[0]["instrumentInfo"]["pid"])
+    instrument = f"{metadata[0]['instrumentInfo']['instrumentId']}_{pid}"
+    folder = _create_folder(instrument, args)
     filepaths = []
     for meta in metadata:
-        pid = _shorten_pid(meta["instrumentInfo"]["pid"])
-        instrument = f"{meta['instrumentInfo']['instrumentId']}_{pid}"
-        folder = args.input / args.site / args.date / instrument
         filepath = _download_file(meta, folder, args)
         filepaths.append(filepath)
     return filepaths
 
 
 def _download_file(meta: dict, folder: Path, args: argparse.Namespace) -> str:
-    folder.mkdir(parents=True, exist_ok=True)
     filepath = folder / meta["filename"]
     filepath_trunc = filepath.with_suffix("") if filepath.suffix == ".gz" else filepath
     if filepath.exists() and not args.force:
