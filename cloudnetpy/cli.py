@@ -403,18 +403,18 @@ def _parse_arg_list(products: str) -> list[str]:
 
 
 def _plot(filepath: os.PathLike | str | None, product: str, args: argparse.Namespace):
-    if not args.plot or filepath is None:
+    if filepath is None or (not args.plot and not args.show):
         return
     res = requests.get(f"{cloudnet_api_url}products/variables", timeout=60)
     res.raise_for_status()
     variables = next(var["variables"] for var in res.json() if var["id"] == product)
     variables = [var["id"].split("-")[-1] for var in variables]
-    image_name = str(filepath).replace(".nc", ".png")
+    image_name = str(filepath).replace(".nc", ".png") if args.plot else None
     try:
         generate_figure(
             filepath,
             variables,
-            show=False,
+            show=args.show,
             output_filename=image_name,
         )
     except PlottingError as e:
@@ -449,6 +449,12 @@ def main():
     parser.add_argument(
         "--plot",
         help="Plot the processed data",
+        default=False,
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "--show",
+        help="Show plotted image",
         default=False,
         action=argparse.BooleanOptionalAction,
     )
