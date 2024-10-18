@@ -64,20 +64,19 @@ def run(args: argparse.Namespace, tmpdir: str):
 
 def _process_categorize(input_files: dict, args: argparse.Namespace) -> str | None:
     cat_filepath = _create_categorize_filepath(args)
+
     input_files["model"] = _fetch_model(args)
-    if not input_files["model"]:
+    if input_files["model"] is None:
         logging.info("No model data available for this date.")
         return None
+
     for product in ("radar", "lidar", "disdrometer"):
         if product not in input_files and (filepath := _fetch_product(args, product)):
             input_files[product] = filepath
-    mwr = _fetch_product(args, "mwr-single")
-    if mwr is None:
-        mwr = _fetch_product(args, "mwr")
-    if mwr is None:
-        mwr = _fetch_product(args, "radar", source="rpg-fmcw-94")
-    if mwr is not None:
+
+    if mwr := _fetch_mwr(args):
         input_files["mwr"] = mwr
+
     try:
         logging.info("Processing categorize...")
         generate_categorize(input_files, cat_filepath)
@@ -86,6 +85,20 @@ def _process_categorize(input_files: dict, args: argparse.Namespace) -> str | No
         logging.info("No data available for this date.")
         return None
     return cat_filepath
+
+
+def _fetch_mwr(args: argparse.Namespace) -> str | None:
+    mwr_sources = [
+        ("mwr-single", None),
+        ("mwr", None),
+        ("radar", "rpg-fmcw-35"),
+        ("radar", "rpg-fmcw-94"),
+    ]
+    for product, source in mwr_sources:
+        mwr = _fetch_product(args, product, source=source)
+        if mwr:
+            return mwr
+    return None
 
 
 def _process_instrument_product(
