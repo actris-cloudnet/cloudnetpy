@@ -24,8 +24,6 @@ if TYPE_CHECKING:
 
 cloudnet_api_url: Final = "https://cloudnet.fmi.fi/api/"
 
-logging.basicConfig(level=logging.INFO)
-
 
 def run(args: argparse.Namespace, tmpdir: str):
     files_for_cat = {}
@@ -462,6 +460,13 @@ def main():
         action=argparse.BooleanOptionalAction,
     )
     args = parser.parse_args()
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("%(levelname)s: %(message)s")
+    handler.setFormatter(formatter)
+    logger.handlers = [handler]
 
     with TemporaryDirectory() as tmpdir:
         run(args, tmpdir)
