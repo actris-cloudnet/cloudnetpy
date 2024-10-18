@@ -241,11 +241,24 @@ def _filter_by_suffix(meta: list[dict], product: str) -> list[dict]:
 def _get_source_instruments(products: list[str]) -> dict[str, list[str]]:
     source_instruments = {}
     for product in products:
-        res = requests.get(f"{cloudnet_api_url}products/{product}", timeout=60)
+        prod, model = _parse_instrument(product)
+        res = requests.get(f"{cloudnet_api_url}products/{prod}", timeout=60)
         res.raise_for_status()
         if sources := res.json().get("sourceInstruments", []):
-            source_instruments[product] = [i["id"] for i in sources]
+            source_instruments[prod] = [i["id"] for i in sources]
+            if match := [i for i in source_instruments[prod] if i == model]:
+                source_instruments[prod] = match
     return source_instruments
+
+
+def _parse_instrument(s: str) -> tuple[str, str | None]:
+    if "[" in s and s.endswith("]"):
+        name = s[: s.index("[")]
+        value = s[s.index("[") + 1 : -1]
+    else:
+        name = s
+        value = None
+    return name, value
 
 
 def _select_instrument(meta: list[dict], product: str) -> dict | None:
