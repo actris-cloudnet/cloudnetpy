@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Final
@@ -23,6 +24,13 @@ if TYPE_CHECKING:
 
 
 cloudnet_api_url: Final = "https://cloudnet.fmi.fi/api/"
+
+
+@dataclass
+class Instrument:
+    id: str
+    pid: str
+    name: str
 
 
 def run(args: argparse.Namespace, tmpdir: str):
@@ -104,7 +112,7 @@ def _fetch_mwr(args: argparse.Namespace) -> str | None:
 def _process_instrument_product(
     product: str,
     meta: list[dict],
-    instrument: dict,
+    instrument: Instrument,
     tmpdir: str,
     args: argparse.Namespace,
 ) -> str:
@@ -115,7 +123,7 @@ def _process_instrument_product(
     input_folder = str(Path(input_files[0]).parent)
     calibration = _get_calibration(instrument, args)
     fun: Callable
-    match (product, instrument["instrumentId"]):
+    match (product, instrument.id):
         case ("radar", _id) if "mira" in _id:
             fun = instruments.mira2nc
         case ("radar", _id) if "rpg" in _id:
@@ -185,10 +193,10 @@ def _fetch_coefficient_files(calibration: dict, tmpdir: str) -> list:
     return coefficient_paths
 
 
-def _get_calibration(instrument: dict, args) -> dict:
+def _get_calibration(instrument: Instrument, args) -> dict:
     params = {
         "date": args.date,
-        "instrumentPid": instrument["pid"],
+        "instrumentPid": instrument.pid,
     }
     res = requests.get(
         f"{cloudnet_api_url}calibration",
@@ -200,11 +208,12 @@ def _get_calibration(instrument: dict, args) -> dict:
     return res.json().get("data", {})
 
 
-def _create_instrument_filepath(instrument: dict, args: argparse.Namespace) -> str:
+def _create_instrument_filepath(
+    instrument: Instrument, args: argparse.Namespace
+) -> str:
     folder = _create_folder("instrument", args)
-    instrument_id = instrument["instrumentId"]
-    pid = _shorten_pid(instrument["pid"])
-    filename = f"{args.date.replace('-', '')}_{args.site}_{instrument_id}_{pid}.nc"
+    pid = _shorten_pid(instrument.pid)
+    filename = f"{args.date.replace('-', '')}_{args.site}_{instrument.id}_{pid}.nc"
     return str(folder / filename)
 
 
@@ -234,8 +243,8 @@ def _fetch_raw_meta(instruments: list[str], args: argparse.Namespace) -> list[di
     return res.json()
 
 
-def _filter_by_instrument(meta: list[dict], instrument: dict) -> list[dict]:
-    return [m for m in meta if m["instrumentInfo"]["pid"] == instrument["pid"]]
+def _filter_by_instrument(meta: list[dict], instrument: Instrument) -> list[dict]:
+    return [m for m in meta if m["instrumentInfo"]["pid"] == instrument.pid]
 
 
 def _filter_by_suffix(meta: list[dict], product: str) -> list[dict]:
@@ -273,7 +282,7 @@ def _parse_instrument(s: str) -> tuple[str, str | None]:
     return name, value
 
 
-def _select_instrument(meta: list[dict], product: str) -> dict | None:
+def _select_instrument(meta: list[dict], product: str) -> Instrument | None:
     instruments = _get_unique_instruments(meta)
     if len(instruments) == 0:
         logging.info("No instruments found")
@@ -281,26 +290,28 @@ def _select_instrument(meta: list[dict], product: str) -> dict | None:
     if len(instruments) > 1:
         logging.info("Multiple instruments found for %s", product)
         logging.info("Please specify which one to use")
-        for i, _id in enumerate(instruments):
-            logging.info("%d: %s", i + 1, _id["name"])
+        for i, instrument in enumerate(instruments):
+            logging.info("%d: %s", i + 1, instrument.name)
         ind = int(input("Select: ")) - 1
         selected_instrument = instruments[ind]
     else:
         selected_instrument = instruments[0]
-        logging.info("Single instrument found: %s", selected_instrument["name"])
+        logging.info("Single instrument found: %s", selected_instrument.name)
     return selected_instrument
 
 
-def _get_unique_instruments(meta: list[dict]) -> list[dict]:
+def _get_unique_instruments(meta: list[dict]) -> list[Instrument]:
     unique_pids = {m["instrumentInfo"]["pid"] for m in meta}
     unique_instruments = []
     for pid in unique_pids:
         for m in meta:
             if m["instrumentInfo"]["pid"] == pid:
-                unique_instruments.append(m["instrumentInfo"])
+                i = m["instrumentInfo"]
+                unique_instruments.append(
+                    Instrument(i["instrumentId"], i["pid"], i["name"])
+                )
                 break
-    unique_instruments.sort(key=lambda x: x["name"])
-    return unique_instruments
+    return sorted(unique_instruments, key=lambda x: x.name)
 
 
 def _fetch_product(
