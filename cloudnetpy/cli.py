@@ -175,7 +175,7 @@ def _process_instrument_product(
         case ("weather-station", _id):
             fun = instruments.ws2nc
     fun(input_files, output_filepath, site_meta)
-    logging.info("Processed %s to %s", product, output_filepath)
+    logging.info("Processed %s: %s", product, output_filepath)
     return output_filepath
 
 
@@ -454,7 +454,7 @@ def _process_product_file(product: str, categorize_file: str) -> str:
     output_file = categorize_file.replace("categorize", product)
     module = importlib.import_module("cloudnetpy.products")
     getattr(module, f"generate_{product}")(categorize_file, output_file)
-    logging.info("Processed %s to %s", product, output_file)
+    logging.info("Processed %s: %s", product, output_file)
     return output_file
 
 
