@@ -211,20 +211,26 @@ def _get_calibration(instrument: Instrument, args) -> dict:
 def _create_instrument_filepath(
     instrument: Instrument, args: argparse.Namespace
 ) -> str:
-    folder = _create_folder("instrument", args)
+    folder = _create_output_folder("instrument", args)
     pid = _shorten_pid(instrument.pid)
     filename = f"{args.date.replace('-', '')}_{args.site}_{instrument.id}_{pid}.nc"
     return str(folder / filename)
 
 
 def _create_categorize_filepath(args: argparse.Namespace) -> str:
-    folder = _create_folder("geophysical", args)
+    folder = _create_output_folder("geophysical", args)
     filename = f"{args.date.replace('-', '')}_{args.site}_categorize.nc"
     return str(folder / filename)
 
 
-def _create_folder(end_point: str, args: argparse.Namespace) -> Path:
-    folder = Path(args.output) / args.site / args.date / end_point
+def _create_input_folder(end_point: str, args: argparse.Namespace) -> Path:
+    folder = args.input / args.site / args.date / end_point
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
+
+
+def _create_output_folder(end_point: str, args: argparse.Namespace) -> Path:
+    folder = args.output / args.site / args.date / end_point
     folder.mkdir(parents=True, exist_ok=True)
     return folder
 
@@ -339,7 +345,7 @@ def _fetch_product(
         )
     meta = meta[0]
     suffix = "geophysical" if "geophysical" in meta["product"]["type"] else "instrument"
-    folder = _create_folder(suffix, args)
+    folder = _create_output_folder(suffix, args)
     return _download_file(meta, folder, args)
 
 
@@ -356,14 +362,14 @@ def _fetch_model(args: argparse.Namespace) -> str | None:
         logging.info("No model data available for this date")
         return None
     meta = meta[0]
-    folder = _create_folder("instrument", args)
+    folder = _create_output_folder("instrument", args)
     return _download_file(meta, folder, args)
 
 
 def _fetch_raw(metadata: list[dict], args: argparse.Namespace) -> list[str]:
     pid = _shorten_pid(metadata[0]["instrumentInfo"]["pid"])
     instrument = f"{metadata[0]['instrumentInfo']['instrumentId']}_{pid}"
-    folder = _create_folder(instrument, args)
+    folder = _create_input_folder(instrument, args)
     filepaths = []
     with ThreadPoolExecutor() as executor:
         futures = [
