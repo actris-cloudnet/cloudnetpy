@@ -141,26 +141,15 @@ def _process_instrument_product(
             fun = instruments.parsivel2nc
         case ("disdrometer", _id) if "thies" in _id:
             fun = instruments.thies2nc
-            if len(input_files) > 1:
-                concat_file = str(Path(tmpdir) / "tmp.txt")
-                concatenate_text_files(input_files, concat_file)
-                input_files = concat_file
-            else:
-                input_files = input_files[0]
+            input_files = _concatenate_(input_files, tmpdir)
         case ("lidar", _id) if "pollyxt" in _id:
             fun = instruments.pollyxt2nc
-        case ("lidar", _id) if "chm" in _id:
-            fun = instruments.ceilo2nc
-            if len(input_files) > 1:
-                concat_file = str(Path(tmpdir) / "tmp.nc")
-                concatenate_files(input_files, concat_file)
-                input_files = concat_file
-            else:
-                input_files = input_files[0]
-            if factor := calibration.get("calibration_factor"):
-                site_meta["calibration_factor"] = factor
         case ("lidar", _id):
             fun = instruments.ceilo2nc
+            input_files = _concatenate_(input_files, tmpdir)
+            site_meta["model"] = instrument.id
+            if factor := calibration.get("calibration_factor"):
+                site_meta["calibration_factor"] = factor
         case ("mwr", _id):
             fun = instruments.hatpro2nc
             input_files = input_folder
@@ -177,6 +166,17 @@ def _process_instrument_product(
     fun(input_files, output_filepath, site_meta)
     logging.info("Processed %s: %s", product, output_filepath)
     return output_filepath
+
+
+def _concatenate_(input_files: list[str], tmpdir: str) -> str:
+    if len(input_files) > 1:
+        concat_file = str(Path(tmpdir) / "tmp.nc")
+        try:
+            concatenate_files(input_files, concat_file)
+        except OSError:
+            concatenate_text_files(input_files, concat_file)
+        return concat_file
+    return input_files[0]
 
 
 def _fetch_coefficient_files(calibration: dict, tmpdir: str) -> list:
