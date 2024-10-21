@@ -464,7 +464,11 @@ def main():
         "-p",
         "--products",
         type=_parse_arg_list,
-        help="Products to process",
+        help=(
+            "Products to process, e.g. 'radar' or 'classification'. If the site "
+            "has many instruments, you can specify the instrument in brackets, "
+            "e.g. radar[mira-35]."
+        ),
         required=True,
     )
     parser.add_argument("--input", type=Path, help="Input path", default="input/")
