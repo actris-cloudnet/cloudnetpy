@@ -53,20 +53,38 @@ def run(args: argparse.Namespace, tmpdir: str):
             _plot(output_filepath, product, args)
             files_for_cat[product] = output_filepath
 
+    # Categorize based products
     if "categorize" in args.products:
         cat_filepath = _process_categorize(files_for_cat, args)
         _plot(cat_filepath, "categorize", args)
-
-    l2_products = ("lwc", "iwc", "classification", "der", "ier", "drizzle")
-    for product in args.products:
-        if product not in l2_products:
-            continue
-        if "categorize" not in args.products:
+    else:
+        cat_filepath = None
+    products_with_sources = _get_product_sources(args.products)
+    cat_products = [
+        p for p in products_with_sources if "categorize" in products_with_sources[p]
+    ]
+    for product in cat_products:
+        if cat_filepath is None:
             cat_filepath = _fetch_product(args, "categorize")
         if cat_filepath is None:
-            logging.info("No categorize data available for l2 products")
+            logging.info("No categorize data available for {}")
+            continue
+        l2_filename = _process_cat_product(product, cat_filepath)
+        _plot(l2_filename, product, args)
+
+    # MWR-L1c based products
+    mwrpy_products = [
+        p for p in products_with_sources if "mwr-l1c" in products_with_sources[p]
+    ]
+    for product in mwrpy_products:
+        if "mwr-l1c" in files_for_cat:
+            mwrpy_filepath = files_for_cat.get("mwr-l1c")
+        else:
+            mwrpy_filepath = _fetch_product(args, "mwr-l1c")
+        if mwrpy_filepath is None:
+            logging.info("No MWR-L1c data available for %s", product)
             break
-        l2_filename = _process_product_file(product, cat_filepath)
+        l2_filename = _process_mwrpy_product(product, mwrpy_filepath, args)
         _plot(l2_filename, product, args)
 
 
@@ -291,6 +309,17 @@ def _get_source_instruments(products: list[str]) -> dict[str, list[str]]:
     return source_instruments
 
 
+def _get_product_sources(products: list[str]) -> dict[str, list[str]]:
+    source_products = {}
+    for product in products:
+        prod, _ = _parse_instrument(product)
+        res = requests.get(f"{cloudnet_api_url}products/{prod}", timeout=60)
+        res.raise_for_status()
+        if sources := res.json().get("sourceProducts", []):
+            source_products[prod] = [i["id"] for i in sources]
+    return source_products
+
+
 def _parse_instrument(s: str) -> tuple[str, str | None]:
     if "[" in s and s.endswith("]"):
         name = s[: s.index("[")]
@@ -359,7 +388,7 @@ def _fetch_product(
     meta = meta[0]
     suffix = "geophysical" if "geophysical" in meta["product"]["type"] else "instrument"
     folder = _create_output_folder(suffix, args)
-    return _download_file(meta, folder)
+    return _download_product_file(meta, folder)
 
 
 def _fetch_model(args: argparse.Namespace) -> str | None:
@@ -376,7 +405,7 @@ def _fetch_model(args: argparse.Namespace) -> str | None:
         return None
     meta = meta[0]
     folder = _create_output_folder("instrument", args)
-    return _download_file(meta, folder)
+    return _download_product_file(meta, folder)
 
 
 def _fetch_raw(metadata: list[dict], args: argparse.Namespace) -> list[str]:
@@ -385,32 +414,41 @@ def _fetch_raw(metadata: list[dict], args: argparse.Namespace) -> list[str]:
     folder = _create_input_folder(instrument, args)
     filepaths = []
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(_download_file, meta, folder) for meta in metadata]
+        futures = [
+            executor.submit(_download_raw_file, meta, folder) for meta in metadata
+        ]
         for future in as_completed(futures):
             filepaths.append(future.result())
     return filepaths
 
 
-def _download_file(meta: dict, folder: Path) -> str:
+def _download_raw_file(meta: dict, folder: Path) -> str:
     filepath = folder / meta["filename"]
-
     possible_filepaths = [filepath]
     if filepath.suffix == ".gz":
         possible_filepaths.append(filepath.with_suffix(""))
-
     for path in possible_filepaths:
         if path.exists() and md5sum(path) == meta["checksum"]:
             logging.info("Using existing file: %s", path)
             return str(path)
-
     logging.info("Downloading file: %s", filepath)
     res = requests.get(meta["downloadUrl"], timeout=60)
     res.raise_for_status()
     filepath.write_bytes(res.content)
-
     if filepath.suffix == ".gz":
         filepath = _unzip_gz_file(filepath)
+    return str(filepath)
 
+
+def _download_product_file(meta: dict, folder: Path) -> str:
+    filepath = folder / meta["filename"]
+    if filepath.exists():
+        logging.info("Using existing file: %s", filepath)
+        return str(filepath)
+    logging.info("Downloading file: %s", filepath)
+    res = requests.get(meta["downloadUrl"], timeout=60)
+    res.raise_for_status()
+    filepath.write_bytes(res.content)
     return str(filepath)
 
 
@@ -468,12 +506,23 @@ def _plot(filepath: os.PathLike | str | None, product: str, args: argparse.Names
         logging.info("Failed to plot %s: %s", product, e)
 
 
-def _process_product_file(product: str, categorize_file: str) -> str:
+def _process_cat_product(product: str, categorize_file: str) -> str:
     output_file = categorize_file.replace("categorize", product)
     module = importlib.import_module("cloudnetpy.products")
     getattr(module, f"generate_{product}")(categorize_file, output_file)
     logging.info("Processed %s: %s", product, output_file)
     return output_file
+
+
+def _process_mwrpy_product(
+    product: str, mwr_l1c_file: str, args: argparse.Namespace
+) -> str:
+    filename = f"{args.date}_{args.site}_{product}.nc"
+    output_file = _create_output_folder("geophysical", args) / filename
+    module = importlib.import_module("cloudnetpy.products")
+    getattr(module, f"generate_{product.replace('-','_')}")(mwr_l1c_file, output_file)
+    logging.info("Processed %s: %s", product, output_file)
+    return str(output_file)
 
 
 def main():
