@@ -13,9 +13,8 @@ from typing import TYPE_CHECKING, Final
 
 import requests
 
-from cloudnetpy import instruments
+from cloudnetpy import concat_lib, instruments
 from cloudnetpy.categorize import generate_categorize
-from cloudnetpy.concat_lib import concatenate_files, concatenate_text_files
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.plotting import generate_figure
 
@@ -144,6 +143,18 @@ def _process_instrument_product(
             input_files = _concatenate_(input_files, tmpdir)
         case ("lidar", _id) if "pollyxt" in _id:
             fun = instruments.pollyxt2nc
+        case ("lidar", _id) if _id == "cl61d":
+            fun = instruments.ceilo2nc
+            variables = ["x_pol", "p_pol", "beta_att", "time", "tilt_angle"]
+            concat_file = str(Path(tmpdir) / "tmp.nc")
+            concat_lib.bundle_netcdf_files(
+                input_files,
+                args.date,
+                concat_file,
+                variables=variables,
+            )
+            input_files = concat_file
+            site_meta["model"] = instrument.id
         case ("lidar", _id):
             fun = instruments.ceilo2nc
             input_files = _concatenate_(input_files, tmpdir)
@@ -163,7 +174,7 @@ def _process_instrument_product(
             fun = instruments.mrr2nc
         case ("weather-station", _id):
             fun = instruments.ws2nc
-    fun(input_files, output_filepath, site_meta)
+    fun(input_files, output_filepath, site_meta, date=args.date)
     logging.info("Processed %s: %s", product, output_filepath)
     return output_filepath
 
@@ -172,9 +183,9 @@ def _concatenate_(input_files: list[str], tmpdir: str) -> str:
     if len(input_files) > 1:
         concat_file = str(Path(tmpdir) / "tmp.nc")
         try:
-            concatenate_files(input_files, concat_file)
+            concat_lib.concatenate_files(input_files, concat_file)
         except OSError:
-            concatenate_text_files(input_files, concat_file)
+            concat_lib.concatenate_text_files(input_files, concat_file)
         return concat_file
     return input_files[0]
 
@@ -242,6 +253,7 @@ def _fetch_raw_meta(instruments: list[str], args: argparse.Namespace) -> list[di
             "site": args.site,
             "date": args.date,
             "instrument": instruments,
+            "status": ["uploaded", "processed"],
         },
         timeout=60,
     )
@@ -439,6 +451,7 @@ def _plot(filepath: os.PathLike | str | None, product: str, args: argparse.Names
     variables = next(var["variables"] for var in res.json() if var["id"] == product)
     variables = [var["id"].split("-")[-1] for var in variables]
     image_name = str(filepath).replace(".nc", ".png") if args.plot else None
+
     try:
         generate_figure(
             filepath,
