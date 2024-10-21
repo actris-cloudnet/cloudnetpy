@@ -17,6 +17,7 @@ from cloudnetpy import concat_lib, instruments
 from cloudnetpy.categorize import generate_categorize
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.plotting import generate_figure
+from cloudnetpy.utils import md5sum
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -358,7 +359,7 @@ def _fetch_product(
     meta = meta[0]
     suffix = "geophysical" if "geophysical" in meta["product"]["type"] else "instrument"
     folder = _create_output_folder(suffix, args)
-    return _download_file(meta, folder, args)
+    return _download_file(meta, folder)
 
 
 def _fetch_model(args: argparse.Namespace) -> str | None:
@@ -375,7 +376,7 @@ def _fetch_model(args: argparse.Namespace) -> str | None:
         return None
     meta = meta[0]
     folder = _create_output_folder("instrument", args)
-    return _download_file(meta, folder, args)
+    return _download_file(meta, folder)
 
 
 def _fetch_raw(metadata: list[dict], args: argparse.Namespace) -> list[str]:
@@ -384,28 +385,32 @@ def _fetch_raw(metadata: list[dict], args: argparse.Namespace) -> list[str]:
     folder = _create_input_folder(instrument, args)
     filepaths = []
     with ThreadPoolExecutor() as executor:
-        futures = [
-            executor.submit(_download_file, meta, folder, args) for meta in metadata
-        ]
+        futures = [executor.submit(_download_file, meta, folder) for meta in metadata]
         for future in as_completed(futures):
             filepaths.append(future.result())
     return filepaths
 
 
-def _download_file(meta: dict, folder: Path, args: argparse.Namespace) -> str:
+def _download_file(meta: dict, folder: Path) -> str:
     filepath = folder / meta["filename"]
-    filepath_trunc = filepath.with_suffix("") if filepath.suffix == ".gz" else filepath
-    if filepath.exists() and not args.force:
-        logging.info("Using existing file: %s", filepath)
-    elif filepath_trunc.exists() and not args.force:
-        logging.info("Using existing file: %s", filepath_trunc)
-        filepath = filepath_trunc
-    else:
-        logging.info("Downloading file: %s", filepath)
-        res = requests.get(meta["downloadUrl"], timeout=60)
-        res.raise_for_status()
-        filepath.write_bytes(res.content)
+
+    possible_filepaths = [filepath]
+    if filepath.suffix == ".gz":
+        possible_filepaths.append(filepath.with_suffix(""))
+
+    for path in possible_filepaths:
+        if path.exists() and md5sum(path) == meta["checksum"]:
+            logging.info("Using existing file: %s", path)
+            return str(path)
+
+    logging.info("Downloading file: %s", filepath)
+    res = requests.get(meta["downloadUrl"], timeout=60)
+    res.raise_for_status()
+    filepath.write_bytes(res.content)
+
+    if filepath.suffix == ".gz":
         filepath = _unzip_gz_file(filepath)
+
     return str(filepath)
 
 
@@ -501,13 +506,6 @@ def main():
     parser.add_argument(
         "--show",
         help="Show plotted image",
-        default=False,
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "-f",
-        "--force",
-        help="Force download of files",
         default=False,
         action=argparse.BooleanOptionalAction,
     )
