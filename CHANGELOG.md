@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.7 – 2024-10-22
+
+- Fix cli product parse
+
 ## 1.66.6 – 2024-10-22
 
 - Optimize `rebin_2d`
