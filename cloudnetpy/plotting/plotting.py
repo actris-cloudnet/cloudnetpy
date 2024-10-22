@@ -43,6 +43,8 @@ class PlotParameters:
             instruments and model).
         footer_text: The text to display in the footer of the plot.
         plot_meta: Additional metadata for the plot.
+        raise_on_empty: Whether to raise an error if no data is found for a
+            plotted variable.
     """
 
     dpi: float = 120
@@ -55,6 +57,7 @@ class PlotParameters:
     show_sources: bool = False
     footer_text: str | None = None
     plot_meta: PlotMeta | None = None
+    raise_on_empty: bool = False
 
 
 class Dimensions:
@@ -492,7 +495,7 @@ class Plot2D(Plot):
             smoothed_data = uniform_filter(self._data[valid_time_ind, :], sigma_units)
             self._data[valid_time_ind, :] = smoothed_data
 
-        if self._data.mask.all():
+        if self._data.mask.all() and figure_data.options.raise_on_empty:
             msg = "All data is masked"
             raise PlottingError(msg)
 
@@ -603,7 +606,7 @@ class Plot1D(Plot):
             raise PlottingError(msg)
         self._data = self._data[:, freq_ind]
         self._data[np.isnan(self._data)] = ma.masked
-        if self._data.mask.all():
+        if self._data.mask.all() and figure_data.options.raise_on_empty:
             msg = "All data is masked"
             raise PlottingError(msg)
         self._data_orig = self._data_orig[:, freq_ind]
