@@ -553,6 +553,7 @@ def main():
         help="Site",
         required=True,
         choices=_fetch_cloudnet_sites(),
+        metavar="SITE",
     )
     parser.add_argument(
         "-d", "--date", type=str, help="Date in YYYY-MM-DD", required=True
