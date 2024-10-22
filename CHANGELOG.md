@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.66.6 – 2024-10-22
+
+- Optimize `rebin_2d`
+- Add `raise_on_empty` option
+- Add CloudnetPy CLI
+
 ## 1.66.5 – 2024-10-15
 
 - Check for missing time data
