@@ -5,7 +5,6 @@ import logging
 import os
 import re
 import shutil
-from collections.abc import Generator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
@@ -531,15 +530,17 @@ def _fetch_cloudnet_sites() -> list[str]:
     return [site["id"] for site in res.json()]
 
 
-def _parse_products(product_argument: str) -> Generator:
+def _parse_products(product_argument: str) -> list[str]:
     products = product_argument.split(",")
     res = requests.get(f"{cloudnet_api_url}products", timeout=60)
     res.raise_for_status()
     valid_options = [p["id"] for p in res.json()]
+    valid_products = []
     for product in products:
         prod, _ = _parse_instrument(product)
         if prod in valid_options:
-            yield product
+            valid_products.append(prod)
+    return valid_products
 
 
 def main():
