@@ -650,7 +650,7 @@ def n_elements(array: np.ndarray, dist: float, var: str | None = None) -> int:
     return int(np.round(n))
 
 
-def isscalar(array: np.ndarray | float | list) -> bool:
+def isscalar(array: np.ndarray | float | list | netCDF4.Variable) -> bool:
     """Tests if input is scalar.
 
     By "scalar" we mean that array has a single value.

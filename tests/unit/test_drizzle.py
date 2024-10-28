@@ -103,7 +103,7 @@ def drizzle_cat_file(tmpdir_factory, file_metadata):
         var = root_grp.createVariable("rainfall_rate", "i4", "time")
         var[:] = [0, 0]
         var = root_grp.createVariable("v_sigma", "f8", ("time", "height"))
-        var[:] = [[-2, np.nan, 2], [1, -1, 0]]
+        var[:] = [[-2, np.nan, 2], [1, -1, 0]]  # type: ignore
         var = root_grp.createVariable("width", "f8", ("time", "height"))
         var[:] = [[2, 0, 1], [1, 3, 0]]
     return file_name

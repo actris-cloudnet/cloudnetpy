@@ -10,7 +10,7 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 
 class CloudnetInstrument:
     def __init__(self):
-        self.dataset: netCDF4.Dataset | None = None
+        self.dataset: netCDF4.Dataset
         self.time: np.ndarray = np.array([])
         self.site_meta: dict = {}
         self.data: dict = {}
@@ -23,14 +23,19 @@ class CloudnetInstrument:
             if key in self.site_meta:
                 value = self.site_meta[key]
             # From source global attributes (MIRA):
-            elif isinstance(self.dataset, netCDF4.Dataset) and hasattr(
-                self.dataset,
-                key.capitalize(),
+            elif (
+                hasattr(self, "dataset")
+                and isinstance(self.dataset, netCDF4.Dataset)
+                and hasattr(
+                    self.dataset,
+                    key.capitalize(),
+                )
             ):
                 value = self.parse_global_attribute_numeral(key.capitalize())
             # From source data (BASTA / RPG):
             elif (
-                isinstance(self.dataset, netCDF4.Dataset)
+                hasattr(self, "dataset")
+                and isinstance(self.dataset, netCDF4.Dataset)
                 and key in self.dataset.variables
             ):
                 value = self.dataset.variables[key][:]

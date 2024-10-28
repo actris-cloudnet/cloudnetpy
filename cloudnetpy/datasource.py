@@ -221,7 +221,7 @@ class DataSource:
         """
         for name in possible_names:
             if name in self.dataset.variables:
-                array = self.dataset.variables[name]
+                array: netCDF4.Variable | np.ndarray = self.dataset.variables[name]
                 if ignore_mask is True:
                     array = np.array(array)
                 self.append_data(array, key, units=units)

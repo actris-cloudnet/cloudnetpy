@@ -101,7 +101,7 @@ def test_get_source_uuids():
     source1.dataset.file_uuid = uuid1  # type: ignore
     source2.dataset.file_uuid = uuid2  # type: ignore
     source3.dataset.file_uuid = uuid2  # type: ignore
-    res = output.get_source_uuids([source1, source2, source3, source4])
+    res = output.get_source_uuids([source1, source2, source3, source4])  # type: ignore
     for value in (uuid1, uuid2, ", "):
         assert value in res
     assert len(res) == len(uuid1) + len(uuid2) + 2

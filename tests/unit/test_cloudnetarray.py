@@ -57,9 +57,9 @@ def test_different_inputs(array, expected_data, expected_dtype):
 
 def test_bad_input():
     with pytest.raises(ValueError):
-        CloudnetArray((1, 2, 3), "bad_input")
+        CloudnetArray((1, 2, 3), "bad_input")  # type: ignore
     with pytest.raises(ValueError):
-        CloudnetArray([1, 2, 3], "bad_input")
+        CloudnetArray([1, 2, 3], "bad_input")  # type: ignore
 
 
 def test_masked_array():

@@ -136,7 +136,8 @@ class NcRadar(DataSource, CloudnetInstrument):
             msg = "Instrument not defined"
             raise RuntimeError(msg)
         key = "radar_frequency"
-        self.data[key] = CloudnetArray(self.instrument.frequency, key)
+        if self.instrument.frequency is not None:
+            self.data[key] = CloudnetArray(self.instrument.frequency, key)
         try:
             possible_nyquist_names = ("ambiguous_velocity", "NyquistVelocity")
             data = self.getvar(*possible_nyquist_names)

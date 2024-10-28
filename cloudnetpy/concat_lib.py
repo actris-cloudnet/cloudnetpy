@@ -2,6 +2,7 @@
 
 import shutil
 from os import PathLike
+from typing import Literal
 
 import netCDF4
 import numpy as np
@@ -210,7 +211,7 @@ class _Concat:
                     self.concatenated_file.variables[key][ind0:ind1, :] = array
 
     def _init_output_file(self, output_file: str) -> netCDF4.Dataset:
-        data_model = (
+        data_model: Literal["NETCDF4", "NETCDF4_CLASSIC"] = (
             "NETCDF4" if self.first_file.data_model == "NETCDF4" else "NETCDF4_CLASSIC"
         )
         nc = netCDF4.Dataset(output_file, "w", format=data_model)
@@ -234,7 +235,10 @@ class _Concat:
         self._close()
 
 
-def _copy_attributes(source: netCDF4.Dataset, target: netCDF4.Dataset) -> None:
+def _copy_attributes(
+    source: netCDF4.Dataset | netCDF4.Variable,
+    target: netCDF4.Dataset | netCDF4.Variable,
+) -> None:
     for attr in source.ncattrs():
         if attr != "_FillValue":
             value = getattr(source, attr)

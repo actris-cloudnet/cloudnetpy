@@ -73,7 +73,7 @@ class DataSet:
 
 class LwcSourceObj(LwcSource):
     def __init__(self):
-        self.dataset = DataSet()
+        self.dataset = DataSet()  # type: ignore
         self.path_lengths = np.array([10, 10, 10])
         self.categorize_bits = CategorizeBits(
             category_bits=CategoryBits(
