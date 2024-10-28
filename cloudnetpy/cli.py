@@ -539,7 +539,7 @@ def _parse_products(product_argument: str) -> list[str]:
     for product in products:
         prod, _ = _parse_instrument(product)
         if prod in valid_options:
-            valid_products.append(prod)
+            valid_products.append(product)
     return valid_products
 
 
