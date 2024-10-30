@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.66.8 – 2024-10-30
+
+- Raise exception if all timestamps are screened
+- Fix CLI product parsing
+
 ## 1.66.7 – 2024-10-22
 
 - Fix cli product parse
