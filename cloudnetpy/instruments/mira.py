@@ -8,7 +8,6 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 from numpy import ma
 
 from cloudnetpy import concat_lib, output, utils
-from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments.instruments import MIRA35
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
@@ -109,8 +108,6 @@ class Mira(NcRadar):
             date = "-".join(utils.seconds2date(timestamp, self.epoch)[:3])
             if date == expected_date:
                 valid_indices.append(ind)
-        if not valid_indices:
-            raise ValidTimeStampError
         self.screen_time_indices(valid_indices)
 
     def _init_mira_date(self) -> list[str]:

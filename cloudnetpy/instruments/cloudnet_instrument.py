@@ -6,6 +6,7 @@ from numpy import ma
 
 from cloudnetpy import utils
 from cloudnetpy.cloudnetarray import CloudnetArray
+from cloudnetpy.exceptions import ValidTimeStampError
 
 
 class CloudnetInstrument:
@@ -77,6 +78,9 @@ class CloudnetInstrument:
         self.screen_time_indices(ind)
 
     def screen_time_indices(self, valid_indices: list | np.ndarray) -> None:
+        if len(valid_indices) == 0:
+            msg = "All timestamps screened"
+            raise ValidTimeStampError(msg)
         time = self._get_time()
         n_time = len(time)
         for cloudnet_array in self.data.values():

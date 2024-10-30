@@ -10,7 +10,6 @@ from uuid import UUID
 import netCDF4
 
 from cloudnetpy import concat_lib, output, utils
-from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
@@ -160,8 +159,6 @@ class MrrPro(NcRadar):
             date = "-".join(utils.seconds2date(timestamp, self.epoch)[:3])
             if date == expected_date.isoformat():
                 valid_indices.append(ind)
-        if not valid_indices:
-            raise ValidTimeStampError
         self.screen_time_indices(valid_indices)
 
 
