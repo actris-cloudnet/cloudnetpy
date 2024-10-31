@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.9 – 2024-10-31
+
+- Fix check for empty index array
+
 ## 1.66.8 – 2024-10-30
 
 - Raise exception if all timestamps are screened
