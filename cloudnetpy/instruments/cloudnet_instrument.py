@@ -78,11 +78,16 @@ class CloudnetInstrument:
         self.screen_time_indices(ind)
 
     def screen_time_indices(self, valid_indices: list | np.ndarray) -> None:
-        if len(valid_indices) == 0:
-            msg = "All timestamps screened"
-            raise ValidTimeStampError(msg)
         time = self._get_time()
         n_time = len(time)
+        if len(valid_indices) == 0 or (
+            isinstance(valid_indices, np.ndarray)
+            and valid_indices.dtype == np.bool_
+            and valid_indices.shape == time.shape
+            and not np.any(valid_indices)
+        ):
+            msg = "All timestamps screened"
+            raise ValidTimeStampError(msg)
         for cloudnet_array in self.data.values():
             array = cloudnet_array.data
             if not utils.isscalar(array) and array.shape[0] == n_time:
