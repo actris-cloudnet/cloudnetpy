@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.10 – 2024-11-01
+
+- Update reader for Galati weather station
+
 ## 1.66.9 – 2024-10-31
 
 - Fix check for empty index array
