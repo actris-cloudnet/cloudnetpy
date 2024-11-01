@@ -1,6 +1,7 @@
 import csv
 import datetime
 import math
+from collections.abc import Iterable
 
 import numpy as np
 from numpy import ma
@@ -109,14 +110,12 @@ class WS(CloudnetInstrument):
         self.data["rainfall_amount"] = CloudnetArray(rainfall_amount, "rainfall_amount")
 
     def screen_timestamps(self, date: str) -> None:
-        dates = [str(d.date()) for d in self._data["time"]]
-        valid_ind = [ind for ind, d in enumerate(dates) if d == date]
-        if not valid_ind:
+        dates = np.array([str(d.date()) for d in self._data["time"]])
+        valid_mask = dates == date
+        if not valid_mask.any():
             raise ValidTimeStampError
         for key in self._data:
-            self._data[key] = [
-                x for ind, x in enumerate(self._data[key]) if ind in valid_ind
-            ]
+            self._data[key] = self._data[key][valid_mask]
 
     @staticmethod
     def format_data(data: dict) -> dict:
@@ -436,14 +435,32 @@ class GalatiWS(WS):
                         except ValueError:
                             parsed_value = math.nan
                     raw_data[key].append(parsed_value)
+
+        def read_value(keys: Iterable[str]):
+            for key in keys:
+                if key in raw_data:
+                    return raw_data[key]
+            raise KeyError("Didn't find any keys: " + ", ".join(keys))
+
         data = {
-            "time": raw_data["TimeStamp"],
-            "air_temperature": raw_data["Temperature"],
-            "relative_humidity": raw_data["RH"],
-            "air_pressure": raw_data["Atmospheric_pressure"],
-            "rainfall_rate": raw_data["Precipitations"],
+            "time": read_value(["TimeStamp"]),
+            "air_temperature": read_value(["Temperature", "Temperatura"]),
+            "relative_humidity": read_value(["RH", "Umiditate_relativa"]),
+            "air_pressure": read_value(
+                ["Atmospheric_pressure", "Presiune_atmosferica"]
+            ),
+            "rainfall_rate": read_value(["Precipitations", "Precipitatii"]),
+            "wind_speed": read_value(["Wind_speed", "Viteza_vant"]),
+            "wind_direction": read_value(["Wind_direction", "Directie_vant"]),
         }
         return self.format_data(data)
+
+    def add_data(self) -> None:
+        # Skip wind measurements where range was limited to 0-180 degrees
+        if datetime.date(*map(int, self.date)) < datetime.date(2024, 10, 29):
+            del self._data["wind_speed"]
+            del self._data["wind_direction"]
+        return super().add_data()
 
     def convert_pressure(self) -> None:
         mmHg2Pa = 133.322
