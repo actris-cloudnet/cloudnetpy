@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.12 – 2024-11-14
+
+- Fix `VOODOO` global attributes
+
 ## 1.66.11 – 2024-11-14
 
 - Remove snowfall from categorize rain detection
