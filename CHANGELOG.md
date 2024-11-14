@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.11 – 2024-11-14
+
+- Remove snowfall from categorize rain detection
+
 ## 1.66.10 – 2024-11-01
 
 - Update reader for Galati weather station
