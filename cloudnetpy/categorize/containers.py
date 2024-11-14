@@ -4,7 +4,7 @@ import numpy as np
 from numpy import ma
 
 from cloudnetpy import utils
-from cloudnetpy.constants import MM_H_TO_M_S
+from cloudnetpy.constants import MM_H_TO_M_S, T0
 from cloudnetpy.products.product_tools import CategoryBits
 
 from .disdrometer import Disdrometer
@@ -89,7 +89,8 @@ class ClassData:
         rain_from_disdrometer = self._find_rain_from_disdrometer()
         ind = ~rain_from_disdrometer.mask
         is_rain[ind] = rain_from_disdrometer[ind]
-        return is_rain
+        is_positive_temp = self.tw[:, 0] > T0 + 5  # Filter snowfall
+        return is_rain & is_positive_temp
 
     def _find_rain_from_radar_echo(self) -> np.ndarray:
         first_gate_with_data = np.argmin(self.z.mask.all(axis=0))
