@@ -55,8 +55,11 @@ def generate_classification(
         date = product_container.get_date()
         attributes = output.add_time_attribute(CLASSIFICATION_ATTRIBUTES, date)
         output.update_attributes(product_container.data, attributes)
+        file_type = "classification"
+        if "liquid_prob" in product_container.dataset.variables:
+            file_type += "-voodoo"
         return output.save_product_file(
-            "classification",
+            file_type,
             product_container,
             output_file,
             uuid,

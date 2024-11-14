@@ -425,7 +425,15 @@ def _get_dimensions(nc: netCDF4.Dataset, data: np.ndarray) -> tuple:
 
 
 def _get_identifier(short_id: str) -> str:
-    valid_ids = ("lwc", "iwc", "drizzle", "classification", "der", "ier")
+    valid_ids = (
+        "lwc",
+        "iwc",
+        "drizzle",
+        "classification",
+        "der",
+        "ier",
+        "classification-voodoo",
+    )
     if short_id not in valid_ids:
         msg = f"Invalid file identifier: {short_id}"
         raise ValueError(msg)

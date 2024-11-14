@@ -215,6 +215,9 @@ def _save_cat(
     }
 
     file_type = "categorize"
+    if "liquid_prob" in cloudnet_arrays:
+        file_type += "-voodoo"
+
     with output.init_file(full_path, dims, cloudnet_arrays, uuid) as nc:
         uuid_out = nc.file_uuid
         nc.cloudnet_file_type = file_type
