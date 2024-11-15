@@ -25,10 +25,17 @@ class TestRadiometrics2nc(Check):
     uuid = radiometrics2nc(test_input, temp_path, site_meta, date=date)
 
     def test_time(self):
-        assert_allclose(self.nc.variables["time"][:], [0.02, 0.10527778, 0.1886111])
+        assert_allclose(self.nc.variables["time"][:], [0.02, 0.10527778])
+
+    def test_range(self):
+        assert len(self.nc.variables["range"]) == 47
+        assert_allclose(self.nc.variables["range"][:5], [0, 100, 200, 300, 400])
+        assert_allclose(
+            self.nc.variables["range"][-5:], [9000, 9250, 9500, 9750, 10000]
+        )
 
     def test_lwp(self):
-        assert_allclose(self.nc.variables["lwp"][:], [0.030, 0.030, 0])
+        assert_allclose(self.nc.variables["lwp"][:], [0.030, 0.030])
 
     def test_global_attributes(self):
         assert self.nc.source == "Radiometrics"
@@ -70,6 +77,13 @@ class TestRadiometrics2ncAgain(Check):
         assert_allclose(
             self.nc.variables["time"][:],
             [0.08305556, 0.11055555, 0.13833334, 0.16611111],
+        )
+
+    def test_range(self):
+        assert len(self.nc.variables["range"]) == 58
+        assert_allclose(self.nc.variables["range"][:5], [0, 50, 100, 150, 200])
+        assert_allclose(
+            self.nc.variables["range"][-5:], [9000, 9250, 9500, 9750, 10000]
         )
 
     def test_lwp(self):

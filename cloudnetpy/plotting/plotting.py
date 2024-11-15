@@ -627,13 +627,15 @@ class Plot1D(Plot):
             label = "Freq"
             value = figure_data.file.variables["frequency"][freq_ind]
             unit = "GHz"
-        else:
+        elif "ir_wavelength" in figure_data.file.variables:
             label = "WL"
             variable = figure_data.file.variables["ir_wavelength"]
             # `ir_wavelength` is scalar in old files
             value = variable[:] if len(variable.shape) == 0 else variable[freq_ind]
             value /= 1e-6  # m to μm
             unit = "μm"
+        else:
+            return
         self._ax.text(
             0.0,
             -0.13,

@@ -4,6 +4,7 @@ import csv
 import datetime
 import logging
 import os
+import re
 from operator import attrgetter
 from typing import Any, NamedTuple
 
@@ -11,8 +12,9 @@ import numpy as np
 
 from cloudnetpy import output, utils
 from cloudnetpy.cloudnetarray import CloudnetArray
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
 from cloudnetpy.instruments import instruments
+from cloudnetpy.metadata import MetaData
 
 
 def radiometrics2nc(
@@ -65,7 +67,7 @@ def radiometrics2nc(
     if radiometrics.date is None:
         msg = "Failed to find valid timestamps from Radiometrics file(s)."
         raise ValidTimeStampError(msg)
-    attributes = output.add_time_attribute({}, radiometrics.date)
+    attributes = output.add_time_attribute(ATTRIBUTES, radiometrics.date)
     output.update_attributes(radiometrics.data, attributes)
     return output.save_level1b(radiometrics, output_file, uuid)
 
@@ -91,6 +93,7 @@ class Radiometrics:
         self.raw_data: list[Record] = []
         self.data: dict = {}
         self.instrument = instruments.RADIOMETRICS
+        self.heights: list[str] = []
 
     def read_raw_data(self) -> None:
         """Reads Radiometrics raw data."""
@@ -98,14 +101,21 @@ class Radiometrics:
         unknown_record_types = set()
         rows = []
         with open(self.filename, encoding="utf8") as infile:
-            reader = csv.reader(infile)
+            reader = csv.reader(infile, skipinitialspace=True)
             for row in reader:
                 if row[0] == "Record":
                     if row[1] != "Date/Time":
                         msg = "Unexpected header in Radiometrics file"
                         raise RuntimeError(msg)
                     record_type = int(row[2])
-                    record_columns[record_type] = row[3:]
+                    columns = row[3:]
+                    record_columns[record_type] = columns
+                    if record_type in (10, 400):
+                        self.heights = [
+                            column
+                            for column in columns
+                            if re.fullmatch(r"\d+\.\d+", column)
+                        ]
                 else:
                     record_type = int(row[2])
                     block_type = record_type // 10 * 10
@@ -125,33 +135,72 @@ class Radiometrics:
                     )
                     rows.append(record)
 
-        # The rows should be in sequence but sort them just to be sure.
-        rows.sort(key=attrgetter("row_number"))
-
-        for data_row in rows:
-            # Use the first row of a block and skip the rest which should
-            # contain the same values in the first columns.
-            if data_row.block_index == 0:
-                self.raw_data.append(data_row)
+        self.raw_data = sorted(rows, key=attrgetter("row_number"))
 
     def read_data(self) -> None:
         """Reads values."""
         times = []
         lwps = []
         iwvs = []
+        irts = []
+        temps = []
+        rhs = []
+        ahs = []
+        block_titles = {}
         for record in self.raw_data:
-            lwp = record.values.get("Lqint(mm)", record.values.get("Int. Liquid(mm)"))
-            iwv = record.values.get("Vint(cm)", record.values.get("Int. Vapor(cm)"))
-            if lwp is None and iwv is None:
-                continue
-            times.append(record.timestamp)
-            if lwp is not None:
-                lwps.append(float(lwp))  # mm => kg m-2
-            if iwv is not None:
-                iwvs.append(float(iwv) * 10)  # cm => kg m-2
+            if record.block_type == 100:
+                block_type = int(record.values["Record Type"]) - 1
+                title = record.values["Title"]
+                block_titles[block_type] = title
+            if title := block_titles.get(record.block_type + record.block_index):
+                if title == "Temperature (K)":
+                    temps.append(
+                        [float(record.values[column]) for column in self.heights]
+                    )
+                elif title == "Relative Humidity (%)":
+                    rhs.append(
+                        [float(record.values[column]) for column in self.heights]
+                    )
+                elif title == "Vapor Density (g/m^3)":
+                    ahs.append(
+                        [float(record.values[column]) for column in self.heights]
+                    )
+            elif record.block_type == 10:
+                if record.block_index == 0:
+                    lwp = record.values["Lqint(mm)"]
+                    iwv = record.values["Vint(cm)"]
+                    irt = record.values["Tir(K)"]
+                    times.append(record.timestamp)
+                    lwps.append(float(lwp))
+                    iwvs.append(float(iwv))
+                    irts.append([float(irt)])
+                    temps.append(
+                        [float(record.values[column]) for column in self.heights]
+                    )
+                elif record.block_index == 1:
+                    ahs.append(
+                        [float(record.values[column]) for column in self.heights]
+                    )
+                elif record.block_index == 2:
+                    rhs.append(
+                        [float(record.values[column]) for column in self.heights]
+                    )
+            elif record.block_type == 200:
+                irt = record.values["Tir(K)"]
+                irts.append([float(irt)])
+            elif record.block_type == 300:
+                lwp = record.values["Int. Liquid(mm)"]
+                iwv = record.values["Int. Vapor(cm)"]
+                times.append(record.timestamp)
+                lwps.append(float(lwp))
+                iwvs.append(float(iwv))
         self.data["time"] = np.array(times, dtype="datetime64[s]")
-        self.data["lwp"] = np.array(lwps, dtype=float)
-        self.data["iwv"] = np.array(iwvs, dtype=float)
+        self.data["lwp"] = np.array(lwps)  # mm => kg m-2
+        self.data["iwv"] = np.array(iwvs) * 10  # cm => kg m-2
+        self.data["irt"] = np.array(irts)
+        self.data["temperature"] = np.array(temps)
+        self.data["relative_humidity"] = np.array(rhs) / 100  # % => 1
+        self.data["absolute_humidity"] = np.array(ahs) / 1000  # g m-3 => kg m-3
 
 
 class RadiometricsCombined:
@@ -165,8 +214,13 @@ class RadiometricsCombined:
         self.data = {}
         self.date = None
         for obj in objs:
+            if obj.heights != objs[0].heights:
+                msg = "Inconsistent heights between files"
+                raise InconsistentDataError(msg)
             for key in obj.data:
                 self.data = utils.append_data(self.data, key, obj.data[key])
+        heights = [float(x) for x in objs[0].heights]
+        self.data["range"] = np.array(heights) * 1000  # m => km
         self.instrument = instruments.RADIOMETRICS
 
     def screen_time(self, expected_date: datetime.date | None) -> None:
@@ -179,6 +233,8 @@ class RadiometricsCombined:
         if np.count_nonzero(valid_mask) == 0:
             raise ValidTimeStampError
         for key in self.data:
+            if key == "range":
+                continue
             self.data[key] = self.data[key][valid_mask]
 
     def time_to_fractional_hours(self) -> None:
@@ -188,7 +244,12 @@ class RadiometricsCombined:
     def data_to_cloudnet_arrays(self) -> None:
         """Converts arrays to CloudnetArrays."""
         for key, array in self.data.items():
-            self.data[key] = CloudnetArray(array, key)
+            dimensions = (
+                ("time", "range")
+                if key in ("temperature", "relative_humidity", "absolute_humidity")
+                else None
+            )
+            self.data[key] = CloudnetArray(array, key, dimensions=dimensions)
 
     def add_meta(self) -> None:
         """Adds some metadata."""
@@ -213,3 +274,11 @@ def _parse_datetime(text: str) -> datetime.datetime:
         minute,
         second,
     )
+
+
+ATTRIBUTES = {
+    "irt": MetaData(
+        long_name="Infrared brightness temperatures",
+        units="K",
+    ),
+}

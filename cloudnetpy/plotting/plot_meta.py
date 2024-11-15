@@ -137,6 +137,25 @@ ATTRIBUTES = {
             plot_range=(0, 50 / 3600000),
         )
     },
+    "mwr": {
+        "temperature": PlotMeta(
+            cmap="coolwarm",
+            plot_range=(223.15, 323.15),
+            contour=True,
+            time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
+        ),
+        "relative_humidity": PlotMeta(
+            plot_range=(0, 120),
+            contour=True,
+            time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
+        ),
+        "absolute_humidity": PlotMeta(
+            plot_range=(1e-4, 1e-2),
+            log_scale=True,
+            contour=True,
+            time_smoothing_duration=_MWR_SINGLE_SMOOTHING,
+        ),
+    },
     "mwr-single": {
         "temperature": PlotMeta(
             cmap="coolwarm",

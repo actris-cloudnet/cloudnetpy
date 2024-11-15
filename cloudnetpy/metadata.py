@@ -144,6 +144,11 @@ COMMON_ATTRIBUTES = {
         standard_name="relative_humidity",
         units="1",
     ),
+    "absolute_humidity": MetaData(
+        long_name="Absolute humidity",
+        standard_name="mass_concentration_of_water_vapor_in_air",
+        units="kg m-3",
+    ),
     "wind_speed": MetaData(
         long_name="Wind speed",
         standard_name="wind_speed",
