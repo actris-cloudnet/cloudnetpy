@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.13 – 2024-11-15
+
+- Read profiles from Radiometrics files
+
 ## 1.66.12 – 2024-11-14
 
 - Fix `VOODOO` global attributes
