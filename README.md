@@ -39,7 +39,7 @@ python3 -m pip install --upgrade pip
 python3 -m pip install .
 ```
 
-## Verification
+### Verification
 
 To verify the installation:
 
