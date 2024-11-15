@@ -7,84 +7,50 @@
 
 CloudnetPy is Python software designed for producing vertical profiles of cloud properties from ground-based
 remote sensing measurements. The Cloudnet processing combines data from cloud radar, optical lidar,
-microwave radiometer, and numerical weather prediction models.
-Measurements and model data are brought into a common grid and
-classified as ice, liquid, aerosol, insects, and so on.
-Subsequently, geophysical products such as ice water content can be
-retrieved in further processing steps. See [Illingworth et al. (2007)](https://doi.org/10.1175/BAMS-88-6-883) for more details about the concept.
-
-CloudnetPy is a rewritten version of the original Cloudnet Matlab code. It features several revised methods, extensive documentation, and more.
-
-- CloudnetPy documentation: <https://actris-cloudnet.github.io/cloudnetpy/>
-- Cloudnet data portal: <https://cloudnet.fmi.fi>
+microwave radiometer, and numerical weather prediction models. Measurements and model data are brought
+into a common grid and classified as ice, liquid, aerosol, insects, and so on. Subsequently, geophysical
+products such as ice water content can be retrieved.
 
 ![CloudnetPy example output](https://raw.githubusercontent.com/actris-cloudnet/cloudnetpy/main/docs/source/_static/20230831_lindenberg_classification-9b74f4ac-target_classification.png)
 
-## Installation
-
-### From PyPI
-
-```
-python3 -m pip install cloudnetpy
-```
-
-### From the source
-
-```sh
-git clone https://github.com/actris-cloudnet/cloudnetpy
-cd cloudnetpy/
-python3 -m venv venv
-source venv/bin/activate
-python3 -m pip install --upgrade pip
-python3 -m pip install .
+## Installation Steps
+### Option 1: Install via pip
+To install CloudnetPy, use pip:
+```bash
+pip install cloudnetpy
 ```
 
-## Citing
+### Option 2: Manual Installation
+Clone the repository and install the dependencies:
+```bash
+git clone https://github.com/actris-cloudnet/cloudnetpy.git
+cd cloudnetpy
+pip install -r requirements.txt
+```
 
-If you wish to acknowledge CloudnetPy in your publication, please cite:
+### Verification
+To verify the installation:
+```bash
+python -m cloudnetpy --help
+```
 
-> Tukiainen et al., (2020). CloudnetPy: A Python package for processing cloud remote sensing data. Journal of Open Source Software, 5(53), 2123, https://doi.org/10.21105/joss.02123
+## Documentation
+Comprehensive documentation is available at:
+- [CloudnetPy Documentation](https://cloudnetpy.readthedocs.io/)
 
 ## Contributing
+Contributions are welcome! Please check the [CONTRIBUTING.md](https://github.com/actris-cloudnet/cloudnetpy/blob/main/CONTRIBUTING.md) for guidelines.
 
-We encourage you to contribute to CloudnetPy! Please check out the [contribution guidelines](CONTRIBUTING.md) about how to proceed.
+## Version History
+Details on release versions and changes are available in the [CHANGELOG](https://github.com/actris-cloudnet/cloudnetpy/blob/main/CHANGELOG.md).
 
-## Development
+## Help and Support
+For support and common issues, refer to:
+- [GitHub Issues](https://github.com/actris-cloudnet/cloudnetpy/issues)
 
-Follow the installation instructions from the source above but install with the development dependencies and [pre-commit](https://pre-commit.com/) hooks:
-
-```sh
-python3 -m pip install -e .[dev,test]
-pre-commit install
-```
-
-Run unit tests:
-
-```sh
-python3 -m pytest --flake-finder --flake-runs=2
-```
-
-Run single unit test:
-
-```sh
-python3 -m pytest tests/unit/test_hatpro.py
-```
-
-Run end-to-end tests:
-
-```sh
-python3 tests/e2e_test.py
-```
-
-```sh
-for f in cloudnetpy/model_evaluation/tests/e2e/*/main.py; do $f; done
-```
-
-Force `pre-commit` checks (`ruff`, `mypy`, etc.) for all files:
-
-```sh
-pre-commit run --all
-```
+## Citation
+If you use CloudnetPy in your work, please use the following citation:
+[![DOI](https://zenodo.org/badge/233602651.svg)](https://zenodo.org/badge/latestdoi/233602651)
 
 ## License
 
