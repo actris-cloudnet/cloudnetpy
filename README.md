@@ -13,7 +13,7 @@ classified as ice, liquid, aerosol, insects, and so on.
 Subsequently, geophysical products such as ice water content can be
 retrieved in further processing steps. See [Illingworth et al. (2007)](https://doi.org/10.1175/BAMS-88-6-883) for more details about the concept.
 
-CloudnetPy is a rewritten version of the original Cloudnet Matlab code. It features several revised methods, extensive documentation, and more.
+CloudnetPy is a rewritten version of the original Cloudnet MATLAB code. It features several revised methods, extensive documentation, and more.
 
 - CloudnetPy documentation: <https://actris-cloudnet.github.io/cloudnetpy/>
 - Cloudnet data portal: <https://cloudnet.fmi.fi>
@@ -22,13 +22,13 @@ CloudnetPy is a rewritten version of the original Cloudnet Matlab code. It featu
 
 ## Installation
 
-### From PyPI
+### Option 1: From PyPI
 
 ```
 python3 -m pip install cloudnetpy
 ```
 
-### From the source
+### Option 2: From the source
 
 ```sh
 git clone https://github.com/actris-cloudnet/cloudnetpy
@@ -37,6 +37,14 @@ python3 -m venv venv
 source venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install .
+```
+
+## Verification
+
+To verify the installation:
+
+```sh
+cloudnetpy --help
 ```
 
 ## Citing
@@ -61,12 +69,7 @@ pre-commit install
 Run unit tests:
 
 ```sh
-python3 -m pytest --flake-finder --flake-runs=2
-```
-
-Run single unit test:
-
-```sh
+python3 -m pytest
 python3 -m pytest tests/unit/test_hatpro.py
 ```
 
@@ -74,9 +77,6 @@ Run end-to-end tests:
 
 ```sh
 python3 tests/e2e_test.py
-```
-
-```sh
 for f in cloudnetpy/model_evaluation/tests/e2e/*/main.py; do $f; done
 ```
 
