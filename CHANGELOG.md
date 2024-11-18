@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.16 – 2024-11-18
+
+- Allow small differences between files with PollyXT data
+
 ## 1.66.15 – 2024-11-18
 
 - Improve MIRA zenith angle screening
