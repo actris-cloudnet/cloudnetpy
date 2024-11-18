@@ -192,6 +192,8 @@ class _Concat:
             ind0 = len(self.concatenated_file.variables[self.concat_dimension])
             ind1 = ind0 + len(file.variables[self.concat_dimension])
             for key in self.concatenated_file.variables:
+                if key not in file.variables:
+                    continue
                 array = file[key][:]
                 if key in self.common_variables:
                     if allow_vary is not None and key in allow_vary:
