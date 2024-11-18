@@ -61,6 +61,7 @@ def radiometrics2nc(
 
     radiometrics = RadiometricsCombined(objs, site_meta)
     radiometrics.screen_time(date)
+    radiometrics.sort_timestamps()
     radiometrics.time_to_fractional_hours()
     radiometrics.data_to_cloudnet_arrays()
     radiometrics.add_meta()
@@ -143,9 +144,13 @@ class Radiometrics:
         lwps = []
         iwvs = []
         irts = []
+        irt_times = []
         temps = []
+        temp_times = []
         rhs = []
+        rh_times = []
         ahs = []
+        ah_times = []
         block_titles = {}
         for record in self.raw_data:
             if record.block_type == 100:
@@ -154,12 +159,15 @@ class Radiometrics:
                 block_titles[block_type] = title
             if title := block_titles.get(record.block_type + record.block_index):
                 if title == "Temperature (K)":
+                    temp_times.append(record.timestamp)
                     temps.append(
                         [float(record.values[column]) for column in self.ranges]
                     )
                 elif title == "Relative Humidity (%)":
+                    rh_times.append(record.timestamp)
                     rhs.append([float(record.values[column]) for column in self.ranges])
                 elif title == "Vapor Density (g/m^3)":
+                    ah_times.append(record.timestamp)
                     ahs.append([float(record.values[column]) for column in self.ranges])
             elif record.block_type == 10:
                 if record.block_index == 0:
@@ -169,15 +177,20 @@ class Radiometrics:
                     times.append(record.timestamp)
                     lwps.append(float(lwp))
                     iwvs.append(float(iwv))
+                    irt_times.append(record.timestamp)
                     irts.append([float(irt)])
+                    temp_times.append(record.timestamp)
                     temps.append(
                         [float(record.values[column]) for column in self.ranges]
                     )
                 elif record.block_index == 1:
+                    ah_times.append(record.timestamp)
                     ahs.append([float(record.values[column]) for column in self.ranges])
                 elif record.block_index == 2:
+                    rh_times.append(record.timestamp)
                     rhs.append([float(record.values[column]) for column in self.ranges])
             elif record.block_type == 200:
+                irt_times.append(record.timestamp)
                 irt = record.values["Tir(K)"]
                 irts.append([float(irt)])
             elif record.block_type == 300:
@@ -186,16 +199,29 @@ class Radiometrics:
                 times.append(record.timestamp)
                 lwps.append(float(lwp))
                 iwvs.append(float(iwv))
-        n_time = len(times)
         self.data["time"] = np.array(times, dtype="datetime64[s]")
         self.data["lwp"] = np.array(lwps)  # mm => kg m-2
         self.data["iwv"] = np.array(iwvs) * 10  # cm => kg m-2
-        self.data["irt"] = np.array(irts[:n_time])
-        self.data["temperature"] = np.array(temps[:n_time])
-        self.data["relative_humidity"] = np.array(rhs[:n_time]) / 100  # % => 1
-        self.data["absolute_humidity"] = (
-            np.array(ahs[:n_time]) / 1000
-        )  # g m-3 => kg m-3
+        self.data["irt"] = _find_closest(
+            np.array(irt_times, dtype="datetime64[s]"),
+            np.array(irts),
+            self.data["time"],
+        )
+        self.data["temperature"] = _find_closest(
+            np.array(temp_times, dtype="datetime64[s]"),
+            np.array(temps),
+            self.data["time"],
+        )
+        self.data["relative_humidity"] = _find_closest(
+            np.array(rh_times, dtype="datetime64[s]"),
+            np.array(rhs) / 100,  # % => 1
+            self.data["time"],
+        )
+        self.data["absolute_humidity"] = _find_closest(
+            np.array(ah_times, dtype="datetime64[s]"),
+            np.array(ahs) / 1000,  # g m-3 => kg m-3
+            self.data["time"],
+        )
 
 
 class RadiometricsCombined:
@@ -232,6 +258,13 @@ class RadiometricsCombined:
             if key in ("range", "height"):
                 continue
             self.data[key] = self.data[key][valid_mask]
+
+    def sort_timestamps(self):
+        ind = np.argsort(self.data["time"])
+        for key in self.data:
+            if key in ("range", "height"):
+                continue
+            self.data[key] = self.data[key][ind]
 
     def time_to_fractional_hours(self) -> None:
         base = self.data["time"][0].astype("datetime64[D]")
@@ -270,6 +303,10 @@ def _parse_datetime(text: str) -> datetime.datetime:
         minute,
         second,
     )
+
+
+def _find_closest(x: np.ndarray, y: np.ndarray, x_new: np.ndarray) -> np.ndarray:
+    return y[np.argmin(np.abs(x_new - x[:, np.newaxis]), axis=0)]
 
 
 ATTRIBUTES = {
