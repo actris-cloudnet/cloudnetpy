@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.14 – 2024-11-18
+
+- Handle different number of measurements from Radiometrics
+
 ## 1.66.13 – 2024-11-15
 
 - Read profiles from Radiometrics files
