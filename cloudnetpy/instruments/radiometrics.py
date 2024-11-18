@@ -186,13 +186,16 @@ class Radiometrics:
                 times.append(record.timestamp)
                 lwps.append(float(lwp))
                 iwvs.append(float(iwv))
+        n_time = len(times)
         self.data["time"] = np.array(times, dtype="datetime64[s]")
         self.data["lwp"] = np.array(lwps)  # mm => kg m-2
         self.data["iwv"] = np.array(iwvs) * 10  # cm => kg m-2
-        self.data["irt"] = np.array(irts)
-        self.data["temperature"] = np.array(temps)
-        self.data["relative_humidity"] = np.array(rhs) / 100  # % => 1
-        self.data["absolute_humidity"] = np.array(ahs) / 1000  # g m-3 => kg m-3
+        self.data["irt"] = np.array(irts[:n_time])
+        self.data["temperature"] = np.array(temps[:n_time])
+        self.data["relative_humidity"] = np.array(rhs[:n_time]) / 100  # % => 1
+        self.data["absolute_humidity"] = (
+            np.array(ahs[:n_time]) / 1000
+        )  # g m-3 => kg m-3
 
 
 class RadiometricsCombined:
