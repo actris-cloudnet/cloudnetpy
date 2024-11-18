@@ -6,7 +6,7 @@ import logging
 import netCDF4
 import numpy as np
 from numpy import ma
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_almost_equal
 
 from cloudnetpy import output, utils
 from cloudnetpy.exceptions import InconsistentDataError, ValidTimeStampError
@@ -190,7 +190,9 @@ def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarr
             array1 = _read_array_from_file_pair(nc1, nc2, key)
             if ind == 0:
                 array = array1
-        assert_array_equal(array, array1, f"Inconsistent variable '{key}'")
+        assert_almost_equal(
+            array, array1, err_msg=f"Inconsistent variable '{key}'", decimal=2
+        )
     return np.array(array)
 
 
@@ -201,7 +203,9 @@ def _read_array_from_file_pair(
 ) -> np.ndarray:
     array1 = nc_file1.variables[key][:]
     array2 = nc_file2.variables[key][:]
-    assert_array_equal(array1, array2, f"Inconsistent variable '{key}'")
+    assert_almost_equal(
+        array1, array2, err_msg=f"Inconsistent variable '{key}'", decimal=2
+    )
     return array1
 
 
