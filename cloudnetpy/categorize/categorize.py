@@ -167,10 +167,11 @@ def generate_categorize(
                 logging.warning("Unable to use disdrometer: %s", err)
         time, height = _define_dense_grid()
         valid_ind = _interpolate_to_cloudnet_grid()
-        if not valid_ind:
-            msg = "No overlapping radar and lidar timestamps found"
+        if len(valid_ind) < 2:
+            msg = "Less than 2 overlapping radar, lidar and model timestamps found"
             raise ValidTimeStampError(msg)
         _screen_bad_time_indices(valid_ind)
+
         if any(source in data.radar.source_type.lower() for source in ("rpg", "basta")):
             data.radar.filter_speckle_noise()
             data.radar.filter_1st_gate_artifact()
