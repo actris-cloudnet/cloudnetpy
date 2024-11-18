@@ -103,18 +103,26 @@ class NcRadar(DataSource, CloudnetInstrument):
             azimuth_reference = ma.median(azimuth)
             azimuth_tolerance = 0.1
 
-        elevation = self.data["elevation"].data
-        zenith = 90 - elevation
-        is_stable_zenith = np.isclose(zenith, ma.median(zenith), atol=0.1)
+        zenith = 90 - self.data["elevation"].data
+
+        is_valid_zenith = np.abs(zenith) < 10
+        if not np.any(is_valid_zenith):
+            msg = "No valid zenith angles"
+            raise ValidTimeStampError(msg)
+
+        valid_zenith = zenith[is_valid_zenith]
+        is_stable_zenith = np.isclose(zenith, ma.median(valid_zenith), atol=0.1)
         is_stable_azimuth = np.isclose(
             azimuth,
             azimuth_reference,
             atol=azimuth_tolerance,
         )
         is_stable_profile = is_stable_zenith & is_stable_azimuth
+
         if ma.isMaskedArray(is_stable_profile):
             is_stable_profile[is_stable_profile.mask] = False
         n_removed = np.count_nonzero(~is_stable_profile)
+
         if n_removed >= len(zenith) - 1:
             msg = "Less than two profiles with valid zenith / azimuth angles"
             raise ValidTimeStampError(msg)
