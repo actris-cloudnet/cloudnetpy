@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.66.15 – 2024-11-18
+
+- Improve MIRA zenith angle screening
+- Avoid single profile categorize file
+- Handle out-of-order data from Radiometrics
+- Skip file with missing variables in concatenation
+
 ## 1.66.14 – 2024-11-18
 
 - Handle different number of measurements from Radiometrics
