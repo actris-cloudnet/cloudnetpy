@@ -103,7 +103,12 @@ class NcRadar(DataSource, CloudnetInstrument):
             azimuth_reference = ma.median(azimuth)
             azimuth_tolerance = 0.1
 
-        zenith = 90 - self.data["elevation"].data
+        elevation = self.data["elevation"].data
+
+        # Elevation is sometimes around -1000 indicating missing value
+        # Assume the instrument is pointing vertically in these cases
+        elevation[elevation < 0] = 90
+        zenith = 90 - elevation
 
         is_valid_zenith = np.abs(zenith) < 10
         if not np.any(is_valid_zenith):
