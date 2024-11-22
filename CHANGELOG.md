@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.17 – 2024-11-22
+
+- Assume negative MIRA elevation angles are vertical measurements
+
 ## 1.66.16 – 2024-11-18
 
 - Allow small differences between files with PollyXT data
