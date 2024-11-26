@@ -910,6 +910,7 @@ def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
         "mwr-multi": 35,
         "weather-station": 12,
         "doppler-lidar-wind": 75,
+        "radar": 5,
     }
     return max_allowed_gap.get(file_type, 10)
 

@@ -72,6 +72,7 @@ def mira2nc(
             mira.screen_by_snr()
             mira.screen_invalid_ldr()
             mira.mask_invalid_data()
+            mira.mask_bad_angles()
             mira.add_time_and_range()
             mira.add_site_geolocation()
             mira.add_radar_specific_variables()
@@ -127,6 +128,18 @@ class Mira(NcRadar):
                 "Screening all LDR for now.",
             )
             self.data["ldr"].data[:] = ma.masked
+
+    def mask_bad_angles(self) -> None:
+        """Masks clearly bad elevation and azimuth angles."""
+        limits = {
+            "elevation": (0, 180),
+            "azimuth_angle": (-360, 360),
+        }
+        for key, (lower, upper) in limits.items():
+            if (array := self.data[key].data) is not None:
+                margin = (upper - lower) * 0.05
+                array[array < (lower - margin)] = ma.masked
+                array[array > (upper + margin)] = ma.masked
 
 
 def _parse_input_files(input_files: str | list[str], temp_dir: str) -> tuple:
@@ -219,7 +232,6 @@ def _get_keymap(filetype: str) -> dict:
                 ("SNRh2l", "SNR"),
                 ("elv", "elevation"),
                 ("azi", "azimuth_angle"),
-                ("aziv", "azimuth_velocity"),
                 ("nfft", "nfft"),
                 ("nave", "nave"),
                 ("prf", "prf"),
@@ -234,7 +246,6 @@ def _get_keymap(filetype: str) -> dict:
             "SNRg": "SNR",
             "elv": "elevation",
             "azi": "azimuth_angle",
-            "aziv": "azimuth_velocity",
             "nfft": "nfft",
             "nave": "nave",
             "prf": "prf",

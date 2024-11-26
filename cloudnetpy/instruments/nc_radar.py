@@ -94,41 +94,26 @@ class NcRadar(DataSource, CloudnetInstrument):
         """Adds non-varying instrument zenith and azimuth angles and returns valid
         time indices.
         """
-        if "azimuth_velocity" in self.data:
-            azimuth = self.data["azimuth_velocity"].data
-            azimuth_reference = azimuth[0] if np.all(azimuth == azimuth[0]) else 0
-            azimuth_tolerance = 1e-6
-        else:
-            azimuth = self.data["azimuth_angle"].data
-            azimuth_reference = ma.median(azimuth)
-            azimuth_tolerance = 0.1
-
         elevation = self.data["elevation"].data
+        azimuth = self.data["azimuth_angle"].data
 
-        # Elevation is sometimes around -1000 indicating missing value
-        # Assume the instrument is pointing vertically in these cases
-        elevation[elevation < 0] = 90
-        zenith = 90 - elevation
+        elevation_diff = ma.diff(elevation, prepend=elevation[1])
+        azimuth_diff = ma.diff(azimuth, prepend=azimuth[1])
 
-        is_valid_zenith = np.abs(zenith) < 10
-        if not np.any(is_valid_zenith):
-            msg = "No valid zenith angles"
-            raise ValidTimeStampError(msg)
+        is_stable = np.abs(elevation - 90) < 1
+        is_stable &= np.abs(elevation_diff) < 1e-6
+        is_stable &= np.abs(azimuth_diff) < 1e-3
 
-        valid_zenith = zenith[is_valid_zenith]
-        is_stable_zenith = np.isclose(zenith, ma.median(valid_zenith), atol=0.1)
-        is_stable_azimuth = np.isclose(
-            azimuth,
-            azimuth_reference,
-            atol=azimuth_tolerance,
-        )
-        is_stable_profile = is_stable_zenith & is_stable_azimuth
+        # If scanning unit is broken, data are missing
+        # (assume it's vertically pointing)
+        missing_info = elevation.mask & azimuth.mask
+        is_stable[missing_info] = True
 
-        if ma.isMaskedArray(is_stable_profile):
-            is_stable_profile[is_stable_profile.mask] = False
-        n_removed = np.count_nonzero(~is_stable_profile)
+        if ma.isMaskedArray(is_stable):
+            is_stable[is_stable.mask] = False
+        n_removed = np.count_nonzero(~is_stable)
 
-        if n_removed >= len(zenith) - 1:
+        if n_removed >= len(elevation) - 1:
             msg = "Less than two profiles with valid zenith / azimuth angles"
             raise ValidTimeStampError(msg)
 
@@ -137,11 +122,10 @@ class NcRadar(DataSource, CloudnetInstrument):
                 "Filtering %s profiles due to varying zenith / azimuth angle",
                 n_removed,
             )
+        zenith = 90 - elevation
         self.append_data(zenith, "zenith_angle")
-        for key in ("elevation", "azimuth_velocity"):
-            if key in self.data:
-                del self.data[key]
-        return list(is_stable_profile)
+        del self.data["elevation"]
+        return list(is_stable)
 
     def add_radar_specific_variables(self) -> None:
         """Adds radar specific variables."""
