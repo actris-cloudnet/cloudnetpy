@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.66.18 – 2024-11-27
+
+- Improve MIRA angle screening
+
 ## 1.66.17 – 2024-11-22
 
 - Assume negative MIRA elevation angles are vertical measurements
