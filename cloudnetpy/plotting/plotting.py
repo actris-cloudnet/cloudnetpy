@@ -46,6 +46,7 @@ class PlotParameters:
         raise_on_empty: Whether to raise an error if no data is found for a
             plotted variable.
         minor_ticks: Whether to display minor ticks on the x-axis.
+
     """
 
     dpi: float = 120
@@ -214,7 +215,7 @@ class SubPlot:
         self.ax.set_xticklabels(x_tick_labels, fontsize=12)
         if self.options.minor_ticks:
             self.ax.xaxis.set_minor_locator(AutoMinorLocator(4))
-            self.ax.tick_params(which='minor', length=2.5)
+            self.ax.tick_params(which="minor", length=2.5)
         self.ax.set_xlim(0, 24)
 
     def set_yax(
