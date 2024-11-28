@@ -340,3 +340,18 @@ def normalize_lwc_by_lwp(
     theoretical_lwp = ma.sum(lwc_adiabatic * path_lengths, axis=1)
     scaling_factors = lwp / theoretical_lwp
     return lwc_adiabatic * utils.transpose(scaling_factors)
+
+
+def calc_altitude(temperature: float, pressure: float) -> float:
+    """Calculate altitude (m) based on observed pressure (Pa) and temperature (K)
+    using the International Standard Atmosphere (ISA) model.
+
+    Args:
+        temperature: Observed temperature (K).
+        pressure: Observed atmospheric pressure (Pa).
+
+    Returns:
+        Altitude (m).
+    """
+    L = 0.0065  # Temperature lapse rate (K/m)
+    return (temperature / L) * (1 - (pressure / con.P0) ** (con.RS * L / con.G))

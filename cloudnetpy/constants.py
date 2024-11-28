@@ -14,6 +14,9 @@ RS: Final = 287.058
 # ice density kg m-3
 RHO_ICE: Final = 917
 
+# Standard atmospheric pressure at sea level Pa
+P0: Final = 1013_25
+
 # other
 SPEED_OF_LIGHT: Final = 3.0e8
 SEC_IN_MINUTE: Final = 60
@@ -30,3 +33,4 @@ PA_TO_HPA: Final = 1 / HPA_TO_PA
 KM_H_TO_M_S: Final = 1000 / SEC_IN_HOUR
 M_TO_KM: Final = 1e-3
 TWO_WAY: Final = 2
+G: Final = 9.80665
