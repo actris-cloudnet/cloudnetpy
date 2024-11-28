@@ -21,7 +21,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from numpy import ma, ndarray
 from scipy.ndimage import uniform_filter
 
-from cloudnetpy.constants import T0
+from cloudnetpy import constants as con
+from cloudnetpy.categorize.atmos_utils import calc_altitude
 from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.instruments.ceilometer import calc_sigma_units
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
@@ -46,6 +47,7 @@ class PlotParameters:
         raise_on_empty: Whether to raise an error if no data is found for a
             plotted variable.
         minor_ticks: Whether to display minor ticks on the x-axis.
+        plot_above_ground: Whether to plot above ground instead of above mean sea level.
 
     """
 
@@ -61,6 +63,7 @@ class PlotParameters:
     plot_meta: PlotMeta | None = None
     raise_on_empty: bool = False
     minor_ticks: bool = False
+    plot_above_ground: bool = False
 
 
 class Dimensions:
@@ -173,14 +176,34 @@ class FigureData:
         m2mm = 1e3
         file_type = getattr(self.file, "cloudnet_file_type", "")
         if file_type == "model":
-            return ma.mean(self.file.variables["height"][:], axis=0) * m2km
+            height = ma.mean(self.file.variables["height"][:], axis=0)  # height AGL
+            if not self.options.plot_above_ground:
+                site_alt = self._calc_ground_altitude()
+                height += site_alt
+            return height * m2km
         if "height" in self.file.variables:
-            return self.file.variables["height"][:] * m2km
+            height = self.file.variables["height"][:]  # height AMSL
+            if self.options.plot_above_ground:
+                if "altitude" not in self.file.variables:
+                    msg = "No altitude information in the file."
+                    raise ValueError(msg)
+                height -= self.file.variables["altitude"][:]
+            return height * m2km
         if "range" in self.file.variables:
             return self.file.variables["range"][:] * m2km
         if "diameter" in self.file.variables:
             return self.file.variables["diameter"][:] * m2mm
         return None
+
+    def _calc_ground_altitude(self) -> float:
+        if (
+            "sfc_geopotential" in self.file.variables
+            and "gdas1" not in self.file.source.lower()  # uncertain unit in gdas1
+        ):
+            return np.mean(self.file.variables["sfc_geopotential"][:]) / con.G
+        pressure = ma.mean(self.file.variables["pressure"][:, 0])
+        temperature = ma.mean(self.file.variables["temperature"][:, 0])
+        return calc_altitude(temperature, pressure)
 
     def is_mwrpy_product(self) -> bool:
         cloudnet_file_type = getattr(self.file, "cloudnet_file_type", "")
@@ -201,7 +224,8 @@ class SubPlot:
         self.ax = ax
         self.variable = variable
         self.options = options
-        self.plot_meta = self._read_plot_meta(file_type)
+        self.file_type = file_type
+        self.plot_meta = self._read_plot_meta()
 
     def set_xax(self) -> None:
         resolution = 4
@@ -223,7 +247,11 @@ class SubPlot:
         ylabel: str | None = None,
         y_limits: tuple[float, float] | None = None,
     ) -> None:
-        label = ylabel if ylabel is not None else "Height (km)"
+        height_str = (
+            "Height (km AGL)" if self.options.plot_above_ground else "Height (km AMSL)"
+        )
+
+        label = ylabel if ylabel is not None else height_str
         self.ax.set_ylabel(label, fontsize=13)
         if y_limits is not None:
             self.ax.set_ylim(*y_limits)
@@ -288,12 +316,12 @@ class SubPlot:
                 va="bottom",
             )
 
-    def _read_plot_meta(self, file_type: str | None) -> PlotMeta:
+    def _read_plot_meta(self) -> PlotMeta:
         if self.options.plot_meta is not None:
             plot_meta = self.options.plot_meta
         else:
             fallback = ATTRIBUTES["fallback"].get(self.variable.name, PlotMeta())
-            file_attributes = ATTRIBUTES.get(file_type or "", {})
+            file_attributes = ATTRIBUTES.get(self.file_type or "", {})
             plot_meta = file_attributes.get(self.variable.name, fallback)
         if plot_meta.clabel is None:
             plot_meta = plot_meta._replace(clabel=_reformat_units(self.variable.units))
@@ -548,7 +576,7 @@ class Plot2D(Plot):
             self._plot_contour(
                 figure_data,
                 alt,
-                levels=np.array([T0]),
+                levels=np.array([con.T0]),
                 colors="gray",
                 linewidths=1.25,
                 linestyles="dashed",
