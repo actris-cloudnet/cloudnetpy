@@ -142,11 +142,18 @@ HALO = Instrument(
     model="StreamLine",
 )
 
-WINDCUBE = Instrument(
-    manufacturer="Leosphere",
+WINDCUBE_WLS200S = Instrument(
+    manufacturer="Vaisala",
     domain="lidar",
     category="Doppler lidar",
-    model="WindCube",
+    model="WindCube WLS200S",
+)
+
+WINDCUBE_WLS70 = Instrument(
+    manufacturer="Vaisala",
+    domain="lidar",
+    category="Doppler lidar",
+    model="WindCube WLS70",
 )
 
 PARSIVEL2 = Instrument(
