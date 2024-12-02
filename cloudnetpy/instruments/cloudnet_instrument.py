@@ -52,14 +52,12 @@ class CloudnetInstrument:
         return float(new_str)
 
     def add_height(self) -> None:
-        try:
-            zenith_angle = ma.median(self.data["zenith_angle"].data)
-        except RuntimeError:
+        zenith_angle = self._get_zenith_angle()
+        if zenith_angle is None:
             logging.warning("Assuming 0 deg zenith_angle")
             zenith_angle = 0
         height = utils.range_to_height(self.data["range"].data, zenith_angle)
         height += self.data["altitude"].data
-        height = np.array(height)
         self.data["height"] = CloudnetArray(height, "height")
 
     def linear_to_db(self, variables_to_log: tuple) -> None:
@@ -106,3 +104,11 @@ class CloudnetInstrument:
             return self.data["time"].data[:]
         except KeyError:
             return self.time
+
+    def _get_zenith_angle(self) -> float | None:
+        if "zenith_angle" not in self.data or self.data["zenith_angle"].data.size == 0:
+            return None
+        zenith_angle = ma.median(self.data["zenith_angle"].data)
+        if np.isnan(zenith_angle) or zenith_angle is ma.masked:
+            return None
+        return zenith_angle
