@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.66.19 – 2024-12-02
+
+- Add option for minor ticks
+- Add doppler-lidar plot max gap
+- Add windcube models
+
 ## 1.66.18 – 2024-11-27
 
 - Improve MIRA angle screening
