@@ -72,7 +72,12 @@ class DrizzleSource(DataSource):
         """Returns string corresponding the radar frequency."""
         radar_frequency = float(self.getvar("radar_frequency"))
         wl_band = utils.get_wl_band(radar_frequency)
-        return "35" if wl_band == 0 else "94"
+        if wl_band == "Ka":
+            return "35"
+        if wl_band == "W":
+            return "94"
+        msg = f"Unsupported band: {wl_band}"
+        raise ValueError(msg)
 
 
 class DrizzleClassification(ProductClassification):

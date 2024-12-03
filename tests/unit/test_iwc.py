@@ -51,7 +51,7 @@ def categorize_file(tmpdir_factory, file_metadata):
 
 def test_iwc_wl_band(categorize_file):
     obj = IwcSource(categorize_file, "iwc")
-    assert obj.wl_band == 0
+    assert obj.wl_band == "Ka"
 
 
 @pytest.mark.parametrize("result", ["K2liquid0", "ZT", "T", "Z", "c"])
