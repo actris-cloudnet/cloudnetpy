@@ -69,7 +69,11 @@ def mira2nc(
             n_profiles = utils.n_elements(mira.time, 5, "time")
             valid_ind = utils.remove_masked_blocks(mira.data["Zh"][:], limit=n_profiles)
             mira.screen_time_indices(valid_ind)
-            mira.screen_by_snr()
+
+            # Default limit seems to remove too much with MIRA-10.
+            snr_limit = -30 if mira.instrument == MIRA10 else None
+            mira.screen_by_snr(snr_limit)
+
             mira.screen_invalid_ldr()
             mira.mask_invalid_data()
             mira.mask_bad_angles()
