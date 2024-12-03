@@ -113,7 +113,7 @@ def _add_iwc_error_comment(attributes: dict, lwp_prior, uncertainty: float) -> d
 
 
 def _add_iwc_comment(attributes: dict, iwc: IwcSource) -> dict:
-    freq = utils.get_frequency(iwc.wl_band)
+    freq = iwc.radar_frequency
     coeffs = iwc.coefficients
     factor = round((coeffs[0] / 0.93) * 1000) / 1000
     attributes["iwc"] = attributes["iwc"]._replace(

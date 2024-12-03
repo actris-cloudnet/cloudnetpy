@@ -75,6 +75,14 @@ CHM15KX = Instrument(
     wavelength=1064.0,
 )
 
+MIRA10 = Instrument(
+    manufacturer="METEK",
+    domain="radar",
+    category="cloud radar",
+    model="MIRA-10",
+    frequency=9.4,  # 9.2 - 9.6 GHz
+)
+
 MIRA35 = Instrument(
     manufacturer="METEK",
     domain="radar",

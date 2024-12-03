@@ -181,7 +181,8 @@ class IceSource(DataSource):
 
     def __init__(self, categorize_file: str, product: str):
         super().__init__(categorize_file)
-        self.wl_band = utils.get_wl_band(float(self.getvar("radar_frequency")))
+        self.radar_frequency = float(self.getvar("radar_frequency"))
+        self.wl_band = utils.get_wl_band(self.radar_frequency)
         self.temperature = _get_temperature(categorize_file)
         self.product = product
         self.coefficients = self._get_coefficients()
@@ -216,13 +217,18 @@ class IceSource(DataSource):
         References:
             Hogan et.al. 2006, https://doi.org/10.1175/JAM2340.1
         """
+        msg = f"Unsupported band: {self.wl_band}"
         if self.product == "ier":
-            if self.wl_band == 0:
+            if self.wl_band == "Ka":
                 return IceCoefficients(0.878, -0.000205, -0.0015, 0.0016, -1.52)
-            return IceCoefficients(0.669, -0.000296, -0.00193, -0.000, -1.502)
-        if self.wl_band == 0:
+            if self.wl_band == "W":
+                return IceCoefficients(0.669, -0.000296, -0.00193, -0.000, -1.502)
+            raise ValueError(msg)
+        if self.wl_band == "Ka":
             return IceCoefficients(0.878, 0.000242, -0.0186, 0.0699, -1.63)
-        return IceCoefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
+        if self.wl_band == "W":
+            return IceCoefficients(0.669, 0.000580, -0.00706, 0.0923, -0.992)
+        raise ValueError(msg)
 
     def _convert_z(self, z_variable: str = "Z") -> np.ndarray:
         """Calculates temperature weighted z, i.e. ice effective radius [m]."""

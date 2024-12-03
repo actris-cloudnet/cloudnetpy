@@ -40,7 +40,7 @@ def calc_melting_attenuation(
     amount[amount == 0] = ma.masked
 
     band = utils.get_wl_band(data.radar.radar_frequency)
-    error_factor = 0.2 if band == 0 else 0.1
+    error_factor = {"Ka": 0.2, "W": 0.1}[band]
 
     error = amount * error_factor
     error[~affected_region] = ma.masked
@@ -65,9 +65,10 @@ def _calc_melting_attenuation(
         Research: Atmospheres, 124, 9520–9533. https://doi.org/10.1029/2019JD030316
 
     """
-    if frequency > 34 and frequency < 37:
+    band = utils.get_wl_band(frequency)
+    if band == "Ka":
         a, b = 0.97, 0.61
-    elif frequency > 93 and frequency < 96:
+    elif band == "W":
         a, b = 2.9, 0.42
     else:
         msg = "Radar frequency not supported"

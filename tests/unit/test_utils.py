@@ -447,8 +447,9 @@ class TestDelDictKeys:
 @pytest.mark.parametrize(
     "frequency, band",
     [
-        (35.5, 0),
-        (94, 1),
+        (10, "X"),
+        (35.5, "Ka"),
+        (94, "W"),
     ],
 )
 def test_get_wl_band(frequency, band):

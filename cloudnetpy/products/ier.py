@@ -3,7 +3,7 @@
 import numpy as np
 from numpy import ma
 
-from cloudnetpy import constants, output, utils
+from cloudnetpy import constants, output
 from cloudnetpy.metadata import MetaData
 from cloudnetpy.products.iwc import DEFINITIONS as IWC_DEFINITION
 from cloudnetpy.products.product_tools import IceClassification, IceSource
@@ -83,7 +83,7 @@ class IerSource(IceSource):
 
 
 def _add_ier_comment(attributes: dict, ier: IerSource) -> dict:
-    freq = utils.get_frequency(ier.wl_band)
+    freq = ier.radar_frequency
     coeffs = ier.coefficients
     factor = np.round((coeffs[0] / 0.93), 3)
     attributes["ier"] = attributes["ier"]._replace(

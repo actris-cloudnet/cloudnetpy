@@ -112,7 +112,7 @@ class ObservationManager(DataSource):
             raise RuntimeError(msg)
         wband = utils.get_wl_band(float(self.radar_freq))
         rainrate_threshold = 8
-        if 90 < wband < 100:
+        if wband == "W":
             rainrate_threshold = 2
         return rainrate_threshold
 

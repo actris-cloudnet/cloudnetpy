@@ -8,7 +8,7 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 from numpy import ma
 
 from cloudnetpy import concat_lib, output, utils
-from cloudnetpy.instruments.instruments import MIRA35
+from cloudnetpy.instruments.instruments import MIRA10, MIRA35
 from cloudnetpy.instruments.nc_radar import NcRadar
 from cloudnetpy.metadata import MetaData
 
@@ -99,7 +99,13 @@ class Mira(NcRadar):
     def __init__(self, full_path: str, site_meta: dict):
         super().__init__(full_path, site_meta)
         self.date = self._init_mira_date()
-        self.instrument = MIRA35
+        if "model" not in site_meta or site_meta["model"] == "mira-35":
+            self.instrument = MIRA35
+        elif site_meta["model"] == "mira-10":
+            self.instrument = MIRA10
+        else:
+            msg = f"Invalid model: {site_meta['model']}"
+            raise ValueError(msg)
 
     def screen_by_date(self, expected_date: str) -> None:
         """Screens incorrect time stamps."""
