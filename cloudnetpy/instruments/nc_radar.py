@@ -56,7 +56,7 @@ class NcRadar(DataSource, CloudnetInstrument):
         self.append_data(range_instru, "range")
         self.append_data(time, "time", dtype=time_dtype)
 
-    def screen_by_snr(self, snr_limit: float = -17) -> None:
+    def screen_by_snr(self, snr_limit: float) -> None:
         """Mask values where SNR smaller than threshold."""
         ind = np.where(self.data["SNR"][:] < snr_limit)
         for cloudnet_array in self.data.values():
