@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.67.2 – 2024-12-03
+
+- Remove default SNR limit
+
 ## 1.67.1 – 2024-12-03
 
 - Adjust MIRA-10 screening
