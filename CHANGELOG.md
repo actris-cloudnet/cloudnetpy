@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.67.0 – 2024-12-03
+
+- Add MIRA-10 support
+- Add `plot_above_ground` option
+- Fix height calculating with masked zenith angle
+
 ## 1.66.19 – 2024-12-02
 
 - Add option for minor ticks
