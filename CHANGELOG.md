@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.67.1 – 2024-12-03
+
+- Adjust MIRA-10 screening
+
 ## 1.67.0 – 2024-12-03
 
 - Add MIRA-10 support
