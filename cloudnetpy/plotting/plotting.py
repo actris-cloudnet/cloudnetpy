@@ -868,58 +868,62 @@ def generate_figure(
         Dimensions: Dimensions of a generated figure in pixels.
 
     """
-    if options is None:
-        options = PlotParameters()
+    fig = None
+    try:
+        if options is None:
+            options = PlotParameters()
 
-    with netCDF4.Dataset(filename) as file:
-        figure_data = FigureData(file, variables, options)
-        fig, axes = figure_data.initialize_figure()
+        with netCDF4.Dataset(filename) as file:
+            figure_data = FigureData(file, variables, options)
+            fig, axes = figure_data.initialize_figure()
 
-        for ax, variable, ind in zip(
-            axes, figure_data.variables, figure_data.indices, strict=True
-        ):
-            file_type = getattr(file, "cloudnet_file_type", None)
-            subplot = SubPlot(ax, variable, options, file_type)
+            for ax, variable, ind in zip(
+                axes, figure_data.variables, figure_data.indices, strict=True
+            ):
+                file_type = getattr(file, "cloudnet_file_type", None)
+                subplot = SubPlot(ax, variable, options, file_type)
 
-            if variable.name in ("tb", "irt") and ind is not None:
-                Plot1D(subplot).plot_tb(figure_data, ind)
-            elif variable.ndim == 1:
-                Plot1D(subplot).plot(figure_data)
-            elif variable.name in ("number_concentration", "fall_velocity"):
-                Plot2D(subplot).plot(figure_data)
-                subplot.set_yax(ylabel="Diameter (mm)", y_limits=(0, 10))
-            else:
-                Plot2D(subplot).plot(figure_data)
-                subplot.set_yax(y_limits=(0, figure_data.options.max_y))
+                if variable.name in ("tb", "irt") and ind is not None:
+                    Plot1D(subplot).plot_tb(figure_data, ind)
+                elif variable.ndim == 1:
+                    Plot1D(subplot).plot(figure_data)
+                elif variable.name in ("number_concentration", "fall_velocity"):
+                    Plot2D(subplot).plot(figure_data)
+                    subplot.set_yax(ylabel="Diameter (mm)", y_limits=(0, 10))
+                else:
+                    Plot2D(subplot).plot(figure_data)
+                    subplot.set_yax(y_limits=(0, figure_data.options.max_y))
 
-            subplot.set_xax()
+                subplot.set_xax()
 
-            if options.title:
-                subplot.add_title(ind)
+                if options.title:
+                    subplot.add_title(ind)
 
-            if options.grid:
-                subplot.add_grid()
+                if options.grid:
+                    subplot.add_grid()
 
-            if options.show_sources:
-                subplot.add_sources(figure_data)
+                if options.show_sources:
+                    subplot.add_sources(figure_data)
 
-            if options.subtitle and variable == figure_data.variables[-1]:
-                figure_data.add_subtitle(fig)
+                if options.subtitle and variable == figure_data.variables[-1]:
+                    figure_data.add_subtitle(fig)
 
-    subplot.set_xlabel()
+        subplot.set_xlabel()
 
-    if options.footer_text is not None:
-        subplot.show_footer(fig, ax)
+        if options.footer_text is not None:
+            subplot.show_footer(fig, ax)
 
-    if output_filename:
-        plt.savefig(output_filename, bbox_inches="tight")
+        if output_filename:
+            plt.savefig(output_filename, bbox_inches="tight")
 
-    if show:
-        plt.show()
+        if show:
+            plt.show()
 
-    plt.close()
+        return Dimensions(fig, axes)
 
-    return Dimensions(fig, axes)
+    finally:
+        if fig:
+            plt.close(fig)
 
 
 def lin2log(*args) -> list:
