@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.67.3 – 2024-12-05
+
+- Fix memory error with Matplotlib
+- Improve PollyXT data reading
+
 ## 1.67.2 – 2024-12-03
 
 - Remove default SNR limit
