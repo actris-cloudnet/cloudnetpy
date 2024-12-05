@@ -2,6 +2,7 @@
 
 import glob
 import logging
+from collections import Counter
 
 import netCDF4
 import numpy as np
@@ -105,12 +106,13 @@ class PollyXt(Ceilometer):
         if len(bsc_files) != len(depol_files):
             msg = "Inconsistent number of pollyxt bsc / depol files"
             raise InconsistentDataError(msg)
+        bsc_files, depol_files = _fetch_files_with_same_range(bsc_files, depol_files)
+        if not bsc_files:
+            msg = "No pollyxt files with same range found"
+            raise InconsistentDataError(msg)
         self._fetch_attributes(bsc_files[0])
-        self.data["range"] = _read_array_from_multiple_files(
-            bsc_files,
-            depol_files,
-            "height",
-        )
+        with netCDF4.Dataset(bsc_files[0], "r") as nc:
+            self.data["range"] = nc.variables["height"][:]
         calibration_factors: np.ndarray = np.array([])
         beta_channel = self._get_valid_beta_channel(bsc_files)
         bsc_key = f"attenuated_backscatter_{beta_channel}nm"
@@ -127,14 +129,22 @@ class PollyXt(Ceilometer):
                 except AssertionError as err:
                     logging.warning(
                         "Ignoring files '%s' and '%s': %s",
-                        nc_bsc,
-                        nc_depol,
+                        bsc_file,
+                        depol_file,
                         err,
                     )
                     continue
                 beta_raw = nc_bsc.variables[bsc_key][:]
                 depol_raw = nc_depol.variables["volume_depolarization_ratio_532nm"][:]
-                snr = nc_bsc.variables[f"SNR_{beta_channel}nm"][:]
+                try:
+                    snr = nc_bsc.variables[f"SNR_{beta_channel}nm"][:]
+                except KeyError:
+                    logging.warning(
+                        "Ignoring files '%s' and '%s'",
+                        bsc_file,
+                        depol_file,
+                    )
+                    continue
                 for array, key in zip(
                     [beta_raw, depol_raw, time, snr],
                     ["beta_raw", "depolarisation_raw", "time", "snr"],
@@ -183,17 +193,30 @@ class PollyXt(Ceilometer):
                 self.serial_number = nc.source.lower()
 
 
-def _read_array_from_multiple_files(files1: list, files2: list, key) -> np.ndarray:
-    array: np.ndarray = np.array([])
-    for ind, (file1, file2) in enumerate(zip(files1, files2, strict=True)):
-        with netCDF4.Dataset(file1, "r") as nc1, netCDF4.Dataset(file2, "r") as nc2:
-            array1 = _read_array_from_file_pair(nc1, nc2, key)
-            if ind == 0:
-                array = array1
-        assert_almost_equal(
-            array, array1, err_msg=f"Inconsistent variable '{key}'", decimal=2
-        )
-    return np.array(array)
+def _fetch_files_with_same_range(
+    bsc_files: list[str], depol_files: list[str]
+) -> tuple[list[str], list[str]]:
+    def get_sum(file: str):
+        with netCDF4.Dataset(file, "r") as nc:
+            return np.sum(np.round(nc.variables["height"][:]))
+
+    bsc_sums = [get_sum(f) for f in bsc_files]
+    depol_sums = [get_sum(f) for f in depol_files]
+    all_sums = bsc_sums + depol_sums
+    most_common_sum = Counter(all_sums).most_common(1)[0][0]
+    valid_indices = [
+        i
+        for i, (bs, ds) in enumerate(zip(bsc_sums, depol_sums, strict=False))
+        if bs == most_common_sum and ds == most_common_sum
+    ]
+    if len(valid_indices) != len(bsc_files):
+        n_ignored = len(bsc_files) - len(valid_indices)
+        msg = f"Ignoring {n_ignored} file(s) with different range"
+        logging.warning(msg)
+    return (
+        [bsc_files[i] for i in valid_indices],
+        [depol_files[i] for i in valid_indices],
+    )
 
 
 def _read_array_from_file_pair(
