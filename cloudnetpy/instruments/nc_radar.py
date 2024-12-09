@@ -90,7 +90,12 @@ class NcRadar(DataSource, CloudnetInstrument):
         if len(ind) > 0:
             self.data["v"].data[:, ind] = ma.masked
 
-    def add_zenith_and_azimuth_angles(self) -> list:
+    def add_zenith_and_azimuth_angles(
+        self,
+        elevation_threshold: float,
+        elevation_diff_threshold: float,
+        azimuth_diff_threshold: float,
+    ) -> list:
         """Adds non-varying instrument zenith and azimuth angles and returns valid
         time indices.
         """
@@ -100,9 +105,9 @@ class NcRadar(DataSource, CloudnetInstrument):
         elevation_diff = ma.diff(elevation, prepend=elevation[1])
         azimuth_diff = ma.diff(azimuth, prepend=azimuth[1])
 
-        is_stable = np.abs(elevation - 90) < 1
-        is_stable &= np.abs(elevation_diff) < 1e-6
-        is_stable &= np.abs(azimuth_diff) < 1e-3
+        is_stable = np.abs(elevation - 90) < elevation_threshold
+        is_stable &= np.abs(elevation_diff) < elevation_diff_threshold
+        is_stable &= np.abs(azimuth_diff) < azimuth_diff_threshold
 
         # If scanning unit is broken, data are missing
         # (assume it's vertically pointing)

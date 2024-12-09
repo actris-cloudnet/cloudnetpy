@@ -96,7 +96,11 @@ def copernicus2nc(
             copernicus.add_radar_specific_variables()
             copernicus.add_nyquist_velocity(keymap)
             copernicus.add_site_geolocation()
-            valid_indices = copernicus.add_zenith_and_azimuth_angles()
+            valid_indices = copernicus.add_zenith_and_azimuth_angles(
+                elevation_threshold=1,
+                elevation_diff_threshold=0.1,
+                azimuth_diff_threshold=0.1,
+            )
             copernicus.screen_time_indices(valid_indices)
             copernicus.add_height()
             copernicus.test_if_all_masked()

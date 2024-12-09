@@ -80,7 +80,11 @@ def mira2nc(
             mira.add_time_and_range()
             mira.add_site_geolocation()
             mira.add_radar_specific_variables()
-            valid_indices = mira.add_zenith_and_azimuth_angles()
+            valid_indices = mira.add_zenith_and_azimuth_angles(
+                elevation_threshold=1,
+                elevation_diff_threshold=1e-6,
+                azimuth_diff_threshold=1e-3,
+            )
             mira.screen_time_indices(valid_indices)
             mira.add_height()
             mira.test_if_all_masked()

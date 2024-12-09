@@ -92,7 +92,11 @@ def galileo2nc(
             galileo.add_radar_specific_variables()
             galileo.add_nyquist_velocity(keymap)
             galileo.add_site_geolocation()
-            valid_indices = galileo.add_zenith_and_azimuth_angles()
+            valid_indices = galileo.add_zenith_and_azimuth_angles(
+                elevation_threshold=1,
+                elevation_diff_threshold=0.1,
+                azimuth_diff_threshold=0.1,
+            )
             galileo.screen_time_indices(valid_indices)
             galileo.add_height()
             galileo.test_if_all_masked()
