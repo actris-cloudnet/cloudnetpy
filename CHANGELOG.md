@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.67.4 – 2024-12-09
+
+- Check for empty Copernicus and Galileo data
+- Move magic numbers into arguments
+
 ## 1.67.3 – 2024-12-05
 
 - Fix memory error with Matplotlib
