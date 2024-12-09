@@ -89,7 +89,6 @@ def galileo2nc(
             galileo.screen_by_snr(snr_limit=snr_limit)
             galileo.mask_clutter()
             galileo.mask_invalid_data()
-            galileo.add_time_and_range()
             galileo.add_radar_specific_variables()
             galileo.add_nyquist_velocity(keymap)
             galileo.add_site_geolocation()

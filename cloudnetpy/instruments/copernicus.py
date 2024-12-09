@@ -91,7 +91,6 @@ def copernicus2nc(
             copernicus.mask_corrupted_values()
             copernicus.mask_first_range_gates()
             copernicus.mask_invalid_data()
-            copernicus.add_time_and_range()
             copernicus.fix_range_offset(site_meta)
             copernicus.screen_negative_ranges()
             copernicus.add_radar_specific_variables()
