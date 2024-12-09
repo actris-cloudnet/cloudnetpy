@@ -95,6 +95,7 @@ def galileo2nc(
             valid_indices = galileo.add_zenith_and_azimuth_angles()
             galileo.screen_time_indices(valid_indices)
             galileo.add_height()
+            galileo.test_if_all_masked()
         attributes = output.add_time_attribute(ATTRIBUTES, galileo.date)
         output.update_attributes(galileo.data, attributes)
         return output.save_level1b(galileo, output_file, uuid)

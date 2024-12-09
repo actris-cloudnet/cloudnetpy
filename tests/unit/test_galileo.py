@@ -5,7 +5,7 @@ import netCDF4
 import numpy as np
 import pytest
 
-from cloudnetpy.exceptions import ValidTimeStampError
+from cloudnetpy.exceptions import ValidTimeStampError, RadarDataError
 from cloudnetpy.instruments import galileo
 from tests.unit.all_products_fun import Check
 from tests.unit.radar_fun import RadarFun
@@ -81,7 +81,8 @@ class TestGalileo2nc(Check):
     def test_filename_argument(self, tmp_path):
         test_path = tmp_path / "date.nc"
         filename = f"{FILEPATH}galileo-file-1.nc"
-        galileo.galileo2nc(filename, test_path, self.site_meta)
+        with pytest.raises(RadarDataError):
+            galileo.galileo2nc(filename, test_path, self.site_meta)
 
     def test_correct_date_validation(self, tmp_path):
         test_path = tmp_path / "date.nc"

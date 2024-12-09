@@ -99,6 +99,7 @@ def copernicus2nc(
             valid_indices = copernicus.add_zenith_and_azimuth_angles()
             copernicus.screen_time_indices(valid_indices)
             copernicus.add_height()
+            copernicus.test_if_all_masked()
         attributes = output.add_time_attribute(ATTRIBUTES, copernicus.date)
         output.update_attributes(copernicus.data, attributes)
         return output.save_level1b(copernicus, output_file, uuid)
