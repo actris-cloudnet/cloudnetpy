@@ -121,6 +121,11 @@ COMMON_ATTRIBUTES = {
         standard_name="zenith_angle",
         comment="Angle to the local vertical. A value of zero is directly overhead.",
     ),
+    "ir_zenith_angle": MetaData(
+        long_name="Infrared sensor zenith angle",
+        units="degree",
+        comment="90=horizon, 0=zenith",
+    ),
     "azimuth_angle": MetaData(
         long_name="Azimuth angle",
         standard_name="sensor_azimuth_angle",
