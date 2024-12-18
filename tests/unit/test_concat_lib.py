@@ -88,8 +88,8 @@ class TestConcat:
         self.concat._close()
 
     def test_sorting_input_files(self):
-        assert self.concat.filenames[0] == self.files[1]
-        assert self.concat.filenames[1] == self.files[0]
+        assert self.concat.filenames[0].samefile(self.files[1])
+        assert self.concat.filenames[1].samefile(self.files[0])
 
     def test_create_dimension(self):
         for dim in ("time", "range", "range_hr", "layer"):

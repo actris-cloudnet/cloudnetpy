@@ -1,7 +1,10 @@
 """Module for concatenating netCDF files."""
 
+import logging
 import shutil
+from collections.abc import Iterable
 from os import PathLike
+from pathlib import Path
 from typing import Literal
 
 import netCDF4
@@ -80,14 +83,14 @@ def update_nc(old_file: str, new_file: str) -> int:
 
 
 def concatenate_files(
-    filenames: list,
+    filenames: Iterable[PathLike | str],
     output_file: str,
     concat_dimension: str = "time",
     variables: list | None = None,
     new_attributes: dict | None = None,
     ignore: list | None = None,
     allow_difference: list | None = None,
-) -> None:
+) -> list:
     """Concatenate netCDF files in one dimension.
 
     Args:
@@ -101,6 +104,9 @@ def concatenate_files(
         allow_difference: Names of scalar variables that can differ from one file to
             another (value from the first file is saved).
 
+    Returns:
+        List of filenames that were successfully concatenated.
+
     Notes:
         Arrays without 'concat_dimension', scalars, and global attributes will be taken
         from the first file. Groups, possibly present in a NETCDF4 formatted file,
@@ -110,7 +116,7 @@ def concatenate_files(
     with _Concat(filenames, output_file, concat_dimension) as concat:
         concat.get_common_variables()
         concat.create_global_attributes(new_attributes)
-        concat.concat_data(variables, ignore, allow_difference)
+        return concat.concat_data(variables, ignore, allow_difference)
 
 
 class _Concat:
@@ -118,11 +124,11 @@ class _Concat:
 
     def __init__(
         self,
-        filenames: list,
+        filenames: Iterable[PathLike | str],
         output_file: str,
         concat_dimension: str = "time",
     ):
-        self.filenames = sorted(filenames)
+        self.filenames = sorted(map(Path, filenames), key=lambda f: f.name)
         self.concat_dimension = concat_dimension
         self.first_filename = self.filenames[0]
         self.first_file = netCDF4.Dataset(self.first_filename)
@@ -147,12 +153,22 @@ class _Concat:
         variables: list | None,
         ignore: list | None,
         allow_vary: list | None,
-    ) -> None:
+    ) -> list:
         """Concatenates data arrays."""
         self._write_initial_data(variables, ignore)
+        output = [self.first_filename]
         if len(self.filenames) > 1:
             for filename in self.filenames[1:]:
-                self._append_data(filename, allow_vary)
+                try:
+                    self._append_data(filename, allow_vary)
+                except RuntimeError as e:
+                    if "NetCDF: HDF error" in str(e):
+                        msg = f"Caught a NetCDF HDF error. Skipping file '{filename}'."
+                        logging.exception(msg)
+                        continue
+                    raise
+                output.append(filename)
+        return output
 
     def _write_initial_data(self, variables: list | None, ignore: list | None) -> None:
         for key in self.first_file.variables:
@@ -185,7 +201,7 @@ class _Concat:
             var[:] = array
             _copy_attributes(self.first_file[key], var)
 
-    def _append_data(self, filename: str, allow_vary: list | None) -> None:
+    def _append_data(self, filename: str | PathLike, allow_vary: list | None) -> None:
         with netCDF4.Dataset(filename) as file:
             auto_scale = False
             file.set_auto_scale(auto_scale)
