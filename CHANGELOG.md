@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.67.5 – 2024-12-18
+
+- Fix MWRpy metadata
+- Skip completely masked PollyXT profiles
+- Skip files raising HDF error in concatenation
+
 ## 1.67.4 – 2024-12-09
 
 - Check for empty Copernicus and Galileo data
