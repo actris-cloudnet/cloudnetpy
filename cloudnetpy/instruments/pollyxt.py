@@ -203,7 +203,12 @@ def _fetch_files_with_same_range(
     bsc_sums = [get_sum(f) for f in bsc_files]
     depol_sums = [get_sum(f) for f in depol_files]
     all_sums = bsc_sums + depol_sums
-    most_common_sum = Counter(all_sums).most_common(1)[0][0]
+
+    filtered_sums = [item for item in all_sums if item is not ma.masked]
+    if not filtered_sums:
+        return [], []
+
+    most_common_sum = Counter(filtered_sums).most_common(1)[0][0]
     valid_indices = [
         i
         for i, (bs, ds) in enumerate(zip(bsc_sums, depol_sums, strict=False))
