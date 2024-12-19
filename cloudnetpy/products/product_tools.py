@@ -9,6 +9,8 @@ import numpy as np
 import numpy.typing as npt
 from numpy import ma
 from numpy.typing import NDArray
+from scipy.interpolate import RectBivariateSpline
+from scipy.stats import linregress
 
 from cloudnetpy import constants, utils
 from cloudnetpy.categorize import atmos_utils
@@ -319,3 +321,54 @@ def _get_temperature(categorize_file: str | PathLike) -> npt.NDArray:
     """Returns interpolated temperatures in Celsius."""
     atmosphere = interpolate_model(categorize_file, "temperature")
     return atmos_utils.k2c(atmosphere["temperature"])
+
+
+def get_interpolated_horizontal_wind(uwind, vwind, wind_time, wind_height):
+    horizontal_wind_speed = np.sqrt((uwind) ** 2 + (vwind) ** 2)
+    return RectBivariateSpline(
+        wind_time, wind_height, horizontal_wind_speed, kx=1, ky=1
+    )
+
+
+def periodogram(vel_data, delta_t, adv_vel=10):
+    """Compute frequency and power spectra.
+
+    Based on a time series of mean Doppler velocities.
+    """
+    # Convert input to numpy array
+    vel_data = np.asarray(vel_data, dtype=float)
+    if vel_data.size == 0:
+        return np.nan, np.nan
+    # Use wavenumber
+    delta_x = delta_t * adv_vel
+    # Compute the Fourier transform and scale power spectrum
+    fft_result = np.fft.rfft(vel_data)
+    power_sp = (delta_x**2 / (vel_data.size * delta_x)) * np.abs(fft_result) ** 2
+    power_sp *= 2 / (2 * np.pi)  # Scale by 2 for positive frequencies, normalize by 2π
+
+    # Compute angular frequencies
+    freq_sp = np.fft.rfftfreq(vel_data.size, d=delta_x) * 2 * np.pi
+
+    if any(power_sp == 0):
+        power_sp = power_sp[np.where(np.abs(fft_result) != 0)]
+        freq_sp = freq_sp[np.where(np.abs(fft_result) != 0)]
+
+    return freq_sp, power_sp
+
+
+def spec_fit(freq, power, freq_range):
+    """Fit a linear function (power~frequency).
+
+    Within a given frequency range (in log space).
+    """
+    mask = (freq > freq_range[0]) & (freq < freq_range[1])
+    freq_lin = np.log10(freq[mask])
+    power_lin = np.log10(power[mask])
+    valid_mask = ~np.isnan(freq_lin) & ~np.isnan(power_lin)
+    freq_valid = freq_lin[valid_mask]
+    power_valid = power_lin[valid_mask]
+    # slope, intercept, r_value, p_value, std_err
+    if len(freq_valid) > 1:
+        # Perform linear regression
+        return linregress(freq_valid, power_valid)
+    return (np.nan, np.nan, np.nan, np.nan, np.nan, np.nan)
