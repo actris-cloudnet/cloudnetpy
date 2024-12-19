@@ -407,6 +407,7 @@ def _get_identifier(short_id: str) -> str:
         "der",
         "ier",
         "classification-voodoo",
+        "edr",
     )
     if short_id not in valid_ids:
         msg = f"Invalid file identifier: {short_id}"
@@ -419,6 +420,8 @@ def _get_identifier(short_id: str) -> str:
         return "ice effective radius"
     if short_id == "der":
         return "droplet effective radius"
+    if short_id == "edr":
+        return "eddy dissipation rate"
     return short_id
 
 
