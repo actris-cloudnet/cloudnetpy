@@ -568,5 +568,6 @@ ATTRIBUTES = {
         "lwp": PlotMeta(
             zero_line=True,
         ),
+        "edr": PlotMeta(log_scale=True),
     },
 }
