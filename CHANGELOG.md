@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.67.6 – 2025-01-07
+
+- Fix masking of zero values in RPG data
+
 ## 1.67.5 – 2024-12-18
 
 - Fix MWRpy metadata
