@@ -593,5 +593,6 @@ ATTRIBUTES = {
             plot_range=(1e-7, 1e-1),
             log_scale=True,
         ),
+        "edr": PlotMeta(log_scale=True),
     },
 }
