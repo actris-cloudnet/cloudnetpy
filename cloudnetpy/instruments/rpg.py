@@ -158,7 +158,7 @@ def _mask_invalid_data(data_in: dict) -> dict:
     data = data_in.copy()
     fill_values = (-999, 1e-10)
     for name in data:
-        if np.issubdtype(data[name].dtype, np.integer) or name == "rainfall_rate":
+        if np.issubdtype(data[name].dtype, np.integer) or data[name].ndim < 2:
             continue
         data[name] = ma.masked_equal(data[name], 0)
         for value in fill_values:
@@ -333,9 +333,9 @@ class Hatpro(Rpg):
 
 def _filter_zenith_angle(zenith: ma.MaskedArray) -> np.ndarray:
     """Returns indices of profiles with stable zenith angle close to 0 deg."""
+    zenith = ma.array(zenith)
     if zenith.mask.all():
-        zenith[:] = 0
-        logging.warning("Can not determine zenith angle, assuming 0 degrees")
+        return np.zeros(zenith.shape, dtype=bool)
     limits = [-5, 15]
     ind_close_to_zenith = np.where(
         np.logical_and(zenith > limits[0], zenith < limits[1]),
