@@ -14,7 +14,6 @@ from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
 from cloudnetpy.instruments.toa5 import read_toa5
-from cloudnetpy.metadata import MetaData
 from cloudnetpy.utils import datetime2decimal_hours
 
 
@@ -73,7 +72,7 @@ def ws2nc(
         ws.convert_rainfall_amount()
         ws.normalize_rainfall_amount()
         ws.calculate_rainfall_amount()
-        attributes = output.add_time_attribute(ATTRIBUTES, ws.date)
+        attributes = output.add_time_attribute({}, ws.date)
         output.update_attributes(ws.data, attributes)
     except ValueError as err:
         raise WeatherStationDataError from err
@@ -465,13 +464,3 @@ class GalatiWS(WS):
     def convert_pressure(self) -> None:
         mmHg2Pa = 133.322
         self.data["air_pressure"].data = self.data["air_pressure"][:] * mmHg2Pa
-
-
-ATTRIBUTES = {
-    "rainfall_amount": MetaData(
-        long_name="Rainfall amount",
-        standard_name="thickness_of_rainfall_amount",
-        units="m",
-        comment="Cumulated precipitation since 00:00 UTC",
-    ),
-}

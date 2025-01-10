@@ -346,6 +346,8 @@ class Plot:
             "relative_humidity": (multiply, 100, "%"),
             "rainfall_amount": (multiply, 1000, "mm"),
             "air_temperature": (add, -273.15, "\u00b0C"),
+            "r_accum_RT": (multiply, 1000, "mm"),
+            "r_accum_NRT": (multiply, 1000, "mm"),
         }
         conversion_method, conversion, units = units_conversion.get(
             self.sub_plot.variable.name, (multiply, 1, None)

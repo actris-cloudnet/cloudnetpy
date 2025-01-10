@@ -178,6 +178,34 @@ THIES = Instrument(
     model="LNM",
 )
 
+PLUVIO2 = Instrument(
+    manufacturer="OTT HydroMet",
+    domain="rain-gauge",
+    category="rain-gauge",
+    model="Pluvio2",
+)
+
+PLUVIO2S = Instrument(
+    manufacturer="OTT HydroMet",
+    domain="rain-gauge",
+    category="rain-gauge",
+    model="Pluvio2S",
+)
+
+THIES_PT = Instrument(
+    manufacturer="Thies Clima",
+    domain="rain-gauge",
+    category="rain-gauge",
+    model="Precipitation Transmitter",
+)
+
+RAIN_E_H3 = Instrument(
+    manufacturer="LAMBRECHT meteo GmbH",
+    domain="rain-gauge",
+    category="rain-gauge",
+    model="rain[e]H3",
+)
+
 GENERIC_WEATHER_STATION = Instrument(
     domain="weather-station",
     category="weather station",

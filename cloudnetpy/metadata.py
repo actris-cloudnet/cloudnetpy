@@ -169,6 +169,12 @@ COMMON_ATTRIBUTES = {
         standard_name="rainfall_rate",
         units="m s-1",
     ),
+    "rainfall_amount": MetaData(
+        long_name="Rainfall amount",
+        standard_name="thickness_of_rainfall_amount",
+        units="m",
+        comment="Cumulated precipitation since 00:00 UTC",
+    ),
     "air_temperature": MetaData(
         long_name="Air temperature",
         standard_name="air_temperature",
