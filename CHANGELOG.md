@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.67.7 – 2025-01-14
+
+- Add rain gauge metadata
+
 ## 1.67.6 – 2025-01-07
 
 - Fix masking of zero values in RPG data
