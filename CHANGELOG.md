@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.67.8 – 2025-01-16
+
+- Handle old MIRA files without angle variables
+
 ## 1.67.7 – 2025-01-14
 
 - Add rain gauge metadata
