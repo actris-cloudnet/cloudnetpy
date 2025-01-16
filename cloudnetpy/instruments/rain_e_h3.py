@@ -1,5 +1,6 @@
 import csv
-from datetime import datetime
+import datetime
+from os import PathLike
 
 import numpy as np
 
@@ -10,11 +11,11 @@ from cloudnetpy.instruments.cloudnet_instrument import CSVFile
 
 
 def rain_e_h32nc(
-    input_file: str,
+    input_file: str | PathLike,
     output_file: str,
     site_meta: dict,
     uuid: str | None = None,
-    date: str | None = None,
+    date: str | datetime.date | None = None,
 ):
     """Converts rain_e_h3 rain-gauge into Cloudnet Level 1b netCDF file.
 
@@ -24,7 +25,7 @@ def rain_e_h32nc(
         site_meta: Dictionary containing information about the site. Required key
             is `name`.
         uuid: Set specific UUID for the file.
-        date: Expected date of the measurements as YYYY-MM-DD.
+        date: Expected date of the measurements as YYYY-MM-DD or datetime.date object.
 
     Returns:
         UUID of the generated file.
@@ -34,6 +35,8 @@ def rain_e_h32nc(
         ValidTimeStampError: No valid timestamps found.
     """
     rain = RainEH3(site_meta)
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
     rain.parse_input_file(input_file, date)
     rain.add_data()
     rain.add_date()
@@ -52,8 +55,15 @@ class RainEH3(CSVFile):
     def __init__(self, site_meta: dict):
         super().__init__(site_meta)
         self.instrument = instruments.RAIN_E_H3
+        self._data = {
+            "time": [],
+            "rainfall_rate": [],
+            "rainfall_amount": [],
+        }
 
-    def parse_input_file(self, filepath: str, date: str | None = None) -> None:
+    def parse_input_file(
+        self, filepath: str | PathLike, date: datetime.date | None = None
+    ) -> None:
         with open(filepath, encoding="latin1") as f:
             data = list(csv.reader(f, delimiter=";"))
         n_values = np.median([len(row) for row in data]).astype(int)
@@ -66,18 +76,8 @@ class RainEH3(CSVFile):
             msg = "Only talker protocol with 16 or 22 columns is supported."
             raise NotImplementedError(msg)
 
-    def _is_timestamp(self, date_str: str) -> bool:
-        try:
-            datetime.strptime(date_str, self.time_format_a)
-        except ValueError:
-            try:
-                datetime.strptime(date_str, self.time_format_b)
-            except ValueError:
-                return False
-        return True
-
     def _read_talker_protocol_16_columns(
-        self, data: list, date: str | None = None
+        self, data: list, date: datetime.date | None = None
     ) -> None:
         """Old Lindenberg data format.
 
@@ -99,26 +99,25 @@ class RainEH3(CSVFile):
         15 user data storage 3
 
         """
-        valid_data = [
-            row
-            for row in data
-            if len(row) == 16 and self._is_timestamp(f"{row[0]} {row[1]}")
-        ]
-        if date:
-            date_format = f"{date[8:10]}.{date[5:7]}.{date[0:4]}"
-            valid_data = [row for row in valid_data if row[0].startswith(date_format)]
-        if not valid_data:
+        date_prefix = date.strftime("%d.%m.%Y") if date else None
+        for row in data:
+            if len(row) != 16:
+                continue
+            timestamp = f"{row[0]} {row[1]}"
+            if not self._is_timestamp(timestamp):
+                continue
+            if date_prefix and not row[0].startswith(date_prefix):
+                continue
+            self._data["time"].append(
+                datetime.datetime.strptime(timestamp, self.time_format_b)
+            )
+            self._data["rainfall_rate"].append(float(row[2]))
+            self._data["rainfall_amount"].append(float(row[3]))
+        if not self._data["time"]:
             raise ValidTimeStampError
 
-        timestamps = [f"{row[0]} {row[1]}" for row in valid_data]
-        self._data["time"] = [
-            datetime.strptime(row, self.time_format_b) for row in timestamps
-        ]
-        self._data["rainfall_rate"] = [float(row[2]) for row in valid_data]
-        self._data["rainfall_amount"] = [float(row[3]) for row in valid_data]
-
     def _read_talker_protocol_22_columns(
-        self, data: list, date: str | None = None
+        self, data: list, date: datetime.date | None = None
     ) -> None:
         """Columns according to header in Lindenberg data.
 
@@ -146,21 +145,31 @@ class RainEH3(CSVFile):
         21 external temperature * checksum
 
         """
-        valid_data = [
-            row for row in data if len(row) == 22 and self._is_timestamp(row[0])
-        ]
-        if date:
-            valid_data = [row for row in valid_data if row[0].startswith(date)]
-        if not valid_data:
+        for row in data:
+            if len(row) != 22:
+                continue
+            timestamp = f"{row[0]}"
+            if not self._is_timestamp(timestamp):
+                continue
+            if date and not row[0].startswith(str(date)):
+                continue
+            self._data["time"].append(
+                datetime.datetime.strptime(timestamp, self.time_format_a)
+            )
+            self._data["rainfall_rate"].append(float(row[3]))
+            self._data["rainfall_amount"].append(float(row[4]))
+        if not self._data["time"]:
             raise ValidTimeStampError
 
-        timestamps = [row[0] for row in valid_data]
-
-        self._data["time"] = [
-            datetime.strptime(row, self.time_format_a) for row in timestamps
-        ]
-        self._data["rainfall_rate"] = [float(row[3]) for row in valid_data]
-        self._data["rainfall_amount"] = [float(row[4]) for row in valid_data]
+    def _is_timestamp(self, date_str: str) -> bool:
+        try:
+            datetime.datetime.strptime(date_str, self.time_format_a)
+        except ValueError:
+            try:
+                datetime.datetime.strptime(date_str, self.time_format_b)
+            except ValueError:
+                return False
+        return True
 
     def convert_units(self) -> None:
         rainfall_rate = self.data["rainfall_rate"][:]

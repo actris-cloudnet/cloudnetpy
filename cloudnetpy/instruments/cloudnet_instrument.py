@@ -121,12 +121,8 @@ class CSVFile(CloudnetInstrument):
         self._data: dict = {}
 
     def add_date(self) -> None:
-        first_date = self._data["time"][0].date()
-        self.date = [
-            str(first_date.year),
-            str(first_date.month).zfill(2),
-            str(first_date.day).zfill(2),
-        ]
+        dt = self._data["time"][0]
+        self.date = dt.strftime("%Y %m %d").split()
 
     def add_data(self) -> None:
         for key, value in self._data.items():
