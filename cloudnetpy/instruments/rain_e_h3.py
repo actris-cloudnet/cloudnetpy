@@ -154,6 +154,7 @@ class RainEH3(CSVFile):
             self._data["time"].append(dt)
             self._data["rainfall_rate"].append(float(row[3]))
             self._data["rainfall_amount"].append(float(row[4]))
+            self.serial_number = row[18]
         if not self._data["time"]:
             raise ValidTimeStampError
 
