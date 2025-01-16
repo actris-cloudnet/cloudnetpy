@@ -73,6 +73,12 @@ def mira2nc(
             # Empirical values, should be checked at some point...
             snr_limit = -30 if mira.instrument == MIRA10 else -17
 
+            # Old MIRA files don't have angle variables.
+            if "elevation" not in mira.data:
+                mira.append_data(ma.masked_all_like(mira.time.data), "elevation")
+            if "azimuth_angle" not in mira.data:
+                mira.append_data(ma.masked_all_like(mira.time.data), "azimuth_angle")
+
             mira.screen_by_snr(snr_limit)
             mira.screen_invalid_ldr()
             mira.mask_invalid_data()
