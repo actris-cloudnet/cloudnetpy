@@ -49,9 +49,6 @@ def rain_e_h32nc(
 
 
 class RainEH3(CSVFile):
-    time_format_a = "%Y-%m-%d %H:%M:%S"
-    time_format_b = "%d.%m.%Y %H:%M:%S"
-
     def __init__(self, site_meta: dict):
         super().__init__(site_meta)
         self.instrument = instruments.RAIN_E_H3
@@ -99,18 +96,18 @@ class RainEH3(CSVFile):
         15 user data storage 3
 
         """
-        date_prefix = date.strftime("%d.%m.%Y") if date else None
         for row in data:
             if len(row) != 16:
                 continue
-            timestamp = f"{row[0]} {row[1]}"
-            if not self._is_timestamp(timestamp):
+            try:
+                dt = datetime.datetime.strptime(
+                    f"{row[0]} {row[1]}", "%d.%m.%Y %H:%M:%S"
+                )
+            except ValueError:
                 continue
-            if date_prefix and not row[0].startswith(date_prefix):
+            if date and date != dt.date():
                 continue
-            self._data["time"].append(
-                datetime.datetime.strptime(timestamp, self.time_format_b)
-            )
+            self._data["time"].append(dt)
             self._data["rainfall_rate"].append(float(row[2]))
             self._data["rainfall_amount"].append(float(row[3]))
         if not self._data["time"]:
@@ -148,28 +145,17 @@ class RainEH3(CSVFile):
         for row in data:
             if len(row) != 22:
                 continue
-            timestamp = f"{row[0]}"
-            if not self._is_timestamp(timestamp):
+            try:
+                dt = datetime.datetime.strptime(f"{row[0]}", "%Y-%m-%d %H:%M:%S")
+            except ValueError:
                 continue
-            if date and not row[0].startswith(str(date)):
+            if date and date != dt.date():
                 continue
-            self._data["time"].append(
-                datetime.datetime.strptime(timestamp, self.time_format_a)
-            )
+            self._data["time"].append(dt)
             self._data["rainfall_rate"].append(float(row[3]))
             self._data["rainfall_amount"].append(float(row[4]))
         if not self._data["time"]:
             raise ValidTimeStampError
-
-    def _is_timestamp(self, date_str: str) -> bool:
-        try:
-            datetime.datetime.strptime(date_str, self.time_format_a)
-        except ValueError:
-            try:
-                datetime.datetime.strptime(date_str, self.time_format_b)
-            except ValueError:
-                return False
-        return True
 
     def convert_units(self) -> None:
         rainfall_rate = self.data["rainfall_rate"][:]
