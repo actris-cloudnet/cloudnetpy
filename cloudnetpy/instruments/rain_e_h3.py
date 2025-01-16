@@ -164,7 +164,7 @@ class RainEH3(CSVFile):
 
     def convert_units(self) -> None:
         rainfall_rate = self.data["rainfall_rate"][:]
-        self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
+        self.data["rainfall_rate"].data = rainfall_rate / 3600 / 1000  # mm/h -> m/s
         self.data["rainfall_amount"].data = (
             self.data["rainfall_amount"][:] / 1000
         )  # mm -> m
