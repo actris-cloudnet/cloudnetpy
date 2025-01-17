@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.68.1 – 2025-01-17
+
+- Improve rain[e]H3 timestamp screening
+
 ## 1.68.0 – 2025-01-17
 
 - Add rain[e]H3 rain gauge processing (#113)
