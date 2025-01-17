@@ -43,6 +43,8 @@ def rain_e_h32nc(
     rain.convert_units()
     rain.normalize_rainfall_amount()
     rain.add_site_geolocation()
+    rain.sort_timestamps()
+    rain.remove_duplicate_timestamps()
     attributes = output.add_time_attribute({}, rain.date)
     output.update_attributes(rain.data, attributes)
     return output.save_level1b(rain, output_file, uuid)
