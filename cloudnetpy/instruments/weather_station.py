@@ -12,7 +12,7 @@ from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import HPA_TO_PA, MM_H_TO_M_S, SEC_IN_HOUR
 from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
 from cloudnetpy.instruments import instruments
-from cloudnetpy.instruments.cloudnet_instrument import CloudnetInstrument
+from cloudnetpy.instruments.cloudnet_instrument import CSVFile
 from cloudnetpy.instruments.toa5 import read_toa5
 from cloudnetpy.utils import datetime2decimal_hours
 
@@ -79,27 +79,12 @@ def ws2nc(
     return output.save_level1b(ws, output_file, uuid)
 
 
-class WS(CloudnetInstrument):
+class WS(CSVFile):
     def __init__(self, site_meta: dict):
-        super().__init__()
-        self._data: dict
-        self.site_meta = site_meta
+        super().__init__(site_meta)
         self.instrument = instruments.GENERIC_WEATHER_STATION
 
     date: list[str]
-
-    def add_date(self) -> None:
-        first_date = self._data["time"][0].date()
-        self.date = [
-            str(first_date.year),
-            str(first_date.month).zfill(2),
-            str(first_date.day).zfill(2),
-        ]
-
-    def add_data(self) -> None:
-        for key, value in self._data.items():
-            parsed = datetime2decimal_hours(value) if key == "time" else ma.array(value)
-            self.data[key] = CloudnetArray(parsed, key)
 
     def calculate_rainfall_amount(self) -> None:
         if "rainfall_amount" in self.data:
@@ -136,17 +121,6 @@ class WS(CloudnetInstrument):
 
     def convert_pressure(self) -> None:
         self.data["air_pressure"].data = self.data["air_pressure"][:] * HPA_TO_PA
-
-    def normalize_rainfall_amount(self) -> None:
-        if "rainfall_amount" in self.data:
-            amount = self.data["rainfall_amount"][:]
-            offset = 0
-            for i in range(1, len(amount)):
-                if amount[i] + offset < amount[i - 1]:
-                    offset += amount[i - 1]
-                amount[i] += offset
-            amount -= amount[0]
-            self.data["rainfall_amount"].data = amount
 
     def convert_time(self) -> None:
         pass

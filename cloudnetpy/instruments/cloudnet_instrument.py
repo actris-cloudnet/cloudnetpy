@@ -112,3 +112,34 @@ class CloudnetInstrument:
         if np.isnan(zenith_angle) or zenith_angle is ma.masked:
             return None
         return zenith_angle
+
+
+class CSVFile(CloudnetInstrument):
+    def __init__(self, site_meta: dict):
+        super().__init__()
+        self.site_meta = site_meta
+        self._data: dict = {}
+
+    def add_date(self) -> None:
+        dt = self._data["time"][0]
+        self.date = dt.strftime("%Y %m %d").split()
+
+    def add_data(self) -> None:
+        for key, value in self._data.items():
+            parsed = (
+                utils.datetime2decimal_hours(value)
+                if key == "time"
+                else ma.array(value)
+            )
+            self.data[key] = CloudnetArray(parsed, key)
+
+    def normalize_rainfall_amount(self) -> None:
+        if "rainfall_amount" in self.data:
+            amount = self.data["rainfall_amount"][:]
+            offset = 0
+            for i in range(1, len(amount)):
+                if amount[i] + offset < amount[i - 1]:
+                    offset += amount[i - 1]
+                amount[i] += offset
+            amount -= amount[0]
+            self.data["rainfall_amount"].data = amount
