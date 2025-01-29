@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.69.2 – 2025-01-29
+
+- Handle invalid timestamps in CT25K
+
 ## 1.69.1 – 2025-01-29
 
 - Support zenith and azimuth offsets in MIRA
