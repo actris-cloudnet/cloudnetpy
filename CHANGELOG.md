@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.69.1 – 2025-01-29
+
+- Support zenith and azimuth offsets in MIRA
+
 ## 1.69.0 – 2025-01-29
 
 - Support Jülich weather station
