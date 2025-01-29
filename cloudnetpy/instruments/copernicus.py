@@ -97,7 +97,7 @@ def copernicus2nc(
             copernicus.add_nyquist_velocity(keymap)
             copernicus.add_site_geolocation()
             valid_indices = copernicus.add_zenith_and_azimuth_angles(
-                elevation_threshold=1,
+                elevation_threshold=1.1,
                 elevation_diff_threshold=0.1,
                 azimuth_diff_threshold=0.1,
             )

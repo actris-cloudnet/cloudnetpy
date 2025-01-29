@@ -87,9 +87,11 @@ def mira2nc(
             mira.add_site_geolocation()
             mira.add_radar_specific_variables()
             valid_indices = mira.add_zenith_and_azimuth_angles(
-                elevation_threshold=1,
+                elevation_threshold=1.1,
                 elevation_diff_threshold=1e-6,
                 azimuth_diff_threshold=1e-3,
+                zenith_offset=site_meta.get("zenith_offset"),
+                azimuth_offset=site_meta.get("azimuth_offset"),
             )
             mira.screen_time_indices(valid_indices)
             mira.add_height()
@@ -297,5 +299,15 @@ ATTRIBUTES = {
     "prf": MetaData(
         long_name="Pulse Repetition Frequency",
         units="Hz",
+    ),
+    "zenith_offset": MetaData(
+        long_name="Zenith offset of the instrument",
+        units="degrees",
+        comment="Zenith offset applied.",
+    ),
+    "azimuth_offset": MetaData(
+        long_name="Azimuth offset of the instrument (positive clockwise from north)",
+        units="degrees",
+        comment="Azimuth offset applied.",
     ),
 }

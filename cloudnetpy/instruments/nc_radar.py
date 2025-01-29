@@ -95,12 +95,21 @@ class NcRadar(DataSource, CloudnetInstrument):
         elevation_threshold: float,
         elevation_diff_threshold: float,
         azimuth_diff_threshold: float,
+        zenith_offset: float | None = None,
+        azimuth_offset: float | None = None,
     ) -> list:
         """Adds non-varying instrument zenith and azimuth angles and returns valid
         time indices.
         """
         elevation = self.data["elevation"].data
+        if zenith_offset is not None:
+            self.append_data(zenith_offset, "zenith_offset")
+            elevation -= zenith_offset
+
         azimuth = self.data["azimuth_angle"].data
+        if azimuth_offset is not None:
+            self.append_data(azimuth_offset, "azimuth_offset")
+            azimuth += azimuth_offset
 
         elevation_diff = ma.diff(elevation, prepend=elevation[1])
         azimuth_diff = ma.diff(azimuth, prepend=azimuth[1])
