@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.69.0 – 2025-01-29
+
+- Support Jülich weather station
+- Add ARPEGE to supported models
+
 ## 1.68.1 – 2025-01-17
 
 - Improve rain[e]H3 timestamp screening
