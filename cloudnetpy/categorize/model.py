@@ -164,11 +164,11 @@ def _calc_mean_height(model_heights: np.ndarray) -> np.ndarray:
 
 def _find_model_type(file_name: str) -> str:
     """Finds model type from the model filename."""
-    possible_keys = ("gdas1", "icon", "ecmwf", "harmonie", "era5")
+    possible_keys = ("gdas1", "icon", "ecmwf", "harmonie", "era5", "arpege")
     for key in possible_keys:
         if key in file_name:
             return key
-    msg = "Unknown model type"
+    msg = f"Unknown model type: {file_name}"
     raise ValueError(msg)
 
 
