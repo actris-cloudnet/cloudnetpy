@@ -48,6 +48,8 @@ class WS(Check):
         assert max_wind_dir <= 360
 
     def test_rainfall_rate_values(self):
+        if "rainfall_rate" not in self.nc.variables:
+            return
         assert self.nc.variables["rainfall_rate"].units == "m s-1"
         min_rainfall = ma.min(self.nc.variables["rainfall_rate"][:])
         max_rainfall = ma.max(self.nc.variables["rainfall_rate"][:])
@@ -55,6 +57,8 @@ class WS(Check):
         assert max_rainfall <= 1.4e-6
 
     def test_rainfall_amount(self):
+        if "rainfall_amount" not in self.nc.variables:
+            return
         assert self.nc.variables["rainfall_amount"][0] == 0.0
         assert (np.diff(self.nc.variables["rainfall_amount"][:]) >= 0).all()
 
@@ -201,6 +205,18 @@ class TestWeatherStationBucharestII(WS):
 
     def test_dimensions(self):
         assert self.nc.dimensions["time"].size == 48
+
+
+class TestWeatherStationJuelich(WS):
+    date = "2025-01-27"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = {**SITE_META, "name": "Jülich"}
+    filename = f"{SCRIPT_PATH}/data/ws/20250127_JOYCE_WST_01m.dat"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 9
 
 
 @pytest.mark.parametrize(

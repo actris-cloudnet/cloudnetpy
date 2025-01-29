@@ -57,6 +57,8 @@ def ws2nc(
             ws = HyytialaWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Galați":
             ws = GalatiWS(weather_station_file, site_meta)
+        elif site_meta["name"] == "Jülich":
+            ws = JuelichWS(weather_station_file, site_meta)
         else:
             msg = "Unsupported site"
             raise ValueError(msg)  # noqa: TRY301
@@ -87,7 +89,7 @@ class WS(CSVFile):
     date: list[str]
 
     def calculate_rainfall_amount(self) -> None:
-        if "rainfall_amount" in self.data:
+        if "rainfall_amount" in self.data or "rainfall_rate" not in self.data:
             return
         resolution = np.median(np.diff(self.data["time"].data)) * SEC_IN_HOUR
         rainfall_amount = ma.cumsum(self.data["rainfall_rate"].data * resolution)
@@ -116,6 +118,8 @@ class WS(CSVFile):
         self.data["relative_humidity"].data = self.data["relative_humidity"][:] / 100
 
     def convert_rainfall_rate(self) -> None:
+        if "rainfall_rate" not in self.data:
+            return
         rainfall_rate = self.data["rainfall_rate"][:]
         self.data["rainfall_rate"].data = rainfall_rate / 60 / 1000  # mm/min -> m/s
 
@@ -438,3 +442,47 @@ class GalatiWS(WS):
     def convert_pressure(self) -> None:
         mmHg2Pa = 133.322
         self.data["air_pressure"].data = self.data["air_pressure"][:] * mmHg2Pa
+
+
+class JuelichWS(WS):
+    def __init__(self, filenames: list[str], site_meta: dict):
+        super().__init__(site_meta)
+        self.filename = filenames[0]
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        keymap = {
+            "TIMESTAMP": "time",
+            "AirTC_Avg": "air_temperature",
+            "RH": "relative_humidity",
+            "BV_BP_Avg": "air_pressure",
+            "WS_ms_S_WVT": "wind_speed",
+            "WindDir_D1_WVT": "wind_direction",
+        }
+        expected_units = {
+            "AirTC_Avg": "Deg C",
+            "RH": "%",
+            "BV_BP_Avg": "hPa",
+            "WS_ms_S_WVT": "meters/Second",
+            "WindDir_D1_WVT": "Deg",
+        }
+        units, process, rows = read_toa5(self.filename)
+        for key in units:
+            if key in expected_units and expected_units[key] != units[key]:
+                msg = (
+                    f"Expected {key} to have units {expected_units[key]},"
+                    f" got {units[key]} instead"
+                )
+                raise ValueError(msg)
+
+        data: dict[str, list] = {keymap[key]: [] for key in units if key in keymap}
+        for row in rows:
+            for key, value in row.items():
+                if key not in keymap:
+                    continue
+                parsed = value
+                if keymap[key] != "time":
+                    parsed = float(value)
+                data[keymap[key]].append(parsed)
+
+        return self.format_data(data)
