@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.69.3 – 2025-01-31
+
+- Improve `chm15k` version check
+
 ## 1.69.2 – 2025-01-29
 
 - Handle invalid timestamps in CT25K
