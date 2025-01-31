@@ -3,6 +3,7 @@
 import logging
 
 import netCDF4
+import numpy as np
 from numpy import ma
 
 from cloudnetpy import utils
@@ -61,9 +62,19 @@ class LufftCeilo(NcLidar):
             msg = "No dataset found"
             raise RuntimeError(msg)
         version = self.dataset.software_version
-        if len(str(version)) > 4:
+        # In old files, the version is a single integer.
+        if isinstance(version, np.integer):
+            return str(version)
+        # In newer files, the version is a space-separated list: Operating
+        # system, FPGA, firmware, CloudDetectionMode (added in firmware 0.747).
+        if isinstance(version, str):
+            parts = version.split()
+            firmware = parts[2]
+            if firmware < "0.702":
+                return firmware
             return None
-        return version
+        msg = f"Cannot determine version: {version}"
+        raise RuntimeError(msg)
 
     def _get_nn(self) -> float | ma.MaskedArray:
         nn1 = self._getvar("nn1", "NN1")
