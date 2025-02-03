@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.69.4 – 2025-02-03
+
+- Add snr_limit metadata option to mira
+- Store snr_limit variable in netCDF
+
 ## 1.69.3 – 2025-01-31
 
 - Improve `chm15k` version check
