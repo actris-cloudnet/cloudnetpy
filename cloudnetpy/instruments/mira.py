@@ -70,8 +70,11 @@ def mira2nc(
             valid_ind = utils.remove_masked_blocks(mira.data["Zh"][:], limit=n_profiles)
             mira.screen_time_indices(valid_ind)
 
-            # Empirical values, should be checked at some point...
-            snr_limit = -30 if mira.instrument == MIRA10 else -17
+            if "snr_limit" in site_meta:
+                snr_limit = site_meta["snr_limit"]
+            else:
+                # Empirical values, should be checked
+                snr_limit = -30 if mira.instrument == MIRA10 else -17
 
             # Old MIRA files don't have angle variables.
             if "elevation" not in mira.data:
