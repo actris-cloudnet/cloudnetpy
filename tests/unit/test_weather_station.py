@@ -219,6 +219,18 @@ class TestWeatherStationJuelich(WS):
         assert self.nc.dimensions["time"].size == 9
 
 
+class TestWeatherStationLampedusa(WS):
+    date = "2025-01-19"
+    temp_dir = TemporaryDirectory()
+    temp_path = temp_dir.name + "/test.nc"
+    site_meta = {**SITE_META, "name": "Lampedusa"}
+    filename = f"{SCRIPT_PATH}/data/ws/lampedusa.rep"
+    uuid = weather_station.ws2nc(filename, temp_path, site_meta, date=date)
+
+    def test_dimensions(self):
+        assert self.nc.dimensions["time"].size == 5
+
+
 @pytest.mark.parametrize(
     "original, expected",
     [
