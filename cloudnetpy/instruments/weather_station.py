@@ -59,6 +59,8 @@ def ws2nc(
             ws = GalatiWS(weather_station_file, site_meta)
         elif site_meta["name"] == "Jülich":
             ws = JuelichWS(weather_station_file, site_meta)
+        elif site_meta["name"] == "Lampedusa":
+            ws = LampedusaWS(weather_station_file, site_meta)
         else:
             msg = "Unsupported site"
             raise ValueError(msg)  # noqa: TRY301
@@ -485,4 +487,58 @@ class JuelichWS(WS):
                     parsed = float(value)
                 data[keymap[key]].append(parsed)
 
+        return self.format_data(data)
+
+
+class LampedusaWS(WS):
+    """Read Lampedusa weather station data in ICOS format."""
+
+    def __init__(self, filenames: list[str], site_meta: dict):
+        super().__init__(site_meta)
+        self.filename = filenames[0]
+        self._data = self._read_data()
+
+    def _read_data(self) -> dict:
+        with open(self.filename, newline="") as f:
+            fields = [
+                "time",
+                "str1",
+                "str2",
+                "T",
+                "RH",
+                "Td",
+                "P",
+                "WSi",
+                "WDi",
+                "WS10m",
+                "WD10m",
+                "rain1m",
+                "rain2h",
+                "empty",
+            ]
+            reader = csv.DictReader(f, fieldnames=fields)
+            raw_data: dict = {key: [] for key in fields}
+            for row in reader:
+                for key, value in row.items():
+                    parsed_value: float | datetime.datetime
+                    if key == "time":
+                        parsed_value = datetime.datetime.strptime(
+                            value, "%y%m%d %H%M%S"
+                        )
+                    else:
+                        try:
+                            parsed_value = float(value)
+                        except ValueError:
+                            parsed_value = math.nan
+                    raw_data[key].append(parsed_value)
+
+        data = {
+            "time": raw_data["time"],
+            "air_temperature": raw_data["T"],
+            "relative_humidity": raw_data["RH"],
+            "air_pressure": raw_data["P"],
+            "wind_speed": raw_data["WSi"],
+            "wind_direction": raw_data["WDi"],
+            "rainfall_rate": raw_data["rain1m"],
+        }
         return self.format_data(data)
