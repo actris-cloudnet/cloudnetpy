@@ -62,7 +62,7 @@ class NcRadar(DataSource, CloudnetInstrument):
         for cloudnet_array in self.data.values():
             if cloudnet_array.data.ndim == 2:
                 cloudnet_array.mask_indices(ind)
-        self.append_data(snr_limit, "snr_limit")
+        self.append_data(float(snr_limit), "snr_limit")
 
     def screen_using_top_gates_snr(self, snr_limit: float = 2) -> None:
         """Masks values where SNR is smaller than mean SNR of top gates."""
