@@ -67,6 +67,7 @@ class TestMIRA2nc(Check):
             "nave",
             "prf",
             "nfft",
+            "snr_limit",
         }
         assert set(self.nc.variables.keys()) == keys
 

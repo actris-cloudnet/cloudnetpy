@@ -185,4 +185,9 @@ COMMON_ATTRIBUTES = {
         standard_name="air_pressure",
         units="Pa",
     ),
+    "snr_limit": MetaData(
+        long_name="SNR limit",
+        units="dB",
+        comment="SNR threshold used in data screening.",
+    ),
 }

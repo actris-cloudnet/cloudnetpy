@@ -46,6 +46,7 @@ class TestGalileo2nc(Check):
             "beamwidthH",
             "beamwidthV",
             "antenna_diameter",
+            "snr_limit",
         }
         assert set(self.nc.variables.keys()) == keys
 
