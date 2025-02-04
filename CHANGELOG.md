@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.69.5 – 2025-02-04
+
+- Fix bug in calibration data reading
+
 ## 1.69.4 – 2025-02-03
 
 - Add snr_limit metadata option to mira
