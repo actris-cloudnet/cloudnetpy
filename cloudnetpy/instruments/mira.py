@@ -70,7 +70,7 @@ def mira2nc(
             valid_ind = utils.remove_masked_blocks(mira.data["Zh"][:], limit=n_profiles)
             mira.screen_time_indices(valid_ind)
 
-            if "snr_limit" in site_meta:
+            if "snr_limit" in site_meta and site_meta["snr_limit"] is not None:
                 snr_limit = site_meta["snr_limit"]
             else:
                 # Empirical values, should be checked
