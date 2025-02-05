@@ -52,7 +52,7 @@ Changelog = "https://github.com/actris-cloudnet/cloudnetpy/blob/main/CHANGELOG.m
 check_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["matplotlib.*", "mpl_toolkits.*", "netCDF4.*", "scipy.*", "skimage.*", "voodoonet.*"]
+module = ["mpl_toolkits.*", "scipy.*", "voodoonet.*"]
 ignore_missing_imports = true
 
 [tool.release-version]
