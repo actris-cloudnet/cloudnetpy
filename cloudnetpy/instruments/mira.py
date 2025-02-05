@@ -131,6 +131,8 @@ class Mira(NcRadar):
         time_stamps = self.getvar("time")
         valid_indices = []
         for ind, timestamp in enumerate(time_stamps):
+            if not timestamp:
+                continue
             date = "-".join(utils.seconds2date(timestamp, self.epoch)[:3])
             if date == expected_date:
                 valid_indices.append(ind)
