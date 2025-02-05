@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.69.6 – 2025-02-05
+
+- Ignore masked mira timestamps
+
 ## 1.69.5 – 2025-02-04
 
 - Fix bug in calibration data reading
