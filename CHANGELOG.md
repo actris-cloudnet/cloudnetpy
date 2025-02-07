@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.69.7 – 2025-02-07
+
+- Support `time_offset` in `hatpro2l1c`
+- Test with Python 3.13
+
 ## 1.69.6 – 2025-02-05
 
 - Ignore masked mira timestamps
