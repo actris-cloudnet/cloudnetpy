@@ -31,7 +31,7 @@ def hatpro2l1c(
     output_file: str,
     site_meta: dict,
     uuid: str | None = None,
-    date: str | None = None,
+    date: datetime.date | str | None = None,
 ) -> str:
     """Converts RPG HATPRO microwave radiometer data into Cloudnet Level 1c netCDF file.
 
@@ -45,7 +45,11 @@ def hatpro2l1c(
     Returns:
         UUID of the generated file.
     """
+    if isinstance(date, str):
+        date = datetime.date.fromisoformat(date)
+
     coeff_files = site_meta.get("coefficientFiles")
+    time_offset = site_meta.get("time_offset")
 
     try:
         hatpro_raw = lev1_to_nc(
@@ -54,6 +58,8 @@ def hatpro2l1c(
             output_file=output_file,
             coeff_files=coeff_files,
             instrument_config=site_meta,
+            date=date,
+            time_offset=time_offset,
         )
     except MissingInputData as err:
         raise HatproDataError(str(err)) from err
@@ -73,7 +79,7 @@ def hatpro2l1c(
             msg = "Timestamps are not increasing"
             raise RuntimeError(msg)
         dates = [
-            str(datetime.datetime.fromtimestamp(t, tz=datetime.timezone.utc).date())
+            datetime.datetime.fromtimestamp(t, tz=datetime.timezone.utc).date()
             for t in timestamps
         ]
         if len(set(dates)) != 1:
@@ -119,7 +125,7 @@ class HatproL1c:
     def __init__(self, hatpro, site_meta: dict):
         self.raw_data = hatpro.raw_data
         self.data = hatpro.data
-        self.date = hatpro.date.split("-")
+        self.date = hatpro.date.isoformat().split("-")
         self.site_meta = site_meta
         self.instrument = HATPRO
 
