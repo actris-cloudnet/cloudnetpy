@@ -1,3 +1,6 @@
+input/
+output/
+*.nc
 .idea/
 .vscode/
 venv/

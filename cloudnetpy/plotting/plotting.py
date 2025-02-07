@@ -27,6 +27,8 @@ from cloudnetpy.exceptions import PlottingError
 from cloudnetpy.instruments.ceilometer import calc_sigma_units
 from cloudnetpy.plotting.plot_meta import ATTRIBUTES, PlotMeta
 
+EARTHCARE_MAX_X = 517.84
+
 
 @dataclass
 class PlotParameters:
@@ -116,8 +118,9 @@ class FigureData:
             requested_variables
         )
         self.options = options
+        self.file_type = getattr(self.file, "cloudnet_file_type", "")
         self.height = self._get_height()
-        self.time = self.file.variables["time"][:]
+        self.time = self._get_time()
         self.time_including_gaps = np.array([])
 
     def initialize_figure(self) -> tuple[Figure, list[Axes]]:
@@ -171,16 +174,25 @@ class FigureData:
             raise PlottingError(msg)
         return valid_variables, variable_indices
 
+    def _get_time(self) -> ndarray:
+        if self.file_type == "cpr-simulation":
+            x_data = self.file.variables["along_track_sat"][:] * con.M_TO_KM
+        else:
+            x_data = self.file.variables["time"][:]
+        return x_data
+
     def _get_height(self) -> ndarray | None:
-        m2km = 1e-3
-        m2mm = 1e3
-        file_type = getattr(self.file, "cloudnet_file_type", "")
-        if file_type == "model":
+        if self.file_type == "cpr-simulation":
+            height = self.file.variables["height_sat"][:]
+            if self.options.plot_above_ground:
+                height -= self.file.variables["altitude"][:]
+            return height * con.M_TO_KM
+        if self.file_type == "model":
             height = ma.mean(self.file.variables["height"][:], axis=0)  # height AGL
             if not self.options.plot_above_ground:
                 site_alt = self._calc_ground_altitude()
                 height += site_alt
-            return height * m2km
+            return height * con.M_TO_KM
         if "height" in self.file.variables:
             height = self.file.variables["height"][:]  # height AMSL
             if self.options.plot_above_ground:
@@ -188,11 +200,11 @@ class FigureData:
                     msg = "No altitude information in the file."
                     raise ValueError(msg)
                 height -= self.file.variables["altitude"][:]
-            return height * m2km
+            return height * con.M_TO_KM
         if "range" in self.file.variables:
-            return self.file.variables["range"][:] * m2km
+            return self.file.variables["range"][:] * con.M_TO_KM
         if "diameter" in self.file.variables:
-            return self.file.variables["diameter"][:] * m2mm
+            return self.file.variables["diameter"][:] * con.M_TO_MM
         return None
 
     def _calc_ground_altitude(self) -> float:
@@ -206,8 +218,7 @@ class FigureData:
         return calc_altitude(temperature, pressure)
 
     def is_mwrpy_product(self) -> bool:
-        cloudnet_file_type = getattr(self.file, "cloudnet_file_type", "")
-        return cloudnet_file_type in ("mwr-single", "mwr-multi")
+        return self.file_type in ("mwr-single", "mwr-multi")
 
     def __len__(self) -> int:
         return len(self.variables)
@@ -228,6 +239,9 @@ class SubPlot:
         self.plot_meta = self._read_plot_meta()
 
     def set_xax(self) -> None:
+        if self.file_type == "cpr-simulation":
+            self.ax.set_xlim(0, EARTHCARE_MAX_X)  # km
+            return
         resolution = 4
         x_tick_labels = [
             f"{int(i):02d}:00"
@@ -294,7 +308,12 @@ class SubPlot:
             )
 
     def set_xlabel(self) -> None:
-        self.ax.set_xlabel("Time (UTC)", fontsize=13)
+        label = (
+            "Distance along track (km)"
+            if self.file_type == "cpr-simulation"
+            else "Time (UTC)"
+        )
+        self.ax.set_xlabel(label, fontsize=13)
 
     def show_footer(self, fig: Figure, ax: Axes) -> None:
         if isinstance(self.options.footer_text, str):
@@ -387,18 +406,23 @@ class Plot:
                 zorder=_get_zorder("data_gap"),
             )
 
-    def _mark_gaps(self, figure_data: FigureData) -> None:
+    def _mark_gaps(
+        self, figure_data: FigureData, min_x: float = 0, max_x: float = 24
+    ) -> None:
         time = figure_data.time
-        data = self._data
-        if time[0] < 0 or time[-1] > 24:
-            msg = "Time values outside the range 0-24."
+
+        if time[0] < min_x or time[-1] > max_x:
+            msg = f"x-axis values outside the range {min_x}-{max_x}."
             raise ValueError(msg)
         max_gap_fraction_hour = _get_max_gap_in_minutes(figure_data) / 60
 
-        if getattr(figure_data.file, "cloudnet_file_type", "") == "model":
+        data = self._data
+
+        if self.sub_plot.file_type == "model":
             time, data = screen_completely_masked_profiles(time, data)
 
         gap_indices = np.where(np.diff(time) > max_gap_fraction_hour)[0]
+
         if not ma.is_masked(data):
             mask_new = np.zeros(data.shape)
         elif ma.all(data.mask) is ma.masked:
@@ -420,16 +444,16 @@ class Plot:
             mask_new = np.insert(mask_new, ind_gap, temp_mask, axis=0)
             time_new = np.insert(time_new, ind_gap, time[ind_gap] - time_delta)
             time_new = np.insert(time_new, ind_gap, time[ind_gap - 1] + time_delta)
-        if (time[0] - 0) > max_gap_fraction_hour:
+        if (time[0] - min_x) > max_gap_fraction_hour:
             data_new = np.insert(data_new, 0, temp_array, axis=0)
             mask_new = np.insert(mask_new, 0, temp_mask, axis=0)
             time_new = np.insert(time_new, 0, time[0] - time_delta)
             time_new = np.insert(time_new, 0, time_delta)
-        if (24 - time[-1]) > max_gap_fraction_hour:
+        if (max_x - time[-1]) > max_gap_fraction_hour:
             ind_gap = mask_new.shape[0]
             data_new = np.insert(data_new, ind_gap, temp_array, axis=0)
             mask_new = np.insert(mask_new, ind_gap, temp_mask, axis=0)
-            time_new = np.insert(time_new, ind_gap, 24 - time_delta)
+            time_new = np.insert(time_new, ind_gap, max_x - time_delta)
             time_new = np.insert(time_new, ind_gap, time[-1] + time_delta)
         data_new.mask = mask_new
         self._data = data_new
@@ -451,7 +475,11 @@ class Plot:
 class Plot2D(Plot):
     def plot(self, figure_data: FigureData):
         self._convert_units()
-        self._mark_gaps(figure_data)
+        if figure_data.file_type == "cpr-simulation":
+            min_x, max_x = 0, EARTHCARE_MAX_X
+        else:
+            min_x, max_x = 0, 24
+        self._mark_gaps(figure_data, min_x=min_x, max_x=max_x)
         if self.sub_plot.variable.name == "cloud_fraction":
             self._data[self._data == 0] = ma.masked
         if any(
@@ -952,6 +980,7 @@ def _get_max_gap_in_minutes(figure_data: FigureData) -> float:
         "doppler-lidar-wind": 75,
         "doppler-lidar": 75,
         "radar": 5,
+        "cpr-simulation": 60,
     }
     return max_allowed_gap.get(file_type, 10)
 

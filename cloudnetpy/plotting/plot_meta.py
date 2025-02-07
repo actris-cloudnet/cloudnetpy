@@ -213,6 +213,14 @@ ATTRIBUTES = {
         ),
     },
     "fallback": {
+        "nubf": PlotMeta(plot_range=(0, 5)),
+        "ze_sat": PlotMeta(
+            plot_range=(-40, 15),
+        ),
+        "vm_sat": PlotMeta(
+            cmap="RdBu_r",
+            plot_range=(-4, 4),
+        ),
         "ier": PlotMeta(
             plot_range=(2e-5, 6e-5),
         ),
