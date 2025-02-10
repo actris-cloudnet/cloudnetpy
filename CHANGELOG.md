@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.69.9 – 2025-02-10
+
+- Skip null characters Lampedusa weather station
+- Remove `WeatherStationDataError`
+
 ## 1.69.8 – 2025-02-10
 
 - Add support for Lampedusa weather station
