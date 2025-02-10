@@ -520,14 +520,15 @@ class LampedusaWS(WS):
             raw_data: dict = {key: [] for key in fields}
             for row in reader:
                 for key, value in row.items():
+                    fixed_value = value.strip("\0")
                     parsed_value: float | datetime.datetime
                     if key == "time":
                         parsed_value = datetime.datetime.strptime(
-                            value, "%y%m%d %H%M%S"
+                            fixed_value, "%y%m%d %H%M%S"
                         )
                     else:
                         try:
-                            parsed_value = float(value)
+                            parsed_value = float(fixed_value)
                         except ValueError:
                             parsed_value = math.nan
                     raw_data[key].append(parsed_value)
