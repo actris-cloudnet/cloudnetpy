@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.69.10 – 2025-02-10
+
+- Screen invalid rainfall rates in Thies LPM
+
 ## 1.69.9 – 2025-02-10
 
 - Skip null characters Lampedusa weather station
