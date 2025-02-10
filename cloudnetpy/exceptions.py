@@ -30,13 +30,6 @@ class PlottingError(CloudnetException):
         super().__init__(msg)
 
 
-class WeatherStationDataError(CloudnetException):
-    """Internal exception class."""
-
-    def __init__(self, msg: str = "Unable to read the file"):
-        super().__init__(msg)
-
-
 class ModelDataError(CloudnetException):
     """Internal exception class."""
 

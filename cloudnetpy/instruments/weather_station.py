@@ -10,7 +10,7 @@ from cloudnetpy import output
 from cloudnetpy.categorize import atmos_utils
 from cloudnetpy.cloudnetarray import CloudnetArray
 from cloudnetpy.constants import HPA_TO_PA, MM_H_TO_M_S, SEC_IN_HOUR
-from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import instruments
 from cloudnetpy.instruments.cloudnet_instrument import CSVFile
 from cloudnetpy.instruments.toa5 import read_toa5
@@ -38,48 +38,44 @@ def ws2nc(
         UUID of the generated file.
 
     Raises:
-        WeatherStationDataError : Unable to read the file.
         ValidTimeStampError: No valid timestamps found.
     """
     if not isinstance(weather_station_file, list):
         weather_station_file = [weather_station_file]
-    try:
-        ws: WS
-        if site_meta["name"] == "Palaiseau":
-            ws = PalaiseauWS(weather_station_file, site_meta)
-        elif site_meta["name"] == "Bucharest":
-            ws = BucharestWS(weather_station_file, site_meta)
-        elif site_meta["name"] == "Granada":
-            ws = GranadaWS(weather_station_file, site_meta)
-        elif site_meta["name"] == "Kenttärova":
-            ws = KenttarovaWS(weather_station_file, site_meta)
-        elif site_meta["name"] == "Hyytiälä":
-            ws = HyytialaWS(weather_station_file, site_meta)
-        elif site_meta["name"] == "Galați":
-            ws = GalatiWS(weather_station_file, site_meta)
-        elif site_meta["name"] == "Jülich":
-            ws = JuelichWS(weather_station_file, site_meta)
-        elif site_meta["name"] == "Lampedusa":
-            ws = LampedusaWS(weather_station_file, site_meta)
-        else:
-            msg = "Unsupported site"
-            raise ValueError(msg)  # noqa: TRY301
-        if date is not None:
-            ws.screen_timestamps(date)
-        ws.convert_time()
-        ws.add_date()
-        ws.add_site_geolocation()
-        ws.add_data()
-        ws.convert_temperature_and_humidity()
-        ws.convert_pressure()
-        ws.convert_rainfall_rate()
-        ws.convert_rainfall_amount()
-        ws.normalize_rainfall_amount()
-        ws.calculate_rainfall_amount()
-        attributes = output.add_time_attribute({}, ws.date)
-        output.update_attributes(ws.data, attributes)
-    except ValueError as err:
-        raise WeatherStationDataError from err
+    ws: WS
+    if site_meta["name"] == "Palaiseau":
+        ws = PalaiseauWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Bucharest":
+        ws = BucharestWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Granada":
+        ws = GranadaWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Kenttärova":
+        ws = KenttarovaWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Hyytiälä":
+        ws = HyytialaWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Galați":
+        ws = GalatiWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Jülich":
+        ws = JuelichWS(weather_station_file, site_meta)
+    elif site_meta["name"] == "Lampedusa":
+        ws = LampedusaWS(weather_station_file, site_meta)
+    else:
+        msg = "Unsupported site"
+        raise ValueError(msg)
+    if date is not None:
+        ws.screen_timestamps(date)
+    ws.convert_time()
+    ws.add_date()
+    ws.add_site_geolocation()
+    ws.add_data()
+    ws.convert_temperature_and_humidity()
+    ws.convert_pressure()
+    ws.convert_rainfall_rate()
+    ws.convert_rainfall_amount()
+    ws.normalize_rainfall_amount()
+    ws.calculate_rainfall_amount()
+    attributes = output.add_time_attribute({}, ws.date)
+    output.update_attributes(ws.data, attributes)
     return output.save_level1b(ws, output_file, uuid)
 
 

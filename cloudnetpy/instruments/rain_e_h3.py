@@ -31,7 +31,6 @@ def rain_e_h32nc(
         UUID of the generated file.
 
     Raises:
-        WeatherStationDataError : Unable to read the file.
         ValidTimeStampError: No valid timestamps found.
     """
     rain = RainEH3(site_meta)

@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 from cloudnetpy.cloudnetarray import CloudnetArray
 import pytest
 
-from cloudnetpy.exceptions import ValidTimeStampError, WeatherStationDataError
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.instruments import weather_station
 from tests.unit.all_products_fun import Check
 import numpy as np
@@ -117,21 +117,21 @@ class TestTimestampScreening(WS):
 def test_invalid_file():
     filename = f"{SCRIPT_PATH}/data/parsivel/norunda.log"
     temp_path = TemporaryDirectory().name + "/test.nc"
-    with pytest.raises(WeatherStationDataError):
+    with pytest.raises(ValueError):
         weather_station.ws2nc(filename, temp_path, SITE_META)
 
 
 def test_invalid_header():
     filename = f"{SCRIPT_PATH}/data/ws/bad-ws.asc"
     temp_path = "test.nc"
-    with pytest.raises(WeatherStationDataError):
+    with pytest.raises(ValueError):
         weather_station.ws2nc(filename, temp_path, SITE_META)
 
 
 def test_invalid_header2():
     filename = f"{SCRIPT_PATH}/data/ws/bad-ws2.asc"
     temp_path = "test.nc"
-    with pytest.raises(WeatherStationDataError):
+    with pytest.raises(ValueError):
         weather_station.ws2nc(filename, temp_path, SITE_META)
 
 
