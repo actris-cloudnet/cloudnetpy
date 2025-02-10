@@ -4,6 +4,7 @@ from os import PathLike
 from typing import Any
 
 import numpy as np
+from numpy import ma
 
 from cloudnetpy import output
 from cloudnetpy.cloudnetarray import CloudnetArray
@@ -107,6 +108,7 @@ def thies2nc(
         raise DisdrometerDataError(msg) from err
     disdrometer.sort_timestamps()
     disdrometer.remove_duplicate_timestamps()
+    disdrometer.mask_invalid_values()
     disdrometer.add_meta()
     disdrometer.convert_units()
     attributes = output.add_time_attribute(ATTRIBUTES, disdrometer.date)
@@ -268,6 +270,12 @@ class Thies(Disdrometer):
             raise DisdrometerDataError(msg)
         for key in self.raw_data:
             self.raw_data[key] = self.raw_data[key][valid_mask]
+
+    def mask_invalid_values(self) -> None:
+        rainfall_rate = self.data["rainfall_rate"]
+        rainfall_rate.data = ma.masked_where(
+            rainfall_rate.data > 999, rainfall_rate.data
+        )
 
     def _create_velocity_vectors(self) -> None:
         n_values = [5, 6, 7, 1, 1]
