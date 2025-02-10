@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.69.8 – 2025-02-10
+
+- Add support for Lampedusa weather station
+
 ## 1.69.7 – 2025-02-07
 
 - Support `time_offset` in `hatpro2l1c`
