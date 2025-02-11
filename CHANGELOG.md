@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.70.0 – 2025-02-11
+
+- Add cpr-simulation plotting
+
 ## 1.69.10 – 2025-02-10
 
 - Screen invalid rainfall rates in Thies LPM
