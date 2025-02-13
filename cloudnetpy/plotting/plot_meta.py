@@ -221,6 +221,18 @@ ATTRIBUTES = {
             cmap="RdBu_r",
             plot_range=(-4, 4),
         ),
+        "vm_sat_folded": PlotMeta(
+            cmap="RdBu_r",
+            plot_range=(-4, 4),
+        ),
+        "vm_sat_noise": PlotMeta(
+            cmap="RdBu_r",
+            plot_range=(-4, 4),
+        ),
+        "vm_sat_vel": PlotMeta(
+            cmap="RdBu_r",
+            plot_range=(-4, 4),
+        ),
         "ier": PlotMeta(
             plot_range=(2e-5, 6e-5),
         ),
