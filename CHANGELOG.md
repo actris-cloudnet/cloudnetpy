@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.70.1 – 2025-02-13
+
+- Add plotting metadata for EarthCARE velocity variables
+
 ## 1.70.0 – 2025-02-11
 
 - Add cpr-simulation plotting
