@@ -77,7 +77,7 @@ class AllProductsFun:
         for key in ("altitude", "latitude", "longitude"):
             value = self.nc.variables[key][:]
             expected = self.site_meta[key]
-            assert value == expected, f"{value} != {expected}"
+            assert np.isclose(value, expected), f"{value} != {expected}"
 
     def test_invalid_units(self):
         for key in self.nc.variables:

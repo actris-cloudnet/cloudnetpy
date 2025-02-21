@@ -18,6 +18,7 @@ classifiers = [
 ]
 dependencies = [
   "cloudnetpy_qc>=1.15.0",
+  "doppy>=0.5.0",
   "matplotlib",
   "mwrpy>=1.2.0",
   "netCDF4",
