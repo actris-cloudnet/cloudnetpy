@@ -1,6 +1,6 @@
 [default]
 extend-ignore-re = ["Winddirection\\(degres\\)"]
-extend-ignore-identifiers-re = ["MOR", "morVisibility", "mor_visibility", "reshape_1d2nd"]
+extend-ignore-identifiers-re = ["LinearNDInterpolator", "MOR", "NearestNDInterpolator", "morVisibility", "mor_visibility", "reshape_1d2nd"]
 
 [files]
 extend-exclude = ["tests/unit/data"]

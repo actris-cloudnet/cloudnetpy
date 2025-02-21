@@ -588,5 +588,10 @@ ATTRIBUTES = {
         "lwp": PlotMeta(
             zero_line=True,
         ),
+        "epsilon": PlotMeta(
+            cmap="inferno",
+            plot_range=(1e-7, 1e-1),
+            log_scale=True,
+        ),
     },
 }
