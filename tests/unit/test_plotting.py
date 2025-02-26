@@ -132,7 +132,7 @@ def test_screen_completely_masked_profiles_with_all_masked_2():
     "units, result",
     [
         ("1", ""),
-        ("mu m", "$\\mu$m"),
+        ("10", "10"),
         ("m-3", "m$^{-3}$"),
         ("m s-1", "m s$^{-1}$"),
         ("sr-1 m-1", "sr$^{-1}$ m$^{-1}$"),
@@ -143,6 +143,8 @@ def test_screen_completely_masked_profiles_with_all_masked_2():
         ("kg m-2 s-1", "kg m$^{-2}$ s$^{-1}$"),
         ("dB km-1", "dB km$^{-1}$"),
         ("rad km-1", "rad km$^{-1}$"),
+        ("m2", "m$^{2}$"),
+        ("dB-1", "dB$^{-1}$"),
     ],
 )
 def test_reformat_units(units, result):
