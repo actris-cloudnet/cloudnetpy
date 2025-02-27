@@ -162,7 +162,7 @@ class NcRadar(DataSource, CloudnetInstrument):
 
     def test_if_all_masked(self) -> None:
         """Tests if all data are masked."""
-        if not np.any(~self.data["v"][:].mask):
+        if np.all(self.data["v"][:].mask):
             msg = "All radar data are masked"
             raise RadarDataError(msg)
 

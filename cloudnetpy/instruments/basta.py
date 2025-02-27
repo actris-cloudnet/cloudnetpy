@@ -62,6 +62,7 @@ def basta2nc(
         basta.add_height()
         basta.sort_timestamps()
         basta.remove_duplicate_timestamps()
+        basta.test_if_all_masked()
     attributes = output.add_time_attribute(ATTRIBUTES, basta.date)
     output.update_attributes(basta.data, attributes)
     return output.save_level1b(basta, output_file, uuid)
