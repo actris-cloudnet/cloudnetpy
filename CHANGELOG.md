@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.70.2 – 2025-03-04
+
+- Check if all BASTA data is masked
+- Fix units formatting in plots
+
 ## 1.70.1 – 2025-02-13
 
 - Add plotting metadata for EarthCARE velocity variables
