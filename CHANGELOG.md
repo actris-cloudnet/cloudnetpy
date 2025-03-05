@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.71.0 – 2025-03-05
+
+- Add generate epsilon-lidar product
+
 ## 1.70.2 – 2025-03-04
 
 - Check if all BASTA data is masked
