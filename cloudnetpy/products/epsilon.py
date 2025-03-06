@@ -82,8 +82,8 @@ def generate_epsilon_from_lidar(
         nc.add_attribute("cloudnetpy_version", cloudnetpy.__version__)
         nc.add_attribute(
             "title",
-            "Dissipation rate of turbulent kinetic energy "
-            "from {nc_src.source} from {nc_src.location}",
+            "Dissipation rate of turbulent kinetic energy (lidar) "
+            f"from {nc_src.location}",
         )
 
     copy_attributes_from_src(doppler_lidar_file, output_file)
@@ -97,13 +97,18 @@ def generate_epsilon_from_lidar(
             nc_src_stare, nc_out, ("latitude", "longitude", "altitude", "source")
         )
         nc_out.source_file_uuids = f"{nc_src_stare.file_uuid}, {nc_src_wind.file_uuid}"
-        nc_out.source = f"{nc_src_stare.source}, {nc_src_wind.source}"
-        nc_out.history = (
+        sources = {nc_src_stare.source, nc_src_wind.source}
+        nc_out.source = ", ".join(sources)
+        history = (
             f"{get_time()} - epsilon-lidar file created using doppy "
             f"v{doppy.__version__} and cloudnetpy v{cloudnetpy.__version__}\n"
             f"{nc_src_stare.history}\n"
-            f"{nc_src_wind.history}\n"
+            f"{nc_src_wind.history}"
         )
+        history = "\n".join(
+            line.strip() for line in history.splitlines() if line.strip()
+        )
+        nc_out.history = history
         nc_out.references = "https://doi.org/10.1175/2010JTECHA1455.1"
     return uuid
 
