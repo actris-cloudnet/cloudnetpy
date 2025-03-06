@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.71.1 – 2025-03-06
+
+- Fix epsilon-lidar metadata
+
 ## 1.71.0 – 2025-03-05
 
 - Add generate epsilon-lidar product
