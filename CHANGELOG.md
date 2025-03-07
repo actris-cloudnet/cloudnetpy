@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.71.2 – 2025-03-07
+
+- Handle all data masked in epsilon-lidar
+
 ## 1.71.1 – 2025-03-06
 
 - Fix epsilon-lidar metadata
