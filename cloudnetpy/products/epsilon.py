@@ -11,6 +11,7 @@ from doppy.product.turbulence import HorizontalWind, Options, Turbulence, Vertic
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 
 import cloudnetpy
+from cloudnetpy.exceptions import ValidTimeStampError
 from cloudnetpy.output import copy_variables
 from cloudnetpy.utils import get_time, get_uuid
 
@@ -131,6 +132,8 @@ def _horizontal_wind_from_doppler_lidar_file(
         vmask = np.array(nc["vwind"][:].mask, dtype=np.bool_)
         V = np.sqrt(uwind**2 + vwind**2)
         mask = umask | vmask
+        if np.all(mask):
+            raise ValidTimeStampError
         t = np.broadcast_to(time[:, None], mask.shape)[~mask]
         h = np.broadcast_to(height[None, :], mask.shape)[~mask]
         interp_linear = LinearNDInterpolator(list(zip(t, h, strict=False)), V[~mask])
