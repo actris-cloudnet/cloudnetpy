@@ -83,9 +83,9 @@ class IerSource(IceSource):
 
 
 def _add_ier_comment(attributes: dict, ier: IerSource) -> dict:
-    freq = ier.radar_frequency
+    freq = round(ier.radar_frequency, 3)
     coeffs = ier.coefficients
-    factor = np.round((coeffs[0] / 0.93), 3)
+    factor = round(coeffs[0] / 0.93, 3)
     attributes["ier"] = attributes["ier"]._replace(
         comment=f"This variable was calculated from the {freq}-GHz radar\n"
         f"reflectivity factor after correction for gaseous attenuation,\n"

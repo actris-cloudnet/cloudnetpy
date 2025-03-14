@@ -113,9 +113,9 @@ def _add_iwc_error_comment(attributes: dict, lwp_prior, uncertainty: float) -> d
 
 
 def _add_iwc_comment(attributes: dict, iwc: IwcSource) -> dict:
-    freq = iwc.radar_frequency
+    freq = round(iwc.radar_frequency, 3)
     coeffs = iwc.coefficients
-    factor = round((coeffs[0] / 0.93) * 1000) / 1000
+    factor = round(coeffs[0] / 0.93, 3)
     attributes["iwc"] = attributes["iwc"]._replace(
         comment=f"This variable was calculated from the {freq}-GHz radar reflectivity\n"
         "factor after correction for gaseous attenuation, and temperature taken from\n"
