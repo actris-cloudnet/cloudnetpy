@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.71.3 – 2025-03-14
+
+- Extend CS135 support
+- Fix frequency formatting in ier and lwc comments
+
 ## 1.71.2 – 2025-03-07
 
 - Handle all data masked in epsilon-lidar
